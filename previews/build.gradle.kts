@@ -1,6 +1,5 @@
 plugins {
     alias(libs.plugins.android.library)
-    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.compose.preview)
 }
@@ -37,6 +36,8 @@ dependencies {
     debugImplementation(libs.compose.ui.tooling)
 
     implementation(libs.remote.creation.compose)
+    implementation(libs.remote.creation.android)
+    implementation(libs.remote.creation.core)
     implementation(libs.remote.player.compose)
     implementation(libs.remote.player.view)
     implementation(libs.remote.tooling.preview)

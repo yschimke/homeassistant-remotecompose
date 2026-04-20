@@ -30,11 +30,27 @@ fun snapshot(vararg states: Pair<String, EntityState>): HaSnapshot =
 /** A small bank of fixture snapshots used across previews. */
 object Fixtures {
     val livingRoomTemp = snapshot(
-        state("sensor.living_room_temperature", "21.4",
-            mapOf("friendly_name" to "Living Room", "unit_of_measurement" to "°C")),
+        state("sensor.living_room", "21.4",
+            mapOf(
+                "friendly_name" to "Living Room",
+                "unit_of_measurement" to "°C",
+                "device_class" to "temperature",
+            )),
     )
 
     val kitchenLight = snapshot(
+        state("light.kitchen", "on",
+            mapOf("friendly_name" to "Kitchen", "brightness" to "200")),
+    )
+
+    /** Combined snapshot — entities/glance/stack previews mix these. */
+    val mixed = snapshot(
+        state("sensor.living_room", "21.4",
+            mapOf(
+                "friendly_name" to "Living Room",
+                "unit_of_measurement" to "°C",
+                "device_class" to "temperature",
+            )),
         state("light.kitchen", "on",
             mapOf("friendly_name" to "Kitchen", "brightness" to "200")),
     )

@@ -1,41 +1,65 @@
 package ee.schimke.ha.previews
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.padding
+import androidx.compose.remote.creation.compose.layout.RemoteAlignment
+import androidx.compose.remote.creation.compose.layout.RemoteBox
+import androidx.compose.remote.creation.compose.modifier.RemoteModifier
+import androidx.compose.remote.creation.compose.modifier.background
+import androidx.compose.remote.creation.compose.modifier.fillMaxSize
+import androidx.compose.remote.creation.compose.modifier.padding
+import androidx.compose.remote.creation.compose.state.rc
+import androidx.compose.remote.creation.compose.state.rdp
+import androidx.compose.remote.tooling.preview.RemotePreview
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import ee.schimke.ha.rc.cards.TileCardConverter
+import ee.schimke.ha.rc.ProvideCardRegistry
+import ee.schimke.ha.rc.RenderChild
+import ee.schimke.ha.rc.androidXExperimental
+import ee.schimke.ha.rc.cards.defaultRegistry
 
 /**
- * Previews drive the pixel-parity loop: each fixture compiled by the
- * compose-preview plugin becomes a PNG under
- * `previews/build/compose-previews/renders/`. Compare against reference
- * PNGs captured from real HA (via hass-lovelace-screenshotter / Puppeteer).
+ * Tile-only previews. Separate from [CardPreviews] so the integration
+ * `PixelDiffTest` can continue to locate them by their existing
+ * `Tile_*` function names — the committed reference PNGs are named to
+ * match.
  *
- * NOTE: once the RemoteCompose API for the wrapper scope stabilises, wrap
- * the converter's `Render` call in a RemoteCompose player composable so the
- * preview exercises the same byte stream that a production renderer would.
+ * Ideally previews would use `wrapContentSize()` so the rendered PNG
+ * fits the card exactly. The current RemoteCompose player requires a
+ * bounded size, so we pad the canvas and center the card instead.
  */
-@Preview(name = "tile — sensor temperature", showBackground = true, widthDp = 360, heightDp = 120)
+private val DASHBOARD_BG = Color(0xFFE5E7EB)
+
 @Composable
-fun Tile_TemperatureSensor() {
-    Box(Modifier.padding(16.dp)) {
-        TileCardConverter().Render(
-            card = card("""{"type":"tile","entity":"sensor.living_room_temperature"}"""),
-            snapshot = Fixtures.livingRoomTemp,
-        )
+private fun TileFrame(content: @Composable () -> Unit) {
+    RemotePreview(profile = androidXExperimental) {
+        ProvideCardRegistry(defaultRegistry()) {
+            RemoteBox(
+                modifier = RemoteModifier
+                    .fillMaxSize()
+                    .background(DASHBOARD_BG.rc)
+                    .padding(20.rdp),
+                contentAlignment = RemoteAlignment.TopCenter,
+            ) {
+                content()
+            }
+        }
     }
 }
 
-@Preview(name = "tile — light on", showBackground = true, widthDp = 360, heightDp = 120)
+@Preview(name = "tile — sensor temperature", showBackground = true, widthDp = 360, heightDp = 96)
 @Composable
-fun Tile_LightOn() {
-    Box(Modifier.padding(16.dp)) {
-        TileCardConverter().Render(
-            card = card("""{"type":"tile","entity":"light.kitchen","color":"amber"}"""),
-            snapshot = Fixtures.kitchenLight,
-        )
-    }
+fun Tile_TemperatureSensor() = TileFrame {
+    RenderChild(
+        card = card("""{"type":"tile","entity":"sensor.living_room"}"""),
+        snapshot = Fixtures.livingRoomTemp,
+    )
+}
+
+@Preview(name = "tile — light on", showBackground = true, widthDp = 360, heightDp = 96)
+@Composable
+fun Tile_LightOn() = TileFrame {
+    RenderChild(
+        card = card("""{"type":"tile","entity":"light.kitchen","color":"amber"}"""),
+        snapshot = Fixtures.kitchenLight,
+    )
 }

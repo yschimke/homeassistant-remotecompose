@@ -1,14 +1,16 @@
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
     alias(libs.plugins.kotlin.serialization)
-    alias(libs.plugins.android.library)
+    alias(libs.plugins.android.kmp.library)
 }
 
 kotlin {
     jvmToolchain(libs.versions.java.get().toInt())
 
-    androidTarget {
-        publishLibraryVariants("release")
+    androidLibrary {
+        namespace = "ee.schimke.ha.client"
+        compileSdk = libs.versions.android.compileSdk.get().toInt()
+        minSdk = libs.versions.android.minSdk.get().toInt()
     }
     jvm()
 
@@ -32,13 +34,5 @@ kotlin {
         jvmMain.dependencies {
             implementation(libs.ktor.client.cio)
         }
-    }
-}
-
-android {
-    namespace = "ee.schimke.ha.client"
-    compileSdk = libs.versions.android.compileSdk.get().toInt()
-    defaultConfig {
-        minSdk = libs.versions.android.minSdk.get().toInt()
     }
 }

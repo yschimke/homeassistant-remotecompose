@@ -1,7 +1,7 @@
 [versions]
 # Toolchain
 kotlin = "2.1.20"
-agp = "8.7.3"
+agp = "9.1.0"
 java = "17"
 
 # Compose
@@ -10,11 +10,12 @@ compose-compiler = "1.5.15"
 
 # RemoteCompose (alpha — APIs change per release)
 remote-compose = "1.0.0-alpha08"
+remote-material3 = "1.0.0-alpha02"
 
 # Android
-android-minSdk = "23"
-android-compileSdk = "35"
-android-targetSdk = "35"
+android-minSdk = "29"
+android-compileSdk = "37"
+android-targetSdk = "37"
 
 # Libraries
 ktor = "3.0.3"
@@ -23,7 +24,7 @@ kotlinx-coroutines = "1.10.1"
 kotlinx-datetime = "0.6.1"
 
 # Preview tooling
-compose-preview-plugin = "0.7.0"
+compose-preview-plugin = "0.7.4"
 
 [libraries]
 # RemoteCompose authoring / playback
@@ -36,6 +37,7 @@ remote-player-core = { module = "androidx.compose.remote:remote-player-core", ve
 remote-player-compose = { module = "androidx.compose.remote:remote-player-compose", version.ref = "remote-compose" }
 remote-player-view = { module = "androidx.compose.remote:remote-player-view", version.ref = "remote-compose" }
 remote-tooling-preview = { module = "androidx.compose.remote:remote-tooling-preview", version.ref = "remote-compose" }
+remote-material3 = { module = "androidx.wear.compose.remote:remote-material3", version.ref = "remote-material3" }
 
 # Compose
 compose-bom = { module = "androidx.compose:compose-bom", version.ref = "compose-bom" }
@@ -44,6 +46,7 @@ compose-ui-tooling = { module = "androidx.compose.ui:ui-tooling" }
 compose-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview" }
 compose-foundation = { module = "androidx.compose.foundation:foundation" }
 compose-material3 = { module = "androidx.compose.material3:material3" }
+compose-material-icons-extended = { module = "androidx.compose.material:material-icons-extended" }
 activity-compose = { module = "androidx.activity:activity-compose", version = "1.9.3" }
 
 # Ktor (HA WebSocket client)
@@ -66,7 +69,7 @@ kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-t
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 android-library = { id = "com.android.library", version.ref = "agp" }
-kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
+android-kmp-library = { id = "com.android.kotlin.multiplatform.library", version.ref = "agp" }
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }

@@ -1,0 +1,17 @@
+.env.local
+bin/
+
+# HA container runtime-generated state — only the hand-written config files
+# (configuration.yaml, ui-lovelace.yaml, themes/) should be committed.
+config/.storage/
+config/.cloud/
+config/.HA_VERSION
+config/.ha_run.lock
+config/home-assistant.log*
+config/home-assistant_v2.db*
+config/core.*
+config/tts/
+config/deps/
+config/www/
+config/blueprints/
+config/secrets.yaml
