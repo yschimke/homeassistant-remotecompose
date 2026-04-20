@@ -1,8 +1,11 @@
 // Reference capture: given a running HA + long-lived token, open each
-// view of the reference dashboard and crop each card's bounding box into
-// references/<card-type>/<name>.png. HA's Lovelace lives several shadow
-// roots deep, so we do a manual shadow-piercing traversal rather than
-// relying on plain CSS selectors.
+// view of the reference dashboard twice (light + dark) and crop each
+// card's bounding box into references/<card-type>/<name>_{light,dark}.png.
+//
+// HA's Lovelace lives several shadow roots deep, so we use a manual
+// shadow-piercing traversal rather than plain CSS selectors. Dark mode
+// is set via `Emulation.setEmulatedMedia` — HA's "default" theme
+// honours `prefers-color-scheme`.
 
 import puppeteer from "puppeteer";
 import { mkdir, writeFile } from "node:fs/promises";
@@ -17,13 +20,16 @@ if (!TOKEN) {
   process.exit(2);
 }
 
+/**
+ * One entry per card crop. `view` / `cardIndex` pin the location in the
+ * reference dashboard; `file` is the base name (the `_light`/`_dark`
+ * suffix is appended per theme at capture time).
+ */
 const MANIFEST = [
-  { view: "tile", cardIndex: 0, file: "tile/temperature_sensor.png" },
-  { view: "tile", cardIndex: 1, file: "tile/light_on.png" },
+  { view: "tile", cardIndex: 0, file: "tile/temperature_sensor" },
+  { view: "tile", cardIndex: 1, file: "tile/light_on" },
 ];
 
-// Shadow-DOM deep-query helper injected via page.evaluate. Walks every
-// open shadowRoot under `document` and returns all matches for `selector`.
 const deepQueryAllFn = `
 function deepQueryAll(selector, root = document) {
   const results = [];
@@ -50,7 +56,7 @@ try {
   const page = await browser.newPage();
   await page.setViewport({ width: 800, height: 1200, deviceScaleFactor: 2 });
 
-  // Seed the LL token into localStorage so the frontend skips the login wall.
+  // Seed the LL token so the frontend skips the login wall.
   await page.goto(BASE, { waitUntil: "domcontentloaded" });
   await page.evaluate((token) => {
     localStorage.setItem(
@@ -67,55 +73,62 @@ try {
     );
   }, TOKEN);
 
-  const seenViews = new Set();
-  for (const entry of MANIFEST) {
-    if (!seenViews.has(entry.view)) {
-      console.log(`-> navigating to view=${entry.view}`);
-      await page.goto(`${BASE}/lovelace/${entry.view}`, {
-        waitUntil: "networkidle2",
+  for (const theme of ["light", "dark"]) {
+    console.log(`== theme: ${theme} ==`);
+    await page.emulateMediaFeatures([
+      { name: "prefers-color-scheme", value: theme },
+    ]);
+
+    const seenViews = new Set();
+    for (const entry of MANIFEST) {
+      if (!seenViews.has(entry.view)) {
+        console.log(`-> navigating to view=${entry.view}`);
+        await page.goto(`${BASE}/lovelace/${entry.view}`, {
+          waitUntil: "networkidle2",
+        });
+
+        await page.waitForFunction(
+          `(() => { ${deepQueryAllFn} return deepQueryAll('hui-card').length > 0 || deepQueryAll('hui-tile-card').length > 0; })()`,
+          { timeout: 30_000 },
+        );
+        await new Promise((r) => setTimeout(r, 1200));
+        seenViews.add(entry.view);
+      }
+
+      const box = await page.evaluate(
+        `(() => {
+          ${deepQueryAllFn}
+          const cards = deepQueryAll('hui-card');
+          const cardsOrTiles = cards.length ? cards : deepQueryAll('hui-tile-card');
+          const el = cardsOrTiles[${entry.cardIndex}];
+          if (!el) return null;
+          const r = el.getBoundingClientRect();
+          return { x: r.x, y: r.y, width: r.width, height: r.height };
+        })()`,
+      );
+
+      if (!box || box.width === 0) {
+        console.error(
+          `no visible card at index ${entry.cardIndex} on view '${entry.view}'`,
+        );
+        continue;
+      }
+
+      const outPath = join(OUT, `${entry.file}_${theme}.png`);
+      await mkdir(dirname(outPath), { recursive: true });
+      const buf = await page.screenshot({
+        clip: {
+          x: Math.max(0, Math.floor(box.x)),
+          y: Math.max(0, Math.floor(box.y)),
+          width: Math.ceil(box.width),
+          height: Math.ceil(box.height),
+        },
       });
-
-      // Wait until at least one hui-card is present somewhere in the shadow tree.
-      await page.waitForFunction(
-        `(() => { ${deepQueryAllFn} return deepQueryAll('hui-card').length > 0 || deepQueryAll('hui-tile-card').length > 0; })()`,
-        { timeout: 30_000 },
+      await writeFile(outPath, buf);
+      console.log(
+        `wrote ${outPath} (${Math.ceil(box.width)}x${Math.ceil(box.height)})`,
       );
-      // Small settle delay for card animations.
-      await new Promise((r) => setTimeout(r, 1200));
-      seenViews.add(entry.view);
     }
-
-    const box = await page.evaluate(
-      `(() => {
-        ${deepQueryAllFn}
-        const cards = deepQueryAll('hui-card');
-        const cardsOrTiles = cards.length ? cards : deepQueryAll('hui-tile-card');
-        const el = cardsOrTiles[${entry.cardIndex}];
-        if (!el) return null;
-        const r = el.getBoundingClientRect();
-        return { x: r.x, y: r.y, width: r.width, height: r.height };
-      })()`,
-    );
-
-    if (!box || box.width === 0) {
-      console.error(
-        `no visible card at index ${entry.cardIndex} on view '${entry.view}' (box=${JSON.stringify(box)})`,
-      );
-      continue;
-    }
-
-    const outPath = join(OUT, entry.file);
-    await mkdir(dirname(outPath), { recursive: true });
-    const buf = await page.screenshot({
-      clip: {
-        x: Math.max(0, Math.floor(box.x)),
-        y: Math.max(0, Math.floor(box.y)),
-        width: Math.ceil(box.width),
-        height: Math.ceil(box.height),
-      },
-    });
-    await writeFile(outPath, buf);
-    console.log(`wrote ${outPath} (${Math.ceil(box.width)}x${Math.ceil(box.height)})`);
   }
 } finally {
   await browser.close();

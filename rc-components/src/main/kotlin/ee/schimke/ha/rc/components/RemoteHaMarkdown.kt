@@ -31,17 +31,18 @@ fun RemoteHaMarkdown(
     title: RemoteString? = null,
     modifier: RemoteModifier = RemoteModifier,
 ) {
+    val theme = haTheme()
     RemoteBox(
         modifier = modifier
             .clip(RemoteRoundedCornerShape(12.rdp))
-            .background(Color.White.rc)
+            .background(theme.cardBackground.rc)
             .padding(16.rdp),
     ) {
         RemoteColumn {
             if (title != null) {
                 RemoteText(
                     text = title,
-                    color = Color(0xFF1C1C1C).rc,
+                    color = theme.primaryText.rc,
                     fontSize = 18.rsp,
                     fontWeight = FontWeight.Medium,
                     style = RemoteTextStyle.Default,
@@ -51,7 +52,7 @@ fun RemoteHaMarkdown(
             lines.forEach { line ->
                 RemoteText(
                     text = line,
-                    color = Color(0xFF1C1C1C).rc,
+                    color = theme.primaryText.rc,
                     fontSize = 14.rsp,
                     style = RemoteTextStyle.Default,
                 )

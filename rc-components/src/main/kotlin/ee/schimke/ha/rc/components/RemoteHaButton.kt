@@ -9,10 +9,8 @@ import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.background
 import androidx.compose.remote.creation.compose.modifier.clickable
 import androidx.compose.remote.creation.compose.modifier.clip
-import androidx.compose.remote.creation.compose.modifier.fillMaxSize
 import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.modifier.size
-import androidx.compose.remote.creation.compose.modifier.wrapContentSize
 import androidx.compose.remote.creation.compose.shapes.RemoteRoundedCornerShape
 import androidx.compose.remote.creation.compose.state.RemoteColor
 import androidx.compose.remote.creation.compose.state.RemoteString
@@ -42,18 +40,17 @@ fun RemoteHaButton(
     showName: Boolean = true,
     tapAction: HaAction = HaAction.None,
 ) {
+    val theme = haTheme()
     val clickable = tapAction.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
     RemoteBox(
         modifier = modifier
             .then(clickable)
-            .fillMaxSize()
             .clip(RemoteRoundedCornerShape(12.rdp))
-            .background(Color.White.rc)
+            .background(theme.cardBackground.rc)
             .padding(16.rdp),
         contentAlignment = RemoteAlignment.Center,
     ) {
         RemoteColumn(
-            modifier = RemoteModifier.wrapContentSize(),
             horizontalAlignment = RemoteAlignment.CenterHorizontally,
         ) {
             RemoteBox(
@@ -74,7 +71,7 @@ fun RemoteHaButton(
                 RemoteBox(modifier = RemoteModifier.padding(top = 8.rdp)) {
                     RemoteText(
                         text = name,
-                        color = Color(0xFF1C1C1C).rc,
+                        color = theme.primaryText.rc,
                         fontSize = 14.rsp,
                         fontWeight = FontWeight.Medium,
                         style = RemoteTextStyle.Default,

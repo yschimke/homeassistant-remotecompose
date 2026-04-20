@@ -50,12 +50,13 @@ fun RemoteHaTile(
     modifier: RemoteModifier = RemoteModifier,
     tapAction: HaAction = HaAction.None,
 ) {
+    val theme = haTheme()
     val clickable = tapAction.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
     RemoteBox(
         modifier = modifier
             .then(clickable)
             .clip(RemoteRoundedCornerShape(12.rdp))
-            .background(Color.White.rc)
+            .background(theme.cardBackground.rc)
             .padding(12.rdp),
     ) {
         RemoteRow(verticalAlignment = RemoteAlignment.CenterVertically) {
@@ -76,14 +77,14 @@ fun RemoteHaTile(
             RemoteColumn(modifier = RemoteModifier.padding(left = 12.rdp)) {
                 RemoteText(
                     text = name,
-                    color = COLOR_PRIMARY_TEXT,
+                    color = theme.primaryText.rc,
                     fontSize = 14.rsp,
                     fontWeight = FontWeight.Medium,
                     style = RemoteTextStyle.Default,
                 )
                 RemoteText(
                     text = state,
-                    color = COLOR_SECONDARY_TEXT,
+                    color = theme.secondaryText.rc,
                     fontSize = 12.rsp,
                     style = RemoteTextStyle.Default,
                 )
@@ -91,6 +92,3 @@ fun RemoteHaTile(
         }
     }
 }
-
-private val COLOR_PRIMARY_TEXT: RemoteColor get() = Color(0xFF1C1C1C).rc
-private val COLOR_SECONDARY_TEXT: RemoteColor get() = Color(0xFF5F6367).rc

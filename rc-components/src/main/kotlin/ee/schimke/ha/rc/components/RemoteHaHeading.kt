@@ -25,10 +25,11 @@ fun RemoteHaHeading(
     modifier: RemoteModifier = RemoteModifier,
     style: HaHeadingStyle = HaHeadingStyle.Title,
 ) {
+    val theme = haTheme()
     RemoteText(
         text = title,
         modifier = modifier.padding(vertical = 8.rdp),
-        color = Color(0xFF1C1C1C).rc,
+        color = theme.primaryText.rc,
         fontSize = style.sizeSp.rsp,
         fontWeight = style.weight,
         style = RemoteTextStyle.Default,

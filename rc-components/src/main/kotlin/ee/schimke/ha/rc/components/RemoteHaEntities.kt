@@ -31,17 +31,18 @@ fun RemoteHaEntities(
     modifier: RemoteModifier = RemoteModifier,
     content: @Composable @RemoteComposable () -> Unit,
 ) {
+    val theme = haTheme()
     RemoteBox(
         modifier = modifier
             .clip(RemoteRoundedCornerShape(12.rdp))
-            .background(Color.White.rc)
+            .background(theme.cardBackground.rc)
             .padding(16.rdp),
     ) {
         RemoteColumn(horizontalAlignment = RemoteAlignment.Start) {
             if (title != null) {
                 RemoteText(
                     text = title,
-                    color = Color(0xFF1C1C1C).rc,
+                    color = theme.primaryText.rc,
                     fontSize = 18.rsp,
                     fontWeight = FontWeight.Medium,
                     style = RemoteTextStyle.Default,

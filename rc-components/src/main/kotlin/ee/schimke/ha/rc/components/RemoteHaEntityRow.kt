@@ -38,6 +38,7 @@ fun RemoteHaEntityRow(
     modifier: RemoteModifier = RemoteModifier,
     tapAction: HaAction = HaAction.None,
 ) {
+    val theme = haTheme()
     val clickable = tapAction.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
     RemoteRow(
         modifier = modifier.then(clickable).fillMaxWidth().padding(vertical = 8.rdp),
@@ -54,7 +55,7 @@ fun RemoteHaEntityRow(
             RemoteBox(modifier = RemoteModifier.padding(left = 16.rdp)) {
                 RemoteText(
                     text = name,
-                    color = Color(0xFF1C1C1C).rc,
+                    color = theme.primaryText.rc,
                     fontSize = 14.rsp,
                     style = RemoteTextStyle.Default,
                 )
@@ -62,7 +63,7 @@ fun RemoteHaEntityRow(
         }
         RemoteText(
             text = state,
-            color = Color(0xFF5F6367).rc,
+            color = theme.secondaryText.rc,
             fontSize = 14.rsp,
             style = RemoteTextStyle.Default,
         )

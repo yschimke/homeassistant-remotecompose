@@ -33,10 +33,11 @@ fun RemoteHaUnsupported(
     cardType: androidx.compose.remote.creation.compose.state.RemoteString,
     modifier: RemoteModifier = RemoteModifier,
 ) {
+    val theme = haTheme()
     RemoteBox(
         modifier = modifier
             .clip(RemoteRoundedCornerShape(12.rdp))
-            .background(Color(0xFFFFF4E5).rc)
+            .background(theme.placeholderBackground.rc)
             .padding(12.rdp),
         contentAlignment = RemoteAlignment.CenterStart,
     ) {
@@ -45,12 +46,12 @@ fun RemoteHaUnsupported(
                 imageVector = Icons.Filled.Widgets,
                 contentDescription = "Unsupported card".rs,
                 modifier = RemoteModifier.size(24.rdp),
-                tint = Color(0xFFB26A00).rc,
+                tint = theme.placeholderAccent.rc,
             )
             RemoteBox(modifier = RemoteModifier.padding(top = 8.rdp)) {
                 RemoteText(
                     text = "Not yet supported".rs,
-                    color = Color(0xFF1C1C1C).rc,
+                    color = theme.primaryText.rc,
                     fontSize = 14.rsp,
                     fontWeight = FontWeight.Medium,
                     style = RemoteTextStyle.Default,
@@ -58,7 +59,7 @@ fun RemoteHaUnsupported(
             }
             RemoteText(
                 text = cardType,
-                color = Color(0xFF5F6367).rc,
+                color = theme.secondaryText.rc,
                 fontSize = 12.rsp,
                 style = RemoteTextStyle.Default,
             )

@@ -39,17 +39,18 @@ fun RemoteHaGlance(
     modifier: RemoteModifier = RemoteModifier,
     content: @Composable @RemoteComposable () -> Unit,
 ) {
+    val theme = haTheme()
     RemoteBox(
         modifier = modifier
             .clip(RemoteRoundedCornerShape(12.rdp))
-            .background(Color.White.rc)
+            .background(theme.cardBackground.rc)
             .padding(16.rdp),
     ) {
         RemoteColumn {
             if (title != null) {
                 RemoteText(
                     text = title,
-                    color = Color(0xFF1C1C1C).rc,
+                    color = theme.primaryText.rc,
                     fontSize = 18.rsp,
                     fontWeight = FontWeight.Medium,
                     style = RemoteTextStyle.Default,
@@ -77,6 +78,7 @@ fun RemoteHaGlanceCell(
     modifier: RemoteModifier = RemoteModifier,
     tapAction: HaAction = HaAction.None,
 ) {
+    val theme = haTheme()
     val clickable = tapAction.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
     RemoteColumn(
         modifier = modifier.then(clickable).padding(4.rdp),
@@ -91,14 +93,14 @@ fun RemoteHaGlanceCell(
         RemoteBox(modifier = RemoteModifier.padding(top = 4.rdp)) {
             RemoteText(
                 text = name,
-                color = Color(0xFF1C1C1C).rc,
+                color = theme.primaryText.rc,
                 fontSize = 12.rsp,
                 style = RemoteTextStyle.Default,
             )
         }
         RemoteText(
             text = state,
-            color = Color(0xFF5F6367).rc,
+            color = theme.secondaryText.rc,
             fontSize = 11.rsp,
             style = RemoteTextStyle.Default,
         )

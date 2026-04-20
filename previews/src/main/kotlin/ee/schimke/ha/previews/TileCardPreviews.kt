@@ -10,54 +10,73 @@ import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.tooling.preview.RemotePreview
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import ee.schimke.ha.rc.ProvideCardRegistry
 import ee.schimke.ha.rc.RenderChild
 import ee.schimke.ha.rc.androidXExperimental
 import ee.schimke.ha.rc.cards.defaultRegistry
+import ee.schimke.ha.rc.components.HaTheme
+import ee.schimke.ha.rc.components.ProvideHaTheme
 
 /**
- * Tile-only previews. Separate from [CardPreviews] so the integration
- * `PixelDiffTest` can continue to locate them by their existing
- * `Tile_*` function names — the committed reference PNGs are named to
- * match.
+ * Tile-only previews. Separate from [CardPreviews] because the integration
+ * `TileCardPixelDiffTest` locates them by their existing function names
+ * and the committed reference PNGs are keyed to the tile card
+ * specifically.
  *
  * Ideally previews would use `wrapContentSize()` so the rendered PNG
  * fits the card exactly. The current RemoteCompose player requires a
  * bounded size, so we pad the canvas and center the card instead.
  */
-private val DASHBOARD_BG = Color(0xFFE5E7EB)
-
 @Composable
-private fun TileFrame(content: @Composable () -> Unit) {
+private fun TileFrame(theme: HaTheme, content: @Composable () -> Unit) {
     RemotePreview(profile = androidXExperimental) {
         ProvideCardRegistry(defaultRegistry()) {
-            RemoteBox(
-                modifier = RemoteModifier
-                    .fillMaxSize()
-                    .background(DASHBOARD_BG.rc)
-                    .padding(20.rdp),
-                contentAlignment = RemoteAlignment.TopCenter,
-            ) {
-                content()
+            ProvideHaTheme(theme) {
+                RemoteBox(
+                    modifier = RemoteModifier
+                        .fillMaxSize()
+                        .background(theme.dashboardBackground.rc)
+                        .padding(8.rdp),
+                    contentAlignment = RemoteAlignment.TopStart,
+                ) {
+                    content()
+                }
             }
         }
     }
 }
 
-@Preview(name = "tile — sensor temperature", showBackground = true, widthDp = 360, heightDp = 96)
+@Preview(name = "tile — sensor temperature", showBackground = true, widthDp = 232, heightDp = 88)
 @Composable
-fun Tile_TemperatureSensor() = TileFrame {
+fun Tile_TemperatureSensor() = TileFrame(HaTheme.Light) {
     RenderChild(
         card = card("""{"type":"tile","entity":"sensor.living_room"}"""),
         snapshot = Fixtures.livingRoomTemp,
     )
 }
 
-@Preview(name = "tile — light on", showBackground = true, widthDp = 360, heightDp = 96)
+@Preview(name = "tile — sensor temperature (dark)", showBackground = true, widthDp = 232, heightDp = 88)
 @Composable
-fun Tile_LightOn() = TileFrame {
+fun Tile_TemperatureSensor_Dark() = TileFrame(HaTheme.Dark) {
+    RenderChild(
+        card = card("""{"type":"tile","entity":"sensor.living_room"}"""),
+        snapshot = Fixtures.livingRoomTemp,
+    )
+}
+
+@Preview(name = "tile — light on", showBackground = true, widthDp = 232, heightDp = 88)
+@Composable
+fun Tile_LightOn() = TileFrame(HaTheme.Light) {
+    RenderChild(
+        card = card("""{"type":"tile","entity":"light.kitchen","color":"amber"}"""),
+        snapshot = Fixtures.kitchenLight,
+    )
+}
+
+@Preview(name = "tile — light on (dark)", showBackground = true, widthDp = 232, heightDp = 88)
+@Composable
+fun Tile_LightOn_Dark() = TileFrame(HaTheme.Dark) {
     RenderChild(
         card = card("""{"type":"tile","entity":"light.kitchen","color":"amber"}"""),
         snapshot = Fixtures.kitchenLight,
