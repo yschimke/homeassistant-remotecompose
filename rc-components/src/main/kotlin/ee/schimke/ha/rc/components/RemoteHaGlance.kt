@@ -10,6 +10,7 @@ import androidx.compose.remote.creation.compose.layout.RemoteRow
 import androidx.compose.remote.creation.compose.layout.RemoteText
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.background
+import androidx.compose.remote.creation.compose.modifier.border
 import androidx.compose.remote.creation.compose.modifier.clickable
 import androidx.compose.remote.creation.compose.modifier.clip
 import androidx.compose.remote.creation.compose.modifier.padding
@@ -44,6 +45,7 @@ fun RemoteHaGlance(
         modifier = modifier
             .clip(RemoteRoundedCornerShape(12.rdp))
             .background(theme.cardBackground.rc)
+            .border(1.rdp, theme.divider.rc, RemoteRoundedCornerShape(12.rdp))
             .padding(16.rdp),
     ) {
         RemoteColumn {
