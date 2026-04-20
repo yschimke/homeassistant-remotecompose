@@ -5,6 +5,19 @@ cards into [RemoteCompose](https://developer.android.com/jetpack/androidx/releas
 documents. Android target today; the shared data/client layers are structured
 as KMP so more targets are possible as RemoteCompose publishes more klibs.
 
+## Rendered previews
+
+Current card output side-by-side with the real HA frontend for reference:
+[**gist.github.com/yschimke/09c6fbeb83f71b4de3442a410010ee3f**](https://gist.github.com/yschimke/09c6fbeb83f71b4de3442a410010ee3f)
+(regenerated on every push of this repo).
+
+Tile side-by-side (HA reference on left, RemoteCompose on right):
+
+| | Home Assistant | RemoteCompose |
+|---|---|---|
+| **tile** — temperature sensor | ![](https://gist.githubusercontent.com/yschimke/09c6fbeb83f71b4de3442a410010ee3f/raw/tile_temperature_sensor_ref.png) | ![](https://gist.githubusercontent.com/yschimke/09c6fbeb83f71b4de3442a410010ee3f/raw/tile_temperature_sensor_rc.png) |
+| **tile** — light on | ![](https://gist.githubusercontent.com/yschimke/09c6fbeb83f71b4de3442a410010ee3f/raw/tile_light_on_ref.png) | ![](https://gist.githubusercontent.com/yschimke/09c6fbeb83f71b4de3442a410010ee3f/raw/tile_light_on_rc.png) |
+
 ## Why this exists
 
 HA's frontend is lit-element web components that read a live `hass` object
