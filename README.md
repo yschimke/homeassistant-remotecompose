@@ -7,16 +7,24 @@ as KMP so more targets are possible as RemoteCompose publishes more klibs.
 
 ## Rendered previews
 
-Current card output side-by-side with the real HA frontend for reference:
-[**gist.github.com/yschimke/09c6fbeb83f71b4de3442a410010ee3f**](https://gist.github.com/yschimke/09c6fbeb83f71b4de3442a410010ee3f)
-(regenerated on every push of this repo).
+Full side-by-side gallery (all card types, light + dark themes):
+[**gist.github.com/yschimke/09c6fbeb83f71b4de3442a410010ee3f**](https://gist.github.com/yschimke/09c6fbeb83f71b4de3442a410010ee3f).
 
-Tile side-by-side (HA reference on left, RemoteCompose on right):
+Tile — HA reference on the left, RemoteCompose on the right:
+
+**Light theme**
 
 | | Home Assistant | RemoteCompose |
 |---|---|---|
-| **tile** — temperature sensor | ![](https://gist.githubusercontent.com/yschimke/09c6fbeb83f71b4de3442a410010ee3f/raw/tile_temperature_sensor_ref.png) | ![](https://gist.githubusercontent.com/yschimke/09c6fbeb83f71b4de3442a410010ee3f/raw/tile_temperature_sensor_rc.png) |
-| **tile** — light on | ![](https://gist.githubusercontent.com/yschimke/09c6fbeb83f71b4de3442a410010ee3f/raw/tile_light_on_ref.png) | ![](https://gist.githubusercontent.com/yschimke/09c6fbeb83f71b4de3442a410010ee3f/raw/tile_light_on_rc.png) |
+| **tile** — temperature sensor | ![](https://gist.githubusercontent.com/yschimke/09c6fbeb83f71b4de3442a410010ee3f/raw/ref_tile_temperaturesensor_light.png) | ![](https://gist.githubusercontent.com/yschimke/09c6fbeb83f71b4de3442a410010ee3f/raw/rc_tile_temperaturesensor_light.png) |
+| **tile** — light on | ![](https://gist.githubusercontent.com/yschimke/09c6fbeb83f71b4de3442a410010ee3f/raw/ref_tile_lighton_light.png) | ![](https://gist.githubusercontent.com/yschimke/09c6fbeb83f71b4de3442a410010ee3f/raw/rc_tile_lighton_light.png) |
+
+**Dark theme**
+
+| | Home Assistant | RemoteCompose |
+|---|---|---|
+| **tile** — temperature sensor | ![](https://gist.githubusercontent.com/yschimke/09c6fbeb83f71b4de3442a410010ee3f/raw/ref_tile_temperaturesensor_dark.png) | ![](https://gist.githubusercontent.com/yschimke/09c6fbeb83f71b4de3442a410010ee3f/raw/rc_tile_temperaturesensor_dark.png) |
+| **tile** — light on | ![](https://gist.githubusercontent.com/yschimke/09c6fbeb83f71b4de3442a410010ee3f/raw/ref_tile_lighton_dark.png) | ![](https://gist.githubusercontent.com/yschimke/09c6fbeb83f71b4de3442a410010ee3f/raw/rc_tile_lighton_dark.png) |
 
 ## Why this exists
 
