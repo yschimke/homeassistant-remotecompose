@@ -1,0 +1,74 @@
+[versions]
+# Toolchain
+kotlin = "2.1.20"
+agp = "8.7.3"
+java = "17"
+
+# Compose
+compose-bom = "2025.01.00"
+compose-compiler = "1.5.15"
+
+# RemoteCompose (alpha — APIs change per release)
+remote-compose = "1.0.0-alpha08"
+
+# Android
+android-minSdk = "23"
+android-compileSdk = "35"
+android-targetSdk = "35"
+
+# Libraries
+ktor = "3.0.3"
+kotlinx-serialization = "1.7.3"
+kotlinx-coroutines = "1.10.1"
+kotlinx-datetime = "0.6.1"
+
+# Preview tooling
+compose-preview-plugin = "0.7.0"
+
+[libraries]
+# RemoteCompose authoring / playback
+remote-creation-compose = { module = "androidx.compose.remote:remote-creation-compose", version.ref = "remote-compose" }
+remote-creation-android = { module = "androidx.compose.remote:remote-creation-android", version.ref = "remote-compose" }
+remote-creation-jvm = { module = "androidx.compose.remote:remote-creation-jvm", version.ref = "remote-compose" }
+remote-creation-core = { module = "androidx.compose.remote:remote-creation-core", version.ref = "remote-compose" }
+remote-core = { module = "androidx.compose.remote:remote-core", version.ref = "remote-compose" }
+remote-player-core = { module = "androidx.compose.remote:remote-player-core", version.ref = "remote-compose" }
+remote-player-compose = { module = "androidx.compose.remote:remote-player-compose", version.ref = "remote-compose" }
+remote-player-view = { module = "androidx.compose.remote:remote-player-view", version.ref = "remote-compose" }
+remote-tooling-preview = { module = "androidx.compose.remote:remote-tooling-preview", version.ref = "remote-compose" }
+
+# Compose
+compose-bom = { module = "androidx.compose:compose-bom", version.ref = "compose-bom" }
+compose-ui = { module = "androidx.compose.ui:ui" }
+compose-ui-tooling = { module = "androidx.compose.ui:ui-tooling" }
+compose-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview" }
+compose-foundation = { module = "androidx.compose.foundation:foundation" }
+compose-material3 = { module = "androidx.compose.material3:material3" }
+activity-compose = { module = "androidx.activity:activity-compose", version = "1.9.3" }
+
+# Ktor (HA WebSocket client)
+ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
+ktor-client-websockets = { module = "io.ktor:ktor-client-websockets", version.ref = "ktor" }
+ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
+ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
+ktor-client-okhttp = { module = "io.ktor:ktor-client-okhttp", version.ref = "ktor" }
+ktor-client-cio = { module = "io.ktor:ktor-client-cio", version.ref = "ktor" }
+
+# Kotlinx
+kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
+kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
+kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinx-datetime" }
+
+# Test
+kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
+kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinx-coroutines" }
+
+[plugins]
+android-application = { id = "com.android.application", version.ref = "agp" }
+android-library = { id = "com.android.library", version.ref = "agp" }
+kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
+kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+compose-preview = { id = "ee.schimke.composeai.preview", version.ref = "compose-preview-plugin" }
