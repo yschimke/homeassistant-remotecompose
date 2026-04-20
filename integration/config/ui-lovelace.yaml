@@ -1,0 +1,16 @@
+# Reference dashboard. One view per card type; each card matches a
+# @Preview fixture in `:previews`. Ordering here is the capture order —
+# the puppeteer script indexes by card position.
+title: RemoteCompose References
+views:
+  - title: tile
+    path: tile
+    type: sections
+    sections:
+      - type: grid
+        cards:
+          - type: tile
+            entity: sensor.living_room
+          - type: tile
+            entity: light.kitchen
+            color: amber

@@ -1,0 +1,48 @@
+# Minimal HA config for reference-screenshot capture. Deterministic entities
+# and a hand-written Lovelace view — no automations, no integrations, nothing
+# that talks to the outside world.
+
+default_config:
+
+# Hand-rolled entity values that match the @Preview fixtures in
+# `:previews`. If you add a new card converter with a new fixture, add the
+# corresponding entity here so the reference screenshot matches.
+template:
+  - sensor:
+      - name: "Living Room"
+        unique_id: living_room_temperature
+        unit_of_measurement: "°C"
+        state: "21.4"
+        device_class: temperature
+
+input_boolean:
+  kitchen_light_proxy:
+    name: Kitchen
+    initial: on
+
+# The frontend treats input_boolean as a light-like toggle but for a `tile`
+# card with `entity: light.kitchen` we want a real `light` entity. A
+# `light:` platform with the `template` integration keeps everything
+# deterministic.
+light:
+  - platform: template
+    lights:
+      kitchen:
+        friendly_name: Kitchen
+        value_template: "{{ states('input_boolean.kitchen_light_proxy') }}"
+        turn_on:
+          service: input_boolean.turn_on
+          target:
+            entity_id: input_boolean.kitchen_light_proxy
+        turn_off:
+          service: input_boolean.turn_off
+          target:
+            entity_id: input_boolean.kitchen_light_proxy
+
+lovelace:
+  mode: yaml
+  dashboards: {}
+
+# Loaded as the default dashboard.
+frontend:
+  themes: !include_dir_merge_named themes

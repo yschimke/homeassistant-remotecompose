@@ -25,7 +25,9 @@ rootProject.name = "homeassistant-remotecompose"
 include(
     ":ha-model",
     ":ha-client",
+    ":rc-components",
     ":rc-converter",
     ":previews",
     ":demo-app",
+    ":integration",
 )

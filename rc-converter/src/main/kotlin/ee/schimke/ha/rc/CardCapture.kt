@@ -4,15 +4,11 @@ import android.content.Context
 import androidx.annotation.RestrictTo
 import androidx.compose.remote.core.CoreDocument
 import androidx.compose.remote.core.RemoteComposeBuffer
-import androidx.compose.remote.creation.CreationDisplayInfo
+import androidx.compose.remote.creation.compose.capture.RemoteCreationDisplayInfo
 import androidx.compose.remote.creation.compose.capture.rememberRemoteDocument
 import androidx.compose.remote.creation.compose.v2.captureSingleRemoteDocumentV2
 import androidx.compose.remote.player.compose.RemoteDocumentPlayer
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.State
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
@@ -46,7 +42,7 @@ data class CardDocument(
 /**
  * Headless capture path — produces a [CardDocument] without any visible
  * surface. This is what a widget worker calls: the HA snapshot changed, so
- * re-encode the card's bytes and push to the appinstance / Glance session.
+ * re-encode the card's bytes and push to the app instance / Glance session.
  *
  * Uses `captureSingleRemoteDocumentV2` which is `@RestrictTo(LIBRARY_GROUP)`
  * — suppressed here deliberately. The non-V2 capture path requires a
@@ -66,7 +62,7 @@ suspend fun captureCardDocument(
     val converter = registry.get(card.type)
         ?: error("No converter registered for card type='${card.type}'")
     val captured = captureSingleRemoteDocumentV2(
-        creationDisplayInfo = CreationDisplayInfo(widthPx, heightPx, densityDpi),
+        creationDisplayInfo = RemoteCreationDisplayInfo(widthPx, heightPx, densityDpi),
         context = context,
     ) {
         converter.Render(card, snapshot)
@@ -85,11 +81,16 @@ fun CardPlayer(
     snapshot: HaSnapshot,
     widthPx: Int,
     heightPx: Int,
+    densityDpi: Int,
     registry: CardRegistry,
     modifier: Modifier = Modifier,
 ) {
     val converter = registry.get(card.type) ?: return
-    val doc = rememberRemoteDocument { converter.Render(card, snapshot) }
+    val doc = rememberRemoteDocument(
+        creationDisplayInfo = RemoteCreationDisplayInfo(widthPx, heightPx, densityDpi),
+    ) {
+        converter.Render(card, snapshot)
+    }
     val document = doc.value ?: return
     RemoteDocumentPlayer(
         document = document,

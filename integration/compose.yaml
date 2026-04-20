@@ -1,0 +1,46 @@
+# Local HA instance used to capture reference screenshots.
+# One-shot usage: `scripts/capture-references.sh` brings this up, captures, tears down.
+# Long-running usage: `docker compose up -d` if you want to click around the HA UI.
+
+services:
+  homeassistant:
+    image: ghcr.io/home-assistant/home-assistant:stable
+    container_name: ha-remotecompose-ref
+    restart: "no"
+    ports:
+      # Host port is configurable so it doesn't clash with an existing HA
+      # install. Container always listens on 8123 internally.
+      # Override via `HA_HOST_PORT=8200 docker compose up` or integration/.env.local.
+      - "127.0.0.1:${HA_HOST_PORT:-8124}:8123"
+    volumes:
+      - ./config:/config
+    # HA serves the websocket + frontend on 8123. No secrets here — this is an
+    # ephemeral container driven by a checked-in config and (on first run) a
+    # manually-issued long-lived token. The token goes into `.env.local` which
+    # is gitignored.
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://127.0.0.1:8123 || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+      start_period: 20s
+
+  puppeteer:
+    image: ghcr.io/puppeteer/puppeteer:latest
+    container_name: ha-remotecompose-shot
+    profiles: ["capture"]   # only started when `docker compose --profile capture up`
+    depends_on:
+      homeassistant:
+        condition: service_healthy
+    network_mode: "service:homeassistant"
+    user: pptruser
+    # The puppeteer image installs `puppeteer` under /home/pptruser/node_modules.
+    # Mount scripts *under* that dir so Node's resolver walks up to it.
+    working_dir: /home/pptruser
+    volumes:
+      - ./scripts:/home/pptruser/scripts:ro
+      - ../references:/out
+    env_file:
+      - path: .env.local
+        required: false
+    command: ["node", "/home/pptruser/scripts/capture.mjs"]
