@@ -12,6 +12,7 @@ import ee.schimke.ha.rc.defaultTapActionFor
 import ee.schimke.ha.rc.formatState
 import ee.schimke.ha.rc.icons.HaIconMap
 import ee.schimke.ha.rc.parseHaAction
+import ee.schimke.ha.rc.tileIconStyleFor
 import ee.schimke.ha.rc.components.RemoteHaTile
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -43,6 +44,7 @@ class TileCardConverter : CardConverter {
             state = formatState(entity).rs,
             icon = HaIconMap.resolve(iconOverride, entity),
             accent = HaStateColor.resolve(entity).rc,
+            iconStyle = tileIconStyleFor(entity),
             tapAction = tapAction,
         )
     }
