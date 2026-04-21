@@ -11,16 +11,13 @@ import ee.schimke.ha.rc.components.HaTheme
 import ee.schimke.ha.rc.components.ProvideHaTheme
 
 /**
- * Tile-only previews. Sized to **exactly** match the reference PNG
- * pixel dimensions captured from real HA so the side-by-side
- * comparison in the gist is apples-to-apples.
+ * Tile-only previews. Canvas sizing follows the same rule as
+ * [CardPreviews] — see the "CANVAS SIZING RULE" block there. DO NOT
+ * change these dimensions without updating both files together.
  *
  * Reference PNG is 492×112 px (captured at deviceScaleFactor=2 via
- * Puppeteer). Our preview renders at density 2.625 (Robolectric
- * default), so canvas = 492/2.625 × 112/2.625 ≈ 187×43 dp.
- *
- * No chrome / no dashboard background around the card — the card
- * fills the canvas the same way HA's tight crop fills the reference.
+ * Puppeteer). Preview renders at density 2.625 (Robolectric default),
+ * so canvas = 492/2.625 × 112/2.625 ≈ 187×43 dp.
  */
 private const val TILE_WIDTH_DP = 187
 private const val TILE_HEIGHT_DP = 43
