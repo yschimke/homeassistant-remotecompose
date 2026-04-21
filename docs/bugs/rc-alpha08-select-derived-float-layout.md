@@ -1,6 +1,6 @@
 # RemoteCompose alpha08: a `RemoteFloat` derived from `RemoteBoolean.select` (or `animateRemoteFloat`) breaks `.clip()` and inner content of the surrounding layout
 
-**For filing at** https://issuetracker.google.com (androidx.compose.remote component).
+**Filed as** [b/504893436](https://issuetracker.google.com/issues/504893436) (not publicly visible).
 
 ## Summary
 

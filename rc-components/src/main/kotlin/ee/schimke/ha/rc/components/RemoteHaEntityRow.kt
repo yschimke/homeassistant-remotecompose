@@ -107,8 +107,8 @@ private val KnobSize = 16.rdp
  * to re-encode the document.
  *
  * Why this is a downgrade from the androidx-main `ClickableDemo`
- * pattern: see [docs/bugs/rc-alpha08-select-derived-float-layout.md].
- * Briefly, in alpha08 a `RemoteFloat` derived from
+ * pattern: see [docs/bugs/rc-alpha08-select-derived-float-layout.md]
+ * (filed as b/504893436). Briefly, in alpha08 a `RemoteFloat` derived from
  * `RemoteBoolean.select(1f.rf, 0f.rf)` (or any non-constant source like
  * `animateRemoteFloat`) cannot be consumed by `RemoteRowScope.weight`
  * or by `lerp(...)` inside a `Modifier.background` without breaking the
