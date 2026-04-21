@@ -1,16 +1,89 @@
-# Reference dashboard. One view per card type; each card matches a
-# @Preview fixture in `:previews`. Ordering here is the capture order —
-# the puppeteer script indexes by card position.
+# Reference dashboard. One view per card type; within each view, the
+# cards are in the order the capture script expects (cardIndex 0..N
+# in scripts/capture.mjs MANIFEST).
+#
+# Use sections-view so HA lays each card out in its natural width.
 title: RemoteCompose References
 views:
+
   - title: tile
     path: tile
     type: sections
     sections:
       - type: grid
         cards:
-          - type: tile
+          - type: tile                              # 0 — sensor (plain)
             entity: sensor.living_room
-          - type: tile
+          - type: tile                              # 1 — light on (chip)
             entity: light.kitchen
             color: amber
+          - type: tile                              # 2 — light off
+            entity: light.office_lamp
+          - type: tile                              # 3 — lock (locked)
+            entity: lock.front_door
+          - type: tile                              # 4 — cover
+            entity: cover.living_room_window
+
+  - title: button
+    path: button
+    type: sections
+    sections:
+      - type: grid
+        cards:
+          - type: button                            # 0 — light toggle
+            entity: light.kitchen
+            name: Kitchen
+            show_name: true
+          - type: button                            # 1 — switch off
+            entity: light.office_lamp
+            name: Office
+            show_name: true
+
+  - title: entity
+    path: entity
+    type: sections
+    sections:
+      - type: grid
+        cards:
+          - type: entity                            # 0
+            entity: sensor.living_room
+          - type: entity                            # 1
+            entity: light.kitchen
+
+  - title: entities
+    path: entities
+    type: sections
+    sections:
+      - type: grid
+        cards:
+          - type: entities                          # 0
+            title: Living Room
+            entities:
+              - sensor.living_room
+              - light.kitchen
+              - switch.coffee_maker
+
+  - title: glance
+    path: glance
+    type: sections
+    sections:
+      - type: grid
+        cards:
+          - type: glance                            # 0
+            title: Overview
+            entities:
+              - sensor.living_room
+              - light.kitchen
+              - lock.front_door
+
+  - title: markdown
+    path: markdown
+    type: sections
+    sections:
+      - type: grid
+        cards:
+          - type: markdown                          # 0
+            title: Notes
+            content: |-
+              Welcome home.
+              Temperature is normal.

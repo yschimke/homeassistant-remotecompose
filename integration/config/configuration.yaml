@@ -1,12 +1,10 @@
-# Minimal HA config for reference-screenshot capture. Deterministic entities
-# and a hand-written Lovelace view — no automations, no integrations, nothing
-# that talks to the outside world.
+# Minimal HA config for reference-screenshot capture. Deterministic
+# entities and a hand-written Lovelace dashboard — no automations, no
+# integrations, nothing that talks to the outside world.
 
 default_config:
 
-# Hand-rolled entity values that match the @Preview fixtures in
-# `:previews`. If you add a new card converter with a new fixture, add the
-# corresponding entity here so the reference screenshot matches.
+# ——— sensors & friends ———
 template:
   - sensor:
       - name: "Living Room"
@@ -15,15 +13,37 @@ template:
         state: "21.4"
         device_class: temperature
 
+      - name: "Office humidity"
+        unique_id: office_humidity
+        unit_of_measurement: "%"
+        state: "47"
+        device_class: humidity
+
+      - name: "Phone battery"
+        unique_id: phone_battery
+        unit_of_measurement: "%"
+        state: "62"
+        device_class: battery
+
+  - binary_sensor:
+      - name: "Front door motion"
+        unique_id: front_door_motion
+        state: "on"
+        device_class: motion
+
+# ——— input_booleans used as proxies by the `light:` + `switch:` platforms ———
 input_boolean:
   kitchen_light_proxy:
     name: Kitchen
     initial: on
+  office_lamp_proxy:
+    name: Office lamp
+    initial: off
+  coffee_maker_proxy:
+    name: Coffee maker
+    initial: on
 
-# The frontend treats input_boolean as a light-like toggle but for a `tile`
-# card with `entity: light.kitchen` we want a real `light` entity. A
-# `light:` platform with the `template` integration keeps everything
-# deterministic.
+# ——— real light / switch entities ———
 light:
   - platform: template
     lights:
@@ -32,17 +52,42 @@ light:
         value_template: "{{ states('input_boolean.kitchen_light_proxy') }}"
         turn_on:
           service: input_boolean.turn_on
-          target:
-            entity_id: input_boolean.kitchen_light_proxy
+          target: { entity_id: input_boolean.kitchen_light_proxy }
         turn_off:
           service: input_boolean.turn_off
-          target:
-            entity_id: input_boolean.kitchen_light_proxy
+          target: { entity_id: input_boolean.kitchen_light_proxy }
+      office_lamp:
+        friendly_name: Office lamp
+        value_template: "{{ states('input_boolean.office_lamp_proxy') }}"
+        turn_on:
+          service: input_boolean.turn_on
+          target: { entity_id: input_boolean.office_lamp_proxy }
+        turn_off:
+          service: input_boolean.turn_off
+          target: { entity_id: input_boolean.office_lamp_proxy }
+
+switch:
+  - platform: template
+    switches:
+      coffee_maker:
+        friendly_name: Coffee maker
+        value_template: "{{ states('input_boolean.coffee_maker_proxy') }}"
+        turn_on:
+          service: input_boolean.turn_on
+          target: { entity_id: input_boolean.coffee_maker_proxy }
+        turn_off:
+          service: input_boolean.turn_off
+          target: { entity_id: input_boolean.coffee_maker_proxy }
+
+# ——— Demo cover + lock via the `demo` platform entities ———
+# HA's `demo` integration exposes `cover.living_room_window`,
+# `lock.front_door`, etc. We enable it to get realistic multi-state
+# entities without writing Python.
+demo:
 
 lovelace:
   mode: yaml
   dashboards: {}
 
-# Loaded as the default dashboard.
 frontend:
   themes: !include_dir_merge_named themes

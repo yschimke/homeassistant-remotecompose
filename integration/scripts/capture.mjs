@@ -1,11 +1,15 @@
-// Reference capture: given a running HA + long-lived token, open each
-// view of the reference dashboard twice (light + dark) and crop each
-// card's bounding box into references/<card-type>/<name>_{light,dark}.png.
+// Reference capture: given a running HA + long-lived token, walk each
+// view of the reference dashboard and crop each card's bounding box
+// into references/<card-type>/<name>_{light,dark}.png.
 //
 // HA's Lovelace lives several shadow roots deep, so we use a manual
-// shadow-piercing traversal rather than plain CSS selectors. Dark mode
-// is set via `Emulation.setEmulatedMedia` — HA's "default" theme
+// shadow-piercing traversal rather than plain CSS selectors. Dark
+// mode is set via `Emulation.setEmulatedMedia` — HA's default theme
 // honours `prefers-color-scheme`.
+//
+// Extend MANIFEST below to add new card references. Each entry:
+//   { view, cardIndex, file }
+// `file` gets the `_light` / `_dark` theme suffix appended at capture.
 
 import puppeteer from "puppeteer";
 import { mkdir, writeFile } from "node:fs/promises";
@@ -20,14 +24,25 @@ if (!TOKEN) {
   process.exit(2);
 }
 
-/**
- * One entry per card crop. `view` / `cardIndex` pin the location in the
- * reference dashboard; `file` is the base name (the `_light`/`_dark`
- * suffix is appended per theme at capture time).
- */
+/** One entry per card crop. */
 const MANIFEST = [
   { view: "tile", cardIndex: 0, file: "tile/temperature_sensor" },
   { view: "tile", cardIndex: 1, file: "tile/light_on" },
+  { view: "tile", cardIndex: 2, file: "tile/light_off" },
+  { view: "tile", cardIndex: 3, file: "tile/lock_locked" },
+  { view: "tile", cardIndex: 4, file: "tile/cover" },
+
+  { view: "button", cardIndex: 0, file: "button/light_on" },
+  { view: "button", cardIndex: 1, file: "button/light_off" },
+
+  { view: "entity", cardIndex: 0, file: "entity/temperature_sensor" },
+  { view: "entity", cardIndex: 1, file: "entity/light_on" },
+
+  { view: "entities", cardIndex: 0, file: "entities/living_room" },
+
+  { view: "glance", cardIndex: 0, file: "glance/overview" },
+
+  { view: "markdown", cardIndex: 0, file: "markdown/notes" },
 ];
 
 const deepQueryAllFn = `
@@ -54,9 +69,9 @@ const browser = await puppeteer.launch({
 
 try {
   const page = await browser.newPage();
-  await page.setViewport({ width: 800, height: 1200, deviceScaleFactor: 2 });
+  await page.setViewport({ width: 800, height: 1600, deviceScaleFactor: 2 });
 
-  // Seed the LL token so the frontend skips the login wall.
+  // Seed the long-lived token so the frontend skips the login wall.
   await page.goto(BASE, { waitUntil: "domcontentloaded" });
   await page.evaluate((token) => {
     localStorage.setItem(
@@ -73,13 +88,16 @@ try {
     );
   }, TOKEN);
 
+  let wrote = 0;
+  let failed = 0;
   for (const theme of ["light", "dark"]) {
     console.log(`== theme: ${theme} ==`);
     await page.emulateMediaFeatures([
       { name: "prefers-color-scheme", value: theme },
     ]);
 
-    const seenViews = new Set();
+    // Cards of a given view get navigated once; we reuse the page.
+    const seenViews = new Map(); // view -> card bounding boxes
     for (const entry of MANIFEST) {
       if (!seenViews.has(entry.view)) {
         console.log(`-> navigating to view=${entry.view}`);
@@ -87,20 +105,24 @@ try {
           waitUntil: "networkidle2",
         });
 
-        await page.waitForFunction(
-          `(() => { ${deepQueryAllFn} return deepQueryAll('hui-card').length > 0 || deepQueryAll('hui-tile-card').length > 0; })()`,
-          { timeout: 30_000 },
-        );
+        try {
+          await page.waitForFunction(
+            `(() => { ${deepQueryAllFn} return deepQueryAll('hui-card').length > 0; })()`,
+            { timeout: 30_000 },
+          );
+        } catch (e) {
+          console.error(`view '${entry.view}' never produced hui-card`);
+          seenViews.set(entry.view, []);
+          continue;
+        }
         await new Promise((r) => setTimeout(r, 1200));
-        seenViews.add(entry.view);
+        seenViews.set(entry.view, true);
       }
 
       const box = await page.evaluate(
         `(() => {
           ${deepQueryAllFn}
-          const cards = deepQueryAll('hui-card');
-          const cardsOrTiles = cards.length ? cards : deepQueryAll('hui-tile-card');
-          const el = cardsOrTiles[${entry.cardIndex}];
+          const el = deepQueryAll('hui-card')[${entry.cardIndex}];
           if (!el) return null;
           const r = el.getBoundingClientRect();
           return { x: r.x, y: r.y, width: r.width, height: r.height };
@@ -109,8 +131,9 @@ try {
 
       if (!box || box.width === 0) {
         console.error(
-          `no visible card at index ${entry.cardIndex} on view '${entry.view}'`,
+          `no card at index ${entry.cardIndex} in view '${entry.view}'`,
         );
+        failed++;
         continue;
       }
 
@@ -128,8 +151,10 @@ try {
       console.log(
         `wrote ${outPath} (${Math.ceil(box.width)}x${Math.ceil(box.height)})`,
       );
+      wrote++;
     }
   }
+  console.log(`\n== summary: wrote=${wrote} failed=${failed} ==`);
 } finally {
   await browser.close();
 }
