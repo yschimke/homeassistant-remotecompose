@@ -6,64 +6,57 @@ import androidx.compose.remote.creation.compose.layout.RemoteBox
 import androidx.compose.remote.creation.compose.layout.RemoteColumn
 import androidx.compose.remote.creation.compose.layout.RemoteComposable
 import androidx.compose.remote.creation.compose.layout.RemoteFlowRow
-import androidx.compose.remote.creation.compose.layout.RemoteRow
 import androidx.compose.remote.creation.compose.layout.RemoteText
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.background
 import androidx.compose.remote.creation.compose.modifier.border
 import androidx.compose.remote.creation.compose.modifier.clickable
 import androidx.compose.remote.creation.compose.modifier.clip
+import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.modifier.size
 import androidx.compose.remote.creation.compose.shapes.RemoteRoundedCornerShape
 import androidx.compose.remote.creation.compose.state.RemoteColor
-import androidx.compose.remote.creation.compose.state.RemoteString
 import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
-import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.remote.creation.compose.state.rsp
 import androidx.compose.remote.creation.compose.text.RemoteTextStyle
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.wear.compose.remote.material3.RemoteIcon
 
 /**
- * HA `glance` card — a title header over a flow-row of compact entity
- * cells (icon + state or name). Matches `hui-glance-card.ts` visually.
+ * HA `glance` card — title header over a flow-row of compact entity
+ * cells. Matches `hui-glance-card.ts` visually.
  */
 @Composable
 @RemoteComposable
-fun RemoteHaGlance(
-    title: RemoteString? = null,
-    modifier: RemoteModifier = RemoteModifier,
-    content: @Composable @RemoteComposable () -> Unit,
-) {
+fun RemoteHaGlance(data: HaGlanceData, modifier: RemoteModifier = RemoteModifier) {
     val theme = haTheme()
     RemoteBox(
         modifier = modifier
+            .fillMaxWidth()
             .clip(RemoteRoundedCornerShape(12.rdp))
             .background(theme.cardBackground.rc)
             .border(1.rdp, theme.divider.rc, RemoteRoundedCornerShape(12.rdp))
-            .padding(16.rdp),
+            .padding(horizontal = 12.rdp, vertical = 10.rdp),
     ) {
         RemoteColumn {
-            if (title != null) {
+            if (data.title != null) {
                 RemoteText(
-                    text = title,
+                    text = data.title,
                     color = theme.primaryText.rc,
-                    fontSize = 18.rsp,
+                    fontSize = 15.rsp,
                     fontWeight = FontWeight.Medium,
                     style = RemoteTextStyle.Default,
                 )
-                RemoteBox(modifier = RemoteModifier.padding(top = 8.rdp))
+                RemoteBox(modifier = RemoteModifier.padding(top = 6.rdp))
             }
             RemoteFlowRow(
-                horizontalArrangement = RemoteArrangement.spacedBy(8.rdp),
-                verticalArrangement = RemoteArrangement.spacedBy(8.rdp),
+                horizontalArrangement = RemoteArrangement.spacedBy(6.rdp),
+                verticalArrangement = RemoteArrangement.spacedBy(6.rdp),
             ) {
-                content()
+                data.cells.forEach { cell -> RemoteHaGlanceCell(cell) }
             }
         }
     }
@@ -72,40 +65,34 @@ fun RemoteHaGlance(
 /** One cell inside a Glance. */
 @Composable
 @RemoteComposable
-fun RemoteHaGlanceCell(
-    name: RemoteString,
-    state: RemoteString,
-    icon: ImageVector,
-    accent: RemoteColor,
-    modifier: RemoteModifier = RemoteModifier,
-    tapAction: HaAction = HaAction.None,
-) {
+fun RemoteHaGlanceCell(data: HaGlanceCellData, modifier: RemoteModifier = RemoteModifier) {
     val theme = haTheme()
-    val clickable = tapAction.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
+    val clickable = data.tapAction.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
+    val accent: RemoteColor = data.accent.isOn?.select(data.accent.activeAccent, data.accent.inactiveAccent)
+        ?: data.accent.activeAccent
     RemoteColumn(
-        modifier = modifier.then(clickable).padding(4.rdp),
+        modifier = modifier.then(clickable).padding(vertical = 4.rdp),
         horizontalAlignment = RemoteAlignment.CenterHorizontally,
     ) {
         RemoteIcon(
-            imageVector = icon,
-            contentDescription = name,
-            modifier = RemoteModifier.size(32.rdp),
+            imageVector = data.icon,
+            contentDescription = data.name,
+            modifier = RemoteModifier.size(28.rdp),
             tint = accent,
         )
         RemoteBox(modifier = RemoteModifier.padding(top = 4.rdp)) {
             RemoteText(
-                text = name,
+                text = data.name,
                 color = theme.primaryText.rc,
                 fontSize = 12.rsp,
                 style = RemoteTextStyle.Default,
             )
         }
         RemoteText(
-            text = state,
+            text = data.state,
             color = theme.secondaryText.rc,
             fontSize = 11.rsp,
             style = RemoteTextStyle.Default,
         )
     }
 }
-

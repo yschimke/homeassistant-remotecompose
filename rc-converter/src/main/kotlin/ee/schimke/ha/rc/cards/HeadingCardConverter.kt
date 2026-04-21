@@ -1,11 +1,12 @@
 package ee.schimke.ha.rc.cards
 
+import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.runtime.Composable
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.CardConverter
-import androidx.compose.remote.creation.compose.state.rs
+import ee.schimke.ha.rc.components.HaHeadingData
 import ee.schimke.ha.rc.components.HaHeadingStyle
 import ee.schimke.ha.rc.components.RemoteHaHeading
 import kotlinx.serialization.json.jsonPrimitive
@@ -22,6 +23,6 @@ class HeadingCardConverter : CardConverter {
             "subtitle" -> HaHeadingStyle.Subtitle
             else -> HaHeadingStyle.Title
         }
-        RemoteHaHeading(title = heading.rs, style = style)
+        RemoteHaHeading(HaHeadingData(title = heading.rs, style = style))
     }
 }

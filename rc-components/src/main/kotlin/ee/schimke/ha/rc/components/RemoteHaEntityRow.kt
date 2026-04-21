@@ -12,15 +12,11 @@ import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.modifier.size
 import androidx.compose.remote.creation.compose.state.RemoteColor
-import androidx.compose.remote.creation.compose.state.RemoteString
 import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
-import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.remote.creation.compose.state.rsp
 import androidx.compose.remote.creation.compose.text.RemoteTextStyle
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.wear.compose.remote.material3.RemoteIcon
 
 /**
@@ -30,43 +26,37 @@ import androidx.wear.compose.remote.material3.RemoteIcon
  */
 @Composable
 @RemoteComposable
-fun RemoteHaEntityRow(
-    name: RemoteString,
-    state: RemoteString,
-    icon: ImageVector,
-    accent: RemoteColor,
-    modifier: RemoteModifier = RemoteModifier,
-    tapAction: HaAction = HaAction.None,
-) {
+fun RemoteHaEntityRow(data: HaEntityRowData, modifier: RemoteModifier = RemoteModifier) {
     val theme = haTheme()
-    val clickable = tapAction.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
+    val clickable = data.tapAction.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
+    val accent: RemoteColor = data.accent.isOn?.select(data.accent.activeAccent, data.accent.inactiveAccent)
+        ?: data.accent.activeAccent
     RemoteRow(
-        modifier = modifier.then(clickable).fillMaxWidth().padding(vertical = 8.rdp),
+        modifier = modifier.then(clickable).fillMaxWidth().padding(vertical = 6.rdp),
         horizontalArrangement = RemoteArrangement.SpaceBetween,
         verticalAlignment = RemoteAlignment.CenterVertically,
     ) {
         RemoteRow(verticalAlignment = RemoteAlignment.CenterVertically) {
             RemoteIcon(
-                imageVector = icon,
-                contentDescription = name,
-                modifier = RemoteModifier.size(24.rdp),
+                imageVector = data.icon,
+                contentDescription = data.name,
+                modifier = RemoteModifier.size(20.rdp),
                 tint = accent,
             )
-            RemoteBox(modifier = RemoteModifier.padding(left = 16.rdp)) {
+            RemoteBox(modifier = RemoteModifier.padding(left = 12.rdp)) {
                 RemoteText(
-                    text = name,
+                    text = data.name,
                     color = theme.primaryText.rc,
-                    fontSize = 14.rsp,
+                    fontSize = 13.rsp,
                     style = RemoteTextStyle.Default,
                 )
             }
         }
         RemoteText(
-            text = state,
+            text = data.state,
             color = theme.secondaryText.rc,
-            fontSize = 14.rsp,
+            fontSize = 13.rsp,
             style = RemoteTextStyle.Default,
         )
     }
 }
-

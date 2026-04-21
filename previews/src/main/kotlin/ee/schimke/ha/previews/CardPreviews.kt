@@ -1,16 +1,10 @@
 package ee.schimke.ha.previews
 
-import androidx.compose.remote.creation.compose.layout.RemoteAlignment
-import androidx.compose.remote.creation.compose.layout.RemoteBox
-import androidx.compose.remote.creation.compose.modifier.RemoteModifier
-import androidx.compose.remote.creation.compose.modifier.background
-import androidx.compose.remote.creation.compose.modifier.fillMaxSize
-import androidx.compose.remote.creation.compose.modifier.padding
-import androidx.compose.remote.creation.compose.state.rc
-import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.tooling.preview.RemotePreview
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.ProvideCardRegistry
 import ee.schimke.ha.rc.RenderChild
 import ee.schimke.ha.rc.androidXExperimental
@@ -19,52 +13,42 @@ import ee.schimke.ha.rc.components.HaTheme
 import ee.schimke.ha.rc.components.ProvideHaTheme
 
 /**
- * Fixture-driven previews per card type, doubled into `_Light` / `_Dark`
- * variants. Each `@Preview` sets up a `CardConfig` matching HA's YAML
- * shape and renders through the default registry — so we exercise the
- * full dispatch path (including child cards in stacks).
+ * Previews for every card type, sized precisely to the card's natural
+ * content. No chrome / no dashboard background around the card — the
+ * PNG contains the card alone, same as the committed HA reference
+ * captures.
  *
- * Each preview wraps the card in a dashboard-ish surface so the card's
- * actual bounds are obvious vs. the empty canvas around it. Canvas
- * sizes are fitted to each card's natural content (+ 8 dp of chrome
- * padding) — if a card grows or shrinks the canvas must follow.
- *
- * TODO(theme): when `androidx.compose.remote.core.operations.ColorTheme`
- * gets a public creation-side DSL, collapse both variants into a single
- * `.rc` document whose player switches palette at playback. See
- * [ee.schimke.ha.rc.components.HaTheme].
+ * State-variant cards (light on/off/unavailable, cover closed/open/
+ * opening, lock locked/unlocked/locking) fan out via
+ * [PreviewParameterProvider] so one function produces one PNG per
+ * state.
  */
+
 @Composable
-private fun CardFrame(theme: HaTheme, content: @Composable () -> Unit) {
+private fun CardHost(theme: HaTheme, content: @Composable () -> Unit) {
     RemotePreview(profile = androidXExperimental) {
         ProvideCardRegistry(defaultRegistry()) {
-            ProvideHaTheme(theme) {
-                RemoteBox(
-                    modifier = RemoteModifier
-                        .fillMaxSize()
-                        .background(theme.dashboardBackground.rc)
-                        .padding(8.rdp),
-                    contentAlignment = RemoteAlignment.TopStart,
-                ) {
-                    content()
-                }
-            }
+            ProvideHaTheme(theme) { content() }
         }
     }
 }
 
 // ——— button ———
 
-@Preview(name = "button — toggle light (light)", showBackground = true, widthDp = 136, heightDp = 152)
+@Preview(name = "button (light)", showBackground = false, widthDp = 136, heightDp = 108)
 @Composable
-fun Button_LightToggle_Light() = CardFrame(HaTheme.Light) {
-    RenderChild(buttonCard(), Fixtures.kitchenLight)
+fun Button_Light(
+    @PreviewParameter(KitchenLightStatesProvider::class) param: Pair<String, HaSnapshot>,
+) = CardHost(HaTheme.Light) {
+    RenderChild(buttonCard(), param.second)
 }
 
-@Preview(name = "button — toggle light (dark)", showBackground = true, widthDp = 136, heightDp = 152)
+@Preview(name = "button (dark)", showBackground = false, widthDp = 136, heightDp = 108)
 @Composable
-fun Button_LightToggle_Dark() = CardFrame(HaTheme.Dark) {
-    RenderChild(buttonCard(), Fixtures.kitchenLight)
+fun Button_Dark(
+    @PreviewParameter(KitchenLightStatesProvider::class) param: Pair<String, HaSnapshot>,
+) = CardHost(HaTheme.Dark) {
+    RenderChild(buttonCard(), param.second)
 }
 
 private fun buttonCard() = card(
@@ -73,15 +57,15 @@ private fun buttonCard() = card(
 
 // ——— entity ———
 
-@Preview(name = "entity — temperature (light)", showBackground = true, widthDp = 320, heightDp = 64)
+@Preview(name = "entity (light)", showBackground = false, widthDp = 328, heightDp = 44)
 @Composable
-fun Entity_TemperatureSensor_Light() = CardFrame(HaTheme.Light) {
+fun Entity_Light() = CardHost(HaTheme.Light) {
     RenderChild(entityCard(), Fixtures.livingRoomTemp)
 }
 
-@Preview(name = "entity — temperature (dark)", showBackground = true, widthDp = 320, heightDp = 64)
+@Preview(name = "entity (dark)", showBackground = false, widthDp = 328, heightDp = 44)
 @Composable
-fun Entity_TemperatureSensor_Dark() = CardFrame(HaTheme.Dark) {
+fun Entity_Dark() = CardHost(HaTheme.Dark) {
     RenderChild(entityCard(), Fixtures.livingRoomTemp)
 }
 
@@ -89,15 +73,15 @@ private fun entityCard() = card("""{"type":"entity","entity":"sensor.living_room
 
 // ——— entities ———
 
-@Preview(name = "entities — mixed list (light)", showBackground = true, widthDp = 360, heightDp = 184)
+@Preview(name = "entities (light)", showBackground = false, widthDp = 328, heightDp = 140)
 @Composable
-fun Entities_MixedList_Light() = CardFrame(HaTheme.Light) {
+fun Entities_Light() = CardHost(HaTheme.Light) {
     RenderChild(entitiesCard(), Fixtures.mixed)
 }
 
-@Preview(name = "entities — mixed list (dark)", showBackground = true, widthDp = 360, heightDp = 184)
+@Preview(name = "entities (dark)", showBackground = false, widthDp = 328, heightDp = 140)
 @Composable
-fun Entities_MixedList_Dark() = CardFrame(HaTheme.Dark) {
+fun Entities_Dark() = CardHost(HaTheme.Dark) {
     RenderChild(entitiesCard(), Fixtures.mixed)
 }
 
@@ -107,15 +91,15 @@ private fun entitiesCard() = card(
 
 // ——— glance ———
 
-@Preview(name = "glance — mixed (light)", showBackground = true, widthDp = 232, heightDp = 168)
+@Preview(name = "glance (light)", showBackground = false, widthDp = 232, heightDp = 140)
 @Composable
-fun Glance_Mixed_Light() = CardFrame(HaTheme.Light) {
+fun Glance_Light() = CardHost(HaTheme.Light) {
     RenderChild(glanceCard(), Fixtures.mixed)
 }
 
-@Preview(name = "glance — mixed (dark)", showBackground = true, widthDp = 232, heightDp = 168)
+@Preview(name = "glance (dark)", showBackground = false, widthDp = 232, heightDp = 140)
 @Composable
-fun Glance_Mixed_Dark() = CardFrame(HaTheme.Dark) {
+fun Glance_Dark() = CardHost(HaTheme.Dark) {
     RenderChild(glanceCard(), Fixtures.mixed)
 }
 
@@ -125,15 +109,15 @@ private fun glanceCard() = card(
 
 // ——— heading ———
 
-@Preview(name = "heading — title (light)", showBackground = true, widthDp = 200, heightDp = 56)
+@Preview(name = "heading (light)", showBackground = false, widthDp = 200, heightDp = 44)
 @Composable
-fun Heading_Title_Light() = CardFrame(HaTheme.Light) {
+fun Heading_Light() = CardHost(HaTheme.Light) {
     RenderChild(headingCard(), Fixtures.mixed)
 }
 
-@Preview(name = "heading — title (dark)", showBackground = true, widthDp = 200, heightDp = 56)
+@Preview(name = "heading (dark)", showBackground = false, widthDp = 200, heightDp = 44)
 @Composable
-fun Heading_Title_Dark() = CardFrame(HaTheme.Dark) {
+fun Heading_Dark() = CardHost(HaTheme.Dark) {
     RenderChild(headingCard(), Fixtures.mixed)
 }
 
@@ -141,15 +125,15 @@ private fun headingCard() = card("""{"type":"heading","heading":"Downstairs"}"""
 
 // ——— markdown ———
 
-@Preview(name = "markdown — paragraph (light)", showBackground = true, widthDp = 320, heightDp = 128)
+@Preview(name = "markdown (light)", showBackground = false, widthDp = 328, heightDp = 96)
 @Composable
-fun Markdown_Paragraph_Light() = CardFrame(HaTheme.Light) {
+fun Markdown_Light() = CardHost(HaTheme.Light) {
     RenderChild(markdownCard(), Fixtures.mixed)
 }
 
-@Preview(name = "markdown — paragraph (dark)", showBackground = true, widthDp = 320, heightDp = 128)
+@Preview(name = "markdown (dark)", showBackground = false, widthDp = 328, heightDp = 96)
 @Composable
-fun Markdown_Paragraph_Dark() = CardFrame(HaTheme.Dark) {
+fun Markdown_Dark() = CardHost(HaTheme.Dark) {
     RenderChild(markdownCard(), Fixtures.mixed)
 }
 
@@ -159,15 +143,15 @@ private fun markdownCard() = card(
 
 // ——— vertical-stack ———
 
-@Preview(name = "vertical-stack (light)", showBackground = true, widthDp = 232, heightDp = 168)
+@Preview(name = "vertical-stack (light)", showBackground = false, widthDp = 232, heightDp = 132)
 @Composable
-fun VerticalStack_TwoTiles_Light() = CardFrame(HaTheme.Light) {
+fun VerticalStack_Light() = CardHost(HaTheme.Light) {
     RenderChild(verticalStackCard(), Fixtures.mixed)
 }
 
-@Preview(name = "vertical-stack (dark)", showBackground = true, widthDp = 232, heightDp = 168)
+@Preview(name = "vertical-stack (dark)", showBackground = false, widthDp = 232, heightDp = 132)
 @Composable
-fun VerticalStack_TwoTiles_Dark() = CardFrame(HaTheme.Dark) {
+fun VerticalStack_Dark() = CardHost(HaTheme.Dark) {
     RenderChild(verticalStackCard(), Fixtures.mixed)
 }
 
@@ -180,15 +164,15 @@ private fun verticalStackCard() = card(
 
 // ——— horizontal-stack ———
 
-@Preview(name = "horizontal-stack (light)", showBackground = true, widthDp = 300, heightDp = 168)
+@Preview(name = "horizontal-stack (light)", showBackground = false, widthDp = 320, heightDp = 108)
 @Composable
-fun HorizontalStack_TwoButtons_Light() = CardFrame(HaTheme.Light) {
+fun HorizontalStack_Light() = CardHost(HaTheme.Light) {
     RenderChild(horizontalStackCard(), Fixtures.mixed)
 }
 
-@Preview(name = "horizontal-stack (dark)", showBackground = true, widthDp = 300, heightDp = 168)
+@Preview(name = "horizontal-stack (dark)", showBackground = false, widthDp = 320, heightDp = 108)
 @Composable
-fun HorizontalStack_TwoButtons_Dark() = CardFrame(HaTheme.Dark) {
+fun HorizontalStack_Dark() = CardHost(HaTheme.Dark) {
     RenderChild(horizontalStackCard(), Fixtures.mixed)
 }
 
@@ -201,15 +185,15 @@ private fun horizontalStackCard() = card(
 
 // ——— grid ———
 
-@Preview(name = "grid — 4 buttons (light)", showBackground = true, widthDp = 300, heightDp = 300)
+@Preview(name = "grid (light)", showBackground = false, widthDp = 300, heightDp = 240)
 @Composable
-fun Grid_FourButtons_Light() = CardFrame(HaTheme.Light) {
+fun Grid_Light() = CardHost(HaTheme.Light) {
     RenderChild(gridCard(), Fixtures.mixed)
 }
 
-@Preview(name = "grid — 4 buttons (dark)", showBackground = true, widthDp = 300, heightDp = 300)
+@Preview(name = "grid (dark)", showBackground = false, widthDp = 300, heightDp = 240)
 @Composable
-fun Grid_FourButtons_Dark() = CardFrame(HaTheme.Dark) {
+fun Grid_Dark() = CardHost(HaTheme.Dark) {
     RenderChild(gridCard(), Fixtures.mixed)
 }
 
@@ -224,16 +208,42 @@ private fun gridCard() = card(
 
 // ——— unsupported placeholder ———
 
-@Preview(name = "unsupported — gauge (light)", showBackground = true, widthDp = 160, heightDp = 128)
+@Preview(name = "unsupported (light)", showBackground = false, widthDp = 200, heightDp = 108)
 @Composable
-fun Unsupported_Gauge_Light() = CardFrame(HaTheme.Light) {
+fun Unsupported_Light() = CardHost(HaTheme.Light) {
     RenderChild(unsupportedCard(), Fixtures.mixed)
 }
 
-@Preview(name = "unsupported — gauge (dark)", showBackground = true, widthDp = 160, heightDp = 128)
+@Preview(name = "unsupported (dark)", showBackground = false, widthDp = 200, heightDp = 108)
 @Composable
-fun Unsupported_Gauge_Dark() = CardFrame(HaTheme.Dark) {
+fun Unsupported_Dark() = CardHost(HaTheme.Dark) {
     RenderChild(unsupportedCard(), Fixtures.mixed)
 }
 
 private fun unsupportedCard() = card("""{"type":"gauge","entity":"sensor.living_room"}""")
+
+// ——— tile, state variants via PreviewParameter ———
+
+@Preview(name = "tile light (light)", showBackground = false, widthDp = 328, heightDp = 56)
+@Composable
+fun Tile_Light_States(
+    @PreviewParameter(KitchenLightStatesProvider::class) param: Pair<String, HaSnapshot>,
+) = CardHost(HaTheme.Light) {
+    RenderChild(card("""{"type":"tile","entity":"light.kitchen"}"""), param.second)
+}
+
+@Preview(name = "tile cover (light)", showBackground = false, widthDp = 328, heightDp = 56)
+@Composable
+fun Tile_Cover_States(
+    @PreviewParameter(GarageCoverStatesProvider::class) param: Pair<String, HaSnapshot>,
+) = CardHost(HaTheme.Light) {
+    RenderChild(card("""{"type":"tile","entity":"cover.garage"}"""), param.second)
+}
+
+@Preview(name = "tile lock (light)", showBackground = false, widthDp = 328, heightDp = 56)
+@Composable
+fun Tile_Lock_States(
+    @PreviewParameter(FrontDoorLockStatesProvider::class) param: Pair<String, HaSnapshot>,
+) = CardHost(HaTheme.Light) {
+    RenderChild(card("""{"type":"tile","entity":"lock.front_door"}"""), param.second)
+}

@@ -8,54 +8,49 @@ import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.background
 import androidx.compose.remote.creation.compose.modifier.border
 import androidx.compose.remote.creation.compose.modifier.clip
+import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.shapes.RemoteRoundedCornerShape
-import androidx.compose.remote.creation.compose.state.RemoteString
 import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
-import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.remote.creation.compose.state.rsp
 import androidx.compose.remote.creation.compose.text.RemoteTextStyle
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 
 /**
- * HA `markdown` card — we currently render plain text lines. A small subset
- * of Markdown (heading `#`, bold `**`, newlines) could be added later; for
- * now we keep it readable without re-implementing a parser.
+ * HA `markdown` card — renders plain text lines inside the card chrome.
+ * A small subset of Markdown (heading `#`, bold `**`) could be parsed
+ * later; today we keep it readable without re-implementing a parser.
  */
 @Composable
 @RemoteComposable
-fun RemoteHaMarkdown(
-    lines: List<RemoteString>,
-    title: RemoteString? = null,
-    modifier: RemoteModifier = RemoteModifier,
-) {
+fun RemoteHaMarkdown(data: HaMarkdownData, modifier: RemoteModifier = RemoteModifier) {
     val theme = haTheme()
     RemoteBox(
         modifier = modifier
+            .fillMaxWidth()
             .clip(RemoteRoundedCornerShape(12.rdp))
             .background(theme.cardBackground.rc)
             .border(1.rdp, theme.divider.rc, RemoteRoundedCornerShape(12.rdp))
-            .padding(16.rdp),
+            .padding(horizontal = 12.rdp, vertical = 10.rdp),
     ) {
         RemoteColumn {
-            if (title != null) {
+            if (data.title != null) {
                 RemoteText(
-                    text = title,
+                    text = data.title,
                     color = theme.primaryText.rc,
-                    fontSize = 18.rsp,
+                    fontSize = 15.rsp,
                     fontWeight = FontWeight.Medium,
                     style = RemoteTextStyle.Default,
                 )
-                RemoteBox(modifier = RemoteModifier.padding(top = 8.rdp))
+                RemoteBox(modifier = RemoteModifier.padding(top = 4.rdp))
             }
-            lines.forEach { line ->
+            data.lines.forEach { line ->
                 RemoteText(
                     text = line,
                     color = theme.primaryText.rc,
-                    fontSize = 14.rsp,
+                    fontSize = 13.rsp,
                     style = RemoteTextStyle.Default,
                 )
             }

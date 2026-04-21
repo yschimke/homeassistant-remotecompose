@@ -3,8 +3,10 @@ package ee.schimke.ha.rc.icons
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AcUnit
 import androidx.compose.material.icons.filled.Air
+import androidx.compose.material.icons.filled.Alarm
 import androidx.compose.material.icons.filled.Battery4Bar
 import androidx.compose.material.icons.filled.BlindsClosed
+import androidx.compose.material.icons.filled.CleaningServices
 import androidx.compose.material.icons.filled.Devices
 import androidx.compose.material.icons.filled.DoorFront
 import androidx.compose.material.icons.filled.ElectricBolt
@@ -33,107 +35,70 @@ import androidx.compose.material.icons.filled.Wifi
 import androidx.compose.material.icons.filled.Window
 import androidx.compose.ui.graphics.vector.ImageVector
 import ee.schimke.ha.model.EntityState
+import ee.schimke.ha.model.HaEntity
+import ee.schimke.ha.model.LockState
+import ee.schimke.ha.model.toTyped
 import kotlinx.serialization.json.jsonPrimitive
 
 /**
- * Map HA / MDI icon names to Compose Material icons.
- *
- * HA uses the **Material Design Icons** font (`mdi:...`) which has ~7,000
- * glyphs. Compose Material icons are **Google's Material Symbols** (~2,000
- * in `material-icons-extended`), a different family. We do not aim for
- * pixel-perfect icon parity — see the "looks like the same thing" bar in
- * project goals — but we do map common icons by meaning.
- *
- * Priority order at resolution time, matching the HA frontend:
- *   1. Explicit `icon:` on the card config (already stripped of `mdi:` prefix)
+ * Resolve the icon for an entity. Priority:
+ *   1. Explicit `icon:` on the card config
  *   2. Entity's `icon` attribute
- *   3. `device_class` default for the entity's domain
- *   4. Domain default
- *   5. Fallback `Help` question mark
+ *   3. Domain- or device-class default via [HaEntity] dispatch
+ *   4. Fallback [Icons.Filled.Help]
  */
 object HaIconMap {
 
-    /**
-     * Resolve the icon to display for an entity.
-     *
-     * @param iconOverride value of the card's `icon:` config, if any
-     * @param entity current HA state
-     * @return a Compose `ImageVector`; never null (falls back to `Help`)
-     */
     fun resolve(iconOverride: String?, entity: EntityState?): ImageVector {
         iconOverride?.let { mdi(it)?.let { v -> return v } }
-        entity?.attributes?.get("icon")?.jsonPrimitive?.content?.let { mdi(it)?.let { v -> return v } }
-
-        val domain = entity?.entityId?.substringBefore('.')
-        val deviceClass = entity?.attributes?.get("device_class")?.jsonPrimitive?.content
-        val state = entity?.state
-
-        byDeviceClass(domain, deviceClass, state)?.let { return it }
-        byDomain(domain, state)?.let { return it }
-
-        return Icons.Filled.Help
+        entity?.attributes?.get("icon")?.jsonPrimitive?.content
+            ?.let { mdi(it)?.let { v -> return v } }
+        return entity?.toTyped()?.defaultIcon() ?: Icons.Filled.Help
     }
 
-    /** `mdi:thermometer` or `thermometer` → `Icons.Filled.Thermostat`. */
+    private fun HaEntity.defaultIcon(): ImageVector = when (this) {
+        is HaEntity.Light -> Icons.Filled.Lightbulb
+        is HaEntity.Switch, is HaEntity.InputBoolean -> Icons.Filled.PowerSettingsNew
+        is HaEntity.Fan -> Icons.Filled.Air
+        is HaEntity.Siren -> Icons.Filled.Alarm
+        is HaEntity.Humidifier -> Icons.Filled.WaterDrop
+        is HaEntity.Cover -> when (deviceClass) {
+            "door", "garage" -> Icons.Filled.DoorFront
+            "window" -> Icons.Filled.Window
+            "shade", "blind", "curtain" -> Icons.Filled.BlindsClosed
+            else -> Icons.Filled.Window
+        }
+        is HaEntity.Lock -> if (state is LockState.Unlocked) Icons.Filled.LockOpen else Icons.Filled.Lock
+        is HaEntity.MediaPlayer -> Icons.Filled.Speaker
+        is HaEntity.Climate -> Icons.Filled.Thermostat
+        is HaEntity.AlarmControlPanel -> Icons.Filled.Alarm
+        is HaEntity.Vacuum -> Icons.Filled.CleaningServices
+        is HaEntity.Sensor -> when (deviceClass) {
+            "temperature" -> Icons.Filled.Thermostat
+            "humidity" -> Icons.Filled.WaterDrop
+            "battery" -> Icons.Filled.Battery4Bar
+            "power", "energy" -> Icons.Filled.ElectricBolt
+            "illuminance" -> Icons.Filled.EnergySavingsLeaf
+            else -> Icons.Filled.Devices
+        }
+        is HaEntity.BinarySensor -> when (deviceClass) {
+            "motion", "occupancy" -> Icons.Filled.SensorOccupied
+            "door" -> Icons.Filled.SensorDoor
+            "connectivity" -> Icons.Filled.Wifi
+            else -> Icons.Filled.Devices
+        }
+        is HaEntity.Person, is HaEntity.DeviceTracker -> Icons.Filled.Mood
+        is HaEntity.Weather -> Icons.Filled.Umbrella
+        is HaEntity.Other -> Icons.Filled.Help
+    }
+
+    /** `mdi:thermometer` → `Icons.Filled.Thermostat`, or null when unmapped. */
     private fun mdi(raw: String): ImageVector? {
         val key = raw.removePrefix("mdi:").removePrefix("hass:").trim().lowercase()
-        return MDI_TO_COMPOSE[key]
+        return MdiMap[key]
     }
 
-    private fun byDeviceClass(domain: String?, deviceClass: String?, state: String?): ImageVector? {
-        if (domain == null || deviceClass == null) return null
-        return when (domain) {
-            "sensor", "binary_sensor" -> when (deviceClass) {
-                "temperature" -> Icons.Filled.Thermostat
-                "humidity" -> Icons.Filled.WaterDrop
-                "battery" -> Icons.Filled.Battery4Bar
-                "motion", "occupancy" -> Icons.Filled.SensorOccupied
-                "door" -> Icons.Filled.SensorDoor
-                "power", "energy" -> Icons.Filled.ElectricBolt
-                "connectivity" -> Icons.Filled.Wifi
-                "signal_strength" -> Icons.Filled.RssFeed
-                else -> null
-            }
-            "cover" -> when (deviceClass) {
-                "door", "garage" -> Icons.Filled.DoorFront
-                "window" -> Icons.Filled.Window
-                "shade", "blind", "curtain" -> Icons.Filled.BlindsClosed
-                else -> null
-            }
-            else -> null
-        }
-    }
-
-    private fun byDomain(domain: String?, state: String?): ImageVector? = when (domain) {
-        "light" -> Icons.Filled.Lightbulb
-        "switch", "input_boolean" -> Icons.Filled.PowerSettingsNew
-        "fan" -> Icons.Filled.Air
-        "climate" -> Icons.Filled.Thermostat
-        "media_player" -> Icons.Filled.Speaker
-        "lock" -> if (state == "unlocked") Icons.Filled.LockOpen else Icons.Filled.Lock
-        "cover" -> Icons.Filled.Window
-        "weather" -> Icons.Filled.Umbrella
-        "person" -> Icons.Filled.Mood
-        "zone" -> Icons.Filled.Home
-        "automation", "script" -> Icons.Filled.PlayArrow
-        "scene" -> Icons.Filled.SettingsInputComponent
-        "sensor", "binary_sensor" -> Icons.Filled.Devices
-        "device_tracker" -> Icons.Filled.Devices
-        "input_button", "button" -> Icons.Filled.PowerSettingsNew
-        "assist_satellite" -> Icons.Filled.Mic
-        "conversation" -> Icons.Filled.Mic
-        "media_source" -> Icons.Filled.MusicNote
-        "remote" -> Icons.Filled.Tv
-        "update" -> Icons.Filled.Refresh
-        else -> null
-    }
-
-    /**
-     * Direct `mdi:<name>` → Compose mapping for the icons that appear in
-     * HA's frontend-default icon list (hui-tile-card, hui-entity-card, etc).
-     * Extend as new card converters surface more icon names.
-     */
-    private val MDI_TO_COMPOSE: Map<String, ImageVector> = mapOf(
+    private val MdiMap: Map<String, ImageVector> = mapOf(
         "thermometer" to Icons.Filled.Thermostat,
         "thermostat" to Icons.Filled.Thermostat,
         "snowflake" to Icons.Filled.AcUnit,
@@ -174,5 +139,10 @@ object HaIconMap {
         "microphone" to Icons.Filled.Mic,
         "leaf" to Icons.Filled.EnergySavingsLeaf,
         "emoticon-happy" to Icons.Filled.Mood,
+        "vacuum" to Icons.Filled.CleaningServices,
+        "broom" to Icons.Filled.CleaningServices,
+        "refresh" to Icons.Filled.Refresh,
+        "cog" to Icons.Filled.SettingsInputComponent,
+        "music-note" to Icons.Filled.MusicNote,
     )
 }

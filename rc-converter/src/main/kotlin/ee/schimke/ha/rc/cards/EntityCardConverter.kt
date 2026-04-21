@@ -9,6 +9,9 @@ import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.CardConverter
 import ee.schimke.ha.rc.HaStateColor
+import ee.schimke.ha.rc.LiveBindings
+import ee.schimke.ha.rc.components.HaEntityRowData
+import ee.schimke.ha.rc.components.HaToggleAccent
 import ee.schimke.ha.rc.components.RemoteHaEntityRow
 import ee.schimke.ha.rc.defaultTapActionFor
 import ee.schimke.ha.rc.formatState
@@ -25,15 +28,20 @@ class EntityCardConverter : CardConverter {
     override fun Render(card: CardConfig, snapshot: HaSnapshot) {
         val entityId = card.raw["entity"]?.jsonPrimitive?.content
         val entity = entityId?.let { snapshot.states[it] }
+        val tapCfg = card.raw["tap_action"]?.jsonObject
+        val tapAction = if (tapCfg != null) parseHaAction(tapCfg, entityId) else defaultTapActionFor(entityId)
         RemoteHaEntityRow(
-            name = nameFor(card, entity, entityId).rs,
-            state = formatState(entity).rs,
-            icon = HaIconMap.resolve(card.raw["icon"]?.jsonPrimitive?.content, entity),
-            accent = HaStateColor.resolve(entity).rc,
-            tapAction = run {
-                val cfg = card.raw["tap_action"]?.jsonObject
-                if (cfg != null) parseHaAction(cfg, entityId) else defaultTapActionFor(entityId)
-            },
+            HaEntityRowData(
+                name = nameFor(card, entity, entityId).rs,
+                state = LiveBindings.state(entity, formatState(entity)),
+                icon = HaIconMap.resolve(card.raw["icon"]?.jsonPrimitive?.content, entity),
+                accent = HaToggleAccent(
+                    activeAccent = HaStateColor.activeFor(entity).rc,
+                    inactiveAccent = HaStateColor.inactiveFor(entity).rc,
+                    isOn = LiveBindings.isOn(entity),
+                ),
+                tapAction = tapAction,
+            ),
         )
     }
 

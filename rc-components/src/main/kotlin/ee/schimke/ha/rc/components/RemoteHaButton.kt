@@ -10,71 +10,63 @@ import androidx.compose.remote.creation.compose.modifier.background
 import androidx.compose.remote.creation.compose.modifier.border
 import androidx.compose.remote.creation.compose.modifier.clickable
 import androidx.compose.remote.creation.compose.modifier.clip
+import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.modifier.size
+import androidx.compose.remote.creation.compose.shapes.RemoteCircleShape
 import androidx.compose.remote.creation.compose.shapes.RemoteRoundedCornerShape
 import androidx.compose.remote.creation.compose.state.RemoteColor
-import androidx.compose.remote.creation.compose.state.RemoteString
 import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rf
-import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.remote.creation.compose.state.rsp
 import androidx.compose.remote.creation.compose.text.RemoteTextStyle
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.wear.compose.remote.material3.RemoteIcon
 
 /**
- * HA `button` card — large tappable surface with a centered icon and name.
+ * HA `button` card — tappable card with a centered icon chip and name.
  * Maps to `home-assistant/frontend` `hui-button-card.ts`.
  */
 @Composable
 @RemoteComposable
-fun RemoteHaButton(
-    name: RemoteString,
-    icon: ImageVector,
-    accent: RemoteColor,
-    modifier: RemoteModifier = RemoteModifier,
-    showName: Boolean = true,
-    tapAction: HaAction = HaAction.None,
-) {
+fun RemoteHaButton(data: HaButtonData, modifier: RemoteModifier = RemoteModifier) {
     val theme = haTheme()
-    val clickable = tapAction.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
+    val clickable = data.tapAction.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
+    val accent: RemoteColor = data.accent.isOn?.select(data.accent.activeAccent, data.accent.inactiveAccent)
+        ?: data.accent.activeAccent
     RemoteBox(
         modifier = modifier
             .then(clickable)
+            .fillMaxWidth()
             .clip(RemoteRoundedCornerShape(12.rdp))
             .background(theme.cardBackground.rc)
             .border(1.rdp, theme.divider.rc, RemoteRoundedCornerShape(12.rdp))
-            .padding(16.rdp),
+            .padding(horizontal = 12.rdp, vertical = 12.rdp),
         contentAlignment = RemoteAlignment.Center,
     ) {
-        RemoteColumn(
-            horizontalAlignment = RemoteAlignment.CenterHorizontally,
-        ) {
+        RemoteColumn(horizontalAlignment = RemoteAlignment.CenterHorizontally) {
             RemoteBox(
                 modifier = RemoteModifier
-                    .size(56.rdp)
-                    .clip(RemoteRoundedCornerShape(28.rdp))
+                    .size(48.rdp)
+                    .clip(RemoteCircleShape)
                     .background(accent.copy(alpha = accent.alpha * 0.2f.rf)),
                 contentAlignment = RemoteAlignment.Center,
             ) {
                 RemoteIcon(
-                    imageVector = icon,
-                    contentDescription = name,
-                    modifier = RemoteModifier.size(32.rdp),
+                    imageVector = data.icon,
+                    contentDescription = data.name,
+                    modifier = RemoteModifier.size(28.rdp),
                     tint = accent,
                 )
             }
-            if (showName) {
-                RemoteBox(modifier = RemoteModifier.padding(top = 8.rdp)) {
+            if (data.showName) {
+                RemoteBox(modifier = RemoteModifier.padding(top = 6.rdp)) {
                     RemoteText(
-                        text = name,
+                        text = data.name,
                         color = theme.primaryText.rc,
-                        fontSize = 14.rsp,
+                        fontSize = 13.rsp,
                         fontWeight = FontWeight.Medium,
                         style = RemoteTextStyle.Default,
                     )
@@ -83,4 +75,3 @@ fun RemoteHaButton(
         }
     }
 }
-
