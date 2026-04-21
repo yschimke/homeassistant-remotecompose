@@ -24,34 +24,49 @@ done
 SRC="previews/build/compose-previews/renders"
 
 # —— Tile previews (pinned function names for the diff test) ——
-cp "$SRC/ee.schimke.ha.previews.TileCardPreviewsKt.Tile_TemperatureSensor_tile — sensor temperature.png" "$OUT/rc_tile_temperature_sensor_light.png"
-cp "$SRC/ee.schimke.ha.previews.TileCardPreviewsKt.Tile_TemperatureSensor_Dark_tile — sensor temperature (dark).png" "$OUT/rc_tile_temperature_sensor_dark.png"
-cp "$SRC/ee.schimke.ha.previews.TileCardPreviewsKt.Tile_LightOn_tile — light on.png" "$OUT/rc_tile_light_on_light.png"
-cp "$SRC/ee.schimke.ha.previews.TileCardPreviewsKt.Tile_LightOn_Dark_tile — light on (dark).png" "$OUT/rc_tile_light_on_dark.png"
+# compose-preview 0.7.5 renders as: <ClassNameKt>.<FuncName>_<slug>.png
+# (no FQN prefix, em-dashes stripped, parens removed, spaces → _).
+cp "$SRC/TileCardPreviewsKt.Tile_TemperatureSensor_tile_sensor_temperature.png" "$OUT/rc_tile_temperature_sensor_light.png"
+cp "$SRC/TileCardPreviewsKt.Tile_TemperatureSensor_Dark_tile_sensor_temperature_dark.png" "$OUT/rc_tile_temperature_sensor_dark.png"
+cp "$SRC/TileCardPreviewsKt.Tile_LightOn_tile_light_on.png" "$OUT/rc_tile_light_on_light.png"
+cp "$SRC/TileCardPreviewsKt.Tile_LightOn_Dark_tile_light_on_dark.png" "$OUT/rc_tile_light_on_dark.png"
 
 # —— @PreviewParameter state-variants (light theme only) ——
+# Returns 0 even when nothing matched so `set -e` doesn't abort the
+# whole script on a stale preview name — we'd rather stage what we have
+# and warn about the gap.
 map_param() {
-    local pattern="$1" out="$2"
-    for f in "$SRC"/$pattern; do [ -f "$f" ] && cp "$f" "$OUT/$out" && return 0; done
+    local pattern="$1" out="$2" f
+    for f in "$SRC"/$pattern; do
+        if [ -f "$f" ]; then cp "$f" "$OUT/$out"; return 0; fi
+    done
+    echo "warn: no render matched $pattern" >&2
+    return 0
 }
-map_param "*Tile_Light_States*PARAM_0*"  "rc_tile_light_states_on.png"
-map_param "*Tile_Light_States*PARAM_1*"  "rc_tile_light_states_off.png"
-map_param "*Tile_Light_States*PARAM_2*"  "rc_tile_light_states_unavailable.png"
-map_param "*Tile_Cover_States*PARAM_0*"  "rc_tile_cover_states_closed.png"
-map_param "*Tile_Cover_States*PARAM_1*"  "rc_tile_cover_states_open.png"
-map_param "*Tile_Cover_States*PARAM_2*"  "rc_tile_cover_states_opening.png"
-map_param "*Tile_Lock_States*PARAM_0*"   "rc_tile_lock_states_locked.png"
-map_param "*Tile_Lock_States*PARAM_1*"   "rc_tile_lock_states_unlocked.png"
-map_param "*Tile_Lock_States*PARAM_2*"   "rc_tile_lock_states_locking.png"
-map_param "*Button_Light_button*PARAM_0*" "rc_button_states_on_light.png"
-map_param "*Button_Light_button*PARAM_1*" "rc_button_states_off_light.png"
-map_param "*Button_Dark_button*PARAM_0*"  "rc_button_states_on_dark.png"
-map_param "*Button_Dark_button*PARAM_1*"  "rc_button_states_off_dark.png"
+# 0.7.5 inlines the state name (from the PreviewParameter provider's
+# `toString()`) into the filename instead of `PARAM_<index>`.
+map_param "*Tile_Light_States*light_on.png"          "rc_tile_light_states_on.png"
+map_param "*Tile_Light_States*light_off.png"         "rc_tile_light_states_off.png"
+map_param "*Tile_Light_States*light_unavailable.png" "rc_tile_light_states_unavailable.png"
+map_param "*Tile_Cover_States*cover_light_closed.png"  "rc_tile_cover_states_closed.png"
+map_param "*Tile_Cover_States*cover_light_open.png"    "rc_tile_cover_states_open.png"
+map_param "*Tile_Cover_States*cover_light_opening.png" "rc_tile_cover_states_opening.png"
+map_param "*Tile_Lock_States*lock_light_locked.png"   "rc_tile_lock_states_locked.png"
+map_param "*Tile_Lock_States*lock_light_unlocked.png" "rc_tile_lock_states_unlocked.png"
+map_param "*Tile_Lock_States*lock_light_locking.png"  "rc_tile_lock_states_locking.png"
+map_param "*Button_Light_button_light_on.png"  "rc_button_states_on_light.png"
+map_param "*Button_Light_button_light_off.png" "rc_button_states_off_light.png"
+map_param "*Button_Dark_button_dark_on.png"    "rc_button_states_on_dark.png"
+map_param "*Button_Dark_button_dark_off.png"   "rc_button_states_off_dark.png"
 
 # —— Non-parameter card previews ——
 map() {
-    local pattern="$1" out="$2"
-    for f in "$SRC"/$pattern; do [ -f "$f" ] && cp "$f" "$OUT/$out" && return 0; done
+    local pattern="$1" out="$2" f
+    for f in "$SRC"/$pattern; do
+        if [ -f "$f" ]; then cp "$f" "$OUT/$out"; return 0; fi
+    done
+    echo "warn: no render matched $pattern" >&2
+    return 0
 }
 map "*Entity_Light_entity*"      "rc_entity_temperature_sensor_light.png"
 map "*Entity_Dark_entity*"       "rc_entity_temperature_sensor_dark.png"
