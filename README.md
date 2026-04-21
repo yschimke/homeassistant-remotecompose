@@ -7,24 +7,35 @@ as KMP so more targets are possible as RemoteCompose publishes more klibs.
 
 ## Rendered previews
 
-Full side-by-side gallery (all card types, light + dark themes):
+Full gallery (every card type, light + dark):
 [**gist.github.com/yschimke/09c6fbeb83f71b4de3442a410010ee3f**](https://gist.github.com/yschimke/09c6fbeb83f71b4de3442a410010ee3f).
 
-Tile — HA reference on the left, RemoteCompose on the right:
+HA reference on the left, RemoteCompose on the right.
 
-**Light theme**
+### tile — light theme
 
-| | Home Assistant | RemoteCompose |
+| variant | Home Assistant | RemoteCompose |
 |---|---|---|
-| **tile** — temperature sensor | ![](https://gist.githubusercontent.com/yschimke/09c6fbeb83f71b4de3442a410010ee3f/raw/ref_tile_temperaturesensor_light.png) | ![](https://gist.githubusercontent.com/yschimke/09c6fbeb83f71b4de3442a410010ee3f/raw/rc_tile_temperaturesensor_light.png) |
-| **tile** — light on | ![](https://gist.githubusercontent.com/yschimke/09c6fbeb83f71b4de3442a410010ee3f/raw/ref_tile_lighton_light.png) | ![](https://gist.githubusercontent.com/yschimke/09c6fbeb83f71b4de3442a410010ee3f/raw/rc_tile_lighton_light.png) |
+| temperature sensor | ![](https://gist.githubusercontent.com/yschimke/09c6fbeb83f71b4de3442a410010ee3f/raw/ref_tile_temperature_sensor_light.png) | ![](https://gist.githubusercontent.com/yschimke/09c6fbeb83f71b4de3442a410010ee3f/raw/rc_tile_temperature_sensor_light.png) |
+| light on | ![](https://gist.githubusercontent.com/yschimke/09c6fbeb83f71b4de3442a410010ee3f/raw/ref_tile_light_on_light.png) | ![](https://gist.githubusercontent.com/yschimke/09c6fbeb83f71b4de3442a410010ee3f/raw/rc_tile_light_on_light.png) |
+| light off | ![](https://gist.githubusercontent.com/yschimke/09c6fbeb83f71b4de3442a410010ee3f/raw/ref_tile_light_off_light.png) | ![](https://gist.githubusercontent.com/yschimke/09c6fbeb83f71b4de3442a410010ee3f/raw/rc_tile_light_states_off.png) |
+| lock locked | ![](https://gist.githubusercontent.com/yschimke/09c6fbeb83f71b4de3442a410010ee3f/raw/ref_tile_lock_locked_light.png) | ![](https://gist.githubusercontent.com/yschimke/09c6fbeb83f71b4de3442a410010ee3f/raw/rc_tile_lock_states_locked.png) |
 
-**Dark theme**
+### tile — dark theme
 
-| | Home Assistant | RemoteCompose |
+| variant | Home Assistant | RemoteCompose |
 |---|---|---|
-| **tile** — temperature sensor | ![](https://gist.githubusercontent.com/yschimke/09c6fbeb83f71b4de3442a410010ee3f/raw/ref_tile_temperaturesensor_dark.png) | ![](https://gist.githubusercontent.com/yschimke/09c6fbeb83f71b4de3442a410010ee3f/raw/rc_tile_temperaturesensor_dark.png) |
-| **tile** — light on | ![](https://gist.githubusercontent.com/yschimke/09c6fbeb83f71b4de3442a410010ee3f/raw/ref_tile_lighton_dark.png) | ![](https://gist.githubusercontent.com/yschimke/09c6fbeb83f71b4de3442a410010ee3f/raw/rc_tile_lighton_dark.png) |
+| temperature sensor | ![](https://gist.githubusercontent.com/yschimke/09c6fbeb83f71b4de3442a410010ee3f/raw/ref_tile_temperature_sensor_dark.png) | ![](https://gist.githubusercontent.com/yschimke/09c6fbeb83f71b4de3442a410010ee3f/raw/rc_tile_temperature_sensor_dark.png) |
+| light on | ![](https://gist.githubusercontent.com/yschimke/09c6fbeb83f71b4de3442a410010ee3f/raw/ref_tile_light_on_dark.png) | ![](https://gist.githubusercontent.com/yschimke/09c6fbeb83f71b4de3442a410010ee3f/raw/rc_tile_light_on_dark.png) |
+
+### other cards (light)
+
+| card | Home Assistant | RemoteCompose |
+|---|---|---|
+| `button` | ![](https://gist.githubusercontent.com/yschimke/09c6fbeb83f71b4de3442a410010ee3f/raw/ref_button_light_on_light.png) | ![](https://gist.githubusercontent.com/yschimke/09c6fbeb83f71b4de3442a410010ee3f/raw/rc_button_states_on_light.png) |
+| `entities` | ![](https://gist.githubusercontent.com/yschimke/09c6fbeb83f71b4de3442a410010ee3f/raw/ref_entities_living_room_light.png) | ![](https://gist.githubusercontent.com/yschimke/09c6fbeb83f71b4de3442a410010ee3f/raw/rc_entities_living_room_light.png) |
+| `glance` | ![](https://gist.githubusercontent.com/yschimke/09c6fbeb83f71b4de3442a410010ee3f/raw/ref_glance_overview_light.png) | ![](https://gist.githubusercontent.com/yschimke/09c6fbeb83f71b4de3442a410010ee3f/raw/rc_glance_overview_light.png) |
+| `markdown` | ![](https://gist.githubusercontent.com/yschimke/09c6fbeb83f71b4de3442a410010ee3f/raw/ref_markdown_notes_light.png) | ![](https://gist.githubusercontent.com/yschimke/09c6fbeb83f71b4de3442a410010ee3f/raw/rc_markdown_notes_light.png) |
 
 ## Why this exists
 

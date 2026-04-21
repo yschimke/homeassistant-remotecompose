@@ -35,7 +35,7 @@ private fun CardHost(theme: HaTheme, content: @Composable () -> Unit) {
 
 // ——— button ———
 
-@Preview(name = "button (light)", showBackground = false, widthDp = 136, heightDp = 108)
+@Preview(name = "button (light)", showBackground = false, widthDp = 136, heightDp = 93)
 @Composable
 fun Button_Light(
     @PreviewParameter(KitchenLightStatesProvider::class) param: Pair<String, HaSnapshot>,
@@ -43,7 +43,7 @@ fun Button_Light(
     RenderChild(buttonCard(), param.second)
 }
 
-@Preview(name = "button (dark)", showBackground = false, widthDp = 136, heightDp = 108)
+@Preview(name = "button (dark)", showBackground = false, widthDp = 136, heightDp = 93)
 @Composable
 fun Button_Dark(
     @PreviewParameter(KitchenLightStatesProvider::class) param: Pair<String, HaSnapshot>,
@@ -57,13 +57,13 @@ private fun buttonCard() = card(
 
 // ——— entity ———
 
-@Preview(name = "entity (light)", showBackground = false, widthDp = 328, heightDp = 44)
+@Preview(name = "entity (light)", showBackground = false, widthDp = 328, heightDp = 18)
 @Composable
 fun Entity_Light() = CardHost(HaTheme.Light) {
     RenderChild(entityCard(), Fixtures.livingRoomTemp)
 }
 
-@Preview(name = "entity (dark)", showBackground = false, widthDp = 328, heightDp = 44)
+@Preview(name = "entity (dark)", showBackground = false, widthDp = 328, heightDp = 18)
 @Composable
 fun Entity_Dark() = CardHost(HaTheme.Dark) {
     RenderChild(entityCard(), Fixtures.livingRoomTemp)
@@ -73,13 +73,13 @@ private fun entityCard() = card("""{"type":"entity","entity":"sensor.living_room
 
 // ——— entities ———
 
-@Preview(name = "entities (light)", showBackground = false, widthDp = 328, heightDp = 140)
+@Preview(name = "entities (light)", showBackground = false, widthDp = 328, heightDp = 106)
 @Composable
 fun Entities_Light() = CardHost(HaTheme.Light) {
     RenderChild(entitiesCard(), Fixtures.mixed)
 }
 
-@Preview(name = "entities (dark)", showBackground = false, widthDp = 328, heightDp = 140)
+@Preview(name = "entities (dark)", showBackground = false, widthDp = 328, heightDp = 106)
 @Composable
 fun Entities_Dark() = CardHost(HaTheme.Dark) {
     RenderChild(entitiesCard(), Fixtures.mixed)
@@ -91,13 +91,13 @@ private fun entitiesCard() = card(
 
 // ——— glance ———
 
-@Preview(name = "glance (light)", showBackground = false, widthDp = 232, heightDp = 140)
+@Preview(name = "glance (light)", showBackground = false, widthDp = 232, heightDp = 111)
 @Composable
 fun Glance_Light() = CardHost(HaTheme.Light) {
     RenderChild(glanceCard(), Fixtures.mixed)
 }
 
-@Preview(name = "glance (dark)", showBackground = false, widthDp = 232, heightDp = 140)
+@Preview(name = "glance (dark)", showBackground = false, widthDp = 232, heightDp = 111)
 @Composable
 fun Glance_Dark() = CardHost(HaTheme.Dark) {
     RenderChild(glanceCard(), Fixtures.mixed)
@@ -109,13 +109,13 @@ private fun glanceCard() = card(
 
 // ——— heading ———
 
-@Preview(name = "heading (light)", showBackground = false, widthDp = 200, heightDp = 44)
+@Preview(name = "heading (light)", showBackground = false, widthDp = 112, heightDp = 21)
 @Composable
 fun Heading_Light() = CardHost(HaTheme.Light) {
     RenderChild(headingCard(), Fixtures.mixed)
 }
 
-@Preview(name = "heading (dark)", showBackground = false, widthDp = 200, heightDp = 44)
+@Preview(name = "heading (dark)", showBackground = false, widthDp = 112, heightDp = 21)
 @Composable
 fun Heading_Dark() = CardHost(HaTheme.Dark) {
     RenderChild(headingCard(), Fixtures.mixed)
@@ -125,13 +125,13 @@ private fun headingCard() = card("""{"type":"heading","heading":"Downstairs"}"""
 
 // ——— markdown ———
 
-@Preview(name = "markdown (light)", showBackground = false, widthDp = 328, heightDp = 96)
+@Preview(name = "markdown (light)", showBackground = false, widthDp = 328, heightDp = 72)
 @Composable
 fun Markdown_Light() = CardHost(HaTheme.Light) {
     RenderChild(markdownCard(), Fixtures.mixed)
 }
 
-@Preview(name = "markdown (dark)", showBackground = false, widthDp = 328, heightDp = 96)
+@Preview(name = "markdown (dark)", showBackground = false, widthDp = 328, heightDp = 72)
 @Composable
 fun Markdown_Dark() = CardHost(HaTheme.Dark) {
     RenderChild(markdownCard(), Fixtures.mixed)
@@ -143,13 +143,13 @@ private fun markdownCard() = card(
 
 // ——— vertical-stack ———
 
-@Preview(name = "vertical-stack (light)", showBackground = false, widthDp = 232, heightDp = 132)
+@Preview(name = "vertical-stack (light)", showBackground = false, widthDp = 232, heightDp = 100)
 @Composable
 fun VerticalStack_Light() = CardHost(HaTheme.Light) {
     RenderChild(verticalStackCard(), Fixtures.mixed)
 }
 
-@Preview(name = "vertical-stack (dark)", showBackground = false, widthDp = 232, heightDp = 132)
+@Preview(name = "vertical-stack (dark)", showBackground = false, widthDp = 232, heightDp = 100)
 @Composable
 fun VerticalStack_Dark() = CardHost(HaTheme.Dark) {
     RenderChild(verticalStackCard(), Fixtures.mixed)
@@ -164,13 +164,13 @@ private fun verticalStackCard() = card(
 
 // ——— horizontal-stack ———
 
-@Preview(name = "horizontal-stack (light)", showBackground = false, widthDp = 320, heightDp = 108)
+@Preview(name = "horizontal-stack (light)", showBackground = false, widthDp = 320, heightDp = 93)
 @Composable
 fun HorizontalStack_Light() = CardHost(HaTheme.Light) {
     RenderChild(horizontalStackCard(), Fixtures.mixed)
 }
 
-@Preview(name = "horizontal-stack (dark)", showBackground = false, widthDp = 320, heightDp = 108)
+@Preview(name = "horizontal-stack (dark)", showBackground = false, widthDp = 320, heightDp = 93)
 @Composable
 fun HorizontalStack_Dark() = CardHost(HaTheme.Dark) {
     RenderChild(horizontalStackCard(), Fixtures.mixed)
@@ -208,13 +208,13 @@ private fun gridCard() = card(
 
 // ——— unsupported placeholder ———
 
-@Preview(name = "unsupported (light)", showBackground = false, widthDp = 200, heightDp = 108)
+@Preview(name = "unsupported (light)", showBackground = false, widthDp = 140, heightDp = 86)
 @Composable
 fun Unsupported_Light() = CardHost(HaTheme.Light) {
     RenderChild(unsupportedCard(), Fixtures.mixed)
 }
 
-@Preview(name = "unsupported (dark)", showBackground = false, widthDp = 200, heightDp = 108)
+@Preview(name = "unsupported (dark)", showBackground = false, widthDp = 140, heightDp = 86)
 @Composable
 fun Unsupported_Dark() = CardHost(HaTheme.Dark) {
     RenderChild(unsupportedCard(), Fixtures.mixed)
