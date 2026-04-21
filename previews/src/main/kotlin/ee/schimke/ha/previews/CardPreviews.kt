@@ -13,10 +13,53 @@ import ee.schimke.ha.rc.components.HaTheme
 import ee.schimke.ha.rc.components.ProvideHaTheme
 
 /**
- * Previews for every card type, sized precisely to the card's natural
- * content. No chrome / no dashboard background around the card — the
- * PNG contains the card alone, same as the committed HA reference
- * captures.
+ * Previews for every card type.
+ *
+ * ───────────────────────────────────────────────────────────────────
+ *  CANVAS SIZING RULE — DO NOT CHANGE WITHOUT READING THIS
+ * ───────────────────────────────────────────────────────────────────
+ *
+ * Preview `widthDp` / `heightDp` are pinned to the HA reference
+ * capture dimensions (the PNGs under `references/[card]/`), converted
+ * from capture px to dp at density 2.625:
+ *
+ *   widthDp  = round(refCapturePx.width  / 2.625)
+ *   heightDp = round(refCapturePx.height / 2.625)
+ *
+ * That makes the RC render and the HA screenshot the same pixel size
+ * when viewed side-by-side in the gist — the comparison is honest.
+ *
+ * Rules:
+ *
+ *   1. Do **not** shrink the preview canvas below the reference, even
+ *      if our converter emits content smaller than HA's card. The
+ *      resulting transparent padding is a visible signal that the
+ *      widget still needs to grow to match HA. Don't hide that gap by
+ *      tightening the canvas.
+ *
+ *   2. Do **not** grow the canvas above the reference to add "safety
+ *      margin" — Robolectric renders at a known density and clipping
+ *      is already flagged by `scripts/check-preview-clipping.py`.
+ *
+ *   3. For card types with **no** HA reference (heading, grid,
+ *      vertical-stack, horizontal-stack, unsupported) the canvas is
+ *      tight to content bounds as measured by
+ *      `scripts/check-preview-waste.py`. Don't round up.
+ *
+ *   4. The reference dimensions at 2.625 density are:
+ *
+ *        tile      187 ×  43 dp     (refs in `references/tile/`)
+ *        button    187 ×  91 dp     (refs in `references/button/`)
+ *        entity    187 ×  91 dp     (refs in `references/entity/`)
+ *        entities  381 × 169 dp     (refs in `references/entities/`)
+ *        glance    381 × 149 dp     (refs in `references/glance/`)
+ *        markdown  381 × 106 dp     (refs in `references/markdown/`)
+ *
+ *   5. If the HA references are ever re-captured at a different
+ *      density, re-run `scripts/ref-sizes.py` and update these
+ *      numbers together — don't drift.
+ *
+ * ───────────────────────────────────────────────────────────────────
  *
  * State-variant cards (light on/off/unavailable, cover closed/open/
  * opening, lock locked/unlocked/locking) fan out via
@@ -35,7 +78,7 @@ private fun CardHost(theme: HaTheme, content: @Composable () -> Unit) {
 
 // ——— button ———
 
-@Preview(name = "button (light)", showBackground = false, widthDp = 136, heightDp = 93)
+@Preview(name = "button (light)", showBackground = false, widthDp = 187, heightDp = 91)
 @Composable
 fun Button_Light(
     @PreviewParameter(KitchenLightStatesProvider::class) param: Pair<String, HaSnapshot>,
@@ -43,7 +86,7 @@ fun Button_Light(
     RenderChild(buttonCard(), param.second)
 }
 
-@Preview(name = "button (dark)", showBackground = false, widthDp = 136, heightDp = 93)
+@Preview(name = "button (dark)", showBackground = false, widthDp = 187, heightDp = 91)
 @Composable
 fun Button_Dark(
     @PreviewParameter(KitchenLightStatesProvider::class) param: Pair<String, HaSnapshot>,
@@ -57,13 +100,17 @@ private fun buttonCard() = card(
 
 // ——— entity ———
 
-@Preview(name = "entity (light)", showBackground = false, widthDp = 328, heightDp = 40)
+// Our converter emits a simple row that's visibly smaller than HA's
+// tile-styled entity card; see `docs/followups/entity-card-redesign.md`.
+// The empty space in the preview canvas is that gap — don't hide it.
+
+@Preview(name = "entity (light)", showBackground = false, widthDp = 187, heightDp = 91)
 @Composable
 fun Entity_Light() = CardHost(HaTheme.Light) {
     RenderChild(entityCard(), Fixtures.livingRoomTemp)
 }
 
-@Preview(name = "entity (dark)", showBackground = false, widthDp = 328, heightDp = 40)
+@Preview(name = "entity (dark)", showBackground = false, widthDp = 187, heightDp = 91)
 @Composable
 fun Entity_Dark() = CardHost(HaTheme.Dark) {
     RenderChild(entityCard(), Fixtures.livingRoomTemp)
@@ -73,13 +120,13 @@ private fun entityCard() = card("""{"type":"entity","entity":"sensor.living_room
 
 // ——— entities ———
 
-@Preview(name = "entities (light)", showBackground = false, widthDp = 328, heightDp = 156)
+@Preview(name = "entities (light)", showBackground = false, widthDp = 381, heightDp = 169)
 @Composable
 fun Entities_Light() = CardHost(HaTheme.Light) {
     RenderChild(entitiesCard(), Fixtures.mixed)
 }
 
-@Preview(name = "entities (dark)", showBackground = false, widthDp = 328, heightDp = 156)
+@Preview(name = "entities (dark)", showBackground = false, widthDp = 381, heightDp = 169)
 @Composable
 fun Entities_Dark() = CardHost(HaTheme.Dark) {
     RenderChild(entitiesCard(), Fixtures.mixed)
@@ -96,13 +143,13 @@ private fun entitiesCard() = card(
 
 // ——— glance ———
 
-@Preview(name = "glance (light)", showBackground = false, widthDp = 260, heightDp = 120)
+@Preview(name = "glance (light)", showBackground = false, widthDp = 381, heightDp = 149)
 @Composable
 fun Glance_Light() = CardHost(HaTheme.Light) {
     RenderChild(glanceCard(), Fixtures.mixed)
 }
 
-@Preview(name = "glance (dark)", showBackground = false, widthDp = 260, heightDp = 120)
+@Preview(name = "glance (dark)", showBackground = false, widthDp = 381, heightDp = 149)
 @Composable
 fun Glance_Dark() = CardHost(HaTheme.Dark) {
     RenderChild(glanceCard(), Fixtures.mixed)
@@ -118,14 +165,15 @@ private fun glanceCard() = card(
 )
 
 // ——— heading ———
+// No HA reference. Tight-to-content, per rule 3 at top.
 
-@Preview(name = "heading (light)", showBackground = false, widthDp = 128, heightDp = 44)
+@Preview(name = "heading (light)", showBackground = false, widthDp = 108, heightDp = 18)
 @Composable
 fun Heading_Light() = CardHost(HaTheme.Light) {
     RenderChild(headingCard(), Fixtures.mixed)
 }
 
-@Preview(name = "heading (dark)", showBackground = false, widthDp = 128, heightDp = 44)
+@Preview(name = "heading (dark)", showBackground = false, widthDp = 108, heightDp = 18)
 @Composable
 fun Heading_Dark() = CardHost(HaTheme.Dark) {
     RenderChild(headingCard(), Fixtures.mixed)
@@ -135,13 +183,13 @@ private fun headingCard() = card("""{"type":"heading","heading":"Downstairs"}"""
 
 // ——— markdown ———
 
-@Preview(name = "markdown (light)", showBackground = false, widthDp = 328, heightDp = 72)
+@Preview(name = "markdown (light)", showBackground = false, widthDp = 381, heightDp = 106)
 @Composable
 fun Markdown_Light() = CardHost(HaTheme.Light) {
     RenderChild(markdownCard(), Fixtures.mixed)
 }
 
-@Preview(name = "markdown (dark)", showBackground = false, widthDp = 328, heightDp = 72)
+@Preview(name = "markdown (dark)", showBackground = false, widthDp = 381, heightDp = 106)
 @Composable
 fun Markdown_Dark() = CardHost(HaTheme.Dark) {
     RenderChild(markdownCard(), Fixtures.mixed)
@@ -173,14 +221,15 @@ private fun verticalStackCard() = card(
 )
 
 // ——— horizontal-stack ———
+// No HA reference. Tight-to-content, per rule 3 at top.
 
-@Preview(name = "horizontal-stack (light)", showBackground = false, widthDp = 320, heightDp = 93)
+@Preview(name = "horizontal-stack (light)", showBackground = false, widthDp = 152, heightDp = 93)
 @Composable
 fun HorizontalStack_Light() = CardHost(HaTheme.Light) {
     RenderChild(horizontalStackCard(), Fixtures.mixed)
 }
 
-@Preview(name = "horizontal-stack (dark)", showBackground = false, widthDp = 320, heightDp = 93)
+@Preview(name = "horizontal-stack (dark)", showBackground = false, widthDp = 152, heightDp = 93)
 @Composable
 fun HorizontalStack_Dark() = CardHost(HaTheme.Dark) {
     RenderChild(horizontalStackCard(), Fixtures.mixed)
@@ -194,14 +243,16 @@ private fun horizontalStackCard() = card(
 )
 
 // ——— grid ———
+// No HA reference. Tight-to-content, per rule 3 at top.
+// Our 4 buttons fit in one row at 312 dp.
 
-@Preview(name = "grid (light)", showBackground = false, widthDp = 320, heightDp = 320)
+@Preview(name = "grid (light)", showBackground = false, widthDp = 312, heightDp = 94)
 @Composable
 fun Grid_Light() = CardHost(HaTheme.Light) {
     RenderChild(gridCard(), Fixtures.mixed)
 }
 
-@Preview(name = "grid (dark)", showBackground = false, widthDp = 320, heightDp = 320)
+@Preview(name = "grid (dark)", showBackground = false, widthDp = 312, heightDp = 94)
 @Composable
 fun Grid_Dark() = CardHost(HaTheme.Dark) {
     RenderChild(gridCard(), Fixtures.mixed)
@@ -234,7 +285,7 @@ private fun unsupportedCard() = card("""{"type":"gauge","entity":"sensor.living_
 
 // ——— tile, state variants via PreviewParameter ———
 
-@Preview(name = "tile light (light)", showBackground = false, widthDp = 328, heightDp = 43)
+@Preview(name = "tile light (light)", showBackground = false, widthDp = 187, heightDp = 43)
 @Composable
 fun Tile_Light_States(
     @PreviewParameter(KitchenLightStatesProvider::class) param: Pair<String, HaSnapshot>,
@@ -242,7 +293,7 @@ fun Tile_Light_States(
     RenderChild(card("""{"type":"tile","entity":"light.kitchen"}"""), param.second)
 }
 
-@Preview(name = "tile cover (light)", showBackground = false, widthDp = 328, heightDp = 43)
+@Preview(name = "tile cover (light)", showBackground = false, widthDp = 187, heightDp = 43)
 @Composable
 fun Tile_Cover_States(
     @PreviewParameter(GarageCoverStatesProvider::class) param: Pair<String, HaSnapshot>,
@@ -250,7 +301,7 @@ fun Tile_Cover_States(
     RenderChild(card("""{"type":"tile","entity":"cover.garage"}"""), param.second)
 }
 
-@Preview(name = "tile lock (light)", showBackground = false, widthDp = 328, heightDp = 43)
+@Preview(name = "tile lock (light)", showBackground = false, widthDp = 187, heightDp = 43)
 @Composable
 fun Tile_Lock_States(
     @PreviewParameter(FrontDoorLockStatesProvider::class) param: Pair<String, HaSnapshot>,
