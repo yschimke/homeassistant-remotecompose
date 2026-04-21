@@ -1,5 +1,7 @@
 package ee.schimke.ha.previews
 
+import androidx.compose.remote.creation.compose.modifier.RemoteModifier
+import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.tooling.preview.RemotePreview
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
@@ -48,12 +50,13 @@ import ee.schimke.ha.rc.components.ProvideHaTheme
  *
  *   4. The reference dimensions at 2.625 density are:
  *
- *        tile      187 ×  43 dp     (refs in `references/tile/`)
- *        button    187 ×  91 dp     (refs in `references/button/`)
- *        entity    187 ×  91 dp     (refs in `references/entity/`)
- *        entities  381 × 169 dp     (refs in `references/entities/`)
- *        glance    381 × 149 dp     (refs in `references/glance/`)
- *        markdown  381 × 106 dp     (refs in `references/markdown/`)
+ *        tile       187 ×  43 dp     (refs in `references/tile/`)
+ *        button     187 ×  91 dp     (refs in `references/button/`)
+ *        entity     187 ×  91 dp     (refs in `references/entity/`)
+ *        entities   381 × 169 dp     (refs in `references/entities/`)
+ *        glance     381 × 149 dp     (refs in `references/glance/`)
+ *        markdown   381 × 106 dp     (refs in `references/markdown/`)
+ *        dashboard  381 × 411 dp     (refs in `references/dashboard/`)
  *
  *   5. If the HA references are ever re-captured at a different
  *      density, re-run `scripts/ref-sizes.py` and update these
@@ -78,12 +81,16 @@ private fun CardHost(theme: HaTheme, content: @Composable () -> Unit) {
 
 // ——— button ———
 
+// Standalone button card — `fillMaxWidth()` so the card fills the
+// preview canvas (matching HA's top-level button card). Buttons nested
+// inside a grid / horizontal-stack use the default wrap-content.
+
 @Preview(name = "button (light)", showBackground = false, widthDp = 187, heightDp = 91)
 @Composable
 fun Button_Light(
     @PreviewParameter(KitchenLightStatesProvider::class) param: Pair<String, HaSnapshot>,
 ) = CardHost(HaTheme.Light) {
-    RenderChild(buttonCard(), param.second)
+    RenderChild(buttonCard(), param.second, RemoteModifier.fillMaxWidth())
 }
 
 @Preview(name = "button (dark)", showBackground = false, widthDp = 187, heightDp = 91)
@@ -91,7 +98,7 @@ fun Button_Light(
 fun Button_Dark(
     @PreviewParameter(KitchenLightStatesProvider::class) param: Pair<String, HaSnapshot>,
 ) = CardHost(HaTheme.Dark) {
-    RenderChild(buttonCard(), param.second)
+    RenderChild(buttonCard(), param.second, RemoteModifier.fillMaxWidth())
 }
 
 private fun buttonCard() = card(
@@ -264,6 +271,39 @@ private fun gridCard() = card(
         {"type":"button","entity":"light.kitchen","name":"Office"},
         {"type":"button","entity":"sensor.living_room","name":"Temp","icon":"mdi:thermometer"},
         {"type":"button","entity":"sensor.living_room","name":"RH","icon":"mdi:water-percent"}
+    ]}""",
+)
+
+// ——— dashboard (mixed-card demo) ———
+//
+// End-to-end example: a realistic vertical stack of heading + tiles +
+// entities + glance, matching `integration/config/ui-lovelace.yaml`
+// view=dashboard and the reference under `references/dashboard/`.
+// Same canvas-sizing rule as every other referenced card.
+
+@Preview(name = "dashboard (light)", showBackground = false, widthDp = 381, heightDp = 411)
+@Composable
+fun Dashboard_Light() = CardHost(HaTheme.Light) {
+    RenderChild(dashboardCard(), Fixtures.mixed, RemoteModifier.fillMaxWidth())
+}
+
+@Preview(name = "dashboard (dark)", showBackground = false, widthDp = 381, heightDp = 411)
+@Composable
+fun Dashboard_Dark() = CardHost(HaTheme.Dark) {
+    RenderChild(dashboardCard(), Fixtures.mixed, RemoteModifier.fillMaxWidth())
+}
+
+private fun dashboardCard() = card(
+    """{"type":"vertical-stack","cards":[
+        {"type":"heading","heading":"Home"},
+        {"type":"tile","entity":"sensor.living_room"},
+        {"type":"tile","entity":"light.kitchen","color":"amber"},
+        {"type":"entities","title":"Living Room","entities":[
+            "light.kitchen","switch.coffee_maker"
+        ]},
+        {"type":"glance","title":"Overview","entities":[
+            "sensor.living_room","light.kitchen","lock.front_door"
+        ]}
     ]}""",
 )
 

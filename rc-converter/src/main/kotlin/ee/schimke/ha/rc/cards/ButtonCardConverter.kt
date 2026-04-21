@@ -1,5 +1,6 @@
 package ee.schimke.ha.rc.cards
 
+import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.runtime.Composable
@@ -31,7 +32,7 @@ class ButtonCardConverter : CardConverter {
     override val cardType: String = CardTypes.BUTTON
 
     @Composable
-    override fun Render(card: CardConfig, snapshot: HaSnapshot) {
+    override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
         val entityId = card.raw["entity"]?.jsonPrimitive?.content
         val entity = entityId?.let { snapshot.states[it] }
         val name = card.raw["name"]?.jsonPrimitive?.content
@@ -57,6 +58,6 @@ class ButtonCardConverter : CardConverter {
             tapAction = tapAction,
         )
 
-        if (isOn != null) RemoteHaToggleButton(data) else RemoteHaButton(data)
+        if (isOn != null) RemoteHaToggleButton(data, modifier) else RemoteHaButton(data, modifier)
     }
 }

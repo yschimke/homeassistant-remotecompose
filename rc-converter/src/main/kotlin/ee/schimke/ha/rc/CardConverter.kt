@@ -1,5 +1,6 @@
 package ee.schimke.ha.rc
 
+import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.runtime.Composable
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
@@ -27,9 +28,16 @@ interface CardConverter {
     /**
      * Invoked inside a RemoteCompose capture scope. Implementations emit
      * `Remote*` composables from [androidx.compose.remote.creation.compose].
+     *
+     * @param modifier applied to the card's top-level composable. Lets
+     *   the caller set `fillMaxWidth()` when the card is rendered as a
+     *   standalone dashboard tile, or leave it wrap-content when packed
+     *   into a grid / horizontal-stack. Child converters inside a stack
+     *   typically pass `RemoteModifier` (the default) so the stack's
+     *   layout decides.
      */
     @Composable
-    fun Render(card: CardConfig, snapshot: HaSnapshot)
+    fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier = RemoteModifier)
 }
 
 /**

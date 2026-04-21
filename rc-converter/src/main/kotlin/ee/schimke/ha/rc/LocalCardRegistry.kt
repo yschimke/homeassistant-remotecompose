@@ -1,5 +1,6 @@
 package ee.schimke.ha.rc
 
+import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.staticCompositionLocalOf
@@ -29,12 +30,16 @@ fun ProvideCardRegistry(registry: CardRegistry, content: @Composable () -> Unit)
  * renders.
  */
 @Composable
-fun RenderChild(card: CardConfig, snapshot: HaSnapshot) {
+fun RenderChild(
+    card: CardConfig,
+    snapshot: HaSnapshot,
+    modifier: RemoteModifier = RemoteModifier,
+) {
     val registry = LocalCardRegistry.current
     val converter = registry.get(card.type)
         ?: registry.get(UNSUPPORTED_CARD_TYPE)
         ?: return
-    converter.Render(card, snapshot)
+    converter.Render(card, snapshot, modifier)
 }
 
 internal const val UNSUPPORTED_CARD_TYPE = "__unsupported__"

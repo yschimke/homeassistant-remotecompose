@@ -86,5 +86,7 @@ map "*Grid_Light_grid*"          "rc_grid_light.png"
 map "*Grid_Dark_grid*"           "rc_grid_dark.png"
 map "*Unsupported_Light_unsupported*" "rc_unsupported_light.png"
 map "*Unsupported_Dark_unsupported*"  "rc_unsupported_dark.png"
+map "*Dashboard_Light_dashboard*" "rc_dashboard_home_light.png"
+map "*Dashboard_Dark_dashboard*"  "rc_dashboard_home_dark.png"
 
 echo "Staged $(ls "$OUT"/*.png 2>/dev/null | wc -l) PNGs in $OUT"

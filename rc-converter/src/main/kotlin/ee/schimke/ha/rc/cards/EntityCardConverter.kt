@@ -1,5 +1,6 @@
 package ee.schimke.ha.rc.cards
 
+import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.runtime.Composable
@@ -26,7 +27,7 @@ class EntityCardConverter : CardConverter {
     override val cardType: String = CardTypes.ENTITY
 
     @Composable
-    override fun Render(card: CardConfig, snapshot: HaSnapshot) {
+    override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
         val entityId = card.raw["entity"]?.jsonPrimitive?.content
         val entity = entityId?.let { snapshot.states[it] }
         val tapCfg = card.raw["tap_action"]?.jsonObject
@@ -44,6 +45,7 @@ class EntityCardConverter : CardConverter {
                 ),
                 tapAction = tapAction,
             ),
+            modifier = modifier,
         )
     }
 

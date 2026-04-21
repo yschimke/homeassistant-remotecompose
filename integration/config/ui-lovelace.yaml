@@ -87,3 +87,33 @@ views:
             content: |-
               Welcome home.
               Temperature is normal.
+
+  # A realistic mixed dashboard — heading + tiles + entities + glance
+  # stacked vertically, so the reference capture shows the end-to-end
+  # experience and not just one card in isolation.
+  - title: dashboard
+    path: dashboard
+    type: sections
+    sections:
+      - type: grid
+        cards:
+          - type: vertical-stack                    # 0 — whole view
+            cards:
+              - type: heading
+                heading: Home
+              - type: tile
+                entity: sensor.living_room
+              - type: tile
+                entity: light.kitchen
+                color: amber
+              - type: entities
+                title: Living Room
+                entities:
+                  - light.kitchen
+                  - switch.coffee_maker
+              - type: glance
+                title: Overview
+                entities:
+                  - sensor.living_room
+                  - light.kitchen
+                  - lock.front_door
