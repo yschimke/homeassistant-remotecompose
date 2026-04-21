@@ -73,38 +73,48 @@ private fun entityCard() = card("""{"type":"entity","entity":"sensor.living_room
 
 // ——— entities ———
 
-@Preview(name = "entities (light)", showBackground = false, widthDp = 328, heightDp = 106)
+@Preview(name = "entities (light)", showBackground = false, widthDp = 328, heightDp = 156)
 @Composable
 fun Entities_Light() = CardHost(HaTheme.Light) {
     RenderChild(entitiesCard(), Fixtures.mixed)
 }
 
-@Preview(name = "entities (dark)", showBackground = false, widthDp = 328, heightDp = 106)
+@Preview(name = "entities (dark)", showBackground = false, widthDp = 328, heightDp = 156)
 @Composable
 fun Entities_Dark() = CardHost(HaTheme.Dark) {
     RenderChild(entitiesCard(), Fixtures.mixed)
 }
 
+// Matches `integration/config/ui-lovelace.yaml` view=entities.
 private fun entitiesCard() = card(
-    """{"type":"entities","title":"Living Room","entities":["sensor.living_room","light.kitchen"]}""",
+    """{"type":"entities","title":"Living Room","entities":[
+        "sensor.living_room",
+        "light.kitchen",
+        "switch.coffee_maker"
+    ]}""",
 )
 
 // ——— glance ———
 
-@Preview(name = "glance (light)", showBackground = false, widthDp = 232, heightDp = 111)
+@Preview(name = "glance (light)", showBackground = false, widthDp = 260, heightDp = 120)
 @Composable
 fun Glance_Light() = CardHost(HaTheme.Light) {
     RenderChild(glanceCard(), Fixtures.mixed)
 }
 
-@Preview(name = "glance (dark)", showBackground = false, widthDp = 232, heightDp = 111)
+@Preview(name = "glance (dark)", showBackground = false, widthDp = 260, heightDp = 120)
 @Composable
 fun Glance_Dark() = CardHost(HaTheme.Dark) {
     RenderChild(glanceCard(), Fixtures.mixed)
 }
 
+// Matches `integration/config/ui-lovelace.yaml` view=glance.
 private fun glanceCard() = card(
-    """{"type":"glance","title":"Overview","entities":["sensor.living_room","light.kitchen"]}""",
+    """{"type":"glance","title":"Overview","entities":[
+        "sensor.living_room",
+        "light.kitchen",
+        "lock.front_door"
+    ]}""",
 )
 
 // ——— heading ———

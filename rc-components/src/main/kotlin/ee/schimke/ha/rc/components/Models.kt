@@ -22,11 +22,17 @@ import androidx.compose.ui.graphics.vector.ImageVector
  * can flip the accent without re-encoding the document. For
  * non-toggleable entities (sensors, etc.) set [isOn] = null and the
  * activeAccent is used unconditionally.
+ *
+ * [initiallyOn] is the boolean value at authoring time — named
+ * `RemoteBoolean`s don't carry a `constantValueOrNull`, so the
+ * composable needs this separately to seed an in-document
+ * `MutableRemoteBoolean` for the optimistic-click pattern.
  */
 data class HaToggleAccent(
     val activeAccent: RemoteColor,
     val inactiveAccent: RemoteColor,
     val isOn: RemoteBoolean? = null,
+    val initiallyOn: Boolean = false,
 )
 
 /** HA tile card model. */

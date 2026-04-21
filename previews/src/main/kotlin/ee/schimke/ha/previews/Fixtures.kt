@@ -27,7 +27,9 @@ fun state(
 fun snapshot(vararg states: Pair<String, EntityState>): HaSnapshot =
     HaSnapshot(states = states.toMap())
 
-/** A small bank of fixture snapshots used across previews. */
+/** Fixture snapshots used across previews. Mirrors HA's ui-lovelace.yaml
+ * so RC renderings can be diffed apples-to-apples against the committed
+ * reference captures. */
 object Fixtures {
     val livingRoomTemp = snapshot(
         state("sensor.living_room", "21.4",
@@ -43,7 +45,9 @@ object Fixtures {
             mapOf("friendly_name" to "Kitchen", "brightness" to "200")),
     )
 
-    /** Combined snapshot — entities/glance/stack previews mix these. */
+    /** Combined snapshot matching `integration/config/ui-lovelace.yaml` —
+     * sensor + light + switch + lock + cover so entities / glance / stacks
+     * have the same data HA sees. */
     val mixed = snapshot(
         state("sensor.living_room", "21.4",
             mapOf(
@@ -53,5 +57,13 @@ object Fixtures {
             )),
         state("light.kitchen", "on",
             mapOf("friendly_name" to "Kitchen", "brightness" to "200")),
+        state("light.office_lamp", "off",
+            mapOf("friendly_name" to "Office lamp")),
+        state("switch.coffee_maker", "on",
+            mapOf("friendly_name" to "Coffee maker")),
+        state("lock.front_door", "locked",
+            mapOf("friendly_name" to "Front door")),
+        state("cover.living_room_window", "open",
+            mapOf("friendly_name" to "Living Room Window", "device_class" to "window")),
     )
 }
