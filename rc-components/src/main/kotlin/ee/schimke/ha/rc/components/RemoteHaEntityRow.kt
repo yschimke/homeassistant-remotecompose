@@ -17,6 +17,7 @@ import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rsp
 import androidx.compose.remote.creation.compose.text.RemoteTextStyle
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.wear.compose.remote.material3.RemoteIcon
 
 /**
@@ -49,6 +50,8 @@ fun RemoteHaEntityRow(data: HaEntityRowData, modifier: RemoteModifier = RemoteMo
                     color = theme.primaryText.rc,
                     fontSize = 13.rsp,
                     style = RemoteTextStyle.Default,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                 )
             }
         }
@@ -57,6 +60,8 @@ fun RemoteHaEntityRow(data: HaEntityRowData, modifier: RemoteModifier = RemoteMo
             color = theme.secondaryText.rc,
             fontSize = 13.rsp,
             style = RemoteTextStyle.Default,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
         )
     }
 }

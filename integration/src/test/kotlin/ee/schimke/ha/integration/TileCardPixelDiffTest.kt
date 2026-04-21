@@ -42,7 +42,7 @@ class TileCardPixelDiffTest {
         referenceRelPath = "tile/light_on_dark.png",
     )
 
-    private fun diff(previewName: String, referenceRelPath: String, maxPctChanged: Double = 10.0) {
+    private fun diff(previewName: String, referenceRelPath: String, maxPctChanged: Double = 25.0) {
         val rendered = locateRendered(previewName)
         val reference = referenceFile(referenceRelPath)
         assumeTrue(

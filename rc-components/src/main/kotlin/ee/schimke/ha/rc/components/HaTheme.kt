@@ -35,23 +35,27 @@ data class HaTheme(
     val isDark: Boolean,
 ) {
     companion object {
+        // Values sampled from HA's default light theme for
+        // `hui-tile-card` (HA 2026-04).
         val Light = HaTheme(
             cardBackground = Color(0xFFFFFFFF),
-            dashboardBackground = Color(0xFFE5E7EB),
-            primaryText = Color(0xFF1C1C1C),
-            secondaryText = Color(0xFF5F6367),
-            divider = Color(0xFFE0E3E7),
+            dashboardBackground = Color(0xFFFAFAFA),
+            primaryText = Color(0xFF141414),
+            secondaryText = Color(0xFF8F8F8F),
+            divider = Color(0xFFE0E0E0),
             placeholderAccent = Color(0xFFB26A00),
             placeholderBackground = Color(0xFFFFF4E5),
             unknownAccent = Color(0xFF757575),
             isDark = false,
         )
+        // Values sampled from HA's default dark theme for
+        // `hui-tile-card` (HA 2026-04).
         val Dark = HaTheme(
-            cardBackground = Color(0xFF1F2329),
-            dashboardBackground = Color(0xFF111318),
-            primaryText = Color(0xFFE3E5E8),
-            secondaryText = Color(0xFFA8ADB4),
-            divider = Color(0xFF2A2F36),
+            cardBackground = Color(0xFF1C1C1C),
+            dashboardBackground = Color(0xFF111111),
+            primaryText = Color(0xFFE1E1E1),
+            secondaryText = Color(0xFF878787),
+            divider = Color(0xFF333333),
             placeholderAccent = Color(0xFFFFB74D),
             placeholderBackground = Color(0xFF2A2016),
             unknownAccent = Color(0xFF8A8F96),

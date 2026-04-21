@@ -24,6 +24,7 @@ import androidx.compose.remote.creation.compose.state.rsp
 import androidx.compose.remote.creation.compose.text.RemoteTextStyle
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.wear.compose.remote.material3.RemoteIcon
 
 /**
@@ -88,12 +89,16 @@ fun RemoteHaTile(data: HaTileData, modifier: RemoteModifier = RemoteModifier) {
                     fontSize = 13.rsp,
                     fontWeight = FontWeight.Medium,
                     style = RemoteTextStyle.Default,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                 )
                 RemoteText(
                     text = data.state,
                     color = theme.secondaryText.rc,
                     fontSize = 11.rsp,
                     style = RemoteTextStyle.Default,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                 )
             }
         }
