@@ -29,5 +29,6 @@ include(
     ":rc-converter",
     ":previews",
     ":demo-app",
+    ":app",
     ":integration",
 )
