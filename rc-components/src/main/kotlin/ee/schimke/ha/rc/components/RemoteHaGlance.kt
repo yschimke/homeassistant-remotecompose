@@ -52,8 +52,13 @@ fun RemoteHaGlance(data: HaGlanceData, modifier: RemoteModifier = RemoteModifier
                 )
                 RemoteBox(modifier = RemoteModifier.padding(top = 6.rdp))
             }
+            // HA's glance spaces cells evenly across the card width.
+            // FlowRow handles wrapping when more cells arrive than fit
+            // the row; within each row, distribute the cells using
+            // SpaceEvenly instead of packing them to the start.
             RemoteFlowRow(
-                horizontalArrangement = RemoteArrangement.spacedBy(6.rdp),
+                modifier = RemoteModifier.fillMaxWidth(),
+                horizontalArrangement = RemoteArrangement.SpaceEvenly,
                 verticalArrangement = RemoteArrangement.spacedBy(6.rdp),
             ) {
                 data.cells.forEach { cell -> RemoteHaGlanceCell(cell) }
@@ -62,7 +67,10 @@ fun RemoteHaGlance(data: HaGlanceData, modifier: RemoteModifier = RemoteModifier
     }
 }
 
-/** One cell inside a Glance. */
+/**
+ * One cell inside a Glance — name on top, icon in the middle, state
+ * below. Matches HA's `hui-glance-card.ts` cell order.
+ */
 @Composable
 @RemoteComposable
 fun RemoteHaGlanceCell(data: HaGlanceCellData, modifier: RemoteModifier = RemoteModifier) {
@@ -74,18 +82,18 @@ fun RemoteHaGlanceCell(data: HaGlanceCellData, modifier: RemoteModifier = Remote
         modifier = modifier.then(clickable).padding(vertical = 4.rdp),
         horizontalAlignment = RemoteAlignment.CenterHorizontally,
     ) {
-        RemoteIcon(
-            imageVector = data.icon,
-            contentDescription = data.name,
-            modifier = RemoteModifier.size(28.rdp),
-            tint = accent,
+        RemoteText(
+            text = data.name,
+            color = theme.primaryText.rc,
+            fontSize = 12.rsp,
+            style = RemoteTextStyle.Default,
         )
-        RemoteBox(modifier = RemoteModifier.padding(top = 4.rdp)) {
-            RemoteText(
-                text = data.name,
-                color = theme.primaryText.rc,
-                fontSize = 12.rsp,
-                style = RemoteTextStyle.Default,
+        RemoteBox(modifier = RemoteModifier.padding(vertical = 4.rdp)) {
+            RemoteIcon(
+                imageVector = data.icon,
+                contentDescription = data.name,
+                modifier = RemoteModifier.size(28.rdp),
+                tint = accent,
             )
         }
         RemoteText(

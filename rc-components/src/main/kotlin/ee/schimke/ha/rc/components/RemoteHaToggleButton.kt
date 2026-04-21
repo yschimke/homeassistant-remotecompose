@@ -12,7 +12,6 @@ import androidx.compose.remote.creation.compose.modifier.background
 import androidx.compose.remote.creation.compose.modifier.border
 import androidx.compose.remote.creation.compose.modifier.clickable
 import androidx.compose.remote.creation.compose.modifier.clip
-import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.modifier.size
 import androidx.compose.remote.creation.compose.shapes.RemoteCircleShape
@@ -74,10 +73,12 @@ fun RemoteHaToggleButton(data: HaButtonData, modifier: RemoteModifier = RemoteMo
 
     val accent: RemoteColor = localIsOn.select(data.accent.activeAccent, data.accent.inactiveAccent)
 
+    // Wrap-content by default so grid / horizontal-stack can pack
+    // multiple buttons per row. Standalone callers wanting a
+    // card-wide button pass `RemoteModifier.fillMaxWidth()`.
     RemoteBox(
         modifier = modifier
             .then(clickable)
-            .fillMaxWidth()
             .clip(RemoteRoundedCornerShape(12.rdp))
             .background(theme.cardBackground.rc)
             .border(1.rdp, theme.divider.rc, RemoteRoundedCornerShape(12.rdp))

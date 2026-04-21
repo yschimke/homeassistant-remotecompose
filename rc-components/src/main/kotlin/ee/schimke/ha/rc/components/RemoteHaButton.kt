@@ -10,7 +10,6 @@ import androidx.compose.remote.creation.compose.modifier.background
 import androidx.compose.remote.creation.compose.modifier.border
 import androidx.compose.remote.creation.compose.modifier.clickable
 import androidx.compose.remote.creation.compose.modifier.clip
-import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.modifier.size
 import androidx.compose.remote.creation.compose.shapes.RemoteCircleShape
@@ -37,10 +36,13 @@ fun RemoteHaButton(data: HaButtonData, modifier: RemoteModifier = RemoteModifier
     val clickable = data.tapAction.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
     val accent: RemoteColor = data.accent.isOn?.select(data.accent.activeAccent, data.accent.inactiveAccent)
         ?: data.accent.activeAccent
+    // Not using `fillMaxWidth()`: buttons placed in a grid or
+    // horizontal-stack should wrap-content so the flow layout can
+    // pack multiple across the row. Standalone callers wanting a
+    // card-wide button can pass `RemoteModifier.fillMaxWidth()`.
     RemoteBox(
         modifier = modifier
             .then(clickable)
-            .fillMaxWidth()
             .clip(RemoteRoundedCornerShape(12.rdp))
             .background(theme.cardBackground.rc)
             .border(1.rdp, theme.divider.rc, RemoteRoundedCornerShape(12.rdp))

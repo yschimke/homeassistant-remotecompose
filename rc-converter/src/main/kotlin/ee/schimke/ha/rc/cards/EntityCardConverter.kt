@@ -7,6 +7,7 @@ import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HaSnapshot
+import ee.schimke.ha.model.toTyped
 import ee.schimke.ha.rc.CardConverter
 import ee.schimke.ha.rc.HaStateColor
 import ee.schimke.ha.rc.LiveBindings
@@ -39,6 +40,7 @@ class EntityCardConverter : CardConverter {
                     activeAccent = HaStateColor.activeFor(entity).rc,
                     inactiveAccent = HaStateColor.inactiveFor(entity).rc,
                     isOn = LiveBindings.isOn(entity),
+                    initiallyOn = entity?.toTyped()?.isActive == true,
                 ),
                 tapAction = tapAction,
             ),

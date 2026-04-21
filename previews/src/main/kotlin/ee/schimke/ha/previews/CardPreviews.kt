@@ -57,13 +57,13 @@ private fun buttonCard() = card(
 
 // ——— entity ———
 
-@Preview(name = "entity (light)", showBackground = false, widthDp = 328, heightDp = 18)
+@Preview(name = "entity (light)", showBackground = false, widthDp = 328, heightDp = 40)
 @Composable
 fun Entity_Light() = CardHost(HaTheme.Light) {
     RenderChild(entityCard(), Fixtures.livingRoomTemp)
 }
 
-@Preview(name = "entity (dark)", showBackground = false, widthDp = 328, heightDp = 18)
+@Preview(name = "entity (dark)", showBackground = false, widthDp = 328, heightDp = 40)
 @Composable
 fun Entity_Dark() = CardHost(HaTheme.Dark) {
     RenderChild(entityCard(), Fixtures.livingRoomTemp)
@@ -119,13 +119,13 @@ private fun glanceCard() = card(
 
 // ——— heading ———
 
-@Preview(name = "heading (light)", showBackground = false, widthDp = 112, heightDp = 21)
+@Preview(name = "heading (light)", showBackground = false, widthDp = 128, heightDp = 44)
 @Composable
 fun Heading_Light() = CardHost(HaTheme.Light) {
     RenderChild(headingCard(), Fixtures.mixed)
 }
 
-@Preview(name = "heading (dark)", showBackground = false, widthDp = 112, heightDp = 21)
+@Preview(name = "heading (dark)", showBackground = false, widthDp = 128, heightDp = 44)
 @Composable
 fun Heading_Dark() = CardHost(HaTheme.Dark) {
     RenderChild(headingCard(), Fixtures.mixed)
@@ -195,13 +195,13 @@ private fun horizontalStackCard() = card(
 
 // ——— grid ———
 
-@Preview(name = "grid (light)", showBackground = false, widthDp = 300, heightDp = 240)
+@Preview(name = "grid (light)", showBackground = false, widthDp = 320, heightDp = 320)
 @Composable
 fun Grid_Light() = CardHost(HaTheme.Light) {
     RenderChild(gridCard(), Fixtures.mixed)
 }
 
-@Preview(name = "grid (dark)", showBackground = false, widthDp = 300, heightDp = 240)
+@Preview(name = "grid (dark)", showBackground = false, widthDp = 320, heightDp = 320)
 @Composable
 fun Grid_Dark() = CardHost(HaTheme.Dark) {
     RenderChild(gridCard(), Fixtures.mixed)
