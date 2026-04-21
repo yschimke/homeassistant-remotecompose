@@ -1,9 +1,17 @@
 package ee.schimke.ha.previews
 
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth as uiFillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.remote.creation.compose.layout.RemoteComposable
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.tooling.preview.RemotePreview
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import ee.schimke.ha.model.HaSnapshot
@@ -276,36 +284,100 @@ private fun gridCard() = card(
 
 // ——— dashboard (mixed-card demo) ———
 //
-// End-to-end example: a realistic vertical stack of heading + tiles +
-// entities + glance, matching `integration/config/ui-lovelace.yaml`
-// view=dashboard and the reference under `references/dashboard/`.
-// Same canvas-sizing rule as every other referenced card.
+// End-to-end example of the target architecture: each Lovelace card
+// emits its **own** `.rc` document played in its own `RemotePreview`
+// host, and the dashboard is a regular Compose `Column` that stacks
+// those players. In the end-goal app each of these players becomes a
+// separate Glance widget; this preview models that decomposition.
+//
+// Not a single big `.rc` for the whole vertical-stack — doing that
+// would couple per-card state updates and defeat the widget-per-card
+// model.
 
 @Preview(name = "dashboard (light)", showBackground = false, widthDp = 381, heightDp = 411)
 @Composable
-fun Dashboard_Light() = CardHost(HaTheme.Light) {
-    RenderChild(dashboardCard(), Fixtures.mixed, RemoteModifier.fillMaxWidth())
-}
+fun Dashboard_Light() = DashboardHost(HaTheme.Light)
 
 @Preview(name = "dashboard (dark)", showBackground = false, widthDp = 381, heightDp = 411)
 @Composable
-fun Dashboard_Dark() = CardHost(HaTheme.Dark) {
-    RenderChild(dashboardCard(), Fixtures.mixed, RemoteModifier.fillMaxWidth())
+fun Dashboard_Dark() = DashboardHost(HaTheme.Dark)
+
+/**
+ * Row heights are pinned so the stack totals exactly the reference
+ * height (381×411 dp). Each [PlayerSlot] hosts one independent
+ * RemoteCompose document.
+ */
+@Composable
+private fun DashboardHost(theme: HaTheme) {
+    Column(
+        modifier = Modifier.uiFillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(0.dp),
+    ) {
+        PlayerSlot(theme, heightDp = 36) {
+            RenderChild(
+                card("""{"type":"heading","heading":"Home"}"""),
+                Fixtures.mixed,
+                RemoteModifier.fillMaxWidth(),
+            )
+        }
+        PlayerSlot(theme, heightDp = 48) {
+            RenderChild(
+                card("""{"type":"tile","entity":"sensor.living_room"}"""),
+                Fixtures.mixed,
+                RemoteModifier.fillMaxWidth(),
+            )
+        }
+        PlayerSlot(theme, heightDp = 48) {
+            RenderChild(
+                card("""{"type":"tile","entity":"light.kitchen","color":"amber"}"""),
+                Fixtures.mixed,
+                RemoteModifier.fillMaxWidth(),
+            )
+        }
+        PlayerSlot(theme, heightDp = 128) {
+            RenderChild(
+                card(
+                    """{"type":"entities","title":"Living Room","entities":[
+                        "light.kitchen","switch.coffee_maker"
+                    ]}""",
+                ),
+                Fixtures.mixed,
+                RemoteModifier.fillMaxWidth(),
+            )
+        }
+        PlayerSlot(theme, heightDp = 151) {
+            RenderChild(
+                card(
+                    """{"type":"glance","title":"Overview","entities":[
+                        "sensor.living_room","light.kitchen","lock.front_door"
+                    ]}""",
+                ),
+                Fixtures.mixed,
+                RemoteModifier.fillMaxWidth(),
+            )
+        }
+    }
 }
 
-private fun dashboardCard() = card(
-    """{"type":"vertical-stack","cards":[
-        {"type":"heading","heading":"Home"},
-        {"type":"tile","entity":"sensor.living_room"},
-        {"type":"tile","entity":"light.kitchen","color":"amber"},
-        {"type":"entities","title":"Living Room","entities":[
-            "light.kitchen","switch.coffee_maker"
-        ]},
-        {"type":"glance","title":"Overview","entities":[
-            "sensor.living_room","light.kitchen","lock.front_door"
-        ]}
-    ]}""",
-)
+/**
+ * Bounded box hosting a single RemoteCompose document. Each slot has
+ * a fixed height — `RemoteDocPreview` sizes the doc to its container,
+ * so callers must pin the container size.
+ */
+@Composable
+private fun PlayerSlot(
+    theme: HaTheme,
+    heightDp: Int,
+    content: @Composable @RemoteComposable () -> Unit,
+) {
+    Box(modifier = Modifier.uiFillMaxWidth().height(heightDp.dp)) {
+        RemotePreview(profile = androidXExperimental) {
+            ProvideCardRegistry(defaultRegistry()) {
+                ProvideHaTheme(theme) { content() }
+            }
+        }
+    }
+}
 
 // ——— unsupported placeholder ———
 
