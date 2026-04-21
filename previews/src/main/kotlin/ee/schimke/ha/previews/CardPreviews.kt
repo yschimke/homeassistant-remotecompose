@@ -224,7 +224,7 @@ private fun unsupportedCard() = card("""{"type":"gauge","entity":"sensor.living_
 
 // ——— tile, state variants via PreviewParameter ———
 
-@Preview(name = "tile light (light)", showBackground = false, widthDp = 328, heightDp = 56)
+@Preview(name = "tile light (light)", showBackground = false, widthDp = 328, heightDp = 43)
 @Composable
 fun Tile_Light_States(
     @PreviewParameter(KitchenLightStatesProvider::class) param: Pair<String, HaSnapshot>,
@@ -232,7 +232,7 @@ fun Tile_Light_States(
     RenderChild(card("""{"type":"tile","entity":"light.kitchen"}"""), param.second)
 }
 
-@Preview(name = "tile cover (light)", showBackground = false, widthDp = 328, heightDp = 56)
+@Preview(name = "tile cover (light)", showBackground = false, widthDp = 328, heightDp = 43)
 @Composable
 fun Tile_Cover_States(
     @PreviewParameter(GarageCoverStatesProvider::class) param: Pair<String, HaSnapshot>,
@@ -240,7 +240,7 @@ fun Tile_Cover_States(
     RenderChild(card("""{"type":"tile","entity":"cover.garage"}"""), param.second)
 }
 
-@Preview(name = "tile lock (light)", showBackground = false, widthDp = 328, heightDp = 56)
+@Preview(name = "tile lock (light)", showBackground = false, widthDp = 328, heightDp = 43)
 @Composable
 fun Tile_Lock_States(
     @PreviewParameter(FrontDoorLockStatesProvider::class) param: Pair<String, HaSnapshot>,

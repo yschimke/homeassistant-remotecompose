@@ -9,90 +9,107 @@ OUT=/tmp/ha-rc-gist
 cat > "$OUT/README.md" <<'EOF'
 # homeassistant-remotecompose — card previews
 
-Side-by-side comparison of the rendered RemoteCompose output against
-reference screenshots captured from a real Home Assistant frontend
-(light + dark themes). See
+Side-by-side comparison of rendered RemoteCompose output against HA
+reference screenshots (both themes, every implemented card type). See
 [yschimke/homeassistant-remotecompose](https://github.com/yschimke/homeassistant-remotecompose)
 for the library source.
 
-## Tile — side by side
+## tile
 
 ### Light theme
 
-| | Home Assistant | RemoteCompose |
+| variant | Home Assistant | RemoteCompose |
 |---|---|---|
-| **tile** — temperature sensor | ![](ref_tile_temperaturesensor_light.png) | ![](rc_tile_temperaturesensor_light.png) |
-| **tile** — light on | ![](ref_tile_lighton_light.png) | ![](rc_tile_lighton_light.png) |
+| temperature sensor | ![](ref_tile_temperature_sensor_light.png) | ![](rc_tile_temperature_sensor_light.png) |
+| light on | ![](ref_tile_light_on_light.png) | ![](rc_tile_light_on_light.png) |
+| light off | ![](ref_tile_light_off_light.png) | ![](rc_tile_light_states_off.png) |
+| lock locked | ![](ref_tile_lock_locked_light.png) | ![](rc_tile_lock_states_locked.png) |
+| cover | ![](ref_tile_cover_light.png) | ![](rc_tile_cover_states_closed.png) |
 
 ### Dark theme
 
+| variant | Home Assistant | RemoteCompose |
+|---|---|---|
+| temperature sensor | ![](ref_tile_temperature_sensor_dark.png) | ![](rc_tile_temperature_sensor_dark.png) |
+| light on | ![](ref_tile_light_on_dark.png) | ![](rc_tile_light_on_dark.png) |
+
+## button
+
+### Light theme
+
+| variant | Home Assistant | RemoteCompose |
+|---|---|---|
+| light on | ![](ref_button_light_on_light.png) | ![](rc_button_states_on_light.png) |
+| light off | ![](ref_button_light_off_light.png) | ![](rc_button_states_off_light.png) |
+
+### Dark theme
+
+| variant | Home Assistant | RemoteCompose |
+|---|---|---|
+| light on | ![](ref_button_light_on_dark.png) | ![](rc_button_states_on_dark.png) |
+| light off | ![](ref_button_light_off_dark.png) | ![](rc_button_states_off_dark.png) |
+
+## entity
+
 | | Home Assistant | RemoteCompose |
 |---|---|---|
-| **tile** — temperature sensor | ![](ref_tile_temperaturesensor_dark.png) | ![](rc_tile_temperaturesensor_dark.png) |
-| **tile** — light on | ![](ref_tile_lighton_dark.png) | ![](rc_tile_lighton_dark.png) |
+| temperature (light) | ![](ref_entity_temperature_sensor_light.png) | ![](rc_entity_temperature_sensor_light.png) |
+| temperature (dark) | ![](ref_entity_temperature_sensor_dark.png) | ![](rc_entity_temperature_sensor_dark.png) |
+
+## entities
+
+| | Home Assistant | RemoteCompose |
+|---|---|---|
+| living room (light) | ![](ref_entities_living_room_light.png) | ![](rc_entities_living_room_light.png) |
+| living room (dark) | ![](ref_entities_living_room_dark.png) | ![](rc_entities_living_room_dark.png) |
+
+## glance
+
+| | Home Assistant | RemoteCompose |
+|---|---|---|
+| overview (light) | ![](ref_glance_overview_light.png) | ![](rc_glance_overview_light.png) |
+| overview (dark) | ![](ref_glance_overview_dark.png) | ![](rc_glance_overview_dark.png) |
+
+## markdown
+
+| | Home Assistant | RemoteCompose |
+|---|---|---|
+| notes (light) | ![](ref_markdown_notes_light.png) | ![](rc_markdown_notes_light.png) |
+| notes (dark) | ![](ref_markdown_notes_dark.png) | ![](rc_markdown_notes_dark.png) |
 
 ## State variants (single document, binding-driven)
 
 Each tile emits one `.rc` document whose accent + chip flip based on a
-named `RemoteBoolean` that the player updates live. These previews
-illustrate what the same document looks like at different states.
+named `RemoteBoolean` that the player updates live — same bytes, three
+rendered states.
 
 ### Light entity
 
 | on | off | unavailable |
 |---|---|---|
-| ![](rc_tile_light_on.png) | ![](rc_tile_light_off.png) | ![](rc_tile_light_unavailable.png) |
+| ![](rc_tile_light_states_on.png) | ![](rc_tile_light_states_off.png) | ![](rc_tile_light_states_unavailable.png) |
 
 ### Cover entity
 
 | closed | open | opening |
 |---|---|---|
-| ![](rc_tile_cover_closed.png) | ![](rc_tile_cover_open.png) | ![](rc_tile_cover_opening.png) |
+| ![](rc_tile_cover_states_closed.png) | ![](rc_tile_cover_states_open.png) | ![](rc_tile_cover_states_opening.png) |
 
 ### Lock entity
 
 | locked | unlocked | locking |
 |---|---|---|
-| ![](rc_tile_lock_locked.png) | ![](rc_tile_lock_unlocked.png) | ![](rc_tile_lock_locking.png) |
+| ![](rc_tile_lock_states_locked.png) | ![](rc_tile_lock_states_unlocked.png) | ![](rc_tile_lock_states_locking.png) |
 
-### Button
+## Layout-only cards (no HA reference — wrapper visual)
 
-| on | off | unavailable |
+| Card | Light | Dark |
 |---|---|---|
-| ![](rc_button_light_on.png) | ![](rc_button_light_off.png) | ![](rc_button_light_unavailable.png) |
-
-## Other card types (RemoteCompose output only)
-
-Reference capture for these is still TODO (extending the
-`ui-lovelace.yaml` in the integration harness).
-
-### Light theme
-
-| Card | RemoteCompose |
-|---|---|
-| `entity` | ![](rc_entity_light.png) |
-| `entities` | ![](rc_entities_light.png) |
-| `glance` | ![](rc_glance_light.png) |
-| `heading` | ![](rc_heading_light.png) |
-| `markdown` | ![](rc_markdown_light.png) |
-| `vertical-stack` | ![](rc_verticalstack_light.png) |
-| `horizontal-stack` | ![](rc_horizontalstack_light.png) |
-| `grid` | ![](rc_grid_light.png) |
-| `gauge` (unsupported placeholder) | ![](rc_unsupported_light.png) |
-
-### Dark theme
-
-| Card | RemoteCompose |
-|---|---|
-| `entity` | ![](rc_entity_dark.png) |
-| `entities` | ![](rc_entities_dark.png) |
-| `glance` | ![](rc_glance_dark.png) |
-| `heading` | ![](rc_heading_dark.png) |
-| `markdown` | ![](rc_markdown_dark.png) |
-| `vertical-stack` | ![](rc_verticalstack_dark.png) |
-| `horizontal-stack` | ![](rc_horizontalstack_dark.png) |
-| `grid` | ![](rc_grid_dark.png) |
-| `gauge` (unsupported placeholder) | ![](rc_unsupported_dark.png) |
+| `vertical-stack` | ![](rc_verticalstack_light.png) | ![](rc_verticalstack_dark.png) |
+| `horizontal-stack` | ![](rc_horizontalstack_light.png) | ![](rc_horizontalstack_dark.png) |
+| `grid` | ![](rc_grid_light.png) | ![](rc_grid_dark.png) |
+| `heading` | ![](rc_heading_title_light.png) | ![](rc_heading_title_dark.png) |
+| `gauge` (unsupported placeholder) | ![](rc_unsupported_light.png) | ![](rc_unsupported_dark.png) |
 
 ## Known gaps
 
