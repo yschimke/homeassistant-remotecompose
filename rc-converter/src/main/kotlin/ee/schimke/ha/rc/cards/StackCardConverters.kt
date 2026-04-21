@@ -1,5 +1,6 @@
 package ee.schimke.ha.rc.cards
 
+import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.runtime.Composable
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
@@ -23,8 +24,8 @@ class VerticalStackCardConverter : CardConverter {
     override val cardType: String = CardTypes.VERTICAL_STACK
 
     @Composable
-    override fun Render(card: CardConfig, snapshot: HaSnapshot) {
-        RemoteHaVerticalStack {
+    override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
+        RemoteHaVerticalStack(modifier = modifier) {
             childCards(card).forEach { RenderChild(it, snapshot) }
         }
     }
@@ -34,8 +35,8 @@ class HorizontalStackCardConverter : CardConverter {
     override val cardType: String = CardTypes.HORIZONTAL_STACK
 
     @Composable
-    override fun Render(card: CardConfig, snapshot: HaSnapshot) {
-        RemoteHaHorizontalStack {
+    override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
+        RemoteHaHorizontalStack(modifier = modifier) {
             childCards(card).forEach { RenderChild(it, snapshot) }
         }
     }
@@ -45,8 +46,8 @@ class GridCardConverter : CardConverter {
     override val cardType: String = CardTypes.GRID
 
     @Composable
-    override fun Render(card: CardConfig, snapshot: HaSnapshot) {
-        RemoteHaGrid {
+    override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
+        RemoteHaGrid(modifier = modifier) {
             childCards(card).forEach { RenderChild(it, snapshot) }
         }
     }

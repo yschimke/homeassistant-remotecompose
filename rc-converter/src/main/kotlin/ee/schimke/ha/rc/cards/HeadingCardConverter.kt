@@ -1,5 +1,6 @@
 package ee.schimke.ha.rc.cards
 
+import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.runtime.Composable
 import ee.schimke.ha.model.CardConfig
@@ -15,7 +16,7 @@ class HeadingCardConverter : CardConverter {
     override val cardType: String = CardTypes.HEADING
 
     @Composable
-    override fun Render(card: CardConfig, snapshot: HaSnapshot) {
+    override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
         val heading = card.raw["heading"]?.jsonPrimitive?.content
             ?: card.raw["title"]?.jsonPrimitive?.content
             ?: ""
@@ -23,6 +24,6 @@ class HeadingCardConverter : CardConverter {
             "subtitle" -> HaHeadingStyle.Subtitle
             else -> HaHeadingStyle.Title
         }
-        RemoteHaHeading(HaHeadingData(title = heading.rs, style = style))
+        RemoteHaHeading(HaHeadingData(title = heading.rs, style = style), modifier = modifier)
     }
 }

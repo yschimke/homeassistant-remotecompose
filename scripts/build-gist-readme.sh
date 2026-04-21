@@ -14,6 +14,17 @@ reference screenshots (both themes, every implemented card type). See
 [yschimke/homeassistant-remotecompose](https://github.com/yschimke/homeassistant-remotecompose)
 for the library source.
 
+## End-to-end dashboard
+
+A realistic vertical-stack — heading + tiles + entities (with toggles)
++ glance — all in one `.rc` document, side-by-side with the HA capture
+of the same YAML config.
+
+| | Home Assistant | RemoteCompose |
+|---|---|---|
+| Home (light) | ![](ref_dashboard_home_light.png) | ![](rc_dashboard_home_light.png) |
+| Home (dark) | ![](ref_dashboard_home_dark.png) | ![](rc_dashboard_home_dark.png) |
+
 ## tile
 
 ### Light theme

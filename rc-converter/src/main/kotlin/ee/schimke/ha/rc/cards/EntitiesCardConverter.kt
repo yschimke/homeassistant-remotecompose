@@ -1,5 +1,6 @@
 package ee.schimke.ha.rc.cards
 
+import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.runtime.Composable
@@ -33,7 +34,7 @@ class EntitiesCardConverter : CardConverter {
     override val cardType: String = CardTypes.ENTITIES
 
     @Composable
-    override fun Render(card: CardConfig, snapshot: HaSnapshot) {
+    override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
         val title = card.raw["title"]?.jsonPrimitive?.content
         val entries: List<JsonElement> = card.raw["entities"]?.jsonArray ?: emptyList()
 
@@ -59,7 +60,7 @@ class EntitiesCardConverter : CardConverter {
                 tapAction = tapAction,
             )
         }
-        RemoteHaEntities(HaEntitiesData(title = title?.rs, rows = rows))
+        RemoteHaEntities(HaEntitiesData(title = title?.rs, rows = rows), modifier = modifier)
     }
 
     private fun normalize(el: JsonElement): Pair<String?, JsonObject?> = when (el) {

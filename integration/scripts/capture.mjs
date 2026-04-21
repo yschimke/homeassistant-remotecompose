@@ -43,6 +43,10 @@ const MANIFEST = [
   { view: "glance", cardIndex: 0, file: "glance/overview" },
 
   { view: "markdown", cardIndex: 0, file: "markdown/notes" },
+
+  // The realistic mixed dashboard — one capture of the whole vertical
+  // stack rather than a per-card crop.
+  { view: "dashboard", cardIndex: 0, file: "dashboard/home" },
 ];
 
 const deepQueryAllFn = `
