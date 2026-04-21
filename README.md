@@ -12,6 +12,19 @@ Full gallery (every card type, light + dark):
 
 HA reference on the left, RemoteCompose on the right.
 
+### End-to-end dashboard
+
+A realistic vertical stack — heading + two tiles + entities (with
+toggles) + glance. Each card is its own `.rc` document played in its
+own `RemotePreview` host; the "dashboard" is a regular Compose `Column`
+stacking those players. This mirrors the end-goal app where each
+Lovelace card becomes an independent, live-updating Glance widget.
+
+| theme | Home Assistant | RemoteCompose |
+|---|---|---|
+| light | ![](https://gist.githubusercontent.com/yschimke/09c6fbeb83f71b4de3442a410010ee3f/raw/ref_dashboard_home_light.png) | ![](https://gist.githubusercontent.com/yschimke/09c6fbeb83f71b4de3442a410010ee3f/raw/rc_dashboard_home_light.png) |
+| dark | ![](https://gist.githubusercontent.com/yschimke/09c6fbeb83f71b4de3442a410010ee3f/raw/ref_dashboard_home_dark.png) | ![](https://gist.githubusercontent.com/yschimke/09c6fbeb83f71b4de3442a410010ee3f/raw/rc_dashboard_home_dark.png) |
+
 ### tile — light theme
 
 | variant | Home Assistant | RemoteCompose |
