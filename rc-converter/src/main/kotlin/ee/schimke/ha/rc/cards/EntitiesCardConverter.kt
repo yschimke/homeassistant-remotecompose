@@ -33,6 +33,12 @@ import kotlinx.serialization.json.jsonPrimitive
 class EntitiesCardConverter : CardConverter {
     override val cardType: String = CardTypes.ENTITIES
 
+    override fun naturalHeightDp(card: CardConfig, snapshot: HaSnapshot): Int {
+        val rows = card.raw["entities"]?.jsonArray?.size ?: 0
+        val title = if (card.raw["title"] != null) 36 else 0
+        return title + 16 + 44 * rows // title + top-pad + 44dp per entity row.
+    }
+
     @Composable
     override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
         val title = card.raw["title"]?.jsonPrimitive?.content

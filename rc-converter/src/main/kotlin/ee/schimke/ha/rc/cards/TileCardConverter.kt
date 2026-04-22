@@ -24,6 +24,8 @@ import kotlinx.serialization.json.jsonPrimitive
 class TileCardConverter : CardConverter {
     override val cardType: String = CardTypes.TILE
 
+    override fun naturalHeightDp(card: CardConfig, snapshot: HaSnapshot): Int = 43
+
     @Composable
     override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
         val entityId = card.raw["entity"]?.jsonPrimitive?.content

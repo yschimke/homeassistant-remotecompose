@@ -33,6 +33,11 @@ import kotlinx.serialization.json.jsonPrimitive
 class GlanceCardConverter : CardConverter {
     override val cardType: String = CardTypes.GLANCE
 
+    override fun naturalHeightDp(card: CardConfig, snapshot: HaSnapshot): Int {
+        val title = if (card.raw["title"] != null) 40 else 0
+        return title + 112 // HA glance cell is ~112dp tall (icon + name + state).
+    }
+
     @Composable
     override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
         val title = card.raw["title"]?.jsonPrimitive?.content

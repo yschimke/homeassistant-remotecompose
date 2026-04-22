@@ -38,6 +38,19 @@ interface CardConverter {
      */
     @Composable
     fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier = RemoteModifier)
+
+    /**
+     * Preferred rendered height in dp when this card fills its parent
+     * width. Callers that need to pin a slot size (e.g. a dashboard
+     * grid of per-card RemoteCompose players, or a widget preview)
+     * read this instead of re-deriving it.
+     *
+     * The default is a catch-all; each converter should override with
+     * a value that matches its HA reference capture. If a card's
+     * height depends on its payload (e.g. `entities` with N rows),
+     * override to compute from [card] / [snapshot].
+     */
+    fun naturalHeightDp(card: CardConfig, snapshot: HaSnapshot): Int = 160
 }
 
 /**
