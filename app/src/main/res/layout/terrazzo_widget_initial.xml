@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Placeholder shown by the launcher between "pin widget" and the first
+  `updateAppWidget` call with the real RemoteCompose document. Kept
+  deliberately bare so a stale placeholder doesn't look like the real
+  content when something goes wrong.
+-->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="?android:attr/colorBackground" />

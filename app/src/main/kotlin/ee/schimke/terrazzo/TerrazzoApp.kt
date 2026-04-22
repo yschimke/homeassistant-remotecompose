@@ -21,11 +21,14 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import ee.schimke.ha.model.CardConfig
+import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.terrazzo.auth.rememberLoginController
 import ee.schimke.terrazzo.dashboard.DashboardPickerScreen
 import ee.schimke.terrazzo.dashboard.DashboardViewScreen
 import ee.schimke.terrazzo.dashboard.HaSession
 import ee.schimke.terrazzo.discovery.DiscoveryScreen
+import ee.schimke.terrazzo.widget.WidgetInstallSheet
 import ee.schimke.terrazzo.widget.WidgetsScreen
 
 /**
@@ -126,6 +129,7 @@ private fun AuthenticatedScaffold(session: HaSession) {
 @Composable
 private fun DashboardsTab(session: HaSession) {
     var opened by rememberSaveable { mutableStateOf<String?>(DASHBOARD_UNSET) }
+    var installPending by remember { mutableStateOf<Pair<CardConfig, HaSnapshot>?>(null) }
     val openedValue = opened
 
     if (openedValue == DASHBOARD_UNSET) {
@@ -137,7 +141,20 @@ private fun DashboardsTab(session: HaSession) {
         DashboardViewScreen(
             session = session,
             urlPath = openedValue,
-            onCardLongPress = { _card -> /* TODO: widget install sheet */ },
+            onCardLongPress = { card ->
+                // Reuse an empty snapshot for the preview frame; the
+                // installed widget will refresh from HA on first tick.
+                installPending = card to HaSnapshot()
+            },
+        )
+    }
+
+    installPending?.let { (card, snapshot) ->
+        WidgetInstallSheet(
+            baseUrl = session.baseUrl,
+            card = card,
+            snapshot = snapshot,
+            onDismiss = { installPending = null },
         )
     }
 }

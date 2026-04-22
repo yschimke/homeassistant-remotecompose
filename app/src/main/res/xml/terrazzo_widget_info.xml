@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  AppWidget provider metadata for Terrazzo widgets. One XML covers
+  every installed instance; the provider resolves per-widget config
+  from DataStore at render time.
+
+  Size: scales to whatever the host card natural height implies; the
+  default cell is 2x1 for a tile-style card. `resizeMode` lets the user
+  grow it vertically in case they've pinned a taller card (entities /
+  glance).
+
+  `updatePeriodMillis="0"` — we drive updates imperatively from a
+  background worker when HA state changes; the 30-minute minimum of
+  the framework poll would give stale readings anyway.
+-->
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:minWidth="180dp"
+    android:minHeight="48dp"
+    android:minResizeWidth="180dp"
+    android:minResizeHeight="48dp"
+    android:resizeMode="horizontal|vertical"
+    android:updatePeriodMillis="0"
+    android:widgetCategory="home_screen"
+    android:initialLayout="@layout/terrazzo_widget_initial" />
