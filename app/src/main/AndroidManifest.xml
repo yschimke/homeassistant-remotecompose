@@ -38,5 +38,30 @@
                       android:host="auth-callback" />
             </intent-filter>
         </activity>
+
+        <!--
+          Per-card home-screen widget. One declaration, many pinned
+          instances — each pinned widget gets a unique `appWidgetId`
+          that keys into DataStore to find its card config.
+        -->
+        <receiver
+            android:name=".widget.TerrazzoWidgetProvider"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/terrazzo_widget_info" />
+        </receiver>
+
+        <!-- Fires after requestPinAppWidget is confirmed by the user. -->
+        <receiver
+            android:name=".widget.WidgetInstallReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="ee.schimke.terrazzo.WIDGET_PIN_CONFIRMED" />
+            </intent-filter>
+        </receiver>
     </application>
 </manifest>
