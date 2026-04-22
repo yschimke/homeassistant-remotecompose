@@ -44,9 +44,13 @@ const MANIFEST = [
 
   { view: "markdown", cardIndex: 0, file: "markdown/notes" },
 
-  // The realistic mixed dashboard — one capture of the whole vertical
-  // stack rather than a per-card crop.
+  // Pixel-parity reference — one `vertical-stack` card.
   { view: "dashboard", cardIndex: 0, file: "dashboard/home" },
+
+  // Conference-demo home view — crop the union bounding box of every
+  // `hui-card` in the view so sections + grids + headings all land in
+  // one reference image.
+  { view: "home", cardIndex: "all", file: "home/home" },
 ];
 
 const deepQueryAllFn = `
@@ -126,7 +130,23 @@ try {
       const box = await page.evaluate(
         `(() => {
           ${deepQueryAllFn}
-          const el = deepQueryAll('hui-card')[${entry.cardIndex}];
+          const idx = ${JSON.stringify(entry.cardIndex)};
+          const cards = deepQueryAll('hui-card');
+          if (idx === 'all') {
+            // Union bbox over every visible card — for sections views
+            // we want the whole laid-out dashboard, not just the first
+            // card (which is often a small heading).
+            const rects = cards
+              .map(c => c.getBoundingClientRect())
+              .filter(r => r.width > 0 && r.height > 0);
+            if (rects.length === 0) return null;
+            const minX = Math.min(...rects.map(r => r.x));
+            const minY = Math.min(...rects.map(r => r.y));
+            const maxX = Math.max(...rects.map(r => r.x + r.width));
+            const maxY = Math.max(...rects.map(r => r.y + r.height));
+            return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
+          }
+          const el = cards[idx];
           if (!el) return null;
           const r = el.getBoundingClientRect();
           return { x: r.x, y: r.y, width: r.width, height: r.height };

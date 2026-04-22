@@ -88,16 +88,17 @@ views:
               Welcome home.
               Temperature is normal.
 
-  # A realistic mixed dashboard — heading + tiles + entities + glance
-  # stacked vertically, so the reference capture shows the end-to-end
-  # experience and not just one card in isolation.
+  # Pixel-parity reference — one `vertical-stack` card that renders a
+  # mixed-content example. Keeps the same shape as the existing
+  # `Dashboard_Light` preview so the side-by-side comparison stays
+  # apples-to-apples.
   - title: dashboard
     path: dashboard
     type: sections
     sections:
       - type: grid
         cards:
-          - type: vertical-stack                    # 0 — whole view
+          - type: vertical-stack
             cards:
               - type: heading
                 heading: Home
@@ -117,3 +118,57 @@ views:
                   - sensor.living_room
                   - light.kitchen
                   - lock.front_door
+
+  # Conference-demo "Home" dashboard. Follows HA's current (2024+) best
+  # practices: `type: sections`, `max_columns: 4`, per-section grid of
+  # `tile` cards (not `entities`/`glance` — those are legacy), headings
+  # inside sections for structure. Reshape this when the demo grows
+  # new rooms; the entities themselves come from the `demo:` integration
+  # plus the template helpers above.
+  - title: Home
+    path: home
+    type: sections
+    max_columns: 4
+    sections:
+      - type: grid
+        cards:
+          - type: heading
+            heading: Quick Actions
+            heading_style: title
+          - type: button
+            entity: light.kitchen
+            name: Kitchen
+            show_name: true
+            tap_action:
+              action: toggle
+          - type: button
+            entity: light.office_lamp
+            name: Office
+            show_name: true
+            tap_action:
+              action: toggle
+      - type: grid
+        cards:
+          - type: heading
+            heading: Living Room
+            heading_style: subtitle
+          - type: tile
+            entity: sensor.living_room
+          - type: tile
+            entity: light.kitchen
+            color: amber
+          - type: tile
+            entity: switch.coffee_maker
+          - type: tile
+            entity: cover.living_room_window
+      - type: grid
+        cards:
+          - type: heading
+            heading: Security
+            heading_style: subtitle
+          - type: tile
+            entity: lock.front_door
+          - type: tile
+            entity: binary_sensor.front_door_motion
+          - type: tile
+            entity: sensor.office_humidity

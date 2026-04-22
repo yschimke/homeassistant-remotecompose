@@ -65,6 +65,7 @@ import ee.schimke.ha.rc.components.ProvideHaTheme
  *        glance     381 × 149 dp     (refs in `references/glance/`)
  *        markdown   381 × 106 dp     (refs in `references/markdown/`)
  *        dashboard  381 × 411 dp     (refs in `references/dashboard/`)
+ *        home       561 × 251 dp     (refs in `references/home/`)
  *
  *   5. If the HA references are ever re-captured at a different
  *      density, re-run `scripts/ref-sizes.py` and update these
