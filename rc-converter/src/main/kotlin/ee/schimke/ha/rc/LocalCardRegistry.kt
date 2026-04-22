@@ -42,4 +42,16 @@ fun RenderChild(
     converter.Render(card, snapshot, modifier)
 }
 
+/**
+ * Host-side lookup of a card's preferred rendered height in dp.
+ * Callers pinning a container size (dashboard grid cell, widget
+ * preview frame) use this instead of hand-rolling a per-type table.
+ * Unknown card types fall back to the unsupported-placeholder
+ * converter's height; failing that, 160.
+ */
+fun CardRegistry.cardHeightDp(card: CardConfig, snapshot: HaSnapshot): Int {
+    val converter = get(card.type) ?: get(UNSUPPORTED_CARD_TYPE)
+    return converter?.naturalHeightDp(card, snapshot) ?: 160
+}
+
 internal const val UNSUPPORTED_CARD_TYPE = "__unsupported__"

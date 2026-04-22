@@ -15,6 +15,8 @@ import kotlinx.serialization.json.jsonPrimitive
 class HeadingCardConverter : CardConverter {
     override val cardType: String = CardTypes.HEADING
 
+    override fun naturalHeightDp(card: CardConfig, snapshot: HaSnapshot): Int = 36
+
     @Composable
     override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
         val heading = card.raw["heading"]?.jsonPrimitive?.content

@@ -29,6 +29,7 @@ import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.ProvideCardRegistry
 import ee.schimke.ha.rc.RenderChild
 import ee.schimke.ha.rc.androidXExperimental
+import ee.schimke.ha.rc.cardHeightDp
 import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.components.HaTheme
 import ee.schimke.ha.rc.components.ProvideHaTheme
@@ -83,6 +84,7 @@ private fun DashboardGrid(
     onCardLongPress: (CardConfig) -> Unit,
     contentPadding: PaddingValues,
 ) {
+    val registry = remember { defaultRegistry() }
     val cards = remember(dashboard) { flattenCards(dashboard) }
     LazyVerticalGrid(
         columns = GridCells.Adaptive(minSize = 320.dp),
@@ -92,7 +94,7 @@ private fun DashboardGrid(
         modifier = Modifier.fillMaxSize().padding(horizontal = 12.dp),
     ) {
         items(cards) { card ->
-            CardSlot(card, snapshot, onCardLongPress)
+            CardSlot(card, snapshot, registry, onCardLongPress)
         }
     }
 }
@@ -100,15 +102,17 @@ private fun DashboardGrid(
 /**
  * Hosts one card's own `.rc` document. Height is pinned so
  * `RemoteDocPreview` (which sizes to its container) has bounded
- * constraints; the value is a per-card-type heuristic for now.
+ * constraints. The value comes from the converter itself
+ * (`CardRegistry.cardHeightDp`) — app doesn't know per-card sizing.
  */
 @Composable
 private fun CardSlot(
     card: CardConfig,
     snapshot: HaSnapshot,
+    registry: ee.schimke.ha.rc.CardRegistry,
     onLongPress: (CardConfig) -> Unit,
 ) {
-    val heightDp = heightFor(card.type)
+    val heightDp = remember(card, snapshot) { registry.cardHeightDp(card, snapshot) }
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -116,7 +120,7 @@ private fun CardSlot(
             .combinedClickLongPress(onLongPress = { onLongPress(card) }),
     ) {
         RemotePreview(profile = androidXExperimental) {
-            ProvideCardRegistry(defaultRegistry()) {
+            ProvideCardRegistry(registry) {
                 // TODO: honor dashboard theme; for now we render light.
                 ProvideHaTheme(HaTheme.Light) {
                     RenderChild(card, snapshot, RemoteModifier.fillMaxWidth())
@@ -124,17 +128,6 @@ private fun CardSlot(
             }
         }
     }
-}
-
-private fun heightFor(cardType: String): Int = when (cardType) {
-    "tile" -> 48
-    "entity" -> 48
-    "button" -> 96
-    "heading" -> 40
-    "entities" -> 180
-    "glance" -> 160
-    "markdown" -> 120
-    else -> 160
 }
 
 private fun flattenCards(dashboard: Dashboard): List<CardConfig> =

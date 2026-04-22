@@ -14,6 +14,15 @@ import kotlinx.serialization.json.jsonPrimitive
 class MarkdownCardConverter : CardConverter {
     override val cardType: String = CardTypes.MARKDOWN
 
+    override fun naturalHeightDp(card: CardConfig, snapshot: HaSnapshot): Int {
+        val content = card.raw["content"]?.let {
+            (it as? kotlinx.serialization.json.JsonPrimitive)?.content
+        }.orEmpty()
+        val lines = content.count { it == '\n' } + 1
+        val title = if (card.raw["title"] != null) 32 else 0
+        return title + 16 + 24 * lines // rough heuristic; title + top-pad + per-line.
+    }
+
     @Composable
     override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
         val title = card.raw["title"]?.jsonPrimitive?.content
