@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Android 9+ blocks cleartext HTTP by default. Production HA deployments
+  should speak HTTPS (reverse proxy / Nabu Casa), but the integration
+  Docker container serves plain HTTP on loopback and the emulator reaches
+  it via `10.0.2.2`. Whitelist just those two hosts so the token
+  exchange can actually happen in dev; real deployments stay on HTTPS.
+-->
+<network-security-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="false">10.0.2.2</domain>
+        <domain includeSubdomains="false">127.0.0.1</domain>
+        <domain includeSubdomains="false">localhost</domain>
+    </domain-config>
+</network-security-config>

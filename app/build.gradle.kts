@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.compose.compiler)
+    alias(libs.plugins.metro)
 }
 
 android {
@@ -37,6 +38,7 @@ dependencies {
     implementation(project(":ha-client"))
     implementation(project(":rc-converter"))
     implementation(project(":rc-components"))
+    implementation(project(":terrazzo-core"))
 
     implementation(platform(libs.compose.bom))
     implementation(libs.compose.ui)
@@ -52,6 +54,7 @@ dependencies {
 
     implementation(libs.androidx.browser)
     implementation(libs.androidx.datastore.preferences)
+    implementation(libs.androidx.work.runtime)
     implementation(libs.androidx.navigation3.runtime)
     implementation(libs.androidx.navigation3.ui)
     implementation(libs.androidx.material3.adaptive.navigation.suite)

@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.Intent
 import android.util.Log
 import ee.schimke.ha.model.CardConfig
+import ee.schimke.terrazzo.terrazzoGraph
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
@@ -38,7 +39,7 @@ class WidgetInstallReceiver : BroadcastReceiver() {
             raw = json.parseToJsonElement(cardJson) as JsonObject,
         )
 
-        val store = WidgetStore(context.applicationContext)
+        val store = context.terrazzoGraph().widgetStore
         runBlocking {
             if (store.isFull()) {
                 // Hit the cap between when the user tapped "Add" and

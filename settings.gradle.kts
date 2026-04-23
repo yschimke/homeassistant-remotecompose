@@ -27,8 +27,10 @@ include(
     ":ha-client",
     ":rc-components",
     ":rc-converter",
+    ":rc-card-shutter",
     ":previews",
     ":demo-app",
+    ":terrazzo-core",
     ":app",
     ":integration",
 )

@@ -10,6 +10,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -33,6 +34,8 @@ import ee.schimke.ha.rc.cardHeightDp
 import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.components.HaTheme
 import ee.schimke.ha.rc.components.ProvideHaTheme
+import ee.schimke.terrazzo.LocalTerrazzoGraph
+import ee.schimke.terrazzo.core.widget.WidgetStore
 
 /**
  * Bottom sheet shown when the user long-presses a card. Live preview
@@ -51,10 +54,11 @@ fun WidgetInstallSheet(
     card: CardConfig,
     snapshot: HaSnapshot,
     onDismiss: () -> Unit,
+    onMonitor: (() -> Unit)? = null,
 ) {
     val context = LocalContext.current
     val installer = remember { WidgetInstaller(context.applicationContext) }
-    val store = remember { WidgetStore(context.applicationContext) }
+    val store = LocalTerrazzoGraph.current.widgetStore
     val registry = remember { defaultRegistry() }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
@@ -105,6 +109,16 @@ fun WidgetInstallSheet(
                 enabled = pinSupported && !capHit,
                 modifier = Modifier.fillMaxWidth(),
             ) { Text(if (capHit) "All 5 slots in use" else "Add to Home Screen") }
+
+            onMonitor?.let { start ->
+                OutlinedButton(
+                    onClick = {
+                        start()
+                        onDismiss()
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                ) { Text("Monitor for 15 min") }
+            }
         }
     }
 }

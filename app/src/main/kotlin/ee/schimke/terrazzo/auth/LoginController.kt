@@ -1,9 +1,7 @@
 package ee.schimke.terrazzo.auth
 
-import android.app.Activity
 import android.content.Intent
-import android.net.Uri
-import androidx.activity.ComponentActivity
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultLauncher
@@ -14,9 +12,11 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.snapshotFlow
-import androidx.compose.ui.platform.LocalContext
+import ee.schimke.terrazzo.LocalTerrazzoGraph
+import ee.schimke.terrazzo.core.auth.HaAuthService
+import ee.schimke.terrazzo.core.auth.TokenVault
 import kotlinx.coroutines.launch
+import net.openid.appauth.AuthorizationException
 import net.openid.appauth.AuthorizationResponse
 
 /**
@@ -56,7 +56,17 @@ class LoginController internal constructor(
     }
 
     internal fun onResult(result: ActivityResult) {
-        val data = result.data ?: return
+        val data = result.data ?: run {
+            onError(IllegalStateException("AppAuth returned no result data"))
+            return
+        }
+        val authEx = AuthorizationException.fromIntent(data)
+        if (authEx != null) {
+            Log.e(TAG, "authorize failed: code=${authEx.code} type=${authEx.type} " +
+                "desc=${authEx.errorDescription} cause=${authEx.cause}", authEx)
+            onError(authEx)
+            return
+        }
         val response = AuthorizationResponse.fromIntent(data) ?: run {
             onError(IllegalStateException("No authorization response in redirect"))
             return
@@ -74,8 +84,18 @@ class LoginController internal constructor(
                     vault.put(baseUrl, refresh)
                     onReady(baseUrl, access)
                 }
-                .onFailure(onError)
+                .onFailure { ex ->
+                    val authFailure = ex as? AuthorizationException
+                    Log.e(TAG, "token exchange failed: code=${authFailure?.code} " +
+                        "type=${authFailure?.type} desc=${authFailure?.errorDescription} " +
+                        "cause=${ex.cause}", ex)
+                    onError(ex)
+                }
         }
+    }
+
+    private companion object {
+        const val TAG = "LoginController"
     }
 }
 
@@ -84,9 +104,9 @@ fun rememberLoginController(
     onReady: (instanceId: String, accessToken: String) -> Unit,
     onError: (Throwable) -> Unit = { },
 ): LoginController {
-    val context = LocalContext.current
-    val authService = remember { HaAuthService(context.applicationContext) }
-    val vault = remember { TokenVault(context.applicationContext) }
+    val graph = LocalTerrazzoGraph.current
+    val authService = graph.authService
+    val vault = graph.tokenVault
     val scope = rememberCoroutineScope()
     val pendingBaseUrl = remember { mutableStateOf<String?>(null) }
 

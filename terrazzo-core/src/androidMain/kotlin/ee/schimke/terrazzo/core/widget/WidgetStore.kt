@@ -1,11 +1,14 @@
-package ee.schimke.terrazzo.widget
+package ee.schimke.terrazzo.core.widget
 
 import android.content.Context
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.SingleIn
 import ee.schimke.ha.model.CardConfig
+import ee.schimke.terrazzo.core.di.AppScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
@@ -22,6 +25,8 @@ import kotlinx.serialization.json.JsonObject
  * Capped at 5 installs (product requirement). The cap is enforced on
  * write; the widget provider itself doesn't care.
  */
+@SingleIn(AppScope::class)
+@Inject
 class WidgetStore(private val context: Context) {
 
     data class Entry(

@@ -1,11 +1,11 @@
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.compose.compiler)
-    alias(libs.plugins.compose.preview)
+    alias(libs.plugins.kotlin.serialization)
 }
 
 android {
-    namespace = "ee.schimke.ha.previews"
+    namespace = "ee.schimke.ha.rc.cards.shutter"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
     defaultConfig {
         minSdk = libs.versions.android.minSdk.get().toInt()
@@ -18,30 +18,24 @@ android {
     kotlin { jvmToolchain(libs.versions.java.get().toInt()) }
 }
 
-composePreview {
-    variant.set("debug")
-    sdkVersion.set(35)
-    enabled.set(true)
-}
-
 dependencies {
+    api(project(":rc-converter"))
+    api(project(":rc-components"))
     implementation(project(":ha-model"))
-    implementation(project(":rc-converter"))
-    implementation(project(":rc-card-shutter"))
 
     implementation(platform(libs.compose.bom))
     implementation(libs.compose.ui)
     implementation(libs.compose.foundation)
     implementation(libs.compose.material3)
-    implementation(libs.compose.ui.tooling.preview)
-    debugImplementation(libs.compose.ui.tooling)
+    implementation(libs.compose.material.icons.extended)
 
     implementation(libs.remote.creation.compose)
     implementation(libs.remote.creation.android)
     implementation(libs.remote.creation.core)
-    implementation(libs.remote.player.compose)
-    implementation(libs.remote.player.view)
-    implementation(libs.remote.tooling.preview)
+    implementation(libs.remote.core)
+    implementation(libs.remote.material3)
 
     implementation(libs.kotlinx.serialization.json)
+
+    testImplementation(libs.kotlin.test)
 }

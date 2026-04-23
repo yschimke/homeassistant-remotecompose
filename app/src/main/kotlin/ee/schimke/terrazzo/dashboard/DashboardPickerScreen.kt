@@ -22,6 +22,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import ee.schimke.ha.client.DashboardSummary
+import ee.schimke.terrazzo.core.session.HaSession
 
 @Composable
 fun DashboardPickerScreen(

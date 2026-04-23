@@ -1,12 +1,18 @@
-package ee.schimke.terrazzo.auth
+package ee.schimke.terrazzo.core.auth
 
-import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.SingleIn
+import ee.schimke.terrazzo.core.di.AppScope
+import java.net.HttpURLConnection
+import java.net.URL
+import javax.net.ssl.HttpsURLConnection
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlinx.coroutines.suspendCancellableCoroutine
+import net.openid.appauth.AppAuthConfiguration
 import net.openid.appauth.AuthorizationException
 import net.openid.appauth.AuthorizationRequest
 import net.openid.appauth.AuthorizationResponse
@@ -14,14 +20,16 @@ import net.openid.appauth.AuthorizationService
 import net.openid.appauth.AuthorizationServiceConfiguration
 import net.openid.appauth.ResponseTypeValues
 import net.openid.appauth.TokenResponse
+import net.openid.appauth.connectivity.ConnectionBuilder
 
 /**
  * OAuth flow against a Home Assistant instance.
  *
  * HA speaks IndieAuth-flavored OAuth 2.0:
  *   - `client_id` is a URL that hosts a `<link rel="redirect_uri">`
- *     whitelisting the app's custom scheme. Terrazzo's client_id is
- *     `https://yschimke.github.io/homeassistant-remotecompose/auth/`.
+ *     whitelisting the app's custom scheme. HA fetches it server-side
+ *     so the URL has to be reachable from the HA process, not the app.
+ *     See [CLIENT_ID] for the current (integration-local) value.
  *   - `redirect_uri` is `rcha://auth-callback` (declared in manifest,
  *     handled by `net.openid.appauth.RedirectUriReceiverActivity`).
  *   - Authorization endpoint: `{baseUrl}/auth/authorize`
@@ -33,13 +41,24 @@ import net.openid.appauth.TokenResponse
  *     Tab, intercepts via the manifest intent filter, and exchanges
  *     the code for tokens over plain HTTPS form-POST.
  *
- * One instance per HA host. The refresh token is handed to [TokenVault]
- * for persistence; the access token is returned to the caller and held
- * in memory for the WebSocket connection lifetime.
+ * Scoped to the graph — one `AuthorizationService` per process. The
+ * refresh token is handed to [TokenVault] for persistence; the access
+ * token is returned to the caller and held in memory for the
+ * WebSocket connection lifetime.
  */
-class HaAuthService(private val context: Context) {
+@SingleIn(AppScope::class)
+@Inject
+class HaAuthService(context: Context) {
 
-    private val appAuth = AuthorizationService(context)
+    // Allow HTTP for the integration Docker container. AppAuth's
+    // default ConnectionBuilder rejects non-HTTPS endpoints at the
+    // token-exchange step; HA on 10.0.2.2:8124 is plain HTTP.
+    private val appAuth = AuthorizationService(
+        context,
+        AppAuthConfiguration.Builder()
+            .setConnectionBuilder(PlainHttpConnectionBuilder)
+            .build(),
+    )
 
     fun close() = appAuth.dispose()
 
@@ -80,12 +99,29 @@ class HaAuthService(private val context: Context) {
         }
 
     companion object {
-        /**
-         * Pinned to a stable URL we control. Points at the IndieAuth
-         * page under `docs/auth/` in the main repo, published via
-         * GitHub Pages.
-         */
-        const val CLIENT_ID = "https://yschimke.github.io/homeassistant-remotecompose/auth/"
+        const val CLIENT_ID = "https://yschimke.github.io/homeassistant-remotecompose/terrazzo-auth/index.html"
         const val REDIRECT_URI = "rcha://auth-callback"
+    }
+}
+
+/**
+ * AppAuth `ConnectionBuilder` that accepts both HTTPS and plain HTTP.
+ *
+ * Production HA deployments almost always speak HTTPS (via reverse proxy
+ * or Nabu Casa), but the integration Docker container talks plain HTTP
+ * on loopback. Without this, the token exchange step throws
+ * `only https connections are permitted`.
+ */
+private object PlainHttpConnectionBuilder : ConnectionBuilder {
+    override fun openConnection(uri: Uri): HttpURLConnection {
+        val url = URL(uri.toString())
+        val conn = url.openConnection() as HttpURLConnection
+        conn.connectTimeout = 15_000
+        conn.readTimeout = 10_000
+        conn.instanceFollowRedirects = false
+        if (conn is HttpsURLConnection) {
+            // Defaults are fine for real HTTPS; no custom trust manager.
+        }
+        return conn
     }
 }

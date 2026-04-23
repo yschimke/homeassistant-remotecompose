@@ -1,17 +1,20 @@
-package ee.schimke.terrazzo.auth
+package ee.schimke.terrazzo.core.auth
 
 import android.content.Context
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
+import android.util.Base64
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.SingleIn
+import ee.schimke.terrazzo.core.di.AppScope
 import java.security.KeyStore
 import javax.crypto.Cipher
 import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
 import javax.crypto.spec.GCMParameterSpec
-import android.util.Base64
 import kotlinx.coroutines.flow.first
 
 /**
@@ -26,6 +29,8 @@ import kotlinx.coroutines.flow.first
  * One vault per HA instance (keyed by `instanceId`), so a user with
  * multiple HA installs gets independent credential slots.
  */
+@SingleIn(AppScope::class)
+@Inject
 class TokenVault(private val context: Context) {
 
     private val Context.store by preferencesDataStore(name = "terrazzo_token_vault")

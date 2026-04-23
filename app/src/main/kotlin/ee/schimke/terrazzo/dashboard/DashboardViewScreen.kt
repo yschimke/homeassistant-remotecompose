@@ -26,6 +26,7 @@ import androidx.compose.remote.tooling.preview.RemotePreview
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.Dashboard
 import ee.schimke.ha.model.HaSnapshot
+import ee.schimke.terrazzo.core.session.HaSession
 import ee.schimke.ha.rc.ProvideCardRegistry
 import ee.schimke.ha.rc.RenderChild
 import ee.schimke.ha.rc.androidXExperimental
@@ -33,6 +34,7 @@ import ee.schimke.ha.rc.cardHeightDp
 import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.components.HaTheme
 import ee.schimke.ha.rc.components.ProvideHaTheme
+import kotlinx.coroutines.delay
 
 /**
  * Renders every top-level card in a dashboard as an independent `.rc`
@@ -55,9 +57,21 @@ fun DashboardViewScreen(
 
     LaunchedEffect(session, urlPath) {
         state = DashboardState.Loading
-        runCatching { session.loadDashboard(urlPath) }
-            .onSuccess { (dashboard, snapshot) -> state = DashboardState.Ready(dashboard, snapshot) }
-            .onFailure { state = DashboardState.Error(it.message ?: it::class.simpleName ?: "error") }
+        // Poll when the session opts in (demo mode does, at ~2s) so
+        // values visibly change; a one-shot fetch otherwise.
+        while (true) {
+            runCatching { session.loadDashboard(urlPath) }
+                .onSuccess { (dashboard, snapshot) ->
+                    state = DashboardState.Ready(dashboard, snapshot)
+                }
+                .onFailure {
+                    if (state is DashboardState.Loading) {
+                        state = DashboardState.Error(it.message ?: it::class.simpleName ?: "error")
+                    }
+                }
+            val interval = session.refreshIntervalMillis ?: break
+            delay(interval)
+        }
     }
 
     when (val s = state) {

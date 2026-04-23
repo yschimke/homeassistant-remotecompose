@@ -25,6 +25,7 @@ dependencies {
     implementation(project(":ha-model"))
     implementation(project(":ha-client"))
     implementation(project(":rc-converter"))
+    implementation(project(":rc-card-shutter"))
 
     implementation(platform(libs.compose.bom))
     implementation(libs.compose.ui)

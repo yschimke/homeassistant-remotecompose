@@ -14,6 +14,9 @@ import ee.schimke.ha.rc.RenderChild
 import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.components.HaTheme
 import ee.schimke.ha.rc.components.ProvideHaTheme
+import ee.schimke.terrazzo.core.session.DemoData
+import ee.schimke.terrazzo.core.widget.WidgetStore
+import ee.schimke.terrazzo.terrazzoGraph
 import kotlinx.coroutines.runBlocking
 
 /**
@@ -48,16 +51,22 @@ class TerrazzoWidgetProvider : RemoteComposeWidget(useCompose = true) {
             // again once the app calls updateAppWidget().
             return
         }
+        // Widgets pinned while the app was in demo mode carry the demo
+        // baseUrl marker; render those against the current demo
+        // snapshot so values are non-empty. Live-mode widgets keep the
+        // empty default — they'll be refreshed by a future background
+        // worker once we wire snapshot caching.
+        val snapshot = if (DemoData.isDemo(entry.baseUrl)) DemoData.snapshot() else EMPTY_SNAPSHOT
         val registry = defaultRegistry()
         ProvideCardRegistry(registry) {
             ProvideHaTheme(HaTheme.Light) {
-                RenderChild(entry.card, EMPTY_SNAPSHOT, RemoteModifier.fillMaxWidth())
+                RenderChild(entry.card, snapshot, RemoteModifier.fillMaxWidth())
             }
         }
     }
 
     private fun loadEntry(context: Context, widgetId: Int): WidgetStore.Entry? =
-        runBlocking { WidgetStore(context.applicationContext).get(widgetId) }
+        runBlocking { context.terrazzoGraph().widgetStore.get(widgetId) }
 
     private companion object {
         val EMPTY_SNAPSHOT = HaSnapshot()

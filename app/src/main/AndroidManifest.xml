@@ -5,9 +5,15 @@
     <!-- mDNS discovery for _home-assistant._tcp instances on the LAN. -->
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE" />
+    <!-- User-initiated 15-min monitoring window (foreground service + its notification). -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <application
+        android:name=".TerrazzoApplication"
         android:label="Terrazzo"
+        android:networkSecurityConfig="@xml/network_security_config"
         android:theme="@android:style/Theme.Material.Light.NoActionBar">
 
         <activity
@@ -63,5 +69,16 @@
                 <action android:name="ee.schimke.terrazzo.WIDGET_PIN_CONFIRMED" />
             </intent-filter>
         </receiver>
+
+        <!--
+          User-initiated bounded-window monitoring of a single card.
+          `dataSync` fits the "poll state on a timer for 15 min" shape;
+          the service self-stops at the window end, so the foreground
+          promise stays bounded.
+        -->
+        <service
+            android:name=".monitor.MonitoringService"
+            android:exported="false"
+            android:foregroundServiceType="dataSync" />
     </application>
 </manifest>
