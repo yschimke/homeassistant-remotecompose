@@ -51,13 +51,32 @@ jobs:
             **/build/test-results/**
             **/build/compose-previews/renders/**
 
+  lint:
+    name: Android lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+      # `lint` fans out across every Android module. Debug variant is
+      # enough for CI; release-only rules (e.g. ObsoleteSdkInt on
+      # targetSdk) surface the same findings.
+      - run: ./gradlew lintDebug --stacktrace
+      - name: Upload lint reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lint-reports
+          path: |
+            **/build/reports/lint-results-*.html
+            **/build/reports/lint-results-*.xml
+
   android-test:
     name: Instrumented tests (API 36)
     runs-on: ubuntu-latest
-    # AVD boot is ~5 min of the job; keep it off the hot path by only
-    # running on explicit dispatch + main. Flip to `always` once we have
-    # real `src/androidTest/` sources that warrant gating PRs on it.
-    if: github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main'
     steps:
       - uses: actions/checkout@v4
       - name: Enable KVM
