@@ -1,3 +1,5 @@
+@file:Suppress("RestrictedApi")
+
 package ee.schimke.terrazzo.dashboard
 
 import androidx.compose.foundation.layout.Arrangement

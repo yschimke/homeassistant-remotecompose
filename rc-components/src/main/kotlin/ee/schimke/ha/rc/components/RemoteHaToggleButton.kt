@@ -1,3 +1,5 @@
+@file:Suppress("RestrictedApi")
+
 package ee.schimke.ha.rc.components
 
 import androidx.compose.remote.creation.compose.action.Action
