@@ -1,3 +1,5 @@
+@file:Suppress("RestrictedApi")
+
 package ee.schimke.ha.previews
 
 import androidx.compose.remote.tooling.preview.RemotePreview

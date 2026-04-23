@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.Settings
@@ -183,7 +184,9 @@ private fun AuthenticatedScaffold(
             )
         },
     ) {
-        Box(Modifier.fillMaxSize()) {
+        // `safeDrawingPadding` pads status bar (top) + IME; the
+        // navigation suite already handles its own bottom-bar insets.
+        Box(Modifier.fillMaxSize().safeDrawingPadding()) {
             when (current) {
                 Destination.Dashboards -> DashboardsTab(session)
                 Destination.Widgets -> WidgetsScreen()

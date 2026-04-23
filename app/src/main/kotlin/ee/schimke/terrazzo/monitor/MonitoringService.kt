@@ -12,7 +12,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.pm.ServiceInfo
-import android.os.Build
 import android.os.IBinder
 import android.util.Log
 import android.util.TypedValue
@@ -81,15 +80,11 @@ class MonitoringService : Service() {
         )
 
         val placeholder = placeholderNotification(card, durationMinutes)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-            startForeground(
-                NOTIFICATION_ID,
-                placeholder,
-                ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC,
-            )
-        } else {
-            startForeground(NOTIFICATION_ID, placeholder)
-        }
+        startForeground(
+            NOTIFICATION_ID,
+            placeholder,
+            ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC,
+        )
 
         loopJob?.cancel()
         loopJob = scope.launch { runMonitoringLoop(card, durationMinutes) }
@@ -209,9 +204,8 @@ class MonitoringService : Service() {
     }
 
     private fun hasPostNotificationPermission(): Boolean =
-        Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
-            ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) ==
-                PackageManager.PERMISSION_GRANTED
+        ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) ==
+            PackageManager.PERMISSION_GRANTED
 
     private fun dpToPx(dp: Int): Int =
         TypedValue.applyDimension(

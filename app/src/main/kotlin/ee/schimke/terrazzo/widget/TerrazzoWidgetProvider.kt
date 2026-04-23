@@ -1,4 +1,4 @@
-@file:Suppress("RestrictedApiAndroidX")
+@file:Suppress("RestrictedApi", "RestrictedApiAndroidX")
 
 package ee.schimke.terrazzo.widget
 
