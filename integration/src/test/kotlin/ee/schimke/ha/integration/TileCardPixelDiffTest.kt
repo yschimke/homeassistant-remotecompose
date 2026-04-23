@@ -23,22 +23,22 @@ import kotlin.test.assertTrue
 class TileCardPixelDiffTest {
 
     @Test fun temperatureSensor_light_matchesReference() = diff(
-        previewName = "Tile_TemperatureSensor_tile — sensor temperature",
+        previewName = "Tile_TemperatureSensor_tile_sensor_temperature",
         referenceRelPath = "tile/temperature_sensor_light.png",
     )
 
     @Test fun lightOn_light_matchesReference() = diff(
-        previewName = "Tile_LightOn_tile — light on",
+        previewName = "Tile_LightOn_tile_light_on",
         referenceRelPath = "tile/light_on_light.png",
     )
 
     @Test fun temperatureSensor_dark_matchesReference() = diff(
-        previewName = "Tile_TemperatureSensor_Dark_tile — sensor temperature (dark)",
+        previewName = "Tile_TemperatureSensor_Dark_tile_sensor_temperature_dark",
         referenceRelPath = "tile/temperature_sensor_dark.png",
     )
 
     @Test fun lightOn_dark_matchesReference() = diff(
-        previewName = "Tile_LightOn_Dark_tile — light on (dark)",
+        previewName = "Tile_LightOn_Dark_tile_light_on_dark",
         referenceRelPath = "tile/light_on_dark.png",
     )
 
