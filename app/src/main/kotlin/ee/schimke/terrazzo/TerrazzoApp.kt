@@ -39,6 +39,12 @@ import ee.schimke.terrazzo.dashboard.DashboardPickerScreen
 import ee.schimke.terrazzo.dashboard.DashboardViewScreen
 import ee.schimke.terrazzo.discovery.DiscoveryScreen
 import ee.schimke.terrazzo.monitor.MonitoringService
+import ee.schimke.terrazzo.ui.AppearanceSection
+import ee.schimke.terrazzo.ui.TerrazzoTheme
+import ee.schimke.terrazzo.ui.theme.ColorSource
+import ee.schimke.terrazzo.ui.theme.DarkMode
+import ee.schimke.terrazzo.ui.theme.TypographyChoice
+import ee.schimke.terrazzo.ui.theme.rememberThemeSettings
 import ee.schimke.terrazzo.widget.WidgetInstallSheet
 import ee.schimke.terrazzo.widget.WidgetRefreshScheduler
 import ee.schimke.terrazzo.widget.WidgetsScreen
@@ -62,6 +68,15 @@ import kotlinx.coroutines.launch
  */
 @Composable
 fun TerrazzoApp() {
+    val graph = LocalTerrazzoGraph.current
+    val themeSettings by rememberThemeSettings(graph.preferencesStore)
+    TerrazzoTheme(settings = themeSettings) {
+        TerrazzoAppContent()
+    }
+}
+
+@Composable
+private fun TerrazzoAppContent() {
     // NOTE: not saveable — an HaSession owns a live WebSocket. Process
     // restart re-walks the discovery / login flow. The refresh token in
     // TokenVault means we can auto-sign-in silently once we wire that up.
@@ -260,6 +275,10 @@ private fun SettingsScreen(
     onSignOut: () -> Unit,
 ) {
     val isDemo = session is DemoHaSession
+    val graph = LocalTerrazzoGraph.current
+    val scope = rememberCoroutineScope()
+    val themeSettings by rememberThemeSettings(graph.preferencesStore)
+
     Column(Modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
         Text("Settings", style = MaterialTheme.typography.headlineMedium)
 
@@ -267,6 +286,19 @@ private fun SettingsScreen(
         Text(
             if (isDemo) "Demo mode — offline fake data" else session.baseUrl,
             style = MaterialTheme.typography.bodyMedium,
+        )
+
+        AppearanceSection(
+            settings = themeSettings,
+            onColorSource = { choice: ColorSource ->
+                scope.launch { graph.preferencesStore.setColorSource(choice.name) }
+            },
+            onTypography = { choice: TypographyChoice ->
+                scope.launch { graph.preferencesStore.setTypography(choice.name) }
+            },
+            onDarkMode = { choice: DarkMode ->
+                scope.launch { graph.preferencesStore.setDarkMode(choice.name) }
+            },
         )
 
         Row(
