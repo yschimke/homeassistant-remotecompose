@@ -49,6 +49,5 @@ private fun colorSchemeFor(source: ColorSource, dark: Boolean): ColorScheme = wh
     ColorSource.Custom -> rememberDynamicColorScheme(
         seedColor = HomeAssistantSeed,
         isDark = dark,
-        isAmoled = false,
     )
 }
