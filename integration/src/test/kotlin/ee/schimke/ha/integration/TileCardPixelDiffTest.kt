@@ -43,17 +43,13 @@ class TileCardPixelDiffTest {
     )
 
     private fun diff(previewName: String, referenceRelPath: String, maxPctChanged: Double = 25.0) {
+        val rendered = locateRendered(previewName)
         val reference = referenceFile(referenceRelPath)
         assumeTrue(
             reference.exists(),
             "reference $referenceRelPath missing — run integration/scripts/capture-references.sh",
         )
-        val rendered = locateRendered(previewName)
-        assumeTrue(
-            rendered != null,
-            "no rendered PNG matching '$previewName' — run ./gradlew :previews:renderAllPreviews",
-        )
-        val report = ImageDiff.compare(rendered!!, reference)
+        val report = ImageDiff.compare(rendered, reference)
         println(report)
         assertTrue(
             report.pctChanged <= maxPctChanged,
@@ -61,10 +57,13 @@ class TileCardPixelDiffTest {
         )
     }
 
-    private fun locateRendered(previewName: String): File? {
+    private fun locateRendered(previewName: String): File {
         val dir = File(System.getProperty("ha.rendered.dir") ?: "previews/build/compose-previews/renders")
         val exact = dir.listFiles { f -> f.name.contains(previewName) && f.extension == "png" }
-        return exact?.firstOrNull()
+        require(!exact.isNullOrEmpty()) {
+            "No rendered PNG matching '$previewName' under $dir — run ./gradlew :previews:renderAllPreviews"
+        }
+        return exact.first()
     }
 
     private fun referenceFile(rel: String): File {
