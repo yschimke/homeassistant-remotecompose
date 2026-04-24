@@ -3,11 +3,16 @@ package ee.schimke.terrazzo
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeDrawingPadding
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.Settings
@@ -189,16 +194,22 @@ private fun AuthenticatedScaffold(
             )
         },
     ) {
-        // `safeDrawingPadding` pads status bar (top) + IME; the
-        // navigation suite already handles its own bottom-bar insets.
-        Box(Modifier.fillMaxSize().safeDrawingPadding()) {
+        // Edge-to-edge: the outer Box fills the entire window (background
+        // paints behind the status bar / nav bar), and each destination
+        // gets the safe-drawing insets as `contentPadding`. Scrollable
+        // tabs apply it to their LazyColumn so list items scroll under
+        // the bars; static tabs pad their root container so chrome
+        // doesn't get clipped.
+        val safeInsets = WindowInsets.safeDrawing.asPaddingValues()
+        Box(Modifier.fillMaxSize()) {
             when (current) {
-                Destination.Dashboards -> DashboardsTab(session)
-                Destination.Widgets -> WidgetsScreen()
+                Destination.Dashboards -> DashboardsTab(session, safeInsets)
+                Destination.Widgets -> WidgetsScreen(safeInsets)
                 Destination.Settings -> SettingsScreen(
                     session = session,
                     onToggleDemo = onToggleDemo,
                     onSignOut = onSignOut,
+                    contentPadding = safeInsets,
                 )
             }
         }
@@ -212,7 +223,7 @@ private fun AuthenticatedScaffold(
  * configure) we promote to a real `NavDisplay`.
  */
 @Composable
-private fun DashboardsTab(session: HaSession) {
+private fun DashboardsTab(session: HaSession, contentPadding: PaddingValues) {
     var opened by rememberSaveable { mutableStateOf<String?>(DASHBOARD_UNSET) }
     var installPending by remember { mutableStateOf<Pair<CardConfig, HaSnapshot>?>(null) }
     val openedValue = opened
@@ -221,6 +232,7 @@ private fun DashboardsTab(session: HaSession) {
         DashboardPickerScreen(
             session = session,
             onDashboardPicked = { urlPath -> opened = urlPath },
+            contentPadding = contentPadding,
         )
     } else {
         DashboardViewScreen(
@@ -235,6 +247,7 @@ private fun DashboardsTab(session: HaSession) {
                     if (session is DemoHaSession) DemoData.snapshot() else HaSnapshot()
                 installPending = card to previewSnapshot
             },
+            contentPadding = contentPadding,
         )
     }
 
@@ -263,6 +276,7 @@ private fun SettingsScreen(
     session: HaSession,
     onToggleDemo: (Boolean) -> Unit,
     onSignOut: () -> Unit,
+    contentPadding: PaddingValues = PaddingValues(0.dp),
 ) {
     val isDemo = session is DemoHaSession
     val graph = LocalTerrazzoGraph.current
@@ -272,7 +286,14 @@ private fun SettingsScreen(
     val themePref by graph.preferencesStore.themeStyle.collectAsState(initial = ThemePref.TerrazzoHome)
     val darkPref by graph.preferencesStore.darkMode.collectAsState(initial = DarkModePref.Follow)
 
-    Column(Modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(contentPadding)
+            .padding(24.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
         Text("Settings", style = MaterialTheme.typography.headlineMedium)
 
         Text("Connected to", style = MaterialTheme.typography.labelMedium)

@@ -10,6 +10,7 @@ import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.model.toTyped
 import ee.schimke.ha.rc.CardConverter
+import ee.schimke.ha.rc.CardWidthClass
 import ee.schimke.ha.rc.HaStateColor
 import ee.schimke.ha.rc.LiveBindings
 import ee.schimke.ha.rc.components.HaEntityRowData
@@ -27,6 +28,9 @@ class EntityCardConverter : CardConverter {
     override val cardType: String = CardTypes.ENTITY
 
     override fun naturalHeightDp(card: CardConfig, snapshot: HaSnapshot): Int = 48
+
+    override fun naturalWidthClass(card: CardConfig, snapshot: HaSnapshot): CardWidthClass =
+        CardWidthClass.Compact
 
     @Composable
     override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {

@@ -54,4 +54,14 @@ fun CardRegistry.cardHeightDp(card: CardConfig, snapshot: HaSnapshot): Int {
     return converter?.naturalHeightDp(card, snapshot) ?: 160
 }
 
+/**
+ * Host-side lookup of a card's [CardWidthClass]. Unknown / unsupported
+ * cards fall back to [CardWidthClass.Full] so a placeholder slot
+ * spans the row rather than visually pairing with a real card.
+ */
+fun CardRegistry.cardWidthClass(card: CardConfig, snapshot: HaSnapshot): CardWidthClass {
+    val converter = get(card.type) ?: get(UNSUPPORTED_CARD_TYPE)
+    return converter?.naturalWidthClass(card, snapshot) ?: CardWidthClass.Full
+}
+
 internal const val UNSUPPORTED_CARD_TYPE = "__unsupported__"
