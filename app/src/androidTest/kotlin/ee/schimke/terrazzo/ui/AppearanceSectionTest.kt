@@ -8,10 +8,10 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import ee.schimke.terrazzo.ui.theme.DarkMode
 import ee.schimke.terrazzo.ui.theme.ThemeSettings
 import ee.schimke.terrazzo.ui.theme.TypographyChoice
+import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-import kotlin.test.assertEquals
 
 /**
  * Smoke test for the settings appearance pickers. Renders
