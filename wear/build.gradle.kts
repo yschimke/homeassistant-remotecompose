@@ -35,4 +35,7 @@ dependencies {
 
     implementation(libs.wear.compose.material3)
     implementation(libs.wear.compose.foundation)
+
+    implementation(libs.androidx.datastore.preferences)
+    implementation(libs.kotlinx.coroutines.core)
 }

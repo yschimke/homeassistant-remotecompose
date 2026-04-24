@@ -3,60 +3,53 @@ package ee.schimke.terrazzo.wear
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.platform.LocalContext
 import androidx.wear.compose.material3.AppScaffold
 import androidx.wear.compose.material3.MaterialTheme
 import androidx.wear.compose.material3.ScreenScaffold
-import androidx.wear.compose.material3.Text
 import androidx.wear.compose.material3.TimeText
 import ee.schimke.ha.rc.components.ThemeStyle
+import ee.schimke.terrazzo.wear.data.WearPrefs
+import ee.schimke.terrazzo.wear.ui.WearThemePicker
 import ee.schimke.terrazzo.wear.ui.terrazzoWearColorScheme
 import ee.schimke.terrazzo.wear.ui.wearTypographyFor
+import kotlinx.coroutines.launch
 
 /**
- * Wear stub. The real app lands in a follow-up — for now this renders the
- * active Terrazzo theme (dark-only on Wear) so the design tokens can be
- * eyeballed on a round face. `ThemeStyle` is hard-wired to Home for the
- * stub; wiring it through a proto preference is part of the follow-up.
+ * Wear companion app — a single-screen palette browser. Picks a
+ * Terrazzo [ThemeStyle], persists it via [WearPrefs], and re-themes the
+ * whole watch UI live so the chosen palette can be evaluated on a
+ * round face. Real HA tile rendering lands in a follow-up.
  */
 class WearMainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContent { WearStub(style = ThemeStyle.TerrazzoHome) }
+        setContent { WearApp() }
     }
 }
 
 @Composable
-private fun WearStub(style: ThemeStyle) {
+private fun WearApp() {
+    val context = LocalContext.current
+    val prefs = remember(context) { WearPrefs(context.applicationContext) }
+    val scope = rememberCoroutineScope()
+    val style by prefs.themeStyle.collectAsState(initial = ThemeStyle.TerrazzoHome)
+
     MaterialTheme(
         colorScheme = terrazzoWearColorScheme(style),
         typography = wearTypographyFor(style),
     ) {
         AppScaffold(timeText = { TimeText() }) {
             ScreenScaffold {
-                Column(
-                    modifier = Modifier.fillMaxSize().padding(16.dp),
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    Text(
-                        text = "Terrazzo",
-                        style = MaterialTheme.typography.titleLarge,
-                        color = MaterialTheme.colorScheme.primary,
-                    )
-                    Text(
-                        text = "Wear companion · ${style.displayName}",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
+                WearThemePicker(
+                    selected = style,
+                    onSelect = { picked -> scope.launch { prefs.setThemeStyle(picked) } },
+                )
             }
         }
     }
