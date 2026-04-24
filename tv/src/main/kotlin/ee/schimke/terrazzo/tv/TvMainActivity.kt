@@ -5,65 +5,65 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import ee.schimke.ha.rc.components.ThemeStyle
 import ee.schimke.ha.rc.components.terrazzoColorScheme
 import ee.schimke.ha.rc.components.terrazzoTypographyFor
+import ee.schimke.terrazzo.tv.data.TvPrefs
+import ee.schimke.terrazzo.tv.ui.TvKioskPreview
+import ee.schimke.terrazzo.tv.ui.TvThemePicker
+import kotlinx.coroutines.launch
 
 /**
- * TV stub. HA dashboards on a TV want the "kiosk" treatment: large type,
- * high-contrast surfaces, minimal chrome. The stub renders the active
- * Terrazzo palette in its dark (10-ft) variant so the wall-dashboard
- * tokens can be previewed on a 4K panel without the full app.
- *
- * Hard-wires [ThemeStyle.TerrazzoKiosk] to start — TV is the natural
- * home for the kiosk treatment. A picker and the rest of the TV app
- * land in a follow-up.
+ * TV companion. Renders a two-column kiosk dashboard preview: the
+ * picker on the left runs the DPAD focus, the right pane re-skins
+ * itself live as the selection changes. Theme is persisted via
+ * [TvPrefs] (defaults to [ThemeStyle.TerrazzoKiosk] — the wall-panel
+ * brief). The full HA dashboard wires onto the right pane in a
+ * follow-up.
  */
 class TvMainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContent { TvStub(style = ThemeStyle.TerrazzoKiosk) }
+        setContent { TvApp() }
     }
 }
 
 @Composable
-private fun TvStub(style: ThemeStyle) {
+private fun TvApp() {
+    val context = LocalContext.current
+    val prefs = remember(context) { TvPrefs(context.applicationContext) }
+    val scope = rememberCoroutineScope()
+    val style by prefs.themeStyle.collectAsState(initial = ThemeStyle.TerrazzoKiosk)
+
     val colors = terrazzoColorScheme(style, darkTheme = true)
     MaterialTheme(colorScheme = colors, typography = terrazzoTypographyFor(style)) {
-        Box(
+        Row(
             modifier = Modifier
                 .fillMaxSize()
                 .background(colors.background)
-                .padding(horizontal = 64.dp, vertical = 48.dp),
-            contentAlignment = Alignment.CenterStart,
+                .padding(horizontal = 48.dp, vertical = 36.dp),
+            horizontalArrangement = Arrangement.spacedBy(32.dp),
         ) {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text(
-                    text = "Terrazzo",
-                    style = MaterialTheme.typography.displayLarge,
-                    color = colors.primary,
-                )
-                Text(
-                    text = "TV kiosk dashboard · coming soon",
-                    style = MaterialTheme.typography.headlineMedium,
-                    color = colors.onSurface,
-                )
-                Text(
-                    text = "Active theme: ${style.displayName}",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = colors.onSurfaceVariant,
-                )
-            }
+            TvThemePicker(
+                selected = style,
+                onSelect = { picked -> scope.launch { prefs.setThemeStyle(picked) } },
+            )
+            TvKioskPreview(
+                style = style,
+                modifier = Modifier.weight(1f),
+            )
         }
     }
 }

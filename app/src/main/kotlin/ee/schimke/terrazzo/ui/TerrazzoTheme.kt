@@ -1,14 +1,10 @@
 package ee.schimke.terrazzo.ui
 
-import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.dynamicDarkColorScheme
-import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.staticCompositionLocalOf
-import androidx.compose.ui.platform.LocalContext
 import ee.schimke.ha.rc.components.ThemeStyle
 import ee.schimke.ha.rc.components.terrazzoColorScheme
 import ee.schimke.ha.rc.components.terrazzoTypographyFor
@@ -36,11 +32,14 @@ val LocalIsDarkTheme = staticCompositionLocalOf { false }
  * [DarkModePref] from the store (wired via [TerrazzoThemeController]
  * one level up) and composes:
  *
- * - **Material3 style + Android 12+**: dynamic colour scheme from the
- *   system wallpaper (Material You). Typography: system default.
- * - **Material3 style + older**: stock light/dark `colorScheme()`.
- * - **Any Terrazzo style**: hand-picked palette from [terrazzoColorScheme]
- *   plus the Google Fonts pairing for that palette.
+ * - **Material3 style + wallpaper available**: seed sampled from the
+ *   system wallpaper (Android 8.1+) and run through materialkolor's
+ *   `dynamicColorScheme(...)` for Material You-style derivation with
+ *   our own [PaletteStyle] tuning. Typography: system default.
+ * - **Material3 style + no wallpaper seed**: stock light/dark
+ *   `colorScheme()`.
+ * - **Any Terrazzo style**: that palette's seed run through materialkolor
+ *   plus the Google Fonts pairing for the palette.
  */
 @Composable
 fun TerrazzoTheme(
@@ -48,7 +47,6 @@ fun TerrazzoTheme(
     darkMode: DarkModePref,
     content: @Composable () -> Unit,
 ) {
-    val context = LocalContext.current
     val systemDark = isSystemInDarkTheme()
     val darkTheme = when (darkMode) {
         DarkModePref.Follow -> systemDark
@@ -56,12 +54,8 @@ fun TerrazzoTheme(
         DarkModePref.Dark -> true
     }
 
-    val colors = when {
-        style == ThemeStyle.Material3 && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-        }
-        else -> terrazzoColorScheme(style, darkTheme)
-    }
+    val wallpaperSeed = if (style == ThemeStyle.Material3) rememberWallpaperSeedColor() else null
+    val colors = terrazzoColorScheme(style, darkTheme, seedOverride = wallpaperSeed)
 
     CompositionLocalProvider(
         LocalThemeStyle provides style,

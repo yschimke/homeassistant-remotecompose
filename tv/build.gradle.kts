@@ -35,4 +35,7 @@ dependencies {
     implementation(libs.activity.compose)
 
     implementation(libs.tv.material)
+
+    implementation(libs.androidx.datastore.preferences)
+    implementation(libs.kotlinx.coroutines.core)
 }
