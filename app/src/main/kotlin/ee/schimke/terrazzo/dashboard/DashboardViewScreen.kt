@@ -34,8 +34,10 @@ import ee.schimke.ha.rc.RenderChild
 import ee.schimke.ha.rc.androidXExperimental
 import ee.schimke.ha.rc.cardHeightDp
 import ee.schimke.ha.rc.cards.defaultRegistry
-import ee.schimke.ha.rc.components.HaTheme
 import ee.schimke.ha.rc.components.ProvideHaTheme
+import ee.schimke.ha.rc.components.haThemeFor
+import ee.schimke.terrazzo.ui.LocalIsDarkTheme
+import ee.schimke.terrazzo.ui.LocalThemeStyle
 import kotlinx.coroutines.delay
 
 /**
@@ -129,6 +131,12 @@ private fun CardSlot(
     onLongPress: (CardConfig) -> Unit,
 ) {
     val heightDp = remember(card, snapshot) { registry.cardHeightDp(card, snapshot) }
+    val style = LocalThemeStyle.current
+    val dark = LocalIsDarkTheme.current
+    // Re-capture the `.rc` document when the user switches theme — the
+    // document's colours are baked at capture, so we key the
+    // `RemotePreview` on the style+dark pair.
+    val haTheme = remember(style, dark) { haThemeFor(style, dark) }
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -137,8 +145,7 @@ private fun CardSlot(
     ) {
         RemotePreview(profile = androidXExperimental) {
             ProvideCardRegistry(registry) {
-                // TODO: honor dashboard theme; for now we render light.
-                ProvideHaTheme(HaTheme.Light) {
+                ProvideHaTheme(haTheme) {
                     RenderChild(card, snapshot, RemoteModifier.fillMaxWidth())
                 }
             }
