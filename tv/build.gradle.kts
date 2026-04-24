@@ -8,7 +8,10 @@ android {
     compileSdk = libs.versions.android.compileSdk.get().toInt()
     defaultConfig {
         applicationId = "ee.schimke.terrazzo.tv"
-        minSdk = 26
+        // Match rc-components' minSdk (29). Android TV 10 (API 29) is
+        // a reasonable floor for HA dashboards; dropping lower would
+        // need a tools:overrideLibrary escape hatch.
+        minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
         versionCode = 1
         versionName = "0.1.0"
