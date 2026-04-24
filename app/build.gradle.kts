@@ -38,7 +38,10 @@ android {
 
 composePreview {
     variant.set("debug")
-    sdkVersion.set(35)
+    // Match `:app`'s `minSdk = 36` (widget playback needs API 35+) — at
+    // `sdkVersion.set(35)` Robolectric's PackageParser refuses the APK
+    // manifest with "Requires newer sdk version #36".
+    sdkVersion.set(36)
     enabled.set(true)
 }
 
