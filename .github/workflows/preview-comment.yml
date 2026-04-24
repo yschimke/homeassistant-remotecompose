@@ -1,0 +1,31 @@
+name: Preview Comment
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize]
+
+# Workflow-level: read only. Jobs that need to push renders or comment on
+# the PR widen below.
+permissions:
+  contents: read
+
+concurrency:
+  group: preview-comment-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  compare:
+    name: Compare previews
+    runs-on: ubuntu-latest
+    permissions:
+      # preview-comment composite action appends a commit to the shared
+      # preview_pr branch and upserts a PR comment with before/after images.
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup
+      - uses: ./.github/actions/preview-comment

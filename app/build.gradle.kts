@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.compose.compiler)
+    alias(libs.plugins.compose.preview)
     alias(libs.plugins.metro)
 }
 
@@ -10,10 +11,12 @@ android {
     defaultConfig {
         applicationId = "ee.schimke.terrazzo"
         // Widget playback via RemoteViews.DrawInstructions needs API 35+
-        // (VANILLA_ICE_CREAM). minSdk 36 so the D8 dex compiler accepts
-        // the build (alpha compilers warn on 37+); we still compile / target
-        // the newest available SDK via `compileSdk` / `targetSdk`.
-        minSdk = 36
+        // (VANILLA_ICE_CREAM). We still compile / target the newest
+        // available SDK via `compileSdk` / `targetSdk`. Keeping minSdk
+        // at 35 (not 36) lets Robolectric's SDK-35 framework — which
+        // compose-preview 0.7.8 tops out at — parse this module's
+        // apk-for-local-test during renderPreviews.
+        minSdk = 35
         targetSdk = libs.versions.android.targetSdk.get().toInt()
         versionCode = 1
         versionName = "0.1.0"
@@ -21,6 +24,8 @@ android {
         // Exposed to AndroidManifest via placeholders so the IndieAuth
         // redirect scheme is declared in one place.
         manifestPlaceholders["appAuthRedirectScheme"] = "rcha"
+
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
     buildFeatures {
         compose = true
@@ -31,6 +36,12 @@ android {
         targetCompatibility = JavaVersion.toVersion(libs.versions.java.get())
     }
     kotlin { jvmToolchain(libs.versions.java.get().toInt()) }
+}
+
+composePreview {
+    variant.set("debug")
+    sdkVersion.set(35)
+    enabled.set(true)
 }
 
 dependencies {
@@ -46,6 +57,8 @@ dependencies {
     implementation(libs.compose.material3)
     implementation(libs.compose.material.icons.extended)
     implementation(libs.compose.ui.text.google.fonts)
+    implementation(libs.compose.ui.tooling.preview)
+    debugImplementation(libs.compose.ui.tooling)
     implementation(libs.activity.compose)
     implementation(libs.materialkolor)
 
@@ -67,4 +80,12 @@ dependencies {
 
     testImplementation(libs.kotlin.test.junit)
     testImplementation(libs.kotlinx.coroutines.test)
+
+    androidTestImplementation(libs.androidx.test.ext.junit)
+    androidTestImplementation(platform(libs.compose.bom))
+    androidTestImplementation(libs.compose.ui.test.junit4)
+    // ui-test-manifest bundles a ComponentActivity into the debug APK so
+    // `createComposeRule()` can host @Composable content without an
+    // Activity of our own.
+    debugImplementation(libs.compose.ui.test.manifest)
 }
