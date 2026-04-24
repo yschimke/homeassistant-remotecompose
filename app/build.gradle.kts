@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.compose.compiler)
+    alias(libs.plugins.compose.preview)
     alias(libs.plugins.metro)
 }
 
@@ -35,6 +36,12 @@ android {
     kotlin { jvmToolchain(libs.versions.java.get().toInt()) }
 }
 
+composePreview {
+    variant.set("debug")
+    sdkVersion.set(35)
+    enabled.set(true)
+}
+
 dependencies {
     implementation(project(":ha-model"))
     implementation(project(":ha-client"))
@@ -48,6 +55,8 @@ dependencies {
     implementation(libs.compose.material3)
     implementation(libs.compose.material.icons.extended)
     implementation(libs.compose.ui.text.google.fonts)
+    implementation(libs.compose.ui.tooling.preview)
+    debugImplementation(libs.compose.ui.tooling)
     implementation(libs.activity.compose)
     implementation(libs.materialkolor)
 
