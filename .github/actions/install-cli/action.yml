@@ -1,0 +1,33 @@
+name: 'Install compose-preview CLI'
+description: >
+  Download the released compose-preview CLI tarball and put its `bin/` on
+  `$GITHUB_PATH`. This repo consumes the plugin+CLI rather than owning
+  their source, so we pin a release version here; bump in lockstep with
+  the version-catalog pin on the Gradle plugin (`compose-preview-plugin`
+  in `gradle/libs.versions.toml`).
+
+inputs:
+  version:
+    description: 'compose-ai-tools release version'
+    default: '0.7.8'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Download + stage CLI
+      shell: bash
+      env:
+        VER: ${{ inputs.version }}
+      # Stage under /opt so the $GITHUB_PATH write is a fixed literal. An
+      # expansion-backed path would trip zizmor's `github-env` rule — the
+      # input goes via env, never into the PATH line itself.
+      run: |
+        set -euo pipefail
+        curl -fsSL -o /tmp/compose-preview.tar.gz \
+          "https://github.com/yschimke/compose-ai-tools/releases/download/v${VER}/compose-preview-${VER}.tar.gz"
+        sudo mkdir -p /opt/compose-preview
+        sudo tar -xzf /tmp/compose-preview.tar.gz -C /opt/compose-preview --strip-components=1
+
+    - name: Add CLI to PATH
+      shell: bash
+      run: echo "/opt/compose-preview/bin" >> "$GITHUB_PATH"
