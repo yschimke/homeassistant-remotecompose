@@ -21,6 +21,8 @@ android {
         // Exposed to AndroidManifest via placeholders so the IndieAuth
         // redirect scheme is declared in one place.
         manifestPlaceholders["appAuthRedirectScheme"] = "rcha"
+
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
     buildFeatures {
         compose = true
@@ -67,4 +69,12 @@ dependencies {
 
     testImplementation(libs.kotlin.test.junit)
     testImplementation(libs.kotlinx.coroutines.test)
+
+    androidTestImplementation(libs.androidx.test.ext.junit)
+    androidTestImplementation(platform(libs.compose.bom))
+    androidTestImplementation(libs.compose.ui.test.junit4)
+    // ui-test-manifest bundles a ComponentActivity into the debug APK so
+    // `createComposeRule()` can host @Composable content without an
+    // Activity of our own.
+    debugImplementation(libs.compose.ui.test.manifest)
 }
