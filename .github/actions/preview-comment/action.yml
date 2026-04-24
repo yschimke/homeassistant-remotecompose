@@ -30,6 +30,20 @@ runs:
         RENDER_TIMEOUT: ${{ inputs.timeout }}
       run: compose-preview show --json --timeout "$RENDER_TIMEOUT" > _previews.json
 
+    - name: Upload render failure reports
+      # Robolectric-based `renderPreviews` task fails with a generic
+      # "There were failing tests" summary and points at an HTML report
+      # that isn't otherwise preserved. Grab it on failure so we can
+      # diagnose without re-running locally.
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: preview-render-reports
+        path: |
+          **/build/reports/tests/renderPreviews/**
+          **/build/test-results/renderPreviews/**
+        if-no-files-found: ignore
+
     - name: Fetch baselines
       shell: bash
       env:
