@@ -11,10 +11,12 @@ android {
     defaultConfig {
         applicationId = "ee.schimke.terrazzo"
         // Widget playback via RemoteViews.DrawInstructions needs API 35+
-        // (VANILLA_ICE_CREAM). minSdk 36 so the D8 dex compiler accepts
-        // the build (alpha compilers warn on 37+); we still compile / target
-        // the newest available SDK via `compileSdk` / `targetSdk`.
-        minSdk = 36
+        // (VANILLA_ICE_CREAM). We still compile / target the newest
+        // available SDK via `compileSdk` / `targetSdk`. Keeping minSdk
+        // at 35 (not 36) lets Robolectric's SDK-35 framework — which
+        // compose-preview 0.7.8 tops out at — parse this module's
+        // apk-for-local-test during renderPreviews.
+        minSdk = 35
         targetSdk = libs.versions.android.targetSdk.get().toInt()
         versionCode = 1
         versionName = "0.1.0"
@@ -38,10 +40,7 @@ android {
 
 composePreview {
     variant.set("debug")
-    // Match `:app`'s `minSdk = 36` (widget playback needs API 35+) — at
-    // `sdkVersion.set(35)` Robolectric's PackageParser refuses the APK
-    // manifest with "Requires newer sdk version #36".
-    sdkVersion.set(36)
+    sdkVersion.set(35)
     enabled.set(true)
 }
 
