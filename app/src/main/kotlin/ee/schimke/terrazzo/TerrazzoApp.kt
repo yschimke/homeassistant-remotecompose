@@ -12,14 +12,17 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Widgets
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -32,21 +35,17 @@ import androidx.compose.ui.unit.dp
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.terrazzo.auth.rememberLoginController
+import ee.schimke.terrazzo.core.prefs.DarkModePref
+import ee.schimke.terrazzo.core.prefs.ThemePref
 import ee.schimke.terrazzo.core.session.DemoData
 import ee.schimke.terrazzo.core.session.DemoHaSession
 import ee.schimke.terrazzo.core.session.HaSession
+import ee.schimke.terrazzo.widget.WidgetRefreshScheduler
 import ee.schimke.terrazzo.dashboard.DashboardPickerScreen
 import ee.schimke.terrazzo.dashboard.DashboardViewScreen
 import ee.schimke.terrazzo.discovery.DiscoveryScreen
 import ee.schimke.terrazzo.monitor.MonitoringService
-import ee.schimke.terrazzo.ui.AppearanceSection
-import ee.schimke.terrazzo.ui.TerrazzoTheme
-import ee.schimke.terrazzo.ui.theme.ColorSource
-import ee.schimke.terrazzo.ui.theme.DarkMode
-import ee.schimke.terrazzo.ui.theme.TypographyChoice
-import ee.schimke.terrazzo.ui.theme.rememberThemeSettings
 import ee.schimke.terrazzo.widget.WidgetInstallSheet
-import ee.schimke.terrazzo.widget.WidgetRefreshScheduler
 import ee.schimke.terrazzo.widget.WidgetsScreen
 import kotlinx.coroutines.launch
 
@@ -68,15 +67,6 @@ import kotlinx.coroutines.launch
  */
 @Composable
 fun TerrazzoApp() {
-    val graph = LocalTerrazzoGraph.current
-    val themeSettings by rememberThemeSettings(graph.preferencesStore)
-    TerrazzoTheme(settings = themeSettings) {
-        TerrazzoAppContent()
-    }
-}
-
-@Composable
-private fun TerrazzoAppContent() {
     // NOTE: not saveable — an HaSession owns a live WebSocket. Process
     // restart re-walks the discovery / login flow. The refresh token in
     // TokenVault means we can auto-sign-in silently once we wire that up.
@@ -277,7 +267,10 @@ private fun SettingsScreen(
     val isDemo = session is DemoHaSession
     val graph = LocalTerrazzoGraph.current
     val scope = rememberCoroutineScope()
-    val themeSettings by rememberThemeSettings(graph.preferencesStore)
+    val context = LocalContext.current
+    val widgetRefresh = remember(context) { WidgetRefreshScheduler(context.applicationContext) }
+    val themePref by graph.preferencesStore.themeStyle.collectAsState(initial = ThemePref.TerrazzoHome)
+    val darkPref by graph.preferencesStore.darkMode.collectAsState(initial = DarkModePref.Follow)
 
     Column(Modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
         Text("Settings", style = MaterialTheme.typography.headlineMedium)
@@ -286,19 +279,6 @@ private fun SettingsScreen(
         Text(
             if (isDemo) "Demo mode — offline fake data" else session.baseUrl,
             style = MaterialTheme.typography.bodyMedium,
-        )
-
-        AppearanceSection(
-            settings = themeSettings,
-            onColorSource = { choice: ColorSource ->
-                scope.launch { graph.preferencesStore.setColorSource(choice.name) }
-            },
-            onTypography = { choice: TypographyChoice ->
-                scope.launch { graph.preferencesStore.setTypography(choice.name) }
-            },
-            onDarkMode = { choice: DarkMode ->
-                scope.launch { graph.preferencesStore.setDarkMode(choice.name) }
-            },
         )
 
         Row(
@@ -319,8 +299,102 @@ private fun SettingsScreen(
             )
         }
 
+        ThemeSection(
+            selected = themePref,
+            darkMode = darkPref,
+            onSelectTheme = { pref ->
+                scope.launch {
+                    graph.preferencesStore.setThemeStyle(pref)
+                    // Each pinned widget has a baked .rc doc using the
+                    // old palette; broadcast a refresh so the provider
+                    // re-captures under the new one.
+                    widgetRefresh.refreshAllNow()
+                }
+            },
+            onSelectDark = { pref ->
+                scope.launch {
+                    graph.preferencesStore.setDarkMode(pref)
+                    widgetRefresh.refreshAllNow()
+                }
+            },
+        )
+
         OutlinedButton(onClick = onSignOut) {
             Text(if (isDemo) "Exit demo" else "Sign out")
         }
     }
+}
+
+@Composable
+private fun ThemeSection(
+    selected: ThemePref,
+    darkMode: DarkModePref,
+    onSelectTheme: (ThemePref) -> Unit,
+    onSelectDark: (DarkModePref) -> Unit,
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Text("Theme", style = MaterialTheme.typography.titleMedium)
+        Text(
+            "Material 3 uses the system default palette (dynamic colour on Android 12+). " +
+                "The Terrazzo themes ship a curated Home-Assistant-flavoured palette plus a Google-Fonts pairing.",
+            style = MaterialTheme.typography.bodySmall,
+        )
+        ThemePref.entries.forEach { pref ->
+            ThemeRow(
+                pref = pref,
+                selected = pref == selected,
+                onClick = { onSelectTheme(pref) },
+            )
+        }
+
+        Text("Appearance", style = MaterialTheme.typography.titleMedium)
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            DarkModePref.entries.forEach { pref ->
+                FilterChip(
+                    selected = pref == darkMode,
+                    onClick = { onSelectDark(pref) },
+                    label = {
+                        Text(
+                            when (pref) {
+                                DarkModePref.Follow -> "Follow system"
+                                DarkModePref.Light -> "Light"
+                                DarkModePref.Dark -> "Dark"
+                            },
+                        )
+                    },
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ThemeRow(pref: ThemePref, selected: Boolean, onClick: () -> Unit) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        RadioButton(selected = selected, onClick = onClick)
+        Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(themePrefDisplayName(pref), style = MaterialTheme.typography.bodyLarge)
+            Text(themePrefTagline(pref), style = MaterialTheme.typography.bodySmall)
+        }
+    }
+}
+
+private fun themePrefDisplayName(pref: ThemePref): String = when (pref) {
+    ThemePref.Material3 -> "Material 3"
+    ThemePref.TerrazzoHome -> "Home"
+    ThemePref.TerrazzoMushroom -> "Mushroom"
+    ThemePref.TerrazzoMinimalist -> "Minimalist"
+    ThemePref.TerrazzoKiosk -> "Kiosk"
+}
+
+private fun themePrefTagline(pref: ThemePref): String = when (pref) {
+    ThemePref.Material3 -> "Defaults · dynamic colour on Android 12+"
+    ThemePref.TerrazzoHome -> "Home Assistant blue · Roboto Flex + Inter"
+    ThemePref.TerrazzoMushroom -> "Warm salmon · Figtree"
+    ThemePref.TerrazzoMinimalist -> "Neutral slate · IBM Plex Sans"
+    ThemePref.TerrazzoKiosk -> "High-contrast teal · Atkinson Hyperlegible"
 }

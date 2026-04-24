@@ -1,10 +1,15 @@
 package ee.schimke.terrazzo.widget
 
+import android.appwidget.AppWidgetManager
+import android.content.ComponentName
 import android.content.Context
+import android.content.Intent
 import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.workDataOf
+import ee.schimke.terrazzo.terrazzoGraph
+import kotlinx.coroutines.flow.first
 import java.util.concurrent.TimeUnit
 
 /**
@@ -41,6 +46,24 @@ class WidgetRefreshScheduler(private val context: Context) {
 
     fun cancelDemo() {
         WorkManager.getInstance(context).cancelUniqueWork(DEMO_WORK_NAME)
+    }
+
+    /**
+     * Broadcast `ACTION_APPWIDGET_UPDATE` to every pinned widget. Used
+     * after a preference that affects widget rendering changes (theme,
+     * dark mode) so existing pinned widgets re-capture a document
+     * using the new palette.
+     */
+    suspend fun refreshAllNow() {
+        val ids = context.terrazzoGraph().widgetStore.installed.first()
+            .map { it.widgetId }
+            .toIntArray()
+        if (ids.isEmpty()) return
+        val intent = Intent(AppWidgetManager.ACTION_APPWIDGET_UPDATE).apply {
+            component = ComponentName(context, TerrazzoWidgetProvider::class.java)
+            putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids)
+        }
+        context.sendBroadcast(intent)
     }
 
     companion object {

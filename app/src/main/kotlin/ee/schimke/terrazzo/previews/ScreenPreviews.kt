@@ -7,13 +7,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
+import ee.schimke.ha.rc.components.ThemeStyle
+import ee.schimke.terrazzo.core.prefs.DarkModePref
 import ee.schimke.terrazzo.core.session.DemoHaSession
 import ee.schimke.terrazzo.dashboard.DashboardPickerScreen
 import ee.schimke.terrazzo.dashboard.DashboardViewScreen
 import ee.schimke.terrazzo.discovery.DiscoveryScreen
 import ee.schimke.terrazzo.ui.TerrazzoTheme
-import ee.schimke.terrazzo.ui.theme.ThemeSettings
-import ee.schimke.terrazzo.ui.theme.TypographyChoice
 import ee.schimke.terrazzo.widget.WidgetsScreen
 
 /**
@@ -22,11 +22,10 @@ import ee.schimke.terrazzo.widget.WidgetsScreen
  * theme tokens, a refactor that orphans a screen) show up in CI's
  * artifact bundle even before the emulator job runs.
  *
- * Every preview is wrapped in [TerrazzoTheme] so colour/typography
- * choices from [ThemeSettings] are exercised. Screens requiring a live
- * HA session use [DemoHaSession] — its `connect()` is a no-op and it
- * serves deterministic fake dashboards/state, which is exactly what a
- * screenshot harness wants.
+ * Every preview is wrapped in [TerrazzoTheme] so a [ThemeStyle] is
+ * exercised. Screens requiring a live HA session use [DemoHaSession] —
+ * its `connect()` is a no-op and it serves deterministic fake
+ * dashboards/state, which is exactly what a screenshot harness wants.
  *
  * Dimensions are Pixel-6-ish (portrait) so a full screen is visible
  * without scrolling.
@@ -36,10 +35,11 @@ private const val PHONE_HEIGHT_DP = 892
 
 @Composable
 private fun PhoneHost(
-    settings: ThemeSettings = ThemeSettings(),
+    style: ThemeStyle = ThemeStyle.TerrazzoHome,
+    darkMode: DarkModePref = DarkModePref.Follow,
     content: @Composable () -> Unit,
 ) {
-    TerrazzoTheme(settings = settings) {
+    TerrazzoTheme(style = style, darkMode = darkMode) {
         Box(Modifier.fillMaxSize()) { content() }
     }
 }
@@ -74,16 +74,14 @@ fun Screen_DashboardView() = PhoneHost {
 
 /**
  * Parameterised fan-out of [DashboardViewScreen] over every
- * [TypographyChoice]. Produces four PNGs — Material default, Expressive,
- * Atkinson Hyperlegible, Lexend — so the PR can compare the typography
- * options side-by-side against the same dashboard content. One preview
- * per PNG keeps filenames readable in the artifact bundle.
+ * [ThemeStyle]. Produces one PNG per curated palette so the PR can
+ * compare them side-by-side against the same dashboard content.
  */
 @Preview(name = "dashboard · theme", showBackground = false, widthDp = PHONE_WIDTH_DP, heightDp = PHONE_HEIGHT_DP)
 @Composable
-fun Screen_DashboardView_Typography(
-    @PreviewParameter(TypographyChoiceProvider::class) choice: TypographyChoice,
-) = PhoneHost(settings = ThemeSettings(typography = choice)) {
+fun Screen_DashboardView_ThemeStyle(
+    @PreviewParameter(ThemeStyleProvider::class) style: ThemeStyle,
+) = PhoneHost(style = style) {
     DashboardViewScreen(
         session = DemoHaSession(),
         urlPath = null,
@@ -91,6 +89,6 @@ fun Screen_DashboardView_Typography(
     )
 }
 
-class TypographyChoiceProvider : PreviewParameterProvider<TypographyChoice> {
-    override val values: Sequence<TypographyChoice> = TypographyChoice.entries.asSequence()
+class ThemeStyleProvider : PreviewParameterProvider<ThemeStyle> {
+    override val values: Sequence<ThemeStyle> = ThemeStyle.entries.asSequence()
 }

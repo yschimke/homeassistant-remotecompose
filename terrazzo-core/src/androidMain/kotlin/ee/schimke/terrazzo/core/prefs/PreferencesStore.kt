@@ -13,15 +13,27 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 
 /**
- * Small app-level preferences. Holds:
- *
- * - [demoMode]: whether to route dashboard screens through
- *   [ee.schimke.terrazzo.core.session.DemoHaSession] instead of a real
- *   HA session.
- * - [appearance]: three appearance keys (colour source, typography,
- *   dark mode). Stored as plain strings — enum name + `valueOf` — so
- *   adding / removing options doesn't need a schema migration, unknown
- *   values silently fall back to the default.
+ * User-selectable night-mode preference, layered above the system
+ * setting so users can force dark or light regardless of the system
+ * value. `Follow` is the default on mobile; Wear and TV ignore it (they
+ * are dark-only / light-only respectively).
+ */
+enum class DarkModePref { Follow, Light, Dark }
+
+/**
+ * Top-level theme selection: Material 3 defaults, or one of the
+ * curated Terrazzo palettes. The string values here match
+ * `ThemeStyle.name` in the rc-components module so the two tables
+ * stay in sync without an explicit mapper.
+ */
+enum class ThemePref { Material3, TerrazzoHome, TerrazzoMushroom, TerrazzoMinimalist, TerrazzoKiosk }
+
+/**
+ * Small app-level preferences. Demo-mode flag plus theme choice
+ * (Material 3 vs one of four Terrazzo palettes) and dark-mode
+ * preference. Reads are `Flow`s so the UI recomposes when the user
+ * flips a switch in Settings; widget refresh takes a one-shot read
+ * at update time.
  */
 @SingleIn(AppScope::class)
 @Inject
@@ -36,44 +48,34 @@ class PreferencesStore(private val context: Context) {
         context.store.edit { it[DEMO_KEY] = enabled }
     }
 
-    val appearance: Flow<AppearancePrefs>
+    val themeStyle: Flow<ThemePref>
         get() = context.store.data.map { prefs ->
-            AppearancePrefs(
-                colorSource = prefs[COLOR_SOURCE_KEY].orEmpty(),
-                typography = prefs[TYPOGRAPHY_KEY].orEmpty(),
-                darkMode = prefs[DARK_MODE_KEY].orEmpty(),
-            )
+            prefs[THEME_KEY]?.let { runCatching { ThemePref.valueOf(it) }.getOrNull() }
+                ?: ThemePref.TerrazzoHome
         }
 
-    suspend fun setColorSource(value: String) {
-        context.store.edit { it[COLOR_SOURCE_KEY] = value }
+    suspend fun themeStyleNow(): ThemePref = themeStyle.first()
+
+    suspend fun setThemeStyle(style: ThemePref) {
+        context.store.edit { it[THEME_KEY] = style.name }
     }
 
-    suspend fun setTypography(value: String) {
-        context.store.edit { it[TYPOGRAPHY_KEY] = value }
-    }
+    val darkMode: Flow<DarkModePref>
+        get() = context.store.data.map { prefs ->
+            prefs[DARK_KEY]?.let { runCatching { DarkModePref.valueOf(it) }.getOrNull() }
+                ?: DarkModePref.Follow
+        }
 
-    suspend fun setDarkMode(value: String) {
-        context.store.edit { it[DARK_MODE_KEY] = value }
+    suspend fun darkModeNow(): DarkModePref = darkMode.first()
+
+    suspend fun setDarkMode(mode: DarkModePref) {
+        context.store.edit { it[DARK_KEY] = mode.name }
     }
 
     companion object {
         private val Context.store by preferencesDataStore(name = "terrazzo_prefs")
         private val DEMO_KEY = booleanPreferencesKey("demo_mode")
-        private val COLOR_SOURCE_KEY = stringPreferencesKey("color_source")
-        private val TYPOGRAPHY_KEY = stringPreferencesKey("typography")
-        private val DARK_MODE_KEY = stringPreferencesKey("dark_mode")
+        private val THEME_KEY = stringPreferencesKey("theme_style")
+        private val DARK_KEY = stringPreferencesKey("dark_mode")
     }
 }
-
-/**
- * Raw appearance values as stored in DataStore. Strings so this module
- * stays free of any dependency on the `ThemeSettings` enums, which live
- * in the `app` module. The UI layer maps between these strings and its
- * enums (missing / unknown → default).
- */
-data class AppearancePrefs(
-    val colorSource: String,
-    val typography: String,
-    val darkMode: String,
-)

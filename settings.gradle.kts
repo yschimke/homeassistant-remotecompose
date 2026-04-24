@@ -32,5 +32,7 @@ include(
     ":demo-app",
     ":terrazzo-core",
     ":app",
+    ":wear",
+    ":tv",
     ":integration",
 )
