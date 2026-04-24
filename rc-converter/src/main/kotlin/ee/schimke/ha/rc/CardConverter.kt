@@ -51,6 +51,33 @@ interface CardConverter {
      * override to compute from [card] / [snapshot].
      */
     fun naturalHeightDp(card: CardConfig, snapshot: HaSnapshot): Int = 160
+
+    /**
+     * Whether this card prefers to share its row with siblings
+     * ([CardWidthClass.Compact] — small button-shaped tiles like `tile`,
+     * `button`, `entity`) or wants the full content width
+     * ([CardWidthClass.Full] — list-shaped, hero, or chrome cards).
+     *
+     * The dashboard layout reads this to pack consecutive Compact
+     * cards into a single row on tablets / unfolded foldables, while
+     * keeping Full cards stacked one-per-row regardless of width.
+     * Default is [CardWidthClass.Full]: the conservative choice that
+     * preserves how the card was authored.
+     */
+    fun naturalWidthClass(card: CardConfig, snapshot: HaSnapshot): CardWidthClass =
+        CardWidthClass.Full
+}
+
+/**
+ * Layout hint emitted by a [CardConverter]. The dashboard renderer uses
+ * it to decide whether the card stays on its own row or pairs up with
+ * neighbouring small cards.
+ */
+enum class CardWidthClass {
+    /** Small button-shaped card (tile, button, entity). Pairs into rows. */
+    Compact,
+    /** Wants the full content width — list / hero / chrome. */
+    Full,
 }
 
 /**

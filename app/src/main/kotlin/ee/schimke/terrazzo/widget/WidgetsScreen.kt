@@ -1,8 +1,11 @@
 package ee.schimke.terrazzo.widget
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -16,9 +19,13 @@ import androidx.compose.ui.unit.dp
  *   - up-to-5 cap enforced here.
  */
 @Composable
-fun WidgetsScreen() {
+fun WidgetsScreen(contentPadding: PaddingValues = PaddingValues(0.dp)) {
     Column(
-        modifier = Modifier.fillMaxSize().padding(24.dp),
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(contentPadding)
+            .padding(24.dp),
     ) {
         Text("Widgets", style = MaterialTheme.typography.headlineMedium)
         Text(
