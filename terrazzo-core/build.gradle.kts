@@ -12,7 +12,7 @@ kotlin {
         compileSdk = libs.versions.android.compileSdk.get().toInt()
         // RemoteCompose widget needs API 35+; align with :app so Android
         // sources can reference the same platform APIs.
-        minSdk = 36
+        minSdk = 35
     }
 
     sourceSets {
