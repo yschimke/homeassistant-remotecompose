@@ -7,10 +7,11 @@ Auto-generated from `main`. Browse inline or compare against PR branches.
 | Preview | Image |
 |---------|-------|
 | `Screen_DashboardPicker` | <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/preview_main/renders/app/Screen_DashboardPicker_dashboard_picker.png" width="150" /> |
-| `Screen_DashboardView_Typography` | <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/preview_main/renders/app/Screen_DashboardView_Typography_dashboard_theme_AtkinsonHyperlegible.png" width="150" /> |
-| `Screen_DashboardView_Typography` | <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/preview_main/renders/app/Screen_DashboardView_Typography_dashboard_theme_Expressive.png" width="150" /> |
-| `Screen_DashboardView_Typography` | <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/preview_main/renders/app/Screen_DashboardView_Typography_dashboard_theme_Lexend.png" width="150" /> |
-| `Screen_DashboardView_Typography` | <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/preview_main/renders/app/Screen_DashboardView_Typography_dashboard_theme_MaterialDefault.png" width="150" /> |
+| `Screen_DashboardView_ThemeStyle` | <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/preview_main/renders/app/Screen_DashboardView_ThemeStyle_dashboard_theme_Material3.png" width="150" /> |
+| `Screen_DashboardView_ThemeStyle` | <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/preview_main/renders/app/Screen_DashboardView_ThemeStyle_dashboard_theme_TerrazzoHome.png" width="150" /> |
+| `Screen_DashboardView_ThemeStyle` | <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/preview_main/renders/app/Screen_DashboardView_ThemeStyle_dashboard_theme_TerrazzoKiosk.png" width="150" /> |
+| `Screen_DashboardView_ThemeStyle` | <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/preview_main/renders/app/Screen_DashboardView_ThemeStyle_dashboard_theme_TerrazzoMinimalist.png" width="150" /> |
+| `Screen_DashboardView_ThemeStyle` | <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/preview_main/renders/app/Screen_DashboardView_ThemeStyle_dashboard_theme_TerrazzoMushroom.png" width="150" /> |
 | `Screen_DashboardView` | <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/preview_main/renders/app/Screen_DashboardView_dashboard_view.png" width="150" /> |
 | `Screen_Discovery` | <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/preview_main/renders/app/Screen_Discovery_discovery.png" width="150" /> |
 | `Screen_Widgets` | <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/preview_main/renders/app/Screen_Widgets_widgets.png" width="150" /> |
@@ -56,6 +57,16 @@ Auto-generated from `main`. Browse inline or compare against PR branches.
 | `VerticalStack_Light` | <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/preview_main/renders/previews/CardPreviewsKt.VerticalStack_Light_vertical-stack_light.png" width="150" /> |
 | `Shutter_Dark` | <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/preview_main/renders/previews/ShutterCardPreviewsKt.Shutter_Dark_shutter_dark.png" width="150" /> |
 | `Shutter_Light` | <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/preview_main/renders/previews/ShutterCardPreviewsKt.Shutter_Light_shutter_light.png" width="150" /> |
+| `Theme_Home_Dark` | <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/preview_main/renders/previews/ThemePreviewsKt.Theme_Home_Dark_theme_Home_dark.png" width="150" /> |
+| `Theme_Home_Light` | <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/preview_main/renders/previews/ThemePreviewsKt.Theme_Home_Light_theme_Home_light.png" width="150" /> |
+| `Theme_Kiosk_Dark` | <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/preview_main/renders/previews/ThemePreviewsKt.Theme_Kiosk_Dark_theme_Kiosk_dark.png" width="150" /> |
+| `Theme_Kiosk_Light` | <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/preview_main/renders/previews/ThemePreviewsKt.Theme_Kiosk_Light_theme_Kiosk_light.png" width="150" /> |
+| `Theme_Material3_Dark` | <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/preview_main/renders/previews/ThemePreviewsKt.Theme_Material3_Dark_theme_Material3_dark.png" width="150" /> |
+| `Theme_Material3_Light` | <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/preview_main/renders/previews/ThemePreviewsKt.Theme_Material3_Light_theme_Material3_light.png" width="150" /> |
+| `Theme_Minimalist_Dark` | <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/preview_main/renders/previews/ThemePreviewsKt.Theme_Minimalist_Dark_theme_Minimalist_dark.png" width="150" /> |
+| `Theme_Minimalist_Light` | <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/preview_main/renders/previews/ThemePreviewsKt.Theme_Minimalist_Light_theme_Minimalist_light.png" width="150" /> |
+| `Theme_Mushroom_Dark` | <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/preview_main/renders/previews/ThemePreviewsKt.Theme_Mushroom_Dark_theme_Mushroom_dark.png" width="150" /> |
+| `Theme_Mushroom_Light` | <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/preview_main/renders/previews/ThemePreviewsKt.Theme_Mushroom_Light_theme_Mushroom_light.png" width="150" /> |
 | `Tile_LightOn_Dark` | <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/preview_main/renders/previews/TileCardPreviewsKt.Tile_LightOn_Dark_tile_light_on_dark.png" width="150" /> |
 | `Tile_LightOn` | <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/preview_main/renders/previews/TileCardPreviewsKt.Tile_LightOn_tile_light_on.png" width="150" /> |
 | `Tile_TemperatureSensor_Dark` | <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/preview_main/renders/previews/TileCardPreviewsKt.Tile_TemperatureSensor_Dark_tile_sensor_temperature_dark.png" width="150" /> |
