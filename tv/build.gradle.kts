@@ -1,14 +1,20 @@
 plugins {
-    alias(libs.plugins.android.library)
+    alias(libs.plugins.android.application)
     alias(libs.plugins.compose.compiler)
-    alias(libs.plugins.kotlin.serialization)
 }
 
 android {
-    namespace = "ee.schimke.ha.rc.components"
+    namespace = "ee.schimke.terrazzo.tv"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
     defaultConfig {
+        applicationId = "ee.schimke.terrazzo.tv"
+        // Match rc-components' minSdk (29). Android TV 10 (API 29) is
+        // a reasonable floor for HA dashboards; dropping lower would
+        // need a tools:overrideLibrary escape hatch.
         minSdk = libs.versions.android.minSdk.get().toInt()
+        targetSdk = libs.versions.android.targetSdk.get().toInt()
+        versionCode = 1
+        versionName = "0.1.0"
     }
     buildFeatures { compose = true }
     compileOptions {
@@ -19,21 +25,14 @@ android {
 }
 
 dependencies {
+    implementation(project(":rc-components"))
+
     implementation(platform(libs.compose.bom))
     implementation(libs.compose.ui)
     implementation(libs.compose.foundation)
     implementation(libs.compose.material3)
-    implementation(libs.compose.material.icons.extended)
     implementation(libs.compose.ui.text.google.fonts)
-    api(libs.materialkolor)
+    implementation(libs.activity.compose)
 
-    implementation(libs.remote.creation.compose)
-    implementation(libs.remote.creation.android)
-    implementation(libs.remote.creation.core)
-    implementation(libs.remote.core)
-    implementation(libs.remote.material3)
-
-    implementation(libs.kotlinx.serialization.json)
-
-    testImplementation(libs.kotlin.test)
+    implementation(libs.tv.material)
 }

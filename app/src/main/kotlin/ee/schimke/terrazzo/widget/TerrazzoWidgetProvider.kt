@@ -12,8 +12,11 @@ import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.ProvideCardRegistry
 import ee.schimke.ha.rc.RenderChild
 import ee.schimke.ha.rc.cards.defaultRegistry
-import ee.schimke.ha.rc.components.HaTheme
 import ee.schimke.ha.rc.components.ProvideHaTheme
+import ee.schimke.ha.rc.components.ThemeStyle
+import ee.schimke.ha.rc.components.haThemeFor
+import ee.schimke.terrazzo.core.prefs.DarkModePref
+import ee.schimke.terrazzo.core.prefs.ThemePref
 import ee.schimke.terrazzo.core.session.DemoData
 import ee.schimke.terrazzo.core.widget.WidgetStore
 import ee.schimke.terrazzo.terrazzoGraph
@@ -57,9 +60,11 @@ class TerrazzoWidgetProvider : RemoteComposeWidget(useCompose = true) {
         // empty default — they'll be refreshed by a future background
         // worker once we wire snapshot caching.
         val snapshot = if (DemoData.isDemo(entry.baseUrl)) DemoData.snapshot() else EMPTY_SNAPSHOT
+        val (style, dark) = remember(context, widgetId) { loadThemeChoice(context) }
+        val haTheme = remember(style, dark) { haThemeFor(style, dark) }
         val registry = defaultRegistry()
         ProvideCardRegistry(registry) {
-            ProvideHaTheme(HaTheme.Light) {
+            ProvideHaTheme(haTheme) {
                 RenderChild(entry.card, snapshot, RemoteModifier.fillMaxWidth())
             }
         }
@@ -67,6 +72,37 @@ class TerrazzoWidgetProvider : RemoteComposeWidget(useCompose = true) {
 
     private fun loadEntry(context: Context, widgetId: Int): WidgetStore.Entry? =
         runBlocking { context.terrazzoGraph().widgetStore.get(widgetId) }
+
+    /**
+     * Resolve the user's theme + dark-mode preference synchronously at
+     * render time. The widget has no Compose theme scope upstream —
+     * each `updateAppWidget` call captures a fresh `.rc` document, so
+     * changing the preference regenerates the widget on the next
+     * refresh (see `TerrazzoApp`'s settings screen, which triggers a
+     * broadcast refresh when the user picks a new theme).
+     */
+    private fun loadThemeChoice(context: Context): Pair<ThemeStyle, Boolean> = runBlocking {
+        val prefs = context.terrazzoGraph().preferencesStore
+        val style = prefs.themeStyleNow().toStyle()
+        val dark = when (prefs.darkModeNow()) {
+            DarkModePref.Follow -> {
+                val ui = context.resources.configuration.uiMode and
+                    android.content.res.Configuration.UI_MODE_NIGHT_MASK
+                ui == android.content.res.Configuration.UI_MODE_NIGHT_YES
+            }
+            DarkModePref.Light -> false
+            DarkModePref.Dark -> true
+        }
+        style to dark
+    }
+
+    private fun ThemePref.toStyle(): ThemeStyle = when (this) {
+        ThemePref.Material3 -> ThemeStyle.Material3
+        ThemePref.TerrazzoHome -> ThemeStyle.TerrazzoHome
+        ThemePref.TerrazzoMushroom -> ThemeStyle.TerrazzoMushroom
+        ThemePref.TerrazzoMinimalist -> ThemeStyle.TerrazzoMinimalist
+        ThemePref.TerrazzoKiosk -> ThemeStyle.TerrazzoKiosk
+    }
 
     private companion object {
         val EMPTY_SNAPSHOT = HaSnapshot()

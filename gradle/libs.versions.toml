@@ -27,7 +27,7 @@ kotlinx-coroutines = "1.10.1"
 kotlinx-datetime = "0.6.1"
 
 # Preview tooling
-compose-preview-plugin = "0.7.8"
+compose-preview-plugin = "0.7.11"
 
 [libraries]
 # RemoteCompose authoring / playback
@@ -52,6 +52,13 @@ compose-material3 = { module = "androidx.compose.material3:material3" }
 compose-material-icons-extended = { module = "androidx.compose.material:material-icons-extended" }
 activity-compose = { module = "androidx.activity:activity-compose", version = "1.9.3" }
 
+# Wear Compose (stub module — full app lands later)
+wear-compose-material3 = { module = "androidx.wear.compose:compose-material3", version = "1.5.0-beta03" }
+wear-compose-foundation = { module = "androidx.wear.compose:compose-foundation", version = "1.5.0-beta03" }
+
+# TV Compose (stub module)
+tv-material = { module = "androidx.tv:tv-material", version = "1.0.0" }
+
 # Terrazzo app deps
 androidx-browser = { module = "androidx.browser:browser", version = "1.8.0" }
 androidx-datastore-preferences = { module = "androidx.datastore:datastore-preferences", version = "1.1.1" }
@@ -64,6 +71,10 @@ compose-ui-text-google-fonts = { module = "androidx.compose.ui:ui-text-google-fo
 compose-ui-test-junit4 = { module = "androidx.compose.ui:ui-test-junit4" }
 compose-ui-test-manifest = { module = "androidx.compose.ui:ui-test-manifest" }
 androidx-test-ext-junit = { module = "androidx.test.ext:junit", version = "1.2.1" }
+# materialkolor: derive a full Material 3 ColorScheme from a single seed
+# colour. Each Terrazzo palette = seed + PaletteStyle. Non-composable
+# `dynamicColorScheme(...)` is what the widget provider calls at
+# capture time (we can't hold a Compose state across the widget boundary).
 materialkolor = { module = "com.materialkolor:material-kolor", version = "4.1.1" }
 
 # Ktor (HA WebSocket client)

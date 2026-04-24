@@ -8,20 +8,14 @@ import androidx.compose.ui.graphics.Color
 
 /**
  * Rendered-theme palette for Home Assistant cards. A [HaTheme] is a
- * concrete snapshot of colors; composables read it through [LocalHaTheme]
- * and emit plain [Color]s into the document at capture time.
+ * concrete snapshot of colours; composables read it through
+ * [LocalHaTheme] and emit plain [Color]s into the `.rc` document at
+ * capture time.
  *
- * TODO(theme): move to `androidx.compose.remote.core.operations.ColorTheme`
- *   so a single `.rc` document carries both palettes and the player
- *   switches based on `playbackTheme`. The creation-side DSL for
- *   `ColorTheme` is not yet public as of alpha08, so for now we:
- *
- *   - capture the host app's current theme
- *   - render one document per theme
- *   - regenerate when the theme changes
- *
- *   See `androidx.compose.remote.core.operations.Theme.{LIGHT,DARK}`
- *   and `ColorTheme` for the eventual single-document path.
+ * A theme switch **regenerates** the document — the colours are baked
+ * at capture. This is deliberate (see project_rendering_strategy in
+ * memory); alpha08 does not expose a stable `ColorTheme` DSL that would
+ * let a single document carry both palettes.
  */
 data class HaTheme(
     val cardBackground: Color,
@@ -36,7 +30,8 @@ data class HaTheme(
 ) {
     companion object {
         // Values sampled from HA's default light theme for
-        // `hui-tile-card` (HA 2026-04).
+        // `hui-tile-card` (HA 2026-04). Used as the `TerrazzoHome` light
+        // palette and as the fallback when no style is resolved.
         val Light = HaTheme(
             cardBackground = Color(0xFFFFFFFF),
             dashboardBackground = Color(0xFFFAFAFA),
@@ -62,6 +57,43 @@ data class HaTheme(
             isDark = true,
         )
     }
+}
+
+/**
+ * Derive an [HaTheme] for a given [style] and [darkTheme] flag. Each
+ * Terrazzo palette maps the Material 3 `ColorScheme` (built from
+ * [terrazzoColorScheme]) onto the HA-card role layer so cards render in
+ * the selected palette automatically:
+ *
+ * - `surface` ↦ `cardBackground`
+ * - `background` ↦ `dashboardBackground`
+ * - `onSurface` ↦ `primaryText`
+ * - `onSurfaceVariant` ↦ `secondaryText`
+ * - `outline` ↦ `divider`
+ * - `secondary` ↦ `placeholderAccent`
+ * - `secondaryContainer` ↦ `placeholderBackground`
+ *
+ * [ThemeStyle.Material3] is special-cased: the M3 defaults have a
+ * lilac primary that doesn't match any HA palette, so we fall back to
+ * the HA-sampled Light/Dark snapshots rather than let `colorScheme()`
+ * leak purple containers into the dashboard.
+ */
+fun haThemeFor(style: ThemeStyle, darkTheme: Boolean): HaTheme {
+    if (style == ThemeStyle.Material3) {
+        return if (darkTheme) HaTheme.Dark else HaTheme.Light
+    }
+    val m3 = terrazzoColorScheme(style, darkTheme)
+    return HaTheme(
+        cardBackground = m3.surface,
+        dashboardBackground = m3.background,
+        primaryText = m3.onSurface,
+        secondaryText = m3.onSurfaceVariant,
+        divider = m3.outline,
+        placeholderAccent = m3.secondary,
+        placeholderBackground = m3.secondaryContainer,
+        unknownAccent = m3.onSurfaceVariant,
+        isDark = darkTheme,
+    )
 }
 
 val LocalHaTheme = staticCompositionLocalOf { HaTheme.Light }
