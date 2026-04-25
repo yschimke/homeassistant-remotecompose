@@ -24,6 +24,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
@@ -206,7 +208,16 @@ private fun CardSlot(
     val haTheme = remember(style, dark) { haThemeFor(style, dark) }
     Box(
         modifier = modifier
-            .combinedClickLongPress(onLongPress = { onLongPress(card) }),
+            // Stable semantics tag so uiautomator / Compose tests can
+            // address card slots by content-description without
+            // depending on the (potentially user-localised) card name.
+            .semantics(mergeDescendants = true) {
+                contentDescription = "dashboard-card:${card.type}"
+            }
+            // longPressBeforeChild — listens on the Initial pass so it
+            // fires even though RemotePreview's pointer-input consumes
+            // events on the Main pass for in-document click regions.
+            .longPressBeforeChild { onLongPress(card) },
     ) {
         RemotePreview(profile = androidXExperimental) {
             ProvideCardRegistry(registry) {
