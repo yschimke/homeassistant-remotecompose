@@ -82,8 +82,13 @@ dependencies {
     testImplementation(libs.kotlinx.coroutines.test)
 
     androidTestImplementation(libs.androidx.test.ext.junit)
+    androidTestImplementation(libs.androidx.test.runner)
     androidTestImplementation(platform(libs.compose.bom))
     androidTestImplementation(libs.compose.ui.test.junit4)
+    // uiautomator drives the long-press install flow via the actual
+    // Android input pipeline — Compose UI tests can't reliably exercise
+    // the Initial-pass pointer-input path that pre-empts the RC player.
+    androidTestImplementation(libs.androidx.test.uiautomator)
     // ui-test-manifest bundles a ComponentActivity into the debug APK so
     // `createComposeRule()` can host @Composable content without an
     // Activity of our own.
