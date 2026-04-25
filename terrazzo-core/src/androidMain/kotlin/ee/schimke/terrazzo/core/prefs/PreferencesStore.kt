@@ -72,10 +72,58 @@ class PreferencesStore(private val context: Context) {
         context.store.edit { it[DARK_KEY] = mode.name }
     }
 
+    /**
+     * The dashboard the user last opened. Drives auto-launch: on cold
+     * start, [ee.schimke.terrazzo.MainActivity] reads this once and
+     * seeds the dashboard nav-state, so a single-dashboard or 2-3
+     * favourites user lands directly on their content rather than the
+     * picker.
+     *
+     * Encoding:
+     *   - **`null`** (key absent) — never opened a dashboard. Show the
+     *     picker.
+     *   - **[DEFAULT_DASHBOARD_SENTINEL]** — last dashboard was HA's
+     *     unnamed default (whose `urlPath` is `null` over the wire).
+     *     We can't distinguish "user hasn't picked" from "user picked
+     *     the default" if both encoded as `null`, so the default gets
+     *     a sentinel string.
+     *   - any other string — the named dashboard's `urlPath`.
+     */
+    val lastViewedDashboard: Flow<String?>
+        get() = context.store.data.map { it[LAST_VIEWED_KEY] }
+
+    suspend fun lastViewedDashboardNow(): String? = lastViewedDashboard.first()
+
+    /**
+     * Persist the dashboard the user just opened. Pass `null` for HA's
+     * default dashboard (which has no `urlPath`); the store encodes it
+     * as [DEFAULT_DASHBOARD_SENTINEL] so a subsequent
+     * [lastViewedDashboardNow] read can tell "default dashboard" apart
+     * from "never opened anything".
+     */
+    suspend fun setLastViewedDashboard(urlPath: String?) {
+        context.store.edit { it[LAST_VIEWED_KEY] = urlPath ?: DEFAULT_DASHBOARD_SENTINEL }
+    }
+
+    /**
+     * Forget the last dashboard. Called on sign-out / demo toggle so a
+     * fresh session doesn't auto-jump into a dashboard from the
+     * previous instance — that dashboard might not exist on the new
+     * one, and even if it did the user just changed identity and
+     * deserves the picker.
+     */
+    suspend fun clearLastViewedDashboard() {
+        context.store.edit { it.remove(LAST_VIEWED_KEY) }
+    }
+
     companion object {
         private val Context.store by preferencesDataStore(name = "terrazzo_prefs")
         private val DEMO_KEY = booleanPreferencesKey("demo_mode")
         private val THEME_KEY = stringPreferencesKey("theme_style")
         private val DARK_KEY = stringPreferencesKey("dark_mode")
+        private val LAST_VIEWED_KEY = stringPreferencesKey("last_viewed_dashboard")
+
+        /** Stored value for HA's default (unnamed) dashboard. */
+        const val DEFAULT_DASHBOARD_SENTINEL: String = "__default__"
     }
 }
