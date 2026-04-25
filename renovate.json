@@ -1,0 +1,47 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    ":dependencyDashboard",
+    ":semanticCommits"
+  ],
+  "labels": ["dependencies"],
+  "schedule": ["before 6am on monday"],
+  "timezone": "Europe/London",
+  "packageRules": [
+    {
+      "matchPackageNames": ["/^io\\.ktor:/"],
+      "groupName": "ktor"
+    },
+    {
+      "matchPackageNames": ["/^org\\.jetbrains\\.kotlinx:/"],
+      "groupName": "kotlinx"
+    },
+    {
+      "matchPackageNames": [
+        "/^androidx\\.compose($|\\.)/",
+        "/^androidx\\.activity:activity-compose/"
+      ],
+      "groupName": "androidx-compose"
+    },
+    {
+      "matchPackageNames": ["/^androidx\\.wear($|\\.)/", "/^androidx\\.tv\\./"],
+      "groupName": "androidx-wear-tv"
+    },
+    {
+      "matchPackageNames": ["/^com\\.google\\.android\\.horologist:/"],
+      "groupName": "horologist"
+    },
+    {
+      "matchPackageNames": [
+        "/^androidx\\.compose\\.remote:/",
+        "/^androidx\\.wear\\.compose\\.remote:/"
+      ],
+      "groupName": "remote-compose"
+    },
+    {
+      "matchManagers": ["github-actions"],
+      "groupName": "github-actions"
+    }
+  ]
+}
