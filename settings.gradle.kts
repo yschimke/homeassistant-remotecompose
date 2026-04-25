@@ -35,4 +35,5 @@ include(
     ":wear",
     ":tv",
     ":integration",
+    ":addon-server",
 )
