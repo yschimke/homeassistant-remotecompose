@@ -14,61 +14,46 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import ee.schimke.ha.client.DashboardSummary
-import ee.schimke.terrazzo.core.session.HaSession
 
+/**
+ * Dashboard picker. **Presentational** — the dashboards list is loaded
+ * by the caller (`DashboardsRoot`) so the same data drives both this
+ * screen and the top-bar quick-switcher dropdown without re-querying.
+ *
+ * The picker is the first-launch experience (when no `lastViewedDashboard`
+ * pref is set) and the destination of the system-back gesture from a
+ * dashboard view. With the new top-bar dropdown most users won't visit
+ * this screen often once they've picked a dashboard.
+ */
 @Composable
 fun DashboardPickerScreen(
-    session: HaSession,
+    state: DashboardListState,
     onDashboardPicked: (urlPath: String?) -> Unit,
     contentPadding: PaddingValues = PaddingValues(0.dp),
 ) {
-    var dashboards by remember { mutableStateOf<List<DashboardSummary>?>(null) }
-    var error by remember { mutableStateOf<String?>(null) }
-
-    LaunchedEffect(session) {
-        runCatching {
-            session.connect()
-            session.listDashboards()
-        }.onSuccess {
-            // HA returns an empty list if there are no *extra* dashboards; the
-            // default dashboard always lives at url_path = null.
-            dashboards = it.ifEmpty { listOf(DashboardSummary(urlPath = null, title = "Home")) }
-        }.onFailure { error = it.message ?: it::class.simpleName }
-    }
-
-    when {
-        error != null -> Column(Modifier.fillMaxSize().padding(contentPadding).padding(24.dp)) {
-            Text("Couldn't load dashboards", style = MaterialTheme.typography.titleMedium)
-            Text(error!!)
-        }
-        dashboards == null -> Column(
+    when (state) {
+        DashboardListState.Loading -> Column(
             Modifier.fillMaxSize().padding(contentPadding).padding(24.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             CircularProgressIndicator()
             Text("Fetching dashboards…")
         }
-        else -> LazyColumn(
+        is DashboardListState.Error -> Column(
+            Modifier.fillMaxSize().padding(contentPadding).padding(24.dp),
+        ) {
+            Text("Couldn't load dashboards", style = MaterialTheme.typography.titleMedium)
+            Text(state.message)
+        }
+        is DashboardListState.Ready -> LazyColumn(
             modifier = Modifier.fillMaxSize(),
             contentPadding = contentPadding,
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            item {
-                Text(
-                    "Dashboards",
-                    style = MaterialTheme.typography.headlineMedium,
-                    modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp),
-                )
-            }
-            items(dashboards!!) { d ->
+            items(state.dashboards, key = { it.urlPath ?: "__default__" }) { d ->
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
