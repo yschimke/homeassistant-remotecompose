@@ -10,42 +10,42 @@
     "captureLabel": "",
     "functionName": "Screen_DashboardView_ThemeStyle",
     "renderBasename": "Screen_DashboardView_ThemeStyle_dashboard_theme_Material3.png",
-    "sha256": "259d9f83c58664f3803a02b4cfe60711204f65e7278fac258cc0bd79e50417f9",
+    "sha256": "72b0abbae1b0e34e456eaccc0ec28e51c41e9a3da841795c854bee4167360607",
     "sourceFile": "ee/schimke/terrazzo/previews/ScreenPreviews.kt"
   },
   "app/ee.schimke.terrazzo.previews.ScreenPreviewsKt.Screen_DashboardView_ThemeStyle_dashboard \u00b7 theme#1": {
     "captureLabel": "",
     "functionName": "Screen_DashboardView_ThemeStyle",
     "renderBasename": "Screen_DashboardView_ThemeStyle_dashboard_theme_TerrazzoHome.png",
-    "sha256": "a3dd085939fa1c35da7257134a683ca9230e5f5fd7a750087b065fcb9cd1e99e",
+    "sha256": "5488f36bfa1b0b03804b2e9064fdb289dd2d80e529bac10637c76c26b78ae4d6",
     "sourceFile": "ee/schimke/terrazzo/previews/ScreenPreviews.kt"
   },
   "app/ee.schimke.terrazzo.previews.ScreenPreviewsKt.Screen_DashboardView_ThemeStyle_dashboard \u00b7 theme#2": {
     "captureLabel": "",
     "functionName": "Screen_DashboardView_ThemeStyle",
     "renderBasename": "Screen_DashboardView_ThemeStyle_dashboard_theme_TerrazzoKiosk.png",
-    "sha256": "69606a265ae76d3b948a82867956857f5d7a7833ae695d2df977135935fa03a6",
+    "sha256": "3effe3b6856c0d331cd993ba421b701f918eb51d459e6dfb745d30a71d4c316d",
     "sourceFile": "ee/schimke/terrazzo/previews/ScreenPreviews.kt"
   },
   "app/ee.schimke.terrazzo.previews.ScreenPreviewsKt.Screen_DashboardView_ThemeStyle_dashboard \u00b7 theme#3": {
     "captureLabel": "",
     "functionName": "Screen_DashboardView_ThemeStyle",
     "renderBasename": "Screen_DashboardView_ThemeStyle_dashboard_theme_TerrazzoMinimalist.png",
-    "sha256": "ce14d94885c7718daa7270faf496a8a1c44f2c79e5f4ee13040a088e2448ae9f",
+    "sha256": "70a6e864cf8082b357da690c516d008638829a32366a3732d5792cf4ed60417b",
     "sourceFile": "ee/schimke/terrazzo/previews/ScreenPreviews.kt"
   },
   "app/ee.schimke.terrazzo.previews.ScreenPreviewsKt.Screen_DashboardView_ThemeStyle_dashboard \u00b7 theme#4": {
     "captureLabel": "",
     "functionName": "Screen_DashboardView_ThemeStyle",
     "renderBasename": "Screen_DashboardView_ThemeStyle_dashboard_theme_TerrazzoMushroom.png",
-    "sha256": "65e47eaa43992eb252bdf56fabafb520d56302888743dd482ceb2b5c93b16611",
+    "sha256": "a5e6eb6bdb23f65b65b59f42579a247ca789c6f8d2838dab92c3059c297edbaf",
     "sourceFile": "ee/schimke/terrazzo/previews/ScreenPreviews.kt"
   },
   "app/ee.schimke.terrazzo.previews.ScreenPreviewsKt.Screen_DashboardView_dashboard view": {
     "captureLabel": "",
     "functionName": "Screen_DashboardView",
     "renderBasename": "Screen_DashboardView_dashboard_view.png",
-    "sha256": "5929be372998c7233a23ec89cca9372886b5b51508a8d7a7d1378b137d1a62ed",
+    "sha256": "8aec2f60ff5882e71fa3996d7f9bb07458c7b4468b7b282e2fe079c378b7ea78",
     "sourceFile": "ee/schimke/terrazzo/previews/ScreenPreviews.kt"
   },
   "app/ee.schimke.terrazzo.previews.ScreenPreviewsKt.Screen_Discovery_discovery": {
