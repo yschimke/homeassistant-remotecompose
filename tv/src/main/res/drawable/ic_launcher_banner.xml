@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Android TV banner. Composed from the shared adaptive-icon pieces so
+  the brand stays in lockstep with the launcher icon. Recommended
+  intrinsic size is 320dp x 180dp; the foreground is centered at icon
+  scale and reads from the 10-ft viewing distance Kiosk targets.
+-->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:drawable="@color/ic_launcher_background" />
+    <item
+        android:width="120dp"
+        android:height="120dp"
+        android:gravity="center"
+        android:drawable="@drawable/ic_launcher_foreground" />
+</layer-list>
