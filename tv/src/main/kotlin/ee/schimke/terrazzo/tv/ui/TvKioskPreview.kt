@@ -22,6 +22,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.unit.dp
 import ee.schimke.ha.rc.components.ThemeStyle
 import kotlinx.coroutines.delay
@@ -37,9 +38,15 @@ import kotlinx.coroutines.delay
 fun TvKioskPreview(style: ThemeStyle, demoMode: Boolean, modifier: Modifier = Modifier) {
     val cs = MaterialTheme.colorScheme
 
-    var nowMs by remember { mutableLongStateOf(System.currentTimeMillis()) }
-    LaunchedEffect(demoMode) {
-        if (!demoMode) return@LaunchedEffect
+    // In `@Preview` rendering, freeze the clock to a fixed instant so the
+    // PNG is byte-stable across captures — sine-driven values in
+    // TvDemoData.tiles(nowMs) would otherwise drift between runs.
+    val inInspection = LocalInspectionMode.current
+    var nowMs by remember {
+        mutableLongStateOf(if (inInspection) PREVIEW_NOW_MS else System.currentTimeMillis())
+    }
+    LaunchedEffect(demoMode, inInspection) {
+        if (!demoMode || inInspection) return@LaunchedEffect
         while (true) {
             nowMs = System.currentTimeMillis()
             delay(2_000)
@@ -143,6 +150,12 @@ private val PLACEHOLDER_TILES = listOf(
     TvDemoData.Tile("Climate", "—"),
     TvDemoData.Tile("Media", "—"),
 )
+
+// Fixed wall-clock instant used when rendering inside `@Preview` so
+// TvDemoData's sine-driven values land on the same numbers every run.
+// 2024-01-01T12:00:00Z — not 0L, since the lights/media indices land on
+// the same bucket that production demo mode is most often in.
+private const val PREVIEW_NOW_MS: Long = 1_704_110_400_000L
 
 @Composable
 private fun Tile(

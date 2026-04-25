@@ -6,6 +6,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.wear.compose.material3.AppScaffold
 import androidx.wear.compose.material3.MaterialTheme
 import androidx.wear.compose.material3.ScreenScaffold
+import androidx.wear.compose.material3.TimeSource
 import androidx.wear.compose.material3.TimeText
 import ee.schimke.ha.rc.components.ThemeStyle
 import ee.schimke.terrazzo.wearsync.proto.CardSummary
@@ -175,8 +176,15 @@ private fun WearPreviewFrame(content: @Composable () -> Unit) {
         colorScheme = terrazzoWearColorScheme(ThemeStyle.TerrazzoHome),
         typography = wearTypographyFor(ThemeStyle.TerrazzoHome),
     ) {
-        AppScaffold(timeText = { TimeText() }) {
+        AppScaffold(timeText = { TimeText(timeSource = PreviewTimeSource) }) {
             ScreenScaffold { content() }
         }
     }
+}
+
+// Frozen clock so previews are byte-stable across renders. The runtime
+// scaffold in WearMainActivity still uses the real system clock.
+private object PreviewTimeSource : TimeSource {
+    override val currentTime: String
+        @Composable get() = "10:08"
 }
