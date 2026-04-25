@@ -9,7 +9,7 @@ description: >
 inputs:
   version:
     description: 'compose-ai-tools release version'
-    default: '0.7.8'
+    default: '0.8.1'
 
 runs:
   using: 'composite'
