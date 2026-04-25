@@ -1,7 +1,9 @@
 # addon-server
 
 Home Assistant add-on that serves RemoteCompose dashboards from the HA
-host. See [`PLAN.md`](PLAN.md) for the full design.
+host. See [`PLAN.md`](PLAN.md) for the full design and
+[`INSTALL.md`](INSTALL.md) for dev setup, testing, and connectivity
+details.
 
 ## Status
 
