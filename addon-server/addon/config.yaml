@@ -1,0 +1,48 @@
+# Home Assistant add-on manifest. Lives in the directory the user adds as a
+# local add-on repo, or that we publish via the GitHub Pages add-on store.
+#
+# Reference: https://developers.home-assistant.io/docs/add-ons/configuration/
+
+slug: remotecompose
+name: RemoteCompose Dashboards
+version: "0.1.0"
+description: >-
+  Serves Home Assistant Lovelace dashboards as RemoteCompose documents over
+  HTTP/WebSocket, with live state updates pushed to native clients (phone,
+  Wear, TV, Glance widgets, ESP32).
+url: https://github.com/yschimke/homeassistant-remotecompose
+arch:
+  - amd64
+  - aarch64
+startup: application
+boot: auto
+init: false
+
+# Required so the supervisor injects SUPERVISOR_TOKEN with rights against
+# Home Assistant Core's WebSocket + REST API.
+homeassistant_api: true
+hassio_api: true
+auth_api: true
+
+# Ingress lets users open the add-on through HA's authenticated proxy. We
+# don't ship a UI; ingress is here so future debug/admin pages live under
+# the user's HA session.
+ingress: true
+ingress_port: 8099
+panel_icon: mdi:remote
+panel_title: RemoteCompose
+
+# Optional LAN exposure for native apps that aren't going through the HA
+# frontend (Glance widgets, Wear tiles, ESP32). Off by default.
+ports:
+  8099/tcp: null
+ports_description:
+  8099/tcp: RemoteCompose API (HTTP + WebSocket)
+
+options:
+  log_level: info
+schema:
+  log_level: list(trace|debug|info|warning|error|fatal)
+
+# Multi-arch image lives in GHCR. The supervisor substitutes {arch}.
+image: ghcr.io/yschimke/ha-remotecompose-{arch}

@@ -1,0 +1,53 @@
+# End-to-end smoke test:
+#   - real Home Assistant Core container, reusing the onboarded config
+#     from `integration/config/`
+#   - the add-on built from `addon-server/addon/Dockerfile`, talking to
+#     HA over the compose-internal network at `http://ha:8123`
+#
+# Usage: `addon-server/test-docker/run.sh`. The runner brings this up,
+# waits for `/readyz`, hits a handful of endpoints, tears down.
+#
+# This is *not* the supervisor flow — there's no `SUPERVISOR_TOKEN`
+# injected, so we authenticate via the HA long-lived token the user
+# already created for the existing reference-capture pipeline.
+
+services:
+  ha:
+    image: ghcr.io/home-assistant/home-assistant:stable
+    container_name: ha-remotecompose-addon-test-ha
+    restart: "no"
+    # Reuse the same pre-onboarded config the integration/ pipeline uses.
+    # No host port published — the add-on reaches HA via the compose
+    # network at `ha:8123`.
+    volumes:
+      - ../../integration/config:/config
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://127.0.0.1:8123 || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+      start_period: 20s
+
+  addon-server:
+    container_name: ha-remotecompose-addon-test-server
+    build:
+      # Build context = repo root, so we can COPY `gradle/`, `ha-model/`,
+      # `ha-client/`, `addon-server/` in one layer.
+      context: ../..
+      dockerfile: addon-server/addon/Dockerfile
+    environment:
+      HA_BASE_URL: "http://ha:8123"
+      # HA_TOKEN comes from integration/.env.local via env_file below.
+      PORT: "8099"
+      LOG_LEVEL: "info"
+    ports:
+      - "127.0.0.1:18099:8099"
+    depends_on:
+      ha:
+        condition: service_healthy
+    env_file:
+      # Same token the rest of integration/ uses. Optional so a CI run
+      # can override HA_TOKEN via plain env without committing a file.
+      - path: ../../integration/.env.local
+        required: false
+    restart: "no"
