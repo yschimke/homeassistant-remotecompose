@@ -1,0 +1,31 @@
+name: ktfmt
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ktfmt-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: ktfmt check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # Gradle itself (and the Metro plugin's buildscript) need JVM 21+.
+      # The Kotlin toolchain stays pinned to 17 (libs.versions.toml), and
+      # setup-java installs both so Gradle's toolchain discovery finds 17
+      # via JAVA_HOME_17_X64 while the daemon runs on 21.
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: |
+            17
+            21
+      - uses: gradle/actions/setup-gradle@v4
+      - run: ./gradlew ktfmtCheck --stacktrace

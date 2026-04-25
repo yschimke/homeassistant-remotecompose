@@ -31,6 +31,9 @@ junit-jupiter-bom = "5.14.3"
 # Preview tooling
 compose-preview-plugin = "0.8.0"
 
+# Formatting
+ktfmt-gradle = "0.26.0"
+
 # Wear data layer + Proto DataStore + Horologist
 horologist = "0.8.3-alpha"
 play-services-wearable = "19.0.0"
@@ -146,3 +149,4 @@ kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", versi
 compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 compose-preview = { id = "ee.schimke.composeai.preview", version.ref = "compose-preview-plugin" }
 metro = { id = "dev.zacsweers.metro", version.ref = "metro" }
+ktfmt = { id = "com.ncorti.ktfmt.gradle", version.ref = "ktfmt-gradle" }
