@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.compose.compiler)
+    alias(libs.plugins.compose.preview)
 }
 
 android {
@@ -24,6 +25,12 @@ android {
     kotlin { jvmToolchain(libs.versions.java.get().toInt()) }
 }
 
+composePreview {
+    variant.set("debug")
+    sdkVersion.set(34)
+    enabled.set(true)
+}
+
 dependencies {
     implementation(project(":rc-components"))
 
@@ -32,6 +39,8 @@ dependencies {
     implementation(libs.compose.foundation)
     implementation(libs.compose.material3)
     implementation(libs.compose.ui.text.google.fonts)
+    implementation(libs.compose.ui.tooling.preview)
+    debugImplementation(libs.compose.ui.tooling)
     implementation(libs.activity.compose)
 
     implementation(libs.tv.material)

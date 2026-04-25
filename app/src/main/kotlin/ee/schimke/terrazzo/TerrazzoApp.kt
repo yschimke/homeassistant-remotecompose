@@ -88,6 +88,9 @@ fun TerrazzoApp(initialDashboard: String? = null) {
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
     val widgetScheduler = remember(context) { WidgetRefreshScheduler(context.applicationContext) }
+    val wearSync = remember(context) {
+        (context.applicationContext as TerrazzoApplication).wearSync
+    }
 
     // Persisted demo-mode flag survives process restarts, so a user who
     // opted into demo doesn't see the login screen again on relaunch.
@@ -99,6 +102,10 @@ fun TerrazzoApp(initialDashboard: String? = null) {
             widgetScheduler.scheduleDemo()
         }
     }
+
+    // Mirror the active session to the wear data layer so the watch
+    // can render dashboards / live values from whatever's current.
+    LaunchedEffect(session) { wearSync.setSession(session) }
 
     val login = rememberLoginController(
         onReady = { baseUrl, accessToken ->
@@ -172,7 +179,7 @@ private fun UnauthenticatedScreen(
     }
 }
 
-private enum class AppScreen { Dashboards, Settings, Widgets }
+private enum class AppScreen { Dashboards, Settings, Widgets, SyncDiagnostics }
 
 @Composable
 private fun AuthenticatedShell(
@@ -187,8 +194,11 @@ private fun AuthenticatedShell(
     // root. Inside DashboardsRoot another BackHandler routes view →
     // picker; the platform handles back at the picker (exits app).
     BackHandler(enabled = screen != AppScreen.Dashboards) {
-        screen = AppScreen.Dashboards
+        screen = if (screen == AppScreen.SyncDiagnostics) AppScreen.Settings else AppScreen.Dashboards
     }
+
+    val context = LocalContext.current
+    val app = remember(context) { context.applicationContext as TerrazzoApplication }
 
     when (screen) {
         AppScreen.Dashboards -> DashboardsRoot(
@@ -203,10 +213,19 @@ private fun AuthenticatedShell(
             onToggleDemo = onToggleDemo,
             onSignOut = onSignOut,
             onBack = { screen = AppScreen.Dashboards },
+            onOpenSyncDiagnostics = { screen = AppScreen.SyncDiagnostics },
         )
         AppScreen.Widgets -> WidgetsScreen(
             onBack = { screen = AppScreen.Dashboards },
         )
+        AppScreen.SyncDiagnostics -> {
+            val streaming by app.wearSync.streamActive.collectAsState()
+            ee.schimke.terrazzo.wearsync.SyncDiagnosticsScreen(
+                statsStore = app.syncStats,
+                streamActive = streaming,
+                onBack = { screen = AppScreen.Settings },
+            )
+        }
     }
 }
 
@@ -345,6 +364,7 @@ private fun SettingsScreen(
     onToggleDemo: (Boolean) -> Unit,
     onSignOut: () -> Unit,
     onBack: () -> Unit,
+    onOpenSyncDiagnostics: () -> Unit,
 ) {
     val isDemo = session is DemoHaSession
     val graph = LocalTerrazzoGraph.current
@@ -421,6 +441,13 @@ private fun SettingsScreen(
 
             OutlinedButton(onClick = onSignOut) {
                 Text(if (isDemo) "Exit demo" else "Sign out")
+            }
+
+            // Sync diagnostics — buried at the bottom of Settings on
+            // purpose. Shows DataItem write / MessageClient send counts
+            // so power users can sanity-check wear-side chatter.
+            androidx.compose.material3.TextButton(onClick = onOpenSyncDiagnostics) {
+                Text("Sync diagnostics")
             }
         }
     }

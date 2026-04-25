@@ -1,0 +1,114 @@
+// Wear ↔ phone sync schema. Identical copy lives in `app/src/main/proto/`
+// — Wire compiles each module's .proto separately, the wire format is
+// what's on the wire so duplicate generation is intentional.
+//
+// Path conventions (mirrored in WearSyncPaths.kt):
+//   /wear/settings              — WearSettings (phone → wear; demo flag, baseUrl)
+//   /wear/pinned                — PinnedCardSet (phone → wear; mobile widget list)
+//   /wear/values                — LiveValues (phone → wear; current entity values)
+//   /wear/dashboard/<urlPath>   — DashboardData (phone → wear; one entry per dashboard)
+//   /wear/lease   (MessageClient) — WearLease (wear → phone; foreground heartbeat)
+//   /wear/stream  (MessageClient) — StreamUpdate (phone → wear; ephemeral deltas)
+syntax = "proto3";
+
+package terrazzo.wearsync;
+
+option java_package = "ee.schimke.terrazzo.wearsync.proto";
+option java_multiple_files = true;
+
+// Cross-device wear settings. Phone is the source of truth; wear reads
+// to drive its UI (e.g. show "Demo" badge, route to demo data).
+message WearSettings {
+    // True when phone has demo mode enabled — wear falls back to its
+    // own DemoData fixture and stops expecting live values.
+    bool demo_mode = 1;
+    // The HA base URL phone is connected to (informational; wear shows
+    // it on the about screen). Empty when signed-out / demo.
+    string base_url = 2;
+    // Wall-clock time of the last write, for diagnostics.
+    int64 updated_at_ms = 3;
+}
+
+// Card surfaces shown on Wear. Phone extracts the minimum each row
+// needs (title + primary entity + raw config blob).
+message CardSummary {
+    string type = 1;
+    string title = 2;
+    string primary_entity_id = 3;
+    string raw_json = 4;
+}
+
+// One DataStore Proto entry per dashboard (path
+// `/wear/dashboard/<urlPath>`). Wear's "browse" screen lists titles +
+// loads the chosen entry on demand.
+message DashboardData {
+    string url_path = 1;
+    string title = 2;
+    repeated CardSummary cards = 3;
+    int64 updated_at_ms = 4;
+}
+
+// Single DataStore Proto entry at `/wear/values`. Phone writes the
+// snapshot here when streaming is OFF (no Wear lease). Cheaper than
+// MessageClient for cold reads / activity bootstraps.
+message LiveValues {
+    map<string, EntityValue> values = 1;
+    int64 captured_at_ms = 2;
+}
+
+message EntityValue {
+    string state = 1;
+    string friendly_name = 2;
+    string unit = 3;
+    string device_class = 4;
+}
+
+// Sent via MessageClient at `/wear/stream` when phone has a live lease
+// from wear (or pinned cards force a stream). Carries only changed
+// entities to keep traffic small.
+message StreamUpdate {
+    repeated EntityDelta deltas = 1;
+    int64 captured_at_ms = 2;
+}
+
+message EntityDelta {
+    string entity_id = 1;
+    EntityValue value = 2;
+}
+
+// Pinned-cards mirror of phone's WidgetStore. Wear shows these as the
+// default home screen so the watch surfaces what the user has already
+// curated.
+message PinnedCardSet {
+    repeated PinnedCard cards = 1;
+    int64 updated_at_ms = 2;
+}
+
+message PinnedCard {
+    string base_url = 1;
+    CardSummary card = 2;
+}
+
+// Wear → phone heartbeat (MessageClient at `/wear/lease`). Phone uses
+// the most-recent arrival time as the lease window: while a recent
+// heartbeat exists, phone streams; otherwise it batches to the
+// `/wear/values` DataStore.
+message WearLease {
+    int64 sent_at_ms = 1;
+    bool foreground = 2;
+}
+
+// Phone-local diagnostics. Stored in a phone-only Proto DataStore at
+// `terrazzo_sync_stats.pb` and surfaced in Settings → Diagnostics so
+// users can sanity-check sync chatter.
+message SyncStats {
+    int64 datastore_writes = 1;
+    int64 message_sends = 2;
+    int64 last_lease_at_ms = 3;
+    int64 last_write_at_ms = 4;
+    int64 last_message_at_ms = 5;
+    // Bounded ring buffer (last 32 send timestamps in ms) so we can
+    // compute a rolling-window frequency without persisting unbounded
+    // history.
+    repeated int64 recent_send_ms = 6;
+}
