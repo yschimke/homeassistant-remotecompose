@@ -35,6 +35,14 @@ import ee.schimke.terrazzo.widget.WidgetsScreen
 private const val PHONE_WIDTH_DP = 412
 private const val PHONE_HEIGHT_DP = 892
 
+// Pin the demo-session clock so the snapshot's sine-wave sensor values
+// (temperatures, humidity, power, lamp toggles, battery drain) render
+// identically on every run. Defaulting to `System::currentTimeMillis`
+// would re-seed the demo data each render and produce false preview
+// diffs on every PR.
+private const val DEMO_CLOCK_MS = 0L
+private fun demoSession() = DemoHaSession(clock = { DEMO_CLOCK_MS })
+
 @Composable
 private fun PhoneHost(
     style: ThemeStyle = ThemeStyle.TerrazzoHome,
@@ -77,7 +85,7 @@ fun Screen_DashboardPicker() = PhoneHost {
 @Composable
 fun Screen_DashboardView() = PhoneHost {
     DashboardViewScreen(
-        session = DemoHaSession(),
+        session = demoSession(),
         urlPath = null,
         onCardLongPress = {},
     )
@@ -94,7 +102,7 @@ fun Screen_DashboardView_ThemeStyle(
     @PreviewParameter(ThemeStyleProvider::class) style: ThemeStyle,
 ) = PhoneHost(style = style) {
     DashboardViewScreen(
-        session = DemoHaSession(),
+        session = demoSession(),
         urlPath = null,
         onCardLongPress = {},
     )
