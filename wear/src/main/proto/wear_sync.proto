@@ -1,0 +1,102 @@
+// Wear ↔ phone sync schema. Identical copy lives in `app/src/main/proto/`.
+//
+// Path conventions (mirrored in WearSyncPaths.kt):
+//   /wear/settings              — WearSettings (phone → wear; demo flag, baseUrl, themeStyle)
+//   /wear/pinned                — PinnedCardSet (phone → wear; refs to mobile widget cards)
+//   /wear/values                — LiveValues (phone → wear; current entity values)
+//   /wear/dashboard/<urlPath>   — DashboardData (phone → wear; refs only)
+//   /wear/card/<id>             — CardDoc (phone → wear; the actual RemoteCompose `.rc` bytes)
+//   /wear/lease   (MessageClient) — WearLease (wear → phone; foreground heartbeat)
+//   /wear/stream  (MessageClient) — StreamUpdate (phone → wear; ephemeral deltas)
+syntax = "proto3";
+
+package terrazzo.wearsync;
+
+option java_package = "ee.schimke.terrazzo.wearsync.proto";
+option java_multiple_files = true;
+
+message WearSettings {
+    bool demo_mode = 1;
+    string base_url = 2;
+    // Phone's ThemePref name. Watch maps this to a wear palette
+    // (rendered dark) so the chrome behind the RC player stays
+    // consistent with the phone's choice. Wear has no local picker.
+    string theme_style = 3;
+    int64 updated_at_ms = 4;
+}
+
+// Pointer carried by DashboardData / PinnedCardSet. The actual RC
+// bytes live in their own DataItem at /wear/card/<id>.
+message CardRef {
+    string id = 1;
+    string title = 2;
+    string primary_entity_id = 3;
+    string type = 4;
+}
+
+message DashboardData {
+    string url_path = 1;
+    string title = 2;
+    repeated CardRef cards = 3;
+    int64 updated_at_ms = 4;
+}
+
+message LiveValues {
+    map<string, EntityValue> values = 1;
+    int64 captured_at_ms = 2;
+}
+
+message EntityValue {
+    string state = 1;
+    string friendly_name = 2;
+    string unit = 3;
+    string device_class = 4;
+}
+
+message StreamUpdate {
+    repeated EntityDelta deltas = 1;
+    int64 captured_at_ms = 2;
+}
+
+message EntityDelta {
+    string entity_id = 1;
+    EntityValue value = 2;
+}
+
+message PinnedCardSet {
+    repeated PinnedCardRef cards = 1;
+    int64 updated_at_ms = 2;
+}
+
+message PinnedCardRef {
+    string id = 1;
+    string base_url = 2;
+    string title = 3;
+    string primary_entity_id = 4;
+    string type = 5;
+}
+
+// Pre-baked RemoteCompose document for a single card. Phone runs the
+// CardConverter pipeline against the dark wear theme and dumps the
+// bytes here; watch plays them via RemoteDocumentPlayer.
+message CardDoc {
+    string id = 1;
+    bytes rc_bytes = 2;
+    int32 width_px = 3;
+    int32 height_px = 4;
+    int64 updated_at_ms = 5;
+}
+
+message WearLease {
+    int64 sent_at_ms = 1;
+    bool foreground = 2;
+}
+
+message SyncStats {
+    int64 datastore_writes = 1;
+    int64 message_sends = 2;
+    int64 last_lease_at_ms = 3;
+    int64 last_write_at_ms = 4;
+    int64 last_message_at_ms = 5;
+    repeated int64 recent_send_ms = 6;
+}

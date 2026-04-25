@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.compose.compiler)
+    alias(libs.plugins.compose.preview)
 }
 
 android {
@@ -24,18 +25,39 @@ android {
     kotlin { jvmToolchain(libs.versions.java.get().toInt()) }
 }
 
+composePreview {
+    variant.set("debug")
+    sdkVersion.set(34)
+    enabled.set(true)
+}
+
 dependencies {
     implementation(project(":rc-components"))
+    implementation(project(":rc-converter"))
+    implementation(project(":ha-model"))
 
     implementation(platform(libs.compose.bom))
     implementation(libs.compose.ui)
     implementation(libs.compose.foundation)
     implementation(libs.compose.material3)
     implementation(libs.compose.ui.text.google.fonts)
+    implementation(libs.compose.ui.tooling.preview)
+    debugImplementation(libs.compose.ui.tooling)
     implementation(libs.activity.compose)
 
     implementation(libs.tv.material)
 
+    // RemoteCompose authoring + playback. TV runs the *same* converter
+    // chain as the phone — there's no wear-style data layer pairing
+    // here; the TV bakes its own `.rc` documents locally (demo or live)
+    // and plays them via the in-composition CardPlayer.
+    implementation(libs.remote.creation.compose)
+    implementation(libs.remote.creation.android)
+    implementation(libs.remote.creation.core)
+    implementation(libs.remote.player.compose)
+    implementation(libs.remote.tooling.preview)
+
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.kotlinx.coroutines.core)
+    implementation(libs.kotlinx.serialization.json)
 }
