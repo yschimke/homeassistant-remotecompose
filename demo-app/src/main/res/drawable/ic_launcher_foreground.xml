@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Adaptive-icon foreground: a house silhouette filled with scattered
+  terrazzo chips. The house path doubles as a clip mask, so chips drawn
+  inside the group are trimmed to the silhouette regardless of how far
+  they bleed. Sized inside the 72dp safe zone of the 108dp canvas.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <group>
+        <clip-path android:pathData="M54,32 L22,60 L28,60 L28,84 L80,84 L80,60 L86,60 Z" />
+
+        <!-- Mortar / cream base inside the house -->
+        <path
+            android:fillColor="#F5EFE0"
+            android:pathData="M54,32 L22,60 L28,60 L28,84 L80,84 L80,60 L86,60 Z" />
+
+        <!-- Larger terrazzo chips -->
+        <path
+            android:fillColor="#E07A5F"
+            android:pathData="M32,50 a6,4 0 1,0 12,0 a6,4 0 1,0 -12,0" />
+        <path
+            android:fillColor="#F2CC8F"
+            android:pathData="M63,44 a5,4 0 1,0 10,0 a5,4 0 1,0 -10,0" />
+        <path
+            android:fillColor="#81B29A"
+            android:pathData="M47,66 a7,5 0 1,0 14,0 a7,5 0 1,0 -14,0" />
+        <path
+            android:fillColor="#3D405B"
+            android:pathData="M29,72 a4,3 0 1,0 8,0 a4,3 0 1,0 -8,0" />
+        <path
+            android:fillColor="#C9ADA7"
+            android:pathData="M67,76 a5,4 0 1,0 10,0 a5,4 0 1,0 -10,0" />
+        <path
+            android:fillColor="#6B4F4F"
+            android:pathData="M55,52 a3,3 0 1,0 6,0 a3,3 0 1,0 -6,0" />
+        <path
+            android:fillColor="#4A6670"
+            android:pathData="M41,78 a3,2 0 1,0 6,0 a3,2 0 1,0 -6,0" />
+        <path
+            android:fillColor="#E07A5F"
+            android:pathData="M68,58 a4,3 0 1,0 8,0 a4,3 0 1,0 -8,0" />
+        <path
+            android:fillColor="#81B29A"
+            android:pathData="M45,42 a3,3 0 1,0 6,0 a3,3 0 1,0 -6,0" />
+        <path
+            android:fillColor="#F2CC8F"
+            android:pathData="M61,80 a3,2 0 1,0 6,0 a3,2 0 1,0 -6,0" />
+        <path
+            android:fillColor="#C9ADA7"
+            android:pathData="M39,58 a3,2 0 1,0 6,0 a3,2 0 1,0 -6,0" />
+        <path
+            android:fillColor="#3D405B"
+            android:pathData="M62,66 a4,3 0 1,0 8,0 a4,3 0 1,0 -8,0" />
+
+        <!-- Smaller speckles -->
+        <path
+            android:fillColor="#E07A5F"
+            android:pathData="M34,82 a2,2 0 1,0 4,0 a2,2 0 1,0 -4,0" />
+        <path
+            android:fillColor="#81B29A"
+            android:pathData="M74,70 a2,2 0 1,0 4,0 a2,2 0 1,0 -4,0" />
+        <path
+            android:fillColor="#3D405B"
+            android:pathData="M48,58 a2,2 0 1,0 4,0 a2,2 0 1,0 -4,0" />
+        <path
+            android:fillColor="#F2CC8F"
+            android:pathData="M38,64 a2,2 0 1,0 4,0 a2,2 0 1,0 -4,0" />
+        <path
+            android:fillColor="#4A6670"
+            android:pathData="M66,82 a2,2 0 1,0 4,0 a2,2 0 1,0 -4,0" />
+        <path
+            android:fillColor="#C9ADA7"
+            android:pathData="M58,40 a2,2 0 1,0 4,0 a2,2 0 1,0 -4,0" />
+
+        <!-- Door, anchored to the floor of the body -->
+        <path
+            android:fillColor="#3D405B"
+            android:pathData="M49,71 L59,71 L59,84 L49,84 Z" />
+    </group>
+
+    <!-- House outline for definition at small sizes -->
+    <path
+        android:pathData="M54,32 L22,60 L28,60 L28,84 L80,84 L80,60 L86,60 Z"
+        android:strokeColor="#2A2A2E"
+        android:strokeWidth="1.6"
+        android:strokeLineJoin="round" />
+</vector>

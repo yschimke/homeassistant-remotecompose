@@ -4,6 +4,8 @@
     <uses-feature android:name="android.hardware.type.watch" />
 
     <application
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round"
         android:label="Terrazzo"
         android:theme="@android:style/Theme.DeviceDefault">
 

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Themed-icon (Android 13+) layer. Only the alpha channel is used; the
+  system tints with the active wallpaper colours. Renders the house as
+  a single filled silhouette with a door cut-out via the even-odd rule.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <path
+        android:fillColor="#000000"
+        android:fillType="evenOdd"
+        android:pathData="M54,32 L22,60 L28,60 L28,84 L80,84 L80,60 L86,60 Z M49,71 L59,71 L59,84 L49,84 Z" />
+</vector>
