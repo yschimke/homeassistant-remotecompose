@@ -1,5 +1,6 @@
 package ee.schimke.terrazzo
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -41,6 +42,7 @@ import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.terrazzo.auth.rememberLoginController
 import ee.schimke.terrazzo.core.prefs.DarkModePref
+import ee.schimke.terrazzo.core.prefs.PreferencesStore
 import ee.schimke.terrazzo.core.prefs.ThemePref
 import ee.schimke.terrazzo.core.session.DemoData
 import ee.schimke.terrazzo.core.session.DemoHaSession
@@ -71,7 +73,7 @@ import kotlinx.coroutines.launch
  * app can be explored without a working HA instance.
  */
 @Composable
-fun TerrazzoApp() {
+fun TerrazzoApp(initialDashboard: String? = null) {
     // NOTE: not saveable — an HaSession owns a live WebSocket. Process
     // restart re-walks the discovery / login flow. The refresh token in
     // TokenVault means we can auto-sign-in silently once we wire that up.
@@ -113,10 +115,17 @@ fun TerrazzoApp() {
         )
         else -> AuthenticatedScaffold(
             session = s,
+            initialDashboard = initialDashboard,
             onToggleDemo = { enabled ->
                 val previous = session
                 scope.launch {
                     graph.preferencesStore.setDemoMode(enabled)
+                    // The dashboard the user just looked at belongs
+                    // to the previous identity — clear so the next
+                    // launch goes through the picker rather than
+                    // jumping into a dashboard that may not exist on
+                    // the new instance.
+                    graph.preferencesStore.clearLastViewedDashboard()
                     previous?.close()
                 }
                 if (enabled) {
@@ -131,6 +140,7 @@ fun TerrazzoApp() {
                 val previous = session
                 scope.launch {
                     graph.preferencesStore.setDemoMode(false)
+                    graph.preferencesStore.clearLastViewedDashboard()
                     previous?.close()
                 }
                 widgetScheduler.cancelDemo()
@@ -167,6 +177,7 @@ private enum class Destination(val label: String) {
 @Composable
 private fun AuthenticatedScaffold(
     session: HaSession,
+    initialDashboard: String?,
     onToggleDemo: (Boolean) -> Unit,
     onSignOut: () -> Unit,
 ) {
@@ -203,7 +214,11 @@ private fun AuthenticatedScaffold(
         val safeInsets = WindowInsets.safeDrawing.asPaddingValues()
         Box(Modifier.fillMaxSize()) {
             when (current) {
-                Destination.Dashboards -> DashboardsTab(session, safeInsets)
+                Destination.Dashboards -> DashboardsTab(
+                    session = session,
+                    initialDashboard = initialDashboard,
+                    contentPadding = safeInsets,
+                )
                 Destination.Widgets -> WidgetsScreen(safeInsets)
                 Destination.Settings -> SettingsScreen(
                     session = session,
@@ -223,15 +238,38 @@ private fun AuthenticatedScaffold(
  * configure) we promote to a real `NavDisplay`.
  */
 @Composable
-private fun DashboardsTab(session: HaSession, contentPadding: PaddingValues) {
-    var opened by rememberSaveable { mutableStateOf<String?>(DASHBOARD_UNSET) }
+private fun DashboardsTab(
+    session: HaSession,
+    initialDashboard: String?,
+    contentPadding: PaddingValues,
+) {
+    val graph = LocalTerrazzoGraph.current
+    val scope = rememberCoroutineScope()
+    var opened by rememberSaveable {
+        mutableStateOf(initialDashboardToOpened(initialDashboard))
+    }
     var installPending by remember { mutableStateOf<Pair<CardConfig, HaSnapshot>?>(null) }
     val openedValue = opened
+
+    // System-back navigates from view → picker. On the picker itself
+    // back is disabled, so the platform handles it (exits the app or
+    // pops the activity). Without this, the only way back to the
+    // picker is sign-out — and on cold launch we now auto-jump into
+    // the persisted last-viewed, so users would otherwise be stuck.
+    BackHandler(enabled = openedValue != DASHBOARD_UNSET) {
+        opened = DASHBOARD_UNSET
+    }
 
     if (openedValue == DASHBOARD_UNSET) {
         DashboardPickerScreen(
             session = session,
-            onDashboardPicked = { urlPath -> opened = urlPath },
+            onDashboardPicked = { urlPath ->
+                opened = urlPath
+                // Persist for the next cold start. The picker is the
+                // only entry point that changes which dashboard we
+                // consider "current", so this is the only write site.
+                scope.launch { graph.preferencesStore.setLastViewedDashboard(urlPath) }
+            },
             contentPadding = contentPadding,
         )
     } else {
@@ -270,6 +308,21 @@ private fun DashboardsTab(session: HaSession, contentPadding: PaddingValues) {
 
 /** Sentinel for "no dashboard opened yet". null is a valid urlPath (the default dashboard). */
 private const val DASHBOARD_UNSET = "__none__"
+
+/**
+ * Translate the persisted last-viewed-dashboard pref into the local
+ * `opened` sentinel/urlPath encoding `DashboardsTab` uses:
+ *
+ *   - `null` (pref absent) → [DASHBOARD_UNSET] (show picker).
+ *   - [PreferencesStore.DEFAULT_DASHBOARD_SENTINEL] → `null`
+ *     (HA's default dashboard, whose `urlPath` is null over the wire).
+ *   - any other string → that `urlPath`.
+ */
+private fun initialDashboardToOpened(stored: String?): String? = when (stored) {
+    null -> DASHBOARD_UNSET
+    PreferencesStore.DEFAULT_DASHBOARD_SENTINEL -> null
+    else -> stored
+}
 
 @Composable
 private fun SettingsScreen(

@@ -30,6 +30,13 @@ class MainActivity : ComponentActivity() {
             runBlocking { graph.preferencesStore.setDemoMode(true) }
         }
 
+        // Read the auto-launch dashboard pref synchronously so the
+        // first composition can land directly on the right dashboard
+        // (no picker flash). DataStore reads from a tiny preferences
+        // file; the runBlocking cost is < 5 ms in practice — same
+        // pattern as the test hatch above.
+        val initialDashboard = runBlocking { graph.preferencesStore.lastViewedDashboardNow() }
+
         setContent {
             CompositionLocalProvider(LocalTerrazzoGraph provides graph) {
                 val themePref by graph.preferencesStore.themeStyle
@@ -37,7 +44,7 @@ class MainActivity : ComponentActivity() {
                 val darkPref by graph.preferencesStore.darkMode
                     .collectAsState(initial = DarkModePref.Follow)
                 TerrazzoTheme(style = themePref.toThemeStyle(), darkMode = darkPref) {
-                    TerrazzoApp()
+                    TerrazzoApp(initialDashboard = initialDashboard)
                 }
             }
         }
