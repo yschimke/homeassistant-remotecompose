@@ -9,8 +9,9 @@
         android:required="false" />
 
     <application
-        android:banner="@android:drawable/sym_def_app_icon"
-        android:icon="@android:drawable/sym_def_app_icon"
+        android:banner="@drawable/ic_launcher_banner"
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round"
         android:label="Terrazzo"
         android:theme="@android:style/Theme.DeviceDefault.NoActionBar">
 
