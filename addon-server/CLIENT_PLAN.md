@@ -275,31 +275,34 @@ When the device is offline:
 
 ## Slicing
 
-### Slice (a) — abstractions + add-on client + fallback (next PR)
+### Slice (a) — abstractions + add-on client + fallback ✅ landed
 
 **Scope.** Deliver the runtime so a client can transparently mix
 add-on and local rendering for a single configured server. No Room
 yet — sessions are still in-memory.
 
-**Adds:**
+**Shipped:**
+- `ha-model` (KMP): `ClientProfile`, `CardSize`, `CardBytes`,
+  `HaServer` value types.
 - `ha-client` (KMP): `AddonClient` — REST wrapper for `/v1/cards/*`,
-  `/v1/dashboards`, `/healthz`.
-- `ha-client` (KMP): `CardGenerator` interface + `CardSource` chain +
-  `AddonCardGenerator`.
+  `/v1/dashboards`, `/healthz`. Engine-injectable so tests use
+  `MockEngine`.
+- `ha-client` (KMP): `CardGenerator` interface + `CardSource`
+  priority chain + `AddonCardGenerator`. `CardRender` sealed result
+  (`Bytes(generator)` for telemetry / `Unsupported(cardType)`).
 - `rc-converter` (Android): `LocalCardGenerator` wrapping the
   existing `CardRegistry` + `captureCardDocument`.
-- `terrazzo-core` (Android): `HaSession` becomes a 3-component
-  composition; `HaSessionFactory.create(server)` runs the probe and
-  builds the chain.
-- Tests with Ktor `MockEngine`: probe success/failure, generator
-  fallback when the higher-priority returns null, "no add-on
-  configured" path.
+- Tests with Ktor `MockEngine`: probe success / 503 / network error;
+  byte fetch on 200 / 501 / 404 / network error; bearer token
+  forwarding. Plus `CardSourceTest` covering priority order, fall-
+  through on null, skip on `!supports`, all-null → `Unsupported`,
+  empty chain.
 
-**Doesn't change:**
-- Storage (still in-memory).
-- UI (existing call sites get the new behaviour for free; no screen
-  rewrites).
-- The add-on server (already shipped in M0–M2).
+**Deferred to slice (b):**
+- Wiring `LiveHaSession` / `HaSessionFactory` to use the chain.
+  Tracked because slice (b) replaces the session anyway with the
+  Room-backed read path; doing it now would just churn that file
+  twice.
 
 ### Slice (b) — Room store
 

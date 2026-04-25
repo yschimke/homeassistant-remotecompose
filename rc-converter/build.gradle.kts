@@ -20,6 +20,7 @@ android {
 dependencies {
     api(project(":rc-components"))
     implementation(project(":ha-model"))
+    implementation(project(":ha-client"))
 
     implementation(platform(libs.compose.bom))
     implementation(libs.compose.ui)
