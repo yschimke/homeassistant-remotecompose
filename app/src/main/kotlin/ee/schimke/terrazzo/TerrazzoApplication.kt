@@ -5,9 +5,13 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
 import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.lifecycle.ProcessLifecycleOwner
+import androidx.lifecycle.lifecycleScope
 import dev.zacsweers.metro.createGraphFactory
 import ee.schimke.terrazzo.core.di.TerrazzoGraph
 import ee.schimke.terrazzo.monitor.MonitoringService
+import ee.schimke.terrazzo.wearsync.MobileSyncStatsStore
+import ee.schimke.terrazzo.wearsync.MobileWearSyncManager
 
 /**
  * Holds the singleton [TerrazzoGraph] so every Android entry point —
@@ -20,9 +24,29 @@ class TerrazzoApplication : Application() {
         createGraphFactory<TerrazzoGraph.Factory>().create(applicationContext)
     }
 
+    /**
+     * Phone-only wear sync. Held outside the Metro graph because the
+     * wear-data layer dependency stack (play-services-wearable +
+     * Horologist) only lives in this module. Started on first access.
+     */
+    val syncStats: MobileSyncStatsStore by lazy { MobileSyncStatsStore(applicationContext) }
+    val wearSync: MobileWearSyncManager by lazy {
+        MobileWearSyncManager(applicationContext, syncStats)
+    }
+
     override fun onCreate() {
         super.onCreate()
         registerNotificationChannels()
+        // Bind the wear sync to the application's lifecycle scope so it
+        // outlives Activities (a paired watch should keep receiving
+        // demo / pinned-card updates even when the phone UI is in the
+        // background). PreferencesStore + WidgetStore are read from the
+        // graph; the manager owns its own lazy DataClient/MessageClient.
+        wearSync.start(
+            scope = ProcessLifecycleOwner.get().lifecycleScope,
+            prefs = graph.preferencesStore,
+            widgetStore = graph.widgetStore,
+        )
     }
 
     private fun registerNotificationChannels() {

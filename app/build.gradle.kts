@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.compose.preview)
     alias(libs.plugins.metro)
+    alias(libs.plugins.kotlin.serialization)
 }
 
 android {
@@ -68,7 +69,19 @@ dependencies {
     implementation(libs.remote.tooling.preview)
 
     implementation(libs.androidx.browser)
+    // Proto DataStore for the wear sync layer. Schema is documented
+    // in `src/main/proto/wear_sync.proto`; we encode @Serializable
+    // Kotlin data classes to the same proto wire format via
+    // kotlinx-serialization-protobuf. (TODO: switch to Wire once its
+    // Gradle plugin recognises AGP 9's built-in Kotlin.)
+    implementation(libs.androidx.datastore)
     implementation(libs.androidx.datastore.preferences)
+    implementation(libs.kotlinx.serialization.protobuf)
+    implementation(libs.play.services.wearable)
+    implementation(libs.horologist.datalayer)
+    implementation(libs.horologist.datalayer.phone)
+    implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation(libs.androidx.lifecycle.process)
     implementation(libs.androidx.work.runtime)
     implementation(libs.androidx.navigation3.runtime)
     implementation(libs.androidx.navigation3.ui)
