@@ -84,7 +84,7 @@ fun RemoteHaTile(data: HaTileData, modifier: RemoteModifier = RemoteModifier) {
                     tint = accent,
                 )
             }
-            RemoteColumn(modifier = RemoteModifier.padding(left = 10.rdp)) {
+            RemoteColumn(modifier = RemoteModifier.padding(start = 10.rdp)) {
                 RemoteText(
                     text = data.name,
                     color = theme.primaryText.rc,

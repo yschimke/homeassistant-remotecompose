@@ -9,5 +9,6 @@ local.properties
 captures/
 .compose-preview-history/
 */.compose-preview-history/
+*/bin/
 
 __pycache__/

@@ -3,6 +3,7 @@
 package ee.schimke.ha.rc.components
 
 import androidx.compose.remote.creation.compose.action.Action
+import androidx.compose.remote.creation.compose.action.CombinedAction
 import androidx.compose.remote.creation.compose.action.ValueChange
 import androidx.compose.remote.creation.compose.layout.RemoteAlignment
 import androidx.compose.remote.creation.compose.layout.RemoteBox
@@ -65,13 +66,11 @@ fun RemoteHaToggleButton(data: HaButtonData, modifier: RemoteModifier = RemoteMo
     val localIsOn = rememberMutableRemoteBoolean(data.accent.initiallyOn)
 
     // Build the click action(s): optimistic flip + optional host action.
+    // alpha09's `clickable` takes a single Action — combine via CombinedAction.
     val toggle: Action = ValueChange(localIsOn, localIsOn.not())
     val host: Action? = data.tapAction.toRemoteAction()
-    val clickable = if (host != null) {
-        RemoteModifier.clickable(toggle, host)
-    } else {
-        RemoteModifier.clickable(toggle)
-    }
+    val click: Action = if (host != null) CombinedAction(toggle, host) else toggle
+    val clickable = RemoteModifier.clickable(click)
 
     val accent: RemoteColor = localIsOn.select(data.accent.activeAccent, data.accent.inactiveAccent)
 

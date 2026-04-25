@@ -6,9 +6,9 @@ kotlin { jvmToolchain(libs.versions.java.get().toInt()) }
 
 dependencies {
     testImplementation(libs.kotlin.test)
-    testImplementation(platform("org.junit:junit-bom:5.11.4"))
-    testImplementation("org.junit.jupiter:junit-jupiter")
-    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+    testImplementation(platform(libs.junit.jupiter.bom))
+    testImplementation(libs.junit.jupiter)
+    testRuntimeOnly(libs.junit.platform.launcher)
 }
 
 tasks.test {

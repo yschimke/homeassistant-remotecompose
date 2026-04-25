@@ -62,7 +62,7 @@ fun RemoteHaEntityRow(data: HaEntityRowData, modifier: RemoteModifier = RemoteMo
                 modifier = RemoteModifier.size(20.rdp),
                 tint = accent,
             )
-            RemoteBox(modifier = RemoteModifier.padding(left = 12.rdp)) {
+            RemoteBox(modifier = RemoteModifier.padding(start = 12.rdp)) {
                 RemoteText(
                     text = data.name,
                     color = theme.primaryText.rc,

@@ -7,8 +7,8 @@ import androidx.annotation.RestrictTo
 import androidx.compose.remote.core.CoreDocument
 import androidx.compose.remote.core.RemoteComposeBuffer
 import androidx.compose.remote.creation.compose.capture.RemoteCreationDisplayInfo
+import androidx.compose.remote.creation.compose.capture.captureSingleRemoteDocument
 import androidx.compose.remote.creation.compose.capture.rememberRemoteDocument
-import androidx.compose.remote.creation.compose.v2.captureSingleRemoteDocumentV2
 import androidx.compose.remote.player.compose.RemoteDocumentPlayer
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -46,9 +46,10 @@ data class CardDocument(
  * surface. This is what a widget worker calls: the HA snapshot changed, so
  * re-encode the card's bytes and push to the app instance / Glance session.
  *
- * Uses `captureSingleRemoteDocumentV2` which is `@RestrictTo(LIBRARY_GROUP)`
- * — suppressed here deliberately. The non-V2 capture path requires a
- * `VirtualDisplay` which is prohibitive from a WorkManager worker.
+ * alpha09 collapses the public/V2 capture functions into a single
+ * `captureSingleRemoteDocument` which is itself `@RestrictTo(LIBRARY_GROUP)`
+ * — suppressed here deliberately. It runs the composition headlessly
+ * (no `VirtualDisplay`), so it's safe from a WorkManager worker.
  */
 @Suppress("RestrictedApi")
 @RestrictTo(RestrictTo.Scope.LIBRARY)
@@ -63,9 +64,9 @@ suspend fun captureCardDocument(
 ): CardDocument {
     val converter = registry.get(card.type)
         ?: error("No converter registered for card type='${card.type}'")
-    val captured = captureSingleRemoteDocumentV2(
-        creationDisplayInfo = RemoteCreationDisplayInfo(widthPx, heightPx, densityDpi),
+    val captured = captureSingleRemoteDocument(
         context = context,
+        creationDisplayInfo = RemoteCreationDisplayInfo(widthPx, heightPx, densityDpi),
     ) {
         converter.Render(card, snapshot)
     }
