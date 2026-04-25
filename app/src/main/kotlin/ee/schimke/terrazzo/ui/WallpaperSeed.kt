@@ -14,6 +14,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalInspectionMode
 
 /**
  * Read the system wallpaper's primary colour and observe live updates.
@@ -30,6 +31,11 @@ import androidx.compose.ui.platform.LocalContext
  */
 @Composable
 fun rememberWallpaperSeedColor(): Color? {
+    // Compose tooling / preview-render environments have no real wallpaper.
+    // Whatever the harness's `WallpaperManager` returns (often platform
+    // defaults, sometimes null) would otherwise re-seed the M3 ColorScheme
+    // and produce false preview diffs. Treat preview as "no wallpaper".
+    if (LocalInspectionMode.current) return null
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O_MR1) return null
     val context = LocalContext.current
     var seed by remember(context) { mutableStateOf(readWallpaperSeed(context)) }
