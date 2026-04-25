@@ -9,16 +9,20 @@ import ee.schimke.ha.rc.CardRegistry
  *
  * **Fully implemented** (produce visually-correct output):
  *   tile, button, entity, entities, glance, heading, markdown,
- *   vertical-stack, horizontal-stack, grid.
+ *   vertical-stack, horizontal-stack, grid, conditional.
+ *
+ * **Summary chrome** (registered with a real converter that renders
+ * a card chrome but skips the rich visualisation — replace with the
+ * full `RemoteHa…` composable when ready):
+ *   map, history-graph, custom:ha-bambulab-*.
  *
  * **Placeholder-only** (registered so the dashboard renders, but with a
  * "not yet supported" badge — extend by writing a `RemoteHa…` composable
  * + converter shim):
  *   gauge, thermostat, humidifier, light, media-control, alarm-panel,
- *   weather-forecast, clock, area, calendar, logbook, todo-list, map,
+ *   weather-forecast, clock, area, calendar, logbook, todo-list,
  *   picture, picture-entity, picture-glance, picture-elements,
- *   history-graph, statistics-graph, statistic, sensor, conditional,
- *   entity-filter, iframe.
+ *   statistics-graph, statistic, sensor, entity-filter, iframe.
  */
 fun defaultConverters(): List<CardConverter> = buildList {
     add(TileCardConverter())
@@ -31,6 +35,15 @@ fun defaultConverters(): List<CardConverter> = buildList {
     add(VerticalStackCardConverter())
     add(HorizontalStackCardConverter())
     add(GridCardConverter())
+    add(ConditionalCardConverter())
+    add(MapCardConverter())
+    add(HistoryGraphCardConverter())
+
+    add(BambuLabAmsCardConverter())
+    add(BambuLabSpoolCardConverter())
+    add(BambuLabPrintStatusCardConverter())
+    add(BambuLabPrintControlCardConverter())
+    add(BambuLabSkipObjectCardConverter())
 
     PLACEHOLDER_CARD_TYPES.forEach { add(UnsupportedCardConverter(it)) }
 
@@ -53,16 +66,13 @@ private val PLACEHOLDER_CARD_TYPES: List<String> = listOf(
     CardTypes.CALENDAR,
     CardTypes.LOGBOOK,
     CardTypes.TODO_LIST,
-    CardTypes.MAP,
     CardTypes.PICTURE,
     CardTypes.PICTURE_ENTITY,
     CardTypes.PICTURE_GLANCE,
     CardTypes.PICTURE_ELEMENTS,
-    CardTypes.HISTORY_GRAPH,
     CardTypes.STATISTICS_GRAPH,
     CardTypes.STATISTIC,
     CardTypes.SENSOR,
-    CardTypes.CONDITIONAL,
     CardTypes.ENTITY_FILTER,
     CardTypes.IFRAME,
 )
