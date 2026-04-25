@@ -1,18 +1,18 @@
 [versions]
 # Toolchain
-kotlin = "2.3.20"
-agp = "9.1.0"
+kotlin = "2.3.21"
+agp = "9.2.0"
 java = "17"
 
 # Metro (DI) — requires Kotlin 2.2.20+.
-metro = "1.0.0-RC2"
+metro = "1.0.0-RC4"
 
 # Compose
-compose-bom = "2025.01.00"
+compose-bom = "2026.04.01"
 compose-compiler = "1.5.15"
 
 # RemoteCompose (alpha — APIs change per release)
-remote-compose = "1.0.0-alpha08"
+remote-compose = "1.0.0-alpha09"
 remote-material3 = "1.0.0-alpha02"
 
 # Android
@@ -21,14 +21,15 @@ android-compileSdk = "37"
 android-targetSdk = "37"
 
 # Libraries
-ktor = "3.0.3"
-kotlinx-serialization = "1.7.3"
-kotlinx-coroutines = "1.10.1"
-kotlinx-datetime = "0.6.1"
-logback = "1.5.12"
+ktor = "3.4.3"
+kotlinx-serialization = "1.11.0"
+kotlinx-coroutines = "1.10.2"
+kotlinx-datetime = "0.8.0-rc01"
+logback = "1.5.32"
+junit-jupiter-bom = "5.14.3"
 
 # Preview tooling
-compose-preview-plugin = "0.7.11"
+compose-preview-plugin = "0.8.0"
 
 # Wear data layer + Proto DataStore + Horologist
 horologist = "0.8.3-alpha"
@@ -55,31 +56,31 @@ compose-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview"
 compose-foundation = { module = "androidx.compose.foundation:foundation" }
 compose-material3 = { module = "androidx.compose.material3:material3" }
 compose-material-icons-extended = { module = "androidx.compose.material:material-icons-extended" }
-activity-compose = { module = "androidx.activity:activity-compose", version = "1.9.3" }
+activity-compose = { module = "androidx.activity:activity-compose", version = "1.13.0" }
 
 # Wear Compose (stub module — full app lands later)
-wear-compose-material3 = { module = "androidx.wear.compose:compose-material3", version = "1.5.0-beta03" }
-wear-compose-foundation = { module = "androidx.wear.compose:compose-foundation", version = "1.5.0-beta03" }
+wear-compose-material3 = { module = "androidx.wear.compose:compose-material3", version = "1.6.1" }
+wear-compose-foundation = { module = "androidx.wear.compose:compose-foundation", version = "1.6.1" }
 
 # TV Compose (stub module)
-tv-material = { module = "androidx.tv:tv-material", version = "1.0.0" }
+tv-material = { module = "androidx.tv:tv-material", version = "1.0.1" }
 
 # Terrazzo app deps
-androidx-browser = { module = "androidx.browser:browser", version = "1.8.0" }
-androidx-datastore-preferences = { module = "androidx.datastore:datastore-preferences", version = "1.1.1" }
+androidx-browser = { module = "androidx.browser:browser", version = "1.10.0" }
+androidx-datastore-preferences = { module = "androidx.datastore:datastore-preferences", version = "1.2.1" }
 # Proto DataStore — used by the Wear sync layer (per-dashboard + cross-device
 # settings) and the phone-side mirror that publishes to the data layer.
-androidx-datastore = { module = "androidx.datastore:datastore", version = "1.1.1" }
-androidx-work-runtime = { module = "androidx.work:work-runtime-ktx", version = "2.10.0" }
-androidx-navigation3-runtime = { module = "androidx.navigation3:navigation3-runtime", version = "1.2.0-alpha01" }
-androidx-navigation3-ui = { module = "androidx.navigation3:navigation3-ui", version = "1.2.0-alpha01" }
-androidx-material3-adaptive-navigation-suite = { module = "androidx.compose.material3:material3-adaptive-navigation-suite", version = "1.3.2" }
-appauth = { module = "net.openid:appauth", version = "0.9.1" }
+androidx-datastore = { module = "androidx.datastore:datastore", version = "1.2.1" }
+androidx-work-runtime = { module = "androidx.work:work-runtime-ktx", version = "2.11.2" }
+androidx-navigation3-runtime = { module = "androidx.navigation3:navigation3-runtime", version = "1.2.0-alpha02" }
+androidx-navigation3-ui = { module = "androidx.navigation3:navigation3-ui", version = "1.2.0-alpha02" }
+androidx-material3-adaptive-navigation-suite = { module = "androidx.compose.material3:material3-adaptive-navigation-suite", version = "1.4.0" }
+appauth = { module = "net.openid:appauth", version = "0.11.1" }
 compose-ui-text-google-fonts = { module = "androidx.compose.ui:ui-text-google-fonts" }
 compose-ui-test-junit4 = { module = "androidx.compose.ui:ui-test-junit4" }
 compose-ui-test-manifest = { module = "androidx.compose.ui:ui-test-manifest" }
-androidx-test-ext-junit = { module = "androidx.test.ext:junit", version = "1.2.1" }
-androidx-test-runner = { module = "androidx.test:runner", version = "1.6.2" }
+androidx-test-ext-junit = { module = "androidx.test.ext:junit", version = "1.3.0" }
+androidx-test-runner = { module = "androidx.test:runner", version = "1.7.0" }
 androidx-test-uiautomator = { module = "androidx.test.uiautomator:uiautomator", version = "2.3.0" }
 # materialkolor: derive a full Material 3 ColorScheme from a single seed
 # colour. Each Terrazzo palette = seed + PaletteStyle. Non-composable
@@ -124,13 +125,16 @@ horologist-datalayer-phone = { module = "com.google.android.horologist:horologis
 # bytes a protoc / Wire output would produce. Schema lives as
 # documentation in `wear/src/main/proto/wear_sync.proto`.
 kotlinx-serialization-protobuf = { module = "org.jetbrains.kotlinx:kotlinx-serialization-protobuf", version.ref = "kotlinx-serialization" }
-androidx-lifecycle-runtime-ktx = { module = "androidx.lifecycle:lifecycle-runtime-ktx", version = "2.8.7" }
-androidx-lifecycle-process = { module = "androidx.lifecycle:lifecycle-process", version = "2.8.7" }
+androidx-lifecycle-runtime-ktx = { module = "androidx.lifecycle:lifecycle-runtime-ktx", version = "2.10.0" }
+androidx-lifecycle-process = { module = "androidx.lifecycle:lifecycle-process", version = "2.10.0" }
 
 # Test
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
 kotlin-test-junit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlin" }
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinx-coroutines" }
+junit-jupiter-bom = { module = "org.junit:junit-bom", version.ref = "junit-jupiter-bom" }
+junit-jupiter = { module = "org.junit.jupiter:junit-jupiter" }
+junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
