@@ -307,6 +307,160 @@
     "sha256": "8a5045cfde91c0c602f43be2847f9bba4cfd192becfd184352cf117aeb849333",
     "sourceFile": "ee/schimke/ha/previews/CardPreviews.kt"
   },
+  "previews/ee.schimke.ha.previews.GarageShutterCardPreviewsKt.Garage_Animation_Dark_garage-anim (dark)": {
+    "captureLabel": "",
+    "functionName": "Garage_Animation_Dark",
+    "renderBasename": "GarageShutterCardPreviewsKt.Garage_Animation_Dark_garage-anim_dark_closed.png",
+    "sha256": "160163736bba01b9afcbdb1c27b98c04b953e16c2aaf280144c73030414e248a",
+    "sourceFile": "ee/schimke/ha/previews/GarageShutterCardPreviews.kt"
+  },
+  "previews/ee.schimke.ha.previews.GarageShutterCardPreviewsKt.Garage_Animation_Dark_garage-anim (dark)#1": {
+    "captureLabel": "",
+    "functionName": "Garage_Animation_Dark",
+    "renderBasename": "GarageShutterCardPreviewsKt.Garage_Animation_Dark_garage-anim_dark_open.png",
+    "sha256": "343d27d5506967a22acb6fc4029ee4705cff7f3a1305b8a52f7ad778f7614a59",
+    "sourceFile": "ee/schimke/ha/previews/GarageShutterCardPreviews.kt"
+  },
+  "previews/ee.schimke.ha.previews.GarageShutterCardPreviewsKt.Garage_Animation_Dark_garage-anim (dark)#2": {
+    "captureLabel": "",
+    "functionName": "Garage_Animation_Dark",
+    "renderBasename": "GarageShutterCardPreviewsKt.Garage_Animation_Dark_garage-anim_dark_opening_25.png",
+    "sha256": "f4b18f2ec494f79dde73302a55a8f5769da67e65bdab0a0c285f0fbe50f79bfb",
+    "sourceFile": "ee/schimke/ha/previews/GarageShutterCardPreviews.kt"
+  },
+  "previews/ee.schimke.ha.previews.GarageShutterCardPreviewsKt.Garage_Animation_Dark_garage-anim (dark)#3": {
+    "captureLabel": "",
+    "functionName": "Garage_Animation_Dark",
+    "renderBasename": "GarageShutterCardPreviewsKt.Garage_Animation_Dark_garage-anim_dark_opening_50.png",
+    "sha256": "0eb011e7862b47c007d21194bfb9428c645084767218ae424a837062b10e3f48",
+    "sourceFile": "ee/schimke/ha/previews/GarageShutterCardPreviews.kt"
+  },
+  "previews/ee.schimke.ha.previews.GarageShutterCardPreviewsKt.Garage_Animation_Dark_garage-anim (dark)#4": {
+    "captureLabel": "",
+    "functionName": "Garage_Animation_Dark",
+    "renderBasename": "GarageShutterCardPreviewsKt.Garage_Animation_Dark_garage-anim_dark_opening_75.png",
+    "sha256": "0a23661676d0aa7790c0139b519a71f2215c6408e849e6a81bee7a26735108db",
+    "sourceFile": "ee/schimke/ha/previews/GarageShutterCardPreviews.kt"
+  },
+  "previews/ee.schimke.ha.previews.GarageShutterCardPreviewsKt.Garage_Animation_Light_garage-anim (light)": {
+    "captureLabel": "",
+    "functionName": "Garage_Animation_Light",
+    "renderBasename": "GarageShutterCardPreviewsKt.Garage_Animation_Light_garage-anim_light_closed.png",
+    "sha256": "3b2a48ee390919a4f77e0890abc7416dc522cebab3673718df406661dadd1842",
+    "sourceFile": "ee/schimke/ha/previews/GarageShutterCardPreviews.kt"
+  },
+  "previews/ee.schimke.ha.previews.GarageShutterCardPreviewsKt.Garage_Animation_Light_garage-anim (light)#1": {
+    "captureLabel": "",
+    "functionName": "Garage_Animation_Light",
+    "renderBasename": "GarageShutterCardPreviewsKt.Garage_Animation_Light_garage-anim_light_open.png",
+    "sha256": "3ce860e9aa6b3712247c78d47f53f68ad53eb03a0030db6d6598282d6f6fb5da",
+    "sourceFile": "ee/schimke/ha/previews/GarageShutterCardPreviews.kt"
+  },
+  "previews/ee.schimke.ha.previews.GarageShutterCardPreviewsKt.Garage_Animation_Light_garage-anim (light)#2": {
+    "captureLabel": "",
+    "functionName": "Garage_Animation_Light",
+    "renderBasename": "GarageShutterCardPreviewsKt.Garage_Animation_Light_garage-anim_light_opening_25.png",
+    "sha256": "865a5037b78a55f42320b7bc6469be245331f2494aa8056d8731810da0d56223",
+    "sourceFile": "ee/schimke/ha/previews/GarageShutterCardPreviews.kt"
+  },
+  "previews/ee.schimke.ha.previews.GarageShutterCardPreviewsKt.Garage_Animation_Light_garage-anim (light)#3": {
+    "captureLabel": "",
+    "functionName": "Garage_Animation_Light",
+    "renderBasename": "GarageShutterCardPreviewsKt.Garage_Animation_Light_garage-anim_light_opening_50.png",
+    "sha256": "0c115a1a5fa8ae7d1395eebddc43dc3e4e7b694ce0417a2126e878451f2289e9",
+    "sourceFile": "ee/schimke/ha/previews/GarageShutterCardPreviews.kt"
+  },
+  "previews/ee.schimke.ha.previews.GarageShutterCardPreviewsKt.Garage_Animation_Light_garage-anim (light)#4": {
+    "captureLabel": "",
+    "functionName": "Garage_Animation_Light",
+    "renderBasename": "GarageShutterCardPreviewsKt.Garage_Animation_Light_garage-anim_light_opening_75.png",
+    "sha256": "4af2cb185627c79c00f14dc1155e9d687f0c26a3facb7616789fe912666bd760",
+    "sourceFile": "ee/schimke/ha/previews/GarageShutterCardPreviews.kt"
+  },
+  "previews/ee.schimke.ha.previews.GarageShutterCardPreviewsKt.Garage_State_Dark_garage-state (dark)": {
+    "captureLabel": "",
+    "functionName": "Garage_State_Dark",
+    "renderBasename": "GarageShutterCardPreviewsKt.Garage_State_Dark_garage-state_dark_closed.png",
+    "sha256": "160163736bba01b9afcbdb1c27b98c04b953e16c2aaf280144c73030414e248a",
+    "sourceFile": "ee/schimke/ha/previews/GarageShutterCardPreviews.kt"
+  },
+  "previews/ee.schimke.ha.previews.GarageShutterCardPreviewsKt.Garage_State_Dark_garage-state (dark)#1": {
+    "captureLabel": "",
+    "functionName": "Garage_State_Dark",
+    "renderBasename": "GarageShutterCardPreviewsKt.Garage_State_Dark_garage-state_dark_closing.png",
+    "sha256": "efeae0bb9ffe5c8a4b9574a2d6deabf2a30cdd9bff2872a6a560ceb5bfa69c00",
+    "sourceFile": "ee/schimke/ha/previews/GarageShutterCardPreviews.kt"
+  },
+  "previews/ee.schimke.ha.previews.GarageShutterCardPreviewsKt.Garage_State_Dark_garage-state (dark)#2": {
+    "captureLabel": "",
+    "functionName": "Garage_State_Dark",
+    "renderBasename": "GarageShutterCardPreviewsKt.Garage_State_Dark_garage-state_dark_open.png",
+    "sha256": "343d27d5506967a22acb6fc4029ee4705cff7f3a1305b8a52f7ad778f7614a59",
+    "sourceFile": "ee/schimke/ha/previews/GarageShutterCardPreviews.kt"
+  },
+  "previews/ee.schimke.ha.previews.GarageShutterCardPreviewsKt.Garage_State_Dark_garage-state (dark)#3": {
+    "captureLabel": "",
+    "functionName": "Garage_State_Dark",
+    "renderBasename": "GarageShutterCardPreviewsKt.Garage_State_Dark_garage-state_dark_opening.png",
+    "sha256": "6d4725ce9fed2e696688d62cb905a47ffefa25be363b9009c3814462e3a8bc27",
+    "sourceFile": "ee/schimke/ha/previews/GarageShutterCardPreviews.kt"
+  },
+  "previews/ee.schimke.ha.previews.GarageShutterCardPreviewsKt.Garage_State_Dark_garage-state (dark)#4": {
+    "captureLabel": "",
+    "functionName": "Garage_State_Dark",
+    "renderBasename": "GarageShutterCardPreviewsKt.Garage_State_Dark_garage-state_dark_unavailable.png",
+    "sha256": "9b4d4a67aea5de082b661ba11e6e7ee12c4d08f9f0d5adf8c8aa59d0263ba4b1",
+    "sourceFile": "ee/schimke/ha/previews/GarageShutterCardPreviews.kt"
+  },
+  "previews/ee.schimke.ha.previews.GarageShutterCardPreviewsKt.Garage_State_Light_garage-state (light)": {
+    "captureLabel": "",
+    "functionName": "Garage_State_Light",
+    "renderBasename": "GarageShutterCardPreviewsKt.Garage_State_Light_garage-state_light_closed.png",
+    "sha256": "3b2a48ee390919a4f77e0890abc7416dc522cebab3673718df406661dadd1842",
+    "sourceFile": "ee/schimke/ha/previews/GarageShutterCardPreviews.kt"
+  },
+  "previews/ee.schimke.ha.previews.GarageShutterCardPreviewsKt.Garage_State_Light_garage-state (light)#1": {
+    "captureLabel": "",
+    "functionName": "Garage_State_Light",
+    "renderBasename": "GarageShutterCardPreviewsKt.Garage_State_Light_garage-state_light_closing.png",
+    "sha256": "0111fb49b132b9090e872cb107fba73f1c429e9043229b4f98e2acb7af6eb6ab",
+    "sourceFile": "ee/schimke/ha/previews/GarageShutterCardPreviews.kt"
+  },
+  "previews/ee.schimke.ha.previews.GarageShutterCardPreviewsKt.Garage_State_Light_garage-state (light)#2": {
+    "captureLabel": "",
+    "functionName": "Garage_State_Light",
+    "renderBasename": "GarageShutterCardPreviewsKt.Garage_State_Light_garage-state_light_open.png",
+    "sha256": "3ce860e9aa6b3712247c78d47f53f68ad53eb03a0030db6d6598282d6f6fb5da",
+    "sourceFile": "ee/schimke/ha/previews/GarageShutterCardPreviews.kt"
+  },
+  "previews/ee.schimke.ha.previews.GarageShutterCardPreviewsKt.Garage_State_Light_garage-state (light)#3": {
+    "captureLabel": "",
+    "functionName": "Garage_State_Light",
+    "renderBasename": "GarageShutterCardPreviewsKt.Garage_State_Light_garage-state_light_opening.png",
+    "sha256": "6edd6891b9371b528d55167c3c33e168d4390d323af37f31908608f09bfe66c1",
+    "sourceFile": "ee/schimke/ha/previews/GarageShutterCardPreviews.kt"
+  },
+  "previews/ee.schimke.ha.previews.GarageShutterCardPreviewsKt.Garage_State_Light_garage-state (light)#4": {
+    "captureLabel": "",
+    "functionName": "Garage_State_Light",
+    "renderBasename": "GarageShutterCardPreviewsKt.Garage_State_Light_garage-state_light_unavailable.png",
+    "sha256": "9dcdcfb15f1e3737177f917e20e33ad31ab924c4ed7e69aa3f41e749c8bcc815",
+    "sourceFile": "ee/schimke/ha/previews/GarageShutterCardPreviews.kt"
+  },
+  "previews/ee.schimke.ha.previews.GarageShutterCardPreviewsKt.Garage_TwoEntities_Dark_garage two-entities (dark)": {
+    "captureLabel": "",
+    "functionName": "Garage_TwoEntities_Dark",
+    "renderBasename": "GarageShutterCardPreviewsKt.Garage_TwoEntities_Dark_garage_two-entities_dark.png",
+    "sha256": "069be1ec205c482f8d79d52c73657a0716166e7181b96ec0f95e783b763ad655",
+    "sourceFile": "ee/schimke/ha/previews/GarageShutterCardPreviews.kt"
+  },
+  "previews/ee.schimke.ha.previews.GarageShutterCardPreviewsKt.Garage_TwoEntities_Light_garage two-entities (light)": {
+    "captureLabel": "",
+    "functionName": "Garage_TwoEntities_Light",
+    "renderBasename": "GarageShutterCardPreviewsKt.Garage_TwoEntities_Light_garage_two-entities_light.png",
+    "sha256": "2b1bb0f635ce85c91625ac09463fd89dd0aed1d13a807e0e4744e949894bbd55",
+    "sourceFile": "ee/schimke/ha/previews/GarageShutterCardPreviews.kt"
+  },
   "previews/ee.schimke.ha.previews.ShutterCardPreviewsKt.Shutter_Dark_shutter (dark)": {
     "captureLabel": "",
     "functionName": "Shutter_Dark",
