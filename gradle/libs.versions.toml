@@ -29,7 +29,7 @@ logback = "1.5.32"
 junit-jupiter-bom = "5.14.3"
 
 # Preview tooling
-compose-preview-plugin = "0.8.0"
+compose-preview-plugin = "0.8.1"
 
 # Wear data layer + Proto DataStore + Horologist
 horologist = "0.8.3-alpha"
