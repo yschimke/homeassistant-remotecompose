@@ -619,14 +619,14 @@
     "captureLabel": "",
     "functionName": "TvKioskPreview_Demo",
     "renderBasename": "TvKioskPreview_Demo_TV_kiosk_demo.png",
-    "sha256": "1bc6d206be1915752f84b4e8519846c2d7dbc86bc32df7ab0a7a0909c619b214",
+    "sha256": "86f32e140775f8db7c0406d38fe34d79d94db386181fc46c42465a1b094ec7a4",
     "sourceFile": "ee/schimke/terrazzo/tv/ui/TvPreviews.kt"
   },
   "tv/ee.schimke.terrazzo.tv.ui.TvPreviewsKt.TvKioskPreview_HomePalette_TV: kiosk (Home palette)": {
     "captureLabel": "",
     "functionName": "TvKioskPreview_HomePalette",
     "renderBasename": "TvKioskPreview_HomePalette_TV_kiosk_Home_palette.png",
-    "sha256": "83b5c463705bbb37cf002cf165904e49ed561585fd8ff0ecf702f10390be814e",
+    "sha256": "f5ab7d51abd0f308f7d3943ef8505efbe91075b9ed0817b552c8754e6831e5a8",
     "sourceFile": "ee/schimke/terrazzo/tv/ui/TvPreviews.kt"
   },
   "tv/ee.schimke.terrazzo.tv.ui.TvPreviewsKt.TvKioskPreview_Live_TV: kiosk (live)": {
@@ -640,42 +640,42 @@
     "captureLabel": "",
     "functionName": "WearDashboardPreview",
     "renderBasename": "WearDashboardPreview_Wear_dashboard.png",
-    "sha256": "90c9a226ab8e65dbe4fa2746245e699e7da65a8801f856ccfdf868f4cae579eb",
+    "sha256": "5748f78cd0007496f8dd4ae3215311bbc958622c06773f466b00aeefe6831a4a",
     "sourceFile": "ee/schimke/terrazzo/wear/ui/WearPreviews.kt"
   },
   "wear/ee.schimke.terrazzo.wear.ui.WearPreviewsKt.WearDashboardsPreview_Wear: dashboards": {
     "captureLabel": "",
     "functionName": "WearDashboardsPreview",
     "renderBasename": "WearDashboardsPreview_Wear_dashboards.png",
-    "sha256": "c7b62a915e34e77c9ceeee30244a59cffa87724baa573a97e85706d991252547",
+    "sha256": "74881907196719e0443fe4d93a3ee3f3cbf7644d5d34d7843b9cc0f0ab21cd3a",
     "sourceFile": "ee/schimke/terrazzo/wear/ui/WearPreviews.kt"
   },
   "wear/ee.schimke.terrazzo.wear.ui.WearPreviewsKt.WearHomePreview_Demo_Wear: home (demo)": {
     "captureLabel": "",
     "functionName": "WearHomePreview_Demo",
     "renderBasename": "WearHomePreview_Demo_Wear_home_demo.png",
-    "sha256": "912a193593763d915b7fb503d9735e39153925ca5b1b5a452ccae954bd5255dc",
+    "sha256": "9f60638076a695786636dbfd0c189faa42a04c42bd699acbdea38109a8f41f45",
     "sourceFile": "ee/schimke/terrazzo/wear/ui/WearPreviews.kt"
   },
   "wear/ee.schimke.terrazzo.wear.ui.WearPreviewsKt.WearHomePreview_Empty_Wear: home (empty)": {
     "captureLabel": "",
     "functionName": "WearHomePreview_Empty",
     "renderBasename": "WearHomePreview_Empty_Wear_home_empty.png",
-    "sha256": "a307ee1aba473efc127a1d27e13123cf607373ba14429a7dfd5534bd1aff0fe2",
+    "sha256": "9211824b8d99d222a2a9c8e0f40655fd7def0b9a5afbc5064a9406636bd89762",
     "sourceFile": "ee/schimke/terrazzo/wear/ui/WearPreviews.kt"
   },
   "wear/ee.schimke.terrazzo.wear.ui.WearPreviewsKt.WearHomePreview_Live_Wear: home (live)": {
     "captureLabel": "",
     "functionName": "WearHomePreview_Live",
     "renderBasename": "WearHomePreview_Live_Wear_home_live.png",
-    "sha256": "f344026098346b503314d2924c28fcca98ea033a46429a8967f5a3d8779f9b11",
+    "sha256": "072414d5b98934a5a44d5cb979f3ca52c0a5a1e63c4f41cae5391cdb81c2b6ce",
     "sourceFile": "ee/schimke/terrazzo/wear/ui/WearPreviews.kt"
   },
   "wear/ee.schimke.terrazzo.wear.ui.WearPreviewsKt.WearSettingsPreview_Wear: settings": {
     "captureLabel": "",
     "functionName": "WearSettingsPreview",
     "renderBasename": "WearSettingsPreview_Wear_settings.png",
-    "sha256": "040ae2dc2d91a5e94b2405264fbb499276f0082df26006699fb97eebae6f59a9",
+    "sha256": "20883b495a6b5268ba3cd8a958201adae59d6356dbad7412edcf61973dba278d",
     "sourceFile": "ee/schimke/terrazzo/wear/ui/WearPreviews.kt"
   }
 }
