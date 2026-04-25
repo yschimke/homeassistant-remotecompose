@@ -41,3 +41,9 @@ The add-on runs against the supervisor-injected `SUPERVISOR_TOKEN`; no
 extra config required. Once published to a repo and installed, the
 endpoints are reachable via ingress (in-frontend) or via the LAN port
 exposed in `addon/config.yaml`.
+
+## End-to-end test
+
+`test-docker/run.sh` builds the add-on image, runs it next to a real
+HA container, and smoke-checks the public endpoints. See
+[`test-docker/README.md`](test-docker/README.md).
