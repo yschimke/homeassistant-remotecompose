@@ -100,3 +100,22 @@ Auto-generated from `main`. Browse inline or compare against PR branches.
 | `ToggleInitial_On_Dark` | <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/preview_main/renders/previews/ToggleSwitchPreviewsKt.ToggleInitial_On_Dark_toggle_initial_on_dark.png" width="150" /> |
 | `ToggleInitial_On` | <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/preview_main/renders/previews/ToggleSwitchPreviewsKt.ToggleInitial_On_toggle_initial_on.png" width="150" /> |
 
+## tv
+
+| Preview | Image |
+|---------|-------|
+| `TvKioskPreview_Demo` | <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/preview_main/renders/tv/TvKioskPreview_Demo_TV_kiosk_demo.png" width="150" /> |
+| `TvKioskPreview_HomePalette` | <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/preview_main/renders/tv/TvKioskPreview_HomePalette_TV_kiosk_Home_palette.png" width="150" /> |
+| `TvKioskPreview_Live` | <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/preview_main/renders/tv/TvKioskPreview_Live_TV_kiosk_live.png" width="150" /> |
+
+## wear
+
+| Preview | Image |
+|---------|-------|
+| `WearDashboardPreview` | <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/preview_main/renders/wear/WearDashboardPreview_Wear_dashboard.png" width="150" /> |
+| `WearDashboardsPreview` | <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/preview_main/renders/wear/WearDashboardsPreview_Wear_dashboards.png" width="150" /> |
+| `WearHomePreview_Demo` | <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/preview_main/renders/wear/WearHomePreview_Demo_Wear_home_demo.png" width="150" /> |
+| `WearHomePreview_Empty` | <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/preview_main/renders/wear/WearHomePreview_Empty_Wear_home_empty.png" width="150" /> |
+| `WearHomePreview_Live` | <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/preview_main/renders/wear/WearHomePreview_Live_Wear_home_live.png" width="150" /> |
+| `WearSettingsPreview` | <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/preview_main/renders/wear/WearSettingsPreview_Wear_settings.png" width="150" /> |
+
