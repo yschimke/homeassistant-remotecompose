@@ -7,9 +7,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
+import ee.schimke.ha.client.DashboardSummary
 import ee.schimke.ha.rc.components.ThemeStyle
 import ee.schimke.terrazzo.core.prefs.DarkModePref
 import ee.schimke.terrazzo.core.session.DemoHaSession
+import ee.schimke.terrazzo.dashboard.DashboardListState
 import ee.schimke.terrazzo.dashboard.DashboardPickerScreen
 import ee.schimke.terrazzo.dashboard.DashboardViewScreen
 import ee.schimke.terrazzo.discovery.DiscoveryScreen
@@ -53,13 +55,22 @@ fun Screen_Discovery() = PhoneHost {
 @Preview(name = "widgets", showBackground = false, widthDp = PHONE_WIDTH_DP, heightDp = PHONE_HEIGHT_DP)
 @Composable
 fun Screen_Widgets() = PhoneHost {
-    WidgetsScreen()
+    WidgetsScreen(onBack = {})
 }
 
 @Preview(name = "dashboard picker", showBackground = false, widthDp = PHONE_WIDTH_DP, heightDp = PHONE_HEIGHT_DP)
 @Composable
 fun Screen_DashboardPicker() = PhoneHost {
-    DashboardPickerScreen(session = DemoHaSession(), onDashboardPicked = {})
+    DashboardPickerScreen(
+        state = DashboardListState.Ready(
+            dashboards = listOf(
+                DashboardSummary(urlPath = null, title = "Home"),
+                DashboardSummary(urlPath = "lovelace-mobile", title = "Living room"),
+                DashboardSummary(urlPath = "lovelace-garage", title = "Garage"),
+            ),
+        ),
+        onDashboardPicked = {},
+    )
 }
 
 @Preview(name = "dashboard view", showBackground = false, widthDp = PHONE_WIDTH_DP, heightDp = PHONE_HEIGHT_DP)
