@@ -4,6 +4,7 @@ package ee.schimke.terrazzo.dashboard
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -12,7 +13,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -42,6 +43,7 @@ import ee.schimke.ha.rc.cardWidthClass
 import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.components.ProvideHaTheme
 import ee.schimke.ha.rc.components.haThemeFor
+import ee.schimke.terrazzo.ui.LayoutConfig
 import ee.schimke.terrazzo.ui.LocalIsDarkTheme
 import ee.schimke.terrazzo.ui.LocalThemeStyle
 import ee.schimke.terrazzo.ui.rememberLayoutConfig
@@ -53,16 +55,24 @@ import kotlinx.coroutines.delay
  * widget-per-card model — a dashboard here is a stack of players, not
  * one giant document.
  *
- * Layout is single-column on every form factor; the only thing that
- * scales with width is how many [CardWidthClass.Compact] cards (tile,
- * button, entity) we pack into a row. On phones a "lights cluster" of
- * four buttons fits 2-up; on tablets / unfolded foldables 4-up. Full
- * cards (entities, glance, markdown, shutter) stay one-per-row at any
- * width — they'd be unreadable side-by-side on a wall display anyway.
+ * Layout follows the dashboard's own structure as faithfully as the
+ * window allows:
  *
- * The dashboard column is centred and capped to ~840 dp on Expanded
- * widths so an `entities` list doesn't render 1280 dp wide and become
- * a horizontal eyeline-skipping disaster.
+ *   - **Wide (Expanded width, ≥2 sections)** — sections render
+ *     side-by-side as columns, mirroring HA's modern dashboard. Up
+ *     to 2 columns at 840 dp / 3 at 1200 dp. Section titles sit at
+ *     the top of each column.
+ *   - **Single-column (Compact / Medium, or no sections)** — sections
+ *     stack vertically with their titles preserved as inline
+ *     headings. Cards inside a section pack consecutive
+ *     [CardWidthClass.Compact] entries (tile / button / entity) into
+ *     a single row so a four-button cluster doesn't take four full
+ *     screen heights on a phone.
+ *
+ * View titles are not rendered: each top-level dashboard has one
+ * "view" in the typical case, and the user already saw the view name
+ * in the picker. Multi-view dashboards are an HA tab construct; we'd
+ * surface them as tabs, not stacked, when we get to that.
  */
 @Composable
 fun DashboardViewScreen(
@@ -117,18 +127,17 @@ private fun DashboardList(
     contentPadding: PaddingValues,
 ) {
     val registry = remember { defaultRegistry() }
-    val layout = rememberLayoutConfig()
-    val rows = remember(dashboard, snapshot, layout.compactCardsPerRow) {
-        packRows(flattenCards(dashboard), snapshot) { card ->
-            registry.cardWidthClass(card, snapshot)
-        }.let { groups -> chunkCompactGroups(groups, layout.compactCardsPerRow) }
-    }
+    val layout = remember(dashboard) { buildDashboardLayout(dashboard) }
+    val cfg = rememberLayoutConfig()
 
-    // The inner column carries the contentPadding so the LazyColumn
-    // itself fills the window edge-to-edge (background paints behind
-    // status bar / nav bar). centring + maxContentWidth comes via
-    // `widthIn` on the LazyColumn modifier, applied inside an outer
-    // Box that consumes the leftover horizontal space.
+    val sectionColumns = (cfg.maxSectionColumns).coerceAtMost(layout.sectionCount).coerceAtLeast(1)
+    val sideBySide = sectionColumns >= 2
+
+    // Centre + cap the column on Expanded ONLY when the dashboard has
+    // no sections — sections drive their own grid width and shouldn't
+    // be capped to a single-column max.
+    val constrainColumn = !sideBySide && cfg.maxContentWidth != Dp.Unspecified
+
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.TopCenter,
@@ -136,20 +145,193 @@ private fun DashboardList(
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .columnMaxWidth(layout.maxContentWidth)
-                .padding(horizontal = layout.horizontalGutter),
+                .let { if (constrainColumn) it.widthIn(max = cfg.maxContentWidth) else it }
+                .padding(horizontal = cfg.horizontalGutter),
             contentPadding = contentPadding,
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
-            items(rows, key = { it.key }) { row ->
-                CardRow(row, snapshot, registry, onCardLongPress)
+            layout.views.forEachIndexed { viewIndex, view ->
+                renderView(
+                    viewIndex = viewIndex,
+                    view = view,
+                    snapshot = snapshot,
+                    registry = registry,
+                    cfg = cfg,
+                    sideBySide = sideBySide,
+                    sectionColumns = sectionColumns,
+                    onLongPress = onCardLongPress,
+                )
             }
         }
     }
 }
 
-private fun Modifier.columnMaxWidth(maxContentWidth: Dp): Modifier =
-    if (maxContentWidth == Dp.Unspecified) this else widthIn(max = maxContentWidth)
+/**
+ * Emit one view's blocks into the parent [LazyListScope]. Orphan
+ * cards (legacy `view.cards`) come first as a single column;
+ * sections follow, either stacked (single-column mode) or
+ * chunked into rows of [sectionColumns] section-columns
+ * (wide mode).
+ */
+private fun LazyListScope.renderView(
+    viewIndex: Int,
+    view: ViewLayout,
+    snapshot: HaSnapshot,
+    registry: ee.schimke.ha.rc.CardRegistry,
+    cfg: LayoutConfig,
+    sideBySide: Boolean,
+    sectionColumns: Int,
+    onLongPress: (CardConfig) -> Unit,
+) {
+    val viewKey = "v$viewIndex"
+
+    if (view.orphanCards.isNotEmpty()) {
+        cardRows(
+            keyPrefix = "$viewKey-orphan",
+            cards = view.orphanCards,
+            snapshot = snapshot,
+            registry = registry,
+            compactPerRow = cfg.compactCardsPerRow,
+            onLongPress = onLongPress,
+        )
+    }
+
+    if (view.sections.isEmpty()) return
+
+    if (!sideBySide) {
+        view.sections.forEachIndexed { sectionIndex, section ->
+            val sectionKey = "$viewKey-s$sectionIndex"
+            section.title?.let { title ->
+                item(key = "$sectionKey-title") { SectionHeading(title) }
+            }
+            cardRows(
+                keyPrefix = "$sectionKey",
+                cards = section.cards,
+                snapshot = snapshot,
+                registry = registry,
+                // Within a single-column section, keep the same
+                // packing rule the orphan path uses — small buttons
+                // pair up so a "lights" cluster stays usable on
+                // narrow screens.
+                compactPerRow = cfg.compactCardsPerRow,
+                onLongPress = onLongPress,
+            )
+        }
+    } else {
+        view.sections.chunked(sectionColumns).forEachIndexed { rowIndex, sectionRow ->
+            item(key = "$viewKey-srow$rowIndex") {
+                SectionRow(
+                    sections = sectionRow,
+                    columns = sectionColumns,
+                    snapshot = snapshot,
+                    registry = registry,
+                    onLongPress = onLongPress,
+                )
+            }
+        }
+    }
+}
+
+/** Heading for a section title. Shared between single-column and wide layouts. */
+@Composable
+private fun SectionHeading(title: String) {
+    Text(
+        text = title,
+        style = MaterialTheme.typography.titleMedium,
+        color = MaterialTheme.colorScheme.onSurface,
+        modifier = Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 4.dp),
+    )
+}
+
+/**
+ * One row of [columns] section-columns laid out side-by-side. Cards
+ * within each section stack vertically — wide mode treats sections
+ * as the primary layout unit so we don't compact-pack inside them
+ * (a 400-dp section column can show a tile at full width without
+ * eyeline pain). If [sections] is shorter than [columns] we pad with
+ * empty `weight(1f)` Spacer-equivalents via empty columns so the
+ * remaining sections in the next row still align with this one.
+ */
+@Composable
+private fun SectionRow(
+    sections: List<SectionLayout>,
+    columns: Int,
+    snapshot: HaSnapshot,
+    registry: ee.schimke.ha.rc.CardRegistry,
+    onLongPress: (CardConfig) -> Unit,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+        verticalAlignment = Alignment.Top,
+    ) {
+        sections.forEach { section ->
+            SectionColumn(
+                section = section,
+                snapshot = snapshot,
+                registry = registry,
+                onLongPress = onLongPress,
+                modifier = Modifier.weight(1f),
+            )
+        }
+        // Reserve weight for missing columns so the row geometry
+        // matches its sibling rows when sections.size % columns != 0.
+        repeat(columns - sections.size) {
+            Box(modifier = Modifier.weight(1f))
+        }
+    }
+}
+
+@Composable
+private fun SectionColumn(
+    section: SectionLayout,
+    snapshot: HaSnapshot,
+    registry: ee.schimke.ha.rc.CardRegistry,
+    onLongPress: (CardConfig) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        section.title?.let { SectionHeading(it) }
+        section.cards.forEach { card ->
+            val heightDp = remember(card, snapshot) { registry.cardHeightDp(card, snapshot) }
+            CardSlot(
+                card = card,
+                snapshot = snapshot,
+                registry = registry,
+                onLongPress = onLongPress,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(heightDp.dp),
+            )
+        }
+    }
+}
+
+/**
+ * Emit packed rows for [cards] into the parent [LazyListScope].
+ * Consecutive [CardWidthClass.Compact] cards group into rows of
+ * [compactPerRow]; full-width cards stand alone.
+ */
+private fun LazyListScope.cardRows(
+    keyPrefix: String,
+    cards: List<CardConfig>,
+    snapshot: HaSnapshot,
+    registry: ee.schimke.ha.rc.CardRegistry,
+    compactPerRow: Int,
+    onLongPress: (CardConfig) -> Unit,
+) {
+    val rows = packAndChunk(cards, compactPerRow) { c ->
+        registry.cardWidthClass(c, snapshot)
+    }
+    rows.forEachIndexed { rowIndex, row ->
+        item(key = "$keyPrefix-r$rowIndex") {
+            CardRow(row, snapshot, registry, onLongPress)
+        }
+    }
+}
 
 /**
  * One LazyColumn item — either a single full-width card or a row of
@@ -186,9 +368,9 @@ private fun CardRow(
 }
 
 /**
- * Hosts one card's own `.rc` document. Sized by the parent Row (via
- * `weight(1f)`) so packing logic decides the slot width, not the
- * RemoteCompose document.
+ * Hosts one card's own `.rc` document. Sized by the parent (via
+ * `weight(1f)` in compact rows, or `height(...)` in section columns)
+ * so the layout decides the slot size, not the RemoteCompose document.
  */
 @Composable
 private fun CardSlot(
@@ -218,71 +400,35 @@ private fun CardSlot(
     }
 }
 
-private fun flattenCards(dashboard: Dashboard): List<CardConfig> =
-    dashboard.views.flatMap { view ->
-        val fromCards = view.cards
-        val fromSections = view.sections.flatMap { it.cards }
-        fromCards + fromSections
-    }
+/**
+ * One emitted dashboard row in the LazyColumn. Either a single
+ * full-width card or a cluster of compact cards sharing the row.
+ */
+private data class DashboardRow(val cards: List<CardConfig>)
 
 /**
- * One emitted dashboard row. Either a single full-width card or a
- * cluster of compact cards that have been deemed "shareable".
+ * Group consecutive cards by [CardWidthClass], then chunk Compact
+ * groups into rows of [perRow]. Authored order is preserved — a Full
+ * card between two Compact runs splits them into two clusters.
  */
-private data class DashboardRow(val key: String, val cards: List<CardConfig>)
-
-/**
- * Group consecutive cards by [CardWidthClass]. The dashboard's authored
- * order is preserved — a Full card between two Compact runs splits
- * them into two clusters, never reorders.
- */
-private fun packRows(
+private fun packAndChunk(
     cards: List<CardConfig>,
-    snapshot: HaSnapshot,
-    widthClassOf: (CardConfig) -> CardWidthClass,
-): List<List<CardConfig>> {
-    val groups = mutableListOf<List<CardConfig>>()
-    val pending = mutableListOf<CardConfig>()
-    var pendingClass: CardWidthClass? = null
-    for (card in cards) {
-        val cls = widthClassOf(card)
-        if (cls == CardWidthClass.Full) {
-            if (pending.isNotEmpty()) {
-                groups += pending.toList(); pending.clear(); pendingClass = null
-            }
-            groups += listOf(card)
-        } else {
-            if (pendingClass != null && pendingClass != cls) {
-                groups += pending.toList(); pending.clear()
-            }
-            pending += card
-            pendingClass = cls
-        }
-    }
-    if (pending.isNotEmpty()) groups += pending.toList()
-    return groups
-}
-
-/**
- * Chunk Compact groups into rows of [perRow] siblings while keeping
- * Full groups as standalone single-card rows. Stable keys are
- * synthesised from the position so LazyColumn can recycle correctly
- * across recompositions.
- */
-private fun chunkCompactGroups(
-    groups: List<List<CardConfig>>,
     perRow: Int,
-): List<DashboardRow> {
-    var index = 0
-    return buildList {
-        groups.forEach { group ->
-            if (group.size <= 1) {
-                add(DashboardRow(key = "row-${index++}", cards = group))
-            } else {
-                group.chunked(perRow).forEach { chunk ->
-                    add(DashboardRow(key = "row-${index++}", cards = chunk))
-                }
-            }
+    widthClassOf: (CardConfig) -> CardWidthClass,
+): List<DashboardRow> = buildList {
+    val pending = mutableListOf<CardConfig>()
+    fun flushPending() {
+        if (pending.isEmpty()) return
+        pending.chunked(perRow).forEach { add(DashboardRow(it.toList())) }
+        pending.clear()
+    }
+    for (card in cards) {
+        if (widthClassOf(card) == CardWidthClass.Full) {
+            flushPending()
+            add(DashboardRow(listOf(card)))
+        } else {
+            pending += card
         }
     }
+    flushPending()
 }
