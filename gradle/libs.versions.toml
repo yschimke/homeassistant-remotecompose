@@ -30,7 +30,7 @@ junit-jupiter-bom = "6.0.3"
 mockserver = "5.15.0"
 
 # Preview tooling
-compose-preview-plugin = "0.8.6"
+compose-preview-plugin = "0.8.8"
 
 # Formatting
 ktfmt-gradle = "0.26.0"
