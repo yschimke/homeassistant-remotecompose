@@ -50,12 +50,20 @@ jobs:
           printf '%s' "$SIGNING_KEYSTORE" | base64 -d > "$keystore"
           echo "HARC_KEYSTORE_PATH=$keystore" >> "$GITHUB_ENV"
 
-      - name: Assemble release
+      - name: Assemble release APK
         env:
           HARC_KEYSTORE_PASSWORD: ${{ secrets.HARC_KEYSTORE_PASSWORD }}
           HARC_KEY_ALIAS: ${{ secrets.HARC_KEY_ALIAS }}
           HARC_KEY_PASSWORD: ${{ secrets.HARC_KEY_PASSWORD }}
-        run: ./gradlew :app:assembleRelease :app:bundleRelease --stacktrace
+        run: ./gradlew :app:assembleRelease --stacktrace
+
+      - name: Assemble release bundle (Play)
+        if: env.HAS_SIGNING_KEYSTORE == 'true'
+        env:
+          HARC_KEYSTORE_PASSWORD: ${{ secrets.HARC_KEYSTORE_PASSWORD }}
+          HARC_KEY_ALIAS: ${{ secrets.HARC_KEY_ALIAS }}
+          HARC_KEY_PASSWORD: ${{ secrets.HARC_KEY_PASSWORD }}
+        run: ./gradlew :app:bundleRelease --stacktrace
 
       - name: Publish to Play (internal track)
         if: env.HAS_PLAY_CREDENTIALS == 'true' && env.HAS_SIGNING_KEYSTORE == 'true'
@@ -90,10 +98,13 @@ jobs:
         uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ env.TAG_NAME }}
+          # The AAB only exists when SIGNING_KEYSTORE is configured;
+          # `fail_on_unmatched_files` would fail every pre-signing tag
+          # push otherwise. The unsigned APK glob is enough until the
+          # signing secret lands.
           files: |
             _release/*.apk
             _release/*.aab
-          fail_on_unmatched_files: true
 
       - name: Upload workflow artifact
         if: github.event_name != 'push'
