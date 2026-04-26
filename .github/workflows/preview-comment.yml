@@ -18,6 +18,7 @@ jobs:
   compare:
     name: Compare previews
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     permissions:
       # preview-comment composite action appends a commit to the shared
       # preview_pr branch and upserts a PR comment with before/after images.

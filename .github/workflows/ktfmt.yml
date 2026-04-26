@@ -15,6 +15,7 @@ jobs:
   check:
     name: ktfmt check
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v6
       # Gradle itself (and the Metro plugin's buildscript) need JVM 21+.
