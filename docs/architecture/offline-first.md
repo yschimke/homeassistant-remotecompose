@@ -26,9 +26,12 @@ A surface is **offline-first** when:
 
 ## Caches
 
-All persistent state lives under
-`context.filesDir/terrazzo/<scope>/...`. JSON for everything except
-the wear sync proto blobs, which already have a wire schema.
+Each app stores cached data in the format that matches its source — JSON
+for the mobile cache (HA's `lovelace/config` and entity-state payloads
+are JSON over the WebSocket), proto wire bytes for the wear cache (the
+wear data layer already speaks proto). Each blob lives in its own file
+so a corruption or partial write only loses one entry, never the whole
+cache. Writes are atomic (tmp + rename).
 
 ### Mobile (`app/` + `terrazzo-core`)
 
@@ -46,7 +49,6 @@ filesDir/
       dashboards.json                 # List<DashboardSummary>
       dashboard/<urlPath>.json        # Dashboard
       snapshot/<urlPath>.json         # HaSnapshot
-      meta.json                       # last-fetched timestamps
 ```
 
 `urlPath` may be `null` (HA's default dashboard); we encode that as
@@ -67,12 +69,26 @@ fall through unchanged because they always read from cache first.
 ### Wear (`wear/`)
 
 `WearSyncRepository` already builds StateFlows from
-DataClient/MessageClient. We add a parallel `WearOfflineStore`
-(JSON file under `filesDir/terrazzo/wear/last_state.json`) that
-mirrors every successful proto blob handled and rehydrates from
-disk on `start()` before the listeners attach. Schema is the
-same proto types we already use (`WearSettings`, `PinnedCardSet`,
-list of `DashboardData`, `LiveValues`).
+DataClient/MessageClient. We add a parallel `WearOfflineStore` that
+persists each blob the repository handles as proto wire bytes (same
+encoding the wear data layer itself uses — no re-serialisation). One
+file per blob type so each blob has an independent lifecycle:
+
+```
+filesDir/
+  terrazzo/
+    wear/
+      settings.pb                     # WearSettings
+      pinned.pb                       # PinnedCardSet
+      values.pb                       # LiveValues (full or merged)
+      dashboards/<urlPath>.pb         # DashboardData
+```
+
+The repository hydrates its StateFlows from these files in its primary
+constructor, so the very first composition sees cached data — listeners
+attach afterwards and overlay live updates. Stream deltas merged into
+the in-memory map are written back to `values.pb` so a process restart
+resumes from the latest delta-updated state, not the last full DataItem.
 
 This way:
 
@@ -84,11 +100,14 @@ This way:
 ### TV (`tv/`)
 
 TV does not yet wire an HA session — it's kiosk + demo today. The
-offline-first scaffold added here is `TvOfflineCache`: same JSON
-layout as the mobile cache, scoped to the TV app's `filesDir`. A
-future change that lands a `TvHaSession` will read/write from this
-cache via the existing `CachedHaSession` wrapper, so wall-mounted
-TVs that lose the LAN keep their last good dashboard on screen.
+offline-first scaffold added here is `TvOfflineCache`: a blob store
+under the TV app's `filesDir/terrazzo/tv/<scope>/<name>`, with the
+same per-instance / atomic-write semantics as the mobile and wear
+caches. The cache stores raw payloads (callers own the format —
+JSON for HA-shaped data, proto if the TV app ever pairs with the
+phone) so the TV module can stay minimal until it has a real use
+for it. A future change that lands a `TvHaSession` will plug into
+the same `CachedHaSession` wrapper used by mobile.
 
 ## Auto-resume
 
