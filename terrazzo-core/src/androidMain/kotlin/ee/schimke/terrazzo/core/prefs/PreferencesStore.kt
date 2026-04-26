@@ -73,6 +73,21 @@ class PreferencesStore(private val context: Context) {
     }
 
     /**
+     * Opt-in to the experimental Compose 1.11 `Grid` API for the
+     * dashboard side-by-side section layout. Off by default so the
+     * stable `Row` + chunked path keeps shipping; flip from Settings
+     * to evaluate visual / behavioural parity against the legacy
+     * path. Compact / Medium widths render the same either way (the
+     * flag only takes effect in Expanded width with ≥2 sections).
+     */
+    val experimentalGridLayout: Flow<Boolean>
+        get() = context.store.data.map { it[GRID_LAYOUT_KEY] ?: false }
+
+    suspend fun setExperimentalGridLayout(enabled: Boolean) {
+        context.store.edit { it[GRID_LAYOUT_KEY] = enabled }
+    }
+
+    /**
      * The dashboard the user last opened. Drives auto-launch: on cold
      * start, [ee.schimke.terrazzo.MainActivity] reads this once and
      * seeds the dashboard nav-state, so a single-dashboard or 2-3
@@ -122,6 +137,7 @@ class PreferencesStore(private val context: Context) {
         private val THEME_KEY = stringPreferencesKey("theme_style")
         private val DARK_KEY = stringPreferencesKey("dark_mode")
         private val LAST_VIEWED_KEY = stringPreferencesKey("last_viewed_dashboard")
+        private val GRID_LAYOUT_KEY = booleanPreferencesKey("experimental_grid_layout")
 
         /** Stored value for HA's default (unnamed) dashboard. */
         const val DEFAULT_DASHBOARD_SENTINEL: String = "__default__"

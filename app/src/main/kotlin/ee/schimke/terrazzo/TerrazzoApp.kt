@@ -388,6 +388,7 @@ private fun SettingsScreen(
     val widgetRefresh = remember(context) { WidgetRefreshScheduler(context.applicationContext) }
     val themePref by graph.preferencesStore.themeStyle.collectAsState(initial = ThemePref.TerrazzoHome)
     val darkPref by graph.preferencesStore.darkMode.collectAsState(initial = DarkModePref.Follow)
+    val gridLayoutEnabled by graph.preferencesStore.experimentalGridLayout.collectAsState(initial = false)
 
     Scaffold(
         topBar = {
@@ -453,6 +454,28 @@ private fun SettingsScreen(
                     }
                 },
             )
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text("Experimental: Grid layout", style = MaterialTheme.typography.titleMedium)
+                    Text(
+                        "Use Compose 1.11's Grid API for the wide-screen side-by-side " +
+                            "section layout instead of the chunked Row path. Only takes " +
+                            "effect on tablets / unfolded foldables with ≥2 sections.",
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                }
+                Switch(
+                    checked = gridLayoutEnabled,
+                    onCheckedChange = { enabled ->
+                        scope.launch { graph.preferencesStore.setExperimentalGridLayout(enabled) }
+                    },
+                )
+            }
 
             OutlinedButton(onClick = onSignOut) {
                 Text(if (isDemo) "Exit demo" else "Sign out")
