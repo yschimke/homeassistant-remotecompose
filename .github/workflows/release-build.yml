@@ -1,0 +1,103 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to build (e.g. v0.1.1)'
+        required: true
+
+permissions:
+  contents: write
+  packages: write
+
+concurrency:
+  group: release-${{ github.ref_name }}
+  cancel-in-progress: false
+
+# Required secrets:
+#   SIGNING_KEYSTORE              base64 of the upload keystore (.jks)
+#   HARC_KEYSTORE_PASSWORD        keystore password
+#   HARC_KEY_ALIAS                key alias inside the keystore
+#   HARC_KEY_PASSWORD             key password
+#   PLAY_SERVICE_ACCOUNT_JSON     service account JSON; presence gates Play upload
+jobs:
+  release:
+    name: Build & publish release
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      TAG_NAME: ${{ github.ref_type == 'tag' && github.ref_name || inputs.tag }}
+      HAS_SIGNING_KEYSTORE: ${{ secrets.SIGNING_KEYSTORE != '' }}
+      HAS_PLAY_CREDENTIALS: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON != '' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_type == 'tag' && github.ref_name || inputs.tag }}
+      - uses: ./.github/actions/setup
+        with:
+          cache-read-only: 'true'
+
+      - name: Decode signing keystore
+        if: env.HAS_SIGNING_KEYSTORE == 'true'
+        env:
+          SIGNING_KEYSTORE: ${{ secrets.SIGNING_KEYSTORE }}
+        run: |
+          set -euo pipefail
+          keystore="${RUNNER_TEMP}/upload.jks"
+          printf '%s' "$SIGNING_KEYSTORE" | base64 -d > "$keystore"
+          echo "HARC_KEYSTORE_PATH=$keystore" >> "$GITHUB_ENV"
+
+      - name: Assemble release
+        env:
+          HARC_KEYSTORE_PASSWORD: ${{ secrets.HARC_KEYSTORE_PASSWORD }}
+          HARC_KEY_ALIAS: ${{ secrets.HARC_KEY_ALIAS }}
+          HARC_KEY_PASSWORD: ${{ secrets.HARC_KEY_PASSWORD }}
+        run: ./gradlew :app:assembleRelease :app:bundleRelease --stacktrace
+
+      - name: Publish to Play (internal track)
+        if: env.HAS_PLAY_CREDENTIALS == 'true' && env.HAS_SIGNING_KEYSTORE == 'true'
+        env:
+          ANDROID_PUBLISHER_CREDENTIALS: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          HARC_KEYSTORE_PASSWORD: ${{ secrets.HARC_KEYSTORE_PASSWORD }}
+          HARC_KEY_ALIAS: ${{ secrets.HARC_KEY_ALIAS }}
+          HARC_KEY_PASSWORD: ${{ secrets.HARC_KEY_PASSWORD }}
+        run: ./gradlew :app:publishBundle --stacktrace
+
+      - name: Stage release assets
+        id: stage
+        run: |
+          set -euo pipefail
+          mkdir -p _release
+          version="${TAG_NAME#v}"
+          shopt -s nullglob
+          for f in app/build/outputs/apk/release/*.apk; do
+            name=$(basename "$f" .apk)
+            suffix=""
+            case "$name" in *-unsigned) suffix="-unsigned" ;; esac
+            cp "$f" "_release/harc-${version}${suffix}.apk"
+          done
+          for f in app/build/outputs/bundle/release/*.aab; do
+            cp "$f" "_release/harc-${version}.aab"
+          done
+          ls -la _release/
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+
+      - name: Attach assets to GitHub release
+        if: github.event_name == 'push'
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: ${{ env.TAG_NAME }}
+          files: |
+            _release/*.apk
+            _release/*.aab
+          fail_on_unmatched_files: true
+
+      - name: Upload workflow artifact
+        if: github.event_name != 'push'
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-${{ steps.stage.outputs.version }}
+          path: _release/
