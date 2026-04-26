@@ -77,11 +77,15 @@ import kotlinx.coroutines.launch
  * app can be explored without a working HA instance.
  */
 @Composable
-fun TerrazzoApp(initialDashboard: String? = null) {
-    // NOTE: not saveable — an HaSession owns a live WebSocket. Process
-    // restart re-walks the discovery / login flow. The refresh token in
-    // TokenVault means we can auto-sign-in silently once we wire that up.
-    var session by remember { mutableStateOf<HaSession?>(null) }
+fun TerrazzoApp(
+    initialDashboard: String? = null,
+    initialSession: HaSession? = null,
+) {
+    // Cold-start auto-resume: [initialSession] is a cache-only session
+    // built in MainActivity from the last-known instance, so the first
+    // frame paints from disk while we re-mint the access token in the
+    // background. A new sign-in or demo toggle replaces this state.
+    var session by remember { mutableStateOf(initialSession) }
     var lastError by remember { mutableStateOf<Throwable?>(null) }
 
     val graph = LocalTerrazzoGraph.current
@@ -95,10 +99,12 @@ fun TerrazzoApp(initialDashboard: String? = null) {
     // Persisted demo-mode flag survives process restarts, so a user who
     // opted into demo doesn't see the login screen again on relaunch.
     // Also re-arms the widget refresh chain in case the worker queue
-    // was flushed (e.g. "Clear data" via system Settings).
+    // was flushed (e.g. "Clear data" via system Settings). When a
+    // cache-only [initialSession] was passed in (cold-start auto-resume
+    // from a prior login), the demo path overrides it.
     LaunchedEffect(Unit) {
         if (graph.preferencesStore.demoModeNow()) {
-            if (session == null) session = graph.sessionFactory.createDemo()
+            session = graph.sessionFactory.createDemo()
             widgetScheduler.scheduleDemo()
         }
     }
@@ -149,9 +155,18 @@ fun TerrazzoApp(initialDashboard: String? = null) {
             },
             onSignOut = {
                 val previous = session
+                val previousBaseUrl = previous?.baseUrl
                 scope.launch {
                     graph.preferencesStore.setDemoMode(false)
                     graph.preferencesStore.clearLastViewedDashboard()
+                    // Wipe cached dashboards / snapshots and the
+                    // refresh-token vault entry so the next user on
+                    // this device can't read the previous account's
+                    // data, and so cold start goes back to discovery.
+                    if (previousBaseUrl != null) {
+                        graph.offlineCache.clearInstance(previousBaseUrl)
+                        runCatching { graph.tokenVault.clear(previousBaseUrl) }
+                    }
                     previous?.close()
                 }
                 widgetScheduler.cancelDemo()

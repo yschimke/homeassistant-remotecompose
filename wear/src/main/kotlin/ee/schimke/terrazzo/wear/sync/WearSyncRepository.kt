@@ -25,7 +25,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 
 /**
@@ -58,16 +57,28 @@ class WearSyncRepository(
             coroutineScope = scope,
         )
 
-    private val _settings: MutableStateFlow<WearSettings> = MutableStateFlow(WearSettings())
+    /**
+     * Local on-disk mirror of every proto blob the phone has ever
+     * pushed. Read once at [start] so the watch boots from disk when
+     * the phone is unreachable; written on every [handle] so the next
+     * cold launch sees the latest values without waiting for a sync.
+     */
+    private val offline: WearOfflineStore = WearOfflineStore(context.applicationContext)
+
+    private val _settings: MutableStateFlow<WearSettings> =
+        MutableStateFlow(offline.readSettings() ?: WearSettings())
     val settings: StateFlow<WearSettings> = _settings.asStateFlow()
 
-    private val _pinned: MutableStateFlow<PinnedCardSet> = MutableStateFlow(PinnedCardSet())
+    private val _pinned: MutableStateFlow<PinnedCardSet> =
+        MutableStateFlow(offline.readPinned() ?: PinnedCardSet())
     val pinned: StateFlow<PinnedCardSet> = _pinned.asStateFlow()
 
-    private val _dashboards: MutableStateFlow<List<DashboardData>> = MutableStateFlow(emptyList())
+    private val _dashboards: MutableStateFlow<List<DashboardData>> =
+        MutableStateFlow(offline.readAllDashboards().sortedBy { it.title })
     val dashboards: StateFlow<List<DashboardData>> = _dashboards.asStateFlow()
 
-    private val _values: MutableStateFlow<Map<String, EntityValue>> = MutableStateFlow(emptyMap())
+    private val _values: MutableStateFlow<Map<String, EntityValue>> =
+        MutableStateFlow(offline.readValues()?.values ?: emptyMap())
     val values: StateFlow<Map<String, EntityValue>> = _values.asStateFlow()
 
     private val dataListener = DataClient.OnDataChangedListener { events: DataEventBuffer ->
@@ -89,6 +100,9 @@ class WearSyncRepository(
             merged[delta.entityId] = delta.value
         }
         _values.value = merged
+        // Persist the merged snapshot so a process restart resumes from
+        // the latest delta-updated state, not the last full DataItem.
+        offline.writeValues(LiveValues(values = merged, capturedAtMs = frame.capturedAtMs))
     }
 
     fun start() {
@@ -136,14 +150,21 @@ class WearSyncRepository(
     private fun handle(path: String, bytes: ByteArray) {
         when {
             path == WearSyncPaths.SETTINGS ->
-                decodeProto<WearSettings>(bytes)?.let { _settings.value = it }
+                decodeProto<WearSettings>(bytes)?.let {
+                    _settings.value = it
+                    offline.writeSettings(it)
+                }
             path == WearSyncPaths.PINNED ->
-                decodeProto<PinnedCardSet>(bytes)?.let { _pinned.value = it }
+                decodeProto<PinnedCardSet>(bytes)?.let {
+                    _pinned.value = it
+                    offline.writePinned(it)
+                }
             path == WearSyncPaths.VALUES ->
                 decodeProto<LiveValues>(bytes)?.let { live ->
                     // Cold-read overwrites entirely; subsequent stream
                     // deltas will merge from this baseline.
                     _values.value = live.values
+                    offline.writeValues(live)
                 }
             path.startsWith(WearSyncPaths.DASHBOARD_PREFIX) ->
                 decodeProto<DashboardData>(bytes)?.let { dashboard ->
@@ -151,6 +172,7 @@ class WearSyncRepository(
                     val idx = current.indexOfFirst { it.urlPath == dashboard.urlPath }
                     if (idx >= 0) current[idx] = dashboard else current.add(dashboard)
                     _dashboards.value = current.sortedBy { it.title }
+                    offline.writeDashboard(dashboard)
                 }
         }
     }

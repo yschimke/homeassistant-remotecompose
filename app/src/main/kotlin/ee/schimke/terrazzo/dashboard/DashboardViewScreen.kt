@@ -35,6 +35,7 @@ import androidx.compose.remote.tooling.preview.RemotePreview
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.Dashboard
 import ee.schimke.ha.model.HaSnapshot
+import ee.schimke.terrazzo.LocalTerrazzoGraph
 import ee.schimke.terrazzo.core.session.HaSession
 import ee.schimke.ha.rc.CardWidthClass
 import ee.schimke.ha.rc.ProvideCardRegistry
@@ -83,10 +84,21 @@ fun DashboardViewScreen(
     onCardLongPress: (CardConfig) -> Unit,
     contentPadding: PaddingValues = PaddingValues(0.dp),
 ) {
-    var state by remember(session, urlPath) { mutableStateOf<DashboardState>(DashboardState.Loading) }
+    val cache = LocalTerrazzoGraph.current.offlineCache
+    // Seed from disk so the first composition shows the last-known
+    // dashboard + snapshot instead of a spinner. The polling loop
+    // refreshes in place; transient failures don't blank the UI
+    // because Ready isn't reset on failure.
+    var state by remember(session, urlPath) {
+        val cachedDashboard = cache.dashboard(session.baseUrl, urlPath)
+        val cachedSnapshot = cache.snapshot(session.baseUrl, urlPath) ?: HaSnapshot()
+        val seed: DashboardState =
+            cachedDashboard?.let { DashboardState.Ready(it, cachedSnapshot) }
+                ?: DashboardState.Loading
+        mutableStateOf(seed)
+    }
 
     LaunchedEffect(session, urlPath) {
-        state = DashboardState.Loading
         // Poll when the session opts in (demo mode does, at ~2s) so
         // values visibly change; a one-shot fetch otherwise.
         while (true) {
