@@ -26,8 +26,17 @@ class MainActivity : ComponentActivity() {
         // uiautomator test can land directly on the dashboard. Gated
         // on BuildConfig.DEBUG so production builds don't expose
         // the bypass even if the extra is present.
+        //
+        // Also clears the offline-cache instance pointer and the
+        // last-viewed-dashboard pref so the test starts on the
+        // dashboard picker every time, not auto-resumed onto a
+        // previous run's cached dashboard.
         if (BuildConfig.DEBUG && intent?.getBooleanExtra(EXTRA_TEST_DEMO_MODE, false) == true) {
-            runBlocking { graph.preferencesStore.setDemoMode(true) }
+            runBlocking {
+                graph.preferencesStore.setDemoMode(true)
+                graph.preferencesStore.clearLastViewedDashboard()
+            }
+            graph.offlineCache.clearLastInstance()
         }
 
         // Read the auto-launch dashboard pref synchronously so the
