@@ -26,7 +26,7 @@ kotlinx-serialization = "1.11.0"
 kotlinx-coroutines = "1.10.2"
 kotlinx-datetime = "0.8.0-rc01"
 logback = "1.5.32"
-junit-jupiter-bom = "5.14.3"
+junit-jupiter-bom = "6.0.3"
 mockserver = "5.15.0"
 
 # Preview tooling
