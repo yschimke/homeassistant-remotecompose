@@ -27,6 +27,7 @@ kotlinx-coroutines = "1.10.2"
 kotlinx-datetime = "0.8.0-rc01"
 logback = "1.5.32"
 junit-jupiter-bom = "5.14.3"
+mockserver = "5.15.0"
 
 # Preview tooling
 compose-preview-plugin = "0.8.1"
@@ -138,6 +139,8 @@ kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-t
 junit-jupiter-bom = { module = "org.junit:junit-bom", version.ref = "junit-jupiter-bom" }
 junit-jupiter = { module = "org.junit.jupiter:junit-jupiter" }
 junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher" }
+mockserver-netty = { module = "org.mock-server:mockserver-netty", version.ref = "mockserver" }
+mockserver-client-java = { module = "org.mock-server:mockserver-client-java", version.ref = "mockserver" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

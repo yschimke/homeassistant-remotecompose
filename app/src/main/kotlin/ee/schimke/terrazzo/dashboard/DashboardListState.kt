@@ -8,6 +8,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import ee.schimke.ha.client.DashboardSummary
+import ee.schimke.terrazzo.LocalTerrazzoGraph
 import ee.schimke.terrazzo.core.session.HaSession
 
 /**
@@ -40,20 +41,35 @@ sealed interface DashboardListState {
  */
 @Composable
 fun rememberDashboardListState(session: HaSession): State<DashboardListState> {
-    val state = remember(session) { mutableStateOf<DashboardListState>(DashboardListState.Loading) }
+    val cache = LocalTerrazzoGraph.current.offlineCache
+    // Seed from disk synchronously so the first composition paints
+    // already-known dashboards instead of the loading spinner. The
+    // background fetch then upgrades the value to live data; failures
+    // leave the cached list in place so an offline relaunch still
+    // shows the picker.
+    val state = remember(session) {
+        val seed = cache.dashboards(session.baseUrl)
+            ?.let { DashboardListState.Ready(it.ifNotEmptyOrHomeFallback()) }
+            ?: DashboardListState.Loading
+        mutableStateOf<DashboardListState>(seed)
+    }
     LaunchedEffect(session) {
         runCatching {
             session.connect()
             session.listDashboards()
         }.onSuccess { list ->
-            state.value = DashboardListState.Ready(
-                dashboards = list.ifEmpty {
-                    listOf(DashboardSummary(urlPath = null, title = "Home"))
-                },
-            )
+            state.value = DashboardListState.Ready(list.ifNotEmptyOrHomeFallback())
         }.onFailure {
-            state.value = DashboardListState.Error(it.message ?: it::class.simpleName ?: "error")
+            // Only flip to Error if we have nothing to show. A cached
+            // list is more useful than a blank error screen.
+            if (state.value !is DashboardListState.Ready) {
+                state.value =
+                    DashboardListState.Error(it.message ?: it::class.simpleName ?: "error")
+            }
         }
     }
     return state
 }
+
+private fun List<DashboardSummary>.ifNotEmptyOrHomeFallback(): List<DashboardSummary> =
+    ifEmpty { listOf(DashboardSummary(urlPath = null, title = "Home")) }

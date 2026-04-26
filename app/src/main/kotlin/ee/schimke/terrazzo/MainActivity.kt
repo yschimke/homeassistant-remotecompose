@@ -37,6 +37,16 @@ class MainActivity : ComponentActivity() {
         // pattern as the test hatch above.
         val initialDashboard = runBlocking { graph.preferencesStore.lastViewedDashboardNow() }
 
+        // Offline-first cold start: if a previous session left an
+        // instance pointer on disk, build a cache-only session so the
+        // first composition paints immediately from cached dashboards
+        // and snapshots — no spinner, no network roundtrip. The login
+        // flow upgrades this to a live session as soon as the access
+        // token is minted (see TerrazzoApp.LaunchedEffect that calls
+        // sessionFactory.create with a fresh access token).
+        val initialInstance = graph.offlineCache.lastInstance()
+        val initialSession = initialInstance?.let { graph.sessionFactory.createCachedOnly(it) }
+
         setContent {
             CompositionLocalProvider(LocalTerrazzoGraph provides graph) {
                 val themePref by graph.preferencesStore.themeStyle
@@ -44,7 +54,10 @@ class MainActivity : ComponentActivity() {
                 val darkPref by graph.preferencesStore.darkMode
                     .collectAsState(initial = DarkModePref.Follow)
                 TerrazzoTheme(style = themePref.toThemeStyle(), darkMode = darkPref) {
-                    TerrazzoApp(initialDashboard = initialDashboard)
+                    TerrazzoApp(
+                        initialDashboard = initialDashboard,
+                        initialSession = initialSession,
+                    )
                 }
             }
         }

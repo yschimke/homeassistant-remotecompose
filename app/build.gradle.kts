@@ -93,6 +93,24 @@ dependencies {
 
   testImplementation(libs.kotlin.test.junit)
   testImplementation(libs.kotlinx.coroutines.test)
+  // Offline-first integration tests spin up real fake servers so the
+  // round-trip through HaClient (WebSocket) and AddonClient (HTTP) is
+  // exercised against an actual socket — not a Ktor MockEngine.
+  //
+  //   - mockserver-netty for HTTP REST endpoints (AddonClient probe +
+  //     dashboard fetch). Picked over OkHttp's MockWebServer because
+  //     mockserver's expectations API is closer to integration-test
+  //     ergonomics for offline-first scenarios.
+  //   - ktor-server-cio + ktor-server-websockets for the HA-protocol
+  //     WebSocket fake. mockserver's WebSocket support is for its own
+  //     callback infrastructure, not for serving an arbitrary text-
+  //     based protocol like HA's auth_required / commands-by-id; Ktor
+  //     server is already a project dep (used by the addon-server
+  //     module) and is a natural fit.
+  testImplementation(libs.mockserver.netty)
+  testImplementation(libs.mockserver.client.java)
+  testImplementation(libs.ktor.server.cio)
+  testImplementation(libs.ktor.server.websockets)
 
   androidTestImplementation(libs.androidx.test.ext.junit)
   androidTestImplementation(libs.androidx.test.runner)

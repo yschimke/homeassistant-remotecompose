@@ -185,6 +185,5 @@ private fun WearPreviewFrame(content: @Composable () -> Unit) {
 // Frozen clock so previews are byte-stable across renders. The runtime
 // scaffold in WearMainActivity still uses the real system clock.
 private object PreviewTimeSource : TimeSource {
-    override val currentTime: String
-        @Composable get() = "10:08"
+    @Composable override fun currentTime(): String = "10:08"
 }
