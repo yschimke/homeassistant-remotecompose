@@ -25,8 +25,11 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           # The composite action pushes via an explicit token in the remote
-          # URL (see `preview-baselines/action.yml`), so we don't need the
-          # default git credentials persisted here.
+          # URL embedded in its push step, so we don't need the default git
+          # credentials persisted here.
           persist-credentials: false
       - uses: ./.github/actions/setup
-      - uses: ./.github/actions/preview-baselines
+      - uses: yschimke/compose-ai-tools/.github/actions/preview-baselines@v0.8.3
+        with:
+          cli-version: catalog
+          catalog-key: compose-preview-plugin
