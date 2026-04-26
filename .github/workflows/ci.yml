@@ -15,6 +15,7 @@ jobs:
   build:
     name: Assemble (debug)
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v6
       - uses: gradle/actions/wrapper-validation@v6
@@ -34,6 +35,7 @@ jobs:
   test:
     name: Unit tests
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v6
       # Gradle itself (and the Metro plugin's buildscript) need JVM 21+.
@@ -66,6 +68,7 @@ jobs:
   lint:
     name: Android lint
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v6
       # Gradle itself (and the Metro plugin's buildscript) need JVM 21+.
@@ -95,6 +98,13 @@ jobs:
   android-test:
     name: Instrumented tests (API 36)
     runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        api-level: [36]
+        target: [default]
+        arch: [x86_64]
     steps:
       - uses: actions/checkout@v6
       - name: Enable KVM
@@ -114,14 +124,39 @@ jobs:
             17
             21
       - uses: gradle/actions/setup-gradle@v6
+
+      - name: AVD cache
+        uses: actions/cache@v4
+        id: avd-cache
+        with:
+          path: |
+            ~/.android/avd/*
+            ~/.android/adb*
+          key: avd-${{ matrix.api-level }}-${{ matrix.target }}-${{ matrix.arch }}
+
+      - name: Create AVD snapshot for caching
+        if: steps.avd-cache.outputs.cache-hit != 'true'
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: ${{ matrix.api-level }}
+          target: ${{ matrix.target }}
+          arch: ${{ matrix.arch }}
+          force-avd-creation: false
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot-load -noaudio -no-boot-anim -camera-back none
+          disable-animations: true
+          script: echo "Generated AVD snapshot."
+
       - name: Run connectedDebugAndroidTest
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: 36
-          target: default
-          arch: x86_64
+          api-level: ${{ matrix.api-level }}
+          target: ${{ matrix.target }}
+          arch: ${{ matrix.arch }}
+          force-avd-creation: false
+          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           disable-animations: true
           script: ./gradlew connectedDebugAndroidTest --stacktrace
+
       - name: Upload instrumented test reports
         if: always()
         uses: actions/upload-artifact@v7
@@ -130,3 +165,4 @@ jobs:
           path: |
             **/build/reports/androidTests/**
             **/build/outputs/androidTest-results/**
+          if-no-files-found: ignore
