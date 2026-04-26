@@ -5,6 +5,8 @@ package ee.schimke.terrazzo.dashboard
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalGridApi
+import androidx.compose.foundation.layout.Grid
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -19,6 +21,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -40,12 +43,13 @@ import ee.schimke.terrazzo.core.session.HaSession
 import ee.schimke.ha.rc.CardWidthClass
 import ee.schimke.ha.rc.ProvideCardRegistry
 import ee.schimke.ha.rc.RenderChild
-import ee.schimke.ha.rc.androidXExperimental
+import ee.schimke.ha.rc.androidXExperimentalWrap
 import ee.schimke.ha.rc.cardHeightDp
 import ee.schimke.ha.rc.cardWidthClass
 import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.components.ProvideHaTheme
 import ee.schimke.ha.rc.components.haThemeFor
+import ee.schimke.terrazzo.LocalTerrazzoGraph
 import ee.schimke.terrazzo.ui.LayoutConfig
 import ee.schimke.terrazzo.ui.LocalIsDarkTheme
 import ee.schimke.terrazzo.ui.LocalThemeStyle
@@ -143,6 +147,8 @@ private fun DashboardList(
     val registry = remember { defaultRegistry() }
     val layout = remember(dashboard) { buildDashboardLayout(dashboard) }
     val cfg = rememberLayoutConfig()
+    val useGridLayout by LocalTerrazzoGraph.current
+        .preferencesStore.experimentalGridLayout.collectAsState(initial = false)
 
     val sectionColumns = (cfg.maxSectionColumns).coerceAtMost(layout.sectionCount).coerceAtLeast(1)
     val sideBySide = sectionColumns >= 2
@@ -173,6 +179,7 @@ private fun DashboardList(
                     cfg = cfg,
                     sideBySide = sideBySide,
                     sectionColumns = sectionColumns,
+                    useGridLayout = useGridLayout,
                     onLongPress = onCardLongPress,
                 )
             }
@@ -183,9 +190,13 @@ private fun DashboardList(
 /**
  * Emit one view's blocks into the parent [LazyListScope]. Orphan
  * cards (legacy `view.cards`) come first as a single column;
- * sections follow, either stacked (single-column mode) or
- * chunked into rows of [sectionColumns] section-columns
- * (wide mode).
+ * sections follow, either stacked (single-column mode) or — in wide
+ * mode — packed across [sectionColumns] tracks. The wide path has
+ * two implementations selected by [useGridLayout]: the legacy
+ * `Row` + `chunked` path with manual weight padding, or a single
+ * Compose 1.11 `Grid` with one section per cell. Compact / Medium
+ * widths render the same either way (both fall through to the
+ * single-column branch).
  */
 private fun LazyListScope.renderView(
     viewIndex: Int,
@@ -195,6 +206,7 @@ private fun LazyListScope.renderView(
     cfg: LayoutConfig,
     sideBySide: Boolean,
     sectionColumns: Int,
+    useGridLayout: Boolean,
     onLongPress: (CardConfig) -> Unit,
 ) {
     val viewKey = "v$viewIndex"
@@ -228,6 +240,16 @@ private fun LazyListScope.renderView(
                 // pair up so a "lights" cluster stays usable on
                 // narrow screens.
                 compactPerRow = cfg.compactCardsPerRow,
+                onLongPress = onLongPress,
+            )
+        }
+    } else if (useGridLayout) {
+        item(key = "$viewKey-grid") {
+            SectionGrid(
+                sections = view.sections,
+                columns = sectionColumns,
+                snapshot = snapshot,
+                registry = registry,
                 onLongPress = onLongPress,
             )
         }
@@ -292,6 +314,47 @@ private fun SectionRow(
         // matches its sibling rows when sections.size % columns != 0.
         repeat(columns - sections.size) {
             Box(modifier = Modifier.weight(1f))
+        }
+    }
+}
+
+/**
+ * Experimental wide-mode layout: every section in a view is one cell
+ * in a Compose 1.11 [Grid] with [columns] equal-weight column tracks.
+ * Replaces the [SectionRow] + `view.sections.chunked(columns)` +
+ * `Spacer(weight)` ceremony with a single layout pass that auto-flows
+ * sections by row. Per-cell content is the same [SectionColumn]
+ * the legacy path uses, so visual parity is the goal: any difference
+ * is the Grid layout policy itself, not a different cell renderer.
+ *
+ * Implicit row tracks default to `GridTrackSize.Auto`, so each row
+ * sizes to its tallest section (cards inside still report fixed
+ * heights via `cardHeightDp`).
+ */
+@OptIn(ExperimentalGridApi::class)
+@Composable
+private fun SectionGrid(
+    sections: List<SectionLayout>,
+    columns: Int,
+    snapshot: HaSnapshot,
+    registry: ee.schimke.ha.rc.CardRegistry,
+    onLongPress: (CardConfig) -> Unit,
+) {
+    Grid(
+        modifier = Modifier.fillMaxWidth(),
+        config = {
+            repeat(columns) { column(1.fr) }
+            gap(row = 16.dp, column = 16.dp)
+        },
+    ) {
+        sections.forEach { section ->
+            SectionColumn(
+                section = section,
+                snapshot = snapshot,
+                registry = registry,
+                onLongPress = onLongPress,
+                modifier = Modifier.gridItem(),
+            )
         }
     }
 }
@@ -413,7 +476,7 @@ private fun CardSlot(
             // events on the Main pass for in-document click regions.
             .longPressBeforeChild { onLongPress(card) },
     ) {
-        RemotePreview(profile = androidXExperimental) {
+        RemotePreview(profile = androidXExperimentalWrap) {
             ProvideCardRegistry(registry) {
                 ProvideHaTheme(haTheme) {
                     RenderChild(card, snapshot, RemoteModifier.fillMaxWidth())
