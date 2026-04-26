@@ -1,0 +1,38 @@
+name: 'Install compose-preview CLI (shim)'
+description: >
+  Local shim around yschimke/compose-ai-tools/.github/actions/install. Exists
+  because GitHub resolves relative `uses: ./...` refs inside composite
+  actions against the consumer workspace, not the action's own repo — so
+  the upstream preview-baselines / preview-comment composites need a sibling
+  named `install` in this repo. Forwarding all inputs keeps the upstream
+  semantics (literal version / "latest" / "catalog") intact.
+
+inputs:
+  version:
+    description: 'Literal version, "latest", or "catalog".'
+    default: 'latest'
+  catalog-path:
+    description: 'Path to the Gradle version catalog (when version=catalog).'
+    default: 'gradle/libs.versions.toml'
+  catalog-key:
+    description: '[versions] key to read (when version=catalog).'
+    default: 'composePreviewCli'
+  github-token:
+    description: 'Token for the releases API call. Empty falls back to github.token.'
+    default: ''
+
+outputs:
+  version:
+    description: 'Resolved version, no leading "v".'
+    value: ${{ steps.install.outputs.version }}
+
+runs:
+  using: 'composite'
+  steps:
+    - id: install
+      uses: yschimke/compose-ai-tools/.github/actions/install@v0.8.3
+      with:
+        version: ${{ inputs.version }}
+        catalog-path: ${{ inputs.catalog-path }}
+        catalog-key: ${{ inputs.catalog-key }}
+        github-token: ${{ inputs.github-token }}
