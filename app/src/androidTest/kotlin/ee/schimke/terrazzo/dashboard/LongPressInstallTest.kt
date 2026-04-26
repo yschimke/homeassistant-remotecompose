@@ -52,11 +52,16 @@ class LongPressInstallTest {
             .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK)
             .putExtra(MainActivity.EXTRA_TEST_DEMO_MODE, true)
         context.startActivity(launch)
-        // Wait for the navigation suite to render (Dashboards is the
-        // default destination after demo-mode short-circuits auth).
+        // Wait for the dashboard picker. The shell is now a Scaffold +
+        // TopAppBar (the old NavigationSuiteScaffold is gone), so the
+        // first stable user-visible string after demo-mode short-
+        // circuits auth is the picker's TopAppBar title. Demo-mode
+        // also clears the last-viewed-dashboard pref so we always
+        // land on the picker, never auto-resumed onto a dashboard
+        // from a previous test run.
         assertTrue(
-            "navigation suite did not surface within 15s",
-            device.wait(Until.hasObject(By.text("Dashboards")), 15_000),
+            "dashboard picker did not surface within 15s",
+            device.wait(Until.hasObject(By.text("Pick a dashboard")), 15_000),
         )
     }
 
