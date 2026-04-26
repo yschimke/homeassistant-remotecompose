@@ -111,6 +111,15 @@ Start with `tile` (scaffolded), then `entities` / `glance` / `gauge` /
 `map`, and the graph cards are hard; `iframe` and custom cards are
 explicitly out of scope.
 
+## Local setup
+
+One-time bootstrap to wire the repo's `.githooks/` (ktfmt pre-commit
+check) into your clone:
+
+```sh
+./gradlew installGitHooks
+```
+
 ## Running the previews
 
 ```sh
