@@ -3,6 +3,7 @@
 kotlin = "2.3.21"
 agp = "9.2.0"
 java = "17"
+play-publisher = "4.0.0"
 
 # Metro (DI) — requires Kotlin 2.2.20+.
 metro = "1.0.0-RC4"
@@ -153,3 +154,4 @@ compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "
 compose-preview = { id = "ee.schimke.composeai.preview", version.ref = "compose-preview-plugin" }
 metro = { id = "dev.zacsweers.metro", version.ref = "metro" }
 ktfmt = { id = "com.ncorti.ktfmt.gradle", version.ref = "ktfmt-gradle" }
+play-publisher = { id = "com.github.triplet.play", version.ref = "play-publisher" }

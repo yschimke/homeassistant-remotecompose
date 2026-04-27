@@ -1,16 +1,19 @@
+import com.github.triplet.gradle.androidpublisher.ReleaseStatus
+
 plugins {
   alias(libs.plugins.android.application)
   alias(libs.plugins.compose.compiler)
   alias(libs.plugins.compose.preview)
   alias(libs.plugins.metro)
   alias(libs.plugins.kotlin.serialization)
+  alias(libs.plugins.play.publisher)
 }
 
 android {
   namespace = "ee.schimke.terrazzo"
   compileSdk = libs.versions.android.compileSdk.get().toInt()
   defaultConfig {
-    applicationId = "ee.schimke.terrazzo"
+    applicationId = "ee.schimke.harc"
     // Widget playback via RemoteViews.DrawInstructions needs API 35+
     // (VANILLA_ICE_CREAM). We still compile / target the newest
     // available SDK via `compileSdk` / `targetSdk`. Keeping minSdk
@@ -28,6 +31,26 @@ android {
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
+  val releaseKeystorePath = System.getenv("HARC_KEYSTORE_PATH")
+  signingConfigs {
+    if (releaseKeystorePath != null) {
+      create("release") {
+        storeFile = file(releaseKeystorePath)
+        storePassword = System.getenv("HARC_KEYSTORE_PASSWORD")
+        keyAlias = System.getenv("HARC_KEY_ALIAS")
+        keyPassword = System.getenv("HARC_KEY_PASSWORD")
+      }
+    }
+  }
+  buildTypes {
+    getByName("release") {
+      isMinifyEnabled = true
+      isShrinkResources = true
+      if (releaseKeystorePath != null) {
+        signingConfig = signingConfigs.getByName("release")
+      }
+    }
+  }
   buildFeatures {
     compose = true
     buildConfig = true
@@ -43,6 +66,14 @@ composePreview {
   variant.set("debug")
   sdkVersion.set(35)
   enabled.set(true)
+}
+
+play {
+  track.set("internal")
+  defaultToAppBundles.set(true)
+  releaseStatus.set(ReleaseStatus.DRAFT)
+  // Skip API calls in CI runs that build but don't publish (e.g. PRs).
+  enabled.set(System.getenv("ANDROID_PUBLISHER_CREDENTIALS") != null)
 }
 
 dependencies {
