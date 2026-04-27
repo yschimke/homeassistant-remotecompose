@@ -19,16 +19,11 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - uses: gradle/actions/wrapper-validation@v6
-      # Gradle itself (and the Metro plugin's buildscript) need JVM 21+.
-      # The Kotlin toolchain stays pinned to 17 (libs.versions.toml), and
-      # setup-java installs both so Gradle's toolchain discovery finds 17
-      # via JAVA_HOME_17_X64 while the daemon runs on 21.
+      # Kotlin toolchain and Gradle daemon both run on JVM 21 (libs.versions.toml).
       - uses: actions/setup-java@v5
         with:
           distribution: temurin
-          java-version: |
-            17
-            21
+          java-version: 21
       - uses: gradle/actions/setup-gradle@v6
       - run: ./gradlew assembleDebug --stacktrace
 
@@ -38,16 +33,11 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v6
-      # Gradle itself (and the Metro plugin's buildscript) need JVM 21+.
-      # The Kotlin toolchain stays pinned to 17 (libs.versions.toml), and
-      # setup-java installs both so Gradle's toolchain discovery finds 17
-      # via JAVA_HOME_17_X64 while the daemon runs on 21.
+      # Kotlin toolchain and Gradle daemon both run on JVM 21 (libs.versions.toml).
       - uses: actions/setup-java@v5
         with:
           distribution: temurin
-          java-version: |
-            17
-            21
+          java-version: 21
       - uses: gradle/actions/setup-gradle@v6
       # `test` fans out to every module: Android library / app modules get
       # their `testDebugUnitTest`, JVM modules (`:integration`, KMP common)
@@ -71,16 +61,11 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v6
-      # Gradle itself (and the Metro plugin's buildscript) need JVM 21+.
-      # The Kotlin toolchain stays pinned to 17 (libs.versions.toml), and
-      # setup-java installs both so Gradle's toolchain discovery finds 17
-      # via JAVA_HOME_17_X64 while the daemon runs on 21.
+      # Kotlin toolchain and Gradle daemon both run on JVM 21 (libs.versions.toml).
       - uses: actions/setup-java@v5
         with:
           distribution: temurin
-          java-version: |
-            17
-            21
+          java-version: 21
       - uses: gradle/actions/setup-gradle@v6
       # `lint` fans out across every Android module. Debug variant is
       # enough for CI; release-only rules (e.g. ObsoleteSdkInt on
@@ -113,16 +98,11 @@ jobs:
             | sudo tee /etc/udev/rules.d/99-kvm4all.rules
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
-      # Gradle itself (and the Metro plugin's buildscript) need JVM 21+.
-      # The Kotlin toolchain stays pinned to 17 (libs.versions.toml), and
-      # setup-java installs both so Gradle's toolchain discovery finds 17
-      # via JAVA_HOME_17_X64 while the daemon runs on 21.
+      # Kotlin toolchain and Gradle daemon both run on JVM 21 (libs.versions.toml).
       - uses: actions/setup-java@v5
         with:
           distribution: temurin
-          java-version: |
-            17
-            21
+          java-version: 21
       - uses: gradle/actions/setup-gradle@v6
 
       - name: AVD cache

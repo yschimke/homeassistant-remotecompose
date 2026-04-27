@@ -18,15 +18,10 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v6
-      # Gradle itself (and the Metro plugin's buildscript) need JVM 21+.
-      # The Kotlin toolchain stays pinned to 17 (libs.versions.toml), and
-      # setup-java installs both so Gradle's toolchain discovery finds 17
-      # via JAVA_HOME_17_X64 while the daemon runs on 21.
+      # Kotlin toolchain and Gradle daemon both run on JVM 21 (libs.versions.toml).
       - uses: actions/setup-java@v5
         with:
           distribution: temurin
-          java-version: |
-            17
-            21
+          java-version: 21
       - uses: gradle/actions/setup-gradle@v6
       - run: ./gradlew ktfmtCheck --stacktrace

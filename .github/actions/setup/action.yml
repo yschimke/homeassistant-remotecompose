@@ -1,10 +1,7 @@
 name: 'Setup JDK + Gradle'
 description: >
-  Dual-JDK setup: Temurin 17 (Kotlin toolchain) + 21 (Gradle daemon, so the
-  Metro plugin loads — it requires JVM runtime 21+). Last entry in the
-  setup-java version list wins as JAVA_HOME, so daemon = 21 and Gradle's
-  toolchain discovery finds 17 via JAVA_HOME_17_X64 for the Kotlin
-  compiler. Matches the pattern already used in ci.yml.
+  Temurin 21 covers both the Kotlin toolchain and the Gradle daemon (the
+  Metro plugin's buildscript requires JVM runtime 21+).
 
 inputs:
   cache-read-only:
@@ -19,9 +16,7 @@ runs:
     - uses: actions/setup-java@v5
       with:
         distribution: temurin
-        java-version: |
-          17
-          21
+        java-version: 21
     - uses: gradle/actions/setup-gradle@v6
       with:
         cache-read-only: ${{ inputs.cache-read-only }}
