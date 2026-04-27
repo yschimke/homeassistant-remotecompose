@@ -29,7 +29,7 @@ jobs:
         with:
           persist-credentials: false
       - uses: ./.github/actions/setup
-      - uses: yschimke/compose-ai-tools/.github/actions/preview-comment@v0.8.9
+      - uses: yschimke/compose-ai-tools/.github/actions/preview-comment@v0.8.10
         with:
           cli-version: catalog
           catalog-key: compose-preview-plugin
