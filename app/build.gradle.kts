@@ -1,5 +1,18 @@
 import com.github.triplet.gradle.androidpublisher.ReleaseStatus
 
+val appVersionName = "0.1.1" // x-release-please-version
+
+// Pack MAJOR.MINOR.PATCH into a monotonic int. Caps at major < 22.
+val appVersionCode: Int =
+  run {
+      val parts = appVersionName.split(".", "-").mapNotNull { it.toIntOrNull() }
+      val major = parts.getOrNull(0) ?: 0
+      val minor = parts.getOrNull(1) ?: 0
+      val patch = parts.getOrNull(2) ?: 0
+      major * 10_000 + minor * 100 + patch
+    }
+    .coerceAtLeast(1)
+
 plugins {
   alias(libs.plugins.android.application)
   alias(libs.plugins.compose.compiler)
@@ -22,8 +35,8 @@ android {
     // apk-for-local-test during renderPreviews.
     minSdk = 35
     targetSdk = libs.versions.android.targetSdk.get().toInt()
-    versionCode = 1
-    versionName = "0.1.0"
+    versionCode = appVersionCode
+    versionName = appVersionName
 
     // Exposed to AndroidManifest via placeholders so the IndieAuth
     // redirect scheme is declared in one place.
@@ -71,7 +84,7 @@ composePreview {
 play {
   track.set("internal")
   defaultToAppBundles.set(true)
-  releaseStatus.set(ReleaseStatus.DRAFT)
+  releaseStatus.set(ReleaseStatus.COMPLETED)
   // Skip API calls in CI runs that build but don't publish (e.g. PRs).
   enabled.set(System.getenv("ANDROID_PUBLISHER_CREDENTIALS") != null)
 }
