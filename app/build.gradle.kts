@@ -1,9 +1,12 @@
+import com.github.triplet.gradle.androidpublisher.ReleaseStatus
+
 plugins {
   alias(libs.plugins.android.application)
   alias(libs.plugins.compose.compiler)
   alias(libs.plugins.compose.preview)
   alias(libs.plugins.metro)
   alias(libs.plugins.kotlin.serialization)
+  alias(libs.plugins.play.publisher)
 }
 
 android {
@@ -63,6 +66,14 @@ composePreview {
   variant.set("debug")
   sdkVersion.set(35)
   enabled.set(true)
+}
+
+play {
+  track.set("internal")
+  defaultToAppBundles.set(true)
+  releaseStatus.set(ReleaseStatus.DRAFT)
+  // Skip API calls in CI runs that build but don't publish (e.g. PRs).
+  enabled.set(System.getenv("ANDROID_PUBLISHER_CREDENTIALS") != null)
 }
 
 dependencies {
