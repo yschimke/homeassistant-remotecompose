@@ -1,0 +1,16 @@
+Terrazzo is a Compose-based dashboard client for Home Assistant.
+You configure your own Home Assistant URL and authenticate via
+IndieAuth / OAuth2; the app renders your existing dashboards using
+Jetpack RemoteCompose.
+
+This is a single-developer hobby project; you can read all the source
+code at https://github.com/yschimke/homeassistant-remotecompose.
+
+Notes:
+- The developer collects nothing. The app talks only to the Home
+  Assistant server you configure.
+- No analytics, no advertising, no crash-reporting SDKs.
+- Authentication tokens stay on your device.
+
+Privacy policy: https://yschimke.github.io/homeassistant-remotecompose/privacy/
+Issues / feedback: https://github.com/yschimke/homeassistant-remotecompose/issues
