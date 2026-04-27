@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  Adaptive-icon foreground: a house silhouette filled with scattered
-  terrazzo chips. The house path doubles as a clip mask, so chips drawn
-  inside the group are trimmed to the silhouette regardless of how far
-  they bleed. Sized inside the 72dp safe zone of the 108dp canvas.
+  Adaptive-icon foreground. Italian-terracotta palette: a terracotta-tile
+  roof sits on warm stucco walls. Each surface is broken up by angular
+  tile chips in tighter shades of its base, with the base colour acting
+  as the mortar between chips. Sized inside the 72dp safe zone of the
+  108dp canvas.
 -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp"
@@ -11,82 +12,76 @@
     android:viewportWidth="108"
     android:viewportHeight="108">
 
+    <!-- Roof: terracotta base + tile fragments. Clipped to the roof triangle. -->
     <group>
-        <clip-path android:pathData="M54,32 L22,60 L28,60 L28,84 L80,84 L80,60 L86,60 Z" />
+        <clip-path android:pathData="M54,32 L22,60 L28,60 L86,60 Z" />
 
-        <!-- Mortar / cream base inside the house -->
+        <!-- Mortar / base tile colour -->
         <path
-            android:fillColor="#F5EFE0"
-            android:pathData="M54,32 L22,60 L28,60 L28,84 L80,84 L80,60 L86,60 Z" />
+            android:fillColor="#B5532E"
+            android:pathData="M54,32 L22,60 L28,60 L86,60 Z" />
 
-        <!-- Larger terrazzo chips -->
+        <!-- Darker tile fragments -->
         <path
-            android:fillColor="#E07A5F"
-            android:pathData="M32,50 a6,4 0 1,0 12,0 a6,4 0 1,0 -12,0" />
+            android:fillColor="#8C3A1C"
+            android:pathData="M30,58 L42,52 L48,58 L46,60 L30,60 Z" />
         <path
-            android:fillColor="#F2CC8F"
-            android:pathData="M63,44 a5,4 0 1,0 10,0 a5,4 0 1,0 -10,0" />
+            android:fillColor="#8C3A1C"
+            android:pathData="M58,44 L66,48 L62,56 L54,52 Z" />
         <path
-            android:fillColor="#81B29A"
-            android:pathData="M47,66 a7,5 0 1,0 14,0 a7,5 0 1,0 -14,0" />
-        <path
-            android:fillColor="#3D405B"
-            android:pathData="M29,72 a4,3 0 1,0 8,0 a4,3 0 1,0 -8,0" />
-        <path
-            android:fillColor="#C9ADA7"
-            android:pathData="M67,76 a5,4 0 1,0 10,0 a5,4 0 1,0 -10,0" />
-        <path
-            android:fillColor="#6B4F4F"
-            android:pathData="M55,52 a3,3 0 1,0 6,0 a3,3 0 1,0 -6,0" />
-        <path
-            android:fillColor="#4A6670"
-            android:pathData="M41,78 a3,2 0 1,0 6,0 a3,2 0 1,0 -6,0" />
-        <path
-            android:fillColor="#E07A5F"
-            android:pathData="M68,58 a4,3 0 1,0 8,0 a4,3 0 1,0 -8,0" />
-        <path
-            android:fillColor="#81B29A"
-            android:pathData="M45,42 a3,3 0 1,0 6,0 a3,3 0 1,0 -6,0" />
-        <path
-            android:fillColor="#F2CC8F"
-            android:pathData="M61,80 a3,2 0 1,0 6,0 a3,2 0 1,0 -6,0" />
-        <path
-            android:fillColor="#C9ADA7"
-            android:pathData="M39,58 a3,2 0 1,0 6,0 a3,2 0 1,0 -6,0" />
-        <path
-            android:fillColor="#3D405B"
-            android:pathData="M62,66 a4,3 0 1,0 8,0 a4,3 0 1,0 -8,0" />
+            android:fillColor="#8C3A1C"
+            android:pathData="M70,55 L80,58 L78,60 L66,60 Z" />
 
-        <!-- Smaller speckles -->
+        <!-- Lighter tile fragments -->
         <path
-            android:fillColor="#E07A5F"
-            android:pathData="M34,82 a2,2 0 1,0 4,0 a2,2 0 1,0 -4,0" />
+            android:fillColor="#D67149"
+            android:pathData="M44,40 L52,38 L52,46 L44,48 Z" />
         <path
-            android:fillColor="#81B29A"
-            android:pathData="M74,70 a2,2 0 1,0 4,0 a2,2 0 1,0 -4,0" />
+            android:fillColor="#D67149"
+            android:pathData="M50,52 L60,52 L62,60 L50,60 Z" />
         <path
-            android:fillColor="#3D405B"
-            android:pathData="M48,58 a2,2 0 1,0 4,0 a2,2 0 1,0 -4,0" />
-        <path
-            android:fillColor="#F2CC8F"
-            android:pathData="M38,64 a2,2 0 1,0 4,0 a2,2 0 1,0 -4,0" />
-        <path
-            android:fillColor="#4A6670"
-            android:pathData="M66,82 a2,2 0 1,0 4,0 a2,2 0 1,0 -4,0" />
-        <path
-            android:fillColor="#C9ADA7"
-            android:pathData="M58,40 a2,2 0 1,0 4,0 a2,2 0 1,0 -4,0" />
-
-        <!-- Door, anchored to the floor of the body -->
-        <path
-            android:fillColor="#3D405B"
-            android:pathData="M49,71 L59,71 L59,84 L49,84 Z" />
+            android:fillColor="#D67149"
+            android:pathData="M62,55 L72,56 L72,60 L60,60 Z" />
     </group>
+
+    <!-- Walls: warm stucco base + chunkier tile chips. Clipped to the wall body. -->
+    <group>
+        <clip-path android:pathData="M28,60 L80,60 L80,84 L28,84 Z" />
+
+        <!-- Mortar / base wall colour -->
+        <path
+            android:fillColor="#E8CFA6"
+            android:pathData="M28,60 L80,60 L80,84 L28,84 Z" />
+
+        <!-- Umber chips -->
+        <path
+            android:fillColor="#A88456"
+            android:pathData="M30,63 L46,64 L44,71 L30,70 Z" />
+        <path
+            android:fillColor="#A88456"
+            android:pathData="M62,73 L78,72 L78,82 L62,82 Z" />
+        <path
+            android:fillColor="#A88456"
+            android:pathData="M30,73 L46,74 L46,82 L30,82 Z" />
+
+        <!-- Cream highlight chips -->
+        <path
+            android:fillColor="#F4E4C4"
+            android:pathData="M62,63 L78,63 L78,70 L62,70 Z" />
+        <path
+            android:fillColor="#F4E4C4"
+            android:pathData="M48,63 L60,64 L60,69 L48,68 Z" />
+    </group>
+
+    <!-- Door, anchored to the floor of the body -->
+    <path
+        android:fillColor="#3A1E12"
+        android:pathData="M49,71 L59,71 L59,84 L49,84 Z" />
 
     <!-- House outline for definition at small sizes -->
     <path
         android:pathData="M54,32 L22,60 L28,60 L28,84 L80,84 L80,60 L86,60 Z"
-        android:strokeColor="#2A2A2E"
+        android:strokeColor="#3A1E12"
         android:strokeWidth="1.6"
         android:strokeLineJoin="round" />
 </vector>
