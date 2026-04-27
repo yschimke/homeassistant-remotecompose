@@ -123,7 +123,7 @@ check) into your clone:
 ## Running the previews
 
 ```sh
-compose-preview doctor             # verifies Java 17 toolchain
+compose-preview doctor             # verifies Java 21 toolchain
 compose-preview list               # lists all @Preview entries
 compose-preview show --json        # renders and prints PNG paths
 compose-preview render --filter tile

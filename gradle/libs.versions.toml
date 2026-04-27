@@ -2,7 +2,7 @@
 # Toolchain
 kotlin = "2.3.21"
 agp = "9.2.0"
-java = "17"
+java = "21"
 play-publisher = "4.0.0"
 
 # Metro (DI) — requires Kotlin 2.2.20+.
