@@ -46,7 +46,7 @@ import ee.schimke.terrazzo.widget.WidgetsScreen
  *
  * Default phone dimensions match Pixel 6 portrait so a full screen is
  * visible without scrolling. The Play-Store-targeted previews override
- * those via `@Preview(device = ...)` to land on Pixel 8a / 7-inch /
+ * those via `@Preview(device = ...)` to land on Pixel 2 / 7-inch /
  * 10-inch tablet specs instead, with `dpi` chosen to keep the rendered
  * PNG under the 1800-pixel agent capture limit while preserving the
  * device's aspect ratio.
@@ -57,10 +57,10 @@ private const val PHONE_HEIGHT_DP = 892
 // Play-Store device specs. dpi is tuned per-device so the rendered PNG
 // stays under 1800 px in either dimension while preserving the real
 // device aspect ratio.
-//   Pixel 8a    1080×2400 native (9:20)  — 405dp×900dp @ 320dpi → 810×1800
+//   Pixel 2     1080×1920 native (9:16)  — 411dp×731dp @ 320dpi → 822×1462
 //   7-inch tab   600dp×960dp     (5:8)   — 600dp×960dp @ 240dpi → 900×1440
 //   10-inch tab 800dp×1280dp     (5:8)   — 800dp×1280dp @ 224dpi → 1120×1792
-private const val PIXEL_8A_DEVICE = "spec:width=405dp,height=900dp,dpi=320"
+private const val PIXEL_2_DEVICE = "spec:width=411dp,height=731dp,dpi=320"
 private const val TABLET_7_DEVICE = "spec:width=600dp,height=960dp,dpi=240"
 private const val TABLET_10_DEVICE = "spec:width=800dp,height=1280dp,dpi=224"
 
@@ -189,28 +189,28 @@ class ThemeStyleProvider : PreviewParameterProvider<ThemeStyle> {
 // below are picked to sort cleanly.
 
 /** Phone slot 1 — light dashboard (the "home screen"). */
-@Preview(name = "play · phone · home (light)", showBackground = false, device = PIXEL_8A_DEVICE)
+@Preview(name = "play · phone · home (light)", showBackground = false, device = PIXEL_2_DEVICE)
 @Composable
 fun Play_Phone_01_HomeLight() = PhoneHost(darkMode = DarkModePref.Light) {
     DashboardViewScreen(session = demoSession(), urlPath = null, onCardLongPress = {})
 }
 
 /** Phone slot 2 — dark dashboard (the "home screen"). */
-@Preview(name = "play · phone · home (dark)", showBackground = false, device = PIXEL_8A_DEVICE)
+@Preview(name = "play · phone · home (dark)", showBackground = false, device = PIXEL_2_DEVICE)
 @Composable
 fun Play_Phone_02_HomeDark() = PhoneHost(darkMode = DarkModePref.Dark) {
     DashboardViewScreen(session = demoSession(), urlPath = null, onCardLongPress = {})
 }
 
 /** Phone slot 3 — discovery / first-launch flow. */
-@Preview(name = "play · phone · discovery", showBackground = false, device = PIXEL_8A_DEVICE)
+@Preview(name = "play · phone · discovery", showBackground = false, device = PIXEL_2_DEVICE)
 @Composable
 fun Play_Phone_03_Discovery() = PhoneHost(darkMode = DarkModePref.Light) {
     DiscoveryScreen(onInstancePicked = {}, onDemoSelected = {})
 }
 
 /** Phone slot 4 — multi-dashboard picker. */
-@Preview(name = "play · phone · picker", showBackground = false, device = PIXEL_8A_DEVICE)
+@Preview(name = "play · phone · picker", showBackground = false, device = PIXEL_2_DEVICE)
 @Composable
 fun Play_Phone_04_Picker() = PhoneHost(darkMode = DarkModePref.Light) {
     DashboardPickerScreen(
@@ -226,7 +226,7 @@ fun Play_Phone_04_Picker() = PhoneHost(darkMode = DarkModePref.Light) {
 }
 
 /** Phone slot 5 — installed widgets. */
-@Preview(name = "play · phone · widgets", showBackground = false, device = PIXEL_8A_DEVICE)
+@Preview(name = "play · phone · widgets", showBackground = false, device = PIXEL_2_DEVICE)
 @Composable
 fun Play_Phone_05_Widgets() = PhoneHost(darkMode = DarkModePref.Light) {
     WidgetsScreen(onBack = {})
