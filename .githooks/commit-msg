@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+# Enforce Conventional Commits on the first line. Bypass with `--no-verify`.
+set -euo pipefail
+
+msg_file="$1"
+first_line="$(sed -n '1p' "$msg_file")"
+
+# Allow merges, reverts, fixup/squash/amend trailers, and empty (aborted) messages.
+case "$first_line" in
+  ""|"Merge "*|"Revert "*|"fixup!"*|"squash!"*|"amend!"*) exit 0 ;;
+esac
+
+pattern='^(build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test)(\([^)]+\))?!?: .+'
+if [[ ! "$first_line" =~ $pattern ]]; then
+  cat <<EOF
+Commit message does not follow Conventional Commits.
+
+  Got: $first_line
+
+  Expected: <type>(<scope>)?!?: <description>
+  Types:    build, chore, ci, docs, feat, fix, perf, refactor, revert, style, test
+  Examples:
+    feat: add foo
+    fix(auth): handle empty token
+    refactor!: drop legacy API
+EOF
+  exit 1
+fi
