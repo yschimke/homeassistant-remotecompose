@@ -26,6 +26,7 @@ include(
   ":ha-model",
   ":ha-client",
   ":rc-components",
+  ":rc-components-ui",
   ":rc-converter",
   ":rc-card-shutter",
   ":previews",
