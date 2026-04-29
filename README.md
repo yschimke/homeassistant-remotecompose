@@ -6,6 +6,13 @@ Auto-generated from `main`. Browse inline or compare against PR branches.
 
 | Preview | Image |
 |---------|-------|
+| `Play_Phone_01_HomeLight` | <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/preview_main/renders/app/Play_Phone_01_HomeLight_play_phone_home_light.png" width="150" /> |
+| `Play_Phone_02_HomeDark` | <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/preview_main/renders/app/Play_Phone_02_HomeDark_play_phone_home_dark.png" width="150" /> |
+| `Play_Phone_03_Discovery` | <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/preview_main/renders/app/Play_Phone_03_Discovery_play_phone_discovery.png" width="150" /> |
+| `Play_Phone_04_Picker` | <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/preview_main/renders/app/Play_Phone_04_Picker_play_phone_picker.png" width="150" /> |
+| `Play_Phone_05_Widgets` | <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/preview_main/renders/app/Play_Phone_05_Widgets_play_phone_widgets.png" width="150" /> |
+| `Play_Tablet10_01_Home` | <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/preview_main/renders/app/Play_Tablet10_01_Home_play_10-inch_home.png" width="150" /> |
+| `Play_Tablet7_01_Home` | <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/preview_main/renders/app/Play_Tablet7_01_Home_play_7-inch_home.png" width="150" /> |
 | `Screen_DashboardPicker` | <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/preview_main/renders/app/Screen_DashboardPicker_dashboard_picker.png" width="150" /> |
 | `Screen_DashboardView_ThemeStyle` | <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/preview_main/renders/app/Screen_DashboardView_ThemeStyle_dashboard_theme_Material3.png" width="150" /> |
 | `Screen_DashboardView_ThemeStyle` | <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/preview_main/renders/app/Screen_DashboardView_ThemeStyle_dashboard_theme_TerrazzoHome.png" width="150" /> |
@@ -20,6 +27,8 @@ Auto-generated from `main`. Browse inline or compare against PR branches.
 
 | Preview | Image |
 |---------|-------|
+| `AppIcon_Dark` | <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/preview_main/renders/previews/AppIconPreviewsKt.AppIcon_Dark_app-icon_dark.png" width="150" /> |
+| `AppIcon_Light` | <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/preview_main/renders/previews/AppIconPreviewsKt.AppIcon_Light_app-icon_light.png" width="150" /> |
 | `Button_Dark` | <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/preview_main/renders/previews/CardPreviewsKt.Button_Dark_button_dark_off.png" width="150" /> |
 | `Button_Dark` | <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/preview_main/renders/previews/CardPreviewsKt.Button_Dark_button_dark_on.png" width="150" /> |
 | `Button_Dark` | <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/preview_main/renders/previews/CardPreviewsKt.Button_Dark_button_dark_unavailable.png" width="150" /> |
