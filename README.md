@@ -66,6 +66,8 @@ Glance widgets, Wear launcher tiles, ESP32 devices, etc.).
 |--------|--------|------|
 | [`ha-model`](ha-model/) | KMP (Android + JVM) | Dashboard / view / section / card config + HA state snapshot types, kotlinx-serialization. |
 | [`ha-client`](ha-client/) | KMP (Android + JVM) | Ktor WebSocket client for `lovelace/config` + state fetch. |
+| [`rc-components`](rc-components/) | Android | Tier-1 `RemoteHa*` composables — RemoteCompose-native cards (RemoteString / RemoteColor / actions). |
+| [`rc-components-ui`](rc-components-ui/) | Android | Tier-2 plain Compose-UI wrappers (`HaTile`, `HaButton`, …) embedding the Tier-1 composables via `RemotePreview`, so apps can drop them into a normal Compose tree without seeing RemoteCompose types. |
 | [`rc-converter`](rc-converter/) | Android | `CardConverter` strategy + one impl per card type. Emits RemoteCompose content. |
 | [`previews`](previews/) | Android | `@Preview` fixtures per card type, rendered by the `ee.schimke.composeai.preview` plugin for pixel-parity iteration. |
 | [`demo-app`](demo-app/) | Android | Sample app: fetch a real dashboard, render via `remote-player-compose`. |
