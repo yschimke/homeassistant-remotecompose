@@ -524,6 +524,20 @@
     "sha256": "2b1bb0f635ce85c91625ac09463fd89dd0aed1d13a807e0e4744e949894bbd55",
     "sourceFile": "ee/schimke/ha/previews/GarageShutterCardPreviews.kt"
   },
+  "previews/ee.schimke.ha.previews.PlayStoreGraphicsPreviewsKt.Play_Feature_1024x500_play \u00b7 feature \u00b7 1024x500": {
+    "captureLabel": "",
+    "functionName": "Play_Feature_1024x500",
+    "renderBasename": "PlayStoreGraphicsPreviewsKt.Play_Feature_1024x500_play_feature_1024x500.png",
+    "sha256": "e4d32a90d1e3696814dfaaea4820f088f9d21e86d22fe40ffc86fd9671b9bac2",
+    "sourceFile": "ee/schimke/ha/previews/PlayStoreGraphicsPreviews.kt"
+  },
+  "previews/ee.schimke.ha.previews.PlayStoreGraphicsPreviewsKt.Play_Icon_512_play \u00b7 icon \u00b7 512": {
+    "captureLabel": "",
+    "functionName": "Play_Icon_512",
+    "renderBasename": "PlayStoreGraphicsPreviewsKt.Play_Icon_512_play_icon_512.png",
+    "sha256": "cd54526c896ce18fc798ab2373ee473d2d87d202b7794937d3bf1c59a9fdb41a",
+    "sourceFile": "ee/schimke/ha/previews/PlayStoreGraphicsPreviews.kt"
+  },
   "previews/ee.schimke.ha.previews.ShutterCardPreviewsKt.Shutter_Dark_shutter (dark)": {
     "captureLabel": "",
     "functionName": "Shutter_Dark",
