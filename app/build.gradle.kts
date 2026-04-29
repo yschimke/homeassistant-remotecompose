@@ -81,6 +81,24 @@ composePreview {
   enabled.set(true)
 }
 
+// Espresso 3.5.0 still ships split hamcrest 1.3 jars
+// (`hamcrest-library`, `hamcrest-integration`) that contain references to
+// the 2-arg `AllOf.allOf(Matcher, Matcher)` overload removed in
+// hamcrest-core 2.x. Robolectric's compose-test idling strategy
+// touches Espresso during preview rendering, so the split jars trip a
+// `NoSuchMethodError`. Substitute them with the unified
+// `org.hamcrest:hamcrest` jar that contains the modern API.
+configurations.all {
+  resolutionStrategy.dependencySubstitution {
+    substitute(module("org.hamcrest:hamcrest-library"))
+      .using(module("org.hamcrest:hamcrest:2.2"))
+      .because("hamcrest 1.3 split jars are incompatible with hamcrest-core 2.x")
+    substitute(module("org.hamcrest:hamcrest-integration"))
+      .using(module("org.hamcrest:hamcrest:2.2"))
+      .because("hamcrest 1.3 split jars are incompatible with hamcrest-core 2.x")
+  }
+}
+
 play {
   track.set("internal")
   defaultToAppBundles.set(true)
