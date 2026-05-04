@@ -9,7 +9,7 @@
 # vanilla JRE — the supervisor doesn't require the bashio base for plain
 # `application` startup. If we ever need bashio (for `/data/options.json`
 # parsing) we can switch and run `run.sh` instead.
-ARG BUILD_FROM=eclipse-temurin:25.0.2_10-jdk-jammy
+ARG BUILD_FROM=eclipse-temurin:25.0.3_9-jdk-jammy
 ARG RUN_FROM=gcr.io/distroless/java21-debian12:nonroot
 
 FROM ${BUILD_FROM} AS build
