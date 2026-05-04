@@ -32,6 +32,7 @@ mockserver = "5.15.0"
 
 # Preview tooling
 compose-preview-plugin = "0.9.1"
+tapmoc = "0.4.2"
 
 # Formatting
 ktfmt-gradle = "0.26.0"
@@ -153,5 +154,6 @@ kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", versi
 compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 compose-preview = { id = "ee.schimke.composeai.preview", version.ref = "compose-preview-plugin" }
 metro = { id = "dev.zacsweers.metro", version.ref = "metro" }
+tapmoc = { id = "com.gradleup.tapmoc", version.ref = "tapmoc" }
 ktfmt = { id = "com.ncorti.ktfmt.gradle", version.ref = "ktfmt-gradle" }
 play-publisher = { id = "com.github.triplet.play", version.ref = "play-publisher" }
