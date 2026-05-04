@@ -18,6 +18,7 @@ plugins {
   alias(libs.plugins.compose.compiler)
   alias(libs.plugins.compose.preview)
   alias(libs.plugins.metro)
+  alias(libs.plugins.tapmoc)
   alias(libs.plugins.kotlin.serialization)
   alias(libs.plugins.play.publisher)
 }
@@ -68,11 +69,12 @@ android {
     compose = true
     buildConfig = true
   }
-  compileOptions {
-    sourceCompatibility = JavaVersion.toVersion(libs.versions.java.get())
-    targetCompatibility = JavaVersion.toVersion(libs.versions.java.get())
-  }
   kotlin { jvmToolchain(libs.versions.java.get().toInt()) }
+}
+
+tapmoc {
+  java(libs.versions.java.get().toInt())
+  kotlin(libs.versions.kotlin.get())
 }
 
 composePreview {
