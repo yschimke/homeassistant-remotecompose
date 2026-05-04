@@ -38,7 +38,7 @@ ktfmt-gradle = "0.26.0"
 
 # Wear data layer + Proto DataStore + Horologist
 horologist = "0.8.3-alpha"
-play-services-wearable = "19.0.0"
+play-services-wearable = "20.0.1"
 
 [libraries]
 # RemoteCompose authoring / playback
