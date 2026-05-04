@@ -6,7 +6,7 @@ java = "21"
 play-publisher = "4.0.0"
 
 # Metro (DI) — requires Kotlin 2.2.20+.
-metro = "1.0.0-RC4"
+metro = "1.0.0"
 
 # Compose
 compose-bom = "2026.04.01"
