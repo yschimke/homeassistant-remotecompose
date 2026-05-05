@@ -31,7 +31,7 @@ junit-jupiter-bom = "6.0.3"
 mockserver = "5.15.0"
 
 # Preview tooling
-compose-preview-plugin = "0.9.1"
+compose-preview-plugin = "0.9.2"
 tapmoc = "0.4.2"
 
 # Formatting
