@@ -428,3 +428,25 @@ sealed interface HaPictureElement {
         val tapAction: HaAction,
     ) : HaPictureElement
 }
+
+/** `statistic` card model — single hero value for one entity, with
+ *  optional period label and unit. Used by HA's built-in `statistic`
+ *  card which surfaces one mean/min/max/sum statistic value. */
+data class HaStatisticCardData(
+    val name: RemoteString,
+    val valueLabel: RemoteString,
+    val unit: RemoteString?,
+    val periodLabel: RemoteString?,
+    val accent: Color,
+)
+
+/** `sensor` card model — entity name + big value + a small inline
+ *  sparkline of the recent history. Same shape as one history-graph
+ *  row, hoisted into a hero tile. */
+data class HaSensorCardData(
+    val name: RemoteString,
+    val valueLabel: RemoteString,
+    val accent: Color,
+    val points: List<Float>,
+    val rangeLabel: RemoteString?,
+)

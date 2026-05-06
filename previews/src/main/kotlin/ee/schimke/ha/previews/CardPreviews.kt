@@ -774,6 +774,62 @@ private fun pictureElementsCardConfig() = card(
         ]}""",
 )
 
+// ——— statistic ———
+
+@Preview(name = "statistic (light)", showBackground = false, widthDp = 240, heightDp = 110)
+@Composable
+fun Statistic_Light() = CardHost(HaTheme.Light) {
+    RenderChild(statisticCardConfig(), Fixtures.energyStatistics, RemoteModifier.fillMaxWidth())
+}
+
+@Preview(name = "statistic (dark)", showBackground = false, widthDp = 240, heightDp = 110)
+@Composable
+fun Statistic_Dark() = CardHost(HaTheme.Dark) {
+    RenderChild(statisticCardConfig(), Fixtures.energyStatistics, RemoteModifier.fillMaxWidth())
+}
+
+private fun statisticCardConfig() = card(
+    """{"type":"statistic","entity":"sensor.house_power","stat_type":"mean","period":"day"}""",
+)
+
+// ——— sensor ———
+
+@Preview(name = "sensor (light)", showBackground = false, widthDp = 320, heightDp = 130)
+@Composable
+fun Sensor_Light() = CardHost(HaTheme.Light) {
+    RenderChild(sensorCardConfig(), Fixtures.temperatureHistory, RemoteModifier.fillMaxWidth())
+}
+
+@Preview(name = "sensor (dark)", showBackground = false, widthDp = 320, heightDp = 130)
+@Composable
+fun Sensor_Dark() = CardHost(HaTheme.Dark) {
+    RenderChild(sensorCardConfig(), Fixtures.temperatureHistory, RemoteModifier.fillMaxWidth())
+}
+
+private fun sensorCardConfig() = card(
+    """{"type":"sensor","entity":"sensor.outside_temp","hours_to_show":24}""",
+)
+
+// ——— entity-filter ———
+
+@Preview(name = "entity-filter (light)", showBackground = false, widthDp = 381, heightDp = 149)
+@Composable
+fun EntityFilter_Light() = CardHost(HaTheme.Light) {
+    RenderChild(entityFilterCardConfig(), Fixtures.mixed, RemoteModifier.fillMaxWidth())
+}
+
+@Preview(name = "entity-filter (dark)", showBackground = false, widthDp = 381, heightDp = 149)
+@Composable
+fun EntityFilter_Dark() = CardHost(HaTheme.Dark) {
+    RenderChild(entityFilterCardConfig(), Fixtures.mixed, RemoteModifier.fillMaxWidth())
+}
+
+private fun entityFilterCardConfig() = card(
+    """{"type":"entity-filter","state_filter":["on"],
+        "entities":["light.kitchen","light.office_lamp","switch.coffee_maker","lock.front_door"],
+        "card":{"type":"glance","title":"On now"}}""",
+)
+
 // ——— tile, state variants via PreviewParameter ———
 
 @Preview(name = "tile light (light)", showBackground = false, widthDp = 187, heightDp = 43)
