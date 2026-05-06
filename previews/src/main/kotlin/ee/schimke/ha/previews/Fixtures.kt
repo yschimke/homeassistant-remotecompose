@@ -142,6 +142,52 @@ object Fixtures {
             mapOf("friendly_name" to "Garage motion", "device_class" to "motion")),
     )
 
+    /** Climate entity in heating mode at 21.4°C, target 22°C. */
+    val thermostat = snapshot(
+        "climate.living_room" to EntityState(
+            entityId = "climate.living_room",
+            state = "heat",
+            attributes = JsonObject(mapOf(
+                "friendly_name" to JsonPrimitive("Living Room"),
+                "current_temperature" to JsonPrimitive(21.4),
+                "temperature" to JsonPrimitive(22.0),
+                "min_temp" to JsonPrimitive(7.0),
+                "max_temp" to JsonPrimitive(35.0),
+                "temperature_unit" to JsonPrimitive("°C"),
+                "hvac_action" to JsonPrimitive("heating"),
+                "target_temp_step" to JsonPrimitive(0.5),
+            )),
+        ),
+    )
+
+    /** Humidifier at 45% current, target 55%. */
+    val humidifier = snapshot(
+        "humidifier.bedroom" to EntityState(
+            entityId = "humidifier.bedroom",
+            state = "on",
+            attributes = JsonObject(mapOf(
+                "friendly_name" to JsonPrimitive("Bedroom"),
+                "current_humidity" to JsonPrimitive(45),
+                "humidity" to JsonPrimitive(55),
+                "min_humidity" to JsonPrimitive(20),
+                "max_humidity" to JsonPrimitive(80),
+                "action" to JsonPrimitive("humidifying"),
+            )),
+        ),
+    )
+
+    /** Light at 60% brightness. */
+    val brightLight = snapshot(
+        "light.kitchen" to EntityState(
+            entityId = "light.kitchen",
+            state = "on",
+            attributes = JsonObject(mapOf(
+                "friendly_name" to JsonPrimitive("Kitchen"),
+                "brightness" to JsonPrimitive(153),  // 60% of 255
+            )),
+        ),
+    )
+
     /** Helper for AMS tray entities — the converter reads `color`, `remain`,
      *  `remain_enabled`, and `active` off attributes; tray state is the
      *  filament name (e.g. "Generic PLA"). */
