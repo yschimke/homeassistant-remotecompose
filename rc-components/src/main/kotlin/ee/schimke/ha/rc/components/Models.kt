@@ -371,3 +371,60 @@ data class HaTodoListData(
     val activeItems: List<RemoteString>,
     val completedItems: List<RemoteString>,
 )
+
+/** `picture` card model — a static `image:` URL with an optional name
+ *  overlay and tap target. We can't pull arbitrary HTTP images into a
+ *  .rc document, so the renderer paints a tinted placeholder and shows
+ *  the configured image URL as a debug caption (so a host that wires
+ *  in an image-channel later doesn't need to change converters). */
+data class HaPictureCardData(
+    val name: RemoteString?,
+    val captionUrl: RemoteString?,
+    val placeholderIcon: ImageVector,
+    val tapAction: HaAction = HaAction.None,
+)
+
+/** `picture-glance` card model — image with a row of clickable entity
+ *  cells overlaid (typically lights / covers / switches). */
+data class HaPictureGlanceData(
+    val title: RemoteString?,
+    val captionUrl: RemoteString?,
+    val placeholderIcon: ImageVector,
+    val cells: List<HaPictureGlanceCell>,
+)
+
+data class HaPictureGlanceCell(
+    val icon: ImageVector,
+    val accent: Color,
+    val isActive: Boolean,
+    val label: RemoteString,
+    val tapAction: HaAction,
+)
+
+/** `picture-elements` card model — image with arbitrarily-positioned
+ *  elements. We don't render the precise positions yet; v1 emits the
+ *  elements as a strip below the image so all data shows. */
+data class HaPictureElementsData(
+    val captionUrl: RemoteString?,
+    val placeholderIcon: ImageVector,
+    val elements: List<HaPictureElement>,
+)
+
+sealed interface HaPictureElement {
+    data class StateIcon(
+        val icon: ImageVector,
+        val accent: Color,
+        val isActive: Boolean,
+        val tapAction: HaAction,
+    ) : HaPictureElement
+
+    data class StateLabel(
+        val text: RemoteString,
+    ) : HaPictureElement
+
+    data class ServiceButton(
+        val label: RemoteString,
+        val accent: Color,
+        val tapAction: HaAction,
+    ) : HaPictureElement
+}
