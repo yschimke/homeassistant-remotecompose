@@ -243,3 +243,29 @@ data class HaBambuSpoolSlot(
     val remainPercent: Int?,
     val active: Boolean,
 )
+
+/**
+ * Thermostat / humidifier / light arc-gauge model — 270° dial with a
+ * filled portion up to [valueFraction], an optional target marker at
+ * [targetFraction], a centred value label, and HA's mode chip.
+ *
+ * Used by:
+ *   - thermostat → [valueFraction] = current temp normalised, [targetFraction] = setpoint, mode = "Heating"/"Cooling"/...
+ *   - humidifier → same shape, value/target are humidity %, mode = "Humidifying"/"Drying"
+ *   - light       → [valueFraction] = brightness, no target marker, mode = on/off label
+ */
+data class HaArcDialData(
+    val name: RemoteString,
+    val valueFraction: Float,
+    val targetFraction: Float?,
+    val centerLabel: RemoteString,
+    /** Smaller secondary readout under the centre label (e.g. "↑ 22 °C"). */
+    val supportingLabel: RemoteString?,
+    val modeChip: RemoteString?,
+    val accent: Color,
+    val showSteppers: Boolean,
+    val centerIcon: ImageVector?,
+    val tapAction: HaAction = HaAction.None,
+    val incrementAction: HaAction = HaAction.None,
+    val decrementAction: HaAction = HaAction.None,
+)
