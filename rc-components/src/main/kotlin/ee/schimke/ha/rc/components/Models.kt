@@ -188,3 +188,21 @@ data class HaHistoryGraphRow(
     /** Numeric samples in order. Empty → renders a "no data" stub. */
     val points: List<Float>,
 )
+
+/**
+ * `custom:ha-bambulab-print_status-card` model — current print job hero
+ * tile. The progress ring is keyed off [progressFraction] (0f…1f);
+ * ancillary fields can each be null when the snapshot doesn't have the
+ * corresponding entity (the row collapses).
+ */
+data class HaBambuPrintStatusData(
+    val printerName: RemoteString,
+    val stage: RemoteString,
+    val progressLabel: RemoteString,
+    val progressFraction: Float,
+    val accent: Color,
+    val layerLine: RemoteString?,
+    val remainingLine: RemoteString?,
+    val nozzleLine: RemoteString?,
+    val bedLine: RemoteString?,
+)
