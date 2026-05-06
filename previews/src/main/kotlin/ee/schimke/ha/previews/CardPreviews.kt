@@ -396,7 +396,7 @@ fun Unsupported_Dark() = CardHost(HaTheme.Dark) {
     RenderChild(unsupportedCard(), Fixtures.mixed)
 }
 
-private fun unsupportedCard() = card("""{"type":"thermostat","entity":"climate.living_room"}""")
+private fun unsupportedCard() = card("""{"type":"iframe","url":"https://example.com"}""")
 
 // ——— gauge ———
 
@@ -564,6 +564,56 @@ fun BambuSpool_Dark() = CardHost(HaTheme.Dark) {
 
 private fun bambuSpoolCard() = card(
     """{"type":"custom:ha-bambulab-spool-card","spool":"<spool-id-placeholder>"}""",
+)
+
+// ——— thermostat / humidifier / light arc dials ———
+
+@Preview(name = "thermostat (light)", showBackground = false, widthDp = 240, heightDp = 290)
+@Composable
+fun Thermostat_Light() = CardHost(HaTheme.Light) {
+    RenderChild(thermostatCard(), Fixtures.thermostat, RemoteModifier.fillMaxWidth())
+}
+
+@Preview(name = "thermostat (dark)", showBackground = false, widthDp = 240, heightDp = 290)
+@Composable
+fun Thermostat_Dark() = CardHost(HaTheme.Dark) {
+    RenderChild(thermostatCard(), Fixtures.thermostat, RemoteModifier.fillMaxWidth())
+}
+
+private fun thermostatCard() = card(
+    """{"type":"thermostat","entity":"climate.living_room"}""",
+)
+
+@Preview(name = "humidifier (light)", showBackground = false, widthDp = 240, heightDp = 290)
+@Composable
+fun Humidifier_Light() = CardHost(HaTheme.Light) {
+    RenderChild(humidifierCard(), Fixtures.humidifier, RemoteModifier.fillMaxWidth())
+}
+
+@Preview(name = "humidifier (dark)", showBackground = false, widthDp = 240, heightDp = 290)
+@Composable
+fun Humidifier_Dark() = CardHost(HaTheme.Dark) {
+    RenderChild(humidifierCard(), Fixtures.humidifier, RemoteModifier.fillMaxWidth())
+}
+
+private fun humidifierCard() = card(
+    """{"type":"humidifier","entity":"humidifier.bedroom"}""",
+)
+
+@Preview(name = "light card (light)", showBackground = false, widthDp = 240, heightDp = 250)
+@Composable
+fun LightCard_Light() = CardHost(HaTheme.Light) {
+    RenderChild(lightCardConfig(), Fixtures.brightLight, RemoteModifier.fillMaxWidth())
+}
+
+@Preview(name = "light card (dark)", showBackground = false, widthDp = 240, heightDp = 250)
+@Composable
+fun LightCard_Dark() = CardHost(HaTheme.Dark) {
+    RenderChild(lightCardConfig(), Fixtures.brightLight, RemoteModifier.fillMaxWidth())
+}
+
+private fun lightCardConfig() = card(
+    """{"type":"light","entity":"light.kitchen"}""",
 )
 
 // ——— tile, state variants via PreviewParameter ———
