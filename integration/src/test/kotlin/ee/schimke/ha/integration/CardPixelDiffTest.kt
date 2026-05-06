@@ -62,6 +62,29 @@ class CardPixelDiffTest {
       Case("Glance_Dark_glance_dark", "glance/overview_dark.png", 40.0),
       Case("Markdown_Light_markdown_light", "markdown/notes_light.png", 40.0),
       Case("Markdown_Dark_markdown_dark", "markdown/notes_dark.png", 40.0),
+
+      // gauge / weather-forecast / picture-entity / logbook —
+      // converters and previews exist (see CardPreviews.kt), but no HA
+      // reference captures yet. The cases below are wired so that once
+      // `integration/scripts/capture-references.sh` is run against the
+      // seeded HA the diff pops in automatically; until then each one
+      // skips via assumeTrue.
+      Case("Gauge_Light_gauge_light", "gauge/battery_light.png", 40.0),
+      Case("Gauge_Dark_gauge_dark", "gauge/battery_dark.png", 40.0),
+      Case(
+        "WeatherForecast_Light_weather-forecast_light",
+        "weather-forecast/forecast_home_light.png",
+        40.0,
+      ),
+      Case(
+        "WeatherForecast_Dark_weather-forecast_dark",
+        "weather-forecast/forecast_home_dark.png",
+        40.0,
+      ),
+      Case("PictureEntity_Light_picture-entity_light", "picture-entity/driveway_light.png", 50.0),
+      Case("PictureEntity_Dark_picture-entity_dark", "picture-entity/driveway_dark.png", 50.0),
+      Case("Logbook_Light_logbook_light", "logbook/recent_activity_light.png", 40.0),
+      Case("Logbook_Dark_logbook_dark", "logbook/recent_activity_dark.png", 40.0),
     )
 
   @TestFactory
