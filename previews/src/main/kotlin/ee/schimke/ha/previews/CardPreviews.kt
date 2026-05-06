@@ -616,6 +616,43 @@ private fun lightCardConfig() = card(
     """{"type":"light","entity":"light.kitchen"}""",
 )
 
+// ——— clock ———
+
+@Preview(name = "clock (light)", showBackground = false, widthDp = 200, heightDp = 100)
+@Composable
+fun Clock_Light() = CardHost(HaTheme.Light) {
+    RenderChild(clockCard(), Fixtures.mixed, RemoteModifier.fillMaxWidth())
+}
+
+@Preview(name = "clock (dark)", showBackground = false, widthDp = 200, heightDp = 100)
+@Composable
+fun Clock_Dark() = CardHost(HaTheme.Dark) {
+    RenderChild(clockCard(), Fixtures.mixed, RemoteModifier.fillMaxWidth())
+}
+
+private fun clockCard() = card(
+    """{"type":"clock","clock_size":"medium","time_format":"24"}""",
+)
+
+// ——— statistics-graph ———
+
+@Preview(name = "statistics-graph (light)", showBackground = false, widthDp = 381, heightDp = 200)
+@Composable
+fun StatisticsGraph_Light() = CardHost(HaTheme.Light) {
+    RenderChild(statsGraphCard(), Fixtures.energyStatistics, RemoteModifier.fillMaxWidth())
+}
+
+@Preview(name = "statistics-graph (dark)", showBackground = false, widthDp = 381, heightDp = 200)
+@Composable
+fun StatisticsGraph_Dark() = CardHost(HaTheme.Dark) {
+    RenderChild(statsGraphCard(), Fixtures.energyStatistics, RemoteModifier.fillMaxWidth())
+}
+
+private fun statsGraphCard() = card(
+    """{"type":"statistics-graph","title":"Power","period":"hour","stat_types":["mean"],
+        "entities":["sensor.house_power","sensor.solar_power"]}""",
+)
+
 // ——— tile, state variants via PreviewParameter ———
 
 @Preview(name = "tile light (light)", showBackground = false, widthDp = 187, heightDp = 43)

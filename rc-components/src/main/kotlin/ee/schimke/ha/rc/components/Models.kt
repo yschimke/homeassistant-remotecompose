@@ -269,3 +269,24 @@ data class HaArcDialData(
     val incrementAction: HaAction = HaAction.None,
     val decrementAction: HaAction = HaAction.None,
 )
+
+/** `clock` card model. The string is captured at capture time —
+ *  alpha08 has a `RemoteAccess.getTime()` API but emitting a Compose
+ *  text node bound to it requires canvas drawText; deferring live
+ *  ticking to a follow-up. The host re-encodes once a minute / hour. */
+data class HaClockData(
+    val title: RemoteString?,
+    val timeLabel: RemoteString,
+    val secondaryLabel: RemoteString?,
+    val isLarge: Boolean,
+)
+
+/** `statistics-graph` card model — mirrors history-graph, just with
+ *  pre-aggregated mean values from HA's `recorder.statistics_during_period`.
+ *  [chartType] defaults to "line"; bar mode is a follow-up. */
+data class HaStatisticsGraphData(
+    val title: RemoteString?,
+    val rangeLabel: RemoteString,
+    val rows: List<HaHistoryGraphRow>,
+    val chartType: String = "line",
+)

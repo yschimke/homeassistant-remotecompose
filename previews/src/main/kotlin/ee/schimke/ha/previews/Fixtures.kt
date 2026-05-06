@@ -322,4 +322,56 @@ object Fixtures {
             ),
         )
     }
+
+    /** Hourly statistics for an energy-consumption sensor — synthetic
+     *  series so the statistics-graph preview has data to plot. */
+    val energyStatistics: HaSnapshot = run {
+        val states = mapOf(
+            "sensor.house_power" to EntityState(
+                entityId = "sensor.house_power",
+                state = "1840",
+                attributes = JsonObject(mapOf(
+                    "friendly_name" to JsonPrimitive("House power"),
+                    "unit_of_measurement" to JsonPrimitive("W"),
+                    "device_class" to JsonPrimitive("power"),
+                )),
+            ),
+            "sensor.solar_power" to EntityState(
+                entityId = "sensor.solar_power",
+                state = "640",
+                attributes = JsonObject(mapOf(
+                    "friendly_name" to JsonPrimitive("Solar power"),
+                    "unit_of_measurement" to JsonPrimitive("W"),
+                    "device_class" to JsonPrimitive("power"),
+                )),
+            ),
+        )
+        val baseTime = kotlinx.datetime.Instant.parse("2026-05-05T00:00:00Z")
+        // Mean power consumption per hour — house draws are baseline
+        // ~600W, peaks during cooking + evening; solar follows midday.
+        val houseMeans = listOf(
+            520.0, 480.0, 460.0, 450.0, 470.0, 600.0, 1450.0, 2100.0,
+            1800.0, 1100.0, 950.0, 880.0, 1700.0, 1850.0, 1300.0, 1100.0,
+            980.0, 1450.0, 2200.0, 2800.0, 2400.0, 1700.0, 980.0, 720.0,
+        )
+        val solarMeans = listOf(
+            0.0, 0.0, 0.0, 0.0, 0.0, 30.0, 180.0, 480.0,
+            960.0, 1380.0, 1780.0, 2050.0, 2150.0, 2080.0, 1840.0, 1430.0,
+            930.0, 480.0, 160.0, 20.0, 0.0, 0.0, 0.0, 0.0,
+        )
+        fun statSeries(values: List<Double>) =
+            values.mapIndexed { i, v ->
+                ee.schimke.ha.model.StatisticPoint(
+                    start = baseTime.plus(kotlin.time.Duration.parse("${i}h")),
+                    mean = v,
+                )
+            }
+        HaSnapshot(
+            states = states,
+            statistics = mapOf(
+                "sensor.house_power" to statSeries(houseMeans),
+                "sensor.solar_power" to statSeries(solarMeans),
+            ),
+        )
+    }
 }
