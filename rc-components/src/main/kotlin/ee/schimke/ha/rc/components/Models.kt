@@ -168,3 +168,23 @@ data class HaLogbookEntry(
     val whenText: RemoteString,
     val icon: ImageVector,
 )
+
+/**
+ * `history-graph` card model. Each row carries the numeric samples + a
+ * pre-formatted summary string ("21.4 °C", "min – max (N)") so the
+ * renderer doesn't need to know about units.
+ */
+data class HaHistoryGraphData(
+    val title: RemoteString?,
+    /** "Last 24h" / "Last 12h" — whatever `hours_to_show` resolved to. */
+    val rangeLabel: RemoteString,
+    val rows: List<HaHistoryGraphRow>,
+)
+
+data class HaHistoryGraphRow(
+    val name: RemoteString,
+    val summary: RemoteString,
+    val accent: Color,
+    /** Numeric samples in order. Empty → renders a "no data" stub. */
+    val points: List<Float>,
+)

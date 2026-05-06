@@ -141,4 +141,57 @@ object Fixtures {
         state("binary_sensor.garage_motion", "on",
             mapOf("friendly_name" to "Garage motion", "device_class" to "motion")),
     )
+
+    /** Two temperature sensors with a 24-sample diurnal cycle so the
+     *  history-graph preview has real sparkline data to draw. */
+    val temperatureHistory: HaSnapshot = run {
+        val outsideStates = listOf("sensor.outside_temp", "sensor.upstairs_temp")
+        val states = mapOf(
+            "sensor.outside_temp" to EntityState(
+                entityId = "sensor.outside_temp",
+                state = "8.2",
+                attributes = JsonObject(mapOf(
+                    "friendly_name" to JsonPrimitive("Outside"),
+                    "unit_of_measurement" to JsonPrimitive("°C"),
+                    "device_class" to JsonPrimitive("temperature"),
+                )),
+            ),
+            "sensor.upstairs_temp" to EntityState(
+                entityId = "sensor.upstairs_temp",
+                state = "22.2",
+                attributes = JsonObject(mapOf(
+                    "friendly_name" to JsonPrimitive("Upstairs"),
+                    "unit_of_measurement" to JsonPrimitive("°C"),
+                    "device_class" to JsonPrimitive("temperature"),
+                )),
+            ),
+        )
+        // Synthetic 24h sample series: outside follows a sine-ish day,
+        // upstairs is flatter with mild dips overnight.
+        val outside = listOf(
+            7.1f, 6.4f, 5.8f, 5.4f, 5.6f, 6.5f, 8.0f, 9.6f,
+            11.0f, 12.4f, 13.5f, 14.1f, 14.4f, 14.0f, 13.5f, 12.6f,
+            11.4f, 10.2f, 9.4f, 8.9f, 8.6f, 8.4f, 8.3f, 8.2f,
+        )
+        val upstairs = listOf(
+            21.5f, 21.3f, 21.2f, 21.0f, 20.9f, 21.0f, 21.4f, 21.9f,
+            22.4f, 22.7f, 22.9f, 23.0f, 23.1f, 23.0f, 22.9f, 22.8f,
+            22.6f, 22.5f, 22.4f, 22.3f, 22.3f, 22.2f, 22.2f, 22.2f,
+        )
+        val baseTime = kotlinx.datetime.Instant.parse("2026-05-05T00:00:00Z")
+        fun series(name: String, samples: List<Float>) =
+            samples.mapIndexed { i, v ->
+                ee.schimke.ha.model.HistoryPoint(
+                    ts = baseTime.plus(kotlin.time.Duration.parse("${i}h")),
+                    state = v.toString(),
+                )
+            }
+        HaSnapshot(
+            states = states,
+            history = mapOf(
+                "sensor.outside_temp" to series("Outside", outside),
+                "sensor.upstairs_temp" to series("Upstairs", upstairs),
+            ),
+        )
+    }
 }
