@@ -46,6 +46,8 @@ fun defaultConverters(): List<CardConverter> = buildList {
     add(ThermostatCardConverter())
     add(HumidifierCardConverter())
     add(LightCardConverter())
+    add(ClockCardConverter())
+    add(StatisticsGraphCardConverter())
 
     add(BambuLabAmsCardConverter())
     add(BambuLabSpoolCardConverter())
@@ -64,14 +66,12 @@ fun defaultRegistry(): CardRegistry = CardRegistry(defaultConverters())
 private val PLACEHOLDER_CARD_TYPES: List<String> = listOf(
     CardTypes.MEDIA_CONTROL,
     CardTypes.ALARM_PANEL,
-    CardTypes.CLOCK,
     CardTypes.AREA,
     CardTypes.CALENDAR,
     CardTypes.TODO_LIST,
     CardTypes.PICTURE,
     CardTypes.PICTURE_GLANCE,
     CardTypes.PICTURE_ELEMENTS,
-    CardTypes.STATISTICS_GRAPH,
     CardTypes.STATISTIC,
     CardTypes.SENSOR,
     CardTypes.ENTITY_FILTER,
