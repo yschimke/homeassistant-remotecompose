@@ -176,6 +176,52 @@ object Fixtures {
         ),
     )
 
+    /** Alarm-panel disarmed. */
+    val alarmDisarmed = snapshot(
+        state("alarm_control_panel.house", "disarmed",
+            mapOf("friendly_name" to "House")),
+    )
+
+    /** Office speaker mid-track. */
+    val mediaPlaying = snapshot(
+        "media_player.office_speaker" to EntityState(
+            entityId = "media_player.office_speaker",
+            state = "playing",
+            attributes = JsonObject(mapOf(
+                "friendly_name" to JsonPrimitive("Office speaker"),
+                "media_title" to JsonPrimitive("The Anthem"),
+                "media_artist" to JsonPrimitive("Good Charlotte"),
+                "media_position" to JsonPrimitive(75.0),
+                "media_duration" to JsonPrimitive(176.0),
+            )),
+        ),
+    )
+
+    /** Shopping list with two active items + one completed. */
+    val shoppingList = snapshot(
+        "todo.shopping" to EntityState(
+            entityId = "todo.shopping",
+            state = "2",
+            attributes = JsonObject(mapOf(
+                "friendly_name" to JsonPrimitive("Shopping list"),
+                "items" to JsonArray(listOf(
+                    JsonObject(mapOf(
+                        "summary" to JsonPrimitive("Salt"),
+                        "status" to JsonPrimitive("needs_action"),
+                    )),
+                    JsonObject(mapOf(
+                        "summary" to JsonPrimitive("Butter"),
+                        "status" to JsonPrimitive("needs_action"),
+                    )),
+                    JsonObject(mapOf(
+                        "summary" to JsonPrimitive("Milk"),
+                        "status" to JsonPrimitive("completed"),
+                    )),
+                )),
+            )),
+        ),
+    )
+
     /** Light at 60% brightness. */
     val brightLight = snapshot(
         "light.kitchen" to EntityState(
