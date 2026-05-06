@@ -493,6 +493,25 @@ private fun historyGraphCard() = card(
         "entities":["sensor.outside_temp","sensor.upstairs_temp"]}""",
 )
 
+// ——— bambu print-status ———
+
+@Preview(name = "bambu print-status (light)", showBackground = false, widthDp = 381, heightDp = 168)
+@Composable
+fun BambuPrintStatus_Light() = CardHost(HaTheme.Light) {
+    RenderChild(bambuPrintStatusCard(), Fixtures.bambuPrinting, RemoteModifier.fillMaxWidth())
+}
+
+@Preview(name = "bambu print-status (dark)", showBackground = false, widthDp = 381, heightDp = 168)
+@Composable
+fun BambuPrintStatus_Dark() = CardHost(HaTheme.Dark) {
+    RenderChild(bambuPrintStatusCard(), Fixtures.bambuPrinting, RemoteModifier.fillMaxWidth())
+}
+
+private fun bambuPrintStatusCard() = card(
+    """{"type":"custom:ha-bambulab-print_status-card",
+        "printer":"<device-id-placeholder>","style":"full"}""",
+)
+
 // ——— tile, state variants via PreviewParameter ———
 
 @Preview(name = "tile light (light)", showBackground = false, widthDp = 187, heightDp = 43)

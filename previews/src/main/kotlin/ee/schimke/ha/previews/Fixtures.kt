@@ -142,6 +142,36 @@ object Fixtures {
             mapOf("friendly_name" to "Garage motion", "device_class" to "motion")),
     )
 
+    /** Bambu Lab printer mid-print: progress, layer counts, time
+     *  remaining, plus nozzle/bed temperatures. The entity prefix
+     *  matches HA's `bambulab` integration scheme so the converter's
+     *  prefix-discovery picks it up automatically. */
+    val bambuPrinting = snapshot(
+        state("sensor.p2s_printing_print_progress", "34",
+            mapOf(
+                "friendly_name" to "P2S Print progress",
+                "unit_of_measurement" to "%",
+            )),
+        state("sensor.p2s_printing_current_stage", "inspecting_first_layer",
+            mapOf("friendly_name" to "P2S Current stage")),
+        state("sensor.p2s_printing_print_status", "printing",
+            mapOf("friendly_name" to "P2S Print status")),
+        state("sensor.p2s_printing_current_layer", "12",
+            mapOf("friendly_name" to "P2S Current layer")),
+        state("sensor.p2s_printing_total_layer_count", "240",
+            mapOf("friendly_name" to "P2S Total layer count")),
+        state("sensor.p2s_printing_remaining_time", "82",
+            mapOf("friendly_name" to "P2S Remaining time", "unit_of_measurement" to "min")),
+        state("sensor.p2s_printing_nozzle_temperature", "218.4",
+            mapOf("friendly_name" to "P2S Nozzle temperature", "unit_of_measurement" to "°C")),
+        state("sensor.p2s_printing_target_nozzle_temperature", "220",
+            mapOf("friendly_name" to "P2S Target nozzle temperature", "unit_of_measurement" to "°C")),
+        state("sensor.p2s_printing_bed_temperature", "60",
+            mapOf("friendly_name" to "P2S Bed temperature", "unit_of_measurement" to "°C")),
+        state("sensor.p2s_printing_target_bed_temperature", "60",
+            mapOf("friendly_name" to "P2S Target bed temperature", "unit_of_measurement" to "°C")),
+    )
+
     /** Two temperature sensors with a 24-sample diurnal cycle so the
      *  history-graph preview has real sparkline data to draw. */
     val temperatureHistory: HaSnapshot = run {

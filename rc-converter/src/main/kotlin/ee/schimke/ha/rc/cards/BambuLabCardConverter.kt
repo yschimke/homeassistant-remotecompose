@@ -20,6 +20,7 @@ import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.remote.creation.compose.state.rsp
 import androidx.compose.remote.creation.compose.text.RemoteTextStyle
+import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.font.FontWeight
 import ee.schimke.ha.model.CardConfig
@@ -124,11 +125,100 @@ class BambuLabSpoolCardConverter : BambuLabCardConverter(
     variantLabel = "Spool",
 )
 
-/** Current print job + progress. */
+/** Current print job + progress.
+ *
+ *  HA's bambulab integration exposes a flock of `sensor.<prefix>_*`
+ *  entities per printer; the card config references a device id that we
+ *  can't resolve without a device-registry channel. We discover the
+ *  prefix by scanning the snapshot for the first `sensor.*_print_progress`
+ *  and pull related sensors by suffix. Configurations with multiple
+ *  printers can override via an `entity_prefix:` config field. */
 class BambuLabPrintStatusCardConverter : BambuLabCardConverter(
     cardType = "custom:ha-bambulab-print_status-card",
     variantLabel = "Print status",
-)
+) {
+    @Composable
+    override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
+        val prefix = resolvePrinterPrefix(card, snapshot)
+        if (prefix == null) {
+            super.Render(card, snapshot, modifier)
+            return
+        }
+        val data = buildPrintStatusData(prefix, snapshot)
+        ee.schimke.ha.rc.components.RemoteHaBambuPrintStatus(data, modifier)
+    }
+}
+
+/** Best-effort discovery: explicit `entity_prefix` wins; otherwise the
+ *  first `sensor.*_print_progress` entity's prefix. Returns null when
+ *  the snapshot has no Bambu-shaped entities, in which case the caller
+ *  falls back to the chrome-only renderer. */
+internal fun resolvePrinterPrefix(card: CardConfig, snapshot: HaSnapshot): String? {
+    val explicit = card.raw["entity_prefix"]?.jsonPrimitive?.content
+    if (!explicit.isNullOrEmpty()) return explicit
+    return snapshot.states.keys
+        .firstOrNull { it.startsWith("sensor.") && it.endsWith("_print_progress") }
+        ?.removePrefix("sensor.")
+        ?.removeSuffix("_print_progress")
+}
+
+private fun buildPrintStatusData(
+    prefix: String,
+    snapshot: HaSnapshot,
+): ee.schimke.ha.rc.components.HaBambuPrintStatusData {
+    val s = snapshot.states
+    fun sensor(suffix: String) = s["sensor.${prefix}_$suffix"]
+
+    val progress = sensor("print_progress")?.state?.toFloatOrNull() ?: 0f
+    val stageRaw = sensor("current_stage")?.state ?: sensor("print_status")?.state ?: "idle"
+    val stage = stageRaw.replace('_', ' ').replaceFirstChar { it.uppercaseChar() }
+
+    val printerEntity = sensor("print_progress") ?: sensor("print_status")
+    val printerName = printerEntity?.attributes?.get("friendly_name")
+        ?.jsonPrimitive?.content
+        ?.substringBeforeLast(' ')
+        ?: prefix.uppercase()
+
+    val current = sensor("current_layer")?.state?.toIntOrNull()
+    val total = sensor("total_layer_count")?.state?.toIntOrNull()
+    val layerLine = if (current != null && total != null) "Layer $current / $total" else null
+
+    val remaining = sensor("remaining_time")?.state?.toIntOrNull()
+    val remainingLine = remaining?.let { mins ->
+        val h = mins / 60
+        val m = mins % 60
+        if (h > 0) "${h}h ${m}m left" else "${m}m left"
+    }
+
+    val nozzle = sensor("nozzle_temperature")?.state?.toFloatOrNull()
+    val nozzleTarget = sensor("target_nozzle_temperature")?.state?.toFloatOrNull()
+    val nozzleLine = nozzle?.let {
+        val tgt = nozzleTarget?.let { t -> if (t > 0f) " → ${formatTemp(t)}°C" else "" } ?: ""
+        "Nozzle ${formatTemp(it)}°C$tgt"
+    }
+
+    val bed = sensor("bed_temperature")?.state?.toFloatOrNull()
+    val bedTarget = sensor("target_bed_temperature")?.state?.toFloatOrNull()
+    val bedLine = bed?.let {
+        val tgt = bedTarget?.let { t -> if (t > 0f) " → ${formatTemp(t)}°C" else "" } ?: ""
+        "Bed ${formatTemp(it)}°C$tgt"
+    }
+
+    return ee.schimke.ha.rc.components.HaBambuPrintStatusData(
+        printerName = printerName.rs,
+        stage = stage.rs,
+        progressLabel = "${progress.toInt()} %".rs,
+        progressFraction = (progress / 100f).coerceIn(0f, 1f),
+        accent = androidx.compose.ui.graphics.Color(0xFFFF8F00),
+        layerLine = layerLine?.rs,
+        remainingLine = remainingLine?.rs,
+        nozzleLine = nozzleLine?.rs,
+        bedLine = bedLine?.rs,
+    )
+}
+
+private fun formatTemp(value: Float): String =
+    if (value == value.toInt().toFloat()) value.toInt().toString() else "%.1f".format(value)
 
 /** Pause / resume / cancel pad. */
 class BambuLabPrintControlCardConverter : BambuLabCardConverter(
