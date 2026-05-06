@@ -223,6 +223,20 @@
     "sha256": "ae13fcb6f90cb1036e49296b9747e5657326571b20ab466ba39a8cc294a5591e",
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt"
   },
+  "previews/ee.schimke.ha.previews.CardPreviewsKt.Clock_Dark_clock (dark)": {
+    "captureLabel": "",
+    "functionName": "Clock_Dark",
+    "renderBasename": "CardPreviewsKt.Clock_Dark_clock_dark.png",
+    "sha256": "9b4dcb94f06a46a0ce69c2b7678488f15deb2b4e0911ba7067fee0c7567b1e5e",
+    "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt"
+  },
+  "previews/ee.schimke.ha.previews.CardPreviewsKt.Clock_Light_clock (light)": {
+    "captureLabel": "",
+    "functionName": "Clock_Light",
+    "renderBasename": "CardPreviewsKt.Clock_Light_clock_light.png",
+    "sha256": "682fe373007920213cb7700012ddf3aaf86b17c5e593472d698c22ad7619e90f",
+    "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt"
+  },
   "previews/ee.schimke.ha.previews.CardPreviewsKt.Dashboard_Dark_dashboard (dark)": {
     "captureLabel": "",
     "functionName": "Dashboard_Dark",
@@ -417,6 +431,20 @@
     "functionName": "PictureEntity_Light",
     "renderBasename": "CardPreviewsKt.PictureEntity_Light_picture-entity_light.png",
     "sha256": "3481724915183c2fce84e90c4c158bf2d8fcf205e7e20a7c5e76479175f1506e",
+    "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt"
+  },
+  "previews/ee.schimke.ha.previews.CardPreviewsKt.StatisticsGraph_Dark_statistics-graph (dark)": {
+    "captureLabel": "",
+    "functionName": "StatisticsGraph_Dark",
+    "renderBasename": "CardPreviewsKt.StatisticsGraph_Dark_statistics-graph_dark.png",
+    "sha256": "69c26b42e281c9174fee27f844b4d371d6ae705837fa6c990e70f37f4d35ae77",
+    "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt"
+  },
+  "previews/ee.schimke.ha.previews.CardPreviewsKt.StatisticsGraph_Light_statistics-graph (light)": {
+    "captureLabel": "",
+    "functionName": "StatisticsGraph_Light",
+    "renderBasename": "CardPreviewsKt.StatisticsGraph_Light_statistics-graph_light.png",
+    "sha256": "c6efe190bcdae52aa7ecbf7e3c53dbd92dd8297c9494a0eca359a09576b9739b",
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.CardPreviewsKt.Thermostat_Dark_thermostat (dark)": {
