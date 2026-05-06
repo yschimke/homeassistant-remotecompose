@@ -222,6 +222,53 @@ object Fixtures {
         ),
     )
 
+    /** Calendar entity with three upcoming events. */
+    val calendarEvents = snapshot(
+        "calendar.family" to EntityState(
+            entityId = "calendar.family",
+            state = "off",
+            attributes = JsonObject(mapOf(
+                "friendly_name" to JsonPrimitive("Family calendar"),
+                "events" to JsonArray(listOf(
+                    JsonObject(mapOf(
+                        "summary" to JsonPrimitive("Dentist appointment"),
+                        "start" to JsonPrimitive("2026-05-08T09:30:00+01:00"),
+                    )),
+                    JsonObject(mapOf(
+                        "summary" to JsonPrimitive("Trash day"),
+                        "start" to JsonPrimitive("2026-05-09"),
+                    )),
+                    JsonObject(mapOf(
+                        "summary" to JsonPrimitive("Anniversary"),
+                        "start" to JsonPrimitive("2026-05-12"),
+                    )),
+                )),
+            )),
+        ),
+    )
+
+    /** Area with two sensors + a light + a switch. */
+    val livingRoomArea = snapshot(
+        state("sensor.living_room_temp", "21.4",
+            mapOf(
+                "friendly_name" to "Temperature",
+                "unit_of_measurement" to "°C",
+                "device_class" to "temperature",
+            )),
+        state("sensor.living_room_humidity", "48",
+            mapOf(
+                "friendly_name" to "Humidity",
+                "unit_of_measurement" to "%",
+                "device_class" to "humidity",
+            )),
+        state("light.living_room_lamp", "on",
+            mapOf("friendly_name" to "Lamp")),
+        state("switch.living_room_speaker", "off",
+            mapOf("friendly_name" to "Speaker")),
+        state("cover.living_room_blinds", "open",
+            mapOf("friendly_name" to "Blinds", "device_class" to "blind")),
+    )
+
     /** Light at 60% brightness. */
     val brightLight = snapshot(
         "light.kitchen" to EntityState(

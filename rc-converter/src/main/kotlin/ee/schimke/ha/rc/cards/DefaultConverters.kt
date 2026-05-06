@@ -51,6 +51,8 @@ fun defaultConverters(): List<CardConverter> = buildList {
     add(AlarmPanelCardConverter())
     add(MediaControlCardConverter())
     add(TodoListCardConverter())
+    add(CalendarCardConverter())
+    add(AreaCardConverter())
 
     add(BambuLabAmsCardConverter())
     add(BambuLabSpoolCardConverter())
@@ -67,8 +69,6 @@ fun defaultConverters(): List<CardConverter> = buildList {
 fun defaultRegistry(): CardRegistry = CardRegistry(defaultConverters())
 
 private val PLACEHOLDER_CARD_TYPES: List<String> = listOf(
-    CardTypes.AREA,
-    CardTypes.CALENDAR,
     CardTypes.PICTURE,
     CardTypes.PICTURE_GLANCE,
     CardTypes.PICTURE_ELEMENTS,
