@@ -206,3 +206,40 @@ data class HaBambuPrintStatusData(
     val nozzleLine: RemoteString?,
     val bedLine: RemoteString?,
 )
+
+/** `custom:ha-bambulab-print_control-card` — pause / resume / stop pad. */
+data class HaBambuPrintControlData(
+    val printerName: RemoteString,
+    val pause: HaBambuControlButton?,
+    val resume: HaBambuControlButton?,
+    val stop: HaBambuControlButton?,
+)
+
+data class HaBambuControlButton(
+    val label: RemoteString,
+    val icon: ImageVector,
+    val accent: Color,
+    val tapAction: HaAction = HaAction.None,
+)
+
+/** `custom:ha-bambulab-ams-card` — grid of up to four filament slots. */
+data class HaBambuAmsData(
+    val title: RemoteString,
+    val slots: List<HaBambuSpoolSlot>,
+)
+
+/** `custom:ha-bambulab-spool-card` — single filament slot, larger. */
+data class HaBambuSpoolDetail(
+    val slot: HaBambuSpoolSlot,
+)
+
+/** One filament tray. [color] is the spool's swatch (state.attributes.color
+ *  parsed from `#RRGGBBAA`); [remainPercent] is 0..100 (or null when the
+ *  HA "remain_enabled" flag is off and the integration reports nothing). */
+data class HaBambuSpoolSlot(
+    val slotLabel: RemoteString,
+    val material: RemoteString,
+    val color: Color,
+    val remainPercent: Int?,
+    val active: Boolean,
+)

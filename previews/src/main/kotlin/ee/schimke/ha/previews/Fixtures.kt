@@ -142,6 +142,58 @@ object Fixtures {
             mapOf("friendly_name" to "Garage motion", "device_class" to "motion")),
     )
 
+    /** Helper for AMS tray entities — the converter reads `color`, `remain`,
+     *  `remain_enabled`, and `active` off attributes; tray state is the
+     *  filament name (e.g. "Generic PLA"). */
+    private fun trayState(
+        entityId: String,
+        material: String,
+        color: String,
+        remain: Int,
+        active: Boolean = false,
+    ): Pair<String, EntityState> = entityId to EntityState(
+        entityId = entityId,
+        state = material,
+        attributes = JsonObject(mapOf(
+            "friendly_name" to JsonPrimitive("$entityId tray"),
+            "color" to JsonPrimitive(color),
+            "remain" to JsonPrimitive(remain),
+            "remain_enabled" to JsonPrimitive(true),
+            "active" to JsonPrimitive(active),
+            "type" to JsonPrimitive(material.substringAfterLast(' ')),
+        )),
+    )
+
+    /** Bambu Lab AMS with four loaded spools, one of which is active. */
+    val bambuAms = snapshot(
+        trayState("sensor.p2s_printing_ams_1_tray_1", "Generic PLA", "#000000FF", 100, active = false),
+        trayState("sensor.p2s_printing_ams_1_tray_2", "Generic PETG", "#FF6600FF", 87, active = true),
+        trayState("sensor.p2s_printing_ams_1_tray_3", "Generic ASA", "#1E88E5FF", 43),
+        trayState("sensor.p2s_printing_ams_1_tray_4", "Generic TPU", "#43A047FF", 70),
+    )
+
+    /** Single spool — uses the same tray entities as bambuAms; the spool
+     *  card surfaces the active tray (slot 2 here). */
+    val bambuSpool = bambuAms
+
+    /** Pause / Resume / Stop button entities for the print-control card.
+     *  Same prefix as bambuPrinting so prefix-discovery picks it up; we
+     *  also include the print_progress sensor so the converter has a
+     *  printer-name source. */
+    val bambuPrintControl = snapshot(
+        state("sensor.p2s_printing_print_progress", "34",
+            mapOf(
+                "friendly_name" to "P2S Print progress",
+                "unit_of_measurement" to "%",
+            )),
+        state("button.p2s_printing_pause_printing", "unknown",
+            mapOf("friendly_name" to "P2S Pause printing")),
+        state("button.p2s_printing_resume_printing", "unknown",
+            mapOf("friendly_name" to "P2S Resume printing")),
+        state("button.p2s_printing_stop_printing", "unknown",
+            mapOf("friendly_name" to "P2S Stop printing")),
+    )
+
     /** Bambu Lab printer mid-print: progress, layer counts, time
      *  remaining, plus nozzle/bed temperatures. The entity prefix
      *  matches HA's `bambulab` integration scheme so the converter's

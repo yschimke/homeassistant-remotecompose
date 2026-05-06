@@ -512,6 +512,60 @@ private fun bambuPrintStatusCard() = card(
         "printer":"<device-id-placeholder>","style":"full"}""",
 )
 
+// ——— bambu print-control ———
+
+@Preview(name = "bambu print-control (light)", showBackground = false, widthDp = 381, heightDp = 124)
+@Composable
+fun BambuPrintControl_Light() = CardHost(HaTheme.Light) {
+    RenderChild(bambuPrintControlCard(), Fixtures.bambuPrintControl, RemoteModifier.fillMaxWidth())
+}
+
+@Preview(name = "bambu print-control (dark)", showBackground = false, widthDp = 381, heightDp = 124)
+@Composable
+fun BambuPrintControl_Dark() = CardHost(HaTheme.Dark) {
+    RenderChild(bambuPrintControlCard(), Fixtures.bambuPrintControl, RemoteModifier.fillMaxWidth())
+}
+
+private fun bambuPrintControlCard() = card(
+    """{"type":"custom:ha-bambulab-print_control-card","printer":"<device-id-placeholder>"}""",
+)
+
+// ——— bambu ams ———
+
+@Preview(name = "bambu ams (light)", showBackground = false, widthDp = 381, heightDp = 130)
+@Composable
+fun BambuAms_Light() = CardHost(HaTheme.Light) {
+    RenderChild(bambuAmsCard(), Fixtures.bambuAms, RemoteModifier.fillMaxWidth())
+}
+
+@Preview(name = "bambu ams (dark)", showBackground = false, widthDp = 381, heightDp = 130)
+@Composable
+fun BambuAms_Dark() = CardHost(HaTheme.Dark) {
+    RenderChild(bambuAmsCard(), Fixtures.bambuAms, RemoteModifier.fillMaxWidth())
+}
+
+private fun bambuAmsCard() = card(
+    """{"type":"custom:ha-bambulab-ams-card","ams":"<device-id-placeholder>","style":"full"}""",
+)
+
+// ——— bambu spool ———
+
+@Preview(name = "bambu spool (light)", showBackground = false, widthDp = 381, heightDp = 96)
+@Composable
+fun BambuSpool_Light() = CardHost(HaTheme.Light) {
+    RenderChild(bambuSpoolCard(), Fixtures.bambuSpool, RemoteModifier.fillMaxWidth())
+}
+
+@Preview(name = "bambu spool (dark)", showBackground = false, widthDp = 381, heightDp = 96)
+@Composable
+fun BambuSpool_Dark() = CardHost(HaTheme.Dark) {
+    RenderChild(bambuSpoolCard(), Fixtures.bambuSpool, RemoteModifier.fillMaxWidth())
+}
+
+private fun bambuSpoolCard() = card(
+    """{"type":"custom:ha-bambulab-spool-card","spool":"<spool-id-placeholder>"}""",
+)
+
 // ——— tile, state variants via PreviewParameter ———
 
 @Preview(name = "tile light (light)", showBackground = false, widthDp = 187, heightDp = 43)
