@@ -396,7 +396,83 @@ fun Unsupported_Dark() = CardHost(HaTheme.Dark) {
     RenderChild(unsupportedCard(), Fixtures.mixed)
 }
 
-private fun unsupportedCard() = card("""{"type":"gauge","entity":"sensor.living_room"}""")
+private fun unsupportedCard() = card("""{"type":"thermostat","entity":"climate.living_room"}""")
+
+// ——— gauge ———
+
+@Preview(name = "gauge (light)", showBackground = false, widthDp = 187, heightDp = 150)
+@Composable
+fun Gauge_Light() = CardHost(HaTheme.Light) {
+    RenderChild(gaugeCard(), Fixtures.battery, RemoteModifier.fillMaxWidth())
+}
+
+@Preview(name = "gauge (dark)", showBackground = false, widthDp = 187, heightDp = 150)
+@Composable
+fun Gauge_Dark() = CardHost(HaTheme.Dark) {
+    RenderChild(gaugeCard(), Fixtures.battery, RemoteModifier.fillMaxWidth())
+}
+
+private fun gaugeCard() = card(
+    """{"type":"gauge","entity":"sensor.repeater_battery","name":"Battery %",
+        "min":0,"max":100,"needle":true,
+        "severity":{"green":60,"yellow":30,"red":0}}""",
+)
+
+// ——— picture-entity ———
+
+@Preview(name = "picture-entity (light)", showBackground = false, widthDp = 312, heightDp = 160)
+@Composable
+fun PictureEntity_Light() = CardHost(HaTheme.Light) {
+    RenderChild(pictureEntityCard(), Fixtures.driveway, RemoteModifier.fillMaxWidth())
+}
+
+@Preview(name = "picture-entity (dark)", showBackground = false, widthDp = 312, heightDp = 160)
+@Composable
+fun PictureEntity_Dark() = CardHost(HaTheme.Dark) {
+    RenderChild(pictureEntityCard(), Fixtures.driveway, RemoteModifier.fillMaxWidth())
+}
+
+private fun pictureEntityCard() = card(
+    """{"type":"picture-entity","entity":"camera.driveway","name":"Driveway","show_name":true}""",
+)
+
+// ——— weather-forecast ———
+
+@Preview(name = "weather-forecast (light)", showBackground = false, widthDp = 381, heightDp = 168)
+@Composable
+fun WeatherForecast_Light() = CardHost(HaTheme.Light) {
+    RenderChild(weatherForecastCard(), Fixtures.weather, RemoteModifier.fillMaxWidth())
+}
+
+@Preview(name = "weather-forecast (dark)", showBackground = false, widthDp = 381, heightDp = 168)
+@Composable
+fun WeatherForecast_Dark() = CardHost(HaTheme.Dark) {
+    RenderChild(weatherForecastCard(), Fixtures.weather, RemoteModifier.fillMaxWidth())
+}
+
+private fun weatherForecastCard() = card(
+    """{"type":"weather-forecast","entity":"weather.forecast_home",
+        "show_current":true,"show_forecast":true}""",
+)
+
+// ——— logbook ———
+
+@Preview(name = "logbook (light)", showBackground = false, widthDp = 381, heightDp = 150)
+@Composable
+fun Logbook_Light() = CardHost(HaTheme.Light) {
+    RenderChild(logbookCard(), Fixtures.activity, RemoteModifier.fillMaxWidth())
+}
+
+@Preview(name = "logbook (dark)", showBackground = false, widthDp = 381, heightDp = 150)
+@Composable
+fun Logbook_Dark() = CardHost(HaTheme.Dark) {
+    RenderChild(logbookCard(), Fixtures.activity, RemoteModifier.fillMaxWidth())
+}
+
+private fun logbookCard() = card(
+    """{"type":"logbook","title":"Recent activity","hours_to_show":24,
+        "entities":["binary_sensor.front_door","binary_sensor.garage_motion"]}""",
+)
 
 // ——— tile, state variants via PreviewParameter ———
 
