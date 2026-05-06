@@ -616,41 +616,59 @@ private fun lightCardConfig() = card(
     """{"type":"light","entity":"light.kitchen"}""",
 )
 
-// ——— clock ———
+// ——— alarm-panel ———
 
-@Preview(name = "clock (light)", showBackground = false, widthDp = 200, heightDp = 100)
+@Preview(name = "alarm-panel (light)", showBackground = false, widthDp = 320, heightDp = 380)
 @Composable
-fun Clock_Light() = CardHost(HaTheme.Light) {
-    RenderChild(clockCard(), Fixtures.mixed, RemoteModifier.fillMaxWidth())
+fun AlarmPanel_Light() = CardHost(HaTheme.Light) {
+    RenderChild(alarmPanelCard(), Fixtures.alarmDisarmed, RemoteModifier.fillMaxWidth())
 }
 
-@Preview(name = "clock (dark)", showBackground = false, widthDp = 200, heightDp = 100)
+@Preview(name = "alarm-panel (dark)", showBackground = false, widthDp = 320, heightDp = 380)
 @Composable
-fun Clock_Dark() = CardHost(HaTheme.Dark) {
-    RenderChild(clockCard(), Fixtures.mixed, RemoteModifier.fillMaxWidth())
+fun AlarmPanel_Dark() = CardHost(HaTheme.Dark) {
+    RenderChild(alarmPanelCard(), Fixtures.alarmDisarmed, RemoteModifier.fillMaxWidth())
 }
 
-private fun clockCard() = card(
-    """{"type":"clock","clock_size":"medium","time_format":"24"}""",
+private fun alarmPanelCard() = card(
+    """{"type":"alarm-panel","entity":"alarm_control_panel.house",
+        "states":["arm_away","arm_home"]}""",
 )
 
-// ——— statistics-graph ———
+// ——— media-control ———
 
-@Preview(name = "statistics-graph (light)", showBackground = false, widthDp = 381, heightDp = 200)
+@Preview(name = "media-control (light)", showBackground = false, widthDp = 381, heightDp = 168)
 @Composable
-fun StatisticsGraph_Light() = CardHost(HaTheme.Light) {
-    RenderChild(statsGraphCard(), Fixtures.energyStatistics, RemoteModifier.fillMaxWidth())
+fun MediaControl_Light() = CardHost(HaTheme.Light) {
+    RenderChild(mediaControlCard(), Fixtures.mediaPlaying, RemoteModifier.fillMaxWidth())
 }
 
-@Preview(name = "statistics-graph (dark)", showBackground = false, widthDp = 381, heightDp = 200)
+@Preview(name = "media-control (dark)", showBackground = false, widthDp = 381, heightDp = 168)
 @Composable
-fun StatisticsGraph_Dark() = CardHost(HaTheme.Dark) {
-    RenderChild(statsGraphCard(), Fixtures.energyStatistics, RemoteModifier.fillMaxWidth())
+fun MediaControl_Dark() = CardHost(HaTheme.Dark) {
+    RenderChild(mediaControlCard(), Fixtures.mediaPlaying, RemoteModifier.fillMaxWidth())
 }
 
-private fun statsGraphCard() = card(
-    """{"type":"statistics-graph","title":"Power","period":"hour","stat_types":["mean"],
-        "entities":["sensor.house_power","sensor.solar_power"]}""",
+private fun mediaControlCard() = card(
+    """{"type":"media-control","entity":"media_player.office_speaker"}""",
+)
+
+// ——— todo-list ———
+
+@Preview(name = "todo-list (light)", showBackground = false, widthDp = 320, heightDp = 220)
+@Composable
+fun TodoList_Light() = CardHost(HaTheme.Light) {
+    RenderChild(todoListCard(), Fixtures.shoppingList, RemoteModifier.fillMaxWidth())
+}
+
+@Preview(name = "todo-list (dark)", showBackground = false, widthDp = 320, heightDp = 220)
+@Composable
+fun TodoList_Dark() = CardHost(HaTheme.Dark) {
+    RenderChild(todoListCard(), Fixtures.shoppingList, RemoteModifier.fillMaxWidth())
+}
+
+private fun todoListCard() = card(
+    """{"type":"todo-list","entity":"todo.shopping","title":"Shopping list"}""",
 )
 
 // ——— tile, state variants via PreviewParameter ———

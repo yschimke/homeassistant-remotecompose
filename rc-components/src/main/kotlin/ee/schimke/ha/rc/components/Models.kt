@@ -290,3 +290,47 @@ data class HaStatisticsGraphData(
     val rows: List<HaHistoryGraphRow>,
     val chartType: String = "line",
 )
+
+/** `alarm-panel` card model — title, status badge, ARM AWAY/HOME
+ *  buttons (variants depend on `states:` config), code-input field +
+ *  numeric keypad. */
+data class HaAlarmPanelData(
+    val title: RemoteString,
+    val state: RemoteString,
+    val accent: Color,
+    val statusIcon: ImageVector,
+    val actions: List<HaAlarmAction>,
+    val showKeypad: Boolean,
+)
+
+/** One ARM button on the alarm panel — label + the call-service action
+ *  it fires (typically `alarm_control_panel.alarm_arm_*`). */
+data class HaAlarmAction(
+    val label: RemoteString,
+    val accent: Color,
+    val tapAction: HaAction,
+)
+
+/** `media-control` card model — name + title/artist + transport buttons
+ *  + position bar. Album-art is a placeholder swatch (alpha08 can't pull
+ *  arbitrary HTTP images into a .rc document). */
+data class HaMediaControlData(
+    val playerName: RemoteString,
+    val title: RemoteString,
+    val artist: RemoteString?,
+    val accent: Color,
+    val isPlaying: Boolean,
+    val positionFraction: Float,
+    val positionLabel: RemoteString?,
+    val durationLabel: RemoteString?,
+    val previousAction: HaAction,
+    val playPauseAction: HaAction,
+    val nextAction: HaAction,
+)
+
+/** `todo-list` card model — title + active/completed item rows. */
+data class HaTodoListData(
+    val title: RemoteString,
+    val activeItems: List<RemoteString>,
+    val completedItems: List<RemoteString>,
+)
