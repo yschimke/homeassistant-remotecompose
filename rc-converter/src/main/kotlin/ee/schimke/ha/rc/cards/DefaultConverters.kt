@@ -9,7 +9,8 @@ import ee.schimke.ha.rc.CardRegistry
  *
  * **Fully implemented** (produce visually-correct output):
  *   tile, button, entity, entities, glance, heading, markdown,
- *   vertical-stack, horizontal-stack, grid, conditional.
+ *   vertical-stack, horizontal-stack, grid, conditional, gauge,
+ *   weather-forecast, picture-entity, logbook.
  *
  * **Summary chrome** (registered with a real converter that renders
  * a card chrome but skips the rich visualisation — replace with the
@@ -19,9 +20,9 @@ import ee.schimke.ha.rc.CardRegistry
  * **Placeholder-only** (registered so the dashboard renders, but with a
  * "not yet supported" badge — extend by writing a `RemoteHa…` composable
  * + converter shim):
- *   gauge, thermostat, humidifier, light, media-control, alarm-panel,
- *   weather-forecast, clock, area, calendar, logbook, todo-list,
- *   picture, picture-entity, picture-glance, picture-elements,
+ *   thermostat, humidifier, light, media-control, alarm-panel,
+ *   clock, area, calendar, todo-list,
+ *   picture, picture-glance, picture-elements,
  *   statistics-graph, statistic, sensor, entity-filter, iframe.
  */
 fun defaultConverters(): List<CardConverter> = buildList {
@@ -38,6 +39,10 @@ fun defaultConverters(): List<CardConverter> = buildList {
     add(ConditionalCardConverter())
     add(MapCardConverter())
     add(HistoryGraphCardConverter())
+    add(GaugeCardConverter())
+    add(PictureEntityCardConverter())
+    add(WeatherForecastCardConverter())
+    add(LogbookCardConverter())
 
     add(BambuLabAmsCardConverter())
     add(BambuLabSpoolCardConverter())
@@ -54,20 +59,16 @@ fun defaultConverters(): List<CardConverter> = buildList {
 fun defaultRegistry(): CardRegistry = CardRegistry(defaultConverters())
 
 private val PLACEHOLDER_CARD_TYPES: List<String> = listOf(
-    CardTypes.GAUGE,
     CardTypes.THERMOSTAT,
     CardTypes.HUMIDIFIER,
     CardTypes.LIGHT,
     CardTypes.MEDIA_CONTROL,
     CardTypes.ALARM_PANEL,
-    CardTypes.WEATHER_FORECAST,
     CardTypes.CLOCK,
     CardTypes.AREA,
     CardTypes.CALENDAR,
-    CardTypes.LOGBOOK,
     CardTypes.TODO_LIST,
     CardTypes.PICTURE,
-    CardTypes.PICTURE_ENTITY,
     CardTypes.PICTURE_GLANCE,
     CardTypes.PICTURE_ELEMENTS,
     CardTypes.STATISTICS_GRAPH,

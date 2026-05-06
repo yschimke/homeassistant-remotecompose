@@ -30,6 +30,7 @@ import androidx.compose.material.icons.filled.Speaker
 import androidx.compose.material.icons.filled.Thermostat
 import androidx.compose.material.icons.filled.Tv
 import androidx.compose.material.icons.filled.Umbrella
+import androidx.compose.material.icons.filled.Videocam
 import androidx.compose.material.icons.filled.WaterDrop
 import androidx.compose.material.icons.filled.Wifi
 import androidx.compose.material.icons.filled.Window
@@ -53,7 +54,16 @@ object HaIconMap {
         iconOverride?.let { mdi(it)?.let { v -> return v } }
         entity?.attributes?.get("icon")?.jsonPrimitive?.content
             ?.let { mdi(it)?.let { v -> return v } }
-        return entity?.toTyped()?.defaultIcon() ?: Icons.Filled.Help
+        val typed = entity?.toTyped() ?: return Icons.Filled.Help
+        if (typed is HaEntity.Other) byDomain(entity.entityId)?.let { return it }
+        return typed.defaultIcon()
+    }
+
+    /** Domain-only fallback for entity classes the typed hierarchy doesn't model
+     *  (camera, scene, script, …). Keeps `mdi:` overrides authoritative. */
+    private fun byDomain(entityId: String): ImageVector? = when (entityId.substringBefore('.')) {
+        "camera" -> Icons.Filled.Videocam
+        else -> null
     }
 
     private fun HaEntity.defaultIcon(): ImageVector = when (this) {

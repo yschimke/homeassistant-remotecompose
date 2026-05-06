@@ -99,3 +99,72 @@ data class HaHeadingData(
 data class HaUnsupportedData(
     val cardType: RemoteString,
 )
+
+/**
+ * `picture-entity` card model. We can't pull the live camera frame /
+ * image entity into a `.rc` document, so the renderer emits a tinted
+ * placeholder area with a domain-appropriate icon and the entity name
+ * + state at the bottom — matching the visual slot the dashboard
+ * expects.
+ */
+data class HaPictureEntityData(
+    val name: RemoteString,
+    val state: RemoteString,
+    val icon: ImageVector,
+    val accent: HaToggleAccent,
+    val showName: Boolean = true,
+    val showState: Boolean = true,
+    val tapAction: HaAction = HaAction.None,
+)
+
+/** `gauge` card model. Half-circle dial with current value + name + range. */
+data class HaGaugeData(
+    val name: RemoteString,
+    val valueText: RemoteString,
+    val unit: String?,
+    /** Current value in the gauge's [min..max] range; clamped at render time. */
+    val value: Double,
+    val min: Double,
+    val max: Double,
+    /** Severity bands sampled at the value position: green / yellow / red. */
+    val severity: HaGaugeSeverity = HaGaugeSeverity.None,
+    val tapAction: HaAction = HaAction.None,
+)
+
+enum class HaGaugeSeverity { None, Normal, Warning, Critical }
+
+/** `weather-forecast` card model. */
+data class HaWeatherForecastData(
+    val name: RemoteString,
+    val condition: RemoteString,
+    /** Current temperature display, including unit. */
+    val temperature: RemoteString,
+    /** Optional secondary line — feels like, low/high, or extra detail. */
+    val supportingLine: RemoteString?,
+    val icon: ImageVector,
+    val days: List<HaWeatherDay> = emptyList(),
+)
+
+/** One column in a weather forecast strip. */
+data class HaWeatherDay(
+    val label: RemoteString,
+    val high: RemoteString,
+    val low: RemoteString,
+    val icon: ImageVector,
+)
+
+/**
+ * `logbook` card model. Each entry is one row: name, what changed, and
+ * a short "when" suffix (relative time).
+ */
+data class HaLogbookData(
+    val title: RemoteString?,
+    val entries: List<HaLogbookEntry>,
+)
+
+data class HaLogbookEntry(
+    val name: RemoteString,
+    val message: RemoteString,
+    val whenText: RemoteString,
+    val icon: ImageVector,
+)
