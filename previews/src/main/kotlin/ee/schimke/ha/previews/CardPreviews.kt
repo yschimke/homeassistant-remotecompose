@@ -474,6 +474,25 @@ private fun logbookCard() = card(
         "entities":["binary_sensor.front_door","binary_sensor.garage_motion"]}""",
 )
 
+// ——— history-graph ———
+
+@Preview(name = "history-graph (light)", showBackground = false, widthDp = 381, heightDp = 180)
+@Composable
+fun HistoryGraph_Light() = CardHost(HaTheme.Light) {
+    RenderChild(historyGraphCard(), Fixtures.temperatureHistory, RemoteModifier.fillMaxWidth())
+}
+
+@Preview(name = "history-graph (dark)", showBackground = false, widthDp = 381, heightDp = 180)
+@Composable
+fun HistoryGraph_Dark() = CardHost(HaTheme.Dark) {
+    RenderChild(historyGraphCard(), Fixtures.temperatureHistory, RemoteModifier.fillMaxWidth())
+}
+
+private fun historyGraphCard() = card(
+    """{"type":"history-graph","title":"Temperature","hours_to_show":24,
+        "entities":["sensor.outside_temp","sensor.upstairs_temp"]}""",
+)
+
 // ——— tile, state variants via PreviewParameter ———
 
 @Preview(name = "tile light (light)", showBackground = false, widthDp = 187, heightDp = 43)
