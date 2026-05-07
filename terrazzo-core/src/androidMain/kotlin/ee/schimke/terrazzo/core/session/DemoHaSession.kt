@@ -133,6 +133,7 @@ object DemoData {
     private fun parseView(obj: JsonObject): View {
         val title = obj["title"]?.jsonPrimitive?.content
         val type = obj["type"]?.jsonPrimitive?.content
+        val maxColumns = obj["max_columns"]?.jsonPrimitive?.content?.toIntOrNull()
         val cards = (obj["cards"] as? JsonArray)?.mapNotNull { it.toCardConfig() } ?: emptyList()
         val sections = (obj["sections"] as? JsonArray)?.mapNotNull { el ->
             val s = el as? JsonObject ?: return@mapNotNull null
@@ -140,9 +141,17 @@ object DemoData {
                 type = s["type"]?.jsonPrimitive?.content,
                 title = s["title"]?.jsonPrimitive?.content,
                 cards = (s["cards"] as? JsonArray)?.mapNotNull { c -> c.toCardConfig() } ?: emptyList(),
+                columnSpan = s["column_span"]?.jsonPrimitive?.content?.toIntOrNull(),
+                rowSpan = s["row_span"]?.jsonPrimitive?.content?.toIntOrNull(),
             )
         } ?: emptyList()
-        return View(title = title, type = type, cards = cards, sections = sections)
+        return View(
+            title = title,
+            type = type,
+            maxColumns = maxColumns,
+            cards = cards,
+            sections = sections,
+        )
     }
 
     private fun kotlinx.serialization.json.JsonElement.toCardConfig(): CardConfig? {

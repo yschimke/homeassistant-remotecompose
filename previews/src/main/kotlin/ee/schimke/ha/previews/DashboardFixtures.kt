@@ -39,14 +39,34 @@ object DashboardFixtures {
     data class Loaded(val dashboard: Dashboard, val snapshot: HaSnapshot)
 
     fun load(name: String): Loaded? {
+        // First try the bundled second-pass-scrubbed copy (same data
+        // the in-app demo ships) — that's what we want in PR
+        // screenshots and CI runs. Fall back to the sibling
+        // `homeassistant-agents` checkout for local dev when the
+        // resources haven't been re-scrubbed yet.
+        val (cfgText, statesText) = readBundled(name)
+            ?: readSibling(name)
+            ?: return null
+        val dashboard = parseDashboard(cfgText)
+        val states = parseStates(statesText)
+        return Loaded(dashboard = dashboard, snapshot = HaSnapshot(states = states))
+    }
+
+    private fun readBundled(name: String): Pair<String, String>? {
+        val cls = DashboardFixtures::class.java
+        val cfg = cls.getResourceAsStream("/dashboards/$name/lovelace_config.json")
+            ?.bufferedReader()?.use { it.readText() } ?: return null
+        val states = cls.getResourceAsStream("/dashboards/$name/entity_states.json")
+            ?.bufferedReader()?.use { it.readText() } ?: return null
+        return cfg to states
+    }
+
+    private fun readSibling(name: String): Pair<String, String>? {
         val dir = File(DASHBOARDS_ROOT, name)
         val configFile = File(dir, "lovelace_config.json")
         val statesFile = File(dir, "entity_states.json")
         if (!configFile.exists() || !statesFile.exists()) return null
-
-        val dashboard = parseDashboard(configFile.readText())
-        val states = parseStates(statesFile.readText())
-        return Loaded(dashboard = dashboard, snapshot = HaSnapshot(states = states))
+        return configFile.readText() to statesFile.readText()
     }
 }
 
@@ -66,6 +86,7 @@ private fun parseDashboard(text: String): Dashboard {
 private fun parseView(obj: JsonObject): View {
     val title = obj["title"]?.jsonPrimitive?.content
     val type = obj["type"]?.jsonPrimitive?.content
+    val maxColumns = obj["max_columns"]?.jsonPrimitive?.content?.toIntOrNull()
     val cards = (obj["cards"] as? JsonArray)?.mapNotNull { it.toCardConfig() } ?: emptyList()
     val sections = (obj["sections"] as? JsonArray)?.mapNotNull { el ->
         val s = el as? JsonObject ?: return@mapNotNull null
@@ -73,9 +94,17 @@ private fun parseView(obj: JsonObject): View {
             type = s["type"]?.jsonPrimitive?.content,
             title = s["title"]?.jsonPrimitive?.content,
             cards = (s["cards"] as? JsonArray)?.mapNotNull { e -> e.toCardConfig() } ?: emptyList(),
+            columnSpan = s["column_span"]?.jsonPrimitive?.content?.toIntOrNull(),
+            rowSpan = s["row_span"]?.jsonPrimitive?.content?.toIntOrNull(),
         )
     } ?: emptyList()
-    return View(title = title, type = type, cards = cards, sections = sections)
+    return View(
+        title = title,
+        type = type,
+        maxColumns = maxColumns,
+        cards = cards,
+        sections = sections,
+    )
 }
 
 private fun kotlinx.serialization.json.JsonElement.toCardConfig(): CardConfig? {
