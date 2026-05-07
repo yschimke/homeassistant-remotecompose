@@ -1,13 +1,18 @@
 name: Release Please
 
+# Maintains a release PR from conventional-commit history. When merged,
+# release-please cuts the tag + GitHub Release, then this workflow calls
+# release-build.yml via workflow_call to build and publish artifacts.
+# This bypasses the GITHUB_TOKEN recursion guard that otherwise prevents
+# tag-push events from triggering downstream workflows.
+
 on:
   push:
     branches: [main]
   workflow_dispatch:
 
 permissions:
-  contents: write
-  pull-requests: write
+  contents: read
 
 concurrency:
   group: release-please
@@ -17,6 +22,12 @@ jobs:
   release-please:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    permissions:
+      contents: write
+      pull-requests: write
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
     steps:
       - uses: googleapis/release-please-action@v5
         id: release
@@ -24,3 +35,14 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           config-file: .github/release-please-config.json
           manifest-file: .github/.release-please-manifest.json
+
+  release:
+    needs: release-please
+    if: needs.release-please.outputs.release_created == 'true'
+    uses: ./.github/workflows/release-build.yml
+    with:
+      tag: ${{ needs.release-please.outputs.tag_name }}
+    secrets: inherit
+    permissions:
+      contents: write
+      packages: write
