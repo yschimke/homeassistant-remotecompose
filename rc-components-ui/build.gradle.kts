@@ -31,6 +31,8 @@ dependencies {
   implementation(libs.remote.creation.android)
   implementation(libs.remote.creation.core)
   implementation(libs.remote.core)
+  implementation(libs.remote.player.core)
+  implementation(libs.remote.player.compose)
   implementation(libs.remote.tooling.preview)
 
   testImplementation(libs.kotlin.test)

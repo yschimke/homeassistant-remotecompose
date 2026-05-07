@@ -26,6 +26,8 @@ dependencies {
   implementation(project(":ha-model"))
   implementation(project(":rc-converter"))
   implementation(project(":rc-card-shutter"))
+  implementation(project(":rc-components-ui"))
+  implementation(project(":rc-image-coil"))
 
   implementation(platform(libs.compose.bom))
   implementation(libs.compose.ui)
@@ -40,6 +42,12 @@ dependencies {
   implementation(libs.remote.player.compose)
   implementation(libs.remote.player.view)
   implementation(libs.remote.tooling.preview)
+
+  // Coil + fake engine — previews that exercise `CoilBitmapLoader`
+  // resolve named bitmaps through `FakeImageLoaderEngine` instead of
+  // hitting the network, so renders are offline / deterministic.
+  implementation(libs.coil)
+  implementation(libs.coil.test)
 
   implementation(libs.kotlinx.serialization.json)
 }
