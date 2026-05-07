@@ -254,6 +254,43 @@ data class HaBambuSpoolSlot(
  *   - humidifier → same shape, value/target are humidity %, mode = "Humidifying"/"Drying"
  *   - light       → [valueFraction] = brightness, no target marker, mode = on/off label
  */
+/** `calendar` card model — title + chronological list of upcoming
+ *  events (HA's web calendar shows a month grid; we use a list because
+ *  it conveys the same information in less space and degrades better
+ *  on watch / phone widgets). */
+data class HaCalendarData(
+    val title: RemoteString,
+    val rangeLabel: RemoteString,
+    val events: List<HaCalendarEvent>,
+)
+
+data class HaCalendarEvent(
+    val whenLabel: RemoteString,
+    val summary: RemoteString,
+    val accent: Color,
+)
+
+/** `area` card model — area name + summary stats row + action chips
+ *  (typically light/cover/fan toggles). Camera/picture attachments are
+ *  the placeholder swatch (alpha08 has no area-image channel). */
+data class HaAreaCardData(
+    val name: RemoteString,
+    val stats: List<HaAreaStat>,
+    val actions: List<HaAreaAction>,
+)
+
+data class HaAreaStat(
+    val icon: ImageVector,
+    val label: RemoteString,
+)
+
+data class HaAreaAction(
+    val icon: ImageVector,
+    val accent: Color,
+    val isActive: Boolean,
+    val tapAction: HaAction,
+)
+
 data class HaArcDialData(
     val name: RemoteString,
     val valueFraction: Float,
