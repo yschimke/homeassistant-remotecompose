@@ -13,8 +13,8 @@ compose-bom = "2026.04.01"
 compose-compiler = "1.5.15"
 
 # RemoteCompose (alpha — APIs change per release)
-remote-compose = "1.0.0-alpha09"
-remote-material3 = "1.0.0-alpha02"
+remote-compose = "1.0.0-alpha010"
+remote-material3 = "1.0.0-alpha03"
 
 # Android
 android-minSdk = "29"
