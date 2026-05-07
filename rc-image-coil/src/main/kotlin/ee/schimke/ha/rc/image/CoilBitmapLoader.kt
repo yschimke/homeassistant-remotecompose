@@ -25,6 +25,28 @@ import java.io.InputStream
  * hit the call goes through coroutine dispatch) and read directly
  * from [ImageLoader.memoryCache] with a key we control.
  *
+ * Why not configure Coil's dispatchers instead — set
+ * `interceptorCoroutineContext` (etc.) to `EmptyCoroutineContext` so
+ * `executeBlocking` runs the engine on the calling thread? Two
+ * reasons:
+ *
+ *  1. `RealImageLoader.execute` builds its `async` with
+ *     `CoroutineStart.DEFAULT` (hardcoded — `BuildersKt.async$default`
+ *     with `start = null`), which schedules through the dispatcher
+ *     in the merged context regardless of what we pass in. Coil
+ *     never starts undispatched, so the calling thread always pays
+ *     for at least one dispatch round-trip.
+ *  2. Coil's dispatcher knobs are per-loader, not per-call. Setting
+ *     them all to direct contexts to make the lookup sync would
+ *     also make [ImageLoader.enqueue] (used for the async warm-up
+ *     below) run on the calling thread — defeating the point.
+ *
+ * Splitting at the [MemoryCache] boundary keeps both invariants:
+ * lookup is a pure `HashMap.get`, and warm-up rides Coil's normal
+ * `enqueue` pipeline (`interceptorCoroutineContext` →
+ * `fetcherCoroutineContext` → `decoderCoroutineContext`, default
+ * `Dispatchers.IO` for fetch).
+ *
  * Coil's engine derives memory-cache keys from the request's data
  * **plus** size, scale, transformations, etc. — the engine-derived
  * key for `data="https://…/x.png"` does **not** equal
