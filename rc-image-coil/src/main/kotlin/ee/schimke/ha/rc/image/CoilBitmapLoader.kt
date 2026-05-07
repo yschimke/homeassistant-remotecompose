@@ -9,6 +9,7 @@ import coil3.ImageLoader
 import coil3.SingletonImageLoader
 import coil3.memory.MemoryCache
 import coil3.request.ImageRequest
+import coil3.request.allowHardware
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
@@ -101,11 +102,29 @@ open class CoilBitmapLoader(
      * `ColorImage` placeholder Coil keeps in some configurations).
      * Override to support additional [Image] subtypes or to swap the
      * encoder.
+     *
+     * Hardware bitmaps ([Bitmap.Config.HARDWARE], API 26+) are GPU
+     * textures with no CPU-side pixel data — `Bitmap.compress` on
+     * them returns `false` or throws `IllegalStateException`
+     * depending on the device, which would crash playback on a
+     * cache hit. Coil 3 stores hardware bitmaps in the memory cache
+     * by default whenever the device supports it. We can't assume
+     * the host's [imageLoader] was built with `allowHardware(false)`
+     * (it's typically a shared singleton), so copy to a software
+     * config before encoding. Our own [warmUpAsync] disables
+     * hardware bitmaps to avoid this copy on the common path.
      */
     protected open fun encodeImage(image: Image): ByteArray? {
         if (image !is BitmapImage) return null
-        val out = ByteArrayOutputStream(image.bitmap.allocationByteCount.coerceAtLeast(1024))
-        image.bitmap.compress(compressFormat, compressQuality, out)
+        val source = image.bitmap
+        val encodable =
+            if (source.config == Bitmap.Config.HARDWARE) {
+                source.copy(Bitmap.Config.ARGB_8888, /* isMutable = */ false) ?: return null
+            } else {
+                source
+            }
+        val out = ByteArrayOutputStream(encodable.allocationByteCount.coerceAtLeast(1024))
+        encodable.compress(compressFormat, compressQuality, out)
         return out.toByteArray()
     }
 
@@ -113,10 +132,21 @@ open class CoilBitmapLoader(
      * Kick off a full Coil fetch in the background. Default uses
      * [ImageLoader.enqueue] which fires-and-forgets; the populated
      * memory-cache entry is what [loadBitmap] consults next time.
+     *
+     * `allowHardware(false)` is set so the cached `Bitmap` is a
+     * software config we can [Bitmap.compress] directly — see
+     * [encodeImage]. Callers' [configure] block runs after, so a
+     * caller that explicitly wants hardware bitmaps can re-enable
+     * them (and accept the copy in [encodeImage]).
      */
     protected open fun warmUpAsync(name: String, key: MemoryCache.Key) {
         val request =
-            ImageRequest.Builder(context).data(name).memoryCacheKey(key).apply(configure).build()
+            ImageRequest.Builder(context)
+                .data(name)
+                .memoryCacheKey(key)
+                .allowHardware(false)
+                .apply(configure)
+                .build()
         imageLoader.enqueue(request)
     }
 
