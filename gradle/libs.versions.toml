@@ -128,6 +128,10 @@ kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.
 # wanting HTTP add `coil-network-okhttp` themselves.
 coil = { module = "io.coil-kt.coil3:coil", version.ref = "coil" }
 coil-network-okhttp = { module = "io.coil-kt.coil3:coil-network-okhttp", version.ref = "coil" }
+# Fake `ImageLoader` engine for previews + tests; never goes near
+# the network. Pair with `CoilBitmapLoader` so previews exercise the
+# named-bitmap path deterministically.
+coil-test = { module = "io.coil-kt.coil3:coil-test-android", version.ref = "coil" }
 
 # Wear data layer (sync mobile ↔ watch). Horologist's data-layer
 # helpers ride on Google Play Services Wearable; both peers share a
