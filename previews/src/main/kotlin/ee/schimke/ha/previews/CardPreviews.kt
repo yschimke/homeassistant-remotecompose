@@ -91,7 +91,7 @@ import java.time.ZonedDateTime
  * deterministic — the visual diff would otherwise drift each minute.
  */
 private val PreviewNow: ZonedDateTime =
-    ZonedDateTime.of(2026, 5, 5, 13, 42, 0, 0, ZoneOffset.UTC)
+    ZonedDateTime.of(2026, 5, 5, 10, 8, 0, 0, ZoneOffset.UTC)
 
 @Composable
 private fun CardHost(theme: HaTheme, content: @Composable () -> Unit) {
