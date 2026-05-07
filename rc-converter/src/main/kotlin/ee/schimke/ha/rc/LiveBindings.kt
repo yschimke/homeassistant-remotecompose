@@ -57,4 +57,21 @@ object LiveBindings {
             RemoteState.Domain.User,
         )
     }
+
+    /**
+     * Named binding for an entity attribute (e.g. `hvac_action`,
+     * `brightness`, `media_title`). The host pushes new values keyed by
+     * `<entity_id>.attributes.<attr>`.
+     *
+     * Returns a static [RemoteString] when [entity] is null so previews
+     * and unmatched-entity cards still render, with no host wiring.
+     */
+    fun attribute(entity: EntityState?, attribute: String, formatted: String): RemoteString {
+        val entityId = entity?.entityId ?: return formatted.rs
+        return RemoteString.createNamedRemoteString(
+            name(entityId, "attributes.$attribute"),
+            formatted,
+            RemoteState.Domain.User,
+        )
+    }
 }

@@ -8,8 +8,10 @@ import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.CardConverter
+import ee.schimke.ha.rc.LiveBindings
 import ee.schimke.ha.rc.components.HaAction
 import ee.schimke.ha.rc.components.HaArcDialData
+import ee.schimke.ha.rc.components.HaModeChip
 import ee.schimke.ha.rc.components.RemoteHaArcDial
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -63,9 +65,11 @@ class HumidifierCardConverter : CardConverter {
                 name = name.rs,
                 valueFraction = valueFraction.coerceIn(0f, 1f),
                 targetFraction = targetFraction?.coerceIn(0f, 1f),
-                centerLabel = centerLabel.rs,
-                supportingLabel = supportingLabel?.rs,
-                modeChip = modeChip.rs,
+                centerLabel = LiveBindings.attribute(entity, "current_humidity_label", centerLabel),
+                supportingLabel = supportingLabel?.let {
+                    LiveBindings.attribute(entity, "humidity_label", it)
+                },
+                modeChip = HaModeChip.Static(LiveBindings.attribute(entity, "action_label", modeChip)),
                 accent = Color(0xFF00ACC1),
                 showSteppers = target != null,
                 centerIcon = null,

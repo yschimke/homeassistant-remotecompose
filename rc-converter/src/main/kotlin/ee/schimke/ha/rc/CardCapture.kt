@@ -44,8 +44,15 @@ data class CardDocument(
 
 /**
  * Headless capture path — produces a [CardDocument] without any visible
- * surface. This is what a widget worker calls: the HA snapshot changed, so
- * re-encode the card's bytes and push to the app instance / Glance session.
+ * surface. This is what a widget worker calls: the dashboard YAML
+ * changed (or the slot is freshly seeded), re-encode the card's bytes
+ * and push to the app instance / Glance session.
+ *
+ * Consults [cache] before encoding: the snapshot is allowed to change
+ * without forcing a re-encode, since named-binding writes from the
+ * host carry value updates. Pass [forceRefresh] = true to bypass the
+ * cache (e.g. when the YAML just changed but the cache key is hard
+ * to evict surgically).
  *
  * alpha09 collapses the public/V2 capture functions into a single
  * `captureSingleRemoteDocument` which is itself `@RestrictTo(LIBRARY_GROUP)`
@@ -62,17 +69,35 @@ suspend fun captureCardDocument(
     registry: CardRegistry,
     card: CardConfig,
     snapshot: HaSnapshot,
+    cache: CardDocumentCache = defaultCardDocumentCache,
+    forceRefresh: Boolean = false,
 ): CardDocument {
     val converter = registry.get(card.type)
         ?: error("No converter registered for card type='${card.type}'")
+    val cacheKey = HeadlessCardCacheKey(card, widthPx, heightPx, densityDpi)
+    if (!forceRefresh) cache.get(cacheKey)?.let { return it }
     val captured = captureSingleRemoteDocument(
         context = context,
         creationDisplayInfo = RemoteCreationDisplayInfo(widthPx, heightPx, densityDpi),
     ) {
         converter.Render(card, snapshot)
     }
-    return CardDocument(captured.bytes, widthPx, heightPx)
+    return CardDocument(captured.bytes, widthPx, heightPx).also { cache.put(cacheKey, it) }
 }
+
+/**
+ * Default cache key for the headless capture path. Includes the size
+ * inputs because the encoded document bakes them into its header and
+ * recomputing layout for a different slot size produces different
+ * bytes. Theme isn't part of the key today: widget capture uses the
+ * default theme; if widgets gain a theme picker, extend this key.
+ */
+private data class HeadlessCardCacheKey(
+    val card: CardConfig,
+    val widthPx: Int,
+    val heightPx: Int,
+    val densityDpi: Int,
+)
 
 /**
  * In-composition capture — for previews and in-app playback. Encodes once

@@ -9,6 +9,7 @@ import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.model.HistoryPoint
 import ee.schimke.ha.rc.CardConverter
 import ee.schimke.ha.rc.HaStateColor
+import ee.schimke.ha.rc.LiveBindings
 import ee.schimke.ha.rc.components.HaHistoryGraphData
 import ee.schimke.ha.rc.components.HaHistoryGraphRow
 import ee.schimke.ha.rc.components.RemoteHaHistoryGraph
@@ -20,9 +21,12 @@ import kotlinx.serialization.json.jsonPrimitive
 
 /**
  * `history-graph` card. Renders one sparkline per entity using the
- * snapshot's `history[entityId]`. Numeric points are normalised into
- * the row's drawable rect at capture time; alpha08 doesn't expose a
- * RemoteFloat numeric binding, so live updates re-encode.
+ * snapshot's `history[entityId]`. The per-row summary text is a named
+ * `<entity>.state` binding so the host can refresh it without a
+ * re-encode. Numeric points are normalised into the row's drawable rect
+ * at capture time; alpha010 still doesn't expose a RemoteFloat list
+ * binding, so the sparkline geometry itself is re-encoded when new
+ * samples arrive.
  */
 class HistoryGraphCardConverter : CardConverter {
     override val cardType: String = CardTypes.HISTORY_GRAPH
@@ -47,7 +51,7 @@ class HistoryGraphCardConverter : CardConverter {
             val numeric = history.mapNotNull { it.state.toFloatOrNull() }
             HaHistoryGraphRow(
                 name = name.rs,
-                summary = summarise(history).rs,
+                summary = LiveBindings.state(entity, summarise(history)),
                 accent = HaStateColor.activeFor(entity),
                 points = numeric,
             )

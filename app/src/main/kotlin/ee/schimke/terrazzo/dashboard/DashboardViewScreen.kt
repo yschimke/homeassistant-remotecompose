@@ -34,12 +34,12 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
-import androidx.compose.remote.tooling.preview.RemotePreview
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.Dashboard
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.terrazzo.LocalTerrazzoGraph
 import ee.schimke.terrazzo.core.session.HaSession
+import ee.schimke.ha.rc.CachedCardPreview
 import ee.schimke.ha.rc.CardWidthClass
 import ee.schimke.ha.rc.ProvideCardRegistry
 import ee.schimke.ha.rc.RenderChild
@@ -48,6 +48,7 @@ import ee.schimke.ha.rc.cardHeightDp
 import ee.schimke.ha.rc.cardWidthClass
 import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.components.ProvideHaTheme
+import ee.schimke.ha.rc.components.ThemeStyle
 import ee.schimke.ha.rc.components.haThemeFor
 import ee.schimke.terrazzo.LocalTerrazzoGraph
 import ee.schimke.terrazzo.ui.LayoutConfig
@@ -459,10 +460,12 @@ private fun CardSlot(
 ) {
     val style = LocalThemeStyle.current
     val dark = LocalIsDarkTheme.current
-    // Re-capture the `.rc` document when the user switches theme — the
-    // document's colours are baked at capture, so we key the
-    // `RemotePreview` on the style+dark pair.
+    // The document's paint colours are baked at capture; re-encode when
+    // theme flips. Snapshot is deliberately NOT in the cache key —
+    // entity values flow into the running player by named binding
+    // (see LiveBindings).
     val haTheme = remember(style, dark) { haThemeFor(style, dark) }
+    val cacheKey = remember(card, style, dark) { CardSlotCacheKey(card, style, dark) }
     Box(
         modifier = modifier
             // Stable semantics tag so uiautomator / Compose tests can
@@ -472,11 +475,11 @@ private fun CardSlot(
                 contentDescription = "dashboard-card:${card.type}"
             }
             // longPressBeforeChild — listens on the Initial pass so it
-            // fires even though RemotePreview's pointer-input consumes
+            // fires even though the player's pointer-input consumes
             // events on the Main pass for in-document click regions.
             .longPressBeforeChild { onLongPress(card) },
     ) {
-        RemotePreview(profile = androidXExperimentalWrap) {
+        CachedCardPreview(cacheKey = cacheKey, profile = androidXExperimentalWrap) {
             ProvideCardRegistry(registry) {
                 ProvideHaTheme(haTheme) {
                     RenderChild(card, snapshot, RemoteModifier.fillMaxWidth())
@@ -485,6 +488,12 @@ private fun CardSlot(
         }
     }
 }
+
+private data class CardSlotCacheKey(
+    val card: CardConfig,
+    val style: ThemeStyle,
+    val dark: Boolean,
+)
 
 /**
  * One emitted dashboard row in the LazyColumn. Either a single

@@ -30,6 +30,7 @@ import androidx.compose.ui.text.font.FontWeight
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.CardConverter
+import ee.schimke.ha.rc.LiveBindings
 import ee.schimke.ha.rc.components.LocalHaTheme
 import ee.schimke.ha.rc.formatState
 import kotlinx.serialization.json.jsonPrimitive
@@ -106,7 +107,7 @@ open class BambuLabCardConverter(
                         style = RemoteTextStyle.Default,
                     )
                     RemoteText(
-                        text = state.rs,
+                        text = LiveBindings.state(entity, state),
                         color = theme.secondaryText.rc,
                         fontSize = 13.rsp,
                         style = RemoteTextStyle.Default,

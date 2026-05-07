@@ -14,6 +14,7 @@ import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.CardConverter
+import ee.schimke.ha.rc.LiveBindings
 import ee.schimke.ha.rc.components.HaAction
 import ee.schimke.ha.rc.components.HaAlarmAction
 import ee.schimke.ha.rc.components.HaAlarmPanelData
@@ -66,7 +67,7 @@ class AlarmPanelCardConverter : CardConverter {
         RemoteHaAlarmPanel(
             HaAlarmPanelData(
                 title = title.rs,
-                state = formatState(state).rs,
+                state = LiveBindings.state(entity, formatState(state)),
                 accent = stateAccent(state),
                 statusIcon = stateIcon(state),
                 actions = actions,

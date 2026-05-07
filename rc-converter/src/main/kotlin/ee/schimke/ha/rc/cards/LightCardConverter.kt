@@ -10,8 +10,10 @@ import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.CardConverter
+import ee.schimke.ha.rc.LiveBindings
 import ee.schimke.ha.rc.components.HaAction
 import ee.schimke.ha.rc.components.HaArcDialData
+import ee.schimke.ha.rc.components.HaModeChip
 import ee.schimke.ha.rc.components.RemoteHaArcDial
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -42,7 +44,14 @@ class LightCardConverter : CardConverter {
         val brightness = attrs["brightness"]?.jsonPrimitive?.content?.toFloatOrNull()
         val fraction = if (isOn) (brightness ?: 255f) / 255f else 0f
         val accent = if (isOn) Color(0xFFFFBE3E) else Color(0xFFB0B0B0)
-        val centerLabel = if (isOn) "${(fraction * 100f).toInt()}%" else "Off"
+        val centerLabel = LiveBindings.attribute(
+            entity,
+            "brightness_pct",
+            if (isOn) "${(fraction * 100f).toInt()}%" else "Off",
+        )
+        val modeChip = LiveBindings.isOn(entity)?.let { isOnBinding ->
+            HaModeChip.Toggle(isOnBinding, onLabel = "On", offLabel = "Off")
+        } ?: HaModeChip.Static((if (isOn) "On" else "Off").rs)
 
         val tap = entityId?.let { HaAction.Toggle(it) } ?: HaAction.None
         val (inc, dec) = brightnessSteppers(entityId, isOn, brightness)
@@ -52,9 +61,9 @@ class LightCardConverter : CardConverter {
                 name = name.rs,
                 valueFraction = fraction,
                 targetFraction = null,
-                centerLabel = centerLabel.rs,
+                centerLabel = centerLabel,
                 supportingLabel = null,
-                modeChip = (if (isOn) "On" else "Off").rs,
+                modeChip = modeChip,
                 accent = accent,
                 showSteppers = isOn,
                 centerIcon = Icons.Filled.Lightbulb,
