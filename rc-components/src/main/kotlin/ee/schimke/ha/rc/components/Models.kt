@@ -307,15 +307,17 @@ data class HaArcDialData(
     val decrementAction: HaAction = HaAction.None,
 )
 
-/** `clock` card model. The string is captured at capture time —
- *  alpha08 has a `RemoteAccess.getTime()` API but emitting a Compose
- *  text node bound to it requires canvas drawText; deferring live
- *  ticking to a follow-up. The host re-encodes once a minute / hour. */
+/** `clock` card model. The default render uses
+ *  `RemoteTimeDefaults.defaultTimeString` so the time text auto-ticks
+ *  inside the playing document without re-encode. [staticTimeLabel]
+ *  is an opt-in static override (kept for previews and for hosts that
+ *  want a frozen capture). */
 data class HaClockData(
     val title: RemoteString?,
-    val timeLabel: RemoteString,
+    val staticTimeLabel: RemoteString?,
     val secondaryLabel: RemoteString?,
     val isLarge: Boolean,
+    val use24Hour: Boolean,
 )
 
 /** `statistics-graph` card model — mirrors history-graph, just with

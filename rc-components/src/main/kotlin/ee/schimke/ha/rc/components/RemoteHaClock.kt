@@ -15,20 +15,22 @@ import androidx.compose.remote.creation.compose.modifier.clip
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.shapes.RemoteRoundedCornerShape
+import androidx.compose.remote.creation.compose.state.RemoteBoolean
 import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rsp
 import androidx.compose.remote.creation.compose.text.RemoteTextStyle
+import androidx.compose.remote.creation.compose.text.RemoteTimeDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 
 /**
- * `clock` card — local time as a static text label captured at
- * encode time. The host re-encodes once a minute (or whatever cadence
- * the player uses); a future revision can swap this for a
- * `RemoteCanvas.drawText` bound to `RemoteAccess.getTime()` for
- * live-ticking without re-encode.
+ * `clock` card — local time text. The default path binds
+ * `RemoteTimeDefaults.defaultTimeString` so the document ticks the
+ * time once a minute on the player without a re-encode round trip.
+ * [HaClockData.staticTimeLabel] overrides for a frozen capture (used
+ * by previews and any host that prefers snapshot-time text).
  */
 @Composable
 @RemoteComposable
@@ -58,8 +60,11 @@ fun RemoteHaClock(data: HaClockData, modifier: RemoteModifier = RemoteModifier) 
                     overflow = TextOverflow.Ellipsis,
                 )
             }
+            val timeText = data.staticTimeLabel ?: RemoteTimeDefaults.defaultTimeString(
+                is24HourFormat = if (data.use24Hour) RemoteBoolean(true) else RemoteTimeDefaults.is24HourFormat(),
+            )
             RemoteText(
-                text = data.timeLabel,
+                text = timeText,
                 color = theme.primaryText.rc,
                 fontSize = timeSize.rsp,
                 fontWeight = FontWeight.Light,
