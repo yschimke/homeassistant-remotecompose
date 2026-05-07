@@ -7,9 +7,11 @@ import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.CardConverter
+import ee.schimke.ha.rc.LocalPreviewClock
 import ee.schimke.ha.rc.components.HaClockData
 import ee.schimke.ha.rc.components.RemoteHaClock
 import java.time.ZoneId
+import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import kotlinx.serialization.json.jsonPrimitive
 
@@ -41,25 +43,27 @@ class ClockCardConverter : CardConverter {
         val showSeconds = card.raw["show_seconds"]?.jsonPrimitive?.content?.toBooleanStrictOrNull() ?: false
         val timeFmt = card.raw["time_format"]?.jsonPrimitive?.content
 
-        // Live-ticking path: no time_zone override, no show_seconds.
-        // Use RemoteTimeDefaults via the composable; pass null label.
-        val canTick = tz == null && !showSeconds
+        // Live-ticking path: no time_zone override, no show_seconds, no
+        // preview-clock override. When a preview clock is in scope the
+        // rendered document must be deterministic, so fall back to the
+        // static-label encoding.
+        val previewNow = LocalPreviewClock.current
+        val canTick = tz == null && !showSeconds && previewNow == null
         val use24Hour = timeFmt != "12"
 
-        // Static fallback for time-zone / seconds variants.
+        // Static fallback for time-zone / seconds / preview variants.
         val staticLabel = if (canTick) null else run {
             val pattern = when {
                 timeFmt == "12" -> if (showSeconds) "h:mm:ss a" else "h:mm a"
                 else -> if (showSeconds) "HH:mm:ss" else "HH:mm"
             }
-            val now = java.time.ZonedDateTime.now(tz ?: ZoneId.systemDefault())
+            val now = clockNow(tz, previewNow)
             now.format(DateTimeFormatter.ofPattern(pattern))
         }
 
         val display = card.raw["display"]?.jsonPrimitive?.content ?: "primary"
         val secondaryLabel = if (display == "primary" || display == null) {
-            java.time.ZonedDateTime.now(tz ?: ZoneId.systemDefault())
-                .format(DateTimeFormatter.ofPattern("EEE d MMM"))
+            clockNow(tz, previewNow).format(DateTimeFormatter.ofPattern("EEE d MMM"))
         } else null
         val size = card.raw["clock_size"]?.jsonPrimitive?.content
         val isLarge = size == "large" || size == "medium"
@@ -75,4 +79,9 @@ class ClockCardConverter : CardConverter {
             modifier = modifier,
         )
     }
+}
+
+private fun clockNow(tz: ZoneId?, previewNow: ZonedDateTime?): ZonedDateTime {
+    val zone = tz ?: previewNow?.zone ?: ZoneId.systemDefault()
+    return previewNow?.withZoneSameInstant(zone) ?: ZonedDateTime.now(zone)
 }
