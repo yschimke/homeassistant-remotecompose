@@ -321,13 +321,15 @@ data class HaClockData(
 )
 
 /** `statistics-graph` card model — mirrors history-graph, just with
- *  pre-aggregated mean values from HA's `recorder.statistics_during_period`.
- *  [chartType] defaults to "line"; bar mode is a follow-up. */
+ *  pre-aggregated values from HA's `recorder.statistics_during_period`.
+ *  [chartType] is "line" or "bar"; [stacked] only applies to bar mode
+ *  and stacks the entity contributions per bucket (HA's `stack: true`). */
 data class HaStatisticsGraphData(
     val title: RemoteString?,
     val rangeLabel: RemoteString,
     val rows: List<HaHistoryGraphRow>,
     val chartType: String = "line",
+    val stacked: Boolean = false,
 )
 
 /** `alarm-panel` card model — title, status badge, ARM AWAY/HOME
