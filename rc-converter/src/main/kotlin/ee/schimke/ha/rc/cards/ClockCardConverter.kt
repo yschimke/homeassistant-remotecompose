@@ -10,6 +10,7 @@ import ee.schimke.ha.rc.CardConverter
 import ee.schimke.ha.rc.LocalPreviewClock
 import ee.schimke.ha.rc.components.HaClockData
 import ee.schimke.ha.rc.components.RemoteHaClock
+import java.time.Instant
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
@@ -18,10 +19,14 @@ import kotlinx.serialization.json.jsonPrimitive
 /**
  * `clock` card — local time text. The default render binds
  * `RemoteTimeDefaults.defaultTimeString` so the player ticks the time
- * without a re-encode round trip. Configs that pin a specific time
- * zone or seconds-display drop back to a static encode-time label
- * because the bound RemoteString uses the host's locale-default
- * formatting (no per-card override path yet).
+ * without a re-encode round trip. Configs that pin `time_zone` or
+ * `show_seconds` switch to a per-field live path that composes the
+ * displayed string from the player's hour/minute/second floats — so
+ * those variants tick live too. The zone shift is captured at encode
+ * time; DST transitions during playback fall to the next re-encode.
+ *
+ * When [LocalPreviewClock] is in scope the converter encodes a static
+ * label instead, so preview PNGs stay deterministic across renders.
  */
 class ClockCardConverter : CardConverter {
     override val cardType: String = CardTypes.CLOCK
@@ -43,23 +48,27 @@ class ClockCardConverter : CardConverter {
         val showSeconds = card.raw["show_seconds"]?.jsonPrimitive?.content?.toBooleanStrictOrNull() ?: false
         val timeFmt = card.raw["time_format"]?.jsonPrimitive?.content
 
-        // Live-ticking path: no time_zone override, no show_seconds, no
-        // preview-clock override. When a preview clock is in scope the
-        // rendered document must be deterministic, so fall back to the
-        // static-label encoding.
         val previewNow = LocalPreviewClock.current
-        val canTick = tz == null && !showSeconds && previewNow == null
         val use24Hour = timeFmt != "12"
 
-        // Static fallback for time-zone / seconds / preview variants.
-        val staticLabel = if (canTick) null else run {
+        // Preview clock in scope → freeze to a static label so preview
+        // PNGs are stable. Otherwise the time_zone / show_seconds path
+        // ticks live via per-field RemoteFloat formatting in the
+        // composable; no override at all → defaultTimeString.
+        val staticLabel = if (previewNow != null) {
             val pattern = when {
                 timeFmt == "12" -> if (showSeconds) "h:mm:ss a" else "h:mm a"
                 else -> if (showSeconds) "HH:mm:ss" else "HH:mm"
             }
-            val now = clockNow(tz, previewNow)
-            now.format(DateTimeFormatter.ofPattern(pattern))
-        }
+            clockNow(tz, previewNow).format(DateTimeFormatter.ofPattern(pattern))
+        } else null
+
+        val zoneOffsetMinutes = if (tz != null) {
+            val now = Instant.now()
+            val target = tz.rules.getOffset(now).totalSeconds / 60
+            val host = ZoneId.systemDefault().rules.getOffset(now).totalSeconds / 60
+            target - host
+        } else 0
 
         val display = card.raw["display"]?.jsonPrimitive?.content ?: "primary"
         val secondaryLabel = if (display == "primary" || display == null) {
@@ -75,6 +84,8 @@ class ClockCardConverter : CardConverter {
                 secondaryLabel = secondaryLabel?.rs,
                 isLarge = isLarge,
                 use24Hour = use24Hour,
+                zoneOffsetMinutes = zoneOffsetMinutes,
+                showSeconds = showSeconds,
             ),
             modifier = modifier,
         )

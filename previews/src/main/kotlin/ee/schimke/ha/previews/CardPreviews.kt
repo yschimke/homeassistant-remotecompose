@@ -652,6 +652,26 @@ fun Clock_Dark() = CardHost(HaTheme.Dark) {
     RenderChild(clockCard(), Fixtures.mixed, RemoteModifier.fillMaxWidth())
 }
 
+@Preview(name = "clock (seconds)", showBackground = false, widthDp = 220, heightDp = 100)
+@Composable
+fun Clock_Seconds() = CardHost(HaTheme.Light) {
+    RenderChild(
+        card("""{"type":"clock","clock_size":"medium","time_format":"24","show_seconds":"true"}"""),
+        Fixtures.mixed,
+        RemoteModifier.fillMaxWidth(),
+    )
+}
+
+@Preview(name = "clock (zone)", showBackground = false, widthDp = 220, heightDp = 100)
+@Composable
+fun Clock_Zone() = CardHost(HaTheme.Light) {
+    RenderChild(
+        card("""{"type":"clock","clock_size":"medium","time_format":"24","time_zone":"America/Los_Angeles"}"""),
+        Fixtures.mixed,
+        RemoteModifier.fillMaxWidth(),
+    )
+}
+
 private fun clockCard() = card(
     """{"type":"clock","clock_size":"medium","time_format":"24"}""",
 )

@@ -311,13 +311,22 @@ data class HaArcDialData(
  *  `RemoteTimeDefaults.defaultTimeString` so the time text auto-ticks
  *  inside the playing document without re-encode. [staticTimeLabel]
  *  is an opt-in static override (kept for previews and for hosts that
- *  want a frozen capture). */
+ *  want a frozen capture).
+ *
+ *  When [zoneOffsetMinutes] is non-zero or [showSeconds] is true the
+ *  renderer composes a live RemoteString from `RemoteContext`'s
+ *  hour/minute/second floats so the player still ticks (no re-encode).
+ *  [zoneOffsetMinutes] is the static offset (target zone − host zone)
+ *  captured at encode time; DST transitions during playback fall to
+ *  the next host re-encode. */
 data class HaClockData(
     val title: RemoteString?,
     val staticTimeLabel: RemoteString?,
     val secondaryLabel: RemoteString?,
     val isLarge: Boolean,
     val use24Hour: Boolean,
+    val zoneOffsetMinutes: Int = 0,
+    val showSeconds: Boolean = false,
 )
 
 /** `statistics-graph` card model — mirrors history-graph, just with
