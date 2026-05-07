@@ -12,17 +12,21 @@ import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.tooling.preview.RemotePreview
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import ee.schimke.ha.model.HaSnapshot
+import ee.schimke.ha.rc.LocalPreviewClock
 import ee.schimke.ha.rc.ProvideCardRegistry
 import ee.schimke.ha.rc.RenderChild
 import ee.schimke.ha.rc.androidXExperimental
 import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.components.HaTheme
 import ee.schimke.ha.rc.components.ProvideHaTheme
+import java.time.ZoneOffset
+import java.time.ZonedDateTime
 
 /**
  * Previews for every card type.
@@ -81,11 +85,21 @@ import ee.schimke.ha.rc.components.ProvideHaTheme
  * state.
  */
 
+/**
+ * Frozen "now" so any converter that would otherwise read wall-clock
+ * time (clock card today) encodes a static label. Keeps preview PNGs
+ * deterministic — the visual diff would otherwise drift each minute.
+ */
+private val PreviewNow: ZonedDateTime =
+    ZonedDateTime.of(2026, 5, 5, 10, 8, 0, 0, ZoneOffset.UTC)
+
 @Composable
 private fun CardHost(theme: HaTheme, content: @Composable () -> Unit) {
     RemotePreview(profile = androidXExperimental) {
-        ProvideCardRegistry(defaultRegistry()) {
-            ProvideHaTheme(theme) { content() }
+        CompositionLocalProvider(LocalPreviewClock provides PreviewNow) {
+            ProvideCardRegistry(defaultRegistry()) {
+                ProvideHaTheme(theme) { content() }
+            }
         }
     }
 }
@@ -375,8 +389,10 @@ private fun PlayerSlot(
 ) {
     Box(modifier = Modifier.uiFillMaxWidth().height(heightDp.dp)) {
         RemotePreview(profile = androidXExperimental) {
-            ProvideCardRegistry(defaultRegistry()) {
-                ProvideHaTheme(theme) { content() }
+            CompositionLocalProvider(LocalPreviewClock provides PreviewNow) {
+                ProvideCardRegistry(defaultRegistry()) {
+                    ProvideHaTheme(theme) { content() }
+                }
             }
         }
     }
@@ -618,9 +634,11 @@ private fun lightCardConfig() = card(
 
 // ——— clock ———
 //
-// The default render path binds RemoteTimeDefaults.defaultTimeString,
-// so the rendered PNG is whatever wall-clock time the Robolectric
-// host reports — that's expected (live-ticking by design).
+// Production binds RemoteTimeDefaults.defaultTimeString so the player
+// ticks the time once a minute without a re-encode. Previews install
+// a frozen LocalPreviewClock via CardHost, which forces the converter
+// onto its static-label path — the rendered PNG always shows the same
+// time so the screenshot diff stays meaningful.
 
 @Preview(name = "clock (light)", showBackground = false, widthDp = 200, heightDp = 100)
 @Composable

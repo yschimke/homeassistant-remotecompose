@@ -6,6 +6,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.staticCompositionLocalOf
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
+import java.time.ZonedDateTime
 
 /**
  * Composition local that lets stack / grid / conditional cards recurse
@@ -18,6 +19,15 @@ import ee.schimke.ha.model.HaSnapshot
 val LocalCardRegistry = staticCompositionLocalOf<CardRegistry> {
     error("No CardRegistry in scope — wrap with ProvideCardRegistry { }.")
 }
+
+/**
+ * Composition local for a frozen "now" used by converters that would
+ * otherwise read wall-clock time (clock card today; relative-time
+ * formatters in the future). When non-null, converters must encode a
+ * static label derived from this instant so the resulting `.rc`
+ * document is deterministic — required for preview screenshot diffs.
+ */
+val LocalPreviewClock = staticCompositionLocalOf<ZonedDateTime?> { null }
 
 @Composable
 fun ProvideCardRegistry(registry: CardRegistry, content: @Composable () -> Unit) {
