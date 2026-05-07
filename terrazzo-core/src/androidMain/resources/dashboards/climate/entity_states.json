@@ -1,0 +1,508 @@
+{
+  "camera.back_door_camera": {
+    "entity_id": "camera.back_door_camera",
+    "state": "streaming",
+    "attributes": {
+      "access_token": "<redacted>",
+      "model_name": "Camera",
+      "brand": "Google Nest",
+      "entity_picture": "/api/camera_proxy/camera.back_door_camera?token=REDACTED",
+      "friendly_name": "Back door camera",
+      "supported_features": 2
+    },
+    "last_changed": "2026-04-30T18:08:21.992495+00:00",
+    "last_reported": "2026-05-05T22:13:07.553994+00:00",
+    "last_updated": "2026-05-05T22:13:07.553994+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "camera.g5_turret_ultra_high_resolution_channel": {
+    "entity_id": "camera.g5_turret_ultra_high_resolution_channel",
+    "state": "recording",
+    "attributes": {
+      "access_token": "<redacted>",
+      "width": 1504,
+      "height": 2688,
+      "fps": 30,
+      "bitrate": 7000000,
+      "channel_id": 0,
+      "attribution": "Powered by UniFi Protect Server",
+      "entity_picture": "/api/camera_proxy/camera.g5_turret_ultra_high_resolution_channel?token=REDACTED",
+      "friendly_name": "G5 Turret Ultra High resolution channel",
+      "supported_features": 2
+    },
+    "last_changed": "2026-04-30T18:08:15.096345+00:00",
+    "last_reported": "2026-05-05T22:13:07.553309+00:00",
+    "last_updated": "2026-05-05T22:13:07.553309+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "climate.downstairs": {
+    "entity_id": "climate.downstairs",
+    "state": "heat",
+    "attributes": {
+      "hvac_modes": [
+        "heat",
+        "off"
+      ],
+      "min_temp": 10,
+      "max_temp": 32,
+      "preset_modes": [
+        "none",
+        "eco"
+      ],
+      "current_temperature": 22.8,
+      "temperature": 21.8,
+      "current_humidity": 45.0,
+      "hvac_action": "idle",
+      "preset_mode": "none",
+      "friendly_name": "Downstairs",
+      "supported_features": 401
+    },
+    "last_changed": "2026-04-30T18:08:21.995766+00:00",
+    "last_reported": "2026-05-05T21:53:54.630289+00:00",
+    "last_updated": "2026-05-05T21:53:54.630289+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "climate.kids_room": {
+    "entity_id": "climate.kids_room",
+    "state": "heat",
+    "attributes": {
+      "hvac_modes": [
+        "heat",
+        "off"
+      ],
+      "min_temp": 10,
+      "max_temp": 32,
+      "preset_modes": [
+        "none",
+        "eco"
+      ],
+      "current_temperature": 21.8,
+      "temperature": 22.0,
+      "current_humidity": 58.0,
+      "hvac_action": "heating",
+      "preset_mode": "none",
+      "friendly_name": "Kitchen",
+      "supported_features": 401
+    },
+    "last_changed": "2026-04-30T18:08:21.994655+00:00",
+    "last_reported": "2026-05-05T21:52:32.159906+00:00",
+    "last_updated": "2026-05-05T21:52:32.159906+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "climate.upstairs": {
+    "entity_id": "climate.upstairs",
+    "state": "heat",
+    "attributes": {
+      "hvac_modes": [
+        "heat",
+        "off"
+      ],
+      "min_temp": 10,
+      "max_temp": 32,
+      "preset_modes": [
+        "none",
+        "eco"
+      ],
+      "current_temperature": 22.8,
+      "temperature": 22.7,
+      "current_humidity": 41.0,
+      "hvac_action": "idle",
+      "preset_mode": "none",
+      "friendly_name": "Upstairs",
+      "supported_features": 401
+    },
+    "last_changed": "2026-04-30T18:08:21.996686+00:00",
+    "last_reported": "2026-05-05T21:49:13.276997+00:00",
+    "last_updated": "2026-05-05T21:49:13.276997+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.downstairs_humidity": {
+    "entity_id": "sensor.downstairs_humidity",
+    "state": "45",
+    "attributes": {
+      "state_class": "measurement",
+      "unit_of_measurement": "%",
+      "device_class": "humidity",
+      "friendly_name": "Downstairs Humidity"
+    },
+    "last_changed": "2026-05-05T19:59:32.067238+00:00",
+    "last_reported": "2026-05-05T19:59:32.067238+00:00",
+    "last_updated": "2026-05-05T19:59:32.067238+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.downstairs_temperature": {
+    "entity_id": "sensor.downstairs_temperature",
+    "state": "22.8",
+    "attributes": {
+      "state_class": "measurement",
+      "unit_of_measurement": "°C",
+      "device_class": "temperature",
+      "friendly_name": "Downstairs Temperature"
+    },
+    "last_changed": "2026-05-05T21:53:54.630577+00:00",
+    "last_reported": "2026-05-05T21:53:54.630577+00:00",
+    "last_updated": "2026-05-05T21:53:54.630577+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.kids_room_humidity": {
+    "entity_id": "sensor.kids_room_humidity",
+    "state": "58",
+    "attributes": {
+      "state_class": "measurement",
+      "unit_of_measurement": "%",
+      "device_class": "humidity",
+      "friendly_name": "Kitchen Humidity"
+    },
+    "last_changed": "2026-05-05T21:52:32.160395+00:00",
+    "last_reported": "2026-05-05T21:52:32.160395+00:00",
+    "last_updated": "2026-05-05T21:52:32.160395+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.kids_room_temperature": {
+    "entity_id": "sensor.kids_room_temperature",
+    "state": "21.8",
+    "attributes": {
+      "state_class": "measurement",
+      "unit_of_measurement": "°C",
+      "device_class": "temperature",
+      "friendly_name": "Kitchen Temperature"
+    },
+    "last_changed": "2026-05-05T20:58:32.847879+00:00",
+    "last_reported": "2026-05-05T20:58:32.847879+00:00",
+    "last_updated": "2026-05-05T20:58:32.847879+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.openweathermap_cloud_coverage": {
+    "entity_id": "sensor.openweathermap_cloud_coverage",
+    "state": "100",
+    "attributes": {
+      "state_class": "measurement",
+      "unit_of_measurement": "%",
+      "attribution": "Data provided by OpenWeatherMap",
+      "friendly_name": "OpenWeatherMap Cloud coverage"
+    },
+    "last_changed": "2026-05-05T19:38:18.957007+00:00",
+    "last_reported": "2026-05-05T19:38:18.957007+00:00",
+    "last_updated": "2026-05-05T19:38:18.957007+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.openweathermap_dew_point": {
+    "entity_id": "sensor.openweathermap_dew_point",
+    "state": "7.79",
+    "attributes": {
+      "state_class": "measurement",
+      "unit_of_measurement": "°C",
+      "attribution": "Data provided by OpenWeatherMap",
+      "device_class": "temperature",
+      "friendly_name": "OpenWeatherMap Dew point temperature"
+    },
+    "last_changed": "2026-05-05T22:08:18.950232+00:00",
+    "last_reported": "2026-05-05T22:08:18.950232+00:00",
+    "last_updated": "2026-05-05T22:08:18.950232+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.openweathermap_feels_like_temperature": {
+    "entity_id": "sensor.openweathermap_feels_like_temperature",
+    "state": "10.73",
+    "attributes": {
+      "state_class": "measurement",
+      "unit_of_measurement": "°C",
+      "attribution": "Data provided by OpenWeatherMap",
+      "device_class": "temperature",
+      "friendly_name": "OpenWeatherMap Apparent temperature"
+    },
+    "last_changed": "2026-05-05T22:08:18.950464+00:00",
+    "last_reported": "2026-05-05T22:08:18.950464+00:00",
+    "last_updated": "2026-05-05T22:08:18.950464+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.openweathermap_humidity": {
+    "entity_id": "sensor.openweathermap_humidity",
+    "state": "78",
+    "attributes": {
+      "state_class": "measurement",
+      "unit_of_measurement": "%",
+      "attribution": "Data provided by OpenWeatherMap",
+      "device_class": "humidity",
+      "friendly_name": "OpenWeatherMap Humidity"
+    },
+    "last_changed": "2026-05-05T21:58:18.953638+00:00",
+    "last_reported": "2026-05-05T21:58:18.953638+00:00",
+    "last_updated": "2026-05-05T21:58:18.953638+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.openweathermap_pressure": {
+    "entity_id": "sensor.openweathermap_pressure",
+    "state": "1012",
+    "attributes": {
+      "state_class": "measurement",
+      "unit_of_measurement": "hPa",
+      "attribution": "Data provided by OpenWeatherMap",
+      "device_class": "pressure",
+      "friendly_name": "OpenWeatherMap Pressure"
+    },
+    "last_changed": "2026-05-05T22:08:18.950702+00:00",
+    "last_reported": "2026-05-05T22:08:18.950702+00:00",
+    "last_updated": "2026-05-05T22:08:18.950702+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.openweathermap_rain": {
+    "entity_id": "sensor.openweathermap_rain",
+    "state": "0",
+    "attributes": {
+      "state_class": "measurement",
+      "unit_of_measurement": "mm/h",
+      "attribution": "Data provided by OpenWeatherMap",
+      "device_class": "precipitation_intensity",
+      "friendly_name": "OpenWeatherMap Rain intensity"
+    },
+    "last_changed": "2026-05-05T21:58:18.953761+00:00",
+    "last_reported": "2026-05-05T21:58:18.953761+00:00",
+    "last_updated": "2026-05-05T21:58:18.953761+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.openweathermap_temperature": {
+    "entity_id": "sensor.openweathermap_temperature",
+    "state": "11.49",
+    "attributes": {
+      "state_class": "measurement",
+      "unit_of_measurement": "°C",
+      "attribution": "Data provided by OpenWeatherMap",
+      "device_class": "temperature",
+      "friendly_name": "OpenWeatherMap Temperature"
+    },
+    "last_changed": "2026-05-05T22:08:18.950395+00:00",
+    "last_reported": "2026-05-05T22:08:18.950395+00:00",
+    "last_updated": "2026-05-05T22:08:18.950395+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.openweathermap_uv_index": {
+    "entity_id": "sensor.openweathermap_uv_index",
+    "state": "0",
+    "attributes": {
+      "state_class": "measurement",
+      "unit_of_measurement": "UV index",
+      "attribution": "Data provided by OpenWeatherMap",
+      "friendly_name": "OpenWeatherMap UV index"
+    },
+    "last_changed": "2026-05-05T18:38:18.988289+00:00",
+    "last_reported": "2026-05-05T18:38:18.988289+00:00",
+    "last_updated": "2026-05-05T18:38:18.988289+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.openweathermap_visibility": {
+    "entity_id": "sensor.openweathermap_visibility",
+    "state": "10000",
+    "attributes": {
+      "state_class": "measurement",
+      "unit_of_measurement": "m",
+      "attribution": "Data provided by OpenWeatherMap",
+      "device_class": "distance",
+      "friendly_name": "OpenWeatherMap Visibility"
+    },
+    "last_changed": "2026-05-05T01:38:19.037556+00:00",
+    "last_reported": "2026-05-05T01:38:19.037556+00:00",
+    "last_updated": "2026-05-05T01:38:19.037556+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.openweathermap_wind_bearing": {
+    "entity_id": "sensor.openweathermap_wind_bearing",
+    "state": "50",
+    "attributes": {
+      "state_class": "measurement_angle",
+      "unit_of_measurement": "°",
+      "attribution": "Data provided by OpenWeatherMap",
+      "device_class": "wind_direction",
+      "friendly_name": "OpenWeatherMap Wind direction"
+    },
+    "last_changed": "2026-05-05T22:08:18.950618+00:00",
+    "last_reported": "2026-05-05T22:08:18.950618+00:00",
+    "last_updated": "2026-05-05T22:08:18.950618+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.openweathermap_wind_speed": {
+    "entity_id": "sensor.openweathermap_wind_speed",
+    "state": "11.124",
+    "attributes": {
+      "state_class": "measurement",
+      "unit_of_measurement": "km/h",
+      "attribution": "Data provided by OpenWeatherMap",
+      "device_class": "wind_speed",
+      "friendly_name": "OpenWeatherMap Wind speed"
+    },
+    "last_changed": "2026-05-05T22:08:18.950532+00:00",
+    "last_reported": "2026-05-05T22:08:18.950532+00:00",
+    "last_updated": "2026-05-05T22:08:18.950532+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.upstairs_humidity": {
+    "entity_id": "sensor.upstairs_humidity",
+    "state": "41",
+    "attributes": {
+      "state_class": "measurement",
+      "unit_of_measurement": "%",
+      "device_class": "humidity",
+      "friendly_name": "Upstairs Humidity"
+    },
+    "last_changed": "2026-05-05T19:57:11.117937+00:00",
+    "last_reported": "2026-05-05T19:57:21.063491+00:00",
+    "last_updated": "2026-05-05T19:57:11.117937+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.upstairs_temperature": {
+    "entity_id": "sensor.upstairs_temperature",
+    "state": "22.8",
+    "attributes": {
+      "state_class": "measurement",
+      "unit_of_measurement": "°C",
+      "device_class": "temperature",
+      "friendly_name": "Upstairs Temperature"
+    },
+    "last_changed": "2026-05-05T21:49:13.277295+00:00",
+    "last_reported": "2026-05-05T21:49:13.277295+00:00",
+    "last_updated": "2026-05-05T21:49:13.277295+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sun.sun": {
+    "entity_id": "sun.sun",
+    "state": "below_horizon",
+    "attributes": {
+      "next_dawn": "2026-05-06T03:43:08.471218+00:00",
+      "next_dusk": "2026-05-06T20:11:02.130404+00:00",
+      "next_midnight": "2026-05-05T23:56:27+00:00",
+      "next_noon": "2026-05-06T11:56:28+00:00",
+      "next_rising": "2026-05-06T04:23:07.763196+00:00",
+      "next_setting": "2026-05-06T19:30:46.918156+00:00",
+      "elevation": -18.0,
+      "azimuth": 332.51,
+      "rising": false,
+      "friendly_name": "Sun"
+    },
+    "last_changed": "2026-05-05T19:33:10.514814+00:00",
+    "last_reported": "2026-05-05T22:07:31.790236+00:00",
+    "last_updated": "2026-05-05T22:07:31.790236+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "weather.forecast_home": {
+    "entity_id": "weather.forecast_home",
+    "state": "rainy",
+    "attributes": {
+      "temperature": 11.2,
+      "dew_point": 8.5,
+      "temperature_unit": "°C",
+      "humidity": 84,
+      "cloud_coverage": 100.0,
+      "uv_index": 0.0,
+      "pressure": 1012.7,
+      "pressure_unit": "hPa",
+      "wind_bearing": 47.4,
+      "wind_speed": 14.4,
+      "wind_speed_unit": "km/h",
+      "visibility_unit": "km",
+      "precipitation_unit": "mm",
+      "attribution": "Weather forecast from met.no, delivered by the Norwegian Meteorological Institute.",
+      "friendly_name": "Forecast Home",
+      "supported_features": 3
+    },
+    "last_changed": "2026-05-05T19:07:17.911366+00:00",
+    "last_reported": "2026-05-05T22:10:18.063969+00:00",
+    "last_updated": "2026-05-05T22:10:18.063969+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  }
+}

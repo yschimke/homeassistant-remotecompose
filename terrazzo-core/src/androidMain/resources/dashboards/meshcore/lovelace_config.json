@@ -1,0 +1,981 @@
+{
+  "views": [
+    {
+      "title": "Overview",
+      "icon": "mdi:view-dashboard",
+      "type": "sections",
+      "max_columns": 4,
+      "header": {
+        "card": {
+          "type": "markdown",
+          "text_only": true,
+          "content": "# 📡 MeshCore\n**Hub:** {{ states('sensor.meshcore_sn1_node_status_kodu_heltec') | title }} · **Nodes seen:** {{ states('sensor.meshcore_sn1_node_count_kodu_heltec') }} · **Last delivery:** {{ states('sensor.meshcore_sn1_last_message_delivery_kodu_heltec') }}"
+        }
+      },
+      "sections": [
+        {
+          "type": "grid",
+          "column_span": 4,
+          "cards": [
+            {
+              "type": "heading",
+              "heading": "Hub — Kodu Heltec",
+              "heading_style": "title",
+              "grid_options": {
+                "columns": "full"
+              },
+              "icon": "mdi:usb-port"
+            },
+            {
+              "type": "grid",
+              "columns": 4,
+              "square": false,
+              "cards": [
+                {
+                  "type": "tile",
+                  "entity": "sensor.meshcore_sn1_node_status_kodu_heltec",
+                  "name": "Status",
+                  "icon": "mdi:chip",
+                  "color": "blue"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.meshcore_sn1_node_count_kodu_heltec",
+                  "name": "Nodes seen",
+                  "icon": "mdi:radio-tower"
+                },
+                {
+                  "type": "tile",
+                  "entity": "binary_sensor.meshcore_sn1_mqtt_broker_1_connection",
+                  "name": "MQTT broker",
+                  "icon": "mdi:cloud-outline"
+                },
+                {
+                  "type": "tile",
+                  "entity": "binary_sensor.meshcore_sn1_ch_0_messages",
+                  "name": "Public msgs",
+                  "icon": "mdi:message-bulleted"
+                }
+              ],
+              "grid_options": {
+                "columns": "full"
+              }
+            },
+            {
+              "type": "heading",
+              "heading": "Contacts",
+              "heading_style": "title",
+              "grid_options": {
+                "columns": "full"
+              },
+              "icon": "mdi:check-network"
+            },
+            {
+              "type": "grid",
+              "columns": 3,
+              "square": false,
+              "cards": [
+                {
+                  "type": "tile",
+                  "entity": "binary_sensor.meshcore_kodu_t1000e_sn3_contact",
+                  "name": "🎒 Card (T1000E)",
+                  "icon": "mdi:card-account-details-outline"
+                },
+                {
+                  "type": "tile",
+                  "entity": "binary_sensor.meshcore_kodu_room_sn2_contact",
+                  "name": "🏠 Room Server",
+                  "icon": "mdi:server-network"
+                },
+                {
+                  "type": "tile",
+                  "entity": "binary_sensor.meshcore_sensecap_solar_repeater_sn4_contact",
+                  "name": "☀️ Solar Repeater",
+                  "icon": "mdi:solar-power-variant"
+                }
+              ],
+              "grid_options": {
+                "columns": "full"
+              }
+            },
+            {
+              "type": "heading",
+              "heading": "🎒 Card Tracker  —  Am I close to home?",
+              "heading_style": "title",
+              "grid_options": {
+                "columns": "full"
+              },
+              "icon": "mdi:card-account-details-outline"
+            },
+            {
+              "type": "grid",
+              "columns": 2,
+              "square": false,
+              "cards": [
+                {
+                  "type": "markdown",
+                  "content": "{% set e = 'binary_sensor.meshcore_kodu_t1000e_sn3_contact' %}\n{% set lat = state_attr(e, 'latitude') %}\n{% set lon = state_attr(e, 'longitude') %}\n{% set d = distance(lat, lon) if lat is number and lon is number else none %}\n{% set d = d | float(0) if d is not none else none %}\n### {% if states(e) == 'fresh' %}🟢 Online{% else %}🔴 Stale{% endif %}\n\n{% if d is not none %}## {% if d < 0.15 %}🏠 At home{% elif d < 1 %}🚶 {{ (d*1000)|round(0)|int }} m from home{% elif d < 50 %}🚗 {{ d|round(2) }} km from home{% else %}✈️ {{ d|round(0)|int }} km from home{% endif %}\n\n{% else %}*No location advertised yet.*\n\n{% endif %}**Last heard:** {{ state_attr(e, 'last_advert_formatted') or '–' }}\n\n**Hops to hub:** {% set h = state_attr(e, 'out_path_len') %}{% if h is number and h >= 0 %}{{ h }}{% else %}– (no direct route){% endif %}"
+                },
+                {
+                  "type": "grid",
+                  "columns": 2,
+                  "square": false,
+                  "cards": [
+                    {
+                      "type": "tile",
+                      "entity": "sensor.meshcore_sn6_out_path_len_kodu_t1000e",
+                      "name": "Path length",
+                      "icon": "mdi:map-marker-path"
+                    },
+                    {
+                      "type": "tile",
+                      "entity": "sensor.meshcore_sn6_request_successes_kodu_t1000e",
+                      "name": "Req OK",
+                      "icon": "mdi:check-circle-outline",
+                      "color": "green"
+                    },
+                    {
+                      "type": "tile",
+                      "entity": "sensor.meshcore_sn6_request_failures_kodu_t1000e",
+                      "name": "Req fail",
+                      "icon": "mdi:alert-circle-outline",
+                      "color": "red"
+                    },
+                    {
+                      "type": "tile",
+                      "entity": "binary_sensor.meshcore_kodu_t1000e_sn3_contact",
+                      "name": "Contact",
+                      "icon": "mdi:lan-connect"
+                    }
+                  ],
+                  "grid_options": {
+                    "columns": "full"
+                  }
+                }
+              ],
+              "grid_options": {
+                "columns": "full"
+              }
+            },
+            {
+              "type": "heading",
+              "heading": "Mesh map",
+              "heading_style": "title",
+              "grid_options": {
+                "columns": "full"
+              },
+              "icon": "mdi:map"
+            },
+            {
+              "type": "map",
+              "default_zoom": 13,
+              "hours_to_show": 168,
+              "aspect_ratio": "21:9",
+              "entities": [
+                {
+                  "entity": "zone.home"
+                },
+                {
+                  "entity": "binary_sensor.meshcore_kodu_t1000e_sn3_contact"
+                },
+                {
+                  "entity": "binary_sensor.meshcore_kodu_room_sn2_contact"
+                },
+                {
+                  "entity": "binary_sensor.meshcore_sensecap_solar_repeater_sn4_contact"
+                }
+              ],
+              "grid_options": {
+                "columns": "full"
+              }
+            },
+            {
+              "type": "heading",
+              "heading": "☀️ Solar Repeater battery",
+              "heading_style": "title",
+              "grid_options": {
+                "columns": "full"
+              },
+              "icon": "mdi:solar-power-variant"
+            },
+            {
+              "type": "grid",
+              "columns": 4,
+              "square": false,
+              "cards": [
+                {
+                  "type": "tile",
+                  "entity": "sensor.meshcore_sn7_battery_percentage_kodu_repeater",
+                  "name": "Battery %",
+                  "icon": "mdi:battery"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.meshcore_sn7_bat_kodu_repeater",
+                  "name": "Battery V",
+                  "icon": "mdi:battery-outline"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.meshcore_sn7_ch1_voltage_kodu_repeater",
+                  "name": "Ch1 voltage",
+                  "icon": "mdi:current-dc"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.meshcore_sn7_uptime_kodu_repeater",
+                  "name": "Uptime",
+                  "icon": "mdi:clock-outline"
+                }
+              ],
+              "grid_options": {
+                "columns": "full"
+              }
+            },
+            {
+              "type": "history-graph",
+              "title": "Solar repeater battery (2 weeks)",
+              "hours_to_show": 336,
+              "entities": [
+                {
+                  "entity": "sensor.meshcore_sn7_battery_percentage_kodu_repeater",
+                  "name": "Battery %"
+                },
+                {
+                  "entity": "sensor.meshcore_sn7_bat_kodu_repeater",
+                  "name": "Battery V"
+                }
+              ],
+              "grid_options": {
+                "columns": "full"
+              }
+            },
+            {
+              "type": "heading",
+              "heading": "💬 Send to a room",
+              "heading_style": "title",
+              "grid_options": {
+                "columns": "full"
+              },
+              "icon": "mdi:chat-outline"
+            },
+            {
+              "type": "entities",
+              "entities": [
+                {
+                  "entity": "select.meshcore_recipient_type",
+                  "name": "Recipient type"
+                },
+                {
+                  "entity": "select.meshcore_channel",
+                  "name": "Channel"
+                },
+                {
+                  "entity": "select.meshcore_contact",
+                  "name": "Contact / Room"
+                },
+                {
+                  "entity": "text.meshcore_message",
+                  "name": "Message"
+                },
+                {
+                  "entity": "sensor.meshcore_sn1_last_message_delivery_kodu_heltec",
+                  "name": "Last delivery"
+                }
+              ],
+              "state_color": true,
+              "grid_options": {
+                "columns": "full"
+              }
+            },
+            {
+              "type": "heading",
+              "heading": "🏠 Room server activity",
+              "heading_style": "title",
+              "grid_options": {
+                "columns": "full"
+              },
+              "icon": "mdi:chat-processing-outline"
+            },
+            {
+              "type": "grid",
+              "columns": 4,
+              "square": false,
+              "cards": [
+                {
+                  "type": "tile",
+                  "entity": "binary_sensor.meshcore_kodu_room_sn2_contact",
+                  "name": "Contact",
+                  "icon": "mdi:lan-connect"
+                },
+                {
+                  "type": "tile",
+                  "entity": "binary_sensor.meshcore_sn1_ch_0_messages",
+                  "name": "Messages",
+                  "icon": "mdi:chat-processing-outline"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.meshcore_sn5_nb_recv_rate_kodu_room",
+                  "name": "Recv rate",
+                  "icon": "mdi:download"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.meshcore_sn5_recv_direct_rate_kodu_room",
+                  "name": "Direct recv rate",
+                  "icon": "mdi:message-arrow-left"
+                }
+              ],
+              "grid_options": {
+                "columns": "full"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Solar Repeater",
+      "icon": "mdi:solar-power-variant",
+      "path": "repeater",
+      "type": "sections",
+      "max_columns": 4,
+      "sections": [
+        {
+          "type": "grid",
+          "column_span": 4,
+          "cards": [
+            {
+              "type": "heading",
+              "heading": "🔋 Solar Repeater — battery & power",
+              "heading_style": "title",
+              "grid_options": {
+                "columns": "full"
+              },
+              "icon": "mdi:battery"
+            },
+            {
+              "type": "grid",
+              "columns": 2,
+              "square": false,
+              "cards": [
+                {
+                  "type": "gauge",
+                  "entity": "sensor.meshcore_sn7_battery_percentage_kodu_repeater",
+                  "min": 0,
+                  "max": 100,
+                  "needle": true,
+                  "name": "Battery %",
+                  "severity": {
+                    "green": 60,
+                    "yellow": 30,
+                    "red": 0
+                  }
+                },
+                {
+                  "type": "grid",
+                  "columns": 2,
+                  "square": false,
+                  "cards": [
+                    {
+                      "type": "tile",
+                      "entity": "sensor.meshcore_sn7_bat_kodu_repeater",
+                      "name": "Battery V",
+                      "icon": "mdi:battery-outline"
+                    },
+                    {
+                      "type": "tile",
+                      "entity": "sensor.meshcore_sn7_ch1_voltage_kodu_repeater",
+                      "name": "Ch1 V",
+                      "icon": "mdi:current-dc"
+                    },
+                    {
+                      "type": "tile",
+                      "entity": "sensor.meshcore_sn7_ch1_temperature_kodu_repeater",
+                      "name": "Ch1 temp",
+                      "icon": "mdi:thermometer"
+                    },
+                    {
+                      "type": "tile",
+                      "entity": "sensor.meshcore_sn7_uptime_kodu_repeater",
+                      "name": "Uptime",
+                      "icon": "mdi:clock-outline"
+                    }
+                  ],
+                  "grid_options": {
+                    "columns": "full"
+                  }
+                }
+              ],
+              "grid_options": {
+                "columns": "full"
+              }
+            },
+            {
+              "type": "history-graph",
+              "title": "Solar Repeater battery & Ch1 (2 weeks)",
+              "hours_to_show": 336,
+              "entities": [
+                {
+                  "entity": "sensor.meshcore_sn7_battery_percentage_kodu_repeater",
+                  "name": "Battery %"
+                },
+                {
+                  "entity": "sensor.meshcore_sn7_bat_kodu_repeater",
+                  "name": "Battery V"
+                },
+                {
+                  "entity": "sensor.meshcore_sn7_ch1_voltage_kodu_repeater",
+                  "name": "Ch1 V"
+                },
+                {
+                  "entity": "sensor.meshcore_sn7_ch1_temperature_kodu_repeater",
+                  "name": "Ch1 temp"
+                }
+              ],
+              "grid_options": {
+                "columns": "full"
+              }
+            },
+            {
+              "type": "heading",
+              "heading": "📶 Link quality",
+              "heading_style": "title",
+              "grid_options": {
+                "columns": "full"
+              },
+              "icon": "mdi:signal"
+            },
+            {
+              "type": "grid",
+              "columns": 4,
+              "square": false,
+              "cards": [
+                {
+                  "type": "tile",
+                  "entity": "binary_sensor.meshcore_sensecap_solar_repeater_sn4_contact",
+                  "name": "Contact",
+                  "icon": "mdi:lan-connect"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.meshcore_sn7_last_rssi_kodu_repeater",
+                  "name": "RSSI",
+                  "icon": "mdi:signal"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.meshcore_sn7_last_snr_kodu_repeater",
+                  "name": "SNR",
+                  "icon": "mdi:signal-variant"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.meshcore_sn7_noise_floor_kodu_repeater",
+                  "name": "Noise floor",
+                  "icon": "mdi:waveform"
+                }
+              ],
+              "grid_options": {
+                "columns": "full"
+              }
+            },
+            {
+              "type": "heading",
+              "heading": "📈 Traffic",
+              "heading_style": "title",
+              "grid_options": {
+                "columns": "full"
+              },
+              "icon": "mdi:chart-line"
+            },
+            {
+              "type": "grid",
+              "columns": 2,
+              "square": false,
+              "cards": [
+                {
+                  "type": "gauge",
+                  "entity": "sensor.meshcore_sn7_airtime_utilization_kodu_repeater",
+                  "min": 0,
+                  "max": 100,
+                  "needle": true,
+                  "name": "Airtime util %",
+                  "severity": {
+                    "green": 0,
+                    "yellow": 10,
+                    "red": 25
+                  }
+                },
+                {
+                  "type": "gauge",
+                  "entity": "sensor.meshcore_sn7_rx_airtime_utilization_kodu_repeater",
+                  "min": 0,
+                  "max": 100,
+                  "needle": true,
+                  "name": "RX airtime util %",
+                  "severity": {
+                    "green": 0,
+                    "yellow": 25,
+                    "red": 50
+                  }
+                }
+              ],
+              "grid_options": {
+                "columns": "full"
+              }
+            },
+            {
+              "type": "grid",
+              "columns": 3,
+              "square": false,
+              "cards": [
+                {
+                  "type": "tile",
+                  "entity": "sensor.meshcore_sn7_nb_recv_rate_kodu_repeater",
+                  "name": "Recv rate",
+                  "icon": "mdi:download"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.meshcore_sn7_nb_sent_rate_kodu_repeater",
+                  "name": "Sent rate",
+                  "icon": "mdi:upload"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.meshcore_sn7_flood_dups_rate_kodu_repeater",
+                  "name": "Flood dups",
+                  "icon": "mdi:content-duplicate"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.meshcore_sn7_tx_queue_len_kodu_repeater",
+                  "name": "TX queue",
+                  "icon": "mdi:playlist-play"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.meshcore_sn7_nb_recv_kodu_repeater",
+                  "name": "Recv total",
+                  "icon": "mdi:counter"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.meshcore_sn7_nb_sent_kodu_repeater",
+                  "name": "Sent total",
+                  "icon": "mdi:counter"
+                }
+              ],
+              "grid_options": {
+                "columns": "full"
+              }
+            },
+            {
+              "type": "history-graph",
+              "title": "Solar Repeater traffic & link (24h)",
+              "hours_to_show": 24,
+              "entities": [
+                {
+                  "entity": "sensor.meshcore_sn7_nb_recv_rate_kodu_repeater",
+                  "name": "Recv/min"
+                },
+                {
+                  "entity": "sensor.meshcore_sn7_nb_sent_rate_kodu_repeater",
+                  "name": "Sent/min"
+                },
+                {
+                  "entity": "sensor.meshcore_sn7_flood_dups_rate_kodu_repeater",
+                  "name": "Flood dups/min"
+                },
+                {
+                  "entity": "sensor.meshcore_sn7_last_rssi_kodu_repeater",
+                  "name": "RSSI"
+                },
+                {
+                  "entity": "sensor.meshcore_sn7_last_snr_kodu_repeater",
+                  "name": "SNR"
+                }
+              ],
+              "grid_options": {
+                "columns": "full"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Room Server",
+      "icon": "mdi:server-network",
+      "path": "room",
+      "type": "sections",
+      "max_columns": 4,
+      "sections": [
+        {
+          "type": "grid",
+          "column_span": 4,
+          "cards": [
+            {
+              "type": "heading",
+              "heading": "🏠 Room Server (Kodu Room) — mains-powered",
+              "heading_style": "title",
+              "grid_options": {
+                "columns": "full"
+              },
+              "icon": "mdi:server-network"
+            },
+            {
+              "type": "grid",
+              "columns": 4,
+              "square": false,
+              "cards": [
+                {
+                  "type": "tile",
+                  "entity": "binary_sensor.meshcore_kodu_room_sn2_contact",
+                  "name": "Contact",
+                  "icon": "mdi:lan-connect"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.meshcore_sn5_uptime_kodu_room",
+                  "name": "Uptime",
+                  "icon": "mdi:clock-outline"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.meshcore_sn5_ch1_temperature_kodu_room",
+                  "name": "Ch1 temp",
+                  "icon": "mdi:thermometer"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.meshcore_sn5_battery_percentage_kodu_room",
+                  "name": "Battery (backup)",
+                  "icon": "mdi:battery-charging-outline"
+                }
+              ],
+              "grid_options": {
+                "columns": "full"
+              }
+            },
+            {
+              "type": "heading",
+              "heading": "💬 Send to this room",
+              "heading_style": "title",
+              "grid_options": {
+                "columns": "full"
+              },
+              "icon": "mdi:chat-outline"
+            },
+            {
+              "type": "entities",
+              "entities": [
+                {
+                  "entity": "select.meshcore_recipient_type",
+                  "name": "Recipient type"
+                },
+                {
+                  "entity": "select.meshcore_contact",
+                  "name": "Contact / Room"
+                },
+                {
+                  "entity": "text.meshcore_message",
+                  "name": "Message"
+                },
+                {
+                  "entity": "sensor.meshcore_sn1_last_message_delivery_kodu_heltec",
+                  "name": "Last delivery"
+                }
+              ],
+              "state_color": true,
+              "grid_options": {
+                "columns": "full"
+              }
+            },
+            {
+              "type": "heading",
+              "heading": "📨 Room messages",
+              "heading_style": "title",
+              "grid_options": {
+                "columns": "full"
+              },
+              "icon": "mdi:chat-processing-outline"
+            },
+            {
+              "type": "grid",
+              "columns": 4,
+              "square": false,
+              "cards": [
+                {
+                  "type": "tile",
+                  "entity": "binary_sensor.meshcore_sn1_ch_0_messages",
+                  "name": "Activity",
+                  "icon": "mdi:chat-processing-outline"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.meshcore_sn5_nb_recv_kodu_room",
+                  "name": "Recv total",
+                  "icon": "mdi:counter"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.meshcore_sn5_nb_sent_kodu_room",
+                  "name": "Sent total",
+                  "icon": "mdi:counter"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.meshcore_sn5_nb_recv_rate_kodu_room",
+                  "name": "Recv rate",
+                  "icon": "mdi:download"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.meshcore_sn5_nb_sent_rate_kodu_room",
+                  "name": "Sent rate",
+                  "icon": "mdi:upload"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.meshcore_sn5_recv_direct_rate_kodu_room",
+                  "name": "Direct recv",
+                  "icon": "mdi:message-arrow-left"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.meshcore_sn5_sent_direct_rate_kodu_room",
+                  "name": "Direct sent",
+                  "icon": "mdi:message-arrow-right"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.meshcore_sn5_recv_flood_rate_kodu_room",
+                  "name": "Flood recv",
+                  "icon": "mdi:broadcast"
+                }
+              ],
+              "grid_options": {
+                "columns": "full"
+              }
+            },
+            {
+              "type": "history-graph",
+              "title": "Room message rates (24h)",
+              "hours_to_show": 24,
+              "entities": [
+                {
+                  "entity": "sensor.meshcore_sn5_nb_recv_rate_kodu_room",
+                  "name": "Recv/min"
+                },
+                {
+                  "entity": "sensor.meshcore_sn5_nb_sent_rate_kodu_room",
+                  "name": "Sent/min"
+                },
+                {
+                  "entity": "sensor.meshcore_sn5_recv_direct_rate_kodu_room",
+                  "name": "Direct recv/min"
+                },
+                {
+                  "entity": "sensor.meshcore_sn5_sent_direct_rate_kodu_room",
+                  "name": "Direct sent/min"
+                }
+              ],
+              "grid_options": {
+                "columns": "full"
+              }
+            },
+            {
+              "type": "heading",
+              "heading": "📶 Link quality",
+              "heading_style": "title",
+              "grid_options": {
+                "columns": "full"
+              },
+              "icon": "mdi:signal"
+            },
+            {
+              "type": "grid",
+              "columns": 4,
+              "square": false,
+              "cards": [
+                {
+                  "type": "tile",
+                  "entity": "sensor.meshcore_sn5_last_rssi_kodu_room",
+                  "name": "RSSI",
+                  "icon": "mdi:signal"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.meshcore_sn5_last_snr_kodu_room",
+                  "name": "SNR",
+                  "icon": "mdi:signal-variant"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.meshcore_sn5_noise_floor_kodu_room",
+                  "name": "Noise floor",
+                  "icon": "mdi:waveform"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.meshcore_sn5_tx_queue_len_kodu_room",
+                  "name": "TX queue",
+                  "icon": "mdi:playlist-play"
+                }
+              ],
+              "grid_options": {
+                "columns": "full"
+              }
+            },
+            {
+              "type": "logbook",
+              "title": "Room server contact history",
+              "hours_to_show": 168,
+              "entities": [
+                "binary_sensor.meshcore_kodu_room_sn2_contact",
+                "binary_sensor.meshcore_sn1_ch_0_messages"
+              ],
+              "grid_options": {
+                "columns": "full"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Controls",
+      "icon": "mdi:tune",
+      "path": "controls",
+      "type": "sections",
+      "max_columns": 4,
+      "sections": [
+        {
+          "type": "grid",
+          "column_span": 4,
+          "cards": [
+            {
+              "type": "heading",
+              "heading": "💬 Send Message",
+              "heading_style": "title",
+              "grid_options": {
+                "columns": "full"
+              },
+              "icon": "mdi:chat-outline"
+            },
+            {
+              "type": "entities",
+              "entities": [
+                {
+                  "entity": "select.meshcore_recipient_type",
+                  "name": "Recipient type"
+                },
+                {
+                  "entity": "select.meshcore_channel",
+                  "name": "Channel"
+                },
+                {
+                  "entity": "select.meshcore_contact",
+                  "name": "Contact"
+                },
+                {
+                  "entity": "text.meshcore_message",
+                  "name": "Message"
+                },
+                {
+                  "entity": "text.meshcore_command",
+                  "name": "Command"
+                },
+                {
+                  "entity": "sensor.meshcore_sn1_last_message_delivery_kodu_heltec",
+                  "name": "Last delivery"
+                }
+              ],
+              "state_color": true,
+              "grid_options": {
+                "columns": "full"
+              }
+            },
+            {
+              "type": "heading",
+              "heading": "📻 Radio config",
+              "heading_style": "title",
+              "grid_options": {
+                "columns": "full"
+              },
+              "icon": "mdi:radio"
+            },
+            {
+              "type": "grid",
+              "columns": 4,
+              "square": false,
+              "cards": [
+                {
+                  "type": "tile",
+                  "entity": "sensor.meshcore_sn1_frequency_kodu_heltec",
+                  "name": "Frequency",
+                  "icon": "mdi:sine-wave"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.meshcore_sn1_bandwidth_kodu_heltec",
+                  "name": "Bandwidth",
+                  "icon": "mdi:arrow-expand-horizontal"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.meshcore_sn1_spreading_factor_kodu_heltec",
+                  "name": "Spreading factor",
+                  "icon": "mdi:chart-sankey"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.meshcore_sn1_tx_power_kodu_heltec",
+                  "name": "TX power",
+                  "icon": "mdi:antenna"
+                }
+              ],
+              "grid_options": {
+                "columns": "full"
+              }
+            },
+            {
+              "type": "heading",
+              "heading": "🔧 Maintenance",
+              "heading_style": "title",
+              "grid_options": {
+                "columns": "full"
+              },
+              "icon": "mdi:wrench-outline"
+            },
+            {
+              "type": "grid",
+              "columns": 2,
+              "square": false,
+              "cards": [
+                {
+                  "type": "tile",
+                  "entity": "update.meshcore_update",
+                  "name": "Hub firmware",
+                  "icon": "mdi:chip"
+                },
+                {
+                  "type": "tile",
+                  "entity": "update.meshcore_proxy_update",
+                  "name": "Proxy",
+                  "icon": "mdi:update"
+                }
+              ],
+              "grid_options": {
+                "columns": "full"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

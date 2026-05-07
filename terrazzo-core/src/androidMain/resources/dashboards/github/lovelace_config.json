@@ -1,0 +1,483 @@
+{
+  "views": [
+    {
+      "title": "Projects",
+      "icon": "mdi:github",
+      "type": "sections",
+      "max_columns": 4,
+      "header": {
+        "card": {
+          "type": "markdown",
+          "text_only": true,
+          "content": "# 🐙 GitHub Projects\nRepositories under **yschimke** with build status on `main`. Stars / PRs / issues / latest commit come from the HA GitHub integration; build badges come from GitHub Actions directly."
+        }
+      },
+      "sections": [
+        {
+          "type": "grid",
+          "column_span": 4,
+          "cards": [
+            {
+              "type": "heading",
+              "heading": "🐛 Open issues — last 2 weeks",
+              "heading_style": "title",
+              "grid_options": {
+                "columns": "full"
+              },
+              "icon": "mdi:chart-line"
+            },
+            {
+              "type": "history-graph",
+              "title": "Open issues per repo",
+              "hours_to_show": 336,
+              "entities": [
+                {
+                  "entity": "sensor.yschimke_meshcore_mobile_issues",
+                  "name": "meshcore-mobile"
+                },
+                {
+                  "entity": "sensor.yschimke_compose_ai_tools_issues",
+                  "name": "compose-ai-tools"
+                },
+                {
+                  "entity": "sensor.yschimke_homeassistant_remotecompose_issues",
+                  "name": "homeassistant-remotecompose"
+                },
+                {
+                  "entity": "sensor.yschimke_cadence_issues",
+                  "name": "cadence"
+                }
+              ],
+              "grid_options": {
+                "columns": "full"
+              }
+            }
+          ]
+        },
+        {
+          "type": "grid",
+          "column_span": 4,
+          "cards": [
+            {
+              "type": "heading",
+              "heading": "meshcore-mobile",
+              "heading_style": "title",
+              "grid_options": {
+                "columns": "full"
+              },
+              "icon": "mdi:source-branch"
+            },
+            {
+              "type": "markdown",
+              "content": "## [meshcore-mobile](https://github.com/yschimke/meshcore-mobile)\n_Mobile companion for MeshCore_\n\n[![ci](https://github.com/yschimke/meshcore-mobile/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/yschimke/meshcore-mobile/actions/workflows/ci.yml) [![ktfmt](https://github.com/yschimke/meshcore-mobile/actions/workflows/ktfmt.yml/badge.svg?branch=main)](https://github.com/yschimke/meshcore-mobile/actions/workflows/ktfmt.yml) [![Last commit](https://img.shields.io/github/last-commit/yschimke/meshcore-mobile/main?label=last%XXXXXXXX)](https://github.com/yschimke/meshcore-mobile/commits/main) [![License](https://img.shields.io/github/license/yschimke/meshcore-mobile)](https://github.com/yschimke/meshcore-mobile/blob/main/LICENSE)",
+              "grid_options": {
+                "columns": "full"
+              }
+            },
+            {
+              "type": "grid",
+              "columns": 3,
+              "square": false,
+              "cards": [
+                {
+                  "type": "tile",
+                  "entity": "sensor.yschimke_meshcore_mobile_stars",
+                  "name": "Stars",
+                  "icon": "mdi:star"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.yschimke_meshcore_mobile_issues",
+                  "name": "Open issues",
+                  "icon": "mdi:alert-circle-outline"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.yschimke_meshcore_mobile_pull_requests",
+                  "name": "Open PRs",
+                  "icon": "mdi:source-pull"
+                }
+              ],
+              "grid_options": {
+                "columns": "full"
+              }
+            },
+            {
+              "type": "markdown",
+              "content": "{% set s = states['sensor.yschimke_meshcore_mobile_latest_commit'] %}{% if s and s.state not in ['unavailable','unknown'] %}**Latest commit:** {{ s.state }}\n\n[`{{ state_attr('sensor.yschimke_meshcore_mobile_latest_commit', 'sha')[:7] }}`]({{ state_attr('sensor.yschimke_meshcore_mobile_latest_commit', 'url') }}){% else %}_no recent commit data_{% endif %}",
+              "grid_options": {
+                "columns": "full"
+              }
+            },
+            {
+              "type": "grid",
+              "columns": 4,
+              "square": false,
+              "cards": [
+                {
+                  "type": "tile",
+                  "entity": "sensor.yschimke_meshcore_mobile_latest_pull_request",
+                  "name": "Latest PR",
+                  "icon": "mdi:source-pull"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.yschimke_meshcore_mobile_latest_issue",
+                  "name": "Latest issue",
+                  "icon": "mdi:alert"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.yschimke_meshcore_mobile_latest_release",
+                  "name": "Latest release",
+                  "icon": "mdi:tag"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.yschimke_meshcore_mobile_latest_tag",
+                  "name": "Latest tag",
+                  "icon": "mdi:tag-outline"
+                }
+              ],
+              "grid_options": {
+                "columns": "full"
+              }
+            }
+          ]
+        },
+        {
+          "type": "grid",
+          "column_span": 4,
+          "cards": [
+            {
+              "type": "heading",
+              "heading": "compose-ai-tools",
+              "heading_style": "title",
+              "grid_options": {
+                "columns": "full"
+              },
+              "icon": "mdi:source-branch"
+            },
+            {
+              "type": "markdown",
+              "content": "## [compose-ai-tools](https://github.com/yschimke/compose-ai-tools)\n_Helping the Agents Compose the Things_\n\n[![ci](https://github.com/yschimke/compose-ai-tools/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/yschimke/compose-ai-tools/actions/workflows/ci.yml) [![format](https://github.com/yschimke/compose-ai-tools/actions/workflows/format.yml/badge.svg?branch=main)](https://github.com/yschimke/compose-ai-tools/actions/workflows/format.yml) [![codeql](https://github.com/yschimke/compose-ai-tools/actions/workflows/codeql.yml/badge.svg?branch=main)](https://github.com/yschimke/compose-ai-tools/actions/workflows/codeql.yml) [![gitleaks](https://github.com/yschimke/compose-ai-tools/actions/workflows/gitleaks.yml/badge.svg?branch=main)](https://github.com/yschimke/compose-ai-tools/actions/workflows/gitleaks.yml) [![Last commit](https://img.shields.io/github/last-commit/yschimke/compose-ai-tools/main?label=last%XXXXXXXX)](https://github.com/yschimke/compose-ai-tools/commits/main) [![License](https://img.shields.io/github/license/yschimke/compose-ai-tools)](https://github.com/yschimke/compose-ai-tools/blob/main/LICENSE)",
+              "grid_options": {
+                "columns": "full"
+              }
+            },
+            {
+              "type": "grid",
+              "columns": 3,
+              "square": false,
+              "cards": [
+                {
+                  "type": "tile",
+                  "entity": "sensor.yschimke_compose_ai_tools_stars",
+                  "name": "Stars",
+                  "icon": "mdi:star"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.yschimke_compose_ai_tools_issues",
+                  "name": "Open issues",
+                  "icon": "mdi:alert-circle-outline"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.yschimke_compose_ai_tools_pull_requests",
+                  "name": "Open PRs",
+                  "icon": "mdi:source-pull"
+                }
+              ],
+              "grid_options": {
+                "columns": "full"
+              }
+            },
+            {
+              "type": "markdown",
+              "content": "{% set s = states['sensor.yschimke_compose_ai_tools_latest_commit'] %}{% if s and s.state not in ['unavailable','unknown'] %}**Latest commit:** {{ s.state }}\n\n[`{{ state_attr('sensor.yschimke_compose_ai_tools_latest_commit', 'sha')[:7] }}`]({{ state_attr('sensor.yschimke_compose_ai_tools_latest_commit', 'url') }}){% else %}_no recent commit data_{% endif %}",
+              "grid_options": {
+                "columns": "full"
+              }
+            },
+            {
+              "type": "grid",
+              "columns": 4,
+              "square": false,
+              "cards": [
+                {
+                  "type": "tile",
+                  "entity": "sensor.yschimke_compose_ai_tools_latest_pull_request",
+                  "name": "Latest PR",
+                  "icon": "mdi:source-pull"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.yschimke_compose_ai_tools_latest_issue",
+                  "name": "Latest issue",
+                  "icon": "mdi:alert"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.yschimke_compose_ai_tools_latest_release",
+                  "name": "Latest release",
+                  "icon": "mdi:tag"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.yschimke_compose_ai_tools_latest_tag",
+                  "name": "Latest tag",
+                  "icon": "mdi:tag-outline"
+                }
+              ],
+              "grid_options": {
+                "columns": "full"
+              }
+            }
+          ]
+        },
+        {
+          "type": "grid",
+          "column_span": 4,
+          "cards": [
+            {
+              "type": "heading",
+              "heading": "homeassistant-remotecompose",
+              "heading_style": "title",
+              "grid_options": {
+                "columns": "full"
+              },
+              "icon": "mdi:source-branch"
+            },
+            {
+              "type": "markdown",
+              "content": "## [homeassistant-remotecompose](https://github.com/yschimke/homeassistant-remotecompose)\n_Compose-based HA dashboards_\n\n[![ci](https://github.com/yschimke/homeassistant-remotecompose/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/yschimke/homeassistant-remotecompose/actions/workflows/ci.yml) [![ktfmt](https://github.com/yschimke/homeassistant-remotecompose/actions/workflows/ktfmt.yml/badge.svg?branch=main)](https://github.com/yschimke/homeassistant-remotecompose/actions/workflows/ktfmt.yml) [![preview-baselines](https://github.com/yschimke/homeassistant-remotecompose/actions/workflows/preview-baselines.yml/badge.svg?branch=main)](https://github.com/yschimke/homeassistant-remotecompose/actions/workflows/preview-baselines.yml) [![Last commit](https://img.shields.io/github/last-commit/yschimke/homeassistant-remotecompose/main?label=last%XXXXXXXX)](https://github.com/yschimke/homeassistant-remotecompose/commits/main) [![License](https://img.shields.io/github/license/yschimke/homeassistant-remotecompose)](https://github.com/yschimke/homeassistant-remotecompose/blob/main/LICENSE)",
+              "grid_options": {
+                "columns": "full"
+              }
+            },
+            {
+              "type": "grid",
+              "columns": 3,
+              "square": false,
+              "cards": [
+                {
+                  "type": "tile",
+                  "entity": "sensor.yschimke_homeassistant_remotecompose_stars",
+                  "name": "Stars",
+                  "icon": "mdi:star"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.yschimke_homeassistant_remotecompose_issues",
+                  "name": "Open issues",
+                  "icon": "mdi:alert-circle-outline"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.yschimke_homeassistant_remotecompose_pull_requests",
+                  "name": "Open PRs",
+                  "icon": "mdi:source-pull"
+                }
+              ],
+              "grid_options": {
+                "columns": "full"
+              }
+            },
+            {
+              "type": "markdown",
+              "content": "{% set s = states['sensor.yschimke_homeassistant_remotecompose_latest_commit'] %}{% if s and s.state not in ['unavailable','unknown'] %}**Latest commit:** {{ s.state }}\n\n[`{{ state_attr('sensor.yschimke_homeassistant_remotecompose_latest_commit', 'sha')[:7] }}`]({{ state_attr('sensor.yschimke_homeassistant_remotecompose_latest_commit', 'url') }}){% else %}_no recent commit data_{% endif %}",
+              "grid_options": {
+                "columns": "full"
+              }
+            },
+            {
+              "type": "grid",
+              "columns": 4,
+              "square": false,
+              "cards": [
+                {
+                  "type": "tile",
+                  "entity": "sensor.yschimke_homeassistant_remotecompose_latest_pull_request",
+                  "name": "Latest PR",
+                  "icon": "mdi:source-pull"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.yschimke_homeassistant_remotecompose_latest_issue",
+                  "name": "Latest issue",
+                  "icon": "mdi:alert"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.yschimke_homeassistant_remotecompose_latest_release",
+                  "name": "Latest release",
+                  "icon": "mdi:tag"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.yschimke_homeassistant_remotecompose_latest_tag",
+                  "name": "Latest tag",
+                  "icon": "mdi:tag-outline"
+                }
+              ],
+              "grid_options": {
+                "columns": "full"
+              }
+            }
+          ]
+        },
+        {
+          "type": "grid",
+          "column_span": 4,
+          "cards": [
+            {
+              "type": "heading",
+              "heading": "cadence",
+              "heading_style": "title",
+              "grid_options": {
+                "columns": "full"
+              },
+              "icon": "mdi:source-branch"
+            },
+            {
+              "type": "markdown",
+              "content": "## [cadence](https://github.com/yschimke/cadence)\n__\n\n[![build](https://github.com/yschimke/cadence/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/yschimke/cadence/actions/workflows/build.yml) [![ktfmt](https://github.com/yschimke/cadence/actions/workflows/ktfmt.yml/badge.svg?branch=main)](https://github.com/yschimke/cadence/actions/workflows/ktfmt.yml) [![preview-baselines](https://github.com/yschimke/cadence/actions/workflows/preview-baselines.yml/badge.svg?branch=main)](https://github.com/yschimke/cadence/actions/workflows/preview-baselines.yml) [![Last commit](https://img.shields.io/github/last-commit/yschimke/cadence/main?label=last%XXXXXXXX)](https://github.com/yschimke/cadence/commits/main) [![License](https://img.shields.io/github/license/yschimke/cadence)](https://github.com/yschimke/cadence/blob/main/LICENSE)",
+              "grid_options": {
+                "columns": "full"
+              }
+            },
+            {
+              "type": "grid",
+              "columns": 3,
+              "square": false,
+              "cards": [
+                {
+                  "type": "tile",
+                  "entity": "sensor.yschimke_cadence_stars",
+                  "name": "Stars",
+                  "icon": "mdi:star"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.yschimke_cadence_issues",
+                  "name": "Open issues",
+                  "icon": "mdi:alert-circle-outline"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.yschimke_cadence_pull_requests",
+                  "name": "Open PRs",
+                  "icon": "mdi:source-pull"
+                }
+              ],
+              "grid_options": {
+                "columns": "full"
+              }
+            },
+            {
+              "type": "markdown",
+              "content": "{% set s = states['sensor.yschimke_cadence_latest_commit'] %}{% if s and s.state not in ['unavailable','unknown'] %}**Latest commit:** {{ s.state }}\n\n[`{{ state_attr('sensor.yschimke_cadence_latest_commit', 'sha')[:7] }}`]({{ state_attr('sensor.yschimke_cadence_latest_commit', 'url') }}){% else %}_no recent commit data_{% endif %}",
+              "grid_options": {
+                "columns": "full"
+              }
+            },
+            {
+              "type": "grid",
+              "columns": 4,
+              "square": false,
+              "cards": [
+                {
+                  "type": "tile",
+                  "entity": "sensor.yschimke_cadence_latest_pull_request",
+                  "name": "Latest PR",
+                  "icon": "mdi:source-pull"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.yschimke_cadence_latest_issue",
+                  "name": "Latest issue",
+                  "icon": "mdi:alert"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.yschimke_cadence_latest_release",
+                  "name": "Latest release",
+                  "icon": "mdi:tag"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.yschimke_cadence_latest_tag",
+                  "name": "Latest tag",
+                  "icon": "mdi:tag-outline"
+                }
+              ],
+              "grid_options": {
+                "columns": "full"
+              }
+            }
+          ]
+        },
+        {
+          "type": "grid",
+          "column_span": 4,
+          "cards": [
+            {
+              "type": "heading",
+              "heading": "⭐ Other watched repos",
+              "heading_style": "title",
+              "grid_options": {
+                "columns": "full"
+              },
+              "icon": "mdi:bookmark-multiple-outline"
+            },
+            {
+              "type": "grid",
+              "columns": 2,
+              "square": false,
+              "cards": [
+                {
+                  "type": "tile",
+                  "entity": "sensor.square_okhttp_stars",
+                  "name": "square/okhttp",
+                  "icon": "mdi:star"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.google_horologist_stars",
+                  "name": "google/horologist",
+                  "icon": "mdi:star"
+                }
+              ],
+              "grid_options": {
+                "columns": "full"
+              }
+            }
+          ]
+        },
+        {
+          "type": "grid",
+          "column_span": 4,
+          "cards": [
+            {
+              "type": "heading",
+              "heading": "📝 Notes",
+              "heading_style": "title",
+              "grid_options": {
+                "columns": "full"
+              },
+              "icon": "mdi:information-outline"
+            },
+            {
+              "type": "markdown",
+              "grid_options": {
+                "columns": "full"
+              },
+              "content": "- Build badges above use GitHub's `badge.svg` URL. For private repos these require the *viewer* to be logged into github.com in the same browser. If shared/public access is needed, swap to a REST sensor calling `/repos/.../actions/workflows/<wf>/runs?branch=main&per_page=1` with the stored PAT."
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

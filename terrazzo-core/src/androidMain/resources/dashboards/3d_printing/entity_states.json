@@ -1,0 +1,2557 @@
+{
+  "binary_sensor.a1mini_sn1_ams_1_active": {
+    "entity_id": "binary_sensor.a1mini_sn1_ams_1_active",
+    "state": "off",
+    "attributes": {
+      "device_class": "running",
+      "icon": "mdi:check",
+      "friendly_name": "A1MINI_sn1_AMS_1 Active"
+    },
+    "last_changed": "2026-04-30T18:08:21.481739+00:00",
+    "last_reported": "2026-04-30T18:13:55.265041+00:00",
+    "last_updated": "2026-04-30T18:08:21.481739+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "binary_sensor.a1mini_sn1_externalspool_active": {
+    "entity_id": "binary_sensor.a1mini_sn1_externalspool_active",
+    "state": "off",
+    "attributes": {
+      "device_class": "running",
+      "icon": "mdi:check",
+      "friendly_name": "A1MINI_sn1_ExternalSpool Active"
+    },
+    "last_changed": "2026-04-30T18:08:21.482101+00:00",
+    "last_reported": "2026-04-30T18:13:55.265081+00:00",
+    "last_updated": "2026-04-30T18:08:21.482101+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "binary_sensor.a1mini_sn1_extruder_filament_state": {
+    "entity_id": "binary_sensor.a1mini_sn1_extruder_filament_state",
+    "state": "off",
+    "attributes": {
+      "friendly_name": "A1MINI_sn1 Extruder filament"
+    },
+    "last_changed": "2026-04-30T18:08:21.478323+00:00",
+    "last_reported": "2026-04-30T18:13:55.264800+00:00",
+    "last_updated": "2026-04-30T18:08:21.478323+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "binary_sensor.a1mini_sn1_firmware_update": {
+    "entity_id": "binary_sensor.a1mini_sn1_firmware_update",
+    "state": "off",
+    "attributes": {
+      "device_class": "update",
+      "friendly_name": "A1MINI_sn1 Firmware"
+    },
+    "last_changed": "2026-04-30T18:08:21.479265+00:00",
+    "last_reported": "2026-04-30T18:13:55.264882+00:00",
+    "last_updated": "2026-04-30T18:08:21.479265+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "binary_sensor.a1mini_sn1_hms_errors": {
+    "entity_id": "binary_sensor.a1mini_sn1_hms_errors",
+    "state": "off",
+    "attributes": {
+      "Count": 0,
+      "device_class": "problem",
+      "friendly_name": "A1MINI_sn1 HMS errors"
+    },
+    "last_changed": "2026-04-30T18:08:21.478612+00:00",
+    "last_reported": "2026-04-30T18:13:55.264827+00:00",
+    "last_updated": "2026-04-30T18:08:21.478612+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "binary_sensor.a1mini_sn1_online": {
+    "entity_id": "binary_sensor.a1mini_sn1_online",
+    "state": "on",
+    "attributes": {
+      "device_class": "running",
+      "friendly_name": "A1MINI_sn1 Online"
+    },
+    "last_changed": "2026-04-30T18:08:21.479046+00:00",
+    "last_reported": "2026-04-30T18:13:55.264865+00:00",
+    "last_updated": "2026-04-30T18:08:21.479046+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "binary_sensor.a1mini_sn1_print_error": {
+    "entity_id": "binary_sensor.a1mini_sn1_print_error",
+    "state": "off",
+    "attributes": {
+      "device_class": "problem",
+      "friendly_name": "A1MINI_sn1 Print error"
+    },
+    "last_changed": "2026-04-30T18:08:21.478847+00:00",
+    "last_reported": "2026-04-30T18:13:55.264847+00:00",
+    "last_updated": "2026-04-30T18:08:21.478847+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "binary_sensor.a1mini_sn1_recording_timelapse": {
+    "entity_id": "binary_sensor.a1mini_sn1_recording_timelapse",
+    "state": "off",
+    "attributes": {
+      "device_class": "running",
+      "icon": "mdi:camera",
+      "friendly_name": "A1MINI_sn1 Timelapse"
+    },
+    "last_changed": "2026-04-30T18:08:21.477071+00:00",
+    "last_reported": "2026-04-30T18:13:55.264741+00:00",
+    "last_updated": "2026-04-30T18:08:21.477071+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "binary_sensor.p2s_sn2_ams_1_active": {
+    "entity_id": "binary_sensor.p2s_sn2_ams_1_active",
+    "state": "off",
+    "attributes": {
+      "device_class": "running",
+      "icon": "mdi:check",
+      "friendly_name": "P2S_sn2_AMS_1 Active"
+    },
+    "last_changed": "2026-04-30T18:08:22.870950+00:00",
+    "last_reported": "2026-04-30T18:08:24.387238+00:00",
+    "last_updated": "2026-04-30T18:08:22.870950+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "binary_sensor.p2s_sn2_ams_1_drying": {
+    "entity_id": "binary_sensor.p2s_sn2_ams_1_drying",
+    "state": "off",
+    "attributes": {
+      "device_class": "running",
+      "icon": "mdi:heat-wave",
+      "friendly_name": "P2S_sn2_AMS_1 Drying"
+    },
+    "last_changed": "2026-04-30T18:08:22.871117+00:00",
+    "last_reported": "2026-04-30T18:08:24.387254+00:00",
+    "last_updated": "2026-04-30T18:08:22.871117+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "binary_sensor.p2s_sn2_door": {
+    "entity_id": "binary_sensor.p2s_sn2_door",
+    "state": "off",
+    "attributes": {
+      "device_class": "door",
+      "friendly_name": "P2S_sn2 Door"
+    },
+    "last_changed": "2026-04-30T18:08:22.870270+00:00",
+    "last_reported": "2026-04-30T18:08:24.387134+00:00",
+    "last_updated": "2026-04-30T18:08:22.870270+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "binary_sensor.p2s_sn2_externalspool_active": {
+    "entity_id": "binary_sensor.p2s_sn2_externalspool_active",
+    "state": "off",
+    "attributes": {
+      "device_class": "running",
+      "icon": "mdi:check",
+      "friendly_name": "P2S_sn2_ExternalSpool Active"
+    },
+    "last_changed": "2026-04-30T18:08:22.871319+00:00",
+    "last_reported": "2026-04-30T18:08:24.387281+00:00",
+    "last_updated": "2026-04-30T18:08:22.871319+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "binary_sensor.p2s_sn2_extruder_filament": {
+    "entity_id": "binary_sensor.p2s_sn2_extruder_filament",
+    "state": "on",
+    "attributes": {
+      "friendly_name": "P2S_sn2 Extruder filament"
+    },
+    "last_changed": "2026-04-30T18:08:22.869408+00:00",
+    "last_reported": "2026-04-30T18:08:24.387048+00:00",
+    "last_updated": "2026-04-30T18:08:22.869408+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "binary_sensor.p2s_sn2_firmware": {
+    "entity_id": "binary_sensor.p2s_sn2_firmware",
+    "state": "off",
+    "attributes": {
+      "device_class": "update",
+      "friendly_name": "P2S_sn2 Firmware"
+    },
+    "last_changed": "2026-04-30T18:08:22.870100+00:00",
+    "last_reported": "2026-04-30T18:08:24.387120+00:00",
+    "last_updated": "2026-04-30T18:08:22.870100+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "binary_sensor.p2s_sn2_hms_errors": {
+    "entity_id": "binary_sensor.p2s_sn2_hms_errors",
+    "state": "on",
+    "attributes": {
+      "1-Code": "HMS_0500_0600_0002_0070",
+      "1-Error": "unknown",
+      "1-Wiki": "https://wiki.bambulab.com/en/x1/troubleshooting/hmscode/0500_0600_0002_0070",
+      "1-Severity": "serious",
+      "Count": 1,
+      "device_class": "problem",
+      "friendly_name": "P2S_sn2 HMS errors"
+    },
+    "last_changed": "2026-04-30T18:08:22.869601+00:00",
+    "last_reported": "2026-04-30T18:08:24.387070+00:00",
+    "last_updated": "2026-04-30T18:08:22.869601+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "binary_sensor.p2s_sn2_online": {
+    "entity_id": "binary_sensor.p2s_sn2_online",
+    "state": "on",
+    "attributes": {
+      "device_class": "running",
+      "friendly_name": "P2S_sn2 Online"
+    },
+    "last_changed": "2026-04-30T18:08:22.869928+00:00",
+    "last_reported": "2026-04-30T18:08:24.387105+00:00",
+    "last_updated": "2026-04-30T18:08:22.869928+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "binary_sensor.p2s_sn2_print_error": {
+    "entity_id": "binary_sensor.p2s_sn2_print_error",
+    "state": "off",
+    "attributes": {
+      "device_class": "problem",
+      "friendly_name": "P2S_sn2 Print error"
+    },
+    "last_changed": "2026-04-30T18:08:22.869765+00:00",
+    "last_reported": "2026-04-30T18:08:24.387088+00:00",
+    "last_updated": "2026-04-30T18:08:22.869765+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "binary_sensor.p2s_sn2_timelapse": {
+    "entity_id": "binary_sensor.p2s_sn2_timelapse",
+    "state": "off",
+    "attributes": {
+      "device_class": "running",
+      "icon": "mdi:camera",
+      "friendly_name": "P2S_sn2 Timelapse"
+    },
+    "last_changed": "2026-04-30T18:08:22.869158+00:00",
+    "last_reported": "2026-04-30T18:08:24.386994+00:00",
+    "last_updated": "2026-04-30T18:08:22.869158+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "button.a1mini_sn1_force_refresh_data": {
+    "entity_id": "button.a1mini_sn1_force_refresh_data",
+    "state": "unknown",
+    "attributes": {
+      "icon": "mdi:refresh",
+      "friendly_name": "A1MINI_sn1 Force refresh"
+    },
+    "last_changed": "2026-04-30T18:08:21.483351+00:00",
+    "last_reported": "2026-04-30T18:13:20.059632+00:00",
+    "last_updated": "2026-04-30T18:08:21.483351+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "button.a1mini_sn1_pause_printing": {
+    "entity_id": "button.a1mini_sn1_pause_printing",
+    "state": "unavailable",
+    "attributes": {
+      "icon": "mdi:pause",
+      "friendly_name": "A1MINI_sn1 Pause"
+    },
+    "last_changed": "2026-04-30T18:08:21.482817+00:00",
+    "last_reported": "2026-04-30T18:13:20.059558+00:00",
+    "last_updated": "2026-04-30T18:08:21.482817+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "button.a1mini_sn1_resume_printing": {
+    "entity_id": "button.a1mini_sn1_resume_printing",
+    "state": "unavailable",
+    "attributes": {
+      "icon": "mdi:play",
+      "friendly_name": "A1MINI_sn1 Resume"
+    },
+    "last_changed": "2026-04-30T18:08:21.482999+00:00",
+    "last_reported": "2026-04-30T18:13:20.059583+00:00",
+    "last_updated": "2026-04-30T18:08:21.482999+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "button.a1mini_sn1_stop_printing": {
+    "entity_id": "button.a1mini_sn1_stop_printing",
+    "state": "unavailable",
+    "attributes": {
+      "icon": "mdi:stop",
+      "friendly_name": "A1MINI_sn1 Stop"
+    },
+    "last_changed": "2026-04-30T18:08:21.483176+00:00",
+    "last_reported": "2026-04-30T18:13:20.059609+00:00",
+    "last_updated": "2026-04-30T18:08:21.483176+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "camera.a1mini_sn1_camera": {
+    "entity_id": "camera.a1mini_sn1_camera",
+    "state": "streaming",
+    "attributes": {
+      "access_token": "<redacted>",
+      "brand": "Bambu Lab",
+      "entity_picture": "/api/camera_proxy/camera.a1mini_sn1_camera?token=REDACTED",
+      "icon": "mdi:camera",
+      "friendly_name": "A1MINI_sn1 Camera",
+      "supported_features": 0
+    },
+    "last_changed": "2026-04-30T18:08:21.483939+00:00",
+    "last_reported": "2026-05-05T22:13:12.373073+00:00",
+    "last_updated": "2026-05-05T22:13:07.553843+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "fan.a1mini_sn1_cooling_fan": {
+    "entity_id": "fan.a1mini_sn1_cooling_fan",
+    "state": "off",
+    "attributes": {
+      "preset_modes": null,
+      "percentage": 0,
+      "percentage_step": 1.0,
+      "preset_mode": null,
+      "friendly_name": "A1MINI_sn1 Cooling fan",
+      "supported_features": 49
+    },
+    "last_changed": "2026-04-30T18:08:21.484437+00:00",
+    "last_reported": "2026-04-30T18:13:55.265296+00:00",
+    "last_updated": "2026-04-30T18:08:21.484437+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "image.a1mini_sn1_cover_image": {
+    "entity_id": "image.a1mini_sn1_cover_image",
+    "state": "2026-04-30T19:08:24.869197",
+    "attributes": {
+      "access_token": "<redacted>",
+      "entity_picture": "/api/image_proxy/image.a1mini_sn1_cover_image?token=REDACTED",
+      "friendly_name": "A1MINI_sn1 Cover image"
+    },
+    "last_changed": "2026-04-30T18:08:24.869959+00:00",
+    "last_reported": "2026-05-05T22:13:12.373202+00:00",
+    "last_updated": "2026-05-05T22:13:07.627922+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "image.a1mini_sn1_pick_image": {
+    "entity_id": "image.a1mini_sn1_pick_image",
+    "state": "2026-04-30T19:08:24.936681",
+    "attributes": {
+      "access_token": "<redacted>",
+      "entity_picture": "/api/image_proxy/image.a1mini_sn1_pick_image?token=REDACTED",
+      "friendly_name": "A1MINI_sn1 Pick image"
+    },
+    "last_changed": "2026-04-30T18:08:24.995341+00:00",
+    "last_reported": "2026-05-05T22:13:12.373238+00:00",
+    "last_updated": "2026-05-05T22:13:07.628177+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "image.p2s_sn2_cover_image": {
+    "entity_id": "image.p2s_sn2_cover_image",
+    "state": "2026-04-30T19:08:24.089518",
+    "attributes": {
+      "access_token": "<redacted>",
+      "entity_picture": "/api/image_proxy/image.p2s_sn2_cover_image?token=REDACTED",
+      "friendly_name": "P2S_sn2 Cover image"
+    },
+    "last_changed": "2026-04-30T18:08:24.090199+00:00",
+    "last_reported": "2026-05-05T22:13:07.628278+00:00",
+    "last_updated": "2026-05-05T22:13:07.628278+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "image.p2s_sn2_pick_image": {
+    "entity_id": "image.p2s_sn2_pick_image",
+    "state": "2026-04-30T19:08:24.277409",
+    "attributes": {
+      "access_token": "<redacted>",
+      "entity_picture": "/api/image_proxy/image.p2s_sn2_pick_image?token=REDACTED",
+      "friendly_name": "P2S_sn2 Pick image"
+    },
+    "last_changed": "2026-04-30T18:08:24.387361+00:00",
+    "last_reported": "2026-05-05T22:13:07.628350+00:00",
+    "last_updated": "2026-05-05T22:13:07.628350+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "light.a1mini_sn1_chamber_light": {
+    "entity_id": "light.a1mini_sn1_chamber_light",
+    "state": "on",
+    "attributes": {
+      "supported_color_modes": [
+        "onoff"
+      ],
+      "color_mode": "onoff",
+      "icon": "mdi:led-strip-variant",
+      "friendly_name": "A1MINI_sn1 Chamber light",
+      "supported_features": 0
+    },
+    "last_changed": "2026-04-30T18:08:21.486475+00:00",
+    "last_reported": "2026-04-30T18:13:55.265446+00:00",
+    "last_updated": "2026-04-30T18:08:21.486475+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "light.p2s_sn2_chamber_light": {
+    "entity_id": "light.p2s_sn2_chamber_light",
+    "state": "off",
+    "attributes": {
+      "supported_color_modes": [
+        "onoff"
+      ],
+      "color_mode": null,
+      "icon": "mdi:led-strip-variant",
+      "friendly_name": "P2S_sn2 Chamber light",
+      "supported_features": 0
+    },
+    "last_changed": "2026-04-30T18:08:22.872820+00:00",
+    "last_reported": "2026-04-30T18:08:24.387450+00:00",
+    "last_updated": "2026-04-30T18:08:22.872820+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "select.a1mini_sn1_printing_speed": {
+    "entity_id": "select.a1mini_sn1_printing_speed",
+    "state": "unavailable",
+    "attributes": {
+      "options": [
+        "silent",
+        "standard",
+        "sport",
+        "ludicrous"
+      ],
+      "icon": "mdi:speedometer",
+      "friendly_name": "A1MINI_sn1 Printing speed"
+    },
+    "last_changed": "2026-04-30T18:08:21.487558+00:00",
+    "last_reported": "2026-04-30T18:13:55.265657+00:00",
+    "last_updated": "2026-04-30T18:08:21.487558+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.a1mini_sn1_active_tray": {
+    "entity_id": "sensor.a1mini_sn1_active_tray",
+    "state": "none",
+    "attributes": {
+      "friendly_name": "A1MINI_sn1 Active tray"
+    },
+    "last_changed": "2026-04-30T18:08:21.497660+00:00",
+    "last_reported": "2026-04-30T18:13:55.266963+00:00",
+    "last_updated": "2026-04-30T18:08:21.497660+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.a1mini_sn1_ams_1_humidity": {
+    "entity_id": "sensor.a1mini_sn1_ams_1_humidity",
+    "state": "0",
+    "attributes": {
+      "state_class": "measurement",
+      "unit_of_measurement": "%",
+      "device_class": "humidity",
+      "friendly_name": "A1MINI_sn1_AMS_1 Humidity"
+    },
+    "last_changed": "2026-04-30T18:08:21.488539+00:00",
+    "last_reported": "2026-04-30T18:13:55.265832+00:00",
+    "last_updated": "2026-04-30T18:08:21.488539+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.a1mini_sn1_ams_1_humidity_index": {
+    "entity_id": "sensor.a1mini_sn1_ams_1_humidity_index",
+    "state": "1",
+    "attributes": {
+      "state_class": "measurement",
+      "icon": "mdi:water-percent",
+      "friendly_name": "A1MINI_sn1_AMS_1 Humidity index"
+    },
+    "last_changed": "2026-04-30T18:08:21.488296+00:00",
+    "last_reported": "2026-04-30T18:13:55.265799+00:00",
+    "last_updated": "2026-04-30T18:08:21.488296+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.a1mini_sn1_ams_1_temperature_2": {
+    "entity_id": "sensor.a1mini_sn1_ams_1_temperature_2",
+    "state": "0",
+    "attributes": {
+      "state_class": "measurement",
+      "unit_of_measurement": "°C",
+      "device_class": "temperature",
+      "friendly_name": "A1MINI_sn1_AMS_1 Temperature"
+    },
+    "last_changed": "2026-04-30T18:08:21.488775+00:00",
+    "last_reported": "2026-04-30T18:13:55.265859+00:00",
+    "last_updated": "2026-04-30T18:08:21.488775+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.a1mini_sn1_ams_1_tray_1": {
+    "entity_id": "sensor.a1mini_sn1_ams_1_tray_1",
+    "state": "Generic PLA",
+    "attributes": {
+      "slot": 1,
+      "active": false,
+      "bed_temp": "0",
+      "color": "#XXXXXXXX",
+      "cols": [
+        "#XXXXXXXX"
+      ],
+      "ctype": 0,
+      "dry_temp": "0",
+      "dry_time": "0",
+      "empty": false,
+      "filament_id": "<redacted>",
+      "k_value": "<redacted>",
+      "tray_weight": "0",
+      "name": "Generic PLA",
+      "nozzle_temp_min": "190",
+      "nozzle_temp_max": "240",
+      "remain": 100,
+      "remain_enabled": true,
+      "tag_uid": "<redacted>",
+      "tray_uuid": "<redacted>",
+      "type": "PLA",
+      "icon": "mdi:printer-3d-nozzle",
+      "friendly_name": "A1MINI_sn1_AMS_1 Tray 1"
+    },
+    "last_changed": "2026-04-30T18:08:21.489031+00:00",
+    "last_reported": "2026-04-30T18:13:55.265940+00:00",
+    "last_updated": "2026-04-30T18:08:21.489031+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.a1mini_sn1_ams_1_tray_2": {
+    "entity_id": "sensor.a1mini_sn1_ams_1_tray_2",
+    "state": "Empty",
+    "attributes": {
+      "slot": 2,
+      "active": false,
+      "bed_temp": 0,
+      "color": "#XXXXXXXX",
+      "cols": [],
+      "ctype": 0,
+      "dry_temp": 0,
+      "dry_time": 0,
+      "empty": true,
+      "filament_id": "<redacted>",
+      "k_value": "<redacted>",
+      "tray_weight": 0,
+      "name": "Empty",
+      "nozzle_temp_min": 0,
+      "nozzle_temp_max": 0,
+      "remain": -1,
+      "remain_enabled": true,
+      "tag_uid": "<redacted>",
+      "tray_uuid": "<redacted>",
+      "type": "Empty",
+      "icon": "mdi:printer-3d-nozzle",
+      "friendly_name": "A1MINI_sn1_AMS_1 Tray 2"
+    },
+    "last_changed": "2026-04-30T18:08:21.489259+00:00",
+    "last_reported": "2026-04-30T18:13:55.265995+00:00",
+    "last_updated": "2026-04-30T18:08:21.489259+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.a1mini_sn1_ams_1_tray_3": {
+    "entity_id": "sensor.a1mini_sn1_ams_1_tray_3",
+    "state": "Empty",
+    "attributes": {
+      "slot": 3,
+      "active": false,
+      "bed_temp": 0,
+      "color": "#XXXXXXXX",
+      "cols": [],
+      "ctype": 0,
+      "dry_temp": 0,
+      "dry_time": 0,
+      "empty": true,
+      "filament_id": "<redacted>",
+      "k_value": "<redacted>",
+      "tray_weight": 0,
+      "name": "Empty",
+      "nozzle_temp_min": 0,
+      "nozzle_temp_max": 0,
+      "remain": -1,
+      "remain_enabled": true,
+      "tag_uid": "<redacted>",
+      "tray_uuid": "<redacted>",
+      "type": "Empty",
+      "icon": "mdi:printer-3d-nozzle",
+      "friendly_name": "A1MINI_sn1_AMS_1 Tray 3"
+    },
+    "last_changed": "2026-04-30T18:08:21.489496+00:00",
+    "last_reported": "2026-04-30T18:13:55.266044+00:00",
+    "last_updated": "2026-04-30T18:08:21.489496+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.a1mini_sn1_ams_1_tray_4": {
+    "entity_id": "sensor.a1mini_sn1_ams_1_tray_4",
+    "state": "Bambu PLA Basic",
+    "attributes": {
+      "slot": 4,
+      "active": false,
+      "bed_temp": "0",
+      "color": "#XXXXXXXX",
+      "cols": [
+        "#XXXXXXXX"
+      ],
+      "ctype": 0,
+      "dry_temp": "55",
+      "dry_time": "8",
+      "empty": false,
+      "filament_id": "<redacted>",
+      "k_value": "<redacted>",
+      "tray_weight": "1000",
+      "name": "Bambu PLA Basic",
+      "nozzle_temp_min": "190",
+      "nozzle_temp_max": "230",
+      "remain": 100,
+      "remain_enabled": true,
+      "tag_uid": "<redacted>",
+      "tray_uuid": "<redacted>",
+      "type": "PLA",
+      "icon": "mdi:printer-3d-nozzle",
+      "friendly_name": "A1MINI_sn1_AMS_1 Tray 4"
+    },
+    "last_changed": "2026-04-30T18:08:21.489715+00:00",
+    "last_reported": "2026-04-30T18:13:55.266094+00:00",
+    "last_updated": "2026-04-30T18:08:21.489715+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.a1mini_sn1_bed_temperature": {
+    "entity_id": "sensor.a1mini_sn1_bed_temperature",
+    "state": "22",
+    "attributes": {
+      "state_class": "measurement",
+      "unit_of_measurement": "°C",
+      "device_class": "temperature",
+      "friendly_name": "A1MINI_sn1 Bed temperature"
+    },
+    "last_changed": "2026-05-05T22:17:51.888728+00:00",
+    "last_reported": "2026-05-05T22:18:02.243313+00:00",
+    "last_updated": "2026-05-05T22:17:51.888728+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.a1mini_sn1_cooling_fan_speed": {
+    "entity_id": "sensor.a1mini_sn1_cooling_fan_speed",
+    "state": "0",
+    "attributes": {
+      "state_class": "measurement",
+      "unit_of_measurement": "%",
+      "friendly_name": "A1MINI_sn1 Cooling fan speed"
+    },
+    "last_changed": "2026-04-30T18:08:21.491110+00:00",
+    "last_reported": "2026-04-30T18:13:55.266351+00:00",
+    "last_updated": "2026-04-30T18:08:21.491110+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.a1mini_sn1_current_layer": {
+    "entity_id": "sensor.a1mini_sn1_current_layer",
+    "state": "0",
+    "attributes": {
+      "state_class": "measurement",
+      "friendly_name": "A1MINI_sn1 Current layer"
+    },
+    "last_changed": "2026-04-30T18:08:21.495579+00:00",
+    "last_reported": "2026-04-30T18:13:55.266706+00:00",
+    "last_updated": "2026-04-30T18:08:21.495579+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.a1mini_sn1_current_stage": {
+    "entity_id": "sensor.a1mini_sn1_current_stage",
+    "state": "idle",
+    "attributes": {
+      "options": [
+        "check_absolute_accuracy_after_calibration",
+        "preparing_hotend",
+        "paused_first_layer_error",
+        "paused_filament_runout",
+        "calibrating_micro_lidar",
+        "identifying_build_plate_type",
+        "paused_cutter_error",
+        "filament_loading",
+        "calibrate_birdeye_camera",
+        "preparing_ams",
+        "calibrating_extrusion",
+        "check_door_and_cover",
+        "paused_nozzle_temperature_malfunction",
+        "paused_chamber_temperature_control_error",
+        "inspecting_first_layer",
+        "heating_hotend",
+        "thermal_preconditioning",
+        "check_plaform",
+        "paused_user_gcode",
+        "laser_calibration",
+        "unknown",
+        "paused_user",
+        "scanning_bed_surface",
+        "paused_skipped_step",
+        "paused_heat_bed_temperature_malfunction",
+        "bed_level_high_temperature",
+        "paused_low_fan_speed_heat_break",
+        "m400_pause",
+        "calibrating_cutter_model_offset",
+        "purifying_chamber_air",
+        "calibrating_detection_nozzle_clumping",
+        "idle",
+        "heated_bedcooling",
+        "waiting_chamber_temperature_equalize",
+        "checking_extruder_temperature",
+        "paused_front_cover_falling",
+        "check_quick_release",
+        "bed_level_phase_2",
+        "heating_chamber",
+        "waiting_for_heatbed_temperature",
+        "hotend_pick_place_test",
+        "bed_level_phase_1",
+        "calibrating_blade_holder_position",
+        "auto_bed_leveling",
+        "cleaning_nozzle_tip",
+        "filament_unloading",
+        "calibrating_motor_noise",
+        "calibrating_live_view_camera",
+        "calibrating_camera_offset",
+        "check_absolute_accuracy_before_calibration",
+        "homing_blade_holder",
+        "absolute_accuracy_calibration",
+        "paused_nozzle_clog",
+        "check_material",
+        "homing_toolhead",
+        "paused_nozzle_filament_covered_detected",
+        "sweeping_xy_mech_mode",
+        "check_birdeye_camera_position",
+        "cooling_chamber",
+        "motor_noise_showoff",
+        "print_calibration_lines",
+        "printing",
+        "heatbed_preheating",
+        "changing_filament",
+        "calibrating_extrusion_flow",
+        "paused_ams_lost",
+        "check_material_position",
+        "measuring_surface",
+        "calibrate_nozzle_offset",
+        "offline"
+      ],
+      "device_class": "enum",
+      "friendly_name": "A1MINI_sn1 Current stage"
+    },
+    "last_changed": "2026-04-30T18:08:21.493172+00:00",
+    "last_reported": "2026-04-30T18:13:55.266453+00:00",
+    "last_updated": "2026-04-30T18:08:21.493172+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.a1mini_sn1_end_time": {
+    "entity_id": "sensor.a1mini_sn1_end_time",
+    "state": "unavailable",
+    "attributes": {
+      "friendly_name": "A1MINI_sn1 End time"
+    },
+    "last_changed": "2026-04-30T18:08:21.495224+00:00",
+    "last_reported": "2026-04-30T18:13:55.266659+00:00",
+    "last_updated": "2026-04-30T18:08:21.495224+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.a1mini_sn1_externalspool_external_spool": {
+    "entity_id": "sensor.a1mini_sn1_externalspool_external_spool",
+    "state": "Generic PLA",
+    "attributes": {
+      "active": false,
+      "bed_temp": "0",
+      "color": "#XXXXXXXX",
+      "cols": [],
+      "ctype": 0,
+      "dry_temp": "0",
+      "dry_time": "0",
+      "empty": false,
+      "filament_id": "<redacted>",
+      "k_value": "<redacted>",
+      "tray_weight": "0",
+      "name": "Generic PLA",
+      "nozzle_temp_min": "190",
+      "nozzle_temp_max": "240",
+      "remain": -1,
+      "remain_enabled": false,
+      "tag_uid": "<redacted>",
+      "tray_uuid": "<redacted>",
+      "type": "PLA",
+      "icon": "mdi:printer-3d-nozzle",
+      "friendly_name": "A1MINI_sn1_ExternalSpool External spool"
+    },
+    "last_changed": "2026-04-30T18:08:21.488043+00:00",
+    "last_reported": "2026-04-30T18:13:55.265756+00:00",
+    "last_updated": "2026-04-30T18:08:21.488043+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.a1mini_sn1_gcode_file_downloaded": {
+    "entity_id": "sensor.a1mini_sn1_gcode_file_downloaded",
+    "state": "711381-0.2mm layer, 4 walls, 20% infill.gcode",
+    "attributes": {
+      "icon": "mdi:file",
+      "friendly_name": "A1MINI_sn1 Gcode file downloaded"
+    },
+    "last_changed": "2026-04-30T18:08:24.996378+00:00",
+    "last_reported": "2026-04-30T18:13:55.266767+00:00",
+    "last_updated": "2026-04-30T18:08:24.996378+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.a1mini_sn1_gcode_filename": {
+    "entity_id": "sensor.a1mini_sn1_gcode_filename",
+    "state": "unavailable",
+    "attributes": {
+      "icon": "mdi:file",
+      "friendly_name": "A1MINI_sn1 Gcode filename"
+    },
+    "last_changed": "2026-04-30T18:08:21.495890+00:00",
+    "last_reported": "2026-04-30T18:13:55.266746+00:00",
+    "last_updated": "2026-04-30T18:08:21.495890+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.a1mini_sn1_heatbreak_fan_speed": {
+    "entity_id": "sensor.a1mini_sn1_heatbreak_fan_speed",
+    "state": "0",
+    "attributes": {
+      "state_class": "measurement",
+      "unit_of_measurement": "%",
+      "friendly_name": "A1MINI_sn1 Heatbreak fan speed"
+    },
+    "last_changed": "2026-04-30T18:08:21.491618+00:00",
+    "last_reported": "2026-04-30T18:13:55.266376+00:00",
+    "last_updated": "2026-04-30T18:08:21.491618+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.a1mini_sn1_ip_address": {
+    "entity_id": "sensor.a1mini_sn1_ip_address",
+    "state": "<redacted>",
+    "attributes": {
+      "friendly_name": "A1MINI_sn1 IP address"
+    },
+    "last_changed": "2026-04-30T18:08:21.498200+00:00",
+    "last_reported": "2026-04-30T18:13:55.267030+00:00",
+    "last_updated": "2026-04-30T18:08:21.498200+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.a1mini_sn1_model_download": {
+    "entity_id": "sensor.a1mini_sn1_model_download",
+    "state": "100",
+    "attributes": {
+      "state_class": "measurement",
+      "unit_of_measurement": "%",
+      "friendly_name": "A1MINI_sn1 Model download"
+    },
+    "last_changed": "2026-04-30T18:08:21.491887+00:00",
+    "last_reported": "2026-04-30T18:13:55.266400+00:00",
+    "last_updated": "2026-04-30T18:08:21.491887+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.a1mini_sn1_mqtt_connection_mode": {
+    "entity_id": "sensor.a1mini_sn1_mqtt_connection_mode",
+    "state": "bambu_cloud",
+    "attributes": {
+      "options": [
+        "bambu_cloud",
+        "local"
+      ],
+      "device_class": "enum",
+      "friendly_name": "A1MINI_sn1 MQTT connection mode"
+    },
+    "last_changed": "2026-04-30T18:08:21.489952+00:00",
+    "last_reported": "2026-04-30T18:13:55.266131+00:00",
+    "last_updated": "2026-04-30T18:08:21.489952+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.a1mini_sn1_nozzle_size": {
+    "entity_id": "sensor.a1mini_sn1_nozzle_size",
+    "state": "0.4",
+    "attributes": {
+      "unit_of_measurement": "mm",
+      "device_class": "distance",
+      "friendly_name": "A1MINI_sn1 Nozzle size"
+    },
+    "last_changed": "2026-04-30T18:08:21.497854+00:00",
+    "last_reported": "2026-04-30T18:13:55.266989+00:00",
+    "last_updated": "2026-04-30T18:08:21.497854+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.a1mini_sn1_nozzle_target_temperature": {
+    "entity_id": "sensor.a1mini_sn1_nozzle_target_temperature",
+    "state": "0",
+    "attributes": {
+      "state_class": "measurement",
+      "unit_of_measurement": "°C",
+      "device_class": "temperature",
+      "friendly_name": "A1MINI_sn1 Nozzle target temperature"
+    },
+    "last_changed": "2026-04-30T18:08:21.490916+00:00",
+    "last_reported": "2026-04-30T18:13:55.266326+00:00",
+    "last_updated": "2026-04-30T18:08:21.490916+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.a1mini_sn1_nozzle_temperature": {
+    "entity_id": "sensor.a1mini_sn1_nozzle_temperature",
+    "state": "23",
+    "attributes": {
+      "state_class": "measurement",
+      "unit_of_measurement": "°C",
+      "device_class": "temperature",
+      "friendly_name": "A1MINI_sn1 Nozzle temperature"
+    },
+    "last_changed": "2026-05-05T20:28:39.946844+00:00",
+    "last_reported": "2026-05-05T20:28:44.090326+00:00",
+    "last_updated": "2026-05-05T20:28:39.946844+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.a1mini_sn1_nozzle_type": {
+    "entity_id": "sensor.a1mini_sn1_nozzle_type",
+    "state": "stainless_steel",
+    "attributes": {
+      "friendly_name": "A1MINI_sn1 Nozzle type"
+    },
+    "last_changed": "2026-04-30T18:08:21.498013+00:00",
+    "last_reported": "2026-04-30T18:13:55.267010+00:00",
+    "last_updated": "2026-04-30T18:08:21.498013+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.a1mini_sn1_print_bed_type": {
+    "entity_id": "sensor.a1mini_sn1_print_bed_type",
+    "state": "textured_plate",
+    "attributes": {
+      "friendly_name": "A1MINI_sn1 Print bed type"
+    },
+    "last_changed": "2026-04-30T18:08:24.996507+00:00",
+    "last_reported": "2026-04-30T18:13:55.266901+00:00",
+    "last_updated": "2026-04-30T18:08:24.996507+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.a1mini_sn1_print_length": {
+    "entity_id": "sensor.a1mini_sn1_print_length",
+    "state": "4.94",
+    "attributes": {
+      "state_class": "measurement",
+      "unit_of_measurement": "m",
+      "device_class": "distance",
+      "friendly_name": "A1MINI_sn1 Print length"
+    },
+    "last_changed": "2026-04-30T18:08:24.996482+00:00",
+    "last_reported": "2026-04-30T18:13:55.266879+00:00",
+    "last_updated": "2026-04-30T18:08:24.996482+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.a1mini_sn1_print_progress": {
+    "entity_id": "sensor.a1mini_sn1_print_progress",
+    "state": "0",
+    "attributes": {
+      "state_class": "measurement",
+      "unit_of_measurement": "%",
+      "friendly_name": "A1MINI_sn1 Print progress"
+    },
+    "last_changed": "2026-04-30T18:08:21.493676+00:00",
+    "last_reported": "2026-04-30T18:13:55.266474+00:00",
+    "last_updated": "2026-04-30T18:08:21.493676+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.a1mini_sn1_print_status": {
+    "entity_id": "sensor.a1mini_sn1_print_status",
+    "state": "idle",
+    "attributes": {
+      "options": [
+        "failed",
+        "finish",
+        "idle",
+        "init",
+        "offline",
+        "pause",
+        "prepare",
+        "running",
+        "slicing",
+        "unknown",
+        "offline"
+      ],
+      "device_class": "enum",
+      "friendly_name": "A1MINI_sn1 Print status"
+    },
+    "last_changed": "2026-04-30T18:08:21.493959+00:00",
+    "last_reported": "2026-04-30T18:13:55.266497+00:00",
+    "last_updated": "2026-04-30T18:08:21.493959+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.a1mini_sn1_print_type": {
+    "entity_id": "sensor.a1mini_sn1_print_type",
+    "state": "idle",
+    "attributes": {
+      "options": [
+        "local",
+        "cloud",
+        "unknown",
+        "idle",
+        "system"
+      ],
+      "device_class": "enum",
+      "icon": "mdi:file",
+      "friendly_name": "A1MINI_sn1 Print type"
+    },
+    "last_changed": "2026-04-30T18:08:21.496595+00:00",
+    "last_reported": "2026-04-30T18:13:55.266810+00:00",
+    "last_updated": "2026-04-30T18:08:21.496595+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.a1mini_sn1_print_weight": {
+    "entity_id": "sensor.a1mini_sn1_print_weight",
+    "state": "14.97",
+    "attributes": {
+      "state_class": "measurement",
+      "unit_of_measurement": "g",
+      "device_class": "weight",
+      "friendly_name": "A1MINI_sn1 Print weight"
+    },
+    "last_changed": "2026-04-30T18:08:24.996545+00:00",
+    "last_reported": "2026-04-30T18:13:55.266940+00:00",
+    "last_updated": "2026-04-30T18:08:24.996545+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.a1mini_sn1_printable_objects": {
+    "entity_id": "sensor.a1mini_sn1_printable_objects",
+    "state": "1",
+    "attributes": {
+      "state_class": "measurement",
+      "objects": {
+        "290": "Body1"
+      },
+      "friendly_name": "A1MINI_sn1 Printable objects"
+    },
+    "last_changed": "2026-04-30T18:08:24.996157+00:00",
+    "last_reported": "2026-04-30T18:13:55.266523+00:00",
+    "last_updated": "2026-04-30T18:08:24.996157+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.a1mini_sn1_printer_name": {
+    "entity_id": "sensor.a1mini_sn1_printer_name",
+    "state": "3DP-030-293",
+    "attributes": {
+      "friendly_name": "A1MINI_sn1 Printer name"
+    },
+    "last_changed": "2026-04-30T18:08:21.496845+00:00",
+    "last_reported": "2026-04-30T18:13:55.266833+00:00",
+    "last_updated": "2026-04-30T18:08:21.496845+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.a1mini_sn1_remaining_time": {
+    "entity_id": "sensor.a1mini_sn1_remaining_time",
+    "state": "0.0",
+    "attributes": {
+      "unit_of_measurement": "h",
+      "device_class": "duration",
+      "friendly_name": "A1MINI_sn1 Remaining time"
+    },
+    "last_changed": "2026-04-30T18:08:21.495055+00:00",
+    "last_reported": "2026-04-30T18:13:55.266641+00:00",
+    "last_updated": "2026-04-30T18:08:21.495055+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.a1mini_sn1_sd_card_status": {
+    "entity_id": "sensor.a1mini_sn1_sd_card_status",
+    "state": "normal",
+    "attributes": {
+      "options": [
+        "missing",
+        "normal",
+        "abnormal"
+      ],
+      "device_class": "enum",
+      "friendly_name": "A1MINI_sn1 SD card status"
+    },
+    "last_changed": "2026-04-30T18:08:21.494382+00:00",
+    "last_reported": "2026-04-30T18:13:55.266546+00:00",
+    "last_updated": "2026-04-30T18:08:21.494382+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.a1mini_sn1_serial_number": {
+    "entity_id": "sensor.a1mini_sn1_serial_number",
+    "state": "<redacted>",
+    "attributes": {
+      "friendly_name": "A1MINI_sn1 Serial number"
+    },
+    "last_changed": "2026-04-30T18:08:21.498359+00:00",
+    "last_reported": "2026-04-30T18:13:55.267049+00:00",
+    "last_updated": "2026-04-30T18:08:21.498359+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.a1mini_sn1_skipped_objects": {
+    "entity_id": "sensor.a1mini_sn1_skipped_objects",
+    "state": "0",
+    "attributes": {
+      "state_class": "measurement",
+      "objects": [],
+      "friendly_name": "A1MINI_sn1 Skipped objects"
+    },
+    "last_changed": "2026-04-30T18:08:21.494577+00:00",
+    "last_reported": "2026-04-30T18:13:55.266569+00:00",
+    "last_updated": "2026-04-30T18:08:21.494577+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.a1mini_sn1_speed_profile": {
+    "entity_id": "sensor.a1mini_sn1_speed_profile",
+    "state": "standard",
+    "attributes": {
+      "options": [
+        "silent",
+        "standard",
+        "sport",
+        "ludicrous"
+      ],
+      "modifier": 100,
+      "device_class": "enum",
+      "friendly_name": "A1MINI_sn1 Speed profile"
+    },
+    "last_changed": "2026-04-30T18:08:21.492092+00:00",
+    "last_reported": "2026-04-30T18:13:55.266426+00:00",
+    "last_updated": "2026-04-30T18:08:21.492092+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.a1mini_sn1_start_time": {
+    "entity_id": "sensor.a1mini_sn1_start_time",
+    "state": "unavailable",
+    "attributes": {
+      "friendly_name": "A1MINI_sn1 Start time"
+    },
+    "last_changed": "2026-04-30T18:08:21.494831+00:00",
+    "last_reported": "2026-04-30T18:13:20.060980+00:00",
+    "last_updated": "2026-04-30T18:08:21.494831+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.a1mini_sn1_target_bed_temperature": {
+    "entity_id": "sensor.a1mini_sn1_target_bed_temperature",
+    "state": "0",
+    "attributes": {
+      "state_class": "measurement",
+      "unit_of_measurement": "°C",
+      "device_class": "temperature",
+      "friendly_name": "A1MINI_sn1 Bed target temperature"
+    },
+    "last_changed": "2026-04-30T18:08:21.490532+00:00",
+    "last_reported": "2026-04-30T18:13:55.266277+00:00",
+    "last_updated": "2026-04-30T18:08:21.490532+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.a1mini_sn1_task_name": {
+    "entity_id": "sensor.a1mini_sn1_task_name",
+    "state": "unknown",
+    "attributes": {
+      "icon": "mdi:file",
+      "friendly_name": "A1MINI_sn1 Task name"
+    },
+    "last_changed": "2026-04-30T18:08:21.496199+00:00",
+    "last_reported": "2026-04-30T18:13:55.266788+00:00",
+    "last_updated": "2026-04-30T18:08:21.496199+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.a1mini_sn1_total_layer_count": {
+    "entity_id": "sensor.a1mini_sn1_total_layer_count",
+    "state": "0",
+    "attributes": {
+      "state_class": "measurement",
+      "friendly_name": "A1MINI_sn1 Total layer count"
+    },
+    "last_changed": "2026-04-30T18:08:21.495739+00:00",
+    "last_reported": "2026-04-30T18:13:55.266727+00:00",
+    "last_updated": "2026-04-30T18:08:21.495739+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.a1mini_sn1_total_usage": {
+    "entity_id": "sensor.a1mini_sn1_total_usage",
+    "state": "0.0",
+    "attributes": {
+      "state_class": "total_increasing",
+      "unit_of_measurement": "h",
+      "device_class": "duration",
+      "friendly_name": "A1MINI_sn1 Total usage"
+    },
+    "last_changed": "2026-04-30T18:08:21.495405+00:00",
+    "last_reported": "2026-04-30T18:13:55.266685+00:00",
+    "last_updated": "2026-04-30T18:08:21.495405+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.a1mini_sn1_wi_fi_signal": {
+    "entity_id": "sensor.a1mini_sn1_wi_fi_signal",
+    "state": "-57",
+    "attributes": {
+      "state_class": "measurement",
+      "unit_of_measurement": "dBm",
+      "device_class": "signal_strength",
+      "friendly_name": "A1MINI_sn1 Wi-Fi signal"
+    },
+    "last_changed": "2026-05-05T22:18:02.243152+00:00",
+    "last_reported": "2026-05-05T22:18:02.243152+00:00",
+    "last_updated": "2026-05-05T22:18:02.243152+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.p2s_sn2_active_tray": {
+    "entity_id": "sensor.p2s_sn2_active_tray",
+    "state": "Generic TPU",
+    "attributes": {
+      "ams_index": 255,
+      "bed_temp": "0",
+      "color": "#XXXXXXXX",
+      "cols": [
+        "#XXXXXXXX"
+      ],
+      "ctype": 2,
+      "dry_temp": 0,
+      "dry_time": 0,
+      "filament_id": "<redacted>",
+      "tray_weight": "0",
+      "name": "Generic TPU",
+      "nozzle_temp_min": "200",
+      "nozzle_temp_max": "250",
+      "remain": -1,
+      "remain_enabled": false,
+      "tag_uid": "<redacted>",
+      "tray_index": 3,
+      "tray_uuid": "<redacted>",
+      "type": "TPU",
+      "friendly_name": "P2S_sn2 Active tray"
+    },
+    "last_changed": "2026-04-30T18:08:22.887706+00:00",
+    "last_reported": "2026-04-30T18:08:24.388581+00:00",
+    "last_updated": "2026-04-30T18:08:22.887706+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.p2s_sn2_airduct_mode": {
+    "entity_id": "sensor.p2s_sn2_airduct_mode",
+    "state": "cooling",
+    "attributes": {
+      "options": [
+        "cooling",
+        "heating"
+      ],
+      "device_class": "enum",
+      "friendly_name": "P2S_sn2 Airduct mode"
+    },
+    "last_changed": "2026-04-30T18:08:22.883008+00:00",
+    "last_reported": "2026-04-30T18:08:24.388100+00:00",
+    "last_updated": "2026-04-30T18:08:22.883008+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.p2s_sn2_ams_1_humidity": {
+    "entity_id": "sensor.p2s_sn2_ams_1_humidity",
+    "state": "36",
+    "attributes": {
+      "state_class": "measurement",
+      "unit_of_measurement": "%",
+      "device_class": "humidity",
+      "friendly_name": "P2S_sn2_AMS_1 Humidity"
+    },
+    "last_changed": "2026-05-05T06:21:11.774471+00:00",
+    "last_reported": "2026-05-05T06:21:11.774471+00:00",
+    "last_updated": "2026-05-05T06:21:11.774471+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.p2s_sn2_ams_1_humidity_index": {
+    "entity_id": "sensor.p2s_sn2_ams_1_humidity_index",
+    "state": "4",
+    "attributes": {
+      "state_class": "measurement",
+      "icon": "mdi:water-percent",
+      "friendly_name": "P2S_sn2_AMS_1 Humidity index"
+    },
+    "last_changed": "2026-04-30T18:08:22.873723+00:00",
+    "last_reported": "2026-04-30T18:08:24.387562+00:00",
+    "last_updated": "2026-04-30T18:08:22.873723+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.p2s_sn2_ams_1_remaining_drying_time": {
+    "entity_id": "sensor.p2s_sn2_ams_1_remaining_drying_time",
+    "state": "0.0",
+    "attributes": {
+      "unit_of_measurement": "h",
+      "device_class": "duration",
+      "icon": "mdi:fan-clock",
+      "friendly_name": "P2S_sn2_AMS_1 Remaining drying time"
+    },
+    "last_changed": "2026-04-30T18:08:22.878089+00:00",
+    "last_reported": "2026-04-30T18:08:24.387655+00:00",
+    "last_updated": "2026-04-30T18:08:22.878089+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.p2s_sn2_ams_1_temperature": {
+    "entity_id": "sensor.p2s_sn2_ams_1_temperature",
+    "state": "24.9",
+    "attributes": {
+      "state_class": "measurement",
+      "unit_of_measurement": "°C",
+      "device_class": "temperature",
+      "friendly_name": "P2S_sn2_AMS_1 Temperature"
+    },
+    "last_changed": "2026-05-05T10:20:06.712533+00:00",
+    "last_reported": "2026-05-05T10:20:06.712533+00:00",
+    "last_updated": "2026-05-05T10:20:06.712533+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.p2s_sn2_ams_1_tray_1": {
+    "entity_id": "sensor.p2s_sn2_ams_1_tray_1",
+    "state": "Bambu TPU for AMS",
+    "attributes": {
+      "slot": 1,
+      "active": false,
+      "bed_temp": "0",
+      "color": "#XXXXXXXX",
+      "cols": [
+        "#XXXXXXXX"
+      ],
+      "ctype": 2,
+      "dry_temp": 0,
+      "dry_time": 0,
+      "empty": false,
+      "filament_id": "<redacted>",
+      "tray_weight": "1000",
+      "name": "Bambu TPU for AMS",
+      "nozzle_temp_min": "220",
+      "nozzle_temp_max": "240",
+      "remain": 100,
+      "remain_enabled": true,
+      "tag_uid": "<redacted>",
+      "tray_uuid": "<redacted>",
+      "type": "TPU-AMS",
+      "icon": "mdi:printer-3d-nozzle",
+      "friendly_name": "P2S_sn2_AMS_1 Tray 1"
+    },
+    "last_changed": "2026-04-30T18:08:22.878361+00:00",
+    "last_reported": "2026-04-30T18:08:24.387709+00:00",
+    "last_updated": "2026-04-30T18:08:22.878361+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.p2s_sn2_ams_1_tray_2": {
+    "entity_id": "sensor.p2s_sn2_ams_1_tray_2",
+    "state": "Generic PLA",
+    "attributes": {
+      "slot": 2,
+      "active": false,
+      "bed_temp": "0",
+      "color": "#XXXXXXXX",
+      "cols": [
+        "#XXXXXXXX"
+      ],
+      "ctype": 2,
+      "dry_temp": 0,
+      "dry_time": 0,
+      "empty": false,
+      "filament_id": "<redacted>",
+      "tray_weight": "0",
+      "name": "Generic PLA",
+      "nozzle_temp_min": "190",
+      "nozzle_temp_max": "240",
+      "remain": -1,
+      "remain_enabled": true,
+      "tag_uid": "<redacted>",
+      "tray_uuid": "<redacted>",
+      "type": "PLA",
+      "icon": "mdi:printer-3d-nozzle",
+      "friendly_name": "P2S_sn2_AMS_1 Tray 2"
+    },
+    "last_changed": "2026-04-30T18:08:22.878616+00:00",
+    "last_reported": "2026-04-30T18:08:24.387747+00:00",
+    "last_updated": "2026-04-30T18:08:22.878616+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.p2s_sn2_ams_1_tray_3": {
+    "entity_id": "sensor.p2s_sn2_ams_1_tray_3",
+    "state": "Bambu PLA Glow",
+    "attributes": {
+      "slot": 3,
+      "active": false,
+      "bed_temp": "35",
+      "color": "#XXXXXXXX",
+      "cols": [
+        "#XXXXXXXX"
+      ],
+      "ctype": 2,
+      "dry_temp": 0,
+      "dry_time": 0,
+      "empty": false,
+      "filament_id": "<redacted>",
+      "tray_weight": "1000",
+      "name": "Bambu PLA Glow",
+      "nozzle_temp_min": "190",
+      "nozzle_temp_max": "230",
+      "remain": 100,
+      "remain_enabled": true,
+      "tag_uid": "<redacted>",
+      "tray_uuid": "<redacted>",
+      "type": "PLA",
+      "icon": "mdi:printer-3d-nozzle",
+      "friendly_name": "P2S_sn2_AMS_1 Tray 3"
+    },
+    "last_changed": "2026-04-30T18:08:22.878911+00:00",
+    "last_reported": "2026-04-30T18:08:24.387780+00:00",
+    "last_updated": "2026-04-30T18:08:22.878911+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.p2s_sn2_ams_1_tray_4": {
+    "entity_id": "sensor.p2s_sn2_ams_1_tray_4",
+    "state": "Bambu PETG Basic",
+    "attributes": {
+      "slot": 4,
+      "active": false,
+      "bed_temp": "70",
+      "color": "#XXXXXXXX",
+      "cols": [
+        "#XXXXXXXX"
+      ],
+      "ctype": 2,
+      "dry_temp": 0,
+      "dry_time": 0,
+      "empty": false,
+      "filament_id": "<redacted>",
+      "tray_weight": "1000",
+      "name": "Bambu PETG Basic",
+      "nozzle_temp_min": "220",
+      "nozzle_temp_max": "270",
+      "remain": 32,
+      "remain_enabled": true,
+      "tag_uid": "<redacted>",
+      "tray_uuid": "<redacted>",
+      "type": "PETG",
+      "icon": "mdi:printer-3d-nozzle",
+      "friendly_name": "P2S_sn2_AMS_1 Tray 4"
+    },
+    "last_changed": "2026-04-30T18:08:22.879152+00:00",
+    "last_reported": "2026-04-30T18:08:24.387814+00:00",
+    "last_updated": "2026-04-30T18:08:22.879152+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.p2s_sn2_aux_fan_speed": {
+    "entity_id": "sensor.p2s_sn2_aux_fan_speed",
+    "state": "0",
+    "attributes": {
+      "state_class": "measurement",
+      "unit_of_measurement": "%",
+      "friendly_name": "P2S_sn2 Aux fan speed"
+    },
+    "last_changed": "2026-04-30T18:08:22.881342+00:00",
+    "last_reported": "2026-04-30T18:08:24.387984+00:00",
+    "last_updated": "2026-04-30T18:08:22.881342+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.p2s_sn2_bed_target_temperature": {
+    "entity_id": "sensor.p2s_sn2_bed_target_temperature",
+    "state": "0",
+    "attributes": {
+      "state_class": "measurement",
+      "unit_of_measurement": "°C",
+      "device_class": "temperature",
+      "friendly_name": "P2S_sn2 Bed target temperature"
+    },
+    "last_changed": "2026-04-30T18:08:22.880254+00:00",
+    "last_reported": "2026-04-30T18:08:24.387908+00:00",
+    "last_updated": "2026-04-30T18:08:22.880254+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.p2s_sn2_bed_temperature": {
+    "entity_id": "sensor.p2s_sn2_bed_temperature",
+    "state": "20",
+    "attributes": {
+      "state_class": "measurement",
+      "unit_of_measurement": "°C",
+      "device_class": "temperature",
+      "friendly_name": "P2S_sn2 Bed temperature"
+    },
+    "last_changed": "2026-05-05T21:26:21.610431+00:00",
+    "last_reported": "2026-05-05T21:26:21.610431+00:00",
+    "last_updated": "2026-05-05T21:26:21.610431+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.p2s_sn2_chamber_fan_speed": {
+    "entity_id": "sensor.p2s_sn2_chamber_fan_speed",
+    "state": "0",
+    "attributes": {
+      "state_class": "measurement",
+      "unit_of_measurement": "%",
+      "friendly_name": "P2S_sn2 Chamber fan speed"
+    },
+    "last_changed": "2026-04-30T18:08:22.881857+00:00",
+    "last_reported": "2026-04-30T18:08:24.388004+00:00",
+    "last_updated": "2026-04-30T18:08:22.881857+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.p2s_sn2_chamber_temperature": {
+    "entity_id": "sensor.p2s_sn2_chamber_temperature",
+    "state": "23",
+    "attributes": {
+      "state_class": "measurement",
+      "unit_of_measurement": "°C",
+      "device_class": "temperature",
+      "friendly_name": "P2S_sn2 Chamber temperature"
+    },
+    "last_changed": "2026-05-05T06:29:35.984383+00:00",
+    "last_reported": "2026-05-05T06:29:39.570736+00:00",
+    "last_updated": "2026-05-05T06:29:35.984383+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.p2s_sn2_cooling_fan_speed": {
+    "entity_id": "sensor.p2s_sn2_cooling_fan_speed",
+    "state": "0",
+    "attributes": {
+      "state_class": "measurement",
+      "unit_of_measurement": "%",
+      "friendly_name": "P2S_sn2 Cooling fan speed"
+    },
+    "last_changed": "2026-04-30T18:08:22.882141+00:00",
+    "last_reported": "2026-04-30T18:08:24.388022+00:00",
+    "last_updated": "2026-04-30T18:08:22.882141+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.p2s_sn2_current_layer": {
+    "entity_id": "sensor.p2s_sn2_current_layer",
+    "state": "0",
+    "attributes": {
+      "state_class": "measurement",
+      "friendly_name": "P2S_sn2 Current layer"
+    },
+    "last_changed": "2026-04-30T18:08:22.885340+00:00",
+    "last_reported": "2026-04-30T18:08:24.388324+00:00",
+    "last_updated": "2026-04-30T18:08:22.885340+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.p2s_sn2_current_stage": {
+    "entity_id": "sensor.p2s_sn2_current_stage",
+    "state": "idle",
+    "attributes": {
+      "options": [
+        "check_absolute_accuracy_after_calibration",
+        "preparing_hotend",
+        "paused_first_layer_error",
+        "paused_filament_runout",
+        "calibrating_micro_lidar",
+        "identifying_build_plate_type",
+        "paused_cutter_error",
+        "filament_loading",
+        "calibrate_birdeye_camera",
+        "preparing_ams",
+        "calibrating_extrusion",
+        "check_door_and_cover",
+        "paused_nozzle_temperature_malfunction",
+        "paused_chamber_temperature_control_error",
+        "inspecting_first_layer",
+        "heating_hotend",
+        "thermal_preconditioning",
+        "check_plaform",
+        "paused_user_gcode",
+        "laser_calibration",
+        "unknown",
+        "paused_user",
+        "scanning_bed_surface",
+        "paused_skipped_step",
+        "paused_heat_bed_temperature_malfunction",
+        "bed_level_high_temperature",
+        "paused_low_fan_speed_heat_break",
+        "m400_pause",
+        "calibrating_cutter_model_offset",
+        "purifying_chamber_air",
+        "calibrating_detection_nozzle_clumping",
+        "idle",
+        "heated_bedcooling",
+        "waiting_chamber_temperature_equalize",
+        "checking_extruder_temperature",
+        "paused_front_cover_falling",
+        "check_quick_release",
+        "bed_level_phase_2",
+        "heating_chamber",
+        "waiting_for_heatbed_temperature",
+        "hotend_pick_place_test",
+        "bed_level_phase_1",
+        "calibrating_blade_holder_position",
+        "auto_bed_leveling",
+        "cleaning_nozzle_tip",
+        "filament_unloading",
+        "calibrating_motor_noise",
+        "calibrating_live_view_camera",
+        "calibrating_camera_offset",
+        "check_absolute_accuracy_before_calibration",
+        "homing_blade_holder",
+        "absolute_accuracy_calibration",
+        "paused_nozzle_clog",
+        "check_material",
+        "homing_toolhead",
+        "paused_nozzle_filament_covered_detected",
+        "sweeping_xy_mech_mode",
+        "check_birdeye_camera_position",
+        "cooling_chamber",
+        "motor_noise_showoff",
+        "print_calibration_lines",
+        "printing",
+        "heatbed_preheating",
+        "changing_filament",
+        "calibrating_extrusion_flow",
+        "paused_ams_lost",
+        "check_material_position",
+        "measuring_surface",
+        "calibrate_nozzle_offset",
+        "offline"
+      ],
+      "device_class": "enum",
+      "friendly_name": "P2S_sn2 Current stage"
+    },
+    "last_changed": "2026-04-30T18:08:22.883466+00:00",
+    "last_reported": "2026-04-30T18:08:24.388119+00:00",
+    "last_updated": "2026-04-30T18:08:22.883466+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.p2s_sn2_end_time": {
+    "entity_id": "sensor.p2s_sn2_end_time",
+    "state": "unavailable",
+    "attributes": {
+      "friendly_name": "P2S_sn2 End time"
+    },
+    "last_changed": "2026-04-30T18:08:22.884980+00:00",
+    "last_reported": "2026-04-30T18:08:24.388287+00:00",
+    "last_updated": "2026-04-30T18:08:22.884980+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.p2s_sn2_externalspool_external_spool": {
+    "entity_id": "sensor.p2s_sn2_externalspool_external_spool",
+    "state": "Generic TPU",
+    "attributes": {
+      "active": false,
+      "bed_temp": "0",
+      "color": "#XXXXXXXX",
+      "cols": [
+        "#XXXXXXXX"
+      ],
+      "ctype": 2,
+      "dry_temp": 0,
+      "dry_time": 0,
+      "empty": false,
+      "filament_id": "<redacted>",
+      "tray_weight": "0",
+      "name": "Generic TPU",
+      "nozzle_temp_min": "200",
+      "nozzle_temp_max": "250",
+      "remain": -1,
+      "remain_enabled": false,
+      "tag_uid": "<redacted>",
+      "tray_uuid": "<redacted>",
+      "type": "TPU",
+      "icon": "mdi:printer-3d-nozzle",
+      "friendly_name": "P2S_sn2_ExternalSpool External spool"
+    },
+    "last_changed": "2026-04-30T18:08:22.873489+00:00",
+    "last_reported": "2026-04-30T18:08:24.387528+00:00",
+    "last_updated": "2026-04-30T18:08:22.873489+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.p2s_sn2_gcode_file_downloaded": {
+    "entity_id": "sensor.p2s_sn2_gcode_file_downloaded",
+    "state": "1009585-Pillars tat.gcode.gcode",
+    "attributes": {
+      "icon": "mdi:file",
+      "friendly_name": "P2S_sn2 Gcode file downloaded"
+    },
+    "last_changed": "2026-04-30T18:08:24.388383+00:00",
+    "last_reported": "2026-04-30T18:08:24.388383+00:00",
+    "last_updated": "2026-04-30T18:08:24.388383+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.p2s_sn2_gcode_filename": {
+    "entity_id": "sensor.p2s_sn2_gcode_filename",
+    "state": "unavailable",
+    "attributes": {
+      "icon": "mdi:file",
+      "friendly_name": "P2S_sn2 Gcode filename"
+    },
+    "last_changed": "2026-04-30T18:08:22.885682+00:00",
+    "last_reported": "2026-04-30T18:08:24.388353+00:00",
+    "last_updated": "2026-04-30T18:08:22.885682+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.p2s_sn2_heatbreak_fan_speed": {
+    "entity_id": "sensor.p2s_sn2_heatbreak_fan_speed",
+    "state": "0",
+    "attributes": {
+      "state_class": "measurement",
+      "unit_of_measurement": "%",
+      "friendly_name": "P2S_sn2 Heatbreak fan speed"
+    },
+    "last_changed": "2026-04-30T18:08:22.882359+00:00",
+    "last_reported": "2026-04-30T18:08:24.388040+00:00",
+    "last_updated": "2026-04-30T18:08:22.882359+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.p2s_sn2_ip_address": {
+    "entity_id": "sensor.p2s_sn2_ip_address",
+    "state": "<redacted>",
+    "attributes": {
+      "friendly_name": "P2S_sn2 IP address"
+    },
+    "last_changed": "2026-04-30T18:08:22.888263+00:00",
+    "last_reported": "2026-04-30T18:08:24.388633+00:00",
+    "last_updated": "2026-04-30T18:08:22.888263+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.p2s_sn2_model_download": {
+    "entity_id": "sensor.p2s_sn2_model_download",
+    "state": "100",
+    "attributes": {
+      "state_class": "measurement",
+      "unit_of_measurement": "%",
+      "friendly_name": "P2S_sn2 Model download"
+    },
+    "last_changed": "2026-04-30T18:08:22.882591+00:00",
+    "last_reported": "2026-04-30T18:08:24.388060+00:00",
+    "last_updated": "2026-04-30T18:08:22.882591+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.p2s_sn2_mqtt_connection_mode": {
+    "entity_id": "sensor.p2s_sn2_mqtt_connection_mode",
+    "state": "bambu_cloud",
+    "attributes": {
+      "options": [
+        "bambu_cloud",
+        "local"
+      ],
+      "device_class": "enum",
+      "friendly_name": "P2S_sn2 MQTT connection mode"
+    },
+    "last_changed": "2026-04-30T18:08:22.879427+00:00",
+    "last_reported": "2026-04-30T18:08:24.387841+00:00",
+    "last_updated": "2026-04-30T18:08:22.879427+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.p2s_sn2_nozzle_size": {
+    "entity_id": "sensor.p2s_sn2_nozzle_size",
+    "state": "0.4",
+    "attributes": {
+      "unit_of_measurement": "mm",
+      "device_class": "distance",
+      "friendly_name": "P2S_sn2 Nozzle size"
+    },
+    "last_changed": "2026-04-30T18:08:22.887908+00:00",
+    "last_reported": "2026-04-30T18:08:24.388603+00:00",
+    "last_updated": "2026-04-30T18:08:22.887908+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.p2s_sn2_nozzle_target_temperature": {
+    "entity_id": "sensor.p2s_sn2_nozzle_target_temperature",
+    "state": "0",
+    "attributes": {
+      "state_class": "measurement",
+      "unit_of_measurement": "°C",
+      "device_class": "temperature",
+      "friendly_name": "P2S_sn2 Nozzle target temperature"
+    },
+    "last_changed": "2026-04-30T18:08:22.880984+00:00",
+    "last_reported": "2026-04-30T18:08:24.387962+00:00",
+    "last_updated": "2026-04-30T18:08:22.880984+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.p2s_sn2_nozzle_temperature": {
+    "entity_id": "sensor.p2s_sn2_nozzle_temperature",
+    "state": "22",
+    "attributes": {
+      "state_class": "measurement",
+      "unit_of_measurement": "°C",
+      "device_class": "temperature",
+      "friendly_name": "P2S_sn2 Nozzle temperature"
+    },
+    "last_changed": "2026-05-05T22:16:00.544192+00:00",
+    "last_reported": "2026-05-05T22:16:00.544192+00:00",
+    "last_updated": "2026-05-05T22:16:00.544192+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.p2s_sn2_nozzle_type": {
+    "entity_id": "sensor.p2s_sn2_nozzle_type",
+    "state": "hardened_steel",
+    "attributes": {
+      "friendly_name": "P2S_sn2 Nozzle type"
+    },
+    "last_changed": "2026-04-30T18:08:22.888076+00:00",
+    "last_reported": "2026-04-30T18:08:24.388619+00:00",
+    "last_updated": "2026-04-30T18:08:22.888076+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.p2s_sn2_print_bed_type": {
+    "entity_id": "sensor.p2s_sn2_print_bed_type",
+    "state": "supertack_plate",
+    "attributes": {
+      "friendly_name": "P2S_sn2 Print bed type"
+    },
+    "last_changed": "2026-04-30T18:08:22.887190+00:00",
+    "last_reported": "2026-04-30T18:08:24.388504+00:00",
+    "last_updated": "2026-04-30T18:08:22.887190+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.p2s_sn2_print_length": {
+    "entity_id": "sensor.p2s_sn2_print_length",
+    "state": "56.88",
+    "attributes": {
+      "state_class": "measurement",
+      "unit_of_measurement": "m",
+      "device_class": "distance",
+      "friendly_name": "P2S_sn2 Print length"
+    },
+    "last_changed": "2026-04-30T18:08:22.886765+00:00",
+    "last_reported": "2026-04-30T18:08:24.388487+00:00",
+    "last_updated": "2026-04-30T18:08:24.092142+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.p2s_sn2_print_progress": {
+    "entity_id": "sensor.p2s_sn2_print_progress",
+    "state": "0",
+    "attributes": {
+      "state_class": "measurement",
+      "unit_of_measurement": "%",
+      "friendly_name": "P2S_sn2 Print progress"
+    },
+    "last_changed": "2026-04-30T18:08:22.883655+00:00",
+    "last_reported": "2026-04-30T18:08:24.388135+00:00",
+    "last_updated": "2026-04-30T18:08:22.883655+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.p2s_sn2_print_status": {
+    "entity_id": "sensor.p2s_sn2_print_status",
+    "state": "idle",
+    "attributes": {
+      "options": [
+        "failed",
+        "finish",
+        "idle",
+        "init",
+        "offline",
+        "pause",
+        "prepare",
+        "running",
+        "slicing",
+        "unknown",
+        "offline"
+      ],
+      "device_class": "enum",
+      "friendly_name": "P2S_sn2 Print status"
+    },
+    "last_changed": "2026-04-30T18:08:22.883852+00:00",
+    "last_reported": "2026-04-30T18:08:24.388152+00:00",
+    "last_updated": "2026-04-30T18:08:22.883852+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.p2s_sn2_print_type": {
+    "entity_id": "sensor.p2s_sn2_print_type",
+    "state": "unknown",
+    "attributes": {
+      "options": [
+        "local",
+        "cloud",
+        "unknown",
+        "idle",
+        "system"
+      ],
+      "device_class": "enum",
+      "icon": "mdi:file",
+      "friendly_name": "P2S_sn2 Print type"
+    },
+    "last_changed": "2026-04-30T18:08:22.886361+00:00",
+    "last_reported": "2026-04-30T18:08:24.388428+00:00",
+    "last_updated": "2026-04-30T18:08:22.886361+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.p2s_sn2_print_weight": {
+    "entity_id": "sensor.p2s_sn2_print_weight",
+    "state": "169.66",
+    "attributes": {
+      "state_class": "measurement",
+      "unit_of_measurement": "g",
+      "device_class": "weight",
+      "friendly_name": "P2S_sn2 Print weight"
+    },
+    "last_changed": "2026-04-30T18:08:22.887461+00:00",
+    "last_reported": "2026-04-30T18:08:24.388535+00:00",
+    "last_updated": "2026-04-30T18:08:24.092261+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.p2s_sn2_printable_objects": {
+    "entity_id": "sensor.p2s_sn2_printable_objects",
+    "state": "32",
+    "attributes": {
+      "state_class": "measurement",
+      "objects": {
+        "1077": "Pillars tat.stl_16",
+        "1253": "Pillars tat.stl_24",
+        "1011": "Pillars tat.stl_13",
+        "1231": "Pillars tat.stl_23",
+        "857": "Pillars tat.stl_6",
+        "923": "Pillars tat.stl_9",
+        "1407": "Pillars tat.stl_31",
+        "967": "Pillars tat.stl_11",
+        "1275": "Pillars tat.stl_25",
+        "901": "Pillars tat.stl_8",
+        "813": "Pillars tat.stl_4",
+        "1385": "Pillars tat.stl_30",
+        "1165": "Pillars tat.stl_20",
+        "879": "Pillars tat.stl_7",
+        "1319": "Pillars tat.stl_27",
+        "1363": "Pillars tat.stl_29",
+        "989": "Pillars tat.stl_12",
+        "1209": "Pillars tat.stl_22",
+        "1143": "Pillars tat.stl_19",
+        "945": "Pillars tat.stl_10",
+        "835": "Pillars tat.stl_5",
+        "791": "Pillars tat.stl_3",
+        "1033": "Pillars tat.stl_14",
+        "769": "Pillars tat.stl_2",
+        "1099": "Pillars tat.stl_17",
+        "1121": "Pillars tat.stl_18",
+        "1055": "Pillars tat.stl_15",
+        "1429": "Pillars tat.stl_32",
+        "1187": "Pillars tat.stl_21",
+        "747": "Pillars tat.stl_1",
+        "1341": "Pillars tat.stl_28",
+        "1297": "Pillars tat.stl_26"
+      },
+      "friendly_name": "P2S_sn2 Printable objects"
+    },
+    "last_changed": "2026-04-30T18:08:24.388173+00:00",
+    "last_reported": "2026-04-30T18:08:24.388173+00:00",
+    "last_updated": "2026-04-30T18:08:24.388173+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.p2s_sn2_printer_name": {
+    "entity_id": "sensor.p2s_sn2_printer_name",
+    "state": "P2S Kodu ",
+    "attributes": {
+      "friendly_name": "P2S_sn2 Printer name"
+    },
+    "last_changed": "2026-04-30T18:08:22.886546+00:00",
+    "last_reported": "2026-04-30T18:08:24.388447+00:00",
+    "last_updated": "2026-04-30T18:08:22.886546+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.p2s_sn2_remaining_time": {
+    "entity_id": "sensor.p2s_sn2_remaining_time",
+    "state": "0.0",
+    "attributes": {
+      "unit_of_measurement": "h",
+      "device_class": "duration",
+      "friendly_name": "P2S_sn2 Remaining time"
+    },
+    "last_changed": "2026-04-30T18:08:22.884808+00:00",
+    "last_reported": "2026-04-30T18:08:24.388273+00:00",
+    "last_updated": "2026-04-30T18:08:22.884808+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.p2s_sn2_sd_card_status": {
+    "entity_id": "sensor.p2s_sn2_sd_card_status",
+    "state": "normal",
+    "attributes": {
+      "options": [
+        "missing",
+        "normal",
+        "abnormal"
+      ],
+      "device_class": "enum",
+      "friendly_name": "P2S_sn2 SD card status"
+    },
+    "last_changed": "2026-04-30T18:08:22.884210+00:00",
+    "last_reported": "2026-04-30T18:08:24.388208+00:00",
+    "last_updated": "2026-04-30T18:08:22.884210+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.p2s_sn2_serial_number": {
+    "entity_id": "sensor.p2s_sn2_serial_number",
+    "state": "<redacted>",
+    "attributes": {
+      "friendly_name": "P2S_sn2 Serial number"
+    },
+    "last_changed": "2026-04-30T18:08:22.888428+00:00",
+    "last_reported": "2026-04-30T18:08:24.388646+00:00",
+    "last_updated": "2026-04-30T18:08:22.888428+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.p2s_sn2_skipped_objects": {
+    "entity_id": "sensor.p2s_sn2_skipped_objects",
+    "state": "0",
+    "attributes": {
+      "state_class": "measurement",
+      "objects": [],
+      "friendly_name": "P2S_sn2 Skipped objects"
+    },
+    "last_changed": "2026-04-30T18:08:22.884385+00:00",
+    "last_reported": "2026-04-30T18:08:24.388228+00:00",
+    "last_updated": "2026-04-30T18:08:22.884385+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.p2s_sn2_speed_profile": {
+    "entity_id": "sensor.p2s_sn2_speed_profile",
+    "state": "standard",
+    "attributes": {
+      "options": [
+        "silent",
+        "standard",
+        "sport",
+        "ludicrous"
+      ],
+      "modifier": 100,
+      "device_class": "enum",
+      "friendly_name": "P2S_sn2 Speed profile"
+    },
+    "last_changed": "2026-04-30T18:08:22.882793+00:00",
+    "last_reported": "2026-04-30T18:08:24.388080+00:00",
+    "last_updated": "2026-04-30T18:08:22.882793+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.p2s_sn2_start_time": {
+    "entity_id": "sensor.p2s_sn2_start_time",
+    "state": "unavailable",
+    "attributes": {
+      "friendly_name": "P2S_sn2 Start time"
+    },
+    "last_changed": "2026-04-30T18:08:22.884610+00:00",
+    "last_reported": "2026-04-30T18:08:24.388252+00:00",
+    "last_updated": "2026-04-30T18:08:22.884610+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.p2s_sn2_task_name": {
+    "entity_id": "sensor.p2s_sn2_task_name",
+    "state": "unknown",
+    "attributes": {
+      "icon": "mdi:file",
+      "friendly_name": "P2S_sn2 Task name"
+    },
+    "last_changed": "2026-04-30T18:08:22.886003+00:00",
+    "last_reported": "2026-04-30T18:08:24.388409+00:00",
+    "last_updated": "2026-04-30T18:08:22.886003+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.p2s_sn2_total_layer_count": {
+    "entity_id": "sensor.p2s_sn2_total_layer_count",
+    "state": "0",
+    "attributes": {
+      "state_class": "measurement",
+      "friendly_name": "P2S_sn2 Total layer count"
+    },
+    "last_changed": "2026-04-30T18:08:22.885518+00:00",
+    "last_reported": "2026-04-30T18:08:24.388340+00:00",
+    "last_updated": "2026-04-30T18:08:22.885518+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.p2s_sn2_total_usage": {
+    "entity_id": "sensor.p2s_sn2_total_usage",
+    "state": "0.0",
+    "attributes": {
+      "state_class": "total_increasing",
+      "unit_of_measurement": "h",
+      "device_class": "duration",
+      "friendly_name": "P2S_sn2 Total usage"
+    },
+    "last_changed": "2026-04-30T18:08:22.885170+00:00",
+    "last_reported": "2026-04-30T18:08:24.388307+00:00",
+    "last_updated": "2026-04-30T18:08:22.885170+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.p2s_sn2_wi_fi_signal": {
+    "entity_id": "sensor.p2s_sn2_wi_fi_signal",
+    "state": "-70",
+    "attributes": {
+      "state_class": "measurement",
+      "unit_of_measurement": "dBm",
+      "device_class": "signal_strength",
+      "friendly_name": "P2S_sn2 Wi-Fi signal"
+    },
+    "last_changed": "2026-05-02T17:55:20.858537+00:00",
+    "last_reported": "2026-05-02T17:55:20.858537+00:00",
+    "last_updated": "2026-05-02T17:55:20.858537+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "switch.a1mini_sn1_enable_camera": {
+    "entity_id": "switch.a1mini_sn1_enable_camera",
+    "state": "on",
+    "attributes": {
+      "icon": "mdi:video",
+      "friendly_name": "A1MINI_sn1 Camera"
+    },
+    "last_changed": "2026-04-30T18:08:21.498980+00:00",
+    "last_reported": "2026-04-30T18:13:55.267075+00:00",
+    "last_updated": "2026-04-30T18:08:21.498980+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "switch.p2s_sn2_camera": {
+    "entity_id": "switch.p2s_sn2_camera",
+    "state": "on",
+    "attributes": {
+      "icon": "mdi:video",
+      "friendly_name": "P2S_sn2 Camera"
+    },
+    "last_changed": "2026-04-30T18:08:22.889784+00:00",
+    "last_reported": "2026-04-30T18:08:24.388665+00:00",
+    "last_updated": "2026-04-30T18:08:22.889784+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  }
+}

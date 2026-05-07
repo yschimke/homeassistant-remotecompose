@@ -1,0 +1,2751 @@
+{
+  "binary_sensor.octopus_energy_a_sn1_octoplus_saving_sessions": {
+    "entity_id": "binary_sensor.octopus_energy_a_sn1_octoplus_saving_sessions",
+    "state": "off",
+    "attributes": {
+      "current_joined_event_start": null,
+      "current_joined_event_end": null,
+      "current_joined_event_duration_in_minutes": null,
+      "next_joined_event_start": null,
+      "next_joined_event_end": null,
+      "next_joined_event_duration_in_minutes": null,
+      "icon": "mdi:leaf",
+      "friendly_name": "Octoplus (A-sn1) Octoplus Saving Sessions (A-sn1)"
+    },
+    "last_changed": "2026-04-30T18:08:19.021281+00:00",
+    "last_reported": "2026-04-30T18:13:18.636836+00:00",
+    "last_updated": "2026-04-30T18:08:19.021281+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "binary_sensor.octopus_energy_electricity_sn2_sn3_off_peak": {
+    "entity_id": "binary_sensor.octopus_energy_electricity_sn2_sn3_off_peak",
+    "state": "off",
+    "attributes": {
+      "current_start": null,
+      "current_end": null,
+      "next_start": null,
+      "next_end": null,
+      "icon": "mdi:lightning-bolt",
+      "friendly_name": "Electricity Meter Off Peak Electricity (sn2/sn3)"
+    },
+    "last_changed": "2026-04-30T18:08:19.021695+00:00",
+    "last_reported": "2026-04-30T18:13:20.036952+00:00",
+    "last_updated": "2026-04-30T18:08:19.021695+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.octopus_energy_a_sn1_octoplus_points": {
+    "entity_id": "sensor.octopus_energy_a_sn1_octoplus_points",
+    "state": "500",
+    "attributes": {
+      "state_class": "total",
+      "redeemable_points": 496,
+      "icon": "mdi:trophy",
+      "friendly_name": "Octoplus (A-sn1) Octoplus Points (A-sn1)"
+    },
+    "last_changed": "2026-04-30T18:08:49.222081+00:00",
+    "last_reported": "2026-04-30T18:13:19.116670+00:00",
+    "last_updated": "2026-04-30T18:08:49.222081+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.octopus_energy_a_sn1_wheel_of_fortune_spins_electricity": {
+    "entity_id": "sensor.octopus_energy_a_sn1_wheel_of_fortune_spins_electricity",
+    "state": "2",
+    "attributes": {
+      "state_class": "total",
+      "icon": "mdi:star-circle",
+      "friendly_name": "Wheel Of Fortune Spins Electricity (A-sn1)"
+    },
+    "last_changed": "2026-04-30T18:09:19.173678+00:00",
+    "last_reported": "2026-04-30T18:13:18.997716+00:00",
+    "last_updated": "2026-04-30T18:09:19.173678+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.octopus_energy_a_sn1_wheel_of_fortune_spins_gas": {
+    "entity_id": "sensor.octopus_energy_a_sn1_wheel_of_fortune_spins_gas",
+    "state": "2",
+    "attributes": {
+      "state_class": "total",
+      "icon": "mdi:star-circle",
+      "friendly_name": "Wheel Of Fortune Spins Gas (A-sn1)"
+    },
+    "last_changed": "2026-04-30T18:09:19.173798+00:00",
+    "last_reported": "2026-04-30T18:13:18.997802+00:00",
+    "last_updated": "2026-04-30T18:09:19.173798+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.octopus_energy_electricity_sn2_sn3_current_rate": {
+    "entity_id": "sensor.octopus_energy_electricity_sn2_sn3_current_rate",
+    "state": "0.248962",
+    "attributes": {
+      "state_class": "total",
+      "mpan": "<redacted>",
+      "serial_number": "<redacted>",
+      "is_export": false,
+      "is_smart_meter": true,
+      "tariff": "<redacted>",
+      "start": "2026-05-04T00:00:00+01:00",
+      "end": "2026-05-07T00:00:00+01:00",
+      "is_capped": false,
+      "is_intelligent_adjusted": false,
+      "current_day_min_rate": 0.248962,
+      "current_day_max_rate": 0.248962,
+      "current_day_average_rate": 0.248962,
+      "unit_of_measurement": "GBP/kWh",
+      "device_class": "monetary",
+      "icon": "mdi:currency-gbp",
+      "friendly_name": "Electricity Meter Current Rate Electricity (sn2 sn3)"
+    },
+    "last_changed": "2026-04-30T18:08:19.100303+00:00",
+    "last_reported": "2026-05-04T23:09:36.428620+00:00",
+    "last_updated": "2026-05-04T23:09:36.428620+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.octopus_energy_electricity_sn2_sn3_current_standing_charge": {
+    "entity_id": "sensor.octopus_energy_electricity_sn2_sn3_current_standing_charge",
+    "state": "0.4428564",
+    "attributes": {
+      "state_class": "total",
+      "mpan": "<redacted>",
+      "serial_number": "<redacted>",
+      "is_export": false,
+      "is_smart_meter": true,
+      "start": "2026-04-01T00:00:00+01:00",
+      "end": null,
+      "unit_of_measurement": "GBP",
+      "device_class": "monetary",
+      "icon": "mdi:currency-gbp",
+      "friendly_name": "Electricity Meter Current Standing Charge Electricity (sn2/sn3)"
+    },
+    "last_changed": "2026-04-30T18:08:19.101005+00:00",
+    "last_reported": "2026-04-30T18:13:18.748962+00:00",
+    "last_updated": "2026-04-30T18:08:19.101005+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.octopus_energy_electricity_sn2_sn3_next_rate": {
+    "entity_id": "sensor.octopus_energy_electricity_sn2_sn3_next_rate",
+    "state": "unknown",
+    "attributes": {
+      "state_class": "total",
+      "mpan": "<redacted>",
+      "serial_number": "<redacted>",
+      "is_export": false,
+      "is_smart_meter": true,
+      "start": null,
+      "end": null,
+      "unit_of_measurement": "GBP/kWh",
+      "device_class": "monetary",
+      "icon": "mdi:currency-gbp",
+      "friendly_name": "Electricity Meter Next Rate Electricity (sn2/sn3)"
+    },
+    "last_changed": "2026-04-30T18:08:19.100751+00:00",
+    "last_reported": "2026-04-30T18:13:20.040280+00:00",
+    "last_updated": "2026-04-30T18:08:19.100751+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.octopus_energy_electricity_sn2_sn3_previous_accumulative_consumption": {
+    "entity_id": "sensor.octopus_energy_electricity_sn2_sn3_previous_accumulative_consumption",
+    "state": "13.78",
+    "attributes": {
+      "state_class": "total",
+      "last_reset": "2026-05-02T23:00:00+00:00",
+      "mpan": "<redacted>",
+      "serial_number": "<redacted>",
+      "is_export": false,
+      "is_smart_meter": true,
+      "total": 13.780000000000001,
+      "charges": [
+        {
+          "start": "2026-05-03T00:00:00+01:00",
+          "end": "2026-05-03T00:30:00+01:00",
+          "consumption": 0.561
+        },
+        {
+          "start": "2026-05-03T00:30:00+01:00",
+          "end": "2026-05-03T01:00:00+01:00",
+          "consumption": 0.527
+        },
+        {
+          "start": "2026-05-03T01:00:00+01:00",
+          "end": "2026-05-03T01:30:00+01:00",
+          "consumption": 0.39
+        },
+        {
+          "start": "2026-05-03T01:30:00+01:00",
+          "end": "2026-05-03T02:00:00+01:00",
+          "consumption": 0.353
+        },
+        {
+          "start": "2026-05-03T02:00:00+01:00",
+          "end": "2026-05-03T02:30:00+01:00",
+          "consumption": 0.304
+        },
+        {
+          "start": "2026-05-03T02:30:00+01:00",
+          "end": "2026-05-03T03:00:00+01:00",
+          "consumption": 0.271
+        },
+        {
+          "start": "2026-05-03T03:00:00+01:00",
+          "end": "2026-05-03T03:30:00+01:00",
+          "consumption": 0.24
+        },
+        {
+          "start": "2026-05-03T03:30:00+01:00",
+          "end": "2026-05-03T04:00:00+01:00",
+          "consumption": 0.251
+        },
+        {
+          "start": "2026-05-03T04:00:00+01:00",
+          "end": "2026-05-03T04:30:00+01:00",
+          "consumption": 0.317
+        },
+        {
+          "start": "2026-05-03T04:30:00+01:00",
+          "end": "2026-05-03T05:00:00+01:00",
+          "consumption": 0.273
+        },
+        {
+          "start": "2026-05-03T05:00:00+01:00",
+          "end": "2026-05-03T05:30:00+01:00",
+          "consumption": 0.256
+        },
+        {
+          "start": "2026-05-03T05:30:00+01:00",
+          "end": "2026-05-03T06:00:00+01:00",
+          "consumption": 0.26
+        },
+        {
+          "start": "2026-05-03T06:00:00+01:00",
+          "end": "2026-05-03T06:30:00+01:00",
+          "consumption": 0.237
+        },
+        {
+          "start": "2026-05-03T06:30:00+01:00",
+          "end": "2026-05-03T07:00:00+01:00",
+          "consumption": 0.226
+        },
+        {
+          "start": "2026-05-03T07:00:00+01:00",
+          "end": "2026-05-03T07:30:00+01:00",
+          "consumption": 0.432
+        },
+        {
+          "start": "2026-05-03T07:30:00+01:00",
+          "end": "2026-05-03T08:00:00+01:00",
+          "consumption": 0.292
+        },
+        {
+          "start": "2026-05-03T08:00:00+01:00",
+          "end": "2026-05-03T08:30:00+01:00",
+          "consumption": 0.022
+        },
+        {
+          "start": "2026-05-03T08:30:00+01:00",
+          "end": "2026-05-03T09:00:00+01:00",
+          "consumption": 0.063
+        },
+        {
+          "start": "2026-05-03T09:00:00+01:00",
+          "end": "2026-05-03T09:30:00+01:00",
+          "consumption": 0.065
+        },
+        {
+          "start": "2026-05-03T09:30:00+01:00",
+          "end": "2026-05-03T10:00:00+01:00",
+          "consumption": 0.254
+        },
+        {
+          "start": "2026-05-03T10:00:00+01:00",
+          "end": "2026-05-03T10:30:00+01:00",
+          "consumption": 0.181
+        },
+        {
+          "start": "2026-05-03T10:30:00+01:00",
+          "end": "2026-05-03T11:00:00+01:00",
+          "consumption": 0.298
+        },
+        {
+          "start": "2026-05-03T11:00:00+01:00",
+          "end": "2026-05-03T11:30:00+01:00",
+          "consumption": 0.011
+        },
+        {
+          "start": "2026-05-03T11:30:00+01:00",
+          "end": "2026-05-03T12:00:00+01:00",
+          "consumption": 0.003
+        },
+        {
+          "start": "2026-05-03T12:00:00+01:00",
+          "end": "2026-05-03T12:30:00+01:00",
+          "consumption": 0.101
+        },
+        {
+          "start": "2026-05-03T12:30:00+01:00",
+          "end": "2026-05-03T13:00:00+01:00",
+          "consumption": 0.003
+        },
+        {
+          "start": "2026-05-03T13:00:00+01:00",
+          "end": "2026-05-03T13:30:00+01:00",
+          "consumption": 0.082
+        },
+        {
+          "start": "2026-05-03T13:30:00+01:00",
+          "end": "2026-05-03T14:00:00+01:00",
+          "consumption": 0.103
+        },
+        {
+          "start": "2026-05-03T14:00:00+01:00",
+          "end": "2026-05-03T14:30:00+01:00",
+          "consumption": 0.969
+        },
+        {
+          "start": "2026-05-03T14:30:00+01:00",
+          "end": "2026-05-03T15:00:00+01:00",
+          "consumption": 0.155
+        },
+        {
+          "start": "2026-05-03T15:00:00+01:00",
+          "end": "2026-05-03T15:30:00+01:00",
+          "consumption": 0.044
+        },
+        {
+          "start": "2026-05-03T15:30:00+01:00",
+          "end": "2026-05-03T16:00:00+01:00",
+          "consumption": 0.018
+        },
+        {
+          "start": "2026-05-03T16:00:00+01:00",
+          "end": "2026-05-03T16:30:00+01:00",
+          "consumption": 0.029
+        },
+        {
+          "start": "2026-05-03T16:30:00+01:00",
+          "end": "2026-05-03T17:00:00+01:00",
+          "consumption": 0.02
+        },
+        {
+          "start": "2026-05-03T17:00:00+01:00",
+          "end": "2026-05-03T17:30:00+01:00",
+          "consumption": 0.078
+        },
+        {
+          "start": "2026-05-03T17:30:00+01:00",
+          "end": "2026-05-03T18:00:00+01:00",
+          "consumption": 0.07
+        },
+        {
+          "start": "2026-05-03T18:00:00+01:00",
+          "end": "2026-05-03T18:30:00+01:00",
+          "consumption": 0.336
+        },
+        {
+          "start": "2026-05-03T18:30:00+01:00",
+          "end": "2026-05-03T19:00:00+01:00",
+          "consumption": 0.275
+        },
+        {
+          "start": "2026-05-03T19:00:00+01:00",
+          "end": "2026-05-03T19:30:00+01:00",
+          "consumption": 0.357
+        },
+        {
+          "start": "2026-05-03T19:30:00+01:00",
+          "end": "2026-05-03T20:00:00+01:00",
+          "consumption": 0.581
+        },
+        {
+          "start": "2026-05-03T20:00:00+01:00",
+          "end": "2026-05-03T20:30:00+01:00",
+          "consumption": 0.669
+        },
+        {
+          "start": "2026-05-03T20:30:00+01:00",
+          "end": "2026-05-03T21:00:00+01:00",
+          "consumption": 0.557
+        },
+        {
+          "start": "2026-05-03T21:00:00+01:00",
+          "end": "2026-05-03T21:30:00+01:00",
+          "consumption": 0.513
+        },
+        {
+          "start": "2026-05-03T21:30:00+01:00",
+          "end": "2026-05-03T22:00:00+01:00",
+          "consumption": 0.577
+        },
+        {
+          "start": "2026-05-03T22:00:00+01:00",
+          "end": "2026-05-03T22:30:00+01:00",
+          "consumption": 0.71
+        },
+        {
+          "start": "2026-05-03T22:30:00+01:00",
+          "end": "2026-05-03T23:00:00+01:00",
+          "consumption": 0.55
+        },
+        {
+          "start": "2026-05-03T23:00:00+01:00",
+          "end": "2026-05-03T23:30:00+01:00",
+          "consumption": 0.509
+        },
+        {
+          "start": "2026-05-03T23:30:00+01:00",
+          "end": "2026-05-04T00:00:00+01:00",
+          "consumption": 0.387
+        }
+      ],
+      "unit_of_measurement": "kWh",
+      "device_class": "energy",
+      "icon": "mdi:lightning-bolt",
+      "friendly_name": "Electricity Meter Previous Accumulative Consumption Electricity (sn2/sn3)"
+    },
+    "last_changed": "2026-05-05T01:38:12.033561+00:00",
+    "last_reported": "2026-05-05T01:38:37.329614+00:00",
+    "last_updated": "2026-05-05T01:38:12.033561+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.octopus_energy_electricity_sn2_sn3_previous_accumulative_cost": {
+    "entity_id": "sensor.octopus_energy_electricity_sn2_sn3_previous_accumulative_cost",
+    "state": "3.84",
+    "attributes": {
+      "state_class": "total",
+      "last_reset": "2026-05-02T23:00:00+00:00",
+      "mpan": "<redacted>",
+      "serial_number": "<redacted>",
+      "is_export": false,
+      "is_smart_meter": true,
+      "tariff_code": "<redacted>",
+      "total": 3.84,
+      "charges": [
+        {
+          "start": "2026-05-03T00:00:00+01:00",
+          "end": "2026-05-03T00:30:00+01:00",
+          "rate": 0.248962,
+          "consumption": 0.561,
+          "cost": 0.14
+        },
+        {
+          "start": "2026-05-03T00:30:00+01:00",
+          "end": "2026-05-03T01:00:00+01:00",
+          "rate": 0.248962,
+          "consumption": 0.527,
+          "cost": 0.13
+        },
+        {
+          "start": "2026-05-03T01:00:00+01:00",
+          "end": "2026-05-03T01:30:00+01:00",
+          "rate": 0.248962,
+          "consumption": 0.39,
+          "cost": 0.1
+        },
+        {
+          "start": "2026-05-03T01:30:00+01:00",
+          "end": "2026-05-03T02:00:00+01:00",
+          "rate": 0.248962,
+          "consumption": 0.353,
+          "cost": 0.09
+        },
+        {
+          "start": "2026-05-03T02:00:00+01:00",
+          "end": "2026-05-03T02:30:00+01:00",
+          "rate": 0.248962,
+          "consumption": 0.304,
+          "cost": 0.07
+        },
+        {
+          "start": "2026-05-03T02:30:00+01:00",
+          "end": "2026-05-03T03:00:00+01:00",
+          "rate": 0.248962,
+          "consumption": 0.271,
+          "cost": 0.07
+        },
+        {
+          "start": "2026-05-03T03:00:00+01:00",
+          "end": "2026-05-03T03:30:00+01:00",
+          "rate": 0.248962,
+          "consumption": 0.24,
+          "cost": 0.06
+        },
+        {
+          "start": "2026-05-03T03:30:00+01:00",
+          "end": "2026-05-03T04:00:00+01:00",
+          "rate": 0.248962,
+          "consumption": 0.251,
+          "cost": 0.06
+        },
+        {
+          "start": "2026-05-03T04:00:00+01:00",
+          "end": "2026-05-03T04:30:00+01:00",
+          "rate": 0.248962,
+          "consumption": 0.317,
+          "cost": 0.08
+        },
+        {
+          "start": "2026-05-03T04:30:00+01:00",
+          "end": "2026-05-03T05:00:00+01:00",
+          "rate": 0.248962,
+          "consumption": 0.273,
+          "cost": 0.07
+        },
+        {
+          "start": "2026-05-03T05:00:00+01:00",
+          "end": "2026-05-03T05:30:00+01:00",
+          "rate": 0.248962,
+          "consumption": 0.256,
+          "cost": 0.06
+        },
+        {
+          "start": "2026-05-03T05:30:00+01:00",
+          "end": "2026-05-03T06:00:00+01:00",
+          "rate": 0.248962,
+          "consumption": 0.26,
+          "cost": 0.06
+        },
+        {
+          "start": "2026-05-03T06:00:00+01:00",
+          "end": "2026-05-03T06:30:00+01:00",
+          "rate": 0.248962,
+          "consumption": 0.237,
+          "cost": 0.06
+        },
+        {
+          "start": "2026-05-03T06:30:00+01:00",
+          "end": "2026-05-03T07:00:00+01:00",
+          "rate": 0.248962,
+          "consumption": 0.226,
+          "cost": 0.06
+        },
+        {
+          "start": "2026-05-03T07:00:00+01:00",
+          "end": "2026-05-03T07:30:00+01:00",
+          "rate": 0.248962,
+          "consumption": 0.432,
+          "cost": 0.11
+        },
+        {
+          "start": "2026-05-03T07:30:00+01:00",
+          "end": "2026-05-03T08:00:00+01:00",
+          "rate": 0.248962,
+          "consumption": 0.292,
+          "cost": 0.07
+        },
+        {
+          "start": "2026-05-03T08:00:00+01:00",
+          "end": "2026-05-03T08:30:00+01:00",
+          "rate": 0.248962,
+          "consumption": 0.022,
+          "cost": 0.0
+        },
+        {
+          "start": "2026-05-03T08:30:00+01:00",
+          "end": "2026-05-03T09:00:00+01:00",
+          "rate": 0.248962,
+          "consumption": 0.063,
+          "cost": 0.01
+        },
+        {
+          "start": "2026-05-03T09:00:00+01:00",
+          "end": "2026-05-03T09:30:00+01:00",
+          "rate": 0.248962,
+          "consumption": 0.065,
+          "cost": 0.02
+        },
+        {
+          "start": "2026-05-03T09:30:00+01:00",
+          "end": "2026-05-03T10:00:00+01:00",
+          "rate": 0.248962,
+          "consumption": 0.254,
+          "cost": 0.06
+        },
+        {
+          "start": "2026-05-03T10:00:00+01:00",
+          "end": "2026-05-03T10:30:00+01:00",
+          "rate": 0.248962,
+          "consumption": 0.181,
+          "cost": 0.04
+        },
+        {
+          "start": "2026-05-03T10:30:00+01:00",
+          "end": "2026-05-03T11:00:00+01:00",
+          "rate": 0.248962,
+          "consumption": 0.298,
+          "cost": 0.07
+        },
+        {
+          "start": "2026-05-03T11:00:00+01:00",
+          "end": "2026-05-03T11:30:00+01:00",
+          "rate": 0.248962,
+          "consumption": 0.011,
+          "cost": 0.0
+        },
+        {
+          "start": "2026-05-03T11:30:00+01:00",
+          "end": "2026-05-03T12:00:00+01:00",
+          "rate": 0.248962,
+          "consumption": 0.003,
+          "cost": 0.0
+        },
+        {
+          "start": "2026-05-03T12:00:00+01:00",
+          "end": "2026-05-03T12:30:00+01:00",
+          "rate": 0.248962,
+          "consumption": 0.101,
+          "cost": 0.02
+        },
+        {
+          "start": "2026-05-03T12:30:00+01:00",
+          "end": "2026-05-03T13:00:00+01:00",
+          "rate": 0.248962,
+          "consumption": 0.003,
+          "cost": 0.0
+        },
+        {
+          "start": "2026-05-03T13:00:00+01:00",
+          "end": "2026-05-03T13:30:00+01:00",
+          "rate": 0.248962,
+          "consumption": 0.082,
+          "cost": 0.02
+        },
+        {
+          "start": "2026-05-03T13:30:00+01:00",
+          "end": "2026-05-03T14:00:00+01:00",
+          "rate": 0.248962,
+          "consumption": 0.103,
+          "cost": 0.02
+        },
+        {
+          "start": "2026-05-03T14:00:00+01:00",
+          "end": "2026-05-03T14:30:00+01:00",
+          "rate": 0.248962,
+          "consumption": 0.969,
+          "cost": 0.24
+        },
+        {
+          "start": "2026-05-03T14:30:00+01:00",
+          "end": "2026-05-03T15:00:00+01:00",
+          "rate": 0.248962,
+          "consumption": 0.155,
+          "cost": 0.04
+        },
+        {
+          "start": "2026-05-03T15:00:00+01:00",
+          "end": "2026-05-03T15:30:00+01:00",
+          "rate": 0.248962,
+          "consumption": 0.044,
+          "cost": 0.01
+        },
+        {
+          "start": "2026-05-03T15:30:00+01:00",
+          "end": "2026-05-03T16:00:00+01:00",
+          "rate": 0.248962,
+          "consumption": 0.018,
+          "cost": 0.0
+        },
+        {
+          "start": "2026-05-03T16:00:00+01:00",
+          "end": "2026-05-03T16:30:00+01:00",
+          "rate": 0.248962,
+          "consumption": 0.029,
+          "cost": 0.01
+        },
+        {
+          "start": "2026-05-03T16:30:00+01:00",
+          "end": "2026-05-03T17:00:00+01:00",
+          "rate": 0.248962,
+          "consumption": 0.02,
+          "cost": 0.0
+        },
+        {
+          "start": "2026-05-03T17:00:00+01:00",
+          "end": "2026-05-03T17:30:00+01:00",
+          "rate": 0.248962,
+          "consumption": 0.078,
+          "cost": 0.02
+        },
+        {
+          "start": "2026-05-03T17:30:00+01:00",
+          "end": "2026-05-03T18:00:00+01:00",
+          "rate": 0.248962,
+          "consumption": 0.07,
+          "cost": 0.02
+        },
+        {
+          "start": "2026-05-03T18:00:00+01:00",
+          "end": "2026-05-03T18:30:00+01:00",
+          "rate": 0.248962,
+          "consumption": 0.336,
+          "cost": 0.08
+        },
+        {
+          "start": "2026-05-03T18:30:00+01:00",
+          "end": "2026-05-03T19:00:00+01:00",
+          "rate": 0.248962,
+          "consumption": 0.275,
+          "cost": 0.07
+        },
+        {
+          "start": "2026-05-03T19:00:00+01:00",
+          "end": "2026-05-03T19:30:00+01:00",
+          "rate": 0.248962,
+          "consumption": 0.357,
+          "cost": 0.09
+        },
+        {
+          "start": "2026-05-03T19:30:00+01:00",
+          "end": "2026-05-03T20:00:00+01:00",
+          "rate": 0.248962,
+          "consumption": 0.581,
+          "cost": 0.14
+        },
+        {
+          "start": "2026-05-03T20:00:00+01:00",
+          "end": "2026-05-03T20:30:00+01:00",
+          "rate": 0.248962,
+          "consumption": 0.669,
+          "cost": 0.17
+        },
+        {
+          "start": "2026-05-03T20:30:00+01:00",
+          "end": "2026-05-03T21:00:00+01:00",
+          "rate": 0.248962,
+          "consumption": 0.557,
+          "cost": 0.14
+        },
+        {
+          "start": "2026-05-03T21:00:00+01:00",
+          "end": "2026-05-03T21:30:00+01:00",
+          "rate": 0.248962,
+          "consumption": 0.513,
+          "cost": 0.13
+        },
+        {
+          "start": "2026-05-03T21:30:00+01:00",
+          "end": "2026-05-03T22:00:00+01:00",
+          "rate": 0.248962,
+          "consumption": 0.577,
+          "cost": 0.14
+        },
+        {
+          "start": "2026-05-03T22:00:00+01:00",
+          "end": "2026-05-03T22:30:00+01:00",
+          "rate": 0.248962,
+          "consumption": 0.71,
+          "cost": 0.18
+        },
+        {
+          "start": "2026-05-03T22:30:00+01:00",
+          "end": "2026-05-03T23:00:00+01:00",
+          "rate": 0.248962,
+          "consumption": 0.55,
+          "cost": 0.14
+        },
+        {
+          "start": "2026-05-03T23:00:00+01:00",
+          "end": "2026-05-03T23:30:00+01:00",
+          "rate": 0.248962,
+          "consumption": 0.509,
+          "cost": 0.13
+        },
+        {
+          "start": "2026-05-03T23:30:00+01:00",
+          "end": "2026-05-04T00:00:00+01:00",
+          "rate": 0.248962,
+          "consumption": 0.387,
+          "cost": 0.1
+        }
+      ],
+      "standing_charge": 0.44,
+      "total_without_standing_charge": 3.4,
+      "unit_of_measurement": "GBP",
+      "device_class": "monetary",
+      "icon": "mdi:currency-gbp",
+      "friendly_name": "Electricity Meter Previous Accumulative Cost Electricity (sn2/sn3)"
+    },
+    "last_changed": "2026-05-05T01:38:37.340010+00:00",
+    "last_reported": "2026-05-05T01:38:37.340010+00:00",
+    "last_updated": "2026-05-05T01:38:37.340010+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.octopus_energy_electricity_sn2_sn4_export_current_rate": {
+    "entity_id": "sensor.octopus_energy_electricity_sn2_sn4_export_current_rate",
+    "state": "0.12",
+    "attributes": {
+      "state_class": "total",
+      "mpan": "<redacted>",
+      "serial_number": "<redacted>",
+      "is_export": true,
+      "is_smart_meter": true,
+      "tariff": "<redacted>",
+      "start": "2026-05-04T00:00:00+01:00",
+      "end": "2026-05-07T00:00:00+01:00",
+      "is_capped": false,
+      "is_intelligent_adjusted": false,
+      "current_day_min_rate": 0.12,
+      "current_day_max_rate": 0.12,
+      "current_day_average_rate": 0.12,
+      "unit_of_measurement": "GBP/kWh",
+      "device_class": "monetary",
+      "icon": "mdi:currency-gbp",
+      "friendly_name": "Electricity Meter Export Current Rate Export Electricity (sn2 sn4)"
+    },
+    "last_changed": "2026-04-30T18:08:19.103058+00:00",
+    "last_reported": "2026-05-04T23:09:35.052516+00:00",
+    "last_updated": "2026-05-04T23:09:35.052516+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.octopus_energy_electricity_sn2_sn4_export_next_rate": {
+    "entity_id": "sensor.octopus_energy_electricity_sn2_sn4_export_next_rate",
+    "state": "unknown",
+    "attributes": {
+      "state_class": "total",
+      "mpan": "<redacted>",
+      "serial_number": "<redacted>",
+      "is_export": true,
+      "is_smart_meter": true,
+      "start": null,
+      "end": null,
+      "unit_of_measurement": "GBP/kWh",
+      "device_class": "monetary",
+      "icon": "mdi:currency-gbp",
+      "friendly_name": "Electricity Meter Export Next Rate Export Electricity (sn2/sn4)"
+    },
+    "last_changed": "2026-04-30T18:08:19.103436+00:00",
+    "last_reported": "2026-04-30T18:13:18.676911+00:00",
+    "last_updated": "2026-04-30T18:08:19.103436+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.octopus_energy_electricity_sn2_sn4_export_previous_accumulative_consumption": {
+    "entity_id": "sensor.octopus_energy_electricity_sn2_sn4_export_previous_accumulative_consumption",
+    "state": "7.386",
+    "attributes": {
+      "state_class": "total",
+      "last_reset": "2026-05-02T23:00:00+00:00",
+      "mpan": "<redacted>",
+      "serial_number": "<redacted>",
+      "is_export": true,
+      "is_smart_meter": true,
+      "total": 7.385999999999999,
+      "charges": [
+        {
+          "start": "2026-05-03T00:00:00+01:00",
+          "end": "2026-05-03T00:30:00+01:00",
+          "consumption": 0.0
+        },
+        {
+          "start": "2026-05-03T00:30:00+01:00",
+          "end": "2026-05-03T01:00:00+01:00",
+          "consumption": 0.0
+        },
+        {
+          "start": "2026-05-03T01:00:00+01:00",
+          "end": "2026-05-03T01:30:00+01:00",
+          "consumption": 0.0
+        },
+        {
+          "start": "2026-05-03T01:30:00+01:00",
+          "end": "2026-05-03T02:00:00+01:00",
+          "consumption": 0.0
+        },
+        {
+          "start": "2026-05-03T02:00:00+01:00",
+          "end": "2026-05-03T02:30:00+01:00",
+          "consumption": 0.0
+        },
+        {
+          "start": "2026-05-03T02:30:00+01:00",
+          "end": "2026-05-03T03:00:00+01:00",
+          "consumption": 0.0
+        },
+        {
+          "start": "2026-05-03T03:00:00+01:00",
+          "end": "2026-05-03T03:30:00+01:00",
+          "consumption": 0.0
+        },
+        {
+          "start": "2026-05-03T03:30:00+01:00",
+          "end": "2026-05-03T04:00:00+01:00",
+          "consumption": 0.0
+        },
+        {
+          "start": "2026-05-03T04:00:00+01:00",
+          "end": "2026-05-03T04:30:00+01:00",
+          "consumption": 0.0
+        },
+        {
+          "start": "2026-05-03T04:30:00+01:00",
+          "end": "2026-05-03T05:00:00+01:00",
+          "consumption": 0.0
+        },
+        {
+          "start": "2026-05-03T05:00:00+01:00",
+          "end": "2026-05-03T05:30:00+01:00",
+          "consumption": 0.0
+        },
+        {
+          "start": "2026-05-03T05:30:00+01:00",
+          "end": "2026-05-03T06:00:00+01:00",
+          "consumption": 0.0
+        },
+        {
+          "start": "2026-05-03T06:00:00+01:00",
+          "end": "2026-05-03T06:30:00+01:00",
+          "consumption": 0.0
+        },
+        {
+          "start": "2026-05-03T06:30:00+01:00",
+          "end": "2026-05-03T07:00:00+01:00",
+          "consumption": 0.0
+        },
+        {
+          "start": "2026-05-03T07:00:00+01:00",
+          "end": "2026-05-03T07:30:00+01:00",
+          "consumption": 0.0
+        },
+        {
+          "start": "2026-05-03T07:30:00+01:00",
+          "end": "2026-05-03T08:00:00+01:00",
+          "consumption": 0.021
+        },
+        {
+          "start": "2026-05-03T08:00:00+01:00",
+          "end": "2026-05-03T08:30:00+01:00",
+          "consumption": 0.208
+        },
+        {
+          "start": "2026-05-03T08:30:00+01:00",
+          "end": "2026-05-03T09:00:00+01:00",
+          "consumption": 0.255
+        },
+        {
+          "start": "2026-05-03T09:00:00+01:00",
+          "end": "2026-05-03T09:30:00+01:00",
+          "consumption": 0.11
+        },
+        {
+          "start": "2026-05-03T09:30:00+01:00",
+          "end": "2026-05-03T10:00:00+01:00",
+          "consumption": 0.48
+        },
+        {
+          "start": "2026-05-03T10:00:00+01:00",
+          "end": "2026-05-03T10:30:00+01:00",
+          "consumption": 0.494
+        },
+        {
+          "start": "2026-05-03T10:30:00+01:00",
+          "end": "2026-05-03T11:00:00+01:00",
+          "consumption": 0.208
+        },
+        {
+          "start": "2026-05-03T11:00:00+01:00",
+          "end": "2026-05-03T11:30:00+01:00",
+          "consumption": 0.726
+        },
+        {
+          "start": "2026-05-03T11:30:00+01:00",
+          "end": "2026-05-03T12:00:00+01:00",
+          "consumption": 0.787
+        },
+        {
+          "start": "2026-05-03T12:00:00+01:00",
+          "end": "2026-05-03T12:30:00+01:00",
+          "consumption": 0.56
+        },
+        {
+          "start": "2026-05-03T12:30:00+01:00",
+          "end": "2026-05-03T13:00:00+01:00",
+          "consumption": 0.574
+        },
+        {
+          "start": "2026-05-03T13:00:00+01:00",
+          "end": "2026-05-03T13:30:00+01:00",
+          "consumption": 0.565
+        },
+        {
+          "start": "2026-05-03T13:30:00+01:00",
+          "end": "2026-05-03T14:00:00+01:00",
+          "consumption": 0.618
+        },
+        {
+          "start": "2026-05-03T14:00:00+01:00",
+          "end": "2026-05-03T14:30:00+01:00",
+          "consumption": 0.108
+        },
+        {
+          "start": "2026-05-03T14:30:00+01:00",
+          "end": "2026-05-03T15:00:00+01:00",
+          "consumption": 0.03
+        },
+        {
+          "start": "2026-05-03T15:00:00+01:00",
+          "end": "2026-05-03T15:30:00+01:00",
+          "consumption": 0.103
+        },
+        {
+          "start": "2026-05-03T15:30:00+01:00",
+          "end": "2026-05-03T16:00:00+01:00",
+          "consumption": 0.452
+        },
+        {
+          "start": "2026-05-03T16:00:00+01:00",
+          "end": "2026-05-03T16:30:00+01:00",
+          "consumption": 0.417
+        },
+        {
+          "start": "2026-05-03T16:30:00+01:00",
+          "end": "2026-05-03T17:00:00+01:00",
+          "consumption": 0.372
+        },
+        {
+          "start": "2026-05-03T17:00:00+01:00",
+          "end": "2026-05-03T17:30:00+01:00",
+          "consumption": 0.174
+        },
+        {
+          "start": "2026-05-03T17:30:00+01:00",
+          "end": "2026-05-03T18:00:00+01:00",
+          "consumption": 0.124
+        },
+        {
+          "start": "2026-05-03T18:00:00+01:00",
+          "end": "2026-05-03T18:30:00+01:00",
+          "consumption": 0.0
+        },
+        {
+          "start": "2026-05-03T18:30:00+01:00",
+          "end": "2026-05-03T19:00:00+01:00",
+          "consumption": 0.0
+        },
+        {
+          "start": "2026-05-03T19:00:00+01:00",
+          "end": "2026-05-03T19:30:00+01:00",
+          "consumption": 0.0
+        },
+        {
+          "start": "2026-05-03T19:30:00+01:00",
+          "end": "2026-05-03T20:00:00+01:00",
+          "consumption": 0.0
+        },
+        {
+          "start": "2026-05-03T20:00:00+01:00",
+          "end": "2026-05-03T20:30:00+01:00",
+          "consumption": 0.0
+        },
+        {
+          "start": "2026-05-03T20:30:00+01:00",
+          "end": "2026-05-03T21:00:00+01:00",
+          "consumption": 0.0
+        },
+        {
+          "start": "2026-05-03T21:00:00+01:00",
+          "end": "2026-05-03T21:30:00+01:00",
+          "consumption": 0.0
+        },
+        {
+          "start": "2026-05-03T21:30:00+01:00",
+          "end": "2026-05-03T22:00:00+01:00",
+          "consumption": 0.0
+        },
+        {
+          "start": "2026-05-03T22:00:00+01:00",
+          "end": "2026-05-03T22:30:00+01:00",
+          "consumption": 0.0
+        },
+        {
+          "start": "2026-05-03T22:30:00+01:00",
+          "end": "2026-05-03T23:00:00+01:00",
+          "consumption": 0.0
+        },
+        {
+          "start": "2026-05-03T23:00:00+01:00",
+          "end": "2026-05-03T23:30:00+01:00",
+          "consumption": 0.0
+        },
+        {
+          "start": "2026-05-03T23:30:00+01:00",
+          "end": "2026-05-04T00:00:00+01:00",
+          "consumption": 0.0
+        }
+      ],
+      "unit_of_measurement": "kWh",
+      "device_class": "energy",
+      "icon": "mdi:lightning-bolt",
+      "friendly_name": "Electricity Meter Export Previous Accumulative Consumption Export Electricity (sn2/sn4)"
+    },
+    "last_changed": "2026-05-04T22:38:08.141100+00:00",
+    "last_reported": "2026-05-04T22:38:17.056568+00:00",
+    "last_updated": "2026-05-04T22:38:08.141100+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.octopus_energy_electricity_sn2_sn4_export_previous_accumulative_cost": {
+    "entity_id": "sensor.octopus_energy_electricity_sn2_sn4_export_previous_accumulative_cost",
+    "state": "0.87",
+    "attributes": {
+      "state_class": "total",
+      "last_reset": "2026-05-02T23:00:00+00:00",
+      "mpan": "<redacted>",
+      "serial_number": "<redacted>",
+      "is_export": true,
+      "is_smart_meter": true,
+      "tariff_code": "<redacted>",
+      "total": 0.87,
+      "charges": [
+        {
+          "start": "2026-05-03T00:00:00+01:00",
+          "end": "2026-05-03T00:30:00+01:00",
+          "rate": 0.12,
+          "consumption": 0.0,
+          "cost": 0.0
+        },
+        {
+          "start": "2026-05-03T00:30:00+01:00",
+          "end": "2026-05-03T01:00:00+01:00",
+          "rate": 0.12,
+          "consumption": 0.0,
+          "cost": 0.0
+        },
+        {
+          "start": "2026-05-03T01:00:00+01:00",
+          "end": "2026-05-03T01:30:00+01:00",
+          "rate": 0.12,
+          "consumption": 0.0,
+          "cost": 0.0
+        },
+        {
+          "start": "2026-05-03T01:30:00+01:00",
+          "end": "2026-05-03T02:00:00+01:00",
+          "rate": 0.12,
+          "consumption": 0.0,
+          "cost": 0.0
+        },
+        {
+          "start": "2026-05-03T02:00:00+01:00",
+          "end": "2026-05-03T02:30:00+01:00",
+          "rate": 0.12,
+          "consumption": 0.0,
+          "cost": 0.0
+        },
+        {
+          "start": "2026-05-03T02:30:00+01:00",
+          "end": "2026-05-03T03:00:00+01:00",
+          "rate": 0.12,
+          "consumption": 0.0,
+          "cost": 0.0
+        },
+        {
+          "start": "2026-05-03T03:00:00+01:00",
+          "end": "2026-05-03T03:30:00+01:00",
+          "rate": 0.12,
+          "consumption": 0.0,
+          "cost": 0.0
+        },
+        {
+          "start": "2026-05-03T03:30:00+01:00",
+          "end": "2026-05-03T04:00:00+01:00",
+          "rate": 0.12,
+          "consumption": 0.0,
+          "cost": 0.0
+        },
+        {
+          "start": "2026-05-03T04:00:00+01:00",
+          "end": "2026-05-03T04:30:00+01:00",
+          "rate": 0.12,
+          "consumption": 0.0,
+          "cost": 0.0
+        },
+        {
+          "start": "2026-05-03T04:30:00+01:00",
+          "end": "2026-05-03T05:00:00+01:00",
+          "rate": 0.12,
+          "consumption": 0.0,
+          "cost": 0.0
+        },
+        {
+          "start": "2026-05-03T05:00:00+01:00",
+          "end": "2026-05-03T05:30:00+01:00",
+          "rate": 0.12,
+          "consumption": 0.0,
+          "cost": 0.0
+        },
+        {
+          "start": "2026-05-03T05:30:00+01:00",
+          "end": "2026-05-03T06:00:00+01:00",
+          "rate": 0.12,
+          "consumption": 0.0,
+          "cost": 0.0
+        },
+        {
+          "start": "2026-05-03T06:00:00+01:00",
+          "end": "2026-05-03T06:30:00+01:00",
+          "rate": 0.12,
+          "consumption": 0.0,
+          "cost": 0.0
+        },
+        {
+          "start": "2026-05-03T06:30:00+01:00",
+          "end": "2026-05-03T07:00:00+01:00",
+          "rate": 0.12,
+          "consumption": 0.0,
+          "cost": 0.0
+        },
+        {
+          "start": "2026-05-03T07:00:00+01:00",
+          "end": "2026-05-03T07:30:00+01:00",
+          "rate": 0.12,
+          "consumption": 0.0,
+          "cost": 0.0
+        },
+        {
+          "start": "2026-05-03T07:30:00+01:00",
+          "end": "2026-05-03T08:00:00+01:00",
+          "rate": 0.12,
+          "consumption": 0.021,
+          "cost": 0.0
+        },
+        {
+          "start": "2026-05-03T08:00:00+01:00",
+          "end": "2026-05-03T08:30:00+01:00",
+          "rate": 0.12,
+          "consumption": 0.208,
+          "cost": 0.03
+        },
+        {
+          "start": "2026-05-03T08:30:00+01:00",
+          "end": "2026-05-03T09:00:00+01:00",
+          "rate": 0.12,
+          "consumption": 0.255,
+          "cost": 0.03
+        },
+        {
+          "start": "2026-05-03T09:00:00+01:00",
+          "end": "2026-05-03T09:30:00+01:00",
+          "rate": 0.12,
+          "consumption": 0.11,
+          "cost": 0.01
+        },
+        {
+          "start": "2026-05-03T09:30:00+01:00",
+          "end": "2026-05-03T10:00:00+01:00",
+          "rate": 0.12,
+          "consumption": 0.48,
+          "cost": 0.06
+        },
+        {
+          "start": "2026-05-03T10:00:00+01:00",
+          "end": "2026-05-03T10:30:00+01:00",
+          "rate": 0.12,
+          "consumption": 0.494,
+          "cost": 0.06
+        },
+        {
+          "start": "2026-05-03T10:30:00+01:00",
+          "end": "2026-05-03T11:00:00+01:00",
+          "rate": 0.12,
+          "consumption": 0.208,
+          "cost": 0.03
+        },
+        {
+          "start": "2026-05-03T11:00:00+01:00",
+          "end": "2026-05-03T11:30:00+01:00",
+          "rate": 0.12,
+          "consumption": 0.726,
+          "cost": 0.09
+        },
+        {
+          "start": "2026-05-03T11:30:00+01:00",
+          "end": "2026-05-03T12:00:00+01:00",
+          "rate": 0.12,
+          "consumption": 0.787,
+          "cost": 0.09
+        },
+        {
+          "start": "2026-05-03T12:00:00+01:00",
+          "end": "2026-05-03T12:30:00+01:00",
+          "rate": 0.12,
+          "consumption": 0.56,
+          "cost": 0.07
+        },
+        {
+          "start": "2026-05-03T12:30:00+01:00",
+          "end": "2026-05-03T13:00:00+01:00",
+          "rate": 0.12,
+          "consumption": 0.574,
+          "cost": 0.07
+        },
+        {
+          "start": "2026-05-03T13:00:00+01:00",
+          "end": "2026-05-03T13:30:00+01:00",
+          "rate": 0.12,
+          "consumption": 0.565,
+          "cost": 0.07
+        },
+        {
+          "start": "2026-05-03T13:30:00+01:00",
+          "end": "2026-05-03T14:00:00+01:00",
+          "rate": 0.12,
+          "consumption": 0.618,
+          "cost": 0.07
+        },
+        {
+          "start": "2026-05-03T14:00:00+01:00",
+          "end": "2026-05-03T14:30:00+01:00",
+          "rate": 0.12,
+          "consumption": 0.108,
+          "cost": 0.01
+        },
+        {
+          "start": "2026-05-03T14:30:00+01:00",
+          "end": "2026-05-03T15:00:00+01:00",
+          "rate": 0.12,
+          "consumption": 0.03,
+          "cost": 0.0
+        },
+        {
+          "start": "2026-05-03T15:00:00+01:00",
+          "end": "2026-05-03T15:30:00+01:00",
+          "rate": 0.12,
+          "consumption": 0.103,
+          "cost": 0.01
+        },
+        {
+          "start": "2026-05-03T15:30:00+01:00",
+          "end": "2026-05-03T16:00:00+01:00",
+          "rate": 0.12,
+          "consumption": 0.452,
+          "cost": 0.05
+        },
+        {
+          "start": "2026-05-03T16:00:00+01:00",
+          "end": "2026-05-03T16:30:00+01:00",
+          "rate": 0.12,
+          "consumption": 0.417,
+          "cost": 0.05
+        },
+        {
+          "start": "2026-05-03T16:30:00+01:00",
+          "end": "2026-05-03T17:00:00+01:00",
+          "rate": 0.12,
+          "consumption": 0.372,
+          "cost": 0.04
+        },
+        {
+          "start": "2026-05-03T17:00:00+01:00",
+          "end": "2026-05-03T17:30:00+01:00",
+          "rate": 0.12,
+          "consumption": 0.174,
+          "cost": 0.02
+        },
+        {
+          "start": "2026-05-03T17:30:00+01:00",
+          "end": "2026-05-03T18:00:00+01:00",
+          "rate": 0.12,
+          "consumption": 0.124,
+          "cost": 0.01
+        },
+        {
+          "start": "2026-05-03T18:00:00+01:00",
+          "end": "2026-05-03T18:30:00+01:00",
+          "rate": 0.12,
+          "consumption": 0.0,
+          "cost": 0.0
+        },
+        {
+          "start": "2026-05-03T18:30:00+01:00",
+          "end": "2026-05-03T19:00:00+01:00",
+          "rate": 0.12,
+          "consumption": 0.0,
+          "cost": 0.0
+        },
+        {
+          "start": "2026-05-03T19:00:00+01:00",
+          "end": "2026-05-03T19:30:00+01:00",
+          "rate": 0.12,
+          "consumption": 0.0,
+          "cost": 0.0
+        },
+        {
+          "start": "2026-05-03T19:30:00+01:00",
+          "end": "2026-05-03T20:00:00+01:00",
+          "rate": 0.12,
+          "consumption": 0.0,
+          "cost": 0.0
+        },
+        {
+          "start": "2026-05-03T20:00:00+01:00",
+          "end": "2026-05-03T20:30:00+01:00",
+          "rate": 0.12,
+          "consumption": 0.0,
+          "cost": 0.0
+        },
+        {
+          "start": "2026-05-03T20:30:00+01:00",
+          "end": "2026-05-03T21:00:00+01:00",
+          "rate": 0.12,
+          "consumption": 0.0,
+          "cost": 0.0
+        },
+        {
+          "start": "2026-05-03T21:00:00+01:00",
+          "end": "2026-05-03T21:30:00+01:00",
+          "rate": 0.12,
+          "consumption": 0.0,
+          "cost": 0.0
+        },
+        {
+          "start": "2026-05-03T21:30:00+01:00",
+          "end": "2026-05-03T22:00:00+01:00",
+          "rate": 0.12,
+          "consumption": 0.0,
+          "cost": 0.0
+        },
+        {
+          "start": "2026-05-03T22:00:00+01:00",
+          "end": "2026-05-03T22:30:00+01:00",
+          "rate": 0.12,
+          "consumption": 0.0,
+          "cost": 0.0
+        },
+        {
+          "start": "2026-05-03T22:30:00+01:00",
+          "end": "2026-05-03T23:00:00+01:00",
+          "rate": 0.12,
+          "consumption": 0.0,
+          "cost": 0.0
+        },
+        {
+          "start": "2026-05-03T23:00:00+01:00",
+          "end": "2026-05-03T23:30:00+01:00",
+          "rate": 0.12,
+          "consumption": 0.0,
+          "cost": 0.0
+        },
+        {
+          "start": "2026-05-03T23:30:00+01:00",
+          "end": "2026-05-04T00:00:00+01:00",
+          "rate": 0.12,
+          "consumption": 0.0,
+          "cost": 0.0
+        }
+      ],
+      "standing_charge": 0.0,
+      "total_without_standing_charge": 0.87,
+      "unit_of_measurement": "GBP",
+      "device_class": "monetary",
+      "icon": "mdi:currency-gbp",
+      "friendly_name": "Electricity Meter Export Previous Accumulative Cost Export Electricity (sn2/sn4)"
+    },
+    "last_changed": "2026-05-04T22:38:37.062989+00:00",
+    "last_reported": "2026-05-04T22:38:47.056188+00:00",
+    "last_updated": "2026-05-04T22:38:37.062989+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.octopus_energy_gas_sn5_sn6_current_rate": {
+    "entity_id": "sensor.octopus_energy_gas_sn5_sn6_current_rate",
+    "state": "0.059144",
+    "attributes": {
+      "state_class": "total",
+      "mprn": "<redacted>",
+      "serial_number": "<redacted>",
+      "is_smart_meter": true,
+      "tariff": "<redacted>",
+      "start": "2026-05-04T00:00:00+01:00",
+      "end": "2026-05-07T00:00:00+01:00",
+      "is_capped": false,
+      "unit_of_measurement": "GBP/kWh",
+      "device_class": "monetary",
+      "icon": "mdi:currency-gbp",
+      "friendly_name": "Gas Meter Current Rate Gas (sn5/sn6)"
+    },
+    "last_changed": "2026-04-30T18:08:19.106551+00:00",
+    "last_reported": "2026-05-04T23:09:33.135538+00:00",
+    "last_updated": "2026-05-04T23:09:33.135538+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.octopus_energy_gas_sn5_sn6_current_standing_charge": {
+    "entity_id": "sensor.octopus_energy_gas_sn5_sn6_current_standing_charge",
+    "state": "0.XXXXXXXX",
+    "attributes": {
+      "state_class": "total",
+      "mprn": "<redacted>",
+      "serial_number": "<redacted>",
+      "start": "2026-04-01T00:00:00+01:00",
+      "end": null,
+      "unit_of_measurement": "GBP",
+      "device_class": "monetary",
+      "icon": "mdi:currency-gbp",
+      "friendly_name": "Gas Meter Current Standing Charge Gas (sn5/sn6)"
+    },
+    "last_changed": "2026-04-30T18:08:19.107297+00:00",
+    "last_reported": "2026-04-30T18:13:18.867078+00:00",
+    "last_updated": "2026-04-30T18:08:19.107297+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.octopus_energy_gas_sn5_sn6_next_rate": {
+    "entity_id": "sensor.octopus_energy_gas_sn5_sn6_next_rate",
+    "state": "unknown",
+    "attributes": {
+      "state_class": "total",
+      "mprn": "<redacted>",
+      "serial_number": "<redacted>",
+      "is_smart_meter": true,
+      "start": null,
+      "end": null,
+      "unit_of_measurement": "GBP/kWh",
+      "device_class": "monetary",
+      "icon": "mdi:currency-gbp",
+      "friendly_name": "Gas Meter Next Rate Gas (sn5/sn6)"
+    },
+    "last_changed": "2026-04-30T18:08:19.107052+00:00",
+    "last_reported": "2026-04-30T18:13:18.702664+00:00",
+    "last_updated": "2026-04-30T18:08:19.107052+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.octopus_energy_gas_sn5_sn6_previous_accumulative_consumption_kwh": {
+    "entity_id": "sensor.octopus_energy_gas_sn5_sn6_previous_accumulative_consumption_kwh",
+    "state": "33.215",
+    "attributes": {
+      "state_class": "total",
+      "last_reset": "2026-05-02T23:00:00+00:00",
+      "mprn": "<redacted>",
+      "serial_number": "<redacted>",
+      "is_estimated": true,
+      "charges": [
+        {
+          "start": "2026-05-03T00:00:00+01:00",
+          "end": "2026-05-03T00:30:00+01:00",
+          "consumption_m3": 0.0,
+          "consumption_kwh": 0.0
+        },
+        {
+          "start": "2026-05-03T00:30:00+01:00",
+          "end": "2026-05-03T01:00:00+01:00",
+          "consumption_m3": 0.0,
+          "consumption_kwh": 0.0
+        },
+        {
+          "start": "2026-05-03T01:00:00+01:00",
+          "end": "2026-05-03T01:30:00+01:00",
+          "consumption_m3": 0.067,
+          "consumption_kwh": 0.761
+        },
+        {
+          "start": "2026-05-03T01:30:00+01:00",
+          "end": "2026-05-03T02:00:00+01:00",
+          "consumption_m3": 0.107,
+          "consumption_kwh": 1.216
+        },
+        {
+          "start": "2026-05-03T02:00:00+01:00",
+          "end": "2026-05-03T02:30:00+01:00",
+          "consumption_m3": 0.124,
+          "consumption_kwh": 1.409
+        },
+        {
+          "start": "2026-05-03T02:30:00+01:00",
+          "end": "2026-05-03T03:00:00+01:00",
+          "consumption_m3": 0.038,
+          "consumption_kwh": 0.432
+        },
+        {
+          "start": "2026-05-03T03:00:00+01:00",
+          "end": "2026-05-03T03:30:00+01:00",
+          "consumption_m3": 0.039,
+          "consumption_kwh": 0.443
+        },
+        {
+          "start": "2026-05-03T03:30:00+01:00",
+          "end": "2026-05-03T04:00:00+01:00",
+          "consumption_m3": 0.019,
+          "consumption_kwh": 0.216
+        },
+        {
+          "start": "2026-05-03T04:00:00+01:00",
+          "end": "2026-05-03T04:30:00+01:00",
+          "consumption_m3": 0.02,
+          "consumption_kwh": 0.227
+        },
+        {
+          "start": "2026-05-03T04:30:00+01:00",
+          "end": "2026-05-03T05:00:00+01:00",
+          "consumption_m3": 0.038,
+          "consumption_kwh": 0.432
+        },
+        {
+          "start": "2026-05-03T05:00:00+01:00",
+          "end": "2026-05-03T05:30:00+01:00",
+          "consumption_m3": 0.019,
+          "consumption_kwh": 0.216
+        },
+        {
+          "start": "2026-05-03T05:30:00+01:00",
+          "end": "2026-05-03T06:00:00+01:00",
+          "consumption_m3": 0.019,
+          "consumption_kwh": 0.216
+        },
+        {
+          "start": "2026-05-03T06:00:00+01:00",
+          "end": "2026-05-03T06:30:00+01:00",
+          "consumption_m3": 0.02,
+          "consumption_kwh": 0.227
+        },
+        {
+          "start": "2026-05-03T06:30:00+01:00",
+          "end": "2026-05-03T07:00:00+01:00",
+          "consumption_m3": 0.019,
+          "consumption_kwh": 0.216
+        },
+        {
+          "start": "2026-05-03T07:00:00+01:00",
+          "end": "2026-05-03T07:30:00+01:00",
+          "consumption_m3": 0.092,
+          "consumption_kwh": 1.045
+        },
+        {
+          "start": "2026-05-03T07:30:00+01:00",
+          "end": "2026-05-03T08:00:00+01:00",
+          "consumption_m3": 0.418,
+          "consumption_kwh": 4.75
+        },
+        {
+          "start": "2026-05-03T08:00:00+01:00",
+          "end": "2026-05-03T08:30:00+01:00",
+          "consumption_m3": 0.039,
+          "consumption_kwh": 0.443
+        },
+        {
+          "start": "2026-05-03T08:30:00+01:00",
+          "end": "2026-05-03T09:00:00+01:00",
+          "consumption_m3": 0.019,
+          "consumption_kwh": 0.216
+        },
+        {
+          "start": "2026-05-03T09:00:00+01:00",
+          "end": "2026-05-03T09:30:00+01:00",
+          "consumption_m3": 0.027,
+          "consumption_kwh": 0.307
+        },
+        {
+          "start": "2026-05-03T09:30:00+01:00",
+          "end": "2026-05-03T10:00:00+01:00",
+          "consumption_m3": 0.052,
+          "consumption_kwh": 0.591
+        },
+        {
+          "start": "2026-05-03T10:00:00+01:00",
+          "end": "2026-05-03T10:30:00+01:00",
+          "consumption_m3": 0.214,
+          "consumption_kwh": 2.432
+        },
+        {
+          "start": "2026-05-03T10:30:00+01:00",
+          "end": "2026-05-03T11:00:00+01:00",
+          "consumption_m3": 0.081,
+          "consumption_kwh": 0.92
+        },
+        {
+          "start": "2026-05-03T11:00:00+01:00",
+          "end": "2026-05-03T11:30:00+01:00",
+          "consumption_m3": 0.191,
+          "consumption_kwh": 2.17
+        },
+        {
+          "start": "2026-05-03T11:30:00+01:00",
+          "end": "2026-05-03T12:00:00+01:00",
+          "consumption_m3": 0.228,
+          "consumption_kwh": 2.591
+        },
+        {
+          "start": "2026-05-03T12:00:00+01:00",
+          "end": "2026-05-03T12:30:00+01:00",
+          "consumption_m3": 0.089,
+          "consumption_kwh": 1.011
+        },
+        {
+          "start": "2026-05-03T12:30:00+01:00",
+          "end": "2026-05-03T13:00:00+01:00",
+          "consumption_m3": 0.039,
+          "consumption_kwh": 0.443
+        },
+        {
+          "start": "2026-05-03T13:00:00+01:00",
+          "end": "2026-05-03T13:30:00+01:00",
+          "consumption_m3": 0.039,
+          "consumption_kwh": 0.443
+        },
+        {
+          "start": "2026-05-03T13:30:00+01:00",
+          "end": "2026-05-03T14:00:00+01:00",
+          "consumption_m3": 0.019,
+          "consumption_kwh": 0.216
+        },
+        {
+          "start": "2026-05-03T14:00:00+01:00",
+          "end": "2026-05-03T14:30:00+01:00",
+          "consumption_m3": 0.059,
+          "consumption_kwh": 0.67
+        },
+        {
+          "start": "2026-05-03T14:30:00+01:00",
+          "end": "2026-05-03T15:00:00+01:00",
+          "consumption_m3": 0.059,
+          "consumption_kwh": 0.67
+        },
+        {
+          "start": "2026-05-03T15:00:00+01:00",
+          "end": "2026-05-03T15:30:00+01:00",
+          "consumption_m3": 0.019,
+          "consumption_kwh": 0.216
+        },
+        {
+          "start": "2026-05-03T15:30:00+01:00",
+          "end": "2026-05-03T16:00:00+01:00",
+          "consumption_m3": 0.04,
+          "consumption_kwh": 0.455
+        },
+        {
+          "start": "2026-05-03T16:00:00+01:00",
+          "end": "2026-05-03T16:30:00+01:00",
+          "consumption_m3": 0.02,
+          "consumption_kwh": 0.227
+        },
+        {
+          "start": "2026-05-03T16:30:00+01:00",
+          "end": "2026-05-03T17:00:00+01:00",
+          "consumption_m3": 0.019,
+          "consumption_kwh": 0.216
+        },
+        {
+          "start": "2026-05-03T17:00:00+01:00",
+          "end": "2026-05-03T17:30:00+01:00",
+          "consumption_m3": 0.04,
+          "consumption_kwh": 0.455
+        },
+        {
+          "start": "2026-05-03T17:30:00+01:00",
+          "end": "2026-05-03T18:00:00+01:00",
+          "consumption_m3": 0.019,
+          "consumption_kwh": 0.216
+        },
+        {
+          "start": "2026-05-03T18:00:00+01:00",
+          "end": "2026-05-03T18:30:00+01:00",
+          "consumption_m3": 0.019,
+          "consumption_kwh": 0.216
+        },
+        {
+          "start": "2026-05-03T18:30:00+01:00",
+          "end": "2026-05-03T19:00:00+01:00",
+          "consumption_m3": 0.02,
+          "consumption_kwh": 0.227
+        },
+        {
+          "start": "2026-05-03T19:00:00+01:00",
+          "end": "2026-05-03T19:30:00+01:00",
+          "consumption_m3": 0.02,
+          "consumption_kwh": 0.227
+        },
+        {
+          "start": "2026-05-03T19:30:00+01:00",
+          "end": "2026-05-03T20:00:00+01:00",
+          "consumption_m3": 0.019,
+          "consumption_kwh": 0.216
+        },
+        {
+          "start": "2026-05-03T20:00:00+01:00",
+          "end": "2026-05-03T20:30:00+01:00",
+          "consumption_m3": 0.04,
+          "consumption_kwh": 0.455
+        },
+        {
+          "start": "2026-05-03T20:30:00+01:00",
+          "end": "2026-05-03T21:00:00+01:00",
+          "consumption_m3": 0.039,
+          "consumption_kwh": 0.443
+        },
+        {
+          "start": "2026-05-03T21:00:00+01:00",
+          "end": "2026-05-03T21:30:00+01:00",
+          "consumption_m3": 0.154,
+          "consumption_kwh": 1.75
+        },
+        {
+          "start": "2026-05-03T21:30:00+01:00",
+          "end": "2026-05-03T22:00:00+01:00",
+          "consumption_m3": 0.101,
+          "consumption_kwh": 1.148
+        },
+        {
+          "start": "2026-05-03T22:00:00+01:00",
+          "end": "2026-05-03T22:30:00+01:00",
+          "consumption_m3": 0.06,
+          "consumption_kwh": 0.682
+        },
+        {
+          "start": "2026-05-03T22:30:00+01:00",
+          "end": "2026-05-03T23:00:00+01:00",
+          "consumption_m3": 0.04,
+          "consumption_kwh": 0.455
+        },
+        {
+          "start": "2026-05-03T23:00:00+01:00",
+          "end": "2026-05-03T23:30:00+01:00",
+          "consumption_m3": 0.02,
+          "consumption_kwh": 0.227
+        },
+        {
+          "start": "2026-05-03T23:30:00+01:00",
+          "end": "2026-05-04T00:00:00+01:00",
+          "consumption_m3": 0.04,
+          "consumption_kwh": 0.455
+        }
+      ],
+      "calorific_value": 40.0,
+      "unit_of_measurement": "kWh",
+      "device_class": "energy",
+      "icon": "mdi:lightning-bolt",
+      "friendly_name": "Gas Meter Previous Accumulative Consumption (kWh) Gas (sn5/sn6)"
+    },
+    "last_changed": "2026-05-05T00:08:37.200185+00:00",
+    "last_reported": "2026-05-05T00:08:37.200185+00:00",
+    "last_updated": "2026-05-05T00:08:37.200185+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.octopus_energy_gas_sn5_sn6_previous_accumulative_consumption_m3": {
+    "entity_id": "sensor.octopus_energy_gas_sn5_sn6_previous_accumulative_consumption_m3",
+    "state": "2.923",
+    "attributes": {
+      "state_class": "total",
+      "last_reset": "2026-05-02T23:00:00+00:00",
+      "mprn": "<redacted>",
+      "serial_number": "<redacted>",
+      "is_estimated": false,
+      "total_kwh": 33.215,
+      "total_m3": 2.9230000000000014,
+      "charges": [
+        {
+          "start": "2026-05-03T00:00:00+01:00",
+          "end": "2026-05-03T00:30:00+01:00",
+          "consumption_m3": 0.0,
+          "consumption_kwh": 0.0
+        },
+        {
+          "start": "2026-05-03T00:30:00+01:00",
+          "end": "2026-05-03T01:00:00+01:00",
+          "consumption_m3": 0.0,
+          "consumption_kwh": 0.0
+        },
+        {
+          "start": "2026-05-03T01:00:00+01:00",
+          "end": "2026-05-03T01:30:00+01:00",
+          "consumption_m3": 0.067,
+          "consumption_kwh": 0.761
+        },
+        {
+          "start": "2026-05-03T01:30:00+01:00",
+          "end": "2026-05-03T02:00:00+01:00",
+          "consumption_m3": 0.107,
+          "consumption_kwh": 1.216
+        },
+        {
+          "start": "2026-05-03T02:00:00+01:00",
+          "end": "2026-05-03T02:30:00+01:00",
+          "consumption_m3": 0.124,
+          "consumption_kwh": 1.409
+        },
+        {
+          "start": "2026-05-03T02:30:00+01:00",
+          "end": "2026-05-03T03:00:00+01:00",
+          "consumption_m3": 0.038,
+          "consumption_kwh": 0.432
+        },
+        {
+          "start": "2026-05-03T03:00:00+01:00",
+          "end": "2026-05-03T03:30:00+01:00",
+          "consumption_m3": 0.039,
+          "consumption_kwh": 0.443
+        },
+        {
+          "start": "2026-05-03T03:30:00+01:00",
+          "end": "2026-05-03T04:00:00+01:00",
+          "consumption_m3": 0.019,
+          "consumption_kwh": 0.216
+        },
+        {
+          "start": "2026-05-03T04:00:00+01:00",
+          "end": "2026-05-03T04:30:00+01:00",
+          "consumption_m3": 0.02,
+          "consumption_kwh": 0.227
+        },
+        {
+          "start": "2026-05-03T04:30:00+01:00",
+          "end": "2026-05-03T05:00:00+01:00",
+          "consumption_m3": 0.038,
+          "consumption_kwh": 0.432
+        },
+        {
+          "start": "2026-05-03T05:00:00+01:00",
+          "end": "2026-05-03T05:30:00+01:00",
+          "consumption_m3": 0.019,
+          "consumption_kwh": 0.216
+        },
+        {
+          "start": "2026-05-03T05:30:00+01:00",
+          "end": "2026-05-03T06:00:00+01:00",
+          "consumption_m3": 0.019,
+          "consumption_kwh": 0.216
+        },
+        {
+          "start": "2026-05-03T06:00:00+01:00",
+          "end": "2026-05-03T06:30:00+01:00",
+          "consumption_m3": 0.02,
+          "consumption_kwh": 0.227
+        },
+        {
+          "start": "2026-05-03T06:30:00+01:00",
+          "end": "2026-05-03T07:00:00+01:00",
+          "consumption_m3": 0.019,
+          "consumption_kwh": 0.216
+        },
+        {
+          "start": "2026-05-03T07:00:00+01:00",
+          "end": "2026-05-03T07:30:00+01:00",
+          "consumption_m3": 0.092,
+          "consumption_kwh": 1.045
+        },
+        {
+          "start": "2026-05-03T07:30:00+01:00",
+          "end": "2026-05-03T08:00:00+01:00",
+          "consumption_m3": 0.418,
+          "consumption_kwh": 4.75
+        },
+        {
+          "start": "2026-05-03T08:00:00+01:00",
+          "end": "2026-05-03T08:30:00+01:00",
+          "consumption_m3": 0.039,
+          "consumption_kwh": 0.443
+        },
+        {
+          "start": "2026-05-03T08:30:00+01:00",
+          "end": "2026-05-03T09:00:00+01:00",
+          "consumption_m3": 0.019,
+          "consumption_kwh": 0.216
+        },
+        {
+          "start": "2026-05-03T09:00:00+01:00",
+          "end": "2026-05-03T09:30:00+01:00",
+          "consumption_m3": 0.027,
+          "consumption_kwh": 0.307
+        },
+        {
+          "start": "2026-05-03T09:30:00+01:00",
+          "end": "2026-05-03T10:00:00+01:00",
+          "consumption_m3": 0.052,
+          "consumption_kwh": 0.591
+        },
+        {
+          "start": "2026-05-03T10:00:00+01:00",
+          "end": "2026-05-03T10:30:00+01:00",
+          "consumption_m3": 0.214,
+          "consumption_kwh": 2.432
+        },
+        {
+          "start": "2026-05-03T10:30:00+01:00",
+          "end": "2026-05-03T11:00:00+01:00",
+          "consumption_m3": 0.081,
+          "consumption_kwh": 0.92
+        },
+        {
+          "start": "2026-05-03T11:00:00+01:00",
+          "end": "2026-05-03T11:30:00+01:00",
+          "consumption_m3": 0.191,
+          "consumption_kwh": 2.17
+        },
+        {
+          "start": "2026-05-03T11:30:00+01:00",
+          "end": "2026-05-03T12:00:00+01:00",
+          "consumption_m3": 0.228,
+          "consumption_kwh": 2.591
+        },
+        {
+          "start": "2026-05-03T12:00:00+01:00",
+          "end": "2026-05-03T12:30:00+01:00",
+          "consumption_m3": 0.089,
+          "consumption_kwh": 1.011
+        },
+        {
+          "start": "2026-05-03T12:30:00+01:00",
+          "end": "2026-05-03T13:00:00+01:00",
+          "consumption_m3": 0.039,
+          "consumption_kwh": 0.443
+        },
+        {
+          "start": "2026-05-03T13:00:00+01:00",
+          "end": "2026-05-03T13:30:00+01:00",
+          "consumption_m3": 0.039,
+          "consumption_kwh": 0.443
+        },
+        {
+          "start": "2026-05-03T13:30:00+01:00",
+          "end": "2026-05-03T14:00:00+01:00",
+          "consumption_m3": 0.019,
+          "consumption_kwh": 0.216
+        },
+        {
+          "start": "2026-05-03T14:00:00+01:00",
+          "end": "2026-05-03T14:30:00+01:00",
+          "consumption_m3": 0.059,
+          "consumption_kwh": 0.67
+        },
+        {
+          "start": "2026-05-03T14:30:00+01:00",
+          "end": "2026-05-03T15:00:00+01:00",
+          "consumption_m3": 0.059,
+          "consumption_kwh": 0.67
+        },
+        {
+          "start": "2026-05-03T15:00:00+01:00",
+          "end": "2026-05-03T15:30:00+01:00",
+          "consumption_m3": 0.019,
+          "consumption_kwh": 0.216
+        },
+        {
+          "start": "2026-05-03T15:30:00+01:00",
+          "end": "2026-05-03T16:00:00+01:00",
+          "consumption_m3": 0.04,
+          "consumption_kwh": 0.455
+        },
+        {
+          "start": "2026-05-03T16:00:00+01:00",
+          "end": "2026-05-03T16:30:00+01:00",
+          "consumption_m3": 0.02,
+          "consumption_kwh": 0.227
+        },
+        {
+          "start": "2026-05-03T16:30:00+01:00",
+          "end": "2026-05-03T17:00:00+01:00",
+          "consumption_m3": 0.019,
+          "consumption_kwh": 0.216
+        },
+        {
+          "start": "2026-05-03T17:00:00+01:00",
+          "end": "2026-05-03T17:30:00+01:00",
+          "consumption_m3": 0.04,
+          "consumption_kwh": 0.455
+        },
+        {
+          "start": "2026-05-03T17:30:00+01:00",
+          "end": "2026-05-03T18:00:00+01:00",
+          "consumption_m3": 0.019,
+          "consumption_kwh": 0.216
+        },
+        {
+          "start": "2026-05-03T18:00:00+01:00",
+          "end": "2026-05-03T18:30:00+01:00",
+          "consumption_m3": 0.019,
+          "consumption_kwh": 0.216
+        },
+        {
+          "start": "2026-05-03T18:30:00+01:00",
+          "end": "2026-05-03T19:00:00+01:00",
+          "consumption_m3": 0.02,
+          "consumption_kwh": 0.227
+        },
+        {
+          "start": "2026-05-03T19:00:00+01:00",
+          "end": "2026-05-03T19:30:00+01:00",
+          "consumption_m3": 0.02,
+          "consumption_kwh": 0.227
+        },
+        {
+          "start": "2026-05-03T19:30:00+01:00",
+          "end": "2026-05-03T20:00:00+01:00",
+          "consumption_m3": 0.019,
+          "consumption_kwh": 0.216
+        },
+        {
+          "start": "2026-05-03T20:00:00+01:00",
+          "end": "2026-05-03T20:30:00+01:00",
+          "consumption_m3": 0.04,
+          "consumption_kwh": 0.455
+        },
+        {
+          "start": "2026-05-03T20:30:00+01:00",
+          "end": "2026-05-03T21:00:00+01:00",
+          "consumption_m3": 0.039,
+          "consumption_kwh": 0.443
+        },
+        {
+          "start": "2026-05-03T21:00:00+01:00",
+          "end": "2026-05-03T21:30:00+01:00",
+          "consumption_m3": 0.154,
+          "consumption_kwh": 1.75
+        },
+        {
+          "start": "2026-05-03T21:30:00+01:00",
+          "end": "2026-05-03T22:00:00+01:00",
+          "consumption_m3": 0.101,
+          "consumption_kwh": 1.148
+        },
+        {
+          "start": "2026-05-03T22:00:00+01:00",
+          "end": "2026-05-03T22:30:00+01:00",
+          "consumption_m3": 0.06,
+          "consumption_kwh": 0.682
+        },
+        {
+          "start": "2026-05-03T22:30:00+01:00",
+          "end": "2026-05-03T23:00:00+01:00",
+          "consumption_m3": 0.04,
+          "consumption_kwh": 0.455
+        },
+        {
+          "start": "2026-05-03T23:00:00+01:00",
+          "end": "2026-05-03T23:30:00+01:00",
+          "consumption_m3": 0.02,
+          "consumption_kwh": 0.227
+        },
+        {
+          "start": "2026-05-03T23:30:00+01:00",
+          "end": "2026-05-04T00:00:00+01:00",
+          "consumption_m3": 0.04,
+          "consumption_kwh": 0.455
+        }
+      ],
+      "calorific_value": 40.0,
+      "unit_of_measurement": "m³",
+      "device_class": "gas",
+      "icon": "mdi:fire",
+      "friendly_name": "Gas Meter Previous Accumulative Consumption Gas (sn5/sn6)"
+    },
+    "last_changed": "2026-05-05T00:08:11.136228+00:00",
+    "last_reported": "2026-05-05T00:08:11.136228+00:00",
+    "last_updated": "2026-05-05T00:08:11.136228+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.octopus_energy_gas_sn5_sn6_previous_accumulative_cost": {
+    "entity_id": "sensor.octopus_energy_gas_sn5_sn6_previous_accumulative_cost",
+    "state": "2.22",
+    "attributes": {
+      "state_class": "total",
+      "last_reset": "2026-05-02T23:00:00+00:00",
+      "mprn": "<redacted>",
+      "serial_number": "<redacted>",
+      "tariff_code": "<redacted>",
+      "standing_charge": 0.29,
+      "total_without_standing_charge": 1.93,
+      "total": 2.2199999999999998,
+      "charges": [
+        {
+          "start": "2026-05-03T00:00:00+01:00",
+          "end": "2026-05-03T00:30:00+01:00",
+          "rate": 0.059144,
+          "consumption": 0.0,
+          "cost": 0.0
+        },
+        {
+          "start": "2026-05-03T00:30:00+01:00",
+          "end": "2026-05-03T01:00:00+01:00",
+          "rate": 0.059144,
+          "consumption": 0.0,
+          "cost": 0.0
+        },
+        {
+          "start": "2026-05-03T01:00:00+01:00",
+          "end": "2026-05-03T01:30:00+01:00",
+          "rate": 0.059144,
+          "consumption": 0.761,
+          "cost": 0.04
+        },
+        {
+          "start": "2026-05-03T01:30:00+01:00",
+          "end": "2026-05-03T02:00:00+01:00",
+          "rate": 0.059144,
+          "consumption": 1.216,
+          "cost": 0.07
+        },
+        {
+          "start": "2026-05-03T02:00:00+01:00",
+          "end": "2026-05-03T02:30:00+01:00",
+          "rate": 0.059144,
+          "consumption": 1.409,
+          "cost": 0.08
+        },
+        {
+          "start": "2026-05-03T02:30:00+01:00",
+          "end": "2026-05-03T03:00:00+01:00",
+          "rate": 0.059144,
+          "consumption": 0.432,
+          "cost": 0.03
+        },
+        {
+          "start": "2026-05-03T03:00:00+01:00",
+          "end": "2026-05-03T03:30:00+01:00",
+          "rate": 0.059144,
+          "consumption": 0.443,
+          "cost": 0.03
+        },
+        {
+          "start": "2026-05-03T03:30:00+01:00",
+          "end": "2026-05-03T04:00:00+01:00",
+          "rate": 0.059144,
+          "consumption": 0.216,
+          "cost": 0.01
+        },
+        {
+          "start": "2026-05-03T04:00:00+01:00",
+          "end": "2026-05-03T04:30:00+01:00",
+          "rate": 0.059144,
+          "consumption": 0.227,
+          "cost": 0.01
+        },
+        {
+          "start": "2026-05-03T04:30:00+01:00",
+          "end": "2026-05-03T05:00:00+01:00",
+          "rate": 0.059144,
+          "consumption": 0.432,
+          "cost": 0.03
+        },
+        {
+          "start": "2026-05-03T05:00:00+01:00",
+          "end": "2026-05-03T05:30:00+01:00",
+          "rate": 0.059144,
+          "consumption": 0.216,
+          "cost": 0.01
+        },
+        {
+          "start": "2026-05-03T05:30:00+01:00",
+          "end": "2026-05-03T06:00:00+01:00",
+          "rate": 0.059144,
+          "consumption": 0.216,
+          "cost": 0.01
+        },
+        {
+          "start": "2026-05-03T06:00:00+01:00",
+          "end": "2026-05-03T06:30:00+01:00",
+          "rate": 0.059144,
+          "consumption": 0.227,
+          "cost": 0.01
+        },
+        {
+          "start": "2026-05-03T06:30:00+01:00",
+          "end": "2026-05-03T07:00:00+01:00",
+          "rate": 0.059144,
+          "consumption": 0.216,
+          "cost": 0.01
+        },
+        {
+          "start": "2026-05-03T07:00:00+01:00",
+          "end": "2026-05-03T07:30:00+01:00",
+          "rate": 0.059144,
+          "consumption": 1.045,
+          "cost": 0.06
+        },
+        {
+          "start": "2026-05-03T07:30:00+01:00",
+          "end": "2026-05-03T08:00:00+01:00",
+          "rate": 0.059144,
+          "consumption": 4.75,
+          "cost": 0.28
+        },
+        {
+          "start": "2026-05-03T08:00:00+01:00",
+          "end": "2026-05-03T08:30:00+01:00",
+          "rate": 0.059144,
+          "consumption": 0.443,
+          "cost": 0.03
+        },
+        {
+          "start": "2026-05-03T08:30:00+01:00",
+          "end": "2026-05-03T09:00:00+01:00",
+          "rate": 0.059144,
+          "consumption": 0.216,
+          "cost": 0.01
+        },
+        {
+          "start": "2026-05-03T09:00:00+01:00",
+          "end": "2026-05-03T09:30:00+01:00",
+          "rate": 0.059144,
+          "consumption": 0.307,
+          "cost": 0.02
+        },
+        {
+          "start": "2026-05-03T09:30:00+01:00",
+          "end": "2026-05-03T10:00:00+01:00",
+          "rate": 0.059144,
+          "consumption": 0.591,
+          "cost": 0.03
+        },
+        {
+          "start": "2026-05-03T10:00:00+01:00",
+          "end": "2026-05-03T10:30:00+01:00",
+          "rate": 0.059144,
+          "consumption": 2.432,
+          "cost": 0.14
+        },
+        {
+          "start": "2026-05-03T10:30:00+01:00",
+          "end": "2026-05-03T11:00:00+01:00",
+          "rate": 0.059144,
+          "consumption": 0.92,
+          "cost": 0.05
+        },
+        {
+          "start": "2026-05-03T11:00:00+01:00",
+          "end": "2026-05-03T11:30:00+01:00",
+          "rate": 0.059144,
+          "consumption": 2.17,
+          "cost": 0.13
+        },
+        {
+          "start": "2026-05-03T11:30:00+01:00",
+          "end": "2026-05-03T12:00:00+01:00",
+          "rate": 0.059144,
+          "consumption": 2.591,
+          "cost": 0.15
+        },
+        {
+          "start": "2026-05-03T12:00:00+01:00",
+          "end": "2026-05-03T12:30:00+01:00",
+          "rate": 0.059144,
+          "consumption": 1.011,
+          "cost": 0.06
+        },
+        {
+          "start": "2026-05-03T12:30:00+01:00",
+          "end": "2026-05-03T13:00:00+01:00",
+          "rate": 0.059144,
+          "consumption": 0.443,
+          "cost": 0.03
+        },
+        {
+          "start": "2026-05-03T13:00:00+01:00",
+          "end": "2026-05-03T13:30:00+01:00",
+          "rate": 0.059144,
+          "consumption": 0.443,
+          "cost": 0.03
+        },
+        {
+          "start": "2026-05-03T13:30:00+01:00",
+          "end": "2026-05-03T14:00:00+01:00",
+          "rate": 0.059144,
+          "consumption": 0.216,
+          "cost": 0.01
+        },
+        {
+          "start": "2026-05-03T14:00:00+01:00",
+          "end": "2026-05-03T14:30:00+01:00",
+          "rate": 0.059144,
+          "consumption": 0.67,
+          "cost": 0.04
+        },
+        {
+          "start": "2026-05-03T14:30:00+01:00",
+          "end": "2026-05-03T15:00:00+01:00",
+          "rate": 0.059144,
+          "consumption": 0.67,
+          "cost": 0.04
+        },
+        {
+          "start": "2026-05-03T15:00:00+01:00",
+          "end": "2026-05-03T15:30:00+01:00",
+          "rate": 0.059144,
+          "consumption": 0.216,
+          "cost": 0.01
+        },
+        {
+          "start": "2026-05-03T15:30:00+01:00",
+          "end": "2026-05-03T16:00:00+01:00",
+          "rate": 0.059144,
+          "consumption": 0.455,
+          "cost": 0.03
+        },
+        {
+          "start": "2026-05-03T16:00:00+01:00",
+          "end": "2026-05-03T16:30:00+01:00",
+          "rate": 0.059144,
+          "consumption": 0.227,
+          "cost": 0.01
+        },
+        {
+          "start": "2026-05-03T16:30:00+01:00",
+          "end": "2026-05-03T17:00:00+01:00",
+          "rate": 0.059144,
+          "consumption": 0.216,
+          "cost": 0.01
+        },
+        {
+          "start": "2026-05-03T17:00:00+01:00",
+          "end": "2026-05-03T17:30:00+01:00",
+          "rate": 0.059144,
+          "consumption": 0.455,
+          "cost": 0.03
+        },
+        {
+          "start": "2026-05-03T17:30:00+01:00",
+          "end": "2026-05-03T18:00:00+01:00",
+          "rate": 0.059144,
+          "consumption": 0.216,
+          "cost": 0.01
+        },
+        {
+          "start": "2026-05-03T18:00:00+01:00",
+          "end": "2026-05-03T18:30:00+01:00",
+          "rate": 0.059144,
+          "consumption": 0.216,
+          "cost": 0.01
+        },
+        {
+          "start": "2026-05-03T18:30:00+01:00",
+          "end": "2026-05-03T19:00:00+01:00",
+          "rate": 0.059144,
+          "consumption": 0.227,
+          "cost": 0.01
+        },
+        {
+          "start": "2026-05-03T19:00:00+01:00",
+          "end": "2026-05-03T19:30:00+01:00",
+          "rate": 0.059144,
+          "consumption": 0.227,
+          "cost": 0.01
+        },
+        {
+          "start": "2026-05-03T19:30:00+01:00",
+          "end": "2026-05-03T20:00:00+01:00",
+          "rate": 0.059144,
+          "consumption": 0.216,
+          "cost": 0.01
+        },
+        {
+          "start": "2026-05-03T20:00:00+01:00",
+          "end": "2026-05-03T20:30:00+01:00",
+          "rate": 0.059144,
+          "consumption": 0.455,
+          "cost": 0.03
+        },
+        {
+          "start": "2026-05-03T20:30:00+01:00",
+          "end": "2026-05-03T21:00:00+01:00",
+          "rate": 0.059144,
+          "consumption": 0.443,
+          "cost": 0.03
+        },
+        {
+          "start": "2026-05-03T21:00:00+01:00",
+          "end": "2026-05-03T21:30:00+01:00",
+          "rate": 0.059144,
+          "consumption": 1.75,
+          "cost": 0.1
+        },
+        {
+          "start": "2026-05-03T21:30:00+01:00",
+          "end": "2026-05-03T22:00:00+01:00",
+          "rate": 0.059144,
+          "consumption": 1.148,
+          "cost": 0.07
+        },
+        {
+          "start": "2026-05-03T22:00:00+01:00",
+          "end": "2026-05-03T22:30:00+01:00",
+          "rate": 0.059144,
+          "consumption": 0.682,
+          "cost": 0.04
+        },
+        {
+          "start": "2026-05-03T22:30:00+01:00",
+          "end": "2026-05-03T23:00:00+01:00",
+          "rate": 0.059144,
+          "consumption": 0.455,
+          "cost": 0.03
+        },
+        {
+          "start": "2026-05-03T23:00:00+01:00",
+          "end": "2026-05-03T23:30:00+01:00",
+          "rate": 0.059144,
+          "consumption": 0.227,
+          "cost": 0.01
+        },
+        {
+          "start": "2026-05-03T23:30:00+01:00",
+          "end": "2026-05-04T00:00:00+01:00",
+          "rate": 0.059144,
+          "consumption": 0.455,
+          "cost": 0.03
+        }
+      ],
+      "calorific_value": 40.0,
+      "unit_of_measurement": "GBP",
+      "device_class": "monetary",
+      "icon": "mdi:currency-gbp",
+      "friendly_name": "Gas Meter Previous Accumulative Cost Gas (sn5/sn6)"
+    },
+    "last_changed": "2026-05-05T00:08:37.198823+00:00",
+    "last_reported": "2026-05-05T00:08:37.198823+00:00",
+    "last_updated": "2026-05-05T00:08:37.198823+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.openweathermap_cloud_coverage": {
+    "entity_id": "sensor.openweathermap_cloud_coverage",
+    "state": "100",
+    "attributes": {
+      "state_class": "measurement",
+      "unit_of_measurement": "%",
+      "attribution": "Data provided by OpenWeatherMap",
+      "friendly_name": "OpenWeatherMap Cloud coverage"
+    },
+    "last_changed": "2026-05-05T19:38:18.957007+00:00",
+    "last_reported": "2026-05-05T19:38:18.957007+00:00",
+    "last_updated": "2026-05-05T19:38:18.957007+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.openweathermap_condition": {
+    "entity_id": "sensor.openweathermap_condition",
+    "state": "cloudy",
+    "attributes": {
+      "attribution": "Data provided by OpenWeatherMap",
+      "friendly_name": "OpenWeatherMap Condition"
+    },
+    "last_changed": "2026-05-05T21:58:18.953938+00:00",
+    "last_reported": "2026-05-05T21:58:18.953938+00:00",
+    "last_updated": "2026-05-05T21:58:18.953938+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.openweathermap_uv_index": {
+    "entity_id": "sensor.openweathermap_uv_index",
+    "state": "0",
+    "attributes": {
+      "state_class": "measurement",
+      "unit_of_measurement": "UV index",
+      "attribution": "Data provided by OpenWeatherMap",
+      "friendly_name": "OpenWeatherMap UV index"
+    },
+    "last_changed": "2026-05-05T18:38:18.988289+00:00",
+    "last_reported": "2026-05-05T18:38:18.988289+00:00",
+    "last_updated": "2026-05-05T18:38:18.988289+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.solaredge_current_power": {
+    "entity_id": "sensor.solaredge_current_power",
+    "state": "0.0",
+    "attributes": {
+      "state_class": "measurement",
+      "unit_of_measurement": "W",
+      "device_class": "power",
+      "friendly_name": "solaredge Current power"
+    },
+    "last_changed": "2026-05-04T19:08:26.978878+00:00",
+    "last_reported": "2026-05-04T19:08:26.978878+00:00",
+    "last_updated": "2026-05-04T19:08:26.978878+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.solaredge_lifetime_energy": {
+    "entity_id": "sensor.solaredge_lifetime_energy",
+    "state": "XXXXXXXX.0",
+    "attributes": {
+      "state_class": "total_increasing",
+      "unit_of_measurement": "Wh",
+      "device_class": "energy",
+      "friendly_name": "solaredge Lifetime energy"
+    },
+    "last_changed": "2026-05-05T20:38:28.040120+00:00",
+    "last_reported": "2026-05-05T20:38:28.040120+00:00",
+    "last_updated": "2026-05-05T20:38:28.040120+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.sun_next_dawn": {
+    "entity_id": "sensor.sun_next_dawn",
+    "state": "2026-05-06T03:43:08+00:00",
+    "attributes": {
+      "device_class": "timestamp",
+      "friendly_name": "Sun Next dawn"
+    },
+    "last_changed": "2026-05-05T03:45:08.023536+00:00",
+    "last_reported": "2026-05-05T03:45:08.023536+00:00",
+    "last_updated": "2026-05-05T03:45:08.023536+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.sun_next_dusk": {
+    "entity_id": "sensor.sun_next_dusk",
+    "state": "2026-05-06T20:11:02+00:00",
+    "attributes": {
+      "device_class": "timestamp",
+      "friendly_name": "Sun Next dusk"
+    },
+    "last_changed": "2026-05-05T20:09:11.999338+00:00",
+    "last_reported": "2026-05-05T20:09:11.999338+00:00",
+    "last_updated": "2026-05-05T20:09:11.999338+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.sun_next_midnight": {
+    "entity_id": "sensor.sun_next_midnight",
+    "state": "2026-05-05T23:56:27+00:00",
+    "attributes": {
+      "device_class": "timestamp",
+      "friendly_name": "Sun Next midnight"
+    },
+    "last_changed": "2026-05-04T23:56:31.002637+00:00",
+    "last_reported": "2026-05-04T23:56:31.002637+00:00",
+    "last_updated": "2026-05-04T23:56:31.002637+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.sun_next_noon": {
+    "entity_id": "sensor.sun_next_noon",
+    "state": "2026-05-06T11:56:28+00:00",
+    "attributes": {
+      "device_class": "timestamp",
+      "friendly_name": "Sun Next noon"
+    },
+    "last_changed": "2026-05-05T11:56:33.002074+00:00",
+    "last_reported": "2026-05-05T11:56:33.002074+00:00",
+    "last_updated": "2026-05-05T11:56:33.002074+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.sun_next_rising": {
+    "entity_id": "sensor.sun_next_rising",
+    "state": "2026-05-06T04:23:07+00:00",
+    "attributes": {
+      "device_class": "timestamp",
+      "friendly_name": "Sun Next rising"
+    },
+    "last_changed": "2026-05-05T04:24:53.725938+00:00",
+    "last_reported": "2026-05-05T04:24:53.725938+00:00",
+    "last_updated": "2026-05-05T04:24:53.725938+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.sun_next_setting": {
+    "entity_id": "sensor.sun_next_setting",
+    "state": "2026-05-06T19:30:46+00:00",
+    "attributes": {
+      "device_class": "timestamp",
+      "friendly_name": "Sun Next setting"
+    },
+    "last_changed": "2026-05-05T19:29:10.512930+00:00",
+    "last_reported": "2026-05-05T19:29:10.512930+00:00",
+    "last_updated": "2026-05-05T19:29:10.512930+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  }
+}

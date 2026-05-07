@@ -1,0 +1,230 @@
+{
+  "views": [
+    {
+      "title": "Security",
+      "icon": "mdi:shield-home",
+      "type": "sections",
+      "max_columns": 4,
+      "sections": [
+        {
+          "type": "grid",
+          "column_span": 4,
+          "cards": [
+            {
+              "type": "heading",
+              "heading": "🚪 Garage door",
+              "heading_style": "title",
+              "grid_options": {
+                "columns": "full"
+              },
+              "icon": "mdi:garage"
+            },
+            {
+              "type": "custom:enhanced-shutter-card",
+              "grid_options": {
+                "columns": "full"
+              },
+              "entities": [
+                {
+                  "entity": "cover.garage_door_garage_door_2",
+                  "name": "Garage Door",
+                  "top_offset_pct": 13,
+                  "button_up_hide_states": [
+                    "open",
+                    "opening",
+                    "closing"
+                  ],
+                  "button_stop_hide_states": [
+                    "open",
+                    "closed",
+                    "partial_open"
+                  ],
+                  "button_down_hide_states": [
+                    "closed",
+                    "opening",
+                    "closing"
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "grid",
+              "columns": 4,
+              "square": false,
+              "cards": [
+                {
+                  "type": "tile",
+                  "entity": "cover.garage_door_garage_door_2",
+                  "name": "State",
+                  "icon": "mdi:garage"
+                },
+                {
+                  "type": "tile",
+                  "entity": "light.garage_door_garage_door_light",
+                  "name": "Garage light",
+                  "icon": "mdi:lightbulb"
+                },
+                {
+                  "type": "tile",
+                  "entity": "binary_sensor.garage_door_hcpbridge_connected",
+                  "name": "HCP bridge",
+                  "icon": "mdi:connection"
+                },
+                {
+                  "type": "tile",
+                  "entity": "binary_sensor.garage_door_garage_door_relay_state",
+                  "name": "Relay",
+                  "icon": "mdi:electric-switch"
+                }
+              ],
+              "grid_options": {
+                "columns": "full"
+              }
+            },
+            {
+              "type": "grid",
+              "columns": 3,
+              "square": false,
+              "cards": [
+                {
+                  "type": "tile",
+                  "entity": "button.garage_door_garage_door_vent",
+                  "name": "Vent",
+                  "icon": "mdi:fan"
+                },
+                {
+                  "type": "tile",
+                  "entity": "button.garage_door_garage_door_half",
+                  "name": "Half open",
+                  "icon": "mdi:arrow-split-horizontal"
+                },
+                {
+                  "type": "tile",
+                  "entity": "button.garage_door_garage_door_impulse",
+                  "name": "Impulse",
+                  "icon": "mdi:flash"
+                }
+              ],
+              "grid_options": {
+                "columns": "full"
+              }
+            },
+            {
+              "type": "heading",
+              "heading": "📷 Outdoor cameras",
+              "heading_style": "title",
+              "grid_options": {
+                "columns": "full"
+              },
+              "icon": "mdi:cctv"
+            },
+            {
+              "type": "grid",
+              "columns": 3,
+              "square": false,
+              "cards": [
+                {
+                  "type": "picture-entity",
+                  "entity": "camera.g5_turret_ultra_high_resolution_channel",
+                  "camera_image": "camera.g5_turret_ultra_high_resolution_channel",
+                  "camera_view": "auto",
+                  "name": "Driveway",
+                  "show_name": true,
+                  "aspect_ratio": "16:9"
+                },
+                {
+                  "type": "picture-entity",
+                  "entity": "camera.back_door_camera",
+                  "camera_image": "camera.back_door_camera",
+                  "camera_view": "auto",
+                  "name": "Back door",
+                  "show_name": true,
+                  "aspect_ratio": "16:9"
+                },
+                {
+                  "type": "picture-entity",
+                  "entity": "camera.g4_instant_high_resolution_channel",
+                  "camera_image": "camera.g4_instant_high_resolution_channel",
+                  "camera_view": "auto",
+                  "name": "Garage",
+                  "show_name": true,
+                  "aspect_ratio": "16:9"
+                }
+              ],
+              "grid_options": {
+                "columns": "full"
+              }
+            },
+            {
+              "type": "heading",
+              "heading": "🚶 Motion",
+              "heading_style": "title",
+              "grid_options": {
+                "columns": "full"
+              },
+              "icon": "mdi:motion-sensor"
+            },
+            {
+              "type": "grid",
+              "columns": 4,
+              "square": false,
+              "cards": [
+                {
+                  "type": "tile",
+                  "entity": "binary_sensor.g5_turret_ultra_motion",
+                  "name": "Driveway",
+                  "icon": "mdi:motion-sensor"
+                },
+                {
+                  "type": "tile",
+                  "entity": "binary_sensor.g4_instant_motion",
+                  "name": "Garage",
+                  "icon": "mdi:motion-sensor"
+                },
+                {
+                  "type": "tile",
+                  "entity": "binary_sensor.g8t1_9401_3255_0m5u_motion",
+                  "name": "Front room",
+                  "icon": "mdi:motion-sensor"
+                },
+                {
+                  "type": "tile",
+                  "entity": "event.back_door_camera_motion",
+                  "name": "Back door (last event)",
+                  "icon": "mdi:motion-sensor"
+                }
+              ],
+              "grid_options": {
+                "columns": "full"
+              }
+            },
+            {
+              "type": "heading",
+              "heading": "🔔 Alarm",
+              "heading_style": "title",
+              "grid_options": {
+                "columns": "full"
+              },
+              "icon": "mdi:shield-alert"
+            },
+            {
+              "type": "grid",
+              "columns": 1,
+              "square": false,
+              "cards": [
+                {
+                  "type": "tile",
+                  "entity": "alarm_control_panel.blink_panel",
+                  "name": "Blink hub"
+                }
+              ],
+              "grid_options": {
+                "columns": "full"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

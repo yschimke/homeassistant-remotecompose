@@ -22,17 +22,20 @@ class DemoHaSessionTest {
     fun loadDashboard_threads_the_injected_clock() = runTest {
         // The dashboard screen re-polls on refreshIntervalMillis; each
         // call should see a fresh snapshot derived from the current
-        // clock, not a cached one from construction time.
+        // clock, not a cached one from construction time. Drift is on
+        // a per-minute cadence so step the clock by 5 minutes.
         var clockNow = 0L
         val session = DemoHaSession(clock = { clockNow })
 
         val (_, s1) = session.loadDashboard(null)
-        clockNow = 30_000L
+        clockNow = 60_000L * 5L
         val (_, s2) = session.loadDashboard(null)
 
+        val differing = s1.states.filter { (id, st) -> s2.states[id]?.state != st.state }
         assertNotEquals(
-            s1.states["sensor.living_room"]?.state,
-            s2.states["sensor.living_room"]?.state,
+            0,
+            differing.size,
+            "expected at least one entity to drift between minute 0 and minute 5",
         )
     }
 

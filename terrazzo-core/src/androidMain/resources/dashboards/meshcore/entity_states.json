@@ -1,0 +1,1170 @@
+{
+  "binary_sensor.meshcore_sn1_ch_0_messages": {
+    "entity_id": "binary_sensor.meshcore_sn1_ch_0_messages",
+    "state": "Active",
+    "attributes": {
+      "channel_index": "0",
+      "device_class": "connectivity",
+      "icon": "mdi:message-bulleted",
+      "friendly_name": "MeshCore Kodu Heltec (sn1) Public Messages"
+    },
+    "last_changed": "2026-04-30T18:08:20.159842+00:00",
+    "last_reported": "2026-04-30T18:13:55.012657+00:00",
+    "last_updated": "2026-04-30T18:08:20.159842+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "binary_sensor.meshcore_sn1_mqtt_broker_1_connection": {
+    "entity_id": "binary_sensor.meshcore_sn1_mqtt_broker_1_connection",
+    "state": "off",
+    "attributes": {
+      "broker_number": "<redacted>",
+      "server": "mqtt-eu-v1.letsmesh.net",
+      "device_class": "connectivity",
+      "friendly_name": "MeshCore Kodu Heltec (sn1) MQTT Broker 1 Connection"
+    },
+    "last_changed": "2026-04-30T18:08:18.554925+00:00",
+    "last_reported": "2026-04-30T18:13:55.012035+00:00",
+    "last_updated": "2026-04-30T18:08:18.554925+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "binary_sensor.meshcore_kodu_room_sn2_contact": {
+    "entity_id": "binary_sensor.meshcore_kodu_room_sn2_contact",
+    "state": "stale",
+    "attributes": {
+      "latitude": "<redacted>",
+      "longitude": "<redacted>",
+      "public_key": "<redacted>",
+      "type": 3,
+      "flags": 1,
+      "out_path_hash_mode": "<redacted>",
+      "out_path_len": "<redacted>",
+      "out_path": "<redacted>",
+      "adv_name": "<redacted>",
+      "last_advert": 1717239154,
+      "adv_lat": "<redacted>",
+      "adv_lon": "<redacted>",
+      "lastmod": 1778017124,
+      "pubkey_prefix": "<redacted>",
+      "added_to_node": true,
+      "pubkey_short": "<redacted>",
+      "node_type_str": "Room Server",
+      "entity_picture": "/api/meshcore/static/room_server.svg",
+      "last_advert_formatted": "2024-06-01T11:52:34",
+      "device_class": "connectivity",
+      "icon": "mdi:forum-outline",
+      "friendly_name": "MeshCore Kodu Heltec (sn1) Kodu Room (Room Server)"
+    },
+    "last_changed": "2026-04-30T18:08:18.554369+00:00",
+    "last_reported": "2026-05-05T22:13:41.011980+00:00",
+    "last_updated": "2026-05-05T22:13:41.011980+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "binary_sensor.meshcore_kodu_t1000e_sn3_contact": {
+    "entity_id": "binary_sensor.meshcore_kodu_t1000e_sn3_contact",
+    "state": "stale",
+    "attributes": {
+      "latitude": "<redacted>",
+      "longitude": "<redacted>",
+      "public_key": "<redacted>",
+      "type": 1,
+      "flags": 1,
+      "out_path_hash_mode": "<redacted>",
+      "out_path_len": "<redacted>",
+      "out_path": "<redacted>",
+      "adv_name": "<redacted>",
+      "last_advert": 1776711664,
+      "adv_lat": "<redacted>",
+      "adv_lon": "<redacted>",
+      "lastmod": 1777487762,
+      "pubkey_prefix": "<redacted>",
+      "added_to_node": true,
+      "pubkey_short": "<redacted>",
+      "node_type_str": "Client",
+      "entity_picture": "/api/meshcore/static/client.svg",
+      "last_advert_formatted": "2026-04-20T20:01:04",
+      "device_class": "connectivity",
+      "icon": "mdi:account-off",
+      "friendly_name": "MeshCore Kodu Heltec (sn1) Kodu T1000E (Client)"
+    },
+    "last_changed": "2026-04-30T18:08:18.554024+00:00",
+    "last_reported": "2026-04-30T18:08:23.372384+00:00",
+    "last_updated": "2026-04-30T18:08:18.554024+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "binary_sensor.meshcore_sensecap_solar_repeater_sn4_contact": {
+    "entity_id": "binary_sensor.meshcore_sensecap_solar_repeater_sn4_contact",
+    "state": "fresh",
+    "attributes": {
+      "latitude": "<redacted>",
+      "longitude": "<redacted>",
+      "public_key": "<redacted>",
+      "type": 2,
+      "flags": 1,
+      "out_path_hash_mode": "<redacted>",
+      "out_path_len": "<redacted>",
+      "out_path": "<redacted>",
+      "adv_name": "<redacted>",
+      "last_advert": 1778001245,
+      "adv_lat": "<redacted>",
+      "adv_lon": "<redacted>",
+      "lastmod": 1778005848,
+      "pubkey_prefix": "<redacted>",
+      "added_to_node": true,
+      "pubkey_short": "<redacted>",
+      "node_type_str": "Repeater",
+      "entity_picture": "/api/meshcore/static/repeater-green.svg",
+      "last_advert_formatted": "2026-05-05T18:14:05",
+      "device_class": "connectivity",
+      "icon": "mdi:radio-tower",
+      "friendly_name": "MeshCore Kodu Heltec (sn1) Kodu Repeater (Repeater)"
+    },
+    "last_changed": "2026-05-03T18:11:34.011698+00:00",
+    "last_reported": "2026-05-05T19:13:36.010412+00:00",
+    "last_updated": "2026-05-05T19:13:36.010412+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "select.meshcore_channel": {
+    "entity_id": "select.meshcore_channel",
+    "state": "Public (0)",
+    "attributes": {
+      "options": [
+        "Public (0)",
+        " (1)",
+        " (2)",
+        " (3)",
+        " (4)",
+        " (5)",
+        " (6)",
+        " (7)",
+        " (8)",
+        " (9)",
+        " (10)",
+        " (11)",
+        " (12)",
+        " (13)",
+        " (14)",
+        " (15)",
+        " (16)",
+        " (17)",
+        " (18)",
+        " (19)",
+        " (20)",
+        " (21)",
+        " (22)",
+        " (23)",
+        " (24)",
+        " (25)",
+        " (26)",
+        " (27)",
+        " (28)",
+        " (29)",
+        " (30)",
+        " (31)",
+        " (32)",
+        " (33)",
+        " (34)",
+        " (35)",
+        " (36)",
+        " (37)",
+        " (38)",
+        " (39)"
+      ],
+      "channel_idx": 0,
+      "icon": "mdi:tune-vertical",
+      "friendly_name": "MeshCore Channel"
+    },
+    "last_changed": "2026-04-30T18:08:23.373170+00:00",
+    "last_reported": "2026-04-30T18:13:55.012235+00:00",
+    "last_updated": "2026-04-30T18:08:23.373170+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "select.meshcore_contact": {
+    "entity_id": "select.meshcore_contact",
+    "state": "Kodu Room (sn2)",
+    "attributes": {
+      "options": [
+        "Kodu Room (sn2)",
+        "Kodu T1000E (sn3)"
+      ],
+      "public_key_prefix": "sn2",
+      "public_key": "<redacted>",
+      "contact_name": "<redacted>",
+      "icon": "mdi:account-multiple",
+      "friendly_name": "MeshCore Contact"
+    },
+    "last_changed": "2026-04-30T18:08:18.556945+00:00",
+    "last_reported": "2026-04-30T18:13:55.012375+00:00",
+    "last_updated": "2026-04-30T18:08:18.556945+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "select.meshcore_recipient_type": {
+    "entity_id": "select.meshcore_recipient_type",
+    "state": "Channel",
+    "attributes": {
+      "options": [
+        "Channel",
+        "Contact"
+      ],
+      "icon": "mdi:account-switch",
+      "friendly_name": "MeshCore Recipient Type"
+    },
+    "last_changed": "2026-04-30T18:08:18.557068+00:00",
+    "last_reported": "2026-04-30T18:13:55.012405+00:00",
+    "last_updated": "2026-04-30T18:08:18.557068+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.meshcore_sn1_bandwidth_kodu_heltec": {
+    "entity_id": "sensor.meshcore_sn1_bandwidth_kodu_heltec",
+    "state": "62.5",
+    "attributes": {
+      "state_class": "measurement",
+      "unit_of_measurement": "kHz",
+      "icon": "mdi:radio",
+      "friendly_name": "MeshCore Kodu Heltec (sn1) Bandwidth"
+    },
+    "last_changed": "2026-04-30T18:08:23.010466+00:00",
+    "last_reported": "2026-04-30T18:13:55.009587+00:00",
+    "last_updated": "2026-04-30T18:08:23.010466+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.meshcore_sn1_frequency_kodu_heltec": {
+    "entity_id": "sensor.meshcore_sn1_frequency_kodu_heltec",
+    "state": "869.618",
+    "attributes": {
+      "state_class": "measurement",
+      "unit_of_measurement": "MHz",
+      "icon": "mdi:radio",
+      "friendly_name": "MeshCore Kodu Heltec (sn1) Frequency"
+    },
+    "last_changed": "2026-04-30T18:08:23.010412+00:00",
+    "last_reported": "2026-04-30T18:13:55.009561+00:00",
+    "last_updated": "2026-04-30T18:08:23.010412+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.meshcore_sn1_last_message_delivery_kodu_heltec": {
+    "entity_id": "sensor.meshcore_sn1_last_message_delivery_kodu_heltec",
+    "state": "Idle",
+    "attributes": {
+      "icon": "mdi:radio-tower",
+      "friendly_name": "MeshCore Kodu Heltec (sn1) Last Message Delivery"
+    },
+    "last_changed": "2026-04-30T18:08:18.544211+00:00",
+    "last_reported": "2026-04-30T18:13:55.011961+00:00",
+    "last_updated": "2026-04-30T18:08:18.544211+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.meshcore_sn1_node_count_kodu_heltec": {
+    "entity_id": "sensor.meshcore_sn1_node_count_kodu_heltec",
+    "state": "4",
+    "attributes": {
+      "state_class": "measurement",
+      "icon": "mdi:account-group",
+      "friendly_name": "MeshCore Kodu Heltec (sn1) Node Count"
+    },
+    "last_changed": "2026-04-30T18:09:00.011446+00:00",
+    "last_reported": "2026-04-30T18:13:55.009426+00:00",
+    "last_updated": "2026-04-30T18:09:00.011446+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.meshcore_sn1_node_status_kodu_heltec": {
+    "entity_id": "sensor.meshcore_sn1_node_status_kodu_heltec",
+    "state": "online",
+    "attributes": {
+      "icon": "mdi:radio-tower",
+      "friendly_name": "MeshCore Kodu Heltec (sn1) Node Status"
+    },
+    "last_changed": "2026-04-30T18:08:23.370669+00:00",
+    "last_reported": "2026-04-30T18:13:55.009288+00:00",
+    "last_updated": "2026-04-30T18:08:23.370669+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.meshcore_sn1_spreading_factor_kodu_heltec": {
+    "entity_id": "sensor.meshcore_sn1_spreading_factor_kodu_heltec",
+    "state": "8",
+    "attributes": {
+      "icon": "mdi:radio",
+      "friendly_name": "MeshCore Kodu Heltec (sn1) Spreading Factor"
+    },
+    "last_changed": "2026-04-30T18:08:23.010513+00:00",
+    "last_reported": "2026-04-30T18:13:55.009607+00:00",
+    "last_updated": "2026-04-30T18:08:23.010513+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.meshcore_sn1_tx_power_kodu_heltec": {
+    "entity_id": "sensor.meshcore_sn1_tx_power_kodu_heltec",
+    "state": "10",
+    "attributes": {
+      "state_class": "measurement",
+      "unit_of_measurement": "dBm",
+      "device_class": "signal_strength",
+      "icon": "mdi:power",
+      "friendly_name": "MeshCore Kodu Heltec (sn1) TX Power"
+    },
+    "last_changed": "2026-04-30T18:08:23.010191+00:00",
+    "last_reported": "2026-04-30T18:13:55.009455+00:00",
+    "last_updated": "2026-04-30T18:08:23.010191+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.meshcore_sn5_battery_percentage_kodu_room": {
+    "entity_id": "sensor.meshcore_sn5_battery_percentage_kodu_room",
+    "state": "88.83",
+    "attributes": {
+      "state_class": "measurement",
+      "last_updated": "2026-05-05T21:40:09.828745",
+      "unit_of_measurement": "%",
+      "device_class": "battery",
+      "icon": "mdi:battery",
+      "friendly_name": "MeshCore Repeater: Kodu Room (f1f680) Battery Percentage"
+    },
+    "last_changed": "2026-05-05T20:40:09.828844+00:00",
+    "last_reported": "2026-05-05T20:40:15.011287+00:00",
+    "last_updated": "2026-05-05T20:40:09.828844+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.meshcore_sn5_ch1_temperature_kodu_room": {
+    "entity_id": "sensor.meshcore_sn5_ch1_temperature_kodu_room",
+    "state": "24.7",
+    "attributes": {
+      "state_class": "measurement",
+      "channel": 1,
+      "lpp_type": "temperature",
+      "pubkey_prefix": "<redacted>",
+      "node_type": "repeater",
+      "node_name": "<redacted>",
+      "last_updated": "2026-05-05T21:40:34.221830",
+      "raw_value": "<redacted>",
+      "unit_of_measurement": "°C",
+      "device_class": "temperature",
+      "icon": "mdi:thermometer",
+      "friendly_name": "MeshCore Repeater: Kodu Room (f1f680) Ch1 Temperature"
+    },
+    "last_changed": "2026-05-05T20:40:34.221879+00:00",
+    "last_reported": "2026-05-05T20:40:46.012449+00:00",
+    "last_updated": "2026-05-05T20:40:34.221879+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.meshcore_sn5_last_rssi_kodu_room": {
+    "entity_id": "sensor.meshcore_sn5_last_rssi_kodu_room",
+    "state": "-17",
+    "attributes": {
+      "state_class": "measurement",
+      "last_updated": "2026-05-05T21:40:09.830216",
+      "unit_of_measurement": "dBm",
+      "icon": "mdi:signal",
+      "friendly_name": "MeshCore Repeater: Kodu Room (f1f680) Last RSSI"
+    },
+    "last_changed": "2026-05-05T20:40:09.830257+00:00",
+    "last_reported": "2026-05-05T20:40:15.011456+00:00",
+    "last_updated": "2026-05-05T20:40:09.830257+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.meshcore_sn5_last_snr_kodu_room": {
+    "entity_id": "sensor.meshcore_sn5_last_snr_kodu_room",
+    "state": "12.75",
+    "attributes": {
+      "state_class": "measurement",
+      "last_updated": "2026-05-05T21:40:09.830343",
+      "unit_of_measurement": "dB",
+      "icon": "mdi:signal",
+      "friendly_name": "MeshCore Repeater: Kodu Room (f1f680) Last SNR"
+    },
+    "last_changed": "2026-05-05T20:40:09.830382+00:00",
+    "last_reported": "2026-05-05T20:40:15.011489+00:00",
+    "last_updated": "2026-05-05T20:40:09.830382+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.meshcore_sn5_nb_recv_kodu_room": {
+    "entity_id": "sensor.meshcore_sn5_nb_recv_kodu_room",
+    "state": "173130",
+    "attributes": {
+      "state_class": "total_increasing",
+      "last_updated": "2026-05-05T21:40:09.830459",
+      "icon": "mdi:message-arrow-left",
+      "friendly_name": "MeshCore Repeater: Kodu Room (f1f680) Messages Received"
+    },
+    "last_changed": "2026-05-05T20:40:09.830487+00:00",
+    "last_reported": "2026-05-05T20:40:15.011522+00:00",
+    "last_updated": "2026-05-05T20:40:09.830487+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.meshcore_sn5_nb_recv_rate_kodu_room": {
+    "entity_id": "sensor.meshcore_sn5_nb_recv_rate_kodu_room",
+    "state": "5.6",
+    "attributes": {
+      "state_class": "measurement",
+      "last_updated": "2026-05-05T21:40:09.831877",
+      "uptime_seconds": "1465291",
+      "nb_recv_total": "173130",
+      "nb_recv_since_last_update": "678",
+      "uptime_delta_seconds": "7215",
+      "unit_of_measurement": "msg/min",
+      "icon": "mdi:message-arrow-left",
+      "friendly_name": "MeshCore Repeater: Kodu Room (f1f680) Messages Received Rate"
+    },
+    "last_changed": "2026-05-05T20:40:09.831904+00:00",
+    "last_reported": "2026-05-05T20:40:15.012047+00:00",
+    "last_updated": "2026-05-05T20:40:09.831904+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.meshcore_sn5_nb_sent_kodu_room": {
+    "entity_id": "sensor.meshcore_sn5_nb_sent_kodu_room",
+    "state": "495",
+    "attributes": {
+      "state_class": "total_increasing",
+      "last_updated": "2026-05-05T21:40:09.829458",
+      "icon": "mdi:message-arrow-right",
+      "friendly_name": "MeshCore Repeater: Kodu Room (f1f680) Messages Sent"
+    },
+    "last_changed": "2026-05-05T20:40:09.830050+00:00",
+    "last_reported": "2026-05-05T20:40:15.011424+00:00",
+    "last_updated": "2026-05-05T20:40:09.830050+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.meshcore_sn5_nb_sent_rate_kodu_room": {
+    "entity_id": "sensor.meshcore_sn5_nb_sent_rate_kodu_room",
+    "state": "0.0",
+    "attributes": {
+      "state_class": "measurement",
+      "last_updated": "2026-05-05T21:40:09.831962",
+      "uptime_seconds": "1465291",
+      "nb_sent_total": "495",
+      "nb_sent_since_last_update": "2",
+      "uptime_delta_seconds": "7215",
+      "unit_of_measurement": "msg/min",
+      "icon": "mdi:message-arrow-right",
+      "friendly_name": "MeshCore Repeater: Kodu Room (f1f680) Messages Sent Rate"
+    },
+    "last_changed": "2026-04-30T20:09:03.096604+00:00",
+    "last_reported": "2026-05-05T20:40:15.012086+00:00",
+    "last_updated": "2026-05-05T20:40:09.831990+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.meshcore_sn5_noise_floor_kodu_room": {
+    "entity_id": "sensor.meshcore_sn5_noise_floor_kodu_room",
+    "state": "-106",
+    "attributes": {
+      "state_class": "measurement",
+      "last_updated": "2026-05-05T21:40:09.830651",
+      "unit_of_measurement": "dBm",
+      "icon": "mdi:waveform",
+      "friendly_name": "MeshCore Repeater: Kodu Room (f1f680) Noise Floor"
+    },
+    "last_changed": "2026-05-05T18:39:54.715138+00:00",
+    "last_reported": "2026-05-05T20:40:15.011584+00:00",
+    "last_updated": "2026-05-05T20:40:09.830676+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.meshcore_sn5_recv_direct_rate_kodu_room": {
+    "entity_id": "sensor.meshcore_sn5_recv_direct_rate_kodu_room",
+    "state": "0.0",
+    "attributes": {
+      "state_class": "measurement",
+      "last_updated": "2026-05-05T21:40:09.832046",
+      "uptime_seconds": "1465291",
+      "recv_direct_total": "1655",
+      "recv_direct_since_last_update": "6",
+      "uptime_delta_seconds": "7215",
+      "unit_of_measurement": "msg/min",
+      "icon": "mdi:message-arrow-left",
+      "friendly_name": "MeshCore Repeater: Kodu Room (f1f680) Received Direct Messages Rate"
+    },
+    "last_changed": "2026-05-05T20:40:09.832073+00:00",
+    "last_reported": "2026-05-05T20:40:15.012126+00:00",
+    "last_updated": "2026-05-05T20:40:09.832073+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.meshcore_sn5_recv_flood_rate_kodu_room": {
+    "entity_id": "sensor.meshcore_sn5_recv_flood_rate_kodu_room",
+    "state": "5.6",
+    "attributes": {
+      "state_class": "measurement",
+      "last_updated": "2026-05-05T21:40:09.832129",
+      "uptime_seconds": "1465291",
+      "recv_flood_total": "171436",
+      "recv_flood_since_last_update": "672",
+      "uptime_delta_seconds": "7215",
+      "unit_of_measurement": "msg/min",
+      "icon": "mdi:message-arrow-left-outline",
+      "friendly_name": "MeshCore Repeater: Kodu Room (f1f680) Received Flood Messages Rate"
+    },
+    "last_changed": "2026-05-05T20:40:09.832156+00:00",
+    "last_reported": "2026-05-05T20:40:15.012167+00:00",
+    "last_updated": "2026-05-05T20:40:09.832156+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.meshcore_sn5_sent_direct_rate_kodu_room": {
+    "entity_id": "sensor.meshcore_sn5_sent_direct_rate_kodu_room",
+    "state": "0.0",
+    "attributes": {
+      "state_class": "measurement",
+      "last_updated": "2026-05-05T21:40:09.832211",
+      "uptime_seconds": "1465291",
+      "sent_direct_total": "448",
+      "sent_direct_since_last_update": "2",
+      "uptime_delta_seconds": "7215",
+      "unit_of_measurement": "msg/min",
+      "icon": "mdi:message-arrow-right",
+      "friendly_name": "MeshCore Repeater: Kodu Room (f1f680) Sent Direct Messages Rate"
+    },
+    "last_changed": "2026-04-30T20:09:03.096910+00:00",
+    "last_reported": "2026-05-05T20:40:15.012205+00:00",
+    "last_updated": "2026-05-05T20:40:09.832235+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.meshcore_sn5_tx_queue_len_kodu_room": {
+    "entity_id": "sensor.meshcore_sn5_tx_queue_len_kodu_room",
+    "state": "0",
+    "attributes": {
+      "state_class": "measurement",
+      "last_updated": "2026-05-05T21:40:09.830555",
+      "icon": "mdi:playlist-edit",
+      "friendly_name": "MeshCore Repeater: Kodu Room (f1f680) TX Queue Length"
+    },
+    "last_changed": "2026-04-30T18:08:54.856641+00:00",
+    "last_reported": "2026-05-05T20:40:15.011553+00:00",
+    "last_updated": "2026-05-05T20:40:09.830583+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.meshcore_sn5_uptime_kodu_room": {
+    "entity_id": "sensor.meshcore_sn5_uptime_kodu_room",
+    "state": "16.959375",
+    "attributes": {
+      "state_class": "measurement",
+      "last_updated": "2026-05-05T21:40:09.829013",
+      "human_readable": "16d 23h 1m 31s",
+      "unit_of_measurement": "d",
+      "device_class": "duration",
+      "icon": "mdi:clock",
+      "friendly_name": "MeshCore Repeater: Kodu Room (f1f680) Uptime"
+    },
+    "last_changed": "2026-05-05T20:40:09.829101+00:00",
+    "last_reported": "2026-05-05T20:40:15.011349+00:00",
+    "last_updated": "2026-05-05T20:40:09.829101+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.meshcore_sn6_out_path_len_kodu_t1000e": {
+    "entity_id": "sensor.meshcore_sn6_out_path_len_kodu_t1000e",
+    "state": "unknown",
+    "attributes": {
+      "state_class": "measurement",
+      "unit_of_measurement": "hops",
+      "icon": "mdi:counter",
+      "friendly_name": "MeshCore Client: Kodu T1000E (f27490) Path Length"
+    },
+    "last_changed": "2026-04-30T18:08:18.543822+00:00",
+    "last_reported": "2026-04-30T18:13:55.011888+00:00",
+    "last_updated": "2026-04-30T18:08:18.543822+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.meshcore_sn6_request_failures_kodu_t1000e": {
+    "entity_id": "sensor.meshcore_sn6_request_failures_kodu_t1000e",
+    "state": "66",
+    "attributes": {
+      "state_class": "total_increasing",
+      "unit_of_measurement": "requests",
+      "icon": "mdi:alert-circle",
+      "friendly_name": "MeshCore Client: Kodu T1000E (f27490) Request Failures"
+    },
+    "last_changed": "2026-05-05T20:36:11.011072+00:00",
+    "last_reported": "2026-05-05T20:36:16.013596+00:00",
+    "last_updated": "2026-05-05T20:36:11.011072+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.meshcore_sn6_request_successes_kodu_t1000e": {
+    "entity_id": "sensor.meshcore_sn6_request_successes_kodu_t1000e",
+    "state": "0",
+    "attributes": {
+      "state_class": "total_increasing",
+      "unit_of_measurement": "requests",
+      "icon": "mdi:check-circle",
+      "friendly_name": "MeshCore Client: Kodu T1000E (f27490) Request Successes"
+    },
+    "last_changed": "2026-04-30T18:08:18.543951+00:00",
+    "last_reported": "2026-04-30T18:13:55.011908+00:00",
+    "last_updated": "2026-04-30T18:08:18.543951+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.meshcore_sn7_airtime_utilization_kodu_repeater": {
+    "entity_id": "sensor.meshcore_sn7_airtime_utilization_kodu_repeater",
+    "state": "7.1",
+    "attributes": {
+      "state_class": "measurement",
+      "last_updated": "2026-05-05T21:31:19.890987",
+      "uptime_seconds": "2776724",
+      "airtime_seconds": "184368",
+      "airtime_since_last_update": "8.6",
+      "unit_of_measurement": "%",
+      "device_class": "power_factor",
+      "icon": "mdi:percent",
+      "friendly_name": "MeshCore Repeater: Kodu Repeater (fa27ef) Airtime Utilization"
+    },
+    "last_changed": "2026-05-05T20:31:19.891030+00:00",
+    "last_reported": "2026-05-05T20:31:43.011091+00:00",
+    "last_updated": "2026-05-05T20:31:19.891030+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.meshcore_sn7_bat_kodu_repeater": {
+    "entity_id": "sensor.meshcore_sn7_bat_kodu_repeater",
+    "state": "4.13",
+    "attributes": {
+      "state_class": "measurement",
+      "last_updated": "2026-05-05T21:31:19.889083",
+      "raw_millivolts": "<redacted>",
+      "unit_of_measurement": "V",
+      "device_class": "voltage",
+      "icon": "mdi:battery",
+      "friendly_name": "MeshCore Repeater: Kodu Repeater (fa27ef) Battery Voltage"
+    },
+    "last_changed": "2026-05-05T20:31:19.889198+00:00",
+    "last_reported": "2026-05-05T20:31:43.010541+00:00",
+    "last_updated": "2026-05-05T20:31:19.889198+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.meshcore_sn7_battery_percentage_kodu_repeater": {
+    "entity_id": "sensor.meshcore_sn7_battery_percentage_kodu_repeater",
+    "state": "94.17",
+    "attributes": {
+      "state_class": "measurement",
+      "last_updated": "2026-05-05T21:31:19.889377",
+      "unit_of_measurement": "%",
+      "device_class": "battery",
+      "icon": "mdi:battery",
+      "friendly_name": "MeshCore Repeater: Kodu Repeater (fa27ef) Battery Percentage"
+    },
+    "last_changed": "2026-05-05T20:31:19.889433+00:00",
+    "last_reported": "2026-05-05T20:31:43.010581+00:00",
+    "last_updated": "2026-05-05T20:31:19.889433+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.meshcore_sn7_ch1_temperature_kodu_repeater": {
+    "entity_id": "sensor.meshcore_sn7_ch1_temperature_kodu_repeater",
+    "state": "13.5",
+    "attributes": {
+      "state_class": "measurement",
+      "channel": 1,
+      "lpp_type": "temperature",
+      "pubkey_prefix": "<redacted>",
+      "node_type": "repeater",
+      "node_name": "<redacted>",
+      "last_updated": "2026-05-05T22:58:30.133697",
+      "raw_value": "<redacted>",
+      "unit_of_measurement": "°C",
+      "device_class": "temperature",
+      "icon": "mdi:thermometer",
+      "friendly_name": "MeshCore Repeater: Kodu Repeater (fa27ef) Ch1 Temperature"
+    },
+    "last_changed": "2026-05-05T21:58:30.133747+00:00",
+    "last_reported": "2026-05-05T21:58:39.012943+00:00",
+    "last_updated": "2026-05-05T21:58:30.133747+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.meshcore_sn7_ch1_voltage_kodu_repeater": {
+    "entity_id": "sensor.meshcore_sn7_ch1_voltage_kodu_repeater",
+    "state": "4.11",
+    "attributes": {
+      "state_class": "measurement",
+      "channel": 1,
+      "lpp_type": "voltage",
+      "pubkey_prefix": "<redacted>",
+      "node_type": "repeater",
+      "node_name": "<redacted>",
+      "last_updated": "2026-05-05T22:58:30.133413",
+      "raw_value": "<redacted>",
+      "unit_of_measurement": "V",
+      "device_class": "voltage",
+      "icon": "mdi:flash",
+      "friendly_name": "MeshCore Repeater: Kodu Repeater (fa27ef) Ch1 Voltage"
+    },
+    "last_changed": "2026-05-05T21:58:30.133529+00:00",
+    "last_reported": "2026-05-05T21:58:39.012908+00:00",
+    "last_updated": "2026-05-05T21:58:30.133529+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.meshcore_sn7_flood_dups_rate_kodu_repeater": {
+    "entity_id": "sensor.meshcore_sn7_flood_dups_rate_kodu_repeater",
+    "state": "8.0",
+    "attributes": {
+      "state_class": "measurement",
+      "last_updated": "2026-05-05T21:31:19.891402",
+      "uptime_seconds": "2776724",
+      "flood_dups_total": "54000",
+      "flood_dups_since_last_update": "968",
+      "uptime_delta_seconds": "7232",
+      "unit_of_measurement": "msg/min",
+      "icon": "mdi:content-duplicate",
+      "friendly_name": "MeshCore Repeater: Kodu Repeater (fa27ef) Flood Duplicates Rate"
+    },
+    "last_changed": "2026-05-05T20:31:19.891437+00:00",
+    "last_reported": "2026-05-05T20:31:43.011248+00:00",
+    "last_updated": "2026-05-05T20:31:19.891437+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.meshcore_sn7_last_rssi_kodu_repeater": {
+    "entity_id": "sensor.meshcore_sn7_last_rssi_kodu_repeater",
+    "state": "-73",
+    "attributes": {
+      "state_class": "measurement",
+      "last_updated": "2026-05-05T21:31:19.889974",
+      "unit_of_measurement": "dBm",
+      "icon": "mdi:signal",
+      "friendly_name": "MeshCore Repeater: Kodu Repeater (fa27ef) Last RSSI"
+    },
+    "last_changed": "2026-05-05T18:30:47.432586+00:00",
+    "last_reported": "2026-05-05T20:31:43.010726+00:00",
+    "last_updated": "2026-05-05T20:31:19.890001+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.meshcore_sn7_last_snr_kodu_repeater": {
+    "entity_id": "sensor.meshcore_sn7_last_snr_kodu_repeater",
+    "state": "13.5",
+    "attributes": {
+      "state_class": "measurement",
+      "last_updated": "2026-05-05T21:31:19.890068",
+      "unit_of_measurement": "dB",
+      "icon": "mdi:signal",
+      "friendly_name": "MeshCore Repeater: Kodu Repeater (fa27ef) Last SNR"
+    },
+    "last_changed": "2026-05-05T18:30:47.432689+00:00",
+    "last_reported": "2026-05-05T20:31:43.010758+00:00",
+    "last_updated": "2026-05-05T20:31:19.890095+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.meshcore_sn7_nb_recv_kodu_repeater": {
+    "entity_id": "sensor.meshcore_sn7_nb_recv_kodu_repeater",
+    "state": "635508",
+    "attributes": {
+      "state_class": "total_increasing",
+      "last_updated": "2026-05-05T21:31:19.890161",
+      "icon": "mdi:message-arrow-left",
+      "friendly_name": "MeshCore Repeater: Kodu Repeater (fa27ef) Messages Received"
+    },
+    "last_changed": "2026-05-05T20:31:19.890187+00:00",
+    "last_reported": "2026-05-05T20:31:43.010788+00:00",
+    "last_updated": "2026-05-05T20:31:19.890187+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.meshcore_sn7_nb_recv_rate_kodu_repeater": {
+    "entity_id": "sensor.meshcore_sn7_nb_recv_rate_kodu_repeater",
+    "state": "13.6",
+    "attributes": {
+      "state_class": "measurement",
+      "last_updated": "2026-05-05T21:31:19.891504",
+      "uptime_seconds": "2776724",
+      "nb_recv_total": "635508",
+      "nb_recv_since_last_update": "1641",
+      "uptime_delta_seconds": "7232",
+      "unit_of_measurement": "msg/min",
+      "icon": "mdi:message-arrow-left",
+      "friendly_name": "MeshCore Repeater: Kodu Repeater (fa27ef) Messages Received Rate"
+    },
+    "last_changed": "2026-05-05T20:31:19.891539+00:00",
+    "last_reported": "2026-05-05T20:31:43.011286+00:00",
+    "last_updated": "2026-05-05T20:31:19.891539+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.meshcore_sn7_nb_sent_kodu_repeater": {
+    "entity_id": "sensor.meshcore_sn7_nb_sent_kodu_repeater",
+    "state": "250088",
+    "attributes": {
+      "state_class": "total_increasing",
+      "last_updated": "2026-05-05T21:31:19.889874",
+      "icon": "mdi:message-arrow-right",
+      "friendly_name": "MeshCore Repeater: Kodu Repeater (fa27ef) Messages Sent"
+    },
+    "last_changed": "2026-05-05T20:31:19.889903+00:00",
+    "last_reported": "2026-05-05T20:31:43.010695+00:00",
+    "last_updated": "2026-05-05T20:31:19.889903+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.meshcore_sn7_nb_sent_rate_kodu_repeater": {
+    "entity_id": "sensor.meshcore_sn7_nb_sent_rate_kodu_repeater",
+    "state": "5.5",
+    "attributes": {
+      "state_class": "measurement",
+      "last_updated": "2026-05-05T21:31:19.891605",
+      "uptime_seconds": "2776724",
+      "nb_sent_total": "250088",
+      "nb_sent_since_last_update": "665",
+      "uptime_delta_seconds": "7232",
+      "unit_of_measurement": "msg/min",
+      "icon": "mdi:message-arrow-right",
+      "friendly_name": "MeshCore Repeater: Kodu Repeater (fa27ef) Messages Sent Rate"
+    },
+    "last_changed": "2026-05-05T20:31:19.891638+00:00",
+    "last_reported": "2026-05-05T20:31:43.011325+00:00",
+    "last_updated": "2026-05-05T20:31:19.891638+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.meshcore_sn7_noise_floor_kodu_repeater": {
+    "entity_id": "sensor.meshcore_sn7_noise_floor_kodu_repeater",
+    "state": "-105",
+    "attributes": {
+      "state_class": "measurement",
+      "last_updated": "2026-05-05T21:31:19.890337",
+      "unit_of_measurement": "dBm",
+      "icon": "mdi:waveform",
+      "friendly_name": "MeshCore Repeater: Kodu Repeater (fa27ef) Noise Floor"
+    },
+    "last_changed": "2026-05-05T20:31:19.890360+00:00",
+    "last_reported": "2026-05-05T20:31:43.010845+00:00",
+    "last_updated": "2026-05-05T20:31:19.890360+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.meshcore_sn7_rx_airtime_utilization_kodu_repeater": {
+    "entity_id": "sensor.meshcore_sn7_rx_airtime_utilization_kodu_repeater",
+    "state": "17.2",
+    "attributes": {
+      "state_class": "measurement",
+      "last_updated": "2026-05-05T21:31:19.891190",
+      "uptime_seconds": "2776724",
+      "rx_airtime_seconds": "448921",
+      "rx_airtime_since_last_update": "20.7",
+      "unit_of_measurement": "%",
+      "device_class": "power_factor",
+      "icon": "mdi:percent",
+      "friendly_name": "MeshCore Repeater: Kodu Repeater (fa27ef) RX Airtime Utilization"
+    },
+    "last_changed": "2026-05-05T20:31:19.891228+00:00",
+    "last_reported": "2026-05-05T20:31:43.011169+00:00",
+    "last_updated": "2026-05-05T20:31:19.891228+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.meshcore_sn7_tx_queue_len_kodu_repeater": {
+    "entity_id": "sensor.meshcore_sn7_tx_queue_len_kodu_repeater",
+    "state": "0",
+    "attributes": {
+      "state_class": "measurement",
+      "last_updated": "2026-05-05T21:31:19.890250",
+      "icon": "mdi:playlist-edit",
+      "friendly_name": "MeshCore Repeater: Kodu Repeater (fa27ef) TX Queue Length"
+    },
+    "last_changed": "2026-05-04T13:32:42.758401+00:00",
+    "last_reported": "2026-05-05T20:31:43.010818+00:00",
+    "last_updated": "2026-05-05T20:31:19.890275+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.meshcore_sn7_uptime_kodu_repeater": {
+    "entity_id": "sensor.meshcore_sn7_uptime_kodu_repeater",
+    "state": "32.XXXXXXXXXXXXX",
+    "attributes": {
+      "state_class": "measurement",
+      "last_updated": "2026-05-05T21:31:19.889600",
+      "human_readable": "32d 3h 18m 44s",
+      "unit_of_measurement": "d",
+      "device_class": "duration",
+      "icon": "mdi:clock",
+      "friendly_name": "MeshCore Repeater: Kodu Repeater (fa27ef) Uptime"
+    },
+    "last_changed": "2026-05-05T20:31:19.889660+00:00",
+    "last_reported": "2026-05-05T20:31:43.010626+00:00",
+    "last_updated": "2026-05-05T20:31:19.889660+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "text.meshcore_command": {
+    "entity_id": "text.meshcore_command",
+    "state": "",
+    "attributes": {
+      "mode": "text",
+      "min": 0,
+      "max": 255,
+      "pattern": null,
+      "icon": "mdi:console",
+      "friendly_name": "MeshCore Command"
+    },
+    "last_changed": "2026-04-30T18:08:18.558160+00:00",
+    "last_reported": "2026-04-30T18:13:55.012620+00:00",
+    "last_updated": "2026-04-30T18:08:18.558160+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "text.meshcore_message": {
+    "entity_id": "text.meshcore_message",
+    "state": "",
+    "attributes": {
+      "mode": "text",
+      "min": 0,
+      "max": 200,
+      "pattern": null,
+      "icon": "mdi:message-text",
+      "friendly_name": "MeshCore Message"
+    },
+    "last_changed": "2026-04-30T18:08:18.557991+00:00",
+    "last_reported": "2026-04-30T18:13:55.012593+00:00",
+    "last_updated": "2026-04-30T18:08:18.557991+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "update.meshcore_proxy_update": {
+    "entity_id": "update.meshcore_proxy_update",
+    "state": "off",
+    "attributes": {
+      "auto_update": false,
+      "display_precision": 0,
+      "installed_version": "0.1.0",
+      "in_progress": false,
+      "latest_version": "0.1.0",
+      "release_summary": null,
+      "release_url": "<redacted>",
+      "skipped_version": null,
+      "title": "MeshCore Proxy",
+      "update_percentage": null,
+      "friendly_name": "MeshCore Proxy Update",
+      "supported_features": 29
+    },
+    "last_changed": "2026-05-02T03:08:16.240015+00:00",
+    "last_reported": "2026-05-02T03:08:16.240015+00:00",
+    "last_updated": "2026-05-02T03:08:16.240015+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "update.meshcore_update": {
+    "entity_id": "update.meshcore_update",
+    "state": "off",
+    "attributes": {
+      "auto_update": false,
+      "display_precision": 0,
+      "installed_version": "v2.6.0",
+      "in_progress": false,
+      "latest_version": "v2.6.0",
+      "release_summary": null,
+      "release_url": "<redacted>",
+      "skipped_version": null,
+      "title": null,
+      "update_percentage": null,
+      "entity_picture": "https://brands.home-assistant.io/_/meshcore/icon.png",
+      "friendly_name": "MeshCore Update",
+      "supported_features": 23
+    },
+    "last_changed": "2026-04-30T18:08:15.650771+00:00",
+    "last_reported": "2026-04-30T18:08:15.650771+00:00",
+    "last_updated": "2026-04-30T18:08:15.650771+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "zone.home": {
+    "entity_id": "zone.home",
+    "state": "1",
+    "attributes": {
+      "latitude": "<redacted>",
+      "longitude": "<redacted>",
+      "radius": 100,
+      "passive": false,
+      "persons": "<redacted>",
+      "editable": true,
+      "icon": "mdi:home",
+      "friendly_name": "Home"
+    },
+    "last_changed": "2026-05-05T06:31:00.892272+00:00",
+    "last_reported": "2026-05-05T06:31:00.892272+00:00",
+    "last_updated": "2026-05-05T06:31:00.892272+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  }
+}

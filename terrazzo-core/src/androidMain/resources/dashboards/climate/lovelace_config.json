@@ -1,0 +1,348 @@
+{
+  "views": [
+    {
+      "title": "Home",
+      "icon": "mdi:home-thermometer",
+      "type": "sections",
+      "max_columns": 4,
+      "sections": [
+        {
+          "type": "grid",
+          "column_span": 4,
+          "cards": [
+            {
+              "type": "heading",
+              "heading": "🌤️  Outside right now",
+              "heading_style": "title",
+              "grid_options": {
+                "columns": "full"
+              },
+              "icon": "mdi:weather-partly-cloudy"
+            },
+            {
+              "type": "weather-forecast",
+              "entity": "weather.forecast_home",
+              "forecast_type": "daily",
+              "show_current": true,
+              "show_forecast": true,
+              "grid_options": {
+                "columns": "full"
+              }
+            },
+            {
+              "type": "grid",
+              "columns": 4,
+              "square": false,
+              "cards": [
+                {
+                  "type": "tile",
+                  "entity": "sensor.openweathermap_temperature",
+                  "name": "Temp",
+                  "icon": "mdi:thermometer"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.openweathermap_feels_like_temperature",
+                  "name": "Feels like",
+                  "icon": "mdi:thermometer-lines"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.openweathermap_humidity",
+                  "name": "Humidity",
+                  "icon": "mdi:water-percent"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.openweathermap_wind_speed",
+                  "name": "Wind",
+                  "icon": "mdi:weather-windy"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.openweathermap_pressure",
+                  "name": "Pressure",
+                  "icon": "mdi:gauge"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.openweathermap_uv_index",
+                  "name": "UV index",
+                  "icon": "mdi:sun-wireless"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.openweathermap_cloud_coverage",
+                  "name": "Cloud cover",
+                  "icon": "mdi:cloud-outline"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.openweathermap_rain",
+                  "name": "Rain",
+                  "icon": "mdi:weather-pouring"
+                }
+              ],
+              "grid_options": {
+                "columns": "full"
+              }
+            },
+            {
+              "type": "heading",
+              "heading": "📷  Live view",
+              "heading_style": "title",
+              "grid_options": {
+                "columns": "full"
+              },
+              "icon": "mdi:cctv"
+            },
+            {
+              "type": "grid",
+              "columns": 2,
+              "square": false,
+              "cards": [
+                {
+                  "type": "picture-entity",
+                  "entity": "camera.g5_turret_ultra_high_resolution_channel",
+                  "camera_image": "camera.g5_turret_ultra_high_resolution_channel",
+                  "camera_view": "auto",
+                  "name": "Front (driveway)",
+                  "show_name": true,
+                  "show_state": false,
+                  "aspect_ratio": "16:9"
+                },
+                {
+                  "type": "picture-entity",
+                  "entity": "camera.back_door_camera",
+                  "camera_image": "camera.back_door_camera",
+                  "camera_view": "auto",
+                  "name": "Back",
+                  "show_name": true,
+                  "show_state": false,
+                  "aspect_ratio": "16:9"
+                }
+              ],
+              "grid_options": {
+                "columns": "full"
+              }
+            },
+            {
+              "type": "heading",
+              "heading": "🏠  Indoor climate",
+              "heading_style": "title",
+              "grid_options": {
+                "columns": "full"
+              },
+              "icon": "mdi:home-floor-l"
+            },
+            {
+              "type": "grid",
+              "columns": 3,
+              "square": false,
+              "cards": [
+                {
+                  "type": "tile",
+                  "entity": "climate.upstairs",
+                  "name": "Upstairs",
+                  "icon": "mdi:thermostat",
+                  "features": [
+                    {
+                      "type": "target-temperature"
+                    },
+                    {
+                      "type": "climate-hvac-modes",
+                      "style": "dropdown"
+                    }
+                  ]
+                },
+                {
+                  "type": "tile",
+                  "entity": "climate.downstairs",
+                  "name": "Downstairs",
+                  "icon": "mdi:thermostat",
+                  "features": [
+                    {
+                      "type": "target-temperature"
+                    },
+                    {
+                      "type": "climate-hvac-modes",
+                      "style": "dropdown"
+                    }
+                  ]
+                },
+                {
+                  "type": "tile",
+                  "entity": "climate.kids_room",
+                  "name": "Kitchen",
+                  "icon": "mdi:thermostat",
+                  "features": [
+                    {
+                      "type": "target-temperature"
+                    },
+                    {
+                      "type": "climate-hvac-modes",
+                      "style": "dropdown"
+                    }
+                  ]
+                }
+              ],
+              "grid_options": {
+                "columns": "full"
+              }
+            },
+            {
+              "type": "grid",
+              "columns": 3,
+              "square": false,
+              "cards": [
+                {
+                  "type": "tile",
+                  "entity": "sensor.upstairs_temperature",
+                  "name": "Upstairs temp",
+                  "icon": "mdi:thermometer"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.upstairs_humidity",
+                  "name": "Upstairs humidity",
+                  "icon": "mdi:water-percent"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.downstairs_temperature",
+                  "name": "Downstairs temp",
+                  "icon": "mdi:thermometer"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.downstairs_humidity",
+                  "name": "Downstairs humidity",
+                  "icon": "mdi:water-percent"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.kids_room_temperature",
+                  "name": "Kitchen temp",
+                  "icon": "mdi:thermometer"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.kids_room_humidity",
+                  "name": "Kitchen humidity",
+                  "icon": "mdi:water-percent"
+                }
+              ],
+              "grid_options": {
+                "columns": "full"
+              }
+            },
+            {
+              "type": "heading",
+              "heading": "📊  Indoor vs outdoor (48h)",
+              "heading_style": "title",
+              "grid_options": {
+                "columns": "full"
+              },
+              "icon": "mdi:chart-line"
+            },
+            {
+              "type": "history-graph",
+              "title": "Temperature",
+              "hours_to_show": 48,
+              "entities": [
+                {
+                  "entity": "sensor.openweathermap_temperature",
+                  "name": "Outside"
+                },
+                {
+                  "entity": "sensor.upstairs_temperature",
+                  "name": "Upstairs"
+                },
+                {
+                  "entity": "sensor.downstairs_temperature",
+                  "name": "Downstairs"
+                },
+                {
+                  "entity": "sensor.kids_room_temperature",
+                  "name": "Kitchen"
+                }
+              ],
+              "grid_options": {
+                "columns": "full"
+              }
+            },
+            {
+              "type": "history-graph",
+              "title": "Humidity",
+              "hours_to_show": 48,
+              "entities": [
+                {
+                  "entity": "sensor.openweathermap_humidity",
+                  "name": "Outside"
+                },
+                {
+                  "entity": "sensor.upstairs_humidity",
+                  "name": "Upstairs"
+                },
+                {
+                  "entity": "sensor.downstairs_humidity",
+                  "name": "Downstairs"
+                },
+                {
+                  "entity": "sensor.kids_room_humidity",
+                  "name": "Kitchen"
+                }
+              ],
+              "grid_options": {
+                "columns": "full"
+              }
+            },
+            {
+              "type": "heading",
+              "heading": "🌙  Sun & extras",
+              "heading_style": "title",
+              "grid_options": {
+                "columns": "full"
+              },
+              "icon": "mdi:weather-sunset"
+            },
+            {
+              "type": "grid",
+              "columns": 4,
+              "square": false,
+              "cards": [
+                {
+                  "type": "tile",
+                  "entity": "sun.sun",
+                  "name": "Sun",
+                  "icon": "mdi:white-balance-sunny"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.openweathermap_dew_point",
+                  "name": "Dew point",
+                  "icon": "mdi:water-thermometer"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.openweathermap_visibility",
+                  "name": "Visibility",
+                  "icon": "mdi:eye-outline"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.openweathermap_wind_bearing",
+                  "name": "Wind bearing",
+                  "icon": "mdi:compass"
+                }
+              ],
+              "grid_options": {
+                "columns": "full"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

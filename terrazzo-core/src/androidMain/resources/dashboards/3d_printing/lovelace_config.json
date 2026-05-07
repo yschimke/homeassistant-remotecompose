@@ -1,0 +1,1490 @@
+{
+  "views": [
+    {
+      "title": "Printers",
+      "icon": "mdi:printer-3d",
+      "type": "sections",
+      "max_columns": 4,
+      "header": {
+        "card": {
+          "type": "markdown",
+          "text_only": true,
+          "content": "# 🏭 3D Printing\nTwo Bambu printers — tap a tab above for full detail"
+        }
+      },
+      "sections": [
+        {
+          "type": "grid",
+          "column_span": 2,
+          "cards": [
+            {
+              "type": "heading",
+              "heading": "🖨️ P2s",
+              "heading_style": "title",
+              "grid_options": {
+                "columns": "full"
+              },
+              "icon": "mdi:printer-3d"
+            },
+            {
+              "type": "conditional",
+              "conditions": [
+                {
+                  "condition": "state",
+                  "entity": "binary_sensor.p2s_sn2_online",
+                  "state": "on"
+                }
+              ],
+              "card": {
+                "type": "picture-entity",
+                "entity": "image.p2s_sn2_cover_image",
+                "name": "P2s",
+                "show_name": false,
+                "show_state": false,
+                "aspect_ratio": "16:9",
+                "tap_action": {
+                  "action": "navigate",
+                  "navigation_path": "/dashboard-bambu/p2s"
+                }
+              }
+            },
+            {
+              "type": "grid",
+              "columns": 2,
+              "square": false,
+              "cards": [
+                {
+                  "type": "tile",
+                  "entity": "binary_sensor.p2s_sn2_online",
+                  "name": "Online",
+                  "icon": "mdi:lan-connect"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.p2s_sn2_print_status",
+                  "name": "Status",
+                  "icon": "mdi:information-outline"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.p2s_sn2_current_stage",
+                  "name": "Stage",
+                  "icon": "mdi:cog-outline"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.p2s_sn2_print_progress",
+                  "name": "Progress",
+                  "icon": "mdi:progress-clock"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.p2s_sn2_nozzle_temperature",
+                  "name": "Nozzle",
+                  "icon": "mdi:printer-3d-nozzle-heat"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.p2s_sn2_bed_temperature",
+                  "name": "Bed",
+                  "icon": "mdi:radiator"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.p2s_sn2_remaining_time",
+                  "name": "Remaining",
+                  "icon": "mdi:timer-sand"
+                },
+                {
+                  "type": "tile",
+                  "entity": "binary_sensor.p2s_sn2_hms_errors",
+                  "name": "HMS",
+                  "icon": "mdi:alert-circle"
+                }
+              ],
+              "grid_options": {
+                "columns": "full"
+              }
+            },
+            {
+              "type": "markdown",
+              "grid_options": {
+                "columns": "full"
+              },
+              "content": "[Open P2s detail →](/dashboard-bambu/p2s)"
+            }
+          ]
+        },
+        {
+          "type": "grid",
+          "column_span": 2,
+          "cards": [
+            {
+              "type": "heading",
+              "heading": "🖨️ A1 Mini",
+              "heading_style": "title",
+              "grid_options": {
+                "columns": "full"
+              },
+              "icon": "mdi:printer-3d"
+            },
+            {
+              "type": "conditional",
+              "conditions": [
+                {
+                  "condition": "state",
+                  "entity": "binary_sensor.a1mini_sn1_online",
+                  "state": "on"
+                }
+              ],
+              "card": {
+                "type": "picture-entity",
+                "entity": "camera.a1mini_sn1_camera",
+                "camera_image": "camera.a1mini_sn1_camera",
+                "camera_view": "live",
+                "name": "A1 Mini",
+                "show_name": false,
+                "show_state": false,
+                "aspect_ratio": "16:9",
+                "tap_action": {
+                  "action": "navigate",
+                  "navigation_path": "/dashboard-bambu/a1mini"
+                }
+              }
+            },
+            {
+              "type": "grid",
+              "columns": 2,
+              "square": false,
+              "cards": [
+                {
+                  "type": "tile",
+                  "entity": "binary_sensor.a1mini_sn1_online",
+                  "name": "Online",
+                  "icon": "mdi:lan-connect"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.a1mini_sn1_print_status",
+                  "name": "Status",
+                  "icon": "mdi:information-outline"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.a1mini_sn1_current_stage",
+                  "name": "Stage",
+                  "icon": "mdi:cog-outline"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.a1mini_sn1_print_progress",
+                  "name": "Progress",
+                  "icon": "mdi:progress-clock"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.a1mini_sn1_nozzle_temperature",
+                  "name": "Nozzle",
+                  "icon": "mdi:printer-3d-nozzle-heat"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.a1mini_sn1_bed_temperature",
+                  "name": "Bed",
+                  "icon": "mdi:radiator"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.a1mini_sn1_remaining_time",
+                  "name": "Remaining",
+                  "icon": "mdi:timer-sand"
+                },
+                {
+                  "type": "tile",
+                  "entity": "binary_sensor.a1mini_sn1_hms_errors",
+                  "name": "HMS",
+                  "icon": "mdi:alert-circle"
+                }
+              ],
+              "grid_options": {
+                "columns": "full"
+              }
+            },
+            {
+              "type": "markdown",
+              "grid_options": {
+                "columns": "full"
+              },
+              "content": "[Open A1 Mini detail →](/dashboard-bambu/a1mini)"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "P2s",
+      "icon": "mdi:printer-3d",
+      "path": "p2s",
+      "type": "sections",
+      "max_columns": 4,
+      "header": {
+        "card": {
+          "type": "markdown",
+          "text_only": true,
+          "content": "# 🖨️ P2s\n**Status:** {{ states('sensor.p2s_sn2_print_status') }} · **Stage:** {{ states('sensor.p2s_sn2_current_stage') }} · **Progress:** {{ states('sensor.p2s_sn2_print_progress') }}% · {% set r = states('sensor.p2s_sn2_remaining_time') %}**Remaining:** {% if r not in ['unknown','unavailable','0','0.0'] %}{{ r }} h{% else %}–{% endif %}"
+        }
+      },
+      "sections": [
+        {
+          "type": "grid",
+          "column_span": 4,
+          "cards": [
+            {
+              "type": "heading",
+              "heading": "Current print",
+              "heading_style": "title",
+              "grid_options": {
+                "columns": "full"
+              },
+              "icon": "mdi:cube-scan"
+            },
+            {
+              "type": "custom:ha-bambulab-print_status-card",
+              "printer": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+              "style": "full",
+              "grid_options": {
+                "columns": "full"
+              }
+            },
+            {
+              "type": "grid",
+              "columns": 2,
+              "square": false,
+              "cards": [
+                {
+                  "type": "picture-entity",
+                  "entity": "image.p2s_sn2_cover_image",
+                  "name": "Cover preview",
+                  "show_name": true,
+                  "show_state": false,
+                  "aspect_ratio": "1:1",
+                  "tap_action": {
+                    "action": "more-info"
+                  }
+                },
+                {
+                  "type": "picture-entity",
+                  "entity": "image.p2s_sn2_pick_image",
+                  "name": "Pick image",
+                  "show_name": true,
+                  "show_state": false,
+                  "aspect_ratio": "1:1",
+                  "tap_action": {
+                    "action": "more-info"
+                  }
+                }
+              ],
+              "grid_options": {
+                "columns": "full"
+              }
+            },
+            {
+              "type": "grid",
+              "columns": 3,
+              "square": false,
+              "cards": [
+                {
+                  "type": "tile",
+                  "entity": "sensor.p2s_sn2_print_progress",
+                  "name": "Progress",
+                  "icon": "mdi:progress-clock"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.p2s_sn2_current_layer",
+                  "name": "Current layer",
+                  "icon": "mdi:layers-triple"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.p2s_sn2_total_layer_count",
+                  "name": "Total layers",
+                  "icon": "mdi:layers-triple-outline"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.p2s_sn2_remaining_time",
+                  "name": "Remaining",
+                  "icon": "mdi:timer-sand"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.p2s_sn2_start_time",
+                  "name": "Started",
+                  "icon": "mdi:clock-start"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.p2s_sn2_end_time",
+                  "name": "ETA",
+                  "icon": "mdi:clock-end"
+                }
+              ],
+              "grid_options": {
+                "columns": "full"
+              }
+            },
+            {
+              "type": "heading",
+              "heading": "🎮 Controls",
+              "heading_style": "title",
+              "grid_options": {
+                "columns": "full"
+              },
+              "icon": "mdi:gamepad-variant"
+            },
+            {
+              "type": "custom:ha-bambulab-print_control-card",
+              "printer": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+              "grid_options": {
+                "columns": "full"
+              }
+            },
+            {
+              "type": "grid",
+              "columns": 3,
+              "square": false,
+              "cards": [
+                {
+                  "type": "tile",
+                  "entity": "light.p2s_sn2_chamber_light",
+                  "name": "Chamber light",
+                  "icon": "mdi:lightbulb"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.p2s_sn2_airduct_mode",
+                  "name": "Airduct mode",
+                  "icon": "mdi:air-filter"
+                },
+                {
+                  "type": "tile",
+                  "entity": "switch.p2s_sn2_camera",
+                  "name": "Camera",
+                  "icon": "mdi:cctv"
+                }
+              ],
+              "grid_options": {
+                "columns": "full"
+              }
+            },
+            {
+              "type": "heading",
+              "heading": "🌡️ Temperatures",
+              "heading_style": "title",
+              "grid_options": {
+                "columns": "full"
+              },
+              "icon": "mdi:thermometer"
+            },
+            {
+              "type": "grid",
+              "columns": 5,
+              "square": false,
+              "cards": [
+                {
+                  "type": "tile",
+                  "entity": "sensor.p2s_sn2_nozzle_temperature",
+                  "name": "Nozzle",
+                  "icon": "mdi:printer-3d-nozzle-heat"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.p2s_sn2_nozzle_target_temperature",
+                  "name": "Nozzle target",
+                  "icon": "mdi:target"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.p2s_sn2_bed_temperature",
+                  "name": "Bed",
+                  "icon": "mdi:radiator"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.p2s_sn2_bed_target_temperature",
+                  "name": "Bed target",
+                  "icon": "mdi:target"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.p2s_sn2_chamber_temperature",
+                  "name": "Chamber",
+                  "icon": "mdi:home-thermometer"
+                }
+              ],
+              "grid_options": {
+                "columns": "full"
+              }
+            },
+            {
+              "type": "history-graph",
+              "title": "Temperatures (24h)",
+              "hours_to_show": 24,
+              "entities": [
+                {
+                  "entity": "sensor.p2s_sn2_nozzle_temperature",
+                  "name": "Nozzle"
+                },
+                {
+                  "entity": "sensor.p2s_sn2_bed_temperature",
+                  "name": "Bed"
+                },
+                {
+                  "entity": "sensor.p2s_sn2_chamber_temperature",
+                  "name": "Chamber"
+                }
+              ],
+              "grid_options": {
+                "columns": "full"
+              }
+            },
+            {
+              "type": "heading",
+              "heading": "💨 Fans",
+              "heading_style": "title",
+              "grid_options": {
+                "columns": "full"
+              },
+              "icon": "mdi:fan"
+            },
+            {
+              "type": "grid",
+              "columns": 4,
+              "square": false,
+              "cards": [
+                {
+                  "type": "tile",
+                  "entity": "sensor.p2s_sn2_cooling_fan_speed",
+                  "name": "Part cooling %",
+                  "icon": "mdi:fan-speed-1"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.p2s_sn2_heatbreak_fan_speed",
+                  "name": "Heatbreak %",
+                  "icon": "mdi:fan-alert"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.p2s_sn2_aux_fan_speed",
+                  "name": "Aux fan %",
+                  "icon": "mdi:fan-plus"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.p2s_sn2_chamber_fan_speed",
+                  "name": "Chamber fan %",
+                  "icon": "mdi:fan-chevron-up"
+                }
+              ],
+              "grid_options": {
+                "columns": "full"
+              }
+            },
+            {
+              "type": "heading",
+              "heading": "📦 Task details",
+              "heading_style": "title",
+              "grid_options": {
+                "columns": "full"
+              },
+              "icon": "mdi:file-document-outline"
+            },
+            {
+              "type": "grid",
+              "columns": 4,
+              "square": false,
+              "cards": [
+                {
+                  "type": "tile",
+                  "entity": "sensor.p2s_sn2_task_name",
+                  "name": "Task",
+                  "icon": "mdi:file-cog"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.p2s_sn2_gcode_filename",
+                  "name": "G-code",
+                  "icon": "mdi:file-code"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.p2s_sn2_gcode_file_downloaded",
+                  "name": "Downloaded",
+                  "icon": "mdi:download-circle"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.p2s_sn2_print_type",
+                  "name": "Type",
+                  "icon": "mdi:cog-outline"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.p2s_sn2_print_bed_type",
+                  "name": "Bed type",
+                  "icon": "mdi:texture"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.p2s_sn2_print_length",
+                  "name": "Filament length",
+                  "icon": "mdi:tape-measure"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.p2s_sn2_print_weight",
+                  "name": "Filament weight",
+                  "icon": "mdi:weight-gram"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.p2s_sn2_nozzle_size",
+                  "name": "Nozzle size",
+                  "icon": "mdi:printer-3d-nozzle"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.p2s_sn2_nozzle_type",
+                  "name": "Nozzle type",
+                  "icon": "mdi:printer-3d-nozzle-alert"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.p2s_sn2_printable_objects",
+                  "name": "Objects",
+                  "icon": "mdi:cube"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.p2s_sn2_skipped_objects",
+                  "name": "Skipped",
+                  "icon": "mdi:cube-off"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.p2s_sn2_model_download",
+                  "name": "Model download",
+                  "icon": "mdi:download"
+                }
+              ],
+              "grid_options": {
+                "columns": "full"
+              }
+            },
+            {
+              "type": "heading",
+              "heading": "🔧 Health & diagnostics",
+              "heading_style": "title",
+              "grid_options": {
+                "columns": "full"
+              },
+              "icon": "mdi:heart-pulse"
+            },
+            {
+              "type": "grid",
+              "columns": 4,
+              "square": false,
+              "cards": [
+                {
+                  "type": "tile",
+                  "entity": "binary_sensor.p2s_sn2_online",
+                  "name": "Online",
+                  "icon": "mdi:lan-connect"
+                },
+                {
+                  "type": "tile",
+                  "entity": "binary_sensor.p2s_sn2_door",
+                  "name": "Door",
+                  "icon": "mdi:door"
+                },
+                {
+                  "type": "tile",
+                  "entity": "binary_sensor.p2s_sn2_hms_errors",
+                  "name": "HMS errors",
+                  "icon": "mdi:alert-circle"
+                },
+                {
+                  "type": "tile",
+                  "entity": "binary_sensor.p2s_sn2_print_error",
+                  "name": "Print error",
+                  "icon": "mdi:alert"
+                },
+                {
+                  "type": "tile",
+                  "entity": "binary_sensor.p2s_sn2_firmware",
+                  "name": "Firmware update",
+                  "icon": "mdi:update"
+                },
+                {
+                  "type": "tile",
+                  "entity": "binary_sensor.p2s_sn2_timelapse",
+                  "name": "Timelapse",
+                  "icon": "mdi:video-box"
+                },
+                {
+                  "type": "tile",
+                  "entity": "binary_sensor.p2s_sn2_extruder_filament",
+                  "name": "Filament loaded",
+                  "icon": "mdi:check-circle"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.p2s_sn2_wi_fi_signal",
+                  "name": "Wi-Fi",
+                  "icon": "mdi:wifi"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.p2s_sn2_total_usage",
+                  "name": "Total usage",
+                  "icon": "mdi:clock-check-outline"
+                }
+              ],
+              "grid_options": {
+                "columns": "full"
+              }
+            },
+            {
+              "type": "grid",
+              "columns": 3,
+              "square": false,
+              "cards": [
+                {
+                  "type": "tile",
+                  "entity": "sensor.p2s_sn2_printer_name",
+                  "name": "Name",
+                  "icon": "mdi:printer-3d"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.p2s_sn2_serial_number",
+                  "name": "Serial",
+                  "icon": "mdi:barcode"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.p2s_sn2_ip_address",
+                  "name": "IP",
+                  "icon": "mdi:ip-network"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.p2s_sn2_sd_card_status",
+                  "name": "SD card",
+                  "icon": "mdi:sd"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.p2s_sn2_mqtt_connection_mode",
+                  "name": "MQTT mode",
+                  "icon": "mdi:connection"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.p2s_sn2_speed_profile",
+                  "name": "Speed profile",
+                  "icon": "mdi:speedometer-medium"
+                }
+              ],
+              "grid_options": {
+                "columns": "full"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "A1 Mini",
+      "icon": "mdi:printer-3d",
+      "path": "a1mini",
+      "type": "sections",
+      "max_columns": 4,
+      "header": {
+        "card": {
+          "type": "markdown",
+          "text_only": true,
+          "content": "# 🖨️ A1 Mini\n**Status:** {{ states('sensor.a1mini_sn1_print_status') }} · **Stage:** {{ states('sensor.a1mini_sn1_current_stage') }} · **Progress:** {{ states('sensor.a1mini_sn1_print_progress') }}% · {% set r = states('sensor.a1mini_sn1_remaining_time') %}**Remaining:** {% if r not in ['unknown','unavailable','0','0.0'] %}{{ r }} h{% else %}–{% endif %}"
+        }
+      },
+      "sections": [
+        {
+          "type": "grid",
+          "column_span": 4,
+          "cards": [
+            {
+              "type": "heading",
+              "heading": "Current print",
+              "heading_style": "title",
+              "grid_options": {
+                "columns": "full"
+              },
+              "icon": "mdi:cube-scan"
+            },
+            {
+              "type": "custom:ha-bambulab-print_status-card",
+              "printer": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+              "style": "full",
+              "grid_options": {
+                "columns": "full"
+              }
+            },
+            {
+              "type": "grid",
+              "columns": 3,
+              "square": false,
+              "cards": [
+                {
+                  "type": "picture-entity",
+                  "entity": "camera.a1mini_sn1_camera",
+                  "camera_image": "camera.a1mini_sn1_camera",
+                  "camera_view": "live",
+                  "name": "Live camera",
+                  "show_name": true,
+                  "show_state": false,
+                  "aspect_ratio": "16:9",
+                  "tap_action": {
+                    "action": "more-info"
+                  }
+                },
+                {
+                  "type": "picture-entity",
+                  "entity": "image.a1mini_sn1_cover_image",
+                  "name": "Cover preview",
+                  "show_name": true,
+                  "show_state": false,
+                  "aspect_ratio": "1:1",
+                  "tap_action": {
+                    "action": "more-info"
+                  }
+                },
+                {
+                  "type": "picture-entity",
+                  "entity": "image.a1mini_sn1_pick_image",
+                  "name": "Pick image",
+                  "show_name": true,
+                  "show_state": false,
+                  "aspect_ratio": "1:1",
+                  "tap_action": {
+                    "action": "more-info"
+                  }
+                }
+              ],
+              "grid_options": {
+                "columns": "full"
+              }
+            },
+            {
+              "type": "grid",
+              "columns": 3,
+              "square": false,
+              "cards": [
+                {
+                  "type": "tile",
+                  "entity": "sensor.a1mini_sn1_print_progress",
+                  "name": "Progress",
+                  "icon": "mdi:progress-clock"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.a1mini_sn1_current_layer",
+                  "name": "Current layer",
+                  "icon": "mdi:layers-triple"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.a1mini_sn1_total_layer_count",
+                  "name": "Total layers",
+                  "icon": "mdi:layers-triple-outline"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.a1mini_sn1_remaining_time",
+                  "name": "Remaining",
+                  "icon": "mdi:timer-sand"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.a1mini_sn1_start_time",
+                  "name": "Started",
+                  "icon": "mdi:clock-start"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.a1mini_sn1_end_time",
+                  "name": "ETA",
+                  "icon": "mdi:clock-end"
+                }
+              ],
+              "grid_options": {
+                "columns": "full"
+              }
+            },
+            {
+              "type": "heading",
+              "heading": "🎮 Controls",
+              "heading_style": "title",
+              "grid_options": {
+                "columns": "full"
+              },
+              "icon": "mdi:gamepad-variant"
+            },
+            {
+              "type": "custom:ha-bambulab-print_control-card",
+              "printer": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+              "grid_options": {
+                "columns": "full"
+              }
+            },
+            {
+              "type": "grid",
+              "columns": 3,
+              "square": false,
+              "cards": [
+                {
+                  "type": "tile",
+                  "entity": "button.a1mini_sn1_pause_printing",
+                  "name": "Pause",
+                  "icon": "mdi:pause",
+                  "color": "yellow"
+                },
+                {
+                  "type": "tile",
+                  "entity": "button.a1mini_sn1_resume_printing",
+                  "name": "Resume",
+                  "icon": "mdi:play",
+                  "color": "green"
+                },
+                {
+                  "type": "tile",
+                  "entity": "button.a1mini_sn1_stop_printing",
+                  "name": "Stop",
+                  "icon": "mdi:stop",
+                  "color": "red"
+                },
+                {
+                  "type": "tile",
+                  "entity": "button.a1mini_sn1_force_refresh_data",
+                  "name": "Refresh",
+                  "icon": "mdi:refresh"
+                },
+                {
+                  "type": "tile",
+                  "entity": "select.a1mini_sn1_printing_speed",
+                  "name": "Speed",
+                  "icon": "mdi:speedometer"
+                },
+                {
+                  "type": "tile",
+                  "entity": "light.a1mini_sn1_chamber_light",
+                  "name": "Chamber light",
+                  "icon": "mdi:lightbulb"
+                },
+                {
+                  "type": "tile",
+                  "entity": "switch.a1mini_sn1_enable_camera",
+                  "name": "Camera",
+                  "icon": "mdi:cctv"
+                }
+              ],
+              "grid_options": {
+                "columns": "full"
+              }
+            },
+            {
+              "type": "heading",
+              "heading": "🌡️ Temperatures",
+              "heading_style": "title",
+              "grid_options": {
+                "columns": "full"
+              },
+              "icon": "mdi:thermometer"
+            },
+            {
+              "type": "grid",
+              "columns": 4,
+              "square": false,
+              "cards": [
+                {
+                  "type": "tile",
+                  "entity": "sensor.a1mini_sn1_nozzle_temperature",
+                  "name": "Nozzle",
+                  "icon": "mdi:printer-3d-nozzle-heat"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.a1mini_sn1_nozzle_target_temperature",
+                  "name": "Nozzle target",
+                  "icon": "mdi:target"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.a1mini_sn1_bed_temperature",
+                  "name": "Bed",
+                  "icon": "mdi:radiator"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.a1mini_sn1_target_bed_temperature",
+                  "name": "Bed target",
+                  "icon": "mdi:target"
+                }
+              ],
+              "grid_options": {
+                "columns": "full"
+              }
+            },
+            {
+              "type": "history-graph",
+              "title": "Temperatures (24h)",
+              "hours_to_show": 24,
+              "entities": [
+                {
+                  "entity": "sensor.a1mini_sn1_nozzle_temperature",
+                  "name": "Nozzle"
+                },
+                {
+                  "entity": "sensor.a1mini_sn1_bed_temperature",
+                  "name": "Bed"
+                }
+              ],
+              "grid_options": {
+                "columns": "full"
+              }
+            },
+            {
+              "type": "heading",
+              "heading": "💨 Fans",
+              "heading_style": "title",
+              "grid_options": {
+                "columns": "full"
+              },
+              "icon": "mdi:fan"
+            },
+            {
+              "type": "grid",
+              "columns": 3,
+              "square": false,
+              "cards": [
+                {
+                  "type": "tile",
+                  "entity": "fan.a1mini_sn1_cooling_fan",
+                  "name": "Part cooling",
+                  "icon": "mdi:fan"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.a1mini_sn1_cooling_fan_speed",
+                  "name": "Part cooling %",
+                  "icon": "mdi:fan-speed-1"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.a1mini_sn1_heatbreak_fan_speed",
+                  "name": "Heatbreak %",
+                  "icon": "mdi:fan-alert"
+                }
+              ],
+              "grid_options": {
+                "columns": "full"
+              }
+            },
+            {
+              "type": "heading",
+              "heading": "📦 Task details",
+              "heading_style": "title",
+              "grid_options": {
+                "columns": "full"
+              },
+              "icon": "mdi:file-document-outline"
+            },
+            {
+              "type": "grid",
+              "columns": 4,
+              "square": false,
+              "cards": [
+                {
+                  "type": "tile",
+                  "entity": "sensor.a1mini_sn1_task_name",
+                  "name": "Task",
+                  "icon": "mdi:file-cog"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.a1mini_sn1_gcode_filename",
+                  "name": "G-code",
+                  "icon": "mdi:file-code"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.a1mini_sn1_gcode_file_downloaded",
+                  "name": "Downloaded",
+                  "icon": "mdi:download-circle"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.a1mini_sn1_print_type",
+                  "name": "Type",
+                  "icon": "mdi:cog-outline"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.a1mini_sn1_print_bed_type",
+                  "name": "Bed type",
+                  "icon": "mdi:texture"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.a1mini_sn1_print_length",
+                  "name": "Filament length",
+                  "icon": "mdi:tape-measure"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.a1mini_sn1_print_weight",
+                  "name": "Filament weight",
+                  "icon": "mdi:weight-gram"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.a1mini_sn1_nozzle_size",
+                  "name": "Nozzle size",
+                  "icon": "mdi:printer-3d-nozzle"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.a1mini_sn1_nozzle_type",
+                  "name": "Nozzle type",
+                  "icon": "mdi:printer-3d-nozzle-alert"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.a1mini_sn1_printable_objects",
+                  "name": "Objects",
+                  "icon": "mdi:cube"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.a1mini_sn1_skipped_objects",
+                  "name": "Skipped",
+                  "icon": "mdi:cube-off"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.a1mini_sn1_model_download",
+                  "name": "Model download",
+                  "icon": "mdi:download"
+                }
+              ],
+              "grid_options": {
+                "columns": "full"
+              }
+            },
+            {
+              "type": "heading",
+              "heading": "🔧 Health & diagnostics",
+              "heading_style": "title",
+              "grid_options": {
+                "columns": "full"
+              },
+              "icon": "mdi:heart-pulse"
+            },
+            {
+              "type": "grid",
+              "columns": 4,
+              "square": false,
+              "cards": [
+                {
+                  "type": "tile",
+                  "entity": "binary_sensor.a1mini_sn1_online",
+                  "name": "Online",
+                  "icon": "mdi:lan-connect"
+                },
+                {
+                  "type": "tile",
+                  "entity": "binary_sensor.a1mini_sn1_hms_errors",
+                  "name": "HMS errors",
+                  "icon": "mdi:alert-circle"
+                },
+                {
+                  "type": "tile",
+                  "entity": "binary_sensor.a1mini_sn1_print_error",
+                  "name": "Print error",
+                  "icon": "mdi:alert"
+                },
+                {
+                  "type": "tile",
+                  "entity": "binary_sensor.a1mini_sn1_firmware_update",
+                  "name": "Firmware update",
+                  "icon": "mdi:update"
+                },
+                {
+                  "type": "tile",
+                  "entity": "binary_sensor.a1mini_sn1_recording_timelapse",
+                  "name": "Timelapse",
+                  "icon": "mdi:video-box"
+                },
+                {
+                  "type": "tile",
+                  "entity": "binary_sensor.a1mini_sn1_extruder_filament_state",
+                  "name": "Filament loaded",
+                  "icon": "mdi:check-circle"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.a1mini_sn1_wi_fi_signal",
+                  "name": "Wi-Fi",
+                  "icon": "mdi:wifi"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.a1mini_sn1_total_usage",
+                  "name": "Total usage",
+                  "icon": "mdi:clock-check-outline"
+                }
+              ],
+              "grid_options": {
+                "columns": "full"
+              }
+            },
+            {
+              "type": "grid",
+              "columns": 3,
+              "square": false,
+              "cards": [
+                {
+                  "type": "tile",
+                  "entity": "sensor.a1mini_sn1_printer_name",
+                  "name": "Name",
+                  "icon": "mdi:printer-3d"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.a1mini_sn1_serial_number",
+                  "name": "Serial",
+                  "icon": "mdi:barcode"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.a1mini_sn1_ip_address",
+                  "name": "IP",
+                  "icon": "mdi:ip-network"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.a1mini_sn1_sd_card_status",
+                  "name": "SD card",
+                  "icon": "mdi:sd"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.a1mini_sn1_mqtt_connection_mode",
+                  "name": "MQTT mode",
+                  "icon": "mdi:connection"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.a1mini_sn1_speed_profile",
+                  "name": "Speed profile",
+                  "icon": "mdi:speedometer-medium"
+                }
+              ],
+              "grid_options": {
+                "columns": "full"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Filament",
+      "icon": "mdi:spool",
+      "path": "filament",
+      "type": "sections",
+      "max_columns": 4,
+      "sections": [
+        {
+          "type": "grid",
+          "column_span": 4,
+          "cards": [
+            {
+              "type": "heading",
+              "heading": "🖨️ P2s — AMS",
+              "heading_style": "title",
+              "grid_options": {
+                "columns": "full"
+              },
+              "icon": "mdi:spool"
+            },
+            {
+              "type": "custom:ha-bambulab-ams-card",
+              "ams": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+              "style": "full",
+              "grid_options": {
+                "columns": "full"
+              }
+            },
+            {
+              "type": "grid",
+              "columns": 4,
+              "square": false,
+              "cards": [
+                {
+                  "type": "tile",
+                  "entity": "binary_sensor.p2s_sn2_ams_1_active",
+                  "name": "AMS active",
+                  "icon": "mdi:spool"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.p2s_sn2_active_tray",
+                  "name": "Active tray",
+                  "icon": "mdi:arrow-right-bold-circle"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.p2s_sn2_ams_1_humidity",
+                  "name": "Humidity",
+                  "icon": "mdi:water-percent"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.p2s_sn2_ams_1_humidity_index",
+                  "name": "Humidity level",
+                  "icon": "mdi:water-alert"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.p2s_sn2_ams_1_temperature",
+                  "name": "AMS temp",
+                  "icon": "mdi:thermometer"
+                },
+                {
+                  "type": "tile",
+                  "entity": "binary_sensor.p2s_sn2_ams_1_drying",
+                  "name": "Drying",
+                  "icon": "mdi:water-remove-outline"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.p2s_sn2_ams_1_remaining_drying_time",
+                  "name": "Dry remaining",
+                  "icon": "mdi:timer-sand"
+                }
+              ],
+              "grid_options": {
+                "columns": "full"
+              }
+            },
+            {
+              "type": "grid",
+              "columns": 4,
+              "square": false,
+              "cards": [
+                {
+                  "type": "tile",
+                  "entity": "sensor.p2s_sn2_ams_1_tray_1",
+                  "name": "Tray 1"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.p2s_sn2_ams_1_tray_2",
+                  "name": "Tray 2"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.p2s_sn2_ams_1_tray_3",
+                  "name": "Tray 3"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.p2s_sn2_ams_1_tray_4",
+                  "name": "Tray 4"
+                }
+              ],
+              "grid_options": {
+                "columns": "full"
+              }
+            },
+            {
+              "type": "heading",
+              "heading": "🪢 External spool (P2s)",
+              "heading_style": "title",
+              "grid_options": {
+                "columns": "full"
+              },
+              "icon": "mdi:record-circle-outline"
+            },
+            {
+              "type": "custom:ha-bambulab-spool-card",
+              "spool": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+              "grid_options": {
+                "columns": "full"
+              }
+            },
+            {
+              "type": "grid",
+              "columns": 2,
+              "square": false,
+              "cards": [
+                {
+                  "type": "tile",
+                  "entity": "binary_sensor.p2s_sn2_externalspool_active",
+                  "name": "External spool",
+                  "icon": "mdi:record-rec"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.p2s_sn2_externalspool_external_spool",
+                  "name": "Spool info",
+                  "icon": "mdi:information"
+                }
+              ],
+              "grid_options": {
+                "columns": "full"
+              }
+            },
+            {
+              "type": "heading",
+              "heading": "🖨️ A1 Mini — AMS",
+              "heading_style": "title",
+              "grid_options": {
+                "columns": "full"
+              },
+              "icon": "mdi:spool"
+            },
+            {
+              "type": "custom:ha-bambulab-ams-card",
+              "ams": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+              "style": "full",
+              "grid_options": {
+                "columns": "full"
+              }
+            },
+            {
+              "type": "grid",
+              "columns": 4,
+              "square": false,
+              "cards": [
+                {
+                  "type": "tile",
+                  "entity": "binary_sensor.a1mini_sn1_ams_1_active",
+                  "name": "AMS active",
+                  "icon": "mdi:spool"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.a1mini_sn1_active_tray",
+                  "name": "Active tray",
+                  "icon": "mdi:arrow-right-bold-circle"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.a1mini_sn1_ams_1_humidity",
+                  "name": "Humidity",
+                  "icon": "mdi:water-percent"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.a1mini_sn1_ams_1_humidity_index",
+                  "name": "Humidity level",
+                  "icon": "mdi:water-alert"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.a1mini_sn1_ams_1_temperature_2",
+                  "name": "AMS temp",
+                  "icon": "mdi:thermometer"
+                }
+              ],
+              "grid_options": {
+                "columns": "full"
+              }
+            },
+            {
+              "type": "grid",
+              "columns": 4,
+              "square": false,
+              "cards": [
+                {
+                  "type": "tile",
+                  "entity": "sensor.a1mini_sn1_ams_1_tray_1",
+                  "name": "Tray 1"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.a1mini_sn1_ams_1_tray_2",
+                  "name": "Tray 2"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.a1mini_sn1_ams_1_tray_3",
+                  "name": "Tray 3"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.a1mini_sn1_ams_1_tray_4",
+                  "name": "Tray 4"
+                }
+              ],
+              "grid_options": {
+                "columns": "full"
+              }
+            },
+            {
+              "type": "heading",
+              "heading": "🪢 External spool (A1 Mini)",
+              "heading_style": "title",
+              "grid_options": {
+                "columns": "full"
+              },
+              "icon": "mdi:record-circle-outline"
+            },
+            {
+              "type": "custom:ha-bambulab-spool-card",
+              "spool": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+              "grid_options": {
+                "columns": "full"
+              }
+            },
+            {
+              "type": "grid",
+              "columns": 2,
+              "square": false,
+              "cards": [
+                {
+                  "type": "tile",
+                  "entity": "binary_sensor.a1mini_sn1_externalspool_active",
+                  "name": "External spool",
+                  "icon": "mdi:record-rec"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.a1mini_sn1_externalspool_external_spool",
+                  "name": "Spool info",
+                  "icon": "mdi:information"
+                }
+              ],
+              "grid_options": {
+                "columns": "full"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

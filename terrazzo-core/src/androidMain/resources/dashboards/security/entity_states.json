@@ -1,0 +1,288 @@
+{
+  "alarm_control_panel.blink_panel": {
+    "entity_id": "alarm_control_panel.blink_panel",
+    "state": "disarmed",
+    "attributes": {
+      "code_format": null,
+      "changed_by": null,
+      "code_arm_required": false,
+      "name": "BlinkA1",
+      "id": "<redacted>",
+      "network_id": "<redacted>",
+      "serial": "<redacted>",
+      "version": null,
+      "status": false,
+      "region_id": "<redacted>",
+      "local_storage": false,
+      "friendly_name": "BlinkA1",
+      "supported_features": 2
+    },
+    "last_changed": "2026-04-30T18:08:18.592819+00:00",
+    "last_reported": "2026-04-30T18:13:19.439131+00:00",
+    "last_updated": "2026-04-30T18:08:18.600304+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "binary_sensor.g4_instant_motion": {
+    "entity_id": "binary_sensor.g4_instant_motion",
+    "state": "unavailable",
+    "attributes": {
+      "attribution": "Powered by UniFi Protect Server",
+      "device_class": "motion",
+      "friendly_name": "G4 Instant Motion"
+    },
+    "last_changed": "2026-04-30T18:08:15.091028+00:00",
+    "last_reported": "2026-04-30T18:08:15.091028+00:00",
+    "last_updated": "2026-04-30T18:08:15.091028+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "binary_sensor.g5_turret_ultra_motion": {
+    "entity_id": "binary_sensor.g5_turret_ultra_motion",
+    "state": "unavailable",
+    "attributes": {
+      "attribution": "Powered by UniFi Protect Server",
+      "device_class": "motion",
+      "friendly_name": "G5 Turret Ultra Motion"
+    },
+    "last_changed": "2026-04-30T18:08:15.089621+00:00",
+    "last_reported": "2026-04-30T18:08:15.089621+00:00",
+    "last_updated": "2026-04-30T18:08:15.089621+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "binary_sensor.g8t1_9401_3255_0m5u_motion": {
+    "entity_id": "binary_sensor.g8t1_9401_3255_0m5u_motion",
+    "state": "off",
+    "attributes": {
+      "device_class": "motion",
+      "friendly_name": "BlinkA1 Motion"
+    },
+    "last_changed": "2026-04-30T18:08:18.596078+00:00",
+    "last_reported": "2026-04-30T18:13:19.439276+00:00",
+    "last_updated": "2026-04-30T18:08:18.600356+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "binary_sensor.garage_door_garage_door_relay_state": {
+    "entity_id": "binary_sensor.garage_door_garage_door_relay_state",
+    "state": "off",
+    "attributes": {
+      "friendly_name": "Garage Door Garage Door Relay state"
+    },
+    "last_changed": "2026-05-05T06:29:01.568838+00:00",
+    "last_reported": "2026-05-05T06:29:01.568838+00:00",
+    "last_updated": "2026-05-05T06:29:01.568838+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "binary_sensor.garage_door_hcpbridge_connected": {
+    "entity_id": "binary_sensor.garage_door_hcpbridge_connected",
+    "state": "on",
+    "attributes": {
+      "device_class": "connectivity",
+      "friendly_name": "Garage Door hcpbridge Connected"
+    },
+    "last_changed": "2026-05-03T02:47:23.130649+00:00",
+    "last_reported": "2026-05-03T02:47:23.130649+00:00",
+    "last_updated": "2026-05-03T02:47:23.130649+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "button.garage_door_garage_door_half": {
+    "entity_id": "button.garage_door_garage_door_half",
+    "state": "unknown",
+    "attributes": {
+      "icon": "mdi:fraction-one-half",
+      "friendly_name": "Garage Door Garage Door Half"
+    },
+    "last_changed": "2026-05-03T02:47:23.111511+00:00",
+    "last_reported": "2026-05-03T02:47:23.111511+00:00",
+    "last_updated": "2026-05-03T02:47:23.111511+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "button.garage_door_garage_door_impulse": {
+    "entity_id": "button.garage_door_garage_door_impulse",
+    "state": "unknown",
+    "attributes": {
+      "icon": "mdi:arrow-up-down",
+      "friendly_name": "Garage Door Garage Door Impulse"
+    },
+    "last_changed": "2026-05-03T02:47:23.111260+00:00",
+    "last_reported": "2026-05-03T02:47:23.111260+00:00",
+    "last_updated": "2026-05-03T02:47:23.111260+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "button.garage_door_garage_door_vent": {
+    "entity_id": "button.garage_door_garage_door_vent",
+    "state": "unknown",
+    "attributes": {
+      "icon": "mdi:fan",
+      "friendly_name": "Garage Door Garage Door Vent"
+    },
+    "last_changed": "2026-05-03T02:47:23.111447+00:00",
+    "last_reported": "2026-05-03T02:47:23.111447+00:00",
+    "last_updated": "2026-05-03T02:47:23.111447+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "camera.back_door_camera": {
+    "entity_id": "camera.back_door_camera",
+    "state": "streaming",
+    "attributes": {
+      "access_token": "<redacted>",
+      "model_name": "Camera",
+      "brand": "Google Nest",
+      "entity_picture": "/api/camera_proxy/camera.back_door_camera?token=REDACTED",
+      "friendly_name": "Back door camera",
+      "supported_features": 2
+    },
+    "last_changed": "2026-04-30T18:08:21.992495+00:00",
+    "last_reported": "2026-05-05T22:13:07.553994+00:00",
+    "last_updated": "2026-05-05T22:13:07.553994+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "camera.g4_instant_high_resolution_channel": {
+    "entity_id": "camera.g4_instant_high_resolution_channel",
+    "state": "recording",
+    "attributes": {
+      "access_token": "<redacted>",
+      "width": 2688,
+      "height": 1512,
+      "fps": 30,
+      "bitrate": 5000000,
+      "channel_id": 0,
+      "attribution": "Powered by UniFi Protect Server",
+      "entity_picture": "/api/camera_proxy/camera.g4_instant_high_resolution_channel?token=REDACTED",
+      "friendly_name": "G4 Instant High resolution channel",
+      "supported_features": 2
+    },
+    "last_changed": "2026-05-05T22:08:51.854153+00:00",
+    "last_reported": "2026-05-05T22:13:07.553562+00:00",
+    "last_updated": "2026-05-05T22:13:07.553562+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "camera.g5_turret_ultra_high_resolution_channel": {
+    "entity_id": "camera.g5_turret_ultra_high_resolution_channel",
+    "state": "recording",
+    "attributes": {
+      "access_token": "<redacted>",
+      "width": 1504,
+      "height": 2688,
+      "fps": 30,
+      "bitrate": 7000000,
+      "channel_id": 0,
+      "attribution": "Powered by UniFi Protect Server",
+      "entity_picture": "/api/camera_proxy/camera.g5_turret_ultra_high_resolution_channel?token=REDACTED",
+      "friendly_name": "G5 Turret Ultra High resolution channel",
+      "supported_features": 2
+    },
+    "last_changed": "2026-04-30T18:08:15.096345+00:00",
+    "last_reported": "2026-05-05T22:13:07.553309+00:00",
+    "last_updated": "2026-05-05T22:13:07.553309+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "cover.garage_door_garage_door_2": {
+    "entity_id": "cover.garage_door_garage_door_2",
+    "state": "closed",
+    "attributes": {
+      "is_closed": true,
+      "current_position": 0,
+      "device_class": "garage",
+      "friendly_name": "Garage Door Garage Door",
+      "supported_features": 15
+    },
+    "last_changed": "2026-05-05T06:27:01.631676+00:00",
+    "last_reported": "2026-05-05T06:27:01.631676+00:00",
+    "last_updated": "2026-05-05T06:27:01.631676+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "event.back_door_camera_motion": {
+    "entity_id": "event.back_door_camera_motion",
+    "state": "2026-04-20T12:22:53.298+00:00",
+    "attributes": {
+      "event_types": [
+        "camera_motion",
+        "camera_person",
+        "camera_sound"
+      ],
+      "event_type": "camera_person",
+      "nest_event_id": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "device_class": "motion",
+      "friendly_name": "Back door camera Motion"
+    },
+    "last_changed": "2026-04-30T18:08:21.998655+00:00",
+    "last_reported": "2026-04-30T18:13:22.004163+00:00",
+    "last_updated": "2026-04-30T18:08:21.998655+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "light.garage_door_garage_door_light": {
+    "entity_id": "light.garage_door_garage_door_light",
+    "state": "off",
+    "attributes": {
+      "supported_color_modes": [
+        "onoff"
+      ],
+      "color_mode": null,
+      "friendly_name": "Garage Door Garage Door Light",
+      "supported_features": 8
+    },
+    "last_changed": "2026-05-05T06:29:01.569179+00:00",
+    "last_reported": "2026-05-05T06:29:01.569179+00:00",
+    "last_updated": "2026-05-05T06:29:01.569179+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  }
+}
