@@ -149,11 +149,12 @@ private fun GarageEntry(entry: HaGarageEntryData) {
 }
 
 /**
- * Sectional garage door from the front. The frame holds a sky/exterior
- * background that's revealed as the door rises; the door panel is
- * bottom-anchored and shrinks as [closedFraction] decreases. Four
- * horizontal "panel" lines on the door read as a sectional residential
- * garage (vs a one-piece tilt-up).
+ * Sectional garage door from the front. The frame holds an interior
+ * backdrop that's revealed below the door as it rises into the ceiling
+ * track; the door panel is top-anchored and its visible portion shrinks
+ * from the bottom up as [closedFraction] decreases. Four horizontal
+ * "panel" lines on the door read as a sectional residential garage
+ * (vs a one-piece tilt-up).
  *
  * A motion arrow overlays the centre of the door when [motion] is
  * non-idle — chevron-up while opening, chevron-down while closing —
@@ -168,7 +169,8 @@ private fun GarageDoorVisualisation(closedFraction: Float, motion: GarageMotion)
     // window shutter frame so a side-by-side card lineup (window +
     // garage) reads as different fixtures, not the same one twice.
     val frame = if (theme.isDark) Color(0xFF3A3530) else Color(0xFFD9D2C5)
-    // Sky / interior backdrop visible above the door when open.
+    // Interior backdrop visible below the door when it's raised into
+    // the ceiling track.
     val sky = if (theme.isDark) Color(0xFF0F1B24) else Color(0xFFD8ECF6)
     // Door panel base. Slightly desaturated white-ish for residential.
     val door = if (theme.isDark) Color(0xFFB7B2A8) else Color(0xFFF1EDE3)
@@ -193,7 +195,7 @@ private fun GarageDoorVisualisation(closedFraction: Float, motion: GarageMotion)
             .clip(RemoteRoundedCornerShape(6.rdp))
             .background(sky.rc)
             .border(borderDp.rdp, frame.rc, RemoteRoundedCornerShape(6.rdp)),
-        contentAlignment = RemoteAlignment.BottomCenter,
+        contentAlignment = RemoteAlignment.TopCenter,
     ) {
         if (doorHeightDp > 0) {
             RemoteBox(
