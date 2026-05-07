@@ -6,7 +6,6 @@ import androidx.compose.material.icons.filled.LockOpen
 import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
-import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -14,7 +13,6 @@ import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.CardConverter
-import ee.schimke.ha.rc.LiveBindings
 import ee.schimke.ha.rc.components.HaAction
 import ee.schimke.ha.rc.components.HaAlarmAction
 import ee.schimke.ha.rc.components.HaAlarmPanelData
@@ -48,30 +46,36 @@ class AlarmPanelCardConverter : CardConverter {
         val statesArr = (card.raw["states"] as? JsonArray)
             ?.mapNotNull { (it as? JsonPrimitive)?.content }
             ?: listOf("arm_away", "arm_home")
-        val actions = entityId?.let { id ->
-            statesArr.map { suffix ->
-                val label = suffix.removePrefix("arm_").replace('_', ' ').uppercase()
-                HaAlarmAction(
-                    label = "ARM $label".rs,
-                    accent = armAccent(suffix),
-                    tapAction = HaAction.CallService(
-                        domain = "alarm_control_panel",
-                        service = "alarm_$suffix",
-                        entityId = id,
-                        serviceData = JsonObject(emptyMap()),
-                    ),
-                )
-            }
-        }.orEmpty()
+        val actions =
+            entityId
+                ?.let { id ->
+                    statesArr.map { suffix ->
+                        val label = suffix.removePrefix("arm_").replace('_', ' ').uppercase()
+                        HaAlarmAction(
+                            label = "ARM $label",
+                            accent = armAccent(suffix),
+                            tapAction =
+                                HaAction.CallService(
+                                    domain = "alarm_control_panel",
+                                    service = "alarm_$suffix",
+                                    entityId = id,
+                                    serviceData = JsonObject(emptyMap()),
+                                ),
+                        )
+                    }
+                }
+                .orEmpty()
 
         RemoteHaAlarmPanel(
             HaAlarmPanelData(
-                title = title.rs,
-                state = LiveBindings.state(entity, formatState(state)),
+                entityId = entityId,
+                title = title,
+                state = formatState(state),
                 accent = stateAccent(state),
                 statusIcon = stateIcon(state),
                 actions = actions,
-                showKeypad = card.raw["show_keypad"]?.jsonPrimitive?.content?.toBooleanStrictOrNull() ?: true,
+                showKeypad =
+                    card.raw["show_keypad"]?.jsonPrimitive?.content?.toBooleanStrictOrNull() ?: true,
             ),
             modifier = modifier,
         )

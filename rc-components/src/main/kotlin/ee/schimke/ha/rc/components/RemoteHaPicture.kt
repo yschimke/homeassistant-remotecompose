@@ -56,7 +56,7 @@ fun RemoteHaPicture(data: HaPictureCardData, modifier: RemoteModifier = RemoteMo
     ) {
         RemoteIcon(
             imageVector = data.placeholderIcon,
-            contentDescription = data.name ?: "image".rs,
+            contentDescription = (data.name ?: "image").rs,
             modifier = RemoteModifier.size(48.rdp),
             tint = theme.placeholderAccent.rc,
         )
@@ -68,7 +68,7 @@ fun RemoteHaPicture(data: HaPictureCardData, modifier: RemoteModifier = RemoteMo
                     .padding(horizontal = 12.rdp, vertical = 6.rdp),
             ) {
                 RemoteText(
-                    text = data.name,
+                    text = data.name.rs,
                     color = theme.primaryText.rc,
                     fontSize = 13.rsp,
                     fontWeight = FontWeight.Medium,
@@ -87,7 +87,7 @@ fun RemoteHaPicture(data: HaPictureCardData, modifier: RemoteModifier = RemoteMo
                     .padding(horizontal = 6.rdp, vertical = 2.rdp),
             ) {
                 RemoteText(
-                    text = data.captionUrl,
+                    text = data.captionUrl.rs,
                     color = theme.secondaryText.rc,
                     fontSize = 9.rsp,
                     style = RemoteTextStyle.Default,
@@ -127,7 +127,7 @@ fun RemoteHaPictureGlance(
             ) {
                 RemoteIcon(
                     imageVector = data.placeholderIcon,
-                    contentDescription = data.title ?: "image".rs,
+                    contentDescription = (data.title ?: "image").rs,
                     modifier = RemoteModifier.size(40.rdp),
                     tint = theme.placeholderAccent.rc,
                 )
@@ -142,7 +142,7 @@ fun RemoteHaPictureGlance(
             ) {
                 if (data.title != null) {
                     RemoteText(
-                        text = data.title,
+                        text = data.title.rs,
                         color = theme.primaryText.rc,
                         fontSize = 13.rsp,
                         fontWeight = FontWeight.Medium,
@@ -167,16 +167,16 @@ private fun Cell(cell: HaPictureGlanceCell, theme: HaTheme) {
             .size(32.rdp)
             .clip(RemoteCircleShape)
             .background(
-                if (cell.isActive) accent.copy(alpha = accent.alpha * 0.18f.rf)
+                if (cell.initiallyActive) accent.copy(alpha = accent.alpha * 0.18f.rf)
                 else theme.divider.rc.copy(alpha = theme.divider.rc.alpha * 0.5f.rf),
             ),
         contentAlignment = RemoteAlignment.Center,
     ) {
         RemoteIcon(
             imageVector = cell.icon,
-            contentDescription = cell.label,
+            contentDescription = cell.label.rs,
             modifier = RemoteModifier.size(18.rdp),
-            tint = if (cell.isActive) accent else theme.secondaryText.rc,
+            tint = if (cell.initiallyActive) accent else theme.secondaryText.rc,
         )
     }
 }
@@ -267,7 +267,7 @@ private fun Element(
                     .size(28.rdp)
                     .clip(RemoteCircleShape)
                     .background(
-                        if (element.isActive) accent.copy(alpha = accent.alpha * 0.18f.rf)
+                        if (element.initiallyActive) accent.copy(alpha = accent.alpha * 0.18f.rf)
                         else theme.divider.rc.copy(alpha = theme.divider.rc.alpha * 0.5f.rf),
                     ),
                 contentAlignment = RemoteAlignment.Center,
@@ -276,13 +276,13 @@ private fun Element(
                     imageVector = element.icon,
                     contentDescription = "element".rs,
                     modifier = RemoteModifier.size(16.rdp),
-                    tint = if (element.isActive) accent else theme.secondaryText.rc,
+                    tint = if (element.initiallyActive) accent else theme.secondaryText.rc,
                 )
             }
         }
         is HaPictureElement.StateLabel -> {
             RemoteText(
-                text = element.text,
+                text = LiveValues.state(element.entityId, element.text),
                 color = theme.primaryText.rc,
                 fontSize = 12.rsp,
                 style = RemoteTextStyle.Default,
@@ -302,7 +302,7 @@ private fun Element(
                     .padding(horizontal = 10.rdp, vertical = 6.rdp),
             ) {
                 RemoteText(
-                    text = element.label,
+                    text = element.label.rs,
                     color = accent,
                     fontSize = 11.rsp,
                     fontWeight = FontWeight.Medium,

@@ -2,14 +2,13 @@ package ee.schimke.ha.rc.cards
 
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.state.rc
-import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.runtime.Composable
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.HaSnapshot
+import ee.schimke.ha.model.toTyped
 import ee.schimke.ha.rc.CardConverter
 import ee.schimke.ha.rc.HaStateColor
-import ee.schimke.ha.rc.LiveBindings
 import ee.schimke.ha.rc.components.HaPictureEntityData
 import ee.schimke.ha.rc.components.HaToggleAccent
 import ee.schimke.ha.rc.components.RemoteHaPictureEntity
@@ -45,16 +44,20 @@ class PictureEntityCardConverter : CardConverter {
         val tapAction = if (tapCfg != null) parseHaAction(tapCfg, entityId)
         else defaultTapActionFor(entityId)
 
+        val isActive = entity?.toTyped()?.isActive
         RemoteHaPictureEntity(
             HaPictureEntityData(
-                name = name.rs,
-                state = LiveBindings.state(entity, formatState(entity)),
+                entityId = entityId,
+                name = name,
+                state = formatState(entity),
                 icon = HaIconMap.resolve(card.raw["icon"]?.jsonPrimitive?.content, entity),
-                accent = HaToggleAccent(
-                    activeAccent = HaStateColor.activeFor(entity).rc,
-                    inactiveAccent = HaStateColor.inactiveFor(entity).rc,
-                    isOn = LiveBindings.isOn(entity),
-                ),
+                accent =
+                    HaToggleAccent(
+                        activeAccent = HaStateColor.activeFor(entity).rc,
+                        inactiveAccent = HaStateColor.inactiveFor(entity).rc,
+                        initiallyOn = isActive ?: false,
+                        toggleable = isActive != null,
+                    ),
                 showName = showName,
                 showState = showState,
                 tapAction = tapAction,

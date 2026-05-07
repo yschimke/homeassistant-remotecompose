@@ -8,7 +8,6 @@ import androidx.compose.material.icons.filled.Thermostat
 import androidx.compose.material.icons.filled.WaterDrop
 import androidx.compose.material.icons.filled.Window
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
-import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -16,7 +15,6 @@ import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.CardConverter
-import ee.schimke.ha.rc.LiveBindings
 import ee.schimke.ha.rc.components.HaAction
 import ee.schimke.ha.rc.components.HaAreaAction
 import ee.schimke.ha.rc.components.HaAreaCardData
@@ -54,47 +52,53 @@ class AreaCardConverter : CardConverter {
             }
         } ?: emptyList()
 
-        val stats = entityIds.mapNotNull { id ->
-            val entity = snapshot.states[id] ?: return@mapNotNull null
-            val deviceClass = entity.attributes["device_class"]?.jsonPrimitive?.content
-            val unit = entity.attributes["unit_of_measurement"]?.jsonPrimitive?.content
-            when (deviceClass) {
-                "temperature" -> HaAreaStat(
-                    Icons.Filled.Thermostat,
-                    LiveBindings.state(entity, "${entity.state}${unit ?: " °C"}"),
-                )
-                "humidity", "moisture" -> HaAreaStat(
-                    Icons.Filled.WaterDrop,
-                    LiveBindings.state(entity, "${entity.state}${unit ?: " %"}"),
-                )
-                else -> null
+        val stats =
+            entityIds.mapNotNull { id ->
+                val entity = snapshot.states[id] ?: return@mapNotNull null
+                val deviceClass = entity.attributes["device_class"]?.jsonPrimitive?.content
+                val unit = entity.attributes["unit_of_measurement"]?.jsonPrimitive?.content
+                when (deviceClass) {
+                    "temperature" ->
+                        HaAreaStat(
+                            entityId = id,
+                            icon = Icons.Filled.Thermostat,
+                            label = "${entity.state}${unit ?: " °C"}",
+                        )
+                    "humidity",
+                    "moisture" ->
+                        HaAreaStat(
+                            entityId = id,
+                            icon = Icons.Filled.WaterDrop,
+                            label = "${entity.state}${unit ?: " %"}",
+                        )
+                    else -> null
+                }
             }
-        }
 
-        val actions = entityIds.mapNotNull { id ->
-            val entity = snapshot.states[id] ?: return@mapNotNull null
-            val domain = id.substringBefore('.')
-            val (icon, accent) = when (domain) {
-                "light" -> Icons.Filled.Lightbulb to Color(0xFFFFBE3E)
-                "switch", "input_boolean" -> Icons.Filled.PowerSettingsNew to Color(0xFF2196F3)
-                "cover" -> Icons.Filled.Window to Color(0xFF00897B)
-                "fan" -> Icons.Filled.Air to Color(0xFF00BFA5)
-                else -> return@mapNotNull null
+        val actions =
+            entityIds.mapNotNull { id ->
+                val entity = snapshot.states[id] ?: return@mapNotNull null
+                val domain = id.substringBefore('.')
+                val (icon, accent) =
+                    when (domain) {
+                        "light" -> Icons.Filled.Lightbulb to Color(0xFFFFBE3E)
+                        "switch",
+                        "input_boolean" -> Icons.Filled.PowerSettingsNew to Color(0xFF2196F3)
+                        "cover" -> Icons.Filled.Window to Color(0xFF00897B)
+                        "fan" -> Icons.Filled.Air to Color(0xFF00BFA5)
+                        else -> return@mapNotNull null
+                    }
+                HaAreaAction(
+                    entityId = id,
+                    icon = icon as ImageVector,
+                    accent = accent,
+                    initiallyActive = entity.state == "on" || entity.state == "open",
+                    tapAction = HaAction.Toggle(id),
+                )
             }
-            HaAreaAction(
-                icon = icon as ImageVector,
-                accent = accent,
-                isActive = entity.state == "on" || entity.state == "open",
-                tapAction = HaAction.Toggle(id),
-            )
-        }
 
         RemoteHaArea(
-            HaAreaCardData(
-                name = name.rs,
-                stats = stats,
-                actions = actions,
-            ),
+            HaAreaCardData(name = name, stats = stats, actions = actions),
             modifier = modifier,
         )
     }

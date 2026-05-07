@@ -3,7 +3,6 @@ package ee.schimke.ha.rc.cards
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
-import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.runtime.Composable
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
@@ -49,7 +48,7 @@ class PictureElementsCardConverter : CardConverter {
         }
         RemoteHaPictureElements(
             HaPictureElementsData(
-                captionUrl = image?.rs,
+                captionUrl = image,
                 placeholderIcon = Icons.Filled.Image,
                 elements = elements,
             ),
@@ -64,21 +63,26 @@ private fun mapElement(obj: JsonObject, snapshot: HaSnapshot): HaPictureElement?
     val entity = entityId?.let { snapshot.states[it] }
     val position = parsePosition(obj)
     return when (type) {
-        "state-icon", "icon" -> HaPictureElement.StateIcon(
-            icon = HaIconMap.resolve(obj["icon"]?.jsonPrimitive?.content, entity),
-            accent = HaStateColor.activeFor(entity),
-            isActive = entity?.state == "on" || entity?.state == "open",
-            tapAction = parseTap(obj, entityId),
-            position = position,
-        )
-        "state-label" -> HaPictureElement.StateLabel(
-            text = formatState(entity).rs,
-            position = position,
-        )
+        "state-icon",
+        "icon" ->
+            HaPictureElement.StateIcon(
+                entityId = entityId,
+                icon = HaIconMap.resolve(obj["icon"]?.jsonPrimitive?.content, entity),
+                accent = HaStateColor.activeFor(entity),
+                initiallyActive = entity?.state == "on" || entity?.state == "open",
+                tapAction = parseTap(obj, entityId),
+                position = position,
+            )
+        "state-label" ->
+            HaPictureElement.StateLabel(
+                entityId = entityId,
+                text = formatState(entity),
+                position = position,
+            )
         "service-button" -> {
             val title = obj["title"]?.jsonPrimitive?.content ?: "Action"
             HaPictureElement.ServiceButton(
-                label = title.rs,
+                label = title,
                 accent = androidx.compose.ui.graphics.Color(0xFF1565C0),
                 tapAction = parseTap(obj, entityId),
                 position = position,

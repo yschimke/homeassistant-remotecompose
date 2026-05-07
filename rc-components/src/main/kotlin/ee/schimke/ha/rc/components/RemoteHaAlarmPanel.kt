@@ -57,7 +57,7 @@ fun RemoteHaAlarmPanel(data: HaAlarmPanelData, modifier: RemoteModifier = Remote
             ) {
                 RemoteColumn {
                     RemoteText(
-                        text = data.title,
+                        text = data.title.rs,
                         color = theme.primaryText.rc,
                         fontSize = 16.rsp,
                         fontWeight = FontWeight.Medium,
@@ -66,7 +66,7 @@ fun RemoteHaAlarmPanel(data: HaAlarmPanelData, modifier: RemoteModifier = Remote
                         overflow = TextOverflow.Ellipsis,
                     )
                     RemoteText(
-                        text = data.state,
+                        text = LiveValues.state(data.entityId, data.state),
                         color = data.accent.rc,
                         fontSize = 12.rsp,
                         style = RemoteTextStyle.Default,
@@ -82,7 +82,7 @@ fun RemoteHaAlarmPanel(data: HaAlarmPanelData, modifier: RemoteModifier = Remote
                 ) {
                     RemoteIcon(
                         imageVector = data.statusIcon,
-                        contentDescription = data.state,
+                        contentDescription = data.state.rs,
                         modifier = RemoteModifier.size(22.rdp),
                         tint = data.accent.rc,
                     )
@@ -120,7 +120,7 @@ private fun ActionPill(action: HaAlarmAction, theme: HaTheme) {
         contentAlignment = RemoteAlignment.Center,
     ) {
         RemoteText(
-            text = action.label,
+            text = action.label.rs,
             color = accent,
             fontSize = 12.rsp,
             fontWeight = FontWeight.Medium,

@@ -3,7 +3,6 @@ package ee.schimke.ha.rc.cards
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
-import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.runtime.Composable
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
@@ -29,8 +28,8 @@ class PictureCardConverter : CardConverter {
         val tap = parseHaAction(card.raw["tap_action"]?.jsonObject, defaultEntityId = null)
         RemoteHaPicture(
             HaPictureCardData(
-                name = name?.rs,
-                captionUrl = image?.rs,
+                name = name,
+                captionUrl = image,
                 placeholderIcon = Icons.Filled.Image,
                 tapAction = tap,
             ),

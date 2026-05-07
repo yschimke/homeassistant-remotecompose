@@ -1,7 +1,6 @@
 package ee.schimke.ha.rc.cards
 
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
-import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import ee.schimke.ha.model.CardConfig
@@ -53,8 +52,8 @@ class CalendarCardConverter : CardConverter {
                 val summary = obj["summary"]?.jsonPrimitive?.content ?: return@mapNotNull null
                 val start = obj["start"]?.jsonPrimitive?.content ?: ""
                 HaCalendarEvent(
-                    whenLabel = formatStart(start).rs,
-                    summary = summary.rs,
+                    whenLabel = formatStart(start),
+                    summary = summary,
                     accent = calendarColor(id),
                 )
             }
@@ -62,8 +61,8 @@ class CalendarCardConverter : CardConverter {
 
         RemoteHaCalendar(
             HaCalendarData(
-                title = title.rs,
-                rangeLabel = "Next ${initialDays} days".rs,
+                title = title,
+                rangeLabel = "Next ${initialDays} days",
                 events = events,
             ),
             modifier = modifier,

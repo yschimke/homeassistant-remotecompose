@@ -62,7 +62,7 @@ fun RemoteHaMediaControl(data: HaMediaControlData, modifier: RemoteModifier = Re
             // Body
             RemoteColumn(modifier = RemoteModifier.weight(1f).padding(end = 12.rdp)) {
                 RemoteText(
-                    text = data.playerName,
+                    text = data.playerName.rs,
                     color = data.accent.rc,
                     fontSize = 11.rsp,
                     fontWeight = FontWeight.Medium,
@@ -71,7 +71,7 @@ fun RemoteHaMediaControl(data: HaMediaControlData, modifier: RemoteModifier = Re
                     overflow = TextOverflow.Ellipsis,
                 )
                 RemoteText(
-                    text = data.title,
+                    text = LiveValues.attribute(data.entityId, "media_title", data.title),
                     color = theme.primaryText.rc,
                     fontSize = 16.rsp,
                     fontWeight = FontWeight.Medium,
@@ -81,7 +81,7 @@ fun RemoteHaMediaControl(data: HaMediaControlData, modifier: RemoteModifier = Re
                 )
                 if (data.artist != null) {
                     RemoteText(
-                        text = data.artist,
+                        text = LiveValues.attribute(data.entityId, "media_artist", data.artist),
                         color = theme.secondaryText.rc,
                         fontSize = 12.rsp,
                         style = RemoteTextStyle.Default,
@@ -110,13 +110,23 @@ fun RemoteHaMediaControl(data: HaMediaControlData, modifier: RemoteModifier = Re
                         horizontalArrangement = RemoteArrangement.SpaceBetween,
                     ) {
                         RemoteText(
-                            text = data.positionLabel,
+                            text =
+                                LiveValues.attribute(
+                                    data.entityId,
+                                    "media_position_label",
+                                    data.positionLabel,
+                                ),
                             color = theme.secondaryText.rc,
                             fontSize = 11.rsp,
                             style = RemoteTextStyle.Default,
                         )
                         RemoteText(
-                            text = data.durationLabel,
+                            text =
+                                LiveValues.attribute(
+                                    data.entityId,
+                                    "media_duration_label",
+                                    data.durationLabel,
+                                ),
                             color = theme.secondaryText.rc,
                             fontSize = 11.rsp,
                             style = RemoteTextStyle.Default,
@@ -134,7 +144,7 @@ fun RemoteHaMediaControl(data: HaMediaControlData, modifier: RemoteModifier = Re
             ) {
                 RemoteIcon(
                     imageVector = Icons.Filled.MusicNote,
-                    contentDescription = data.title,
+                    contentDescription = data.title.rs,
                     modifier = RemoteModifier.size(40.rdp),
                     tint = data.accent.rc,
                 )

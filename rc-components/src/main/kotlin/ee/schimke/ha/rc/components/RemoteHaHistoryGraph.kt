@@ -68,7 +68,7 @@ fun RemoteHaHistoryGraph(
         RemoteColumn(verticalArrangement = RemoteArrangement.spacedBy(6.rdp)) {
             if (data.title != null) {
                 RemoteText(
-                    text = data.title,
+                    text = data.title.rs,
                     color = theme.primaryText.rc,
                     fontSize = 15.rsp,
                     fontWeight = FontWeight.Medium,
@@ -78,7 +78,7 @@ fun RemoteHaHistoryGraph(
                 )
             }
             RemoteText(
-                text = data.rangeLabel,
+                text = data.rangeLabel.rs,
                 color = theme.secondaryText.rc,
                 fontSize = 11.rsp,
                 style = RemoteTextStyle.Default,
@@ -105,7 +105,7 @@ private fun Row(row: HaHistoryGraphRow, theme: HaTheme) {
         horizontalArrangement = RemoteArrangement.SpaceBetween,
     ) {
         RemoteText(
-            text = row.name,
+            text = row.name.rs,
             color = theme.primaryText.rc,
             fontSize = 12.rsp,
             fontWeight = FontWeight.Medium,
@@ -114,7 +114,7 @@ private fun Row(row: HaHistoryGraphRow, theme: HaTheme) {
             overflow = TextOverflow.Ellipsis,
         )
         RemoteText(
-            text = row.summary,
+            text = LiveValues.state(row.entityId, row.summary),
             color = theme.secondaryText.rc,
             fontSize = 11.rsp,
             style = RemoteTextStyle.Default,

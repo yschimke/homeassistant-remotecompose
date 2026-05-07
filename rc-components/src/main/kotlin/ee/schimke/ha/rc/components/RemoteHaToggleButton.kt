@@ -24,6 +24,7 @@ import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rf
 import androidx.compose.remote.creation.compose.state.rememberMutableRemoteBoolean
+import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.remote.creation.compose.state.rsp
 import androidx.compose.remote.creation.compose.text.RemoteTextStyle
 import androidx.compose.runtime.Composable
@@ -96,7 +97,7 @@ fun RemoteHaToggleButton(data: HaButtonData, modifier: RemoteModifier = RemoteMo
             ) {
                 RemoteIcon(
                     imageVector = data.icon,
-                    contentDescription = data.name,
+                    contentDescription = data.name.rs,
                     modifier = RemoteModifier.size(28.rdp),
                     tint = accent,
                 )
@@ -104,7 +105,7 @@ fun RemoteHaToggleButton(data: HaButtonData, modifier: RemoteModifier = RemoteMo
             if (data.showName) {
                 RemoteBox(modifier = RemoteModifier.padding(top = 6.rdp)) {
                     RemoteText(
-                        text = data.name,
+                        text = data.name.rs,
                         color = theme.primaryText.rc,
                         fontSize = 13.rsp,
                         fontWeight = FontWeight.Medium,

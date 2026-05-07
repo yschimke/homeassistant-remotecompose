@@ -58,7 +58,7 @@ fun RemoteHaUnsupported(data: HaUnsupportedData, modifier: RemoteModifier = Remo
                 )
             }
             RemoteText(
-                text = data.cardType,
+                text = data.cardType.rs,
                 color = theme.secondaryText.rc,
                 fontSize = 12.rsp,
                 style = RemoteTextStyle.Default,

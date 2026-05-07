@@ -51,7 +51,7 @@ fun RemoteHaTodoList(data: HaTodoListData, modifier: RemoteModifier = RemoteModi
     ) {
         RemoteColumn(verticalArrangement = RemoteArrangement.spacedBy(8.rdp)) {
             RemoteText(
-                text = data.title,
+                text = data.title.rs,
                 color = theme.primaryText.rc,
                 fontSize = 16.rsp,
                 fontWeight = FontWeight.Medium,
@@ -106,13 +106,13 @@ private fun Row(item: HaTodoItem, completed: Boolean, theme: HaTheme) {
         RemoteIcon(
             imageVector = if (completed) Icons.Filled.CheckBox
             else Icons.Outlined.CheckBoxOutlineBlank,
-            contentDescription = item.summary,
+            contentDescription = item.summary.rs,
             modifier = RemoteModifier.size(18.rdp),
             tint = if (completed) theme.placeholderAccent.rc else theme.secondaryText.rc,
         )
         RemoteBox(modifier = RemoteModifier.padding(start = 10.rdp)) {
             RemoteText(
-                text = item.summary,
+                text = item.summary.rs,
                 color = if (completed) theme.secondaryText.rc else theme.primaryText.rc,
                 fontSize = 13.rsp,
                 style = RemoteTextStyle.Default,

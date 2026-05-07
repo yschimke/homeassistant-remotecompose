@@ -1,7 +1,6 @@
 package ee.schimke.ha.rc.cards
 
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
-import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.runtime.Composable
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
@@ -22,6 +21,6 @@ class UnsupportedCardConverter(
 
     @Composable
     override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
-        RemoteHaUnsupported(HaUnsupportedData(cardType = card.type.rs), modifier = modifier)
+        RemoteHaUnsupported(HaUnsupportedData(cardType = card.type), modifier = modifier)
     }
 }

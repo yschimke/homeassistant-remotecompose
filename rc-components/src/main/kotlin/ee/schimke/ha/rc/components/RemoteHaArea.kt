@@ -50,7 +50,7 @@ fun RemoteHaArea(data: HaAreaCardData, modifier: RemoteModifier = RemoteModifier
     ) {
         RemoteColumn(verticalArrangement = RemoteArrangement.spacedBy(8.rdp)) {
             RemoteText(
-                text = data.name,
+                text = data.name.rs,
                 color = theme.primaryText.rc,
                 fontSize = 16.rsp,
                 fontWeight = FontWeight.Medium,
@@ -84,13 +84,13 @@ private fun Stat(stat: HaAreaStat, theme: HaTheme) {
     RemoteRow(verticalAlignment = RemoteAlignment.CenterVertically) {
         RemoteIcon(
             imageVector = stat.icon,
-            contentDescription = stat.label,
+            contentDescription = stat.label.rs,
             modifier = RemoteModifier.size(16.rdp),
             tint = theme.secondaryText.rc,
         )
         RemoteBox(modifier = RemoteModifier.padding(start = 6.rdp)) {
             RemoteText(
-                text = stat.label,
+                text = LiveValues.state(stat.entityId, stat.label),
                 color = theme.secondaryText.rc,
                 fontSize = 12.rsp,
                 style = RemoteTextStyle.Default,
@@ -105,7 +105,7 @@ private fun ActionChip(action: HaAreaAction, theme: HaTheme) {
     val click = action.tapAction.toRemoteAction()
         ?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
     val accent = action.accent.rc
-    val bg = if (action.isActive) accent.copy(alpha = accent.alpha * 0.18f.rf)
+    val bg = if (action.initiallyActive) accent.copy(alpha = accent.alpha * 0.18f.rf)
     else theme.divider.rc.copy(alpha = theme.divider.rc.alpha * 0.4f.rf)
     RemoteBox(
         modifier = RemoteModifier.then(click)
@@ -118,7 +118,7 @@ private fun ActionChip(action: HaAreaAction, theme: HaTheme) {
             imageVector = action.icon,
             contentDescription = "action".rs,
             modifier = RemoteModifier.size(20.rdp),
-            tint = if (action.isActive) accent else theme.secondaryText.rc,
+            tint = if (action.initiallyActive) accent else theme.secondaryText.rc,
         )
     }
 }

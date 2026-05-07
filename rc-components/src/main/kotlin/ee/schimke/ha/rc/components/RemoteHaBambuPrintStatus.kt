@@ -26,6 +26,7 @@ import androidx.compose.remote.creation.compose.state.asRemotePaint
 import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rf
+import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.remote.creation.compose.state.rsp
 import androidx.compose.remote.creation.compose.text.RemoteTextStyle
 import androidx.compose.runtime.Composable
@@ -69,7 +70,7 @@ fun RemoteHaBambuPrintStatus(
     ) {
         RemoteColumn(verticalArrangement = RemoteArrangement.spacedBy(8.rdp)) {
             RemoteText(
-                text = data.printerName,
+                text = data.printerName.rs,
                 color = theme.secondaryText.rc,
                 fontSize = 11.rsp,
                 style = RemoteTextStyle.Default,
@@ -86,7 +87,12 @@ fun RemoteHaBambuPrintStatus(
                     verticalArrangement = RemoteArrangement.spacedBy(2.rdp),
                 ) {
                     RemoteText(
-                        text = data.progressLabel,
+                        text =
+                            LiveValues.attribute(
+                                data.entityId,
+                                "print_progress_label",
+                                data.progressLabel,
+                            ),
                         color = theme.primaryText.rc,
                         fontSize = 22.rsp,
                         fontWeight = FontWeight.SemiBold,
@@ -94,7 +100,7 @@ fun RemoteHaBambuPrintStatus(
                         maxLines = 1,
                     )
                     RemoteText(
-                        text = data.stage,
+                        text = LiveValues.attribute(data.entityId, "current_stage", data.stage),
                         color = theme.secondaryText.rc,
                         fontSize = 13.rsp,
                         style = RemoteTextStyle.Default,
@@ -105,7 +111,7 @@ fun RemoteHaBambuPrintStatus(
             }
             data.layerLine?.let {
                 RemoteText(
-                    text = it,
+                    text = LiveValues.attribute(data.entityId, "layer_line", it),
                     color = theme.secondaryText.rc,
                     fontSize = 12.rsp,
                     style = RemoteTextStyle.Default,
@@ -114,7 +120,7 @@ fun RemoteHaBambuPrintStatus(
             }
             data.remainingLine?.let {
                 RemoteText(
-                    text = it,
+                    text = LiveValues.attribute(data.entityId, "remaining_line", it),
                     color = theme.secondaryText.rc,
                     fontSize = 12.rsp,
                     style = RemoteTextStyle.Default,
@@ -128,7 +134,7 @@ fun RemoteHaBambuPrintStatus(
                 ) {
                     data.nozzleLine?.let {
                         RemoteText(
-                            text = it,
+                            text = LiveValues.attribute(data.entityId, "nozzle_line", it),
                             color = theme.secondaryText.rc,
                             fontSize = 12.rsp,
                             style = RemoteTextStyle.Default,
@@ -137,7 +143,7 @@ fun RemoteHaBambuPrintStatus(
                     }
                     data.bedLine?.let {
                         RemoteText(
-                            text = it,
+                            text = LiveValues.attribute(data.entityId, "bed_line", it),
                             color = theme.secondaryText.rc,
                             fontSize = 12.rsp,
                             style = RemoteTextStyle.Default,

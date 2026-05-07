@@ -1,7 +1,6 @@
 package ee.schimke.ha.rc.cards
 
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
-import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.runtime.Composable
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
@@ -79,9 +78,9 @@ class ClockCardConverter : CardConverter {
 
         RemoteHaClock(
             HaClockData(
-                title = title?.rs,
-                staticTimeLabel = staticLabel?.rs,
-                secondaryLabel = secondaryLabel?.rs,
+                title = title,
+                staticTimeLabel = staticLabel,
+                secondaryLabel = secondaryLabel,
                 isLarge = isLarge,
                 use24Hour = use24Hour,
                 zoneOffsetMinutes = zoneOffsetMinutes,

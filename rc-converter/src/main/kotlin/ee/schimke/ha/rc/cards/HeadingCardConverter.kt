@@ -1,7 +1,6 @@
 package ee.schimke.ha.rc.cards
 
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
-import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.runtime.Composable
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
@@ -26,6 +25,6 @@ class HeadingCardConverter : CardConverter {
             "subtitle" -> HaHeadingStyle.Subtitle
             else -> HaHeadingStyle.Title
         }
-        RemoteHaHeading(HaHeadingData(title = heading.rs, style = style), modifier = modifier)
+        RemoteHaHeading(HaHeadingData(title = heading, style = style), modifier = modifier)
     }
 }

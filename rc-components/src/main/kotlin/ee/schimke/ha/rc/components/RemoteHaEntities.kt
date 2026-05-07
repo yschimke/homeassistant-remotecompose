@@ -16,6 +16,7 @@ import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.shapes.RemoteRoundedCornerShape
 import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
+import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.remote.creation.compose.state.rsp
 import androidx.compose.remote.creation.compose.text.RemoteTextStyle
 import androidx.compose.runtime.Composable
@@ -40,7 +41,7 @@ fun RemoteHaEntities(data: HaEntitiesData, modifier: RemoteModifier = RemoteModi
         RemoteColumn(horizontalAlignment = RemoteAlignment.Start) {
             if (data.title != null) {
                 RemoteText(
-                    text = data.title,
+                    text = data.title.rs,
                     color = theme.primaryText.rc,
                     fontSize = 15.rsp,
                     fontWeight = FontWeight.Medium,

@@ -2,7 +2,6 @@ package ee.schimke.ha.rc.cards
 
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.state.rc
-import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.runtime.Composable
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
@@ -11,7 +10,6 @@ import ee.schimke.ha.model.toTyped
 import ee.schimke.ha.rc.CardConverter
 import ee.schimke.ha.rc.CardWidthClass
 import ee.schimke.ha.rc.HaStateColor
-import ee.schimke.ha.rc.LiveBindings
 import ee.schimke.ha.rc.components.HaButtonData
 import ee.schimke.ha.rc.components.HaToggleAccent
 import ee.schimke.ha.rc.components.RemoteHaButton
@@ -49,21 +47,24 @@ class ButtonCardConverter : CardConverter {
         val tapAction = if (tapCfg != null) parseHaAction(tapCfg, entityId)
         else defaultTapActionFor(entityId)
 
-        val isOn = LiveBindings.isOn(entity)
-        val initiallyOn = entity?.toTyped()?.isActive == true
-        val data = HaButtonData(
-            name = name.rs,
-            icon = HaIconMap.resolve(card.raw["icon"]?.jsonPrimitive?.content, entity),
-            accent = HaToggleAccent(
-                activeAccent = HaStateColor.activeFor(entity).rc,
-                inactiveAccent = HaStateColor.inactiveFor(entity).rc,
-                isOn = isOn,
-                initiallyOn = initiallyOn,
-            ),
-            showName = showName,
-            tapAction = tapAction,
-        )
+        val isActive = entity?.toTyped()?.isActive
+        val toggleable = isActive != null
+        val data =
+            HaButtonData(
+                entityId = entityId,
+                name = name,
+                icon = HaIconMap.resolve(card.raw["icon"]?.jsonPrimitive?.content, entity),
+                accent =
+                    HaToggleAccent(
+                        activeAccent = HaStateColor.activeFor(entity).rc,
+                        inactiveAccent = HaStateColor.inactiveFor(entity).rc,
+                        initiallyOn = isActive ?: false,
+                        toggleable = toggleable,
+                    ),
+                showName = showName,
+                tapAction = tapAction,
+            )
 
-        if (isOn != null) RemoteHaToggleButton(data, modifier) else RemoteHaButton(data, modifier)
+        if (toggleable) RemoteHaToggleButton(data, modifier) else RemoteHaButton(data, modifier)
     }
 }

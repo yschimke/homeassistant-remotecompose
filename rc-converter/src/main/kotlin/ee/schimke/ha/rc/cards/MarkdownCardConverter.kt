@@ -1,7 +1,6 @@
 package ee.schimke.ha.rc.cards
 
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
-import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.runtime.Composable
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
@@ -27,7 +26,7 @@ class MarkdownCardConverter : CardConverter {
     override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
         val title = card.raw["title"]?.jsonPrimitive?.content
         val content = card.raw["content"]?.jsonPrimitive?.content ?: ""
-        val lines = content.split('\n').filter { it.isNotBlank() }.map { it.rs }
-        RemoteHaMarkdown(HaMarkdownData(title = title?.rs, lines = lines), modifier = modifier)
+        val lines = content.split('\n').filter { it.isNotBlank() }
+        RemoteHaMarkdown(HaMarkdownData(title = title, lines = lines), modifier = modifier)
     }
 }

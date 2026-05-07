@@ -1,5 +1,6 @@
 package ee.schimke.ha.rc
 
+import android.util.Log
 import androidx.collection.LruCache
 import androidx.compose.runtime.staticCompositionLocalOf
 
@@ -29,9 +30,33 @@ interface CardDocumentCache {
     fun clear()
 }
 
-/** Default in-memory bounded LRU. */
-class InMemoryCardDocumentCache(maxEntries: Int = 64) : CardDocumentCache {
-    private val cache = LruCache<Any, CardDocument>(maxEntries)
+/**
+ * Default in-memory bounded LRU. The size is meant to comfortably hold
+ * a multi-view dashboard's worth of cards times the (style, dark)
+ * theme variants the user might toggle through; if eviction starts
+ * firing, that's a signal to either raise [maxEntries] or shrink the
+ * cache key (e.g. drop a dimension that doesn't actually affect the
+ * encoded bytes). The eviction warning is emitted at WARN once per
+ * eviction so the signal isn't drowned in steady-state noise.
+ */
+class InMemoryCardDocumentCache(maxEntries: Int = DEFAULT_MAX_ENTRIES) : CardDocumentCache {
+    private val cache =
+        object : LruCache<Any, CardDocument>(maxEntries) {
+            override fun entryRemoved(
+                evicted: Boolean,
+                key: Any,
+                oldValue: CardDocument,
+                newValue: CardDocument?,
+            ) {
+                if (evicted) {
+                    Log.w(
+                        TAG,
+                        "CardDocumentCache evicted entry; capacity=$maxEntries. " +
+                            "Either raise maxEntries or tighten the cache key.",
+                    )
+                }
+            }
+        }
 
     override fun get(key: Any): CardDocument? = cache.get(key)
 
@@ -41,6 +66,11 @@ class InMemoryCardDocumentCache(maxEntries: Int = 64) : CardDocumentCache {
 
     override fun clear() {
         cache.evictAll()
+    }
+
+    private companion object {
+        const val TAG = "CardDocumentCache"
+        const val DEFAULT_MAX_ENTRIES = 256
     }
 }
 

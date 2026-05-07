@@ -20,6 +20,7 @@ import androidx.compose.remote.creation.compose.state.RemoteColor
 import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rf
+import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.remote.creation.compose.state.rsp
 import androidx.compose.remote.creation.compose.text.RemoteTextStyle
 import androidx.compose.runtime.Composable
@@ -36,8 +37,11 @@ import androidx.wear.compose.remote.material3.RemoteIcon
 fun RemoteHaButton(data: HaButtonData, modifier: RemoteModifier = RemoteModifier) {
     val theme = haTheme()
     val clickable = data.tapAction.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
-    val accent: RemoteColor = data.accent.isOn?.select(data.accent.activeAccent, data.accent.inactiveAccent)
-        ?: data.accent.activeAccent
+    val isOnBinding =
+        if (data.accent.toggleable) LiveValues.isOn(data.entityId, data.accent.initiallyOn) else null
+    val accent: RemoteColor =
+        isOnBinding?.select(data.accent.activeAccent, data.accent.inactiveAccent)
+            ?: data.accent.activeAccent
     // Not using `fillMaxWidth()`: buttons placed in a grid or
     // horizontal-stack should wrap-content so the flow layout can
     // pack multiple across the row. Standalone callers wanting a
@@ -61,7 +65,7 @@ fun RemoteHaButton(data: HaButtonData, modifier: RemoteModifier = RemoteModifier
             ) {
                 RemoteIcon(
                     imageVector = data.icon,
-                    contentDescription = data.name,
+                    contentDescription = data.name.rs,
                     modifier = RemoteModifier.size(28.rdp),
                     tint = accent,
                 )
@@ -69,7 +73,7 @@ fun RemoteHaButton(data: HaButtonData, modifier: RemoteModifier = RemoteModifier
             if (data.showName) {
                 RemoteBox(modifier = RemoteModifier.padding(top = 6.rdp)) {
                     RemoteText(
-                        text = data.name,
+                        text = data.name.rs,
                         color = theme.primaryText.rc,
                         fontSize = 13.rsp,
                         fontWeight = FontWeight.Medium,

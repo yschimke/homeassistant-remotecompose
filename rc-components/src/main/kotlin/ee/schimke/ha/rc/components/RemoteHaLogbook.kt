@@ -54,7 +54,7 @@ fun RemoteHaLogbook(data: HaLogbookData, modifier: RemoteModifier = RemoteModifi
         RemoteColumn(verticalArrangement = RemoteArrangement.spacedBy(8.rdp)) {
             if (data.title != null) {
                 RemoteText(
-                    text = data.title,
+                    text = data.title.rs,
                     color = theme.primaryText.rc,
                     fontSize = 15.rsp,
                     fontWeight = FontWeight.Medium,
@@ -85,7 +85,7 @@ private fun Entry(entry: HaLogbookEntry, theme: HaTheme) {
     ) {
         RemoteIcon(
             imageVector = entry.icon,
-            contentDescription = entry.name,
+            contentDescription = entry.name.rs,
             modifier = RemoteModifier.size(16.rdp),
             tint = theme.secondaryText.rc,
         )
@@ -93,7 +93,7 @@ private fun Entry(entry: HaLogbookEntry, theme: HaTheme) {
             modifier = RemoteModifier.weight(1f).padding(start = 10.rdp),
         ) {
             RemoteText(
-                text = entry.name,
+                text = entry.name.rs,
                 color = theme.primaryText.rc,
                 fontSize = 13.rsp,
                 fontWeight = FontWeight.Medium,
@@ -102,7 +102,7 @@ private fun Entry(entry: HaLogbookEntry, theme: HaTheme) {
                 overflow = TextOverflow.Ellipsis,
             )
             RemoteText(
-                text = entry.message,
+                text = entry.message.rs,
                 color = theme.secondaryText.rc,
                 fontSize = 12.rsp,
                 style = RemoteTextStyle.Default,
@@ -111,7 +111,7 @@ private fun Entry(entry: HaLogbookEntry, theme: HaTheme) {
             )
         }
         RemoteText(
-            text = entry.whenText,
+            text = entry.whenText.rs,
             color = theme.secondaryText.rc,
             fontSize = 11.rsp,
             style = RemoteTextStyle.Default,

@@ -4,7 +4,6 @@ package ee.schimke.ha.rc.components
 
 import androidx.compose.remote.creation.compose.layout.RemoteComposable
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
-import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.runtime.Composable
 
 /**
@@ -21,15 +20,17 @@ fun RemoteHaSensorCard(
     RemoteHaHistoryGraph(
         HaHistoryGraphData(
             title = null,
-            rangeLabel = data.rangeLabel ?: "".rs,
-            rows = listOf(
-                HaHistoryGraphRow(
-                    name = data.name,
-                    summary = data.valueLabel,
-                    accent = data.accent,
-                    points = data.points,
+            rangeLabel = data.rangeLabel ?: "",
+            rows =
+                listOf(
+                    HaHistoryGraphRow(
+                        entityId = data.entityId,
+                        name = data.name,
+                        summary = data.valueLabel,
+                        accent = data.accent,
+                        points = data.points,
+                    )
                 ),
-            ),
         ),
         modifier = modifier,
     )

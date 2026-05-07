@@ -1,13 +1,11 @@
 package ee.schimke.ha.rc.cards
 
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
-import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.runtime.Composable
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.CardConverter
-import ee.schimke.ha.rc.LiveBindings
 import ee.schimke.ha.rc.components.HaGaugeData
 import ee.schimke.ha.rc.components.HaGaugeSeverity
 import ee.schimke.ha.rc.components.RemoteHaGauge
@@ -49,8 +47,9 @@ class GaugeCardConverter : CardConverter {
 
         RemoteHaGauge(
             HaGaugeData(
-                name = name.rs,
-                valueText = LiveBindings.state(entity, formatState(entity)),
+                entityId = entityId,
+                name = name,
+                valueText = formatState(entity),
                 unit = unit,
                 value = value,
                 min = min,
