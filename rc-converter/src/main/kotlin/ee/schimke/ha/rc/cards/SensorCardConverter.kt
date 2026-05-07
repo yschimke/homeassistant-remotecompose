@@ -8,6 +8,7 @@ import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.CardConverter
 import ee.schimke.ha.rc.HaStateColor
+import ee.schimke.ha.rc.LiveBindings
 import ee.schimke.ha.rc.components.HaSensorCardData
 import ee.schimke.ha.rc.components.RemoteHaSensorCard
 import ee.schimke.ha.rc.formatState
@@ -38,7 +39,7 @@ class SensorCardConverter : CardConverter {
         RemoteHaSensorCard(
             HaSensorCardData(
                 name = name.rs,
-                valueLabel = formatState(entity).rs,
+                valueLabel = LiveBindings.state(entity, formatState(entity)),
                 accent = HaStateColor.activeFor(entity),
                 points = numeric,
                 rangeLabel = "Last ${hours}h".rs,

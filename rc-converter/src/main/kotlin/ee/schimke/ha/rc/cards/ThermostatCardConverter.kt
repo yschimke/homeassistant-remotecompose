@@ -9,8 +9,10 @@ import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.CardConverter
+import ee.schimke.ha.rc.LiveBindings
 import ee.schimke.ha.rc.components.HaAction
 import ee.schimke.ha.rc.components.HaArcDialData
+import ee.schimke.ha.rc.components.HaModeChip
 import ee.schimke.ha.rc.components.RemoteHaArcDial
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -67,14 +69,20 @@ class ThermostatCardConverter : CardConverter {
 
         val (incAction, decAction) = stepperActions(entity, target, step) ?: (HaAction.None to HaAction.None)
 
+        val liveCenterLabel = LiveBindings.attribute(entity, "current_temperature_label", centerLabel)
+        val liveSupportingLabel = supportingLabel?.let {
+            LiveBindings.attribute(entity, "temperature_label", it)
+        }
+        val liveModeChip = HaModeChip.Static(LiveBindings.attribute(entity, "hvac_action_label", modeChip))
+
         RemoteHaArcDial(
             HaArcDialData(
                 name = name.rs,
                 valueFraction = valueFraction.coerceIn(0f, 1f),
                 targetFraction = targetFraction?.coerceIn(0f, 1f),
-                centerLabel = centerLabel.rs,
-                supportingLabel = supportingLabel?.rs,
-                modeChip = modeChip.rs,
+                centerLabel = liveCenterLabel,
+                supportingLabel = liveSupportingLabel,
+                modeChip = liveModeChip,
                 accent = accent,
                 showSteppers = target != null,
                 centerIcon = null,

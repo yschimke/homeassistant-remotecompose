@@ -298,7 +298,7 @@ data class HaArcDialData(
     val centerLabel: RemoteString,
     /** Smaller secondary readout under the centre label (e.g. "↑ 22 °C"). */
     val supportingLabel: RemoteString?,
-    val modeChip: RemoteString?,
+    val modeChip: HaModeChip?,
     val accent: Color,
     val showSteppers: Boolean,
     val centerIcon: ImageVector?,
@@ -306,6 +306,33 @@ data class HaArcDialData(
     val incrementAction: HaAction = HaAction.None,
     val decrementAction: HaAction = HaAction.None,
 )
+
+/**
+ * The small mode chip rendered above the centre label of an arc dial /
+ * tile. Modelled as a sum so the component can route discrete states
+ * through `RemoteStateLayout` (no re-encode when the mode flips) while
+ * still accepting plain named-string bindings for free-form values.
+ */
+sealed interface HaModeChip {
+    /**
+     * A pre-formatted [RemoteString], typically built from a named
+     * binding (`LiveBindings.state` / `.attribute`). The player can
+     * still update the text live; what it cannot do is switch between
+     * structurally different variants.
+     */
+    data class Static(val label: RemoteString) : HaModeChip
+
+    /**
+     * Two label variants picked at playback time by [isOn]. Routed
+     * through `RemoteStateLayout(RemoteBoolean)` so a host flipping the
+     * boolean toggles the visible label without touching the document.
+     */
+    data class Toggle(
+        val isOn: RemoteBoolean,
+        val onLabel: String,
+        val offLabel: String,
+    ) : HaModeChip
+}
 
 /** `clock` card model. The default render uses
  *  `RemoteTimeDefaults.defaultTimeString` so the time text auto-ticks

@@ -15,6 +15,7 @@ import androidx.compose.remote.creation.compose.layout.RemoteComposable
 import androidx.compose.remote.creation.compose.layout.RemoteOffset
 import androidx.compose.remote.creation.compose.layout.RemoteRow
 import androidx.compose.remote.creation.compose.layout.RemoteSize
+import androidx.compose.remote.creation.compose.layout.RemoteStateLayout
 import androidx.compose.remote.creation.compose.layout.RemoteText
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.background
@@ -26,6 +27,7 @@ import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.modifier.size
 import androidx.compose.remote.creation.compose.shapes.RemoteCircleShape
 import androidx.compose.remote.creation.compose.shapes.RemoteRoundedCornerShape
+import androidx.compose.remote.creation.compose.state.RemoteString
 import androidx.compose.remote.creation.compose.state.asRemotePaint
 import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
@@ -117,16 +119,7 @@ private fun DialBody(data: HaArcDialData, theme: HaTheme) {
                     tint = data.accent.rc,
                 )
             }
-            if (data.modeChip != null) {
-                RemoteText(
-                    text = data.modeChip,
-                    color = data.accent.rc,
-                    fontSize = 12.rsp,
-                    fontWeight = FontWeight.Medium,
-                    style = RemoteTextStyle.Default,
-                    maxLines = 1,
-                )
-            }
+            ModeChip(data.modeChip, data.accent)
             RemoteText(
                 text = data.centerLabel,
                 color = theme.primaryText.rc,
@@ -147,6 +140,31 @@ private fun DialBody(data: HaArcDialData, theme: HaTheme) {
             }
         }
     }
+}
+
+@Composable
+@RemoteComposable
+private fun ModeChip(chip: HaModeChip?, accent: Color) {
+    if (chip == null) return
+    when (chip) {
+        is HaModeChip.Static -> ChipText(chip.label, accent)
+        is HaModeChip.Toggle -> RemoteStateLayout(chip.isOn) { on ->
+            ChipText((if (on) chip.onLabel else chip.offLabel).rs, accent)
+        }
+    }
+}
+
+@Composable
+@RemoteComposable
+private fun ChipText(text: RemoteString, accent: Color) {
+    RemoteText(
+        text = text,
+        color = accent.rc,
+        fontSize = 12.rsp,
+        fontWeight = FontWeight.Medium,
+        style = RemoteTextStyle.Default,
+        maxLines = 1,
+    )
 }
 
 @Composable

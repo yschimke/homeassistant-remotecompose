@@ -16,6 +16,7 @@ import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.CardConverter
+import ee.schimke.ha.rc.LiveBindings
 import ee.schimke.ha.rc.components.HaAction
 import ee.schimke.ha.rc.components.HaAreaAction
 import ee.schimke.ha.rc.components.HaAreaCardData
@@ -58,10 +59,14 @@ class AreaCardConverter : CardConverter {
             val deviceClass = entity.attributes["device_class"]?.jsonPrimitive?.content
             val unit = entity.attributes["unit_of_measurement"]?.jsonPrimitive?.content
             when (deviceClass) {
-                "temperature" -> HaAreaStat(Icons.Filled.Thermostat,
-                    "${entity.state}${unit ?: " °C"}".rs)
-                "humidity", "moisture" -> HaAreaStat(Icons.Filled.WaterDrop,
-                    "${entity.state}${unit ?: " %"}".rs)
+                "temperature" -> HaAreaStat(
+                    Icons.Filled.Thermostat,
+                    LiveBindings.state(entity, "${entity.state}${unit ?: " °C"}"),
+                )
+                "humidity", "moisture" -> HaAreaStat(
+                    Icons.Filled.WaterDrop,
+                    LiveBindings.state(entity, "${entity.state}${unit ?: " %"}"),
+                )
                 else -> null
             }
         }

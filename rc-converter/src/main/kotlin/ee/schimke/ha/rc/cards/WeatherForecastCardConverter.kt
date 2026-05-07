@@ -17,6 +17,7 @@ import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.CardConverter
+import ee.schimke.ha.rc.LiveBindings
 import ee.schimke.ha.rc.components.HaWeatherDay
 import ee.schimke.ha.rc.components.HaWeatherForecastData
 import ee.schimke.ha.rc.components.RemoteHaWeatherForecast
@@ -73,8 +74,8 @@ class WeatherForecastCardConverter : CardConverter {
         RemoteHaWeatherForecast(
             HaWeatherForecastData(
                 name = name.rs,
-                condition = formatCondition(condition).rs,
-                temperature = temperature.rs,
+                condition = LiveBindings.state(entity, formatCondition(condition)),
+                temperature = LiveBindings.attribute(entity, "temperature_label", temperature),
                 supportingLine = null,
                 icon = weatherIcon(condition),
                 days = days,

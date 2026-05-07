@@ -8,6 +8,7 @@ import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.CardConverter
+import ee.schimke.ha.rc.LiveBindings
 import ee.schimke.ha.rc.components.HaAction
 import ee.schimke.ha.rc.components.HaMediaControlData
 import ee.schimke.ha.rc.components.RemoteHaMediaControl
@@ -52,8 +53,8 @@ class MediaControlCardConverter : CardConverter {
         RemoteHaMediaControl(
             HaMediaControlData(
                 playerName = playerName.rs,
-                title = title.rs,
-                artist = artist?.rs,
+                title = LiveBindings.attribute(entity, "media_title", title),
+                artist = artist?.let { LiveBindings.attribute(entity, "media_artist", it) },
                 accent = accent,
                 isPlaying = isPlaying,
                 positionFraction = fraction,

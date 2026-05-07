@@ -8,6 +8,7 @@ import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.CardConverter
 import ee.schimke.ha.rc.HaStateColor
+import ee.schimke.ha.rc.LiveBindings
 import ee.schimke.ha.rc.components.HaStatisticCardData
 import ee.schimke.ha.rc.components.RemoteHaStatisticCard
 import kotlinx.serialization.json.jsonPrimitive
@@ -63,7 +64,7 @@ class StatisticCardConverter : CardConverter {
         RemoteHaStatisticCard(
             HaStatisticCardData(
                 name = name.rs,
-                valueLabel = valueLabel.rs,
+                valueLabel = LiveBindings.state(entity, valueLabel),
                 unit = unit?.rs,
                 periodLabel = period?.rs,
                 accent = HaStateColor.activeFor(entity),
