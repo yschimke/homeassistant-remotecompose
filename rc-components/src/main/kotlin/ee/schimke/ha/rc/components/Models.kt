@@ -413,30 +413,45 @@ data class HaPictureGlanceCell(
 )
 
 /** `picture-elements` card model — image with arbitrarily-positioned
- *  elements. We don't render the precise positions yet; v1 emits the
- *  elements as a strip below the image so all data shows. */
+ *  elements. Positioned children are overlaid on the placeholder at
+ *  their `(top, left)` fractions; elements without position metadata
+ *  fall back to a strip across the bottom of the canvas. */
 data class HaPictureElementsData(
     val captionUrl: RemoteString?,
     val placeholderIcon: ImageVector,
     val elements: List<HaPictureElement>,
 )
 
+/** Optional fractional placement of a [HaPictureElement] on the
+ *  picture-elements canvas. Both axes are 0f..1f (HA's `style.top` /
+ *  `style.left` percentages parsed into fractions). When null the
+ *  element falls back to the strip-below layout. */
+data class HaPictureElementPosition(
+    val leftFraction: Float,
+    val topFraction: Float,
+)
+
 sealed interface HaPictureElement {
+    val position: HaPictureElementPosition?
+
     data class StateIcon(
         val icon: ImageVector,
         val accent: Color,
         val isActive: Boolean,
         val tapAction: HaAction,
+        override val position: HaPictureElementPosition? = null,
     ) : HaPictureElement
 
     data class StateLabel(
         val text: RemoteString,
+        override val position: HaPictureElementPosition? = null,
     ) : HaPictureElement
 
     data class ServiceButton(
         val label: RemoteString,
         val accent: Color,
         val tapAction: HaAction,
+        override val position: HaPictureElementPosition? = null,
     ) : HaPictureElement
 }
 

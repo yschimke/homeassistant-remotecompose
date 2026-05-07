@@ -12,6 +12,7 @@ import ee.schimke.ha.rc.CardConverter
 import ee.schimke.ha.rc.HaStateColor
 import ee.schimke.ha.rc.components.HaAction
 import ee.schimke.ha.rc.components.HaPictureElement
+import ee.schimke.ha.rc.components.HaPictureElementPosition
 import ee.schimke.ha.rc.components.HaPictureElementsData
 import ee.schimke.ha.rc.components.RemoteHaPictureElements
 import ee.schimke.ha.rc.defaultTapActionFor
@@ -27,9 +28,11 @@ import kotlinx.serialization.json.jsonPrimitive
 /**
  * `picture-elements` card. Each element in the config has a `type:` —
  * we map state-icon / state-label / service-button / icon into the
- * corresponding [HaPictureElement] variant. Position metadata
- * (`style.top`, `style.left`) is parsed but not rendered yet — v1 lays
- * everything out as a chip strip below the image.
+ * corresponding [HaPictureElement] variant. `style.top` / `style.left`
+ * percentages are parsed into a [HaPictureElementPosition] so the
+ * renderer can overlay each element at its configured spot on the
+ * placeholder; elements without position metadata fall back to the
+ * strip across the bottom.
  */
 class PictureElementsCardConverter : CardConverter {
     override val cardType: String = CardTypes.PICTURE_ELEMENTS
@@ -59,20 +62,26 @@ private fun mapElement(obj: JsonObject, snapshot: HaSnapshot): HaPictureElement?
     val type = obj["type"]?.jsonPrimitive?.content ?: return null
     val entityId = obj["entity"]?.jsonPrimitive?.content
     val entity = entityId?.let { snapshot.states[it] }
+    val position = parsePosition(obj)
     return when (type) {
         "state-icon", "icon" -> HaPictureElement.StateIcon(
             icon = HaIconMap.resolve(obj["icon"]?.jsonPrimitive?.content, entity),
             accent = HaStateColor.activeFor(entity),
             isActive = entity?.state == "on" || entity?.state == "open",
             tapAction = parseTap(obj, entityId),
+            position = position,
         )
-        "state-label" -> HaPictureElement.StateLabel(text = formatState(entity).rs)
+        "state-label" -> HaPictureElement.StateLabel(
+            text = formatState(entity).rs,
+            position = position,
+        )
         "service-button" -> {
             val title = obj["title"]?.jsonPrimitive?.content ?: "Action"
             HaPictureElement.ServiceButton(
                 label = title.rs,
                 accent = androidx.compose.ui.graphics.Color(0xFF1565C0),
                 tapAction = parseTap(obj, entityId),
+                position = position,
             )
         }
         else -> null
@@ -83,4 +92,17 @@ private fun parseTap(obj: JsonObject, defaultEntity: String?): HaAction {
     val tapCfg = obj["tap_action"]?.jsonObject
     if (tapCfg != null) return parseHaAction(tapCfg, defaultEntity)
     return defaultTapActionFor(defaultEntity)
+}
+
+private fun parsePosition(obj: JsonObject): HaPictureElementPosition? {
+    val style = obj["style"] as? JsonObject ?: return null
+    val left = style["left"]?.jsonPrimitive?.content?.let(::parsePercent) ?: return null
+    val top = style["top"]?.jsonPrimitive?.content?.let(::parsePercent) ?: return null
+    return HaPictureElementPosition(leftFraction = left, topFraction = top)
+}
+
+private fun parsePercent(raw: String): Float? {
+    val trimmed = raw.trim().removeSuffix("%").trim()
+    val value = trimmed.toFloatOrNull() ?: return null
+    return (value / 100f).coerceIn(0f, 1f)
 }
