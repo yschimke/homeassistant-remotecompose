@@ -10,6 +10,7 @@ import androidx.compose.remote.creation.compose.capture.RemoteCreationDisplayInf
 import androidx.compose.remote.creation.compose.capture.captureSingleRemoteDocument
 import androidx.compose.remote.creation.compose.capture.rememberRemoteDocument
 import androidx.compose.remote.player.compose.RemoteDocumentPlayer
+import androidx.compose.remote.player.core.platform.BitmapLoader
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import ee.schimke.ha.model.CardConfig
@@ -77,6 +78,12 @@ suspend fun captureCardDocument(
  * In-composition capture — for previews and in-app playback. Encodes once
  * per (card, snapshot) change, then hands the document to
  * [RemoteDocumentPlayer].
+ *
+ * [bitmapLoader] resolves the names referenced by named-bitmap
+ * documents (`RemoteHaImageNamed` / `rememberNamedRemoteBitmap(...)`).
+ * Defaults to [BitmapLoader.UNSUPPORTED]; cards that don't use named
+ * bitmaps are unaffected. See `rc-image-coil`'s `CoilBitmapLoader`
+ * for an HTTP / disk-cached impl.
  */
 @Composable
 fun CardPlayer(
@@ -87,6 +94,7 @@ fun CardPlayer(
     densityDpi: Int,
     registry: CardRegistry,
     modifier: Modifier = Modifier,
+    bitmapLoader: BitmapLoader = BitmapLoader.UNSUPPORTED,
 ) {
     val converter = registry.get(card.type) ?: return
     val doc = rememberRemoteDocument(
@@ -100,5 +108,6 @@ fun CardPlayer(
         documentWidth = widthPx,
         documentHeight = heightPx,
         modifier = modifier,
+        bitmapLoader = bitmapLoader,
     )
 }

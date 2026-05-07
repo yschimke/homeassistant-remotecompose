@@ -34,6 +34,9 @@ mockserver = "5.15.0"
 compose-preview-plugin = "0.10.0"
 tapmoc = "0.4.2"
 
+# Image loading (BitmapLoader / RemoteCompose named-bitmap resolution)
+coil = "3.4.0"
+
 # Formatting
 ktfmt-gradle = "0.26.0"
 
@@ -118,6 +121,13 @@ logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "lo
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinx-serialization" }
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinx-datetime" }
+
+# Coil 3 — image loading. Used by rc-image-coil to back the
+# RemoteCompose `BitmapLoader` for named-bitmap resolution. The
+# `coil` artifact pulls in the singleton + Android decoders; apps
+# wanting HTTP add `coil-network-okhttp` themselves.
+coil = { module = "io.coil-kt.coil3:coil", version.ref = "coil" }
+coil-network-okhttp = { module = "io.coil-kt.coil3:coil-network-okhttp", version.ref = "coil" }
 
 # Wear data layer (sync mobile ↔ watch). Horologist's data-layer
 # helpers ride on Google Play Services Wearable; both peers share a

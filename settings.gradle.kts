@@ -29,6 +29,7 @@ include(
   ":rc-components-ui",
   ":rc-converter",
   ":rc-card-shutter",
+  ":rc-image-coil",
   ":previews",
   ":demo-app",
   ":terrazzo-core",
