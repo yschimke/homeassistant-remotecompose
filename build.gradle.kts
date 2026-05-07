@@ -24,7 +24,7 @@ allprojects {
   configurations.all {
     resolutionStrategy.eachDependency {
       if (requested.group == "org.hamcrest") {
-        useTarget("org.hamcrest:hamcrest:2.2")
+        useTarget("org.hamcrest:hamcrest:3.0")
         because("Unify hamcrest split 1.3 jars with the 2.x unified jar")
       }
     }
