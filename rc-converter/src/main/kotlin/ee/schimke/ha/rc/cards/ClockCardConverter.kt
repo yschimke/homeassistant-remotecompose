@@ -14,11 +14,12 @@ import java.time.format.DateTimeFormatter
 import kotlinx.serialization.json.jsonPrimitive
 
 /**
- * `clock` card — local time text. Captured at capture time using the
- * snapshot's [HaSnapshot.locale] when available; the host re-encodes
- * to keep the label current. A future revision can wire
- * `RemoteAccess.getTime()` into a canvas drawText for live ticking
- * without re-encode.
+ * `clock` card — local time text. The default render binds
+ * `RemoteTimeDefaults.defaultTimeString` so the player ticks the time
+ * without a re-encode round trip. Configs that pin a specific time
+ * zone or seconds-display drop back to a static encode-time label
+ * because the bound RemoteString uses the host's locale-default
+ * formatting (no per-card override path yet).
  */
 class ClockCardConverter : CardConverter {
     override val cardType: String = CardTypes.CLOCK
@@ -37,18 +38,28 @@ class ClockCardConverter : CardConverter {
         val title = card.raw["title"]?.jsonPrimitive?.content
         val tz = card.raw["time_zone"]?.jsonPrimitive?.content
             ?.let { runCatching { ZoneId.of(it) }.getOrNull() }
-            ?: ZoneId.systemDefault()
         val showSeconds = card.raw["show_seconds"]?.jsonPrimitive?.content?.toBooleanStrictOrNull() ?: false
         val timeFmt = card.raw["time_format"]?.jsonPrimitive?.content
-        val pattern = when {
-            timeFmt == "12" -> if (showSeconds) "h:mm:ss a" else "h:mm a"
-            else -> if (showSeconds) "HH:mm:ss" else "HH:mm"
+
+        // Live-ticking path: no time_zone override, no show_seconds.
+        // Use RemoteTimeDefaults via the composable; pass null label.
+        val canTick = tz == null && !showSeconds
+        val use24Hour = timeFmt != "12"
+
+        // Static fallback for time-zone / seconds variants.
+        val staticLabel = if (canTick) null else run {
+            val pattern = when {
+                timeFmt == "12" -> if (showSeconds) "h:mm:ss a" else "h:mm a"
+                else -> if (showSeconds) "HH:mm:ss" else "HH:mm"
+            }
+            val now = java.time.ZonedDateTime.now(tz ?: ZoneId.systemDefault())
+            now.format(DateTimeFormatter.ofPattern(pattern))
         }
-        val now = java.time.ZonedDateTime.now(tz)
-        val timeLabel = now.format(DateTimeFormatter.ofPattern(pattern))
+
         val display = card.raw["display"]?.jsonPrimitive?.content ?: "primary"
         val secondaryLabel = if (display == "primary" || display == null) {
-            now.format(DateTimeFormatter.ofPattern("EEE d MMM"))
+            java.time.ZonedDateTime.now(tz ?: ZoneId.systemDefault())
+                .format(DateTimeFormatter.ofPattern("EEE d MMM"))
         } else null
         val size = card.raw["clock_size"]?.jsonPrimitive?.content
         val isLarge = size == "large" || size == "medium"
@@ -56,9 +67,10 @@ class ClockCardConverter : CardConverter {
         RemoteHaClock(
             HaClockData(
                 title = title?.rs,
-                timeLabel = timeLabel.rs,
+                staticTimeLabel = staticLabel?.rs,
                 secondaryLabel = secondaryLabel?.rs,
                 isLarge = isLarge,
+                use24Hour = use24Hour,
             ),
             modifier = modifier,
         )
