@@ -671,6 +671,46 @@ private fun todoListCard() = card(
     """{"type":"todo-list","entity":"todo.shopping","title":"Shopping list"}""",
 )
 
+// ——— calendar ———
+
+@Preview(name = "calendar (light)", showBackground = false, widthDp = 381, heightDp = 220)
+@Composable
+fun Calendar_Light() = CardHost(HaTheme.Light) {
+    RenderChild(calendarCard(), Fixtures.calendarEvents, RemoteModifier.fillMaxWidth())
+}
+
+@Preview(name = "calendar (dark)", showBackground = false, widthDp = 381, heightDp = 220)
+@Composable
+fun Calendar_Dark() = CardHost(HaTheme.Dark) {
+    RenderChild(calendarCard(), Fixtures.calendarEvents, RemoteModifier.fillMaxWidth())
+}
+
+private fun calendarCard() = card(
+    """{"type":"calendar","title":"Family calendar","initial_view":"listWeek",
+        "entities":["calendar.family"]}""",
+)
+
+// ——— area ———
+
+@Preview(name = "area (light)", showBackground = false, widthDp = 280, heightDp = 140)
+@Composable
+fun Area_Light() = CardHost(HaTheme.Light) {
+    RenderChild(areaCard(), Fixtures.livingRoomArea, RemoteModifier.fillMaxWidth())
+}
+
+@Preview(name = "area (dark)", showBackground = false, widthDp = 280, heightDp = 140)
+@Composable
+fun Area_Dark() = CardHost(HaTheme.Dark) {
+    RenderChild(areaCard(), Fixtures.livingRoomArea, RemoteModifier.fillMaxWidth())
+}
+
+private fun areaCard() = card(
+    """{"type":"area","name":"Living room",
+        "entities":["sensor.living_room_temp","sensor.living_room_humidity",
+                    "light.living_room_lamp","switch.living_room_speaker",
+                    "cover.living_room_blinds"]}""",
+)
+
 // ——— tile, state variants via PreviewParameter ———
 
 @Preview(name = "tile light (light)", showBackground = false, widthDp = 187, heightDp = 43)
