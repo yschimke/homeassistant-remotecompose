@@ -119,7 +119,7 @@ fun RemoteHaGauge(
             }
 
             RemoteText(
-                text = data.valueText,
+                text = LiveValues.state(data.entityId, data.valueText),
                 color = theme.primaryText.rc,
                 fontSize = 22.rsp,
                 fontWeight = FontWeight.SemiBold,
@@ -128,7 +128,7 @@ fun RemoteHaGauge(
                 overflow = TextOverflow.Ellipsis,
             )
             RemoteText(
-                text = data.name,
+                text = data.name.rs,
                 color = theme.secondaryText.rc,
                 fontSize = 13.rsp,
                 style = RemoteTextStyle.Default,

@@ -56,9 +56,11 @@ fun RemoteHaPictureEntity(
     modifier: RemoteModifier = RemoteModifier,
 ) {
     val theme = haTheme()
-    val accent = data.accent.isOn
-        ?.select(data.accent.activeAccent, data.accent.inactiveAccent)
-        ?: data.accent.activeAccent
+    val isOnBinding =
+        if (data.accent.toggleable) LiveValues.isOn(data.entityId, data.accent.initiallyOn) else null
+    val accent =
+        isOnBinding?.select(data.accent.activeAccent, data.accent.inactiveAccent)
+            ?: data.accent.activeAccent
     val clickable = data.tapAction.toRemoteAction()
         ?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
     val showStrip = data.showName || data.showState
@@ -82,7 +84,7 @@ fun RemoteHaPictureEntity(
             ) {
                 RemoteIcon(
                     imageVector = data.icon,
-                    contentDescription = data.name,
+                    contentDescription = data.name.rs,
                     modifier = RemoteModifier.size(40.rdp),
                     tint = accent.copy(alpha = accent.alpha * 0.55f.rf),
                 )
@@ -98,7 +100,7 @@ fun RemoteHaPictureEntity(
                     horizontalArrangement = RemoteArrangement.SpaceBetween,
                 ) {
                     RemoteText(
-                        text = if (data.showName) data.name else "".rs,
+                        text = (if (data.showName) data.name else "").rs,
                         color = theme.primaryText.rc,
                         fontSize = 13.rsp,
                         fontWeight = FontWeight.Medium,
@@ -108,7 +110,7 @@ fun RemoteHaPictureEntity(
                     )
                     if (data.showState) {
                         RemoteText(
-                            text = data.state,
+                            text = LiveValues.state(data.entityId, data.state),
                             color = theme.secondaryText.rc,
                             fontSize = 12.rsp,
                             style = RemoteTextStyle.Default,

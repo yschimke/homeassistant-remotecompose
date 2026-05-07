@@ -51,7 +51,7 @@ fun RemoteHaCalendar(data: HaCalendarData, modifier: RemoteModifier = RemoteModi
                 verticalAlignment = RemoteAlignment.CenterVertically,
             ) {
                 RemoteText(
-                    text = data.title,
+                    text = data.title.rs,
                     color = theme.primaryText.rc,
                     fontSize = 16.rsp,
                     fontWeight = FontWeight.Medium,
@@ -60,7 +60,7 @@ fun RemoteHaCalendar(data: HaCalendarData, modifier: RemoteModifier = RemoteModi
                     overflow = TextOverflow.Ellipsis,
                 )
                 RemoteText(
-                    text = data.rangeLabel,
+                    text = data.rangeLabel.rs,
                     color = theme.secondaryText.rc,
                     fontSize = 11.rsp,
                     style = RemoteTextStyle.Default,
@@ -95,13 +95,13 @@ private fun Event(event: HaCalendarEvent, theme: HaTheme) {
         )
         RemoteColumn(modifier = RemoteModifier.padding(start = 10.rdp)) {
             RemoteText(
-                text = event.whenLabel,
+                text = event.whenLabel.rs,
                 color = theme.secondaryText.rc,
                 fontSize = 11.rsp,
                 style = RemoteTextStyle.Default,
             )
             RemoteText(
-                text = event.summary,
+                text = event.summary.rs,
                 color = theme.primaryText.rc,
                 fontSize = 13.rsp,
                 fontWeight = FontWeight.Medium,

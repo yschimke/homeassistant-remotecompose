@@ -24,6 +24,7 @@ import androidx.compose.remote.creation.compose.state.lerp
 import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rf
+import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.remote.creation.compose.state.rsp
 import androidx.compose.remote.creation.compose.text.RemoteTextStyle
 import androidx.compose.runtime.Composable
@@ -46,9 +47,13 @@ import androidx.wear.compose.remote.material3.RemoteIcon
 @RemoteComposable
 fun RemoteHaEntityRow(data: HaEntityRowData, modifier: RemoteModifier = RemoteModifier) {
     val theme = haTheme()
-    val clickable = data.tapAction.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
-    val accent: RemoteColor = data.accent.isOn?.select(data.accent.activeAccent, data.accent.inactiveAccent)
-        ?: data.accent.activeAccent
+    val clickable =
+        data.tapAction.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
+    val isOnBinding =
+        if (data.accent.toggleable) LiveValues.isOn(data.entityId, data.accent.initiallyOn) else null
+    val accent: RemoteColor =
+        isOnBinding?.select(data.accent.activeAccent, data.accent.inactiveAccent)
+            ?: data.accent.activeAccent
 
     RemoteRow(
         modifier = modifier.then(clickable).fillMaxWidth().padding(vertical = 6.rdp),
@@ -58,13 +63,13 @@ fun RemoteHaEntityRow(data: HaEntityRowData, modifier: RemoteModifier = RemoteMo
         RemoteRow(verticalAlignment = RemoteAlignment.CenterVertically) {
             RemoteIcon(
                 imageVector = data.icon,
-                contentDescription = data.name,
+                contentDescription = data.name.rs,
                 modifier = RemoteModifier.size(20.rdp),
                 tint = accent,
             )
             RemoteBox(modifier = RemoteModifier.padding(start = 12.rdp)) {
                 RemoteText(
-                    text = data.name,
+                    text = data.name.rs,
                     color = theme.primaryText.rc,
                     fontSize = 13.rsp,
                     style = RemoteTextStyle.Default,
@@ -73,7 +78,7 @@ fun RemoteHaEntityRow(data: HaEntityRowData, modifier: RemoteModifier = RemoteMo
                 )
             }
         }
-        if (data.accent.isOn != null) {
+        if (isOnBinding != null) {
             RemoteHaToggleSwitch(
                 initiallyOn = data.accent.initiallyOn,
                 activeAccent = data.accent.activeAccent,
@@ -82,7 +87,7 @@ fun RemoteHaEntityRow(data: HaEntityRowData, modifier: RemoteModifier = RemoteMo
             )
         } else {
             RemoteText(
-                text = data.state,
+                text = LiveValues.state(data.entityId, data.state),
                 color = theme.secondaryText.rc,
                 fontSize = 13.rsp,
                 style = RemoteTextStyle.Default,

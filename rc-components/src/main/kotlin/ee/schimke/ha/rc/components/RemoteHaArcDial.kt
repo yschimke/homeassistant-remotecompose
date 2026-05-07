@@ -84,7 +84,7 @@ fun RemoteHaArcDial(
             verticalArrangement = RemoteArrangement.spacedBy(4.rdp),
         ) {
             RemoteText(
-                text = data.name,
+                text = data.name.rs,
                 color = theme.primaryText.rc,
                 fontSize = 14.rsp,
                 fontWeight = FontWeight.Medium,
@@ -114,14 +114,15 @@ private fun DialBody(data: HaArcDialData, theme: HaTheme) {
             if (data.centerIcon != null) {
                 RemoteIcon(
                     imageVector = data.centerIcon,
-                    contentDescription = data.name,
+                    contentDescription = data.name.rs,
                     modifier = RemoteModifier.size(40.rdp),
                     tint = data.accent.rc,
                 )
             }
             ModeChip(data.modeChip, data.accent)
             RemoteText(
-                text = data.centerLabel,
+                text =
+                    LiveValues.attribute(data.entityId, data.centerLabelAttribute, data.centerLabel),
                 color = theme.primaryText.rc,
                 fontSize = 26.rsp,
                 fontWeight = FontWeight.SemiBold,
@@ -129,9 +130,14 @@ private fun DialBody(data: HaArcDialData, theme: HaTheme) {
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
-            if (data.supportingLabel != null) {
+            if (data.supportingLabel != null && data.supportingLabelAttribute != null) {
                 RemoteText(
-                    text = data.supportingLabel,
+                    text =
+                        LiveValues.attribute(
+                            data.entityId,
+                            data.supportingLabelAttribute,
+                            data.supportingLabel,
+                        ),
                     color = data.accent.rc,
                     fontSize = 12.rsp,
                     style = RemoteTextStyle.Default,
@@ -147,9 +153,17 @@ private fun DialBody(data: HaArcDialData, theme: HaTheme) {
 private fun ModeChip(chip: HaModeChip?, accent: Color) {
     if (chip == null) return
     when (chip) {
-        is HaModeChip.Static -> ChipText(chip.label, accent)
-        is HaModeChip.Toggle -> RemoteStateLayout(chip.isOn) { on ->
-            ChipText((if (on) chip.onLabel else chip.offLabel).rs, accent)
+        is HaModeChip.Static ->
+            ChipText(LiveValues.attribute(chip.entityId, chip.attribute, chip.initial), accent)
+        is HaModeChip.Toggle -> {
+            val isOn = LiveValues.isOn(chip.entityId, chip.initiallyOn)
+            if (isOn != null) {
+                RemoteStateLayout(isOn) { on ->
+                    ChipText((if (on) chip.onLabel else chip.offLabel).rs, accent)
+                }
+            } else {
+                ChipText((if (chip.initiallyOn) chip.onLabel else chip.offLabel).rs, accent)
+            }
         }
     }
 }

@@ -1,7 +1,6 @@
 package ee.schimke.ha.rc.cards
 
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
-import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.runtime.Composable
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
@@ -9,7 +8,6 @@ import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.model.HistoryPoint
 import ee.schimke.ha.rc.CardConverter
 import ee.schimke.ha.rc.HaStateColor
-import ee.schimke.ha.rc.LiveBindings
 import ee.schimke.ha.rc.components.HaHistoryGraphData
 import ee.schimke.ha.rc.components.HaHistoryGraphRow
 import ee.schimke.ha.rc.components.RemoteHaHistoryGraph
@@ -44,25 +42,23 @@ class HistoryGraphCardConverter : CardConverter {
         val hours = card.raw["hours_to_show"]?.jsonPrimitive?.content?.toIntOrNull() ?: 24
         val ids = entityIds(card)
 
-        val rows = ids.map { id ->
-            val entity = snapshot.states[id]
-            val name = entity?.attributes?.get("friendly_name")?.jsonPrimitive?.content ?: id
-            val history = snapshot.history[id].orEmpty()
-            val numeric = history.mapNotNull { it.state.toFloatOrNull() }
-            HaHistoryGraphRow(
-                name = name.rs,
-                summary = LiveBindings.state(entity, summarise(history)),
-                accent = HaStateColor.activeFor(entity),
-                points = numeric,
-            )
-        }
+        val rows =
+            ids.map { id ->
+                val entity = snapshot.states[id]
+                val name = entity?.attributes?.get("friendly_name")?.jsonPrimitive?.content ?: id
+                val history = snapshot.history[id].orEmpty()
+                val numeric = history.mapNotNull { it.state.toFloatOrNull() }
+                HaHistoryGraphRow(
+                    entityId = id,
+                    name = name,
+                    summary = summarise(history),
+                    accent = HaStateColor.activeFor(entity),
+                    points = numeric,
+                )
+            }
 
         RemoteHaHistoryGraph(
-            HaHistoryGraphData(
-                title = title?.rs,
-                rangeLabel = "Last ${hours}h".rs,
-                rows = rows,
-            ),
+            HaHistoryGraphData(title = title, rangeLabel = "Last ${hours}h", rows = rows),
             modifier = modifier,
         )
     }

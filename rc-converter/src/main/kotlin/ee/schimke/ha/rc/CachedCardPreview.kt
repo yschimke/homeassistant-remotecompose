@@ -29,9 +29,9 @@ import kotlinx.coroutines.runBlocking
  * (the card YAML, theme colours / dark flag, profile), and nothing
  * that the host can update by named binding (entity state, attributes,
  * `is_on`). Snapshot data is read by [content] on capture but must
- * NOT be part of the key — `LiveBindings.state` / `.attribute` /
- * `.isOn` are exactly the seam through which a running player gets
- * fresh data without re-encoding.
+ * NOT be part of the key — `LiveValues.state` / `.attribute` /
+ * `.isOn` (in rc-components) are exactly the seam through which a
+ * running player gets fresh data without re-encoding.
  *
  * Sizing follows upstream `RemotePreview`: the captured document
  * carries its natural size in the header, and the player measures via

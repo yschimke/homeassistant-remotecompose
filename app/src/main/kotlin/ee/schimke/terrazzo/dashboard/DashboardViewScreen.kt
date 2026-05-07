@@ -463,7 +463,7 @@ private fun CardSlot(
     // The document's paint colours are baked at capture; re-encode when
     // theme flips. Snapshot is deliberately NOT in the cache key —
     // entity values flow into the running player by named binding
-    // (see LiveBindings).
+    // (see LiveValues in rc-components).
     val haTheme = remember(style, dark) { haThemeFor(style, dark) }
     val cacheKey = remember(card, style, dark) { CardSlotCacheKey(card, style, dark) }
     Box(

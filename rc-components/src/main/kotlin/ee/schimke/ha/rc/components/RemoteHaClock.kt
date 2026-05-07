@@ -65,7 +65,7 @@ fun RemoteHaClock(data: HaClockData, modifier: RemoteModifier = RemoteModifier) 
         ) {
             if (data.title != null) {
                 RemoteText(
-                    text = data.title,
+                    text = data.title.rs,
                     color = theme.secondaryText.rc,
                     fontSize = 12.rsp,
                     style = RemoteTextStyle.Default,
@@ -73,18 +73,21 @@ fun RemoteHaClock(data: HaClockData, modifier: RemoteModifier = RemoteModifier) 
                     overflow = TextOverflow.Ellipsis,
                 )
             }
-            val timeText = data.staticTimeLabel
-                ?: if (data.zoneOffsetMinutes != 0 || data.showSeconds) {
-                    liveClockTimeString(
-                        zoneOffsetMinutes = data.zoneOffsetMinutes,
-                        showSeconds = data.showSeconds,
-                        use24Hour = data.use24Hour,
-                    )
-                } else {
-                    RemoteTimeDefaults.defaultTimeString(
-                        is24HourFormat = if (data.use24Hour) RemoteBoolean(true) else RemoteTimeDefaults.is24HourFormat(),
-                    )
-                }
+            val timeText: RemoteString =
+                data.staticTimeLabel?.rs
+                    ?: if (data.zoneOffsetMinutes != 0 || data.showSeconds) {
+                        liveClockTimeString(
+                            zoneOffsetMinutes = data.zoneOffsetMinutes,
+                            showSeconds = data.showSeconds,
+                            use24Hour = data.use24Hour,
+                        )
+                    } else {
+                        RemoteTimeDefaults.defaultTimeString(
+                            is24HourFormat =
+                                if (data.use24Hour) RemoteBoolean(true)
+                                else RemoteTimeDefaults.is24HourFormat()
+                        )
+                    }
             RemoteText(
                 text = timeText,
                 color = theme.primaryText.rc,
@@ -95,7 +98,7 @@ fun RemoteHaClock(data: HaClockData, modifier: RemoteModifier = RemoteModifier) 
             )
             if (data.secondaryLabel != null) {
                 RemoteText(
-                    text = data.secondaryLabel,
+                    text = data.secondaryLabel.rs,
                     color = theme.secondaryText.rc,
                     fontSize = 12.rsp,
                     style = RemoteTextStyle.Default,

@@ -1,7 +1,6 @@
 package ee.schimke.ha.rc.cards
 
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
-import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.runtime.Composable
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
@@ -49,16 +48,12 @@ class TodoListCardConverter : CardConverter {
             val status = obj["status"]?.jsonPrimitive?.content
             val isCompleted = status == "completed"
             val tap = updateItemAction(entityId, summary, isCompleted)
-            val item = HaTodoItem(summary = summary.rs, tapAction = tap)
+            val item = HaTodoItem(summary = summary, tapAction = tap)
             if (isCompleted) completed += item else active += item
         }
 
         RemoteHaTodoList(
-            HaTodoListData(
-                title = title.rs,
-                activeItems = active,
-                completedItems = completed,
-            ),
+            HaTodoListData(title = title, activeItems = active, completedItems = completed),
             modifier = modifier,
         )
     }

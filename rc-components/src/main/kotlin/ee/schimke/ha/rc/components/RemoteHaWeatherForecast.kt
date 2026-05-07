@@ -19,6 +19,7 @@ import androidx.compose.remote.creation.compose.modifier.size
 import androidx.compose.remote.creation.compose.shapes.RemoteRoundedCornerShape
 import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
+import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.remote.creation.compose.state.rsp
 import androidx.compose.remote.creation.compose.text.RemoteTextStyle
 import androidx.compose.runtime.Composable
@@ -76,13 +77,13 @@ private fun CurrentRow(data: HaWeatherForecastData, theme: HaTheme) {
         RemoteRow(verticalAlignment = RemoteAlignment.CenterVertically) {
             RemoteIcon(
                 imageVector = data.icon,
-                contentDescription = data.condition,
+                contentDescription = data.condition.rs,
                 modifier = RemoteModifier.size(36.rdp),
                 tint = theme.primaryText.rc,
             )
             RemoteColumn(modifier = RemoteModifier.padding(start = 10.rdp)) {
                 RemoteText(
-                    text = data.condition,
+                    text = LiveValues.state(data.entityId, data.condition),
                     color = theme.primaryText.rc,
                     fontSize = 16.rsp,
                     fontWeight = FontWeight.Medium,
@@ -92,7 +93,7 @@ private fun CurrentRow(data: HaWeatherForecastData, theme: HaTheme) {
                 )
                 if (data.supportingLine != null) {
                     RemoteText(
-                        text = data.supportingLine,
+                        text = data.supportingLine.rs,
                         color = theme.secondaryText.rc,
                         fontSize = 12.rsp,
                         style = RemoteTextStyle.Default,
@@ -101,7 +102,7 @@ private fun CurrentRow(data: HaWeatherForecastData, theme: HaTheme) {
                     )
                 } else {
                     RemoteText(
-                        text = data.name,
+                        text = data.name.rs,
                         color = theme.secondaryText.rc,
                         fontSize = 12.rsp,
                         style = RemoteTextStyle.Default,
@@ -112,7 +113,7 @@ private fun CurrentRow(data: HaWeatherForecastData, theme: HaTheme) {
             }
         }
         RemoteText(
-            text = data.temperature,
+            text = LiveValues.attribute(data.entityId, "temperature_label", data.temperature),
             color = theme.primaryText.rc,
             fontSize = 28.rsp,
             fontWeight = FontWeight.Light,
@@ -136,7 +137,7 @@ private fun ForecastStrip(days: List<HaWeatherDay>, theme: HaTheme) {
                 verticalArrangement = RemoteArrangement.spacedBy(2.rdp),
             ) {
                 RemoteText(
-                    text = day.label,
+                    text = day.label.rs,
                     color = theme.secondaryText.rc,
                     fontSize = 11.rsp,
                     style = RemoteTextStyle.Default,
@@ -144,12 +145,12 @@ private fun ForecastStrip(days: List<HaWeatherDay>, theme: HaTheme) {
                 )
                 RemoteIcon(
                     imageVector = day.icon,
-                    contentDescription = day.label,
+                    contentDescription = day.label.rs,
                     modifier = RemoteModifier.size(20.rdp),
                     tint = theme.primaryText.rc,
                 )
                 RemoteText(
-                    text = day.high,
+                    text = day.high.rs,
                     color = theme.primaryText.rc,
                     fontSize = 12.rsp,
                     fontWeight = FontWeight.Medium,
@@ -157,7 +158,7 @@ private fun ForecastStrip(days: List<HaWeatherDay>, theme: HaTheme) {
                     maxLines = 1,
                 )
                 RemoteText(
-                    text = day.low,
+                    text = day.low.rs,
                     color = theme.secondaryText.rc,
                     fontSize = 11.rsp,
                     style = RemoteTextStyle.Default,

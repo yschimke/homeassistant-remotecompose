@@ -24,13 +24,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Stop
-import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.font.FontWeight
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.CardConverter
-import ee.schimke.ha.rc.LiveBindings
+import ee.schimke.ha.rc.components.LiveValues
 import ee.schimke.ha.rc.components.LocalHaTheme
 import ee.schimke.ha.rc.formatState
 import kotlinx.serialization.json.jsonPrimitive
@@ -107,7 +106,7 @@ open class BambuLabCardConverter(
                         style = RemoteTextStyle.Default,
                     )
                     RemoteText(
-                        text = LiveBindings.state(entity, state),
+                        text = LiveValues.state(entity?.entityId, state),
                         color = theme.secondaryText.rc,
                         fontSize = 13.rsp,
                         style = RemoteTextStyle.Default,
@@ -139,10 +138,7 @@ class BambuLabAmsCardConverter : BambuLabCardConverter(
             return
         }
         ee.schimke.ha.rc.components.RemoteHaBambuAms(
-            ee.schimke.ha.rc.components.HaBambuAmsData(
-                title = "AMS".rs,
-                slots = slots,
-            ),
+            ee.schimke.ha.rc.components.HaBambuAmsData(title = "AMS", slots = slots),
             modifier,
         )
     }
@@ -196,8 +192,9 @@ private fun readSpoolSlots(
             ?.takeIf { attrs["remain_enabled"]?.jsonPrimitive?.content?.toBooleanStrictOrNull() != false }
         val active = attrs["active"]?.jsonPrimitive?.content?.toBooleanStrictOrNull() == true
         ee.schimke.ha.rc.components.HaBambuSpoolSlot(
-            slotLabel = "Slot $trayIdx".rs,
-            material = material.rs,
+            entityId = entity.entityId,
+            slotLabel = "Slot $trayIdx",
+            material = material,
             color = color,
             remainPercent = remain,
             active = active,
@@ -324,15 +321,16 @@ private fun buildPrintStatusData(
     }
 
     return ee.schimke.ha.rc.components.HaBambuPrintStatusData(
-        printerName = printerName.rs,
-        stage = stage.rs,
-        progressLabel = "${progress.toInt()} %".rs,
+        entityId = printerEntity?.entityId,
+        printerName = printerName,
+        stage = stage,
+        progressLabel = "${progress.toInt()} %",
         progressFraction = (progress / 100f).coerceIn(0f, 1f),
         accent = androidx.compose.ui.graphics.Color(0xFFFF8F00),
-        layerLine = layerLine?.rs,
-        remainingLine = remainingLine?.rs,
-        nozzleLine = nozzleLine?.rs,
-        bedLine = bedLine?.rs,
+        layerLine = layerLine,
+        remainingLine = remainingLine,
+        nozzleLine = nozzleLine,
+        bedLine = bedLine,
     )
 }
 
@@ -384,7 +382,7 @@ private fun buildPrintControlData(
 
     val pause = btn("pause_printing")?.let {
         ee.schimke.ha.rc.components.HaBambuControlButton(
-            label = "Pause".rs,
+            label = "Pause",
             icon = Icons.Filled.Pause,
             accent = androidx.compose.ui.graphics.Color(0xFFFFA000),
             tapAction = ee.schimke.ha.rc.components.HaAction.CallService(
@@ -395,7 +393,7 @@ private fun buildPrintControlData(
     }
     val resume = btn("resume_printing")?.let {
         ee.schimke.ha.rc.components.HaBambuControlButton(
-            label = "Resume".rs,
+            label = "Resume",
             icon = Icons.Filled.PlayArrow,
             accent = androidx.compose.ui.graphics.Color(0xFF43A047),
             tapAction = ee.schimke.ha.rc.components.HaAction.CallService(
@@ -406,7 +404,7 @@ private fun buildPrintControlData(
     }
     val stop = btn("stop_printing")?.let {
         ee.schimke.ha.rc.components.HaBambuControlButton(
-            label = "Stop".rs,
+            label = "Stop",
             icon = Icons.Filled.Stop,
             accent = androidx.compose.ui.graphics.Color(0xFFE53935),
             tapAction = ee.schimke.ha.rc.components.HaAction.CallService(
@@ -422,7 +420,7 @@ private fun buildPrintControlData(
         ?.substringBeforeLast(' ')
         ?: prefix.uppercase()
     return ee.schimke.ha.rc.components.HaBambuPrintControlData(
-        printerName = printerName.rs,
+        printerName = printerName,
         pause = pause,
         resume = resume,
         stop = stop,

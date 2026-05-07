@@ -1,7 +1,6 @@
 package ee.schimke.ha.rc.cards
 
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
-import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.runtime.Composable
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
@@ -47,26 +46,29 @@ class StatisticsGraphCardConverter : CardConverter {
         val chartType = card.raw["chart_type"]?.jsonPrimitive?.content ?: "line"
         val stacked = card.raw["stack"]?.jsonPrimitive?.booleanOrNull == true && chartType == "bar"
 
-        val rows = ids.flatMap { id ->
-            val entity = snapshot.states[id]
-            val baseName = entity?.attributes?.get("friendly_name")?.jsonPrimitive?.content ?: id
-            val statistics = snapshot.statistics[id].orEmpty()
-            stats.map { statType ->
-                val numeric = statistics.mapNotNull { selectStat(it, statType)?.toFloat() }
-                val rowName = if (stats.size > 1) "$baseName · $statType" else baseName
-                HaHistoryGraphRow(
-                    name = rowName.rs,
-                    summary = summariseStatistics(statistics, statType).rs,
-                    accent = HaStateColor.activeFor(entity),
-                    points = numeric,
-                )
+        val rows =
+            ids.flatMap { id ->
+                val entity = snapshot.states[id]
+                val baseName =
+                    entity?.attributes?.get("friendly_name")?.jsonPrimitive?.content ?: id
+                val statistics = snapshot.statistics[id].orEmpty()
+                stats.map { statType ->
+                    val numeric = statistics.mapNotNull { selectStat(it, statType)?.toFloat() }
+                    val rowName = if (stats.size > 1) "$baseName · $statType" else baseName
+                    HaHistoryGraphRow(
+                        entityId = id,
+                        name = rowName,
+                        summary = summariseStatistics(statistics, statType),
+                        accent = HaStateColor.activeFor(entity),
+                        points = numeric,
+                    )
+                }
             }
-        }
 
         RemoteHaStatisticsGraph(
             HaStatisticsGraphData(
-                title = title?.rs,
-                rangeLabel = "Period: $period".rs,
+                title = title,
+                rangeLabel = "Period: $period",
                 rows = rows,
                 chartType = chartType,
                 stacked = stacked,

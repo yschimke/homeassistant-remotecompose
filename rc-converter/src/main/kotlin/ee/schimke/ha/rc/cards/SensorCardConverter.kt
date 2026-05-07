@@ -1,14 +1,12 @@
 package ee.schimke.ha.rc.cards
 
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
-import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.runtime.Composable
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.CardConverter
 import ee.schimke.ha.rc.HaStateColor
-import ee.schimke.ha.rc.LiveBindings
 import ee.schimke.ha.rc.components.HaSensorCardData
 import ee.schimke.ha.rc.components.RemoteHaSensorCard
 import ee.schimke.ha.rc.formatState
@@ -38,11 +36,12 @@ class SensorCardConverter : CardConverter {
 
         RemoteHaSensorCard(
             HaSensorCardData(
-                name = name.rs,
-                valueLabel = LiveBindings.state(entity, formatState(entity)),
+                entityId = entityId,
+                name = name,
+                valueLabel = formatState(entity),
                 accent = HaStateColor.activeFor(entity),
                 points = numeric,
-                rangeLabel = "Last ${hours}h".rs,
+                rangeLabel = "Last ${hours}h",
             ),
             modifier = modifier,
         )

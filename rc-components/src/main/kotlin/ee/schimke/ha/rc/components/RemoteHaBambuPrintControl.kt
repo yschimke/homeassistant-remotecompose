@@ -22,6 +22,7 @@ import androidx.compose.remote.creation.compose.shapes.RemoteRoundedCornerShape
 import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rf
+import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.remote.creation.compose.state.rsp
 import androidx.compose.remote.creation.compose.text.RemoteTextStyle
 import androidx.compose.runtime.Composable
@@ -49,7 +50,7 @@ fun RemoteHaBambuPrintControl(
     ) {
         RemoteColumn(verticalArrangement = RemoteArrangement.spacedBy(8.rdp)) {
             RemoteText(
-                text = data.printerName,
+                text = data.printerName.rs,
                 color = theme.secondaryText.rc,
                 fontSize = 11.rsp,
                 style = RemoteTextStyle.Default,
@@ -85,14 +86,14 @@ private fun Button(button: HaBambuControlButton, theme: HaTheme) {
         ) {
             RemoteIcon(
                 imageVector = button.icon,
-                contentDescription = button.label,
+                contentDescription = button.label.rs,
                 modifier = RemoteModifier.size(24.rdp),
                 tint = accent,
             )
         }
         RemoteBox(modifier = RemoteModifier.padding(top = 6.rdp)) {
             RemoteText(
-                text = button.label,
+                text = button.label.rs,
                 color = theme.primaryText.rc,
                 fontSize = 12.rsp,
                 fontWeight = FontWeight.Medium,

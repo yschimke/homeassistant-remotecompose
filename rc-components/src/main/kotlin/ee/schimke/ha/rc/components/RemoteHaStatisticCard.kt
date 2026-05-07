@@ -18,6 +18,7 @@ import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.shapes.RemoteRoundedCornerShape
 import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
+import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.remote.creation.compose.state.rsp
 import androidx.compose.remote.creation.compose.text.RemoteTextStyle
 import androidx.compose.runtime.Composable
@@ -45,7 +46,7 @@ fun RemoteHaStatisticCard(
     ) {
         RemoteColumn(verticalArrangement = RemoteArrangement.spacedBy(4.rdp)) {
             RemoteText(
-                text = data.name,
+                text = data.name.rs,
                 color = theme.secondaryText.rc,
                 fontSize = 12.rsp,
                 fontWeight = FontWeight.Medium,
@@ -55,7 +56,7 @@ fun RemoteHaStatisticCard(
             )
             RemoteRow(verticalAlignment = RemoteAlignment.Bottom) {
                 RemoteText(
-                    text = data.valueLabel,
+                    text = LiveValues.state(data.entityId, data.valueLabel),
                     color = theme.primaryText.rc,
                     fontSize = 32.rsp,
                     fontWeight = FontWeight.SemiBold,
@@ -65,7 +66,7 @@ fun RemoteHaStatisticCard(
                 if (data.unit != null) {
                     RemoteBox(modifier = RemoteModifier.padding(start = 4.rdp, bottom = 4.rdp)) {
                         RemoteText(
-                            text = data.unit,
+                            text = data.unit.rs,
                             color = theme.secondaryText.rc,
                             fontSize = 14.rsp,
                             style = RemoteTextStyle.Default,
@@ -76,7 +77,7 @@ fun RemoteHaStatisticCard(
             }
             if (data.periodLabel != null) {
                 RemoteText(
-                    text = data.periodLabel,
+                    text = data.periodLabel.rs,
                     color = data.accent.rc,
                     fontSize = 11.rsp,
                     style = RemoteTextStyle.Default,

@@ -1,14 +1,12 @@
 package ee.schimke.ha.rc.cards
 
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
-import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.CardConverter
-import ee.schimke.ha.rc.LiveBindings
 import ee.schimke.ha.rc.components.HaAction
 import ee.schimke.ha.rc.components.HaMediaControlData
 import ee.schimke.ha.rc.components.RemoteHaMediaControl
@@ -52,14 +50,15 @@ class MediaControlCardConverter : CardConverter {
 
         RemoteHaMediaControl(
             HaMediaControlData(
-                playerName = playerName.rs,
-                title = LiveBindings.attribute(entity, "media_title", title),
-                artist = artist?.let { LiveBindings.attribute(entity, "media_artist", it) },
+                entityId = entityId,
+                playerName = playerName,
+                title = title,
+                artist = artist,
                 accent = accent,
                 isPlaying = isPlaying,
                 positionFraction = fraction,
-                positionLabel = if (dur > 0f) formatHms(pos.toLong()).rs else null,
-                durationLabel = if (dur > 0f) formatHms(dur.toLong()).rs else null,
+                positionLabel = if (dur > 0f) formatHms(pos.toLong()) else null,
+                durationLabel = if (dur > 0f) formatHms(dur.toLong()) else null,
                 previousAction = svc("media_previous_track"),
                 playPauseAction = svc(if (isPlaying) "media_pause" else "media_play"),
                 nextAction = svc("media_next_track"),

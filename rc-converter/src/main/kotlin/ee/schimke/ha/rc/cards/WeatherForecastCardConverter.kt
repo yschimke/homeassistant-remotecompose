@@ -10,14 +10,12 @@ import androidx.compose.material.icons.filled.WbCloudy
 import androidx.compose.material.icons.filled.WbSunny
 import androidx.compose.material.icons.outlined.Cloud
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
-import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.vector.ImageVector
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.CardConverter
-import ee.schimke.ha.rc.LiveBindings
 import ee.schimke.ha.rc.components.HaWeatherDay
 import ee.schimke.ha.rc.components.HaWeatherForecastData
 import ee.schimke.ha.rc.components.RemoteHaWeatherForecast
@@ -57,25 +55,29 @@ class WeatherForecastCardConverter : CardConverter {
         val forecast = (attrs["forecast"] as? JsonArray)
             ?: ((attrs["forecast"] as? JsonObject)?.get("daily") as? JsonArray)
             ?: JsonArray(emptyList())
-        val days = if (showForecast) forecast.take(5).mapNotNull { day ->
-            val obj = day as? JsonObject ?: return@mapNotNull null
-            val cond = obj["condition"]?.jsonPrimitive?.content
-            val high = obj["temperature"]?.jsonPrimitive?.content
-            val low = obj["templow"]?.jsonPrimitive?.content
-            val dt = obj["datetime"]?.jsonPrimitive?.content
-            HaWeatherDay(
-                label = (formatDayLabel(dt) ?: "").rs,
-                high = (high?.let { "$it$tempUnit" } ?: "—").rs,
-                low = (low?.let { "$it$tempUnit" } ?: "—").rs,
-                icon = weatherIcon(cond),
-            )
-        } else emptyList()
+        val days =
+            if (showForecast)
+                forecast.take(5).mapNotNull { day ->
+                    val obj = day as? JsonObject ?: return@mapNotNull null
+                    val cond = obj["condition"]?.jsonPrimitive?.content
+                    val high = obj["temperature"]?.jsonPrimitive?.content
+                    val low = obj["templow"]?.jsonPrimitive?.content
+                    val dt = obj["datetime"]?.jsonPrimitive?.content
+                    HaWeatherDay(
+                        label = formatDayLabel(dt) ?: "",
+                        high = high?.let { "$it$tempUnit" } ?: "—",
+                        low = low?.let { "$it$tempUnit" } ?: "—",
+                        icon = weatherIcon(cond),
+                    )
+                }
+            else emptyList()
 
         RemoteHaWeatherForecast(
             HaWeatherForecastData(
-                name = name.rs,
-                condition = LiveBindings.state(entity, formatCondition(condition)),
-                temperature = LiveBindings.attribute(entity, "temperature_label", temperature),
+                entityId = entityId,
+                name = name,
+                condition = formatCondition(condition),
+                temperature = temperature,
                 supportingLine = null,
                 icon = weatherIcon(condition),
                 days = days,

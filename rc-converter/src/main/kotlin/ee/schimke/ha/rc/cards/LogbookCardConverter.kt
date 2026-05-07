@@ -3,7 +3,6 @@ package ee.schimke.ha.rc.cards
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.History
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
-import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.runtime.Composable
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
@@ -45,19 +44,13 @@ class LogbookCardConverter : CardConverter {
             val name = entity?.attributes?.get("friendly_name")?.jsonPrimitive?.content
                 ?: entityId
             HaLogbookEntry(
-                name = name.rs,
-                message = formatState(entity).rs,
-                whenText = formatRelative(entity?.lastChanged).rs,
+                name = name,
+                message = formatState(entity),
+                whenText = formatRelative(entity?.lastChanged),
                 icon = HaIconMap.resolve(null, entity),
             )
         }
-        RemoteHaLogbook(
-            HaLogbookData(
-                title = title?.rs,
-                entries = entries,
-            ),
-            modifier = modifier,
-        )
+        RemoteHaLogbook(HaLogbookData(title = title, entries = entries), modifier = modifier)
     }
 }
 

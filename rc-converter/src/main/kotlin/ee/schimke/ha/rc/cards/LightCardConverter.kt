@@ -10,7 +10,6 @@ import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.CardConverter
-import ee.schimke.ha.rc.LiveBindings
 import ee.schimke.ha.rc.components.HaAction
 import ee.schimke.ha.rc.components.HaArcDialData
 import ee.schimke.ha.rc.components.HaModeChip
@@ -44,25 +43,35 @@ class LightCardConverter : CardConverter {
         val brightness = attrs["brightness"]?.jsonPrimitive?.content?.toFloatOrNull()
         val fraction = if (isOn) (brightness ?: 255f) / 255f else 0f
         val accent = if (isOn) Color(0xFFFFBE3E) else Color(0xFFB0B0B0)
-        val centerLabel = LiveBindings.attribute(
-            entity,
-            "brightness_pct",
-            if (isOn) "${(fraction * 100f).toInt()}%" else "Off",
-        )
-        val modeChip = LiveBindings.isOn(entity)?.let { isOnBinding ->
-            HaModeChip.Toggle(isOnBinding, onLabel = "On", offLabel = "Off")
-        } ?: HaModeChip.Static((if (isOn) "On" else "Off").rs)
+        val centerLabel = if (isOn) "${(fraction * 100f).toInt()}%" else "Off"
+        val modeChip =
+            if (entityId != null)
+                HaModeChip.Toggle(
+                    entityId = entityId,
+                    initiallyOn = isOn,
+                    onLabel = "On",
+                    offLabel = "Off",
+                )
+            else
+                HaModeChip.Static(
+                    entityId = null,
+                    attribute = "is_on_label",
+                    initial = if (isOn) "On" else "Off",
+                )
 
         val tap = entityId?.let { HaAction.Toggle(it) } ?: HaAction.None
         val (inc, dec) = brightnessSteppers(entityId, isOn, brightness)
 
         RemoteHaArcDial(
             HaArcDialData(
-                name = name.rs,
+                entityId = entityId,
+                name = name,
                 valueFraction = fraction,
                 targetFraction = null,
                 centerLabel = centerLabel,
+                centerLabelAttribute = "brightness_pct",
                 supportingLabel = null,
+                supportingLabelAttribute = null,
                 modeChip = modeChip,
                 accent = accent,
                 showSteppers = isOn,

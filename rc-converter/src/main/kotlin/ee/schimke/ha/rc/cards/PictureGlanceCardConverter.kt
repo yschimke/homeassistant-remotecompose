@@ -3,7 +3,6 @@ package ee.schimke.ha.rc.cards
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
-import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.runtime.Composable
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
@@ -38,23 +37,25 @@ class PictureGlanceCardConverter : CardConverter {
             }
         }.orEmpty()
 
-        val cells = ids.map { id ->
-            val entity = snapshot.states[id]
-            val name = entity?.attributes?.get("friendly_name")?.jsonPrimitive?.content ?: id
-            val active = entity?.state == "on" || entity?.state == "open"
-            HaPictureGlanceCell(
-                icon = HaIconMap.resolve(null, entity),
-                accent = HaStateColor.activeFor(entity),
-                isActive = active,
-                label = name.rs,
-                tapAction = defaultTapActionFor(id),
-            )
-        }
+        val cells =
+            ids.map { id ->
+                val entity = snapshot.states[id]
+                val name = entity?.attributes?.get("friendly_name")?.jsonPrimitive?.content ?: id
+                val active = entity?.state == "on" || entity?.state == "open"
+                HaPictureGlanceCell(
+                    entityId = id,
+                    icon = HaIconMap.resolve(null, entity),
+                    accent = HaStateColor.activeFor(entity),
+                    initiallyActive = active,
+                    label = name,
+                    tapAction = defaultTapActionFor(id),
+                )
+            }
 
         RemoteHaPictureGlance(
             HaPictureGlanceData(
-                title = title?.rs,
-                captionUrl = image?.rs,
+                title = title,
+                captionUrl = image,
                 placeholderIcon = Icons.Filled.Image,
                 cells = cells,
             ),

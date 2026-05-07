@@ -21,6 +21,7 @@ import androidx.compose.remote.creation.compose.shapes.RemoteRoundedCornerShape
 import androidx.compose.remote.creation.compose.state.RemoteColor
 import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
+import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.remote.creation.compose.state.rsp
 import androidx.compose.remote.creation.compose.text.RemoteTextStyle
 import androidx.compose.runtime.Composable
@@ -46,7 +47,7 @@ fun RemoteHaGlance(data: HaGlanceData, modifier: RemoteModifier = RemoteModifier
         RemoteColumn {
             if (data.title != null) {
                 RemoteText(
-                    text = data.title,
+                    text = data.title.rs,
                     color = theme.primaryText.rc,
                     fontSize = 15.rsp,
                     fontWeight = FontWeight.Medium,
@@ -77,15 +78,19 @@ fun RemoteHaGlance(data: HaGlanceData, modifier: RemoteModifier = RemoteModifier
 @RemoteComposable
 fun RemoteHaGlanceCell(data: HaGlanceCellData, modifier: RemoteModifier = RemoteModifier) {
     val theme = haTheme()
-    val clickable = data.tapAction.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
-    val accent: RemoteColor = data.accent.isOn?.select(data.accent.activeAccent, data.accent.inactiveAccent)
-        ?: data.accent.activeAccent
+    val clickable =
+        data.tapAction.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
+    val isOnBinding =
+        if (data.accent.toggleable) LiveValues.isOn(data.entityId, data.accent.initiallyOn) else null
+    val accent: RemoteColor =
+        isOnBinding?.select(data.accent.activeAccent, data.accent.inactiveAccent)
+            ?: data.accent.activeAccent
     RemoteColumn(
         modifier = modifier.then(clickable).padding(vertical = 4.rdp),
         horizontalAlignment = RemoteAlignment.CenterHorizontally,
     ) {
         RemoteText(
-            text = data.name,
+            text = data.name.rs,
             color = theme.primaryText.rc,
             fontSize = 12.rsp,
             style = RemoteTextStyle.Default,
@@ -93,13 +98,13 @@ fun RemoteHaGlanceCell(data: HaGlanceCellData, modifier: RemoteModifier = Remote
         RemoteBox(modifier = RemoteModifier.padding(vertical = 4.rdp)) {
             RemoteIcon(
                 imageVector = data.icon,
-                contentDescription = data.name,
+                contentDescription = data.name.rs,
                 modifier = RemoteModifier.size(28.rdp),
                 tint = accent,
             )
         }
         RemoteText(
-            text = data.state,
+            text = LiveValues.state(data.entityId, data.state),
             color = theme.secondaryText.rc,
             fontSize = 11.rsp,
             style = RemoteTextStyle.Default,
