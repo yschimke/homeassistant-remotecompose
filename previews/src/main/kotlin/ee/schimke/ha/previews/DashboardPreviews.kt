@@ -4,7 +4,9 @@ package ee.schimke.ha.previews
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth as uiFillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -20,6 +22,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
+import ee.schimke.ha.model.Section
 import ee.schimke.ha.model.View
 import ee.schimke.ha.rc.ProvideCardRegistry
 import ee.schimke.ha.rc.RenderChild
@@ -136,6 +139,16 @@ private fun DashboardPreview(name: String) {
     }
 }
 
+/** Width threshold below which we collapse the sections grid to a
+ *  single column — matches HA's web frontend behaviour, which packs
+ *  sections only on viewports wide enough that one section keeps a
+ *  reasonable per-card width (~380 dp). */
+private const val SECTIONS_GRID_MIN_WIDTH_DP = 600
+
+/** Per-column target width on tablet+. Sections fill `max_columns`
+ *  columns up to whatever fits in the canvas at this width. */
+private const val SECTIONS_COLUMN_TARGET_WIDTH_DP = 360
+
 @Composable
 private fun ViewBlock(view: View, snapshot: HaSnapshot) {
     if (view.title != null) {
@@ -146,8 +159,84 @@ private fun ViewBlock(view: View, snapshot: HaSnapshot) {
             )
         }
     }
-    val cards = view.cards + view.sections.flatMap { it.cards }
-    cards.forEach { card -> CardSlot(card, snapshot) }
+    if (view.type == "sections" && view.sections.isNotEmpty()) {
+        SectionsView(view, snapshot)
+    } else {
+        // Legacy `type: panel` / `type: masonry` / unspecified — render
+        // every card from view.cards + view.sections.cards as a single
+        // vertical column. Same behaviour as before this change.
+        val cards = view.cards + view.sections.flatMap { it.cards }
+        cards.forEach { card -> CardSlot(card, snapshot) }
+    }
+}
+
+/**
+ * `type: sections` view layout. On viewports below
+ * [SECTIONS_GRID_MIN_WIDTH_DP] we render single-column (mobile path);
+ * on wider hosts we pack sections into N columns based on the canvas
+ * width and the view's `max_columns:` config (default 4 per HA).
+ *
+ * Sections are distributed by walking left-to-right through columns,
+ * appending to the column with the smallest current card-count — keeps
+ * column heights roughly balanced without honouring `column_span` /
+ * `row_span` yet (those are minor v2 polish).
+ */
+@Composable
+private fun SectionsView(view: View, snapshot: HaSnapshot) {
+    BoxWithConstraints(modifier = Modifier.uiFillMaxWidth()) {
+        val widthDp = maxWidth.value.toInt()
+        val maxColumns = view.maxColumns ?: 4
+        val columnCount =
+            if (widthDp < SECTIONS_GRID_MIN_WIDTH_DP) 1
+            else (widthDp / SECTIONS_COLUMN_TARGET_WIDTH_DP).coerceIn(1, maxColumns)
+
+        if (columnCount == 1) {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                view.sections.forEach { section -> SectionBlock(section, snapshot) }
+            }
+        } else {
+            val columns = packSections(view.sections, columnCount)
+            Row(
+                modifier = Modifier.uiFillMaxWidth().padding(horizontal = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                columns.forEach { sections ->
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        sections.forEach { section -> SectionBlock(section, snapshot) }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SectionBlock(section: Section, snapshot: HaSnapshot) {
+    if (section.title != null) {
+        Box(modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)) {
+            androidx.compose.material3.Text(
+                text = section.title!!,
+                style = androidx.compose.material3.MaterialTheme.typography.labelLarge,
+            )
+        }
+    }
+    section.cards.forEach { card -> CardSlot(card, snapshot) }
+}
+
+/** Greedy pack — append each section to the shortest column. Keeps
+ *  column heights balanced without modelling per-card pixel heights. */
+private fun packSections(sections: List<Section>, columnCount: Int): List<List<Section>> {
+    val columns = MutableList(columnCount) { mutableListOf<Section>() }
+    val cardCounts = MutableList(columnCount) { 0 }
+    sections.forEach { section ->
+        val target = cardCounts.indices.minBy { cardCounts[it] }
+        columns[target] += section
+        cardCounts[target] += section.cards.size.coerceAtLeast(1)
+    }
+    return columns
 }
 
 @Composable

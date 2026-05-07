@@ -21,6 +21,11 @@ data class View(
   val icon: String? = null,
   val theme: String? = null,
   val type: String? = null,
+  /**
+   * Maximum number of columns the view uses on a wide enough host. Only meaningful for `type:
+   * sections`; renderers honour it on tablet+ widths and collapse to a single column on mobile.
+   */
+  val maxColumns: Int? = null,
   val sections: List<Section> = emptyList(),
   val cards: List<CardConfig> = emptyList(),
   val badges: List<JsonObject> = emptyList(),
@@ -31,6 +36,13 @@ data class Section(
   val type: String? = null,
   val title: String? = null,
   val cards: List<CardConfig> = emptyList(),
+  /**
+   * Sections-view per-section overrides. `column_span` lets a section occupy more than one grid
+   * column on a wide layout (HA defaults to 1 if absent). `row_span` similarly stretches
+   * vertically.
+   */
+  val columnSpan: Int? = null,
+  val rowSpan: Int? = null,
 )
 
 /**
