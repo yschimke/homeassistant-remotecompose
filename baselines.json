@@ -3,14 +3,14 @@
     "captureLabel": "",
     "functionName": "Play_Phone_01_HomeLight",
     "renderBasename": "Play_Phone_01_HomeLight_play_phone_home_light.png",
-    "sha256": "229377d181bbe4b323dbccba76acd07ba9a0f88d5afb7e7cb5a8885df0f013a3",
+    "sha256": "89647d0ae92aab69a044e6a89bf2f79a360984695e27749ec253d9692d5d86bf",
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/previews/ScreenPreviews.kt"
   },
   "app/ee.schimke.terrazzo.previews.ScreenPreviewsKt.Play_Phone_02_HomeDark_play \u00b7 phone \u00b7 home (dark)": {
     "captureLabel": "",
     "functionName": "Play_Phone_02_HomeDark",
     "renderBasename": "Play_Phone_02_HomeDark_play_phone_home_dark.png",
-    "sha256": "116c2b991afa76df0d729bae6521a6fb095bef20b98c41d94710af897beaa7ee",
+    "sha256": "fd515dd32107e9334856d46c447615d3752ddd91939bd6f68088f23c00d772a2",
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/previews/ScreenPreviews.kt"
   },
   "app/ee.schimke.terrazzo.previews.ScreenPreviewsKt.Play_Phone_03_Discovery_play \u00b7 phone \u00b7 discovery": {
@@ -38,14 +38,14 @@
     "captureLabel": "",
     "functionName": "Play_Tablet10_01_Home",
     "renderBasename": "Play_Tablet10_01_Home_play_10-inch_home.png",
-    "sha256": "6f85a6ee8ea61742784138d49cd3c1af9fc03cba888f71d649e54c9aba50c640",
+    "sha256": "ec9a5a8703444efb066dc08fa8592c34a91d63c31694c1b80a2deef38a3771f1",
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/previews/ScreenPreviews.kt"
   },
   "app/ee.schimke.terrazzo.previews.ScreenPreviewsKt.Play_Tablet7_01_Home_play \u00b7 7-inch \u00b7 home": {
     "captureLabel": "",
     "functionName": "Play_Tablet7_01_Home",
     "renderBasename": "Play_Tablet7_01_Home_play_7-inch_home.png",
-    "sha256": "ddcd45af23152345f244a844ed243c25c826a189609dd5a9aa11b8c14b650c6e",
+    "sha256": "75352cc313048a1c9d9e7f4022e14c4e4c0f3c759cb39c94ab1b5f7c7d324b5b",
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/previews/ScreenPreviews.kt"
   },
   "app/ee.schimke.terrazzo.previews.ScreenPreviewsKt.Screen_DashboardPicker_dashboard picker": {
@@ -59,42 +59,42 @@
     "captureLabel": "",
     "functionName": "Screen_DashboardView_ThemeStyle",
     "renderBasename": "Screen_DashboardView_ThemeStyle_dashboard_theme_Material3.png",
-    "sha256": "795e0c73a1c488c9cf1be5c12d6bf91700add33fbe689ea4ef3e15fe516ef787",
+    "sha256": "b65168e69e6923b64d3a58f9a02481dcc854e5d2fee487d6cdb31dddff9b8ccd",
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/previews/ScreenPreviews.kt"
   },
   "app/ee.schimke.terrazzo.previews.ScreenPreviewsKt.Screen_DashboardView_ThemeStyle_dashboard \u00b7 theme#1": {
     "captureLabel": "",
     "functionName": "Screen_DashboardView_ThemeStyle",
     "renderBasename": "Screen_DashboardView_ThemeStyle_dashboard_theme_TerrazzoHome.png",
-    "sha256": "6a5b5188d9de17ea13740e1681fa9eef7ff4f82002ebe10049ccee5aa08c6607",
+    "sha256": "400a175bd7bc111eace913f6b7e34628228c32b9c85e799704c9d4bfd06fe8a6",
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/previews/ScreenPreviews.kt"
   },
   "app/ee.schimke.terrazzo.previews.ScreenPreviewsKt.Screen_DashboardView_ThemeStyle_dashboard \u00b7 theme#2": {
     "captureLabel": "",
     "functionName": "Screen_DashboardView_ThemeStyle",
     "renderBasename": "Screen_DashboardView_ThemeStyle_dashboard_theme_TerrazzoKiosk.png",
-    "sha256": "103c71739f8bb69695398b21dc009554317fd82faff1feb14dd0b4792d93c36a",
+    "sha256": "30258602bfe01c0ffd24dff177d7bd7446e1136b10f0e2c0beb4abf9b16c04b6",
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/previews/ScreenPreviews.kt"
   },
   "app/ee.schimke.terrazzo.previews.ScreenPreviewsKt.Screen_DashboardView_ThemeStyle_dashboard \u00b7 theme#3": {
     "captureLabel": "",
     "functionName": "Screen_DashboardView_ThemeStyle",
     "renderBasename": "Screen_DashboardView_ThemeStyle_dashboard_theme_TerrazzoMinimalist.png",
-    "sha256": "ad06718ccaa7dc372d0b7fcd9aefe238f3abecd336f87be70e680d393ecd9b1b",
+    "sha256": "b483d9876b4441b5734d37448e0d16b7f45827f6aad80e4c6f51ef3e818cd5a9",
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/previews/ScreenPreviews.kt"
   },
   "app/ee.schimke.terrazzo.previews.ScreenPreviewsKt.Screen_DashboardView_ThemeStyle_dashboard \u00b7 theme#4": {
     "captureLabel": "",
     "functionName": "Screen_DashboardView_ThemeStyle",
     "renderBasename": "Screen_DashboardView_ThemeStyle_dashboard_theme_TerrazzoMushroom.png",
-    "sha256": "c500d95c43385614b7884751046f58350afef3dd891301855c71c25af45cf03c",
+    "sha256": "2324013515f8d3272b30cbc49df95f0b68d412c164c65a224ddd1690e98910fa",
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/previews/ScreenPreviews.kt"
   },
   "app/ee.schimke.terrazzo.previews.ScreenPreviewsKt.Screen_DashboardView_dashboard view": {
     "captureLabel": "",
     "functionName": "Screen_DashboardView",
     "renderBasename": "Screen_DashboardView_dashboard_view.png",
-    "sha256": "6a5b5188d9de17ea13740e1681fa9eef7ff4f82002ebe10049ccee5aa08c6607",
+    "sha256": "400a175bd7bc111eace913f6b7e34628228c32b9c85e799704c9d4bfd06fe8a6",
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/previews/ScreenPreviews.kt"
   },
   "app/ee.schimke.terrazzo.previews.ScreenPreviewsKt.Screen_Discovery_discovery": {
@@ -269,14 +269,14 @@
     "captureLabel": "",
     "functionName": "Clock_Dark",
     "renderBasename": "CardPreviewsKt.Clock_Dark_clock_dark.png",
-    "sha256": "5a8ef7116ad1ad9510e02fb2bc2426044d471d30ab23eb3b479378b4419e36e1",
+    "sha256": "88309cce6af4a55099271d5c8e89d5f38c92c42e0f9199521125a44653c88729",
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.CardPreviewsKt.Clock_Light_clock (light)": {
     "captureLabel": "",
     "functionName": "Clock_Light",
     "renderBasename": "CardPreviewsKt.Clock_Light_clock_light.png",
-    "sha256": "39254ad9bc20d6c1485e2657745cdb5f9e001c9f77e7fcb5a013f8f5f8f4b38b",
+    "sha256": "d582068f2b8e884a61f6be35714b7ddf9b065bc4e375d302eb6d9eef0d4bc47a",
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.CardPreviewsKt.Dashboard_Dark_dashboard (dark)": {
