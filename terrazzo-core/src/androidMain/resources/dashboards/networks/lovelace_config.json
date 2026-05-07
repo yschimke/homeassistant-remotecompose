@@ -1,0 +1,197 @@
+{
+  "views": [
+    {
+      "title": "Broadband",
+      "icon": "mdi:lan",
+      "type": "sections",
+      "max_columns": 4,
+      "header": {
+        "card": {
+          "type": "markdown",
+          "text_only": true,
+          "content": "# 🌐 Networks\n**Download:** {{ states('sensor.fast_com_download') | float(0) | round(0) }} Mbit/s · **Garage:** {{ states('sensor.garage_fast_com_download') | float(0) | round(0) }} Mbit/s · **UniFi devices home:** {{ states.device_tracker | selectattr('entity_id', 'match', '^device_tracker.unifi_default_') | selectattr('state', 'eq', 'home') | list | count }}"
+        }
+      },
+      "sections": [
+        {
+          "type": "grid",
+          "column_span": 4,
+          "cards": [
+            {
+              "type": "heading",
+              "heading": "🚀 Broadband speeds",
+              "heading_style": "title",
+              "grid_options": {
+                "columns": "full"
+              },
+              "icon": "mdi:speedometer"
+            },
+            {
+              "type": "grid",
+              "columns": 3,
+              "square": false,
+              "cards": [
+                {
+                  "type": "tile",
+                  "entity": "sensor.fast_com_download",
+                  "name": "Home download",
+                  "icon": "mdi:download-network"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.garage_fast_com_download",
+                  "name": "Garage download",
+                  "icon": "mdi:download-network-outline"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.remote_connection_to_192_168_0_252_8123",
+                  "name": "Garage link",
+                  "icon": "mdi:connection"
+                }
+              ],
+              "grid_options": {
+                "columns": "full"
+              }
+            },
+            {
+              "type": "history-graph",
+              "title": "Download speeds (1 month)",
+              "hours_to_show": 720,
+              "entities": [
+                {
+                  "entity": "sensor.fast_com_download",
+                  "name": "Home"
+                },
+                {
+                  "entity": "sensor.garage_fast_com_download",
+                  "name": "Garage"
+                }
+              ],
+              "grid_options": {
+                "columns": "full"
+              }
+            },
+            {
+              "type": "heading",
+              "heading": "📶 UniFi",
+              "heading_style": "title",
+              "grid_options": {
+                "columns": "full"
+              },
+              "icon": "mdi:router-network"
+            },
+            {
+              "type": "grid",
+              "columns": 3,
+              "square": false,
+              "cards": [
+                {
+                  "type": "tile",
+                  "entity": "update.unifi_network_application_update",
+                  "name": "Controller update",
+                  "icon": "mdi:cloud-sync-outline"
+                }
+              ],
+              "grid_options": {
+                "columns": "full"
+              }
+            },
+            {
+              "type": "markdown",
+              "grid_options": {
+                "columns": "full"
+              },
+              "content": "### UniFi clients\n{% set trackers = states.device_tracker | selectattr('entity_id', 'match', '^device_tracker.unifi_default_') | list %}**Total:** {{ trackers | count }} · 🟢 **Home:** {{ trackers | selectattr('state','eq','home') | list | count }} · 🔴 **Away:** {{ trackers | selectattr('state','eq','not_home') | list | count }} · ⚫ **Unavailable:** {{ trackers | selectattr('state','eq','unavailable') | list | count }}"
+            },
+            {
+              "type": "heading",
+              "heading": "Known devices",
+              "heading_style": "title",
+              "grid_options": {
+                "columns": "full"
+              },
+              "icon": "mdi:account-multiple"
+            },
+            {
+              "type": "grid",
+              "columns": 4,
+              "square": false,
+              "cards": [
+                {
+                  "type": "tile",
+                  "entity": "device_tracker.unifi_default_da_f1_88_71_ae_2a"
+                },
+                {
+                  "type": "tile",
+                  "entity": "device_tracker.unifi_default_84_2f_57_64_26_00"
+                },
+                {
+                  "type": "tile",
+                  "entity": "device_tracker.unifi_default_4e_b2_24_77_4b_1b"
+                },
+                {
+                  "type": "tile",
+                  "entity": "device_tracker.unifi_default_3e_c4_4a_88_9b_fe"
+                },
+                {
+                  "type": "tile",
+                  "entity": "device_tracker.unifi_default_b6_5b_07_32_f7_38"
+                },
+                {
+                  "type": "tile",
+                  "entity": "device_tracker.unifi_default_e2_ce_9c_67_d8_81"
+                },
+                {
+                  "type": "tile",
+                  "entity": "device_tracker.unifi_default_0e_19_1f_4e_fe_6f"
+                },
+                {
+                  "type": "tile",
+                  "entity": "device_tracker.unifi_default_be_94_67_11_9a_a9"
+                }
+              ],
+              "grid_options": {
+                "columns": "full"
+              }
+            },
+            {
+              "type": "heading",
+              "heading": "👥 People",
+              "heading_style": "title",
+              "grid_options": {
+                "columns": "full"
+              },
+              "icon": "mdi:account-group"
+            },
+            {
+              "type": "grid",
+              "columns": 3,
+              "square": false,
+              "cards": [
+                {
+                  "type": "tile",
+                  "entity": "person.yuri_schimke",
+                  "name": "Yuri"
+                },
+                {
+                  "type": "tile",
+                  "entity": "person.nikolai",
+                  "name": "Nikolai"
+                },
+                {
+                  "type": "tile",
+                  "entity": "person.tatjana",
+                  "name": "Tatjana"
+                }
+              ],
+              "grid_options": {
+                "columns": "full"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

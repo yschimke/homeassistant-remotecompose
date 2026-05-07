@@ -1,0 +1,532 @@
+{
+  "sensor.google_horologist_stars": {
+    "entity_id": "sensor.google_horologist_stars",
+    "state": "681",
+    "attributes": {
+      "state_class": "measurement",
+      "unit_of_measurement": "stars",
+      "attribution": "Data provided by the GitHub API",
+      "friendly_name": "google/horologist Stars"
+    },
+    "last_changed": "2026-05-04T10:37:10.335273+00:00",
+    "last_reported": "2026-05-04T10:37:10.335273+00:00",
+    "last_updated": "2026-05-04T10:37:10.335273+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.square_okhttp_stars": {
+    "entity_id": "sensor.square_okhttp_stars",
+    "state": "46950",
+    "attributes": {
+      "state_class": "measurement",
+      "unit_of_measurement": "stars",
+      "attribution": "Data provided by the GitHub API",
+      "friendly_name": "square/okhttp Stars"
+    },
+    "last_changed": "2026-05-05T20:09:09.364635+00:00",
+    "last_reported": "2026-05-05T20:09:09.364635+00:00",
+    "last_updated": "2026-05-05T20:09:09.364635+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.yschimke_cadence_issues": {
+    "entity_id": "sensor.yschimke_cadence_issues",
+    "state": "2",
+    "attributes": {
+      "state_class": "measurement",
+      "unit_of_measurement": "issues",
+      "attribution": "Data provided by the GitHub API",
+      "friendly_name": "yschimke/cadence Issues"
+    },
+    "last_changed": "2026-05-05T04:43:24.390671+00:00",
+    "last_reported": "2026-05-05T04:43:24.390671+00:00",
+    "last_updated": "2026-05-05T04:43:24.390671+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.yschimke_cadence_latest_issue": {
+    "entity_id": "sensor.yschimke_cadence_latest_issue",
+    "state": "Feature to split audiobooks or podcasts",
+    "attributes": {
+      "url": "<redacted>",
+      "number": 33,
+      "attribution": "Data provided by the GitHub API",
+      "friendly_name": "yschimke/cadence Latest issue"
+    },
+    "last_changed": "2026-05-05T04:43:24.390990+00:00",
+    "last_reported": "2026-05-05T04:43:24.390990+00:00",
+    "last_updated": "2026-05-05T04:43:24.390990+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.yschimke_cadence_latest_pull_request": {
+    "entity_id": "sensor.yschimke_cadence_latest_pull_request",
+    "state": "unavailable",
+    "attributes": {
+      "attribution": "Data provided by the GitHub API",
+      "friendly_name": "yschimke/cadence Latest pull request"
+    },
+    "last_changed": "2026-05-05T04:44:25.066592+00:00",
+    "last_reported": "2026-05-05T04:44:25.066592+00:00",
+    "last_updated": "2026-05-05T04:44:25.066592+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.yschimke_cadence_latest_release": {
+    "entity_id": "sensor.yschimke_cadence_latest_release",
+    "state": "v0.1.2",
+    "attributes": {
+      "url": "<redacted>",
+      "tag": "<redacted>",
+      "attribution": "Data provided by the GitHub API",
+      "friendly_name": "yschimke/cadence Latest release"
+    },
+    "last_changed": "2026-04-30T18:08:19.353986+00:00",
+    "last_reported": "2026-04-30T18:08:19.353986+00:00",
+    "last_updated": "2026-04-30T18:08:19.353986+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.yschimke_cadence_latest_tag": {
+    "entity_id": "sensor.yschimke_cadence_latest_tag",
+    "state": "v0.1.2",
+    "attributes": {
+      "url": "<redacted>",
+      "attribution": "Data provided by the GitHub API",
+      "friendly_name": "yschimke/cadence Latest tag"
+    },
+    "last_changed": "2026-04-30T18:08:19.356219+00:00",
+    "last_reported": "2026-04-30T18:08:19.356219+00:00",
+    "last_updated": "2026-04-30T18:08:19.356219+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.yschimke_cadence_pull_requests": {
+    "entity_id": "sensor.yschimke_cadence_pull_requests",
+    "state": "0",
+    "attributes": {
+      "state_class": "measurement",
+      "unit_of_measurement": "pull requests",
+      "attribution": "Data provided by the GitHub API",
+      "friendly_name": "yschimke/cadence Pull requests"
+    },
+    "last_changed": "2026-05-05T04:44:25.066254+00:00",
+    "last_reported": "2026-05-05T04:44:25.066254+00:00",
+    "last_updated": "2026-05-05T04:44:25.066254+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.yschimke_cadence_stars": {
+    "entity_id": "sensor.yschimke_cadence_stars",
+    "state": "0",
+    "attributes": {
+      "state_class": "measurement",
+      "unit_of_measurement": "stars",
+      "attribution": "Data provided by the GitHub API",
+      "friendly_name": "yschimke/cadence Stars"
+    },
+    "last_changed": "2026-04-30T18:08:19.346346+00:00",
+    "last_reported": "2026-04-30T18:08:19.346346+00:00",
+    "last_updated": "2026-04-30T18:08:19.346346+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.yschimke_compose_ai_tools_issues": {
+    "entity_id": "sensor.yschimke_compose_ai_tools_issues",
+    "state": "17",
+    "attributes": {
+      "state_class": "measurement",
+      "unit_of_measurement": "issues",
+      "attribution": "Data provided by the GitHub API",
+      "friendly_name": "yschimke/compose-ai-tools Issues"
+    },
+    "last_changed": "2026-05-05T21:34:18.970716+00:00",
+    "last_reported": "2026-05-05T21:34:29.310669+00:00",
+    "last_updated": "2026-05-05T21:34:18.970716+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.yschimke_compose_ai_tools_latest_issue": {
+    "entity_id": "sensor.yschimke_compose_ai_tools_latest_issue",
+    "state": "v1.0 cleanup checklist",
+    "attributes": {
+      "url": "<redacted>",
+      "number": 798,
+      "attribution": "Data provided by the GitHub API",
+      "friendly_name": "yschimke/compose-ai-tools Latest issue"
+    },
+    "last_changed": "2026-05-05T21:18:04.287416+00:00",
+    "last_reported": "2026-05-05T21:18:14.781775+00:00",
+    "last_updated": "2026-05-05T21:18:04.287416+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.yschimke_compose_ai_tools_latest_pull_request": {
+    "entity_id": "sensor.yschimke_compose_ai_tools_latest_pull_request",
+    "state": "refactor(data-history): lift diff payload schema to data-history-core",
+    "attributes": {
+      "url": "<redacted>",
+      "number": 804,
+      "attribution": "Data provided by the GitHub API",
+      "friendly_name": "yschimke/compose-ai-tools Latest pull request"
+    },
+    "last_changed": "2026-05-05T22:15:02.926550+00:00",
+    "last_reported": "2026-05-05T22:15:02.926550+00:00",
+    "last_updated": "2026-05-05T22:15:02.926550+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.yschimke_compose_ai_tools_latest_release": {
+    "entity_id": "sensor.yschimke_compose_ai_tools_latest_release",
+    "state": "v0.9.3",
+    "attributes": {
+      "url": "<redacted>",
+      "tag": "<redacted>",
+      "attribution": "Data provided by the GitHub API",
+      "friendly_name": "yschimke/compose-ai-tools Latest release"
+    },
+    "last_changed": "2026-05-05T18:40:29.970543+00:00",
+    "last_reported": "2026-05-05T18:40:29.970543+00:00",
+    "last_updated": "2026-05-05T18:40:29.970543+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.yschimke_compose_ai_tools_latest_tag": {
+    "entity_id": "sensor.yschimke_compose_ai_tools_latest_tag",
+    "state": "v0.9.3",
+    "attributes": {
+      "url": "<redacted>",
+      "attribution": "Data provided by the GitHub API",
+      "friendly_name": "yschimke/compose-ai-tools Latest tag"
+    },
+    "last_changed": "2026-05-05T18:40:29.970692+00:00",
+    "last_reported": "2026-05-05T18:40:29.970692+00:00",
+    "last_updated": "2026-05-05T18:40:29.970692+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.yschimke_compose_ai_tools_pull_requests": {
+    "entity_id": "sensor.yschimke_compose_ai_tools_pull_requests",
+    "state": "3",
+    "attributes": {
+      "state_class": "measurement",
+      "unit_of_measurement": "pull requests",
+      "attribution": "Data provided by the GitHub API",
+      "friendly_name": "yschimke/compose-ai-tools Pull requests"
+    },
+    "last_changed": "2026-05-05T22:15:02.926303+00:00",
+    "last_reported": "2026-05-05T22:15:02.926303+00:00",
+    "last_updated": "2026-05-05T22:15:02.926303+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.yschimke_compose_ai_tools_stars": {
+    "entity_id": "sensor.yschimke_compose_ai_tools_stars",
+    "state": "64",
+    "attributes": {
+      "state_class": "measurement",
+      "unit_of_measurement": "stars",
+      "attribution": "Data provided by the GitHub API",
+      "friendly_name": "yschimke/compose-ai-tools Stars"
+    },
+    "last_changed": "2026-05-05T22:13:51.401854+00:00",
+    "last_reported": "2026-05-05T22:13:51.401854+00:00",
+    "last_updated": "2026-05-05T22:13:51.401854+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.yschimke_homeassistant_remotecompose_issues": {
+    "entity_id": "sensor.yschimke_homeassistant_remotecompose_issues",
+    "state": "1",
+    "attributes": {
+      "state_class": "measurement",
+      "unit_of_measurement": "issues",
+      "attribution": "Data provided by the GitHub API",
+      "friendly_name": "yschimke/homeassistant-remotecompose Issues"
+    },
+    "last_changed": "2026-05-05T16:00:48.103017+00:00",
+    "last_reported": "2026-05-05T16:00:48.103017+00:00",
+    "last_updated": "2026-05-05T16:00:48.103017+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.yschimke_homeassistant_remotecompose_latest_issue": {
+    "entity_id": "sensor.yschimke_homeassistant_remotecompose_latest_issue",
+    "state": "Dependency Dashboard",
+    "attributes": {
+      "url": "<redacted>",
+      "number": 20,
+      "attribution": "Data provided by the GitHub API",
+      "friendly_name": "yschimke/homeassistant-remotecompose Latest issue"
+    },
+    "last_changed": "2026-05-05T16:00:48.103326+00:00",
+    "last_reported": "2026-05-05T16:00:48.103326+00:00",
+    "last_updated": "2026-05-05T16:00:48.103326+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.yschimke_homeassistant_remotecompose_latest_pull_request": {
+    "entity_id": "sensor.yschimke_homeassistant_remotecompose_latest_pull_request",
+    "state": "chore(deps): update eclipse-temurin docker tag to v25.0.3_9-jdk-jammy",
+    "attributes": {
+      "url": "<redacted>",
+      "number": 70,
+      "attribution": "Data provided by the GitHub API",
+      "friendly_name": "yschimke/homeassistant-remotecompose Latest pull request"
+    },
+    "last_changed": "2026-05-05T16:00:48.103385+00:00",
+    "last_reported": "2026-05-05T16:00:48.103385+00:00",
+    "last_updated": "2026-05-05T16:00:48.103385+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.yschimke_homeassistant_remotecompose_latest_release": {
+    "entity_id": "sensor.yschimke_homeassistant_remotecompose_latest_release",
+    "state": "v0.1.2",
+    "attributes": {
+      "url": "<redacted>",
+      "tag": "<redacted>",
+      "attribution": "Data provided by the GitHub API",
+      "friendly_name": "yschimke/homeassistant-remotecompose Latest release"
+    },
+    "last_changed": "2026-05-05T16:00:48.103266+00:00",
+    "last_reported": "2026-05-05T16:00:48.103266+00:00",
+    "last_updated": "2026-05-05T16:00:48.103266+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.yschimke_homeassistant_remotecompose_latest_tag": {
+    "entity_id": "sensor.yschimke_homeassistant_remotecompose_latest_tag",
+    "state": "v0.1.2",
+    "attributes": {
+      "url": "<redacted>",
+      "attribution": "Data provided by the GitHub API",
+      "friendly_name": "yschimke/homeassistant-remotecompose Latest tag"
+    },
+    "last_changed": "2026-05-05T16:00:48.103441+00:00",
+    "last_reported": "2026-05-05T16:00:48.103441+00:00",
+    "last_updated": "2026-05-05T16:00:48.103441+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.yschimke_homeassistant_remotecompose_pull_requests": {
+    "entity_id": "sensor.yschimke_homeassistant_remotecompose_pull_requests",
+    "state": "2",
+    "attributes": {
+      "state_class": "measurement",
+      "unit_of_measurement": "pull requests",
+      "attribution": "Data provided by the GitHub API",
+      "friendly_name": "yschimke/homeassistant-remotecompose Pull requests"
+    },
+    "last_changed": "2026-05-05T16:00:48.103067+00:00",
+    "last_reported": "2026-05-05T16:00:48.103067+00:00",
+    "last_updated": "2026-05-05T16:00:48.103067+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.yschimke_homeassistant_remotecompose_stars": {
+    "entity_id": "sensor.yschimke_homeassistant_remotecompose_stars",
+    "state": "5",
+    "attributes": {
+      "state_class": "measurement",
+      "unit_of_measurement": "stars",
+      "attribution": "Data provided by the GitHub API",
+      "friendly_name": "yschimke/homeassistant-remotecompose Stars"
+    },
+    "last_changed": "2026-05-05T16:00:48.102842+00:00",
+    "last_reported": "2026-05-05T16:00:48.102842+00:00",
+    "last_updated": "2026-05-05T16:00:48.102842+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.yschimke_meshcore_mobile_issues": {
+    "entity_id": "sensor.yschimke_meshcore_mobile_issues",
+    "state": "2",
+    "attributes": {
+      "state_class": "measurement",
+      "unit_of_measurement": "issues",
+      "attribution": "Data provided by the GitHub API",
+      "friendly_name": "yschimke/meshcore-mobile Issues"
+    },
+    "last_changed": "2026-05-04T16:03:26.153661+00:00",
+    "last_reported": "2026-05-04T16:03:26.153661+00:00",
+    "last_updated": "2026-05-04T16:03:26.153661+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.yschimke_meshcore_mobile_latest_issue": {
+    "entity_id": "sensor.yschimke_meshcore_mobile_latest_issue",
+    "state": "MESH_SERVICE permission name still namespaced under old applicationId",
+    "attributes": {
+      "url": "<redacted>",
+      "number": 31,
+      "attribution": "Data provided by the GitHub API",
+      "friendly_name": "yschimke/meshcore-mobile Latest issue"
+    },
+    "last_changed": "2026-05-04T16:03:26.153922+00:00",
+    "last_reported": "2026-05-04T16:03:26.153922+00:00",
+    "last_updated": "2026-05-04T16:03:26.153922+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.yschimke_meshcore_mobile_latest_pull_request": {
+    "entity_id": "sensor.yschimke_meshcore_mobile_latest_pull_request",
+    "state": "unavailable",
+    "attributes": {
+      "attribution": "Data provided by the GitHub API",
+      "friendly_name": "yschimke/meshcore-mobile Latest pull request"
+    },
+    "last_changed": "2026-05-05T04:47:46.083188+00:00",
+    "last_reported": "2026-05-05T04:47:46.083188+00:00",
+    "last_updated": "2026-05-05T04:47:46.083188+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.yschimke_meshcore_mobile_latest_release": {
+    "entity_id": "sensor.yschimke_meshcore_mobile_latest_release",
+    "state": "unavailable",
+    "attributes": {
+      "attribution": "Data provided by the GitHub API",
+      "friendly_name": "yschimke/meshcore-mobile Latest release"
+    },
+    "last_changed": "2026-04-30T18:08:19.353463+00:00",
+    "last_reported": "2026-04-30T18:08:19.353463+00:00",
+    "last_updated": "2026-04-30T18:08:19.353463+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.yschimke_meshcore_mobile_latest_tag": {
+    "entity_id": "sensor.yschimke_meshcore_mobile_latest_tag",
+    "state": "v0.1.1",
+    "attributes": {
+      "url": "<redacted>",
+      "attribution": "Data provided by the GitHub API",
+      "friendly_name": "yschimke/meshcore-mobile Latest tag"
+    },
+    "last_changed": "2026-04-30T18:08:19.355860+00:00",
+    "last_reported": "2026-04-30T18:08:19.355860+00:00",
+    "last_updated": "2026-04-30T18:08:19.355860+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.yschimke_meshcore_mobile_pull_requests": {
+    "entity_id": "sensor.yschimke_meshcore_mobile_pull_requests",
+    "state": "0",
+    "attributes": {
+      "state_class": "measurement",
+      "unit_of_measurement": "pull requests",
+      "attribution": "Data provided by the GitHub API",
+      "friendly_name": "yschimke/meshcore-mobile Pull requests"
+    },
+    "last_changed": "2026-05-05T04:47:46.082820+00:00",
+    "last_reported": "2026-05-05T04:47:46.082820+00:00",
+    "last_updated": "2026-05-05T04:47:46.082820+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.yschimke_meshcore_mobile_stars": {
+    "entity_id": "sensor.yschimke_meshcore_mobile_stars",
+    "state": "1",
+    "attributes": {
+      "state_class": "measurement",
+      "unit_of_measurement": "stars",
+      "attribution": "Data provided by the GitHub API",
+      "friendly_name": "yschimke/meshcore-mobile Stars"
+    },
+    "last_changed": "2026-05-04T04:37:30.772394+00:00",
+    "last_reported": "2026-05-04T04:37:41.212990+00:00",
+    "last_updated": "2026-05-04T04:37:30.772394+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  }
+}

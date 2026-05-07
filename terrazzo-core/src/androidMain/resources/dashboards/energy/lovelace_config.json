@@ -1,0 +1,442 @@
+{
+  "views": [
+    {
+      "title": "Overview",
+      "icon": "mdi:lightning-bolt",
+      "type": "sections",
+      "max_columns": 4,
+      "header": {
+        "card": {
+          "type": "markdown",
+          "text_only": true,
+          "content": "# ⚡ Energy\n☀️ Solar now: **{{ states('sensor.solaredge_current_power') | float(0) | round(0) }} W** · ⚡ Import rate: **{{ (states('sensor.octopus_energy_electricity_sn2_sn3_current_rate') | float(0) * 100) | round(2) }} p/kWh** · ⤴️ Export rate: **{{ (states('sensor.octopus_energy_electricity_sn2_sn4_export_current_rate') | float(0) * 100) | round(2) }} p/kWh** · 🔥 Gas rate: **{{ (states('sensor.octopus_energy_gas_sn5_sn6_current_rate') | float(0) * 100) | round(2) }} p/kWh**"
+        }
+      },
+      "sections": [
+        {
+          "type": "grid",
+          "column_span": 4,
+          "cards": [
+            {
+              "type": "heading",
+              "heading": "☀️ Right now",
+              "heading_style": "title",
+              "grid_options": {
+                "columns": "full"
+              },
+              "icon": "mdi:solar-power"
+            },
+            {
+              "type": "grid",
+              "columns": 4,
+              "square": false,
+              "cards": [
+                {
+                  "type": "tile",
+                  "entity": "sensor.solaredge_current_power",
+                  "name": "Solar production",
+                  "icon": "mdi:solar-power-variant"
+                },
+                {
+                  "type": "tile",
+                  "entity": "binary_sensor.octopus_energy_electricity_sn2_sn3_off_peak",
+                  "name": "Off-peak import?",
+                  "icon": "mdi:lightning-bolt-circle"
+                },
+                {
+                  "type": "tile",
+                  "entity": "binary_sensor.octopus_energy_a_sn1_octoplus_saving_sessions",
+                  "name": "Saving session?",
+                  "icon": "mdi:leaf-circle-outline"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.openweathermap_cloud_coverage",
+                  "name": "Cloud cover",
+                  "icon": "mdi:weather-cloudy"
+                }
+              ],
+              "grid_options": {
+                "columns": "full"
+              }
+            },
+            {
+              "type": "heading",
+              "heading": "💷 Octopus rates (today)",
+              "heading_style": "title",
+              "grid_options": {
+                "columns": "full"
+              },
+              "icon": "mdi:cash"
+            },
+            {
+              "type": "grid",
+              "columns": 4,
+              "square": false,
+              "cards": [
+                {
+                  "type": "tile",
+                  "entity": "sensor.octopus_energy_electricity_sn2_sn3_current_rate",
+                  "name": "Import rate",
+                  "icon": "mdi:transmission-tower-import"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.octopus_energy_electricity_sn2_sn4_export_current_rate",
+                  "name": "Export rate",
+                  "icon": "mdi:transmission-tower-export"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.octopus_energy_gas_sn5_sn6_current_rate",
+                  "name": "Gas rate",
+                  "icon": "mdi:fire"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.octopus_energy_electricity_sn2_sn3_current_standing_charge",
+                  "name": "Elec. standing",
+                  "icon": "mdi:clock-outline"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.octopus_energy_gas_sn5_sn6_current_standing_charge",
+                  "name": "Gas standing",
+                  "icon": "mdi:clock-outline"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.octopus_energy_electricity_sn2_sn3_next_rate",
+                  "name": "Elec. next rate",
+                  "icon": "mdi:transmission-tower-import"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.octopus_energy_electricity_sn2_sn4_export_next_rate",
+                  "name": "Export next rate",
+                  "icon": "mdi:transmission-tower-export"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.octopus_energy_gas_sn5_sn6_next_rate",
+                  "name": "Gas next rate",
+                  "icon": "mdi:fire"
+                }
+              ],
+              "grid_options": {
+                "columns": "full"
+              }
+            },
+            {
+              "type": "heading",
+              "heading": "📅 Yesterday",
+              "heading_style": "title",
+              "grid_options": {
+                "columns": "full"
+              },
+              "icon": "mdi:calendar-yesterday"
+            },
+            {
+              "type": "grid",
+              "columns": 4,
+              "square": false,
+              "cards": [
+                {
+                  "type": "tile",
+                  "entity": "sensor.octopus_energy_electricity_sn2_sn3_previous_accumulative_consumption",
+                  "name": "Imported",
+                  "icon": "mdi:transmission-tower-import"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.octopus_energy_electricity_sn2_sn3_previous_accumulative_cost",
+                  "name": "Import cost",
+                  "icon": "mdi:currency-gbp"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.octopus_energy_electricity_sn2_sn4_export_previous_accumulative_consumption",
+                  "name": "Exported",
+                  "icon": "mdi:transmission-tower-export"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.octopus_energy_electricity_sn2_sn4_export_previous_accumulative_cost",
+                  "name": "Export income",
+                  "icon": "mdi:currency-gbp"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.octopus_energy_gas_sn5_sn6_previous_accumulative_consumption_kwh",
+                  "name": "Gas (kWh)",
+                  "icon": "mdi:fire"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.octopus_energy_gas_sn5_sn6_previous_accumulative_consumption_m3",
+                  "name": "Gas (m³)",
+                  "icon": "mdi:fire-circle"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.octopus_energy_gas_sn5_sn6_previous_accumulative_cost",
+                  "name": "Gas cost",
+                  "icon": "mdi:currency-gbp"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.solaredge_lifetime_energy",
+                  "name": "Solar lifetime",
+                  "icon": "mdi:solar-panel"
+                }
+              ],
+              "grid_options": {
+                "columns": "full"
+              }
+            },
+            {
+              "type": "heading",
+              "heading": "📈 Solar production (7 days)",
+              "heading_style": "title",
+              "grid_options": {
+                "columns": "full"
+              },
+              "icon": "mdi:chart-line"
+            },
+            {
+              "type": "history-graph",
+              "title": "SolarEdge current power",
+              "hours_to_show": 168,
+              "entities": [
+                {
+                  "entity": "sensor.solaredge_current_power",
+                  "name": "Power"
+                }
+              ],
+              "grid_options": {
+                "columns": "full"
+              }
+            },
+            {
+              "type": "history-graph",
+              "title": "Today's rates (import/export/gas)",
+              "hours_to_show": 24,
+              "entities": [
+                {
+                  "entity": "sensor.octopus_energy_electricity_sn2_sn3_current_rate",
+                  "name": "Import"
+                },
+                {
+                  "entity": "sensor.octopus_energy_electricity_sn2_sn4_export_current_rate",
+                  "name": "Export"
+                },
+                {
+                  "entity": "sensor.octopus_energy_gas_sn5_sn6_current_rate",
+                  "name": "Gas"
+                }
+              ],
+              "grid_options": {
+                "columns": "full"
+              }
+            },
+            {
+              "type": "heading",
+              "heading": "🎁 Octoplus perks",
+              "heading_style": "title",
+              "grid_options": {
+                "columns": "full"
+              },
+              "icon": "mdi:gift-outline"
+            },
+            {
+              "type": "grid",
+              "columns": 3,
+              "square": false,
+              "cards": [
+                {
+                  "type": "tile",
+                  "entity": "sensor.octopus_energy_a_sn1_octoplus_points",
+                  "name": "Octoplus points",
+                  "icon": "mdi:star-four-points-outline"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.octopus_energy_a_sn1_wheel_of_fortune_spins_electricity",
+                  "name": "Wheel spins (elec)",
+                  "icon": "mdi:ferris-wheel"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.octopus_energy_a_sn1_wheel_of_fortune_spins_gas",
+                  "name": "Wheel spins (gas)",
+                  "icon": "mdi:ferris-wheel"
+                }
+              ],
+              "grid_options": {
+                "columns": "full"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Sun",
+      "icon": "mdi:weather-sunny",
+      "path": "sun",
+      "type": "sections",
+      "max_columns": 4,
+      "header": {
+        "card": {
+          "type": "markdown",
+          "text_only": true,
+          "content": "# 🌞 Sun\n{% set sun = states.sun.sun %}{% set e = sun.attributes.elevation | float(0) %}{% set a = sun.attributes.azimuth | float(0) %}**State:** {{ 'above horizon' if sun.state == 'above_horizon' else 'below horizon' }} · **Elevation:** {{ e | round(1) }}° · **Azimuth:** {{ a | round(0) }}° {% if sun.state == 'above_horizon' %}— next setting in {{ (as_timestamp(states('sensor.sun_next_setting')) - as_timestamp(now())) | int // 60 }} min{% else %}— next rising in {{ ((as_timestamp(states('sensor.sun_next_rising')) - as_timestamp(now())) | int // 60) }} min{% endif %}"
+        }
+      },
+      "sections": [
+        {
+          "type": "grid",
+          "column_span": 4,
+          "cards": [
+            {
+              "type": "heading",
+              "heading": "🌅 Timings today",
+              "heading_style": "title",
+              "grid_options": {
+                "columns": "full"
+              },
+              "icon": "mdi:weather-sunset"
+            },
+            {
+              "type": "grid",
+              "columns": 3,
+              "square": false,
+              "cards": [
+                {
+                  "type": "tile",
+                  "entity": "sensor.sun_next_dawn",
+                  "name": "Dawn",
+                  "icon": "mdi:weather-sunset-up"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.sun_next_rising",
+                  "name": "Sunrise",
+                  "icon": "mdi:weather-sunset-up"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.sun_next_noon",
+                  "name": "Solar noon",
+                  "icon": "mdi:white-balance-sunny"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.sun_next_setting",
+                  "name": "Sunset",
+                  "icon": "mdi:weather-sunset-down"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.sun_next_dusk",
+                  "name": "Dusk",
+                  "icon": "mdi:weather-sunset-down"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.sun_next_midnight",
+                  "name": "Solar midnight",
+                  "icon": "mdi:weather-night"
+                }
+              ],
+              "grid_options": {
+                "columns": "full"
+              }
+            },
+            {
+              "type": "heading",
+              "heading": "🔭 Position & conditions",
+              "heading_style": "title",
+              "grid_options": {
+                "columns": "full"
+              },
+              "icon": "mdi:compass-outline"
+            },
+            {
+              "type": "markdown",
+              "grid_options": {
+                "columns": "full"
+              },
+              "content": "{% set sun = states.sun.sun %}{% set e = sun.attributes.elevation | float(0) %}{% set a = sun.attributes.azimuth | float(0) %}{% set comp = ['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW','N'] %}{% set idx = ((a / 22.5) | round(0, 'floor')) | int %}## {{ '☀️' if sun.state == 'above_horizon' else '🌙' }} Elevation **{{ e | round(1) }}°** · Azimuth **{{ a | round(0) }}° ({{ comp[idx] }})**\n\n_Rising_: {{ 'yes' if sun.attributes.rising else 'no' }} · _Cloud_: {{ states('sensor.openweathermap_cloud_coverage') }}% · _UV_: {{ states('sensor.openweathermap_uv_index') }} · _Condition_: {{ states('sensor.openweathermap_condition') | replace('-', ' ') | title }}"
+            },
+            {
+              "type": "grid",
+              "columns": 4,
+              "square": false,
+              "cards": [
+                {
+                  "type": "tile",
+                  "entity": "sensor.openweathermap_cloud_coverage",
+                  "name": "Cloud cover",
+                  "icon": "mdi:weather-cloudy"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.openweathermap_uv_index",
+                  "name": "UV index",
+                  "icon": "mdi:sun-wireless"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.openweathermap_condition",
+                  "name": "Condition",
+                  "icon": "mdi:weather-partly-cloudy"
+                },
+                {
+                  "type": "tile",
+                  "entity": "sensor.solaredge_current_power",
+                  "name": "Solar production",
+                  "icon": "mdi:solar-power-variant"
+                }
+              ],
+              "grid_options": {
+                "columns": "full"
+              }
+            },
+            {
+              "type": "heading",
+              "heading": "📊 Solar vs cloud vs UV (48h)",
+              "heading_style": "title",
+              "grid_options": {
+                "columns": "full"
+              },
+              "icon": "mdi:chart-multiline"
+            },
+            {
+              "type": "history-graph",
+              "title": "Production vs sky",
+              "hours_to_show": 48,
+              "entities": [
+                {
+                  "entity": "sensor.solaredge_current_power",
+                  "name": "Solar power"
+                },
+                {
+                  "entity": "sensor.openweathermap_cloud_coverage",
+                  "name": "Cloud %"
+                },
+                {
+                  "entity": "sensor.openweathermap_uv_index",
+                  "name": "UV index"
+                }
+              ],
+              "grid_options": {
+                "columns": "full"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

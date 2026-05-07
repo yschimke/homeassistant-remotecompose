@@ -1,0 +1,319 @@
+{
+  "device_tracker.unifi_default_0e_19_1f_4e_fe_6f": {
+    "entity_id": "device_tracker.unifi_default_0e_19_1f_4e_fe_6f",
+    "state": "home",
+    "attributes": {
+      "source_type": "router",
+      "ip": "<redacted>",
+      "mac": "<redacted>",
+      "host_name": "<redacted>",
+      "_is_guest_by_uap": false,
+      "ap_mac": "<redacted>",
+      "essid": "<redacted>",
+      "is_11r": true,
+      "is_guest": false,
+      "qos_policy_applied": true,
+      "radio": "6e",
+      "radio_proto": "be",
+      "oui": "",
+      "friendly_name": "iPad"
+    },
+    "last_changed": "2026-05-05T12:00:05.363514+00:00",
+    "last_reported": "2026-05-05T12:00:54.430871+00:00",
+    "last_updated": "2026-05-05T12:00:45.315824+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "device_tracker.unifi_default_3e_c4_4a_88_9b_fe": {
+    "entity_id": "device_tracker.unifi_default_3e_c4_4a_88_9b_fe",
+    "state": "not_home",
+    "attributes": {
+      "source_type": "router",
+      "mac": "<redacted>",
+      "host_name": "<redacted>",
+      "oui": "",
+      "friendly_name": "iPhone"
+    },
+    "last_changed": "2026-05-01T02:48:12.768332+00:00",
+    "last_reported": "2026-05-01T02:48:12.768332+00:00",
+    "last_updated": "2026-05-01T02:48:12.768332+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "device_tracker.unifi_default_4e_b2_24_77_4b_1b": {
+    "entity_id": "device_tracker.unifi_default_4e_b2_24_77_4b_1b",
+    "state": "not_home",
+    "attributes": {
+      "source_type": "router",
+      "mac": "<redacted>",
+      "host_name": "<redacted>",
+      "oui": "",
+      "friendly_name": "iPhone iPhone"
+    },
+    "last_changed": "2026-05-01T02:48:12.767199+00:00",
+    "last_reported": "2026-05-01T02:48:12.767199+00:00",
+    "last_updated": "2026-05-01T02:48:12.767199+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "device_tracker.unifi_default_84_2f_57_64_26_00": {
+    "entity_id": "device_tracker.unifi_default_84_2f_57_64_26_00",
+    "state": "not_home",
+    "attributes": {
+      "source_type": "router",
+      "mac": "<redacted>",
+      "host_name": "<redacted>",
+      "oui": "",
+      "friendly_name": "MacBook-Pro"
+    },
+    "last_changed": "2026-05-01T02:48:12.767936+00:00",
+    "last_reported": "2026-05-01T02:48:12.767936+00:00",
+    "last_updated": "2026-05-01T02:48:12.767936+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "device_tracker.unifi_default_b6_5b_07_32_f7_38": {
+    "entity_id": "device_tracker.unifi_default_b6_5b_07_32_f7_38",
+    "state": "not_home",
+    "attributes": {
+      "source_type": "router",
+      "mac": "<redacted>",
+      "host_name": "<redacted>",
+      "oui": "",
+      "friendly_name": "iPhone"
+    },
+    "last_changed": "2026-05-01T02:48:12.768382+00:00",
+    "last_reported": "2026-05-01T02:48:12.768382+00:00",
+    "last_updated": "2026-05-01T02:48:12.768382+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "device_tracker.unifi_default_be_94_67_11_9a_a9": {
+    "entity_id": "device_tracker.unifi_default_be_94_67_11_9a_a9",
+    "state": "not_home",
+    "attributes": {
+      "source_type": "router",
+      "mac": "<redacted>",
+      "host_name": "<redacted>",
+      "oui": "",
+      "friendly_name": "Mac"
+    },
+    "last_changed": "2026-05-01T02:48:12.768280+00:00",
+    "last_reported": "2026-05-01T02:48:12.768280+00:00",
+    "last_updated": "2026-05-01T02:48:12.768280+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "device_tracker.unifi_default_da_f1_88_71_ae_2a": {
+    "entity_id": "device_tracker.unifi_default_da_f1_88_71_ae_2a",
+    "state": "home",
+    "attributes": {
+      "source_type": "router",
+      "ip": "<redacted>",
+      "mac": "<redacted>",
+      "host_name": "<redacted>",
+      "_is_guest_by_uap": false,
+      "ap_mac": "<redacted>",
+      "essid": "<redacted>",
+      "is_11r": false,
+      "is_guest": false,
+      "qos_policy_applied": true,
+      "radio": "6e",
+      "radio_proto": "ax",
+      "oui": "",
+      "friendly_name": "Mac"
+    },
+    "last_changed": "2026-05-05T08:17:55.406712+00:00",
+    "last_reported": "2026-05-05T08:18:15.560051+00:00",
+    "last_updated": "2026-05-05T08:18:03.770793+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "device_tracker.unifi_default_e2_ce_9c_67_d8_81": {
+    "entity_id": "device_tracker.unifi_default_e2_ce_9c_67_d8_81",
+    "state": "not_home",
+    "attributes": {
+      "source_type": "router",
+      "mac": "<redacted>",
+      "host_name": "<redacted>",
+      "oui": "",
+      "friendly_name": "iPhone"
+    },
+    "last_changed": "2026-05-01T02:48:12.769078+00:00",
+    "last_reported": "2026-05-01T02:48:12.769078+00:00",
+    "last_updated": "2026-05-01T02:48:12.769078+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "person.nikolai": {
+    "entity_id": "person.nikolai",
+    "state": "unknown",
+    "attributes": {
+      "editable": true,
+      "id": "<redacted>",
+      "device_trackers": "<redacted>",
+      "friendly_name": "Nikolai"
+    },
+    "last_changed": "2026-04-30T18:08:05.168232+00:00",
+    "last_reported": "2026-04-30T18:13:22.143187+00:00",
+    "last_updated": "2026-04-30T18:13:22.143187+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "person.tatjana": {
+    "entity_id": "person.tatjana",
+    "state": "unknown",
+    "attributes": {
+      "editable": true,
+      "id": "<redacted>",
+      "device_trackers": "<redacted>",
+      "user_id": "<redacted>",
+      "friendly_name": "Tatjana"
+    },
+    "last_changed": "2026-04-30T18:08:05.168393+00:00",
+    "last_reported": "2026-04-30T18:13:22.143233+00:00",
+    "last_updated": "2026-04-30T18:13:22.143233+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "person.yuri_schimke": {
+    "entity_id": "person.yuri_schimke",
+    "state": "home",
+    "attributes": {
+      "editable": true,
+      "id": "<redacted>",
+      "device_trackers": "<redacted>",
+      "latitude": "<redacted>",
+      "longitude": "<redacted>",
+      "gps_accuracy": "<redacted>",
+      "source": "device_tracker.pixel_10a_2",
+      "user_id": "<redacted>",
+      "friendly_name": "Yuri Schimke"
+    },
+    "last_changed": "2026-05-05T06:31:00.892102+00:00",
+    "last_reported": "2026-05-05T21:17:47.040298+00:00",
+    "last_updated": "2026-05-05T21:17:47.040298+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.fast_com_download": {
+    "entity_id": "sensor.fast_com_download",
+    "state": "551.XXXXXXXXXXXX",
+    "attributes": {
+      "state_class": "measurement",
+      "unit_of_measurement": "Mbit/s",
+      "device_class": "data_rate",
+      "friendly_name": "Fast.com Download"
+    },
+    "last_changed": "2026-05-05T21:33:36.484891+00:00",
+    "last_reported": "2026-05-05T21:33:36.484891+00:00",
+    "last_updated": "2026-05-05T21:33:36.484891+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.garage_fast_com_download": {
+    "entity_id": "sensor.garage_fast_com_download",
+    "state": "61.XXXXXXXXXXXXX",
+    "attributes": {
+      "state_class": "measurement",
+      "unit_of_measurement": "Mbit/s",
+      "device_class": "data_rate",
+      "friendly_name": "Garage Fast.com Download",
+      "unique_id": "XXXXXXXXXXXXXXXX_sensor.garage_fast_com_download"
+    },
+    "last_changed": "2026-05-05T22:00:10.885333+00:00",
+    "last_reported": "2026-05-05T22:00:10.885333+00:00",
+    "last_updated": "2026-05-05T22:00:10.885333+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "sensor.remote_connection_to_192_168_0_252_8123": {
+    "entity_id": "sensor.remote_connection_to_192_168_0_252_8123",
+    "state": "connected",
+    "attributes": {
+      "host": "<redacted>",
+      "port": 8123,
+      "secure": false,
+      "verify_ssl": true,
+      "max_msg_size": 0,
+      "entity_prefix": "garage_",
+      "entity_friendly_name_prefix": "Garage ",
+      "uuid": "<redacted>",
+      "friendly_name": "Garage Remote connection to REDACTED_IP"
+    },
+    "last_changed": "2026-05-03T02:36:56.561362+00:00",
+    "last_reported": "2026-05-03T02:36:56.561362+00:00",
+    "last_updated": "2026-05-03T02:36:56.561362+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  },
+  "update.unifi_network_application_update": {
+    "entity_id": "update.unifi_network_application_update",
+    "state": "off",
+    "attributes": {
+      "auto_update": false,
+      "display_precision": 0,
+      "installed_version": "5.1.1",
+      "in_progress": false,
+      "latest_version": "5.1.1",
+      "release_summary": null,
+      "release_url": "<redacted>",
+      "skipped_version": null,
+      "title": "UniFi Network Application",
+      "update_percentage": null,
+      "entity_picture": "/api/hassio/addons/XXXXXXXX_unifi/icon",
+      "friendly_name": "UniFi Network Application Update",
+      "supported_features": 29
+    },
+    "last_changed": "2026-05-02T03:08:16.239803+00:00",
+    "last_reported": "2026-05-02T03:08:16.239803+00:00",
+    "last_updated": "2026-05-02T03:08:16.239803+00:00",
+    "context": {
+      "id": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+      "parent_id": null,
+      "user_id": null
+    }
+  }
+}
