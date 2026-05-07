@@ -807,9 +807,12 @@ fun PictureElements_Dark() = CardHost(HaTheme.Dark) {
 private fun pictureElementsCardConfig() = card(
     """{"type":"picture-elements","image":"/local/floorplan.png",
         "elements":[
-          {"type":"state-icon","entity":"light.living_room_lamp"},
-          {"type":"state-icon","entity":"cover.living_room_blinds"},
-          {"type":"state-label","entity":"light.living_room_lamp"},
+          {"type":"state-icon","entity":"light.living_room_lamp",
+           "style":{"left":"22%","top":"30%"}},
+          {"type":"state-icon","entity":"cover.living_room_blinds",
+           "style":{"left":"68%","top":"22%"}},
+          {"type":"state-label","entity":"light.living_room_lamp",
+           "style":{"left":"30%","top":"55%"}},
           {"type":"service-button","title":"All off",
            "tap_action":{"action":"call-service","service":"light.turn_off","target":{"entity_id":"light.living_room_lamp"}}}
         ]}""",

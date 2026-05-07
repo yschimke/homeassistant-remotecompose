@@ -181,11 +181,19 @@ private fun Cell(cell: HaPictureGlanceCell, theme: HaTheme) {
     }
 }
 
+// HA's `style.top` / `style.left` are CSS percentages of the
+// parent's box. RC has no fraction-based offset, so we lock the
+// picture-elements canvas to a fixed dp size and convert percent →
+// dp at encode time. 360x180 matches `naturalHeightDp` and the
+// preview width; hosts that resize the card will see elements
+// pinned to the top-left of this canvas rather than scaling.
+private const val PICTURE_ELEMENTS_CANVAS_W_DP = 360
+private const val PICTURE_ELEMENTS_CANVAS_H_DP = 180
+
 /**
- * `picture-elements` card — image plus a list of elements. v1 lays the
- * elements out as a chip strip below the image; precise XY positioning
- * needs absolute placement that RC's RemoteBox parent doesn't expose
- * cleanly (follow-up).
+ * `picture-elements` card — image with elements overlaid at the
+ * `(top%, left%)` positions HA configures. Elements without a
+ * position fall back to a strip at the bottom of the canvas.
  */
 @Composable
 @RemoteComposable
@@ -194,52 +202,68 @@ fun RemoteHaPictureElements(
     modifier: RemoteModifier = RemoteModifier,
 ) {
     val theme = haTheme()
+    val (positioned, unpositioned) = data.elements.partition { it.position != null }
     RemoteBox(
         modifier = modifier
             .fillMaxWidth()
+            .height(PICTURE_ELEMENTS_CANVAS_H_DP.rdp)
             .clip(RemoteRoundedCornerShape(12.rdp))
-            .background(theme.cardBackground.rc)
+            .background(theme.divider.rc)
             .border(1.rdp, theme.divider.rc, RemoteRoundedCornerShape(12.rdp)),
+        contentAlignment = RemoteAlignment.TopStart,
     ) {
-        RemoteColumn {
-            RemoteBox(
+        RemoteBox(
+            modifier = RemoteModifier
+                .fillMaxWidth()
+                .height(PICTURE_ELEMENTS_CANVAS_H_DP.rdp),
+            contentAlignment = RemoteAlignment.Center,
+        ) {
+            RemoteIcon(
+                imageVector = data.placeholderIcon,
+                contentDescription = "elements".rs,
+                modifier = RemoteModifier.size(40.rdp),
+                tint = theme.placeholderAccent.rc,
+            )
+        }
+        positioned.forEach { element ->
+            val pos = element.position!!
+            val leftDp = (pos.leftFraction * PICTURE_ELEMENTS_CANVAS_W_DP).toInt().coerceAtLeast(0)
+            val topDp = (pos.topFraction * PICTURE_ELEMENTS_CANVAS_H_DP).toInt().coerceAtLeast(0)
+            Element(
+                element = element,
+                theme = theme,
+                modifier = RemoteModifier.padding(start = leftDp.rdp, top = topDp.rdp),
+            )
+        }
+        if (unpositioned.isNotEmpty()) {
+            RemoteRow(
                 modifier = RemoteModifier
+                    .padding(top = (PICTURE_ELEMENTS_CANVAS_H_DP - 44).rdp)
                     .fillMaxWidth()
-                    .height(120.rdp)
-                    .background(theme.divider.rc),
-                contentAlignment = RemoteAlignment.Center,
+                    .background(theme.cardBackground.rc.copy(alpha = theme.cardBackground.rc.alpha * 0.85f.rf))
+                    .padding(horizontal = 10.rdp, vertical = 8.rdp),
+                horizontalArrangement = RemoteArrangement.spacedBy(8.rdp, RemoteAlignment.Start),
+                verticalAlignment = RemoteAlignment.CenterVertically,
             ) {
-                RemoteIcon(
-                    imageVector = data.placeholderIcon,
-                    contentDescription = "elements".rs,
-                    modifier = RemoteModifier.size(40.rdp),
-                    tint = theme.placeholderAccent.rc,
-                )
-            }
-            if (data.elements.isNotEmpty()) {
-                RemoteRow(
-                    modifier = RemoteModifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 10.rdp, vertical = 8.rdp),
-                    horizontalArrangement = RemoteArrangement.spacedBy(8.rdp, RemoteAlignment.Start),
-                    verticalAlignment = RemoteAlignment.CenterVertically,
-                ) {
-                    data.elements.forEach { Element(it, theme) }
-                }
+                unpositioned.forEach { Element(it, theme) }
             }
         }
     }
 }
 
 @Composable
-private fun Element(element: HaPictureElement, theme: HaTheme) {
+private fun Element(
+    element: HaPictureElement,
+    theme: HaTheme,
+    modifier: RemoteModifier = RemoteModifier,
+) {
     when (element) {
         is HaPictureElement.StateIcon -> {
             val click = element.tapAction.toRemoteAction()
                 ?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
             val accent = element.accent.rc
             RemoteBox(
-                modifier = RemoteModifier.then(click)
+                modifier = modifier.then(click)
                     .size(28.rdp)
                     .clip(RemoteCircleShape)
                     .background(
@@ -264,6 +288,7 @@ private fun Element(element: HaPictureElement, theme: HaTheme) {
                 style = RemoteTextStyle.Default,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
+                modifier = modifier,
             )
         }
         is HaPictureElement.ServiceButton -> {
@@ -271,7 +296,7 @@ private fun Element(element: HaPictureElement, theme: HaTheme) {
                 ?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
             val accent = element.accent.rc
             RemoteBox(
-                modifier = RemoteModifier.then(click)
+                modifier = modifier.then(click)
                     .clip(RemoteRoundedCornerShape(6.rdp))
                     .border(1.rdp, accent, RemoteRoundedCornerShape(6.rdp))
                     .padding(horizontal = 10.rdp, vertical = 6.rdp),
