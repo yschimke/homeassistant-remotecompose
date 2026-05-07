@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.1.4](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.3...v0.1.4) (2026-05-07)
+
+
+### Features
+
+* **clock:** bind RemoteTimeDefaults so the clock card ticks live ([#88](https://github.com/yschimke/homeassistant-remotecompose/issues/88)) ([3427890](https://github.com/yschimke/homeassistant-remotecompose/commit/3427890e925848ceba63ec29f71dc890b2718a0f))
+* **demo:** replace synthetic demo with the seven captured dashboards ([#98](https://github.com/yschimke/homeassistant-remotecompose/issues/98)) ([fea40e6](https://github.com/yschimke/homeassistant-remotecompose/commit/fea40e691e1fa740d49424975b1cb8ad83d7a666))
+* **previews:** whole-dashboard previews at mobile + tablet widths ([#97](https://github.com/yschimke/homeassistant-remotecompose/issues/97)) ([91e0df9](https://github.com/yschimke/homeassistant-remotecompose/commit/91e0df98f9a6893d324b4a24e56905bf44b5dfb7))
+
+
+### Bug Fixes
+
+* **deps:** update dependency androidx.compose:compose-bom to v2026.05.00 ([#94](https://github.com/yschimke/homeassistant-remotecompose/issues/94)) ([b941e0c](https://github.com/yschimke/homeassistant-remotecompose/commit/b941e0c8a2b880a6142f0fe3b798d6960984a4d7))
+* **deps:** update dependency androidx.tv:tv-material to v1.1.0 ([#95](https://github.com/yschimke/homeassistant-remotecompose/issues/95)) ([13d5d31](https://github.com/yschimke/homeassistant-remotecompose/commit/13d5d31d76a21445df36d8a339a2e695a5ea1a3a))
+* **deps:** update dependency org.hamcrest:hamcrest to v3 ([#96](https://github.com/yschimke/homeassistant-remotecompose/issues/96)) ([6f85ab1](https://github.com/yschimke/homeassistant-remotecompose/commit/6f85ab14f3787637ebbaaded29af8d7f2875401c))
+* **deps:** update remote-compose ([#93](https://github.com/yschimke/homeassistant-remotecompose/issues/93)) ([29fe027](https://github.com/yschimke/homeassistant-remotecompose/commit/29fe027beddfbab60fd0739ecf776e7e7f602a68))
+
 ## [0.1.3](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.2...v0.1.3) (2026-05-07)
 
 
