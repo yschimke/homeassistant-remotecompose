@@ -142,6 +142,19 @@ object Fixtures {
             mapOf("friendly_name" to "Garage motion", "device_class" to "motion")),
     )
 
+    /** Picture-glance fixture: light + cover + switch entities for the
+     *  chip strip. */
+    val livingRoomGlance = snapshot(
+        state("light.living_room_lamp", "on",
+            mapOf("friendly_name" to "Lamp")),
+        state("light.kitchen_lights", "off",
+            mapOf("friendly_name" to "Kitchen")),
+        state("cover.living_room_blinds", "open",
+            mapOf("friendly_name" to "Blinds", "device_class" to "blind")),
+        state("switch.fan", "on",
+            mapOf("friendly_name" to "Fan")),
+    )
+
     /** Climate entity in heating mode at 21.4°C, target 22°C. */
     val thermostat = snapshot(
         "climate.living_room" to EntityState(

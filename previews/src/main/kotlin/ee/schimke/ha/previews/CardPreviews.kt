@@ -711,6 +711,69 @@ private fun areaCard() = card(
                     "cover.living_room_blinds"]}""",
 )
 
+// ——— picture ———
+
+@Preview(name = "picture (light)", showBackground = false, widthDp = 320, heightDp = 140)
+@Composable
+fun Picture_Light() = CardHost(HaTheme.Light) {
+    RenderChild(pictureCardConfig(), Fixtures.driveway, RemoteModifier.fillMaxWidth())
+}
+
+@Preview(name = "picture (dark)", showBackground = false, widthDp = 320, heightDp = 140)
+@Composable
+fun Picture_Dark() = CardHost(HaTheme.Dark) {
+    RenderChild(pictureCardConfig(), Fixtures.driveway, RemoteModifier.fillMaxWidth())
+}
+
+private fun pictureCardConfig() = card(
+    """{"type":"picture","image":"/local/floorplan.png","name":"Floor plan"}""",
+)
+
+// ——— picture-glance ———
+
+@Preview(name = "picture-glance (light)", showBackground = false, widthDp = 381, heightDp = 168)
+@Composable
+fun PictureGlance_Light() = CardHost(HaTheme.Light) {
+    RenderChild(pictureGlanceCardConfig(), Fixtures.livingRoomGlance, RemoteModifier.fillMaxWidth())
+}
+
+@Preview(name = "picture-glance (dark)", showBackground = false, widthDp = 381, heightDp = 168)
+@Composable
+fun PictureGlance_Dark() = CardHost(HaTheme.Dark) {
+    RenderChild(pictureGlanceCardConfig(), Fixtures.livingRoomGlance, RemoteModifier.fillMaxWidth())
+}
+
+private fun pictureGlanceCardConfig() = card(
+    """{"type":"picture-glance","title":"Living room","image":"/local/lr.png",
+        "entities":["light.living_room_lamp","light.kitchen_lights",
+                    "cover.living_room_blinds","switch.fan"]}""",
+)
+
+// ——— picture-elements ———
+
+@Preview(name = "picture-elements (light)", showBackground = false, widthDp = 381, heightDp = 180)
+@Composable
+fun PictureElements_Light() = CardHost(HaTheme.Light) {
+    RenderChild(pictureElementsCardConfig(), Fixtures.livingRoomGlance, RemoteModifier.fillMaxWidth())
+}
+
+@Preview(name = "picture-elements (dark)", showBackground = false, widthDp = 381, heightDp = 180)
+@Composable
+fun PictureElements_Dark() = CardHost(HaTheme.Dark) {
+    RenderChild(pictureElementsCardConfig(), Fixtures.livingRoomGlance, RemoteModifier.fillMaxWidth())
+}
+
+private fun pictureElementsCardConfig() = card(
+    """{"type":"picture-elements","image":"/local/floorplan.png",
+        "elements":[
+          {"type":"state-icon","entity":"light.living_room_lamp"},
+          {"type":"state-icon","entity":"cover.living_room_blinds"},
+          {"type":"state-label","entity":"light.living_room_lamp"},
+          {"type":"service-button","title":"All off",
+           "tap_action":{"action":"call-service","service":"light.turn_off","target":{"entity_id":"light.living_room_lamp"}}}
+        ]}""",
+)
+
 // ——— tile, state variants via PreviewParameter ———
 
 @Preview(name = "tile light (light)", showBackground = false, widthDp = 187, heightDp = 43)
