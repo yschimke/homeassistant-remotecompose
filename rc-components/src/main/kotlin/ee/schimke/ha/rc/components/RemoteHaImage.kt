@@ -25,6 +25,23 @@ import androidx.compose.ui.layout.ContentScale
  *   placeholder is what `RemotePreview` and any player without a
  *   loader will show. Pair this with `CoilBitmapLoader` from
  *   `rc-image-coil` for HTTP / disk-cached resolution.
+ *
+ * ### Which form to pick
+ *
+ * Use [RemoteHaImageInline] when the image is **static / config-driven**
+ * — it lives in the source tree, ships with the app, or is otherwise
+ * fixed at document-encode time (e.g. a vendor logo, a state-icon
+ * pre-baked from a vector, an integration's brand mark). The bytes
+ * travel with the document, so playback is fully offline and the
+ * widget host needs no extra plumbing.
+ *
+ * Use [RemoteHaImageNamed] when the image is **external and may
+ * change** independently of the document — typically an
+ * `entity_picture` URL, a media-player thumbnail, or any HA-served
+ * resource that updates without the dashboard config changing. The
+ * document carries only the name, so the same `.rc` survives image
+ * swaps and the bytes stay in the host's image cache (e.g. Coil's
+ * disk cache) instead of bloating every snapshot.
  */
 
 /** Bake [bitmap] into the document. */

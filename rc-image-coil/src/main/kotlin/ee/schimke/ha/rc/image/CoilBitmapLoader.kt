@@ -3,13 +3,12 @@ package ee.schimke.ha.rc.image
 import android.content.Context
 import android.graphics.Bitmap
 import androidx.compose.remote.player.core.platform.BitmapLoader
+import coil3.BitmapImage
+import coil3.Image
 import coil3.ImageLoader
 import coil3.SingletonImageLoader
-import coil3.executeBlocking
-import coil3.request.CachePolicy
+import coil3.memory.MemoryCache
 import coil3.request.ImageRequest
-import coil3.request.SuccessResult
-import coil3.toBitmap
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
@@ -19,34 +18,38 @@ import java.io.InputStream
  * RemoteCompose player to resolve named-bitmap references
  * (`RemoteHaImageNamed` / `rememberNamedRemoteBitmap(...)`).
  *
- * **Never blocks the caller.** `loadBitmap` is invoked on the player's
- * decode path; we only consult Coil's in-memory cache, so the call is
- * effectively a hash-map lookup. If the bytes are not in memory we
- * return an empty stream (the player decodes that to a null bitmap
- * and keeps the placeholder visible) and enqueue a full async fetch
- * via [ImageLoader.enqueue] — Coil's standard pipeline (network +
- * disk-cache + decode) populates the memory cache in the background,
- * and the next document update that references this name resolves
- * synchronously. Coil dedupes concurrent enqueues for the same
- * `data`, so calling [loadBitmap] every frame for a missing name
- * is cheap.
+ * **Never blocks.** [loadBitmap] runs on the player's decode thread,
+ * so the implementation must be a hash-map lookup, not a coroutine
+ * dispatch. We bypass [ImageLoader.execute] entirely (it spins up an
+ * `async` job on a coroutine scope and `await`s it — even on a memory
+ * hit the call goes through coroutine dispatch) and read directly
+ * from [ImageLoader.memoryCache] with a key we control.
  *
- * Note: `BitmapLoader.loadBitmap` is `@NonNull`; the player wraps any
- * `IOException` in a `RuntimeException` and crashes, so we cannot
- * signal "miss" by throwing. Returning an empty `InputStream`
- * decodes to a null bitmap — the player handles that path
- * gracefully.
+ * Coil's engine derives memory-cache keys from the request's data
+ * **plus** size, scale, transformations, etc. — the engine-derived
+ * key for `data="https://…/x.png"` does **not** equal
+ * `MemoryCache.Key("https://…/x.png")`. To make the direct lookup
+ * agree with what the warm-up writes, both sides use the same
+ * explicit [MemoryCache.Key] via [memoryCacheKeyFor]. Override that
+ * if you want to namespace per-instance.
  *
- * `name` is whatever Coil's mapper accepts as `ImageRequest.data`:
+ * On a miss we:
+ *
+ *  1. Enqueue a full async fetch via [ImageLoader.enqueue] with the
+ *     same explicit memory-cache key. Coil's pipeline (network +
+ *     disk-cache + decode) populates the memory cache in the
+ *     background; concurrent enqueues for the same key are deduped.
+ *  2. Return an empty stream — [BitmapLoader.loadBitmap] is `@NonNull`
+ *     and the player wraps thrown `IOException`s in a
+ *     `RuntimeException`, so we cannot signal "miss" by throwing.
+ *     `BitmapFactory.decodeStream` decodes empty input to a null
+ *     bitmap and the player keeps the placeholder.
+ *
+ * `name` is whatever Coil's mappers accept as `ImageRequest.data`:
  * `http(s)://…`, `file://…`, `content://…`, `android.resource://…`,
  * an absolute file path, etc.
- *
- * The player decodes the returned stream with `BitmapFactory.decodeStream`,
- * so we PNG-encode lossless on the way out. The player's own
- * decode-result cache means this re-encode runs at most once per
- * (id, name) pair per document.
  */
-class CoilBitmapLoader(
+open class CoilBitmapLoader(
     private val context: Context,
     private val imageLoader: ImageLoader = SingletonImageLoader.get(context),
     private val compressFormat: Bitmap.CompressFormat = Bitmap.CompressFormat.PNG,
@@ -54,33 +57,45 @@ class CoilBitmapLoader(
     private val configure: ImageRequest.Builder.() -> Unit = {},
 ) : BitmapLoader {
 
-    override fun loadBitmap(name: String): InputStream {
-        val syncResult = imageLoader.executeBlocking(buildSyncRequest(name))
-        if (syncResult is SuccessResult) {
-            return encode(syncResult.image.toBitmap())
-        }
-        imageLoader.enqueue(buildWarmRequest(name))
+    final override fun loadBitmap(name: String): InputStream {
+        val key = memoryCacheKeyFor(name)
+        val image = imageLoader.memoryCache?.get(key)?.image
+        val bytes = image?.let(::encodeImage)
+        if (bytes != null) return ByteArrayInputStream(bytes)
+        warmUpAsync(name, key)
         return ByteArrayInputStream(EMPTY)
     }
 
-    private fun buildSyncRequest(name: String): ImageRequest =
-        ImageRequest.Builder(context)
-            .data(name)
-            .networkCachePolicy(CachePolicy.DISABLED)
-            .diskCachePolicy(CachePolicy.DISABLED)
-            .apply(configure)
-            .build()
+    /**
+     * Stable key used both for the direct memory-cache lookup and for
+     * the warm-up [ImageRequest.memoryCacheKey], so writes and reads
+     * agree.
+     */
+    protected open fun memoryCacheKeyFor(name: String): MemoryCache.Key = MemoryCache.Key(name)
 
-    private fun buildWarmRequest(name: String): ImageRequest =
-        ImageRequest.Builder(context)
-            .data(name)
-            .apply(configure)
-            .build()
+    /**
+     * Convert the cached [Image] to PNG (or [compressFormat]) bytes,
+     * or `null` if the cached image is not a [BitmapImage] (e.g. a
+     * `ColorImage` placeholder Coil keeps in some configurations).
+     * Override to support additional [Image] subtypes or to swap the
+     * encoder.
+     */
+    protected open fun encodeImage(image: Image): ByteArray? {
+        if (image !is BitmapImage) return null
+        val out = ByteArrayOutputStream(image.bitmap.allocationByteCount.coerceAtLeast(1024))
+        image.bitmap.compress(compressFormat, compressQuality, out)
+        return out.toByteArray()
+    }
 
-    private fun encode(bitmap: Bitmap): InputStream {
-        val out = ByteArrayOutputStream(bitmap.allocationByteCount.coerceAtLeast(1024))
-        bitmap.compress(compressFormat, compressQuality, out)
-        return ByteArrayInputStream(out.toByteArray())
+    /**
+     * Kick off a full Coil fetch in the background. Default uses
+     * [ImageLoader.enqueue] which fires-and-forgets; the populated
+     * memory-cache entry is what [loadBitmap] consults next time.
+     */
+    protected open fun warmUpAsync(name: String, key: MemoryCache.Key) {
+        val request =
+            ImageRequest.Builder(context).data(name).memoryCacheKey(key).apply(configure).build()
+        imageLoader.enqueue(request)
     }
 
     private companion object {
