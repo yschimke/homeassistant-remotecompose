@@ -461,6 +461,20 @@
     "sha256": "7fe444b21f13c5ae124d2184af713dc5bbc1b5220f7f145dda84d9e0a6c09288",
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt"
   },
+  "previews/ee.schimke.ha.previews.CardPreviewsKt.PictureElements_Dark_picture-elements (dark)": {
+    "captureLabel": "",
+    "functionName": "PictureElements_Dark",
+    "renderBasename": "CardPreviewsKt.PictureElements_Dark_picture-elements_dark.png",
+    "sha256": "c8431e0ecd36450e7ffe0ddf91bc4f4a07243da94b5ada855bd095277ee3bb7e",
+    "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt"
+  },
+  "previews/ee.schimke.ha.previews.CardPreviewsKt.PictureElements_Light_picture-elements (light)": {
+    "captureLabel": "",
+    "functionName": "PictureElements_Light",
+    "renderBasename": "CardPreviewsKt.PictureElements_Light_picture-elements_light.png",
+    "sha256": "34c6e0a652a57575f52f24d2659c221ac0e8251933cd580760cab282e9ae56ce",
+    "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt"
+  },
   "previews/ee.schimke.ha.previews.CardPreviewsKt.PictureEntity_Dark_picture-entity (dark)": {
     "captureLabel": "",
     "functionName": "PictureEntity_Dark",
@@ -473,6 +487,34 @@
     "functionName": "PictureEntity_Light",
     "renderBasename": "CardPreviewsKt.PictureEntity_Light_picture-entity_light.png",
     "sha256": "3481724915183c2fce84e90c4c158bf2d8fcf205e7e20a7c5e76479175f1506e",
+    "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt"
+  },
+  "previews/ee.schimke.ha.previews.CardPreviewsKt.PictureGlance_Dark_picture-glance (dark)": {
+    "captureLabel": "",
+    "functionName": "PictureGlance_Dark",
+    "renderBasename": "CardPreviewsKt.PictureGlance_Dark_picture-glance_dark.png",
+    "sha256": "fdda49df111f5b5f3b98da7e9696eda56277022dfa4927c758ca01c4ecd6718b",
+    "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt"
+  },
+  "previews/ee.schimke.ha.previews.CardPreviewsKt.PictureGlance_Light_picture-glance (light)": {
+    "captureLabel": "",
+    "functionName": "PictureGlance_Light",
+    "renderBasename": "CardPreviewsKt.PictureGlance_Light_picture-glance_light.png",
+    "sha256": "2f4ffac3906e669cef7ea4aa50ae81e5951ec02fa87f428b83cf21156d6fd432",
+    "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt"
+  },
+  "previews/ee.schimke.ha.previews.CardPreviewsKt.Picture_Dark_picture (dark)": {
+    "captureLabel": "",
+    "functionName": "Picture_Dark",
+    "renderBasename": "CardPreviewsKt.Picture_Dark_picture_dark.png",
+    "sha256": "c074ceec4ae0d9b5a94aa07d3c24d30e828b59248062b221781e2d9e17f75ebc",
+    "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt"
+  },
+  "previews/ee.schimke.ha.previews.CardPreviewsKt.Picture_Light_picture (light)": {
+    "captureLabel": "",
+    "functionName": "Picture_Light",
+    "renderBasename": "CardPreviewsKt.Picture_Light_picture_light.png",
+    "sha256": "e19483c3f1cdf3f73529112b2ebe09b2f572222c0be23616044570aba63af012",
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.CardPreviewsKt.Thermostat_Dark_thermostat (dark)": {
