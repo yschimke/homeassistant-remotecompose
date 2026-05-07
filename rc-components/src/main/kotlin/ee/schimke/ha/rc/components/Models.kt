@@ -370,8 +370,17 @@ data class HaMediaControlData(
 /** `todo-list` card model — title + active/completed item rows. */
 data class HaTodoListData(
     val title: RemoteString,
-    val activeItems: List<RemoteString>,
-    val completedItems: List<RemoteString>,
+    val activeItems: List<HaTodoItem>,
+    val completedItems: List<HaTodoItem>,
+)
+
+/** One row in a [HaTodoListData]. The [tapAction] flips the item's
+ *  status via `todo.update_item`; players that don't carry a service
+ *  channel back to HA will leave the row visually unchanged after a
+ *  tap (no optimistic update). */
+data class HaTodoItem(
+    val summary: RemoteString,
+    val tapAction: HaAction = HaAction.None,
 )
 
 /** `picture` card model — a static `image:` URL with an optional name
