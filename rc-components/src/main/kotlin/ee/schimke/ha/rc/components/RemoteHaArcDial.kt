@@ -183,8 +183,23 @@ private fun ChipText(text: RemoteString, accent: Color) {
 
 @Composable
 private fun ArcCanvas(data: HaArcDialData, theme: HaTheme) {
+    // Live host binding for the value & (optional) target fraction —
+    // wrapped in `animateRemoteFloat` so any state push from the host
+    // tweens the sweep/marker over [DialAnimationSeconds] instead of
+    // snapping. Constant when entityId is null (preview).
     val v = data.valueFraction.coerceIn(0f, 1f)
-    val sweep = 270f * v
+    val rawValueFraction = LiveValues.namedFloat(data.entityId, "value_fraction", v)
+    val animatedValueFraction = animateRemoteFloat(rawValueFraction, DialAnimationSeconds)
+    val animatedSweep = animatedValueFraction * 270f.rf
+
+    val target = data.targetFraction
+    val rawTargetFraction = if (target != null) {
+        LiveValues.namedFloat(data.entityId, "target_fraction", target.coerceIn(0f, 1f))
+    } else null
+    val animatedTargetFraction = rawTargetFraction
+        ?.let { animateRemoteFloat(it, DialAnimationSeconds) }
+    val animatedMarkerAngle = animatedTargetFraction?.let { 135f.rf + it * 270f.rf }
+
     RemoteCanvas(modifier = RemoteModifier.size(180.rdp)) {
         val w = width
         val h = height
@@ -202,20 +217,16 @@ private fun ArcCanvas(data: HaArcDialData, theme: HaTheme) {
         }.asRemotePaint()
         drawArc(track, 135f.rf, 270f.rf, false, topLeft, arcSize)
 
-        if (sweep > 0.5f) {
-            val fill = AndroidPaint().apply {
-                isAntiAlias = true
-                style = AndroidPaint.Style.STROKE
-                strokeWidth = 12f
-                strokeCap = AndroidPaint.Cap.ROUND
-                color = data.accent.toArgb()
-            }.asRemotePaint()
-            drawArc(fill, 135f.rf, sweep.rf, false, topLeft, arcSize)
-        }
+        val fill = AndroidPaint().apply {
+            isAntiAlias = true
+            style = AndroidPaint.Style.STROKE
+            strokeWidth = 12f
+            strokeCap = AndroidPaint.Cap.ROUND
+            color = data.accent.toArgb()
+        }.asRemotePaint()
+        drawArc(fill, 135f.rf, animatedSweep, false, topLeft, arcSize)
 
-        val target = data.targetFraction
-        if (target != null) {
-            val markerAngle = 135f + 270f * target.coerceIn(0f, 1f)
+        if (animatedMarkerAngle != null) {
             val marker = AndroidPaint().apply {
                 isAntiAlias = true
                 style = AndroidPaint.Style.STROKE
@@ -223,10 +234,12 @@ private fun ArcCanvas(data: HaArcDialData, theme: HaTheme) {
                 strokeCap = AndroidPaint.Cap.ROUND
                 color = theme.primaryText.toArgb()
             }.asRemotePaint()
-            drawArc(marker, markerAngle.rf, 0.1f.rf, false, topLeft, arcSize)
+            drawArc(marker, animatedMarkerAngle, 0.1f.rf, false, topLeft, arcSize)
         }
     }
 }
+
+private const val DialAnimationSeconds = 0.45f
 
 @Composable
 private fun Steppers(

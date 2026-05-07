@@ -8,8 +8,8 @@ import androidx.compose.ui.graphics.Color
 import ee.schimke.ha.rc.components.HaAction
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
-import kotlin.test.assertNull
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 /**
  * The plain→Remote conversion is the only Tier-2 surface that's
@@ -31,15 +31,15 @@ class HaUiModelsTest {
         isOn = null,
     )
 
-    @Test fun toggleAccent_isOn_yields_named_remote_boolean() {
-        val remote = accentOn.toRemote("tile.kitchen")
-        assertNotNull(remote.isOn, "isOn should round-trip into a RemoteBoolean")
+    @Test fun toggleAccent_isOn_marks_toggleable_and_seeds_initial_state() {
+        val remote = accentOn.toRemote()
+        assertTrue(remote.toggleable, "isOn != null implies toggleable")
         assertEquals(true, remote.initiallyOn)
     }
 
-    @Test fun toggleAccent_readonly_drops_remote_boolean() {
-        val remote = accentReadOnly.toRemote("tile.sensor")
-        assertNull(remote.isOn, "read-only entity must not carry a RemoteBoolean")
+    @Test fun toggleAccent_readonly_drops_toggleable_flag() {
+        val remote = accentReadOnly.toRemote()
+        assertFalse(remote.toggleable, "isOn = null must produce a non-toggleable accent")
         assertEquals(false, remote.initiallyOn)
     }
 
@@ -52,14 +52,13 @@ class HaUiModelsTest {
             tapAction = HaAction.Toggle("light.kitchen"),
         )
         val remote = ui.toRemote()
+        assertEquals(ui.name, remote.name)
+        assertEquals(ui.state, remote.state)
         assertEquals(ui.icon, remote.icon)
         assertEquals(ui.tapAction, remote.tapAction)
     }
 
-    @Test fun entities_uiData_assigns_unique_tags_per_row() {
-        // Same accent reference on every row — if the conversion shared
-        // a name across rows the named-binding would collide; the
-        // per-index suffix makes each row's binding unique.
+    @Test fun entities_uiData_carries_each_row_through() {
         val ui = HaEntitiesUiData(
             title = "Living Room",
             rows = List(3) {
@@ -71,11 +70,11 @@ class HaUiModelsTest {
                 )
             },
         )
-        val remote = ui.toRemote("entities.living")
+        val remote = ui.toRemote()
         assertEquals(3, remote.rows.size)
-        // Three non-null bindings — the tags differ; the API doesn't
-        // expose the binding name string for a direct assert, but the
-        // count + non-null is enough to lock the contract in.
-        remote.rows.forEach { row -> assertNotNull(row.accent.isOn) }
+        remote.rows.forEachIndexed { i, row ->
+            assertEquals("Lamp $i", row.name)
+            assertTrue(row.accent.toggleable)
+        }
     }
 }

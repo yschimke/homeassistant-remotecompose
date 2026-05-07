@@ -3,8 +3,10 @@
 package ee.schimke.ha.rc.components
 
 import androidx.compose.remote.creation.compose.state.RemoteBoolean
+import androidx.compose.remote.creation.compose.state.RemoteFloat
 import androidx.compose.remote.creation.compose.state.RemoteString
 import androidx.compose.remote.creation.compose.state.RemoteState
+import androidx.compose.remote.creation.compose.state.rf
 import androidx.compose.remote.creation.compose.state.rs
 
 /**
@@ -49,6 +51,30 @@ object LiveValues {
     /** Entity attribute ↔ `<entityId>.attributes.<attribute>`. */
     fun attribute(entityId: String?, attribute: String, initial: String): RemoteString =
         named(entityId, "attributes.$attribute", initial)
+
+    /**
+     * Entity numeric state ↔ `<entityId>.numeric_state` — the parsed
+     * `Float` form of the primary state, used by gauges / arcs that
+     * tween value changes via [AnimatedRemoteFloat]. The host pushes
+     * each new value by name; the player tweens between them.
+     */
+    fun numericState(entityId: String?, initial: Float): RemoteFloat =
+        namedFloat(entityId, "numeric_state", initial)
+
+    /**
+     * Generic numeric host binding for components that need to react to
+     * value updates without a re-encode (`valueFraction`,
+     * `targetFraction`, etc.). The caller picks the suffix; the host
+     * pushes by `<entityId>.<suffix>`.
+     */
+    fun namedFloat(entityId: String?, suffix: String, initial: Float): RemoteFloat {
+        if (entityId == null) return initial.rf
+        return RemoteFloat.createNamedRemoteFloat(
+            name(entityId, suffix),
+            initial,
+            RemoteState.Domain.User,
+        )
+    }
 
     /**
      * Generic helper for fields whose binding name doesn't follow the
