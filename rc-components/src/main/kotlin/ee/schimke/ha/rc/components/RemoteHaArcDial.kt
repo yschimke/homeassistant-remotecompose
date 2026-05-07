@@ -52,10 +52,10 @@ import androidx.wear.compose.remote.material3.RemoteIcon
  * ```
  *
  * The arc starts at 135° (top-left), sweeps clockwise 270° to 45°
- * (top-right). The fill represents [HaArcDialData.valueFraction]; the
- * target appears as text in [HaArcDialData.supportingLabel] (drawing a
- * marker dot at an arbitrary angle requires scalar trig that
- * RemoteFloat doesn't expose at capture time — follow-up).
+ * (top-right). The fill represents [HaArcDialData.valueFraction]; when
+ * [HaArcDialData.targetFraction] is set, a small marker dot is drawn
+ * on the arc at that fraction (rendered as a near-zero-sweep arc with
+ * a round stroke cap, which avoids capture-time trig on RemoteFloat).
  */
 @Composable
 @RemoteComposable
@@ -179,6 +179,19 @@ private fun ArcCanvas(data: HaArcDialData, theme: HaTheme) {
                 color = data.accent.toArgb()
             }.asRemotePaint()
             drawArc(fill, 135f.rf, sweep.rf, false, topLeft, arcSize)
+        }
+
+        val target = data.targetFraction
+        if (target != null) {
+            val markerAngle = 135f + 270f * target.coerceIn(0f, 1f)
+            val marker = AndroidPaint().apply {
+                isAntiAlias = true
+                style = AndroidPaint.Style.STROKE
+                strokeWidth = 14f
+                strokeCap = AndroidPaint.Cap.ROUND
+                color = theme.primaryText.toArgb()
+            }.asRemotePaint()
+            drawArc(marker, markerAngle.rf, 0.1f.rf, false, topLeft, arcSize)
         }
     }
 }
