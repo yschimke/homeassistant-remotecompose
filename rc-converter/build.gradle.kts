@@ -37,4 +37,5 @@ dependencies {
   implementation(libs.remote.material3)
 
   testImplementation(libs.kotlin.test)
+  testImplementation(libs.kotlin.test.junit)
 }
