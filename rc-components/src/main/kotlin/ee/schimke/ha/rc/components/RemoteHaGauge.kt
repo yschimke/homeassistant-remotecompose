@@ -21,6 +21,7 @@ import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.creation.compose.modifier.height
 import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.shapes.RemoteRoundedCornerShape
+import androidx.compose.remote.creation.compose.state.RemoteFloat
 import androidx.compose.remote.creation.compose.state.asRemotePaint
 import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
@@ -61,8 +62,20 @@ fun RemoteHaGauge(
         ?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
 
     val span = (data.max - data.min).coerceAtLeast(0.0001)
-    val fraction = ((data.value - data.min) / span).coerceIn(0.0, 1.0).toFloat()
-    val sweep = (180f * fraction)
+
+    // Live numeric value from the entity binding, animated so each host
+    // update tweens between successive values instead of snapping. When
+    // there's no entityId we get a constant RemoteFloat — animation is
+    // a no-op since the input never changes.
+    val rawValue: RemoteFloat = LiveValues.numericState(data.entityId, data.value.toFloat())
+    val animatedValue: RemoteFloat = animateRemoteFloat(
+        rawValue,
+        durationSeconds = GaugeAnimationSeconds,
+        easing = RcEasing.Standard,
+    )
+    val animatedFraction: RemoteFloat =
+        (animatedValue - data.min.toFloat().rf) / span.toFloat().rf
+    val animatedSweep: RemoteFloat = animatedFraction * 180f.rf
 
     val severityColor = when (data.severity) {
         HaGaugeSeverity.None -> Color(0xFF03A9F4)
@@ -106,16 +119,14 @@ fun RemoteHaGauge(
                 }.asRemotePaint()
                 drawArc(track, 180f.rf, 180f.rf, false, topLeft, arcSize)
 
-                if (sweep > 0.5f) {
-                    val value = AndroidPaint().apply {
-                        isAntiAlias = true
-                        style = AndroidPaint.Style.STROKE
-                        strokeWidth = 10f
-                        strokeCap = AndroidPaint.Cap.ROUND
-                        color = severityColor.toArgb()
-                    }.asRemotePaint()
-                    drawArc(value, 180f.rf, sweep.rf, false, topLeft, arcSize)
-                }
+                val value = AndroidPaint().apply {
+                    isAntiAlias = true
+                    style = AndroidPaint.Style.STROKE
+                    strokeWidth = 10f
+                    strokeCap = AndroidPaint.Cap.ROUND
+                    color = severityColor.toArgb()
+                }.asRemotePaint()
+                drawArc(value, 180f.rf, animatedSweep, false, topLeft, arcSize)
             }
 
             RemoteText(
@@ -148,6 +159,8 @@ fun RemoteHaGauge(
         }
     }
 }
+
+private const val GaugeAnimationSeconds = 0.45f
 
 private fun formatRange(d: Double): String =
     if (d == d.toLong().toDouble()) d.toLong().toString() else "%.1f".format(d)

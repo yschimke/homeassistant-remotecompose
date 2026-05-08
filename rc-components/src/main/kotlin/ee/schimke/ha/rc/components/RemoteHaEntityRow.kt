@@ -2,6 +2,9 @@
 
 package ee.schimke.ha.rc.components
 
+import androidx.compose.remote.creation.compose.action.Action
+import androidx.compose.remote.creation.compose.action.CombinedAction
+import androidx.compose.remote.creation.compose.action.ValueChange
 import androidx.compose.remote.creation.compose.layout.RemoteAlignment
 import androidx.compose.remote.creation.compose.layout.RemoteArrangement
 import androidx.compose.remote.creation.compose.layout.RemoteBox
@@ -12,20 +15,22 @@ import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.background
 import androidx.compose.remote.creation.compose.modifier.clickable
 import androidx.compose.remote.creation.compose.modifier.clip
-import androidx.compose.remote.creation.compose.modifier.fillMaxHeight
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
+import androidx.compose.remote.creation.compose.modifier.offset
 import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.modifier.size
 import androidx.compose.remote.creation.compose.shapes.RemoteCircleShape
 import androidx.compose.remote.creation.compose.shapes.RemoteRoundedCornerShape
 import androidx.compose.remote.creation.compose.state.RemoteColor
 import androidx.compose.remote.creation.compose.state.RemoteFloat
-import androidx.compose.remote.creation.compose.state.lerp
 import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
+import androidx.compose.remote.creation.compose.state.rememberMutableRemoteBoolean
 import androidx.compose.remote.creation.compose.state.rf
 import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.remote.creation.compose.state.rsp
+import androidx.compose.remote.creation.compose.state.asRemoteDp
+import androidx.compose.remote.creation.compose.state.tween
 import androidx.compose.remote.creation.compose.text.RemoteTextStyle
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
@@ -104,32 +109,36 @@ fun RemoteHaEntityRow(data: HaEntityRowData, modifier: RemoteModifier = RemoteMo
 private val TrackWidth = 36.rdp
 private val TrackHeight = 22.rdp
 private val KnobSize = 16.rdp
+private const val KnobInsetDp = 3f
+private val KnobInset = KnobInsetDp.toInt().rdp
+
+/** Distance the knob travels in dp between off and on. */
+private const val KnobTravelDp = 36f - 16f - 2f * KnobInsetDp // = 14f
+
+/** Animation timings. */
+private const val ToggleDurationSeconds = 0.20f
 
 /**
- * Pill-shaped toggle switch.
+ * Pill-shaped toggle switch — animates between off / on.
  *
- * STATIC for now — the visual reflects [initiallyOn] at document-build
- * time. The click only emits the host action; it does NOT flip the
- * visual in-document. To re-render after a service call, the host has
- * to re-encode the document.
- *
- * Why this is a downgrade from the androidx-main `ClickableDemo`
- * pattern: see [docs/bugs/rc-alpha08-select-derived-float-layout.md]
- * (filed as b/504893436). Briefly, in alpha08 a `RemoteFloat` derived from
- * `RemoteBoolean.select(1f.rf, 0f.rf)` (or any non-constant source like
- * `animateRemoteFloat`) cannot be consumed by `RemoteRowScope.weight`
- * or by `lerp(...)` inside a `Modifier.background` without breaking the
- * surrounding layout — the rounded clip is dropped and the inner
- * content disappears. Until that's fixed, the boolean has to live on
- * the host side; the document only ever sees a literal `0f.rf` / `1f.rf`.
- *
- * Once the bug is fixed, restore: `rememberMutableRemoteBoolean` +
- * `ValueChange(localIsOn, localIsOn.not())` + `animateRemoteFloat`
- * driving `RemoteHaToggleSwitchByProgress`.
+ * 1. `rememberMutableRemoteBoolean` creates document-local state seeded
+ *    from [initiallyOn].
+ * 2. A `ValueChange` toggles that state on click; the player evaluates
+ *    the write declaratively, no re-encoding required.
+ * 3. The boolean drives a `select`-derived `RemoteFloat` progress in
+ *    `[0, 1]`, wrapped in [animateRemoteFloat] so successive flips
+ *    tween instead of snapping.
+ * 4. The track color tweens between [inactiveAccent] and [activeAccent]
+ *    via the alpha010 [tween] color helper.
+ * 5. The knob position is the same animated `progress` mapped through
+ *    `toRemoteDp()` and applied as `Modifier.offset` — avoids the
+ *    weight()-on-derived-RemoteFloat issue that bit alpha08
+ *    (b/504893436).
  *
  * @param tapAction Emitted as a `HostAction` so the runtime can call
- *   HA's service. The host is responsible for re-encoding the document
- *   on the next state push.
+ *   HA's service. The optimistic in-document flip happens regardless;
+ *   the host is responsible for rolling state back if the service call
+ *   fails.
  */
 @Composable
 @RemoteComposable
@@ -140,32 +149,46 @@ fun RemoteHaToggleSwitch(
     modifier: RemoteModifier = RemoteModifier,
     tapAction: HaAction = HaAction.None,
 ) {
-    val progress: RemoteFloat = if (initiallyOn) 1f.rf else 0f.rf
-    val host = tapAction.toRemoteAction()
-    val click: RemoteModifier =
-        if (host != null) RemoteModifier.clickable(host) else RemoteModifier
+    val localIsOn = rememberMutableRemoteBoolean(initiallyOn)
+    val target: RemoteFloat = localIsOn.select(1f.rf, 0f.rf)
+    val progress: RemoteFloat = animateRemoteFloat(target, ToggleDurationSeconds)
+
+    val toggle: Action = ValueChange(localIsOn, localIsOn.not())
+    val host: Action? = tapAction.toRemoteAction()
+    val click: Action = if (host != null) CombinedAction(toggle, host) else toggle
 
     RemoteHaToggleSwitchByProgress(
         progress = progress,
         activeAccent = activeAccent,
         inactiveAccent = inactiveAccent,
         modifier = modifier,
-        clickable = click,
+        clickable = RemoteModifier.clickable(click),
     )
 }
 
 /**
  * Progress-driven variant — deterministic layout for any
- * [RemoteFloat] `progress` in `[0, 1]`. Exposed so previews can
- * freeze the switch at 0 / 0.5 / 1 and verify the knob position.
+ * [RemoteFloat] `progress` in `[0, 1]`. Exposed so previews can freeze
+ * the switch at 0 / 0.5 / 1, and so callers (driving an externally
+ * animated source like a host-bound RemoteBoolean) can supply their
+ * own progress directly.
  *
- * Layout: a `RemoteRow` with two weighted spacers around the knob.
- * left.weight = progress, right.weight = 1 − progress. Avoids
- * needing a dynamic `RemoteDp(RemoteFloat)` (that constructor is
- * internal in alpha08).
+ * Track color: `tween(inactiveAccent, activeAccent, progress)`.
+ * Knob position: derived `start` padding —
+ * `(KnobInsetDp + progress * KnobTravelDp).asRemoteDp()`. Use
+ * `asRemoteDp` (the documented public converter — see
+ * [RemoteCompose docs][rc]) and not the `toRemoteDp()` cousin: the
+ * latter divides the input by display density (it expects px input and
+ * returns dp), so feeding it a dp-scaled float silently scales the
+ * travel down by `1 / density` (~38 % at 2.625) and the knob barely
+ * moves. `asRemoteDp` wraps the float as-dp directly.
  *
- * Track color tweens per-channel between [inactiveAccent] and
- * [activeAccent] via `lerp`.
+ * `Modifier.offset(x: RemoteDp)` is not used here — see commit
+ * f1832a9: `offset` with a RemoteFloat-derived RemoteDp visibly
+ * collapsed the travel even when scaling was correct, so the position
+ * is folded into start padding instead.
+ *
+ * [rc]: https://cs.android.com/androidx/platform/frameworks/support/+/androidx-main:compose/remote/remote-creation-compose/src/main/java/androidx/compose/remote/creation/compose/state/RemoteDp.kt
  */
 @Composable
 @RemoteComposable
@@ -176,15 +199,10 @@ fun RemoteHaToggleSwitchByProgress(
     modifier: RemoteModifier = RemoteModifier,
     clickable: RemoteModifier = RemoteModifier,
 ) {
-    val trackColor = lerpRemoteColor(inactiveAccent, activeAccent, progress)
-    val rightWeight: RemoteFloat = 1f.rf - progress
+    val trackColor: RemoteColor = tween(inactiveAccent, activeAccent, progress)
+    val startPaddingDp =
+        (KnobInsetDp.rf + progress * KnobTravelDp.rf).asRemoteDp()
 
-    // Outer Box pins the size — inside an entity row, a Row with weighted
-    // children would otherwise claim all available horizontal space, since
-    // alpha08's `.size()` on a Row doesn't override the weight-driven
-    // fillMax behavior. Box gives a hard size; the inner Row fills that.
-    // `clickable` is composed last so it doesn't shadow the visual
-    // modifiers (size/clip/background) in alpha08's modifier chain.
     RemoteBox(
         modifier = modifier
             .size(width = TrackWidth, height = TrackHeight)
@@ -192,33 +210,12 @@ fun RemoteHaToggleSwitchByProgress(
             .background(trackColor)
             .then(clickable),
     ) {
-        RemoteRow(
+        RemoteBox(
             modifier = RemoteModifier
-                .fillMaxWidth()
-                .fillMaxHeight()
-                .padding(horizontal = 2.rdp, vertical = 2.rdp),
-            verticalAlignment = RemoteAlignment.CenterVertically,
-        ) {
-            RemoteBox(modifier = RemoteModifier.weight(progress).fillMaxHeight())
-            RemoteBox(
-                modifier = RemoteModifier
-                    .size(KnobSize)
-                    .clip(RemoteCircleShape)
-                    .background(Color.White.rc),
-            )
-            RemoteBox(modifier = RemoteModifier.weight(rightWeight).fillMaxHeight())
-        }
+                .padding(start = startPaddingDp, top = KnobInset)
+                .size(KnobSize)
+                .clip(RemoteCircleShape)
+                .background(Color.White.rc),
+        )
     }
-}
-
-/**
- * Per-channel linear interpolation between two [RemoteColor]s. Pure
- * RemoteFloat math so the player can tween at playback time.
- */
-private fun lerpRemoteColor(from: RemoteColor, to: RemoteColor, t: RemoteFloat): RemoteColor {
-    val a = lerp(from.alpha, to.alpha, t)
-    val r = lerp(from.red, to.red, t)
-    val g = lerp(from.green, to.green, t)
-    val b = lerp(from.blue, to.blue, t)
-    return RemoteColor(a, r, g, b)
 }

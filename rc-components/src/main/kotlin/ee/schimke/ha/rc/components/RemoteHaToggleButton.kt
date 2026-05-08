@@ -20,12 +20,14 @@ import androidx.compose.remote.creation.compose.modifier.size
 import androidx.compose.remote.creation.compose.shapes.RemoteCircleShape
 import androidx.compose.remote.creation.compose.shapes.RemoteRoundedCornerShape
 import androidx.compose.remote.creation.compose.state.RemoteColor
+import androidx.compose.remote.creation.compose.state.RemoteFloat
 import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rf
 import androidx.compose.remote.creation.compose.state.rememberMutableRemoteBoolean
 import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.remote.creation.compose.state.rsp
+import androidx.compose.remote.creation.compose.state.tween
 import androidx.compose.remote.creation.compose.text.RemoteTextStyle
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.font.FontWeight
@@ -73,7 +75,16 @@ fun RemoteHaToggleButton(data: HaButtonData, modifier: RemoteModifier = RemoteMo
     val click: Action = if (host != null) CombinedAction(toggle, host) else toggle
     val clickable = RemoteModifier.clickable(click)
 
-    val accent: RemoteColor = localIsOn.select(data.accent.activeAccent, data.accent.inactiveAccent)
+    // Tween the accent between inactive ↔ active so the icon halo and
+    // tint cross-fade instead of snapping. The progress source is the
+    // optimistic in-doc boolean; on a click ValueChange flips it and
+    // `animateRemoteFloat` provides the smoothing.
+    val accentProgress: RemoteFloat = animateRemoteFloat(
+        localIsOn.select(1f.rf, 0f.rf),
+        durationSeconds = 0.20f,
+    )
+    val accent: RemoteColor =
+        tween(data.accent.inactiveAccent, data.accent.activeAccent, accentProgress)
 
     // Wrap-content by default so grid / horizontal-stack can pack
     // multiple buttons per row. Standalone callers wanting a

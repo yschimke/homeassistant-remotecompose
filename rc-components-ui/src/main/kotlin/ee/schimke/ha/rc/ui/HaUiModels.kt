@@ -2,10 +2,7 @@
 
 package ee.schimke.ha.rc.ui
 
-import androidx.compose.remote.creation.compose.state.RemoteBoolean
-import androidx.compose.remote.creation.compose.state.RemoteState
 import androidx.compose.remote.creation.compose.state.rc
-import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import ee.schimke.ha.rc.components.HaAction
@@ -93,78 +90,78 @@ data class HaUnsupportedUiData(
 )
 
 // ——— plain → Remote bridges ———
+//
+// Tier-2 data already uses plain Kotlin types (String / Color /
+// Boolean) — Tier-1 [HaToggleAccent] / [HaTileData] / … now do the
+// same since the rc-components refactor in fa24b6d. The wrapper is
+// just a field-by-field copy, with [Color] mapped to its `RemoteColor`
+// `.rc` form.
 
-internal fun HaToggleAccentUi.toRemote(tag: String): HaToggleAccent =
+internal fun HaToggleAccentUi.toRemote(): HaToggleAccent =
     HaToggleAccent(
         activeAccent = activeAccent.rc,
         inactiveAccent = inactiveAccent.rc,
-        isOn = isOn?.let { literalRemoteBoolean("$tag.is_on", it) },
         initiallyOn = isOn ?: false,
+        toggleable = isOn != null,
     )
 
-/**
- * A constant [RemoteBoolean] expressed as a named binding in the
- * [RemoteState.Domain.User] domain. We piggy-back on the named-binding
- * machinery because the alpha09 SDK exposes no public literal-boolean
- * constructor; the name is otherwise unused (Tier-2 callers don't push
- * live updates — that's Tier-1's job).
- */
-private fun literalRemoteBoolean(name: String, value: Boolean): RemoteBoolean =
-    RemoteBoolean.createNamedRemoteBoolean(name, value, RemoteState.Domain.User)
-
-internal fun HaTileUiData.toRemote(tag: String = "tile"): HaTileData =
+internal fun HaTileUiData.toRemote(): HaTileData =
     HaTileData(
-        name = name.rs,
-        state = state.rs,
+        entityId = null,
+        name = name,
+        state = state,
         icon = icon,
-        accent = accent.toRemote(tag),
+        accent = accent.toRemote(),
         tapAction = tapAction,
     )
 
-internal fun HaButtonUiData.toRemote(tag: String = "button"): HaButtonData =
+internal fun HaButtonUiData.toRemote(): HaButtonData =
     HaButtonData(
-        name = name.rs,
+        entityId = null,
+        name = name,
         icon = icon,
-        accent = accent.toRemote(tag),
+        accent = accent.toRemote(),
         showName = showName,
         tapAction = tapAction,
     )
 
-internal fun HaEntityRowUiData.toRemote(tag: String = "row"): HaEntityRowData =
+internal fun HaEntityRowUiData.toRemote(): HaEntityRowData =
     HaEntityRowData(
-        name = name.rs,
-        state = state.rs,
+        entityId = null,
+        name = name,
+        state = state,
         icon = icon,
-        accent = accent.toRemote(tag),
+        accent = accent.toRemote(),
         tapAction = tapAction,
     )
 
-internal fun HaEntitiesUiData.toRemote(tag: String = "entities"): HaEntitiesData =
+internal fun HaEntitiesUiData.toRemote(): HaEntitiesData =
     HaEntitiesData(
-        title = title?.rs,
-        rows = rows.mapIndexed { i, r -> r.toRemote("$tag.$i") },
+        title = title,
+        rows = rows.map { it.toRemote() },
     )
 
-internal fun HaGlanceCellUiData.toRemote(tag: String = "cell"): HaGlanceCellData =
+internal fun HaGlanceCellUiData.toRemote(): HaGlanceCellData =
     HaGlanceCellData(
-        name = name.rs,
-        state = state.rs,
+        entityId = null,
+        name = name,
+        state = state,
         icon = icon,
-        accent = accent.toRemote(tag),
+        accent = accent.toRemote(),
         tapAction = tapAction,
     )
 
-internal fun HaGlanceUiData.toRemote(tag: String = "glance"): HaGlanceData =
+internal fun HaGlanceUiData.toRemote(): HaGlanceData =
     HaGlanceData(
-        title = title?.rs,
-        cells = cells.mapIndexed { i, c -> c.toRemote("$tag.$i") },
+        title = title,
+        cells = cells.map { it.toRemote() },
     )
 
 internal fun HaMarkdownUiData.toRemote(): HaMarkdownData =
-    HaMarkdownData(title = title?.rs, lines = lines.map { it.rs })
+    HaMarkdownData(title = title, lines = lines)
 
 internal fun HaHeadingUiData.toRemote(): HaHeadingData =
-    HaHeadingData(title = title.rs, style = style)
+    HaHeadingData(title = title, style = style)
 
 internal fun HaUnsupportedUiData.toRemote(): HaUnsupportedData =
-    HaUnsupportedData(cardType = cardType.rs)
+    HaUnsupportedData(cardType = cardType)
