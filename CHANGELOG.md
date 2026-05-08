@@ -1,5 +1,38 @@
 # Changelog
 
+## [0.1.4](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.3...v0.1.4) (2026-05-08)
+
+
+### Features
+
+* **arc-dial:** draw target-position marker dot on the 270° sweep ([#112](https://github.com/yschimke/homeassistant-remotecompose/issues/112)) ([bd92a3e](https://github.com/yschimke/homeassistant-remotecompose/commit/bd92a3ef1910b2c1a9f8c34e5593478722bffdf7))
+* **clock:** bind RemoteTimeDefaults so the clock card ticks live ([#88](https://github.com/yschimke/homeassistant-remotecompose/issues/88)) ([3427890](https://github.com/yschimke/homeassistant-remotecompose/commit/3427890e925848ceba63ec29f71dc890b2718a0f))
+* **components:** in-document animations for toggle / gauge / arc dial ([#128](https://github.com/yschimke/homeassistant-remotecompose/issues/128)) ([f67ef39](https://github.com/yschimke/homeassistant-remotecompose/commit/f67ef3922dfe19bb82407febbba00e96aca7ae2b))
+* **dashboard:** wire button taps to a dispatcher; demo state animates ([#131](https://github.com/yschimke/homeassistant-remotecompose/issues/131)) ([8f36c4d](https://github.com/yschimke/homeassistant-remotecompose/commit/8f36c4dcd02ded4fc251d840a1f71c197a37f2d3))
+* **dashboard:** wire live HA service calls for non-demo sessions ([#132](https://github.com/yschimke/homeassistant-remotecompose/issues/132)) ([14f3d24](https://github.com/yschimke/homeassistant-remotecompose/commit/14f3d24167ea70d022a234c0d98212932bd766bb))
+* **demo:** replace synthetic demo with the seven captured dashboards ([#98](https://github.com/yschimke/homeassistant-remotecompose/issues/98)) ([fea40e6](https://github.com/yschimke/homeassistant-remotecompose/commit/fea40e691e1fa740d49424975b1cb8ad83d7a666))
+* **previews:** pack sections into N columns on tablet ([#110](https://github.com/yschimke/homeassistant-remotecompose/issues/110)) ([5a8de3a](https://github.com/yschimke/homeassistant-remotecompose/commit/5a8de3a35a5899aee81b0e7a6e5244ffc2027534))
+* **previews:** whole-dashboard previews at mobile + tablet widths ([#97](https://github.com/yschimke/homeassistant-remotecompose/issues/97)) ([91e0df9](https://github.com/yschimke/homeassistant-remotecompose/commit/91e0df98f9a6893d324b4a24e56905bf44b5dfb7))
+* **rc-components:** basic markdown parser for markdown card ([#133](https://github.com/yschimke/homeassistant-remotecompose/issues/133)) ([894744d](https://github.com/yschimke/homeassistant-remotecompose/commit/894744d99634f2309b41ca567634141ddfae6ecc))
+* split named / url image forms; add HaEmbeddedPlayer ([#125](https://github.com/yschimke/homeassistant-remotecompose/issues/125)) ([ff58da9](https://github.com/yschimke/homeassistant-remotecompose/commit/ff58da9b2894177a69d59125bda061a408ac4584))
+* **statistics-graph:** bar chart, multi-stat fan-out, stacking ([#115](https://github.com/yschimke/homeassistant-remotecompose/issues/115)) ([b94029a](https://github.com/yschimke/homeassistant-remotecompose/commit/b94029aafb8c611bce03389c60f22227ed2d75d0))
+* **theme:** apply M3 surface elevation + section grouping to rich palettes ([#134](https://github.com/yschimke/homeassistant-remotecompose/issues/134)) ([8a061c0](https://github.com/yschimke/homeassistant-remotecompose/commit/8a061c06909f8d35c8519d71e13aa58a6f88a964))
+* **todo-list:** wire row taps to todo.update_item ([#111](https://github.com/yschimke/homeassistant-remotecompose/issues/111)) ([f30041d](https://github.com/yschimke/homeassistant-remotecompose/commit/f30041d976750f1b8c626b4b95f8b0082e78e6e3))
+
+
+### Bug Fixes
+
+* **clock:** live-tick the time_zone / show_seconds variants ([#118](https://github.com/yschimke/homeassistant-remotecompose/issues/118)) ([f48e783](https://github.com/yschimke/homeassistant-remotecompose/commit/f48e783ff3f2fc2f809570af13cc531b0655f469)), closes [#108](https://github.com/yschimke/homeassistant-remotecompose/issues/108)
+* **deps:** update dependency androidx.compose:compose-bom to v2026.05.00 ([#94](https://github.com/yschimke/homeassistant-remotecompose/issues/94)) ([b941e0c](https://github.com/yschimke/homeassistant-remotecompose/commit/b941e0c8a2b880a6142f0fe3b798d6960984a4d7))
+* **deps:** update dependency androidx.tv:tv-material to v1.1.0 ([#95](https://github.com/yschimke/homeassistant-remotecompose/issues/95)) ([13d5d31](https://github.com/yschimke/homeassistant-remotecompose/commit/13d5d31d76a21445df36d8a339a2e695a5ea1a3a))
+* **deps:** update dependency org.hamcrest:hamcrest to v3 ([#96](https://github.com/yschimke/homeassistant-remotecompose/issues/96)) ([6f85ab1](https://github.com/yschimke/homeassistant-remotecompose/commit/6f85ab14f3787637ebbaaded29af8d7f2875401c))
+* **deps:** update remote-compose ([#93](https://github.com/yschimke/homeassistant-remotecompose/issues/93)) ([29fe027](https://github.com/yschimke/homeassistant-remotecompose/commit/29fe027beddfbab60fd0739ecf776e7e7f602a68))
+* **garage-card:** anchor door to top so it opens upward ([#117](https://github.com/yschimke/homeassistant-remotecompose/issues/117)) ([d5e4546](https://github.com/yschimke/homeassistant-remotecompose/commit/d5e4546bc6900141c7b9c5d6196109e49bab9406))
+* **picture-elements:** overlay elements at configured x/y positions ([#114](https://github.com/yschimke/homeassistant-remotecompose/issues/114)) ([3f44bf8](https://github.com/yschimke/homeassistant-remotecompose/commit/3f44bf8cb2c0f12bace5ca2bfcb723142c3e9713)), closes [#105](https://github.com/yschimke/homeassistant-remotecompose/issues/105)
+* **previews:** freeze clock card time so preview diffs are stable ([#113](https://github.com/yschimke/homeassistant-remotecompose/issues/113)) ([302b402](https://github.com/yschimke/homeassistant-remotecompose/commit/302b40271296342b4a7bc062d17174582b4fb8d0))
+* **rc-image-coil:** handle hardware bitmaps in memory-cache hits ([#127](https://github.com/yschimke/homeassistant-remotecompose/issues/127)) ([709c45c](https://github.com/yschimke/homeassistant-remotecompose/commit/709c45c340ce359b24a13537bfce6d8f10068a3d))
+* **rc:** size CachedCardPreview to its slot so cards render ([#129](https://github.com/yschimke/homeassistant-remotecompose/issues/129)) ([2531fba](https://github.com/yschimke/homeassistant-remotecompose/commit/2531fbaac86ad5270552d767c15f72dac81f577b))
+
 ## [0.1.3](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.2...v0.1.3) (2026-05-07)
 
 
