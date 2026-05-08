@@ -88,6 +88,22 @@ class PreferencesStore(private val context: Context) {
     }
 
     /**
+     * Collapsed-section mode for long single-column dashboards. When
+     * on, only the first section in a view stays expanded and the rest
+     * collapse to their headings; tapping a heading expands that
+     * section and collapses whichever was previously open. Defaults
+     * to on so a long dashboard's above-the-fold content is visible
+     * without scrolling. Wide / side-by-side layouts ignore this — the
+     * whole point there is to show every section at once.
+     */
+    val collapsedMode: Flow<Boolean>
+        get() = context.store.data.map { it[COLLAPSED_MODE_KEY] ?: true }
+
+    suspend fun setCollapsedMode(enabled: Boolean) {
+        context.store.edit { it[COLLAPSED_MODE_KEY] = enabled }
+    }
+
+    /**
      * The dashboard the user last opened. Drives auto-launch: on cold
      * start, [ee.schimke.terrazzo.MainActivity] reads this once and
      * seeds the dashboard nav-state, so a single-dashboard or 2-3
@@ -138,6 +154,7 @@ class PreferencesStore(private val context: Context) {
         private val DARK_KEY = stringPreferencesKey("dark_mode")
         private val LAST_VIEWED_KEY = stringPreferencesKey("last_viewed_dashboard")
         private val GRID_LAYOUT_KEY = booleanPreferencesKey("experimental_grid_layout")
+        private val COLLAPSED_MODE_KEY = booleanPreferencesKey("collapsed_mode")
 
         /** Stored value for HA's default (unnamed) dashboard. */
         const val DEFAULT_DASHBOARD_SENTINEL: String = "__default__"
