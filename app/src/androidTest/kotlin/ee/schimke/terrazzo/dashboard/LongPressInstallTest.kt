@@ -72,11 +72,11 @@ class LongPressInstallTest {
 
     @Test
     fun longPressOnDashboardCard_opensInstallSheet() {
-        // The DashboardPickerScreen lists at least one dashboard;
-        // the demo session's default is "Home". Tapping it opens
-        // the dashboard view.
-        val pickerEntry = device.wait(Until.findObject(By.text("Home")), 10_000)
-        assertNotNull("dashboard picker did not list 'Home' within 10s", pickerEntry)
+        // The DashboardPickerScreen lists the seven captured demo
+        // dashboards (see `DemoData.BOARDS`); the first entry is
+        // "Security". Tapping it opens the dashboard view.
+        val pickerEntry = device.wait(Until.findObject(By.text("Security")), 10_000)
+        assertNotNull("dashboard picker did not list 'Security' within 10s", pickerEntry)
         pickerEntry!!.click()
 
         val card = waitForFirstCard()
