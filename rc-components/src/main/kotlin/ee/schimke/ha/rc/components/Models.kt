@@ -206,12 +206,15 @@ data class HaHistoryGraphRow(
  *
  * Each text line carries its own underlying source entity so the
  * `RemoteHa*` wrapper can register a named binding keyed off that
- * sensor (e.g. `<sensor>.<prefix>_remaining_time.state`). For composite
- * lines built from two sensors (`Layer X / Y`,
- * `Nozzle 220°C → 220°C`) we pick the sensor whose value drives the
- * line — `_current_layer`, `_nozzle_temperature`, `_bed_temperature` —
- * and let the host re-render and push the formatted string when any of
- * the participating entities change.
+ * sensor under a synthetic attribute name
+ * (`<sensor>.attributes.<line>_label`) — not `<sensor>.state`, which
+ * the addon's stream auto-publishes with the raw HA value and would
+ * clobber our pre-formatted string. The host re-renders and pushes the
+ * formatted line under that attribute key when the source sensor (or
+ * either participating sensor for composite lines) changes. For
+ * composite lines (`Layer X / Y`, `Nozzle 220°C → 220°C`) we pick the
+ * sensor whose value drives the line — `_current_layer`,
+ * `_nozzle_temperature`, `_bed_temperature`.
  */
 data class HaBambuPrintStatusData(
     val entityId: String?,
