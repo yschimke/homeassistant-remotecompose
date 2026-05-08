@@ -4,6 +4,7 @@ package ee.schimke.ha.previews
 
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
+import androidx.compose.remote.creation.compose.state.RemoteBoolean
 import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rf
 import androidx.compose.remote.tooling.preview.RemotePreview
@@ -103,10 +104,11 @@ fun Toggle_Animation_Dark(
 }
 
 /**
- * Live-animated toggle. Encodes one `.rc` document with
- * `rememberMutableRemoteBoolean` + `animateRemoteFloat`; an
- * interactive player tweens the knob and colour when the document is
- * tapped.
+ * Public-entry-point smoke preview. The document encodes
+ * `animateRemoteFloat` over the `isOn`-derived progress, so a host
+ * writing back to a named `RemoteBoolean` would tween the knob and
+ * colour live. Here `isOn` is a constant `RemoteBoolean(false)`, so
+ * the static PNG just shows the resting off-state.
  */
 @Preview(name = "toggle-animated (light)", showBackground = false, widthDp = 40, heightDp = 24)
 @Composable
@@ -114,7 +116,7 @@ fun Toggle_Animated_Light() {
     RemotePreview(profile = androidXExperimental) {
         ProvideHaTheme(HaTheme.Light) {
             RemoteHaToggleSwitch(
-                initiallyOn = false,
+                isOn = RemoteBoolean(false),
                 activeAccent = PreviewActiveAccent.rc,
                 inactiveAccent = PreviewInactiveAccent.rc,
             )
@@ -128,7 +130,7 @@ fun Toggle_Animated_Dark() {
     RemotePreview(profile = androidXExperimental) {
         ProvideHaTheme(HaTheme.Dark) {
             RemoteHaToggleSwitch(
-                initiallyOn = false,
+                isOn = RemoteBoolean(false),
                 activeAccent = PreviewActiveAccent.rc,
                 inactiveAccent = PreviewInactiveAccent.rc,
             )

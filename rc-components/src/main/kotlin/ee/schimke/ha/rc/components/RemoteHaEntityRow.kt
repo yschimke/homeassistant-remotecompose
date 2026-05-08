@@ -3,8 +3,6 @@
 package ee.schimke.ha.rc.components
 
 import androidx.compose.remote.creation.compose.action.Action
-import androidx.compose.remote.creation.compose.action.CombinedAction
-import androidx.compose.remote.creation.compose.action.ValueChange
 import androidx.compose.remote.creation.compose.layout.RemoteAlignment
 import androidx.compose.remote.creation.compose.layout.RemoteArrangement
 import androidx.compose.remote.creation.compose.layout.RemoteBox
@@ -21,11 +19,11 @@ import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.modifier.size
 import androidx.compose.remote.creation.compose.shapes.RemoteCircleShape
 import androidx.compose.remote.creation.compose.shapes.RemoteRoundedCornerShape
+import androidx.compose.remote.creation.compose.state.RemoteBoolean
 import androidx.compose.remote.creation.compose.state.RemoteColor
 import androidx.compose.remote.creation.compose.state.RemoteFloat
 import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
-import androidx.compose.remote.creation.compose.state.rememberMutableRemoteBoolean
 import androidx.compose.remote.creation.compose.state.rf
 import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.remote.creation.compose.state.rsp
@@ -85,7 +83,7 @@ fun RemoteHaEntityRow(data: HaEntityRowData, modifier: RemoteModifier = RemoteMo
         }
         if (isOnBinding != null) {
             RemoteHaToggleSwitch(
-                initiallyOn = data.accent.initiallyOn,
+                isOn = isOnBinding,
                 activeAccent = data.accent.activeAccent,
                 inactiveAccent = data.accent.inactiveAccent,
                 tapAction = data.tapAction,
@@ -121,48 +119,45 @@ private const val ToggleDurationSeconds = 0.20f
 /**
  * Pill-shaped toggle switch — animates between off / on.
  *
- * 1. `rememberMutableRemoteBoolean` creates document-local state seeded
- *    from [initiallyOn].
- * 2. A `ValueChange` toggles that state on click; the player evaluates
- *    the write declaratively, no re-encoding required.
- * 3. The boolean drives a `select`-derived `RemoteFloat` progress in
+ * 1. [isOn] is the live `RemoteBoolean` for the entity (typically
+ *    `<entityId>.is_on` from [LiveValues.isOn]). The host pushes by
+ *    name; the document re-renders without re-encoding.
+ * 2. The boolean drives a `select`-derived `RemoteFloat` progress in
  *    `[0, 1]`, wrapped in [animateRemoteFloat] so successive flips
  *    tween instead of snapping.
- * 4. The track color tweens between [inactiveAccent] and [activeAccent]
+ * 3. The track color tweens between [inactiveAccent] and [activeAccent]
  *    via the alpha010 [tween] color helper.
- * 5. The knob position is the same animated `progress` mapped through
+ * 4. The knob position is the same animated `progress` mapped through
  *    `toRemoteDp()` and applied as `Modifier.offset` — avoids the
  *    weight()-on-derived-RemoteFloat issue that bit alpha08
  *    (b/504893436).
  *
  * @param tapAction Emitted as a `HostAction` so the runtime can call
- *   HA's service. The optimistic in-document flip happens regardless;
- *   the host is responsible for rolling state back if the service call
- *   fails.
+ *   HA's service. There is no in-document optimistic flip — the visual
+ *   only changes once the host writes the new value back to [isOn].
+ *   (We may layer optimistic updates on top later.)
  */
 @Composable
 @RemoteComposable
 fun RemoteHaToggleSwitch(
-    initiallyOn: Boolean,
+    isOn: RemoteBoolean,
     activeAccent: RemoteColor,
     inactiveAccent: RemoteColor,
     modifier: RemoteModifier = RemoteModifier,
     tapAction: HaAction = HaAction.None,
 ) {
-    val localIsOn = rememberMutableRemoteBoolean(initiallyOn)
-    val target: RemoteFloat = localIsOn.select(1f.rf, 0f.rf)
+    val target: RemoteFloat = isOn.select(1f.rf, 0f.rf)
     val progress: RemoteFloat = animateRemoteFloat(target, ToggleDurationSeconds)
 
-    val toggle: Action = ValueChange(localIsOn, localIsOn.not())
     val host: Action? = tapAction.toRemoteAction()
-    val click: Action = if (host != null) CombinedAction(toggle, host) else toggle
+    val clickable = if (host != null) RemoteModifier.clickable(host) else RemoteModifier
 
     RemoteHaToggleSwitchByProgress(
         progress = progress,
         activeAccent = activeAccent,
         inactiveAccent = inactiveAccent,
         modifier = modifier,
-        clickable = RemoteModifier.clickable(click),
+        clickable = clickable,
     )
 }
 
