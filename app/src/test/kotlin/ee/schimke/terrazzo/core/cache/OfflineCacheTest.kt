@@ -57,7 +57,18 @@ class OfflineCacheTest {
     val home =
       Dashboard(
         title = "Home",
-        views = listOf(View(cards = listOf(CardConfig(type = "tile")))),
+        views =
+          listOf(
+            View(
+              cards =
+                listOf(
+                  CardConfig(
+                    type = "tile",
+                    raw = JsonObject(mapOf("type" to JsonPrimitive("tile"))),
+                  )
+                )
+            )
+          ),
       )
     val homeSnap =
       HaSnapshot(

@@ -1,7 +1,16 @@
 package ee.schimke.ha.model
 
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
+import kotlinx.serialization.json.JsonDecoder
+import kotlinx.serialization.json.JsonEncoder
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 
 /**
  * Resolved Lovelace dashboard config, matching the payload returned by the HA WebSocket command
@@ -48,5 +57,29 @@ data class Section(
 /**
  * A Lovelace card config. Only `type` is guaranteed — everything else lives in [raw] for per-card
  * converters to interpret.
+ *
+ * Lovelace serialises card fields directly on the card object (no `raw` wrapper), so a custom
+ * serializer captures the entire JSON object as [raw] rather than letting kotlinx-serialization
+ * look for a literal `raw` field that the wire format never emits.
  */
-@Serializable data class CardConfig(val type: String, val raw: JsonObject = JsonObject(emptyMap()))
+@Serializable(with = CardConfigSerializer::class)
+data class CardConfig(val type: String, val raw: JsonObject = JsonObject(emptyMap()))
+
+object CardConfigSerializer : KSerializer<CardConfig> {
+  override val descriptor: SerialDescriptor = JsonObject.serializer().descriptor
+
+  override fun deserialize(decoder: Decoder): CardConfig {
+    val input = decoder as? JsonDecoder ?: error("CardConfig is JSON-only")
+    val obj = input.decodeJsonElement().jsonObject
+    val type = obj["type"]?.jsonPrimitive?.content ?: error("Card config missing required 'type'")
+    return CardConfig(type = type, raw = obj)
+  }
+
+  override fun serialize(encoder: Encoder, value: CardConfig) {
+    val output = encoder as? JsonEncoder ?: error("CardConfig is JSON-only")
+    val obj =
+      if (value.raw["type"] == JsonPrimitive(value.type)) value.raw
+      else JsonObject(value.raw + ("type" to JsonPrimitive(value.type)))
+    output.encodeJsonElement(obj)
+  }
+}
