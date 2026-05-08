@@ -285,35 +285,42 @@ private fun buildPrintStatusData(
     val s = snapshot.states
     fun sensor(suffix: String) = s["sensor.${prefix}_$suffix"]
 
-    val progress = sensor("print_progress")?.state?.toFloatOrNull() ?: 0f
-    val stageRaw = sensor("current_stage")?.state ?: sensor("print_status")?.state ?: "idle"
+    val progressEntity = sensor("print_progress")
+    val progress = progressEntity?.state?.toFloatOrNull() ?: 0f
+    val stageEntity = sensor("current_stage") ?: sensor("print_status")
+    val stageRaw = stageEntity?.state ?: "idle"
     val stage = stageRaw.replace('_', ' ').replaceFirstChar { it.uppercaseChar() }
 
-    val printerEntity = sensor("print_progress") ?: sensor("print_status")
+    val printerEntity = progressEntity ?: sensor("print_status")
     val printerName = printerEntity?.attributes?.get("friendly_name")
         ?.jsonPrimitive?.content
         ?.substringBeforeLast(' ')
         ?: prefix.uppercase()
 
-    val current = sensor("current_layer")?.state?.toIntOrNull()
-    val total = sensor("total_layer_count")?.state?.toIntOrNull()
+    val currentLayerEntity = sensor("current_layer")
+    val totalLayerEntity = sensor("total_layer_count")
+    val current = currentLayerEntity?.state?.toIntOrNull()
+    val total = totalLayerEntity?.state?.toIntOrNull()
     val layerLine = if (current != null && total != null) "Layer $current / $total" else null
 
-    val remaining = sensor("remaining_time")?.state?.toIntOrNull()
+    val remainingEntity = sensor("remaining_time")
+    val remaining = remainingEntity?.state?.toIntOrNull()
     val remainingLine = remaining?.let { mins ->
         val h = mins / 60
         val m = mins % 60
         if (h > 0) "${h}h ${m}m left" else "${m}m left"
     }
 
-    val nozzle = sensor("nozzle_temperature")?.state?.toFloatOrNull()
+    val nozzleEntity = sensor("nozzle_temperature")
+    val nozzle = nozzleEntity?.state?.toFloatOrNull()
     val nozzleTarget = sensor("target_nozzle_temperature")?.state?.toFloatOrNull()
     val nozzleLine = nozzle?.let {
         val tgt = nozzleTarget?.let { t -> if (t > 0f) " → ${formatTemp(t)}°C" else "" } ?: ""
         "Nozzle ${formatTemp(it)}°C$tgt"
     }
 
-    val bed = sensor("bed_temperature")?.state?.toFloatOrNull()
+    val bedEntity = sensor("bed_temperature")
+    val bed = bedEntity?.state?.toFloatOrNull()
     val bedTarget = sensor("target_bed_temperature")?.state?.toFloatOrNull()
     val bedLine = bed?.let {
         val tgt = bedTarget?.let { t -> if (t > 0f) " → ${formatTemp(t)}°C" else "" } ?: ""
@@ -323,13 +330,19 @@ private fun buildPrintStatusData(
     return ee.schimke.ha.rc.components.HaBambuPrintStatusData(
         entityId = printerEntity?.entityId,
         printerName = printerName,
+        stageEntityId = stageEntity?.entityId,
         stage = stage,
+        progressEntityId = progressEntity?.entityId,
         progressLabel = "${progress.toInt()} %",
         progressFraction = (progress / 100f).coerceIn(0f, 1f),
         accent = androidx.compose.ui.graphics.Color(0xFFFF8F00),
+        layerEntityId = currentLayerEntity?.entityId ?: totalLayerEntity?.entityId,
         layerLine = layerLine,
+        remainingEntityId = remainingEntity?.entityId,
         remainingLine = remainingLine,
+        nozzleEntityId = nozzleEntity?.entityId,
         nozzleLine = nozzleLine,
+        bedEntityId = bedEntity?.entityId,
         bedLine = bedLine,
     )
 }
