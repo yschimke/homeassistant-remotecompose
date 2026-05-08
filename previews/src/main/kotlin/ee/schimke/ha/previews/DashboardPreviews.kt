@@ -227,7 +227,6 @@ private fun SectionBlock(section: Section, snapshot: HaSnapshot) {
     ) {
         androidx.compose.foundation.layout.Column(
             verticalArrangement = Arrangement.spacedBy(8.dp),
-            modifier = Modifier.padding(vertical = 4.dp),
         ) {
             if (section.title != null) {
                 Box(modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)) {
