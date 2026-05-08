@@ -36,14 +36,14 @@ import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.cards.shutter.withEnhancedShutter
 import ee.schimke.ha.rc.components.HaTheme
 import ee.schimke.ha.rc.components.ProvideHaTheme
-import ee.schimke.ha.rc.widgetsV6
+import ee.schimke.ha.rc.widgetsProfile
 import ee.schimke.terrazzo.LocalTerrazzoGraph
 import ee.schimke.terrazzo.core.widget.WidgetStore
 
 /**
  * Bottom sheet shown when the user long-presses a card. Live preview
  * on top (rendered through `CachedCardPreview` with the same
- * [widgetsV6] profile the home screen widget uses, so what you see is
+ * [widgetsProfile] profile the home screen widget uses, so what you see is
  * what gets installed), then an "Add to Home Screen" button that calls
  * `requestPinAppWidget`.
  *
@@ -96,8 +96,8 @@ fun WidgetInstallSheet(
                 modifier = Modifier.fillMaxWidth().height(heightDp.dp),
             ) {
                 CachedCardPreview(
-                    cacheKey = WidgetPreviewCacheKey(card, HaTheme.Light, widgetsV6),
-                    profile = widgetsV6,
+                    cacheKey = WidgetPreviewCacheKey(card, HaTheme.Light, widgetsProfile),
+                    profile = widgetsProfile,
                     card = card,
                     snapshot = snapshot,
                 ) {
@@ -146,7 +146,7 @@ fun WidgetInstallSheet(
  * re-encode (see `CachedCardPreview` for the binding push). Profile
  * is part of the key so the same card cached for the dashboard
  * (AndroidX-experimental) doesn't collide with the widget capture
- * (V6).
+ * (V7).
  */
 private data class WidgetPreviewCacheKey(
     val card: CardConfig,
