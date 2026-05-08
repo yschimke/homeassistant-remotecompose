@@ -48,6 +48,41 @@ sealed interface HaAction {
     @Serializable
     data class Url(val url: String) : HaAction
 
+    /**
+     * One press on an alarm-panel keypad. Each digit / `backspace` /
+     * `clear` tap fires its own [AlarmKey] action; the host (typically
+     * via `AlarmKeypadCoordinator`) buffers the keys per [entityId] and
+     * combines them with the most-recent [AlarmIntent] to call
+     * `alarm_control_panel.alarm_*` with `code:` once it decides the
+     * user has finished entering an attempt.
+     *
+     * [key] is one of "0".."9", `"backspace"`, or `"clear"`. The .rc
+     * document carries a separate host action per key — there is no
+     * accumulated buffer in the document itself.
+     */
+    @Serializable
+    data class AlarmKey(val entityId: String, val key: String) : HaAction
+
+    /**
+     * User intent to arm or disarm an alarm panel. Carries the bare
+     * service suffix ("arm_away", "arm_home", "disarm", …); the
+     * dispatcher decides when to actually call
+     * `alarm_control_panel.alarm_<service>`, attaching the buffered
+     * keypad code from any in-flight [AlarmKey]s.
+     *
+     * [codeLength] = 0 signals the entity does not require a code
+     * (e.g. `code_arm_required: false`) so the dispatcher should fire
+     * immediately. A positive value lets the dispatcher auto-flush as
+     * soon as the buffer fills. `null` means "length unknown — flush
+     * by idle-timeout heuristic".
+     */
+    @Serializable
+    data class AlarmIntent(
+        val entityId: String,
+        val service: String,
+        val codeLength: Int? = null,
+    ) : HaAction
+
     @Serializable
     data object None : HaAction
 }

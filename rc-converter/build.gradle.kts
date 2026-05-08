@@ -20,6 +20,8 @@ dependencies {
   implementation(project(":ha-model"))
   implementation(project(":ha-client"))
 
+  implementation(libs.kotlinx.coroutines.core)
+
   implementation(platform(libs.compose.bom))
   implementation(libs.compose.ui)
   implementation(libs.compose.foundation)
@@ -38,4 +40,5 @@ dependencies {
 
   testImplementation(libs.kotlin.test)
   testImplementation(libs.kotlin.test.junit)
+  testImplementation(libs.kotlinx.coroutines.test)
 }
