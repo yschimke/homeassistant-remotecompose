@@ -19,6 +19,7 @@ import ee.schimke.ha.rc.ProvideCardRegistry
 import ee.schimke.ha.rc.RenderChild
 import ee.schimke.ha.rc.cardHeightDp
 import ee.schimke.ha.rc.cards.defaultRegistry
+import ee.schimke.ha.rc.cards.shutter.withEnhancedShutter
 import ee.schimke.ha.rc.components.ProvideHaTheme
 import ee.schimke.ha.rc.components.ThemeStyle
 import ee.schimke.ha.rc.components.haThemeFor
@@ -86,7 +87,7 @@ class TerrazzoWidgetProvider : AppWidgetProvider() {
         val snapshot = if (DemoData.isDemo(entry.baseUrl)) DemoData.snapshot() else EMPTY_SNAPSHOT
         val (style, dark) = loadThemeChoice(context)
         val haTheme = haThemeFor(style, dark)
-        val registry = defaultRegistry()
+        val registry = defaultRegistry().withEnhancedShutter()
 
         val widthPx = dpToPx(context, WIDGET_WIDTH_DP)
         val heightPx = dpToPx(context, registry.cardHeightDp(entry.card, snapshot))

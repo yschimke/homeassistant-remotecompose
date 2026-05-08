@@ -23,6 +23,7 @@ import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.rc.cardHeightDp
 import ee.schimke.ha.rc.captureCardDocument
 import ee.schimke.ha.rc.cards.defaultRegistry
+import ee.schimke.ha.rc.cards.shutter.withEnhancedShutter
 import ee.schimke.terrazzo.MainActivity
 import ee.schimke.terrazzo.core.session.DemoData
 import ee.schimke.terrazzo.widget.TerrazzoWidgetProvider
@@ -110,14 +111,15 @@ class MonitoringService : Service() {
         val snapshot = DemoData.snapshot()
         val density = resources.configuration.densityDpi
         val widthPx = dpToPx(NOTIFICATION_WIDTH_DP)
-        val heightPx = dpToPx(defaultRegistry().cardHeightDp(card, snapshot))
+        val registry = defaultRegistry().withEnhancedShutter()
+        val heightPx = dpToPx(registry.cardHeightDp(card, snapshot))
 
         val doc = captureCardDocument(
             context = this,
             widthPx = widthPx,
             heightPx = heightPx,
             densityDpi = density,
-            registry = defaultRegistry(),
+            registry = registry,
             card = card,
             snapshot = snapshot,
         )

@@ -96,6 +96,7 @@ dependencies {
   implementation(project(":ha-client"))
   implementation(project(":rc-converter"))
   implementation(project(":rc-components"))
+  implementation(project(":rc-card-shutter"))
   implementation(project(":terrazzo-core"))
 
   implementation(platform(libs.compose.bom))

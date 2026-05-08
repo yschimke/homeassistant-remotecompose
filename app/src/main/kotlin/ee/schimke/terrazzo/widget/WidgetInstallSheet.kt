@@ -33,6 +33,7 @@ import ee.schimke.ha.rc.ProvideCardRegistry
 import ee.schimke.ha.rc.RenderChild
 import ee.schimke.ha.rc.cardHeightDp
 import ee.schimke.ha.rc.cards.defaultRegistry
+import ee.schimke.ha.rc.cards.shutter.withEnhancedShutter
 import ee.schimke.ha.rc.components.HaTheme
 import ee.schimke.ha.rc.components.ProvideHaTheme
 import ee.schimke.ha.rc.widgetsV6
@@ -69,7 +70,7 @@ fun WidgetInstallSheet(
     val context = LocalContext.current
     val installer = remember { WidgetInstaller(context.applicationContext) }
     val store = LocalTerrazzoGraph.current.widgetStore
-    val registry = remember { defaultRegistry() }
+    val registry = remember { defaultRegistry().withEnhancedShutter() }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     var installedCount by remember { mutableIntStateOf(0) }

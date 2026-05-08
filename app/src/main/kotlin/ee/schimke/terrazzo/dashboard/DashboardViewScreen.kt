@@ -53,6 +53,7 @@ import ee.schimke.ha.rc.androidXExperimentalWrap
 import ee.schimke.ha.rc.cardHeightDp
 import ee.schimke.ha.rc.cardWidthClass
 import ee.schimke.ha.rc.cards.defaultRegistry
+import ee.schimke.ha.rc.cards.shutter.withEnhancedShutter
 import ee.schimke.ha.rc.components.HaTheme
 import ee.schimke.ha.rc.components.ProvideHaTheme
 import ee.schimke.ha.rc.components.ThemeStyle
@@ -180,7 +181,7 @@ private fun DashboardList(
     onCardLongPress: (CardConfig) -> Unit,
     contentPadding: PaddingValues,
 ) {
-    val registry = remember { defaultRegistry() }
+    val registry = remember { defaultRegistry().withEnhancedShutter() }
     val layout = remember(dashboard) { buildDashboardLayout(dashboard) }
     val cfg = rememberLayoutConfig()
     val useGridLayout by LocalTerrazzoGraph.current
