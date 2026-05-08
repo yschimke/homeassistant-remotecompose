@@ -92,7 +92,7 @@ data class HaGlanceCellData(
 data class HaGlanceData(val title: String?, val cells: List<HaGlanceCellData>)
 
 /** Markdown card. */
-data class HaMarkdownData(val title: String?, val lines: List<String>)
+data class HaMarkdownData(val title: String?, val blocks: List<MarkdownBlock>)
 
 /** Heading card. */
 data class HaHeadingData(val title: String, val style: HaHeadingStyle = HaHeadingStyle.Title)

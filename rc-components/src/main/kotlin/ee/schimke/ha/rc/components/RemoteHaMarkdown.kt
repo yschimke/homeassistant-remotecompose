@@ -11,6 +11,7 @@ import androidx.compose.remote.creation.compose.modifier.background
 import androidx.compose.remote.creation.compose.modifier.border
 import androidx.compose.remote.creation.compose.modifier.clip
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
+import androidx.compose.remote.creation.compose.modifier.height
 import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.shapes.RemoteRoundedCornerShape
 import androidx.compose.remote.creation.compose.state.rc
@@ -22,9 +23,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.font.FontWeight
 
 /**
- * HA `markdown` card — renders plain text lines inside the card chrome.
- * A small subset of Markdown (heading `#`, bold `**`) could be parsed
- * later; today we keep it readable without re-implementing a parser.
+ * HA `markdown` card — renders parsed markdown blocks inside the card
+ * chrome. Headings, bullets and paragraphs each pick a block-level
+ * style; inline syntax was stripped during parsing because RemoteText
+ * applies one style per node.
  */
 @Composable
 @RemoteComposable
@@ -49,13 +51,49 @@ fun RemoteHaMarkdown(data: HaMarkdownData, modifier: RemoteModifier = RemoteModi
                 )
                 RemoteBox(modifier = RemoteModifier.padding(top = 4.rdp))
             }
-            data.lines.forEach { line ->
-                RemoteText(
-                    text = line.rs,
-                    color = theme.primaryText.rc,
-                    fontSize = 13.rsp,
-                    style = RemoteTextStyle.Default,
-                )
+            data.blocks.forEach { block ->
+                when (block.kind) {
+                    MarkdownBlock.Kind.Heading -> {
+                        val size = when (block.level) {
+                            1 -> 16
+                            2 -> 15
+                            3 -> 14
+                            else -> 13
+                        }
+                        RemoteText(
+                            text = block.text.rs,
+                            color = theme.primaryText.rc,
+                            fontSize = size.rsp,
+                            fontWeight = FontWeight.SemiBold,
+                            style = RemoteTextStyle.Default,
+                        )
+                    }
+                    MarkdownBlock.Kind.Bullet -> {
+                        RemoteText(
+                            text = "• ${block.text}".rs,
+                            color = theme.primaryText.rc,
+                            fontSize = 13.rsp,
+                            style = RemoteTextStyle.Default,
+                        )
+                    }
+                    MarkdownBlock.Kind.Divider -> {
+                        RemoteBox(
+                            modifier = RemoteModifier
+                                .padding(vertical = 4.rdp)
+                                .fillMaxWidth()
+                                .height(1.rdp)
+                                .background(theme.divider.rc),
+                        )
+                    }
+                    MarkdownBlock.Kind.Paragraph -> {
+                        RemoteText(
+                            text = block.text.rs,
+                            color = theme.primaryText.rc,
+                            fontSize = 13.rsp,
+                            style = RemoteTextStyle.Default,
+                        )
+                    }
+                }
             }
         }
     }

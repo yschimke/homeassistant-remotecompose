@@ -17,6 +17,7 @@ import ee.schimke.ha.rc.components.HaMarkdownData
 import ee.schimke.ha.rc.components.HaTileData
 import ee.schimke.ha.rc.components.HaToggleAccent
 import ee.schimke.ha.rc.components.HaUnsupportedData
+import ee.schimke.ha.rc.components.Markdown
 
 /**
  * Tier-2 mirror of [HaToggleAccent] expressed in plain Compose types.
@@ -158,7 +159,7 @@ internal fun HaGlanceUiData.toRemote(): HaGlanceData =
     )
 
 internal fun HaMarkdownUiData.toRemote(): HaMarkdownData =
-    HaMarkdownData(title = title, lines = lines)
+    HaMarkdownData(title = title, blocks = Markdown.parse(lines.joinToString("\n")))
 
 internal fun HaHeadingUiData.toRemote(): HaHeadingData =
     HaHeadingData(title = title, style = style)

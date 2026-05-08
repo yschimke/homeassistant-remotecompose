@@ -32,6 +32,8 @@ dependencies {
   implementation(libs.remote.material3)
 
   implementation(libs.kotlinx.serialization.json)
+  implementation(libs.jetbrains.markdown)
 
   testImplementation(libs.kotlin.test)
+  testImplementation(libs.kotlin.test.junit)
 }
