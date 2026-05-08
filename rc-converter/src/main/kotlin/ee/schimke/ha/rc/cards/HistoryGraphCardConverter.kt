@@ -19,12 +19,12 @@ import kotlinx.serialization.json.jsonPrimitive
 
 /**
  * `history-graph` card. Renders one sparkline per entity using the
- * snapshot's `history[entityId]`. The per-row summary text is a named
- * `<entity>.state` binding so the host can refresh it without a
- * re-encode. Numeric points are normalised into the row's drawable rect
- * at capture time; alpha010 still doesn't expose a RemoteFloat list
- * binding, so the sparkline geometry itself is re-encoded when new
- * samples arrive.
+ * snapshot's `history[entityId]`. Per-row summary text is bound to
+ * `<entity>.state`; each sample is bound to `<entity>.numeric.<index>`
+ * so a host can push the next window of values without re-encoding the
+ * document. The y-axis range is fixed at encode time from the captured
+ * samples — values that drift well outside the initial range will clip
+ * to the canvas, in which case the host should re-encode.
  */
 class HistoryGraphCardConverter : CardConverter {
     override val cardType: String = CardTypes.HISTORY_GRAPH

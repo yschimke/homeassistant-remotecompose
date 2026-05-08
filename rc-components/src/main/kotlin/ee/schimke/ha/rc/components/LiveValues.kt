@@ -105,6 +105,24 @@ object LiveValues {
     }
 
     /**
+     * One sample of an entity's history series ↔ `<entityId>.numeric.<index>`.
+     * Sparkline-style cards bind each captured point individually so the
+     * host can push a sliding window of values without re-encoding the
+     * document. The renderer uses the captured float values to fix the
+     * y-axis range at encode time.
+     */
+    fun numericPoint(entityId: String?, index: Int, initial: Float): RemoteFloat =
+        namedFloat(entityId, "numeric.$index", initial)
+
+    /**
+     * Convenience for a whole history series — one named binding per
+     * index (`<entityId>.numeric.0`, `…1`, `…2`, …). When [entityId] is
+     * null each entry falls back to a constant `RemoteFloat`.
+     */
+    fun numericPoints(entityId: String?, points: List<Float>): List<RemoteFloat> =
+        points.mapIndexed { i, v -> numericPoint(entityId, i, v) }
+
+    /**
      * Generic helper for fields whose binding name doesn't follow the
      * `state` / `is_on` / `attributes.*` convention. The caller picks
      * the suffix; useful for composite labels (e.g. `state_label`,

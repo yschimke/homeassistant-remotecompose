@@ -45,11 +45,12 @@ import androidx.compose.ui.text.style.TextOverflow
  *      0       100
  * ```
  *
- * The arc sweep representing `(value - min) / (max - min)` is computed
- * at capture time; the host re-encodes when the underlying entity
- * changes. Severity bands tint the value arc green / yellow / red
- * (matching HA's `gauge.severity` config). Alpha08 doesn't expose a
- * RemoteFloat numeric binding to animate the sweep without re-encode.
+ * The arc sweep is derived from the named `<entityId>.numeric_state`
+ * binding (animated through [animateRemoteFloat]) so live value updates
+ * tween without re-encoding. Severity bands tint the value arc green /
+ * yellow / red (matching HA's `gauge.severity` config); the active
+ * band's colour is baked at encode time, so a host re-encodes when the
+ * value crosses a band boundary.
  */
 @Composable
 @RemoteComposable
