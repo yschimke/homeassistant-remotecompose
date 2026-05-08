@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.1.5](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.4...v0.1.5) (2026-05-08)
+
+
+### Features
+
+* **alarm-panel:** route status chrome through RemoteStateLayout(RemoteInt) ([#138](https://github.com/yschimke/homeassistant-remotecompose/issues/138)) ([6d346b2](https://github.com/yschimke/homeassistant-remotecompose/commit/6d346b2af462ce8da3137363f04b36a1e8212bd5))
+* **alarm-panel:** wire keypad presses with timing-based code submit ([#140](https://github.com/yschimke/homeassistant-remotecompose/issues/140)) ([b9c94b4](https://github.com/yschimke/homeassistant-remotecompose/commit/b9c94b4415d8784c295cade7a25b2ea0f8848e4d))
+* **components:** bind sparkline points to &lt;entityId&gt;.numeric.&lt;index&gt; ([#139](https://github.com/yschimke/homeassistant-remotecompose/issues/139)) ([2c28d54](https://github.com/yschimke/homeassistant-remotecompose/commit/2c28d54dbd6b53c768b908f8620da7d3f6a6c937))
+
+
+### Bug Fixes
+
+* **rc-converter:** push snapshot updates into running player by named binding ([#136](https://github.com/yschimke/homeassistant-remotecompose/issues/136)) ([f4fdb01](https://github.com/yschimke/homeassistant-remotecompose/commit/f4fdb01a725e3b2f38ec77e212686b67cb5ef0a8)), closes [#122](https://github.com/yschimke/homeassistant-remotecompose/issues/122)
+
 ## [0.1.4](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.3...v0.1.4) (2026-05-08)
 
 
