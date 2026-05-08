@@ -373,17 +373,43 @@ data class HaStatisticsGraphData(
     val stacked: Boolean = false,
 )
 
-/** `alarm-panel` card model — title, status badge, ARM AWAY/HOME
- *  buttons (variants depend on `states:` config), code-input field +
- *  numeric keypad. */
+/**
+ * `alarm-panel` card model — title, status chrome (label + icon + accent
+ * border), ARM AWAY/HOME buttons (variants depend on `states:` config),
+ * code-input field + numeric keypad.
+ *
+ * The status chrome is keyed by [initialStateInt] and rendered through
+ * `RemoteStateLayout(RemoteInt, …)` so the host can flip
+ * (icon, accent, label) by pushing a new `<entityId>.state_int` — no
+ * document re-encode. [statuses] enumerates one variant per known state
+ * key on the wire (`AlarmStateInt.*` in `ha-model`); the converter is
+ * responsible for supplying every key the host might ever push,
+ * including the catch-all `Unknown` index.
+ */
 data class HaAlarmPanelData(
     val entityId: String?,
     val title: String,
-    val state: String,
-    val accent: Color,
-    val statusIcon: ImageVector,
+    val initialStateInt: Int,
+    val statuses: List<HaAlarmStatus>,
     val actions: List<HaAlarmAction>,
     val showKeypad: Boolean,
+) {
+    init {
+        require(statuses.isNotEmpty()) { "HaAlarmPanelData.statuses must not be empty" }
+        require(statuses.distinctBy { it.stateKey }.size == statuses.size) {
+            "HaAlarmPanelData.statuses must have distinct stateKey values"
+        }
+    }
+}
+
+/** One status variant rendered for a specific `state_int` key — the
+ *  triplet (icon, accent, label) that the alarm panel chrome flips
+ *  through at playback. */
+data class HaAlarmStatus(
+    val stateKey: Int,
+    val label: String,
+    val accent: Color,
+    val icon: ImageVector,
 )
 
 /** One ARM button on the alarm panel — label + the call-service action

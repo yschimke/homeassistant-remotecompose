@@ -4,9 +4,11 @@ package ee.schimke.ha.rc.components
 
 import androidx.compose.remote.creation.compose.state.RemoteBoolean
 import androidx.compose.remote.creation.compose.state.RemoteFloat
-import androidx.compose.remote.creation.compose.state.RemoteString
+import androidx.compose.remote.creation.compose.state.RemoteInt
 import androidx.compose.remote.creation.compose.state.RemoteState
+import androidx.compose.remote.creation.compose.state.RemoteString
 import androidx.compose.remote.creation.compose.state.rf
+import androidx.compose.remote.creation.compose.state.ri
 import androidx.compose.remote.creation.compose.state.rs
 
 /**
@@ -37,6 +39,32 @@ object LiveValues {
     /** Entity primary state ↔ `<entityId>.state`. */
     fun state(entityId: String?, initial: String): RemoteString =
         named(entityId, "state", initial)
+
+    /**
+     * Entity primary state as an integer key ↔ `<entityId>.state_int`. The
+     * caller picks a stable `String → Int` mapping for the relevant HA
+     * domain (alarm-panel, climate hvac_mode, …); the host pushes the
+     * matching int when the entity changes and `RemoteStateLayout(RemoteInt,
+     * …)` flips the variant without a re-encode. When [entityId] is null
+     * the helper falls back to a constant.
+     */
+    fun intState(entityId: String?, initial: Int): RemoteInt =
+        namedInt(entityId, "state_int", initial)
+
+    /**
+     * Generic integer host binding. The caller picks the suffix; useful
+     * for any enum-shaped state that isn't the primary `state` (e.g.
+     * mode indices). When [entityId] is null the helper falls back to
+     * a constant.
+     */
+    fun namedInt(entityId: String?, suffix: String, initial: Int): RemoteInt {
+        if (entityId == null) return initial.ri
+        return RemoteInt.createNamedRemoteInt(
+            name(entityId, suffix),
+            initial,
+            RemoteState.Domain.User,
+        )
+    }
 
     /** Entity active flag ↔ `<entityId>.is_on`. */
     fun isOn(entityId: String?, initial: Boolean): RemoteBoolean? {

@@ -9,13 +9,16 @@ import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import ee.schimke.ha.model.AlarmStateInt
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.HaSnapshot
+import ee.schimke.ha.model.alarmStateIntFromRaw
 import ee.schimke.ha.rc.CardConverter
 import ee.schimke.ha.rc.components.HaAction
 import ee.schimke.ha.rc.components.HaAlarmAction
 import ee.schimke.ha.rc.components.HaAlarmPanelData
+import ee.schimke.ha.rc.components.HaAlarmStatus
 import ee.schimke.ha.rc.components.RemoteHaAlarmPanel
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
@@ -70,9 +73,8 @@ class AlarmPanelCardConverter : CardConverter {
             HaAlarmPanelData(
                 entityId = entityId,
                 title = title,
-                state = formatState(state),
-                accent = stateAccent(state),
-                statusIcon = stateIcon(state),
+                initialStateInt = alarmStateIntFromRaw(state),
+                statuses = AlarmStatuses,
                 actions = actions,
                 showKeypad =
                     card.raw["show_keypad"]?.jsonPrimitive?.content?.toBooleanStrictOrNull() ?: true,
@@ -82,14 +84,42 @@ class AlarmPanelCardConverter : CardConverter {
     }
 }
 
-private fun stateAccent(state: String): Color = when (state) {
-    "armed_away", "armed_home", "armed_night", "armed_vacation", "armed_custom_bypass" ->
-        Color(0xFF43A047)
-    "disarmed" -> Color(0xFF43A047)
-    "pending", "arming" -> Color(0xFFFFA000)
-    "triggered" -> Color(0xFFE53935)
-    else -> Color(0xFF757575)
-}
+private val AccentArmed = Color(0xFF43A047)
+private val AccentPending = Color(0xFFFFA000)
+private val AccentTriggered = Color(0xFFE53935)
+private val AccentNeutral = Color(0xFF757575)
+
+private fun status(key: Int, label: String, accent: Color, icon: ImageVector): HaAlarmStatus =
+    HaAlarmStatus(stateKey = key, label = label, accent = accent, icon = icon)
+
+/**
+ * One [HaAlarmStatus] per wire key in [AlarmStateInt]. The list is the
+ * complete set of variants the alarm-panel chrome can flip through at
+ * playback — the host pushes any of these int keys and the
+ * `RemoteStateLayout` swaps to the matching variant without a
+ * re-encode. Order mirrors [AlarmStateInt.All] so keys stay aligned
+ * with the wire contract.
+ */
+private val AlarmStatuses: List<HaAlarmStatus> =
+    listOf(
+        status(AlarmStateInt.Disarmed, "Disarmed", AccentArmed, Icons.Filled.LockOpen),
+        status(AlarmStateInt.ArmedHome, "Armed home", AccentArmed, Icons.Filled.Shield),
+        status(AlarmStateInt.ArmedAway, "Armed away", AccentArmed, Icons.Filled.Shield),
+        status(AlarmStateInt.ArmedNight, "Armed night", AccentArmed, Icons.Filled.Shield),
+        status(AlarmStateInt.ArmedVacation, "Armed vacation", AccentArmed, Icons.Filled.Shield),
+        status(
+            AlarmStateInt.ArmedCustomBypass,
+            "Armed custom bypass",
+            AccentArmed,
+            Icons.Filled.Shield,
+        ),
+        status(AlarmStateInt.Triggered, "Triggered", AccentTriggered, Icons.Filled.Warning),
+        status(AlarmStateInt.Pending, "Pending", AccentPending, Icons.Filled.Lock),
+        status(AlarmStateInt.Arming, "Arming", AccentPending, Icons.Filled.Lock),
+        status(AlarmStateInt.Disarming, "Disarming", AccentPending, Icons.Filled.Lock),
+        status(AlarmStateInt.Unavailable, "Unavailable", AccentNeutral, Icons.Filled.Lock),
+        status(AlarmStateInt.Unknown, "Unknown", AccentNeutral, Icons.Filled.Lock),
+    )
 
 private fun armAccent(suffix: String): Color = when (suffix) {
     "arm_away" -> Color(0xFF1565C0)
@@ -98,13 +128,3 @@ private fun armAccent(suffix: String): Color = when (suffix) {
     "disarm" -> Color(0xFFE53935)
     else -> Color(0xFF1565C0)
 }
-
-private fun stateIcon(state: String): ImageVector = when (state) {
-    "disarmed" -> Icons.Filled.LockOpen
-    "triggered" -> Icons.Filled.Warning
-    "armed_away", "armed_home", "armed_night", "armed_vacation", "armed_custom_bypass" -> Icons.Filled.Shield
-    else -> Icons.Filled.Lock
-}
-
-private fun formatState(s: String): String =
-    s.replace('_', ' ').replaceFirstChar { it.uppercaseChar() }
