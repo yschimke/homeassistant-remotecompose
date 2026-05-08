@@ -29,7 +29,7 @@ import androidx.compose.remote.creation.compose.state.rememberMutableRemoteBoole
 import androidx.compose.remote.creation.compose.state.rf
 import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.remote.creation.compose.state.rsp
-import androidx.compose.remote.creation.compose.state.toRemoteDp
+import androidx.compose.remote.creation.compose.state.asRemoteDp
 import androidx.compose.remote.creation.compose.state.tween
 import androidx.compose.remote.creation.compose.text.RemoteTextStyle
 import androidx.compose.runtime.Composable
@@ -174,13 +174,21 @@ fun RemoteHaToggleSwitch(
  * own progress directly.
  *
  * Track color: `tween(inactiveAccent, activeAccent, progress)`.
- * Knob position: derived `start` padding — `(KnobInset + progress *
- * KnobTravelDp).toRemoteDp()`. Modifier.offset(x: RemoteDp) only
- * applies a constant fraction of a non-literal RemoteFloat-derived
- * RemoteDp (alpha010 — verified empirically: 14 dp of intended travel
- * collapsed to ~2 dp), so the position is folded into start padding
- * instead. The padding API consumes RemoteFloat-derived RemoteDp
- * values correctly and produces the full travel.
+ * Knob position: derived `start` padding —
+ * `(KnobInsetDp + progress * KnobTravelDp).asRemoteDp()`. Use
+ * `asRemoteDp` (the documented public converter — see
+ * [RemoteCompose docs][rc]) and not the `toRemoteDp()` cousin: the
+ * latter divides the input by display density (it expects px input and
+ * returns dp), so feeding it a dp-scaled float silently scales the
+ * travel down by `1 / density` (~38 % at 2.625) and the knob barely
+ * moves. `asRemoteDp` wraps the float as-dp directly.
+ *
+ * `Modifier.offset(x: RemoteDp)` is not used here — see commit
+ * f1832a9: `offset` with a RemoteFloat-derived RemoteDp visibly
+ * collapsed the travel even when scaling was correct, so the position
+ * is folded into start padding instead.
+ *
+ * [rc]: https://cs.android.com/androidx/platform/frameworks/support/+/androidx-main:compose/remote/remote-creation-compose/src/main/java/androidx/compose/remote/creation/compose/state/RemoteDp.kt
  */
 @Composable
 @RemoteComposable
@@ -193,7 +201,7 @@ fun RemoteHaToggleSwitchByProgress(
 ) {
     val trackColor: RemoteColor = tween(inactiveAccent, activeAccent, progress)
     val startPaddingDp =
-        (KnobInsetDp.rf + progress * KnobTravelDp.rf).toRemoteDp()
+        (KnobInsetDp.rf + progress * KnobTravelDp.rf).asRemoteDp()
 
     RemoteBox(
         modifier = modifier
