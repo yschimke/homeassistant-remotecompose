@@ -26,7 +26,7 @@ fun RemoteHaSensorCard(
                     HaHistoryGraphRow(
                         entityId = data.entityId,
                         name = data.name,
-                        summary = data.valueLabel,
+                        summary = LiveValues.state(data.entityId, data.valueLabel),
                         accent = data.accent,
                         points = data.points,
                     )

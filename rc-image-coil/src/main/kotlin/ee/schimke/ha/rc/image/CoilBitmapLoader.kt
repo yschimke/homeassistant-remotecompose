@@ -1,3 +1,5 @@
+@file:Suppress("RestrictedApi")
+
 package ee.schimke.ha.rc.image
 
 import android.content.Context

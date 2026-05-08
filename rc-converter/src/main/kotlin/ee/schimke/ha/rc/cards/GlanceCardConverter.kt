@@ -12,6 +12,7 @@ import ee.schimke.ha.rc.HaStateColor
 import ee.schimke.ha.rc.components.HaGlanceCellData
 import ee.schimke.ha.rc.components.HaGlanceData
 import ee.schimke.ha.rc.components.HaToggleAccent
+import ee.schimke.ha.rc.components.LiveValues
 import ee.schimke.ha.rc.components.RemoteHaGlance
 import ee.schimke.ha.rc.defaultTapActionFor
 import ee.schimke.ha.rc.formatState
@@ -57,7 +58,7 @@ class GlanceCardConverter : CardConverter {
                 HaGlanceCellData(
                     entityId = eid,
                     name = name,
-                    state = formatState(entity),
+                    state = LiveValues.state(eid, formatState(entity)),
                     icon = HaIconMap.resolve(row?.get("icon")?.jsonPrimitive?.content, entity),
                     accent =
                         HaToggleAccent(

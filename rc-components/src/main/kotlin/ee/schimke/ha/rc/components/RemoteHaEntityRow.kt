@@ -92,7 +92,7 @@ fun RemoteHaEntityRow(data: HaEntityRowData, modifier: RemoteModifier = RemoteMo
             )
         } else {
             RemoteText(
-                text = LiveValues.state(data.entityId, data.state),
+                text = data.state,
                 color = theme.secondaryText.rc,
                 fontSize = 13.rsp,
                 style = RemoteTextStyle.Default,

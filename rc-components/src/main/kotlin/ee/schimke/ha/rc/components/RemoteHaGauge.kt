@@ -68,9 +68,8 @@ fun RemoteHaGauge(
     // update tweens between successive values instead of snapping. When
     // there's no entityId we get a constant RemoteFloat — animation is
     // a no-op since the input never changes.
-    val rawValue: RemoteFloat = LiveValues.numericState(data.entityId, data.value.toFloat())
     val animatedValue: RemoteFloat = animateRemoteFloat(
-        rawValue,
+        data.value,
         durationSeconds = GaugeAnimationSeconds,
         easing = RcEasing.Standard,
     )
@@ -131,7 +130,7 @@ fun RemoteHaGauge(
             }
 
             RemoteText(
-                text = LiveValues.state(data.entityId, data.valueText),
+                text = data.valueText,
                 color = theme.primaryText.rc,
                 fontSize = 22.rsp,
                 fontWeight = FontWeight.SemiBold,

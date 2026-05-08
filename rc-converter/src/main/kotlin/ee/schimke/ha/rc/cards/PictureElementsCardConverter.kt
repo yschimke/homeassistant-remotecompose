@@ -13,6 +13,7 @@ import ee.schimke.ha.rc.components.HaAction
 import ee.schimke.ha.rc.components.HaPictureElement
 import ee.schimke.ha.rc.components.HaPictureElementPosition
 import ee.schimke.ha.rc.components.HaPictureElementsData
+import ee.schimke.ha.rc.components.LiveValues
 import ee.schimke.ha.rc.components.RemoteHaPictureElements
 import ee.schimke.ha.rc.defaultTapActionFor
 import ee.schimke.ha.rc.formatState
@@ -76,7 +77,7 @@ private fun mapElement(obj: JsonObject, snapshot: HaSnapshot): HaPictureElement?
         "state-label" ->
             HaPictureElement.StateLabel(
                 entityId = entityId,
-                text = formatState(entity),
+                text = LiveValues.state(entityId, formatState(entity)),
                 position = position,
             )
         "service-button" -> {

@@ -282,7 +282,7 @@ private fun Element(
         }
         is HaPictureElement.StateLabel -> {
             RemoteText(
-                text = LiveValues.state(element.entityId, element.text),
+                text = element.text,
                 color = theme.primaryText.rc,
                 fontSize = 12.rsp,
                 style = RemoteTextStyle.Default,

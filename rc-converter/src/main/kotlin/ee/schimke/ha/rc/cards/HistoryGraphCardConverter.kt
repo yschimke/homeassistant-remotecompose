@@ -10,6 +10,7 @@ import ee.schimke.ha.rc.CardConverter
 import ee.schimke.ha.rc.HaStateColor
 import ee.schimke.ha.rc.components.HaHistoryGraphData
 import ee.schimke.ha.rc.components.HaHistoryGraphRow
+import ee.schimke.ha.rc.components.LiveValues
 import ee.schimke.ha.rc.components.RemoteHaHistoryGraph
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
@@ -51,7 +52,7 @@ class HistoryGraphCardConverter : CardConverter {
                 HaHistoryGraphRow(
                     entityId = id,
                     name = name,
-                    summary = summarise(history),
+                    summary = LiveValues.state(id, summarise(history)),
                     accent = HaStateColor.activeFor(entity),
                     points = numeric,
                 )

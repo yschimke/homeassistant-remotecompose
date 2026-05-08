@@ -53,7 +53,7 @@ class HaUiModelsTest {
         )
         val remote = ui.toRemote()
         assertEquals(ui.name, remote.name)
-        assertEquals(ui.state, remote.state)
+        assertEquals(ui.state, remote.state.constantValueOrNull)
         assertEquals(ui.icon, remote.icon)
         assertEquals(ui.tapAction, remote.tapAction)
     }

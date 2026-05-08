@@ -56,7 +56,7 @@ fun RemoteHaStatisticCard(
             )
             RemoteRow(verticalAlignment = RemoteAlignment.Bottom) {
                 RemoteText(
-                    text = LiveValues.state(data.entityId, data.valueLabel),
+                    text = data.valueLabel,
                     color = theme.primaryText.rc,
                     fontSize = 32.rsp,
                     fontWeight = FontWeight.SemiBold,

@@ -8,6 +8,7 @@ import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.CardConverter
 import ee.schimke.ha.rc.components.HaGaugeData
 import ee.schimke.ha.rc.components.HaGaugeSeverity
+import ee.schimke.ha.rc.components.LiveValues
 import ee.schimke.ha.rc.components.RemoteHaGauge
 import ee.schimke.ha.rc.defaultTapActionFor
 import ee.schimke.ha.rc.formatState
@@ -50,9 +51,9 @@ class GaugeCardConverter : CardConverter {
             HaGaugeData(
                 entityId = entityId,
                 name = name,
-                valueText = formatState(entity),
+                valueText = LiveValues.state(entityId, formatState(entity)),
                 unit = unit,
-                value = value,
+                value = LiveValues.numericState(entityId, value.toFloat()),
                 min = min,
                 max = max,
                 severity = severity,

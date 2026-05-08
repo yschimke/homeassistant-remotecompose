@@ -101,7 +101,7 @@ fun RemoteHaTile(data: HaTileData, modifier: RemoteModifier = RemoteModifier) {
                     overflow = TextOverflow.Ellipsis,
                 )
                 RemoteText(
-                    text = LiveValues.state(data.entityId, data.state),
+                    text = data.state,
                     color = theme.secondaryText.rc,
                     fontSize = 11.rsp,
                     style = RemoteTextStyle.Default,

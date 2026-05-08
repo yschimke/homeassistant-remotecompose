@@ -110,7 +110,7 @@ fun RemoteHaPictureEntity(
                     )
                     if (data.showState) {
                         RemoteText(
-                            text = LiveValues.state(data.entityId, data.state),
+                            text = data.state,
                             color = theme.secondaryText.rc,
                             fontSize = 12.rsp,
                             style = RemoteTextStyle.Default,

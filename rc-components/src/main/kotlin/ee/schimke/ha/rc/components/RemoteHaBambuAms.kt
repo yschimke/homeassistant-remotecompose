@@ -98,7 +98,7 @@ fun RemoteHaBambuSpool(data: HaBambuSpoolDetail, modifier: RemoteModifier = Remo
                     style = RemoteTextStyle.Default,
                 )
                 RemoteText(
-                    text = LiveValues.state(data.slot.entityId, data.slot.material),
+                    text = data.slot.material,
                     color = theme.primaryText.rc,
                     fontSize = 16.rsp,
                     fontWeight = FontWeight.Medium,
@@ -128,7 +128,7 @@ private fun SpoolSlot(slot: HaBambuSpoolSlot, theme: HaTheme, big: Boolean) {
         SpoolSwatch(slot, big = big, theme = theme)
         RemoteBox(modifier = RemoteModifier.padding(top = 6.rdp)) {
             RemoteText(
-                text = LiveValues.state(slot.entityId, slot.material),
+                text = slot.material,
                 color = theme.primaryText.rc,
                 fontSize = 11.rsp,
                 fontWeight = FontWeight.Medium,

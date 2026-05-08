@@ -12,6 +12,7 @@ import ee.schimke.ha.rc.HaStateColor
 import ee.schimke.ha.rc.components.HaEntitiesData
 import ee.schimke.ha.rc.components.HaEntityRowData
 import ee.schimke.ha.rc.components.HaToggleAccent
+import ee.schimke.ha.rc.components.LiveValues
 import ee.schimke.ha.rc.components.RemoteHaEntities
 import ee.schimke.ha.rc.defaultTapActionFor
 import ee.schimke.ha.rc.formatState
@@ -58,7 +59,7 @@ class EntitiesCardConverter : CardConverter {
                 HaEntityRowData(
                     entityId = eid,
                     name = name,
-                    state = formatState(entity),
+                    state = LiveValues.state(eid, formatState(entity)),
                     icon = HaIconMap.resolve(row?.get("icon")?.jsonPrimitive?.content, entity),
                     accent =
                         HaToggleAccent(
