@@ -215,15 +215,31 @@ private fun SectionsView(view: View, snapshot: HaSnapshot) {
 
 @Composable
 private fun SectionBlock(section: Section, snapshot: HaSnapshot) {
-    if (section.title != null) {
-        Box(modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)) {
-            androidx.compose.material3.Text(
-                text = section.title!!,
-                style = androidx.compose.material3.MaterialTheme.typography.labelLarge,
-            )
+    // Wrap the title + cards in a Surface tinted with
+    // `HaTheme.Light.sectionBackground` so M3-elevation themes (Mushroom,
+    // Kiosk, Material3) get a visible group. For these flat-HA previews
+    // `sectionBackground == dashboardBackground`, so the wrap is a no-op
+    // and the HA-reference pixel diff is unaffected.
+    androidx.compose.material3.Surface(
+        color = HaTheme.Light.sectionBackground,
+        shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
+        modifier = Modifier.uiFillMaxWidth().padding(horizontal = 4.dp),
+    ) {
+        androidx.compose.foundation.layout.Column(
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.padding(vertical = 4.dp),
+        ) {
+            if (section.title != null) {
+                Box(modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)) {
+                    androidx.compose.material3.Text(
+                        text = section.title!!,
+                        style = androidx.compose.material3.MaterialTheme.typography.labelLarge,
+                    )
+                }
+            }
+            section.cards.forEach { card -> CardSlot(card, snapshot) }
         }
     }
-    section.cards.forEach { card -> CardSlot(card, snapshot) }
 }
 
 /** Greedy pack — append each section to the shortest column. Keeps
