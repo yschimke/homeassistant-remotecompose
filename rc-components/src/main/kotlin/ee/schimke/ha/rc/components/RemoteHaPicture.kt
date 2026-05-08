@@ -20,6 +20,7 @@ import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.modifier.size
 import androidx.compose.remote.creation.compose.shapes.RemoteCircleShape
 import androidx.compose.remote.creation.compose.shapes.RemoteRoundedCornerShape
+import androidx.compose.remote.creation.compose.state.RemoteColor
 import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rf
@@ -162,21 +163,30 @@ private fun Cell(cell: HaPictureGlanceCell, theme: HaTheme) {
     val click = cell.tapAction.toRemoteAction()
         ?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
     val accent = cell.accent.rc
+    val activeBg: RemoteColor = accent.copy(alpha = accent.alpha * 0.18f.rf)
+    val inactiveBg: RemoteColor = theme.divider.rc.copy(alpha = theme.divider.rc.alpha * 0.5f.rf)
+
+    // Live `<entityId>.is_on` so the host can flip the cell styling
+    // without a re-encode; falls back to the authoring-time seed when
+    // entityId is null (preview).
+    val isActive = LiveValues.isOn(cell.entityId, cell.initiallyActive)
+    val bg: RemoteColor = isActive?.select(activeBg, inactiveBg)
+        ?: if (cell.initiallyActive) activeBg else inactiveBg
+    val tint: RemoteColor = isActive?.select(accent, theme.secondaryText.rc)
+        ?: if (cell.initiallyActive) accent else theme.secondaryText.rc
+
     RemoteBox(
         modifier = RemoteModifier.then(click)
             .size(32.rdp)
             .clip(RemoteCircleShape)
-            .background(
-                if (cell.initiallyActive) accent.copy(alpha = accent.alpha * 0.18f.rf)
-                else theme.divider.rc.copy(alpha = theme.divider.rc.alpha * 0.5f.rf),
-            ),
+            .background(bg),
         contentAlignment = RemoteAlignment.Center,
     ) {
         RemoteIcon(
             imageVector = cell.icon,
             contentDescription = cell.label.rs,
             modifier = RemoteModifier.size(18.rdp),
-            tint = if (cell.initiallyActive) accent else theme.secondaryText.rc,
+            tint = tint,
         )
     }
 }
@@ -262,21 +272,30 @@ private fun Element(
             val click = element.tapAction.toRemoteAction()
                 ?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
             val accent = element.accent.rc
+            val activeBg: RemoteColor = accent.copy(alpha = accent.alpha * 0.18f.rf)
+            val inactiveBg: RemoteColor =
+                theme.divider.rc.copy(alpha = theme.divider.rc.alpha * 0.5f.rf)
+
+            // Live `<entityId>.is_on` so the host can flip the element
+            // styling without a re-encode.
+            val isActive = LiveValues.isOn(element.entityId, element.initiallyActive)
+            val bg: RemoteColor = isActive?.select(activeBg, inactiveBg)
+                ?: if (element.initiallyActive) activeBg else inactiveBg
+            val tint: RemoteColor = isActive?.select(accent, theme.secondaryText.rc)
+                ?: if (element.initiallyActive) accent else theme.secondaryText.rc
+
             RemoteBox(
                 modifier = modifier.then(click)
                     .size(28.rdp)
                     .clip(RemoteCircleShape)
-                    .background(
-                        if (element.initiallyActive) accent.copy(alpha = accent.alpha * 0.18f.rf)
-                        else theme.divider.rc.copy(alpha = theme.divider.rc.alpha * 0.5f.rf),
-                    ),
+                    .background(bg),
                 contentAlignment = RemoteAlignment.Center,
             ) {
                 RemoteIcon(
                     imageVector = element.icon,
                     contentDescription = "element".rs,
                     modifier = RemoteModifier.size(16.rdp),
-                    tint = if (element.initiallyActive) accent else theme.secondaryText.rc,
+                    tint = tint,
                 )
             }
         }
