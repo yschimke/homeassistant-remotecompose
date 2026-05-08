@@ -104,7 +104,7 @@ fun RemoteHaGlanceCell(data: HaGlanceCellData, modifier: RemoteModifier = Remote
             )
         }
         RemoteText(
-            text = LiveValues.state(data.entityId, data.state),
+            text = data.state,
             color = theme.secondaryText.rc,
             fontSize = 11.rsp,
             style = RemoteTextStyle.Default,

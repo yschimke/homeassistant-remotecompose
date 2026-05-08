@@ -116,7 +116,7 @@ private fun Row(row: HaHistoryGraphRow, theme: HaTheme) {
             overflow = TextOverflow.Ellipsis,
         )
         RemoteText(
-            text = LiveValues.state(row.entityId, row.summary),
+            text = row.summary,
             color = theme.secondaryText.rc,
             fontSize = 11.rsp,
             style = RemoteTextStyle.Default,

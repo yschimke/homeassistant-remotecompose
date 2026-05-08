@@ -84,13 +84,13 @@ private fun Stat(stat: HaAreaStat, theme: HaTheme) {
     RemoteRow(verticalAlignment = RemoteAlignment.CenterVertically) {
         RemoteIcon(
             imageVector = stat.icon,
-            contentDescription = stat.label.rs,
+            contentDescription = stat.label,
             modifier = RemoteModifier.size(16.rdp),
             tint = theme.secondaryText.rc,
         )
         RemoteBox(modifier = RemoteModifier.padding(start = 6.rdp)) {
             RemoteText(
-                text = LiveValues.state(stat.entityId, stat.label),
+                text = stat.label,
                 color = theme.secondaryText.rc,
                 fontSize = 12.rsp,
                 style = RemoteTextStyle.Default,

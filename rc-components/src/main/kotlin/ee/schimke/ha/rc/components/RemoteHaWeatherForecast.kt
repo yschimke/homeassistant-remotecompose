@@ -77,13 +77,13 @@ private fun CurrentRow(data: HaWeatherForecastData, theme: HaTheme) {
         RemoteRow(verticalAlignment = RemoteAlignment.CenterVertically) {
             RemoteIcon(
                 imageVector = data.icon,
-                contentDescription = data.condition.rs,
+                contentDescription = data.condition,
                 modifier = RemoteModifier.size(36.rdp),
                 tint = theme.primaryText.rc,
             )
             RemoteColumn(modifier = RemoteModifier.padding(start = 10.rdp)) {
                 RemoteText(
-                    text = LiveValues.state(data.entityId, data.condition),
+                    text = data.condition,
                     color = theme.primaryText.rc,
                     fontSize = 16.rsp,
                     fontWeight = FontWeight.Medium,

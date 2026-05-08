@@ -18,6 +18,7 @@ import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.CardConverter
 import ee.schimke.ha.rc.components.HaWeatherDay
 import ee.schimke.ha.rc.components.HaWeatherForecastData
+import ee.schimke.ha.rc.components.LiveValues
 import ee.schimke.ha.rc.components.RemoteHaWeatherForecast
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
@@ -76,7 +77,7 @@ class WeatherForecastCardConverter : CardConverter {
             HaWeatherForecastData(
                 entityId = entityId,
                 name = name,
-                condition = formatCondition(condition),
+                condition = LiveValues.state(entityId, formatCondition(condition)),
                 temperature = temperature,
                 supportingLine = null,
                 icon = weatherIcon(condition),

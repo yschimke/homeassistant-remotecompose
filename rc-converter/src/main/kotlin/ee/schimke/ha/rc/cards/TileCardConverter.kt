@@ -12,6 +12,7 @@ import ee.schimke.ha.rc.CardWidthClass
 import ee.schimke.ha.rc.HaStateColor
 import ee.schimke.ha.rc.components.HaTileData
 import ee.schimke.ha.rc.components.HaToggleAccent
+import ee.schimke.ha.rc.components.LiveValues
 import ee.schimke.ha.rc.components.RemoteHaTile
 import ee.schimke.ha.rc.defaultTapActionFor
 import ee.schimke.ha.rc.formatState
@@ -47,7 +48,7 @@ class TileCardConverter : CardConverter {
             HaTileData(
                 entityId = entityId,
                 name = name,
-                state = formatState(entity),
+                state = LiveValues.state(entityId, formatState(entity)),
                 icon = HaIconMap.resolve(card.raw["icon"]?.jsonPrimitive?.content, entity),
                 accent =
                     HaToggleAccent(

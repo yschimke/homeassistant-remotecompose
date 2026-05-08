@@ -17,6 +17,7 @@ import ee.schimke.ha.rc.components.HaMarkdownData
 import ee.schimke.ha.rc.components.HaTileData
 import ee.schimke.ha.rc.components.HaToggleAccent
 import ee.schimke.ha.rc.components.HaUnsupportedData
+import ee.schimke.ha.rc.components.LiveValues
 import ee.schimke.ha.rc.components.Markdown
 
 /**
@@ -110,7 +111,7 @@ internal fun HaTileUiData.toRemote(): HaTileData =
     HaTileData(
         entityId = null,
         name = name,
-        state = state,
+        state = LiveValues.state(null, state),
         icon = icon,
         accent = accent.toRemote(),
         tapAction = tapAction,
@@ -130,7 +131,7 @@ internal fun HaEntityRowUiData.toRemote(): HaEntityRowData =
     HaEntityRowData(
         entityId = null,
         name = name,
-        state = state,
+        state = LiveValues.state(null, state),
         icon = icon,
         accent = accent.toRemote(),
         tapAction = tapAction,
@@ -146,7 +147,7 @@ internal fun HaGlanceCellUiData.toRemote(): HaGlanceCellData =
     HaGlanceCellData(
         entityId = null,
         name = name,
-        state = state,
+        state = LiveValues.state(null, state),
         icon = icon,
         accent = accent.toRemote(),
         tapAction = tapAction,

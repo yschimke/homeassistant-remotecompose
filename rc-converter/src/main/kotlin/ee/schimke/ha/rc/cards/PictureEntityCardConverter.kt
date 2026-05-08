@@ -11,6 +11,7 @@ import ee.schimke.ha.rc.CardConverter
 import ee.schimke.ha.rc.HaStateColor
 import ee.schimke.ha.rc.components.HaPictureEntityData
 import ee.schimke.ha.rc.components.HaToggleAccent
+import ee.schimke.ha.rc.components.LiveValues
 import ee.schimke.ha.rc.components.RemoteHaPictureEntity
 import ee.schimke.ha.rc.defaultTapActionFor
 import ee.schimke.ha.rc.formatState
@@ -49,7 +50,7 @@ class PictureEntityCardConverter : CardConverter {
             HaPictureEntityData(
                 entityId = entityId,
                 name = name,
-                state = formatState(entity),
+                state = LiveValues.state(entityId, formatState(entity)),
                 icon = HaIconMap.resolve(card.raw["icon"]?.jsonPrimitive?.content, entity),
                 accent =
                     HaToggleAccent(

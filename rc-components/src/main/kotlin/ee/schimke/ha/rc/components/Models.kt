@@ -1,6 +1,8 @@
 package ee.schimke.ha.rc.components
 
 import androidx.compose.remote.creation.compose.state.RemoteColor
+import androidx.compose.remote.creation.compose.state.RemoteFloat
+import androidx.compose.remote.creation.compose.state.RemoteString
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 
@@ -49,7 +51,7 @@ data class HaToggleAccent(
 data class HaTileData(
     val entityId: String?,
     val name: String,
-    val state: String,
+    val state: RemoteString,
     val icon: ImageVector,
     val accent: HaToggleAccent,
     val tapAction: HaAction = HaAction.None,
@@ -69,7 +71,7 @@ data class HaButtonData(
 data class HaEntityRowData(
     val entityId: String?,
     val name: String,
-    val state: String,
+    val state: RemoteString,
     val icon: ImageVector,
     val accent: HaToggleAccent,
     val tapAction: HaAction = HaAction.None,
@@ -82,7 +84,7 @@ data class HaEntitiesData(val title: String?, val rows: List<HaEntityRowData>)
 data class HaGlanceCellData(
     val entityId: String?,
     val name: String,
-    val state: String,
+    val state: RemoteString,
     val icon: ImageVector,
     val accent: HaToggleAccent,
     val tapAction: HaAction = HaAction.None,
@@ -110,7 +112,7 @@ data class HaUnsupportedData(val cardType: String)
 data class HaPictureEntityData(
     val entityId: String?,
     val name: String,
-    val state: String,
+    val state: RemoteString,
     val icon: ImageVector,
     val accent: HaToggleAccent,
     val showName: Boolean = true,
@@ -122,10 +124,10 @@ data class HaPictureEntityData(
 data class HaGaugeData(
     val entityId: String?,
     val name: String,
-    val valueText: String,
+    val valueText: RemoteString,
     val unit: String?,
     /** Current value in the gauge's [min..max] range; clamped at render time. */
-    val value: Double,
+    val value: RemoteFloat,
     val min: Double,
     val max: Double,
     /** Severity bands sampled at the value position: green / yellow / red. */
@@ -144,7 +146,7 @@ enum class HaGaugeSeverity {
 data class HaWeatherForecastData(
     val entityId: String?,
     val name: String,
-    val condition: String,
+    val condition: RemoteString,
     /** Current temperature display, including unit. */
     val temperature: String,
     /** Optional secondary line — feels like, low/high, or extra detail. */
@@ -192,7 +194,7 @@ data class HaHistoryGraphData(
 data class HaHistoryGraphRow(
     val entityId: String?,
     val name: String,
-    val summary: String,
+    val summary: RemoteString,
     val accent: Color,
     /** Numeric samples in order. Empty → renders a "no data" stub. */
     val points: List<Float>,
@@ -262,7 +264,7 @@ data class HaBambuSpoolDetail(val slot: HaBambuSpoolSlot)
 data class HaBambuSpoolSlot(
     val entityId: String?,
     val slotLabel: String,
-    val material: String,
+    val material: RemoteString,
     val color: Color,
     val remainPercent: Int?,
     val active: Boolean,
@@ -288,7 +290,7 @@ data class HaAreaCardData(
     val actions: List<HaAreaAction>,
 )
 
-data class HaAreaStat(val entityId: String?, val icon: ImageVector, val label: String)
+data class HaAreaStat(val icon: ImageVector, val label: RemoteString)
 
 data class HaAreaAction(
     val entityId: String?,
@@ -535,7 +537,7 @@ sealed interface HaPictureElement {
 
     data class StateLabel(
         val entityId: String?,
-        val text: String,
+        val text: RemoteString,
         override val position: HaPictureElementPosition? = null,
     ) : HaPictureElement
 
@@ -553,7 +555,7 @@ sealed interface HaPictureElement {
 data class HaStatisticCardData(
     val entityId: String?,
     val name: String,
-    val valueLabel: String,
+    val valueLabel: RemoteString,
     val unit: String?,
     val periodLabel: String?,
     val accent: Color,

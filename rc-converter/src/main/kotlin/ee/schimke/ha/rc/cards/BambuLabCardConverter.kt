@@ -194,7 +194,7 @@ private fun readSpoolSlots(
         ee.schimke.ha.rc.components.HaBambuSpoolSlot(
             entityId = entity.entityId,
             slotLabel = "Slot $trayIdx",
-            material = material,
+            material = LiveValues.state(entity.entityId, material),
             color = color,
             remainPercent = remain,
             active = active,

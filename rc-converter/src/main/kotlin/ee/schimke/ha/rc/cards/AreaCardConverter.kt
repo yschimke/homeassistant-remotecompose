@@ -19,6 +19,7 @@ import ee.schimke.ha.rc.components.HaAction
 import ee.schimke.ha.rc.components.HaAreaAction
 import ee.schimke.ha.rc.components.HaAreaCardData
 import ee.schimke.ha.rc.components.HaAreaStat
+import ee.schimke.ha.rc.components.LiveValues
 import ee.schimke.ha.rc.components.RemoteHaArea
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -60,16 +61,14 @@ class AreaCardConverter : CardConverter {
                 when (deviceClass) {
                     "temperature" ->
                         HaAreaStat(
-                            entityId = id,
                             icon = Icons.Filled.Thermostat,
-                            label = "${entity.state}${unit ?: " °C"}",
+                            label = LiveValues.state(id, "${entity.state}${unit ?: " °C"}"),
                         )
                     "humidity",
                     "moisture" ->
                         HaAreaStat(
-                            entityId = id,
                             icon = Icons.Filled.WaterDrop,
-                            label = "${entity.state}${unit ?: " %"}",
+                            label = LiveValues.state(id, "${entity.state}${unit ?: " %"}"),
                         )
                     else -> null
                 }
