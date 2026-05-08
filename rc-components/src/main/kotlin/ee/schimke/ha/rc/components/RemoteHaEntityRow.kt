@@ -109,10 +109,11 @@ fun RemoteHaEntityRow(data: HaEntityRowData, modifier: RemoteModifier = RemoteMo
 private val TrackWidth = 36.rdp
 private val TrackHeight = 22.rdp
 private val KnobSize = 16.rdp
-private val KnobInset = 3.rdp
+private const val KnobInsetDp = 3f
+private val KnobInset = KnobInsetDp.toInt().rdp
 
 /** Distance the knob travels in dp between off and on. */
-private const val KnobTravelDp = 36f - 16f - 2f * 3f // = 14f
+private const val KnobTravelDp = 36f - 16f - 2f * KnobInsetDp // = 14f
 
 /** Animation timings. */
 private const val ToggleDurationSeconds = 0.20f
@@ -173,7 +174,13 @@ fun RemoteHaToggleSwitch(
  * own progress directly.
  *
  * Track color: `tween(inactiveAccent, activeAccent, progress)`.
- * Knob position: `Modifier.offset(x = (progress * KnobTravelDp).toRemoteDp())`.
+ * Knob position: derived `start` padding — `(KnobInset + progress *
+ * KnobTravelDp).toRemoteDp()`. Modifier.offset(x: RemoteDp) only
+ * applies a constant fraction of a non-literal RemoteFloat-derived
+ * RemoteDp (alpha010 — verified empirically: 14 dp of intended travel
+ * collapsed to ~2 dp), so the position is folded into start padding
+ * instead. The padding API consumes RemoteFloat-derived RemoteDp
+ * values correctly and produces the full travel.
  */
 @Composable
 @RemoteComposable
@@ -185,7 +192,8 @@ fun RemoteHaToggleSwitchByProgress(
     clickable: RemoteModifier = RemoteModifier,
 ) {
     val trackColor: RemoteColor = tween(inactiveAccent, activeAccent, progress)
-    val knobOffsetX = (progress * KnobTravelDp.rf).toRemoteDp()
+    val startPaddingDp =
+        (KnobInsetDp.rf + progress * KnobTravelDp.rf).toRemoteDp()
 
     RemoteBox(
         modifier = modifier
@@ -196,8 +204,7 @@ fun RemoteHaToggleSwitchByProgress(
     ) {
         RemoteBox(
             modifier = RemoteModifier
-                .padding(start = KnobInset, top = KnobInset)
-                .offset(x = knobOffsetX, y = 0.rdp)
+                .padding(start = startPaddingDp, top = KnobInset)
                 .size(KnobSize)
                 .clip(RemoteCircleShape)
                 .background(Color.White.rc),
