@@ -1,8 +1,17 @@
 package ee.schimke.ha.rc.components
 
+import org.intellij.markdown.MarkdownElementTypes
+import org.intellij.markdown.MarkdownTokenTypes
+import org.intellij.markdown.ast.ASTNode
+import org.intellij.markdown.ast.getTextInNode
+import org.intellij.markdown.flavours.gfm.GFMFlavourDescriptor
+import org.intellij.markdown.flavours.gfm.GFMTokenTypes
+import org.intellij.markdown.parser.MarkdownParser
+
 /**
  * Block-level markdown element. Inline syntax (links, images, emphasis,
- * code spans) has already been stripped to plain text.
+ * code spans) has already been collapsed to plain text — RemoteText
+ * applies one style per node.
  */
 data class MarkdownBlock(
     val kind: Kind,
@@ -13,78 +22,131 @@ data class MarkdownBlock(
 }
 
 /**
- * Tiny line-oriented Markdown parser. Recognises headings, unordered
- * bullets and horizontal rules; everything else becomes a paragraph.
- * Inline emphasis, links, images and code spans collapse to plain text
- * — the renderer applies one style per block, which is the most
- * RemoteText can express today.
+ * Markdown → block list using JetBrains' multiplatform parser. The
+ * parser is responsible for block boundaries (CommonMark + GFM
+ * extensions); we walk the AST and emit one [MarkdownBlock] per
+ * top-level block, dropping inline markup so each block can be
+ * rendered with a single text style.
  */
 object Markdown {
+    private val flavour = GFMFlavourDescriptor()
+
     fun parse(source: String): List<MarkdownBlock> {
+        if (source.isBlank()) return emptyList()
+        val tree = MarkdownParser(flavour).buildMarkdownTreeFromString(source)
         val out = mutableListOf<MarkdownBlock>()
-        var inFence = false
-        for (raw in source.split('\n')) {
-            val line = raw.trim()
-            if (FENCE.matches(line)) {
-                inFence = !inFence
-                continue
-            }
-            if (inFence) {
-                if (line.isNotEmpty()) out += MarkdownBlock(MarkdownBlock.Kind.Paragraph, line)
-                continue
-            }
-            if (line.isEmpty()) continue
-            if (DIVIDER.matches(line)) {
-                out += MarkdownBlock(MarkdownBlock.Kind.Divider, "")
-                continue
-            }
-            HEADING.matchEntire(line)?.let { m ->
-                val level = m.groupValues[1].length.coerceAtMost(6)
-                val text = stripInline(m.groupValues[2])
-                if (text.isNotEmpty()) {
-                    out += MarkdownBlock(MarkdownBlock.Kind.Heading, text, level)
-                }
-                return@let
-            } ?: BULLET.matchEntire(line)?.let { m ->
-                val text = stripInline(m.groupValues[1])
-                if (text.isNotEmpty()) {
-                    out += MarkdownBlock(MarkdownBlock.Kind.Bullet, text)
-                }
-            } ?: run {
-                val text = stripInline(line)
-                if (text.isNotEmpty()) {
-                    out += MarkdownBlock(MarkdownBlock.Kind.Paragraph, text)
-                }
-            }
-        }
+        visit(tree, source, out)
         return out
     }
 
-    private val HEADING = Regex("""^(#{1,6})\s*(.*?)\s*#*\s*$""")
-    private val BULLET = Regex("""^[-*+]\s+(.*)$""")
-    private val DIVIDER = Regex("""^(?:-{3,}|\*{3,}|_{3,})$""")
-    private val FENCE = Regex("""^(?:`{3,}|~{3,}).*$""")
-
-    private val IMAGE = Regex("""!\[[^\]]*]\([^)]*\)""")
-    private val LINK = Regex("""\[([^\]]*)]\([^)]*\)""")
-    private val BOLD_STAR = Regex("""\*\*([^*]+)\*\*""")
-    private val BOLD_UNDER = Regex("""__([^_]+)__""")
-    private val STRIKE = Regex("""~~([^~]+)~~""")
-    private val ITALIC_STAR = Regex("""\*([^*\s][^*]*?)\*""")
-    private val ITALIC_UNDER = Regex("""(?<![A-Za-z0-9_])_([^_\s][^_]*?)_(?![A-Za-z0-9_])""")
-    private val CODE = Regex("""`([^`]+)`""")
-
-    /** Strip inline markdown markers, leaving the visible text. */
-    fun stripInline(input: String): String {
-        var s = input
-        s = IMAGE.replace(s, "")
-        s = LINK.replace(s) { it.groupValues[1] }
-        s = CODE.replace(s) { it.groupValues[1] }
-        s = STRIKE.replace(s) { it.groupValues[1] }
-        s = BOLD_STAR.replace(s) { it.groupValues[1] }
-        s = BOLD_UNDER.replace(s) { it.groupValues[1] }
-        s = ITALIC_STAR.replace(s) { it.groupValues[1] }
-        s = ITALIC_UNDER.replace(s) { it.groupValues[1] }
-        return s.trim()
+    private fun visit(node: ASTNode, src: String, out: MutableList<MarkdownBlock>) {
+        when (node.type) {
+            MarkdownElementTypes.ATX_1 -> heading(node, src, 1, out)
+            MarkdownElementTypes.ATX_2 -> heading(node, src, 2, out)
+            MarkdownElementTypes.ATX_3 -> heading(node, src, 3, out)
+            MarkdownElementTypes.ATX_4 -> heading(node, src, 4, out)
+            MarkdownElementTypes.ATX_5 -> heading(node, src, 5, out)
+            MarkdownElementTypes.ATX_6 -> heading(node, src, 6, out)
+            MarkdownElementTypes.SETEXT_1 -> heading(node, src, 1, out)
+            MarkdownElementTypes.SETEXT_2 -> heading(node, src, 2, out)
+            MarkdownElementTypes.PARAGRAPH -> {
+                val text = visibleText(node, src)
+                if (text.isNotEmpty()) out += MarkdownBlock(MarkdownBlock.Kind.Paragraph, text)
+            }
+            MarkdownElementTypes.UNORDERED_LIST,
+            MarkdownElementTypes.ORDERED_LIST -> {
+                for (item in node.children) {
+                    if (item.type == MarkdownElementTypes.LIST_ITEM) {
+                        val text = visibleText(item, src)
+                        if (text.isNotEmpty()) out += MarkdownBlock(MarkdownBlock.Kind.Bullet, text)
+                    }
+                }
+            }
+            MarkdownTokenTypes.HORIZONTAL_RULE -> out += MarkdownBlock(MarkdownBlock.Kind.Divider, "")
+            MarkdownElementTypes.CODE_FENCE,
+            MarkdownElementTypes.CODE_BLOCK -> {
+                node.getTextInNode(src).toString().lineSequence()
+                    .map { it.trim() }
+                    .filter { it.isNotEmpty() && !it.startsWith("```") && !it.startsWith("~~~") }
+                    .forEach { out += MarkdownBlock(MarkdownBlock.Kind.Paragraph, it) }
+            }
+            MarkdownElementTypes.BLOCK_QUOTE -> node.children.forEach { visit(it, src, out) }
+            else -> if (node.children.isNotEmpty()) {
+                node.children.forEach { visit(it, src, out) }
+            }
+        }
     }
+
+    private fun heading(node: ASTNode, src: String, level: Int, out: MutableList<MarkdownBlock>) {
+        val text = visibleText(node, src)
+        if (text.isNotEmpty()) {
+            out += MarkdownBlock(MarkdownBlock.Kind.Heading, text, level)
+        }
+    }
+
+    /** Concatenate visible inline text, dropping images and link URLs. */
+    private fun visibleText(node: ASTNode, src: String): String {
+        val sb = StringBuilder()
+        appendVisible(node, src, sb)
+        return sb.toString().replace(WHITESPACE, " ").trim()
+    }
+
+    private fun appendVisible(node: ASTNode, src: String, sb: StringBuilder) {
+        when (node.type) {
+            MarkdownElementTypes.IMAGE -> return
+            MarkdownElementTypes.AUTOLINK -> {
+                sb.append(
+                    node.getTextInNode(src).toString().trim().removePrefix("<").removeSuffix(">"),
+                )
+                return
+            }
+            MarkdownElementTypes.INLINE_LINK,
+            MarkdownElementTypes.FULL_REFERENCE_LINK,
+            MarkdownElementTypes.SHORT_REFERENCE_LINK -> {
+                node.children
+                    .firstOrNull { it.type == MarkdownElementTypes.LINK_TEXT }
+                    ?.let { linkText ->
+                        for (c in linkText.children) {
+                            if (c.type != MarkdownTokenTypes.LBRACKET &&
+                                c.type != MarkdownTokenTypes.RBRACKET) {
+                                appendVisible(c, src, sb)
+                            }
+                        }
+                    }
+                return
+            }
+        }
+        if (node.children.isEmpty()) {
+            when (node.type) {
+                MarkdownTokenTypes.EOL,
+                MarkdownTokenTypes.HARD_LINE_BREAK -> sb.append(' ')
+                in MARKUP_TOKENS -> Unit
+                else -> sb.append(node.getTextInNode(src))
+            }
+        } else {
+            node.children.forEach { appendVisible(it, src, sb) }
+        }
+    }
+
+    private val WHITESPACE = Regex("\\s+")
+
+    private val MARKUP_TOKENS = setOf(
+        MarkdownTokenTypes.EMPH,
+        MarkdownTokenTypes.BACKTICK,
+        MarkdownTokenTypes.ESCAPED_BACKTICKS,
+        MarkdownTokenTypes.LBRACKET,
+        MarkdownTokenTypes.RBRACKET,
+        MarkdownTokenTypes.LPAREN,
+        MarkdownTokenTypes.RPAREN,
+        MarkdownTokenTypes.LT,
+        MarkdownTokenTypes.GT,
+        MarkdownTokenTypes.EXCLAMATION_MARK,
+        MarkdownTokenTypes.ATX_HEADER,
+        MarkdownTokenTypes.SETEXT_1,
+        MarkdownTokenTypes.SETEXT_2,
+        MarkdownTokenTypes.LIST_BULLET,
+        MarkdownTokenTypes.LIST_NUMBER,
+        MarkdownTokenTypes.BLOCK_QUOTE,
+        GFMTokenTypes.TILDE,
+    )
 }

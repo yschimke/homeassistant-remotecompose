@@ -40,6 +40,9 @@ coil = "3.4.0"
 # Formatting
 ktfmt-gradle = "0.26.0"
 
+# Markdown parsing (KMP, by JetBrains — used by IntelliJ)
+jetbrains-markdown = "0.7.3"
+
 # Wear data layer + Proto DataStore + Horologist
 horologist = "0.8.3-alpha"
 play-services-wearable = "20.0.1"
@@ -157,6 +160,8 @@ junit-jupiter = { module = "org.junit.jupiter:junit-jupiter" }
 junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher" }
 mockserver-netty = { module = "org.mock-server:mockserver-netty", version.ref = "mockserver" }
 mockserver-client-java = { module = "org.mock-server:mockserver-client-java", version.ref = "mockserver" }
+
+jetbrains-markdown = { module = "org.jetbrains:markdown", version.ref = "jetbrains-markdown" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
