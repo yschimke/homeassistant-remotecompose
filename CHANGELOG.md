@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.1.6](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.5...v0.1.6) (2026-05-08)
+
+
+### Features
+
+* **app:** register enhanced-shutter card converter ([#146](https://github.com/yschimke/homeassistant-remotecompose/issues/146)) ([f8a4d3b](https://github.com/yschimke/homeassistant-remotecompose/commit/f8a4d3b75a47369db407fc1f56c34ac792f75b82))
+* **components:** drive RemoteHaToggleSwitch from a host RemoteBoolean ([#145](https://github.com/yschimke/homeassistant-remotecompose/issues/145)) ([27f9a7c](https://github.com/yschimke/homeassistant-remotecompose/commit/27f9a7c37e2b73d8df20f1be38117dec34f0a3c0))
+* **widget:** capture widget docs with the WIDGETS_V6 profile ([#142](https://github.com/yschimke/homeassistant-remotecompose/issues/142)) ([eca81b0](https://github.com/yschimke/homeassistant-remotecompose/commit/eca81b094de3246ca942817a404b28877363058a))
+* **widget:** use WIDGETS_V7 profile (document API level 7) ([#147](https://github.com/yschimke/homeassistant-remotecompose/issues/147)) ([46772b7](https://github.com/yschimke/homeassistant-remotecompose/commit/46772b73dbdb7caf11df9a2fbce870629e6c5ac0))
+
+
+### Bug Fixes
+
+* **theme:** drop vertical padding from section-group surface ([#144](https://github.com/yschimke/homeassistant-remotecompose/issues/144)) ([019a4cc](https://github.com/yschimke/homeassistant-remotecompose/commit/019a4cca3449a46d9226ac037f36a90da85541e9))
+
 ## [0.1.5](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.4...v0.1.5) (2026-05-08)
 
 
