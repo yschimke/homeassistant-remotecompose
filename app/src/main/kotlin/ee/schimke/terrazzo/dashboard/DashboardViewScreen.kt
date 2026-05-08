@@ -20,6 +20,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -38,9 +39,12 @@ import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.Dashboard
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.terrazzo.LocalTerrazzoGraph
+import ee.schimke.terrazzo.core.session.DemoHaSession
 import ee.schimke.terrazzo.core.session.HaSession
 import ee.schimke.ha.rc.CachedCardPreview
 import ee.schimke.ha.rc.CardWidthClass
+import ee.schimke.ha.rc.LocalCardCaptureEpoch
+import ee.schimke.ha.rc.LocalHaActionDispatcher
 import ee.schimke.ha.rc.ProvideCardRegistry
 import ee.schimke.ha.rc.RenderChild
 import ee.schimke.ha.rc.androidXExperimentalWrap
@@ -104,7 +108,7 @@ fun DashboardViewScreen(
     }
 
     LaunchedEffect(session, urlPath) {
-        // Poll when the session opts in (demo mode does, at ~2s) so
+        // Poll when the session opts in (demo mode does, at ~1s) so
         // values visibly change; a one-shot fetch otherwise.
         while (true) {
             runCatching { session.loadDashboard(urlPath) }
@@ -121,14 +125,42 @@ fun DashboardViewScreen(
         }
     }
 
-    when (val s = state) {
-        DashboardState.Loading -> Box(Modifier.fillMaxSize().padding(contentPadding).padding(24.dp)) {
-            CircularProgressIndicator()
+    // Demo mode: refresh as soon as a tap mutates state so the next
+    // dashboard frame reflects the new override (cover animation,
+    // toggle flip) instead of waiting up to a full poll interval.
+    val demoEpoch: Long = if (session is DemoHaSession) {
+        val epoch by session.actionRouter.epoch.collectAsState()
+        LaunchedEffect(session, urlPath, epoch) {
+            // Skip the seed value (epoch == 0). Subsequent bumps are
+            // user-driven taps and warrant an immediate re-fetch.
+            if (epoch > 0L) {
+                runCatching { session.loadDashboard(urlPath) }
+                    .onSuccess { (dashboard, snapshot) ->
+                        state = DashboardState.Ready(dashboard, snapshot)
+                    }
+            }
         }
-        is DashboardState.Error -> Box(Modifier.fillMaxSize().padding(contentPadding).padding(24.dp)) {
-            Text("Failed: ${s.message}", style = MaterialTheme.typography.bodyMedium)
+        epoch
+    } else {
+        0L
+    }
+
+    val actionDispatcher = rememberDashboardActionDispatcher(session)
+
+    CompositionLocalProvider(
+        LocalHaActionDispatcher provides actionDispatcher,
+        LocalCardCaptureEpoch provides demoEpoch,
+    ) {
+        when (val s = state) {
+            DashboardState.Loading -> Box(Modifier.fillMaxSize().padding(contentPadding).padding(24.dp)) {
+                CircularProgressIndicator()
+            }
+            is DashboardState.Error -> Box(Modifier.fillMaxSize().padding(contentPadding).padding(24.dp)) {
+                Text("Failed: ${s.message}", style = MaterialTheme.typography.bodyMedium)
+            }
+            is DashboardState.Ready ->
+                DashboardList(s.dashboard, s.snapshot, onCardLongPress, contentPadding)
         }
-        is DashboardState.Ready -> DashboardList(s.dashboard, s.snapshot, onCardLongPress, contentPadding)
     }
 }
 
@@ -460,12 +492,17 @@ private fun CardSlot(
 ) {
     val style = LocalThemeStyle.current
     val dark = LocalIsDarkTheme.current
+    val captureEpoch = LocalCardCaptureEpoch.current
     // The document's paint colours are baked at capture; re-encode when
     // theme flips. Snapshot is deliberately NOT in the cache key —
     // entity values flow into the running player by named binding
-    // (see LiveValues in rc-components).
+    // (see LiveValues in rc-components). [captureEpoch] is the
+    // exception: hosts that mutate state out-of-band (demo mode taps)
+    // bump it to force a re-encode on the next composition.
     val haTheme = remember(style, dark) { haThemeFor(style, dark) }
-    val cacheKey = remember(card, style, dark) { CardSlotCacheKey(card, style, dark) }
+    val cacheKey = remember(card, style, dark, captureEpoch) {
+        CardSlotCacheKey(card, style, dark, captureEpoch)
+    }
     Box(
         modifier = modifier
             // Stable semantics tag so uiautomator / Compose tests can
@@ -493,6 +530,7 @@ private data class CardSlotCacheKey(
     val card: CardConfig,
     val style: ThemeStyle,
     val dark: Boolean,
+    val captureEpoch: Long,
 )
 
 /**

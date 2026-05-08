@@ -15,6 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
+import ee.schimke.ha.rc.components.HA_ACTION_NAME
 import java.io.ByteArrayInputStream
 
 /**
@@ -128,11 +129,17 @@ fun CardPlayer(
         converter.Render(card, snapshot)
     }
     val document = doc.value ?: return
+    val dispatcher = LocalHaActionDispatcher.current
     RemoteDocumentPlayer(
         document = document,
         documentWidth = widthPx,
         documentHeight = heightPx,
         modifier = modifier,
         bitmapLoader = bitmapLoader,
+        onNamedAction = { name, value, _ ->
+            if (name == HA_ACTION_NAME) {
+                decodeHaAction(value)?.let(dispatcher::dispatch)
+            }
+        },
     )
 }

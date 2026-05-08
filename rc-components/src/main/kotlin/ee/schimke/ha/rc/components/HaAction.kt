@@ -14,12 +14,16 @@ import kotlinx.serialization.json.JsonObject
  * `src/data/lovelace/config/action.ts`).
  *
  * At render time these get serialized into a single RemoteCompose
- * [HostAction] carrying a JSON payload; the widget-side host intercepts
- * the action via `RemoteDocumentPlayer(onNamedAction = …)` and calls the
- * corresponding HA service / navigates / fires a URL.
+ * [HostAction] carrying a JSON payload; the host intercepts the action
+ * via `RemoteDocumentPlayer(onNamedAction = …)` and calls the
+ * corresponding HA service / navigates / fires a URL. In `:rc-converter`
+ * the playback path (`CachedCardPreview`, `CardPlayer`) wires that
+ * callback to a composition-local `HaActionDispatcher`, so cards
+ * themselves only need to emit actions and the host app supplies one
+ * dispatcher for the whole dashboard.
  *
- * The action name on the wire is always [ACTION_NAME]; the payload is the
- * discriminated-union JSON of the sealed subtype.
+ * The action name on the wire is always [HA_ACTION_NAME]; the payload is
+ * the discriminated-union JSON of the sealed subtype.
  */
 @Serializable
 sealed interface HaAction {
@@ -48,7 +52,11 @@ sealed interface HaAction {
     data object None : HaAction
 }
 
-/** Host-side action name; receive via `RemoteDocumentPlayer(onNamedAction = …)`. */
+/**
+ * Host-side action name. The playback path in `:rc-converter` listens
+ * for `HostAction`s under this name and decodes the JSON payload into
+ * an [HaAction] before forwarding to `LocalHaActionDispatcher`.
+ */
 public const val HA_ACTION_NAME: String = "ha"
 
 private val json = Json { ignoreUnknownKeys = true }

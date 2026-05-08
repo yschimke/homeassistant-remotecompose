@@ -15,6 +15,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalWindowInfo
+import ee.schimke.ha.rc.components.HA_ACTION_NAME
 import kotlinx.coroutines.runBlocking
 
 /**
@@ -69,6 +70,7 @@ fun CachedCardPreview(
 
     val coreDocument = remember(cardDocument) { cardDocument.decode() }
     val windowInfo = LocalWindowInfo.current
+    val dispatcher = LocalHaActionDispatcher.current
 
     Box(modifier = modifier.fillMaxSize()) {
         RemoteDocumentPlayer(
@@ -76,6 +78,11 @@ fun CachedCardPreview(
             documentWidth = windowInfo.containerSize.width,
             documentHeight = windowInfo.containerSize.height,
             modifier = Modifier.fillMaxSize(),
+            onNamedAction = { name, value, _ ->
+                if (name == HA_ACTION_NAME) {
+                    decodeHaAction(value)?.let(dispatcher::dispatch)
+                }
+            },
         )
     }
 }
