@@ -7,6 +7,7 @@ import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.CardConverter
 import ee.schimke.ha.rc.components.HaMarkdownData
+import ee.schimke.ha.rc.components.Markdown
 import ee.schimke.ha.rc.components.RemoteHaMarkdown
 import kotlinx.serialization.json.jsonPrimitive
 
@@ -26,7 +27,7 @@ class MarkdownCardConverter : CardConverter {
     override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
         val title = card.raw["title"]?.jsonPrimitive?.content
         val content = card.raw["content"]?.jsonPrimitive?.content ?: ""
-        val lines = content.split('\n').filter { it.isNotBlank() }
-        RemoteHaMarkdown(HaMarkdownData(title = title, lines = lines), modifier = modifier)
+        val blocks = Markdown.parse(content)
+        RemoteHaMarkdown(HaMarkdownData(title = title, blocks = blocks), modifier = modifier)
     }
 }
