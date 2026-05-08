@@ -389,6 +389,7 @@ private fun SettingsScreen(
     val themePref by graph.preferencesStore.themeStyle.collectAsState(initial = ThemePref.TerrazzoHome)
     val darkPref by graph.preferencesStore.darkMode.collectAsState(initial = DarkModePref.Follow)
     val gridLayoutEnabled by graph.preferencesStore.experimentalGridLayout.collectAsState(initial = false)
+    val collapsedModeEnabled by graph.preferencesStore.collapsedMode.collectAsState(initial = true)
 
     Scaffold(
         topBar = {
@@ -473,6 +474,28 @@ private fun SettingsScreen(
                     checked = gridLayoutEnabled,
                     onCheckedChange = { enabled ->
                         scope.launch { graph.preferencesStore.setExperimentalGridLayout(enabled) }
+                    },
+                )
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text("Collapsed sections", style = MaterialTheme.typography.titleMedium)
+                    Text(
+                        "On a long single-column dashboard, keep only the first section " +
+                            "expanded and collapse the rest to their headings. Tap a heading " +
+                            "to swap which section is open.",
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                }
+                Switch(
+                    checked = collapsedModeEnabled,
+                    onCheckedChange = { enabled ->
+                        scope.launch { graph.preferencesStore.setCollapsedMode(enabled) }
                     },
                 )
             }

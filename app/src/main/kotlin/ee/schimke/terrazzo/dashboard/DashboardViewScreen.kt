@@ -2,6 +2,7 @@
 
 package ee.schimke.terrazzo.dashboard
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,7 +18,11 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -26,9 +31,11 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
@@ -186,9 +193,29 @@ private fun DashboardList(
     val cfg = rememberLayoutConfig()
     val useGridLayout by LocalTerrazzoGraph.current
         .preferencesStore.experimentalGridLayout.collectAsState(initial = false)
+    val collapsedMode by LocalTerrazzoGraph.current
+        .preferencesStore.collapsedMode.collectAsState(initial = true)
 
     val sectionColumns = (cfg.maxSectionColumns).coerceAtMost(layout.sectionCount).coerceAtLeast(1)
     val sideBySide = sectionColumns >= 2
+
+    // Per-view "which section is expanded right now". null = none open
+    // (user collapsed the open one). Seeded with index 0 for each view
+    // when collapsed mode kicks in, so first paint shows above-the-fold
+    // content. Re-seeded when [layout] swaps (a different dashboard
+    // loaded) so we don't carry stale indices across dashboards. Only
+    // consulted by the single-column branch — wide mode shows
+    // everything regardless.
+    val expandedSectionByView: SnapshotStateMap<Int, Int?> =
+        remember(layout, collapsedMode, sideBySide) {
+            mutableStateMapOf<Int, Int?>().apply {
+                if (collapsedMode && !sideBySide) {
+                    layout.views.forEachIndexed { i, view ->
+                        if (view.sections.isNotEmpty()) put(i, 0)
+                    }
+                }
+            }
+        }
 
     // Centre + cap the column on Expanded ONLY when the dashboard has
     // no sections — sections drive their own grid width and shouldn't
@@ -225,6 +252,12 @@ private fun DashboardList(
                     sectionColumns = sectionColumns,
                     useGridLayout = useGridLayout,
                     haTheme = haTheme,
+                    collapsedMode = collapsedMode && !sideBySide,
+                    expandedSectionIndex = expandedSectionByView[viewIndex],
+                    onToggleSection = { sectionIndex ->
+                        expandedSectionByView[viewIndex] =
+                            if (expandedSectionByView[viewIndex] == sectionIndex) null else sectionIndex
+                    },
                     onLongPress = onCardLongPress,
                 )
             }
@@ -282,6 +315,9 @@ private fun LazyListScope.renderView(
     sectionColumns: Int,
     useGridLayout: Boolean,
     haTheme: HaTheme,
+    collapsedMode: Boolean,
+    expandedSectionIndex: Int?,
+    onToggleSection: (Int) -> Unit,
     onLongPress: (CardConfig) -> Unit,
 ) {
     val viewKey = "v$viewIndex"
@@ -307,14 +343,27 @@ private fun LazyListScope.renderView(
         // laziness still applies across sections).
         view.sections.forEachIndexed { sectionIndex, section ->
             val sectionKey = "$viewKey-s$sectionIndex"
+            // Only sections with a title are collapsible — without a
+            // heading there's nothing to tap to re-expand them.
+            val collapsible = collapsedMode && section.title != null
+            val expanded = !collapsible || expandedSectionIndex == sectionIndex
             item(key = sectionKey) {
                 SectionGroupSurface(haTheme) {
-                    section.title?.let { title -> SectionHeading(title) }
-                    val rows = packAndChunk(section.cards, cfg.compactCardsPerRow) { c ->
-                        registry.cardWidthClass(c, snapshot)
+                    section.title?.let { title ->
+                        SectionHeading(
+                            title = title,
+                            collapsible = collapsible,
+                            expanded = expanded,
+                            onClick = { onToggleSection(sectionIndex) },
+                        )
                     }
-                    rows.forEach { row ->
-                        CardRow(row, snapshot, registry, onLongPress)
+                    if (expanded) {
+                        val rows = packAndChunk(section.cards, cfg.compactCardsPerRow) { c ->
+                            registry.cardWidthClass(c, snapshot)
+                        }
+                        rows.forEach { row ->
+                            CardRow(row, snapshot, registry, onLongPress)
+                        }
                     }
                 }
             }
@@ -346,15 +395,41 @@ private fun LazyListScope.renderView(
     }
 }
 
-/** Heading for a section title. Shared between single-column and wide layouts. */
+/**
+ * Heading for a section title. Shared between single-column and wide
+ * layouts. In single-column mode with collapsed sections enabled, the
+ * heading also acts as the tap target that toggles the section open
+ * and shows a chevron reflecting the current state.
+ */
 @Composable
-private fun SectionHeading(title: String) {
-    Text(
-        text = title,
-        style = MaterialTheme.typography.titleMedium,
-        color = MaterialTheme.colorScheme.onSurface,
-        modifier = Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 4.dp),
-    )
+private fun SectionHeading(
+    title: String,
+    collapsible: Boolean = false,
+    expanded: Boolean = true,
+    onClick: () -> Unit = {},
+) {
+    val rowModifier = Modifier
+        .fillMaxWidth()
+        .padding(top = 8.dp, bottom = 4.dp)
+        .let { if (collapsible) it.clickable(onClick = onClick) else it }
+    Row(
+        modifier = rowModifier,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.weight(1f),
+        )
+        if (collapsible) {
+            Icon(
+                imageVector = if (expanded) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore,
+                contentDescription = if (expanded) "Collapse $title" else "Expand $title",
+                tint = MaterialTheme.colorScheme.onSurface,
+            )
+        }
+    }
 }
 
 /**
