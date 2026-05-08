@@ -21,16 +21,24 @@ import ee.schimke.ha.rc.components.HaAlarmPanelData
 import ee.schimke.ha.rc.components.HaAlarmStatus
 import ee.schimke.ha.rc.components.RemoteHaAlarmPanel
 import kotlinx.serialization.json.JsonArray
-import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.booleanOrNull
+import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.jsonPrimitive
 
 /**
  * `alarm-panel` card. Maps `alarm_control_panel.*` entity state into a
  * panel showing the disarmed/armed status, ARM action buttons (driven
- * by `states:` config — defaults to away/home), and a static numeric
- * keypad. Tapping an ARM action fires the corresponding service.
+ * by `states:` config — defaults to away/home), and the numeric
+ * keypad.
+ *
+ * Each ARM/DISARM button emits an [HaAction.AlarmIntent] (rather than
+ * a direct call-service); each keypad press emits an
+ * [HaAction.AlarmKey]. The host's `AlarmKeypadCoordinator` buffers
+ * keys and pairs them with the most recent intent before firing
+ * `alarm_control_panel.alarm_*` with `code:`. When the entity reports
+ * `code_arm_required: false` we forward `codeLength = 0` so the
+ * coordinator skips buffering and dispatches immediately.
  */
 class AlarmPanelCardConverter : CardConverter {
     override val cardType: String = CardTypes.ALARM_PANEL
@@ -49,6 +57,17 @@ class AlarmPanelCardConverter : CardConverter {
         val statesArr = (card.raw["states"] as? JsonArray)
             ?.mapNotNull { (it as? JsonPrimitive)?.content }
             ?: listOf("arm_away", "arm_home")
+        val codeRequired = entity?.attributes?.get("code_arm_required")
+            ?.jsonPrimitive?.booleanOrNull ?: true
+        // HA doesn't surface a structured length, so let the dashboard
+        // YAML pin one (`code_length: 4`); attribute-level hints are
+        // strings like "number" / "^\\d{4}$" that we don't parse.
+        val configuredLen = card.raw["code_length"]?.jsonPrimitive?.intOrNull
+        val codeLength: Int? = when {
+            !codeRequired -> 0
+            configuredLen != null && configuredLen > 0 -> configuredLen
+            else -> null
+        }
         val actions =
             entityId
                 ?.let { id ->
@@ -57,13 +76,11 @@ class AlarmPanelCardConverter : CardConverter {
                         HaAlarmAction(
                             label = "ARM $label",
                             accent = armAccent(suffix),
-                            tapAction =
-                                HaAction.CallService(
-                                    domain = "alarm_control_panel",
-                                    service = "alarm_$suffix",
-                                    entityId = id,
-                                    serviceData = JsonObject(emptyMap()),
-                                ),
+                            tapAction = HaAction.AlarmIntent(
+                                entityId = id,
+                                service = suffix,
+                                codeLength = codeLength,
+                            ),
                         )
                     }
                 }

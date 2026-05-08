@@ -9,6 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
+import ee.schimke.ha.rc.AlarmKeypadCoordinator
 import ee.schimke.ha.rc.CardDocumentCache
 import ee.schimke.ha.rc.HaActionDispatcher
 import ee.schimke.ha.rc.LocalCardDocumentCache
@@ -47,7 +48,11 @@ fun rememberDashboardActionDispatcher(session: HaSession): HaActionDispatcher {
     val cache = LocalCardDocumentCache.current
     val scope = rememberCoroutineScope()
     return remember(session, context, cache, scope) {
-        DashboardActionDispatcher(context.applicationContext, session, cache, scope)
+        val core = DashboardActionDispatcher(context.applicationContext, session, cache, scope)
+        // The keypad coordinator buffers per-key host actions and
+        // translates ARM intents into a single `call_service` with the
+        // entered code attached. Other action variants pass through.
+        AlarmKeypadCoordinator(core, scope)
     }
 }
 
@@ -64,6 +69,11 @@ private class DashboardActionDispatcher(
             is HaAction.CallService -> handleCallService(action)
             is HaAction.MoreInfo,
             is HaAction.Navigate,
+            // AlarmKey / AlarmIntent should be intercepted upstream by
+            // AlarmKeypadCoordinator; logging here means an alarm-panel
+            // action escaped the coordinator (most likely a bug).
+            is HaAction.AlarmKey,
+            is HaAction.AlarmIntent,
             HaAction.None -> Log.i(TAG, "Action not yet wired: $action")
         }
     }

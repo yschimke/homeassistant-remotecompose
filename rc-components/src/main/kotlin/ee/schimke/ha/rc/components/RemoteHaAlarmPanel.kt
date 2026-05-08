@@ -33,10 +33,11 @@ import androidx.wear.compose.remote.material3.RemoteIcon
 
 /**
  * `alarm-panel` card — title, status badge, ARM action buttons, and
- * the static numeric keypad (matches HA's reference). The keypad is
- * informational only at capture time (button-press dispatch through
- * the .rc document into `alarm_control_panel.alarm_arm_*` would need
- * a code-entry text-buffer that alpha08 doesn't model yet).
+ * the numeric keypad (matches HA's reference). Each keypad key fires
+ * its own [HaAction.AlarmKey] host action; the host's
+ * `AlarmKeypadCoordinator` accumulates the keys and submits a
+ * combined `alarm_control_panel.alarm_*` call once the user finishes
+ * an attempt. The .rc document carries no in-band buffer.
  */
 @Composable
 @RemoteComposable
@@ -71,7 +72,7 @@ fun RemoteHaAlarmPanel(data: HaAlarmPanelData, modifier: RemoteModifier = Remote
                 }
             }
 
-            if (data.showKeypad) Keypad(keypadAccent, theme)
+            if (data.showKeypad) Keypad(data.entityId, keypadAccent, theme)
         }
     }
 }
@@ -154,7 +155,11 @@ private fun ActionPill(action: HaAlarmAction, theme: HaTheme) {
 }
 
 @Composable
-private fun Keypad(accent: androidx.compose.ui.graphics.Color, theme: HaTheme) {
+private fun Keypad(
+    entityId: String?,
+    accent: androidx.compose.ui.graphics.Color,
+    theme: HaTheme,
+) {
     RemoteColumn(
         modifier = RemoteModifier.fillMaxWidth().padding(top = 6.rdp),
         verticalArrangement = RemoteArrangement.spacedBy(6.rdp),
@@ -163,21 +168,31 @@ private fun Keypad(accent: androidx.compose.ui.graphics.Color, theme: HaTheme) {
         listOf(listOf("1", "2", "3"), listOf("4", "5", "6"), listOf("7", "8", "9"))
             .forEach { row ->
                 RemoteRow(horizontalArrangement = RemoteArrangement.spacedBy(8.rdp)) {
-                    row.forEach { KeypadKey(it, accent, theme) }
+                    row.forEach { KeypadKey(entityId, it, it, accent, theme) }
                 }
             }
         RemoteRow(horizontalArrangement = RemoteArrangement.spacedBy(8.rdp)) {
             RemoteBox(modifier = RemoteModifier.size(48.rdp))
-            KeypadKey("0", accent, theme)
-            KeypadKey("⌫", accent, theme)
+            KeypadKey(entityId, "0", "0", accent, theme)
+            KeypadKey(entityId, "⌫", "backspace", accent, theme)
         }
     }
 }
 
 @Composable
-private fun KeypadKey(label: String, accent: androidx.compose.ui.graphics.Color, theme: HaTheme) {
+private fun KeypadKey(
+    entityId: String?,
+    label: String,
+    key: String,
+    accent: androidx.compose.ui.graphics.Color,
+    theme: HaTheme,
+) {
+    val click = entityId
+        ?.let { HaAction.AlarmKey(it, key).toRemoteAction() }
+        ?.let { RemoteModifier.clickable(it) }
+        ?: RemoteModifier
     RemoteBox(
-        modifier = RemoteModifier
+        modifier = RemoteModifier.then(click)
             .size(48.rdp)
             .clip(RemoteRoundedCornerShape(6.rdp))
             .border(1.rdp, accent.rc, RemoteRoundedCornerShape(6.rdp)),

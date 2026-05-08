@@ -403,6 +403,11 @@ data class HaStatisticsGraphData(
  * key on the wire (`AlarmStateInt.*` in `ha-model`); the converter is
  * responsible for supplying every key the host might ever push,
  * including the catch-all `Unknown` index.
+ *
+ * Keypad presses fire one [HaAction.AlarmKey] per button; the
+ * dashboard's `AlarmKeypadCoordinator` buffers the digits and combines
+ * them with each [HaAlarmAction.tapAction] (typically
+ * [HaAction.AlarmIntent]) once it judges an attempt complete.
  */
 data class HaAlarmPanelData(
     val entityId: String?,
@@ -430,8 +435,10 @@ data class HaAlarmStatus(
     val icon: ImageVector,
 )
 
-/** One ARM button on the alarm panel — label + the call-service action
- *  it fires (typically `alarm_control_panel.alarm_arm_*`). */
+/** One ARM button on the alarm panel — label + the action it fires.
+ *  For panels behind a code, [tapAction] is typically
+ *  [HaAction.AlarmIntent]; for code-free panels it can be a
+ *  [HaAction.CallService] called directly. */
 data class HaAlarmAction(val label: String, val accent: Color, val tapAction: HaAction)
 
 /** `media-control` card model — name + title/artist + transport buttons
