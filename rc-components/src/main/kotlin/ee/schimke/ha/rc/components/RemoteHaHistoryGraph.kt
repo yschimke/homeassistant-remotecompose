@@ -20,6 +20,7 @@ import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.creation.compose.modifier.height
 import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.shapes.RemoteRoundedCornerShape
+import androidx.compose.remote.creation.compose.state.RemoteFloat
 import androidx.compose.remote.creation.compose.state.asRemotePaint
 import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
@@ -45,10 +46,11 @@ import androidx.compose.ui.text.style.TextOverflow
  *   └─────────────────────────────────────────────┘
  * ```
  *
- * Sparkline is captured from numeric `HistoryPoint`s. Sample values get
- * normalised into the row's drawable rect at capture time; alpha08
- * doesn't expose a numeric `RemoteFloat` binding for live updates, so a
- * host that wants a moving line re-encodes when history changes.
+ * Sparkline is captured from numeric `HistoryPoint`s. Each sample is
+ * bound to `<entityId>.numeric.<index>`, so a host can push a sliding
+ * window of values without re-encoding the document. The y-axis range
+ * is captured from the initial values; samples that drift well outside
+ * that range clip to the canvas (host re-encodes when that happens).
  */
 @Composable
 @RemoteComposable
@@ -122,7 +124,7 @@ private fun Row(row: HaHistoryGraphRow, theme: HaTheme) {
         )
     }
     if (row.points.size >= 2) {
-        Sparkline(row.points, row.accent, theme)
+        Sparkline(row.entityId, row.points, row.accent, theme)
     } else {
         RemoteText(
             text = "No samples".rs,
@@ -134,10 +136,19 @@ private fun Row(row: HaHistoryGraphRow, theme: HaTheme) {
 }
 
 @Composable
-private fun Sparkline(points: List<Float>, accent: Color, theme: HaTheme) {
+private fun Sparkline(entityId: String?, points: List<Float>, accent: Color, theme: HaTheme) {
     val minP = points.min()
     val maxP = points.max()
     val span = (maxP - minP).takeIf { it > 0f } ?: 1f
+
+    // One named RemoteFloat per sample (`<entityId>.numeric.<i>`) so a
+    // host can push the next window of values without re-encoding. The
+    // y-range is fixed at encode time from the initial captured values;
+    // values that drift outside [minP, maxP] still render, just clipped
+    // by the canvas.
+    val bound: List<RemoteFloat> = LiveValues.numericPoints(entityId, points)
+    val minRf = minP.rf
+    val spanRf = span.rf
     RemoteCanvas(modifier = RemoteModifier.fillMaxWidth().height(28.rdp)) {
         val w = width
         val h = height
@@ -169,12 +180,12 @@ private fun Sparkline(points: List<Float>, accent: Color, theme: HaTheme) {
             color = accent.toArgb()
         }.asRemotePaint()
 
-        val n = points.size
+        val n = bound.size
         for (i in 0 until n - 1) {
             val x0 = padX + drawW * (i.toFloat() / (n - 1).toFloat()).rf
             val x1 = padX + drawW * ((i + 1).toFloat() / (n - 1).toFloat()).rf
-            val y0 = padY + drawH * (1f - (points[i] - minP) / span).rf
-            val y1 = padY + drawH * (1f - (points[i + 1] - minP) / span).rf
+            val y0 = padY + drawH * (1f.rf - (bound[i] - minRf) / spanRf)
+            val y1 = padY + drawH * (1f.rf - (bound[i + 1] - minRf) / spanRf)
             drawLine(stroke, RemoteOffset(x0, y0), RemoteOffset(x1, y1))
         }
     }

@@ -19,8 +19,9 @@ import kotlinx.serialization.json.jsonPrimitive
 /**
  * `gauge` card. Maps the entity's numeric state into a half-circle dial
  * with HA's severity bands (`severity.green`/`yellow`/`red` thresholds).
- * Sweep is captured statically — alpha08 doesn't expose a `RemoteFloat`
- * binding, so live updates re-encode.
+ * The sweep is derived from `<entity>.numeric_state` so live value
+ * updates animate without re-encoding; severity-band colours are baked
+ * at encode time and re-encode when the active band changes.
  */
 class GaugeCardConverter : CardConverter {
     override val cardType: String = CardTypes.GAUGE
