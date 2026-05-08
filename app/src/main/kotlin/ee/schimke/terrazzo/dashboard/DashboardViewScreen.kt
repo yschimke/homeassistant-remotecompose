@@ -562,7 +562,12 @@ private fun CardSlot(
             // events on the Main pass for in-document click regions.
             .longPressBeforeChild { onLongPress(card) },
     ) {
-        CachedCardPreview(cacheKey = cacheKey, profile = androidXExperimentalWrap) {
+        CachedCardPreview(
+            cacheKey = cacheKey,
+            profile = androidXExperimentalWrap,
+            card = card,
+            snapshot = snapshot,
+        ) {
             ProvideCardRegistry(registry) {
                 ProvideHaTheme(haTheme) {
                     RenderChild(card, snapshot, RemoteModifier.fillMaxWidth())
