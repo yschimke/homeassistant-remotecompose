@@ -4,6 +4,7 @@ package ee.schimke.ha.rc
 
 import androidx.annotation.RestrictTo
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.remote.creation.compose.capture.captureSingleRemoteDocument
 import androidx.compose.remote.creation.compose.layout.RemoteComposable
 import androidx.compose.remote.creation.profile.Profile
@@ -13,6 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalWindowInfo
 import kotlinx.coroutines.runBlocking
 
 /**
@@ -66,12 +68,14 @@ fun CachedCardPreview(
         }
 
     val coreDocument = remember(cardDocument) { cardDocument.decode() }
+    val windowInfo = LocalWindowInfo.current
 
-    Box(modifier = modifier) {
+    Box(modifier = modifier.fillMaxSize()) {
         RemoteDocumentPlayer(
             document = coreDocument,
-            documentWidth = cardDocument.widthPx,
-            documentHeight = cardDocument.heightPx,
+            documentWidth = windowInfo.containerSize.width,
+            documentHeight = windowInfo.containerSize.height,
+            modifier = Modifier.fillMaxSize(),
         )
     }
 }
