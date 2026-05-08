@@ -203,17 +203,35 @@ data class HaHistoryGraphRow(
  * tile. The progress ring is keyed off [progressFraction] (0f…1f);
  * ancillary fields can each be null when the snapshot doesn't have the
  * corresponding entity (the row collapses).
+ *
+ * Each text line carries its own underlying source entity so the
+ * `RemoteHa*` wrapper can register a named binding keyed off that
+ * sensor under a synthetic attribute name
+ * (`<sensor>.attributes.<line>_label`) — not `<sensor>.state`, which
+ * the addon's stream auto-publishes with the raw HA value and would
+ * clobber our pre-formatted string. The host re-renders and pushes the
+ * formatted line under that attribute key when the source sensor (or
+ * either participating sensor for composite lines) changes. For
+ * composite lines (`Layer X / Y`, `Nozzle 220°C → 220°C`) we pick the
+ * sensor whose value drives the line — `_current_layer`,
+ * `_nozzle_temperature`, `_bed_temperature`.
  */
 data class HaBambuPrintStatusData(
     val entityId: String?,
     val printerName: String,
+    val stageEntityId: String?,
     val stage: String,
+    val progressEntityId: String?,
     val progressLabel: String,
     val progressFraction: Float,
     val accent: Color,
+    val layerEntityId: String?,
     val layerLine: String?,
+    val remainingEntityId: String?,
     val remainingLine: String?,
+    val nozzleEntityId: String?,
     val nozzleLine: String?,
+    val bedEntityId: String?,
     val bedLine: String?,
 )
 

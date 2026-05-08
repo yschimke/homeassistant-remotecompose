@@ -89,8 +89,8 @@ fun RemoteHaBambuPrintStatus(
                     RemoteText(
                         text =
                             LiveValues.attribute(
-                                data.entityId,
-                                "print_progress_label",
+                                data.progressEntityId,
+                                "progress_label",
                                 data.progressLabel,
                             ),
                         color = theme.primaryText.rc,
@@ -100,7 +100,12 @@ fun RemoteHaBambuPrintStatus(
                         maxLines = 1,
                     )
                     RemoteText(
-                        text = LiveValues.attribute(data.entityId, "current_stage", data.stage),
+                        text =
+                            LiveValues.attribute(
+                                data.stageEntityId,
+                                "stage_label",
+                                data.stage,
+                            ),
                         color = theme.secondaryText.rc,
                         fontSize = 13.rsp,
                         style = RemoteTextStyle.Default,
@@ -111,7 +116,7 @@ fun RemoteHaBambuPrintStatus(
             }
             data.layerLine?.let {
                 RemoteText(
-                    text = LiveValues.attribute(data.entityId, "layer_line", it),
+                    text = LiveValues.attribute(data.layerEntityId, "layer_line", it),
                     color = theme.secondaryText.rc,
                     fontSize = 12.rsp,
                     style = RemoteTextStyle.Default,
@@ -120,7 +125,8 @@ fun RemoteHaBambuPrintStatus(
             }
             data.remainingLine?.let {
                 RemoteText(
-                    text = LiveValues.attribute(data.entityId, "remaining_line", it),
+                    text =
+                        LiveValues.attribute(data.remainingEntityId, "remaining_line", it),
                     color = theme.secondaryText.rc,
                     fontSize = 12.rsp,
                     style = RemoteTextStyle.Default,
@@ -134,7 +140,8 @@ fun RemoteHaBambuPrintStatus(
                 ) {
                     data.nozzleLine?.let {
                         RemoteText(
-                            text = LiveValues.attribute(data.entityId, "nozzle_line", it),
+                            text =
+                                LiveValues.attribute(data.nozzleEntityId, "nozzle_line", it),
                             color = theme.secondaryText.rc,
                             fontSize = 12.rsp,
                             style = RemoteTextStyle.Default,
@@ -143,7 +150,7 @@ fun RemoteHaBambuPrintStatus(
                     }
                     data.bedLine?.let {
                         RemoteText(
-                            text = LiveValues.attribute(data.entityId, "bed_line", it),
+                            text = LiveValues.attribute(data.bedEntityId, "bed_line", it),
                             color = theme.secondaryText.rc,
                             fontSize = 12.rsp,
                             style = RemoteTextStyle.Default,
