@@ -2,85 +2,121 @@
 
 package ee.schimke.terrazzo.widget
 
+import android.appwidget.AppWidgetManager
+import android.appwidget.AppWidgetProvider
 import android.content.Context
+import android.os.Build
+import android.util.Log
+import android.util.TypedValue
+import android.widget.RemoteViews
+import androidx.annotation.RequiresApi
+import androidx.compose.remote.creation.compose.capture.RemoteCreationDisplayInfo
+import androidx.compose.remote.creation.compose.capture.captureSingleRemoteDocument
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
-import androidx.compose.remote.creation.compose.widgets.RemoteComposeWidget
-import androidx.compose.runtime.Composable
-import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.ProvideCardRegistry
 import ee.schimke.ha.rc.RenderChild
+import ee.schimke.ha.rc.cardHeightDp
 import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.components.ProvideHaTheme
 import ee.schimke.ha.rc.components.ThemeStyle
 import ee.schimke.ha.rc.components.haThemeFor
+import ee.schimke.ha.rc.widgetsV6
 import ee.schimke.terrazzo.core.prefs.DarkModePref
 import ee.schimke.terrazzo.core.prefs.ThemePref
 import ee.schimke.terrazzo.core.session.DemoData
-import ee.schimke.terrazzo.core.widget.WidgetStore
 import ee.schimke.terrazzo.terrazzoGraph
 import kotlinx.coroutines.runBlocking
 
 /**
- * Per-card home-screen widget. Extends the RemoteCompose
- * `AppWidgetProvider` scaffolding, which turns our `@Composable
- * Content(context, widgetId)` into `RemoteViews.DrawInstructions` and
- * routes click lambdas back through `onReceive` automatically.
+ * Per-card home-screen widget. Extends [AppWidgetProvider] directly
+ * rather than RemoteCompose's `RemoteComposeWidget` scaffolding so we
+ * can pin the capture to [widgetsV6] — the launcher's RemoteCompose
+ * runtime supports a stricter op set than the embedded AndroidX
+ * player, and `RemoteComposeWidget` hard-codes
+ * `RcPlatformProfiles.ANDROIDX` inside its `RCWidget` capture.
  *
- * One provider class covers all installed Terrazzo widgets — each
- * pinned instance gets a unique `widgetId` that keys into [WidgetStore]
- * to find which HA card this instance should render.
+ * Flow:
+ *   1. Framework or our own broadcast triggers [onUpdate].
+ *   2. For each pinned widget id, look up the [WidgetStore.Entry] and
+ *      headlessly capture the card via [captureSingleRemoteDocument]
+ *      with `profile = widgetsV6`. The composition is wrapped with
+ *      [ProvideCardRegistry] + [ProvideHaTheme] so converters resolve
+ *      the user's theme.
+ *   3. Wrap the bytes in `RemoteViews.DrawInstructions` and publish via
+ *      `AppWidgetManager.updateAppWidget(widgetId, …)`.
  *
- * v1 scope:
- *   - Read the widget's card config + base URL from [WidgetStore]
- *     synchronously at render time.
- *   - Render with an empty snapshot (no cached state yet) — the card
- *     will show defaults until a future background worker writes a
- *     fresh snapshot and calls `updateWidgets(id, lambda)`.
+ * Widgets pinned while the app was in demo mode carry the demo
+ * baseUrl marker; render those against the current [DemoData] snapshot
+ * so values are non-empty. Live-mode widgets use the empty default
+ * until a future background worker writes a fresh snapshot.
  *
- * API floor: VANILLA_ICE_CREAM (Android 15 / API 35) — baked into
- * `RemoteComposeWidget.onUpdate` via `@RequiresApi`. The app's minSdk
- * of 36 already satisfies this.
+ * API floor: VANILLA_ICE_CREAM (Android 15 / API 35) — needed for
+ * `RemoteViews.DrawInstructions`. The app's minSdk of 36 already
+ * satisfies this; the `@RequiresApi` is here only to keep lint quiet.
  */
-class TerrazzoWidgetProvider : RemoteComposeWidget(useCompose = true) {
+class TerrazzoWidgetProvider : AppWidgetProvider() {
 
-    @Composable
-    override fun Content(context: Context, widgetId: Int) {
-        val entry = remember(context, widgetId) { loadEntry(context, widgetId) }
-        if (entry == null) {
-            // Not configured yet — nothing to draw. Happens momentarily
-            // between pin + first config write. The widget will update
-            // again once the app calls updateAppWidget().
-            return
-        }
-        // Widgets pinned while the app was in demo mode carry the demo
-        // baseUrl marker; render those against the current demo
-        // snapshot so values are non-empty. Live-mode widgets keep the
-        // empty default — they'll be refreshed by a future background
-        // worker once we wire snapshot caching.
-        val snapshot = if (DemoData.isDemo(entry.baseUrl)) DemoData.snapshot() else EMPTY_SNAPSHOT
-        val (style, dark) = remember(context, widgetId) { loadThemeChoice(context) }
-        val haTheme = remember(style, dark) { haThemeFor(style, dark) }
-        val registry = defaultRegistry()
-        ProvideCardRegistry(registry) {
-            ProvideHaTheme(haTheme) {
-                RenderChild(entry.card, snapshot, RemoteModifier.fillMaxWidth())
-            }
+    override fun onUpdate(
+        context: Context,
+        appWidgetManager: AppWidgetManager,
+        appWidgetIds: IntArray,
+    ) {
+        super.onUpdate(context, appWidgetManager, appWidgetIds)
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.VANILLA_ICE_CREAM) return
+        for (id in appWidgetIds) {
+            renderAndPublish(context, appWidgetManager, id)
         }
     }
 
-    private fun loadEntry(context: Context, widgetId: Int): WidgetStore.Entry? =
-        runBlocking { context.terrazzoGraph().widgetStore.get(widgetId) }
+    @RequiresApi(Build.VERSION_CODES.VANILLA_ICE_CREAM)
+    private fun renderAndPublish(
+        context: Context,
+        appWidgetManager: AppWidgetManager,
+        widgetId: Int,
+    ) {
+        val entry = runBlocking { context.terrazzoGraph().widgetStore.get(widgetId) }
+        if (entry == null) {
+            // Pin in flight, or the entry was evicted. The framework
+            // will call onUpdate again once the install receiver writes
+            // the row.
+            return
+        }
+        val snapshot = if (DemoData.isDemo(entry.baseUrl)) DemoData.snapshot() else EMPTY_SNAPSHOT
+        val (style, dark) = loadThemeChoice(context)
+        val haTheme = haThemeFor(style, dark)
+        val registry = defaultRegistry()
 
-    /**
-     * Resolve the user's theme + dark-mode preference synchronously at
-     * render time. The widget has no Compose theme scope upstream —
-     * each `updateAppWidget` call captures a fresh `.rc` document, so
-     * changing the preference regenerates the widget on the next
-     * refresh (see `TerrazzoApp`'s settings screen, which triggers a
-     * broadcast refresh when the user picks a new theme).
-     */
+        val widthPx = dpToPx(context, WIDGET_WIDTH_DP)
+        val heightPx = dpToPx(context, registry.cardHeightDp(entry.card, snapshot))
+        val densityDpi = context.resources.configuration.densityDpi
+
+        val captured = runCatching {
+            runBlocking {
+                captureSingleRemoteDocument(
+                    context = context,
+                    creationDisplayInfo = RemoteCreationDisplayInfo(widthPx, heightPx, densityDpi),
+                    profile = widgetsV6,
+                ) {
+                    ProvideCardRegistry(registry) {
+                        ProvideHaTheme(haTheme) {
+                            RenderChild(entry.card, snapshot, RemoteModifier.fillMaxWidth())
+                        }
+                    }
+                }
+            }
+        }.getOrElse {
+            // WIDGETS_V6 rejects ops outside the launcher's vocabulary —
+            // log and skip rather than crashing the host process.
+            Log.w(TAG, "widgets-profile capture failed for id=$widgetId type=${entry.card.type}", it)
+            return
+        }
+
+        val instructions = RemoteViews.DrawInstructions.Builder(listOf(captured.bytes)).build()
+        appWidgetManager.updateAppWidget(widgetId, RemoteViews(instructions))
+    }
+
     private fun loadThemeChoice(context: Context): Pair<ThemeStyle, Boolean> = runBlocking {
         val prefs = context.terrazzoGraph().preferencesStore
         val style = prefs.themeStyleNow().toStyle()
@@ -104,14 +140,16 @@ class TerrazzoWidgetProvider : RemoteComposeWidget(useCompose = true) {
         ThemePref.TerrazzoKiosk -> ThemeStyle.TerrazzoKiosk
     }
 
+    private fun dpToPx(context: Context, dp: Int): Int =
+        TypedValue.applyDimension(
+            TypedValue.COMPLEX_UNIT_DIP,
+            dp.toFloat(),
+            context.resources.displayMetrics,
+        ).toInt()
+
     private companion object {
         val EMPTY_SNAPSHOT = HaSnapshot()
+        const val WIDGET_WIDTH_DP = 320
+        const val TAG = "TerrazzoWidgetProvider"
     }
 }
-
-// Non-composable `remember` alias — the RemoteComposeWidget capture
-// runs inside a Compose composition, but we want a plain memoization
-// keyed to a pair of inputs. Implemented via androidx.compose.runtime.
-@Composable
-private fun <T> remember(key1: Any?, key2: Any?, calculation: () -> T): T =
-    androidx.compose.runtime.remember(key1, key2, calculation)
