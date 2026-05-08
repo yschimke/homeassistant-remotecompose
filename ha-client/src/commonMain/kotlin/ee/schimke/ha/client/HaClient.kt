@@ -148,6 +148,33 @@ class HaClient(private val config: HaConfig) {
 
   suspend fun snapshot(): HaSnapshot = HaSnapshot(states = fetchStates())
 
+  /**
+   * Call a Home Assistant service (`call_service` WebSocket command).
+   *
+   * Mirrors the shape Lovelace tap actions produce — a `domain.service` targeting an optional
+   * entity, with arbitrary extra data. The dashboard-side `HaActionDispatcher` decodes button taps
+   * into [HaAction.CallService][ee.schimke.ha.rc.components.HaAction.CallService] payloads and
+   * routes them here.
+   *
+   * Returns when HA acknowledges the command. Errors propagate as exceptions out of `awaitCommand`
+   * so callers can surface them.
+   */
+  suspend fun callService(
+    domain: String,
+    service: String,
+    entityId: String? = null,
+    serviceData: JsonObject = JsonObject(emptyMap()),
+  ) {
+    runCommand("call_service") {
+      put("domain", domain)
+      put("service", service)
+      if (serviceData.isNotEmpty()) put("service_data", serviceData)
+      if (entityId != null) {
+        put("target", buildJsonObject { put("entity_id", entityId) })
+      }
+    }
+  }
+
   suspend fun close() {
     receiveJob?.cancel()
     runCatching { session?.close(CloseReason(CloseReason.Codes.NORMAL, "bye")) }

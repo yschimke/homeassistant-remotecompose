@@ -5,6 +5,7 @@ import ee.schimke.ha.client.HaClient
 import ee.schimke.ha.client.HaConfig
 import ee.schimke.ha.model.Dashboard
 import ee.schimke.ha.model.HaSnapshot
+import kotlinx.serialization.json.JsonObject
 
 /**
  * One HA session held for the app's lifetime. A facade over whatever
@@ -27,6 +28,20 @@ interface HaSession {
     suspend fun connect()
     suspend fun listDashboards(): List<DashboardSummary>
     suspend fun loadDashboard(urlPath: String?): Pair<Dashboard, HaSnapshot>
+
+    /**
+     * Fire-and-await an HA service call. The dashboard's
+     * `HaActionDispatcher` invokes this when a Lovelace tap action
+     * decodes to `CallService` / `Toggle`. Default does nothing so
+     * sessions that can't talk to HA (demo, tests) opt out cleanly.
+     */
+    suspend fun callService(
+        domain: String,
+        service: String,
+        entityId: String? = null,
+        serviceData: JsonObject = JsonObject(emptyMap()),
+    ): Unit = Unit
+
     suspend fun close()
 }
 
@@ -44,5 +59,11 @@ class LiveHaSession(
         val snapshot = client.snapshot()
         return dashboard to snapshot
     }
+    override suspend fun callService(
+        domain: String,
+        service: String,
+        entityId: String?,
+        serviceData: JsonObject,
+    ) = client.callService(domain, service, entityId, serviceData)
     override suspend fun close() = client.close()
 }
