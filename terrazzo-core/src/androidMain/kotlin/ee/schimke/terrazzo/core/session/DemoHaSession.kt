@@ -26,17 +26,29 @@ import kotlinx.serialization.json.jsonPrimitive
  */
 class DemoHaSession(
     private val clock: () -> Long = System::currentTimeMillis,
+    /**
+     * Demo-mode action sink. Defaults to the process-scoped router so
+     * pinned widgets (which build their own [DemoHaSession]) share the
+     * same overrides as the foreground dashboard. Tests pass an
+     * isolated instance.
+     */
+    val actionRouter: DemoActionRouter = DemoData.actionRouter,
 ) : HaSession {
     override val baseUrl: String = DemoData.BASE_URL
 
-    /** Once a minute. The demo entities drift on a per-minute cadence so
-     *  the user sees values change without burning battery. */
-    override val refreshIntervalMillis: Long = 60_000L
+    /**
+     * Refresh every second so demo-mode taps produce visible motion —
+     * cover animations sample at a sub-second cadence, and a one-second
+     * dashboard refresh keeps the UI on the leading edge of that
+     * without burning battery (the active surface is one user-driven
+     * screen, not a background widget).
+     */
+    override val refreshIntervalMillis: Long = 1_000L
 
     override suspend fun connect() = Unit
     override suspend fun listDashboards(): List<DashboardSummary> = DemoData.dashboards
     override suspend fun loadDashboard(urlPath: String?): Pair<Dashboard, HaSnapshot> =
-        DemoData.dashboard(urlPath) to DemoData.snapshot(clock())
+        DemoData.dashboard(urlPath) to DemoData.snapshot(clock(), actionRouter)
     override suspend fun close() = Unit
 }
 
@@ -57,6 +69,13 @@ object DemoData {
     const val BASE_URL: String = "demo://terrazzo"
 
     fun isDemo(baseUrl: String?): Boolean = baseUrl == BASE_URL
+
+    /**
+     * Process-scoped router shared by every [DemoHaSession] (foreground
+     * dashboards and pinned widgets) so an action fired on one surface
+     * is visible on the others.
+     */
+    val actionRouter: DemoActionRouter = DemoActionRouter()
 
     private val json = Json { ignoreUnknownKeys = true; isLenient = true }
 
@@ -96,9 +115,13 @@ object DemoData {
             ?: cachedDashboards[BOARDS.first().slug]!!
     }
 
-    fun snapshot(nowMs: Long = System.currentTimeMillis()): HaSnapshot {
+    fun snapshot(
+        nowMs: Long = System.currentTimeMillis(),
+        router: DemoActionRouter = actionRouter,
+    ): HaSnapshot {
         val drifted = baseStates.mapValues { (id, st) -> drift(id, st, nowMs) }
-        return HaSnapshot(states = drifted)
+        val withOverrides = router.snapshotOverrides(drifted, nowMs)
+        return HaSnapshot(states = withOverrides)
     }
 
     private fun urlPathToSlug(urlPath: String?): String {
