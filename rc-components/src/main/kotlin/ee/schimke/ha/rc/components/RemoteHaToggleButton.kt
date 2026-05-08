@@ -2,9 +2,6 @@
 
 package ee.schimke.ha.rc.components
 
-import androidx.compose.remote.creation.compose.action.Action
-import androidx.compose.remote.creation.compose.action.CombinedAction
-import androidx.compose.remote.creation.compose.action.ValueChange
 import androidx.compose.remote.creation.compose.layout.RemoteAlignment
 import androidx.compose.remote.creation.compose.layout.RemoteBox
 import androidx.compose.remote.creation.compose.layout.RemoteColumn
@@ -24,7 +21,6 @@ import androidx.compose.remote.creation.compose.state.RemoteFloat
 import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rf
-import androidx.compose.remote.creation.compose.state.rememberMutableRemoteBoolean
 import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.remote.creation.compose.state.rsp
 import androidx.compose.remote.creation.compose.state.tween
@@ -37,54 +33,45 @@ import androidx.wear.compose.remote.material3.RemoteIcon
 /**
  * A toggleable variant of [RemoteHaButton].
  *
- * Mirrors the RemoteCompose SDK demo pattern (androidx-main
- * `compose/remote/integration-tests/demos/.../ClickableDemo.kt`):
+ * The accent color tracks the entity's live `<entityId>.is_on` binding
+ * (built from [HaButtonData.accent.initiallyOn] as the authoring-time
+ * seed). On click we emit the configured [HaAction] — usually a
+ * [HaAction.Toggle] [HostAction] — and the host writes the new value
+ * back to the same binding. There is no in-document optimistic flip;
+ * see `RemoteHaToggleSwitch` for the same model.
  *
- * 1. `rememberMutableRemoteBoolean` creates local state *inside* the
- *    `.rc` document.
- * 2. A `ValueChange` action toggles that state on click — the player
- *    evaluates the write declaratively; no re-encoding needed.
- * 3. The accent color is bound to the same state via
- *    `isOn.select(active, inactive)` so the chip flip is instantaneous.
- * 4. [data.tapAction] still emits a `HostAction` alongside the local
- *    flip, so the host app can call HA's real service
- *    (`light.toggle`, `switch.toggle`, …) in response.
- *
- * If the host's service call fails, the host is responsible for
- * rolling back the optimistic state — it can do that by writing back
- * to the same binding.
- *
- * For non-toggleable entities pass [HaButtonData.accent.isOn] = null
- * and use the plain [RemoteHaButton] instead; this component expects
- * the optimistic model.
+ * For non-toggleable entities pass [HaToggleAccent.toggleable] = false
+ * (or use the plain [RemoteHaButton]); without a live boolean the
+ * accent stays on [activeAccent] unconditionally.
  */
 @Composable
 @RemoteComposable
 fun RemoteHaToggleButton(data: HaButtonData, modifier: RemoteModifier = RemoteModifier) {
     val theme = haTheme()
 
-    // Optimistic in-doc state — seeded from the snapshot. The host
-    // updates this same state when HA pushes a new entity state;
-    // addressed by the in-document id of the MutableRemoteBoolean.
-    val localIsOn = rememberMutableRemoteBoolean(data.accent.initiallyOn)
+    // Live host binding for the entity's on/off state. Seeded from the
+    // snapshot; the host pushes updates by name (`<entityId>.is_on`).
+    val isOnBinding =
+        if (data.accent.toggleable) LiveValues.isOn(data.entityId, data.accent.initiallyOn) else null
 
-    // Build the click action(s): optimistic flip + optional host action.
-    // alpha09's `clickable` takes a single Action — combine via CombinedAction.
-    val toggle: Action = ValueChange(localIsOn, localIsOn.not())
-    val host: Action? = data.tapAction.toRemoteAction()
-    val click: Action = if (host != null) CombinedAction(toggle, host) else toggle
-    val clickable = RemoteModifier.clickable(click)
+    // Click action is just the configured host action. No local state
+    // flip — the accent updates when the host writes back to is_on.
+    val clickable = data.tapAction.toRemoteAction()
+        ?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
 
-    // Tween the accent between inactive ↔ active so the icon halo and
-    // tint cross-fade instead of snapping. The progress source is the
-    // optimistic in-doc boolean; on a click ValueChange flips it and
-    // `animateRemoteFloat` provides the smoothing.
-    val accentProgress: RemoteFloat = animateRemoteFloat(
-        localIsOn.select(1f.rf, 0f.rf),
-        durationSeconds = 0.20f,
-    )
-    val accent: RemoteColor =
+    // Tween the accent between inactive ↔ active so a host writeback
+    // crossfades the icon halo and tint instead of snapping. Falls back
+    // to the active accent unconditionally when there's no live binding
+    // (preview / non-toggleable / null entityId).
+    val accent: RemoteColor = if (isOnBinding != null) {
+        val accentProgress: RemoteFloat = animateRemoteFloat(
+            isOnBinding.select(1f.rf, 0f.rf),
+            durationSeconds = 0.20f,
+        )
         tween(data.accent.inactiveAccent, data.accent.activeAccent, accentProgress)
+    } else {
+        data.accent.activeAccent
+    }
 
     // Wrap-content by default so grid / horizontal-stack can pack
     // multiple buttons per row. Standalone callers wanting a

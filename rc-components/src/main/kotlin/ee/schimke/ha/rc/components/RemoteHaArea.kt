@@ -19,6 +19,7 @@ import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.modifier.size
 import androidx.compose.remote.creation.compose.shapes.RemoteCircleShape
 import androidx.compose.remote.creation.compose.shapes.RemoteRoundedCornerShape
+import androidx.compose.remote.creation.compose.state.RemoteColor
 import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rf
@@ -105,8 +106,20 @@ private fun ActionChip(action: HaAreaAction, theme: HaTheme) {
     val click = action.tapAction.toRemoteAction()
         ?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
     val accent = action.accent.rc
-    val bg = if (action.initiallyActive) accent.copy(alpha = accent.alpha * 0.18f.rf)
-    else theme.divider.rc.copy(alpha = theme.divider.rc.alpha * 0.4f.rf)
+    val activeBg: RemoteColor = accent.copy(alpha = accent.alpha * 0.18f.rf)
+    val inactiveBg: RemoteColor = theme.divider.rc.copy(alpha = theme.divider.rc.alpha * 0.4f.rf)
+    val activeTint: RemoteColor = accent
+    val inactiveTint: RemoteColor = theme.secondaryText.rc
+
+    // Live `<entityId>.is_on` binding so the host can flip the chip's
+    // active styling without a re-encode. Falls back to the seed value
+    // when entityId is null (preview).
+    val isActive = LiveValues.isOn(action.entityId, action.initiallyActive)
+    val bg: RemoteColor = isActive?.select(activeBg, inactiveBg)
+        ?: if (action.initiallyActive) activeBg else inactiveBg
+    val tint: RemoteColor = isActive?.select(activeTint, inactiveTint)
+        ?: if (action.initiallyActive) activeTint else inactiveTint
+
     RemoteBox(
         modifier = RemoteModifier.then(click)
             .size(40.rdp)
@@ -118,7 +131,7 @@ private fun ActionChip(action: HaAreaAction, theme: HaTheme) {
             imageVector = action.icon,
             contentDescription = "action".rs,
             modifier = RemoteModifier.size(20.rdp),
-            tint = if (action.initiallyActive) accent else theme.secondaryText.rc,
+            tint = tint,
         )
     }
 }

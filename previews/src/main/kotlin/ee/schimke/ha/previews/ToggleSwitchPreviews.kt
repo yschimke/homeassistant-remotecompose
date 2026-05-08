@@ -2,6 +2,7 @@
 
 package ee.schimke.ha.previews
 
+import androidx.compose.remote.creation.compose.state.RemoteBoolean
 import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rf
 import androidx.compose.remote.tooling.preview.RemotePreview
@@ -21,9 +22,10 @@ import ee.schimke.ha.rc.components.RemoteHaToggleSwitchByProgress
  *   directly with literal RemoteFloats (0 / 0.5 / 1.0) — these prove the
  *   visual works for any constant progress.
  * - `ToggleInitial_*` uses the public [RemoteHaToggleSwitch] entry
- *   point. Currently STATIC: the host-side `Boolean` picks one of the
- *   two literal RemoteFloats; the document never animates between them.
- *   See `docs/bugs/rc-alpha08-select-derived-float-layout.md` for why.
+ *   point with a constant `RemoteBoolean`. Currently STATIC: the
+ *   constant picks one of the two literal RemoteFloats; the document
+ *   never animates between them. See
+ *   `docs/bugs/rc-alpha08-select-derived-float-layout.md` for why.
  */
 
 private val PreviewActiveAccent = Color(0xFF2196F3)
@@ -74,7 +76,7 @@ fun ToggleByProgress_On() = SwitchHost(HaTheme.Light) {
 @Composable
 fun ToggleInitial_Off() = SwitchHost(HaTheme.Light) {
     RemoteHaToggleSwitch(
-        initiallyOn = false,
+        isOn = RemoteBoolean(false),
         activeAccent = PreviewActiveAccent.rc,
         inactiveAccent = PreviewInactiveAccent.rc,
     )
@@ -84,7 +86,7 @@ fun ToggleInitial_Off() = SwitchHost(HaTheme.Light) {
 @Composable
 fun ToggleInitial_On() = SwitchHost(HaTheme.Light) {
     RemoteHaToggleSwitch(
-        initiallyOn = true,
+        isOn = RemoteBoolean(true),
         activeAccent = PreviewActiveAccent.rc,
         inactiveAccent = PreviewInactiveAccent.rc,
     )
@@ -94,7 +96,7 @@ fun ToggleInitial_On() = SwitchHost(HaTheme.Light) {
 @Composable
 fun ToggleInitial_On_Dark() = SwitchHost(HaTheme.Dark) {
     RemoteHaToggleSwitch(
-        initiallyOn = true,
+        isOn = RemoteBoolean(true),
         activeAccent = PreviewActiveAccent.rc,
         inactiveAccent = PreviewInactiveAccent.rc,
     )
