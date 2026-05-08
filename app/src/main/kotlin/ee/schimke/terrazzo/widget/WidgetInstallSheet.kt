@@ -26,24 +26,32 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth as rcFillMaxWidth
-import androidx.compose.remote.tooling.preview.RemotePreview
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
+import ee.schimke.ha.rc.CachedCardPreview
 import ee.schimke.ha.rc.ProvideCardRegistry
 import ee.schimke.ha.rc.RenderChild
-import ee.schimke.ha.rc.androidXExperimental
 import ee.schimke.ha.rc.cardHeightDp
 import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.components.HaTheme
 import ee.schimke.ha.rc.components.ProvideHaTheme
+import ee.schimke.ha.rc.widgetsV6
 import ee.schimke.terrazzo.LocalTerrazzoGraph
 import ee.schimke.terrazzo.core.widget.WidgetStore
 
 /**
  * Bottom sheet shown when the user long-presses a card. Live preview
- * on top (rendered through the exact same `RemotePreview` the home
- * screen widget uses — so what you see is what gets installed), then
- * an "Add to Home Screen" button that calls `requestPinAppWidget`.
+ * on top (rendered through `CachedCardPreview` with the same
+ * [widgetsV6] profile the home screen widget uses, so what you see is
+ * what gets installed), then an "Add to Home Screen" button that calls
+ * `requestPinAppWidget`.
+ *
+ * `CachedCardPreview` (vs. `RemotePreview`) buys two things here:
+ *   - It pushes named-binding writes into the running player whenever
+ *     [snapshot] changes, so the preview tracks live entity state
+ *     instead of freezing on the first frame.
+ *   - It captures once per `(card, theme, profile)` and keeps playing,
+ *     so opening the sheet repeatedly for the same card is cheap.
  *
  * Install cap: disable the button once five widgets are already
  * installed. The cap-check number comes live from [WidgetStore] so
@@ -86,7 +94,12 @@ fun WidgetInstallSheet(
             Box(
                 modifier = Modifier.fillMaxWidth().height(heightDp.dp),
             ) {
-                RemotePreview(profile = androidXExperimental) {
+                CachedCardPreview(
+                    cacheKey = WidgetPreviewCacheKey(card, HaTheme.Light, widgetsV6),
+                    profile = widgetsV6,
+                    card = card,
+                    snapshot = snapshot,
+                ) {
                     ProvideCardRegistry(registry) {
                         ProvideHaTheme(HaTheme.Light) {
                             RenderChild(card, snapshot, RemoteModifier.rcFillMaxWidth())
@@ -124,3 +137,18 @@ fun WidgetInstallSheet(
         }
     }
 }
+
+/**
+ * Cache key for the install-sheet preview. Mirrors the dashboard's
+ * `CardSlotCacheKey` shape — snapshot is deliberately omitted so live
+ * entity changes flow through named bindings instead of forcing a
+ * re-encode (see `CachedCardPreview` for the binding push). Profile
+ * is part of the key so the same card cached for the dashboard
+ * (AndroidX-experimental) doesn't collide with the widget capture
+ * (V6).
+ */
+private data class WidgetPreviewCacheKey(
+    val card: CardConfig,
+    val theme: HaTheme,
+    val profile: Any,
+)

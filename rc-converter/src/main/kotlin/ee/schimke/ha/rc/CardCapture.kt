@@ -9,6 +9,8 @@ import androidx.compose.remote.core.RemoteComposeBuffer
 import androidx.compose.remote.creation.compose.capture.RemoteCreationDisplayInfo
 import androidx.compose.remote.creation.compose.capture.captureSingleRemoteDocument
 import androidx.compose.remote.creation.compose.capture.rememberRemoteDocument
+import androidx.compose.remote.creation.profile.Profile
+import androidx.compose.remote.creation.profile.RcPlatformProfiles
 import androidx.compose.remote.player.compose.RemoteDocumentPlayer
 import androidx.compose.remote.player.core.platform.BitmapLoader
 import androidx.compose.runtime.Composable
@@ -72,14 +74,16 @@ suspend fun captureCardDocument(
     snapshot: HaSnapshot,
     cache: CardDocumentCache = defaultCardDocumentCache,
     forceRefresh: Boolean = false,
+    profile: Profile = RcPlatformProfiles.ANDROIDX,
 ): CardDocument {
     val converter = registry.get(card.type)
         ?: error("No converter registered for card type='${card.type}'")
-    val cacheKey = HeadlessCardCacheKey(card, widthPx, heightPx, densityDpi)
+    val cacheKey = HeadlessCardCacheKey(card, widthPx, heightPx, densityDpi, profile)
     if (!forceRefresh) cache.get(cacheKey)?.let { return it }
     val captured = captureSingleRemoteDocument(
         context = context,
         creationDisplayInfo = RemoteCreationDisplayInfo(widthPx, heightPx, densityDpi),
+        profile = profile,
     ) {
         converter.Render(card, snapshot)
     }
@@ -90,14 +94,17 @@ suspend fun captureCardDocument(
  * Default cache key for the headless capture path. Includes the size
  * inputs because the encoded document bakes them into its header and
  * recomputing layout for a different slot size produces different
- * bytes. Theme isn't part of the key today: widget capture uses the
- * default theme; if widgets gain a theme picker, extend this key.
+ * bytes, plus [profile] so the widget (Glance / launcher) and embedded
+ * AndroidX captures don't clobber each other in [defaultCardDocumentCache].
+ * Theme isn't part of the key today: widget capture uses the default
+ * theme; if widgets gain a theme picker, extend this key.
  */
 private data class HeadlessCardCacheKey(
     val card: CardConfig,
     val widthPx: Int,
     val heightPx: Int,
     val densityDpi: Int,
+    val profile: Profile,
 )
 
 /**
