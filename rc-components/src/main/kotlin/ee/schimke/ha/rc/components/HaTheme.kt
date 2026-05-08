@@ -20,6 +20,19 @@ import androidx.compose.ui.graphics.Color
 data class HaTheme(
     val cardBackground: Color,
     val dashboardBackground: Color,
+    /**
+     * Background of a `type: sections` group container. Cards within the
+     * section sit on [cardBackground] above this layer — three-layer
+     * stack is `dashboardBackground` → `sectionBackground` → `cardBackground`.
+     *
+     * Set equal to [dashboardBackground] to opt out of the group surface
+     * (a `Surface(color = sectionBackground)` wrap then renders as a
+     * no-op). The flat themes — `TerrazzoHome` (HA blue) and
+     * `TerrazzoMinimalist` (matt8707) — opt out, since their identity is
+     * a single uniform surface; the elevated themes (`Material3`,
+     * `TerrazzoMushroom`, `TerrazzoKiosk`) opt in.
+     */
+    val sectionBackground: Color,
     val primaryText: Color,
     val secondaryText: Color,
     val divider: Color,
@@ -35,6 +48,7 @@ data class HaTheme(
         val Light = HaTheme(
             cardBackground = Color(0xFFFFFFFF),
             dashboardBackground = Color(0xFFFAFAFA),
+            sectionBackground = Color(0xFFFAFAFA),
             primaryText = Color(0xFF141414),
             secondaryText = Color(0xFF8F8F8F),
             divider = Color(0xFFE0E0E0),
@@ -48,6 +62,7 @@ data class HaTheme(
         val Dark = HaTheme(
             cardBackground = Color(0xFF1C1C1C),
             dashboardBackground = Color(0xFF111111),
+            sectionBackground = Color(0xFF111111),
             primaryText = Color(0xFFE1E1E1),
             secondaryText = Color(0xFF878787),
             divider = Color(0xFF333333),
@@ -60,40 +75,61 @@ data class HaTheme(
 }
 
 /**
- * Derive an [HaTheme] for a given [style] and [darkTheme] flag. Each
- * Terrazzo palette maps the Material 3 `ColorScheme` (built from
- * [terrazzoColorScheme]) onto the HA-card role layer so cards render in
- * the selected palette automatically:
+ * Derive an [HaTheme] for a given [style] and [darkTheme] flag.
  *
- * - `surface` ↦ `cardBackground`
- * - `background` ↦ `dashboardBackground`
- * - `onSurface` ↦ `primaryText`
- * - `onSurfaceVariant` ↦ `secondaryText`
- * - `outline` ↦ `divider`
- * - `secondary` ↦ `placeholderAccent`
- * - `secondaryContainer` ↦ `placeholderBackground`
+ * The mapping branches by palette identity:
  *
- * [ThemeStyle.Material3] is special-cased: the M3 defaults have a
- * lilac primary that doesn't match any HA palette, so we fall back to
- * the HA-sampled Light/Dark snapshots rather than let `colorScheme()`
- * leak purple containers into the dashboard.
+ *  - **`Material3`, `TerrazzoMushroom`, `TerrazzoKiosk`** — the "rich"
+ *    palettes. Map onto Material 3's surface-elevation tokens for a
+ *    three-layer stack: the page sits on `surface`, sections group their
+ *    cards on `surfaceContainer`, and cards themselves sit on
+ *    `surfaceContainerHigh`. Picture/unsupported/completed accents come
+ *    from `primary`/`primaryContainer` so the palette's hero colour
+ *    carries through, and dividers use the softer `outlineVariant`
+ *    decorative role.
+ *
+ *  - **`TerrazzoHome`, `TerrazzoMinimalist`** — the "flat" palettes.
+ *    Their brief is a single uniform surface (HA's stock blue dashboard
+ *    and the matt8707 minimalist look respectively), so they keep the
+ *    pre-existing flat mapping: cards on `surface`, dashboard on
+ *    `background`, divider on `outline`, accents from
+ *    `secondary`/`secondaryContainer`. `sectionBackground` is set equal
+ *    to `dashboardBackground` so the dashboard's section-group
+ *    `Surface` wrap renders as a no-op for these two themes.
  */
 fun haThemeFor(style: ThemeStyle, darkTheme: Boolean): HaTheme {
-    if (style == ThemeStyle.Material3) {
-        return if (darkTheme) HaTheme.Dark else HaTheme.Light
-    }
     val m3 = terrazzoColorScheme(style, darkTheme)
-    return HaTheme(
-        cardBackground = m3.surface,
-        dashboardBackground = m3.background,
-        primaryText = m3.onSurface,
-        secondaryText = m3.onSurfaceVariant,
-        divider = m3.outline,
-        placeholderAccent = m3.secondary,
-        placeholderBackground = m3.secondaryContainer,
-        unknownAccent = m3.onSurfaceVariant,
-        isDark = darkTheme,
-    )
+    return when (style) {
+        ThemeStyle.TerrazzoHome,
+        ThemeStyle.TerrazzoMinimalist ->
+            HaTheme(
+                cardBackground = m3.surface,
+                dashboardBackground = m3.background,
+                sectionBackground = m3.background,
+                primaryText = m3.onSurface,
+                secondaryText = m3.onSurfaceVariant,
+                divider = m3.outline,
+                placeholderAccent = m3.secondary,
+                placeholderBackground = m3.secondaryContainer,
+                unknownAccent = m3.onSurfaceVariant,
+                isDark = darkTheme,
+            )
+        ThemeStyle.Material3,
+        ThemeStyle.TerrazzoMushroom,
+        ThemeStyle.TerrazzoKiosk ->
+            HaTheme(
+                cardBackground = m3.surfaceContainerHigh,
+                dashboardBackground = m3.surface,
+                sectionBackground = m3.surfaceContainer,
+                primaryText = m3.onSurface,
+                secondaryText = m3.onSurfaceVariant,
+                divider = m3.outlineVariant,
+                placeholderAccent = m3.primary,
+                placeholderBackground = m3.primaryContainer,
+                unknownAccent = m3.onSurfaceVariant,
+                isDark = darkTheme,
+            )
+    }
 }
 
 val LocalHaTheme = staticCompositionLocalOf { HaTheme.Light }

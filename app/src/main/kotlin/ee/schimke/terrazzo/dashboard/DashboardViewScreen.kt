@@ -16,8 +16,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -51,6 +53,7 @@ import ee.schimke.ha.rc.androidXExperimentalWrap
 import ee.schimke.ha.rc.cardHeightDp
 import ee.schimke.ha.rc.cardWidthClass
 import ee.schimke.ha.rc.cards.defaultRegistry
+import ee.schimke.ha.rc.components.HaTheme
 import ee.schimke.ha.rc.components.ProvideHaTheme
 import ee.schimke.ha.rc.components.ThemeStyle
 import ee.schimke.ha.rc.components.haThemeFor
@@ -191,6 +194,13 @@ private fun DashboardList(
     // be capped to a single-column max.
     val constrainColumn = !sideBySide && cfg.maxContentWidth != Dp.Unspecified
 
+    val style = LocalThemeStyle.current
+    val dark = LocalIsDarkTheme.current
+    // Same haTheme each card resolves; computed once here so the
+    // section-group surface upstairs and the per-card paint downstairs
+    // are derived from a single source.
+    val haTheme = remember(style, dark) { haThemeFor(style, dark) }
+
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.TopCenter,
@@ -213,9 +223,39 @@ private fun DashboardList(
                     sideBySide = sideBySide,
                     sectionColumns = sectionColumns,
                     useGridLayout = useGridLayout,
+                    haTheme = haTheme,
                     onLongPress = onCardLongPress,
                 )
             }
+        }
+    }
+}
+
+/**
+ * Wraps a `type: sections` group in a Material 3 surface tinted with
+ * [HaTheme.sectionBackground]. Themes that opt into the M3 elevation
+ * stack (`Material3`, `Mushroom`, `Kiosk`) set this distinct from
+ * `dashboardBackground`, so each section reads as a grouped container.
+ * Flat themes (`TerrazzoHome`, `Minimalist`) set it equal to
+ * `dashboardBackground`, so the wrap renders as a no-op and preserves
+ * the single-surface HA / matt8707 look.
+ */
+@Composable
+private fun SectionGroupSurface(
+    haTheme: HaTheme,
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit,
+) {
+    Surface(
+        color = haTheme.sectionBackground,
+        shape = RoundedCornerShape(20.dp),
+        modifier = modifier.fillMaxWidth(),
+    ) {
+        Column(
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            content()
         }
     }
 }
@@ -240,6 +280,7 @@ private fun LazyListScope.renderView(
     sideBySide: Boolean,
     sectionColumns: Int,
     useGridLayout: Boolean,
+    haTheme: HaTheme,
     onLongPress: (CardConfig) -> Unit,
 ) {
     val viewKey = "v$viewIndex"
@@ -258,23 +299,24 @@ private fun LazyListScope.renderView(
     if (view.sections.isEmpty()) return
 
     if (!sideBySide) {
+        // Single-column: each section becomes a single LazyColumn item
+        // wrapped in [SectionGroupSurface] so the title + its cards
+        // render as one grouped material container. Cards inside are
+        // rendered eagerly (a section is a small handful of cards;
+        // laziness still applies across sections).
         view.sections.forEachIndexed { sectionIndex, section ->
             val sectionKey = "$viewKey-s$sectionIndex"
-            section.title?.let { title ->
-                item(key = "$sectionKey-title") { SectionHeading(title) }
+            item(key = sectionKey) {
+                SectionGroupSurface(haTheme) {
+                    section.title?.let { title -> SectionHeading(title) }
+                    val rows = packAndChunk(section.cards, cfg.compactCardsPerRow) { c ->
+                        registry.cardWidthClass(c, snapshot)
+                    }
+                    rows.forEach { row ->
+                        CardRow(row, snapshot, registry, onLongPress)
+                    }
+                }
             }
-            cardRows(
-                keyPrefix = "$sectionKey",
-                cards = section.cards,
-                snapshot = snapshot,
-                registry = registry,
-                // Within a single-column section, keep the same
-                // packing rule the orphan path uses — small buttons
-                // pair up so a "lights" cluster stays usable on
-                // narrow screens.
-                compactPerRow = cfg.compactCardsPerRow,
-                onLongPress = onLongPress,
-            )
         }
     } else if (useGridLayout) {
         item(key = "$viewKey-grid") {
@@ -283,6 +325,7 @@ private fun LazyListScope.renderView(
                 columns = sectionColumns,
                 snapshot = snapshot,
                 registry = registry,
+                haTheme = haTheme,
                 onLongPress = onLongPress,
             )
         }
@@ -294,6 +337,7 @@ private fun LazyListScope.renderView(
                     columns = sectionColumns,
                     snapshot = snapshot,
                     registry = registry,
+                    haTheme = haTheme,
                     onLongPress = onLongPress,
                 )
             }
@@ -327,6 +371,7 @@ private fun SectionRow(
     columns: Int,
     snapshot: HaSnapshot,
     registry: ee.schimke.ha.rc.CardRegistry,
+    haTheme: HaTheme,
     onLongPress: (CardConfig) -> Unit,
 ) {
     Row(
@@ -339,6 +384,7 @@ private fun SectionRow(
                 section = section,
                 snapshot = snapshot,
                 registry = registry,
+                haTheme = haTheme,
                 onLongPress = onLongPress,
                 modifier = Modifier.weight(1f),
             )
@@ -371,6 +417,7 @@ private fun SectionGrid(
     columns: Int,
     snapshot: HaSnapshot,
     registry: ee.schimke.ha.rc.CardRegistry,
+    haTheme: HaTheme,
     onLongPress: (CardConfig) -> Unit,
 ) {
     Grid(
@@ -385,6 +432,7 @@ private fun SectionGrid(
                 section = section,
                 snapshot = snapshot,
                 registry = registry,
+                haTheme = haTheme,
                 onLongPress = onLongPress,
                 modifier = Modifier.gridItem(),
             )
@@ -397,13 +445,11 @@ private fun SectionColumn(
     section: SectionLayout,
     snapshot: HaSnapshot,
     registry: ee.schimke.ha.rc.CardRegistry,
+    haTheme: HaTheme,
     onLongPress: (CardConfig) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Column(
-        modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
+    SectionGroupSurface(haTheme = haTheme, modifier = modifier) {
         section.title?.let { SectionHeading(it) }
         section.cards.forEach { card ->
             val heightDp = remember(card, snapshot) { registry.cardHeightDp(card, snapshot) }
