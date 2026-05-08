@@ -2,6 +2,7 @@ package ee.schimke.ha.addon.routes
 
 import ee.schimke.ha.addon.bridge.HaEvent
 import ee.schimke.ha.addon.bridge.HaSupervisorBridge
+import ee.schimke.ha.model.alarmStateIntFromRaw
 import io.ktor.server.routing.Routing
 import io.ktor.server.websocket.webSocket
 import io.ktor.websocket.Frame
@@ -62,6 +63,11 @@ fun Routing.streamRoute(bridge: HaSupervisorBridge) {
                   // for everything is harmless — clients
                   // ignore unknown names.
                   put("${state.entityId}.is_on", JsonPrimitive(state.state == "on"))
+                  // Domain-specific int keys (alarm panel, …) so
+                  // `RemoteStateLayout(RemoteInt, …)` chrome can
+                  // flip without a re-encode. Same harmless-extra
+                  // policy as `is_on`.
+                  putStateInt(state.entityId, state.state)
                 },
               )
             }
@@ -128,6 +134,7 @@ private suspend fun handleClientFrame(
             for ((entityId, state) in bindings) {
               put("$entityId.state", JsonPrimitive(state.state))
               put("$entityId.is_on", JsonPrimitive(state.state == "on"))
+              putStateInt(entityId, state.state)
             }
           },
         )
@@ -173,4 +180,23 @@ private suspend fun <T> kotlinx.coroutines.sync.Mutex.withLockReturn(block: () -
   } finally {
     unlock()
   }
+}
+
+/**
+ * Emit `<entityId>.state_int` for entities whose domain has a stable `String → Int` wire mapping
+ * defined in `ha-model`. Clients that don't use the int binding ignore the extra field; clients
+ * that do (alarm-panel, …) flip chrome through `RemoteStateLayout(RemoteInt, …)` without a document
+ * re-encode.
+ */
+private fun kotlinx.serialization.json.JsonObjectBuilder.putStateInt(
+  entityId: String,
+  state: String,
+) {
+  val domain = entityId.substringBefore('.', missingDelimiterValue = "")
+  val intKey =
+    when (domain) {
+      "alarm_control_panel" -> alarmStateIntFromRaw(state)
+      else -> null
+    } ?: return
+  put("$entityId.state_int", JsonPrimitive(intKey))
 }

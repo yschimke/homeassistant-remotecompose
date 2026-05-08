@@ -8,6 +8,7 @@ import androidx.compose.remote.creation.compose.layout.RemoteBox
 import androidx.compose.remote.creation.compose.layout.RemoteColumn
 import androidx.compose.remote.creation.compose.layout.RemoteComposable
 import androidx.compose.remote.creation.compose.layout.RemoteRow
+import androidx.compose.remote.creation.compose.layout.RemoteStateLayout
 import androidx.compose.remote.creation.compose.layout.RemoteText
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.background
@@ -41,6 +42,12 @@ import androidx.wear.compose.remote.material3.RemoteIcon
 @RemoteComposable
 fun RemoteHaAlarmPanel(data: HaAlarmPanelData, modifier: RemoteModifier = RemoteModifier) {
     val theme = haTheme()
+    val statusByKey = data.statuses.associateBy { it.stateKey }
+    val initialStatus = statusByKey[data.initialStateInt] ?: data.statuses.first()
+    // Keypad accent stays tied to the initial state — keypad chrome is
+    // permanent at capture time, the live binding only swaps the status
+    // chrome above.
+    val keypadAccent = initialStatus.accent
     RemoteBox(
         modifier = modifier
             .fillMaxWidth()
@@ -50,44 +57,7 @@ fun RemoteHaAlarmPanel(data: HaAlarmPanelData, modifier: RemoteModifier = Remote
             .padding(horizontal = 14.rdp, vertical = 12.rdp),
     ) {
         RemoteColumn(verticalArrangement = RemoteArrangement.spacedBy(10.rdp)) {
-            RemoteRow(
-                modifier = RemoteModifier.fillMaxWidth(),
-                verticalAlignment = RemoteAlignment.CenterVertically,
-                horizontalArrangement = RemoteArrangement.SpaceBetween,
-            ) {
-                RemoteColumn {
-                    RemoteText(
-                        text = data.title.rs,
-                        color = theme.primaryText.rc,
-                        fontSize = 16.rsp,
-                        fontWeight = FontWeight.Medium,
-                        style = RemoteTextStyle.Default,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                    RemoteText(
-                        text = LiveValues.state(data.entityId, data.state),
-                        color = data.accent.rc,
-                        fontSize = 12.rsp,
-                        style = RemoteTextStyle.Default,
-                        maxLines = 1,
-                    )
-                }
-                RemoteBox(
-                    modifier = RemoteModifier
-                        .size(40.rdp)
-                        .clip(RemoteCircleShape)
-                        .border(2.rdp, data.accent.rc, RemoteCircleShape),
-                    contentAlignment = RemoteAlignment.Center,
-                ) {
-                    RemoteIcon(
-                        imageVector = data.statusIcon,
-                        contentDescription = data.state.rs,
-                        modifier = RemoteModifier.size(22.rdp),
-                        tint = data.accent.rc,
-                    )
-                }
-            }
+            StatusRow(data, statusByKey, initialStatus, theme)
 
             // ARM AWAY / ARM HOME / DISARM buttons.
             if (data.actions.isNotEmpty()) {
@@ -101,7 +71,60 @@ fun RemoteHaAlarmPanel(data: HaAlarmPanelData, modifier: RemoteModifier = Remote
                 }
             }
 
-            if (data.showKeypad) Keypad(data.accent, theme)
+            if (data.showKeypad) Keypad(keypadAccent, theme)
+        }
+    }
+}
+
+@Composable
+@RemoteComposable
+private fun StatusRow(
+    data: HaAlarmPanelData,
+    statusByKey: Map<Int, HaAlarmStatus>,
+    initialStatus: HaAlarmStatus,
+    theme: HaTheme,
+) {
+    val keys = data.statuses.map { it.stateKey }.toIntArray()
+    val stateInt = LiveValues.intState(data.entityId, data.initialStateInt)
+    RemoteStateLayout(stateInt, *keys) { key ->
+        val status = statusByKey[key] ?: initialStatus
+        RemoteRow(
+            modifier = RemoteModifier.fillMaxWidth(),
+            verticalAlignment = RemoteAlignment.CenterVertically,
+            horizontalArrangement = RemoteArrangement.SpaceBetween,
+        ) {
+            RemoteColumn {
+                RemoteText(
+                    text = data.title.rs,
+                    color = theme.primaryText.rc,
+                    fontSize = 16.rsp,
+                    fontWeight = FontWeight.Medium,
+                    style = RemoteTextStyle.Default,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                RemoteText(
+                    text = status.label.rs,
+                    color = status.accent.rc,
+                    fontSize = 12.rsp,
+                    style = RemoteTextStyle.Default,
+                    maxLines = 1,
+                )
+            }
+            RemoteBox(
+                modifier = RemoteModifier
+                    .size(40.rdp)
+                    .clip(RemoteCircleShape)
+                    .border(2.rdp, status.accent.rc, RemoteCircleShape),
+                contentAlignment = RemoteAlignment.Center,
+            ) {
+                RemoteIcon(
+                    imageVector = status.icon,
+                    contentDescription = status.label.rs,
+                    modifier = RemoteModifier.size(22.rdp),
+                    tint = status.accent.rc,
+                )
+            }
         }
     }
 }

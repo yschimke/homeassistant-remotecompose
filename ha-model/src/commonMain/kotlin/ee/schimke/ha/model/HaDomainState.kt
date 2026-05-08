@@ -214,6 +214,67 @@ val AlarmState.isArmed: Boolean
       this is AlarmState.ArmedVacation ||
       this is AlarmState.ArmedCustomBypass
 
+/**
+ * Stable `String → Int` key for [AlarmState], used by `RemoteStateLayout(RemoteInt, …)` so the
+ * alarm-panel chrome (icon, accent, label) flips on data alone — the host pushes
+ * `<entityId>.state_int` and the player picks the matching variant without a re-encode.
+ *
+ * Keys are part of the wire contract between host and `.rc` document; once published they MUST NOT
+ * be reordered or removed. Append new states with a new key.
+ */
+object AlarmStateInt {
+  const val Disarmed: Int = 0
+  const val ArmedHome: Int = 1
+  const val ArmedAway: Int = 2
+  const val ArmedNight: Int = 3
+  const val ArmedVacation: Int = 4
+  const val ArmedCustomBypass: Int = 5
+  const val Triggered: Int = 6
+  const val Pending: Int = 7
+  const val Arming: Int = 8
+  const val Disarming: Int = 9
+  const val Unavailable: Int = 10
+
+  /** Catch-all for states the wire contract doesn't recognise yet. */
+  const val Unknown: Int = 11
+
+  /** All keys in declaration order — pass to `RemoteStateLayout` as the enumerated states. */
+  val All: IntArray =
+    intArrayOf(
+      Disarmed,
+      ArmedHome,
+      ArmedAway,
+      ArmedNight,
+      ArmedVacation,
+      ArmedCustomBypass,
+      Triggered,
+      Pending,
+      Arming,
+      Disarming,
+      Unavailable,
+      Unknown,
+    )
+}
+
+fun AlarmState.intKey(): Int =
+  when (this) {
+    is AlarmState.Disarmed -> AlarmStateInt.Disarmed
+    is AlarmState.ArmedHome -> AlarmStateInt.ArmedHome
+    is AlarmState.ArmedAway -> AlarmStateInt.ArmedAway
+    is AlarmState.ArmedNight -> AlarmStateInt.ArmedNight
+    is AlarmState.ArmedVacation -> AlarmStateInt.ArmedVacation
+    is AlarmState.ArmedCustomBypass -> AlarmStateInt.ArmedCustomBypass
+    is AlarmState.Triggered -> AlarmStateInt.Triggered
+    is AlarmState.Pending -> AlarmStateInt.Pending
+    is AlarmState.Arming -> AlarmStateInt.Arming
+    is AlarmState.Disarming -> AlarmStateInt.Disarming
+    is AlarmState.Unavailable -> AlarmStateInt.Unavailable
+    is AlarmState.Unknown -> AlarmStateInt.Unknown
+  }
+
+/** Parse a raw HA alarm-panel state string straight into the int wire key. */
+fun alarmStateIntFromRaw(raw: String): Int = AlarmState.parse(raw).intKey()
+
 sealed interface VacuumState {
   data object Cleaning : VacuumState
 
