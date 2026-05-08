@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.7](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.6...v0.1.7) (2026-05-08)
+
+
+### Bug Fixes
+
+* **ha-model:** capture full card object as CardConfig.raw ([#148](https://github.com/yschimke/homeassistant-remotecompose/issues/148)) ([53a405c](https://github.com/yschimke/homeassistant-remotecompose/commit/53a405c49497f642a1bec180a984fcd19ae31583))
+* **test:** point LongPressInstallTest at the first captured demo board ([#150](https://github.com/yschimke/homeassistant-remotecompose/issues/150)) ([f250fce](https://github.com/yschimke/homeassistant-remotecompose/commit/f250fced466ee6bc6309460d7c1c62e2da23f873))
+
 ## [0.1.6](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.5...v0.1.6) (2026-05-08)
 
 
