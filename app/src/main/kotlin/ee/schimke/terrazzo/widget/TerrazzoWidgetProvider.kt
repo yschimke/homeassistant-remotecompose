@@ -23,7 +23,7 @@ import ee.schimke.ha.rc.cards.shutter.withEnhancedShutter
 import ee.schimke.ha.rc.components.ProvideHaTheme
 import ee.schimke.ha.rc.components.ThemeStyle
 import ee.schimke.ha.rc.components.haThemeFor
-import ee.schimke.ha.rc.widgetsV6
+import ee.schimke.ha.rc.widgetsProfile
 import ee.schimke.terrazzo.core.prefs.DarkModePref
 import ee.schimke.terrazzo.core.prefs.ThemePref
 import ee.schimke.terrazzo.core.session.DemoData
@@ -33,7 +33,7 @@ import kotlinx.coroutines.runBlocking
 /**
  * Per-card home-screen widget. Extends [AppWidgetProvider] directly
  * rather than RemoteCompose's `RemoteComposeWidget` scaffolding so we
- * can pin the capture to [widgetsV6] — the launcher's RemoteCompose
+ * can pin the capture to [widgetsProfile] — the launcher's RemoteCompose
  * runtime supports a stricter op set than the embedded AndroidX
  * player, and `RemoteComposeWidget` hard-codes
  * `RcPlatformProfiles.ANDROIDX` inside its `RCWidget` capture.
@@ -42,7 +42,7 @@ import kotlinx.coroutines.runBlocking
  *   1. Framework or our own broadcast triggers [onUpdate].
  *   2. For each pinned widget id, look up the [WidgetStore.Entry] and
  *      headlessly capture the card via [captureSingleRemoteDocument]
- *      with `profile = widgetsV6`. The composition is wrapped with
+ *      with `profile = widgetsProfile`. The composition is wrapped with
  *      [ProvideCardRegistry] + [ProvideHaTheme] so converters resolve
  *      the user's theme.
  *   3. Wrap the bytes in `RemoteViews.DrawInstructions` and publish via
@@ -98,7 +98,7 @@ class TerrazzoWidgetProvider : AppWidgetProvider() {
                 captureSingleRemoteDocument(
                     context = context,
                     creationDisplayInfo = RemoteCreationDisplayInfo(widthPx, heightPx, densityDpi),
-                    profile = widgetsV6,
+                    profile = widgetsProfile,
                 ) {
                     ProvideCardRegistry(registry) {
                         ProvideHaTheme(haTheme) {
@@ -108,7 +108,7 @@ class TerrazzoWidgetProvider : AppWidgetProvider() {
                 }
             }
         }.getOrElse {
-            // WIDGETS_V6 rejects ops outside the launcher's vocabulary —
+            // The widgets profile rejects ops outside the launcher's vocabulary —
             // log and skip rather than crashing the host process.
             Log.w(TAG, "widgets-profile capture failed for id=$widgetId type=${entry.card.type}", it)
             return
