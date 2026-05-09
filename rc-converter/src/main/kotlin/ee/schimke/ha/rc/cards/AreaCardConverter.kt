@@ -14,6 +14,7 @@ import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.CardConverter
+import ee.schimke.ha.rc.formatValueWithUnit
 import ee.schimke.ha.rc.components.HaAction
 import ee.schimke.ha.rc.components.HaAreaAction
 import ee.schimke.ha.rc.components.HaAreaCardData
@@ -61,13 +62,13 @@ class AreaCardConverter : CardConverter {
                     "temperature" ->
                         HaAreaStat(
                             icon = Icons.Filled.Thermostat,
-                            label = LiveValues.state(id, "${entity.state}${unit ?: " °C"}"),
+                            label = LiveValues.state(id, formatValueWithUnit(entity.state, unit ?: "°C")),
                         )
                     "humidity",
                     "moisture" ->
                         HaAreaStat(
                             icon = Icons.Filled.WaterDrop,
-                            label = LiveValues.state(id, "${entity.state}${unit ?: " %"}"),
+                            label = LiveValues.state(id, formatValueWithUnit(entity.state, unit ?: "%")),
                         )
                     else -> null
                 }

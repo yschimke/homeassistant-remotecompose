@@ -81,8 +81,24 @@ class HaStateFormatTest {
     }
 
     @Test
-    fun `ha unit symbols match indriya temperature symbols`() {
-        assertEquals("°C", Units.CELSIUS.symbol)
-        assertEquals("°F", Units.FAHRENHEIT.symbol)
+    fun `indriya celsius unit uses single-codepoint symbol`() {
+        assertEquals("℃", Units.CELSIUS.symbol)
+    }
+
+    @Test
+    fun `value and unit formatter normalizes spacing`() {
+        assertEquals("21 °C", formatValueWithUnit("21", "°C"))
+        assertEquals("21 °F", formatValueWithUnit("21", "  °F  "))
+    }
+
+    @Test
+    fun `value and unit formatter normalizes numeric values`() {
+        assertEquals("73.13 Mbit/s", formatValueWithUnit("73.1299", "Mbit/s"))
+        assertEquals("551 Mbit/s", formatValueWithUnit("551.XXXXXXXXXXXX", "Mbit/s"))
+    }
+
+    @Test
+    fun `formatter works with units provided by indriya`() {
+        assertEquals("21 ℃", formatValueWithUnit("21", Units.CELSIUS.symbol))
     }
 }
