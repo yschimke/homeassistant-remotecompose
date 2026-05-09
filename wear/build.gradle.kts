@@ -53,6 +53,14 @@ dependencies {
   implementation(libs.glance.wear)
   implementation(libs.glance.wear.core)
 
+  // Vendored AOSP preview utility for Glance Wear widgets needs
+  // RemoteDocPreview from this artifact. Tracking removal via the
+  // TODOs on WearWidgetPreview.kt / WearWidgetParamsProvider.kt — once
+  // androidx.glance.wear:wear-tooling-preview ships a non-empty
+  // implementation, drop the vendored copies (and re-evaluate keeping
+  // this dep — it only ships RemoteDocPreview today).
+  implementation(libs.remote.tooling.preview)
+
   // Proto DataStore + Horologist data layer for sync with phone.
   // Schema is documented in `src/main/proto/wear_sync.proto`; we
   // encode @Serializable Kotlin data classes to the same proto wire
