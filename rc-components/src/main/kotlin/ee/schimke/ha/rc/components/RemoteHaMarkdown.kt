@@ -21,6 +21,7 @@ import androidx.compose.remote.creation.compose.state.rsp
 import androidx.compose.remote.creation.compose.text.RemoteTextStyle
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 
 /**
  * HA `markdown` card — renders parsed markdown blocks inside the card
@@ -45,9 +46,11 @@ fun RemoteHaMarkdown(data: HaMarkdownData, modifier: RemoteModifier = RemoteModi
                 RemoteText(
                     text = data.title.rs,
                     color = theme.primaryText.rc,
-                    fontSize = 15.rsp,
+                    fontSize = adaptiveTitleSizeSp(data.title).rsp,
                     fontWeight = FontWeight.Medium,
                     style = RemoteTextStyle.Default,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                 )
                 RemoteBox(modifier = RemoteModifier.padding(top = 4.rdp))
             }
