@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.1.14](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.13...v0.1.14) (2026-05-09)
+
+
+### Features
+
+* add themed previews for secondary screens ([#206](https://github.com/yschimke/homeassistant-remotecompose/issues/206)) ([62063c9](https://github.com/yschimke/homeassistant-remotecompose/commit/62063c9459b338d46b93d1c4e7b3f5e5b1123cef))
+
+
+### Bug Fixes
+
+* align discovery/login surfaces with app theme ([#202](https://github.com/yschimke/homeassistant-remotecompose/issues/202)) ([6d5efb8](https://github.com/yschimke/homeassistant-remotecompose/commit/6d5efb8d69d44440da9f160bfc9336b259043024))
+* wire Coil bitmap loader in app card players ([#204](https://github.com/yschimke/homeassistant-remotecompose/issues/204)) ([c4629f3](https://github.com/yschimke/homeassistant-remotecompose/commit/c4629f3eff5bde49c861156b4da071dcec735662))
+
 ## [0.1.13](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.12...v0.1.13) (2026-05-09)
 
 
