@@ -21,6 +21,7 @@ import ee.schimke.terrazzo.core.cache.OfflineCache
 import ee.schimke.terrazzo.core.di.HaSessionFactory
 import ee.schimke.terrazzo.core.di.TerrazzoGraph
 import ee.schimke.terrazzo.core.pin.PinStore
+import ee.schimke.terrazzo.core.pin.WearWidgetSlotsStore
 import ee.schimke.terrazzo.core.prefs.DarkModePref
 import ee.schimke.terrazzo.core.prefs.PreferencesStore
 import ee.schimke.terrazzo.core.session.DemoHaSession
@@ -88,6 +89,7 @@ private fun rememberPreviewGraph(): TerrazzoGraph {
             override val offlineCache: OfflineCache = OfflineCache(context)
             override val preferencesStore: PreferencesStore = PreferencesStore(context)
             override val pinStore: PinStore = PinStore(context)
+            override val wearWidgetSlotsStore: WearWidgetSlotsStore = WearWidgetSlotsStore(context)
             override val widgetStore: WidgetStore
                 get() = error("widgetStore not wired in previews")
             override val tokenVault: TokenVault

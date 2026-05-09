@@ -33,6 +33,9 @@ class TerrazzoApplication : Application() {
     val wearSync: MobileWearSyncManager by lazy {
         MobileWearSyncManager(applicationContext, syncStats)
     }
+    val wearCapabilityProbe: ee.schimke.terrazzo.wearsync.WearCapabilityProbe by lazy {
+        ee.schimke.terrazzo.wearsync.WearCapabilityProbe(applicationContext)
+    }
 
     override fun onCreate() {
         super.onCreate()
@@ -46,6 +49,7 @@ class TerrazzoApplication : Application() {
             scope = ProcessLifecycleOwner.get().lifecycleScope,
             prefs = graph.preferencesStore,
             pinStore = graph.pinStore,
+            slotsStore = graph.wearWidgetSlotsStore,
         )
     }
 

@@ -9,6 +9,7 @@ import ee.schimke.terrazzo.core.auth.HaAuthService
 import ee.schimke.terrazzo.core.auth.TokenVault
 import ee.schimke.terrazzo.core.cache.OfflineCache
 import ee.schimke.terrazzo.core.pin.PinStore
+import ee.schimke.terrazzo.core.pin.WearWidgetSlotsStore
 import ee.schimke.terrazzo.core.prefs.PreferencesStore
 import ee.schimke.terrazzo.core.session.CachedHaSession
 import ee.schimke.terrazzo.core.session.DemoHaSession
@@ -31,6 +32,7 @@ interface TerrazzoGraph {
     val authService: HaAuthService
     val widgetStore: WidgetStore
     val pinStore: PinStore
+    val wearWidgetSlotsStore: WearWidgetSlotsStore
     val preferencesStore: PreferencesStore
     val offlineCache: OfflineCache
     val sessionFactory: HaSessionFactory

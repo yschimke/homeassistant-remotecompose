@@ -26,6 +26,7 @@ fun TopBarOverflowMenu(
     onOpenSettings: () -> Unit,
     onOpenWidgets: () -> Unit,
     onOpenPinned: () -> Unit,
+    onOpenWearWidgets: (() -> Unit)?,
     onSignOut: () -> Unit,
 ) {
     var expanded by remember { mutableStateOf(false) }
@@ -48,6 +49,13 @@ fun TopBarOverflowMenu(
             text = { Text("Manage pinned") },
             onClick = { expanded = false; onOpenPinned() },
         )
+        // Hidden unless a paired Wear node has reported widget support.
+        if (onOpenWearWidgets != null) {
+            DropdownMenuItem(
+                text = { Text("Wear widgets") },
+                onClick = { expanded = false; onOpenWearWidgets() },
+            )
+        }
         DropdownMenuItem(
             text = { Text("Sign out") },
             onClick = { expanded = false; onSignOut() },

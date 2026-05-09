@@ -14,6 +14,8 @@ import ee.schimke.terrazzo.core.pin.MobilePinnedCard
 import ee.schimke.terrazzo.core.pin.MobilePinnedSection
 import ee.schimke.terrazzo.core.pin.PinStore
 import ee.schimke.terrazzo.core.pin.PinnedCardData
+import ee.schimke.terrazzo.core.pin.WearWidgetSlot
+import ee.schimke.terrazzo.core.pin.WearWidgetSlotsStore
 import ee.schimke.terrazzo.core.prefs.PreferencesStore
 import ee.schimke.terrazzo.core.session.HaSession
 import ee.schimke.terrazzo.wearsync.proto.CardSummary
@@ -30,6 +32,7 @@ import ee.schimke.terrazzo.wearsync.proto.WearLease
 import ee.schimke.terrazzo.wearsync.proto.WearSettings
 import ee.schimke.terrazzo.wearsync.proto.WearSyncPaths
 import ee.schimke.terrazzo.wearsync.proto.WearWidgetSlots
+import ee.schimke.terrazzo.wearsync.proto.WidgetSlot
 import ee.schimke.terrazzo.wearsync.proto.decodeProto
 import ee.schimke.terrazzo.wearsync.proto.encodeProto
 import kotlinx.coroutines.CoroutineScope
@@ -124,6 +127,7 @@ class MobileWearSyncManager(
         scope: CoroutineScope,
         prefs: PreferencesStore,
         pinStore: PinStore,
+        slotsStore: WearWidgetSlotsStore,
     ) {
         managerScope = scope
         messageClient.addListener(leaseListener)
@@ -160,6 +164,15 @@ class MobileWearSyncManager(
                 .collect { writeDataItem(WearSyncPaths.SECTIONS, encodeProto(it)) }
         }
 
+        // Wear-widget slots → /wear/slots. Empty assignments survive
+        // the wire so the watch can disable matching widget providers.
+        scope.launch {
+            slotsStore.slots
+                .map { it.toProto() }
+                .distinctUntilChanged()
+                .collect { writeDataItem(WearSyncPaths.SLOTS, encodeProto(it)) }
+        }
+
         // Session snapshot pump. Re-driven on every session change so the
         // demo session and live session each get their own loop. The
         // streaming-vs-batched decision now keys off the unified pin set
@@ -184,14 +197,6 @@ class MobileWearSyncManager(
         streamJob?.cancel()
     }
 
-    /**
-     * Publish the user's wear-widget slot assignments. Slots with an
-     * empty [ee.schimke.terrazzo.wearsync.proto.WidgetSlot.cardKey] tell
-     * the watch to disable the corresponding widget provider component.
-     */
-    suspend fun publishSlots(slots: WearWidgetSlots) {
-        writeDataItem(WearSyncPaths.SLOTS, encodeProto(slots))
-    }
 
     /**
      * Wear → phone path. Ephemeral message delivered if wear-side
@@ -336,6 +341,13 @@ private fun List<MobilePinnedCard>.toProto(): PinnedCardSet =
                 orderIndex = entry.orderIndex,
             )
         },
+        updatedAtMs = System.currentTimeMillis(),
+    )
+
+@JvmName("slotsToProto")
+private fun List<WearWidgetSlot>.toProto(): WearWidgetSlots =
+    WearWidgetSlots(
+        slots = this.map { WidgetSlot(slotIndex = it.slotIndex, cardKey = it.cardKey) },
         updatedAtMs = System.currentTimeMillis(),
     )
 
