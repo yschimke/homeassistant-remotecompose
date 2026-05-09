@@ -454,6 +454,11 @@ private fun ConstraintMatrix(
                                 variant = variant,
                                 card = cardConfig,
                                 profile = profile,
+                                kind = when (label) {
+                                    "tile" -> CardKind.Tile
+                                    "entities" -> CardKind.Entities
+                                    else -> CardKind.Glance
+                                },
                                 registry = registry,
                             )
                         }
@@ -468,21 +473,28 @@ private data class Variant(
     val label: String,
     /** dp, or `-1` for `fillMaxWidth()`. */
     val widthDp: Int,
-    /** dp; `null` + `!wrapHeight` falls back to the converter's `naturalHeightDp`. */
+    /** dp; `null` + `!wrapHeight` falls back to [CardKind.baselineHeightDp]. */
     val heightDp: Int?,
     /** When `true`, no height modifier — the slot tries to wrap to content. */
     val wrapHeight: Boolean,
 )
 
+private enum class CardKind(val baselineHeightDp: Int) {
+    Tile(96),
+    Entities(132),
+    Glance(118),
+}
+
 @Composable
 private fun ConstraintRow(
     variant: Variant,
     card: CardConfig,
+    kind: CardKind,
     profile: Profile,
     registry: ee.schimke.ha.rc.CardRegistry,
 ) {
     val snapshot = Fixtures.mixed
-    val natural = registry.cardHeightDp(card, snapshot)
+    val baseline = kind.baselineHeightDp
     val widthMod = if (variant.widthDp == -1) {
         Modifier.fillMaxWidth()
     } else {
@@ -492,7 +504,7 @@ private fun ConstraintRow(
         variant.wrapHeight -> widthMod to "wrap"
         variant.heightDp != null ->
             widthMod.height(variant.heightDp.dp) to "${variant.heightDp}dp"
-        else -> widthMod.height(natural.dp) to "${natural}dp"
+        else -> widthMod.height(baseline.dp) to "${baseline}dp"
     }
     Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
         Text(
@@ -504,7 +516,7 @@ private fun ConstraintRow(
         // `Modifier.fillMaxWidth()` (host fills available width).
         Row(modifier = Modifier.fillMaxWidth().border(1.dp, Color(0xFF2E7D32))) {
             CachedCardPreview(
-                cacheKey = ConstraintCacheKey(card, profile, variant),
+                cacheKey = ConstraintCacheKey(card, profile, variant, kind),
                 profile = profile,
                 modifier = slotMod.border(1.dp, Color(0xFFD32F2F)),
             ) {
@@ -522,6 +534,7 @@ private data class ConstraintCacheKey(
     val card: CardConfig,
     val profile: Profile,
     val variant: Variant,
+    val kind: CardKind,
 )
 
 private fun experimentCards(): List<Pair<String, CardConfig>> = listOf(
