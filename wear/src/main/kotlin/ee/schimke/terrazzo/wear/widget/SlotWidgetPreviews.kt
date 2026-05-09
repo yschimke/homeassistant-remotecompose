@@ -44,7 +44,7 @@ private class PreviewSlotWidget(
 }
 
 /** Assigned slot showing a sensor reading — typical case. */
-@Preview(name = "Slot widget — assigned w/ value")
+@Preview(name = "Slot widget — assigned with value")
 @Composable
 fun SlotWidgetPreview_AssignedWithValue(
     @PreviewParameter(WearWidgetParamsProvider::class) params: WearWidgetParams,
