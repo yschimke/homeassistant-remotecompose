@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.8](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.7...v0.1.8) (2026-05-08)
+
+
+### Features
+
+* **dashboard:** add collapsed-mode setting for long single-column dashboards ([#151](https://github.com/yschimke/homeassistant-remotecompose/issues/151)) ([e8356d0](https://github.com/yschimke/homeassistant-remotecompose/commit/e8356d019fd394732818e11bb75b70e0155166fe))
+
 ## [0.1.7](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.6...v0.1.7) (2026-05-08)
 
 
