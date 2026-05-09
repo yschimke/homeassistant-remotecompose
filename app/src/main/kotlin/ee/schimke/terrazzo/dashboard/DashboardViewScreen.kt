@@ -530,15 +530,18 @@ private fun SectionColumn(
     SectionGroupSurface(haTheme = haTheme, modifier = modifier) {
         section.title?.let { SectionHeading(it) }
         section.cards.forEach { card ->
-            val heightDp = remember(card, snapshot) { registry.cardHeightDp(card, snapshot) }
+            // No `height(...)` — the wrap-adaptive player (see
+            // `CachedCardPreview` / `WrapAdaptiveRemoteDocumentPlayer`)
+            // sizes itself to the document's intrinsic content height
+            // after a paint-context warmup, so the slot wraps to the
+            // card's actual rendered height instead of pinning per-card
+            // via `naturalHeightDp`.
             CardSlot(
                 card = card,
                 snapshot = snapshot,
                 registry = registry,
                 onLongPress = onLongPress,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(heightDp.dp),
+                modifier = Modifier.fillMaxWidth(),
             )
         }
     }
@@ -569,9 +572,11 @@ private fun LazyListScope.cardRows(
 
 /**
  * One LazyColumn item — either a single full-width card or a row of
- * 2..N compact cards sharing the row equally. Height pins to the
- * tallest card in the row so [RemotePreview] (which sizes to its
- * container) gets bounded constraints.
+ * 2..N compact cards sharing the row equally. The Row sizes itself to
+ * the tallest child via Compose's intrinsic measurement; each card's
+ * adaptive player wraps to its document's content size, so a row of
+ * mixed card types renders as tall as the tallest card with no
+ * per-row pinning needed.
  */
 @Composable
 private fun CardRow(
@@ -580,13 +585,8 @@ private fun CardRow(
     registry: ee.schimke.ha.rc.CardRegistry,
     onLongPress: (CardConfig) -> Unit,
 ) {
-    val rowHeightDp = remember(row, snapshot) {
-        row.cards.maxOf { registry.cardHeightDp(it, snapshot) }
-    }
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(rowHeightDp.dp),
+        modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         row.cards.forEach { card ->
@@ -595,7 +595,7 @@ private fun CardRow(
                 snapshot = snapshot,
                 registry = registry,
                 onLongPress = onLongPress,
-                modifier = Modifier.weight(1f).fillMaxWidth(),
+                modifier = Modifier.weight(1f),
             )
         }
     }

@@ -35,6 +35,7 @@ import androidx.compose.remote.creation.profile.Profile
 import androidx.compose.remote.player.compose.ExperimentalRemotePlayerApi
 import androidx.compose.remote.player.compose.RemoteComposePlayerFlags
 import androidx.compose.remote.player.compose.RemoteDocumentPlayer
+import ee.schimke.ha.rc.WrapAdaptiveRemoteDocumentPlayer
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -152,6 +153,78 @@ fun WrapContentHeightReproAlpha010() {
             )
         }
     }
+}
+
+/**
+ * Same setup as [WrapContentHeightReproAlpha010] but the player is
+ * [WrapAdaptiveRemoteDocumentPlayer], which pre-measures the
+ * captured document with a real `RemoteContext` (1×1 throwaway
+ * canvas to seed the paint context) and pins the host `Box` to the
+ * resulting intrinsic dimensions before delegating to the upstream
+ * `RemoteDocumentPlayer` at EXACTLY constraints. Result: the host
+ * slot tracks the document's intrinsic content height even when
+ * only width is constrained.
+ */
+@Preview(name = "wrap-content height fix · WrapAdaptive player",
+    widthDp = 411, heightDp = 300, showBackground = true,
+    backgroundColor = 0xFFFFFFFFL,
+)
+@OptIn(ExperimentalRemotePlayerApi::class)
+@Composable
+fun WrapContentHeightFixAlpha010() {
+    Column(modifier = Modifier.fillMaxWidth().padding(8.dp)) {
+        Text(
+            text = "fix: WrapAdaptiveRemoteDocumentPlayer (pre-measures the document)",
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.Bold,
+        )
+        Text(
+            text = "Red = host slot. Blue = document's intrinsic content height. Should coincide.",
+            style = MaterialTheme.typography.labelSmall,
+        )
+        Text(
+            text = "1) width=180, height=wrap → adaptive height",
+            style = MaterialTheme.typography.labelMedium,
+            fontWeight = FontWeight.Bold,
+        )
+        Row(modifier = Modifier.fillMaxWidth().border(1.dp, Color(0xFF2E7D32))) {
+            FixedPlayer(modifier = Modifier.width(180.dp).border(1.dp, Color(0xFFD32F2F)))
+        }
+        Text(
+            text = "2) width=fillMax, height=wrap → adaptive height",
+            style = MaterialTheme.typography.labelMedium,
+            fontWeight = FontWeight.Bold,
+        )
+        Row(modifier = Modifier.fillMaxWidth().border(1.dp, Color(0xFF2E7D32))) {
+            FixedPlayer(modifier = Modifier.fillMaxWidth().border(1.dp, Color(0xFFD32F2F)))
+        }
+    }
+}
+
+@OptIn(ExperimentalRemotePlayerApi::class)
+@Composable
+private fun FixedPlayer(modifier: Modifier) {
+    val context = LocalContext.current
+    val documentBytes =
+        remember {
+            runBlocking {
+                captureSingleRemoteDocument(context = context, profile = wrapProfile) {
+                    RemoteBox(
+                        modifier = RemoteModifier
+                            .rcFillMaxWidth()
+                            .rcBorder(1.rdp, Color(0xFF1565C0).rc, RemoteRoundedCornerShape(0.rdp)),
+                    ) {
+                        RemoteColumn(
+                            modifier = RemoteModifier.rcFillMaxWidth().rcPadding(4.rdp),
+                        ) {
+                            RemoteText(text = "Hello", modifier = RemoteModifier.rcFillMaxWidth())
+                        }
+                    }
+                }
+                    .bytes
+            }
+        }
+    WrapAdaptiveRemoteDocumentPlayer(documentBytes = documentBytes, modifier = modifier)
 }
 
 @OptIn(ExperimentalRemotePlayerApi::class)

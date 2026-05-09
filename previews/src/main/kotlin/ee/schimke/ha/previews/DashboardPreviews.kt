@@ -26,7 +26,8 @@ import ee.schimke.ha.model.Section
 import ee.schimke.ha.model.View
 import ee.schimke.ha.rc.ProvideCardRegistry
 import ee.schimke.ha.rc.RenderChild
-import ee.schimke.ha.rc.androidXExperimental
+import ee.schimke.ha.rc.CachedCardPreview
+import ee.schimke.ha.rc.androidXExperimentalWrap
 import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.enableRemoteComposeWrapContent
 import ee.schimke.ha.rc.cards.shutter.withEnhancedShutter
@@ -259,11 +260,17 @@ private fun packSections(sections: List<Section>, columnCount: Int): List<List<S
 @Composable
 private fun CardSlot(card: CardConfig, snapshot: HaSnapshot) {
     val registry = defaultRegistry().withEnhancedShutter().withGarageShutter()
-    val converter = registry.get(card.type)
-    val height = (converter?.naturalHeightDp(card, snapshot) ?: 96)
-        .coerceAtLeast(48)
-    Box(modifier = Modifier.uiFillMaxWidth().height(height.dp).padding(horizontal = 8.dp)) {
-        RemotePreview(profile = androidXExperimental) {
+    // Wrap-content via the adaptive player — slot wraps to the
+    // document's intrinsic content height. Mirrors what
+    // `DashboardViewScreen.CardSlot` does in production.
+    Box(modifier = Modifier.uiFillMaxWidth().padding(horizontal = 8.dp)) {
+        CachedCardPreview(
+            cacheKey = card,
+            profile = androidXExperimentalWrap,
+            modifier = Modifier.uiFillMaxWidth(),
+            card = card,
+            snapshot = snapshot,
+        ) {
             ProvideCardRegistry(registry) {
                 ProvideHaTheme(HaTheme.Light) {
                     RenderChild(card, snapshot, RemoteModifier.fillMaxWidth())

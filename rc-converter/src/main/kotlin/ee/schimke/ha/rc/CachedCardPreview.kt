@@ -3,15 +3,12 @@
 package ee.schimke.ha.rc
 
 import androidx.annotation.RestrictTo
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.remote.creation.compose.capture.captureSingleRemoteDocument
 import androidx.compose.remote.creation.compose.layout.RemoteComposable
 import androidx.compose.remote.creation.profile.Profile
 import androidx.compose.remote.creation.profile.RcPlatformProfiles
 import androidx.compose.remote.player.compose.ExperimentalRemotePlayerApi
 import androidx.compose.remote.player.compose.RemoteComposePlayerFlags
-import androidx.compose.remote.player.compose.RemoteDocumentPlayer
 import androidx.compose.remote.player.core.state.StateUpdater
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -19,7 +16,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalWindowInfo
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.components.HA_ACTION_NAME
@@ -120,8 +116,6 @@ fun CachedCardPreview(
                     .also { cache.put(effectiveCacheKey, it) }
         }
 
-    val coreDocument = remember(cardDocument) { cardDocument.decode() }
-    val windowInfo = LocalWindowInfo.current
     val dispatcher = LocalHaActionDispatcher.current
 
     val entityIds = remember(card) { card?.let { cardEntityIds(it) }.orEmpty() }
@@ -141,20 +135,22 @@ fun CachedCardPreview(
         }
     }
 
-    Box(modifier = modifier.fillMaxSize()) {
-        RemoteDocumentPlayer(
-            document = coreDocument,
-            documentWidth = windowInfo.containerSize.width,
-            documentHeight = windowInfo.containerSize.height,
-            modifier = Modifier.fillMaxSize(),
-            init = { player -> updaterHolder.value = player.stateUpdater },
-            onNamedAction = { name, value, _ ->
-                if (name == HA_ACTION_NAME) {
-                    decodeHaAction(value)?.let(dispatcher::dispatch)
-                }
-            },
-        )
-    }
+    // Use the wrap-adaptive player (a primed `RemoteComposePlayer`
+    // View that has had its paint context warmed up before Compose
+    // measures it). Lets `modifier` be wrap-content on the height
+    // axis without the alpha010 bug ballooning the slot to the
+    // authored canvas size; pinned EXACTLY constraints continue to
+    // dominate the inner View's measure.
+    WrapAdaptiveRemoteDocumentPlayer(
+        documentBytes = cardDocument.bytes,
+        modifier = modifier,
+        init = { player -> updaterHolder.value = player.stateUpdater },
+        onNamedAction = { name, value ->
+            if (name == HA_ACTION_NAME) {
+                decodeHaAction(value)?.let(dispatcher::dispatch)
+            }
+        },
+    )
 }
 
 /**

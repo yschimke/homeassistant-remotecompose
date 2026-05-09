@@ -163,21 +163,19 @@ fun Sizing_TightSlot_Wrap() {
     )
 }
 
-// ── width-constraint matrix ──────────────────────────────────────────
+// ── width × height constraint matrix ─────────────────────────────────
 //
 // Confirms how the player adapts to host-imposed size constraints.
-// alpha010 limitation: `wrapContentSize` on the player + a parent
-// with unbounded maxHeight does NOT shrink to the document's
-// intrinsic content — the `RemoteComposeView` falls back to its
-// authored canvas size. So the matrix below holds the height pinned
-// (to `naturalHeightDp`) and varies the width, which is the
-// dimension that *does* re-measure cleanly: the document's outer
+// Width re-measures cleanly: the document's outer
 // `RemoteBox(fillMaxWidth)` lays out its children at the host's
-// width and Compose reports the resulting bitmap accordingly. Use
-// this preview to verify width adaptation; until the wrap-content
-// path lands, end-to-end adaptive sizing needs an EXACTLY height
-// constraint somewhere up the tree (the dashboard pins
-// `naturalHeightDp` for that reason).
+// width and Compose reports the resulting bitmap accordingly.
+// Height is pinned in the matrix below for two reasons:
+//   1. EXACTLY constraints from a pinned slot are a useful baseline.
+//   2. The wrap-h-with-paint-context warmup happens inside
+//      `WrapAdaptiveRemoteDocumentPlayer` (used by
+//      `CachedCardPreview`), which is what unblocked end-to-end
+//      adaptive sizing in the dashboard. See
+//      `Sizing_WidthPinnedHeightAdaptive` for the wrap-h demo.
 
 @Preview(name = "sizing — width × height matrix · wrap profile",
     widthDp = 800, heightDp = 1300, showBackground = true,
@@ -205,7 +203,7 @@ fun Sizing_ConstraintMatrix_PaintMeasure() {
     )
 }
 
-@Preview(name = "sizing — width pinned, height adaptive (alpha010 limitation)",
+@Preview(name = "sizing — width pinned, height adaptive",
     widthDp = EXP_WIDTH, heightDp = 800, showBackground = true,
     backgroundColor = 0xFFFFFFFFL,
 )
@@ -350,7 +348,7 @@ private fun WidthOnlyDemo() {
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     Text(
-                        text = "width=180dp · height=wrap (alpha010 cannot adapt)",
+                        text = "width=180dp · height=wrap (now adapts via WrapAdaptive player)",
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold,
                     )
