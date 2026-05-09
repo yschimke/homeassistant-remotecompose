@@ -1,6 +1,6 @@
 package ee.schimke.ha.model
 
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
 

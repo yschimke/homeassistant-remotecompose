@@ -17,6 +17,7 @@ import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonPrimitive
+import kotlin.time.Instant
 
 /**
  * `logbook` card. The dashboard JSON only carries the entity ids — real
@@ -64,7 +65,7 @@ private fun entityIds(card: CardConfig): List<String> {
     }
 }
 
-private fun formatRelative(instant: kotlinx.datetime.Instant?): String {
+private fun formatRelative(instant: Instant?): String {
     if (instant == null) return ""
     return instant.toString().substringBefore('T')
 }

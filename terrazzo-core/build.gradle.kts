@@ -9,12 +9,13 @@ plugins {
 kotlin {
   jvmToolchain(libs.versions.java.get().toInt())
 
-  androidLibrary {
+  android {
     namespace = "ee.schimke.terrazzo.core"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
     // RemoteCompose widget needs API 35+; align with :app so Android
     // sources can reference the same platform APIs.
     minSdk = 35
+    withHostTest {}
   }
 
   sourceSets {
