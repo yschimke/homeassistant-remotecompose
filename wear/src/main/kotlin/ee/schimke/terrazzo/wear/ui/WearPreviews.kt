@@ -14,6 +14,8 @@ import ee.schimke.terrazzo.wearsync.proto.DashboardData
 import ee.schimke.terrazzo.wearsync.proto.EntityValue
 import ee.schimke.terrazzo.wearsync.proto.PinnedCard
 import ee.schimke.terrazzo.wearsync.proto.PinnedCardSet
+import ee.schimke.terrazzo.wearsync.proto.PinnedSection
+import ee.schimke.terrazzo.wearsync.proto.PinnedSectionSet
 import ee.schimke.terrazzo.wearsync.proto.WearSettings
 
 /**
@@ -31,6 +33,8 @@ private val PINNED_FIXTURE = PinnedCardSet(
                 title = "Living Room",
                 primaryEntityId = "sensor.living_room",
             ),
+            cardKey = "k0",
+            orderIndex = 0,
         ),
         PinnedCard(
             baseUrl = "demo://terrazzo",
@@ -39,6 +43,8 @@ private val PINNED_FIXTURE = PinnedCardSet(
                 title = "Kitchen",
                 primaryEntityId = "light.kitchen",
             ),
+            cardKey = "k1",
+            orderIndex = 2,
         ),
         PinnedCard(
             baseUrl = "demo://terrazzo",
@@ -47,6 +53,26 @@ private val PINNED_FIXTURE = PinnedCardSet(
                 title = "Front door",
                 primaryEntityId = "lock.front_door",
             ),
+            cardKey = "k2",
+            orderIndex = 3,
+        ),
+    ),
+)
+
+private val SECTIONS_FIXTURE = PinnedSectionSet(
+    sections = listOf(
+        PinnedSection(
+            baseUrl = "demo://terrazzo",
+            dashboardUrlPath = "",
+            viewPath = "view-0",
+            sectionIndex = 0,
+            title = "Climate",
+            cards = listOf(
+                CardSummary(type = "tile", title = "Living Room", primaryEntityId = "sensor.living_room"),
+                CardSummary(type = "tile", title = "Bedroom", primaryEntityId = "sensor.bedroom"),
+            ),
+            sectionKey = "s0",
+            orderIndex = 1,
         ),
     ),
 )
@@ -80,44 +106,64 @@ private val DASHBOARDS_FIXTURE = listOf(
     ),
 )
 
-@Preview(name = "Wear: home (live)", device = Devices.WEAR_OS_SMALL_ROUND, showSystemUi = true)
+@Preview(name = "Wear: top-level (live)", device = Devices.WEAR_OS_SMALL_ROUND, showSystemUi = true)
 @Composable
-fun WearHomePreview_Live() {
+fun WearTopLevelPreview_Live() {
     WearPreviewFrame {
-        WearHomeScreen(
+        WearTopLevelScreen(
             settings = WearSettings(demoMode = false, baseUrl = "https://home.assistant.io"),
             pinned = PINNED_FIXTURE,
+            sections = SECTIONS_FIXTURE,
             values = VALUES_FIXTURE,
+            onOpenSection = {},
             onBrowseDashboards = {},
             onOpenSettings = {},
         )
     }
 }
 
-@Preview(name = "Wear: home (demo)", device = Devices.WEAR_OS_SMALL_ROUND, showSystemUi = true)
+@Preview(name = "Wear: top-level (demo)", device = Devices.WEAR_OS_SMALL_ROUND, showSystemUi = true)
 @Composable
-fun WearHomePreview_Demo() {
+fun WearTopLevelPreview_Demo() {
     WearPreviewFrame {
-        WearHomeScreen(
+        WearTopLevelScreen(
             settings = WearSettings(demoMode = true, baseUrl = "demo://terrazzo"),
             pinned = PINNED_FIXTURE,
+            sections = SECTIONS_FIXTURE,
             values = VALUES_FIXTURE,
+            onOpenSection = {},
             onBrowseDashboards = {},
             onOpenSettings = {},
         )
     }
 }
 
-@Preview(name = "Wear: home (empty)", device = Devices.WEAR_OS_SMALL_ROUND, showSystemUi = true)
+@Preview(name = "Wear: top-level (empty)", device = Devices.WEAR_OS_SMALL_ROUND, showSystemUi = true)
 @Composable
-fun WearHomePreview_Empty() {
+fun WearTopLevelPreview_Empty() {
     WearPreviewFrame {
-        WearHomeScreen(
+        WearTopLevelScreen(
             settings = WearSettings(demoMode = false),
             pinned = PinnedCardSet(),
+            sections = PinnedSectionSet(),
             values = emptyMap(),
+            onOpenSection = {},
             onBrowseDashboards = {},
             onOpenSettings = {},
+        )
+    }
+}
+
+@Preview(name = "Wear: section", device = Devices.WEAR_OS_SMALL_ROUND, showSystemUi = true)
+@Composable
+fun WearSectionPreview() {
+    WearPreviewFrame {
+        WearSectionScreen(
+            section = SECTIONS_FIXTURE.sections.first(),
+            values = VALUES_FIXTURE + mapOf(
+                "sensor.bedroom" to EntityValue(state = "19.2", unit = "°C"),
+            ),
+            onBack = {},
         )
     }
 }
