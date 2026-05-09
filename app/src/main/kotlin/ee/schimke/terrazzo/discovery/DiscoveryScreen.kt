@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -46,7 +45,6 @@ fun DiscoveryScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .safeDrawingPadding()
                 .imePadding()
                 .padding(innerPadding)
                 .padding(24.dp),
