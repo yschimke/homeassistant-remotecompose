@@ -28,6 +28,7 @@ import ee.schimke.ha.rc.ProvideCardRegistry
 import ee.schimke.ha.rc.RenderChild
 import ee.schimke.ha.rc.androidXExperimental
 import ee.schimke.ha.rc.cards.defaultRegistry
+import ee.schimke.ha.rc.enableRemoteComposeWrapContent
 import ee.schimke.ha.rc.cards.shutter.withEnhancedShutter
 import ee.schimke.ha.rc.cards.shutter.withGarageShutter
 import ee.schimke.ha.rc.components.HaTheme
@@ -121,6 +122,7 @@ fun DashboardSecurityTablet() = DashboardPreview("security")
 
 @Composable
 private fun DashboardPreview(name: String) {
+    enableRemoteComposeWrapContent()
     val loaded = DashboardFixtures.load(name) ?: return
     Column(
         modifier = Modifier.uiFillMaxWidth().verticalScroll(rememberScrollState()),

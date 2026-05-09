@@ -8,6 +8,7 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import dev.zacsweers.metro.createGraphFactory
+import ee.schimke.ha.rc.enableRemoteComposeWrapContent
 import ee.schimke.terrazzo.core.di.TerrazzoGraph
 import ee.schimke.terrazzo.monitor.MonitoringService
 import ee.schimke.terrazzo.wearsync.MobileSyncStatsStore
@@ -36,6 +37,12 @@ class TerrazzoApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        // Flip the RemoteCompose player into wrap-content sizing —
+        // see enableRemoteComposeWrapContent's KDoc. Combined with the
+        // wrap-friendly profile (androidXExperimentalWrap) this lets
+        // dashboard slots wrap to each card's intrinsic content height
+        // instead of pinning per-card via naturalHeightDp.
+        enableRemoteComposeWrapContent()
         registerNotificationChannels()
         // Bind the wear sync to the application's lifecycle scope so it
         // outlives Activities (a paired watch should keep receiving

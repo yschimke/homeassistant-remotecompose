@@ -9,6 +9,8 @@ import androidx.compose.remote.creation.compose.capture.captureSingleRemoteDocum
 import androidx.compose.remote.creation.compose.layout.RemoteComposable
 import androidx.compose.remote.creation.profile.Profile
 import androidx.compose.remote.creation.profile.RcPlatformProfiles
+import androidx.compose.remote.player.compose.ExperimentalRemotePlayerApi
+import androidx.compose.remote.player.compose.RemoteComposePlayerFlags
 import androidx.compose.remote.player.compose.RemoteDocumentPlayer
 import androidx.compose.remote.player.core.state.StateUpdater
 import androidx.compose.runtime.Composable
@@ -56,12 +58,22 @@ import kotlinx.coroutines.runBlocking
  *      [cardSnapshotBindings] and writes only those that actually
  *      changed since the last push (`<id>.state`, `<id>.is_on`).
  *
- * Sizing follows upstream `RemotePreview`: the captured document
- * carries its natural size in the header, and the player measures via
- * `RemoteComposePlayerFlags.shouldPlayerWrapContentSize` (on by
- * default), so callers size the slot via [modifier] and don't have to
- * thread pixels through.
+ * Sizing model: the captured document is authored with the
+ * wrap-friendly measure path (FEATURE_PAINT_MEASURE = 0, baked by
+ * `androidXExperimentalWrap`). With
+ * [RemoteComposePlayerFlags.shouldPlayerWrapContentSize] flipped to
+ * `true` (done idempotently below), the player applies
+ * `wrapContentSize()` to itself — but in alpha010 the
+ * `RemoteComposeView` still lays out at its authored canvas size when
+ * the parent constraint is unbounded, so a fully wrap-content host
+ * (no `Modifier.height(...)`) does not yet shrink to the document's
+ * intrinsic content. End-to-end adaptive wrap therefore needs an
+ * EXACTLY constraint somewhere up the chain — the dashboard pins
+ * `Modifier.height(naturalHeightDp.dp)` and the player conforms to
+ * that, ignoring the document's authored canvas. See
+ * `SizingExperimentPreviews` for the matrix that documents this.
  */
+@OptIn(ExperimentalRemotePlayerApi::class)
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 @Composable
 fun CachedCardPreview(
@@ -72,6 +84,12 @@ fun CachedCardPreview(
     snapshot: HaSnapshot? = null,
     content: @RemoteComposable @Composable () -> Unit,
 ) {
+    // Flip the player into wrap-content mode — idempotent assignment.
+    // Today this only matters when the host's parent is bounded
+    // (EXACTLY); see KDoc above. Kept on so future alpha bumps that
+    // make wrap-content work for unbounded parents pick it up.
+    RemoteComposePlayerFlags.shouldPlayerWrapContentSize = true
+
     val context = LocalContext.current
     val cache = LocalCardDocumentCache.current
     val debugBorders = LocalRcDebugBorders.current
@@ -140,6 +158,13 @@ fun CachedCardPreview(
 }
 
 /**
+ * Wrapper key that distinguishes a debug-bordered render of [inner]
+ * from the plain render — same card YAML, different bytes (the
+ * wrapping `DebugRcBorderWrapper` is captured into the document).
+ */
+private data class DebugBorderedCacheKey(val inner: Any)
+
+/**
  * Push the diff between the previous push (tracked in [pushed]) and
  * the current [snapshot] for the named bindings of [entityIds] into
  * [updater]. Catches per-binding failures so a single unknown name
@@ -151,13 +176,6 @@ fun CachedCardPreview(
  * (0/1), and the player only exposes `setUserLocalInt` for that
  * channel.
  */
-/**
- * Wrapper key that distinguishes a debug-bordered render of [inner]
- * from the plain render — same card YAML, different bytes (the
- * wrapping `DebugRcBorderWrapper` is captured into the document).
- */
-private data class DebugBorderedCacheKey(val inner: Any)
-
 private fun pushSnapshotBindings(
     updater: StateUpdater,
     entityIds: Set<String>,

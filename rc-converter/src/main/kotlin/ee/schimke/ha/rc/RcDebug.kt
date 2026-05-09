@@ -10,9 +10,28 @@ import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.creation.compose.shapes.RemoteRoundedCornerShape
 import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
+import androidx.compose.remote.player.compose.RemoteComposePlayerFlags
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
+
+/**
+ * Idempotent: flips `RemoteComposePlayerFlags.shouldPlayerWrapContentSize`
+ * to `true` so any `RemoteComposeView` inside a `RemoteDocumentPlayer`
+ * wraps to the captured document's intrinsic content size instead of
+ * pinning to the modifier-driven size.
+ *
+ * Call from process-init code (`Application.onCreate()`) so production
+ * starts in wrap-content mode, and from preview entry points (which
+ * never hit the Application class) so `@Preview` rendering matches.
+ * The JVM-static field defaults to `false`; without this call the
+ * player ignores wrap-friendly profile bits and the host slot dictates
+ * size unconditionally.
+ */
+@OptIn(androidx.compose.remote.player.compose.ExperimentalRemotePlayerApi::class)
+fun enableRemoteComposeWrapContent() {
+    RemoteComposePlayerFlags.shouldPlayerWrapContentSize = true
+}
 
 /**
  * When `true`, hosts that render RemoteCompose card documents draw
