@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.12](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.11...v0.1.12) (2026-05-09)
+
+
+### Bug Fixes
+
+* escape markdown template regex ([#191](https://github.com/yschimke/homeassistant-remotecompose/issues/191)) ([7b9ebed](https://github.com/yschimke/homeassistant-remotecompose/commit/7b9ebeddd15fb40d12758564be1d5fd3144ef724))
+
 ## [0.1.11](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.10...v0.1.11) (2026-05-09)
 
 
