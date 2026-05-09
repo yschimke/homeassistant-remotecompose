@@ -27,8 +27,6 @@ fun formatState(entity: EntityState?): String {
             .setScale(2, RoundingMode.HALF_UP)
             .stripTrailingZeros()
             .toPlainString()
-            .trimEnd('0')
-            .trimEnd('.')
             .ifEmpty { "0" }
         return if (unit != null) "$normalized $unit" else normalized
     }

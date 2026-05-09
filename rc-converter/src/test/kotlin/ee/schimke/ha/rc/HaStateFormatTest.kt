@@ -47,4 +47,11 @@ class HaStateFormatTest {
 
         assertEquals("551 Mbit/s", formatState(state))
     }
+
+    @Test
+    fun keepsWholeNumberHundredsIntact() {
+        val state = EntityState("sensor.battery", "100")
+
+        assertEquals("100", formatState(state))
+    }
 }
