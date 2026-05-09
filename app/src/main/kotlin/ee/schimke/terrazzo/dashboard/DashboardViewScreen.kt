@@ -377,15 +377,17 @@ private fun LazyListScope.renderView(
         // laziness still applies across sections).
         view.sections.forEachIndexed { sectionIndex, section ->
             val sectionKey = "$viewKey-s$sectionIndex"
-            // Only sections with a title are collapsible — without a
-            // heading there's nothing to tap to re-expand them.
-            val collapsible = collapsedMode && section.title != null
+            // In collapsed mode every section must remain reachable, even
+            // when authored without an explicit title. Untitled sections
+            // get a fallback heading so users can re-expand them.
+            val collapsible = collapsedMode
             val expanded = !collapsible || expandedSectionIndex == sectionIndex
             item(key = sectionKey) {
                 SectionGroupSurface(haTheme) {
-                    if (section.title != null) {
+                    val headingTitle = section.title ?: "Section ${sectionIndex + 1}"
+                    if (collapsible || section.title != null) {
                         PinnableSectionHeading(
-                            title = section.title,
+                            title = headingTitle,
                             collapsible = collapsible,
                             expanded = expanded,
                             onClick = { onToggleSection(sectionIndex) },
