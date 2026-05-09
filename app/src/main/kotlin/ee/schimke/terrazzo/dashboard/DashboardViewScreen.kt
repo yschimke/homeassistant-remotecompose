@@ -59,7 +59,6 @@ import ee.schimke.ha.rc.LocalRcDebugBorders
 import ee.schimke.ha.rc.ProvideCardRegistry
 import ee.schimke.ha.rc.RenderChild
 import ee.schimke.ha.rc.androidXExperimentalWrap
-import ee.schimke.ha.rc.cardHeightDp
 import ee.schimke.ha.rc.cardWidthClass
 import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.cards.shutter.withEnhancedShutter
@@ -485,8 +484,9 @@ private fun SectionRow(
  * is the Grid layout policy itself, not a different cell renderer.
  *
  * Implicit row tracks default to `GridTrackSize.Auto`, so each row
- * sizes to its tallest section (cards inside still report fixed
- * heights via `cardHeightDp`).
+ * sizes to its tallest section. Cards inside a section size
+ * themselves to their document's intrinsic content height via
+ * `WrapAdaptiveRemoteDocumentPlayer` (called from `CachedCardPreview`).
  */
 @OptIn(ExperimentalGridApi::class)
 @Composable
