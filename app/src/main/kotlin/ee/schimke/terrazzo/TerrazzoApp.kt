@@ -24,6 +24,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -37,6 +38,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import ee.schimke.ha.model.CardConfig
@@ -298,6 +300,7 @@ private fun DashboardsRoot(
     }
 
     val readyDashboards = (dashboards as? DashboardListState.Ready)?.dashboards.orEmpty()
+    var connectionStatus by remember { mutableStateOf(ConnectionStatus.Connecting) }
 
     Scaffold(
         topBar = {
@@ -319,6 +322,18 @@ private fun DashboardsRoot(
                     }
                 },
                 actions = {
+                    Surface(
+                        color = connectionStatus.color.copy(alpha = 0.16f),
+                        shape = MaterialTheme.shapes.small,
+                        modifier = Modifier.padding(end = 8.dp),
+                    ) {
+                        Text(
+                            text = connectionStatus.label,
+                            color = connectionStatus.color,
+                            style = MaterialTheme.typography.labelSmall,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
+                        )
+                    }
                     TopBarOverflowMenu(
                         onOpenSettings = onOpenSettings,
                         onOpenWidgets = onOpenWidgets,
@@ -334,6 +349,11 @@ private fun DashboardsRoot(
         contentWindowInsets = WindowInsets.safeDrawing,
     ) { padding ->
         if (openedValue == DASHBOARD_UNSET) {
+            connectionStatus = when (dashboards) {
+                DashboardListState.Loading -> ConnectionStatus.Connecting
+                is DashboardListState.Error -> ConnectionStatus.Failed
+                is DashboardListState.Ready -> ConnectionStatus.Connected
+            }
             DashboardPickerScreen(
                 state = dashboards,
                 onDashboardPicked = { urlPath ->
@@ -349,6 +369,7 @@ private fun DashboardsRoot(
             DashboardViewScreen(
                 session = session,
                 urlPath = openedValue,
+                onConnectionStatusChanged = { status -> connectionStatus = status },
                 onCardLongPress = { card ->
                     // In demo mode the preview — and the installed widget —
                     // render against the current fake snapshot so values
@@ -383,6 +404,12 @@ private fun DashboardsRoot(
 
 /** Sentinel for "no dashboard opened yet". null is a valid urlPath (the default dashboard). */
 private const val DASHBOARD_UNSET = "__none__"
+
+enum class ConnectionStatus(val label: String, val color: Color) {
+    Failed("Failed", Color(0xFFD32F2F)),
+    Connecting("Connecting", Color(0xFF2E7D32)),
+    Connected("Connected", Color(0xFF1976D2)),
+}
 
 /**
  * Translate the persisted last-viewed-dashboard pref into the local
