@@ -33,6 +33,7 @@ kotlinx-datetime = "0.8.0"
 logback = "1.5.32"
 junit-jupiter-bom = "6.0.3"
 mockserver = "5.15.0"
+indriya = "2.2.3"
 
 # Preview tooling
 compose-preview-plugin = "0.10.7"
@@ -170,6 +171,7 @@ mockserver-netty = { module = "org.mock-server:mockserver-netty", version.ref = 
 mockserver-client-java = { module = "org.mock-server:mockserver-client-java", version.ref = "mockserver" }
 
 jetbrains-markdown = { module = "org.jetbrains:markdown", version.ref = "jetbrains-markdown" }
+indriya = { module = "tech.units:indriya", version.ref = "indriya" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
