@@ -49,25 +49,25 @@ import kotlinx.coroutines.runBlocking
  *      entities the card consumes (`entity:` / `entities:`, including
  *      nested cards in stack / conditional / picture-elements).
  *   2. Captures the player's [StateUpdater] via
- *      `RemoteDocumentPlayer(init = ...)`.
+ *      `WrapAdaptiveRemoteDocumentPlayer(init = ...)`.
  *   3. On every [snapshot] change, computes the bindings via
  *      [cardSnapshotBindings] and writes only those that actually
  *      changed since the last push (`<id>.state`, `<id>.is_on`).
  *
  * Sizing model: the captured document is authored with the
  * wrap-friendly measure path (FEATURE_PAINT_MEASURE = 0, baked by
- * `androidXExperimentalWrap`). With
- * [RemoteComposePlayerFlags.shouldPlayerWrapContentSize] flipped to
- * `true` (done idempotently below), the player applies
- * `wrapContentSize()` to itself — but in alpha010 the
- * `RemoteComposeView` still lays out at its authored canvas size when
- * the parent constraint is unbounded, so a fully wrap-content host
- * (no `Modifier.height(...)`) does not yet shrink to the document's
- * intrinsic content. End-to-end adaptive wrap therefore needs an
- * EXACTLY constraint somewhere up the chain — the dashboard pins
- * `Modifier.height(naturalHeightDp.dp)` and the player conforms to
- * that, ignoring the document's authored canvas. See
- * `SizingExperimentPreviews` for the matrix that documents this.
+ * `androidXExperimentalWrap`). Playback goes through
+ * [WrapAdaptiveRemoteDocumentPlayer], which warms up the
+ * `RemoteComposePlayer`'s paint context with one off-screen draw at
+ * the parent's max constraints, then re-measures. This unblocks the
+ * alpha010 wrap-h bug (the `RemoteComposeView` skips the document's
+ * measure pass until paint context is set, causing a
+ * `Modifier.fillMaxWidth()`-only host to balloon to the authored
+ * canvas height) — see
+ * https://github.com/yschimke/homeassistant-remotecompose/issues/153.
+ * Callers can therefore size the slot via [modifier] alone:
+ * `fillMaxWidth()` for adaptive height, or `Modifier.height(...) /
+ * .size(...)` for an EXACTLY constraint that pins the slot.
  */
 @OptIn(ExperimentalRemotePlayerApi::class)
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)

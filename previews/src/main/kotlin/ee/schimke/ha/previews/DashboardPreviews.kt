@@ -41,9 +41,10 @@ import ee.schimke.ha.rc.components.ProvideHaTheme
  * dashboard at mobile (411 dp wide) and tablet (800 dp wide) and look
  * at the resulting PNGs side-by-side.
  *
- * Card heights come from each converter's `naturalHeightDp(card,
- * snapshot)`, so vertical-stack / grid / sections cards size
- * themselves correctly. The whole dashboard renders inside one
+ * Card heights flow from each document's intrinsic content via
+ * `WrapAdaptiveRemoteDocumentPlayer` (used by `CachedCardPreview`), so
+ * vertical-stack / grid / sections cards size themselves to whatever
+ * they actually drew. The whole dashboard renders inside one
  * `verticalScroll` so previews longer than the canvas crop instead of
  * clipping silently.
  *

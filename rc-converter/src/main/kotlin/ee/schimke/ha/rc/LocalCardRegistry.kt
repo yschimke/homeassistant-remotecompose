@@ -53,9 +53,11 @@ fun RenderChild(
 }
 
 /**
- * Host-side lookup of a card's preferred rendered height in dp.
- * Callers pinning a container size (dashboard grid cell, widget
- * preview frame) use this instead of hand-rolling a per-type table.
+ * Host-side lookup of a card's preferred rendered height in dp. The
+ * dashboard does **not** call this — its slots size to the document's
+ * intrinsic content via `WrapAdaptiveRemoteDocumentPlayer`. The hint
+ * is consumed by hosts that need a fixed pixel size up front:
+ * Glance widget bitmap captures and the widget install preview.
  * Unknown card types fall back to the unsupported-placeholder
  * converter's height; failing that, 160.
  */
