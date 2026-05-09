@@ -30,7 +30,7 @@ dependencies {
 
   // RemoteCompose authoring + playback
   implementation(libs.remote.creation.compose)
-  implementation(libs.remote.creation.android)
+  implementation(libs.remote.creation)
   implementation(libs.remote.creation.core)
   implementation(libs.remote.core)
   implementation(libs.remote.player.core)
@@ -41,4 +41,5 @@ dependencies {
   testImplementation(libs.kotlin.test)
   testImplementation(libs.kotlin.test.junit)
   testImplementation(libs.kotlinx.coroutines.test)
+  testImplementation(libs.indriya)
 }

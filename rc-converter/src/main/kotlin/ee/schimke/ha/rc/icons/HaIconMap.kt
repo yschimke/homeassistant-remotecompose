@@ -1,6 +1,7 @@
 package ee.schimke.ha.rc.icons
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Help
 import androidx.compose.material.icons.filled.AcUnit
 import androidx.compose.material.icons.filled.Air
 import androidx.compose.material.icons.filled.Alarm
@@ -11,7 +12,6 @@ import androidx.compose.material.icons.filled.Devices
 import androidx.compose.material.icons.filled.DoorFront
 import androidx.compose.material.icons.filled.ElectricBolt
 import androidx.compose.material.icons.filled.EnergySavingsLeaf
-import androidx.compose.material.icons.filled.Help
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Lightbulb
 import androidx.compose.material.icons.filled.Lock
@@ -46,7 +46,7 @@ import kotlinx.serialization.json.jsonPrimitive
  *   1. Explicit `icon:` on the card config
  *   2. Entity's `icon` attribute
  *   3. Domain- or device-class default via [HaEntity] dispatch
- *   4. Fallback [Icons.Filled.Help]
+ *   4. Fallback [Icons.AutoMirrored.Filled.Help]
  */
 object HaIconMap {
 
@@ -54,7 +54,7 @@ object HaIconMap {
         iconOverride?.let { mdi(it)?.let { v -> return v } }
         entity?.attributes?.get("icon")?.jsonPrimitive?.content
             ?.let { mdi(it)?.let { v -> return v } }
-        val typed = entity?.toTyped() ?: return Icons.Filled.Help
+        val typed = entity?.toTyped() ?: return Icons.AutoMirrored.Filled.Help
         if (typed is HaEntity.Other) byDomain(entity.entityId)?.let { return it }
         return typed.defaultIcon()
     }
@@ -99,7 +99,7 @@ object HaIconMap {
         }
         is HaEntity.Person, is HaEntity.DeviceTracker -> Icons.Filled.Mood
         is HaEntity.Weather -> Icons.Filled.Umbrella
-        is HaEntity.Other -> Icons.Filled.Help
+        is HaEntity.Other -> Icons.AutoMirrored.Filled.Help
     }
 
     /** `mdi:thermometer` → `Icons.Filled.Thermostat`, or null when unmapped. */

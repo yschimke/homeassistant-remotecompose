@@ -28,7 +28,7 @@ dependencies {
   implementation(libs.compose.foundation)
 
   implementation(libs.remote.creation.compose)
-  implementation(libs.remote.creation.android)
+  implementation(libs.remote.creation)
   implementation(libs.remote.creation.core)
   implementation(libs.remote.core)
   implementation(libs.remote.player.core)

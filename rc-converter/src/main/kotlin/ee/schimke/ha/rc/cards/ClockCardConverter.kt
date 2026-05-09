@@ -70,7 +70,7 @@ class ClockCardConverter : CardConverter {
         } else 0
 
         val display = card.raw["display"]?.jsonPrimitive?.content ?: "primary"
-        val secondaryLabel = if (display == "primary" || display == null) {
+        val secondaryLabel = if (display == "primary") {
             clockNow(tz, previewNow).format(DateTimeFormatter.ofPattern("EEE d MMM"))
         } else null
         val size = card.raw["clock_size"]?.jsonPrimitive?.content

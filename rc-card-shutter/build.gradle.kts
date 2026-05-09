@@ -28,7 +28,7 @@ dependencies {
   implementation(libs.compose.material.icons.extended)
 
   implementation(libs.remote.creation.compose)
-  implementation(libs.remote.creation.android)
+  implementation(libs.remote.creation)
   implementation(libs.remote.creation.core)
   implementation(libs.remote.core)
   implementation(libs.remote.material3)

@@ -45,6 +45,7 @@ import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.cards.shutter.withEnhancedShutter
 import ee.schimke.ha.rc.components.HaTheme
 import ee.schimke.ha.rc.components.ProvideHaTheme
+import ee.schimke.ha.rc.image.CoilBitmapLoader
 import ee.schimke.ha.rc.widgetsProfile
 import ee.schimke.terrazzo.LocalTerrazzoGraph
 import ee.schimke.terrazzo.core.pin.MobilePinnedCard
@@ -86,6 +87,7 @@ fun WidgetInstallSheet(
     val pinStore = LocalTerrazzoGraph.current.pinStore
     val pinScope = rememberCoroutineScope()
     val registry = remember { defaultRegistry().withEnhancedShutter() }
+    val bitmapLoader = remember(context) { CoilBitmapLoader(context.applicationContext) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     var installedCount by remember { mutableIntStateOf(0) }
@@ -124,6 +126,7 @@ fun WidgetInstallSheet(
                     profile = widgetsProfile,
                     card = card,
                     snapshot = snapshot,
+                    bitmapLoader = bitmapLoader,
                     modifier = Modifier
                         .width(previewSize.widthDp.dp)
                         .height(previewSize.heightDp.dp),

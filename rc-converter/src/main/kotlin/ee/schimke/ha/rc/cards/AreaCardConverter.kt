@@ -10,11 +10,11 @@ import androidx.compose.material.icons.filled.Window
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.CardConverter
+import ee.schimke.ha.rc.formatValueWithUnit
 import ee.schimke.ha.rc.components.HaAction
 import ee.schimke.ha.rc.components.HaAreaAction
 import ee.schimke.ha.rc.components.HaAreaCardData
@@ -62,13 +62,13 @@ class AreaCardConverter : CardConverter {
                     "temperature" ->
                         HaAreaStat(
                             icon = Icons.Filled.Thermostat,
-                            label = LiveValues.state(id, "${entity.state}${unit ?: " °C"}"),
+                            label = LiveValues.state(id, formatValueWithUnit(entity.state, unit ?: "°C")),
                         )
                     "humidity",
                     "moisture" ->
                         HaAreaStat(
                             icon = Icons.Filled.WaterDrop,
-                            label = LiveValues.state(id, "${entity.state}${unit ?: " %"}"),
+                            label = LiveValues.state(id, formatValueWithUnit(entity.state, unit ?: "%")),
                         )
                     else -> null
                 }
@@ -89,7 +89,7 @@ class AreaCardConverter : CardConverter {
                     }
                 HaAreaAction(
                     entityId = id,
-                    icon = icon as ImageVector,
+                    icon = icon,
                     accent = accent,
                     initiallyActive = entity.state == "on" || entity.state == "open",
                     tapAction = HaAction.Toggle(id),

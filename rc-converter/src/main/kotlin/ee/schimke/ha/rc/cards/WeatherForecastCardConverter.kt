@@ -16,6 +16,7 @@ import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.CardConverter
+import ee.schimke.ha.rc.formatValueWithUnit
 import ee.schimke.ha.rc.components.HaWeatherDay
 import ee.schimke.ha.rc.components.HaWeatherForecastData
 import ee.schimke.ha.rc.components.LiveValues
@@ -50,7 +51,7 @@ class WeatherForecastCardConverter : CardConverter {
         val condition = entity?.state ?: "unknown"
         val tempUnit = attrs["temperature_unit"]?.jsonPrimitive?.content ?: "°"
         val temp = attrs["temperature"]?.jsonPrimitive?.content
-        val temperature = if (temp != null) "$temp$tempUnit" else "—"
+        val temperature = temp?.let { formatValueWithUnit(it, tempUnit) } ?: "—"
         val showForecast = card.raw["show_forecast"]?.jsonPrimitive?.content?.toBooleanStrictOrNull() ?: true
 
         val forecast = (attrs["forecast"] as? JsonArray)
@@ -66,8 +67,8 @@ class WeatherForecastCardConverter : CardConverter {
                     val dt = obj["datetime"]?.jsonPrimitive?.content
                     HaWeatherDay(
                         label = formatDayLabel(dt) ?: "",
-                        high = high?.let { "$it$tempUnit" } ?: "—",
-                        low = low?.let { "$it$tempUnit" } ?: "—",
+                        high = high?.let { formatValueWithUnit(it, tempUnit) } ?: "—",
+                        low = low?.let { formatValueWithUnit(it, tempUnit) } ?: "—",
                         icon = weatherIcon(cond),
                     )
                 }

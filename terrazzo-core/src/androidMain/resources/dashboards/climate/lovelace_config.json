@@ -86,7 +86,13 @@
               "grid_options": {
                 "columns": "full"
               }
-            },
+            }
+          ]
+        },
+        {
+          "type": "grid",
+          "column_span": 4,
+          "cards": [
             {
               "type": "heading",
               "heading": "📷  Live view",

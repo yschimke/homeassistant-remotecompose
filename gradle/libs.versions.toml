@@ -1,7 +1,7 @@
 [versions]
 # Toolchain
 kotlin = "2.3.21"
-agp = "9.2.1"
+agp = "9.2.0"
 java = "21"
 play-publisher = "4.0.0"
 
@@ -33,6 +33,7 @@ kotlinx-datetime = "0.8.0"
 logback = "1.5.32"
 junit-jupiter-bom = "6.0.3"
 mockserver = "5.15.0"
+indriya = "2.2.3"
 
 # Preview tooling
 compose-preview-plugin = "0.10.7"
@@ -54,8 +55,7 @@ play-services-wearable = "20.0.1"
 [libraries]
 # RemoteCompose authoring / playback
 remote-creation-compose = { module = "androidx.compose.remote:remote-creation-compose", version.ref = "remote-compose" }
-remote-creation-android = { module = "androidx.compose.remote:remote-creation-android", version.ref = "remote-compose" }
-remote-creation-jvm = { module = "androidx.compose.remote:remote-creation-jvm", version.ref = "remote-compose" }
+remote-creation = { module = "androidx.compose.remote:remote-creation", version.ref = "remote-compose" }
 remote-creation-core = { module = "androidx.compose.remote:remote-creation-core", version.ref = "remote-compose" }
 remote-core = { module = "androidx.compose.remote:remote-core", version.ref = "remote-compose" }
 remote-player-core = { module = "androidx.compose.remote:remote-player-core", version.ref = "remote-compose" }
@@ -77,6 +77,7 @@ activity-compose = { module = "androidx.activity:activity-compose", version = "1
 # Wear Compose (stub module — full app lands later)
 wear-compose-material3 = { module = "androidx.wear.compose:compose-material3", version = "1.6.1" }
 wear-compose-foundation = { module = "androidx.wear.compose:compose-foundation", version = "1.6.1" }
+wear-tooling-preview = { module = "androidx.wear:wear-tooling-preview", version = "1.0.0" }
 
 # AndroidX Glance Wear — Wear OS widget framework (alpha).
 glance-wear = { module = "androidx.glance.wear:wear", version.ref = "glance-wear" }
@@ -170,6 +171,7 @@ mockserver-netty = { module = "org.mock-server:mockserver-netty", version.ref = 
 mockserver-client-java = { module = "org.mock-server:mockserver-client-java", version.ref = "mockserver" }
 
 jetbrains-markdown = { module = "org.jetbrains:markdown", version.ref = "jetbrains-markdown" }
+indriya = { module = "tech.units:indriya", version.ref = "indriya" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

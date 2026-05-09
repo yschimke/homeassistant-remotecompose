@@ -32,6 +32,7 @@ import ee.schimke.ha.rc.CardConverter
 import ee.schimke.ha.rc.components.LiveValues
 import ee.schimke.ha.rc.components.LocalHaTheme
 import ee.schimke.ha.rc.formatState
+import ee.schimke.ha.rc.formatValueWithUnit
 import kotlinx.serialization.json.jsonPrimitive
 
 /**
@@ -313,18 +314,20 @@ private fun buildPrintStatusData(
 
     val nozzleEntity = sensor("nozzle_temperature")
     val nozzle = nozzleEntity?.state?.toFloatOrNull()
+    val nozzleUnit = nozzleEntity?.attributes?.get("unit_of_measurement")?.jsonPrimitive?.content ?: "°C"
     val nozzleTarget = sensor("target_nozzle_temperature")?.state?.toFloatOrNull()
     val nozzleLine = nozzle?.let {
-        val tgt = nozzleTarget?.let { t -> if (t > 0f) " → ${formatTemp(t)}°C" else "" } ?: ""
-        "Nozzle ${formatTemp(it)}°C$tgt"
+        val tgt = nozzleTarget?.let { t -> if (t > 0f) " → ${formatValueWithUnit(formatTemp(t), nozzleUnit)}" else "" } ?: ""
+        "Nozzle ${formatValueWithUnit(formatTemp(it), nozzleUnit)}$tgt"
     }
 
     val bedEntity = sensor("bed_temperature")
     val bed = bedEntity?.state?.toFloatOrNull()
+    val bedUnit = bedEntity?.attributes?.get("unit_of_measurement")?.jsonPrimitive?.content ?: "°C"
     val bedTarget = sensor("target_bed_temperature")?.state?.toFloatOrNull()
     val bedLine = bed?.let {
-        val tgt = bedTarget?.let { t -> if (t > 0f) " → ${formatTemp(t)}°C" else "" } ?: ""
-        "Bed ${formatTemp(it)}°C$tgt"
+        val tgt = bedTarget?.let { t -> if (t > 0f) " → ${formatValueWithUnit(formatTemp(t), bedUnit)}" else "" } ?: ""
+        "Bed ${formatValueWithUnit(formatTemp(it), bedUnit)}$tgt"
     }
 
     return ee.schimke.ha.rc.components.HaBambuPrintStatusData(
