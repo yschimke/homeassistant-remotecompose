@@ -18,6 +18,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -36,6 +37,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import ee.schimke.terrazzo.LocalTerrazzoGraph
 import ee.schimke.terrazzo.core.pin.MobilePinnedCard
+import ee.schimke.terrazzo.core.pin.SlotSize
 import ee.schimke.terrazzo.core.pin.WearWidgetSlot
 import kotlinx.coroutines.launch
 
@@ -110,6 +112,9 @@ fun WearWidgetsScreen(onBack: () -> Unit) {
                         onClear = {
                             scope.launch { slotsStore.clearSlot(slot.slotIndex) }
                         },
+                        onSizeChange = { size ->
+                            scope.launch { slotsStore.setSize(slot.slotIndex, size) }
+                        },
                     )
                 }
             }
@@ -123,38 +128,66 @@ private fun SlotRow(
     pinnedCards: List<MobilePinnedCard>,
     onAssign: (MobilePinnedCard) -> Unit,
     onClear: () -> Unit,
+    onSizeChange: (SlotSize) -> Unit,
 ) {
     val assignedCard = pinnedCards.firstOrNull { it.key == slot.cardKey }
     val pickerOpen = remember { mutableStateOf(false) }
 
     Card(modifier = Modifier.fillMaxWidth()) {
-        Row(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable(enabled = pinnedCards.isNotEmpty()) { pickerOpen.value = true }
-                .padding(start = 16.dp, end = 4.dp, top = 12.dp, bottom = 12.dp),
-            verticalAlignment = Alignment.CenterVertically,
+                .padding(top = 4.dp, bottom = 8.dp),
         ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text("Slot ${slot.slotIndex + 1}", style = MaterialTheme.typography.titleSmall)
-                Text(
-                    text = when {
-                        assignedCard != null ->
-                            assignedCard.card.title.ifEmpty { assignedCard.card.type }
-                        slot.isAssigned ->
-                            "Assigned card no longer pinned"
-                        else -> "Unassigned"
-                    },
-                    style = MaterialTheme.typography.bodySmall,
-                    color = if (assignedCard != null)
-                        MaterialTheme.colorScheme.primary
-                    else
-                        MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable(enabled = pinnedCards.isNotEmpty()) { pickerOpen.value = true }
+                    .padding(start = 16.dp, end = 4.dp, top = 8.dp, bottom = 4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text("Slot ${slot.slotIndex + 1}", style = MaterialTheme.typography.titleSmall)
+                    Text(
+                        text = when {
+                            assignedCard != null ->
+                                assignedCard.card.title.ifEmpty { assignedCard.card.type }
+                            slot.isAssigned ->
+                                "Assigned card no longer pinned"
+                            else -> "Unassigned"
+                        },
+                        style = MaterialTheme.typography.bodySmall,
+                        color = if (assignedCard != null)
+                            MaterialTheme.colorScheme.primary
+                        else
+                            MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                if (slot.isAssigned) {
+                    IconButton(onClick = onClear) {
+                        Icon(Icons.Filled.Close, contentDescription = "Clear slot")
+                    }
+                }
             }
-            if (slot.isAssigned) {
-                IconButton(onClick = onClear) {
-                    Icon(Icons.Filled.Close, contentDescription = "Clear slot")
+
+            // Size picker — Small / Large / Both. Only meaningful for
+            // assigned slots; greyed out otherwise so the layout stays
+            // stable but a tap doesn't quietly mutate state for an
+            // empty slot.
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 4.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                SlotSize.entries.forEach { option ->
+                    FilterChip(
+                        selected = slot.size == option,
+                        enabled = slot.isAssigned,
+                        onClick = { onSizeChange(option) },
+                        label = { Text(option.displayName) },
+                    )
                 }
             }
         }
@@ -175,4 +208,11 @@ private fun SlotRow(
         }
     }
 }
+
+private val SlotSize.displayName: String
+    get() = when (this) {
+        SlotSize.SmallOnly -> "Small"
+        SlotSize.LargeOnly -> "Large"
+        SlotSize.Both -> "Both"
+    }
 

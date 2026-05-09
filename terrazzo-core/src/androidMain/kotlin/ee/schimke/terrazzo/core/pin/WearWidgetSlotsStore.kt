@@ -3,6 +3,7 @@ package ee.schimke.terrazzo.core.pin
 import android.content.Context
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import dev.zacsweers.metro.Inject
@@ -45,12 +46,24 @@ class WearWidgetSlotsStore(private val context: Context) {
 
     suspend fun clearSlot(slotIndex: Int) {
         require(slotIndex in 0 until SLOT_COUNT) { "slotIndex out of range: $slotIndex" }
-        context.store.edit { it.remove(cardKeyPref(slotIndex)) }
+        context.store.edit {
+            it.remove(cardKeyPref(slotIndex))
+            it.remove(sizePref(slotIndex))
+        }
+    }
+
+    suspend fun setSize(slotIndex: Int, size: SlotSize) {
+        require(slotIndex in 0 until SLOT_COUNT) { "slotIndex out of range: $slotIndex" }
+        context.store.edit { it[sizePref(slotIndex)] = size.wireValue }
     }
 
     private fun Preferences.readSlots(): List<WearWidgetSlot> =
         (0 until SLOT_COUNT).map { i ->
-            WearWidgetSlot(slotIndex = i, cardKey = this[cardKeyPref(i)].orEmpty())
+            WearWidgetSlot(
+                slotIndex = i,
+                cardKey = this[cardKeyPref(i)].orEmpty(),
+                size = this[sizePref(i)]?.let { SlotSize.fromWire(it) } ?: SlotSize.Both,
+            )
         }
 
     companion object {
@@ -58,6 +71,7 @@ class WearWidgetSlotsStore(private val context: Context) {
 
         private val Context.store by preferencesDataStore(name = "terrazzo_wear_slots")
         private fun cardKeyPref(i: Int) = stringPreferencesKey("slot.$i.cardKey")
+        private fun sizePref(i: Int) = intPreferencesKey("slot.$i.size")
     }
 }
 
@@ -65,6 +79,26 @@ class WearWidgetSlotsStore(private val context: Context) {
 data class WearWidgetSlot(
     val slotIndex: Int,
     val cardKey: String,
+    val size: SlotSize = SlotSize.Both,
 ) {
     val isAssigned: Boolean get() = cardKey.isNotEmpty()
+}
+
+/**
+ * Per-slot Glance Wear container size choice. Wire values match
+ * `ee.schimke.terrazzo.wearsync.proto.SlotSizePref` so encoding stays
+ * symmetric across modules without an explicit mapper.
+ */
+enum class SlotSize(val wireValue: Int) {
+    SmallOnly(0),
+    LargeOnly(1),
+    Both(2);
+
+    val advertisesSmall: Boolean get() = this == SmallOnly || this == Both
+    val advertisesLarge: Boolean get() = this == LargeOnly || this == Both
+
+    companion object {
+        fun fromWire(wire: Int): SlotSize =
+            entries.firstOrNull { it.wireValue == wire } ?: Both
+    }
 }

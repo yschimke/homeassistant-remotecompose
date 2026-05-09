@@ -142,6 +142,12 @@ message WidgetSlot {
     // Empty when the slot is unconfigured. References
     // [PinnedCard.card_key].
     string card_key = 2;
+    // Which Glance Wear container sizes this slot should advertise in
+    // the watch's widget picker. Mirrors `SlotSize` on both sides.
+    //   0 = SMALL_ONLY
+    //   1 = LARGE_ONLY
+    //   2 = BOTH (default)
+    int32 size = 3;
 }
 
 // Wear → phone heartbeat (MessageClient at `/wear/lease`). Phone uses

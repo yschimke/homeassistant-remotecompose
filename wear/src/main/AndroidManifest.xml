@@ -29,85 +29,157 @@
         </activity>
 
         <!--
-          Five wear-widget slot services, one per assignable slot. All
-          start `android:enabled="false"`; WearSlotsController flips
-          each one on once the user assigns a pinned card to that slot
-          on the phone (and the runtime version actually supports
-          Glance Wear). The system widget picker only surfaces enabled
-          services, so unconfigured slots stay invisible.
+          Ten wear-widget slot services — five slots, two container
+          sizes each. Splitting per (slot, size) is what lets the
+          phone-side size picker actually filter the watch's widget
+          picker: each service's wearwidget-provider XML declares one
+          container type, and WearSlotsController flips each component
+          on or off based on the slot's size choice (Small / Large /
+          Both).
 
-          Each service binds via the Glance Wear native action plus the
-          tile-provider compat action so the same service shows up on
-          watch faces that haven't migrated to the new picker yet.
+          All start `android:enabled="false"`. Each service binds via
+          the Glance Wear native action plus the tile-provider compat
+          action so older watch faces still see the same provider.
         -->
+
+        <!-- Slot 1 -->
         <service
-            android:name=".widget.Slot0WidgetService"
+            android:name=".widget.Slot0SmallWidgetService"
             android:exported="true"
             android:enabled="false"
-            android:label="Terrazzo slot 1">
+            android:label="Terrazzo slot 1 (small)">
             <intent-filter>
                 <action android:name="androidx.glance.wear.action.BIND_WIDGET_PROVIDER" />
                 <action android:name="androidx.wear.tiles.action.BIND_TILE_PROVIDER" />
             </intent-filter>
             <meta-data
                 android:name="androidx.glance.wear.widget.provider"
-                android:resource="@xml/wear_slot_widget_provider" />
+                android:resource="@xml/wear_slot_widget_provider_small" />
+        </service>
+        <service
+            android:name=".widget.Slot0LargeWidgetService"
+            android:exported="true"
+            android:enabled="false"
+            android:label="Terrazzo slot 1 (large)">
+            <intent-filter>
+                <action android:name="androidx.glance.wear.action.BIND_WIDGET_PROVIDER" />
+                <action android:name="androidx.wear.tiles.action.BIND_TILE_PROVIDER" />
+            </intent-filter>
+            <meta-data
+                android:name="androidx.glance.wear.widget.provider"
+                android:resource="@xml/wear_slot_widget_provider_large" />
         </service>
 
+        <!-- Slot 2 -->
         <service
-            android:name=".widget.Slot1WidgetService"
+            android:name=".widget.Slot1SmallWidgetService"
             android:exported="true"
             android:enabled="false"
-            android:label="Terrazzo slot 2">
+            android:label="Terrazzo slot 2 (small)">
             <intent-filter>
                 <action android:name="androidx.glance.wear.action.BIND_WIDGET_PROVIDER" />
                 <action android:name="androidx.wear.tiles.action.BIND_TILE_PROVIDER" />
             </intent-filter>
             <meta-data
                 android:name="androidx.glance.wear.widget.provider"
-                android:resource="@xml/wear_slot_widget_provider" />
+                android:resource="@xml/wear_slot_widget_provider_small" />
+        </service>
+        <service
+            android:name=".widget.Slot1LargeWidgetService"
+            android:exported="true"
+            android:enabled="false"
+            android:label="Terrazzo slot 2 (large)">
+            <intent-filter>
+                <action android:name="androidx.glance.wear.action.BIND_WIDGET_PROVIDER" />
+                <action android:name="androidx.wear.tiles.action.BIND_TILE_PROVIDER" />
+            </intent-filter>
+            <meta-data
+                android:name="androidx.glance.wear.widget.provider"
+                android:resource="@xml/wear_slot_widget_provider_large" />
         </service>
 
+        <!-- Slot 3 -->
         <service
-            android:name=".widget.Slot2WidgetService"
+            android:name=".widget.Slot2SmallWidgetService"
             android:exported="true"
             android:enabled="false"
-            android:label="Terrazzo slot 3">
+            android:label="Terrazzo slot 3 (small)">
             <intent-filter>
                 <action android:name="androidx.glance.wear.action.BIND_WIDGET_PROVIDER" />
                 <action android:name="androidx.wear.tiles.action.BIND_TILE_PROVIDER" />
             </intent-filter>
             <meta-data
                 android:name="androidx.glance.wear.widget.provider"
-                android:resource="@xml/wear_slot_widget_provider" />
+                android:resource="@xml/wear_slot_widget_provider_small" />
+        </service>
+        <service
+            android:name=".widget.Slot2LargeWidgetService"
+            android:exported="true"
+            android:enabled="false"
+            android:label="Terrazzo slot 3 (large)">
+            <intent-filter>
+                <action android:name="androidx.glance.wear.action.BIND_WIDGET_PROVIDER" />
+                <action android:name="androidx.wear.tiles.action.BIND_TILE_PROVIDER" />
+            </intent-filter>
+            <meta-data
+                android:name="androidx.glance.wear.widget.provider"
+                android:resource="@xml/wear_slot_widget_provider_large" />
         </service>
 
+        <!-- Slot 4 -->
         <service
-            android:name=".widget.Slot3WidgetService"
+            android:name=".widget.Slot3SmallWidgetService"
             android:exported="true"
             android:enabled="false"
-            android:label="Terrazzo slot 4">
+            android:label="Terrazzo slot 4 (small)">
             <intent-filter>
                 <action android:name="androidx.glance.wear.action.BIND_WIDGET_PROVIDER" />
                 <action android:name="androidx.wear.tiles.action.BIND_TILE_PROVIDER" />
             </intent-filter>
             <meta-data
                 android:name="androidx.glance.wear.widget.provider"
-                android:resource="@xml/wear_slot_widget_provider" />
+                android:resource="@xml/wear_slot_widget_provider_small" />
+        </service>
+        <service
+            android:name=".widget.Slot3LargeWidgetService"
+            android:exported="true"
+            android:enabled="false"
+            android:label="Terrazzo slot 4 (large)">
+            <intent-filter>
+                <action android:name="androidx.glance.wear.action.BIND_WIDGET_PROVIDER" />
+                <action android:name="androidx.wear.tiles.action.BIND_TILE_PROVIDER" />
+            </intent-filter>
+            <meta-data
+                android:name="androidx.glance.wear.widget.provider"
+                android:resource="@xml/wear_slot_widget_provider_large" />
         </service>
 
+        <!-- Slot 5 -->
         <service
-            android:name=".widget.Slot4WidgetService"
+            android:name=".widget.Slot4SmallWidgetService"
             android:exported="true"
             android:enabled="false"
-            android:label="Terrazzo slot 5">
+            android:label="Terrazzo slot 5 (small)">
             <intent-filter>
                 <action android:name="androidx.glance.wear.action.BIND_WIDGET_PROVIDER" />
                 <action android:name="androidx.wear.tiles.action.BIND_TILE_PROVIDER" />
             </intent-filter>
             <meta-data
                 android:name="androidx.glance.wear.widget.provider"
-                android:resource="@xml/wear_slot_widget_provider" />
+                android:resource="@xml/wear_slot_widget_provider_small" />
+        </service>
+        <service
+            android:name=".widget.Slot4LargeWidgetService"
+            android:exported="true"
+            android:enabled="false"
+            android:label="Terrazzo slot 5 (large)">
+            <intent-filter>
+                <action android:name="androidx.glance.wear.action.BIND_WIDGET_PROVIDER" />
+                <action android:name="androidx.wear.tiles.action.BIND_TILE_PROVIDER" />
+            </intent-filter>
+            <meta-data
+                android:name="androidx.glance.wear.widget.provider"
+                android:resource="@xml/wear_slot_widget_provider_large" />
         </service>
     </application>
 </manifest>

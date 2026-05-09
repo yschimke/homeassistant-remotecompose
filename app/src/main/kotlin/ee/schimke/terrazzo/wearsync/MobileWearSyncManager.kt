@@ -347,7 +347,13 @@ private fun List<MobilePinnedCard>.toProto(): PinnedCardSet =
 @JvmName("slotsToProto")
 private fun List<WearWidgetSlot>.toProto(): WearWidgetSlots =
     WearWidgetSlots(
-        slots = this.map { WidgetSlot(slotIndex = it.slotIndex, cardKey = it.cardKey) },
+        slots = this.map {
+            WidgetSlot(
+                slotIndex = it.slotIndex,
+                cardKey = it.cardKey,
+                size = it.size.wireValue,
+            )
+        },
         updatedAtMs = System.currentTimeMillis(),
     )
 
