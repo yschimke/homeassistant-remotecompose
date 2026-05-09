@@ -2,6 +2,7 @@
 
 package ee.schimke.terrazzo.dashboard
 
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -54,6 +55,7 @@ import ee.schimke.ha.rc.CachedCardPreview
 import ee.schimke.ha.rc.CardWidthClass
 import ee.schimke.ha.rc.LocalCardCaptureEpoch
 import ee.schimke.ha.rc.LocalHaActionDispatcher
+import ee.schimke.ha.rc.LocalRcDebugBorders
 import ee.schimke.ha.rc.ProvideCardRegistry
 import ee.schimke.ha.rc.RenderChild
 import ee.schimke.ha.rc.androidXExperimentalWrap
@@ -615,6 +617,7 @@ private fun CardSlot(
     val style = LocalThemeStyle.current
     val dark = LocalIsDarkTheme.current
     val captureEpoch = LocalCardCaptureEpoch.current
+    val debugBorders = LocalRcDebugBorders.current
     // The document's paint colours are baked at capture; re-encode when
     // theme flips. Snapshot is deliberately NOT in the cache key —
     // entity values flow into the running player by named binding
@@ -636,7 +639,12 @@ private fun CardSlot(
             // longPressBeforeChild — listens on the Initial pass so it
             // fires even though the player's pointer-input consumes
             // events on the Main pass for in-document click regions.
-            .longPressBeforeChild { onLongPress(card) },
+            .longPressBeforeChild { onLongPress(card) }
+            .let {
+                if (debugBorders) {
+                    it.border(1.dp, androidx.compose.ui.graphics.Color(0xFFD32F2F))
+                } else it
+            },
     ) {
         CachedCardPreview(
             cacheKey = cacheKey,

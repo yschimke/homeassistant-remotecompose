@@ -74,20 +74,32 @@ fun CachedCardPreview(
 ) {
     val context = LocalContext.current
     val cache = LocalCardDocumentCache.current
+    val debugBorders = LocalRcDebugBorders.current
+    // Mix the debug-borders flag into the cache key so toggling it
+    // re-encodes the document (the wrapper changes the captured bytes).
+    val effectiveCacheKey =
+        remember(cacheKey, debugBorders) {
+            if (debugBorders) DebugBorderedCacheKey(cacheKey) else cacheKey
+        }
 
     val cardDocument =
-        remember(cacheKey) {
-            cache.get(cacheKey)
+        remember(effectiveCacheKey) {
+            cache.get(effectiveCacheKey)
                 ?: runBlocking {
                         val captured =
                             captureSingleRemoteDocument(
                                 context = context,
                                 profile = profile,
-                                content = content,
+                                content =
+                                    if (debugBorders) {
+                                        { DebugRcBorderWrapper { content() } }
+                                    } else {
+                                        content
+                                    },
                             )
                         CardDocument(bytes = captured.bytes, widthPx = 0, heightPx = 0)
                     }
-                    .also { cache.put(cacheKey, it) }
+                    .also { cache.put(effectiveCacheKey, it) }
         }
 
     val coreDocument = remember(cardDocument) { cardDocument.decode() }
@@ -139,6 +151,13 @@ fun CachedCardPreview(
  * (0/1), and the player only exposes `setUserLocalInt` for that
  * channel.
  */
+/**
+ * Wrapper key that distinguishes a debug-bordered render of [inner]
+ * from the plain render — same card YAML, different bytes (the
+ * wrapping `DebugRcBorderWrapper` is captured into the document).
+ */
+private data class DebugBorderedCacheKey(val inner: Any)
+
 private fun pushSnapshotBindings(
     updater: StateUpdater,
     entityIds: Set<String>,
