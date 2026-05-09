@@ -443,13 +443,14 @@ private fun SettingsScreen(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
             ) {
-                Column {
+                Column(modifier = Modifier.weight(1f)) {
                     Text("Demo mode", style = MaterialTheme.typography.titleMedium)
                     Text(
                         "Populate the app with an interesting set of fake widgets that animate.",
                         style = MaterialTheme.typography.bodySmall,
                     )
                 }
+                Spacer(Modifier.width(12.dp))
                 Switch(
                     checked = isDemo,
                     onCheckedChange = onToggleDemo,
