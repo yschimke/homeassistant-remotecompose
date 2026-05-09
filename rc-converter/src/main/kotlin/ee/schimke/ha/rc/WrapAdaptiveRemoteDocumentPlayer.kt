@@ -88,8 +88,8 @@ fun WrapAdaptiveRemoteDocumentPlayer(
                     addIdActionListener { id, value -> onNamedAction(id.toString(), value) }
                 }
             }
-        val widthDp = with(density) { view.measuredWidth.toDp() }
-        val heightDp = with(density) { view.measuredHeight.toDp() }
+        val widthDp = with(density) { clampWarmupDimension(view.measuredWidth, maxWPx).toDp() }
+        val heightDp = with(density) { clampWarmupDimension(view.measuredHeight, maxHPx).toDp() }
         Box(modifier = Modifier.size(widthDp, heightDp)) {
             AndroidView(factory = { view }, modifier = Modifier.fillMaxSize())
         }
