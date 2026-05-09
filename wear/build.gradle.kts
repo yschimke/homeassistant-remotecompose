@@ -3,13 +3,14 @@ plugins {
   alias(libs.plugins.compose.compiler)
   alias(libs.plugins.compose.preview)
   alias(libs.plugins.kotlin.serialization)
+  alias(libs.plugins.play.publisher)
 }
 
 android {
   namespace = "ee.schimke.terrazzo.wear"
   compileSdk = libs.versions.android.compileSdk.get().toInt()
   defaultConfig {
-    applicationId = "ee.schimke.terrazzo.wear"
+    applicationId = "ee.schimke.harc"
     minSdk = 30
     targetSdk = libs.versions.android.targetSdk.get().toInt()
     versionCode = 1
@@ -34,6 +35,15 @@ composePreview {
   variant.set("debug")
   sdkVersion.set(34)
   enabled.set(true)
+}
+
+play {
+  // First Wear rollout uses Play internal testing for watch-only QA.
+  track.set("internal")
+  defaultToAppBundles.set(true)
+  releaseStatus.set(com.github.triplet.gradle.androidpublisher.ReleaseStatus.DRAFT)
+  // Only publish when CI/local env provides a Play service-account json file path.
+  enabled.set(System.getenv("ANDROID_PUBLISHER_CREDENTIALS") != null)
 }
 
 dependencies {

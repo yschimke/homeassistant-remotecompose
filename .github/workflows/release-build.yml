@@ -63,7 +63,7 @@ jobs:
           HARC_KEYSTORE_PASSWORD: ${{ secrets.HARC_KEYSTORE_PASSWORD }}
           HARC_KEY_ALIAS: ${{ secrets.HARC_KEY_ALIAS }}
           HARC_KEY_PASSWORD: ${{ secrets.HARC_KEY_PASSWORD }}
-        run: ./gradlew :app:assembleRelease --stacktrace
+        run: ./gradlew :app:assembleRelease :wear:assembleRelease --stacktrace
 
       - name: Assemble release bundle (Play)
         if: env.HAS_SIGNING_KEYSTORE == 'true'
@@ -71,7 +71,7 @@ jobs:
           HARC_KEYSTORE_PASSWORD: ${{ secrets.HARC_KEYSTORE_PASSWORD }}
           HARC_KEY_ALIAS: ${{ secrets.HARC_KEY_ALIAS }}
           HARC_KEY_PASSWORD: ${{ secrets.HARC_KEY_PASSWORD }}
-        run: ./gradlew :app:bundleRelease --stacktrace
+        run: ./gradlew :app:bundleRelease :wear:bundleRelease --stacktrace
 
       - name: Publish to Play (internal track)
         id: play_publish
@@ -81,7 +81,7 @@ jobs:
           HARC_KEYSTORE_PASSWORD: ${{ secrets.HARC_KEYSTORE_PASSWORD }}
           HARC_KEY_ALIAS: ${{ secrets.HARC_KEY_ALIAS }}
           HARC_KEY_PASSWORD: ${{ secrets.HARC_KEY_PASSWORD }}
-        run: ./gradlew :app:publishBundle --stacktrace
+        run: ./gradlew :app:publishBundle :wear:publishBundle --stacktrace
 
       - name: Release publish summary
         if: always()
@@ -116,6 +116,15 @@ jobs:
           done
           for f in app/build/outputs/bundle/release/*.aab; do
             cp "$f" "_release/harc-${version}.aab"
+          done
+          for f in wear/build/outputs/apk/release/*.apk; do
+            name=$(basename "$f" .apk)
+            suffix=""
+            case "$name" in *-unsigned) suffix="-unsigned" ;; esac
+            cp "$f" "_release/harc-wear-${version}${suffix}.apk"
+          done
+          for f in wear/build/outputs/bundle/release/*.aab; do
+            cp "$f" "_release/harc-wear-${version}.aab"
           done
           ls -la _release/
           echo "version=${version}" >> "$GITHUB_OUTPUT"
