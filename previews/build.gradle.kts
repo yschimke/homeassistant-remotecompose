@@ -37,7 +37,7 @@ dependencies {
   debugImplementation(libs.compose.ui.tooling)
 
   implementation(libs.remote.creation.compose)
-  implementation(libs.remote.creation.android)
+  implementation(libs.remote.creation)
   implementation(libs.remote.creation.core)
   implementation(libs.remote.player.compose)
   implementation(libs.remote.player.view)

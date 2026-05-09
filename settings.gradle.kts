@@ -12,6 +12,16 @@ pluginManagement {
   }
 }
 
+file("local.properties")
+  .takeIf { it.isFile }
+  ?.inputStream()
+  ?.use { input -> java.util.Properties().apply { load(input) }.getProperty("androidchka.dir") }
+  ?.trim()
+  ?.takeIf { it.isNotEmpty() }
+  ?.let { androidchkaDir ->
+    apply(from = file(androidchkaDir).resolve("apply-androidchka.settings.gradle"))
+  }
+
 dependencyResolutionManagement {
   repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
   repositories {
