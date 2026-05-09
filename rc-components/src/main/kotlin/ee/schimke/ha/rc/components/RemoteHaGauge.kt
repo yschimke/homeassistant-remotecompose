@@ -105,9 +105,7 @@ fun RemoteHaGauge(
                 val h = height
                 val stroke = 10f.rf
                 val pad = (stroke / 2f.rf) + 2f.rf
-                val availableW = w - pad * 2f.rf
-                val availableH = (h - pad) * 2f.rf
-                val diameter = if (availableW < availableH) availableW else availableH
+                val diameter = (h - pad) * 2f.rf
                 val left = (w - diameter) / 2f.rf
                 val topLeft = RemoteOffset(left, pad)
                 val arcSize = RemoteSize(diameter, diameter)
