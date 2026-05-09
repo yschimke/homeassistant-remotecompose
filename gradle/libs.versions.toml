@@ -35,7 +35,7 @@ junit-jupiter-bom = "6.0.3"
 mockserver = "5.15.0"
 
 # Preview tooling
-compose-preview-plugin = "0.10.0"
+compose-preview-plugin = "0.10.7"
 tapmoc = "0.4.2"
 
 # Image loading (BitmapLoader / RemoteCompose named-bitmap resolution)
