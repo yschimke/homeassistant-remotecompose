@@ -40,6 +40,7 @@ import androidx.glance.wear.core.WidgetInstanceId
  */
 @SuppressLint("RestrictedApi")
 public class WearWidgetParamsProvider : PreviewParameterProvider<WearWidgetParams> {
+    @SuppressLint("RestrictedApi")
     override val values: Sequence<WearWidgetParams> =
         sequenceOf(
             // Large Widget Preview

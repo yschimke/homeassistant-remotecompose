@@ -16,6 +16,7 @@ import org.intellij.markdown.parser.MarkdownParser
 data class MarkdownBlock(
     val kind: Kind,
     val text: String,
+    val boundText: androidx.compose.remote.creation.compose.state.RemoteString? = null,
     val level: Int = 0,
 ) {
     enum class Kind { Heading, Paragraph, Bullet, Divider }

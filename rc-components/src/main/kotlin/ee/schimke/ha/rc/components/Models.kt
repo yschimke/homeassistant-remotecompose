@@ -117,6 +117,8 @@ data class HaPictureEntityData(
     val accent: HaToggleAccent,
     val showName: Boolean = true,
     val showState: Boolean = true,
+    val imageUrl: String? = null,
+    val frameStamp: String? = null,
     val tapAction: HaAction = HaAction.None,
 )
 

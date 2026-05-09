@@ -69,7 +69,9 @@ private val ExpandedMaxWidth = 840.dp
 @Composable
 @ReadOnlyComposable
 fun rememberLayoutConfig(): LayoutConfig {
-    val widthDp = LocalConfiguration.current.screenWidthDp
+    val configuration = LocalConfiguration.current
+    val widthDp = configuration.screenWidthDp
+    val isLandscape = configuration.screenWidthDp > configuration.screenHeightDp
     return when (WindowSize.fromWidthDp(widthDp)) {
         WindowSize.Compact -> LayoutConfig(
             windowSize = WindowSize.Compact,
@@ -83,11 +85,10 @@ fun rememberLayoutConfig(): LayoutConfig {
             compactCardsPerRow = 3,
             maxContentWidth = Dp.Unspecified,
             horizontalGutter = 16.dp,
-            // Medium is 600..839 dp — splitting 3 sections across that
-            // would give ~260 dp / col which is below the ~320 dp
-            // floor most HA cards read well at. Keep single-column;
-            // section titles still preserve structure.
-            maxSectionColumns = 1,
+            // In phone landscape we intentionally allow two section
+            // columns so responsive dashboards can make use of the
+            // extra width instead of remaining stacked.
+            maxSectionColumns = if (isLandscape) 2 else 1,
         )
         WindowSize.Expanded -> LayoutConfig(
             windowSize = WindowSize.Expanded,

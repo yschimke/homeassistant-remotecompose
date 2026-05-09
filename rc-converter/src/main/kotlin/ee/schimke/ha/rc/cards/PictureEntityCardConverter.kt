@@ -46,6 +46,8 @@ class PictureEntityCardConverter : CardConverter {
         else defaultTapActionFor(entityId)
 
         val isActive = entity?.toTyped()?.isActive
+        val imageUrl = entity?.attributes?.get("entity_picture")?.jsonPrimitive?.content
+        val frameStamp = entity?.attributes?.get("demo_frame_stamp")?.jsonPrimitive?.content
         RemoteHaPictureEntity(
             HaPictureEntityData(
                 entityId = entityId,
@@ -61,6 +63,8 @@ class PictureEntityCardConverter : CardConverter {
                     ),
                 showName = showName,
                 showState = showState,
+                imageUrl = imageUrl,
+                frameStamp = frameStamp,
                 tapAction = tapAction,
             ),
             modifier = modifier,

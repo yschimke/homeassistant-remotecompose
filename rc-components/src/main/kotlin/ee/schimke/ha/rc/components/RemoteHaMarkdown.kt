@@ -21,6 +21,7 @@ import androidx.compose.remote.creation.compose.state.rsp
 import androidx.compose.remote.creation.compose.text.RemoteTextStyle
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 
 /**
  * HA `markdown` card — renders parsed markdown blocks inside the card
@@ -45,13 +46,16 @@ fun RemoteHaMarkdown(data: HaMarkdownData, modifier: RemoteModifier = RemoteModi
                 RemoteText(
                     text = data.title.rs,
                     color = theme.primaryText.rc,
-                    fontSize = 15.rsp,
+                    fontSize = adaptiveTitleSizeSp(data.title).rsp,
                     fontWeight = FontWeight.Medium,
                     style = RemoteTextStyle.Default,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                 )
                 RemoteBox(modifier = RemoteModifier.padding(top = 4.rdp))
             }
             data.blocks.forEach { block ->
+                val text = block.boundText ?: block.text.rs
                 when (block.kind) {
                     MarkdownBlock.Kind.Heading -> {
                         val size = when (block.level) {
@@ -61,7 +65,7 @@ fun RemoteHaMarkdown(data: HaMarkdownData, modifier: RemoteModifier = RemoteModi
                             else -> 13
                         }
                         RemoteText(
-                            text = block.text.rs,
+                            text = text,
                             color = theme.primaryText.rc,
                             fontSize = size.rsp,
                             fontWeight = FontWeight.SemiBold,
@@ -70,7 +74,7 @@ fun RemoteHaMarkdown(data: HaMarkdownData, modifier: RemoteModifier = RemoteModi
                     }
                     MarkdownBlock.Kind.Bullet -> {
                         RemoteText(
-                            text = "• ${block.text}".rs,
+                            text = "• ".rs + text,
                             color = theme.primaryText.rc,
                             fontSize = 13.rsp,
                             style = RemoteTextStyle.Default,
@@ -87,7 +91,7 @@ fun RemoteHaMarkdown(data: HaMarkdownData, modifier: RemoteModifier = RemoteModi
                     }
                     MarkdownBlock.Kind.Paragraph -> {
                         RemoteText(
-                            text = block.text.rs,
+                            text = text,
                             color = theme.primaryText.rc,
                             fontSize = 13.rsp,
                             style = RemoteTextStyle.Default,
