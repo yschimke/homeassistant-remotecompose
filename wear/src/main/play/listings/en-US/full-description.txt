@@ -1,0 +1,7 @@
+Terrazzo for Wear OS puts your Home Assistant dashboard on your wrist with glanceable cards and configurable wear-widget slots.
+
+- Watch-first dashboard browsing
+- Five configurable widget slots (small/large variants)
+- Syncs pinned cards and live values from the paired phone app
+
+Designed for quick control and status checks on Wear OS devices.

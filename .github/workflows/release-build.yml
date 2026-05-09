@@ -8,12 +8,23 @@ on:
       tag:
         description: 'Tag to build (e.g. v0.1.1)'
         required: true
+        type: string
+      publish_wear:
+        description: 'Also publish :wear bundle to Play'
+        required: false
+        default: false
+        type: boolean
   workflow_call:
     inputs:
       tag:
         description: 'Tag to build (e.g. v0.1.1)'
         required: true
         type: string
+      publish_wear:
+        description: 'Also publish :wear bundle to Play'
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: read
@@ -40,6 +51,7 @@ jobs:
       TAG_NAME: ${{ github.ref_type == 'tag' && github.ref_name || inputs.tag }}
       HAS_SIGNING_KEYSTORE: ${{ secrets.SIGNING_KEYSTORE != '' }}
       HAS_PLAY_CREDENTIALS: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON != '' }}
+      PUBLISH_WEAR: ${{ inputs.publish_wear || false }}
     steps:
       - uses: actions/checkout@v6
         with:
@@ -58,12 +70,23 @@ jobs:
           printf '%s' "$SIGNING_KEYSTORE" | base64 -d > "$keystore"
           echo "HARC_KEYSTORE_PATH=$keystore" >> "$GITHUB_ENV"
 
+
+      - name: Write Play credentials file
+        if: env.HAS_PLAY_CREDENTIALS == 'true'
+        env:
+          PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+        run: |
+          set -euo pipefail
+          creds_file="${RUNNER_TEMP}/play-service-account.json"
+          printf '%s' "$PLAY_SERVICE_ACCOUNT_JSON" > "$creds_file"
+          echo "ANDROID_PUBLISHER_CREDENTIALS=$creds_file" >> "$GITHUB_ENV"
+
       - name: Assemble release APK
         env:
           HARC_KEYSTORE_PASSWORD: ${{ secrets.HARC_KEYSTORE_PASSWORD }}
           HARC_KEY_ALIAS: ${{ secrets.HARC_KEY_ALIAS }}
           HARC_KEY_PASSWORD: ${{ secrets.HARC_KEY_PASSWORD }}
-        run: ./gradlew :app:assembleRelease --stacktrace
+        run: ./gradlew :app:assembleRelease :wear:assembleRelease --stacktrace
 
       - name: Assemble release bundle (Play)
         if: env.HAS_SIGNING_KEYSTORE == 'true'
@@ -71,17 +94,25 @@ jobs:
           HARC_KEYSTORE_PASSWORD: ${{ secrets.HARC_KEYSTORE_PASSWORD }}
           HARC_KEY_ALIAS: ${{ secrets.HARC_KEY_ALIAS }}
           HARC_KEY_PASSWORD: ${{ secrets.HARC_KEY_PASSWORD }}
-        run: ./gradlew :app:bundleRelease --stacktrace
+        run: ./gradlew :app:bundleRelease :wear:bundleRelease --stacktrace
 
       - name: Publish to Play (internal track)
         id: play_publish
         if: env.HAS_PLAY_CREDENTIALS == 'true' && env.HAS_SIGNING_KEYSTORE == 'true'
         env:
-          ANDROID_PUBLISHER_CREDENTIALS: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
           HARC_KEYSTORE_PASSWORD: ${{ secrets.HARC_KEYSTORE_PASSWORD }}
           HARC_KEY_ALIAS: ${{ secrets.HARC_KEY_ALIAS }}
           HARC_KEY_PASSWORD: ${{ secrets.HARC_KEY_PASSWORD }}
         run: ./gradlew :app:publishBundle --stacktrace
+
+
+      - name: Publish Wear to Play (internal track)
+        if: env.PUBLISH_WEAR == 'true' && env.HAS_PLAY_CREDENTIALS == 'true' && env.HAS_SIGNING_KEYSTORE == 'true'
+        env:
+          HARC_KEYSTORE_PASSWORD: ${{ secrets.HARC_KEYSTORE_PASSWORD }}
+          HARC_KEY_ALIAS: ${{ secrets.HARC_KEY_ALIAS }}
+          HARC_KEY_PASSWORD: ${{ secrets.HARC_KEY_PASSWORD }}
+        run: ./gradlew :wear:publishBundle --stacktrace
 
       - name: Release publish summary
         if: always()
@@ -94,7 +125,8 @@ jobs:
             echo "- Signing keystore configured: ${HAS_SIGNING_KEYSTORE}"
             echo "- Play credentials configured: ${HAS_PLAY_CREDENTIALS}"
             if [[ "${HAS_SIGNING_KEYSTORE}" == "true" && "${HAS_PLAY_CREDENTIALS}" == "true" ]]; then
-              echo "- Play publish step: attempted (internal track)"
+              echo "- Play publish step: app attempted (internal track)"
+              echo "- Wear publish enabled: ${PUBLISH_WEAR}"
             else
               echo "- Play publish step: skipped"
               echo "- Reason: release secrets were not fully configured"
@@ -116,6 +148,15 @@ jobs:
           done
           for f in app/build/outputs/bundle/release/*.aab; do
             cp "$f" "_release/harc-${version}.aab"
+          done
+          for f in wear/build/outputs/apk/release/*.apk; do
+            name=$(basename "$f" .apk)
+            suffix=""
+            case "$name" in *-unsigned) suffix="-unsigned" ;; esac
+            cp "$f" "_release/harc-wear-${version}${suffix}.apk"
+          done
+          for f in wear/build/outputs/bundle/release/*.aab; do
+            cp "$f" "_release/harc-wear-${version}.aab"
           done
           ls -la _release/
           echo "version=${version}" >> "$GITHUB_OUTPUT"
