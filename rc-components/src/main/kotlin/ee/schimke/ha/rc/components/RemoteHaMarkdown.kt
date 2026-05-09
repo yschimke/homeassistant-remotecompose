@@ -52,6 +52,7 @@ fun RemoteHaMarkdown(data: HaMarkdownData, modifier: RemoteModifier = RemoteModi
                 RemoteBox(modifier = RemoteModifier.padding(top = 4.rdp))
             }
             data.blocks.forEach { block ->
+                val text = block.boundText ?: block.text.rs
                 when (block.kind) {
                     MarkdownBlock.Kind.Heading -> {
                         val size = when (block.level) {
@@ -61,7 +62,7 @@ fun RemoteHaMarkdown(data: HaMarkdownData, modifier: RemoteModifier = RemoteModi
                             else -> 13
                         }
                         RemoteText(
-                            text = block.text.rs,
+                            text = text,
                             color = theme.primaryText.rc,
                             fontSize = size.rsp,
                             fontWeight = FontWeight.SemiBold,
@@ -70,7 +71,7 @@ fun RemoteHaMarkdown(data: HaMarkdownData, modifier: RemoteModifier = RemoteModi
                     }
                     MarkdownBlock.Kind.Bullet -> {
                         RemoteText(
-                            text = "• ${block.text}".rs,
+                            text = "• ".rs + text,
                             color = theme.primaryText.rc,
                             fontSize = 13.rsp,
                             style = RemoteTextStyle.Default,
@@ -87,7 +88,7 @@ fun RemoteHaMarkdown(data: HaMarkdownData, modifier: RemoteModifier = RemoteModi
                     }
                     MarkdownBlock.Kind.Paragraph -> {
                         RemoteText(
-                            text = block.text.rs,
+                            text = text,
                             color = theme.primaryText.rc,
                             fontSize = 13.rsp,
                             style = RemoteTextStyle.Default,
