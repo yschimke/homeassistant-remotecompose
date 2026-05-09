@@ -50,7 +50,7 @@ import kotlinx.coroutines.runBlocking
  *   padding.
  * @param modifier The [Modifier] to be applied to the preview container.
  */
-@SuppressLint("RestrictedApiAndroidX")
+@SuppressLint("RestrictedApi")
 @Composable
 public fun WearWidgetPreview(
     widget: GlanceWearWidget,

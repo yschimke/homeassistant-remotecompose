@@ -1,3 +1,5 @@
+@file:android.annotation.SuppressLint("RestrictedApi")
+
 package ee.schimke.ha.rc.cards
 
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
@@ -55,7 +57,11 @@ class MarkdownCardConverter : CardConverter {
             tokenRegex.findAll(text).forEach { match ->
                 if (match.range.first > cursor) expr += text.substring(cursor, match.range.first)
                 val binding = bindings.firstOrNull { it.token == match.value }
-                expr += if (binding != null) LiveValues.state(binding.entityId, binding.initial) else match.value
+                expr += if (binding != null) {
+                    LiveValues.state(binding.entityId, binding.initial)
+                } else {
+                    match.value.rs
+                }
                 cursor = match.range.last + 1
             }
             if (cursor < text.length) expr += text.substring(cursor)

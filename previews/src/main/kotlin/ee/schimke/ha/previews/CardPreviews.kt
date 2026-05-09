@@ -94,7 +94,7 @@ private val PreviewNow: ZonedDateTime =
     ZonedDateTime.of(2026, 5, 5, 10, 8, 0, 0, ZoneOffset.UTC)
 
 @Composable
-private fun CardHost(theme: HaTheme, content: @Composable () -> Unit) {
+internal fun CardHost(theme: HaTheme, content: @Composable () -> Unit) {
     RemotePreview(profile = androidXExperimental) {
         CompositionLocalProvider(LocalPreviewClock provides PreviewNow) {
             ProvideCardRegistry(defaultRegistry()) {
