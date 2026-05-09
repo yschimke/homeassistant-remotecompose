@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.1.10](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.9...v0.1.10) (2026-05-09)
+
+
+### Features
+
+* **wear:** pin model + Wear nav rework + Glance Wear slot widgets ([#159](https://github.com/yschimke/homeassistant-remotecompose/issues/159)) ([48fd022](https://github.com/yschimke/homeassistant-remotecompose/commit/48fd0224841015effaba3932a8ef876ab5083361))
+
+
+### Bug Fixes
+
+* **deps:** update kotlinx ([#163](https://github.com/yschimke/homeassistant-remotecompose/issues/163)) ([fa20c1d](https://github.com/yschimke/homeassistant-remotecompose/commit/fa20c1de61f5fc928b260dfc0b532420ea1d2d8b))
+
 ## [0.1.9](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.8...v0.1.9) (2026-05-09)
 
 
