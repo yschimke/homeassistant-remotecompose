@@ -61,6 +61,8 @@ import ee.schimke.terrazzo.wearsync.WearWidgetsScreen
 import ee.schimke.terrazzo.widget.WidgetInstallSheet
 import ee.schimke.terrazzo.widget.WidgetRefreshScheduler
 import ee.schimke.terrazzo.widget.WidgetsScreen
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import kotlinx.coroutines.launch
 
 /**
@@ -186,16 +188,19 @@ private fun UnauthenticatedScreen(
     onDemoSelected: () -> Unit,
     error: Throwable?,
 ) {
+    val snackbars = remember { SnackbarHostState() }
+    LaunchedEffect(error) {
+        val message = error?.message ?: error?.javaClass?.simpleName
+        if (!message.isNullOrBlank()) {
+            snackbars.showSnackbar("Login failed: $message")
+        }
+    }
+
     DiscoveryScreen(
         onInstancePicked = onInstancePicked,
         onDemoSelected = onDemoSelected,
+        snackbarHost = { SnackbarHost(hostState = snackbars) },
     )
-    error?.let { err ->
-        Column(Modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text("Login failed", style = MaterialTheme.typography.titleMedium)
-            Text(err.message ?: err::class.simpleName.orEmpty())
-        }
-    }
 }
 
 private enum class AppScreen { Dashboards, Settings, Widgets, Pinned, WearWidgets, SyncDiagnostics }

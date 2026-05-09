@@ -4,11 +4,12 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -36,32 +37,40 @@ import androidx.compose.ui.unit.dp
 fun DiscoveryScreen(
     onInstancePicked: (baseUrl: String) -> Unit,
     onDemoSelected: () -> Unit = {},
+    snackbarHost: @Composable () -> Unit = {},
 ) {
     var host by rememberSaveable { mutableStateOf(DEMO_HOST) }
 
-    Column(
-        modifier = Modifier.fillMaxSize().safeDrawingPadding().padding(24.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-    ) {
-        Text("Connect to Home Assistant", style = MaterialTheme.typography.headlineMedium)
-        Text(
-            "Defaulted to the integration Docker HA on the emulator-loopback " +
-                "address. Edit to point at your own instance if needed.",
-            style = MaterialTheme.typography.bodyMedium,
-        )
-        OutlinedTextField(
-            value = host,
-            onValueChange = { host = it },
-            label = { Text("Base URL") },
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true,
-        )
-        Button(
-            onClick = { onInstancePicked(host.trim().removeSuffix("/")) },
-            enabled = host.isNotBlank(),
-        ) { Text("Connect") }
-        TextButton(onClick = onDemoSelected) {
-            Text("Try demo mode (no login)")
+    Scaffold(snackbarHost = snackbarHost) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .imePadding()
+                .padding(innerPadding)
+                .padding(24.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            Text("Connect to Home Assistant", style = MaterialTheme.typography.headlineMedium)
+            Text(
+                "Defaulted to the integration Docker HA on the emulator-loopback " +
+                    "address. Edit to point at your own instance if needed.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            OutlinedTextField(
+                value = host,
+                onValueChange = { host = it },
+                label = { Text("Base URL") },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+            )
+            Button(
+                onClick = { onInstancePicked(host.trim().removeSuffix("/")) },
+                enabled = host.isNotBlank(),
+            ) { Text("Connect") }
+            TextButton(onClick = onDemoSelected) {
+                Text("Try demo mode (no login)")
+            }
         }
     }
 }
