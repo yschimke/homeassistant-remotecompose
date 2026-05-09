@@ -24,6 +24,7 @@ import ee.schimke.terrazzo.wear.data.WearPrefs
 import ee.schimke.terrazzo.wear.sync.WearLeaseController
 import ee.schimke.terrazzo.wear.sync.WearSlotsController
 import ee.schimke.terrazzo.wear.sync.WearSyncRepository
+import ee.schimke.terrazzo.wear.widget.WearSlotPreviewCapturer
 import ee.schimke.terrazzo.wear.ui.WearDashboardScreen
 import ee.schimke.terrazzo.wear.ui.WearDashboardsScreen
 import ee.schimke.terrazzo.wear.ui.WearSectionScreen
@@ -63,6 +64,17 @@ class WearMainActivity : ComponentActivity() {
         // WearWidgetSlotsStore.
         slotsController = WearSlotsController(applicationContext, lifecycleScope, repo)
         slotsController.start()
+        // Off-by-default preview capture exerciser. Reads
+        // WearPrefs.previewCaptureEnabled; while off the controller
+        // never touches the virtual-display path. Flip on locally to
+        // smoke-test runtime PNG generation for the eventual picker
+        // override hook.
+        WearSlotPreviewCapturer(
+            application = application,
+            scope = lifecycleScope,
+            prefs = WearPrefs(applicationContext),
+            slotsFlow = repo.slots,
+        ).start()
 
         setContent { WearApp(repo) }
     }

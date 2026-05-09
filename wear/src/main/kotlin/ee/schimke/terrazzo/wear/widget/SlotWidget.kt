@@ -17,9 +17,15 @@ import androidx.glance.wear.core.WearWidgetParams
 import ee.schimke.terrazzo.wear.sync.WearOfflineStore
 
 /**
- * Per-slot wear widget. Five concrete subclasses ([Slot0Widget] …
- * [Slot4Widget]); each one binds a fixed `slotIndex` and reads the
- * matching slot from disk at render time.
+ * Per-slot wear widget. Ten concrete subclasses ([Slot0SmallWidget] /
+ * [Slot0LargeWidget] … [Slot4SmallWidget] / [Slot4LargeWidget]); each
+ * binds a fixed `slotIndex` and reads the matching slot from disk at
+ * render time. The size dimension only exists in the manifest /
+ * service split — both small and large widgets for the same slot
+ * share their `cardKey` and therefore render the same content; the
+ * Glance Wear lib hands us [WearWidgetParams.containerType] so we
+ * could specialise per size, but the v1 layout is identical for
+ * either container.
  *
  * Render path:
  *   1. [WearOfflineStore.readSlots] — find this slot's `cardKey`.
@@ -40,7 +46,7 @@ import ee.schimke.terrazzo.wear.sync.WearOfflineStore
  * picker can surface them, but the fallback keeps a transient race
  * from showing an empty card.
  */
-abstract class SlotWidget(private val slotIndex: Int) : GlanceWearWidget() {
+abstract class SlotWidget(internal val slotIndex: Int) : GlanceWearWidget() {
 
     override suspend fun provideWidgetData(
         context: Context,
@@ -74,7 +80,7 @@ abstract class SlotWidget(private val slotIndex: Int) : GlanceWearWidget() {
 }
 
 @Composable
-private fun SlotContent(title: String, state: String) {
+internal fun SlotContent(title: String, state: String) {
     RemoteColumn(modifier = RemoteModifier.fillMaxWidth()) {
         RemoteText(text = title)
         if (state.isNotEmpty()) {
@@ -83,41 +89,81 @@ private fun SlotContent(title: String, state: String) {
     }
 }
 
-class Slot0Widget : SlotWidget(slotIndex = 0)
+// One concrete widget per (slot, size) pair. The widget classes
+// themselves don't read the size — both Small and Large for slot N
+// resolve the same row from the offline store. The split exists so
+// the manifest can advertise distinct container types per service,
+// which is what the system widget picker filters on.
 
-class Slot1Widget : SlotWidget(slotIndex = 1)
+class Slot0SmallWidget : SlotWidget(slotIndex = 0)
 
-class Slot2Widget : SlotWidget(slotIndex = 2)
+class Slot0LargeWidget : SlotWidget(slotIndex = 0)
 
-class Slot3Widget : SlotWidget(slotIndex = 3)
+class Slot1SmallWidget : SlotWidget(slotIndex = 1)
 
-class Slot4Widget : SlotWidget(slotIndex = 4)
+class Slot1LargeWidget : SlotWidget(slotIndex = 1)
+
+class Slot2SmallWidget : SlotWidget(slotIndex = 2)
+
+class Slot2LargeWidget : SlotWidget(slotIndex = 2)
+
+class Slot3SmallWidget : SlotWidget(slotIndex = 3)
+
+class Slot3LargeWidget : SlotWidget(slotIndex = 3)
+
+class Slot4SmallWidget : SlotWidget(slotIndex = 4)
+
+class Slot4LargeWidget : SlotWidget(slotIndex = 4)
 
 /**
- * One [GlanceWearWidgetService] per slot. The system binds these via
- * `androidx.glance.wear.action.BIND_WIDGET_PROVIDER` (or the legacy
- * `androidx.wear.tiles.action.BIND_TILE_PROVIDER` for tile-compat
- * surfaces). The `widget` property exposed by
- * [GlanceWearWidgetService] (synthesised from its Java
- * `getWidget()` accessor) returns a stable instance per service;
- * the framework pings it whenever the system needs a fresh frame.
+ * One [GlanceWearWidgetService] per (slot, size) pair. The system
+ * binds these via `androidx.glance.wear.action.BIND_WIDGET_PROVIDER`
+ * (or the legacy `androidx.wear.tiles.action.BIND_TILE_PROVIDER` for
+ * tile-compat surfaces). The `widget` property exposed by
+ * [GlanceWearWidgetService] (synthesised from its Java `getWidget()`
+ * accessor) returns a stable instance per service.
+ *
+ * Per-size manifest entries point at distinct
+ * `wearwidget-provider` XML descriptors (`@xml/wear_slot_widget_provider_small`
+ * vs `@xml/wear_slot_widget_provider_large`) so the picker filters
+ * each service to one container type.
  */
-class Slot0WidgetService : GlanceWearWidgetService() {
-    override val widget: GlanceWearWidget = Slot0Widget()
+class Slot0SmallWidgetService : GlanceWearWidgetService() {
+    override val widget: GlanceWearWidget = Slot0SmallWidget()
 }
 
-class Slot1WidgetService : GlanceWearWidgetService() {
-    override val widget: GlanceWearWidget = Slot1Widget()
+class Slot0LargeWidgetService : GlanceWearWidgetService() {
+    override val widget: GlanceWearWidget = Slot0LargeWidget()
 }
 
-class Slot2WidgetService : GlanceWearWidgetService() {
-    override val widget: GlanceWearWidget = Slot2Widget()
+class Slot1SmallWidgetService : GlanceWearWidgetService() {
+    override val widget: GlanceWearWidget = Slot1SmallWidget()
 }
 
-class Slot3WidgetService : GlanceWearWidgetService() {
-    override val widget: GlanceWearWidget = Slot3Widget()
+class Slot1LargeWidgetService : GlanceWearWidgetService() {
+    override val widget: GlanceWearWidget = Slot1LargeWidget()
 }
 
-class Slot4WidgetService : GlanceWearWidgetService() {
-    override val widget: GlanceWearWidget = Slot4Widget()
+class Slot2SmallWidgetService : GlanceWearWidgetService() {
+    override val widget: GlanceWearWidget = Slot2SmallWidget()
+}
+
+class Slot2LargeWidgetService : GlanceWearWidgetService() {
+    override val widget: GlanceWearWidget = Slot2LargeWidget()
+}
+
+class Slot3SmallWidgetService : GlanceWearWidgetService() {
+    override val widget: GlanceWearWidget = Slot3SmallWidget()
+}
+
+class Slot3LargeWidgetService : GlanceWearWidgetService() {
+    override val widget: GlanceWearWidget = Slot3LargeWidget()
+}
+
+class Slot4SmallWidgetService : GlanceWearWidgetService() {
+    override val widget: GlanceWearWidget = Slot4SmallWidget()
+}
+
+class Slot4LargeWidgetService : GlanceWearWidgetService() {
+    override val widget: GlanceWearWidget = Slot4LargeWidget()
 }

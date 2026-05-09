@@ -144,7 +144,32 @@ data class WidgetSlot(
     val slotIndex: Int = 0,
     /** Empty when the slot is unconfigured. References [PinnedCard.cardKey]. */
     val cardKey: String = "",
+    /**
+     * Which Glance Wear container sizes this slot advertises in the
+     * watch's widget picker. Defaults to 2 ([SlotSizePref.Both]).
+     *
+     *   0 = SMALL_ONLY
+     *   1 = LARGE_ONLY
+     *   2 = BOTH
+     */
+    val size: Int = 2,
 )
+
+/**
+ * Logical mirror of [WidgetSlot.size]. Lives next to the wire model so
+ * both modules can decode the int without depending on the mobile pin
+ * store's enum.
+ */
+enum class SlotSizePref(val wireValue: Int) {
+    SmallOnly(0),
+    LargeOnly(1),
+    Both(2);
+
+    companion object {
+        fun fromWire(wire: Int): SlotSizePref =
+            entries.firstOrNull { it.wireValue == wire } ?: Both
+    }
+}
 
 /**
  * Heartbeat sent from wear → phone over MessageClient. Phone treats the

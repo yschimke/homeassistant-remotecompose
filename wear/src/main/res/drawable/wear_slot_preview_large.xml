@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Placeholder preview image for the large Glance Wear widget container.
+  Surfaces in the system widget picker until a follow-up swaps this for
+  a PNG rendered from our @Preview composables.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="112dp"
+    android:viewportWidth="200"
+    android:viewportHeight="112">
+    <path
+        android:pathData="M0,0 L200,0 L200,112 L0,112 Z"
+        android:fillColor="#1A1A1F" />
+    <path
+        android:pathData="M16,16 L184,16 L184,96 L16,96 Z"
+        android:fillColor="#2A2A33" />
+</vector>
