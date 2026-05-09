@@ -22,6 +22,7 @@ import androidx.wear.compose.material3.TimeText
 import ee.schimke.ha.rc.components.ThemeStyle
 import ee.schimke.terrazzo.wear.data.WearPrefs
 import ee.schimke.terrazzo.wear.sync.WearLeaseController
+import ee.schimke.terrazzo.wear.sync.WearSlotsController
 import ee.schimke.terrazzo.wear.sync.WearSyncRepository
 import ee.schimke.terrazzo.wear.ui.WearDashboardScreen
 import ee.schimke.terrazzo.wear.ui.WearDashboardsScreen
@@ -47,6 +48,7 @@ import kotlinx.coroutines.launch
 class WearMainActivity : ComponentActivity() {
 
     private lateinit var repo: WearSyncRepository
+    private lateinit var slotsController: WearSlotsController
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -55,6 +57,12 @@ class WearMainActivity : ComponentActivity() {
         // Lease tracker — heartbeats while activity is foreground, so
         // phone streams live deltas instead of batching to DataStore.
         lifecycle.addObserver(WearLeaseController(lifecycleScope, repo))
+        // Slot widget plumbing — advertises the wear-widgets capability
+        // when the runtime supports it, then keeps each Slot{N}WidgetService
+        // component enabled-state in lockstep with the phone-side
+        // WearWidgetSlotsStore.
+        slotsController = WearSlotsController(applicationContext, lifecycleScope, repo)
+        slotsController.start()
 
         setContent { WearApp(repo) }
     }
@@ -62,6 +70,7 @@ class WearMainActivity : ComponentActivity() {
     override fun onDestroy() {
         super.onDestroy()
         repo.stop()
+        slotsController.stop()
     }
 }
 

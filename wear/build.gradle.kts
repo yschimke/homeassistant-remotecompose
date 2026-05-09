@@ -48,6 +48,11 @@ dependencies {
   implementation(libs.wear.compose.material3)
   implementation(libs.wear.compose.foundation)
 
+  // AndroidX Glance Wear — runtime widget rendering. Pulls
+  // remote-creation-compose, lifecycle-service, etc. transitively.
+  implementation(libs.glance.wear)
+  implementation(libs.glance.wear.core)
+
   // Proto DataStore + Horologist data layer for sync with phone.
   // Schema is documented in `src/main/proto/wear_sync.proto`; we
   // encode @Serializable Kotlin data classes to the same proto wire
