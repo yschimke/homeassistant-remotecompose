@@ -5,6 +5,7 @@ package ee.schimke.terrazzo.widget
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -28,6 +29,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
@@ -89,7 +91,9 @@ fun WidgetInstallSheet(
     var installedCount by remember { mutableIntStateOf(0) }
     LaunchedEffect(Unit) { installedCount = store.count() }
 
-    val heightDp = remember(card, snapshot) { registry.cardHeightDp(card, snapshot) }
+    val previewSize = remember(card, snapshot) {
+        WidgetSizing.forPreview(registry.cardHeightDp(card, snapshot))
+    }
     val capHit = installedCount >= WidgetStore.MAX_WIDGETS
     val pinSupported = remember { installer.isSupported() }
 
@@ -112,13 +116,17 @@ fun WidgetInstallSheet(
             )
 
             Box(
-                modifier = Modifier.fillMaxWidth().height(heightDp.dp),
+                modifier = Modifier.fillMaxWidth(),
+                contentAlignment = Alignment.Center,
             ) {
                 CachedCardPreview(
                     cacheKey = WidgetPreviewCacheKey(card, HaTheme.Light, widgetsProfile),
                     profile = widgetsProfile,
                     card = card,
                     snapshot = snapshot,
+                    modifier = Modifier
+                        .width(previewSize.widthDp.dp)
+                        .height(previewSize.heightDp.dp),
                 ) {
                     ProvideCardRegistry(registry) {
                         ProvideHaTheme(HaTheme.Light) {
