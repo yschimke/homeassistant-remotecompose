@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.15](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.14...v0.1.15) (2026-05-09)
+
+
+### Bug Fixes
+
+* centralize Play Publisher plugin classpath ([#207](https://github.com/yschimke/homeassistant-remotecompose/issues/207)) ([3ec3ed9](https://github.com/yschimke/homeassistant-remotecompose/commit/3ec3ed95d551ff1c38d9d2f04998a785380d5991))
+
 ## [0.1.14](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.13...v0.1.14) (2026-05-09)
 
 
