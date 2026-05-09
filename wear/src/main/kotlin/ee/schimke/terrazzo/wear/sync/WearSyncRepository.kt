@@ -15,10 +15,12 @@ import ee.schimke.terrazzo.wearsync.proto.DashboardData
 import ee.schimke.terrazzo.wearsync.proto.EntityValue
 import ee.schimke.terrazzo.wearsync.proto.LiveValues
 import ee.schimke.terrazzo.wearsync.proto.PinnedCardSet
+import ee.schimke.terrazzo.wearsync.proto.PinnedSectionSet
 import ee.schimke.terrazzo.wearsync.proto.StreamUpdate
 import ee.schimke.terrazzo.wearsync.proto.WearLease
 import ee.schimke.terrazzo.wearsync.proto.WearSettings
 import ee.schimke.terrazzo.wearsync.proto.WearSyncPaths
+import ee.schimke.terrazzo.wearsync.proto.WearWidgetSlots
 import ee.schimke.terrazzo.wearsync.proto.decodeProto
 import ee.schimke.terrazzo.wearsync.proto.encodeProto
 import kotlinx.coroutines.CoroutineScope
@@ -33,6 +35,10 @@ import kotlinx.coroutines.launch
  *  - [settings]: cross-device flags (demo mode, base url) — sourced from
  *    the `/wear/settings` Proto DataStore entry
  *  - [pinned]: phone's pinned card set
+ *  - [sections]: phone's pinned section set (each becomes a Wear nav
+ *    destination)
+ *  - [slots]: phone's widget-slot assignments (drives which wear-widget
+ *    providers are enabled)
  *  - [dashboards]: one entry per `/wear/dashboard/<urlPath>`
  *  - [values]: latest entity values, merged from the
  *    `/wear/values` DataStore entry (cold reads) and
@@ -72,6 +78,14 @@ class WearSyncRepository(
     private val _pinned: MutableStateFlow<PinnedCardSet> =
         MutableStateFlow(offline.readPinned() ?: PinnedCardSet())
     val pinned: StateFlow<PinnedCardSet> = _pinned.asStateFlow()
+
+    private val _sections: MutableStateFlow<PinnedSectionSet> =
+        MutableStateFlow(offline.readSections() ?: PinnedSectionSet())
+    val sections: StateFlow<PinnedSectionSet> = _sections.asStateFlow()
+
+    private val _slots: MutableStateFlow<WearWidgetSlots> =
+        MutableStateFlow(offline.readSlots() ?: WearWidgetSlots())
+    val slots: StateFlow<WearWidgetSlots> = _slots.asStateFlow()
 
     private val _dashboards: MutableStateFlow<List<DashboardData>> =
         MutableStateFlow(offline.readAllDashboards().sortedBy { it.title })
@@ -158,6 +172,16 @@ class WearSyncRepository(
                 decodeProto<PinnedCardSet>(bytes)?.let {
                     _pinned.value = it
                     offline.writePinned(it)
+                }
+            path == WearSyncPaths.SECTIONS ->
+                decodeProto<PinnedSectionSet>(bytes)?.let {
+                    _sections.value = it
+                    offline.writeSections(it)
+                }
+            path == WearSyncPaths.SLOTS ->
+                decodeProto<WearWidgetSlots>(bytes)?.let {
+                    _slots.value = it
+                    offline.writeSlots(it)
                 }
             path == WearSyncPaths.VALUES ->
                 decodeProto<LiveValues>(bytes)?.let { live ->

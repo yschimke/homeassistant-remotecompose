@@ -20,10 +20,12 @@ import ee.schimke.terrazzo.wearsync.proto.EntityValue
 import ee.schimke.terrazzo.wearsync.proto.LiveValues
 import ee.schimke.terrazzo.wearsync.proto.PinnedCard
 import ee.schimke.terrazzo.wearsync.proto.PinnedCardSet
+import ee.schimke.terrazzo.wearsync.proto.PinnedSectionSet
 import ee.schimke.terrazzo.wearsync.proto.StreamUpdate
 import ee.schimke.terrazzo.wearsync.proto.WearLease
 import ee.schimke.terrazzo.wearsync.proto.WearSettings
 import ee.schimke.terrazzo.wearsync.proto.WearSyncPaths
+import ee.schimke.terrazzo.wearsync.proto.WearWidgetSlots
 import ee.schimke.terrazzo.wearsync.proto.decodeProto
 import ee.schimke.terrazzo.wearsync.proto.encodeProto
 import kotlinx.coroutines.CoroutineScope
@@ -170,6 +172,24 @@ class MobileWearSyncManager(
     fun stop() {
         runCatching { messageClient.removeListener(leaseListener) }
         streamJob?.cancel()
+    }
+
+    /**
+     * Publish the user's pinned-section set to the watch. Called by the
+     * mobile pin store whenever the section pins change. Safe to call
+     * before any wear node is connected — DataItem writes are queued.
+     */
+    suspend fun publishSections(set: PinnedSectionSet) {
+        writeDataItem(WearSyncPaths.SECTIONS, encodeProto(set))
+    }
+
+    /**
+     * Publish the user's wear-widget slot assignments. Slots with an
+     * empty [ee.schimke.terrazzo.wearsync.proto.WidgetSlot.cardKey] tell
+     * the watch to disable the corresponding widget provider component.
+     */
+    suspend fun publishSlots(slots: WearWidgetSlots) {
+        writeDataItem(WearSyncPaths.SLOTS, encodeProto(slots))
     }
 
     /**

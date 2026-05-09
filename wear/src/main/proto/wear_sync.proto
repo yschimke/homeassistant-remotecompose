@@ -4,7 +4,9 @@
 //
 // Path conventions (mirrored in WearSyncPaths.kt):
 //   /wear/settings              — WearSettings (phone → wear; demo flag, baseUrl)
-//   /wear/pinned                — PinnedCardSet (phone → wear; mobile widget list)
+//   /wear/pinned                — PinnedCardSet (phone → wear; user-pinned cards)
+//   /wear/sections              — PinnedSectionSet (phone → wear; user-pinned sections)
+//   /wear/slots                 — WearWidgetSlots (phone → wear; 5 widget slot assignments)
 //   /wear/values                — LiveValues (phone → wear; current entity values)
 //   /wear/dashboard/<urlPath>   — DashboardData (phone → wear; one entry per dashboard)
 //   /wear/lease   (MessageClient) — WearLease (wear → phone; foreground heartbeat)
@@ -76,9 +78,9 @@ message EntityDelta {
     EntityValue value = 2;
 }
 
-// Pinned-cards mirror of phone's WidgetStore. Wear shows these as the
-// default home screen so the watch surfaces what the user has already
-// curated.
+// Pinned cards curated by the user on mobile. Surfaced as top-level
+// destinations on Wear's nav (alongside pinned sections), and the source
+// of truth for [WearWidgetSlots] assignments.
 message PinnedCardSet {
     repeated PinnedCard cards = 1;
     int64 updated_at_ms = 2;
@@ -87,6 +89,59 @@ message PinnedCardSet {
 message PinnedCard {
     string base_url = 1;
     CardSummary card = 2;
+    // Stable identifier chosen at pin time. Survives re-pin / reorder
+    // and is the value referenced by [WidgetSlot.card_key]. Mobile is
+    // responsible for issuing keys (e.g. UUID or
+    // baseUrl|dashboard|view|index).
+    string card_key = 3;
+    // Position within the unified Wear top-level ordering (sections +
+    // cards interleaved). Lower values render first. Ties broken by
+    // card_key.
+    int32 order_index = 4;
+}
+
+// User-pinned sections from the mobile dashboard view. Each becomes
+// a separate Wear nav destination that lists the section's cards.
+message PinnedSectionSet {
+    repeated PinnedSection sections = 1;
+    int64 updated_at_ms = 2;
+}
+
+message PinnedSection {
+    string base_url = 1;
+    string dashboard_url_path = 2;
+    // HA view path within the dashboard (a dashboard may contain
+    // multiple views; sections live inside one of them).
+    string view_path = 3;
+    // Index of the section within the view's `sections` list. Sections
+    // have no inherent stable id in HA's config so position is the key;
+    // mobile must republish if the user reorders sections in HA.
+    int32 section_index = 4;
+    string title = 5;
+    repeated CardSummary cards = 6;
+    // Stable identifier chosen at pin time (analogous to
+    // [PinnedCard.card_key]). Survives reorder.
+    string section_key = 7;
+    // Position within the unified Wear top-level ordering.
+    int32 order_index = 8;
+}
+
+// 5 wear-widget slots assigned by the user on mobile. Each slot points
+// at a [PinnedCard] by its [PinnedCard.card_key]; an empty card_key
+// means the slot is unconfigured and the corresponding wear-widget
+// provider should be disabled (so the system widget picker hides it).
+message WearWidgetSlots {
+    repeated WidgetSlot slots = 1;
+    int64 updated_at_ms = 2;
+}
+
+message WidgetSlot {
+    // 0..4. Stable per slot — slot index is what the wear-side widget
+    // provider keys off (Slot0WidgetProvider … Slot4WidgetProvider).
+    int32 slot_index = 1;
+    // Empty when the slot is unconfigured. References
+    // [PinnedCard.card_key].
+    string card_key = 2;
 }
 
 // Wear → phone heartbeat (MessageClient at `/wear/lease`). Phone uses

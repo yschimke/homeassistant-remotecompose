@@ -19,6 +19,8 @@ import kotlinx.serialization.Serializable
  *   - DataClient:
  *     - `/wear/settings`            — [WearSettings]
  *     - `/wear/pinned`              — [PinnedCardSet]
+ *     - `/wear/sections`            — [PinnedSectionSet]
+ *     - `/wear/slots`               — [WearWidgetSlots]
  *     - `/wear/values`              — [LiveValues]
  *     - `/wear/dashboard/<urlPath>` — [DashboardData]
  *   - MessageClient (ephemeral):
@@ -80,7 +82,11 @@ data class EntityDelta(
     val value: EntityValue = EntityValue(),
 )
 
-/** Mirror of phone's WidgetStore — drives wear's home screen. */
+/**
+ * User-curated pinned cards. Top-level destinations on Wear and the
+ * source of truth for [WearWidgetSlots] assignments (slots reference
+ * cards by [PinnedCard.cardKey]).
+ */
 @Serializable
 data class PinnedCardSet(
     val cards: List<PinnedCard> = emptyList(),
@@ -91,6 +97,53 @@ data class PinnedCardSet(
 data class PinnedCard(
     val baseUrl: String = "",
     val card: CardSummary = CardSummary(),
+    /** Stable id chosen at pin time; referenced by [WidgetSlot.cardKey]. */
+    val cardKey: String = "",
+    /** Position in the unified Wear top-level ordering. */
+    val orderIndex: Int = 0,
+)
+
+/** User-pinned dashboard sections, each becomes a Wear nav destination. */
+@Serializable
+data class PinnedSectionSet(
+    val sections: List<PinnedSection> = emptyList(),
+    val updatedAtMs: Long = 0L,
+)
+
+@Serializable
+data class PinnedSection(
+    val baseUrl: String = "",
+    val dashboardUrlPath: String = "",
+    val viewPath: String = "",
+    /** Position-keyed; HA sections have no inherent stable id. */
+    val sectionIndex: Int = 0,
+    val title: String = "",
+    val cards: List<CardSummary> = emptyList(),
+    /** Stable id chosen at pin time. */
+    val sectionKey: String = "",
+    /** Position in the unified Wear top-level ordering. */
+    val orderIndex: Int = 0,
+)
+
+/**
+ * Mobile-assigned widget slot map. Wear declares 5 widget providers
+ * (Slot0 … Slot4); each [WidgetSlot] points its slot at a pinned card
+ * via [PinnedCard.cardKey]. An unassigned slot (`cardKey == ""`)
+ * disables the corresponding provider on the wear side so it doesn't
+ * appear in the system widget picker.
+ */
+@Serializable
+data class WearWidgetSlots(
+    val slots: List<WidgetSlot> = emptyList(),
+    val updatedAtMs: Long = 0L,
+)
+
+@Serializable
+data class WidgetSlot(
+    /** 0..4. */
+    val slotIndex: Int = 0,
+    /** Empty when the slot is unconfigured. References [PinnedCard.cardKey]. */
+    val cardKey: String = "",
 )
 
 /**
@@ -123,10 +176,15 @@ data class SyncStats(
 object WearSyncPaths {
     const val SETTINGS: String = "/wear/settings"
     const val PINNED: String = "/wear/pinned"
+    const val SECTIONS: String = "/wear/sections"
+    const val SLOTS: String = "/wear/slots"
     const val VALUES: String = "/wear/values"
     const val DASHBOARD_PREFIX: String = "/wear/dashboard/"
     const val LEASE_MESSAGE: String = "/wear/lease"
     const val STREAM_MESSAGE: String = "/wear/stream"
+
+    /** Number of wear-widget slots. Mirrors [WearWidgetSlots] capacity. */
+    const val WIDGET_SLOT_COUNT: Int = 5
 
     /** Encode a urlPath (which may be null for HA's default dashboard) into a DataItem path. */
     fun dashboardPath(urlPath: String?): String =

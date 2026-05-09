@@ -4,7 +4,9 @@ import android.content.Context
 import ee.schimke.terrazzo.wearsync.proto.DashboardData
 import ee.schimke.terrazzo.wearsync.proto.LiveValues
 import ee.schimke.terrazzo.wearsync.proto.PinnedCardSet
+import ee.schimke.terrazzo.wearsync.proto.PinnedSectionSet
 import ee.schimke.terrazzo.wearsync.proto.WearSettings
+import ee.schimke.terrazzo.wearsync.proto.WearWidgetSlots
 import ee.schimke.terrazzo.wearsync.proto.decodeProto
 import ee.schimke.terrazzo.wearsync.proto.encodeProto
 import java.io.File
@@ -22,6 +24,8 @@ import java.io.File
  * ```
  *   settings.pb        — WearSettings
  *   pinned.pb          — PinnedCardSet
+ *   sections.pb        — PinnedSectionSet
+ *   slots.pb           — WearWidgetSlots
  *   values.pb          — LiveValues  (last full snapshot or merged stream)
  *   dashboards/<file>  — DashboardData per `urlPath`
  * ```
@@ -47,6 +51,20 @@ class WearOfflineStore(context: Context) {
 
   fun writePinned(value: PinnedCardSet) {
     File(root, "pinned.pb").atomicWriteBytes(encodeProto(value))
+  }
+
+  fun readSections(): PinnedSectionSet? =
+    File(root, "sections.pb").readBytesOrNull()?.let { decodeProto<PinnedSectionSet>(it) }
+
+  fun writeSections(value: PinnedSectionSet) {
+    File(root, "sections.pb").atomicWriteBytes(encodeProto(value))
+  }
+
+  fun readSlots(): WearWidgetSlots? =
+    File(root, "slots.pb").readBytesOrNull()?.let { decodeProto<WearWidgetSlots>(it) }
+
+  fun writeSlots(value: WearWidgetSlots) {
+    File(root, "slots.pb").atomicWriteBytes(encodeProto(value))
   }
 
   fun readValues(): LiveValues? =
