@@ -43,7 +43,7 @@ class MarkdownCardConverter : CardConverter {
             block.copy(boundText = template.bind(block.text))
         }
 
-    private data class MarkdownTemplateBindings(
+    internal data class MarkdownTemplateBindings(
         val rendered: String,
         private val bindings: List<Binding>,
     ) {
@@ -71,7 +71,7 @@ class MarkdownCardConverter : CardConverter {
         companion object {
             fun from(content: String, snapshot: HaSnapshot): MarkdownTemplateBindings {
                 if (!content.contains("{{")) return MarkdownTemplateBindings(content, emptyList())
-                val expr = Regex("\\{\\{\\s*([\\s\\S]*?)\\s*}}")
+                val expr = Regex("\\{\\{\\s*(.*?)\\s*\\}\\}", RegexOption.DOT_MATCHES_ALL)
                 val bindings = mutableListOf<Binding>()
                 var index = 0
                 val rendered = expr.replace(content) { match ->
