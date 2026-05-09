@@ -25,6 +25,7 @@ import androidx.compose.runtime.setValue
 fun TopBarOverflowMenu(
     onOpenSettings: () -> Unit,
     onOpenWidgets: () -> Unit,
+    onOpenPinned: () -> Unit,
     onSignOut: () -> Unit,
 ) {
     var expanded by remember { mutableStateOf(false) }
@@ -42,6 +43,10 @@ fun TopBarOverflowMenu(
         DropdownMenuItem(
             text = { Text("Manage widgets") },
             onClick = { expanded = false; onOpenWidgets() },
+        )
+        DropdownMenuItem(
+            text = { Text("Manage pinned") },
+            onClick = { expanded = false; onOpenPinned() },
         )
         DropdownMenuItem(
             text = { Text("Sign out") },

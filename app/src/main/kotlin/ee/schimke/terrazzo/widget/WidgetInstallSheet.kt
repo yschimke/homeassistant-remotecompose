@@ -8,8 +8,12 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.PushPin
+import androidx.compose.material.icons.outlined.PushPin
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
@@ -17,13 +21,16 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.launch
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth as rcFillMaxWidth
 import ee.schimke.ha.model.CardConfig
@@ -38,7 +45,10 @@ import ee.schimke.ha.rc.components.HaTheme
 import ee.schimke.ha.rc.components.ProvideHaTheme
 import ee.schimke.ha.rc.widgetsProfile
 import ee.schimke.terrazzo.LocalTerrazzoGraph
+import ee.schimke.terrazzo.core.pin.MobilePinnedCard
+import ee.schimke.terrazzo.core.pin.PinStore
 import ee.schimke.terrazzo.core.widget.WidgetStore
+import ee.schimke.terrazzo.dashboard.toPinnedData
 
 /**
  * Bottom sheet shown when the user long-presses a card. Live preview
@@ -62,6 +72,7 @@ import ee.schimke.terrazzo.core.widget.WidgetStore
 @Composable
 fun WidgetInstallSheet(
     baseUrl: String,
+    dashboardUrlPath: String,
     card: CardConfig,
     snapshot: HaSnapshot,
     onDismiss: () -> Unit,
@@ -70,6 +81,8 @@ fun WidgetInstallSheet(
     val context = LocalContext.current
     val installer = remember { WidgetInstaller(context.applicationContext) }
     val store = LocalTerrazzoGraph.current.widgetStore
+    val pinStore = LocalTerrazzoGraph.current.pinStore
+    val pinScope = rememberCoroutineScope()
     val registry = remember { defaultRegistry().withEnhancedShutter() }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
@@ -79,6 +92,12 @@ fun WidgetInstallSheet(
     val heightDp = remember(card, snapshot) { registry.cardHeightDp(card, snapshot) }
     val capHit = installedCount >= WidgetStore.MAX_WIDGETS
     val pinSupported = remember { installer.isSupported() }
+
+    val cardData = remember(card) { card.toPinnedData() }
+    val pinKey = remember(baseUrl, dashboardUrlPath, cardData.rawJson) {
+        PinStore.cardKey(baseUrl, dashboardUrlPath, cardData.rawJson)
+    }
+    val isCardPinned by pinStore.isCardPinned(pinKey).collectAsState(initial = false)
 
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) {
         Column(
@@ -125,6 +144,35 @@ fun WidgetInstallSheet(
                 enabled = pinSupported && !capHit,
                 modifier = Modifier.fillMaxWidth(),
             ) { Text(if (capHit) "All 5 slots in use" else "Add to Home Screen") }
+
+            OutlinedButton(
+                onClick = {
+                    pinScope.launch {
+                        if (isCardPinned) {
+                            pinStore.unpinCard(pinKey)
+                        } else {
+                            pinStore.pinCard(
+                                MobilePinnedCard(
+                                    key = pinKey,
+                                    baseUrl = baseUrl,
+                                    dashboardUrlPath = dashboardUrlPath,
+                                    card = cardData,
+                                )
+                            )
+                        }
+                    }
+                    onDismiss()
+                },
+                modifier = Modifier.fillMaxWidth(),
+            ) {
+                Icon(
+                    imageVector = if (isCardPinned) Icons.Filled.PushPin else Icons.Outlined.PushPin,
+                    contentDescription = null,
+                )
+                Text(
+                    text = if (isCardPinned) "  Unpin from Wear" else "  Pin to Wear",
+                )
+            }
 
             onMonitor?.let { start ->
                 OutlinedButton(

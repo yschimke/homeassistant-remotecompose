@@ -50,6 +50,7 @@ import ee.schimke.terrazzo.dashboard.DashboardListState
 import ee.schimke.terrazzo.dashboard.DashboardPickerScreen
 import ee.schimke.terrazzo.dashboard.DashboardSwitcher
 import ee.schimke.terrazzo.dashboard.DashboardViewScreen
+import ee.schimke.terrazzo.dashboard.ManagePinnedScreen
 import ee.schimke.terrazzo.dashboard.TopBarOverflowMenu
 import ee.schimke.terrazzo.dashboard.rememberDashboardListState
 import ee.schimke.terrazzo.discovery.DiscoveryScreen
@@ -194,7 +195,7 @@ private fun UnauthenticatedScreen(
     }
 }
 
-private enum class AppScreen { Dashboards, Settings, Widgets, SyncDiagnostics }
+private enum class AppScreen { Dashboards, Settings, Widgets, Pinned, SyncDiagnostics }
 
 @Composable
 private fun AuthenticatedShell(
@@ -221,6 +222,7 @@ private fun AuthenticatedShell(
             initialDashboard = initialDashboard,
             onOpenSettings = { screen = AppScreen.Settings },
             onOpenWidgets = { screen = AppScreen.Widgets },
+            onOpenPinned = { screen = AppScreen.Pinned },
             onSignOut = onSignOut,
         )
         AppScreen.Settings -> SettingsScreen(
@@ -231,6 +233,9 @@ private fun AuthenticatedShell(
             onOpenSyncDiagnostics = { screen = AppScreen.SyncDiagnostics },
         )
         AppScreen.Widgets -> WidgetsScreen(
+            onBack = { screen = AppScreen.Dashboards },
+        )
+        AppScreen.Pinned -> ManagePinnedScreen(
             onBack = { screen = AppScreen.Dashboards },
         )
         AppScreen.SyncDiagnostics -> {
@@ -256,6 +261,7 @@ private fun DashboardsRoot(
     initialDashboard: String?,
     onOpenSettings: () -> Unit,
     onOpenWidgets: () -> Unit,
+    onOpenPinned: () -> Unit,
     onSignOut: () -> Unit,
 ) {
     val graph = LocalTerrazzoGraph.current
@@ -298,6 +304,7 @@ private fun DashboardsRoot(
                     TopBarOverflowMenu(
                         onOpenSettings = onOpenSettings,
                         onOpenWidgets = onOpenWidgets,
+                        onOpenPinned = onOpenPinned,
                         onSignOut = onSignOut,
                     )
                 },
@@ -341,6 +348,7 @@ private fun DashboardsRoot(
     installPending?.let { (card, snapshot) ->
         WidgetInstallSheet(
             baseUrl = session.baseUrl,
+            dashboardUrlPath = openedValue.takeIf { it != DASHBOARD_UNSET } ?: "",
             card = card,
             snapshot = snapshot,
             onDismiss = { installPending = null },

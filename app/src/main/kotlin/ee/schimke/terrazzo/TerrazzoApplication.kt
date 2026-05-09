@@ -45,7 +45,7 @@ class TerrazzoApplication : Application() {
         wearSync.start(
             scope = ProcessLifecycleOwner.get().lifecycleScope,
             prefs = graph.preferencesStore,
-            widgetStore = graph.widgetStore,
+            pinStore = graph.pinStore,
         )
     }
 
