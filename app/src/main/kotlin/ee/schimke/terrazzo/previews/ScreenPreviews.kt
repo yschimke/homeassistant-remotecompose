@@ -55,6 +55,8 @@ import ee.schimke.terrazzo.widget.WidgetsScreen
  */
 private const val PHONE_WIDTH_DP = 412
 private const val PHONE_HEIGHT_DP = 892
+private const val PHONE_LANDSCAPE_MEDIUM_WIDTH_DP = 732
+private const val PHONE_LANDSCAPE_MEDIUM_HEIGHT_DP = 412
 
 // Play-Store device specs. dpi is tuned per-device so the rendered PNG
 // stays under 1800 px in either dimension while preserving the real
@@ -189,6 +191,21 @@ fun Screen_DashboardPicker_ThemeStyle(
 @Preview(name = "dashboard view", showBackground = false, widthDp = PHONE_WIDTH_DP, heightDp = PHONE_HEIGHT_DP)
 @Composable
 fun Screen_DashboardView() = PhoneHost {
+    DashboardViewScreen(
+        session = demoSession(),
+        urlPath = null,
+        onCardLongPress = {},
+    )
+}
+
+@Preview(
+    name = "dashboard view · phone landscape medium",
+    showBackground = false,
+    widthDp = PHONE_LANDSCAPE_MEDIUM_WIDTH_DP,
+    heightDp = PHONE_LANDSCAPE_MEDIUM_HEIGHT_DP,
+)
+@Composable
+fun Screen_DashboardView_PhoneLandscapeMedium() = PhoneHost {
     DashboardViewScreen(
         session = demoSession(),
         urlPath = null,
