@@ -236,9 +236,16 @@ object DemoData {
             }
             else -> null
         }
-        return if (newState != null && newState != base.state) {
+        val withState = if (newState != null && newState != base.state) {
             base.copy(state = newState)
         } else base
+        if (!entityId.startsWith("camera.")) return withState
+
+        val frameTick = (nowMs / 10_000L)
+        val attrs = withState.attributes.toMutableMap()
+        attrs["entity_picture"] = JsonPrimitive("https://demo.local/camera/${entityId.substringAfter('.')}.jpg?frame=$frameTick")
+        attrs["demo_frame_stamp"] = JsonPrimitive("frame ${frameTick % 1000}")
+        return withState.copy(attributes = JsonObject(attrs))
     }
 
     private fun formatLikeOriginal(original: String, value: Double): String {
