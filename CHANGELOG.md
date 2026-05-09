@@ -1,5 +1,31 @@
 # Changelog
 
+## [0.1.11](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.10...v0.1.11) (2026-05-09)
+
+
+### Features
+
+* add responsive card previews and adaptive title sizing ([#184](https://github.com/yschimke/homeassistant-remotecompose/issues/184)) ([7d4e06c](https://github.com/yschimke/homeassistant-remotecompose/commit/7d4e06c1d0cb7a405cd6b3cdce78734774d5a70a))
+* **camera:** render picture-entity images with demo frame ticks ([#181](https://github.com/yschimke/homeassistant-remotecompose/issues/181)) ([b017b1d](https://github.com/yschimke/homeassistant-remotecompose/commit/b017b1d4df56582b0fc59eda3d0a637fe99ff3dc))
+
+
+### Bug Fixes
+
+* align launcher widget capture size with host bounds ([#179](https://github.com/yschimke/homeassistant-remotecompose/issues/179)) ([5e09a1a](https://github.com/yschimke/homeassistant-remotecompose/commit/5e09a1ad3696ccf1432aad11bd3a05d0b414c3c9))
+* bind markdown template states as RemoteStrings ([#183](https://github.com/yschimke/homeassistant-remotecompose/issues/183)) ([525ffcc](https://github.com/yschimke/homeassistant-remotecompose/commit/525ffcca5a0162d7bcc086387244cb5f8198e595))
+* clamp adaptive player size ([#189](https://github.com/yschimke/homeassistant-remotecompose/issues/189)) ([299ad08](https://github.com/yschimke/homeassistant-remotecompose/commit/299ad08c4abad4472b1d4a553751de39f34d854a))
+* handle literal masked decimal suffix in HA states ([#175](https://github.com/yschimke/homeassistant-remotecompose/issues/175)) ([aa387d6](https://github.com/yschimke/homeassistant-remotecompose/commit/aa387d645c658be68e2c01bac85b1e3f0c39aaab))
+* make collapsed mode work for untitled sections ([#178](https://github.com/yschimke/homeassistant-remotecompose/issues/178)) ([a89f375](https://github.com/yschimke/homeassistant-remotecompose/commit/a89f375bf45349daad2d430ac2998216719d787a))
+* prevent gauge arc warping on wide cards ([#174](https://github.com/yschimke/homeassistant-remotecompose/issues/174)) ([a68066a](https://github.com/yschimke/homeassistant-remotecompose/commit/a68066ac1aa70167e939b047e77223e2ba93f9a8))
+* prevent settings demo toggle text clipping ([#177](https://github.com/yschimke/homeassistant-remotecompose/issues/177)) ([2d95ab2](https://github.com/yschimke/homeassistant-remotecompose/commit/2d95ab26f2f7def246db1cfc4b8d25c480881d0f))
+* render dashboard previews ([#188](https://github.com/yschimke/homeassistant-remotecompose/issues/188)) ([d7ba78b](https://github.com/yschimke/homeassistant-remotecompose/commit/d7ba78b15f4eac27ab5fdedb81ca2ca6a46c9e80))
+* restore lintDebug build ([#186](https://github.com/yschimke/homeassistant-remotecompose/issues/186)) ([ea1cce1](https://github.com/yschimke/homeassistant-remotecompose/commit/ea1cce17ae44fffa4c977e8ce87a7cc1db9eccc6))
+* sanitize wear preview name ([#190](https://github.com/yschimke/homeassistant-remotecompose/issues/190)) ([ccb8f5d](https://github.com/yschimke/homeassistant-remotecompose/commit/ccb8f5df300c07ac60a9143d2a2962497c791253))
+* suppress restricted api lint in wear widget preview provider ([#182](https://github.com/yschimke/homeassistant-remotecompose/issues/182)) ([9317c71](https://github.com/yschimke/homeassistant-remotecompose/commit/9317c717a6c4a8d3c7584c3e8323798cdafc5c1e))
+* use named argument for markdown heading level ([#185](https://github.com/yschimke/homeassistant-remotecompose/issues/185)) ([423b0d9](https://github.com/yschimke/homeassistant-remotecompose/commit/423b0d9a7d7013c3a3924f5881a24f3a24408167))
+* use two section columns for phone landscape ([#180](https://github.com/yschimke/homeassistant-remotecompose/issues/180)) ([02b3286](https://github.com/yschimke/homeassistant-remotecompose/commit/02b328637ad4a6dbcc1e80d6edc60bb308e6cb3d))
+* **wear:** skip lint checks for generated preview stubs ([#164](https://github.com/yschimke/homeassistant-remotecompose/issues/164)) ([2eee3ee](https://github.com/yschimke/homeassistant-remotecompose/commit/2eee3eed81a01faf19ab7c93e9325971f91e2eea))
+
 ## [0.1.10](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.9...v0.1.10) (2026-05-09)
 
 
