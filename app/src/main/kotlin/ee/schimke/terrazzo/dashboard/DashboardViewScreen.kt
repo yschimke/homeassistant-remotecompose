@@ -2,6 +2,7 @@
 
 package ee.schimke.terrazzo.dashboard
 
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -54,6 +55,7 @@ import ee.schimke.ha.rc.CachedCardPreview
 import ee.schimke.ha.rc.CardWidthClass
 import ee.schimke.ha.rc.LocalCardCaptureEpoch
 import ee.schimke.ha.rc.LocalHaActionDispatcher
+import ee.schimke.ha.rc.LocalRcDebugBorders
 import ee.schimke.ha.rc.ProvideCardRegistry
 import ee.schimke.ha.rc.RenderChild
 import ee.schimke.ha.rc.androidXExperimentalWrap
@@ -528,15 +530,18 @@ private fun SectionColumn(
     SectionGroupSurface(haTheme = haTheme, modifier = modifier) {
         section.title?.let { SectionHeading(it) }
         section.cards.forEach { card ->
-            val heightDp = remember(card, snapshot) { registry.cardHeightDp(card, snapshot) }
+            // No `height(...)` — the wrap-adaptive player (see
+            // `CachedCardPreview` / `WrapAdaptiveRemoteDocumentPlayer`)
+            // sizes itself to the document's intrinsic content height
+            // after a paint-context warmup, so the slot wraps to the
+            // card's actual rendered height instead of pinning per-card
+            // via `naturalHeightDp`.
             CardSlot(
                 card = card,
                 snapshot = snapshot,
                 registry = registry,
                 onLongPress = onLongPress,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(heightDp.dp),
+                modifier = Modifier.fillMaxWidth(),
             )
         }
     }
@@ -567,9 +572,11 @@ private fun LazyListScope.cardRows(
 
 /**
  * One LazyColumn item — either a single full-width card or a row of
- * 2..N compact cards sharing the row equally. Height pins to the
- * tallest card in the row so [RemotePreview] (which sizes to its
- * container) gets bounded constraints.
+ * 2..N compact cards sharing the row equally. The Row sizes itself to
+ * the tallest child via Compose's intrinsic measurement; each card's
+ * adaptive player wraps to its document's content size, so a row of
+ * mixed card types renders as tall as the tallest card with no
+ * per-row pinning needed.
  */
 @Composable
 private fun CardRow(
@@ -578,13 +585,8 @@ private fun CardRow(
     registry: ee.schimke.ha.rc.CardRegistry,
     onLongPress: (CardConfig) -> Unit,
 ) {
-    val rowHeightDp = remember(row, snapshot) {
-        row.cards.maxOf { registry.cardHeightDp(it, snapshot) }
-    }
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(rowHeightDp.dp),
+        modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         row.cards.forEach { card ->
@@ -593,7 +595,7 @@ private fun CardRow(
                 snapshot = snapshot,
                 registry = registry,
                 onLongPress = onLongPress,
-                modifier = Modifier.weight(1f).fillMaxWidth(),
+                modifier = Modifier.weight(1f),
             )
         }
     }
@@ -615,6 +617,7 @@ private fun CardSlot(
     val style = LocalThemeStyle.current
     val dark = LocalIsDarkTheme.current
     val captureEpoch = LocalCardCaptureEpoch.current
+    val debugBorders = LocalRcDebugBorders.current
     // The document's paint colours are baked at capture; re-encode when
     // theme flips. Snapshot is deliberately NOT in the cache key —
     // entity values flow into the running player by named binding
@@ -636,7 +639,12 @@ private fun CardSlot(
             // longPressBeforeChild — listens on the Initial pass so it
             // fires even though the player's pointer-input consumes
             // events on the Main pass for in-document click regions.
-            .longPressBeforeChild { onLongPress(card) },
+            .longPressBeforeChild { onLongPress(card) }
+            .let {
+                if (debugBorders) {
+                    it.border(1.dp, androidx.compose.ui.graphics.Color(0xFFD32F2F))
+                } else it
+            },
     ) {
         CachedCardPreview(
             cacheKey = cacheKey,

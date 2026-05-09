@@ -3,13 +3,12 @@
 package ee.schimke.ha.rc
 
 import androidx.annotation.RestrictTo
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.remote.creation.compose.capture.captureSingleRemoteDocument
 import androidx.compose.remote.creation.compose.layout.RemoteComposable
 import androidx.compose.remote.creation.profile.Profile
 import androidx.compose.remote.creation.profile.RcPlatformProfiles
-import androidx.compose.remote.player.compose.RemoteDocumentPlayer
+import androidx.compose.remote.player.compose.ExperimentalRemotePlayerApi
+import androidx.compose.remote.player.compose.RemoteComposePlayerFlags
 import androidx.compose.remote.player.core.state.StateUpdater
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -17,7 +16,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalWindowInfo
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.components.HA_ACTION_NAME
@@ -56,12 +54,22 @@ import kotlinx.coroutines.runBlocking
  *      [cardSnapshotBindings] and writes only those that actually
  *      changed since the last push (`<id>.state`, `<id>.is_on`).
  *
- * Sizing follows upstream `RemotePreview`: the captured document
- * carries its natural size in the header, and the player measures via
- * `RemoteComposePlayerFlags.shouldPlayerWrapContentSize` (on by
- * default), so callers size the slot via [modifier] and don't have to
- * thread pixels through.
+ * Sizing model: the captured document is authored with the
+ * wrap-friendly measure path (FEATURE_PAINT_MEASURE = 0, baked by
+ * `androidXExperimentalWrap`). With
+ * [RemoteComposePlayerFlags.shouldPlayerWrapContentSize] flipped to
+ * `true` (done idempotently below), the player applies
+ * `wrapContentSize()` to itself — but in alpha010 the
+ * `RemoteComposeView` still lays out at its authored canvas size when
+ * the parent constraint is unbounded, so a fully wrap-content host
+ * (no `Modifier.height(...)`) does not yet shrink to the document's
+ * intrinsic content. End-to-end adaptive wrap therefore needs an
+ * EXACTLY constraint somewhere up the chain — the dashboard pins
+ * `Modifier.height(naturalHeightDp.dp)` and the player conforms to
+ * that, ignoring the document's authored canvas. See
+ * `SizingExperimentPreviews` for the matrix that documents this.
  */
+@OptIn(ExperimentalRemotePlayerApi::class)
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 @Composable
 fun CachedCardPreview(
@@ -72,26 +80,42 @@ fun CachedCardPreview(
     snapshot: HaSnapshot? = null,
     content: @RemoteComposable @Composable () -> Unit,
 ) {
+    // Flip the player into wrap-content mode — idempotent assignment.
+    // Today this only matters when the host's parent is bounded
+    // (EXACTLY); see KDoc above. Kept on so future alpha bumps that
+    // make wrap-content work for unbounded parents pick it up.
+    RemoteComposePlayerFlags.shouldPlayerWrapContentSize = true
+
     val context = LocalContext.current
     val cache = LocalCardDocumentCache.current
+    val debugBorders = LocalRcDebugBorders.current
+    // Mix the debug-borders flag into the cache key so toggling it
+    // re-encodes the document (the wrapper changes the captured bytes).
+    val effectiveCacheKey =
+        remember(cacheKey, debugBorders) {
+            if (debugBorders) DebugBorderedCacheKey(cacheKey) else cacheKey
+        }
 
     val cardDocument =
-        remember(cacheKey) {
-            cache.get(cacheKey)
+        remember(effectiveCacheKey) {
+            cache.get(effectiveCacheKey)
                 ?: runBlocking {
                         val captured =
                             captureSingleRemoteDocument(
                                 context = context,
                                 profile = profile,
-                                content = content,
+                                content =
+                                    if (debugBorders) {
+                                        { DebugRcBorderWrapper { content() } }
+                                    } else {
+                                        content
+                                    },
                             )
                         CardDocument(bytes = captured.bytes, widthPx = 0, heightPx = 0)
                     }
-                    .also { cache.put(cacheKey, it) }
+                    .also { cache.put(effectiveCacheKey, it) }
         }
 
-    val coreDocument = remember(cardDocument) { cardDocument.decode() }
-    val windowInfo = LocalWindowInfo.current
     val dispatcher = LocalHaActionDispatcher.current
 
     val entityIds = remember(card) { card?.let { cardEntityIds(it) }.orEmpty() }
@@ -111,21 +135,30 @@ fun CachedCardPreview(
         }
     }
 
-    Box(modifier = modifier.fillMaxSize()) {
-        RemoteDocumentPlayer(
-            document = coreDocument,
-            documentWidth = windowInfo.containerSize.width,
-            documentHeight = windowInfo.containerSize.height,
-            modifier = Modifier.fillMaxSize(),
-            init = { player -> updaterHolder.value = player.stateUpdater },
-            onNamedAction = { name, value, _ ->
-                if (name == HA_ACTION_NAME) {
-                    decodeHaAction(value)?.let(dispatcher::dispatch)
-                }
-            },
-        )
-    }
+    // Use the wrap-adaptive player (a primed `RemoteComposePlayer`
+    // View that has had its paint context warmed up before Compose
+    // measures it). Lets `modifier` be wrap-content on the height
+    // axis without the alpha010 bug ballooning the slot to the
+    // authored canvas size; pinned EXACTLY constraints continue to
+    // dominate the inner View's measure.
+    WrapAdaptiveRemoteDocumentPlayer(
+        documentBytes = cardDocument.bytes,
+        modifier = modifier,
+        init = { player -> updaterHolder.value = player.stateUpdater },
+        onNamedAction = { name, value ->
+            if (name == HA_ACTION_NAME) {
+                decodeHaAction(value)?.let(dispatcher::dispatch)
+            }
+        },
+    )
 }
+
+/**
+ * Wrapper key that distinguishes a debug-bordered render of [inner]
+ * from the plain render — same card YAML, different bytes (the
+ * wrapping `DebugRcBorderWrapper` is captured into the document).
+ */
+private data class DebugBorderedCacheKey(val inner: Any)
 
 /**
  * Push the diff between the previous push (tracked in [pushed]) and
