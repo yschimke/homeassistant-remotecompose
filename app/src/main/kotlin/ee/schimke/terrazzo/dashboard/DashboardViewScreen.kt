@@ -386,7 +386,8 @@ private fun LazyListScope.renderView(
                 SectionGroupSurface(haTheme) {
                     val headingModel = resolveSectionHeading(section, sectionIndex)
                     val headingTitle = headingModel.title
-                    if (collapsible || section.title != null) {
+                    val showHeading = collapsible || section.title != null
+                    if (showHeading) {
                         PinnableSectionHeading(
                             title = headingTitle,
                             collapsible = collapsible,
@@ -398,7 +399,8 @@ private fun LazyListScope.renderView(
                         )
                     }
                     if (expanded) {
-                        val rows = packAndChunk(headingModel.visibleCards, cfg.compactCardsPerRow) { c ->
+                        val renderedCards = if (showHeading) headingModel.visibleCards else section.cards
+                        val rows = packAndChunk(renderedCards, cfg.compactCardsPerRow) { c ->
                             registry.cardWidthClass(c, snapshot)
                         }
                         rows.forEach { row ->
