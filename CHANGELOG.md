@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.9](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.8...v0.1.9) (2026-05-09)
+
+
+### Features
+
+* debug-borders + sizing experiment, width-adaptive matrix, alpha010 wrap-h repro ([#154](https://github.com/yschimke/homeassistant-remotecompose/issues/154)) ([7b21583](https://github.com/yschimke/homeassistant-remotecompose/commit/7b2158324f2e5d7d414777d72caf9e695691a768))
+* **wearsync:** add proto schema for pinned sections and widget slots ([#157](https://github.com/yschimke/homeassistant-remotecompose/issues/157)) ([1bfd937](https://github.com/yschimke/homeassistant-remotecompose/commit/1bfd93720a47bed4814c9acef579de4236953a8e))
+
 ## [0.1.8](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.7...v0.1.8) (2026-05-08)
 
 
