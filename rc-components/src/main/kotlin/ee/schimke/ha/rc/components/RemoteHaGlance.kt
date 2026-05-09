@@ -26,6 +26,7 @@ import androidx.compose.remote.creation.compose.state.rsp
 import androidx.compose.remote.creation.compose.text.RemoteTextStyle
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.wear.compose.remote.material3.RemoteIcon
 
 /**
@@ -49,9 +50,11 @@ fun RemoteHaGlance(data: HaGlanceData, modifier: RemoteModifier = RemoteModifier
                 RemoteText(
                     text = data.title.rs,
                     color = theme.primaryText.rc,
-                    fontSize = 15.rsp,
+                    fontSize = adaptiveTitleSizeSp(data.title).rsp,
                     fontWeight = FontWeight.Medium,
                     style = RemoteTextStyle.Default,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                 )
                 RemoteBox(modifier = RemoteModifier.padding(top = 6.rdp))
             }
