@@ -16,7 +16,7 @@ Publishing is gated by `ANDROID_PUBLISHER_CREDENTIALS` (path to service-account 
 3. In the same Play app, add/enable the Wear form factor and create an Internal testing release if prompted.
 4. Create a Google Cloud service account and grant Play Console permissions (at least Release manager for this app).
 5. Download the JSON key and set `ANDROID_PUBLISHER_CREDENTIALS=/path/key.json` in CI secrets/runtime.
-6. Add store listing text and graphics under `wear/src/main/play/listings/en-US/...`.
+6. Add store listing text/graphics under `wear/src/main/play/listings/en-US/...` and track notes under `wear/src/main/play/release-notes/en-US/internal.txt`.
 7. Upload first draft with `:wear:publishBundle`, then review and roll out in Console.
 
 ## Ongoing release flow
