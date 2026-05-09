@@ -7,7 +7,6 @@ import android.appwidget.AppWidgetProvider
 import android.content.Context
 import android.os.Build
 import android.util.Log
-import android.util.TypedValue
 import android.widget.RemoteViews
 import androidx.annotation.RequiresApi
 import androidx.compose.remote.creation.compose.capture.RemoteCreationDisplayInfo
@@ -89,8 +88,13 @@ class TerrazzoWidgetProvider : AppWidgetProvider() {
         val haTheme = haThemeFor(style, dark)
         val registry = defaultRegistry().withEnhancedShutter()
 
-        val widthPx = dpToPx(context, WIDGET_WIDTH_DP)
-        val heightPx = dpToPx(context, registry.cardHeightDp(entry.card, snapshot))
+        val targetSizeDp = WidgetSizing.forWidgetCapture(
+            appWidgetManager = appWidgetManager,
+            widgetId = widgetId,
+            cardHeightDp = registry.cardHeightDp(entry.card, snapshot),
+        )
+        val widthPx = WidgetSizing.dpToPx(context, targetSizeDp.widthDp)
+        val heightPx = WidgetSizing.dpToPx(context, targetSizeDp.heightDp)
         val densityDpi = context.resources.configuration.densityDpi
 
         val captured = runCatching {
@@ -141,16 +145,8 @@ class TerrazzoWidgetProvider : AppWidgetProvider() {
         ThemePref.TerrazzoKiosk -> ThemeStyle.TerrazzoKiosk
     }
 
-    private fun dpToPx(context: Context, dp: Int): Int =
-        TypedValue.applyDimension(
-            TypedValue.COMPLEX_UNIT_DIP,
-            dp.toFloat(),
-            context.resources.displayMetrics,
-        ).toInt()
-
     private companion object {
         val EMPTY_SNAPSHOT = HaSnapshot()
-        const val WIDGET_WIDTH_DP = 320
         const val TAG = "TerrazzoWidgetProvider"
     }
 }
