@@ -107,7 +107,8 @@ fun RemoteHaGauge(
                 val pad = (stroke / 2f.rf) + 2f.rf
                 val diameter = (h - pad) * 2f.rf
                 val left = (w - diameter) / 2f.rf
-                val topLeft = RemoteOffset(left, pad)
+                val top = h - (diameter / 2f.rf)
+                val topLeft = RemoteOffset(left, top)
                 val arcSize = RemoteSize(diameter, diameter)
 
                 val track = AndroidPaint().apply {
