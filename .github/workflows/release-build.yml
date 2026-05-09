@@ -74,6 +74,7 @@ jobs:
         run: ./gradlew :app:bundleRelease --stacktrace
 
       - name: Publish to Play (internal track)
+        id: play_publish
         if: env.HAS_PLAY_CREDENTIALS == 'true' && env.HAS_SIGNING_KEYSTORE == 'true'
         env:
           ANDROID_PUBLISHER_CREDENTIALS: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
@@ -81,6 +82,24 @@ jobs:
           HARC_KEY_ALIAS: ${{ secrets.HARC_KEY_ALIAS }}
           HARC_KEY_PASSWORD: ${{ secrets.HARC_KEY_PASSWORD }}
         run: ./gradlew :app:publishBundle --stacktrace
+
+      - name: Release publish summary
+        if: always()
+        run: |
+          set -euo pipefail
+          {
+            echo "## Release publish status"
+            echo
+            echo "- Tag: ${TAG_NAME}"
+            echo "- Signing keystore configured: ${HAS_SIGNING_KEYSTORE}"
+            echo "- Play credentials configured: ${HAS_PLAY_CREDENTIALS}"
+            if [[ "${HAS_SIGNING_KEYSTORE}" == "true" && "${HAS_PLAY_CREDENTIALS}" == "true" ]]; then
+              echo "- Play publish step: attempted (internal track)"
+            else
+              echo "- Play publish step: skipped"
+              echo "- Reason: release secrets were not fully configured"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Stage release assets
         id: stage
