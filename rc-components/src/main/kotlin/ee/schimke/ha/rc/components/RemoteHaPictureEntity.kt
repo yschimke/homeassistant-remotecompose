@@ -82,12 +82,36 @@ fun RemoteHaPictureEntity(
                     .background(accent.copy(alpha = accent.alpha * 0.10f.rf)),
                 contentAlignment = RemoteAlignment.Center,
             ) {
-                RemoteIcon(
-                    imageVector = data.icon,
-                    contentDescription = data.name.rs,
-                    modifier = RemoteModifier.size(40.rdp),
-                    tint = accent.copy(alpha = accent.alpha * 0.55f.rf),
-                )
+                if (data.imageUrl != null) {
+                    RemoteHaImageUrl(
+                        url = data.imageUrl,
+                        contentDescription = data.name.rs,
+                        modifier = RemoteModifier.fillMaxSize(),
+                    )
+                } else {
+                    RemoteIcon(
+                        imageVector = data.icon,
+                        contentDescription = data.name.rs,
+                        modifier = RemoteModifier.size(40.rdp),
+                        tint = accent.copy(alpha = accent.alpha * 0.55f.rf),
+                    )
+                }
+                if (data.frameStamp != null) {
+                    RemoteBox(
+                        modifier = RemoteModifier
+                            .padding(8.rdp)
+                            .background(theme.cardBackground.rc.copy(alpha = theme.cardBackground.rc.alpha * 0.8f.rf))
+                            .padding(horizontal = 6.rdp, vertical = 2.rdp),
+                    ) {
+                        RemoteText(
+                            text = data.frameStamp.rs,
+                            color = theme.secondaryText.rc,
+                            fontSize = 10.rsp,
+                            style = RemoteTextStyle.Default,
+                            maxLines = 1,
+                        )
+                    }
+                }
             }
             if (showStrip) {
                 val barBg = theme.cardBackground.rc

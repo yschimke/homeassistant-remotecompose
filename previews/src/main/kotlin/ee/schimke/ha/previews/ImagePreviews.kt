@@ -55,6 +55,9 @@ private const val SAMPLE_BITMAP_PX = 96
 private const val SAMPLE_NAME = "samples/weather-now"
 private const val SAMPLE_URL = "https://example.test/samples/weather-now.png"
 
+private const val SAMPLE_URL_FRAME_0 = "https://example.test/samples/weather-now.png?frame=0"
+private const val SAMPLE_URL_FRAME_1 = "https://example.test/samples/weather-now.png?frame=1"
+
 private fun sampleBitmap(): ImageBitmap {
     val size = SAMPLE_BITMAP_PX.toFloat()
     val bmp = ImageBitmap(SAMPLE_BITMAP_PX, SAMPLE_BITMAP_PX)
@@ -189,6 +192,54 @@ private fun FakeCoilUrlHost(theme: HaTheme) {
                 RemoteHaImageUrl(
                     url = SAMPLE_URL,
                     contentDescription = "url sample".rs,
+                    modifier = RemoteModifier.fillMaxWidth().height(IMAGE_BOX_HEIGHT_DP.rdp),
+                )
+            }
+        }
+    }
+}
+
+
+// ─── URL refresh probe (fixed-frame preview variants) ───────────────
+
+@Preview(
+    name = "image-url probe frame=0",
+    showBackground = false,
+    widthDp = 200,
+    heightDp = IMAGE_BOX_HEIGHT_DP,
+)
+@Composable
+fun ImageUrl_Probe_Frame0() = ProbeUrlHost(theme = HaTheme.Light, url = SAMPLE_URL_FRAME_0)
+
+@Preview(
+    name = "image-url probe frame=1",
+    showBackground = false,
+    widthDp = 200,
+    heightDp = IMAGE_BOX_HEIGHT_DP,
+)
+@Composable
+fun ImageUrl_Probe_Frame1() = ProbeUrlHost(theme = HaTheme.Light, url = SAMPLE_URL_FRAME_1)
+
+@Composable
+private fun ProbeUrlHost(theme: HaTheme, url: String) {
+    val context = LocalContext.current
+    val frame0 = remember { sampleBitmap() }
+    val frame1 = remember { resolvedSampleBitmap() }
+    val bitmapLoader =
+        remember(context, frame0, frame1) {
+            RecordingBitmapLoader(
+                previewCoilBitmapLoader(
+                    context,
+                    mappings = mapOf(SAMPLE_URL_FRAME_0 to frame0, SAMPLE_URL_FRAME_1 to frame1),
+                ),
+            )
+        }
+    Box(modifier = Modifier.uiFillMaxWidth().uiHeight(IMAGE_BOX_HEIGHT_DP.dp)) {
+        HaEmbeddedPlayer(profile = androidXExperimental, bitmapLoader = bitmapLoader) {
+            ProvideHaTheme(theme) {
+                RemoteHaImageUrl(
+                    url = url,
+                    contentDescription = "url probe sample".rs,
                     modifier = RemoteModifier.fillMaxWidth().height(IMAGE_BOX_HEIGHT_DP.rdp),
                 )
             }
