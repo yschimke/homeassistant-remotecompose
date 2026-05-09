@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.1.13](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.12...v0.1.13) (2026-05-09)
+
+
+### Features
+
+* split climate dashboard section at live view ([#199](https://github.com/yschimke/homeassistant-remotecompose/issues/199)) ([b16c1dc](https://github.com/yschimke/homeassistant-remotecompose/commit/b16c1dc956086883bf7b4678b18f5f33588cffce))
+
+
+### Bug Fixes
+
+* align wear application id with mobile package ([#198](https://github.com/yschimke/homeassistant-remotecompose/issues/198)) ([9a50217](https://github.com/yschimke/homeassistant-remotecompose/commit/9a5021712fd49280505e7eea247be9258a040f92))
+* keep first card when synthetic heading is hidden ([#197](https://github.com/yschimke/homeassistant-remotecompose/issues/197)) ([691bf61](https://github.com/yschimke/homeassistant-remotecompose/commit/691bf614bfeed828d73e381bc1f779a982e4145c))
+* preserve integer gauge values in state formatting ([#194](https://github.com/yschimke/homeassistant-remotecompose/issues/194)) ([49aaf1a](https://github.com/yschimke/homeassistant-remotecompose/commit/49aaf1abde1c9d0ad3c373600b8c87f9420ffdae))
+
 ## [0.1.12](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.11...v0.1.12) (2026-05-09)
 
 
