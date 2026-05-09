@@ -24,6 +24,8 @@
 
 package androidx.glance.wear.tooling.preview
 
+import android.annotation.SuppressLint
+
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.glance.wear.core.ContainerInfo
 import androidx.glance.wear.core.WearWidgetParams
@@ -36,6 +38,7 @@ import androidx.glance.wear.core.WidgetInstanceId
  * such as large rectangular containers versus small square ones. To use it, annotate your preview
  * parameter with `@PreviewParameter(WearWidgetParamsProvider::class)`.
  */
+@SuppressLint("RestrictedApi")
 public class WearWidgetParamsProvider : PreviewParameterProvider<WearWidgetParams> {
     override val values: Sequence<WearWidgetParams> =
         sequenceOf(
