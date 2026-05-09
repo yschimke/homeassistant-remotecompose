@@ -1,0 +1,1 @@
+Home Assistant dashboards and widgets for Wear OS.
