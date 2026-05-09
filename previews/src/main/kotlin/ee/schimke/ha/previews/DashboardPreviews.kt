@@ -2,6 +2,9 @@
 
 package ee.schimke.ha.previews
 
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Paint
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -9,13 +12,16 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth as uiFillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
+import androidx.compose.remote.player.core.platform.BitmapLoader
 import androidx.compose.remote.tooling.preview.RemotePreview
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -34,6 +40,8 @@ import ee.schimke.ha.rc.cards.shutter.withEnhancedShutter
 import ee.schimke.ha.rc.cards.shutter.withGarageShutter
 import ee.schimke.ha.rc.components.HaTheme
 import ee.schimke.ha.rc.components.ProvideHaTheme
+import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
 
 /**
  * Whole-dashboard previews — one column per card, stacked vertically.
@@ -57,6 +65,7 @@ private const val MOBILE_WIDTH = 411
 private const val MOBILE_HEIGHT = 1800
 private const val TABLET_WIDTH = 800
 private const val TABLET_HEIGHT = 1800
+private const val MAX_CARD_SLOT_HEIGHT_DP = 1800
 
 @Preview(
     name = "dashboard 3d-printing — mobile",
@@ -126,6 +135,7 @@ fun DashboardSecurityTablet() = DashboardPreview("security")
 private fun DashboardPreview(name: String) {
     enableRemoteComposeWrapContent()
     val loaded = DashboardFixtures.load(name) ?: return
+    val bitmapLoader = remember { DashboardPreviewBitmapLoader() }
     Column(
         modifier = Modifier.uiFillMaxWidth().verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -138,7 +148,7 @@ private fun DashboardPreview(name: String) {
             )
         }
         loaded.dashboard.views.forEach { view ->
-            ViewBlock(view, loaded.snapshot)
+            ViewBlock(view, loaded.snapshot, bitmapLoader)
         }
     }
 }
@@ -154,7 +164,7 @@ private const val SECTIONS_GRID_MIN_WIDTH_DP = 600
 private const val SECTIONS_COLUMN_TARGET_WIDTH_DP = 360
 
 @Composable
-private fun ViewBlock(view: View, snapshot: HaSnapshot) {
+private fun ViewBlock(view: View, snapshot: HaSnapshot, bitmapLoader: BitmapLoader) {
     if (view.title != null) {
         Box(modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)) {
             androidx.compose.material3.Text(
@@ -164,13 +174,13 @@ private fun ViewBlock(view: View, snapshot: HaSnapshot) {
         }
     }
     if (view.type == "sections" && view.sections.isNotEmpty()) {
-        SectionsView(view, snapshot)
+        SectionsView(view, snapshot, bitmapLoader)
     } else {
         // Legacy `type: panel` / `type: masonry` / unspecified — render
         // every card from view.cards + view.sections.cards as a single
         // vertical column. Same behaviour as before this change.
         val cards = view.cards + view.sections.flatMap { it.cards }
-        cards.forEach { card -> CardSlot(card, snapshot) }
+        cards.forEach { card -> CardSlot(card, snapshot, bitmapLoader) }
     }
 }
 
@@ -186,7 +196,7 @@ private fun ViewBlock(view: View, snapshot: HaSnapshot) {
  * `row_span` yet (those are minor v2 polish).
  */
 @Composable
-private fun SectionsView(view: View, snapshot: HaSnapshot) {
+private fun SectionsView(view: View, snapshot: HaSnapshot, bitmapLoader: BitmapLoader) {
     BoxWithConstraints(modifier = Modifier.uiFillMaxWidth()) {
         val widthDp = maxWidth.value.toInt()
         val maxColumns = view.maxColumns ?: 4
@@ -196,7 +206,7 @@ private fun SectionsView(view: View, snapshot: HaSnapshot) {
 
         if (columnCount == 1) {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                view.sections.forEach { section -> SectionBlock(section, snapshot) }
+                view.sections.forEach { section -> SectionBlock(section, snapshot, bitmapLoader) }
             }
         } else {
             val columns = packSections(view.sections, columnCount)
@@ -209,7 +219,7 @@ private fun SectionsView(view: View, snapshot: HaSnapshot) {
                         modifier = Modifier.weight(1f),
                         verticalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
-                        sections.forEach { section -> SectionBlock(section, snapshot) }
+                        sections.forEach { section -> SectionBlock(section, snapshot, bitmapLoader) }
                     }
                 }
             }
@@ -218,7 +228,7 @@ private fun SectionsView(view: View, snapshot: HaSnapshot) {
 }
 
 @Composable
-private fun SectionBlock(section: Section, snapshot: HaSnapshot) {
+private fun SectionBlock(section: Section, snapshot: HaSnapshot, bitmapLoader: BitmapLoader) {
     // Wrap the title + cards in a Surface tinted with
     // `HaTheme.Light.sectionBackground` so M3-elevation themes (Mushroom,
     // Kiosk, Material3) get a visible group. For these flat-HA previews
@@ -240,7 +250,7 @@ private fun SectionBlock(section: Section, snapshot: HaSnapshot) {
                     )
                 }
             }
-            section.cards.forEach { card -> CardSlot(card, snapshot) }
+            section.cards.forEach { card -> CardSlot(card, snapshot, bitmapLoader) }
         }
     }
 }
@@ -259,18 +269,24 @@ private fun packSections(sections: List<Section>, columnCount: Int): List<List<S
 }
 
 @Composable
-private fun CardSlot(card: CardConfig, snapshot: HaSnapshot) {
+private fun CardSlot(card: CardConfig, snapshot: HaSnapshot, bitmapLoader: BitmapLoader) {
     val registry = defaultRegistry().withEnhancedShutter().withGarageShutter()
     // Wrap-content via the adaptive player — slot wraps to the
     // document's intrinsic content height. Mirrors what
     // `DashboardViewScreen.CardSlot` does in production.
-    Box(modifier = Modifier.uiFillMaxWidth().padding(horizontal = 8.dp)) {
+    Box(
+        modifier =
+            Modifier.uiFillMaxWidth()
+                .heightIn(max = MAX_CARD_SLOT_HEIGHT_DP.dp)
+                .padding(horizontal = 8.dp),
+    ) {
         CachedCardPreview(
             cacheKey = card,
             profile = androidXExperimentalWrap,
             modifier = Modifier.uiFillMaxWidth(),
             card = card,
             snapshot = snapshot,
+            bitmapLoader = bitmapLoader,
         ) {
             ProvideCardRegistry(registry) {
                 ProvideHaTheme(HaTheme.Light) {
@@ -279,4 +295,24 @@ private fun CardSlot(card: CardConfig, snapshot: HaSnapshot) {
             }
         }
     }
+}
+
+private class DashboardPreviewBitmapLoader : BitmapLoader {
+    private val bytes: ByteArray =
+        ByteArrayOutputStream().use { out ->
+            val bitmap = Bitmap.createBitmap(96, 96, Bitmap.Config.ARGB_8888)
+            val canvas = Canvas(bitmap)
+            val paint = Paint(Paint.ANTI_ALIAS_FLAG)
+            paint.color = 0xFF1B5E20.toInt()
+            canvas.drawRect(0f, 0f, 96f, 96f, paint)
+            paint.color = 0xFFFFFFFF.toInt()
+            canvas.drawCircle(48f, 48f, 30f, paint)
+            paint.color = 0xFF1B5E20.toInt()
+            canvas.drawCircle(48f, 48f, 14f, paint)
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, out)
+            bitmap.recycle()
+            out.toByteArray()
+        }
+
+    override fun loadBitmap(name: String) = ByteArrayInputStream(bytes)
 }

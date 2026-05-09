@@ -9,6 +9,7 @@ import androidx.compose.remote.creation.profile.Profile
 import androidx.compose.remote.creation.profile.RcPlatformProfiles
 import androidx.compose.remote.player.compose.ExperimentalRemotePlayerApi
 import androidx.compose.remote.player.compose.RemoteComposePlayerFlags
+import androidx.compose.remote.player.core.platform.BitmapLoader
 import androidx.compose.remote.player.core.state.StateUpdater
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -78,6 +79,7 @@ fun CachedCardPreview(
     modifier: Modifier = Modifier,
     card: CardConfig? = null,
     snapshot: HaSnapshot? = null,
+    bitmapLoader: BitmapLoader = BitmapLoader.UNSUPPORTED,
     content: @RemoteComposable @Composable () -> Unit,
 ) {
     // Flip the player into wrap-content mode — idempotent assignment.
@@ -144,6 +146,7 @@ fun CachedCardPreview(
     WrapAdaptiveRemoteDocumentPlayer(
         documentBytes = cardDocument.bytes,
         modifier = modifier,
+        bitmapLoader = bitmapLoader,
         init = { player -> updaterHolder.value = player.stateUpdater },
         onNamedAction = { name, value ->
             if (name == HA_ACTION_NAME) {
