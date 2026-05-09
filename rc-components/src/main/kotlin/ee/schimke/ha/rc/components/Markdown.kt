@@ -81,7 +81,7 @@ object Markdown {
     private fun heading(node: ASTNode, src: String, level: Int, out: MutableList<MarkdownBlock>) {
         val text = visibleText(node, src)
         if (text.isNotEmpty()) {
-            out += MarkdownBlock(MarkdownBlock.Kind.Heading, text, level)
+            out += MarkdownBlock(MarkdownBlock.Kind.Heading, text, level = level)
         }
     }
 
