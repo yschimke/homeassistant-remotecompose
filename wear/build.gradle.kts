@@ -21,6 +21,13 @@ android {
     targetCompatibility = JavaVersion.toVersion(libs.versions.java.get())
   }
   kotlin { jvmToolchain(libs.versions.java.get().toInt()) }
+  lint {
+    // Compose Preview plugin generates preview parameter providers under
+    // build/generated that can reference @RestrictTo APIs from Glance Wear.
+    // These generated stubs are not shipped runtime code, so skip generated
+    // source lint checks for this module.
+    checkGeneratedSources = false
+  }
 }
 
 composePreview {
