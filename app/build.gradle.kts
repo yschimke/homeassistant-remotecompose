@@ -97,6 +97,7 @@ dependencies {
   implementation(project(":rc-converter"))
   implementation(project(":rc-components"))
   implementation(project(":rc-card-shutter"))
+  implementation(project(":rc-image-coil"))
   implementation(project(":terrazzo-core"))
 
   implementation(platform(libs.compose.bom))
@@ -134,6 +135,7 @@ dependencies {
   implementation(libs.androidx.navigation3.ui)
   implementation(libs.androidx.material3.adaptive.navigation.suite)
   implementation(libs.appauth)
+  implementation(libs.coil.network.okhttp)
 
   implementation(libs.kotlinx.coroutines.core)
   implementation(libs.kotlinx.serialization.json)

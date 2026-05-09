@@ -73,6 +73,7 @@ import ee.schimke.ha.rc.components.HaTheme
 import ee.schimke.ha.rc.components.ProvideHaTheme
 import ee.schimke.ha.rc.components.ThemeStyle
 import ee.schimke.ha.rc.components.haThemeFor
+import ee.schimke.ha.rc.image.CoilBitmapLoader
 import ee.schimke.terrazzo.LocalTerrazzoGraph
 import ee.schimke.terrazzo.ui.LayoutConfig
 import ee.schimke.terrazzo.ui.LocalIsDarkTheme
@@ -827,6 +828,8 @@ private fun CardSlot(
     val cacheKey = remember(card, style, dark, captureEpoch) {
         CardSlotCacheKey(card, style, dark, captureEpoch)
     }
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val bitmapLoader = remember(context) { CoilBitmapLoader(context.applicationContext) }
     Box(
         modifier = modifier
             // Stable semantics tag so uiautomator / Compose tests can
@@ -850,6 +853,7 @@ private fun CardSlot(
             profile = androidXExperimentalWrap,
             card = card,
             snapshot = snapshot,
+            bitmapLoader = bitmapLoader,
         ) {
             ProvideCardRegistry(registry) {
                 ProvideHaTheme(haTheme) {
