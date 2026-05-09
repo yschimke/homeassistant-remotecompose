@@ -22,7 +22,7 @@ class WidgetSizingTest {
     }
 
     @Test
-    fun growsHeightWhenCardNeedsMoreThanContainer() {
+    fun staysAtContainerHeightEvenWhenCardWantsMore() {
         val options = Bundle().apply {
             putInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, 180)
             putInt(AppWidgetManager.OPTION_APPWIDGET_MAX_WIDTH, 240)
@@ -33,6 +33,6 @@ class WidgetSizingTest {
         val target = WidgetSizing.targetSizeFromOptions(options, cardHeightDp = 160)
 
         assertEquals(240, target.widthDp)
-        assertEquals(160, target.heightDp)
+        assertEquals(90, target.heightDp)
     }
 }

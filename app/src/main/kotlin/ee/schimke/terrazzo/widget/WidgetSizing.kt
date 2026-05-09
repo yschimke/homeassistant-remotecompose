@@ -31,7 +31,7 @@ internal object WidgetSizing {
         val maxHeight = options.getDp(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT, minHeight)
 
         val targetWidth = maxOf(minWidth, maxWidth)
-        val targetHeight = maxOf(minHeight, maxHeight, cardHeightDp)
+        val targetHeight = maxOf(minHeight, maxHeight)
         return WidgetSizeDp(widthDp = targetWidth, heightDp = targetHeight)
     }
 
