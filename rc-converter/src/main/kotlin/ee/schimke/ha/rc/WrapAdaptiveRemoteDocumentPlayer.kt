@@ -21,6 +21,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.viewinterop.AndroidView
+import kotlin.math.min
 import java.io.ByteArrayInputStream
 
 /**
@@ -110,18 +111,35 @@ private fun decode(bytes: ByteArray): CoreDocument =
  *    a populated paint context, so the View reports the intrinsic
  *    content size instead of the authored canvas size.
  */
+private const val MAX_WARMUP_DIMENSION_PX = 4096
+
 private fun primeAndMeasure(view: RemoteComposePlayer, maxWPx: Int, maxHPx: Int) {
     val widthSpec = toMeasureSpec(maxWPx)
     val heightSpec = toMeasureSpec(maxHPx)
     view.measure(widthSpec, heightSpec)
-    val warmupW = view.measuredWidth.coerceAtLeast(1)
-    val warmupH = view.measuredHeight.coerceAtLeast(1)
+
+    val measuredW = view.measuredWidth
+    val measuredH = view.measuredHeight
+
+    val warmupW = clampWarmupDimension(measuredW, maxWPx)
+    val warmupH = clampWarmupDimension(measuredH, maxHPx)
+
     view.layout(0, 0, warmupW, warmupH)
     val warmupBmp = Bitmap.createBitmap(warmupW, warmupH, Bitmap.Config.ARGB_8888)
     view.draw(Canvas(warmupBmp))
     warmupBmp.recycle()
     view.forceLayout()
     view.measure(widthSpec, heightSpec)
+}
+
+private fun clampWarmupDimension(measuredPx: Int, constraintMaxPx: Int): Int {
+    val boundedByConstraint =
+        if (constraintMaxPx == Constraints.Infinity) {
+            measuredPx
+        } else {
+            min(measuredPx, constraintMaxPx)
+        }
+    return boundedByConstraint.coerceIn(1, MAX_WARMUP_DIMENSION_PX)
 }
 
 private fun toMeasureSpec(maxPx: Int): Int =
