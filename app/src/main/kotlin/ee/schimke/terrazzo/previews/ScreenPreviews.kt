@@ -132,15 +132,48 @@ fun Screen_Discovery() = PhoneHost {
     DiscoveryScreen(onInstancePicked = {}, onDemoSelected = {})
 }
 
+@Preview(name = "discovery · theme", showBackground = false, widthDp = PHONE_WIDTH_DP, heightDp = PHONE_HEIGHT_DP)
+@Composable
+fun Screen_Discovery_ThemeStyle(
+    @PreviewParameter(ThemeStyleProvider::class) style: ThemeStyle,
+) = PhoneHost(style = style) {
+    DiscoveryScreen(onInstancePicked = {}, onDemoSelected = {})
+}
+
 @Preview(name = "widgets", showBackground = false, widthDp = PHONE_WIDTH_DP, heightDp = PHONE_HEIGHT_DP)
 @Composable
 fun Screen_Widgets() = PhoneHost {
     WidgetsScreen(onBack = {})
 }
 
+@Preview(name = "widgets · theme", showBackground = false, widthDp = PHONE_WIDTH_DP, heightDp = PHONE_HEIGHT_DP)
+@Composable
+fun Screen_Widgets_ThemeStyle(
+    @PreviewParameter(ThemeStyleProvider::class) style: ThemeStyle,
+) = PhoneHost(style = style) {
+    WidgetsScreen(onBack = {})
+}
+
 @Preview(name = "dashboard picker", showBackground = false, widthDp = PHONE_WIDTH_DP, heightDp = PHONE_HEIGHT_DP)
 @Composable
 fun Screen_DashboardPicker() = PhoneHost {
+    DashboardPickerScreen(
+        state = DashboardListState.Ready(
+            dashboards = listOf(
+                DashboardSummary(urlPath = null, title = "Home"),
+                DashboardSummary(urlPath = "lovelace-mobile", title = "Living room"),
+                DashboardSummary(urlPath = "lovelace-garage", title = "Garage"),
+            ),
+        ),
+        onDashboardPicked = {},
+    )
+}
+
+@Preview(name = "dashboard picker · theme", showBackground = false, widthDp = PHONE_WIDTH_DP, heightDp = PHONE_HEIGHT_DP)
+@Composable
+fun Screen_DashboardPicker_ThemeStyle(
+    @PreviewParameter(ThemeStyleProvider::class) style: ThemeStyle,
+) = PhoneHost(style = style) {
     DashboardPickerScreen(
         state = DashboardListState.Ready(
             dashboards = listOf(
