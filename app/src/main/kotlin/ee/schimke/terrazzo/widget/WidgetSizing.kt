@@ -21,12 +21,18 @@ internal object WidgetSizing {
         appWidgetManager: AppWidgetManager,
         widgetId: Int,
         cardHeightDp: Int,
-    ): WidgetSizeDp {
-        val options = appWidgetManager.getAppWidgetOptions(widgetId)
+    ): WidgetSizeDp =
+        targetSizeFromOptions(appWidgetManager.getAppWidgetOptions(widgetId), cardHeightDp)
+
+    internal fun targetSizeFromOptions(options: Bundle, cardHeightDp: Int): WidgetSizeDp {
         val minWidth = options.getDp(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, DEFAULT_WIDTH_DP)
-        val maxHeight = options.getDp(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT, cardHeightDp)
-        val targetHeight = cardHeightDp.coerceIn(DEFAULT_HEIGHT_DP, maxHeight.coerceAtLeast(DEFAULT_HEIGHT_DP))
-        return WidgetSizeDp(widthDp = minWidth, heightDp = targetHeight)
+        val maxWidth = options.getDp(AppWidgetManager.OPTION_APPWIDGET_MAX_WIDTH, minWidth)
+        val minHeight = options.getDp(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, DEFAULT_HEIGHT_DP)
+        val maxHeight = options.getDp(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT, minHeight)
+
+        val targetWidth = maxOf(minWidth, maxWidth)
+        val targetHeight = maxOf(minHeight, maxHeight, cardHeightDp)
+        return WidgetSizeDp(widthDp = targetWidth, heightDp = targetHeight)
     }
 
     fun dpToPx(context: Context, dp: Int): Int =
