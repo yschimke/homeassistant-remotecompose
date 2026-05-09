@@ -22,8 +22,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material.icons.filled.PushPin
+import androidx.compose.material.icons.outlined.PushPin
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -36,6 +39,7 @@ import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -49,6 +53,9 @@ import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.Dashboard
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.terrazzo.LocalTerrazzoGraph
+import ee.schimke.terrazzo.core.pin.MobilePinnedSection
+import ee.schimke.terrazzo.core.pin.PinStore
+import ee.schimke.terrazzo.core.pin.PinnedCardData
 import ee.schimke.terrazzo.core.session.DemoHaSession
 import ee.schimke.terrazzo.core.session.HaSession
 import ee.schimke.ha.rc.CachedCardPreview
@@ -72,6 +79,13 @@ import ee.schimke.terrazzo.ui.LocalIsDarkTheme
 import ee.schimke.terrazzo.ui.LocalThemeStyle
 import ee.schimke.terrazzo.ui.rememberLayoutConfig
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonPrimitive
 
 /**
  * Renders every top-level card in a dashboard as an independent `.rc`
@@ -171,7 +185,14 @@ fun DashboardViewScreen(
                 Text("Failed: ${s.message}", style = MaterialTheme.typography.bodyMedium)
             }
             is DashboardState.Ready ->
-                DashboardList(s.dashboard, s.snapshot, onCardLongPress, contentPadding)
+                DashboardList(
+                    dashboard = s.dashboard,
+                    snapshot = s.snapshot,
+                    baseUrl = session.baseUrl,
+                    dashboardUrlPath = urlPath ?: "",
+                    onCardLongPress = onCardLongPress,
+                    contentPadding = contentPadding,
+                )
         }
     }
 }
@@ -186,12 +207,16 @@ private sealed interface DashboardState {
 private fun DashboardList(
     dashboard: Dashboard,
     snapshot: HaSnapshot,
+    baseUrl: String,
+    dashboardUrlPath: String,
     onCardLongPress: (CardConfig) -> Unit,
     contentPadding: PaddingValues,
 ) {
     val registry = remember { defaultRegistry().withEnhancedShutter() }
     val layout = remember(dashboard) { buildDashboardLayout(dashboard) }
     val cfg = rememberLayoutConfig()
+    val pinStore = LocalTerrazzoGraph.current.pinStore
+    val pinScope = rememberCoroutineScope()
     val useGridLayout by LocalTerrazzoGraph.current
         .preferencesStore.experimentalGridLayout.collectAsState(initial = false)
     val collapsedMode by LocalTerrazzoGraph.current
@@ -260,6 +285,13 @@ private fun DashboardList(
                             if (expandedSectionByView[viewIndex] == sectionIndex) null else sectionIndex
                     },
                     onLongPress = onCardLongPress,
+                    pinContext = SectionPinContext(
+                        baseUrl = baseUrl,
+                        dashboardUrlPath = dashboardUrlPath,
+                        viewPath = view.viewPath,
+                        pinStore = pinStore,
+                        onPinAction = { action -> pinScope.launch { action() } },
+                    ),
                 )
             }
         }
@@ -320,6 +352,7 @@ private fun LazyListScope.renderView(
     expandedSectionIndex: Int?,
     onToggleSection: (Int) -> Unit,
     onLongPress: (CardConfig) -> Unit,
+    pinContext: SectionPinContext,
 ) {
     val viewKey = "v$viewIndex"
 
@@ -350,12 +383,15 @@ private fun LazyListScope.renderView(
             val expanded = !collapsible || expandedSectionIndex == sectionIndex
             item(key = sectionKey) {
                 SectionGroupSurface(haTheme) {
-                    section.title?.let { title ->
-                        SectionHeading(
-                            title = title,
+                    if (section.title != null) {
+                        PinnableSectionHeading(
+                            title = section.title,
                             collapsible = collapsible,
                             expanded = expanded,
                             onClick = { onToggleSection(sectionIndex) },
+                            pinContext = pinContext,
+                            sectionIndex = sectionIndex,
+                            section = section,
                         )
                     }
                     if (expanded) {
@@ -378,6 +414,7 @@ private fun LazyListScope.renderView(
                 registry = registry,
                 haTheme = haTheme,
                 onLongPress = onLongPress,
+                pinContext = pinContext,
             )
         }
     } else {
@@ -385,11 +422,13 @@ private fun LazyListScope.renderView(
             item(key = "$viewKey-srow$rowIndex") {
                 SectionRow(
                     sections = sectionRow,
+                    sectionIndexOffset = rowIndex * sectionColumns,
                     columns = sectionColumns,
                     snapshot = snapshot,
                     registry = registry,
                     haTheme = haTheme,
                     onLongPress = onLongPress,
+                    pinContext = pinContext,
                 )
             }
         }
@@ -408,6 +447,7 @@ private fun SectionHeading(
     collapsible: Boolean = false,
     expanded: Boolean = true,
     onClick: () -> Unit = {},
+    trailing: @Composable (() -> Unit)? = null,
 ) {
     val rowModifier = Modifier
         .fillMaxWidth()
@@ -430,8 +470,112 @@ private fun SectionHeading(
                 tint = MaterialTheme.colorScheme.onSurface,
             )
         }
+        trailing?.invoke()
     }
 }
+
+/**
+ * Context plumbed from [DashboardList] down through every section
+ * renderer. Carries enough to compute a stable pin key
+ * ([PinStore.sectionKey]) and to dispatch pin/unpin coroutines.
+ */
+private data class SectionPinContext(
+    val baseUrl: String,
+    val dashboardUrlPath: String,
+    val viewPath: String,
+    val pinStore: PinStore,
+    val onPinAction: (suspend () -> Unit) -> Unit,
+)
+
+/**
+ * [SectionHeading] plus a pin/unpin toggle. Stable key derives from
+ * the section's position in the dashboard so the same section keeps
+ * the same key across cold launches; unpin → re-pin is a no-op for
+ * downstream slot references.
+ */
+@Composable
+private fun PinnableSectionHeading(
+    title: String,
+    pinContext: SectionPinContext,
+    sectionIndex: Int,
+    section: SectionLayout,
+    collapsible: Boolean = false,
+    expanded: Boolean = true,
+    onClick: () -> Unit = {},
+) {
+    val key = remember(pinContext, sectionIndex) {
+        PinStore.sectionKey(
+            baseUrl = pinContext.baseUrl,
+            dashboardUrlPath = pinContext.dashboardUrlPath,
+            viewPath = pinContext.viewPath,
+            sectionIndex = sectionIndex,
+        )
+    }
+    val isPinned by pinContext.pinStore.isSectionPinned(key).collectAsState(initial = false)
+    SectionHeading(
+        title = title,
+        collapsible = collapsible,
+        expanded = expanded,
+        onClick = onClick,
+        trailing = {
+            IconButton(
+                onClick = {
+                    pinContext.onPinAction {
+                        if (isPinned) {
+                            pinContext.pinStore.unpinSection(key)
+                        } else {
+                            pinContext.pinStore.pinSection(
+                                MobilePinnedSection(
+                                    key = key,
+                                    baseUrl = pinContext.baseUrl,
+                                    dashboardUrlPath = pinContext.dashboardUrlPath,
+                                    viewPath = pinContext.viewPath,
+                                    sectionIndex = sectionIndex,
+                                    title = title,
+                                    cards = section.cards.map { it.toPinnedData() },
+                                )
+                            )
+                        }
+                    }
+                },
+            ) {
+                Icon(
+                    imageVector = if (isPinned) Icons.Filled.PushPin else Icons.Outlined.PushPin,
+                    contentDescription = if (isPinned) "Unpin section from Wear" else "Pin section to Wear",
+                    tint = MaterialTheme.colorScheme.onSurface,
+                )
+            }
+        },
+    )
+}
+
+/**
+ * Capture a [CardConfig] into the pin store's neutral [PinnedCardData]
+ * shape. Title and primary entity are pulled from the same JSON keys
+ * `MobileWearSyncManager.toSummary` uses so the wear-side rendering is
+ * consistent with what the live publish path produces.
+ */
+internal fun CardConfig.toPinnedData(): PinnedCardData {
+    val raw = this.raw
+    val title = raw["title"]?.jsonPrimitive?.contentOrNull
+        ?: raw["heading"]?.jsonPrimitive?.contentOrNull
+        ?: raw["name"]?.jsonPrimitive?.contentOrNull
+        ?: this.type
+    val primary = raw["entity"]?.jsonPrimitive?.contentOrNull
+        ?: raw["entities"]?.jsonArray?.firstOrNull()?.let {
+            (it as? JsonPrimitive)?.contentOrNull
+                ?: (it as? JsonObject)?.get("entity")?.jsonPrimitive?.contentOrNull
+        }
+        ?: ""
+    return PinnedCardData(
+        type = this.type,
+        title = title,
+        primaryEntity = primary,
+        rawJson = pinJson.encodeToString(JsonObject.serializer(), raw),
+    )
+}
+
+private val pinJson = Json { ignoreUnknownKeys = true }
 
 /**
  * One row of [columns] section-columns laid out side-by-side. Cards
@@ -445,24 +589,28 @@ private fun SectionHeading(
 @Composable
 private fun SectionRow(
     sections: List<SectionLayout>,
+    sectionIndexOffset: Int,
     columns: Int,
     snapshot: HaSnapshot,
     registry: ee.schimke.ha.rc.CardRegistry,
     haTheme: HaTheme,
     onLongPress: (CardConfig) -> Unit,
+    pinContext: SectionPinContext,
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(16.dp),
         verticalAlignment = Alignment.Top,
     ) {
-        sections.forEach { section ->
+        sections.forEachIndexed { offset, section ->
             SectionColumn(
                 section = section,
+                sectionIndex = sectionIndexOffset + offset,
                 snapshot = snapshot,
                 registry = registry,
                 haTheme = haTheme,
                 onLongPress = onLongPress,
+                pinContext = pinContext,
                 modifier = Modifier.weight(1f),
             )
         }
@@ -497,6 +645,7 @@ private fun SectionGrid(
     registry: ee.schimke.ha.rc.CardRegistry,
     haTheme: HaTheme,
     onLongPress: (CardConfig) -> Unit,
+    pinContext: SectionPinContext,
 ) {
     Grid(
         modifier = Modifier.fillMaxWidth(),
@@ -505,13 +654,15 @@ private fun SectionGrid(
             gap(row = 16.dp, column = 16.dp)
         },
     ) {
-        sections.forEach { section ->
+        sections.forEachIndexed { sectionIndex, section ->
             SectionColumn(
                 section = section,
+                sectionIndex = sectionIndex,
                 snapshot = snapshot,
                 registry = registry,
                 haTheme = haTheme,
                 onLongPress = onLongPress,
+                pinContext = pinContext,
                 modifier = Modifier.gridItem(),
             )
         }
@@ -521,14 +672,23 @@ private fun SectionGrid(
 @Composable
 private fun SectionColumn(
     section: SectionLayout,
+    sectionIndex: Int,
     snapshot: HaSnapshot,
     registry: ee.schimke.ha.rc.CardRegistry,
     haTheme: HaTheme,
     onLongPress: (CardConfig) -> Unit,
+    pinContext: SectionPinContext,
     modifier: Modifier = Modifier,
 ) {
     SectionGroupSurface(haTheme = haTheme, modifier = modifier) {
-        section.title?.let { SectionHeading(it) }
+        section.title?.let {
+            PinnableSectionHeading(
+                title = it,
+                pinContext = pinContext,
+                sectionIndex = sectionIndex,
+                section = section,
+            )
+        }
         section.cards.forEach { card ->
             // No `height(...)` — the wrap-adaptive player (see
             // `CachedCardPreview` / `WrapAdaptiveRemoteDocumentPlayer`)

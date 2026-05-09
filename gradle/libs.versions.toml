@@ -16,6 +16,10 @@ compose-compiler = "1.5.15"
 remote-compose = "1.0.0-alpha010"
 remote-material3 = "1.0.0-alpha03"
 
+# AndroidX Glance Wear (alpha — runtime feature gated on Wear OS 7+ / API 37
+# inside the library; we use it for the per-slot wear widgets).
+glance-wear = "1.0.0-alpha09"
+
 # Android
 android-minSdk = "29"
 android-compileSdk = "37"
@@ -73,6 +77,10 @@ activity-compose = { module = "androidx.activity:activity-compose", version = "1
 # Wear Compose (stub module — full app lands later)
 wear-compose-material3 = { module = "androidx.wear.compose:compose-material3", version = "1.6.1" }
 wear-compose-foundation = { module = "androidx.wear.compose:compose-foundation", version = "1.6.1" }
+
+# AndroidX Glance Wear — Wear OS widget framework (alpha).
+glance-wear = { module = "androidx.glance.wear:wear", version.ref = "glance-wear" }
+glance-wear-core = { module = "androidx.glance.wear:wear-core", version.ref = "glance-wear" }
 
 # TV Compose (stub module)
 tv-material = { module = "androidx.tv:tv-material", version = "1.1.0" }

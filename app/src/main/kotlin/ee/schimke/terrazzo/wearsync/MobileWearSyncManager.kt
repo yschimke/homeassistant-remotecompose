@@ -10,9 +10,14 @@ import com.google.android.gms.wearable.Wearable
 import com.google.android.horologist.data.WearDataLayerRegistry
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.EntityState
+import ee.schimke.terrazzo.core.pin.MobilePinnedCard
+import ee.schimke.terrazzo.core.pin.MobilePinnedSection
+import ee.schimke.terrazzo.core.pin.PinStore
+import ee.schimke.terrazzo.core.pin.PinnedCardData
+import ee.schimke.terrazzo.core.pin.WearWidgetSlot
+import ee.schimke.terrazzo.core.pin.WearWidgetSlotsStore
 import ee.schimke.terrazzo.core.prefs.PreferencesStore
 import ee.schimke.terrazzo.core.session.HaSession
-import ee.schimke.terrazzo.core.widget.WidgetStore
 import ee.schimke.terrazzo.wearsync.proto.CardSummary
 import ee.schimke.terrazzo.wearsync.proto.DashboardData
 import ee.schimke.terrazzo.wearsync.proto.EntityDelta
@@ -20,10 +25,14 @@ import ee.schimke.terrazzo.wearsync.proto.EntityValue
 import ee.schimke.terrazzo.wearsync.proto.LiveValues
 import ee.schimke.terrazzo.wearsync.proto.PinnedCard
 import ee.schimke.terrazzo.wearsync.proto.PinnedCardSet
+import ee.schimke.terrazzo.wearsync.proto.PinnedSection
+import ee.schimke.terrazzo.wearsync.proto.PinnedSectionSet
 import ee.schimke.terrazzo.wearsync.proto.StreamUpdate
 import ee.schimke.terrazzo.wearsync.proto.WearLease
 import ee.schimke.terrazzo.wearsync.proto.WearSettings
 import ee.schimke.terrazzo.wearsync.proto.WearSyncPaths
+import ee.schimke.terrazzo.wearsync.proto.WearWidgetSlots
+import ee.schimke.terrazzo.wearsync.proto.WidgetSlot
 import ee.schimke.terrazzo.wearsync.proto.decodeProto
 import ee.schimke.terrazzo.wearsync.proto.encodeProto
 import kotlinx.coroutines.CoroutineScope
@@ -54,7 +63,8 @@ import kotlinx.serialization.json.jsonPrimitive
  *  - The current snapshot → `/wear/values` (DataStore-style at the wall
  *    refresh interval) **or** `/wear/stream` (MessageClient ephemeral
  *    deltas) when wear holds an active lease
- *  - [WidgetStore.installed] → `/wear/pinned`
+ *  - [PinStore.cards] → `/wear/pinned`
+ *  - [PinStore.sections] → `/wear/sections`
  *
  * Lease is tracked via MessageClient frames at `/wear/lease`: as long as
  * a recent lease arrived (or pinned cards exist) the manager streams
@@ -116,7 +126,8 @@ class MobileWearSyncManager(
     fun start(
         scope: CoroutineScope,
         prefs: PreferencesStore,
-        widgetStore: WidgetStore,
+        pinStore: PinStore,
+        slotsStore: WearWidgetSlotsStore,
     ) {
         managerScope = scope
         messageClient.addListener(leaseListener)
@@ -134,34 +145,48 @@ class MobileWearSyncManager(
                 .collect { writeDataItem(WearSyncPaths.SETTINGS, encodeProto(it)) }
         }
 
-        // Pinned widgets → /wear/pinned.
+        // Pinned cards → /wear/pinned. Source switched from
+        // WidgetStore (phone home-screen widgets) to the new PinStore so
+        // the watch's top-level nav reflects the user's explicit Wear
+        // pins, decoupled from the phone widget set.
         scope.launch {
-            widgetStore.installed
-                .map { entries ->
-                    PinnedCardSet(
-                        cards = entries.map { entry ->
-                            PinnedCard(
-                                baseUrl = entry.baseUrl,
-                                card = entry.card.toSummary(),
-                            )
-                        },
-                        updatedAtMs = System.currentTimeMillis(),
-                    )
-                }
+            pinStore.cards
+                .map { it.toProto() }
                 .distinctUntilChanged()
                 .collect { writeDataItem(WearSyncPaths.PINNED, encodeProto(it)) }
         }
 
-        // Session snapshot pump. Re-driven on every session change so the
-        // demo session and live session each get their own loop.
+        // Pinned sections → /wear/sections.
         scope.launch {
-            combine(sessionState, widgetStore.installed) { s, pinned -> s to pinned }
-                .collectLatest { (session, pinned) ->
+            pinStore.sections
+                .map { it.toProto() }
+                .distinctUntilChanged()
+                .collect { writeDataItem(WearSyncPaths.SECTIONS, encodeProto(it)) }
+        }
+
+        // Wear-widget slots → /wear/slots. Empty assignments survive
+        // the wire so the watch can disable matching widget providers.
+        scope.launch {
+            slotsStore.slots
+                .map { it.toProto() }
+                .distinctUntilChanged()
+                .collect { writeDataItem(WearSyncPaths.SLOTS, encodeProto(it)) }
+        }
+
+        // Session snapshot pump. Re-driven on every session change so the
+        // demo session and live session each get their own loop. The
+        // streaming-vs-batched decision now keys off the unified pin set
+        // (cards + sections); any pin keeps the live stream warm.
+        scope.launch {
+            combine(sessionState, pinStore.cards, pinStore.sections) { s, cards, sections ->
+                Triple(s, cards.isNotEmpty() || sections.isNotEmpty(), Unit)
+            }
+                .collectLatest { (session, hasPinned, _) ->
                     streamJob?.cancel()
                     streamJob = null
                     if (session == null) return@collectLatest
                     publishDashboards(session)
-                    streamJob = scope.launch { sessionPump(session, pinned.isNotEmpty()) }
+                    streamJob = scope.launch { sessionPump(session, hasPinned) }
                 }
         }
     }
@@ -171,6 +196,7 @@ class MobileWearSyncManager(
         runCatching { messageClient.removeListener(leaseListener) }
         streamJob?.cancel()
     }
+
 
     /**
      * Wear → phone path. Ephemeral message delivered if wear-side
@@ -298,6 +324,58 @@ private fun CardConfig.toSummary(states: Map<String, EntityState> = emptyMap()):
 }
 
 private val json = Json { ignoreUnknownKeys = true }
+
+/**
+ * Convert the mobile pin store's pinned-card list into the proto wire
+ * shape the watch consumes. Captured fields flow through unchanged —
+ * the pin store is the source of truth for title / primary entity at
+ * the time of pinning.
+ */
+private fun List<MobilePinnedCard>.toProto(): PinnedCardSet =
+    PinnedCardSet(
+        cards = this.sortedBy { it.orderIndex }.map { entry ->
+            PinnedCard(
+                baseUrl = entry.baseUrl,
+                card = entry.card.toProto(),
+                cardKey = entry.key,
+                orderIndex = entry.orderIndex,
+            )
+        },
+        updatedAtMs = System.currentTimeMillis(),
+    )
+
+@JvmName("slotsToProto")
+private fun List<WearWidgetSlot>.toProto(): WearWidgetSlots =
+    WearWidgetSlots(
+        slots = this.map { WidgetSlot(slotIndex = it.slotIndex, cardKey = it.cardKey) },
+        updatedAtMs = System.currentTimeMillis(),
+    )
+
+@JvmName("sectionsToProto")
+private fun List<MobilePinnedSection>.toProto(): PinnedSectionSet =
+    PinnedSectionSet(
+        sections = this.sortedBy { it.orderIndex }.map { entry ->
+            PinnedSection(
+                baseUrl = entry.baseUrl,
+                dashboardUrlPath = entry.dashboardUrlPath,
+                viewPath = entry.viewPath,
+                sectionIndex = entry.sectionIndex,
+                title = entry.title,
+                cards = entry.cards.map { it.toProto() },
+                sectionKey = entry.key,
+                orderIndex = entry.orderIndex,
+            )
+        },
+        updatedAtMs = System.currentTimeMillis(),
+    )
+
+private fun PinnedCardData.toProto(): CardSummary =
+    CardSummary(
+        type = this.type,
+        title = this.title,
+        primaryEntityId = this.primaryEntity,
+        rawJson = this.rawJson,
+    )
 
 private suspend fun <T> com.google.android.gms.tasks.Task<T>.await(): T =
     kotlinx.coroutines.suspendCancellableCoroutine { cont ->

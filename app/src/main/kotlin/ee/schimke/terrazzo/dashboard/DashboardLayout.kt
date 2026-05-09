@@ -29,6 +29,13 @@ data class DashboardLayout(val views: List<ViewLayout>) {
 
 data class ViewLayout(
     val title: String?,
+    /**
+     * Lovelace's [ee.schimke.ha.model.View.path] — the optional view
+     * slug. Used as part of the stable key for pinned sections so that
+     * reordering views in HA doesn't silently invalidate pins (the path
+     * is the only sort-stable handle a view exposes).
+     */
+    val viewPath: String,
     val orphanCards: List<CardConfig>,
     val sections: List<SectionLayout>,
 )
@@ -48,9 +55,10 @@ data class SectionLayout(
  */
 fun buildDashboardLayout(dashboard: Dashboard): DashboardLayout =
     DashboardLayout(
-        views = dashboard.views.map { view ->
+        views = dashboard.views.mapIndexed { viewIndex, view ->
             ViewLayout(
                 title = view.title,
+                viewPath = view.path?.takeIf { it.isNotEmpty() } ?: "view-$viewIndex",
                 orphanCards = view.cards,
                 sections = view.sections.map { section ->
                     SectionLayout(title = section.title, cards = section.cards)
