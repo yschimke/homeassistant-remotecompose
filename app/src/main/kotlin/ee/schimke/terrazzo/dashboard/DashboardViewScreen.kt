@@ -384,8 +384,10 @@ private fun LazyListScope.renderView(
             val expanded = !collapsible || expandedSectionIndex == sectionIndex
             item(key = sectionKey) {
                 SectionGroupSurface(haTheme) {
-                    val headingTitle = section.title ?: "Section ${sectionIndex + 1}"
-                    if (collapsible || section.title != null) {
+                    val headingModel = resolveSectionHeading(section, sectionIndex)
+                    val headingTitle = headingModel.title
+                    val showHeading = collapsible || section.title != null
+                    if (showHeading) {
                         PinnableSectionHeading(
                             title = headingTitle,
                             collapsible = collapsible,
@@ -397,7 +399,8 @@ private fun LazyListScope.renderView(
                         )
                     }
                     if (expanded) {
-                        val rows = packAndChunk(section.cards, cfg.compactCardsPerRow) { c ->
+                        val renderedCards = if (showHeading) headingModel.visibleCards else section.cards
+                        val rows = packAndChunk(renderedCards, cfg.compactCardsPerRow) { c ->
                             registry.cardWidthClass(c, snapshot)
                         }
                         rows.forEach { row ->
@@ -436,6 +439,40 @@ private fun LazyListScope.renderView(
         }
     }
 }
+
+private data class SectionHeadingModel(
+    val title: String,
+    val visibleCards: List<CardConfig>,
+)
+
+private val SECTION_HEADER_CARD_TYPES: Set<String> = setOf("button", "tile", "entity")
+
+private fun resolveSectionHeading(section: SectionLayout, sectionIndex: Int): SectionHeadingModel {
+    section.title?.let { return SectionHeadingModel(title = it, visibleCards = section.cards) }
+    val firstCard = section.cards.firstOrNull()
+    if (firstCard != null && firstCard.canActAsSectionHeader()) {
+        return SectionHeadingModel(
+            title = firstCard.headingLikeTitle(),
+            visibleCards = section.cards.drop(1),
+        )
+    }
+    return SectionHeadingModel(
+        title = "Section ${sectionIndex + 1}",
+        visibleCards = section.cards,
+    )
+}
+
+private fun CardConfig.canActAsSectionHeader(): Boolean {
+    if (type !in SECTION_HEADER_CARD_TYPES) return false
+    val entity = raw["entity"]?.jsonPrimitive?.contentOrNull
+    val entities = raw["entities"]?.jsonArray?.isNotEmpty() == true
+    return entity.isNullOrBlank() && !entities && headingLikeTitle().isNotBlank()
+}
+
+private fun CardConfig.headingLikeTitle(): String = raw["title"]?.jsonPrimitive?.contentOrNull
+    ?: raw["heading"]?.jsonPrimitive?.contentOrNull
+    ?: raw["name"]?.jsonPrimitive?.contentOrNull
+    ?: type
 
 /**
  * Heading for a section title. Shared between single-column and wide
