@@ -9,6 +9,7 @@ import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.jsonObject
+import kotlin.time.Instant
 
 private val json = Json { ignoreUnknownKeys = true; isLenient = true }
 
@@ -412,7 +413,7 @@ object Fixtures {
             22.4f, 22.7f, 22.9f, 23.0f, 23.1f, 23.0f, 22.9f, 22.8f,
             22.6f, 22.5f, 22.4f, 22.3f, 22.3f, 22.2f, 22.2f, 22.2f,
         )
-        val baseTime = kotlinx.datetime.Instant.parse("2026-05-05T00:00:00Z")
+        val baseTime = Instant.parse("2026-05-05T00:00:00Z")
         fun series(name: String, samples: List<Float>) =
             samples.mapIndexed { i, v ->
                 ee.schimke.ha.model.HistoryPoint(
@@ -452,7 +453,7 @@ object Fixtures {
                 )),
             ),
         )
-        val baseTime = kotlinx.datetime.Instant.parse("2026-05-05T00:00:00Z")
+        val baseTime = Instant.parse("2026-05-05T00:00:00Z")
         // Mean power consumption per hour — house draws are baseline
         // ~600W, peaks during cooking + evening; solar follows midday.
         val houseMeans = listOf(

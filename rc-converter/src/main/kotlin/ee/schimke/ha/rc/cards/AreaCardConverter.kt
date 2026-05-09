@@ -10,7 +10,6 @@ import androidx.compose.material.icons.filled.Window
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.HaSnapshot
@@ -89,7 +88,7 @@ class AreaCardConverter : CardConverter {
                     }
                 HaAreaAction(
                     entityId = id,
-                    icon = icon as ImageVector,
+                    icon = icon,
                     accent = accent,
                     initiallyActive = entity.state == "on" || entity.state == "open",
                     tapAction = HaAction.Toggle(id),

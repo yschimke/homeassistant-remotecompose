@@ -7,10 +7,11 @@ plugins {
 kotlin {
   jvmToolchain(libs.versions.java.get().toInt())
 
-  androidLibrary {
+  android {
     namespace = "ee.schimke.ha.client"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
     minSdk = libs.versions.android.minSdk.get().toInt()
+    withHostTest {}
   }
   jvm()
 

@@ -1,4 +1,4 @@
-@file:Suppress("RestrictedApi")
+@file:Suppress("COMPOSE_APPLIER_CALL_MISMATCH", "RestrictedApi")
 
 package ee.schimke.ha.previews
 

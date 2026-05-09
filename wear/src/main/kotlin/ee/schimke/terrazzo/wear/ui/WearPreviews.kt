@@ -1,13 +1,13 @@
 package ee.schimke.terrazzo.wear.ui
 
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.wear.compose.material3.AppScaffold
 import androidx.wear.compose.material3.MaterialTheme
 import androidx.wear.compose.material3.ScreenScaffold
 import androidx.wear.compose.material3.TimeSource
 import androidx.wear.compose.material3.TimeText
+import androidx.wear.tooling.preview.devices.WearDevices
 import ee.schimke.ha.rc.components.ThemeStyle
 import ee.schimke.terrazzo.wearsync.proto.CardSummary
 import ee.schimke.terrazzo.wearsync.proto.DashboardData
@@ -106,7 +106,7 @@ private val DASHBOARDS_FIXTURE = listOf(
     ),
 )
 
-@Preview(name = "Wear: top-level (live)", device = Devices.WEAR_OS_SMALL_ROUND, showSystemUi = true)
+@Preview(name = "Wear: top-level (live)", device = WearDevices.SMALL_ROUND, showSystemUi = true)
 @Composable
 fun WearTopLevelPreview_Live() {
     WearPreviewFrame {
@@ -122,7 +122,7 @@ fun WearTopLevelPreview_Live() {
     }
 }
 
-@Preview(name = "Wear: top-level (demo)", device = Devices.WEAR_OS_SMALL_ROUND, showSystemUi = true)
+@Preview(name = "Wear: top-level (demo)", device = WearDevices.SMALL_ROUND, showSystemUi = true)
 @Composable
 fun WearTopLevelPreview_Demo() {
     WearPreviewFrame {
@@ -138,7 +138,7 @@ fun WearTopLevelPreview_Demo() {
     }
 }
 
-@Preview(name = "Wear: top-level (empty)", device = Devices.WEAR_OS_SMALL_ROUND, showSystemUi = true)
+@Preview(name = "Wear: top-level (empty)", device = WearDevices.SMALL_ROUND, showSystemUi = true)
 @Composable
 fun WearTopLevelPreview_Empty() {
     WearPreviewFrame {
@@ -154,7 +154,7 @@ fun WearTopLevelPreview_Empty() {
     }
 }
 
-@Preview(name = "Wear: section", device = Devices.WEAR_OS_SMALL_ROUND, showSystemUi = true)
+@Preview(name = "Wear: section", device = WearDevices.SMALL_ROUND, showSystemUi = true)
 @Composable
 fun WearSectionPreview() {
     WearPreviewFrame {
@@ -168,7 +168,7 @@ fun WearSectionPreview() {
     }
 }
 
-@Preview(name = "Wear: dashboards", device = Devices.WEAR_OS_SMALL_ROUND, showSystemUi = true)
+@Preview(name = "Wear: dashboards", device = WearDevices.SMALL_ROUND, showSystemUi = true)
 @Composable
 fun WearDashboardsPreview() {
     WearPreviewFrame {
@@ -180,7 +180,7 @@ fun WearDashboardsPreview() {
     }
 }
 
-@Preview(name = "Wear: dashboard", device = Devices.WEAR_OS_SMALL_ROUND, showSystemUi = true)
+@Preview(name = "Wear: dashboard", device = WearDevices.SMALL_ROUND, showSystemUi = true)
 @Composable
 fun WearDashboardPreview() {
     WearPreviewFrame {
@@ -202,7 +202,7 @@ fun WearDashboardPreview() {
     }
 }
 
-@Preview(name = "Wear: settings", device = Devices.WEAR_OS_SMALL_ROUND, showSystemUi = true)
+@Preview(name = "Wear: settings", device = WearDevices.SMALL_ROUND, showSystemUi = true)
 @Composable
 fun WearSettingsPreview() {
     WearPreviewFrame {
