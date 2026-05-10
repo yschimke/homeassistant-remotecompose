@@ -71,14 +71,15 @@ private val ExpandedMaxWidth = 840.dp
 fun rememberLayoutConfig(): LayoutConfig {
     val configuration = LocalConfiguration.current
     val widthDp = configuration.screenWidthDp
-    val isLandscape = configuration.screenWidthDp > configuration.screenHeightDp
+    val heightDp = configuration.screenHeightDp
+    val isLandscape = widthDp > heightDp
     return when (WindowSize.fromWidthDp(widthDp)) {
         WindowSize.Compact -> LayoutConfig(
             windowSize = WindowSize.Compact,
             compactCardsPerRow = 2,
             maxContentWidth = Dp.Unspecified,
             horizontalGutter = 12.dp,
-            maxSectionColumns = 1,
+            maxSectionColumns = if (isLandscape) 2 else 1,
         )
         WindowSize.Medium -> LayoutConfig(
             windowSize = WindowSize.Medium,
