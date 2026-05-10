@@ -89,7 +89,7 @@ object Markdown {
     private fun visibleText(node: ASTNode, src: String): String {
         val sb = StringBuilder()
         appendVisible(node, src, sb)
-        return sb.toString().replace(WHITESPACE, " ").trim()
+        return sb.toString().replace(HORIZONTAL_WHITESPACE, " ").trim()
     }
 
     private fun appendVisible(node: ASTNode, src: String, sb: StringBuilder) {
@@ -120,7 +120,7 @@ object Markdown {
         if (node.children.isEmpty()) {
             when (node.type) {
                 MarkdownTokenTypes.EOL,
-                MarkdownTokenTypes.HARD_LINE_BREAK -> sb.append(' ')
+                MarkdownTokenTypes.HARD_LINE_BREAK -> sb.append('\n')
                 in MARKUP_TOKENS -> Unit
                 else -> sb.append(node.getTextInNode(src))
             }
@@ -129,7 +129,7 @@ object Markdown {
         }
     }
 
-    private val WHITESPACE = Regex("\\s+")
+    private val HORIZONTAL_WHITESPACE = Regex("[ \\t\\x0B\\f\\r]+")
 
     private val MARKUP_TOKENS = setOf(
         MarkdownTokenTypes.EMPH,
