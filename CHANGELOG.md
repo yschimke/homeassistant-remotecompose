@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.1.18](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.17...v0.1.18) (2026-05-10)
+
+
+### Features
+
+* experimental variant and scoped monitoring service ([#234](https://github.com/yschimke/homeassistant-remotecompose/issues/234)) ([91cad05](https://github.com/yschimke/homeassistant-remotecompose/commit/91cad05e6039ed7129103b96ff9291edc759329a))
+
+
+### Bug Fixes
+
+* failing build ([#231](https://github.com/yschimke/homeassistant-remotecompose/issues/231)) ([2bd96c6](https://github.com/yschimke/homeassistant-remotecompose/commit/2bd96c66fd75c507044585307bc71ca18883d996))
+* markdown ([#233](https://github.com/yschimke/homeassistant-remotecompose/issues/233)) ([25a9838](https://github.com/yschimke/homeassistant-remotecompose/commit/25a98381637abcd2d97c804c69d05b35ed5ed706))
+
 ## [0.1.17](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.16...v0.1.17) (2026-05-10)
 
 
