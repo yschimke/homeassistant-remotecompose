@@ -14,6 +14,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Density
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth as rcFillMaxWidth
 import androidx.compose.runtime.Composable
@@ -96,6 +99,14 @@ data class WidgetGridSize(val cellsW: Int, val cellsH: Int) {
 private val WearSmall = WidgetSizeDp(widthDp = 200, heightDp = 60)
 private val WearLarge = WidgetSizeDp(widthDp = 200, heightDp = 112)
 
+/**
+ * Wear watches typically run at ~2.0× density (xhdpi). The launcher /
+ * mobile dashboard cells inherit the @Preview's density (≈2.625×, the
+ * project standard for HA reference parity), so each surface in the
+ * matrix renders at the density it would on the real device.
+ */
+private const val WearDensityScale: Float = 2f
+
 private data class WidgetSizeDp(val widthDp: Int, val heightDp: Int)
 
 /**
@@ -173,12 +184,14 @@ fun CardPreviewMatrix(
                             snapshot = snapshot,
                             sizeDp = WearSmall,
                             label = "Wear S",
+                            densityScale = WearDensityScale,
                         )
                         FixedModeCell(
                             card = card,
                             snapshot = snapshot,
                             sizeDp = WearLarge,
                             label = "Wear L",
+                            densityScale = WearDensityScale,
                         )
                     }
                 }
@@ -224,25 +237,44 @@ private fun FixedModeCell(
     snapshot: HaSnapshot,
     sizeDp: WidgetSizeDp,
     label: String,
+    densityScale: Float? = null,
 ) {
     // Fixed mode: cell is exactly sizeDp. Border draws the container
     // shape so the launcher / wear widget bounds are visible even
     // when the card itself doesn't fill the cell.
-    CellLabelled(label = label, widthDp = sizeDp.widthDp) {
-        Box(
-            modifier = Modifier.size(sizeDp.widthDp.dp, sizeDp.heightDp.dp).cellOutline(),
-        ) {
-            CachedCardPreview(
-                cacheKey = MatrixCellKey(card, CardSizeMode.Fixed, sizeDp.widthDp, sizeDp.heightDp),
-                profile = androidXExperimentalWrap,
-                modifier = Modifier.fillMaxSize(),
-                card = card,
-                snapshot = snapshot,
+    //
+    // [densityScale] overrides LocalDensity for the cell so wear cells
+    // can render at watch-typical 2× density while launcher cells stay
+    // at the @Preview's mobile density. The captured `.rc` document
+    // bakes its dp coordinates against this density.
+    val parentDensity = LocalDensity.current
+    val cellDensity =
+        densityScale?.let { Density(it, parentDensity.fontScale) } ?: parentDensity
+    CompositionLocalProvider(LocalDensity provides cellDensity) {
+        CellLabelled(label = label, widthDp = sizeDp.widthDp) {
+            Box(
+                modifier =
+                    Modifier.size(sizeDp.widthDp.dp, sizeDp.heightDp.dp).cellOutline(),
             ) {
-                ProvideCardRegistry(defaultRegistry()) {
-                    ProvideHaTheme(HaTheme.Dark) {
-                        ProvideCardSizeMode(CardSizeMode.Fixed) {
-                            RenderChild(card, snapshot, RemoteModifier.rcFillMaxWidth())
+                CachedCardPreview(
+                    cacheKey =
+                        MatrixCellKey(
+                            card,
+                            CardSizeMode.Fixed,
+                            sizeDp.widthDp,
+                            sizeDp.heightDp,
+                            densityScale,
+                        ),
+                    profile = androidXExperimentalWrap,
+                    modifier = Modifier.fillMaxSize(),
+                    card = card,
+                    snapshot = snapshot,
+                ) {
+                    ProvideCardRegistry(defaultRegistry()) {
+                        ProvideHaTheme(HaTheme.Dark) {
+                            ProvideCardSizeMode(CardSizeMode.Fixed) {
+                                RenderChild(card, snapshot, RemoteModifier.rcFillMaxWidth())
+                            }
                         }
                     }
                 }
@@ -287,6 +319,7 @@ private data class MatrixCellKey(
     val mode: CardSizeMode,
     val widthDp: Int,
     val heightDp: Int?,
+    val densityScale: Float? = null,
 )
 
 // ── @Preview entries ─────────────────────────────────────────────────

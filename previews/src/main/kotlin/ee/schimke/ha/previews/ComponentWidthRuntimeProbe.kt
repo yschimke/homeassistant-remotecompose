@@ -95,30 +95,21 @@ private fun ProbeCell(widthDp: Int, heightDp: Int) {
                 // Hard-coded threshold of 350 (px) so the boolean
                 // flips at runtime: cells ≥ 160 dp at 2.625 density
                 // (≥ 420 px) come in as TRUE; smaller cells as FALSE.
-                val threshold = 350f.rf
-                val isLarge = width.ge(threshold)
-                // Sum-of-bools tier expression — same shape
-                // RemoteSizeBreakpoint uses, but rendered visibly so
-                // we can confirm it resolves at playback.
-                val tier: RemoteInt = 0.ri + isLarge.toRemoteInt()
+                val isLarge = width.ge(350f.rf)
                 RemoteColumn(modifier = RemoteModifier.rcFillMaxSize()) {
                     RemoteText(
-                        text = "w=" + width.toRemoteString(IntFormat),
+                        text = width.toRemoteString(IntFormat),
                         color = Color.White.rc,
                     )
                     RemoteText(
-                        text = "≥350: " + isLarge.select("Y".rs, "N".rs),
+                        text = isLarge.select("BIG".rs, "small".rs),
                         color = Color.White.rc,
                     )
-                    RemoteText(
-                        text = "tier=" + tier.toRemoteString(0, 0),
-                        color = Color.White.rc,
-                    )
-                    // Same tier expression fed into a state layout so
-                    // we can see whether the layout actually swaps.
-                    RemoteStateLayout(tier, 0, 1, modifier = RemoteModifier) { variant ->
+                    // Boolean state layout — does it pick the right
+                    // variant at playback?
+                    RemoteStateLayout(isLarge) { on ->
                         RemoteText(
-                            text = if (variant == 0) "[compact]".rs else "[full]".rs,
+                            text = if (on) "B-on".rs else "B-off".rs,
                             color = Color.White.rc,
                         )
                     }
