@@ -31,6 +31,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import ee.schimke.ha.rc.CachedCardPreview
+import ee.schimke.ha.rc.RemoteSizeBreakpoint
 import ee.schimke.ha.rc.androidXExperimentalWrap
 import ee.schimke.ha.rc.components.HaTheme
 import ee.schimke.ha.rc.enableRemoteComposeWrapContent
@@ -87,7 +88,7 @@ private fun ProbeCell(widthDp: Int, heightDp: Int) {
             ) {
                 val width =
                     RemoteFloat.createNamedRemoteFloatExpression(
-                        name = "__cw_probe",
+                        name = "__cw_probe_inline",
                         domain = RemoteState.Domain.User,
                     ) {
                         componentWidth()
@@ -105,11 +106,18 @@ private fun ProbeCell(widthDp: Int, heightDp: Int) {
                         text = isLarge.select("BIG".rs, "small".rs),
                         color = Color.White.rc,
                     )
-                    // Boolean state layout — does it pick the right
-                    // variant at playback?
+                    // Inline boolean state-layout (the v4 path that
+                    // worked).
                     RemoteStateLayout(isLarge) { on ->
                         RemoteText(
-                            text = if (on) "B-on".rs else "B-off".rs,
+                            text = if (on) "in-on".rs else "in-off".rs,
+                            color = Color.White.rc,
+                        )
+                    }
+                    // Helper call (the path under test).
+                    RemoteSizeBreakpoint(thresholdsDp = intArrayOf(120)) { tier ->
+                        RemoteText(
+                            text = if (tier == 0) "BP-T0".rs else "BP-T1".rs,
                             color = Color.White.rc,
                         )
                     }
@@ -119,4 +127,4 @@ private fun ProbeCell(widthDp: Int, heightDp: Int) {
     }
 }
 
-private data class ProbeKey(val widthDp: Int, val heightDp: Int)
+private data class ProbeKey(val widthDp: Int, val heightDp: Int, val version: Int = 8)

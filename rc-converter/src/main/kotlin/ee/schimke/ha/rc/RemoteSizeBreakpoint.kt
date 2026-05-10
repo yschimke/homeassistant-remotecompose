@@ -5,11 +5,10 @@ package ee.schimke.ha.rc
 import androidx.compose.remote.creation.compose.layout.RemoteStateLayout
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.state.RemoteFloat
-import androidx.compose.remote.creation.compose.state.RemoteInt
 import androidx.compose.remote.creation.compose.state.RemoteState
-import androidx.compose.remote.creation.compose.state.rf
-import androidx.compose.remote.creation.compose.state.ri
+import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 
 /**
  * Switch between layout variants based on the live component width at
@@ -18,23 +17,39 @@ import androidx.compose.runtime.Composable
  * launcher / Glance Wear tile surface decides the canvas, this picks
  * the variant that fits.
  *
- * Thresholds are an ascending list of widths in document units (≈ dp).
- * For `thresholdsDp = intArrayOf(120, 200)`:
+ * Thresholds are an ascending list of widths in dp. For
+ * `thresholdsDp = intArrayOf(120, 200)`:
  *
- *   width <  120          → tier 0
- *   120 ≤ width <  200    → tier 1
- *   width ≥  200          → tier 2
+ *   width <  120 dp           → tier 0
+ *   120 dp ≤ width < 200 dp   → tier 1
+ *   width ≥  200 dp           → tier 2
  *
- * The lambda is invoked once per tier during capture so each variant is
- * recorded into the document. At playback the active tier is computed
- * from `RemoteFloatContext.componentWidth()` and the runtime swaps to
- * the matching variant — no re-record needed.
+ * The lambda is invoked once per tier during capture so each variant
+ * is recorded into the document. At playback the active tier is
+ * computed from `RemoteFloatContext.componentWidth()` and the runtime
+ * swaps to the matching variant — no re-record needed.
  *
- * @param thresholdsDp ascending breakpoint widths; produces
+ * Implementation notes:
+ *
+ *   * `componentWidth()` reports the runtime canvas width in pixels.
+ *     We compare against `<dp>.rdp.toPx()` so the dp→px conversion
+ *     happens at playback against the host density — the captured
+ *     document plays correctly across phone, wear, and launcher
+ *     densities without re-encoding.
+ *
+ *   * The `RemoteStateLayout(RemoteInt, IntArray)` overload is broken
+ *     in `androidx.compose.remote:remote-creation-compose:1.0.0-alpha010`
+ *     — it always selects `keys[0]` regardless of the live int value.
+ *     The `RemoteStateLayout(RemoteBoolean)` overload works, so we
+ *     lower the ladder into a chain of nested booleans, one per
+ *     threshold.
+ *
+ * @param thresholdsDp ascending breakpoint widths in dp; produces
  *   `thresholdsDp.size + 1` tier variants.
- * @param modifier applied to the outer state layout. Pass
- *   `RemoteModifier.fillMaxWidth()` so the playback width reflects the
- *   document's runtime canvas rather than the captured intrinsic.
+ * @param modifier applied to the outermost state layout. Pass
+ *   `RemoteModifier.fillMaxWidth()` (or `fillMaxSize()`) so the
+ *   playback width reflects the host's runtime canvas rather than
+ *   the captured intrinsic.
  * @param content invoked per tier; index ranges `0..thresholdsDp.size`.
  */
 @Composable
@@ -48,25 +63,64 @@ fun RemoteSizeBreakpoint(
         (0 until thresholdsDp.size - 1).all { thresholdsDp[it] < thresholdsDp[it + 1] }
     require(sortedAscending) { "thresholdsDp must be strictly ascending: ${thresholdsDp.toList()}" }
 
-    // RemoteFloatContext's constructor is internal; the named-expression
-    // builder is the public way to surface componentWidth() as a
-    // RemoteFloat. Naming by `contentHashCode` lets multiple breakpoints
-    // sharing the same thresholds reuse the same registered expression.
+    // Use a per-call-site unique name so each breakpoint registers its
+    // own expression. Sharing a stable name across captures (the
+    // tempting "memoize by thresholds" path) lets alpha010 hand back a
+    // cached expression bound to the *first* capture's component, which
+    // makes every subsequent cell read the same baked width.
+    val uniqueName = remember { "${WidthExpressionPrefix}${java.util.UUID.randomUUID()}" }
     val width =
         RemoteFloat.createNamedRemoteFloatExpression(
-            name = "${WidthExpressionPrefix}${thresholdsDp.contentHashCode()}",
+            name = uniqueName,
             domain = RemoteState.Domain.User,
         ) {
             componentWidth()
         }
 
-    var tier: RemoteInt = 0.ri
-    for (t in thresholdsDp) {
-        tier = tier + width.ge(t.rf).toRemoteInt()
-    }
+    BreakpointTier(
+        width = width,
+        thresholdsDp = thresholdsDp,
+        baseTier = 0,
+        modifier = modifier,
+        content = content,
+    )
+}
 
-    val tierKeys = IntArray(thresholdsDp.size + 1) { it }
-    RemoteStateLayout(tier, *tierKeys, modifier = modifier) { variant -> content(variant) }
+/**
+ * Recursive helper that walks the threshold list highest-first,
+ * picking the upper variant when `width >= thresholdsDp[hi]` and
+ * recursing on the remaining smaller thresholds otherwise. Lowers to
+ * `RemoteStateLayout(RemoteBoolean)`, which is the only state-layout
+ * overload that respects the live state in alpha010.
+ */
+@Composable
+private fun BreakpointTier(
+    width: RemoteFloat,
+    thresholdsDp: IntArray,
+    baseTier: Int,
+    modifier: RemoteModifier,
+    content: @Composable (tier: Int) -> Unit,
+) {
+    if (thresholdsDp.isEmpty()) {
+        content(baseTier)
+        return
+    }
+    val highestIndex = thresholdsDp.size - 1
+    val highestThresholdPx = thresholdsDp[highestIndex].rdp.toPx()
+    val isAtOrAbove = width.ge(highestThresholdPx)
+    RemoteStateLayout(isAtOrAbove, modifier = modifier) { atOrAbove ->
+        if (atOrAbove) {
+            content(baseTier + thresholdsDp.size)
+        } else {
+            BreakpointTier(
+                width = width,
+                thresholdsDp = thresholdsDp.copyOfRange(0, highestIndex),
+                baseTier = baseTier,
+                modifier = RemoteModifier,
+                content = content,
+            )
+        }
+    }
 }
 
 private const val WidthExpressionPrefix = "__terrazzo_breakpoint_w_"
