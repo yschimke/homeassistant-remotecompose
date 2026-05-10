@@ -50,6 +50,7 @@ import ee.schimke.terrazzo.core.prefs.ThemePref
 import ee.schimke.terrazzo.core.session.DemoData
 import ee.schimke.terrazzo.core.session.DemoHaSession
 import ee.schimke.terrazzo.core.session.HaSession
+import ee.schimke.terrazzo.core.session.SessionConnectionStatus
 import ee.schimke.terrazzo.dashboard.DashboardListState
 import ee.schimke.terrazzo.dashboard.DashboardPickerScreen
 import ee.schimke.terrazzo.dashboard.DashboardSwitcher
@@ -300,7 +301,8 @@ private fun DashboardsRoot(
     }
 
     val readyDashboards = (dashboards as? DashboardListState.Ready)?.dashboards.orEmpty()
-    var connectionStatus by remember { mutableStateOf(ConnectionStatus.Connecting) }
+    val sessionConnection by session.connectionStatus.collectAsState()
+    val connectionStatus = sessionConnection.toUiConnectionStatus()
 
     Scaffold(
         topBar = {
@@ -349,11 +351,6 @@ private fun DashboardsRoot(
         contentWindowInsets = WindowInsets.safeDrawing,
     ) { padding ->
         if (openedValue == DASHBOARD_UNSET) {
-            connectionStatus = when (dashboards) {
-                DashboardListState.Loading -> ConnectionStatus.Connecting
-                is DashboardListState.Error -> ConnectionStatus.Failed
-                is DashboardListState.Ready -> ConnectionStatus.Connected
-            }
             DashboardPickerScreen(
                 state = dashboards,
                 onDashboardPicked = { urlPath ->
@@ -369,7 +366,6 @@ private fun DashboardsRoot(
             DashboardViewScreen(
                 session = session,
                 urlPath = openedValue,
-                onConnectionStatusChanged = { status -> connectionStatus = status },
                 onCardLongPress = { card ->
                     // In demo mode the preview — and the installed widget —
                     // render against the current fake snapshot so values
@@ -409,6 +405,12 @@ enum class ConnectionStatus(val label: String, val color: Color) {
     Failed("Failed", Color(0xFFD32F2F)),
     Connecting("Connecting", Color(0xFF2E7D32)),
     Connected("Connected", Color(0xFF1976D2)),
+}
+
+private fun SessionConnectionStatus.toUiConnectionStatus(): ConnectionStatus = when (this) {
+    SessionConnectionStatus.Failed -> ConnectionStatus.Failed
+    SessionConnectionStatus.Connecting -> ConnectionStatus.Connecting
+    SessionConnectionStatus.Connected -> ConnectionStatus.Connected
 }
 
 /**

@@ -33,7 +33,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
@@ -54,7 +53,6 @@ import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.Dashboard
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.terrazzo.LocalTerrazzoGraph
-import ee.schimke.terrazzo.ConnectionStatus
 import ee.schimke.terrazzo.core.pin.MobilePinnedSection
 import ee.schimke.terrazzo.core.pin.PinStore
 import ee.schimke.terrazzo.core.pin.PinnedCardData
@@ -119,7 +117,6 @@ import kotlinx.serialization.json.jsonPrimitive
 fun DashboardViewScreen(
     session: HaSession,
     urlPath: String?,
-    onConnectionStatusChanged: (ConnectionStatus) -> Unit = {},
     onCardLongPress: (CardConfig) -> Unit,
     contentPadding: PaddingValues = PaddingValues(0.dp),
 ) {
@@ -181,15 +178,6 @@ fun DashboardViewScreen(
         LocalHaActionDispatcher provides actionDispatcher,
         LocalCardCaptureEpoch provides demoEpoch,
     ) {
-        SideEffect {
-            onConnectionStatusChanged(
-                when (state) {
-                    DashboardState.Loading -> ConnectionStatus.Connecting
-                    is DashboardState.Error -> ConnectionStatus.Failed
-                    is DashboardState.Ready -> ConnectionStatus.Connected
-                },
-            )
-        }
         when (val s = state) {
             DashboardState.Loading -> Box(Modifier.fillMaxSize().padding(contentPadding).padding(24.dp)) {
                 CircularProgressIndicator()

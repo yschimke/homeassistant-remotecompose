@@ -9,6 +9,8 @@ import ee.schimke.ha.model.Section
 import ee.schimke.ha.model.View
 import kotlin.math.roundToInt
 import kotlin.math.sin
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
@@ -35,6 +37,8 @@ class DemoHaSession(
     val actionRouter: DemoActionRouter = DemoData.actionRouter,
 ) : HaSession {
     override val baseUrl: String = DemoData.BASE_URL
+    override val connectionStatus: StateFlow<SessionConnectionStatus> =
+        MutableStateFlow(SessionConnectionStatus.Connected)
 
     /**
      * Refresh every second so demo-mode taps produce visible motion —
