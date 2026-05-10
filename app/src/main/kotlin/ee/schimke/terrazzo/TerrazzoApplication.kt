@@ -10,7 +10,9 @@ import androidx.lifecycle.lifecycleScope
 import dev.zacsweers.metro.createGraphFactory
 import ee.schimke.ha.rc.enableRemoteComposeWrapContent
 import ee.schimke.terrazzo.core.di.TerrazzoGraph
-import ee.schimke.terrazzo.monitor.MonitoringService
+import ee.schimke.terrazzo.core.monitor.CardMonitor
+import ee.schimke.terrazzo.di.AppGraph
+import ee.schimke.terrazzo.monitor.createMonitor
 import ee.schimke.terrazzo.wearsync.MobileSyncStatsStore
 import ee.schimke.terrazzo.wearsync.MobileWearSyncManager
 
@@ -22,7 +24,8 @@ import ee.schimke.terrazzo.wearsync.MobileWearSyncManager
 class TerrazzoApplication : Application() {
 
     val graph: TerrazzoGraph by lazy {
-        createGraphFactory<TerrazzoGraph.Factory>().create(applicationContext)
+        val cardMonitor = createMonitor(applicationContext)
+        createGraphFactory<AppGraph.Factory>().create(applicationContext, cardMonitor)
     }
 
     /**
@@ -46,7 +49,9 @@ class TerrazzoApplication : Application() {
         // dashboard slots wrap to each card's intrinsic content height
         // instead of pinning per-card via naturalHeightDp.
         enableRemoteComposeWrapContent()
-        registerNotificationChannels()
+        if (graph.cardMonitor.isEnabled) {
+            registerNotificationChannels()
+        }
         // Bind the wear sync to the application's lifecycle scope so it
         // outlives Activities (a paired watch should keep receiving
         // demo / pinned-card updates even when the phone UI is in the
@@ -63,7 +68,7 @@ class TerrazzoApplication : Application() {
     private fun registerNotificationChannels() {
         val nm = getSystemService(NotificationManager::class.java) ?: return
         val channel = NotificationChannel(
-            MonitoringService.CHANNEL_ID,
+            CardMonitor.CHANNEL_ID,
             "Card monitoring",
             NotificationManager.IMPORTANCE_LOW,
         ).apply {

@@ -59,7 +59,6 @@ import ee.schimke.terrazzo.dashboard.ManagePinnedScreen
 import ee.schimke.terrazzo.dashboard.TopBarOverflowMenu
 import ee.schimke.terrazzo.dashboard.rememberDashboardListState
 import ee.schimke.terrazzo.discovery.DiscoveryScreen
-import ee.schimke.terrazzo.monitor.MonitoringService
 import ee.schimke.terrazzo.wearsync.WearWidgetsScreen
 import ee.schimke.terrazzo.widget.WidgetInstallSheet
 import ee.schimke.terrazzo.widget.WidgetRefreshScheduler
@@ -391,8 +390,8 @@ private fun DashboardsRoot(
             // Only offer monitoring in demo mode — the service pulls
             // state from DemoData today. Live mode needs a shared
             // non-UI HA session; landing in a follow-up.
-            onMonitor = if (session is DemoHaSession) {
-                { MonitoringService.start(monitorContext.applicationContext, card) }
+            onMonitor = if (session is DemoHaSession && graph.cardMonitor.isEnabled) {
+                { graph.cardMonitor.start(card) }
             } else null,
         )
     }
