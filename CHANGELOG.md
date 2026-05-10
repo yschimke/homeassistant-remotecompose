@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.1.16](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.15...v0.1.16) (2026-05-10)
+
+
+### Features
+
+* add wear preview wrapper with size-specific slot previews ([#220](https://github.com/yschimke/homeassistant-remotecompose/issues/220)) ([c540ecc](https://github.com/yschimke/homeassistant-remotecompose/commit/c540eccefa70cba7f2d1f96dbd1fcd421a7e92a9))
+
+
+### Bug Fixes
+
+* detect landscape via configuration orientation for section columns ([#216](https://github.com/yschimke/homeassistant-remotecompose/issues/216)) ([9173991](https://github.com/yschimke/homeassistant-remotecompose/commit/91739916f1797b8fbf521dc41b081df823281c99))
+
 ## [0.1.15](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.14...v0.1.15) (2026-05-09)
 
 
