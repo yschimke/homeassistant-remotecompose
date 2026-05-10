@@ -44,10 +44,17 @@ import java.text.DecimalFormat
  *
  *   * The `RemoteStateLayout(RemoteInt, IntArray)` overload is broken
  *     in `androidx.compose.remote:remote-creation-compose:1.0.0-alpha010`
- *     — it always selects `keys[0]` regardless of the live int value.
- *     The `RemoteStateLayout(RemoteBoolean)` overload works, so we
- *     lower the ladder into a chain of nested booleans, one per
- *     threshold.
+ *     — it always selects `keys[0]` regardless of the live int value
+ *     (#224). The `RemoteStateLayout(RemoteBoolean)` overload works,
+ *     so we lower the ladder into a chain of nested booleans, one
+ *     per threshold.
+ *
+ *   * The named expression that backs `componentWidth()` only writes
+ *     itself into the document when it's visibly referenced by a
+ *     drawing node — reading it transitively via the state-layout's
+ *     bool predicate isn't enough (#224). We work around it by
+ *     emitting a transparent `RemoteText` alongside the inner
+ *     state-layout.
  *
  * @param thresholdsDp ascending breakpoint widths in dp; produces
  *   `thresholdsDp.size + 1` tier variants.
@@ -83,14 +90,22 @@ fun RemoteSizeBreakpoint(
         }
 
     RemoteBox(modifier = modifier) {
-        // Materialize the named expression in the document. Without
-        // this, the runtime reads an unregistered name and the
-        // state-layout's boolean predicate evaluates to false, causing
-        // every breakpoint to collapse to tier 0. A direct visible
-        // reference (RemoteText with the width as a string) is the
-        // simplest forcing function available in alpha010 — drawn at
-        // 0sp / fully transparent so it doesn't visually affect any
-        // tier's content.
+        // TODO(#224): drop this transparent forcing-function once the
+        // alpha010 named-expression bug is fixed upstream.
+        //
+        // The named expression that backs `componentWidth()` is only
+        // written into the captured document if it's referenced by a
+        // visible node. Reading it transitively via
+        // `width.ge(...)` → RemoteBoolean → state-layout predicate
+        // does NOT trigger materialization in alpha010 — the runtime
+        // resolves the unregistered name to 0, the predicate is false
+        // for every cell, and every breakpoint collapses to tier 0.
+        //
+        // Emitting a RemoteText with `Color.Transparent` alongside the
+        // inner state-layout is the simplest forcing function: the
+        // width string isn't visible, but it pulls the named float
+        // into the document so the runtime can evaluate the predicate
+        // correctly.
         RemoteText(
             text = width.toRemoteString(InvisibleFormat),
             color = Color.Transparent.rc,
