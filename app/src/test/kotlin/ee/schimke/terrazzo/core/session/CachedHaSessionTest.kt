@@ -12,6 +12,9 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import ee.schimke.terrazzo.core.session.SessionConnectionStatus
 
 /**
  * The contract under test:
@@ -132,6 +135,7 @@ private class FakeSession(
         Dashboard() to HaSnapshot()
     },
 ) : HaSession {
+    override val connectionStatus: StateFlow<SessionConnectionStatus> = MutableStateFlow(SessionConnectionStatus.Connected)
     override val refreshIntervalMillis: Long? = null
     override suspend fun connect() = connectProvider()
     override suspend fun listDashboards(): List<DashboardSummary> = listProvider()
