@@ -27,6 +27,9 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import ee.schimke.terrazzo.core.session.SessionConnectionStatus
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
@@ -171,6 +174,8 @@ class OfflineFirstWebSocketFlowTest {
    * `CachedHaSession` exercises its cache-fallback path.
    */
   private class AlwaysOfflineSession(override val baseUrl: String) : HaSession {
+    override val connectionStatus: StateFlow<SessionConnectionStatus> = MutableStateFlow(SessionConnectionStatus.Failed)
+
     override suspend fun connect() = Unit
 
     override suspend fun listDashboards(): List<DashboardSummary> = error("offline")
