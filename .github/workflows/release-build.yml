@@ -71,16 +71,6 @@ jobs:
           echo "HARC_KEYSTORE_PATH=$keystore" >> "$GITHUB_ENV"
 
 
-      - name: Write Play credentials file
-        if: env.HAS_PLAY_CREDENTIALS == 'true'
-        env:
-          PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
-        run: |
-          set -euo pipefail
-          creds_file="${RUNNER_TEMP}/play-service-account.json"
-          printf '%s' "$PLAY_SERVICE_ACCOUNT_JSON" > "$creds_file"
-          echo "ANDROID_PUBLISHER_CREDENTIALS=$creds_file" >> "$GITHUB_ENV"
-
       - name: Assemble release APK
         env:
           HARC_KEYSTORE_PASSWORD: ${{ secrets.HARC_KEYSTORE_PASSWORD }}
@@ -103,6 +93,7 @@ jobs:
           HARC_KEYSTORE_PASSWORD: ${{ secrets.HARC_KEYSTORE_PASSWORD }}
           HARC_KEY_ALIAS: ${{ secrets.HARC_KEY_ALIAS }}
           HARC_KEY_PASSWORD: ${{ secrets.HARC_KEY_PASSWORD }}
+          ANDROID_PUBLISHER_CREDENTIALS: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
         run: ./gradlew :app:publishBundle --stacktrace
 
 
@@ -112,6 +103,7 @@ jobs:
           HARC_KEYSTORE_PASSWORD: ${{ secrets.HARC_KEYSTORE_PASSWORD }}
           HARC_KEY_ALIAS: ${{ secrets.HARC_KEY_ALIAS }}
           HARC_KEY_PASSWORD: ${{ secrets.HARC_KEY_PASSWORD }}
+          ANDROID_PUBLISHER_CREDENTIALS: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
         run: ./gradlew :wear:publishBundle --stacktrace
 
       - name: Release publish summary
