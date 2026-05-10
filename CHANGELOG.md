@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.17](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.16...v0.1.17) (2026-05-10)
+
+
+### Bug Fixes
+
+* show live connection status in dashboard top bar ([#219](https://github.com/yschimke/homeassistant-remotecompose/issues/219)) ([13f4b47](https://github.com/yschimke/homeassistant-remotecompose/commit/13f4b479b9d2b000b0dc7e36810fb31f2b09aed2))
+
 ## [0.1.16](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.15...v0.1.16) (2026-05-10)
 
 
