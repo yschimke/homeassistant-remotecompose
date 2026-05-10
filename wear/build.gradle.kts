@@ -62,6 +62,8 @@ play {
 
 dependencies {
   implementation(project(":rc-components"))
+  implementation(project(":rc-converter"))
+  implementation(project(":rc-card-shutter"))
   implementation(project(":ha-model"))
 
   implementation(platform(libs.compose.bom))

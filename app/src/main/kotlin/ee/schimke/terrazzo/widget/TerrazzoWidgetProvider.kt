@@ -14,7 +14,9 @@ import androidx.compose.remote.creation.compose.capture.captureSingleRemoteDocum
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import ee.schimke.ha.model.HaSnapshot
+import ee.schimke.ha.rc.CardSizeMode
 import ee.schimke.ha.rc.ProvideCardRegistry
+import ee.schimke.ha.rc.ProvideCardSizeMode
 import ee.schimke.ha.rc.RenderChild
 import ee.schimke.ha.rc.cardHeightDp
 import ee.schimke.ha.rc.cards.defaultRegistry
@@ -106,7 +108,9 @@ class TerrazzoWidgetProvider : AppWidgetProvider() {
                 ) {
                     ProvideCardRegistry(registry) {
                         ProvideHaTheme(haTheme) {
-                            RenderChild(entry.card, snapshot, RemoteModifier.fillMaxWidth())
+                            ProvideCardSizeMode(CardSizeMode.Fixed) {
+                                RenderChild(entry.card, snapshot, RemoteModifier.fillMaxWidth())
+                            }
                         }
                     }
                 }

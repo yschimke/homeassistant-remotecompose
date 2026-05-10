@@ -1,6 +1,7 @@
 package ee.schimke.ha.rc.cards
 
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
+import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.runtime.Composable
 import ee.schimke.ha.model.CardConfig
@@ -9,8 +10,11 @@ import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.model.toTyped
 import ee.schimke.ha.rc.CardConverter
+import ee.schimke.ha.rc.CardSizeMode
 import ee.schimke.ha.rc.CardWidthClass
 import ee.schimke.ha.rc.HaStateColor
+import ee.schimke.ha.rc.LocalCardSizeMode
+import ee.schimke.ha.rc.RemoteSizeBreakpoint
 import ee.schimke.ha.rc.components.HaEntityRowData
 import ee.schimke.ha.rc.components.HaToggleAccent
 import ee.schimke.ha.rc.components.LiveValues
@@ -33,6 +37,23 @@ class EntityCardConverter : CardConverter {
 
     @Composable
     override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
+        when (LocalCardSizeMode.current) {
+            CardSizeMode.Wrap -> FullRow(card, snapshot, modifier)
+            CardSizeMode.Fixed ->
+                RemoteSizeBreakpoint(
+                    thresholdsDp = intArrayOf(120),
+                    modifier = modifier,
+                ) { tier ->
+                    when (tier) {
+                        0 -> CompactStateChip(card, snapshot)
+                        else -> FullRow(card, snapshot, RemoteModifier.fillMaxWidth())
+                    }
+                }
+        }
+    }
+
+    @Composable
+    private fun FullRow(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
         val entityId = card.raw["entity"]?.jsonPrimitive?.content
         val entity = entityId?.let { snapshot.states[it] }
         val tapCfg = card.raw["tap_action"]?.jsonObject
