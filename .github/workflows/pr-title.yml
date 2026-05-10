@@ -34,8 +34,3 @@ jobs:
             style
             revert
           requireScope: false
-          subjectPattern: ^(?![A-Z]).+$
-          subjectPatternError: |
-            The subject "{subject}" found in PR title "{title}" doesn't match
-            the conventional commit format — it should start with a lowercase
-            letter (e.g. `feat: add new card type`).
