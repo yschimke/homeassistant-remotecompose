@@ -68,7 +68,9 @@ const val LauncherCellHeightDp: Int = 84
 /**
  * Launcher widget size in cells. Each cell is [LauncherCellWidthDp] ×
  * [LauncherCellHeightDp] dp. Use [`-`] / [`+`] to derive the
- * smaller / larger neighbouring sizes that share the same aspect.
+ * smaller / larger neighbouring sizes that share the same aspect; the
+ * smaller variant clamps to a `1×1` floor so a `2×1` chip doesn't try
+ * to shrink to a degenerate `1×0` cell.
  */
 data class WidgetGridSize(val cellsW: Int, val cellsH: Int) {
     init {
@@ -82,7 +84,10 @@ data class WidgetGridSize(val cellsW: Int, val cellsH: Int) {
         WidgetGridSize(cellsW + delta, cellsH + delta)
 
     operator fun minus(delta: Int): WidgetGridSize =
-        WidgetGridSize(cellsW - delta, cellsH - delta)
+        WidgetGridSize(
+            cellsW = (cellsW - delta).coerceAtLeast(1),
+            cellsH = (cellsH - delta).coerceAtLeast(1),
+        )
 
     val label: String get() = "${cellsW}×${cellsH}"
 }
