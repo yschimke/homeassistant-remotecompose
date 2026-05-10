@@ -2,7 +2,6 @@
 
 package ee.schimke.ha.previews
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -121,7 +120,6 @@ fun CardPreviewMatrix(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(HaTheme.Dark.dashboardBackground)
                         .padding(8.dp),
                     verticalArrangement = Arrangement.spacedBy(6.dp),
                 ) {
@@ -254,11 +252,7 @@ private fun CellLabelled(
             style = MaterialTheme.typography.labelSmall,
             color = HaTheme.Dark.secondaryText,
         )
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(HaTheme.Dark.cardBackground),
-        ) {
+        Box(modifier = Modifier.fillMaxWidth()) {
             content()
         }
     }
