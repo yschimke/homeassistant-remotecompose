@@ -2,10 +2,12 @@
 
 package ee.schimke.ha.previews
 
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -192,18 +194,23 @@ private fun WrapModeCell(
     cellWidthDp: Int,
     label: String,
 ) {
+    // Wrap mode: outer column width pinned, height adaptive. Border
+    // hugs the card's intrinsic content so the cell shape and the
+    // card chrome line up.
     CellLabelled(label = label, widthDp = cellWidthDp) {
-        CachedCardPreview(
-            cacheKey = MatrixCellKey(card, CardSizeMode.Wrap, cellWidthDp, null),
-            profile = androidXExperimentalWrap,
-            modifier = Modifier.width(cellWidthDp.dp),
-            card = card,
-            snapshot = snapshot,
-        ) {
-            ProvideCardRegistry(defaultRegistry()) {
-                ProvideHaTheme(HaTheme.Dark) {
-                    ProvideCardSizeMode(CardSizeMode.Wrap) {
-                        RenderChild(card, snapshot, RemoteModifier.rcFillMaxWidth())
+        Box(modifier = Modifier.width(cellWidthDp.dp).cellOutline()) {
+            CachedCardPreview(
+                cacheKey = MatrixCellKey(card, CardSizeMode.Wrap, cellWidthDp, null),
+                profile = androidXExperimentalWrap,
+                modifier = Modifier.width(cellWidthDp.dp),
+                card = card,
+                snapshot = snapshot,
+            ) {
+                ProvideCardRegistry(defaultRegistry()) {
+                    ProvideHaTheme(HaTheme.Dark) {
+                        ProvideCardSizeMode(CardSizeMode.Wrap) {
+                            RenderChild(card, snapshot, RemoteModifier.rcFillMaxWidth())
+                        }
                     }
                 }
             }
@@ -218,18 +225,25 @@ private fun FixedModeCell(
     sizeDp: WidgetSizeDp,
     label: String,
 ) {
+    // Fixed mode: cell is exactly sizeDp. Border draws the container
+    // shape so the launcher / wear widget bounds are visible even
+    // when the card itself doesn't fill the cell.
     CellLabelled(label = label, widthDp = sizeDp.widthDp) {
-        CachedCardPreview(
-            cacheKey = MatrixCellKey(card, CardSizeMode.Fixed, sizeDp.widthDp, sizeDp.heightDp),
-            profile = androidXExperimentalWrap,
-            modifier = Modifier.size(sizeDp.widthDp.dp, sizeDp.heightDp.dp),
-            card = card,
-            snapshot = snapshot,
+        Box(
+            modifier = Modifier.size(sizeDp.widthDp.dp, sizeDp.heightDp.dp).cellOutline(),
         ) {
-            ProvideCardRegistry(defaultRegistry()) {
-                ProvideHaTheme(HaTheme.Dark) {
-                    ProvideCardSizeMode(CardSizeMode.Fixed) {
-                        RenderChild(card, snapshot, RemoteModifier.rcFillMaxWidth())
+            CachedCardPreview(
+                cacheKey = MatrixCellKey(card, CardSizeMode.Fixed, sizeDp.widthDp, sizeDp.heightDp),
+                profile = androidXExperimentalWrap,
+                modifier = Modifier.fillMaxSize(),
+                card = card,
+                snapshot = snapshot,
+            ) {
+                ProvideCardRegistry(defaultRegistry()) {
+                    ProvideHaTheme(HaTheme.Dark) {
+                        ProvideCardSizeMode(CardSizeMode.Fixed) {
+                            RenderChild(card, snapshot, RemoteModifier.rcFillMaxWidth())
+                        }
                     }
                 }
             }
@@ -252,11 +266,21 @@ private fun CellLabelled(
             style = MaterialTheme.typography.labelSmall,
             color = HaTheme.Dark.secondaryText,
         )
-        Box(modifier = Modifier.fillMaxWidth()) {
-            content()
-        }
+        content()
     }
 }
+
+/**
+ * Hairline outline used to mark each matrix cell. Background stays
+ * transparent so card-drawn surfaces still show through; the border is
+ * subtle enough to read as "this is the cell shape" without competing
+ * with the card's own chrome.
+ */
+private fun Modifier.cellOutline(): Modifier =
+    this.border(
+        width = 1.dp,
+        color = HaTheme.Dark.divider,
+    )
 
 private data class MatrixCellKey(
     val card: CardConfig,
