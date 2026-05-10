@@ -21,7 +21,9 @@ import androidx.glance.wear.tooling.preview.WearWidgetPreview
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HaSnapshot
+import ee.schimke.ha.rc.CardSizeMode
 import ee.schimke.ha.rc.ProvideCardRegistry
+import ee.schimke.ha.rc.ProvideCardSizeMode
 import ee.schimke.ha.rc.RenderChild
 import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.cards.shutter.withEnhancedShutter
@@ -35,20 +37,14 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 
 /**
- * Slot-widget @Preview fixtures. Each renders a real Lovelace
- * [CardConfig] through the rc-converter pipeline — same code path the
- * production [SlotWidget] uses — wrapped in a [WearWidgetPreview]
- * frame so the IDE preview reflects what the watch will paint.
- *
- * Wear is dark-only, so previews always resolve the theme with
- * `darkTheme = true`. The default [ThemeStyle.TerrazzoHome] stands in
- * for the user's pref; preview compositions don't read [WearPrefs].
- *
- * Fixture set is representative, not exhaustive — one preview per
- * exercised card converter (tile / entity / gauge / button /
- * entities / conditional) plus an empty-slot placeholder. Each
- * fixture also picks the container size that best matches the card
- * shape (small for status chips, large for richer surfaces).
+ * Wear-specific @Preview fixtures that exercise the Glance Wear
+ * capture path end-to-end (via [WearWidgetPreview] /
+ * [WearWidgetDocument]). The cross-surface "how does this card look at
+ * each size" picture lives in
+ * [ee.schimke.ha.previews.CardPreviewMatrix] — these previews are kept
+ * thin and deliberately wear-shaped: small + large slot containers,
+ * dark theme, one fixture per shape so we catch wear-profile
+ * regressions in CI.
  */
 
 private class PreviewSlotWidget(
@@ -67,10 +63,12 @@ private class PreviewSlotWidget(
             content = {
                 ProvideCardRegistry(registry) {
                     ProvideHaTheme(theme) {
-                        if (card != null) {
-                            RenderChild(card, snapshot, RemoteModifier.fillMaxWidth())
-                        } else {
-                            PreviewEmptyPlaceholder(slotIndex, theme)
+                        ProvideCardSizeMode(CardSizeMode.Fixed) {
+                            if (card != null) {
+                                RenderChild(card, snapshot, RemoteModifier.fillMaxWidth())
+                            } else {
+                                PreviewEmptyPlaceholder(slotIndex, theme)
+                            }
                         }
                     }
                 }
@@ -122,18 +120,17 @@ private fun SlotWidgetPreviewFixture(
     card: CardConfig?,
     snapshot: HaSnapshot,
     container: ContainerType,
-    slotIndex: Int = 0,
 ) {
     val params = if (container == ContainerType.Large) largePreviewParams else smallPreviewParams
     WearWidgetPreview(
-        widget = PreviewSlotWidget(card = card, snapshot = snapshot, slotIndex = slotIndex),
+        widget = PreviewSlotWidget(card = card, snapshot = snapshot),
         params = params,
     )
 }
 
-@Preview(name = "Slot widget — tile (climate)")
+@Preview(name = "Slot widget — tile (small)")
 @Composable
-fun SlotWidgetPreview_TileClimate() {
+fun SlotWidgetPreview_TileSmall() {
     val card = cardConfig("tile") {
         put("entity", "sensor.living_room_temperature")
         put("name", "Living Room")
@@ -147,83 +144,41 @@ fun SlotWidgetPreview_TileClimate() {
             deviceClass = "temperature",
         ),
     )
-    SlotWidgetPreviewFixture(card, snapshot, ContainerType.Large)
-}
-
-@Preview(name = "Slot widget — tile (humidity)")
-@Composable
-fun SlotWidgetPreview_TileHumidity() {
-    val card = cardConfig("tile") {
-        put("entity", "sensor.nursery_humidity")
-        put("name", "Nursery")
-    }
-    val snapshot = snapshotOf(
-        entityState(
-            id = "sensor.nursery_humidity",
-            state = "47",
-            friendlyName = "Nursery humidity",
-            unit = "%",
-            deviceClass = "humidity",
-        ),
-    )
     SlotWidgetPreviewFixture(card, snapshot, ContainerType.Small)
 }
 
-@Preview(name = "Slot widget — entity (lock)")
+@Preview(name = "Slot widget — entities (large)")
 @Composable
-fun SlotWidgetPreview_EntityLock() {
-    val card = cardConfig("entity") {
-        put("entity", "lock.front_door")
-        put("name", "Front door")
-    }
+fun SlotWidgetPreview_EntitiesLarge() {
+    val card = CardConfig(
+        type = "entities",
+        raw = buildJsonObject {
+            put("type", "entities")
+            put("title", "Living Room")
+            put(
+                "entities",
+                kotlinx.serialization.json.buildJsonArray {
+                    add(JsonPrimitive("sensor.living_room_temperature"))
+                    add(JsonPrimitive("light.kitchen"))
+                },
+            )
+        },
+    )
     val snapshot = snapshotOf(
         entityState(
-            id = "lock.front_door",
-            state = "locked",
-            friendlyName = "Front door",
-            deviceClass = "lock",
+            id = "sensor.living_room_temperature",
+            state = "21.5",
+            friendlyName = "Living Room",
+            unit = "°C",
+            deviceClass = "temperature",
         ),
-    )
-    SlotWidgetPreviewFixture(card, snapshot, ContainerType.Small)
-}
-
-@Preview(name = "Slot widget — gauge (battery)")
-@Composable
-fun SlotWidgetPreview_Gauge() {
-    val card = cardConfig("gauge") {
-        put("entity", "sensor.office_battery")
-        put("name", "Battery")
-        put("min", 0)
-        put("max", 100)
-    }
-    val snapshot = snapshotOf(
-        entityState(
-            id = "sensor.office_battery",
-            state = "68",
-            friendlyName = "Office battery",
-            unit = "%",
-            deviceClass = "battery",
-        ),
-    )
-    SlotWidgetPreviewFixture(card, snapshot, ContainerType.Large)
-}
-
-@Preview(name = "Slot widget — button (light)")
-@Composable
-fun SlotWidgetPreview_Button() {
-    val card = cardConfig("button") {
-        put("entity", "light.kitchen")
-        put("name", "Kitchen")
-        put("show_state", true)
-    }
-    val snapshot = snapshotOf(
         entityState(
             id = "light.kitchen",
             state = "on",
             friendlyName = "Kitchen",
         ),
     )
-    SlotWidgetPreviewFixture(card, snapshot, ContainerType.Small)
+    SlotWidgetPreviewFixture(card, snapshot, ContainerType.Large)
 }
 
 @Preview(name = "Slot widget — empty placeholder")

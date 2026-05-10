@@ -1,6 +1,7 @@
 package ee.schimke.ha.rc.cards
 
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
+import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.runtime.Composable
 import ee.schimke.ha.model.CardConfig
@@ -8,7 +9,10 @@ import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.model.toTyped
 import ee.schimke.ha.rc.CardConverter
+import ee.schimke.ha.rc.CardSizeMode
 import ee.schimke.ha.rc.HaStateColor
+import ee.schimke.ha.rc.LocalCardSizeMode
+import ee.schimke.ha.rc.RemoteSizeBreakpoint
 import ee.schimke.ha.rc.components.HaEntitiesData
 import ee.schimke.ha.rc.components.HaEntityRowData
 import ee.schimke.ha.rc.components.HaToggleAccent
@@ -40,11 +44,46 @@ class EntitiesCardConverter : CardConverter {
 
     @Composable
     override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
-        val title = card.raw["title"]?.jsonPrimitive?.content
+        when (LocalCardSizeMode.current) {
+            CardSizeMode.Wrap -> FullList(card, snapshot, modifier, maxRows = Int.MAX_VALUE)
+            CardSizeMode.Fixed ->
+                RemoteSizeBreakpoint(
+                    thresholdsDp = intArrayOf(160, 240),
+                    modifier = modifier,
+                ) { tier ->
+                    // Tier 0: cramped — top row only.
+                    // Tier 1: medium — first three rows, no title chrome.
+                    // Tier 2: roomy — everything (matches Wrap output).
+                    val (rows, keepTitle) =
+                        when (tier) {
+                            0 -> 1 to false
+                            1 -> 3 to false
+                            else -> Int.MAX_VALUE to true
+                        }
+                    FullList(
+                        card,
+                        snapshot,
+                        RemoteModifier.fillMaxWidth(),
+                        maxRows = rows,
+                        forceTitle = keepTitle,
+                    )
+                }
+        }
+    }
+
+    @Composable
+    private fun FullList(
+        card: CardConfig,
+        snapshot: HaSnapshot,
+        modifier: RemoteModifier,
+        maxRows: Int,
+        forceTitle: Boolean = true,
+    ) {
+        val title = if (forceTitle) card.raw["title"]?.jsonPrimitive?.content else null
         val entries: List<JsonElement> = card.raw["entities"]?.jsonArray ?: emptyList()
 
         val rows =
-            entries.mapNotNull { el ->
+            entries.take(maxRows).mapNotNull { el ->
                 val (eid, row) = normalize(el)
                 val entity = eid?.let { snapshot.states[it] }
                 val name =

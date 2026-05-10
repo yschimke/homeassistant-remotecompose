@@ -1,11 +1,15 @@
 package ee.schimke.ha.rc.cards
 
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
+import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.runtime.Composable
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.CardConverter
+import ee.schimke.ha.rc.CardSizeMode
+import ee.schimke.ha.rc.LocalCardSizeMode
+import ee.schimke.ha.rc.RemoteSizeBreakpoint
 import ee.schimke.ha.rc.components.HaGaugeData
 import ee.schimke.ha.rc.components.HaGaugeSeverity
 import ee.schimke.ha.rc.components.LiveValues
@@ -31,6 +35,23 @@ class GaugeCardConverter : CardConverter {
 
     @Composable
     override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
+        when (LocalCardSizeMode.current) {
+            CardSizeMode.Wrap -> FullGauge(card, snapshot, modifier)
+            CardSizeMode.Fixed ->
+                RemoteSizeBreakpoint(
+                    thresholdsDp = intArrayOf(140),
+                    modifier = modifier,
+                ) { tier ->
+                    when (tier) {
+                        0 -> CompactStateChip(card, snapshot)
+                        else -> FullGauge(card, snapshot, RemoteModifier.fillMaxWidth())
+                    }
+                }
+        }
+    }
+
+    @Composable
+    private fun FullGauge(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
         val entityId = card.raw["entity"]?.jsonPrimitive?.content
         val entity = entityId?.let { snapshot.states[it] }
         val name = card.raw["name"]?.jsonPrimitive?.content

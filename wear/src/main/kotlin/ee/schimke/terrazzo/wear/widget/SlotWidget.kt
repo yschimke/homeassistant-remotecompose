@@ -19,7 +19,9 @@ import androidx.glance.wear.core.WearWidgetParams
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HaSnapshot
+import ee.schimke.ha.rc.CardSizeMode
 import ee.schimke.ha.rc.ProvideCardRegistry
+import ee.schimke.ha.rc.ProvideCardSizeMode
 import ee.schimke.ha.rc.RenderChild
 import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.cards.shutter.withEnhancedShutter
@@ -97,10 +99,12 @@ abstract class SlotWidget(internal val slotIndex: Int) : GlanceWearWidget() {
             content = {
                 ProvideCardRegistry(registry) {
                     ProvideHaTheme(theme) {
-                        if (card != null) {
-                            RenderChild(card, snapshot, RemoteModifier.fillMaxWidth())
-                        } else {
-                            EmptySlotPlaceholder(slotIndex, theme)
+                        ProvideCardSizeMode(CardSizeMode.Fixed) {
+                            if (card != null) {
+                                RenderChild(card, snapshot, RemoteModifier.fillMaxWidth())
+                            } else {
+                                EmptySlotPlaceholder(slotIndex, theme)
+                            }
                         }
                     }
                 }
