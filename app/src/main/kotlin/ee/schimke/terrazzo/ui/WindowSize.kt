@@ -1,5 +1,6 @@
 package ee.schimke.terrazzo.ui
 
+import android.content.res.Configuration
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.platform.LocalConfiguration
@@ -71,7 +72,7 @@ private val ExpandedMaxWidth = 840.dp
 fun rememberLayoutConfig(): LayoutConfig {
     val configuration = LocalConfiguration.current
     val widthDp = configuration.screenWidthDp
-    val isLandscape = configuration.screenWidthDp > configuration.screenHeightDp
+    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
     return when (WindowSize.fromWidthDp(widthDp)) {
         WindowSize.Compact -> LayoutConfig(
             windowSize = WindowSize.Compact,
