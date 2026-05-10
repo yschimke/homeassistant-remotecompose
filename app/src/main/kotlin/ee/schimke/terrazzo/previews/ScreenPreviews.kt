@@ -3,7 +3,9 @@ package ee.schimke.terrazzo.previews
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
@@ -13,13 +15,17 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import ee.schimke.ha.client.DashboardSummary
+import ee.schimke.ha.model.CardConfig
+import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.components.ThemeStyle
 import ee.schimke.terrazzo.LocalTerrazzoGraph
+import ee.schimke.terrazzo.TerrazzoApp
 import ee.schimke.terrazzo.core.auth.HaAuthService
 import ee.schimke.terrazzo.core.auth.TokenVault
 import ee.schimke.terrazzo.core.cache.OfflineCache
 import ee.schimke.terrazzo.core.di.HaSessionFactory
 import ee.schimke.terrazzo.core.di.TerrazzoGraph
+import ee.schimke.terrazzo.core.monitor.CardMonitor
 import ee.schimke.terrazzo.core.pin.PinStore
 import ee.schimke.terrazzo.core.pin.WearWidgetSlotsStore
 import ee.schimke.terrazzo.core.prefs.DarkModePref
@@ -100,6 +106,11 @@ private fun rememberPreviewGraph(): TerrazzoGraph {
                 get() = error("authService not wired in previews")
             override val sessionFactory: HaSessionFactory
                 get() = error("sessionFactory not wired in previews")
+            override val cardMonitor: CardMonitor
+                get() = object : CardMonitor {
+                    override val isEnabled: Boolean = false
+                    override fun start(card: CardConfig, durationMinutes: Int) {}
+                }
         }
     }
 }
@@ -111,8 +122,8 @@ private fun PhoneHost(
     content: @Composable () -> Unit,
 ) {
     val graph = rememberPreviewGraph()
-    CompositionLocalProvider(LocalTerrazzoGraph provides graph) {
-        TerrazzoTheme(style = style, darkMode = darkMode) {
+    TerrazzoTheme(style = style, darkMode = darkMode) {
+        CompositionLocalProvider(LocalTerrazzoGraph provides graph) {
             // Paint the Material 3 surface as the page background — the
             // dashboard cards sit on top, and without an explicit fill
             // the preview's transparent background shows through and
@@ -121,7 +132,13 @@ private fun PhoneHost(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(MaterialTheme.colorScheme.background),
-            ) { content() }
+            ) {
+                Scaffold { padding ->
+                    Box(modifier = Modifier.padding(padding)) {
+                        content()
+                    }
+                }
+            }
         }
     }
 }
@@ -298,4 +315,12 @@ fun Play_Tablet7_01_Home() = PhoneHost(darkMode = DarkModePref.Light) {
 @Composable
 fun Play_Tablet10_01_Home() = PhoneHost(darkMode = DarkModePref.Light) {
     DashboardViewScreen(session = demoSession(), urlPath = null, onCardLongPress = {})
+}
+
+@Preview(name = "App Root (empty)", group = "Screens", showBackground = true)
+@Composable
+fun PreviewAppRoot() {
+    PhoneHost {
+        TerrazzoApp()
+    }
 }

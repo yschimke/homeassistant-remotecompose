@@ -64,6 +64,11 @@ android {
         signingConfig = signingConfigs.getByName("release")
       }
     }
+    create("experimental") {
+      initWith(getByName("release"))
+      matchingFallbacks.add("release")
+      applicationIdSuffix = ".experimental"
+    }
   }
   buildFeatures {
     compose = true

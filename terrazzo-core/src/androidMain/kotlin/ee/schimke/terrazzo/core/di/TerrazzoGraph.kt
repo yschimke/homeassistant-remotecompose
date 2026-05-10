@@ -1,13 +1,12 @@
 package ee.schimke.terrazzo.core.di
 
 import android.content.Context
-import dev.zacsweers.metro.DependencyGraph
-import dev.zacsweers.metro.Provides
-import dev.zacsweers.metro.SingleIn
 import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.SingleIn
 import ee.schimke.terrazzo.core.auth.HaAuthService
 import ee.schimke.terrazzo.core.auth.TokenVault
 import ee.schimke.terrazzo.core.cache.OfflineCache
+import ee.schimke.terrazzo.core.monitor.CardMonitor
 import ee.schimke.terrazzo.core.pin.PinStore
 import ee.schimke.terrazzo.core.pin.WearWidgetSlotsStore
 import ee.schimke.terrazzo.core.prefs.PreferencesStore
@@ -26,7 +25,6 @@ import ee.schimke.terrazzo.core.widget.WidgetStore
  * [HaSessionFactory], since each session needs a live baseUrl + access
  * token pair.
  */
-@DependencyGraph(scope = AppScope::class)
 interface TerrazzoGraph {
     val tokenVault: TokenVault
     val authService: HaAuthService
@@ -36,10 +34,10 @@ interface TerrazzoGraph {
     val preferencesStore: PreferencesStore
     val offlineCache: OfflineCache
     val sessionFactory: HaSessionFactory
+    val cardMonitor: CardMonitor
 
-    @DependencyGraph.Factory
     fun interface Factory {
-        fun create(@Provides context: Context): TerrazzoGraph
+        fun create(context: Context): TerrazzoGraph
     }
 }
 
