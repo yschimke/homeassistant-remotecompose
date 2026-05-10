@@ -2,13 +2,18 @@
 
 package ee.schimke.ha.rc
 
+import androidx.compose.remote.creation.compose.layout.RemoteBox
 import androidx.compose.remote.creation.compose.layout.RemoteStateLayout
+import androidx.compose.remote.creation.compose.layout.RemoteText
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.state.RemoteFloat
 import androidx.compose.remote.creation.compose.state.RemoteState
+import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.ui.graphics.Color
+import java.text.DecimalFormat
 
 /**
  * Switch between layout variants based on the live component width at
@@ -77,14 +82,30 @@ fun RemoteSizeBreakpoint(
             componentWidth()
         }
 
-    BreakpointTier(
-        width = width,
-        thresholdsDp = thresholdsDp,
-        baseTier = 0,
-        modifier = modifier,
-        content = content,
-    )
+    RemoteBox(modifier = modifier) {
+        // Materialize the named expression in the document. Without
+        // this, the runtime reads an unregistered name and the
+        // state-layout's boolean predicate evaluates to false, causing
+        // every breakpoint to collapse to tier 0. A direct visible
+        // reference (RemoteText with the width as a string) is the
+        // simplest forcing function available in alpha010 — drawn at
+        // 0sp / fully transparent so it doesn't visually affect any
+        // tier's content.
+        RemoteText(
+            text = width.toRemoteString(InvisibleFormat),
+            color = Color.Transparent.rc,
+        )
+        BreakpointTier(
+            width = width,
+            thresholdsDp = thresholdsDp,
+            baseTier = 0,
+            modifier = RemoteModifier,
+            content = content,
+        )
+    }
 }
+
+private val InvisibleFormat = DecimalFormat("0")
 
 /**
  * Recursive helper that walks the threshold list highest-first,
