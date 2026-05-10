@@ -31,7 +31,6 @@ import ee.schimke.ha.rc.ProvideCardRegistry
 import ee.schimke.ha.rc.RenderChild
 import ee.schimke.ha.rc.androidXExperimental
 import ee.schimke.ha.rc.androidXExperimentalWrap
-import ee.schimke.ha.rc.cardHeightDp
 import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.components.HaTheme
 import ee.schimke.ha.rc.components.ProvideHaTheme
@@ -213,9 +212,18 @@ fun Sizing_WidthPinnedHeightAdaptive() {
     WidthOnlyDemo()
 }
 
+private enum class CardKind(val baselineHeightDp: Int) {
+    Tile(43),
+    Button(91),
+    Entity(48),
+    Entities(184), // 36 (title) + 16 (pad) + 3 * 44 (rows)
+    Glance(152), // 40 (title) + 112 (cell)
+}
+
 private sealed interface SlotHeightStrategy {
-    /** Pin to the converter's [naturalHeightDp]. */
+    /** Pin to the converter's [CardKind.baselineHeightDp]. */
     data class NaturalDp(val unit: Unit = Unit) : SlotHeightStrategy
+
     /** Pin to natural + [delta] dp (negative for "tight"). */
     data class NaturalDpPlus(val delta: Int) : SlotHeightStrategy
 }
@@ -240,10 +248,11 @@ private fun DebugStack(
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold,
                     )
-                    cards.forEach { (label, card) ->
+                    cards.forEach { (label, card, kind) ->
                         ExperimentRow(
                             label = label,
                             card = card,
+                            kind = kind,
                             profile = profile,
                             slotHeightStrategy = slotHeightStrategy,
                             registry = registry,
@@ -259,24 +268,25 @@ private fun DebugStack(
 private fun ExperimentRow(
     label: String,
     card: CardConfig,
+    kind: CardKind,
     profile: Profile,
     slotHeightStrategy: SlotHeightStrategy,
     registry: ee.schimke.ha.rc.CardRegistry,
 ) {
     val snapshot = Fixtures.mixed
-    val natural = registry.cardHeightDp(card, snapshot)
-    val (slotModifier, sizeLabel) = when (slotHeightStrategy) {
-        is SlotHeightStrategy.NaturalDp ->
-            Modifier.fillMaxWidth().height(natural.dp) to "host=${natural}dp (natural)"
-        is SlotHeightStrategy.NaturalDpPlus ->
-            Modifier
-                .fillMaxWidth()
-                .height((natural + slotHeightStrategy.delta).coerceAtLeast(8).dp) to
-                "host=${natural + slotHeightStrategy.delta}dp"
-    }
+    val (slotModifier, sizeLabel) =
+        when (slotHeightStrategy) {
+            is SlotHeightStrategy.NaturalDp ->
+                Modifier.fillMaxWidth().height(kind.baselineHeightDp.dp) to
+                    "host=${kind.baselineHeightDp}dp (natural)"
+            is SlotHeightStrategy.NaturalDpPlus ->
+                Modifier.fillMaxWidth().height(
+                    (kind.baselineHeightDp + slotHeightStrategy.delta).coerceAtLeast(8).dp
+                ) to "host=${kind.baselineHeightDp + slotHeightStrategy.delta}dp"
+        }
     Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
         Text(
-            text = "$label  · natural=${natural}dp · $sizeLabel",
+            text = "$label  · natural=${kind.baselineHeightDp}dp · $sizeLabel",
             style = MaterialTheme.typography.labelSmall,
         )
         // Outer green border = the parent layout's row band, so we can
@@ -285,10 +295,9 @@ private fun ExperimentRow(
             modifier = Modifier.fillMaxWidth().border(1.dp, Color(0xFF2E7D32)).padding(1.dp),
         ) {
             CachedCardPreview(
-                cacheKey = ExperimentCacheKey(card, profile, slotHeightStrategy),
+                cacheKey = ExperimentCacheKey(card, kind, profile, slotHeightStrategy),
                 profile = profile,
-                modifier = slotModifier
-                    .border(1.dp, Color(0xFFD32F2F)),
+                modifier = slotModifier.border(1.dp, Color(0xFFD32F2F)),
             ) {
                 ProvideCardRegistry(registry) {
                     ProvideHaTheme(HaTheme.Light) {
@@ -301,45 +310,46 @@ private fun ExperimentRow(
 }
 
 /**
- * Composite cache key that includes the profile + slot strategy, so
- * the same `(card, theme)` pair re-encodes when the experiment varies
- * the profile / strategy.
+ * Composite cache key that includes the profile + slot strategy, so the same `(card, theme)` pair
+ * re-encodes when the experiment varies the profile / strategy.
  */
 private data class ExperimentCacheKey(
     val card: CardConfig,
+    val kind: CardKind,
     val profile: Profile,
     val strategy: SlotHeightStrategy,
 )
 
 /**
- * Stacks one tile + one entities card with `Modifier.width(180.dp)`
- * and **no** height modifier — the host slot is asked to shrink to
- * the document's intrinsic content height. Renders both
- * `androidXExperimental` (paint-measure) and `androidXExperimentalWrap`
- * profiles side-by-side.
+ * Stacks one tile + one entities card with `Modifier.width(180.dp)` and **no** height modifier — the
+ * host slot is asked to shrink to the document's intrinsic content height. Renders both
+ * `androidXExperimental` (paint-measure) and `androidXExperimentalWrap` profiles side-by-side.
  *
- * **Expected** (if wrap-content worked end-to-end): the slot height
- * matches the blue in-document border, e.g. ~43 dp for tile.
+ * **Expected** (if wrap-content worked end-to-end): the slot height matches the blue in-document
+ * border, e.g. ~43 dp for tile.
  *
- * **Actual** (alpha010): the captured document does measure to
- * intrinsic height — you can see the blue border at the right place.
- * But the player's `RemoteComposeView` reports parent's max height
- * back up to Compose, so the host slot stretches all the way down,
- * leaving an empty band below the blue border. That's why the
- * dashboard still pins `Modifier.height(naturalHeightDp.dp)` rather
- * than relying on adaptive height.
+ * **Actual** (alpha010): the captured document does measure to intrinsic height — you can see the
+ * blue border at the right place. But the player's `RemoteComposeView` reports parent's max height
+ * back up to Compose, so the host slot stretches all the way down, leaving an empty band below the
+ * blue border. That's why the dashboard still pins `Modifier.height(naturalHeightDp.dp)` rather than
+ * relying on adaptive height.
  */
 @Composable
 private fun WidthOnlyDemo() {
     val registry = defaultRegistry()
-    val cards = listOf(
-        "tile" to card("""{"type":"tile","entity":"sensor.living_room"}"""),
-        "entities" to card(
-            """{"type":"entities","title":"Living Room","entities":[
+    val cards =
+        listOf(
+            Triple("tile", card("""{"type":"tile","entity":"sensor.living_room"}"""), CardKind.Tile),
+            Triple(
+                "entities",
+                card(
+                    """{"type":"entities","title":"Living Room","entities":[
                 "sensor.living_room","light.kitchen"
             ]}"""
-        ),
-    )
+                ),
+                CardKind.Entities,
+            ),
+        )
     CompositionLocalProvider(LocalRcDebugBorders provides true) {
         ProvideCardRegistry(registry) {
             ProvideHaTheme(HaTheme.Light) {
@@ -352,12 +362,15 @@ private fun WidthOnlyDemo() {
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold,
                     )
-                    cards.forEach { (label, cardConfig) ->
-                        Text(label, style = MaterialTheme.typography.labelMedium,
-                            fontWeight = FontWeight.Bold)
+                    cards.forEach { (label, cardConfig, kind) ->
+                        Text(
+                            label,
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.Bold,
+                        )
                         Row(modifier = Modifier.fillMaxWidth().border(1.dp, Color(0xFF2E7D32))) {
                             CachedCardPreview(
-                                cacheKey = WidthOnlyKey(cardConfig, 180),
+                                cacheKey = WidthOnlyKey(cardConfig, kind, 180),
                                 profile = androidXExperimentalWrap,
                                 modifier = Modifier.width(180.dp).border(1.dp, Color(0xFFD32F2F)),
                             ) {
@@ -379,58 +392,59 @@ private fun WidthOnlyDemo() {
     }
 }
 
-private data class WidthOnlyKey(val card: CardConfig, val widthDp: Int)
+private data class WidthOnlyKey(val card: CardConfig, val kind: CardKind, val widthDp: Int)
 
 /**
- * Sweeps width × height constraints. The "primary" question this
- * answers: **can we constrain width and let height adapt?** That's
- * the widget / dashboard-column pattern (target column width fixed,
+ * Sweeps width × height constraints. The "primary" question this answers: **can we constrain width
+ * and let height adapt?** That's the widget / dashboard-column pattern (target column width fixed,
  * content drives height). Variants:
+ * - **w=180 × natural**: width pinned, height pinned to the converter's `naturalHeightDp`. Document
+ *   re-measures content at the requested width — tile elides label, glance icons reflow.
+ * - **w=180 × wrap**: width pinned, **no** height modifier. This is the adaptive-height candidate.
+ *   In alpha010 the `RemoteComposeView` does not shrink to intrinsic content when parent maxHeight
+ *   is unbounded; the slot ends up taking the parent's available height instead. Demonstrates the
+ *   limitation.
+ * - **w=fillMax × natural / wrap**: same comparison but width fills the row.
+ * - **w=380 × h=80**: both pinned, height < natural so content clips. Confirms the EXACTLY
+ *   constraint short-circuits the wrap path — the slot is exactly 80 dp tall regardless of card
+ *   type.
  *
- *  - **w=180 × natural**: width pinned, height pinned to the
- *    converter's `naturalHeightDp`. Document re-measures content at
- *    the requested width — tile elides label, glance icons reflow.
- *  - **w=180 × wrap**: width pinned, **no** height modifier. This is
- *    the adaptive-height candidate. In alpha010 the
- *    `RemoteComposeView` does not shrink to intrinsic content when
- *    parent maxHeight is unbounded; the slot ends up taking the
- *    parent's available height instead. Demonstrates the limitation.
- *  - **w=fillMax × natural / wrap**: same comparison but width fills
- *    the row.
- *  - **w=380 × h=80**: both pinned, height < natural so content
- *    clips. Confirms the EXACTLY constraint short-circuits the wrap
- *    path — the slot is exactly 80 dp tall regardless of card type.
- *
- * The bordered green band around each row is the parent layout's
- * row band; it lets you see the difference between
- * `Modifier.width(W)` (host shrinks horizontally) and
- * `Modifier.fillMaxWidth()` (host fills available width).
+ * The bordered green band around each row is the parent layout's row band; it lets you see the
+ * difference between `Modifier.width(W)` (host shrinks horizontally) and `Modifier.fillMaxWidth()`
+ * (host fills available width).
  */
 @Composable
-private fun ConstraintMatrix(
-    title: String,
-    profile: Profile,
-) {
+private fun ConstraintMatrix(title: String, profile: Profile) {
     val registry = defaultRegistry()
-    val cards = listOf(
-        "tile" to card("""{"type":"tile","entity":"sensor.living_room"}"""),
-        "entities" to card(
-            """{"type":"entities","title":"Living Room","entities":[
+    val cards =
+        listOf(
+            Triple("tile", card("""{"type":"tile","entity":"sensor.living_room"}"""), CardKind.Tile),
+            Triple(
+                "entities",
+                card(
+                    """{"type":"entities","title":"Living Room","entities":[
                 "sensor.living_room","light.kitchen","switch.coffee_maker"
             ]}"""
-        ),
-        "glance" to card(
-            """{"type":"glance","title":"Overview","entities":[
+                ),
+                CardKind.Entities,
+            ),
+            Triple(
+                "glance",
+                card(
+                    """{"type":"glance","title":"Overview","entities":[
                 "sensor.living_room","light.kitchen","lock.front_door"
             ]}"""
-        ),
-    )
-    val variants = listOf(
-        Variant("w=180 × natural", widthDp = 180, heightDp = null, wrapHeight = false),
-        Variant("w=300 × natural", widthDp = 300, heightDp = null, wrapHeight = false),
-        Variant("w=fillMax × natural", widthDp = -1, heightDp = null, wrapHeight = false),
-        Variant("w=380 × h=80 (clip)", widthDp = 380, heightDp = 80, wrapHeight = false),
-    )
+                ),
+                CardKind.Glance,
+            ),
+        )
+    val variants =
+        listOf(
+            Variant("w=180 × natural", widthDp = 180, heightDp = null, wrapHeight = false),
+            Variant("w=300 × natural", widthDp = 300, heightDp = null, wrapHeight = false),
+            Variant("w=fillMax × natural", widthDp = -1, heightDp = null, wrapHeight = false),
+            Variant("w=380 × h=80 (clip)", widthDp = 380, heightDp = 80, wrapHeight = false),
+        )
     CompositionLocalProvider(LocalRcDebugBorders provides true) {
         ProvideCardRegistry(registry) {
             ProvideHaTheme(HaTheme.Light) {
@@ -443,7 +457,7 @@ private fun ConstraintMatrix(
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold,
                     )
-                    cards.forEach { (label, cardConfig) ->
+                    cards.forEach { (label, cardConfig, kind) ->
                         Text(
                             text = label,
                             style = MaterialTheme.typography.labelMedium,
@@ -453,6 +467,7 @@ private fun ConstraintMatrix(
                             ConstraintRow(
                                 variant = variant,
                                 card = cardConfig,
+                                kind = kind,
                                 profile = profile,
                                 registry = registry,
                             )
@@ -478,22 +493,24 @@ private data class Variant(
 private fun ConstraintRow(
     variant: Variant,
     card: CardConfig,
+    kind: CardKind,
     profile: Profile,
     registry: ee.schimke.ha.rc.CardRegistry,
 ) {
     val snapshot = Fixtures.mixed
-    val natural = registry.cardHeightDp(card, snapshot)
-    val widthMod = if (variant.widthDp == -1) {
-        Modifier.fillMaxWidth()
-    } else {
-        Modifier.width(variant.widthDp.dp)
-    }
-    val (slotMod, heightLabel) = when {
-        variant.wrapHeight -> widthMod to "wrap"
-        variant.heightDp != null ->
-            widthMod.height(variant.heightDp.dp) to "${variant.heightDp}dp"
-        else -> widthMod.height(natural.dp) to "${natural}dp"
-    }
+    val widthMod =
+        if (variant.widthDp == -1) {
+            Modifier.fillMaxWidth()
+        } else {
+            Modifier.width(variant.widthDp.dp)
+        }
+    val (slotMod, heightLabel) =
+        when {
+            variant.wrapHeight -> widthMod to "wrap"
+            variant.heightDp != null ->
+                widthMod.height(variant.heightDp.dp) to "${variant.heightDp}dp"
+            else -> widthMod.height(kind.baselineHeightDp.dp) to "${kind.baselineHeightDp}dp"
+        }
     Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
         Text(
             text = "  · ${variant.label}  (host=${variant.widthDp}×$heightLabel)",
@@ -504,7 +521,7 @@ private fun ConstraintRow(
         // `Modifier.fillMaxWidth()` (host fills available width).
         Row(modifier = Modifier.fillMaxWidth().border(1.dp, Color(0xFF2E7D32))) {
             CachedCardPreview(
-                cacheKey = ConstraintCacheKey(card, profile, variant),
+                cacheKey = ConstraintCacheKey(card, kind, profile, variant),
                 profile = profile,
                 modifier = slotMod.border(1.dp, Color(0xFFD32F2F)),
             ) {
@@ -520,22 +537,41 @@ private fun ConstraintRow(
 
 private data class ConstraintCacheKey(
     val card: CardConfig,
+    val kind: CardKind,
     val profile: Profile,
     val variant: Variant,
 )
 
-private fun experimentCards(): List<Pair<String, CardConfig>> = listOf(
-    "tile" to card("""{"type":"tile","entity":"sensor.living_room"}"""),
-    "button" to card("""{"type":"button","entity":"light.kitchen","name":"Kitchen"}"""),
-    "entity" to card("""{"type":"entity","entity":"sensor.living_room"}"""),
-    "entities" to card(
-        """{"type":"entities","title":"Living Room","entities":[
+private fun experimentCards(): List<Triple<String, CardConfig, CardKind>> =
+    listOf(
+        Triple("tile", card("""{"type":"tile","entity":"sensor.living_room"}"""), CardKind.Tile),
+        Triple(
+            "button",
+            card("""{"type":"button","entity":"light.kitchen","name":"Kitchen"}"""),
+            CardKind.Button,
+        ),
+        Triple(
+            "entity",
+            card("""{"type":"entity","entity":"sensor.living_room"}"""),
+            CardKind.Entity,
+        ),
+        Triple(
+            "entities",
+            card(
+                """{"type":"entities","title":"Living Room","entities":[
             "sensor.living_room","light.kitchen","switch.coffee_maker"
         ]}"""
-    ),
-    "glance" to card(
-        """{"type":"glance","title":"Overview","entities":[
+            ),
+            CardKind.Entities,
+        ),
+        Triple(
+            "glance",
+            card(
+                """{"type":"glance","title":"Overview","entities":[
             "sensor.living_room","light.kitchen","lock.front_door"
         ]}"""
-    ),
-)
+            ),
+            CardKind.Glance,
+        ),
+    )
+
