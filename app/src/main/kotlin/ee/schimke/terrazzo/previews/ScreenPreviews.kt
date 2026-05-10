@@ -1,5 +1,6 @@
 package ee.schimke.terrazzo.previews
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
@@ -69,7 +70,9 @@ private fun PhoneHost(
     TerrazzoTheme(style = style, darkMode = darkMode) {
         CompositionLocalProvider(LocalTerrazzoGraph provides graph) {
             Scaffold { padding ->
-                content()
+                Box(modifier = Modifier.padding(padding)) {
+                    content()
+                }
             }
         }
     }
