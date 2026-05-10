@@ -5,6 +5,8 @@ import ee.schimke.ha.client.HaClient
 import ee.schimke.ha.client.HaConfig
 import ee.schimke.ha.model.Dashboard
 import ee.schimke.ha.model.HaSnapshot
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.serialization.json.JsonObject
 
 /**
@@ -17,6 +19,7 @@ import kotlinx.serialization.json.JsonObject
  */
 interface HaSession {
     val baseUrl: String
+    val connectionStatus: StateFlow<SessionConnectionStatus>
 
     /**
      * If non-null, dashboard screens should re-fetch snapshots at this
@@ -45,14 +48,27 @@ interface HaSession {
     suspend fun close()
 }
 
+enum class SessionConnectionStatus {
+    Failed,
+    Connecting,
+    Connected,
+}
+
 /** Live session backed by an HA WebSocket. */
 class LiveHaSession(
     override val baseUrl: String,
     accessToken: String,
 ) : HaSession {
     private val client = HaClient(HaConfig(baseUrl = baseUrl, accessToken = accessToken))
+    private val _connectionStatus = MutableStateFlow(SessionConnectionStatus.Connecting)
+    override val connectionStatus: StateFlow<SessionConnectionStatus> = _connectionStatus
 
-    override suspend fun connect() = client.connect()
+    override suspend fun connect() {
+        _connectionStatus.value = SessionConnectionStatus.Connecting
+        runCatching { client.connect() }
+            .onSuccess { _connectionStatus.value = SessionConnectionStatus.Connected }
+            .onFailure { _connectionStatus.value = SessionConnectionStatus.Failed; throw it }
+    }
     override suspend fun listDashboards(): List<DashboardSummary> = client.listDashboards()
     override suspend fun loadDashboard(urlPath: String?): Pair<Dashboard, HaSnapshot> {
         val dashboard = client.fetchDashboard(urlPath)
@@ -65,5 +81,8 @@ class LiveHaSession(
         entityId: String?,
         serviceData: JsonObject,
     ) = client.callService(domain, service, entityId, serviceData)
-    override suspend fun close() = client.close()
+    override suspend fun close() {
+        client.close()
+        _connectionStatus.value = SessionConnectionStatus.Failed
+    }
 }

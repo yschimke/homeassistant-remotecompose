@@ -4,6 +4,7 @@ import ee.schimke.ha.client.DashboardSummary
 import ee.schimke.ha.model.Dashboard
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.terrazzo.core.cache.OfflineCacheStorage
+import kotlinx.coroutines.flow.StateFlow
 
 /**
  * Offline-first wrapper around any [HaSession]. Every successful live
@@ -32,6 +33,8 @@ class CachedHaSession(private val delegate: HaSession, private val cache: Offlin
 
   override val refreshIntervalMillis: Long?
     get() = delegate.refreshIntervalMillis
+  override val connectionStatus: StateFlow<SessionConnectionStatus>
+    get() = delegate.connectionStatus
 
   override suspend fun connect() {
     runCatching { delegate.connect() }

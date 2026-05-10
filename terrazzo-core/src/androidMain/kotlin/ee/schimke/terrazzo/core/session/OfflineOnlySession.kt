@@ -3,6 +3,8 @@ package ee.schimke.terrazzo.core.session
 import ee.schimke.ha.client.DashboardSummary
 import ee.schimke.ha.model.Dashboard
 import ee.schimke.ha.model.HaSnapshot
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 
 /**
  * Stub session whose live calls always fail with [OfflineUnavailable].
@@ -13,6 +15,8 @@ import ee.schimke.ha.model.HaSnapshot
  */
 internal class OfflineOnlySession(override val baseUrl: String) : HaSession {
   override val refreshIntervalMillis: Long? = null
+  override val connectionStatus: StateFlow<SessionConnectionStatus> =
+    MutableStateFlow(SessionConnectionStatus.Failed)
 
   override suspend fun connect() = Unit
 
