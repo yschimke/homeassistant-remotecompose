@@ -319,17 +319,21 @@ fun CardPreviewMatrix_Entity() {
     name = "matrix — gauge",
     showBackground = false,
     widthDp = MATRIX_CANVAS_WIDTH_DP,
-    heightDp = 320,
+    heightDp = 240,
 )
 @Composable
 fun CardPreviewMatrix_Gauge() {
     val card = card(
         """{"type":"gauge","entity":"sensor.living_room","name":"Battery","min":0,"max":100}"""
     )
+    // Gauge's natural launcher shape is a horizontal pill (arc on the
+    // left, value · name on the right) — the Reflowed tier — not the
+    // tall arc-on-top stack that wrap mode shows. See
+    // docs/architecture/adaptive-card-layouts.md §6.
     CardPreviewMatrix(
         card = card,
         snapshot = Fixtures.mixed,
-        baseGridSize = WidgetGridSize(cellsW = 2, cellsH = 2),
+        baseGridSize = WidgetGridSize(cellsW = 2, cellsH = 1),
         label = "gauge · sensor.living_room",
     )
 }
