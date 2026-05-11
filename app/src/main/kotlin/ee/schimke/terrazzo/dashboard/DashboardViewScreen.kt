@@ -446,7 +446,7 @@ private data class SectionHeadingModel(
     val visibleCards: List<CardConfig>,
 )
 
-private val SECTION_HEADER_CARD_TYPES: Set<String> = setOf("button", "tile", "entity")
+private val SECTION_HEADER_CARD_TYPES: Set<String> = setOf("heading", "button", "tile", "entity")
 
 private fun resolveSectionHeading(section: SectionLayout, sectionIndex: Int): SectionHeadingModel {
     section.title?.let { return SectionHeadingModel(title = it, visibleCards = section.cards) }
