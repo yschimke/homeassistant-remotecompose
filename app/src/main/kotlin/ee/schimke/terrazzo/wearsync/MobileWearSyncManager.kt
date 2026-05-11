@@ -18,6 +18,7 @@ import ee.schimke.terrazzo.core.pin.WearWidgetSlot
 import ee.schimke.terrazzo.core.pin.WearWidgetSlotsStore
 import ee.schimke.terrazzo.core.prefs.PreferencesStore
 import ee.schimke.terrazzo.core.session.HaSession
+import ee.schimke.terrazzo.core.wearsync.WearSyncManager
 import ee.schimke.terrazzo.wearsync.proto.CardSummary
 import ee.schimke.terrazzo.wearsync.proto.DashboardData
 import ee.schimke.terrazzo.wearsync.proto.EntityDelta
@@ -77,7 +78,7 @@ import kotlinx.serialization.json.jsonPrimitive
 class MobileWearSyncManager(
     private val context: Context,
     private val statsStore: MobileSyncStatsStore,
-) {
+) : WearSyncManager {
 
     private val dataClient: DataClient by lazy { Wearable.getDataClient(context) }
     private val messageClient: MessageClient by lazy { Wearable.getMessageClient(context) }
@@ -105,7 +106,7 @@ class MobileWearSyncManager(
     }
 
     /** Update the active session whenever login/demo state changes. */
-    fun setSession(session: HaSession?) {
+    override fun setSession(session: HaSession?) {
         sessionState.value = session
     }
 
@@ -114,7 +115,7 @@ class MobileWearSyncManager(
      * with pinned-cards count to decide between streaming and batched
      * DataStore writes.
      */
-    val streamActive: StateFlow<Boolean> by lazy {
+    override val streamActive: StateFlow<Boolean> by lazy {
         leaseState.map { isLeaseFresh(it) }
             .stateIn(managerScope, SharingStarted.Eagerly, false)
     }
@@ -123,7 +124,7 @@ class MobileWearSyncManager(
      * Wires the manager to its data sources. Call once from
      * Application.onCreate. Subsequent session changes use [setSession].
      */
-    fun start(
+    override fun start(
         scope: CoroutineScope,
         prefs: PreferencesStore,
         pinStore: PinStore,
