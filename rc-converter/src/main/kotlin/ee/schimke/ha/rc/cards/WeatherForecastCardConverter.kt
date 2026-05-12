@@ -1,3 +1,5 @@
+@file:Suppress("RestrictedApi")
+
 package ee.schimke.ha.rc.cards
 
 import androidx.compose.material.icons.Icons
@@ -10,17 +12,23 @@ import androidx.compose.material.icons.filled.WbCloudy
 import androidx.compose.material.icons.filled.WbSunny
 import androidx.compose.material.icons.outlined.Cloud
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
+import androidx.compose.remote.creation.compose.modifier.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.vector.ImageVector
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.CardConverter
+import ee.schimke.ha.rc.CardSizeMode
+import ee.schimke.ha.rc.LocalCardSizeMode
+import ee.schimke.ha.rc.RemoteSizeBreakpoint
 import ee.schimke.ha.rc.formatValueWithUnit
 import ee.schimke.ha.rc.components.HaWeatherDay
 import ee.schimke.ha.rc.components.HaWeatherForecastData
 import ee.schimke.ha.rc.components.LiveValues
 import ee.schimke.ha.rc.components.RemoteHaWeatherForecast
+import ee.schimke.ha.rc.components.RemoteHaWeatherForecastMini
+import ee.schimke.ha.rc.components.RemoteHaWeatherForecastWide
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonArray
@@ -74,20 +82,35 @@ class WeatherForecastCardConverter : CardConverter {
                 }
             else emptyList()
 
-        RemoteHaWeatherForecast(
-            HaWeatherForecastData(
-                entityId = entityId,
-                name = name,
-                condition = LiveValues.state(entityId, formatCondition(condition)),
-                temperature = temperature,
-                supportingLine = null,
-                icon = weatherIcon(condition),
-                days = days,
-            ),
-            modifier = modifier,
+        val data = HaWeatherForecastData(
+            entityId = entityId,
+            name = name,
+            condition = LiveValues.state(entityId, formatCondition(condition)),
+            temperature = temperature,
+            supportingLine = null,
+            icon = weatherIcon(condition),
+            days = days,
         )
+
+        when (LocalCardSizeMode.current) {
+            CardSizeMode.Wrap -> RemoteHaWeatherForecast(data, modifier)
+            CardSizeMode.Fixed ->
+                RemoteSizeBreakpoint(
+                    thresholdsDp = intArrayOf(WeatherMiniMaxDp, WeatherWideMaxDp),
+                    modifier = modifier.fillMaxSize(),
+                ) { tier ->
+                    when (tier) {
+                        0 -> RemoteHaWeatherForecastMini(data, RemoteModifier.fillMaxSize())
+                        1 -> RemoteHaWeatherForecastWide(data, RemoteModifier.fillMaxSize())
+                        else -> RemoteHaWeatherForecast(data, RemoteModifier.fillMaxSize())
+                    }
+                }
+        }
     }
 }
+
+private const val WeatherMiniMaxDp = 130
+private const val WeatherWideMaxDp = 260
 
 private fun weatherIcon(condition: String?): ImageVector = when (condition) {
     "sunny", "clear-night" -> Icons.Filled.WbSunny
