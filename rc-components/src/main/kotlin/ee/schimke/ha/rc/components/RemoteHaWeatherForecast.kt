@@ -13,6 +13,7 @@ import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.background
 import androidx.compose.remote.creation.compose.modifier.border
 import androidx.compose.remote.creation.compose.modifier.clip
+import androidx.compose.remote.creation.compose.modifier.fillMaxSize
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.modifier.size
@@ -121,6 +122,113 @@ private fun CurrentRow(data: HaWeatherForecastData, theme: HaTheme) {
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
+    }
+}
+
+/**
+ * Wide-thin Fixed-mode weather variant — icon + condition stacked on
+ * the left, big temperature right. Targets short widget cells (Wear
+ * S/L) where the full card's forecast strip won't fit. The condition
+ * text ellipsises rather than wrapping so the row stays one line.
+ */
+@Composable
+@RemoteComposable
+fun RemoteHaWeatherForecastWide(
+    data: HaWeatherForecastData,
+    modifier: RemoteModifier = RemoteModifier,
+) {
+    val theme = haTheme()
+    RemoteRow(
+        modifier =
+            modifier
+                .clip(RemoteRoundedCornerShape(12.rdp))
+                .background(theme.cardBackground.rc)
+                .border(1.rdp, theme.divider.rc, RemoteRoundedCornerShape(12.rdp))
+                .padding(horizontal = 10.rdp, vertical = 8.rdp),
+        verticalAlignment = RemoteAlignment.CenterVertically,
+        horizontalArrangement = RemoteArrangement.spacedBy(8.rdp),
+    ) {
+        RemoteIcon(
+            imageVector = data.icon,
+            contentDescription = data.condition,
+            modifier = RemoteModifier.size(28.rdp),
+            tint = theme.primaryText.rc,
+        )
+        RemoteColumn(
+            modifier = RemoteModifier.weight(1f),
+            verticalArrangement = RemoteArrangement.Center,
+        ) {
+            RemoteText(
+                text = data.condition,
+                color = theme.primaryText.rc,
+                fontSize = 13.rsp,
+                fontWeight = FontWeight.Medium,
+                style = RemoteTextStyle.Default,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            RemoteText(
+                text = (data.supportingLine ?: data.name).rs,
+                color = theme.secondaryText.rc,
+                fontSize = 11.rsp,
+                style = RemoteTextStyle.Default,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+        RemoteText(
+            text = LiveValues.attribute(data.entityId, "temperature_label", data.temperature),
+            color = theme.primaryText.rc,
+            fontSize = 20.rsp,
+            fontWeight = FontWeight.Light,
+            style = RemoteTextStyle.Default,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+    }
+}
+
+/**
+ * Smallest weather variant — just the icon + temperature stacked. No
+ * condition text, no forecast. Used by 1×1 launcher chips.
+ */
+@Composable
+@RemoteComposable
+fun RemoteHaWeatherForecastMini(
+    data: HaWeatherForecastData,
+    modifier: RemoteModifier = RemoteModifier,
+) {
+    val theme = haTheme()
+    RemoteBox(
+        modifier =
+            modifier
+                .clip(RemoteRoundedCornerShape(12.rdp))
+                .background(theme.cardBackground.rc)
+                .border(1.rdp, theme.divider.rc, RemoteRoundedCornerShape(12.rdp))
+                .padding(4.rdp),
+        contentAlignment = RemoteAlignment.Center,
+    ) {
+        RemoteColumn(
+            modifier = RemoteModifier.fillMaxSize(),
+            verticalArrangement = RemoteArrangement.Center,
+            horizontalAlignment = RemoteAlignment.CenterHorizontally,
+        ) {
+            RemoteIcon(
+                imageVector = data.icon,
+                contentDescription = data.condition,
+                modifier = RemoteModifier.size(22.rdp),
+                tint = theme.primaryText.rc,
+            )
+            RemoteText(
+                text = LiveValues.attribute(data.entityId, "temperature_label", data.temperature),
+                color = theme.primaryText.rc,
+                fontSize = 13.rsp,
+                fontWeight = FontWeight.Medium,
+                style = RemoteTextStyle.Default,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
     }
 }
 

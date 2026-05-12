@@ -10,7 +10,6 @@ import ee.schimke.ha.rc.CardConverter
 import ee.schimke.ha.rc.components.HaAction
 import ee.schimke.ha.rc.components.HaArcDialData
 import ee.schimke.ha.rc.components.HaModeChip
-import ee.schimke.ha.rc.components.RemoteHaArcDial
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonPrimitive
 
@@ -58,30 +57,28 @@ class HumidifierCardConverter : CardConverter {
 
         val (incAction, decAction) = stepperActions(entity?.entityId, target, 5f)
 
-        RemoteHaArcDial(
-            HaArcDialData(
-                entityId = entity?.entityId,
-                name = name,
-                valueFraction = valueFraction.coerceIn(0f, 1f),
-                targetFraction = targetFraction?.coerceIn(0f, 1f),
-                centerLabel = centerLabel,
-                centerLabelAttribute = "current_humidity_label",
-                supportingLabel = supportingLabel,
-                supportingLabelAttribute = supportingLabel?.let { "humidity_label" },
-                modeChip =
-                    HaModeChip.Static(
-                        entityId = entity?.entityId,
-                        attribute = "action_label",
-                        initial = modeChip,
-                    ),
-                accent = Color(0xFF00ACC1),
-                showSteppers = target != null,
-                centerIcon = null,
-                incrementAction = incAction,
-                decrementAction = decAction,
-            ),
-            modifier = modifier,
+        val data = HaArcDialData(
+            entityId = entity?.entityId,
+            name = name,
+            valueFraction = valueFraction.coerceIn(0f, 1f),
+            targetFraction = targetFraction?.coerceIn(0f, 1f),
+            centerLabel = centerLabel,
+            centerLabelAttribute = "current_humidity_label",
+            supportingLabel = supportingLabel,
+            supportingLabelAttribute = supportingLabel?.let { "humidity_label" },
+            modeChip =
+                HaModeChip.Static(
+                    entityId = entity?.entityId,
+                    attribute = "action_label",
+                    initial = modeChip,
+                ),
+            accent = Color(0xFF00ACC1),
+            showSteppers = target != null,
+            centerIcon = null,
+            incrementAction = incAction,
+            decrementAction = decAction,
         )
+        RenderArcDial(data, modifier)
     }
 }
 

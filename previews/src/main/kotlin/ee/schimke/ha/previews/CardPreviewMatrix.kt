@@ -409,6 +409,63 @@ fun CardPreviewMatrix_Button() {
 }
 
 @Preview(
+    name = "matrix — thermostat",
+    showBackground = false,
+    widthDp = MATRIX_CANVAS_WIDTH_DP,
+    heightDp = 360,
+)
+@Composable
+fun CardPreviewMatrix_Thermostat() {
+    val card = card("""{"type":"thermostat","entity":"climate.living_room"}""")
+    CardPreviewMatrix(
+        card = card,
+        snapshot = Fixtures.thermostat,
+        baseGridSize = WidgetGridSize(cellsW = 3, cellsH = 3),
+        appWidthDp = 240,
+        label = "thermostat · climate.living_room",
+    )
+}
+
+@Preview(
+    name = "matrix — humidifier",
+    showBackground = false,
+    widthDp = MATRIX_CANVAS_WIDTH_DP,
+    heightDp = 360,
+)
+@Composable
+fun CardPreviewMatrix_Humidifier() {
+    val card = card("""{"type":"humidifier","entity":"humidifier.bedroom"}""")
+    CardPreviewMatrix(
+        card = card,
+        snapshot = Fixtures.humidifier,
+        baseGridSize = WidgetGridSize(cellsW = 3, cellsH = 3),
+        appWidthDp = 240,
+        label = "humidifier · humidifier.bedroom",
+    )
+}
+
+@Preview(
+    name = "matrix — weather-forecast",
+    showBackground = false,
+    widthDp = MATRIX_CANVAS_WIDTH_DP,
+    heightDp = 280,
+)
+@Composable
+fun CardPreviewMatrix_WeatherForecast() {
+    val card = card(
+        """{"type":"weather-forecast","entity":"weather.forecast_home",
+            "show_current":true,"show_forecast":true}"""
+    )
+    CardPreviewMatrix(
+        card = card,
+        snapshot = Fixtures.weather,
+        baseGridSize = WidgetGridSize(cellsW = 5, cellsH = 2),
+        appWidthDp = 320,
+        label = "weather-forecast · weather.forecast_home",
+    )
+}
+
+@Preview(
     name = "matrix — entities",
     showBackground = false,
     widthDp = MATRIX_CANVAS_WIDTH_DP,

@@ -1,6 +1,9 @@
+@file:Suppress("RestrictedApi")
+
 package ee.schimke.ha.rc.cards
 
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
+import androidx.compose.remote.creation.compose.modifier.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import ee.schimke.ha.model.CardConfig
@@ -8,10 +11,15 @@ import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.CardConverter
+import ee.schimke.ha.rc.CardSizeMode
+import ee.schimke.ha.rc.LocalCardSizeMode
+import ee.schimke.ha.rc.RemoteSizeBreakpoint
 import ee.schimke.ha.rc.components.HaAction
 import ee.schimke.ha.rc.components.HaArcDialData
 import ee.schimke.ha.rc.components.HaModeChip
 import ee.schimke.ha.rc.components.RemoteHaArcDial
+import ee.schimke.ha.rc.components.RemoteHaArcDialMini
+import ee.schimke.ha.rc.components.RemoteHaArcDialWide
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonPrimitive
 
@@ -67,32 +75,57 @@ class ThermostatCardConverter : CardConverter {
 
         val (incAction, decAction) = stepperActions(entity, target, step) ?: (HaAction.None to HaAction.None)
 
-        RemoteHaArcDial(
-            HaArcDialData(
-                entityId = entityId,
-                name = name,
-                valueFraction = valueFraction.coerceIn(0f, 1f),
-                targetFraction = targetFraction?.coerceIn(0f, 1f),
-                centerLabel = centerLabel,
-                centerLabelAttribute = "current_temperature_label",
-                supportingLabel = supportingLabel,
-                supportingLabelAttribute = supportingLabel?.let { "temperature_label" },
-                modeChip =
-                    HaModeChip.Static(
-                        entityId = entityId,
-                        attribute = "hvac_action_label",
-                        initial = modeChip,
-                    ),
-                accent = accent,
-                showSteppers = target != null,
-                centerIcon = null,
-                incrementAction = incAction,
-                decrementAction = decAction,
-            ),
-            modifier = modifier,
+        val data = HaArcDialData(
+            entityId = entityId,
+            name = name,
+            valueFraction = valueFraction.coerceIn(0f, 1f),
+            targetFraction = targetFraction?.coerceIn(0f, 1f),
+            centerLabel = centerLabel,
+            centerLabelAttribute = "current_temperature_label",
+            supportingLabel = supportingLabel,
+            supportingLabelAttribute = supportingLabel?.let { "temperature_label" },
+            modeChip =
+                HaModeChip.Static(
+                    entityId = entityId,
+                    attribute = "hvac_action_label",
+                    initial = modeChip,
+                ),
+            accent = accent,
+            showSteppers = target != null,
+            centerIcon = null,
+            incrementAction = incAction,
+            decrementAction = decAction,
         )
+
+        RenderArcDial(data, modifier)
     }
 }
+
+/**
+ * Width ladder shared by thermostat / humidifier. Mirrors the gauge
+ * tier list in [GaugeCardConverter]: narrow chip → arc-only Mini,
+ * medium row → arc-left Wide, full cell → vertical card with steppers.
+ */
+@Composable
+internal fun RenderArcDial(data: HaArcDialData, modifier: RemoteModifier) {
+    when (LocalCardSizeMode.current) {
+        CardSizeMode.Wrap -> RemoteHaArcDial(data, modifier)
+        CardSizeMode.Fixed ->
+            RemoteSizeBreakpoint(
+                thresholdsDp = intArrayOf(ArcDialMiniMaxDp, ArcDialWideMaxDp),
+                modifier = modifier.fillMaxSize(),
+            ) { tier ->
+                when (tier) {
+                    0 -> RemoteHaArcDialMini(data, RemoteModifier.fillMaxSize())
+                    1 -> RemoteHaArcDialWide(data, RemoteModifier.fillMaxSize())
+                    else -> RemoteHaArcDial(data, RemoteModifier.fillMaxSize())
+                }
+            }
+    }
+}
+
+private const val ArcDialMiniMaxDp = 130
+private const val ArcDialWideMaxDp = 260
 
 private fun stepperActions(
     entity: EntityState?,

@@ -22,11 +22,14 @@ import androidx.compose.remote.creation.compose.modifier.background
 import androidx.compose.remote.creation.compose.modifier.border
 import androidx.compose.remote.creation.compose.modifier.clickable
 import androidx.compose.remote.creation.compose.modifier.clip
+import androidx.compose.remote.creation.compose.modifier.fillMaxHeight
+import androidx.compose.remote.creation.compose.modifier.fillMaxSize
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.modifier.size
 import androidx.compose.remote.creation.compose.shapes.RemoteCircleShape
 import androidx.compose.remote.creation.compose.shapes.RemoteRoundedCornerShape
+import androidx.compose.remote.creation.compose.state.RemoteFloat
 import androidx.compose.remote.creation.compose.state.RemoteString
 import androidx.compose.remote.creation.compose.state.asRemotePaint
 import androidx.compose.remote.creation.compose.state.rc
@@ -58,6 +61,12 @@ import androidx.wear.compose.remote.material3.RemoteIcon
  * [HaArcDialData.targetFraction] is set, a small marker dot is drawn
  * on the arc at that fraction (rendered as a near-zero-sweep arc with
  * a round stroke cap, which avoids capture-time trig on RemoteFloat).
+ *
+ * This is the full vertical card — used at the app preferred width and
+ * for larger launcher widget sizes. Smaller surfaces fall through to
+ * [RemoteHaArcDialWide] (arc-left, text-right) or [RemoteHaArcDialMini]
+ * (just arc + value); the thermostat / humidifier converters pick the
+ * variant via [ee.schimke.ha.rc.RemoteSizeBreakpoint] at playback.
  */
 @Composable
 @RemoteComposable
@@ -100,13 +109,148 @@ fun RemoteHaArcDial(
     }
 }
 
+/**
+ * Horizontal arc-left / text-right variant — used for shorter widget
+ * cells (Wear L, compact launcher tiles) where the full vertical card
+ * doesn't fit. Arc canvas is sized off the row height (square); the
+ * text column shows the mode chip and target. Steppers are omitted on
+ * this layout — the cells that hit this tier (Wear S/L) don't have
+ * vertical room for them.
+ */
+@Composable
+@RemoteComposable
+fun RemoteHaArcDialWide(
+    data: HaArcDialData,
+    modifier: RemoteModifier = RemoteModifier,
+) {
+    val theme = haTheme()
+    val click = data.tapAction.toRemoteAction()
+        ?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
+    RemoteRow(
+        modifier = modifier
+            .then(click)
+            .clip(RemoteRoundedCornerShape(12.rdp))
+            .background(theme.cardBackground.rc)
+            .border(1.rdp, theme.divider.rc, RemoteRoundedCornerShape(12.rdp))
+            .padding(horizontal = 10.rdp, vertical = 8.rdp),
+        verticalAlignment = RemoteAlignment.CenterVertically,
+        horizontalArrangement = RemoteArrangement.spacedBy(10.rdp),
+    ) {
+        RemoteBox(
+            modifier = RemoteModifier.fillMaxHeight().size(56.rdp),
+            contentAlignment = RemoteAlignment.Center,
+        ) {
+            ArcCanvas(
+                data = data,
+                theme = theme,
+                trackStrokePx = 6f,
+                fillStrokePx = 6f,
+                markerStrokePx = 8f,
+                paddingPx = 3f,
+            )
+            RemoteText(
+                text =
+                    LiveValues.attribute(
+                        data.entityId,
+                        data.centerLabelAttribute,
+                        data.centerLabel,
+                    ),
+                color = theme.primaryText.rc,
+                fontSize = 13.rsp,
+                fontWeight = FontWeight.SemiBold,
+                style = RemoteTextStyle.Default,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+        RemoteColumn(
+            modifier = RemoteModifier.weight(1f),
+            verticalArrangement = RemoteArrangement.Center,
+            horizontalAlignment = RemoteAlignment.Start,
+        ) {
+            ModeChip(data.modeChip, data.accent)
+            if (data.supportingLabel != null && data.supportingLabelAttribute != null) {
+                RemoteText(
+                    text =
+                        LiveValues.attribute(
+                            data.entityId,
+                            data.supportingLabelAttribute,
+                            data.supportingLabel,
+                        ),
+                    color = data.accent.rc,
+                    fontSize = 11.rsp,
+                    style = RemoteTextStyle.Default,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+        }
+    }
+}
+
+/**
+ * Smallest arc-dial variant — fills its container with just the arc +
+ * centre value. No name, no mode chip, no target, no steppers. Used by
+ * 1×1 launcher chips where there's no room for the side-by-side
+ * layout.
+ */
+@Composable
+@RemoteComposable
+fun RemoteHaArcDialMini(
+    data: HaArcDialData,
+    modifier: RemoteModifier = RemoteModifier,
+) {
+    val theme = haTheme()
+    val click = data.tapAction.toRemoteAction()
+        ?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
+    RemoteBox(
+        modifier = modifier
+            .then(click)
+            .clip(RemoteRoundedCornerShape(12.rdp))
+            .background(theme.cardBackground.rc)
+            .border(1.rdp, theme.divider.rc, RemoteRoundedCornerShape(12.rdp))
+            .padding(4.rdp),
+        contentAlignment = RemoteAlignment.Center,
+    ) {
+        ArcCanvas(
+            data = data,
+            theme = theme,
+            trackStrokePx = 6f,
+            fillStrokePx = 6f,
+            markerStrokePx = 8f,
+            paddingPx = 3f,
+        )
+        RemoteText(
+            text =
+                LiveValues.attribute(
+                    data.entityId,
+                    data.centerLabelAttribute,
+                    data.centerLabel,
+                ),
+            color = theme.primaryText.rc,
+            fontSize = 14.rsp,
+            fontWeight = FontWeight.SemiBold,
+            style = RemoteTextStyle.Default,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+    }
+}
+
 @Composable
 private fun DialBody(data: HaArcDialData, theme: HaTheme) {
     RemoteBox(
         modifier = RemoteModifier.size(180.rdp),
         contentAlignment = RemoteAlignment.Center,
     ) {
-        ArcCanvas(data, theme)
+        ArcCanvas(
+            data = data,
+            theme = theme,
+            trackStrokePx = 12f,
+            fillStrokePx = 12f,
+            markerStrokePx = 14f,
+            paddingPx = 4f,
+        )
         RemoteColumn(
             horizontalAlignment = RemoteAlignment.CenterHorizontally,
             verticalArrangement = RemoteArrangement.spacedBy(2.rdp),
@@ -181,16 +325,27 @@ private fun ChipText(text: RemoteString, accent: Color) {
     )
 }
 
+/**
+ * Common arc rendering. Sizes itself off the box it sits inside via
+ * `fillMaxSize`, so callers control the arc footprint by sizing the
+ * surrounding container (e.g. 180 dp box in the vertical card vs.
+ * 56 dp box in the wide variant). Stroke widths are passed as
+ * pixel-space floats — small variants want thinner strokes so the
+ * dial doesn't read as a clumsy donut at chip sizes.
+ */
 @Composable
-private fun ArcCanvas(data: HaArcDialData, theme: HaTheme) {
-    // Live host binding for the value & (optional) target fraction —
-    // wrapped in `animateRemoteFloat` so any state push from the host
-    // tweens the sweep/marker over [DialAnimationSeconds] instead of
-    // snapping. Constant when entityId is null (preview).
+private fun ArcCanvas(
+    data: HaArcDialData,
+    theme: HaTheme,
+    trackStrokePx: Float,
+    fillStrokePx: Float,
+    markerStrokePx: Float,
+    paddingPx: Float,
+) {
     val v = data.valueFraction.coerceIn(0f, 1f)
     val rawValueFraction = LiveValues.namedFloat(data.entityId, "value_fraction", v)
     val animatedValueFraction = animateRemoteFloat(rawValueFraction, DialAnimationSeconds)
-    val animatedSweep = animatedValueFraction * 270f.rf
+    val animatedSweep: RemoteFloat = animatedValueFraction * 270f.rf
 
     val target = data.targetFraction
     val rawTargetFraction = if (target != null) {
@@ -200,18 +355,23 @@ private fun ArcCanvas(data: HaArcDialData, theme: HaTheme) {
         ?.let { animateRemoteFloat(it, DialAnimationSeconds) }
     val animatedMarkerAngle = animatedTargetFraction?.let { 135f.rf + it * 270f.rf }
 
-    RemoteCanvas(modifier = RemoteModifier.size(180.rdp)) {
+    RemoteCanvas(modifier = RemoteModifier.fillMaxSize()) {
         val w = width
         val h = height
-        val stroke = 12f.rf
-        val pad = stroke / 2f.rf + 4f.rf
-        val topLeft = RemoteOffset(pad, pad)
-        val arcSize = RemoteSize(w - pad * 2f.rf, h - pad * 2f.rf)
+        val pad = (trackStrokePx.coerceAtLeast(fillStrokePx) / 2f) + paddingPx
+        val padTwice = (pad * 2f).rf
+        val byHeight = h - padTwice
+        val byWidth = w - padTwice
+        val side = byHeight.min(byWidth)
+        val left = (w - side) / 2f.rf
+        val top = (h - side) / 2f.rf
+        val topLeft = RemoteOffset(left, top)
+        val arcSize = RemoteSize(side, side)
 
         val track = AndroidPaint().apply {
             isAntiAlias = true
             style = AndroidPaint.Style.STROKE
-            strokeWidth = 12f
+            strokeWidth = trackStrokePx
             strokeCap = AndroidPaint.Cap.ROUND
             color = theme.divider.toArgb()
         }.asRemotePaint()
@@ -220,7 +380,7 @@ private fun ArcCanvas(data: HaArcDialData, theme: HaTheme) {
         val fill = AndroidPaint().apply {
             isAntiAlias = true
             style = AndroidPaint.Style.STROKE
-            strokeWidth = 12f
+            strokeWidth = fillStrokePx
             strokeCap = AndroidPaint.Cap.ROUND
             color = data.accent.toArgb()
         }.asRemotePaint()
@@ -230,7 +390,7 @@ private fun ArcCanvas(data: HaArcDialData, theme: HaTheme) {
             val marker = AndroidPaint().apply {
                 isAntiAlias = true
                 style = AndroidPaint.Style.STROKE
-                strokeWidth = 14f
+                strokeWidth = markerStrokePx
                 strokeCap = AndroidPaint.Cap.ROUND
                 color = theme.primaryText.toArgb()
             }.asRemotePaint()
