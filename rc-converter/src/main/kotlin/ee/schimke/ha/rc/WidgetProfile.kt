@@ -26,6 +26,6 @@ val widgetsProfile: Profile =
         7,
         RcProfiles.PROFILE_WIDGETS or RcProfiles.PROFILE_EXPERIMENTAL,
         AndroidxRcPlatformServices(),
-    ) { creationDisplayInfo, _, profile ->
-        RemoteComposeWriterAndroid(creationDisplayInfo, null, profile)
+    ) { creationDisplayInfo, profile, callback ->
+        RemoteComposeWriterAndroid(creationDisplayInfo, null, profile, callback)
     }
