@@ -317,10 +317,3 @@ fun Play_Tablet10_01_Home() = PhoneHost(darkMode = DarkModePref.Light) {
     DashboardViewScreen(session = demoSession(), urlPath = null, onCardLongPress = {})
 }
 
-@Preview(name = "App Root (empty)", group = "Screens", showBackground = true)
-@Composable
-fun PreviewAppRoot() {
-    PhoneHost {
-        TerrazzoApp()
-    }
-}
