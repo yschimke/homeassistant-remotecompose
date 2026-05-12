@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.1.19](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.18...v0.1.19) (2026-05-12)
+
+
+### Bug Fixes
+
+* pass callback to RemoteComposeWriterAndroid in widgetsProfile ([#245](https://github.com/yschimke/homeassistant-remotecompose/issues/245)) ([3c7e82e](https://github.com/yschimke/homeassistant-remotecompose/commit/3c7e82e790cc0223fd56634cefc4177727880045))
+* **previews:** wire wear sync through Metro so PreviewAppRoot renders ([#244](https://github.com/yschimke/homeassistant-remotecompose/issues/244)) ([46cd279](https://github.com/yschimke/homeassistant-remotecompose/commit/46cd279e02bb3cb6ef975df1bf6525e774a0edc6))
+* remove empty app root preview from render set ([#246](https://github.com/yschimke/homeassistant-remotecompose/issues/246)) ([b3102ba](https://github.com/yschimke/homeassistant-remotecompose/commit/b3102ba969b6d7651f33a8319a9a05feea84bad2))
+* treat heading cards as section headers ([#241](https://github.com/yschimke/homeassistant-remotecompose/issues/241)) ([a2d00cc](https://github.com/yschimke/homeassistant-remotecompose/commit/a2d00ccdea64d1040f8c6136e83fe5d0c5d0673f))
+* widen widgetsProfile to PROFILE_WIDGETS or PROFILE_EXPERIMENTAL ([#243](https://github.com/yschimke/homeassistant-remotecompose/issues/243)) ([9472e0f](https://github.com/yschimke/homeassistant-remotecompose/commit/9472e0f35e81592dd19c99b3b7c891d70fcda764))
+
 ## [0.1.18](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.17...v0.1.18) (2026-05-10)
 
 
