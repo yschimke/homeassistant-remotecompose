@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.20](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.19...v0.1.20) (2026-05-12)
+
+
+### Bug Fixes
+
+* **gauge:** adaptive fixed-mode ladder with box-overlay backdrop ([#251](https://github.com/yschimke/homeassistant-remotecompose/issues/251)) ([67a1af3](https://github.com/yschimke/homeassistant-remotecompose/commit/67a1af37adae54c037e6af1b61295db0550f8f7c))
+* **widget:** drop launcher minimum size ([#248](https://github.com/yschimke/homeassistant-remotecompose/issues/248)) ([c227fed](https://github.com/yschimke/homeassistant-remotecompose/commit/c227fed9a386df485bfd59b42701be6aa19c3425))
+
 ## [0.1.19](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.18...v0.1.19) (2026-05-12)
 
 
