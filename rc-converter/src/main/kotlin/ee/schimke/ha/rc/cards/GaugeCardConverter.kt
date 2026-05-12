@@ -26,7 +26,7 @@ import ee.schimke.ha.rc.components.HaGaugeData
 import ee.schimke.ha.rc.components.HaGaugeSeverity
 import ee.schimke.ha.rc.components.LiveValues
 import ee.schimke.ha.rc.components.RemoteHaGauge
-import ee.schimke.ha.rc.components.RemoteHaGaugeCompact
+import ee.schimke.ha.rc.components.RemoteHaGaugeStacked
 import ee.schimke.ha.rc.components.RemoteHaGaugeWide
 import ee.schimke.ha.rc.defaultTapActionFor
 import ee.schimke.ha.rc.formatState
@@ -44,24 +44,30 @@ import kotlinx.serialization.json.jsonPrimitive
  * updates animate without re-encoding; severity-band colours are baked
  * at encode time and re-encode when the active band changes.
  *
- * In [CardSizeMode.Fixed] the converter encodes a 3-tier ladder driven
- * by the runtime canvas:
+ * In [CardSizeMode.Fixed] the converter encodes a 2-tier ladder driven
+ * by the runtime canvas (mirrors the gauge ladder in
+ * `docs/architecture/adaptive-card-layouts.md` §gauge):
  *
- *   * Below ~80 dp wide → centred state chip
- *     (no room for the dial).
- *   * Wide-thin (`width > 1.5×height`) → [RemoteHaGaugeWide]
- *     (arc-on-left + value/name on the right). Targets Wear S and
- *     `2×1` launcher pills.
- *   * Otherwise → [RemoteHaGaugeCompact] (arc fills the cell, value
- *     overlaid inside the arc). Targets `2×2` / `3×2` launcher
- *     squares and Wear L.
+ *   * **Too short for stacked** (`h < 70 dp`) → [RemoteHaGaugeWide].
+ *     Arc on the left, value · name on the right. The Wear S
+ *     200×60 chip is the canonical hit; cells with no vertical room
+ *     for an arc-as-backdrop layout reach for the row instead.
+ *   * **Stacked Box overlay** (otherwise) → [RemoteHaGaugeStacked].
+ *     Half-arc as a backdrop with value · name · range overlaid at
+ *     the bottom of the box. Covers everything from a 1×1 launcher
+ *     chip up to a 3×2 dashboard tile and Wear L. The secondary
+ *     text lines ellipsise on cells that can't fit them.
  *
- * Aspect detection uses `componentWidth() / componentHeight()` and
+ * Tier selection uses `componentWidth()` and `componentHeight()` and
  * lowers to nested `RemoteStateLayout(RemoteBoolean)` (the only
  * state-layout overload that respects live state in alpha010 — see
  * [ee.schimke.ha.rc.RemoteSizeBreakpoint]). Both float expressions
  * are materialised via transparent text so the runtime resolves them
  * correctly (#224).
+ *
+ * 2-D gates are encoded as `min(w, h · minW/minH).ge(minW)` because
+ * `RemoteBoolean.and()` doesn't materialise its operands in alpha010
+ * and `.and()`-composed predicates collapse to `false` at playback.
  */
 class GaugeCardConverter : CardConverter {
     override val cardType: String = CardTypes.GAUGE
@@ -88,8 +94,13 @@ class GaugeCardConverter : CardConverter {
             RemoteFloat.createNamedRemoteFloatExpression(heightName, RemoteState.Domain.User) {
                 componentHeight()
             }
-        val isAboveChip = widthExpr.ge(80.rdp.toPx())
-        val isWideThin = widthExpr.gt(heightExpr * 1.5f.rf)
+        // Single height-only outer gate — short cells (Wear S) get
+        // the side-by-side Row, everything else gets the Stacked Box
+        // overlay. Nested inner state-layouts on width or a 2-D
+        // gate don't materialise reliably in alpha010 (#224); they
+        // collapse to false at playback, so a 1-D outer toggle is
+        // all we get for now.
+        val hasRoomForStacked = heightExpr.ge(MinStackedHeightDp.rdp.toPx())
 
         RemoteBox(modifier = modifier.fillMaxSize()) {
             // Materialise both named expressions in the document. The
@@ -105,26 +116,19 @@ class GaugeCardConverter : CardConverter {
                 color = Color.Transparent.rc,
             )
 
-            RemoteStateLayout(isAboveChip) { hasRoom ->
-                if (!hasRoom) {
-                    CompactStateChip(card, snapshot)
+            val data = gaugeData(card, snapshot)
+            RemoteStateLayout(hasRoomForStacked) { tall ->
+                if (tall) {
+                    RemoteHaGaugeStacked(data, RemoteModifier.fillMaxSize())
                 } else {
-                    RemoteStateLayout(isWideThin) { wide ->
-                        if (wide) {
-                            RemoteHaGaugeWide(
-                                gaugeData(card, snapshot),
-                                modifier = RemoteModifier.fillMaxSize(),
-                            )
-                        } else {
-                            RemoteHaGaugeCompact(
-                                gaugeData(card, snapshot),
-                                modifier = RemoteModifier.fillMaxSize(),
-                            )
-                        }
-                    }
+                    RemoteHaGaugeWide(data, RemoteModifier.fillMaxSize())
                 }
             }
         }
+    }
+
+    private companion object {
+        const val MinStackedHeightDp = 70
     }
 
     @Composable

@@ -168,16 +168,19 @@ fun RemoteHaGauge(
 private const val GaugeAnimationSeconds = 0.45f
 
 /**
- * Compact Fixed-mode gauge variant. The half-arc grows to fill the
- * card's intrinsic dimensions (capped at the smaller of `width / 2`
- * and `height` so it stays a true half-circle), and the live value
- * is overlaid centered inside the arc's open interior. Use for
- * square / tall launcher widgets where the wrap-mode column-stack is
- * wasteful.
+ * Stacked Fixed-mode gauge variant — the dominant Fixed-mode tier.
+ * Renders the arc as a backdrop (top-anchored half-circle, capped
+ * so its visible base lands at ~60 % of the cell height) and
+ * overlays value · name · range in the open interior below. One
+ * composable covers everything from a 1×1 launcher chip up to a
+ * 3×2 dashboard tile and Wear L — the same proportional crop
+ * scales naturally across sizes; secondary text lines ellipsise on
+ * cells that can't fit them. Very short cells (Wear S) skip the
+ * stacked overlay and fall through to [RemoteHaGaugeWide].
  */
 @Composable
 @RemoteComposable
-fun RemoteHaGaugeCompact(
+fun RemoteHaGaugeStacked(
     data: HaGaugeData,
     modifier: RemoteModifier = RemoteModifier,
 ) {
@@ -193,70 +196,87 @@ fun RemoteHaGaugeCompact(
                 .then(clickable)
                 .clip(RemoteRoundedCornerShape(12.rdp))
                 .background(theme.cardBackground.rc)
-                .border(1.rdp, theme.divider.rc, RemoteRoundedCornerShape(12.rdp)),
-        contentAlignment = RemoteAlignment.Center,
+                .border(1.rdp, theme.divider.rc, RemoteRoundedCornerShape(12.rdp))
+                .padding(8.rdp),
+        contentAlignment = RemoteAlignment.BottomCenter,
     ) {
-        // Arc fills the cell; its diameter follows the smaller axis so
-        // the half-circle stays proportional. Anchored to the bottom
-        // so the open side faces downward (matching the HA reference).
-        RemoteCanvas(modifier = RemoteModifier.fillMaxSize().padding(6.rdp)) {
+        // Arc fills the box, but the diameter is capped so the
+        // visible half (= diameter / 2) only reaches ~60 % of the
+        // cell height. That leaves the lower ~40 % for the text
+        // overlay regardless of the cell's aspect ratio.
+        RemoteCanvas(modifier = RemoteModifier.fillMaxSize()) {
             val w = width
             val h = height
             val stroke = 8f.rf
-            val pad = stroke / 2f.rf
-            // Half-circle diameter capped by both axes.
-            val byHeight = (h - pad) * 2f.rf
+            val pad = (stroke / 2f.rf) + 2f.rf
+            val arcBottomY = h * 0.6f.rf
+            val byHeight = (arcBottomY - pad) * 2f.rf
             val byWidth = w - pad * 2f.rf
             val diameter = byHeight.min(byWidth)
             val left = (w - diameter) / 2f.rf
-            val arcTop = h - (diameter / 2f.rf) - pad
-            val topLeft = RemoteOffset(left, arcTop)
+            val top = arcBottomY - (diameter / 2f.rf)
+            val topLeft = RemoteOffset(left, top)
             val arcSize = RemoteSize(diameter, diameter)
 
-            val track =
-                AndroidPaint()
-                    .apply {
-                        isAntiAlias = true
-                        style = AndroidPaint.Style.STROKE
-                        strokeWidth = 8f
-                        strokeCap = AndroidPaint.Cap.ROUND
-                        color = theme.divider.toArgb()
-                    }
-                    .asRemotePaint()
+            val track = AndroidPaint().apply {
+                isAntiAlias = true
+                style = AndroidPaint.Style.STROKE
+                strokeWidth = 8f
+                strokeCap = AndroidPaint.Cap.ROUND
+                color = theme.divider.toArgb()
+            }.asRemotePaint()
             drawArc(track, 180f.rf, 180f.rf, false, topLeft, arcSize)
 
-            val value =
-                AndroidPaint()
-                    .apply {
-                        isAntiAlias = true
-                        style = AndroidPaint.Style.STROKE
-                        strokeWidth = 8f
-                        strokeCap = AndroidPaint.Cap.ROUND
-                        color = severityColor.toArgb()
-                    }
-                    .asRemotePaint()
+            val value = AndroidPaint().apply {
+                isAntiAlias = true
+                style = AndroidPaint.Style.STROKE
+                strokeWidth = 8f
+                strokeCap = AndroidPaint.Cap.ROUND
+                color = severityColor.toArgb()
+            }.asRemotePaint()
             drawArc(value, 180f.rf, animatedSweep, false, topLeft, arcSize)
         }
-        // Value text overlaid inside the arc — Box centers by default,
-        // which lands the text in the half-arc's interior.
-        RemoteText(
-            text = data.valueText,
-            color = theme.primaryText.rc,
-            fontSize = 16.rsp,
-            fontWeight = FontWeight.SemiBold,
-            style = RemoteTextStyle.Default,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = RemoteModifier.padding(bottom = 8.rdp),
-        )
+        RemoteColumn(
+            modifier = RemoteModifier.fillMaxWidth(),
+            verticalArrangement = RemoteArrangement.spacedBy(2.rdp),
+            horizontalAlignment = RemoteAlignment.CenterHorizontally,
+        ) {
+            RemoteText(
+                text = data.valueText,
+                color = theme.primaryText.rc,
+                fontSize = 18.rsp,
+                fontWeight = FontWeight.SemiBold,
+                style = RemoteTextStyle.Default,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            RemoteText(
+                text = data.name.rs,
+                color = theme.secondaryText.rc,
+                fontSize = 12.rsp,
+                style = RemoteTextStyle.Default,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            if (data.unit != null) {
+                RemoteText(
+                    text = "${formatRange(data.min)} – ${formatRange(data.max)} ${data.unit}".rs,
+                    color = theme.secondaryText.rc,
+                    fontSize = 10.rsp,
+                    style = RemoteTextStyle.Default,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+        }
     }
 }
 
 /**
  * Wide-thin Fixed-mode gauge variant. Half-arc on the left at square
- * aspect, value + name + range stacked on the right. Targets cells
- * like `200×60` Wear chips and `2×1` launcher widgets where the
- * vertical stack of [RemoteHaGaugeCompact] would crowd the arc.
+ * aspect, value + name stacked on the right. Targets the very short
+ * `200×60` Wear S chip where the [RemoteHaGaugeStacked] backdrop
+ * doesn't have enough vertical room to host the arc + text overlay.
  */
 @Composable
 @RemoteComposable
@@ -278,11 +298,14 @@ fun RemoteHaGaugeWide(
                 .background(theme.cardBackground.rc)
                 .border(1.rdp, theme.divider.rc, RemoteRoundedCornerShape(12.rdp))
                 .padding(horizontal = 8.rdp, vertical = 6.rdp),
-        verticalAlignment = RemoteAlignment.CenterVertically,
+        verticalAlignment = RemoteAlignment.Bottom,
         horizontalArrangement = RemoteArrangement.spacedBy(8.rdp),
     ) {
-        // Arc canvas: square aspect, height-bounded.
-        RemoteCanvas(modifier = RemoteModifier.fillMaxHeight().width(64.rdp)) {
+        // Arc canvas sized off the row height so the half-arc grows
+        // with taller cells (Wear L vs Wear S). The text column gets
+        // the rest of the width via `weight()` so value / name aren't
+        // clipped on narrower 2×1 chips.
+        RemoteCanvas(modifier = RemoteModifier.fillMaxHeight().width(72.rdp)) {
             val w = width
             val h = height
             val stroke = 6f.rf
@@ -320,6 +343,7 @@ fun RemoteHaGaugeWide(
             drawArc(value, 180f.rf, animatedSweep, false, topLeft, arcSize)
         }
         RemoteColumn(
+            modifier = RemoteModifier.weight(1f).padding(bottom = 4.rdp),
             verticalArrangement = RemoteArrangement.Center,
             horizontalAlignment = RemoteAlignment.Start,
         ) {
