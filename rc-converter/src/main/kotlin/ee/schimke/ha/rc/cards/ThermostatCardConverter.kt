@@ -18,7 +18,6 @@ import ee.schimke.ha.rc.components.HaAction
 import ee.schimke.ha.rc.components.HaArcDialData
 import ee.schimke.ha.rc.components.HaModeChip
 import ee.schimke.ha.rc.components.RemoteHaArcDial
-import ee.schimke.ha.rc.components.RemoteHaArcDialMini
 import ee.schimke.ha.rc.components.RemoteHaArcDialWide
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -103,8 +102,11 @@ class ThermostatCardConverter : CardConverter {
 
 /**
  * Width ladder shared by thermostat / humidifier. Mirrors the gauge
- * tier list in [GaugeCardConverter]: narrow chip → arc-only Mini,
- * medium row → arc-left Wide, full cell → vertical card with steppers.
+ * single-gate pattern in [GaugeCardConverter]: arc-left Wide row when
+ * the runtime cell is too narrow for the full vertical card with
+ * steppers, full card otherwise. A single threshold avoids the alpha010
+ * nested `RemoteStateLayout` quirk that collapses multi-tier ladders
+ * (#224).
  */
 @Composable
 internal fun RenderArcDial(data: HaArcDialData, modifier: RemoteModifier) {
@@ -112,20 +114,18 @@ internal fun RenderArcDial(data: HaArcDialData, modifier: RemoteModifier) {
         CardSizeMode.Wrap -> RemoteHaArcDial(data, modifier)
         CardSizeMode.Fixed ->
             RemoteSizeBreakpoint(
-                thresholdsDp = intArrayOf(ArcDialMiniMaxDp, ArcDialWideMaxDp),
+                thresholdsDp = intArrayOf(ArcDialFullMinDp),
                 modifier = modifier.fillMaxSize(),
             ) { tier ->
                 when (tier) {
-                    0 -> RemoteHaArcDialMini(data, RemoteModifier.fillMaxSize())
-                    1 -> RemoteHaArcDialWide(data, RemoteModifier.fillMaxSize())
+                    0 -> RemoteHaArcDialWide(data, RemoteModifier.fillMaxSize())
                     else -> RemoteHaArcDial(data, RemoteModifier.fillMaxSize())
                 }
             }
     }
 }
 
-private const val ArcDialMiniMaxDp = 130
-private const val ArcDialWideMaxDp = 260
+private const val ArcDialFullMinDp = 260
 
 private fun stepperActions(
     entity: EntityState?,

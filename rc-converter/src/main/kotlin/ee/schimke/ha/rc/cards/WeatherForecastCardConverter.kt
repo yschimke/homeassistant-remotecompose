@@ -27,7 +27,6 @@ import ee.schimke.ha.rc.components.HaWeatherDay
 import ee.schimke.ha.rc.components.HaWeatherForecastData
 import ee.schimke.ha.rc.components.LiveValues
 import ee.schimke.ha.rc.components.RemoteHaWeatherForecast
-import ee.schimke.ha.rc.components.RemoteHaWeatherForecastMini
 import ee.schimke.ha.rc.components.RemoteHaWeatherForecastWide
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
@@ -96,12 +95,11 @@ class WeatherForecastCardConverter : CardConverter {
             CardSizeMode.Wrap -> RemoteHaWeatherForecast(data, modifier)
             CardSizeMode.Fixed ->
                 RemoteSizeBreakpoint(
-                    thresholdsDp = intArrayOf(WeatherMiniMaxDp, WeatherWideMaxDp),
+                    thresholdsDp = intArrayOf(WeatherFullMinDp),
                     modifier = modifier.fillMaxSize(),
                 ) { tier ->
                     when (tier) {
-                        0 -> RemoteHaWeatherForecastMini(data, RemoteModifier.fillMaxSize())
-                        1 -> RemoteHaWeatherForecastWide(data, RemoteModifier.fillMaxSize())
+                        0 -> RemoteHaWeatherForecastWide(data, RemoteModifier.fillMaxSize())
                         else -> RemoteHaWeatherForecast(data, RemoteModifier.fillMaxSize())
                     }
                 }
@@ -109,8 +107,7 @@ class WeatherForecastCardConverter : CardConverter {
     }
 }
 
-private const val WeatherMiniMaxDp = 130
-private const val WeatherWideMaxDp = 260
+private const val WeatherFullMinDp = 260
 
 private fun weatherIcon(condition: String?): ImageVector = when (condition) {
     "sunny", "clear-night" -> Icons.Filled.WbSunny
