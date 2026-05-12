@@ -64,9 +64,8 @@ import androidx.wear.compose.remote.material3.RemoteIcon
  *
  * This is the full vertical card — used at the app preferred width and
  * for larger launcher widget sizes. Smaller surfaces fall through to
- * [RemoteHaArcDialWide] (arc-left, text-right) or [RemoteHaArcDialMini]
- * (just arc + value); the thermostat / humidifier converters pick the
- * variant via [ee.schimke.ha.rc.RemoteSizeBreakpoint] at playback.
+ * [RemoteHaArcDialWide] (arc-left, text-right) which shows the same
+ * mode chip, value, and target label in a horizontal layout.
  */
 @Composable
 @RemoteComposable
@@ -111,11 +110,12 @@ fun RemoteHaArcDial(
 
 /**
  * Horizontal arc-left / text-right variant — used for shorter widget
- * cells (Wear L, compact launcher tiles) where the full vertical card
- * doesn't fit. Arc canvas is sized off the row height (square); the
- * text column shows the mode chip and target. Steppers are omitted on
- * this layout — the cells that hit this tier (Wear S/L) don't have
- * vertical room for them.
+ * cells (Wear L, compact launcher tiles, 1×1 launcher chips) where the
+ * full vertical card doesn't fit. Arc canvas is sized off the row
+ * height (square); the text column shows mode chip, value, and target
+ * stacked so the full readout stays visible even at chip sizes.
+ * Steppers are omitted — cells that hit this tier don't have vertical
+ * room for them.
  */
 @Composable
 @RemoteComposable
@@ -124,15 +124,16 @@ fun RemoteHaArcDialWide(
     modifier: RemoteModifier = RemoteModifier,
 ) {
     val theme = haTheme()
-    val click = data.tapAction.toRemoteAction()
-        ?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
+    val click =
+        data.tapAction.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
     RemoteRow(
-        modifier = modifier
-            .then(click)
-            .clip(RemoteRoundedCornerShape(12.rdp))
-            .background(theme.cardBackground.rc)
-            .border(1.rdp, theme.divider.rc, RemoteRoundedCornerShape(12.rdp))
-            .padding(horizontal = 10.rdp, vertical = 8.rdp),
+        modifier =
+            modifier
+                .then(click)
+                .clip(RemoteRoundedCornerShape(12.rdp))
+                .background(theme.cardBackground.rc)
+                .border(1.rdp, theme.divider.rc, RemoteRoundedCornerShape(12.rdp))
+                .padding(horizontal = 10.rdp, vertical = 8.rdp),
         verticalAlignment = RemoteAlignment.CenterVertically,
         horizontalArrangement = RemoteArrangement.spacedBy(10.rdp),
     ) {
@@ -148,6 +149,13 @@ fun RemoteHaArcDialWide(
                 markerStrokePx = 8f,
                 paddingPx = 3f,
             )
+        }
+        RemoteColumn(
+            modifier = RemoteModifier.weight(1f),
+            verticalArrangement = RemoteArrangement.Center,
+            horizontalAlignment = RemoteAlignment.Start,
+        ) {
+            ModeChip(data.modeChip, data.accent)
             RemoteText(
                 text =
                     LiveValues.attribute(
@@ -156,19 +164,12 @@ fun RemoteHaArcDialWide(
                         data.centerLabel,
                     ),
                 color = theme.primaryText.rc,
-                fontSize = 13.rsp,
+                fontSize = 18.rsp,
                 fontWeight = FontWeight.SemiBold,
                 style = RemoteTextStyle.Default,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
-        }
-        RemoteColumn(
-            modifier = RemoteModifier.weight(1f),
-            verticalArrangement = RemoteArrangement.Center,
-            horizontalAlignment = RemoteAlignment.Start,
-        ) {
-            ModeChip(data.modeChip, data.accent)
             if (data.supportingLabel != null && data.supportingLabelAttribute != null) {
                 RemoteText(
                     text =
@@ -178,62 +179,13 @@ fun RemoteHaArcDialWide(
                             data.supportingLabel,
                         ),
                     color = data.accent.rc,
-                    fontSize = 11.rsp,
+                    fontSize = 12.rsp,
                     style = RemoteTextStyle.Default,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
             }
         }
-    }
-}
-
-/**
- * Smallest arc-dial variant — fills its container with just the arc +
- * centre value. No name, no mode chip, no target, no steppers. Used by
- * 1×1 launcher chips where there's no room for the side-by-side
- * layout.
- */
-@Composable
-@RemoteComposable
-fun RemoteHaArcDialMini(
-    data: HaArcDialData,
-    modifier: RemoteModifier = RemoteModifier,
-) {
-    val theme = haTheme()
-    val click = data.tapAction.toRemoteAction()
-        ?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
-    RemoteBox(
-        modifier = modifier
-            .then(click)
-            .clip(RemoteRoundedCornerShape(12.rdp))
-            .background(theme.cardBackground.rc)
-            .border(1.rdp, theme.divider.rc, RemoteRoundedCornerShape(12.rdp))
-            .padding(4.rdp),
-        contentAlignment = RemoteAlignment.Center,
-    ) {
-        ArcCanvas(
-            data = data,
-            theme = theme,
-            trackStrokePx = 6f,
-            fillStrokePx = 6f,
-            markerStrokePx = 8f,
-            paddingPx = 3f,
-        )
-        RemoteText(
-            text =
-                LiveValues.attribute(
-                    data.entityId,
-                    data.centerLabelAttribute,
-                    data.centerLabel,
-                ),
-            color = theme.primaryText.rc,
-            fontSize = 14.rsp,
-            fontWeight = FontWeight.SemiBold,
-            style = RemoteTextStyle.Default,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-        )
     }
 }
 

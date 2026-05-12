@@ -188,50 +188,6 @@ fun RemoteHaWeatherForecastWide(
     }
 }
 
-/**
- * Smallest weather variant — just the icon + temperature stacked. No
- * condition text, no forecast. Used by 1×1 launcher chips.
- */
-@Composable
-@RemoteComposable
-fun RemoteHaWeatherForecastMini(
-    data: HaWeatherForecastData,
-    modifier: RemoteModifier = RemoteModifier,
-) {
-    val theme = haTheme()
-    RemoteBox(
-        modifier =
-            modifier
-                .clip(RemoteRoundedCornerShape(12.rdp))
-                .background(theme.cardBackground.rc)
-                .border(1.rdp, theme.divider.rc, RemoteRoundedCornerShape(12.rdp))
-                .padding(4.rdp),
-        contentAlignment = RemoteAlignment.Center,
-    ) {
-        RemoteColumn(
-            modifier = RemoteModifier.fillMaxSize(),
-            verticalArrangement = RemoteArrangement.Center,
-            horizontalAlignment = RemoteAlignment.CenterHorizontally,
-        ) {
-            RemoteIcon(
-                imageVector = data.icon,
-                contentDescription = data.condition,
-                modifier = RemoteModifier.size(22.rdp),
-                tint = theme.primaryText.rc,
-            )
-            RemoteText(
-                text = LiveValues.attribute(data.entityId, "temperature_label", data.temperature),
-                color = theme.primaryText.rc,
-                fontSize = 13.rsp,
-                fontWeight = FontWeight.Medium,
-                style = RemoteTextStyle.Default,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-        }
-    }
-}
-
 @Composable
 private fun ForecastStrip(days: List<HaWeatherDay>, theme: HaTheme) {
     RemoteRow(
