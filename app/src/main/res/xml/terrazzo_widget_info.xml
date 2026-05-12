@@ -4,20 +4,19 @@
   every installed instance; the provider resolves per-widget config
   from DataStore at render time.
 
-  Size: scales to whatever the host card natural height implies; the
-  default cell is 2x1 for a tile-style card. `resizeMode` lets the user
-  grow it vertically in case they've pinned a taller card (entities /
-  glance).
+  Size: min values are 1dp so the launcher imposes no floor — the
+  widget renders at whatever cell size the user picks. `resizeMode`
+  lets them grow it freely in both axes.
 
   `updatePeriodMillis="0"` — we drive updates imperatively from a
   background worker when HA state changes; the 30-minute minimum of
   the framework poll would give stale readings anyway.
 -->
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
-    android:minWidth="180dp"
-    android:minHeight="48dp"
-    android:minResizeWidth="180dp"
-    android:minResizeHeight="48dp"
+    android:minWidth="1dp"
+    android:minHeight="1dp"
+    android:minResizeWidth="1dp"
+    android:minResizeHeight="1dp"
     android:resizeMode="horizontal|vertical"
     android:updatePeriodMillis="0"
     android:widgetCategory="home_screen"
