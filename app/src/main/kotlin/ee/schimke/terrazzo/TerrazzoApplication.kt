@@ -23,15 +23,12 @@ import ee.schimke.terrazzo.wearsync.MobileWearSyncManager
  */
 class TerrazzoApplication : Application() {
 
-    val graph: TerrazzoGraph by lazy {
-        val cardMonitor = createMonitor(applicationContext)
-        createGraphFactory<AppGraph.Factory>().create(applicationContext, cardMonitor)
-    }
-
     /**
-     * Phone-only wear sync. Held outside the Metro graph because the
-     * wear-data layer dependency stack (play-services-wearable +
-     * Horologist) only lives in this module. Started on first access.
+     * Phone-only wear sync deps held outside the graph because the
+     * wear-data layer stack (play-services-wearable + Horologist) only
+     * lives in this module. [syncStats] feeds [wearSync] (the graph's
+     * [WearSyncManager] binding), and is also consumed directly by the
+     * sync-diagnostics screen.
      */
     val syncStats: MobileSyncStatsStore by lazy { MobileSyncStatsStore(applicationContext) }
     val wearSync: MobileWearSyncManager by lazy {
@@ -39,6 +36,11 @@ class TerrazzoApplication : Application() {
     }
     val wearCapabilityProbe: ee.schimke.terrazzo.wearsync.WearCapabilityProbe by lazy {
         ee.schimke.terrazzo.wearsync.WearCapabilityProbe(applicationContext)
+    }
+
+    val graph: TerrazzoGraph by lazy {
+        val cardMonitor = createMonitor(applicationContext)
+        createGraphFactory<AppGraph.Factory>().create(applicationContext, cardMonitor, wearSync)
     }
 
     override fun onCreate() {
@@ -57,7 +59,7 @@ class TerrazzoApplication : Application() {
         // demo / pinned-card updates even when the phone UI is in the
         // background). PreferencesStore + WidgetStore are read from the
         // graph; the manager owns its own lazy DataClient/MessageClient.
-        wearSync.start(
+        graph.wearSyncManager.start(
             scope = ProcessLifecycleOwner.get().lifecycleScope,
             prefs = graph.preferencesStore,
             pinStore = graph.pinStore,

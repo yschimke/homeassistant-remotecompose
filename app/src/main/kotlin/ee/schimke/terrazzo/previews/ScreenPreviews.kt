@@ -31,6 +31,8 @@ import ee.schimke.terrazzo.core.pin.WearWidgetSlotsStore
 import ee.schimke.terrazzo.core.prefs.DarkModePref
 import ee.schimke.terrazzo.core.prefs.PreferencesStore
 import ee.schimke.terrazzo.core.session.DemoHaSession
+import ee.schimke.terrazzo.core.wearsync.NoOpWearSyncManager
+import ee.schimke.terrazzo.core.wearsync.WearSyncManager
 import ee.schimke.terrazzo.core.widget.WidgetStore
 import ee.schimke.terrazzo.dashboard.DashboardListState
 import ee.schimke.terrazzo.dashboard.DashboardPickerScreen
@@ -100,10 +102,13 @@ private fun rememberPreviewGraph(): TerrazzoGraph {
             override val wearWidgetSlotsStore: WearWidgetSlotsStore = WearWidgetSlotsStore(context)
             override val widgetStore: WidgetStore
                 get() = error("widgetStore not wired in previews")
-            override val tokenVault: TokenVault
-                get() = error("tokenVault not wired in previews")
-            override val authService: HaAuthService
-                get() = error("authService not wired in previews")
+            // Previews compose TerrazzoApp's root, which builds a
+            // LoginController eagerly. Both bindings are pure
+            // context-backed wrappers (vault → encrypted DataStore,
+            // authService → AppAuth client config) so a real instance
+            // is cheap and reaches no network until the user signs in.
+            override val tokenVault: TokenVault = TokenVault(context)
+            override val authService: HaAuthService = HaAuthService(context)
             override val sessionFactory: HaSessionFactory
                 get() = error("sessionFactory not wired in previews")
             override val cardMonitor: CardMonitor
@@ -111,6 +116,7 @@ private fun rememberPreviewGraph(): TerrazzoGraph {
                     override val isEnabled: Boolean = false
                     override fun start(card: CardConfig, durationMinutes: Int) {}
                 }
+            override val wearSyncManager: WearSyncManager = NoOpWearSyncManager()
         }
     }
 }

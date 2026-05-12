@@ -6,6 +6,7 @@ import dev.zacsweers.metro.Provides
 import ee.schimke.terrazzo.core.di.AppScope
 import ee.schimke.terrazzo.core.di.TerrazzoGraph
 import ee.schimke.terrazzo.core.monitor.CardMonitor
+import ee.schimke.terrazzo.core.wearsync.WearSyncManager
 
 @DependencyGraph(scope = AppScope::class)
 interface AppGraph : TerrazzoGraph {
@@ -13,7 +14,8 @@ interface AppGraph : TerrazzoGraph {
     fun interface Factory {
         fun create(
             @Provides context: Context,
-            @Provides cardMonitor: CardMonitor
+            @Provides cardMonitor: CardMonitor,
+            @Provides wearSyncManager: WearSyncManager,
         ): AppGraph
     }
 }

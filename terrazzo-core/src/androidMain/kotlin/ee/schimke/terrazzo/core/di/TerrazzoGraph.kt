@@ -15,6 +15,7 @@ import ee.schimke.terrazzo.core.session.DemoHaSession
 import ee.schimke.terrazzo.core.session.HaSession
 import ee.schimke.terrazzo.core.session.LiveHaSession
 import ee.schimke.terrazzo.core.session.OfflineOnlySession
+import ee.schimke.terrazzo.core.wearsync.WearSyncManager
 import ee.schimke.terrazzo.core.widget.WidgetStore
 
 /**
@@ -35,6 +36,7 @@ interface TerrazzoGraph {
     val offlineCache: OfflineCache
     val sessionFactory: HaSessionFactory
     val cardMonitor: CardMonitor
+    val wearSyncManager: WearSyncManager
 
     fun interface Factory {
         fun create(context: Context): TerrazzoGraph

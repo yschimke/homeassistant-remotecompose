@@ -100,9 +100,7 @@ fun TerrazzoApp(
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
     val widgetScheduler = remember(context) { WidgetRefreshScheduler(context.applicationContext) }
-    val wearSync = remember(context) {
-        (context.applicationContext as TerrazzoApplication).wearSync
-    }
+    val wearSync = graph.wearSyncManager
 
     // Persisted demo-mode flag survives process restarts, so a user who
     // opted into demo doesn't see the login screen again on relaunch.
@@ -225,6 +223,7 @@ private fun AuthenticatedShell(
 
     val context = LocalContext.current
     val app = remember(context) { context.applicationContext as TerrazzoApplication }
+    val graph = LocalTerrazzoGraph.current
 
     when (screen) {
         AppScreen.Dashboards -> DashboardsRoot(
@@ -253,7 +252,7 @@ private fun AuthenticatedShell(
             onBack = { screen = AppScreen.Dashboards },
         )
         AppScreen.SyncDiagnostics -> {
-            val streaming by app.wearSync.streamActive.collectAsState()
+            val streaming by graph.wearSyncManager.streamActive.collectAsState()
             ee.schimke.terrazzo.wearsync.SyncDiagnosticsScreen(
                 statsStore = app.syncStats,
                 streamActive = streaming,
