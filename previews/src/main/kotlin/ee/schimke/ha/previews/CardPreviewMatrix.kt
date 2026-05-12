@@ -144,6 +144,11 @@ fun CardPreviewMatrix(
                             color = HaTheme.Dark.primaryText,
                         )
                     }
+                    // Row 1 — App preferred + the two Wear container shapes.
+                    // App and Wear render at watch / mobile densities (Wear
+                    // cells override LocalDensity to 2×); grouping them on
+                    // the same line keeps the "dashboard tile + wear tile"
+                    // story together.
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -154,7 +159,28 @@ fun CardPreviewMatrix(
                             cellWidthDp = appWidthDp,
                             label = "App ${appWidthDp}dp",
                         )
-                        // Three launcher widget sizes around the base.
+                        FixedModeCell(
+                            card = card,
+                            snapshot = snapshot,
+                            sizeDp = WearSmall,
+                            label = "Wear S",
+                            densityScale = WearDensityScale,
+                        )
+                        FixedModeCell(
+                            card = card,
+                            snapshot = snapshot,
+                            sizeDp = WearLarge,
+                            label = "Wear L",
+                            densityScale = WearDensityScale,
+                        )
+                    }
+                    // Row 2 — three launcher widget sizes around the base
+                    // (smaller, base, larger). All share the launcher
+                    // density inherited from the @Preview.
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
                         FixedModeCell(
                             card = card,
                             snapshot = snapshot,
@@ -178,20 +204,6 @@ fun CardPreviewMatrix(
                                 (baseGridSize + 1).heightDp,
                             ),
                             label = "Widget ${(baseGridSize + 1).label}",
-                        )
-                        FixedModeCell(
-                            card = card,
-                            snapshot = snapshot,
-                            sizeDp = WearSmall,
-                            label = "Wear S",
-                            densityScale = WearDensityScale,
-                        )
-                        FixedModeCell(
-                            card = card,
-                            snapshot = snapshot,
-                            sizeDp = WearLarge,
-                            label = "Wear L",
-                            densityScale = WearDensityScale,
                         )
                     }
                 }
@@ -326,9 +338,14 @@ private data class MatrixCellKey(
 //
 // One preview per representative card. Each preview drives the matrix
 // for the slot-widget reps adapted in this iteration: tile, entity,
-// gauge, button, entities. Width pinned to 1100dp so all six cells
-// fit on a single Row at typical preview density (40dp + 320 + 5×~144
-// + spacing).
+// gauge, button, entities, plus the size-adaptive thermostat /
+// humidifier / weather cards.
+//
+// Layout is two rows: row 1 is App + Wear S + Wear L; row 2 is the
+// three launcher widget sizes (base ±1). Width pinned to 1100 dp so
+// the widest row (a 6×3 weather widget at base+1 ≈ 432 dp) fits at
+// typical preview density. Heights are tuned per card to fit both
+// rows without padding the canvas — measured cell-by-cell.
 
 private const val MATRIX_CANVAS_WIDTH_DP = 1100
 
@@ -336,7 +353,7 @@ private const val MATRIX_CANVAS_WIDTH_DP = 1100
     name = "matrix — tile",
     showBackground = false,
     widthDp = MATRIX_CANVAS_WIDTH_DP,
-    heightDp = 240,
+    heightDp = 260,
 )
 @Composable
 fun CardPreviewMatrix_Tile() {
@@ -353,7 +370,7 @@ fun CardPreviewMatrix_Tile() {
     name = "matrix — entity",
     showBackground = false,
     widthDp = MATRIX_CANVAS_WIDTH_DP,
-    heightDp = 240,
+    heightDp = 260,
 )
 @Composable
 fun CardPreviewMatrix_Entity() {
@@ -370,7 +387,7 @@ fun CardPreviewMatrix_Entity() {
     name = "matrix — gauge",
     showBackground = false,
     widthDp = MATRIX_CANVAS_WIDTH_DP,
-    heightDp = 240,
+    heightDp = 380,
 )
 @Composable
 fun CardPreviewMatrix_Gauge() {
@@ -393,7 +410,7 @@ fun CardPreviewMatrix_Gauge() {
     name = "matrix — button",
     showBackground = false,
     widthDp = MATRIX_CANVAS_WIDTH_DP,
-    heightDp = 240,
+    heightDp = 340,
 )
 @Composable
 fun CardPreviewMatrix_Button() {
@@ -412,7 +429,7 @@ fun CardPreviewMatrix_Button() {
     name = "matrix — thermostat",
     showBackground = false,
     widthDp = MATRIX_CANVAS_WIDTH_DP,
-    heightDp = 360,
+    heightDp = 660,
 )
 @Composable
 fun CardPreviewMatrix_Thermostat() {
@@ -430,7 +447,7 @@ fun CardPreviewMatrix_Thermostat() {
     name = "matrix — humidifier",
     showBackground = false,
     widthDp = MATRIX_CANVAS_WIDTH_DP,
-    heightDp = 360,
+    heightDp = 660,
 )
 @Composable
 fun CardPreviewMatrix_Humidifier() {
@@ -448,7 +465,7 @@ fun CardPreviewMatrix_Humidifier() {
     name = "matrix — weather-forecast",
     showBackground = false,
     widthDp = MATRIX_CANVAS_WIDTH_DP,
-    heightDp = 280,
+    heightDp = 460,
 )
 @Composable
 fun CardPreviewMatrix_WeatherForecast() {
@@ -469,7 +486,7 @@ fun CardPreviewMatrix_WeatherForecast() {
     name = "matrix — entities",
     showBackground = false,
     widthDp = MATRIX_CANVAS_WIDTH_DP,
-    heightDp = 360,
+    heightDp = 620,
 )
 @Composable
 fun CardPreviewMatrix_Entities() {
