@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.1.21](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.20...v0.1.21) (2026-05-12)
+
+
+### Features
+
+* **widget:** adaptive fixed-mode ladder for thermostat/humidifier/weather ([#252](https://github.com/yschimke/homeassistant-remotecompose/issues/252)) ([a9ccac9](https://github.com/yschimke/homeassistant-remotecompose/commit/a9ccac903741ee61776232adc2e4377e8787cd10))
+
+
+### Bug Fixes
+
+* **widget:** show full text in arc/weather wide variants + before/after ([#254](https://github.com/yschimke/homeassistant-remotecompose/issues/254)) ([d5954ef](https://github.com/yschimke/homeassistant-remotecompose/commit/d5954efc2cfa9139934519d48e7f1430cea2fbd9))
+
 ## [0.1.20](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.19...v0.1.20) (2026-05-12)
 
 
