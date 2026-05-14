@@ -4,6 +4,7 @@ import ee.schimke.ha.model.Dashboard
 import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HaSnapshot
 import io.ktor.client.HttpClient
+import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.plugins.websocket.WebSockets
 import io.ktor.client.plugins.websocket.webSocketSession
 import io.ktor.client.request.url
@@ -58,12 +59,17 @@ data class HaConfig(val baseUrl: String, val accessToken: String)
  * The connection is held open; command IDs are monotonic and responses are matched in a receive
  * loop. Not a subscription client yet — cards work from a point-in-time [HaSnapshot].
  */
-class HaClient(private val config: HaConfig) {
+class HaClient(private val config: HaConfig, engine: HttpClientEngine? = null) {
   private val json = Json {
     ignoreUnknownKeys = true
     isLenient = true
   }
-  private val httpClient = HttpClient { install(WebSockets) }
+  private val httpClient =
+    if (engine != null) {
+      HttpClient(engine) { install(WebSockets) }
+    } else {
+      HttpClient { install(WebSockets) }
+    }
   private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
   private val idMutex = Mutex()
   private var nextId = 1

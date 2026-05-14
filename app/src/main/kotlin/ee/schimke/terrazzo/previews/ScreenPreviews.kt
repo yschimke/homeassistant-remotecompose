@@ -111,6 +111,8 @@ private fun rememberPreviewGraph(): TerrazzoGraph {
             override val authService: HaAuthService = HaAuthService(context)
             override val sessionFactory: HaSessionFactory
                 get() = error("sessionFactory not wired in previews")
+            override val lanConnectionPolicy: ee.schimke.terrazzo.core.network.LanConnectionPolicy
+                get() = error("lanConnectionPolicy not wired in previews")
             override val cardMonitor: CardMonitor
                 get() = object : CardMonitor {
                     override val isEnabled: Boolean = false

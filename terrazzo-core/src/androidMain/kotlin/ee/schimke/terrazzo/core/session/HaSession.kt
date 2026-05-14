@@ -5,6 +5,7 @@ import ee.schimke.ha.client.HaClient
 import ee.schimke.ha.client.HaConfig
 import ee.schimke.ha.model.Dashboard
 import ee.schimke.ha.model.HaSnapshot
+import io.ktor.client.engine.HttpClientEngine
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.serialization.json.JsonObject
@@ -58,8 +59,10 @@ enum class SessionConnectionStatus {
 class LiveHaSession(
     override val baseUrl: String,
     accessToken: String,
+    engine: HttpClientEngine? = null,
 ) : HaSession {
-    private val client = HaClient(HaConfig(baseUrl = baseUrl, accessToken = accessToken))
+    private val client =
+        HaClient(HaConfig(baseUrl = baseUrl, accessToken = accessToken), engine = engine)
     private val _connectionStatus = MutableStateFlow(SessionConnectionStatus.Connecting)
     override val connectionStatus: StateFlow<SessionConnectionStatus> = _connectionStatus
 

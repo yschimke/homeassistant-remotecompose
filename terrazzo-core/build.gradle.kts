@@ -28,6 +28,7 @@ kotlin {
     androidMain.dependencies {
       implementation(libs.androidx.datastore.preferences)
       implementation(libs.appauth)
+      implementation(libs.ktor.client.okhttp)
     }
   }
 }

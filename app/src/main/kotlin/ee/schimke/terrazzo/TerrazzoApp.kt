@@ -58,6 +58,7 @@ import ee.schimke.terrazzo.dashboard.DashboardViewScreen
 import ee.schimke.terrazzo.dashboard.ManagePinnedScreen
 import ee.schimke.terrazzo.dashboard.TopBarOverflowMenu
 import ee.schimke.terrazzo.dashboard.rememberDashboardListState
+import ee.schimke.terrazzo.core.network.LanConnectionPolicy
 import ee.schimke.terrazzo.discovery.DiscoveryScreen
 import ee.schimke.terrazzo.wearsync.WearWidgetsScreen
 import ee.schimke.terrazzo.widget.WidgetInstallSheet
@@ -125,10 +126,17 @@ fun TerrazzoApp(
         },
         onError = { lastError = it },
     )
+    val connectionPolicy = graph.lanConnectionPolicy
 
     when (val s = session) {
         null -> UnauthenticatedScreen(
-            onInstancePicked = { login.start(it) },
+            onInstancePicked = { baseUrl ->
+                when (val verdict = connectionPolicy.check(baseUrl)) {
+                    LanConnectionPolicy.Verdict.Allow -> login.start(baseUrl)
+                    is LanConnectionPolicy.Verdict.Deny ->
+                        lastError = IllegalStateException(verdict.reason)
+                }
+            },
             onDemoSelected = {
                 scope.launch { graph.preferencesStore.setDemoMode(true) }
                 session = graph.sessionFactory.createDemo()
