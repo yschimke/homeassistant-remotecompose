@@ -18,6 +18,19 @@
 -->
 <network-security-config>
     <base-config cleartextTrafficPermitted="true">
+        <!--
+          Trust both the OS-shipped CAs (Let's Encrypt, DigiCert, …) and
+          CAs the user installed via Settings → Security → Encryption &
+          credentials. Since Android 7 (API 24), apps don't trust
+          user-installed CAs unless they opt in here.
+
+          HA self-hosters routinely run an internal CA (mkcert,
+          smallstep, Caddy internal, pfSense) and install its root on
+          the phone so `https://homeassistant.lan:8123` validates. Same
+          choice the HA companion app makes. Tradeoff: a malicious or
+          MDM-pushed CA could MITM HTTPS — acceptable for an HA client,
+          not for a banking app.
+        -->
         <trust-anchors>
             <certificates src="system" />
             <certificates src="user" />
