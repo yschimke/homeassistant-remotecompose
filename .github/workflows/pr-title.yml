@@ -34,4 +34,3 @@ jobs:
             style
             revert
           requireScope: false
-          validateSingleCommit: true
