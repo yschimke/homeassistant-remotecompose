@@ -1,4 +1,4 @@
-package ee.schimke.terrazzo.discovery
+package ee.schimke.terrazzo.core.network
 
 import kotlin.test.Test
 import kotlin.test.assertFalse
