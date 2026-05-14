@@ -7,6 +7,8 @@ import ee.schimke.terrazzo.core.auth.HaAuthService
 import ee.schimke.terrazzo.core.auth.TokenVault
 import ee.schimke.terrazzo.core.cache.OfflineCache
 import ee.schimke.terrazzo.core.monitor.CardMonitor
+import ee.schimke.terrazzo.core.network.HttpEngineFactory
+import ee.schimke.terrazzo.core.network.LanConnectionPolicy
 import ee.schimke.terrazzo.core.pin.PinStore
 import ee.schimke.terrazzo.core.pin.WearWidgetSlotsStore
 import ee.schimke.terrazzo.core.prefs.PreferencesStore
@@ -37,6 +39,7 @@ interface TerrazzoGraph {
     val sessionFactory: HaSessionFactory
     val cardMonitor: CardMonitor
     val wearSyncManager: WearSyncManager
+    val lanConnectionPolicy: LanConnectionPolicy
 
     fun interface Factory {
         fun create(context: Context): TerrazzoGraph
@@ -62,9 +65,19 @@ interface TerrazzoGraph {
  */
 @SingleIn(AppScope::class)
 @Inject
-class HaSessionFactory(private val cache: OfflineCache) {
+class HaSessionFactory(
+    private val cache: OfflineCache,
+    private val httpEngineFactory: HttpEngineFactory,
+) {
     fun create(baseUrl: String, accessToken: String): HaSession =
-        CachedHaSession(LiveHaSession(baseUrl = baseUrl, accessToken = accessToken), cache)
+        CachedHaSession(
+            LiveHaSession(
+                baseUrl = baseUrl,
+                accessToken = accessToken,
+                engine = httpEngineFactory.engine,
+            ),
+            cache,
+        )
 
     fun createCachedOnly(baseUrl: String): HaSession =
         CachedHaSession(OfflineOnlySession(baseUrl), cache)
