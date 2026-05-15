@@ -2,6 +2,8 @@
 
 package ee.schimke.ha.previews
 
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -9,14 +11,21 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.sp
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth as rcFillMaxWidth
 import androidx.compose.runtime.Composable
@@ -39,6 +48,7 @@ import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.components.HaTheme
 import ee.schimke.ha.rc.components.ProvideHaTheme
 import ee.schimke.ha.rc.enableRemoteComposeWrapContent
+import ee.schimke.ha.rc.components.R as ComponentsR
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
 
@@ -145,10 +155,14 @@ fun CardPreviewMatrix(
                         )
                     }
                     // Row 1 — App preferred + the two Wear container shapes.
-                    // App and Wear render at watch / mobile densities (Wear
-                    // cells override LocalDensity to 2×); grouping them on
-                    // the same line keeps the "dashboard tile + wear tile"
-                    // story together.
+                    // App renders at the mobile preview density; the wear
+                    // cells render inside a circular watch-face frame at
+                    // wear-typical 2× density (see WatchFaceCell). The
+                    // frame matches the WearWidgetPreviewSnapshot helper
+                    // used by the slot widget previews — same chrome
+                    // (black 227dp circle, app icon, label band) so the
+                    // matrix shows the card in its actual surface, not
+                    // as a floating rectangle.
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -159,19 +173,17 @@ fun CardPreviewMatrix(
                             cellWidthDp = appWidthDp,
                             label = "App ${appWidthDp}dp",
                         )
-                        FixedModeCell(
+                        WatchFaceCell(
                             card = card,
                             snapshot = snapshot,
                             sizeDp = WearSmall,
                             label = "Wear S",
-                            densityScale = WearDensityScale,
                         )
-                        FixedModeCell(
+                        WatchFaceCell(
                             card = card,
                             snapshot = snapshot,
                             sizeDp = WearLarge,
                             label = "Wear L",
-                            densityScale = WearDensityScale,
                         )
                     }
                     // Row 2 — three launcher widget sizes around the base
@@ -295,6 +307,98 @@ private fun FixedModeCell(
     }
 }
 
+/**
+ * Wear cell that frames the captured widget inside a simulated
+ * circular watch face — 227dp black circle, app icon + "Terrazzo
+ * slot" caption at the top, widget offset 14dp below centre.
+ * Mirrors the visual chrome of
+ * [androidx.glance.wear.tooling.preview.WearWidgetPreviewSnapshot]
+ * (vendored from
+ * https://github.com/android/wear-os-samples/pull/1371); this module
+ * doesn't depend on `androidx.glance.wear` so the frame is inlined
+ * rather than calling the snapshot helper directly. Keep the two
+ * surfaces in sync if either side moves.
+ */
+@Composable
+private fun WatchFaceCell(
+    card: CardConfig,
+    snapshot: HaSnapshot,
+    sizeDp: WidgetSizeDp,
+    label: String,
+) {
+    val parentDensity = LocalDensity.current
+    val cellDensity = Density(WearDensityScale, parentDensity.fontScale)
+    CompositionLocalProvider(LocalDensity provides cellDensity) {
+        CellLabelled(label = label, widthDp = WatchFaceDiameterDp) {
+            Box(
+                modifier =
+                    Modifier
+                        .size(WatchFaceDiameterDp.dp)
+                        .clip(CircleShape)
+                        .background(Color.Black),
+                contentAlignment = Alignment.Center,
+            ) {
+                Box(
+                    modifier =
+                        Modifier
+                            .offset(y = 14.dp)
+                            .size(sizeDp.widthDp.dp, sizeDp.heightDp.dp),
+                ) {
+                    CachedCardPreview(
+                        cacheKey =
+                            MatrixCellKey(
+                                card,
+                                CardSizeMode.Fixed,
+                                sizeDp.widthDp,
+                                sizeDp.heightDp,
+                                WearDensityScale,
+                            ),
+                        profile = androidXExperimentalWrap,
+                        modifier = Modifier.fillMaxSize(),
+                        card = card,
+                        snapshot = snapshot,
+                    ) {
+                        ProvideCardRegistry(defaultRegistry()) {
+                            ProvideHaTheme(HaTheme.Dark) {
+                                ProvideCardSizeMode(CardSizeMode.Fixed) {
+                                    RenderChild(card, snapshot, RemoteModifier.rcFillMaxWidth())
+                                }
+                            }
+                        }
+                    }
+                }
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.fillMaxSize().padding(top = 10.dp),
+                ) {
+                    Box(
+                        modifier =
+                            Modifier.size(40.dp).clip(CircleShape).background(Color(0xFFE0E0E0)),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Image(
+                            painter =
+                                painterResource(id = ComponentsR.drawable.ic_launcher_foreground),
+                            contentDescription = null,
+                            modifier = Modifier.size(38.dp),
+                            colorFilter = ColorFilter.tint(Color(0xFF424242)),
+                        )
+                    }
+                    Text(
+                        text = "Terrazzo slot",
+                        color = Color.White,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(top = 2.dp),
+                    )
+                }
+            }
+        }
+    }
+}
+
+private const val WatchFaceDiameterDp: Int = 227
+
 @Composable
 private fun CellLabelled(
     label: String,
@@ -344,8 +448,9 @@ private data class MatrixCellKey(
 // Layout is two rows: row 1 is App + Wear S + Wear L; row 2 is the
 // three launcher widget sizes (base ±1). Width pinned to 1100 dp so
 // the widest row (a 6×3 weather widget at base+1 ≈ 432 dp) fits at
-// typical preview density. Heights are tuned per card to fit both
-// rows without padding the canvas — measured cell-by-cell.
+// typical preview density. Heights leave room for the 227dp watch-face
+// frame that wraps the wear cells (see [WatchFaceCell]) plus the
+// launcher row beneath.
 
 private const val MATRIX_CANVAS_WIDTH_DP = 1100
 
@@ -353,7 +458,7 @@ private const val MATRIX_CANVAS_WIDTH_DP = 1100
     name = "matrix — tile",
     showBackground = false,
     widthDp = MATRIX_CANVAS_WIDTH_DP,
-    heightDp = 260,
+    heightDp = 400,
 )
 @Composable
 fun CardPreviewMatrix_Tile() {
@@ -370,7 +475,7 @@ fun CardPreviewMatrix_Tile() {
     name = "matrix — entity",
     showBackground = false,
     widthDp = MATRIX_CANVAS_WIDTH_DP,
-    heightDp = 260,
+    heightDp = 400,
 )
 @Composable
 fun CardPreviewMatrix_Entity() {
@@ -387,7 +492,7 @@ fun CardPreviewMatrix_Entity() {
     name = "matrix — gauge",
     showBackground = false,
     widthDp = MATRIX_CANVAS_WIDTH_DP,
-    heightDp = 380,
+    heightDp = 500,
 )
 @Composable
 fun CardPreviewMatrix_Gauge() {
@@ -410,7 +515,7 @@ fun CardPreviewMatrix_Gauge() {
     name = "matrix — button",
     showBackground = false,
     widthDp = MATRIX_CANVAS_WIDTH_DP,
-    heightDp = 340,
+    heightDp = 460,
 )
 @Composable
 fun CardPreviewMatrix_Button() {
@@ -429,7 +534,7 @@ fun CardPreviewMatrix_Button() {
     name = "matrix — thermostat",
     showBackground = false,
     widthDp = MATRIX_CANVAS_WIDTH_DP,
-    heightDp = 660,
+    heightDp = 780,
 )
 @Composable
 fun CardPreviewMatrix_Thermostat() {
@@ -447,7 +552,7 @@ fun CardPreviewMatrix_Thermostat() {
     name = "matrix — humidifier",
     showBackground = false,
     widthDp = MATRIX_CANVAS_WIDTH_DP,
-    heightDp = 660,
+    heightDp = 780,
 )
 @Composable
 fun CardPreviewMatrix_Humidifier() {
@@ -465,7 +570,7 @@ fun CardPreviewMatrix_Humidifier() {
     name = "matrix — weather-forecast",
     showBackground = false,
     widthDp = MATRIX_CANVAS_WIDTH_DP,
-    heightDp = 460,
+    heightDp = 580,
 )
 @Composable
 fun CardPreviewMatrix_WeatherForecast() {
@@ -486,7 +591,7 @@ fun CardPreviewMatrix_WeatherForecast() {
     name = "matrix — entities",
     showBackground = false,
     widthDp = MATRIX_CANVAS_WIDTH_DP,
-    heightDp = 620,
+    heightDp = 740,
 )
 @Composable
 fun CardPreviewMatrix_Entities() {
