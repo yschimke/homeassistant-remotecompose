@@ -17,7 +17,7 @@ import androidx.glance.wear.WearWidgetDocument
 import androidx.glance.wear.core.ContainerInfo
 import androidx.glance.wear.core.WearWidgetParams
 import androidx.glance.wear.core.WidgetInstanceId
-import androidx.glance.wear.tooling.preview.WearWidgetPreview
+import androidx.glance.wear.tooling.preview.WearWidgetPreviewSnapshot
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HaSnapshot
@@ -38,13 +38,16 @@ import kotlinx.serialization.json.put
 
 /**
  * Wear-specific @Preview fixtures that exercise the Glance Wear
- * capture path end-to-end (via [WearWidgetPreview] /
- * [WearWidgetDocument]). The cross-surface "how does this card look at
- * each size" picture lives in
- * [ee.schimke.ha.previews.CardPreviewMatrix] — these previews are kept
- * thin and deliberately wear-shaped: small + large slot containers,
- * dark theme, one fixture per shape so we catch wear-profile
- * regressions in CI.
+ * capture path end-to-end (via [WearWidgetPreviewSnapshot] /
+ * [WearWidgetDocument]). [WearWidgetPreviewSnapshot] wraps the
+ * captured widget in a simulated circular watch face so reviewers can
+ * eyeball how the card reads against the watch chrome.
+ *
+ * The cross-surface "how does this card look at each size" picture
+ * lives in [ee.schimke.ha.previews.CardPreviewMatrix] — these previews
+ * are kept thin and deliberately wear-shaped: small + large slot
+ * containers, dark theme, one fixture per shape so we catch
+ * wear-profile regressions in CI.
  */
 
 private class PreviewSlotWidget(
@@ -120,11 +123,13 @@ private fun SlotWidgetPreviewFixture(
     card: CardConfig?,
     snapshot: HaSnapshot,
     container: ContainerType,
+    title: String = "Terrazzo slot",
 ) {
     val params = if (container == ContainerType.Large) largePreviewParams else smallPreviewParams
-    WearWidgetPreview(
+    WearWidgetPreviewSnapshot(
         widget = PreviewSlotWidget(card = card, snapshot = snapshot),
         params = params,
+        title = title,
     )
 }
 
