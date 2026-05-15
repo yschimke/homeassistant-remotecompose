@@ -52,6 +52,7 @@ import ee.schimke.terrazzo.core.pin.MobilePinnedCard
 import ee.schimke.terrazzo.core.pin.PinStore
 import ee.schimke.terrazzo.core.widget.WidgetStore
 import ee.schimke.terrazzo.dashboard.toPinnedData
+import ee.schimke.terrazzo.image.haSessionImageLoader
 
 /**
  * Bottom sheet shown when the user long-presses a card. Live preview
@@ -75,6 +76,7 @@ import ee.schimke.terrazzo.dashboard.toPinnedData
 @Composable
 fun WidgetInstallSheet(
     baseUrl: String,
+    accessToken: String?,
     dashboardUrlPath: String,
     card: CardConfig,
     snapshot: HaSnapshot,
@@ -87,8 +89,21 @@ fun WidgetInstallSheet(
     val pinStore = LocalTerrazzoGraph.current.pinStore
     val pinScope = rememberCoroutineScope()
     val registry = remember { defaultRegistry().withEnhancedShutter() }
-    val bitmapLoader = remember(context, baseUrl) {
-        CoilBitmapLoader(context.applicationContext, baseUrl = baseUrl)
+    val lanPolicy = LocalTerrazzoGraph.current.lanConnectionPolicy
+    val imageLoader = remember(context, baseUrl, accessToken, lanPolicy) {
+        haSessionImageLoader(
+            context = context.applicationContext,
+            baseUrl = baseUrl,
+            accessToken = accessToken,
+            lanPolicy = lanPolicy,
+        )
+    }
+    val bitmapLoader = remember(context, baseUrl, imageLoader) {
+        CoilBitmapLoader(
+            context.applicationContext,
+            imageLoader = imageLoader,
+            baseUrl = baseUrl,
+        )
     }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
