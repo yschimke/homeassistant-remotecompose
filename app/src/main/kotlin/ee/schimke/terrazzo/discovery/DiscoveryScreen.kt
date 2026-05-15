@@ -23,11 +23,9 @@ import androidx.compose.ui.unit.dp
 /**
  * First-run screen: ask for the HA base URL.
  *
- * Default-filled with the emulator-loopback address of the integration
- * Docker HA (`http://10.0.2.2:8124`) so the conference-demo dev loop
- * is one tap:
- *   `integration/ && docker compose up -d homeassistant`, then launch
- *   the app, tap Connect. A real (on-LAN) hostname can be typed in.
+ * Default-filled with `http://homeassistant:8123` — the hostname HAOS /
+ * supervisor publish on the LAN, and what the official companion app
+ * defaults to. A real (on-LAN) hostname or IP can be typed in.
  *
  * A previous version scanned `_home-assistant._tcp` via mDNS; removed
  * by request — the app only needs to talk to the one known instance.
@@ -39,7 +37,7 @@ fun DiscoveryScreen(
     onDemoSelected: () -> Unit = {},
     snackbarHost: @Composable () -> Unit = {},
 ) {
-    var host by rememberSaveable { mutableStateOf(DEMO_HOST) }
+    var host by rememberSaveable { mutableStateOf(DEFAULT_HOST) }
 
     Scaffold(snackbarHost = snackbarHost) { innerPadding ->
         Column(
@@ -52,8 +50,8 @@ fun DiscoveryScreen(
         ) {
             Text("Connect to Home Assistant", style = MaterialTheme.typography.headlineMedium)
             Text(
-                "Defaulted to the integration Docker HA on the emulator-loopback " +
-                    "address. Edit to point at your own instance if needed.",
+                "Defaulted to the standard Home Assistant LAN hostname. " +
+                    "Edit to point at your own instance if needed.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -75,5 +73,5 @@ fun DiscoveryScreen(
     }
 }
 
-/** Emulator loopback → host machine's port 8124, where `integration/` HA runs. */
-private const val DEMO_HOST = "http://10.0.2.2:8124"
+/** Standard HAOS / supervisor LAN hostname; matches the official HA companion app default. */
+private const val DEFAULT_HOST = "http://homeassistant:8123"
