@@ -3,6 +3,7 @@
 kotlin = "2.3.21"
 agp = "9.2.1"
 java = "21"
+okhttp = "5.3.2"
 play-publisher = "4.0.0"
 
 # Metro (DI) — requires Kotlin 2.2.20+.
@@ -54,6 +55,8 @@ play-services-wearable = "20.0.1"
 
 [libraries]
 # RemoteCompose authoring / playback
+okhttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }
+okhttp-coroutines = { module = "com.squareup.okhttp3:okhttp-coroutines", version.ref = "okhttp" }
 remote-creation-compose = { module = "androidx.compose.remote:remote-creation-compose", version.ref = "remote-compose" }
 remote-creation = { module = "androidx.compose.remote:remote-creation", version.ref = "remote-compose" }
 remote-creation-core = { module = "androidx.compose.remote:remote-creation-core", version.ref = "remote-compose" }
