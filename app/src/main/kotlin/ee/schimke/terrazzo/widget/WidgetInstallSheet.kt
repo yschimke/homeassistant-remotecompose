@@ -87,7 +87,9 @@ fun WidgetInstallSheet(
     val pinStore = LocalTerrazzoGraph.current.pinStore
     val pinScope = rememberCoroutineScope()
     val registry = remember { defaultRegistry().withEnhancedShutter() }
-    val bitmapLoader = remember(context) { CoilBitmapLoader(context.applicationContext) }
+    val bitmapLoader = remember(context, baseUrl) {
+        CoilBitmapLoader(context.applicationContext, baseUrl = baseUrl)
+    }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     var installedCount by remember { mutableIntStateOf(0) }

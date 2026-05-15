@@ -285,6 +285,7 @@ private fun DashboardList(
                         expandedSectionByView[viewIndex] =
                             if (expandedSectionByView[viewIndex] == sectionIndex) null else sectionIndex
                     },
+                    baseUrl = baseUrl,
                     onLongPress = onCardLongPress,
                     pinContext = SectionPinContext(
                         baseUrl = baseUrl,
@@ -352,6 +353,7 @@ private fun LazyListScope.renderView(
     collapsedMode: Boolean,
     expandedSectionIndex: Int?,
     onToggleSection: (Int) -> Unit,
+    baseUrl: String?,
     onLongPress: (CardConfig) -> Unit,
     pinContext: SectionPinContext,
 ) {
@@ -364,6 +366,7 @@ private fun LazyListScope.renderView(
             snapshot = snapshot,
             registry = registry,
             compactPerRow = cfg.compactCardsPerRow,
+            baseUrl = baseUrl,
             onLongPress = onLongPress,
         )
     }
@@ -405,7 +408,7 @@ private fun LazyListScope.renderView(
                             registry.cardWidthClass(c, snapshot)
                         }
                         rows.forEach { row ->
-                            CardRow(row, snapshot, registry, onLongPress)
+                            CardRow(row, snapshot, registry, baseUrl, onLongPress)
                         }
                     }
                 }
@@ -419,6 +422,7 @@ private fun LazyListScope.renderView(
                 snapshot = snapshot,
                 registry = registry,
                 haTheme = haTheme,
+                baseUrl = baseUrl,
                 onLongPress = onLongPress,
                 pinContext = pinContext,
             )
@@ -433,6 +437,7 @@ private fun LazyListScope.renderView(
                     snapshot = snapshot,
                     registry = registry,
                     haTheme = haTheme,
+                    baseUrl = baseUrl,
                     onLongPress = onLongPress,
                     pinContext = pinContext,
                 )
@@ -634,6 +639,7 @@ private fun SectionRow(
     snapshot: HaSnapshot,
     registry: ee.schimke.ha.rc.CardRegistry,
     haTheme: HaTheme,
+    baseUrl: String?,
     onLongPress: (CardConfig) -> Unit,
     pinContext: SectionPinContext,
 ) {
@@ -649,6 +655,7 @@ private fun SectionRow(
                 snapshot = snapshot,
                 registry = registry,
                 haTheme = haTheme,
+                baseUrl = baseUrl,
                 onLongPress = onLongPress,
                 pinContext = pinContext,
                 modifier = Modifier.weight(1f),
@@ -684,6 +691,7 @@ private fun SectionGrid(
     snapshot: HaSnapshot,
     registry: ee.schimke.ha.rc.CardRegistry,
     haTheme: HaTheme,
+    baseUrl: String?,
     onLongPress: (CardConfig) -> Unit,
     pinContext: SectionPinContext,
 ) {
@@ -701,6 +709,7 @@ private fun SectionGrid(
                 snapshot = snapshot,
                 registry = registry,
                 haTheme = haTheme,
+                baseUrl = baseUrl,
                 onLongPress = onLongPress,
                 pinContext = pinContext,
                 modifier = Modifier.gridItem(),
@@ -716,6 +725,7 @@ private fun SectionColumn(
     snapshot: HaSnapshot,
     registry: ee.schimke.ha.rc.CardRegistry,
     haTheme: HaTheme,
+    baseUrl: String?,
     onLongPress: (CardConfig) -> Unit,
     pinContext: SectionPinContext,
     modifier: Modifier = Modifier,
@@ -740,6 +750,7 @@ private fun SectionColumn(
                 card = card,
                 snapshot = snapshot,
                 registry = registry,
+                baseUrl = baseUrl,
                 onLongPress = onLongPress,
                 modifier = Modifier.fillMaxWidth(),
             )
@@ -758,6 +769,7 @@ private fun LazyListScope.cardRows(
     snapshot: HaSnapshot,
     registry: ee.schimke.ha.rc.CardRegistry,
     compactPerRow: Int,
+    baseUrl: String?,
     onLongPress: (CardConfig) -> Unit,
 ) {
     val rows = packAndChunk(cards, compactPerRow) { c ->
@@ -765,7 +777,7 @@ private fun LazyListScope.cardRows(
     }
     rows.forEachIndexed { rowIndex, row ->
         item(key = "$keyPrefix-r$rowIndex") {
-            CardRow(row, snapshot, registry, onLongPress)
+            CardRow(row, snapshot, registry, baseUrl, onLongPress)
         }
     }
 }
@@ -783,6 +795,7 @@ private fun CardRow(
     row: DashboardRow,
     snapshot: HaSnapshot,
     registry: ee.schimke.ha.rc.CardRegistry,
+    baseUrl: String?,
     onLongPress: (CardConfig) -> Unit,
 ) {
     Row(
@@ -794,6 +807,7 @@ private fun CardRow(
                 card = card,
                 snapshot = snapshot,
                 registry = registry,
+                baseUrl = baseUrl,
                 onLongPress = onLongPress,
                 modifier = Modifier.weight(1f),
             )
@@ -811,6 +825,7 @@ private fun CardSlot(
     card: CardConfig,
     snapshot: HaSnapshot,
     registry: ee.schimke.ha.rc.CardRegistry,
+    baseUrl: String?,
     onLongPress: (CardConfig) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -829,7 +844,9 @@ private fun CardSlot(
         CardSlotCacheKey(card, style, dark, captureEpoch)
     }
     val context = androidx.compose.ui.platform.LocalContext.current
-    val bitmapLoader = remember(context) { CoilBitmapLoader(context.applicationContext) }
+    val bitmapLoader = remember(context, baseUrl) {
+        CoilBitmapLoader(context.applicationContext, baseUrl = baseUrl)
+    }
     Box(
         modifier = modifier
             // Stable semantics tag so uiautomator / Compose tests can
