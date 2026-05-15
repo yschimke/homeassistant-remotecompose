@@ -116,6 +116,9 @@ dependencies {
   implementation(libs.activity.compose)
   implementation(libs.materialkolor)
 
+  implementation(libs.okhttp)
+  implementation(libs.okhttp.coroutines)
+
   implementation(libs.remote.creation.compose)
   implementation(libs.remote.creation.core)
   implementation(libs.remote.player.compose)
