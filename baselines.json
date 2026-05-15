@@ -17,7 +17,7 @@
     "captureLabel": "",
     "functionName": "Play_Phone_03_Discovery",
     "renderBasename": "Play_Phone_03_Discovery_play_phone_discovery.png",
-    "sha256": "efcd8122fbb968a5e26a152f6723238933e86e2c28695a591571bb9ac878b79f",
+    "sha256": "21547fe6aded97af48d158c909c3e1d4f34c66cf43c799c26cea68f50aa31e07",
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/previews/ScreenPreviews.kt"
   },
   "app/ee.schimke.terrazzo.previews.ScreenPreviewsKt.Play_Phone_04_Picker_play \u00b7 phone \u00b7 picker": {
@@ -38,7 +38,7 @@
     "captureLabel": "",
     "functionName": "Play_Tablet10_01_Home",
     "renderBasename": "Play_Tablet10_01_Home_play_10-inch_home.png",
-    "sha256": "fa1ad0fa38819d5af61eb4c829d50efa9aba69f7208efae7ce7360ed2296ce96",
+    "sha256": "4e9eb96f94fc3d943aaff53f81161a60f6ad10039b25a0ac162c394f7017431e",
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/previews/ScreenPreviews.kt"
   },
   "app/ee.schimke.terrazzo.previews.ScreenPreviewsKt.Play_Tablet7_01_Home_play \u00b7 7-inch \u00b7 home": {
@@ -143,42 +143,42 @@
     "captureLabel": "",
     "functionName": "Screen_Discovery_ThemeStyle",
     "renderBasename": "Screen_Discovery_ThemeStyle_discovery_theme_Material3.png",
-    "sha256": "d911f03889cacfcc47e2538db79284d36f6542af205b5b644842e10095fe383e",
+    "sha256": "fac34c5daa199e35d7f1072edb0d2746ab61cbcb269a4808abf5e1a3d65c0256",
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/previews/ScreenPreviews.kt"
   },
   "app/ee.schimke.terrazzo.previews.ScreenPreviewsKt.Screen_Discovery_ThemeStyle_discovery \u00b7 theme#1": {
     "captureLabel": "",
     "functionName": "Screen_Discovery_ThemeStyle",
     "renderBasename": "Screen_Discovery_ThemeStyle_discovery_theme_TerrazzoHome.png",
-    "sha256": "2d35c6571e7c507d7d67c1a80678331f71494d6d1ffaaad6bcbf0dc20ea3fb13",
+    "sha256": "0c707c9ebd1e68f95a1322c130a3eeb947545a055139a7046c4f2372d4addf73",
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/previews/ScreenPreviews.kt"
   },
   "app/ee.schimke.terrazzo.previews.ScreenPreviewsKt.Screen_Discovery_ThemeStyle_discovery \u00b7 theme#2": {
     "captureLabel": "",
     "functionName": "Screen_Discovery_ThemeStyle",
     "renderBasename": "Screen_Discovery_ThemeStyle_discovery_theme_TerrazzoKiosk.png",
-    "sha256": "38b12e0517b0b8382a8c7f4fc92997133e7f985edf4994e566812e3b0d191b6b",
+    "sha256": "423064eb25e43c390b6f920961b2e02f2b48d36e0224b3397843c56e7bf2fa68",
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/previews/ScreenPreviews.kt"
   },
   "app/ee.schimke.terrazzo.previews.ScreenPreviewsKt.Screen_Discovery_ThemeStyle_discovery \u00b7 theme#3": {
     "captureLabel": "",
     "functionName": "Screen_Discovery_ThemeStyle",
     "renderBasename": "Screen_Discovery_ThemeStyle_discovery_theme_TerrazzoMinimalist.png",
-    "sha256": "02b6c587bb58445401feeabb716c0b542ff37359f52f4c079b010f609b831c76",
+    "sha256": "7690b63f1c93d9dcd8921a2ecfe940f559646bdd5a7c5320a2c0d57c67d304da",
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/previews/ScreenPreviews.kt"
   },
   "app/ee.schimke.terrazzo.previews.ScreenPreviewsKt.Screen_Discovery_ThemeStyle_discovery \u00b7 theme#4": {
     "captureLabel": "",
     "functionName": "Screen_Discovery_ThemeStyle",
     "renderBasename": "Screen_Discovery_ThemeStyle_discovery_theme_TerrazzoMushroom.png",
-    "sha256": "b5d5a6a0b9707d14f1c5c4cfeb046f5d45c864e43579fd609844c7939e5648d0",
+    "sha256": "3b7d78ff3650424352b4a604dc8815cf802044c981609dce2eb35fd5301ee3e0",
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/previews/ScreenPreviews.kt"
   },
   "app/ee.schimke.terrazzo.previews.ScreenPreviewsKt.Screen_Discovery_discovery": {
     "captureLabel": "",
     "functionName": "Screen_Discovery",
     "renderBasename": "Screen_Discovery_discovery.png",
-    "sha256": "2d35c6571e7c507d7d67c1a80678331f71494d6d1ffaaad6bcbf0dc20ea3fb13",
+    "sha256": "0c707c9ebd1e68f95a1322c130a3eeb947545a055139a7046c4f2372d4addf73",
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/previews/ScreenPreviews.kt"
   },
   "app/ee.schimke.terrazzo.previews.ScreenPreviewsKt.Screen_Widgets_ThemeStyle_widgets \u00b7 theme": {
