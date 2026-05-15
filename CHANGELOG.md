@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.1.22](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.21...v0.1.22) (2026-05-15)
+
+
+### Features
+
+* **discovery:** default login host to http://homeassistant:8123 ([#262](https://github.com/yschimke/homeassistant-remotecompose/issues/262)) ([314a012](https://github.com/yschimke/homeassistant-remotecompose/commit/314a01231275b0e1198de4cd6142295a2c173cf3))
+* **discovery:** request ACCESS_LOCAL_NETWORK before login for LAN hosts ([#263](https://github.com/yschimke/homeassistant-remotecompose/issues/263)) ([5e333d0](https://github.com/yschimke/homeassistant-remotecompose/commit/5e333d0912e3e9c43088d38036e9e0203488d916))
+* **wear:** wrap slot widget previews in simulated watch face ([#260](https://github.com/yschimke/homeassistant-remotecompose/issues/260)) ([8007712](https://github.com/yschimke/homeassistant-remotecompose/commit/8007712ee61fbe0722bebadbe92130b72e63b9db))
+
 ## [0.1.21](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.20...v0.1.21) (2026-05-12)
 
 
