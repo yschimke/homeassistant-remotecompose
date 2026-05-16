@@ -73,28 +73,55 @@ import java.io.InputStream
  * `name` is whatever Coil's mappers accept as `ImageRequest.data`:
  * `http(s)://…`, `file://…`, `content://…`, `android.resource://…`,
  * an absolute file path, etc.
+ *
+ * Home Assistant returns `entity_picture` (and addon icon paths,
+ * image_proxy URLs, …) as **server-relative** strings like
+ * `/api/camera_proxy/camera.foo?token=…`. Coil's `HttpUriFetcher`
+ * can't resolve a path-only URI, so a relative `name` would fetch
+ * to silent error and the memory cache would stay empty. Pass
+ * [baseUrl] to resolve names starting with `/` against the HA
+ * server's origin before the cache lookup / enqueue; keep the
+ * document itself host-agnostic.
  */
 open class CoilBitmapLoader(
     private val context: Context,
     private val imageLoader: ImageLoader = SingletonImageLoader.get(context),
+    private val baseUrl: String? = null,
     private val compressFormat: Bitmap.CompressFormat = Bitmap.CompressFormat.PNG,
     private val compressQuality: Int = 100,
     private val configure: ImageRequest.Builder.() -> Unit = {},
 ) : BitmapLoader {
 
+    private val baseUrlPrefix: String? = baseUrl?.trimEnd('/')
+
     final override fun loadBitmap(name: String): InputStream {
-        val key = memoryCacheKeyFor(name)
+        val resolved = resolveName(name)
+        val key = memoryCacheKeyFor(resolved)
         val image = imageLoader.memoryCache?.get(key)?.image
         val bytes = image?.let(::encodeImage)
         if (bytes != null) return ByteArrayInputStream(bytes)
-        warmUpAsync(name, key)
+        warmUpAsync(resolved, key)
         return ByteArrayInputStream(EMPTY)
+    }
+
+    /**
+     * Resolve a server-relative `name` against [baseUrl]; pass anything
+     * else through unchanged. Names with a scheme (`http(s)://`,
+     * `content://`, `file://`, `android.resource://`, …) or that don't
+     * start with `/` are returned as-is.
+     */
+    private fun resolveName(name: String): String {
+        val prefix = baseUrlPrefix ?: return name
+        if (!name.startsWith('/')) return name
+        return prefix + name
     }
 
     /**
      * Stable key used both for the direct memory-cache lookup and for
      * the warm-up [ImageRequest.memoryCacheKey], so writes and reads
-     * agree.
+     * agree. The argument is the **resolved** URL, not the raw `name`
+     * passed to [loadBitmap], so subclasses that override this see the
+     * same string the warm-up will use as request data.
      */
     protected open fun memoryCacheKeyFor(name: String): MemoryCache.Key = MemoryCache.Key(name)
 

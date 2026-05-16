@@ -390,6 +390,7 @@ private fun DashboardsRoot(
     installPending?.let { (card, snapshot) ->
         WidgetInstallSheet(
             baseUrl = session.baseUrl,
+            accessToken = session.accessToken,
             dashboardUrlPath = openedValue.takeIf { it != DASHBOARD_UNSET } ?: "",
             card = card,
             snapshot = snapshot,

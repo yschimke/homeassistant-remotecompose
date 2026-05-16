@@ -75,10 +75,12 @@ import ee.schimke.ha.rc.components.ThemeStyle
 import ee.schimke.ha.rc.components.haThemeFor
 import ee.schimke.ha.rc.image.CoilBitmapLoader
 import ee.schimke.terrazzo.LocalTerrazzoGraph
+import ee.schimke.terrazzo.image.haSessionImageLoader
 import ee.schimke.terrazzo.ui.LayoutConfig
 import ee.schimke.terrazzo.ui.LocalIsDarkTheme
 import ee.schimke.terrazzo.ui.LocalThemeStyle
 import ee.schimke.terrazzo.ui.rememberLayoutConfig
+import coil3.ImageLoader
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
@@ -190,6 +192,7 @@ fun DashboardViewScreen(
                     dashboard = s.dashboard,
                     snapshot = s.snapshot,
                     baseUrl = session.baseUrl,
+                    accessToken = session.accessToken,
                     dashboardUrlPath = urlPath ?: "",
                     onCardLongPress = onCardLongPress,
                     contentPadding = contentPadding,
@@ -209,6 +212,7 @@ private fun DashboardList(
     dashboard: Dashboard,
     snapshot: HaSnapshot,
     baseUrl: String,
+    accessToken: String?,
     dashboardUrlPath: String,
     onCardLongPress: (CardConfig) -> Unit,
     contentPadding: PaddingValues,
@@ -222,6 +226,21 @@ private fun DashboardList(
         .preferencesStore.experimentalGridLayout.collectAsState(initial = false)
     val collapsedMode by LocalTerrazzoGraph.current
         .preferencesStore.collapsedMode.collectAsState(initial = true)
+    // Build the image loader once per (baseUrl, accessToken) and share
+    // it across every CardSlot in the list. The loader keeps an
+    // OkHttp connection pool + Coil memory cache; one-per-card would
+    // re-establish those for each card, blowing the cache on every
+    // recomposition.
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val lanPolicy = LocalTerrazzoGraph.current.lanConnectionPolicy
+    val imageLoader: ImageLoader = remember(context, baseUrl, accessToken, lanPolicy) {
+        haSessionImageLoader(
+            context = context.applicationContext,
+            baseUrl = baseUrl,
+            accessToken = accessToken,
+            lanPolicy = lanPolicy,
+        )
+    }
 
     val sectionColumns = (cfg.maxSectionColumns).coerceAtMost(layout.sectionCount).coerceAtLeast(1)
     val sideBySide = sectionColumns >= 2
@@ -285,6 +304,8 @@ private fun DashboardList(
                         expandedSectionByView[viewIndex] =
                             if (expandedSectionByView[viewIndex] == sectionIndex) null else sectionIndex
                     },
+                    baseUrl = baseUrl,
+                    imageLoader = imageLoader,
                     onLongPress = onCardLongPress,
                     pinContext = SectionPinContext(
                         baseUrl = baseUrl,
@@ -352,6 +373,8 @@ private fun LazyListScope.renderView(
     collapsedMode: Boolean,
     expandedSectionIndex: Int?,
     onToggleSection: (Int) -> Unit,
+    baseUrl: String?,
+    imageLoader: ImageLoader,
     onLongPress: (CardConfig) -> Unit,
     pinContext: SectionPinContext,
 ) {
@@ -364,6 +387,8 @@ private fun LazyListScope.renderView(
             snapshot = snapshot,
             registry = registry,
             compactPerRow = cfg.compactCardsPerRow,
+            baseUrl = baseUrl,
+            imageLoader = imageLoader,
             onLongPress = onLongPress,
         )
     }
@@ -405,7 +430,7 @@ private fun LazyListScope.renderView(
                             registry.cardWidthClass(c, snapshot)
                         }
                         rows.forEach { row ->
-                            CardRow(row, snapshot, registry, onLongPress)
+                            CardRow(row, snapshot, registry, baseUrl, imageLoader, onLongPress)
                         }
                     }
                 }
@@ -419,6 +444,8 @@ private fun LazyListScope.renderView(
                 snapshot = snapshot,
                 registry = registry,
                 haTheme = haTheme,
+                baseUrl = baseUrl,
+                imageLoader = imageLoader,
                 onLongPress = onLongPress,
                 pinContext = pinContext,
             )
@@ -433,6 +460,8 @@ private fun LazyListScope.renderView(
                     snapshot = snapshot,
                     registry = registry,
                     haTheme = haTheme,
+                    baseUrl = baseUrl,
+                    imageLoader = imageLoader,
                     onLongPress = onLongPress,
                     pinContext = pinContext,
                 )
@@ -634,6 +663,8 @@ private fun SectionRow(
     snapshot: HaSnapshot,
     registry: ee.schimke.ha.rc.CardRegistry,
     haTheme: HaTheme,
+    baseUrl: String?,
+    imageLoader: ImageLoader,
     onLongPress: (CardConfig) -> Unit,
     pinContext: SectionPinContext,
 ) {
@@ -649,6 +680,8 @@ private fun SectionRow(
                 snapshot = snapshot,
                 registry = registry,
                 haTheme = haTheme,
+                baseUrl = baseUrl,
+                imageLoader = imageLoader,
                 onLongPress = onLongPress,
                 pinContext = pinContext,
                 modifier = Modifier.weight(1f),
@@ -684,6 +717,8 @@ private fun SectionGrid(
     snapshot: HaSnapshot,
     registry: ee.schimke.ha.rc.CardRegistry,
     haTheme: HaTheme,
+    baseUrl: String?,
+    imageLoader: ImageLoader,
     onLongPress: (CardConfig) -> Unit,
     pinContext: SectionPinContext,
 ) {
@@ -701,6 +736,8 @@ private fun SectionGrid(
                 snapshot = snapshot,
                 registry = registry,
                 haTheme = haTheme,
+                baseUrl = baseUrl,
+                imageLoader = imageLoader,
                 onLongPress = onLongPress,
                 pinContext = pinContext,
                 modifier = Modifier.gridItem(),
@@ -716,6 +753,8 @@ private fun SectionColumn(
     snapshot: HaSnapshot,
     registry: ee.schimke.ha.rc.CardRegistry,
     haTheme: HaTheme,
+    baseUrl: String?,
+    imageLoader: ImageLoader,
     onLongPress: (CardConfig) -> Unit,
     pinContext: SectionPinContext,
     modifier: Modifier = Modifier,
@@ -740,6 +779,8 @@ private fun SectionColumn(
                 card = card,
                 snapshot = snapshot,
                 registry = registry,
+                baseUrl = baseUrl,
+                imageLoader = imageLoader,
                 onLongPress = onLongPress,
                 modifier = Modifier.fillMaxWidth(),
             )
@@ -758,6 +799,8 @@ private fun LazyListScope.cardRows(
     snapshot: HaSnapshot,
     registry: ee.schimke.ha.rc.CardRegistry,
     compactPerRow: Int,
+    baseUrl: String?,
+    imageLoader: ImageLoader,
     onLongPress: (CardConfig) -> Unit,
 ) {
     val rows = packAndChunk(cards, compactPerRow) { c ->
@@ -765,7 +808,7 @@ private fun LazyListScope.cardRows(
     }
     rows.forEachIndexed { rowIndex, row ->
         item(key = "$keyPrefix-r$rowIndex") {
-            CardRow(row, snapshot, registry, onLongPress)
+            CardRow(row, snapshot, registry, baseUrl, imageLoader, onLongPress)
         }
     }
 }
@@ -783,6 +826,8 @@ private fun CardRow(
     row: DashboardRow,
     snapshot: HaSnapshot,
     registry: ee.schimke.ha.rc.CardRegistry,
+    baseUrl: String?,
+    imageLoader: ImageLoader,
     onLongPress: (CardConfig) -> Unit,
 ) {
     Row(
@@ -794,6 +839,8 @@ private fun CardRow(
                 card = card,
                 snapshot = snapshot,
                 registry = registry,
+                baseUrl = baseUrl,
+                imageLoader = imageLoader,
                 onLongPress = onLongPress,
                 modifier = Modifier.weight(1f),
             )
@@ -811,6 +858,8 @@ private fun CardSlot(
     card: CardConfig,
     snapshot: HaSnapshot,
     registry: ee.schimke.ha.rc.CardRegistry,
+    baseUrl: String?,
+    imageLoader: ImageLoader,
     onLongPress: (CardConfig) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -829,7 +878,13 @@ private fun CardSlot(
         CardSlotCacheKey(card, style, dark, captureEpoch)
     }
     val context = androidx.compose.ui.platform.LocalContext.current
-    val bitmapLoader = remember(context) { CoilBitmapLoader(context.applicationContext) }
+    val bitmapLoader = remember(context, baseUrl, imageLoader) {
+        CoilBitmapLoader(
+            context.applicationContext,
+            imageLoader = imageLoader,
+            baseUrl = baseUrl,
+        )
+    }
     Box(
         modifier = modifier
             // Stable semantics tag so uiautomator / Compose tests can

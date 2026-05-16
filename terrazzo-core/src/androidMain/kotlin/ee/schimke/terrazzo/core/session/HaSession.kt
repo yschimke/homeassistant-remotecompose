@@ -23,6 +23,15 @@ interface HaSession {
     val connectionStatus: StateFlow<SessionConnectionStatus>
 
     /**
+     * HA long-lived bearer token, if this session has one. Live sessions
+     * mint one at login; demo / offline sessions return null. Surfaced
+     * here so the image stack can build an `ImageLoader` that adds
+     * `Authorization: Bearer ...` to `image_proxy` / addon-icon fetches
+     * (paths that don't carry HA's `?token=` signed-path token).
+     */
+    val accessToken: String? get() = null
+
+    /**
      * If non-null, dashboard screens should re-fetch snapshots at this
      * cadence so values visibly change on screen. Live sessions return
      * null until we wire real subscriptions.
@@ -58,7 +67,7 @@ enum class SessionConnectionStatus {
 /** Live session backed by an HA WebSocket. */
 class LiveHaSession(
     override val baseUrl: String,
-    accessToken: String,
+    override val accessToken: String,
     engine: HttpClientEngine? = null,
 ) : HaSession {
     private val client =
