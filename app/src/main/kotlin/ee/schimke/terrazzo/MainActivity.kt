@@ -9,6 +9,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import ee.schimke.terrazzo.core.prefs.DarkModePref
 import ee.schimke.terrazzo.core.prefs.ThemePref
+import ee.schimke.terrazzo.di.AppGraph
 import ee.schimke.terrazzo.ui.TerrazzoTheme
 import ee.schimke.terrazzo.ui.toThemeStyle
 import kotlinx.coroutines.runBlocking
@@ -56,8 +57,18 @@ class MainActivity : ComponentActivity() {
         val initialInstance = graph.offlineCache.lastInstance()
         val initialSession = initialInstance?.let { graph.sessionFactory.createCachedOnly(it) }
 
+        // The runtime graph is always an [AppGraph] (constructed via
+        // Metro in TerrazzoApplication). Surface its image stack so
+        // dashboard / widget code reuses the singleton ImageLoader +
+        // DiskCache instead of building per-screen instances pointing
+        // at the same cache directory.
+        val imageStack = (graph as AppGraph).haImageStack
+
         setContent {
-            CompositionLocalProvider(LocalTerrazzoGraph provides graph) {
+            CompositionLocalProvider(
+                LocalTerrazzoGraph provides graph,
+                LocalHaImageStack provides imageStack,
+            ) {
                 val themePref by graph.preferencesStore.themeStyle
                     .collectAsState(initial = ThemePref.TerrazzoHome)
                 val darkPref by graph.preferencesStore.darkMode

@@ -74,16 +74,15 @@ import ee.schimke.ha.rc.components.ProvideHaTheme
 import ee.schimke.ha.rc.components.ThemeStyle
 import ee.schimke.ha.rc.components.haThemeFor
 import ee.schimke.ha.rc.LocalRemoteImageResolver
-import ee.schimke.ha.rc.RemoteImageResolver
 import ee.schimke.ha.rc.image.CoilBitmapLoader
+import ee.schimke.terrazzo.LocalHaImageStack
 import ee.schimke.terrazzo.LocalTerrazzoGraph
-import ee.schimke.terrazzo.image.HaCoilImageResolver
-import ee.schimke.terrazzo.image.haSessionImageLoader
 import ee.schimke.terrazzo.ui.LayoutConfig
 import ee.schimke.terrazzo.ui.LocalIsDarkTheme
 import ee.schimke.terrazzo.ui.LocalThemeStyle
 import ee.schimke.terrazzo.ui.rememberLayoutConfig
 import coil3.ImageLoader
+import coil3.SingletonImageLoader
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
@@ -195,7 +194,6 @@ fun DashboardViewScreen(
                     dashboard = s.dashboard,
                     snapshot = s.snapshot,
                     baseUrl = session.baseUrl,
-                    accessToken = session.accessToken,
                     dashboardUrlPath = urlPath ?: "",
                     onCardLongPress = onCardLongPress,
                     contentPadding = contentPadding,
@@ -215,7 +213,6 @@ private fun DashboardList(
     dashboard: Dashboard,
     snapshot: HaSnapshot,
     baseUrl: String,
-    accessToken: String?,
     dashboardUrlPath: String,
     onCardLongPress: (CardConfig) -> Unit,
     contentPadding: PaddingValues,
@@ -229,35 +226,20 @@ private fun DashboardList(
         .preferencesStore.experimentalGridLayout.collectAsState(initial = false)
     val collapsedMode by LocalTerrazzoGraph.current
         .preferencesStore.collapsedMode.collectAsState(initial = true)
-    // Build the image loader once per (baseUrl, accessToken) and share
-    // it across every CardSlot in the list. The loader keeps an
-    // OkHttp connection pool + Coil memory cache; one-per-card would
-    // re-establish those for each card, blowing the cache on every
-    // recomposition.
+    // Pull the process-singleton image stack (a Metro AppScope binding —
+    // see AppGraph.haImageStack). Coil documents that exactly one
+    // DiskCache per directory is safe; the stack owns that single
+    // instance, plus the OkHttp client whose bearer / LAN-policy
+    // interceptors read the current session through provider lambdas.
+    // Falls back to the default Coil singleton in preview / test hosts
+    // that don't wire a stack — those paths render the URL-fetch
+    // first paint via BitmapLoader but skip the live picture-entity
+    // override.
     val context = androidx.compose.ui.platform.LocalContext.current
-    val lanPolicy = LocalTerrazzoGraph.current.lanConnectionPolicy
-    val imageLoader: ImageLoader = remember(context, baseUrl, accessToken, lanPolicy) {
-        haSessionImageLoader(
-            context = context.applicationContext,
-            baseUrl = baseUrl,
-            accessToken = accessToken,
-            lanPolicy = lanPolicy,
-        )
-    }
-    // The picture-entity refresh path: when the snapshot's
-    // entity_picture URL rotates, `CachedCardPreview` calls this
-    // resolver to fetch fresh bytes and overrides the player's
-    // named-bitmap slot via `setUserLocalBitmap`. Same Coil
-    // [imageLoader] as the player's `BitmapLoader` warm-up, so
-    // auth / LAN policy / disk cache are shared.
-    val imageResolver: RemoteImageResolver =
-        remember(context, baseUrl, imageLoader) {
-            HaCoilImageResolver(
-                context = context.applicationContext,
-                imageLoader = imageLoader,
-                baseUrl = baseUrl,
-            )
-        }
+    val haImageStack = LocalHaImageStack.current
+    val imageLoader: ImageLoader =
+        haImageStack?.imageLoader
+            ?: remember(context) { SingletonImageLoader.get(context.applicationContext) }
 
     val sectionColumns = (cfg.maxSectionColumns).coerceAtMost(layout.sectionCount).coerceAtLeast(1)
     val sideBySide = sectionColumns >= 2
@@ -292,7 +274,7 @@ private fun DashboardList(
     // are derived from a single source.
     val haTheme = remember(style, dark) { haThemeFor(style, dark) }
 
-    CompositionLocalProvider(LocalRemoteImageResolver provides imageResolver) {
+    CompositionLocalProvider(LocalRemoteImageResolver provides haImageStack) {
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.TopCenter,

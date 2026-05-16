@@ -144,6 +144,7 @@ dependencies {
   implementation(libs.androidx.navigation3.ui)
   implementation(libs.androidx.material3.adaptive.navigation.suite)
   implementation(libs.appauth)
+  implementation(libs.coil)
   implementation(libs.coil.network.okhttp)
 
   implementation(libs.kotlinx.coroutines.core)

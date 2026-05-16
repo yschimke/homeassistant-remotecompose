@@ -46,16 +46,16 @@ import ee.schimke.ha.rc.cards.shutter.withEnhancedShutter
 import ee.schimke.ha.rc.components.HaTheme
 import ee.schimke.ha.rc.components.ProvideHaTheme
 import androidx.compose.runtime.CompositionLocalProvider
+import coil3.SingletonImageLoader
 import ee.schimke.ha.rc.LocalRemoteImageResolver
 import ee.schimke.ha.rc.image.CoilBitmapLoader
 import ee.schimke.ha.rc.widgetsProfile
+import ee.schimke.terrazzo.LocalHaImageStack
 import ee.schimke.terrazzo.LocalTerrazzoGraph
 import ee.schimke.terrazzo.core.pin.MobilePinnedCard
 import ee.schimke.terrazzo.core.pin.PinStore
 import ee.schimke.terrazzo.core.widget.WidgetStore
 import ee.schimke.terrazzo.dashboard.toPinnedData
-import ee.schimke.terrazzo.image.HaCoilImageResolver
-import ee.schimke.terrazzo.image.haSessionImageLoader
 
 /**
  * Bottom sheet shown when the user long-presses a card. Live preview
@@ -79,7 +79,6 @@ import ee.schimke.terrazzo.image.haSessionImageLoader
 @Composable
 fun WidgetInstallSheet(
     baseUrl: String,
-    accessToken: String?,
     dashboardUrlPath: String,
     card: CardConfig,
     snapshot: HaSnapshot,
@@ -92,25 +91,17 @@ fun WidgetInstallSheet(
     val pinStore = LocalTerrazzoGraph.current.pinStore
     val pinScope = rememberCoroutineScope()
     val registry = remember { defaultRegistry().withEnhancedShutter() }
-    val lanPolicy = LocalTerrazzoGraph.current.lanConnectionPolicy
-    val imageLoader = remember(context, baseUrl, accessToken, lanPolicy) {
-        haSessionImageLoader(
-            context = context.applicationContext,
-            baseUrl = baseUrl,
-            accessToken = accessToken,
-            lanPolicy = lanPolicy,
-        )
-    }
+    // Shared singleton stack (DiskCache + ImageLoader, auth-aware
+    // OkHttp client) — see AppGraph.haImageStack. Fallback to the
+    // default Coil singleton for preview / test hosts that don't wire
+    // an AppGraph.
+    val haImageStack = LocalHaImageStack.current
+    val imageLoader =
+        haImageStack?.imageLoader
+            ?: remember(context) { SingletonImageLoader.get(context.applicationContext) }
     val bitmapLoader = remember(context, baseUrl, imageLoader) {
         CoilBitmapLoader(
             context.applicationContext,
-            imageLoader = imageLoader,
-            baseUrl = baseUrl,
-        )
-    }
-    val imageResolver = remember(context, baseUrl, imageLoader) {
-        HaCoilImageResolver(
-            context = context.applicationContext,
             imageLoader = imageLoader,
             baseUrl = baseUrl,
         )
@@ -133,7 +124,7 @@ fun WidgetInstallSheet(
     val isCardPinned by pinStore.isCardPinned(pinKey).collectAsState(initial = false)
 
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) {
-      CompositionLocalProvider(LocalRemoteImageResolver provides imageResolver) {
+      CompositionLocalProvider(LocalRemoteImageResolver provides haImageStack) {
         Column(
             modifier = Modifier.fillMaxWidth().padding(24.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
