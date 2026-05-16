@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.1.24](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.23...v0.1.24) (2026-05-16)
+
+
+### Features
+
+* **app:** land on last-viewed dashboard at home, not the picker ([#275](https://github.com/yschimke/homeassistant-remotecompose/issues/275)) ([43406bc](https://github.com/yschimke/homeassistant-remotecompose/commit/43406bcb0bbc96a88787e10b0cbd4749ad992cdd))
+
+
+### Bug Fixes
+
+* **deps:** update ktor to v3.5.0 ([#283](https://github.com/yschimke/homeassistant-remotecompose/issues/283)) ([92f2d2a](https://github.com/yschimke/homeassistant-remotecompose/commit/92f2d2ac62e2892b73e1a0b55f2323082c5838f2))
+* **image:** picture-entity app/widget strategy + workaround upstream 1×1 default ([#278](https://github.com/yschimke/homeassistant-remotecompose/issues/278)) ([d0663c5](https://github.com/yschimke/homeassistant-remotecompose/commit/d0663c5e9438a9fb3db994bc2fc8c80edebe6cd8))
+
 ## [0.1.23](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.22...v0.1.23) (2026-05-16)
 
 
