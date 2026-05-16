@@ -7,6 +7,7 @@ import androidx.compose.remote.creation.compose.layout.RemoteArrangement
 import androidx.compose.remote.creation.compose.layout.RemoteBox
 import androidx.compose.remote.creation.compose.layout.RemoteColumn
 import androidx.compose.remote.creation.compose.layout.RemoteComposable
+import androidx.compose.remote.creation.compose.layout.RemoteImage
 import androidx.compose.remote.creation.compose.layout.RemoteRow
 import androidx.compose.remote.creation.compose.layout.RemoteText
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
@@ -83,22 +84,52 @@ fun RemoteHaPictureEntity(
                 contentAlignment = RemoteAlignment.Center,
             ) {
                 if (data.imageUrl != null) {
-                    // Pass a stable [name] derived from `entityId` so the host
-                    // can override the URL-fetched bytes via
-                    // `StateUpdater.setUserLocalBitmap(pictureBindingName(id), …)`.
-                    // The URL itself is still passed to the player's
-                    // `BitmapLoader` for first paint; the override stacks on
-                    // top of that for live refreshes / token rotation.
-                    // Anonymous-card fallback (no `entityId`) keeps the
-                    // default URL-as-name behaviour.
+                    // The encoding form is picked by the embedding
+                    // surface via [LocalPictureImageStrategy]:
+                    //   - App dashboard → [PictureImageStrategy.Url],
+                    //     the player fetches via the configured
+                    //     `BitmapLoader` at playback.
+                    //   - Widgets → [PictureImageStrategy.Inline] with
+                    //     pre-fetched bytes baked into the doc; widget
+                    //     runtime has no loader.
+                    // Both go through the local
+                    // [rememberLocalNamedRemoteBitmap] helpers, which
+                    // work around the alpha010 1×1 default in upstream
+                    // `addNamedBitmapUrl(name, url)`. See
+                    // [LocalNamedRemoteBitmap.kt] and #277.
                     val bindingName =
                         data.entityId?.let(::pictureBindingName) ?: data.imageUrl
-                    RemoteHaImageUrl(
-                        url = data.imageUrl,
-                        name = bindingName,
-                        contentDescription = data.name.rs,
-                        modifier = RemoteModifier.fillMaxSize(),
-                    )
+                    val rb =
+                        when (val strategy = LocalPictureImageStrategy.current) {
+                            is PictureImageStrategy.Url ->
+                                rememberLocalNamedRemoteBitmap(
+                                    name = bindingName,
+                                    url = data.imageUrl,
+                                    width = strategy.widthPx,
+                                    height = strategy.heightPx,
+                                )
+                            is PictureImageStrategy.Inline ->
+                                strategy.bitmapFor(data.imageUrl)?.let { bytes ->
+                                    rememberLocalNamedRemoteBitmap(name = bindingName) { bytes }
+                                }
+                        }
+                    if (rb != null) {
+                        RemoteImage(
+                            remoteBitmap = rb,
+                            contentDescription = data.name.rs,
+                            modifier = RemoteModifier.fillMaxSize(),
+                        )
+                    } else {
+                        // Inline strategy with no pre-fetched bytes for
+                        // this URL — fall back to the icon path so the
+                        // tile renders something instead of a hole.
+                        RemoteIcon(
+                            imageVector = data.icon,
+                            contentDescription = data.name.rs,
+                            modifier = RemoteModifier.size(40.rdp),
+                            tint = accent.copy(alpha = accent.alpha * 0.55f.rf),
+                        )
+                    }
                 } else {
                     RemoteIcon(
                         imageVector = data.icon,

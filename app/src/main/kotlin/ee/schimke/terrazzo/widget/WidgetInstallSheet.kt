@@ -45,9 +45,7 @@ import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.cards.shutter.withEnhancedShutter
 import ee.schimke.ha.rc.components.HaTheme
 import ee.schimke.ha.rc.components.ProvideHaTheme
-import androidx.compose.runtime.CompositionLocalProvider
 import coil3.SingletonImageLoader
-import ee.schimke.ha.rc.LocalRemoteImageResolver
 import ee.schimke.ha.rc.image.CoilBitmapLoader
 import ee.schimke.ha.rc.widgetsProfile
 import ee.schimke.terrazzo.LocalHaImageStack
@@ -124,7 +122,6 @@ fun WidgetInstallSheet(
     val isCardPinned by pinStore.isCardPinned(pinKey).collectAsState(initial = false)
 
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheetState) {
-      CompositionLocalProvider(LocalRemoteImageResolver provides haImageStack) {
         Column(
             modifier = Modifier.fillMaxWidth().padding(24.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -214,7 +211,6 @@ fun WidgetInstallSheet(
                 ) { Text("Monitor for 15 min") }
             }
         }
-      }
     }
 }
 
