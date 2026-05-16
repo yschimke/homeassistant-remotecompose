@@ -12,6 +12,7 @@ import ee.schimke.ha.rc.enableRemoteComposeWrapContent
 import ee.schimke.terrazzo.core.di.TerrazzoGraph
 import ee.schimke.terrazzo.core.monitor.CardMonitor
 import ee.schimke.terrazzo.di.AppGraph
+import ee.schimke.terrazzo.image.HaImageStack
 import ee.schimke.terrazzo.monitor.createMonitor
 import ee.schimke.terrazzo.wearsync.MobileSyncStatsStore
 import ee.schimke.terrazzo.wearsync.MobileWearSyncManager
@@ -95,3 +96,13 @@ fun Context.terrazzoGraph(): TerrazzoGraph =
 val LocalTerrazzoGraph = staticCompositionLocalOf<TerrazzoGraph> {
     error("TerrazzoGraph not provided; wrap your content in LocalTerrazzoGraph.provides(...)")
 }
+
+/**
+ * Process-singleton image stack (one [coil3.ImageLoader] +
+ * [coil3.disk.DiskCache] for the entire app). Provided alongside
+ * [LocalTerrazzoGraph] in [MainActivity] for real surfaces; previews
+ * and unit tests leave it `null`, in which case dashboard screens fall
+ * back to the player's per-call `BitmapLoader` path with no live
+ * picture-entity refresh.
+ */
+val LocalHaImageStack = staticCompositionLocalOf<HaImageStack?> { null }
