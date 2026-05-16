@@ -73,8 +73,11 @@ import ee.schimke.ha.rc.components.HaTheme
 import ee.schimke.ha.rc.components.ProvideHaTheme
 import ee.schimke.ha.rc.components.ThemeStyle
 import ee.schimke.ha.rc.components.haThemeFor
+import ee.schimke.ha.rc.LocalRemoteImageResolver
+import ee.schimke.ha.rc.RemoteImageResolver
 import ee.schimke.ha.rc.image.CoilBitmapLoader
 import ee.schimke.terrazzo.LocalTerrazzoGraph
+import ee.schimke.terrazzo.image.HaCoilImageResolver
 import ee.schimke.terrazzo.image.haSessionImageLoader
 import ee.schimke.terrazzo.ui.LayoutConfig
 import ee.schimke.terrazzo.ui.LocalIsDarkTheme
@@ -241,6 +244,20 @@ private fun DashboardList(
             lanPolicy = lanPolicy,
         )
     }
+    // The picture-entity refresh path: when the snapshot's
+    // entity_picture URL rotates, `CachedCardPreview` calls this
+    // resolver to fetch fresh bytes and overrides the player's
+    // named-bitmap slot via `setUserLocalBitmap`. Same Coil
+    // [imageLoader] as the player's `BitmapLoader` warm-up, so
+    // auth / LAN policy / disk cache are shared.
+    val imageResolver: RemoteImageResolver =
+        remember(context, baseUrl, imageLoader) {
+            HaCoilImageResolver(
+                context = context.applicationContext,
+                imageLoader = imageLoader,
+                baseUrl = baseUrl,
+            )
+        }
 
     val sectionColumns = (cfg.maxSectionColumns).coerceAtMost(layout.sectionCount).coerceAtLeast(1)
     val sideBySide = sectionColumns >= 2
@@ -275,6 +292,7 @@ private fun DashboardList(
     // are derived from a single source.
     val haTheme = remember(style, dark) { haThemeFor(style, dark) }
 
+    CompositionLocalProvider(LocalRemoteImageResolver provides imageResolver) {
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.TopCenter,
@@ -317,6 +335,7 @@ private fun DashboardList(
                 )
             }
         }
+    }
     }
 }
 

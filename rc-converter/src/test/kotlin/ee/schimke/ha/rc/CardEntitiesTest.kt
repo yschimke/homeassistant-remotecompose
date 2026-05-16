@@ -120,4 +120,51 @@ class CardEntitiesTest {
         assertTrue(bindings.strings.isEmpty())
         assertTrue(bindings.booleans.isEmpty())
     }
+
+    @Test
+    fun pictureEntityIdsTopLevel() {
+        val ids = cardPictureEntityIds(card(
+            """{"type":"picture-entity","entity":"camera.front"}""",
+            type = "picture-entity",
+        ))
+        assertEquals(setOf("camera.front"), ids)
+    }
+
+    @Test
+    fun pictureEntityIdsSkipsNonPictureCards() {
+        // Same `entity` key in a tile card — must not be picked up.
+        val ids = cardPictureEntityIds(card(
+            """{"type":"tile","entity":"camera.front"}""",
+            type = "tile",
+        ))
+        assertTrue(ids.isEmpty())
+    }
+
+    @Test
+    fun pictureEntityIdsInsideStack() {
+        // A vertical-stack of mixed cards; only the picture-entity
+        // children should surface their entities.
+        val ids = cardPictureEntityIds(card(
+            """{
+              "type":"vertical-stack",
+              "cards":[
+                {"type":"tile","entity":"light.kitchen"},
+                {"type":"picture-entity","entity":"camera.front"},
+                {"type":"picture-entity","entity":"camera.back"}
+              ]
+            }""",
+            type = "vertical-stack",
+        ))
+        assertEquals(setOf("camera.front", "camera.back"), ids)
+    }
+
+    @Test
+    fun pictureEntityIdsSkipsEntitiesWithoutDomain() {
+        // `entity:"front"` (no domain.id dot) — HA-illegal, skip.
+        val ids = cardPictureEntityIds(card(
+            """{"type":"picture-entity","entity":"front"}""",
+            type = "picture-entity",
+        ))
+        assertTrue(ids.isEmpty())
+    }
 }
