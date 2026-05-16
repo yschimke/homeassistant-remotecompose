@@ -6,11 +6,18 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.util.Log
 import coil3.BitmapImage
+import coil3.EventListener
 import coil3.ImageLoader
+import coil3.decode.DataSource
 import coil3.disk.DiskCache
+import coil3.fetch.FetchResult
+import coil3.fetch.Fetcher
+import coil3.fetch.ImageFetchResult
+import coil3.fetch.SourceFetchResult
 import coil3.network.okhttp.OkHttpNetworkFetcherFactory
 import coil3.request.ErrorResult
 import coil3.request.ImageRequest
+import coil3.request.Options
 import coil3.request.SuccessResult
 import coil3.request.allowHardware
 import dev.zacsweers.metro.Inject
@@ -76,9 +83,18 @@ class HaImageStack(
   }
 
   private val diskCache: DiskCache by lazy {
+    // Pin sane bounds explicitly so the cache behaves predictably on
+    // every device: at least 10 MB even when free space is tight, no
+    // more than 100 MB so a long-running camera dashboard with
+    // token-rotating URLs can't blow up the cache directory. Coil's
+    // default `maxSizePercent` (0.02) still gates between these
+    // bounds.
     DiskCache.Builder()
       .directory(context.applicationContext.cacheDir.resolve(IMAGE_CACHE_DIR).toOkioPath())
+      .minimumMaxSizeBytes(MIN_DISK_CACHE_BYTES)
+      .maximumMaxSizeBytes(MAX_DISK_CACHE_BYTES)
       .build()
+      .also { Log.d(TAG, "diskCache built at $IMAGE_CACHE_DIR maxSize=${it.maxSize}") }
   }
 
   /**
@@ -92,10 +108,13 @@ class HaImageStack(
         .addInterceptor(LanConnectionPolicyInterceptor(lanPolicy))
         .addInterceptor(HaBearerAuthInterceptor({ haHost }, { accessToken }))
         .build()
+    Log.d(TAG, "imageLoader building (host=$haHost hasToken=${accessToken != null})")
     ImageLoader.Builder(context.applicationContext)
       .components { add(OkHttpNetworkFetcherFactory(callFactory = { client })) }
       .diskCache(diskCache)
+      .eventListener(LoggingEventListener)
       .build()
+      .also { Log.d(TAG, "imageLoader built") }
   }
 
   override suspend fun resolve(url: String): Bitmap? {
@@ -139,8 +158,80 @@ class HaImageStack(
     return prefix + url
   }
 
+  /**
+   * Coil [EventListener] that logs each stage of an image request to
+   * logcat under [TAG]. Filterable with
+   *
+   * ```
+   * adb logcat -s HaImageStack
+   * ```
+   *
+   * The default Coil pipeline runs many stages (size resolve → map →
+   * key → fetch → decode → transform → transition); we only emit a
+   * line for the ones useful for diagnosing why a tile stays gray:
+   * the chosen fetcher (network vs. memory cache hit), the fetch
+   * outcome with its [DataSource] (so a stale fetch from `MEMORY` /
+   * `DISK` is visible), and the final success / error.
+   */
+  private object LoggingEventListener : EventListener() {
+    override fun fetchStart(request: ImageRequest, fetcher: Fetcher, options: Options) {
+      Log.d(
+        TAG,
+        "fetchStart data=${request.data} fetcher=${fetcher::class.java.simpleName}",
+      )
+    }
+
+    override fun fetchEnd(
+      request: ImageRequest,
+      fetcher: Fetcher,
+      options: Options,
+      result: FetchResult?,
+    ) {
+      val source: DataSource? =
+        when (result) {
+          is SourceFetchResult -> result.dataSource
+          is ImageFetchResult -> result.dataSource
+          else -> null
+        }
+      Log.d(
+        TAG,
+        "fetchEnd data=${request.data} fetcher=${fetcher::class.java.simpleName} " +
+          "result=${result?.let { it::class.java.simpleName } ?: "null"} dataSource=$source",
+      )
+    }
+
+    override fun onSuccess(request: ImageRequest, result: SuccessResult) {
+      val img = result.image
+      val dims =
+        if (img is BitmapImage) "${img.bitmap.width}x${img.bitmap.height}"
+        else img::class.java.simpleName
+      Log.d(
+        TAG,
+        "onSuccess data=${request.data} dataSource=${result.dataSource} image=$dims",
+      )
+    }
+
+    override fun onError(request: ImageRequest, result: ErrorResult) {
+      Log.w(
+        TAG,
+        "onError data=${request.data} " +
+          "throwable=${result.throwable::class.java.simpleName}: ${result.throwable.message}",
+      )
+    }
+  }
+
   private companion object {
     private const val IMAGE_CACHE_DIR = "ha_image_cache"
     private const val TAG = "HaImageStack"
+
+    // 10 MB floor — even tight-storage devices keep enough room to
+    // cache a screenful of dashboard thumbnails.
+    private const val MIN_DISK_CACHE_BYTES = 10L * 1024 * 1024
+
+    // 100 MB ceiling — a token-rotating camera URL is a new cache
+    // key every refresh; we don't want that to balloon the cache
+    // dir while the user's away. LRU eviction reclaims under the
+    // ceiling.
+    private const val MAX_DISK_CACHE_BYTES = 100L * 1024 * 1024
   }
 }
