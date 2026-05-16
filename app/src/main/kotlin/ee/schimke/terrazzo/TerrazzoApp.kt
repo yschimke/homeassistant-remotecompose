@@ -66,6 +66,11 @@ import ee.schimke.terrazzo.widget.WidgetRefreshScheduler
 import ee.schimke.terrazzo.widget.WidgetsScreen
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.repeatOnLifecycle
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 /**
@@ -309,6 +314,35 @@ private fun DashboardsRoot(
     val readyDashboards = (dashboards as? DashboardListState.Ready)?.dashboards.orEmpty()
     val sessionConnection by session.connectionStatus.collectAsState()
     val connectionStatus = sessionConnection.toUiConnectionStatus()
+    val snackbars = remember { SnackbarHostState() }
+    val lifecycleOwner = LocalLifecycleOwner.current
+
+    // Keep the HA connection alive while the user has the app open.
+    // While the activity is RESUMED, watch for a Failed status and
+    // retry with a short backoff. Each retry either lands at Connected
+    // (loop idles) or at Failed (StateFlow re-emits and we retry
+    // again). When the activity is paused the [repeatOnLifecycle] scope
+    // cancels, so we stop poking the network in the background.
+    LaunchedEffect(session, lifecycleOwner) {
+        lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+            while (true) {
+                session.connectionStatus.first { it == SessionConnectionStatus.Failed }
+                delay(RECONNECT_BACKOFF_MS)
+                if (session.connectionStatus.value == SessionConnectionStatus.Failed) {
+                    runCatching { session.connect() }
+                }
+            }
+        }
+    }
+
+    val onRetryConnection: () -> Unit = {
+        scope.launch {
+            runCatching { session.connect() }
+            if (session.connectionStatus.value != SessionConnectionStatus.Connected) {
+                snackbars.showSnackbar("Couldn't connect to ${session.baseUrl}")
+            }
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -331,6 +365,7 @@ private fun DashboardsRoot(
                 },
                 actions = {
                     Surface(
+                        onClick = onRetryConnection,
                         color = connectionStatus.color.copy(alpha = 0.16f),
                         shape = MaterialTheme.shapes.small,
                         modifier = Modifier.padding(end = 8.dp),
@@ -352,6 +387,7 @@ private fun DashboardsRoot(
                 },
             )
         },
+        snackbarHost = { SnackbarHost(hostState = snackbars) },
         // Scaffold consumes the top inset for the bar; we hand the
         // bottom + sides to the content as the inner contentPadding.
         contentWindowInsets = WindowInsets.safeDrawing,
@@ -407,6 +443,13 @@ private fun DashboardsRoot(
 
 /** Sentinel for "no dashboard opened yet". null is a valid urlPath (the default dashboard). */
 private const val DASHBOARD_UNSET = "__none__"
+
+/**
+ * Backoff between automatic reconnect attempts while the activity is
+ * resumed. Short enough that a brief network blip recovers quickly,
+ * long enough that we don't hammer a genuinely-down HA instance.
+ */
+private const val RECONNECT_BACKOFF_MS = 5_000L
 
 enum class ConnectionStatus(val label: String, val color: Color) {
     Failed("Failed", Color(0xFFD32F2F)),

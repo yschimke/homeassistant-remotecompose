@@ -137,6 +137,7 @@ dependencies {
   implementation(libs.horologist.datalayer)
   implementation(libs.horologist.datalayer.phone)
   implementation(libs.androidx.lifecycle.runtime.ktx)
+  implementation(libs.androidx.lifecycle.runtime.compose)
   implementation(libs.androidx.lifecycle.process)
   implementation(libs.androidx.work.runtime)
   implementation(libs.androidx.navigation3.runtime)
