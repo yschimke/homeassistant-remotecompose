@@ -83,8 +83,19 @@ fun RemoteHaPictureEntity(
                 contentAlignment = RemoteAlignment.Center,
             ) {
                 if (data.imageUrl != null) {
+                    // Pass a stable [name] derived from `entityId` so the host
+                    // can override the URL-fetched bytes via
+                    // `StateUpdater.setUserLocalBitmap(pictureBindingName(id), …)`.
+                    // The URL itself is still passed to the player's
+                    // `BitmapLoader` for first paint; the override stacks on
+                    // top of that for live refreshes / token rotation.
+                    // Anonymous-card fallback (no `entityId`) keeps the
+                    // default URL-as-name behaviour.
+                    val bindingName =
+                        data.entityId?.let(::pictureBindingName) ?: data.imageUrl
                     RemoteHaImageUrl(
                         url = data.imageUrl,
+                        name = bindingName,
                         contentDescription = data.name.rs,
                         modifier = RemoteModifier.fillMaxSize(),
                     )

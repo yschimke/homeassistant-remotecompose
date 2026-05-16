@@ -92,3 +92,35 @@ fun cardSnapshotBindings(
     }
     return CardSnapshotBindings(strings, booleans)
 }
+
+/**
+ * Recursively walks [card] for `type: picture-entity` nodes (including
+ * picture-entity cards nested in stack / grid / conditional / horizontal
+ * / vertical layouts) and returns the `entity:` referenced by each.
+ * Used by `CachedCardPreview` to discover which slots need a live
+ * bitmap override when `entity_picture` rotates.
+ *
+ * The set is ordered by first appearance for stable iteration. Entries
+ * without a `domain.id`-shaped value are skipped (mirrors
+ * [cardEntityIds]).
+ */
+fun cardPictureEntityIds(card: CardConfig): Set<String> {
+    val out = LinkedHashSet<String>()
+    collectPictureEntities(card.raw, out)
+    return out
+}
+
+private fun collectPictureEntities(element: JsonElement, out: MutableSet<String>) {
+    when (element) {
+        is JsonObject -> {
+            val type = element["type"]?.let { it as? JsonPrimitive }?.contentOrNull
+            if (type == "picture-entity") {
+                val entity = element["entity"]?.let { it as? JsonPrimitive }?.contentOrNull
+                if (entity != null && entity.contains('.')) out.add(entity)
+            }
+            for ((_, value) in element) collectPictureEntities(value, out)
+        }
+        is JsonArray -> element.forEach { collectPictureEntities(it, out) }
+        else -> {}
+    }
+}
