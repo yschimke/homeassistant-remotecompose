@@ -6,8 +6,14 @@ import ee.schimke.ha.client.HaConfig
 import ee.schimke.ha.model.Dashboard
 import ee.schimke.ha.model.HaSnapshot
 import io.ktor.client.engine.HttpClientEngine
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.serialization.json.JsonObject
 
 /**
@@ -74,6 +80,31 @@ class LiveHaSession(
         HaClient(HaConfig(baseUrl = baseUrl, accessToken = accessToken), engine = engine)
     private val _connectionStatus = MutableStateFlow(SessionConnectionStatus.Connecting)
     override val connectionStatus: StateFlow<SessionConnectionStatus> = _connectionStatus
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+
+    init {
+        // Bridge the underlying socket's state into our session status so
+        // a mid-flight disconnect (read loop catches a throwable, peer
+        // hangs up) flips us to Failed. Without this, the app's
+        // RESUMED-state reconnect loop never fires after the WebSocket
+        // dies under a long-lived session — the next dashboard switch
+        // sees the dead session and surfaces "Software caused connection
+        // abort" with no recovery path.
+        client.state
+            .onEach { state ->
+                when (state) {
+                    HaClient.ConnectionState.Ready ->
+                        _connectionStatus.value = SessionConnectionStatus.Connected
+                    HaClient.ConnectionState.Connecting,
+                    HaClient.ConnectionState.Authenticating ->
+                        _connectionStatus.value = SessionConnectionStatus.Connecting
+                    HaClient.ConnectionState.Disconnected,
+                    HaClient.ConnectionState.Error ->
+                        _connectionStatus.value = SessionConnectionStatus.Failed
+                }
+            }
+            .launchIn(scope)
+    }
 
     override suspend fun connect() {
         _connectionStatus.value = SessionConnectionStatus.Connecting
@@ -95,6 +126,7 @@ class LiveHaSession(
     ) = client.callService(domain, service, entityId, serviceData)
     override suspend fun close() {
         client.close()
+        scope.cancel()
         _connectionStatus.value = SessionConnectionStatus.Failed
     }
 }
