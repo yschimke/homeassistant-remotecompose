@@ -22,7 +22,6 @@ import coil3.request.SuccessResult
 import coil3.request.allowHardware
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
-import ee.schimke.ha.rc.RemoteImageResolver
 import ee.schimke.terrazzo.core.di.AppScope
 import ee.schimke.terrazzo.core.network.LanConnectionPolicy
 import ee.schimke.terrazzo.core.network.LanConnectionPolicyInterceptor
@@ -51,19 +50,19 @@ import okio.Path.Companion.toOkioPath
  * external CDN thumbnails referenced from a dashboard don't leak the
  * token.
  *
- * Also implements [RemoteImageResolver] so `CachedCardPreview` can
- * push fresh picture-entity bitmaps via
- * `StateUpdater.setUserLocalBitmap` without re-capturing the
- * document. Same resolution rule as `CoilBitmapLoader`: a leading
- * `/` is prefixed with the current HA base URL, anything else
- * (absolute, `content://`, …) passes through.
+ * Also exposes [resolve] for hosts that need to pre-fetch a URL to
+ * an Android [Bitmap] — used by widget capture, which has no
+ * playback-time `BitmapLoader` and must bake fetched bytes into the
+ * `.rc` doc inline. Same resolution rule as `CoilBitmapLoader`: a
+ * leading `/` is prefixed with the current HA base URL, anything
+ * else (absolute, `content://`, …) passes through.
  */
 @SingleIn(AppScope::class)
 @Inject
 class HaImageStack(
   private val context: Context,
   private val lanPolicy: LanConnectionPolicy,
-) : RemoteImageResolver {
+) {
 
   @Volatile private var baseUrl: String? = null
   @Volatile private var haHost: String? = null
@@ -117,7 +116,13 @@ class HaImageStack(
       .also { Log.d(TAG, "imageLoader built") }
   }
 
-  override suspend fun resolve(url: String): Bitmap? {
+  /**
+   * Pre-fetch the image at [url] to an Android [Bitmap]. Used by
+   * widget capture, which must bake the bytes into the doc because
+   * widget runtime has no `BitmapLoader`. Returns `null` on fetch /
+   * decode failure so callers can fall back to an icon path.
+   */
+  suspend fun resolve(url: String): Bitmap? {
     val resolved = resolveAgainstBase(url)
     Log.d(TAG, "resolve request input=$url resolved=$resolved")
     val request =
