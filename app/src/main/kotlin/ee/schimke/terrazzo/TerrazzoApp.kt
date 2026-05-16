@@ -145,6 +145,16 @@ fun TerrazzoApp(
     // can render dashboards / live values from whatever's current.
     LaunchedEffect(session) { wearSync.setSession(session) }
 
+    // Plumb session credentials into the process-wide image stack so
+    // the singleton OkHttp client adds `Authorization: Bearer …` to
+    // same-host fetches without rebuilding the loader. Demo / null
+    // sessions clear the bearer (`accessToken=null`) — the
+    // interceptor then passes requests through unmodified.
+    val imageStack = LocalHaImageStack.current
+    LaunchedEffect(imageStack, session) {
+        imageStack?.setAuth(session?.baseUrl, session?.accessToken)
+    }
+
     val login = rememberLoginController(
         onReady = { baseUrl, accessToken ->
             session = graph.sessionFactory.create(baseUrl, accessToken)
@@ -446,7 +456,6 @@ private fun DashboardsRoot(
     installPending?.let { (card, snapshot) ->
         WidgetInstallSheet(
             baseUrl = session.baseUrl,
-            accessToken = session.accessToken,
             dashboardUrlPath = openedValue.takeIf { it != DASHBOARD_UNSET } ?: "",
             card = card,
             snapshot = snapshot,

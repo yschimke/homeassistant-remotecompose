@@ -2,6 +2,7 @@
 
 package ee.schimke.ha.rc
 
+import android.util.Log
 import androidx.annotation.RestrictTo
 import androidx.compose.remote.creation.compose.capture.captureSingleRemoteDocument
 import androidx.compose.remote.creation.compose.layout.RemoteComposable
@@ -23,6 +24,8 @@ import ee.schimke.ha.rc.components.HA_ACTION_NAME
 import ee.schimke.ha.rc.components.pictureBindingName
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.contentOrNull
+
+private const val TAG = "CachedCardPreview"
 
 /**
  * Cached counterpart to upstream
@@ -125,7 +128,17 @@ fun CachedCardPreview(
 
     val entityIds = remember(card) { card?.let { cardEntityIds(it) }.orEmpty() }
     val pictureEntityIds =
-        remember(card) { card?.let { cardPictureEntityIds(it) }.orEmpty() }
+        remember(card) {
+            val ids = card?.let { cardPictureEntityIds(it) }.orEmpty()
+            if (ids.isNotEmpty()) {
+                Log.d(
+                    TAG,
+                    "card type=${card?.type} picture-entities=$ids " +
+                        "resolverWired=${imageResolver != null}",
+                )
+            }
+            ids
+        }
     // The handle survives recomposition but is replaced if the player
     // is torn down and rebuilt (cache invalidation, theme flip).
     val updaterHolder = remember { mutableStateOf<StateUpdater?>(null) }
@@ -258,11 +271,41 @@ private suspend fun pushPictureEntityBitmaps(
                 ?.get("entity_picture")
                 ?.let { it as? kotlinx.serialization.json.JsonPrimitive }
                 ?.contentOrNull
-                ?: continue
-        if (pushedUrls[entityId] == url) continue
-        val bitmap = runCatching { resolver.resolve(url) }.getOrNull() ?: continue
+        if (url == null) {
+            Log.v(TAG, "picture entity=$entityId no entity_picture in snapshot; skipping")
+            continue
+        }
+        if (pushedUrls[entityId] == url) {
+            // Same URL as the previous push: the override is still
+            // current, no need to re-fetch.
+            continue
+        }
+        val previous = pushedUrls[entityId]
+        Log.d(
+            TAG,
+            "picture entity=$entityId url=$url" +
+                if (previous != null) " (was=$previous)" else " (first push)",
+        )
+        val bitmap = runCatching { resolver.resolve(url) }.getOrElse { ex ->
+            Log.w(TAG, "picture entity=$entityId resolve threw: ${ex.message}", ex)
+            null
+        }
+        if (bitmap == null) {
+            Log.w(TAG, "picture entity=$entityId resolver returned null bitmap for url=$url")
+            continue
+        }
         val name = pictureBindingName(entityId)
         runCatching { updater.setUserLocalBitmap(name, bitmap) }
-            .onSuccess { pushedUrls[entityId] = url }
+            .onSuccess {
+                pushedUrls[entityId] = url
+                Log.d(
+                    TAG,
+                    "picture entity=$entityId pushed name=$name " +
+                        "bitmap=${bitmap.width}x${bitmap.height}",
+                )
+            }
+            .onFailure { ex ->
+                Log.w(TAG, "picture entity=$entityId setUserLocalBitmap failed: ${ex.message}", ex)
+            }
     }
 }
