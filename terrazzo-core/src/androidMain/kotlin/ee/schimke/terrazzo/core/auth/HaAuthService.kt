@@ -18,7 +18,9 @@ import net.openid.appauth.AuthorizationRequest
 import net.openid.appauth.AuthorizationResponse
 import net.openid.appauth.AuthorizationService
 import net.openid.appauth.AuthorizationServiceConfiguration
+import net.openid.appauth.GrantTypeValues
 import net.openid.appauth.ResponseTypeValues
+import net.openid.appauth.TokenRequest
 import net.openid.appauth.TokenResponse
 import net.openid.appauth.connectivity.ConnectionBuilder
 
@@ -90,6 +92,32 @@ class HaAuthService(context: Context) {
         suspendCancellableCoroutine { cont ->
             val tokenRequest = response.createTokenExchangeRequest()
             appAuth.performTokenRequest(tokenRequest) { tokens, ex ->
+                when {
+                    tokens != null -> cont.resume(tokens)
+                    ex != null -> cont.resumeWithException(ex)
+                    else -> cont.resumeWithException(AuthorizationException.GeneralErrors.NETWORK_ERROR)
+                }
+            }
+        }
+
+    /**
+     * Mint a fresh access token from a stored refresh token. Used on
+     * cold-start auto-resume so the app upgrades from the cache-only
+     * stub session to a live one without sending the user back through
+     * the Custom Tab. HA usually doesn't rotate the refresh token on
+     * this exchange, but if it does the response carries the new one.
+     */
+    suspend fun refreshAccessToken(baseUrl: String, refreshToken: String): TokenResponse =
+        suspendCancellableCoroutine { cont ->
+            val config = AuthorizationServiceConfiguration(
+                Uri.parse("$baseUrl/auth/authorize"),
+                Uri.parse("$baseUrl/auth/token"),
+            )
+            val request = TokenRequest.Builder(config, CLIENT_ID)
+                .setGrantType(GrantTypeValues.REFRESH_TOKEN)
+                .setRefreshToken(refreshToken)
+                .build()
+            appAuth.performTokenRequest(request) { tokens, ex ->
                 when {
                     tokens != null -> cont.resume(tokens)
                     ex != null -> cont.resumeWithException(ex)

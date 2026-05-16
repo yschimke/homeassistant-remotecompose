@@ -113,11 +113,31 @@ fun TerrazzoApp(
     // Also re-arms the widget refresh chain in case the worker queue
     // was flushed (e.g. "Clear data" via system Settings). When a
     // cache-only [initialSession] was passed in (cold-start auto-resume
-    // from a prior login), the demo path overrides it.
+    // from a prior login), the demo path overrides it; otherwise we
+    // mint a fresh access token from the vault's refresh token and
+    // swap the stub for a real live session in the background.
     LaunchedEffect(Unit) {
         if (graph.preferencesStore.demoModeNow()) {
             session = graph.sessionFactory.createDemo()
             widgetScheduler.scheduleDemo()
+        } else if (initialSession != null) {
+            val baseUrl = initialSession.baseUrl
+            val refreshToken = graph.tokenVault.get(baseUrl)
+            if (refreshToken != null) {
+                runCatching { graph.authService.refreshAccessToken(baseUrl, refreshToken) }
+                    .onSuccess { tokens ->
+                        val access = tokens.accessToken
+                        // The user may have signed out or toggled demo
+                        // in the time the refresh was in flight; only
+                        // swap if we're still on the cache-only stub.
+                        if (access != null && session === initialSession) {
+                            val previous = session
+                            session = graph.sessionFactory.create(baseUrl, access)
+                            previous?.close()
+                        }
+                        tokens.refreshToken?.let { graph.tokenVault.put(baseUrl, it) }
+                    }
+            }
         }
     }
 
