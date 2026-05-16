@@ -2,7 +2,6 @@
 
 package ee.schimke.ha.rc
 
-import android.util.Log
 import androidx.annotation.RestrictTo
 import androidx.compose.remote.creation.compose.capture.captureSingleRemoteDocument
 import androidx.compose.remote.creation.compose.layout.RemoteComposable
@@ -21,11 +20,7 @@ import androidx.compose.ui.platform.LocalContext
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.components.HA_ACTION_NAME
-import ee.schimke.ha.rc.components.pictureBindingName
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.json.contentOrNull
-
-private const val TAG = "CachedCardPreview"
 
 /**
  * Cached counterpart to upstream
@@ -124,21 +119,8 @@ fun CachedCardPreview(
         }
 
     val dispatcher = LocalHaActionDispatcher.current
-    val imageResolver = LocalRemoteImageResolver.current
 
     val entityIds = remember(card) { card?.let { cardEntityIds(it) }.orEmpty() }
-    val pictureEntityIds =
-        remember(card) {
-            val ids = card?.let { cardPictureEntityIds(it) }.orEmpty()
-            if (ids.isNotEmpty()) {
-                Log.d(
-                    TAG,
-                    "card type=${card?.type} picture-entities=$ids " +
-                        "resolverWired=${imageResolver != null}",
-                )
-            }
-            ids
-        }
     // The handle survives recomposition but is replaced if the player
     // is torn down and rebuilt (cache invalidation, theme flip).
     val updaterHolder = remember { mutableStateOf<StateUpdater?>(null) }
@@ -147,41 +129,11 @@ fun CachedCardPreview(
     // [cacheKey] changes — the new document carries its own initial
     // bake, and we want the next push to be unconditional.
     val pushed = remember(cacheKey) { HashMap<String, Any?>() }
-    // Picture-entity URLs we've already fetched + pushed. Distinct map
-    // because the channel (setUserLocalBitmap) is separate from the
-    // string / int channel above and the values are URLs, not the
-    // bitmaps themselves (we don't want to retain bitmap references).
-    val pushedPictureUrls = remember(cacheKey) { HashMap<String, String>() }
 
     if (card != null && snapshot != null && entityIds.isNotEmpty()) {
         LaunchedEffect(updaterHolder.value, snapshot) {
             val updater = updaterHolder.value ?: return@LaunchedEffect
             pushSnapshotBindings(updater, entityIds, snapshot, pushed)
-        }
-    }
-
-    // Live bitmap push for picture-entity cards. Distinct from the
-    // string / boolean push above because resolving a URL to bytes is
-    // suspending (Coil fetch), so we can't fold it into the
-    // synchronous binding loop. Skips quietly when no resolver is
-    // wired — call sites that don't provide one (previews, host-less
-    // tests) fall back to whatever the player's BitmapLoader returns
-    // for the URL baked into the document.
-    if (
-        card != null &&
-            snapshot != null &&
-            pictureEntityIds.isNotEmpty() &&
-            imageResolver != null
-    ) {
-        LaunchedEffect(updaterHolder.value, snapshot) {
-            val updater = updaterHolder.value ?: return@LaunchedEffect
-            pushPictureEntityBitmaps(
-                updater = updater,
-                entityIds = pictureEntityIds,
-                snapshot = snapshot,
-                pushedUrls = pushedPictureUrls,
-                resolver = imageResolver,
-            )
         }
     }
 
@@ -239,73 +191,5 @@ private fun pushSnapshotBindings(
         if (pushed[name] == value) continue
         runCatching { updater.setUserLocalInt(name, if (value) 1 else 0) }
             .onSuccess { pushed[name] = value }
-    }
-}
-
-/**
- * For each picture-entity in [entityIds], read the current
- * `entity_picture` URL from [snapshot] and — if it changed since the
- * last push — ask [resolver] for a fresh [Bitmap] and write it into
- * the running player under `pictureBindingName(id)`.
- *
- * `setUserLocalBitmap` writes through `RemoteContext.setNamedDataOverride`,
- * which takes precedence over whatever the player's `BitmapLoader`
- * resolved from the URL baked at capture time. So the document keeps
- * its original URL and the override is what's drawn — no re-capture
- * needed when HA rotates the `?token=`.
- *
- * Per-entity errors are caught so a single failing fetch (404, network
- * blip, decode error) doesn't take down the whole push.
- */
-private suspend fun pushPictureEntityBitmaps(
-    updater: StateUpdater,
-    entityIds: Set<String>,
-    snapshot: HaSnapshot,
-    pushedUrls: MutableMap<String, String>,
-    resolver: RemoteImageResolver,
-) {
-    for (entityId in entityIds) {
-        val url =
-            snapshot.states[entityId]
-                ?.attributes
-                ?.get("entity_picture")
-                ?.let { it as? kotlinx.serialization.json.JsonPrimitive }
-                ?.contentOrNull
-        if (url == null) {
-            Log.v(TAG, "picture entity=$entityId no entity_picture in snapshot; skipping")
-            continue
-        }
-        if (pushedUrls[entityId] == url) {
-            // Same URL as the previous push: the override is still
-            // current, no need to re-fetch.
-            continue
-        }
-        val previous = pushedUrls[entityId]
-        Log.d(
-            TAG,
-            "picture entity=$entityId url=$url" +
-                if (previous != null) " (was=$previous)" else " (first push)",
-        )
-        val bitmap = runCatching { resolver.resolve(url) }.getOrElse { ex ->
-            Log.w(TAG, "picture entity=$entityId resolve threw: ${ex.message}", ex)
-            null
-        }
-        if (bitmap == null) {
-            Log.w(TAG, "picture entity=$entityId resolver returned null bitmap for url=$url")
-            continue
-        }
-        val name = pictureBindingName(entityId)
-        runCatching { updater.setUserLocalBitmap(name, bitmap) }
-            .onSuccess {
-                pushedUrls[entityId] = url
-                Log.d(
-                    TAG,
-                    "picture entity=$entityId pushed name=$name " +
-                        "bitmap=${bitmap.width}x${bitmap.height}",
-                )
-            }
-            .onFailure { ex ->
-                Log.w(TAG, "picture entity=$entityId setUserLocalBitmap failed: ${ex.message}", ex)
-            }
     }
 }

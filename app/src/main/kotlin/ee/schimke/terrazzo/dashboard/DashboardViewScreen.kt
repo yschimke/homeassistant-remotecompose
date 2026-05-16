@@ -74,7 +74,6 @@ import ee.schimke.ha.rc.components.HaTheme
 import ee.schimke.ha.rc.components.ProvideHaTheme
 import ee.schimke.ha.rc.components.ThemeStyle
 import ee.schimke.ha.rc.components.haThemeFor
-import ee.schimke.ha.rc.LocalRemoteImageResolver
 import ee.schimke.ha.rc.image.CoilBitmapLoader
 import ee.schimke.terrazzo.LocalHaImageStack
 import ee.schimke.terrazzo.LocalTerrazzoGraph
@@ -289,7 +288,6 @@ private fun DashboardList(
     // are derived from a single source.
     val haTheme = remember(style, dark) { haThemeFor(style, dark) }
 
-    CompositionLocalProvider(LocalRemoteImageResolver provides haImageStack) {
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.TopCenter,
@@ -332,7 +330,6 @@ private fun DashboardList(
                 )
             }
         }
-    }
     }
 }
 
