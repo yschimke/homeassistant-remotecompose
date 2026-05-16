@@ -2,6 +2,7 @@
 
 package ee.schimke.terrazzo.dashboard
 
+import android.util.Log
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -83,6 +84,7 @@ import ee.schimke.terrazzo.ui.LocalThemeStyle
 import ee.schimke.terrazzo.ui.rememberLayoutConfig
 import coil3.ImageLoader
 import coil3.SingletonImageLoader
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
@@ -142,15 +144,26 @@ fun DashboardViewScreen(
         // Poll when the session opts in (demo mode does, at ~1s) so
         // values visibly change; a one-shot fetch otherwise.
         while (true) {
-            runCatching { session.loadDashboard(urlPath) }
-                .onSuccess { (dashboard, snapshot) ->
-                    state = DashboardState.Ready(dashboard, snapshot)
+            try {
+                val (dashboard, snapshot) = session.loadDashboard(urlPath)
+                state = DashboardState.Ready(dashboard, snapshot)
+            } catch (ce: CancellationException) {
+                // Dashboard switch or composition leaving — let the new
+                // LaunchedEffect take over. `runCatching` used to absorb
+                // this and overwrite state with the cancellation message.
+                throw ce
+            } catch (t: Throwable) {
+                // Log so logcat actually carries the cause. Previously
+                // the message was stuffed straight into the UI state
+                // with no stack trace, so reports like "Software caused
+                // connection abort" arrived with nothing to debug from.
+                Log.w(TAG, "loadDashboard($urlPath) failed", t)
+                if (state is DashboardState.Loading) {
+                    state = DashboardState.Error(
+                        t.message ?: t::class.simpleName ?: "error"
+                    )
                 }
-                .onFailure {
-                    if (state is DashboardState.Loading) {
-                        state = DashboardState.Error(it.message ?: it::class.simpleName ?: "error")
-                    }
-                }
+            }
             val interval = session.refreshIntervalMillis ?: break
             delay(interval)
         }
@@ -201,6 +214,8 @@ fun DashboardViewScreen(
         }
     }
 }
+
+private const val TAG = "DashboardView"
 
 private sealed interface DashboardState {
     data object Loading : DashboardState

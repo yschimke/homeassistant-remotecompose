@@ -75,6 +75,9 @@ class HaClient(private val config: HaConfig, engine: HttpClientEngine? = null) {
   private var nextId = 1
   private val pending = mutableMapOf<Int, CompletableDeferred<JsonObject>>()
   private val pendingMutex = Mutex()
+  // Guards mutation of [session] / [receiveJob] and serialises [send] so two
+  // concurrent commands can't interleave frames on the same socket.
+  private val sessionMutex = Mutex()
   private var session: DefaultWebSocketSession? = null
   private var receiveJob: Job? = null
 
@@ -90,37 +93,40 @@ class HaClient(private val config: HaConfig, engine: HttpClientEngine? = null) {
   }
 
   suspend fun connect() {
-    if (session != null) return
-    _state.value = ConnectionState.Connecting
-    val wsUrl = config.baseUrl.toWsUrl() + "/api/websocket"
-    val s = httpClient.webSocketSession { url(wsUrl) }
-    session = s
+    sessionMutex.withLock {
+      if (session != null) return
+      _state.value = ConnectionState.Connecting
+      val wsUrl = config.baseUrl.toWsUrl() + "/api/websocket"
+      val s = httpClient.webSocketSession { url(wsUrl) }
 
-    // Handshake on this coroutine — then spin up the receive loop.
-    val authRequired = readMessage(s)
-    require(authRequired["type"]?.jsonPrimitive?.content == "auth_required") {
-      "expected auth_required, got $authRequired"
-    }
-    _state.value = ConnectionState.Authenticating
-    s.send(
-      json.encodeToString(
-        JsonObject.serializer(),
-        buildJsonObject {
-          put("type", "auth")
-          put("access_token", config.accessToken)
-        },
-      )
-    )
-    val authResult = readMessage(s)
-    when (authResult["type"]?.jsonPrimitive?.content) {
-      "auth_ok" -> _state.value = ConnectionState.Ready
-      else -> {
-        _state.value = ConnectionState.Error
-        throw IllegalStateException("auth rejected: $authResult")
+      // Handshake on this coroutine — then spin up the receive loop.
+      val authRequired = readMessage(s)
+      require(authRequired["type"]?.jsonPrimitive?.content == "auth_required") {
+        "expected auth_required, got $authRequired"
       }
-    }
+      _state.value = ConnectionState.Authenticating
+      s.send(
+        json.encodeToString(
+          JsonObject.serializer(),
+          buildJsonObject {
+            put("type", "auth")
+            put("access_token", config.accessToken)
+          },
+        )
+      )
+      val authResult = readMessage(s)
+      when (authResult["type"]?.jsonPrimitive?.content) {
+        "auth_ok" -> _state.value = ConnectionState.Ready
+        else -> {
+          _state.value = ConnectionState.Error
+          runCatching { s.close(CloseReason(CloseReason.Codes.PROTOCOL_ERROR, "auth")) }
+          throw IllegalStateException("auth rejected: $authResult")
+        }
+      }
 
-    receiveJob = scope.launch { receiveLoop(s) }
+      session = s
+      receiveJob = scope.launch { receiveLoop(s) }
+    }
   }
 
   suspend fun fetchDashboard(urlPath: String? = null): Dashboard {
@@ -182,9 +188,14 @@ class HaClient(private val config: HaConfig, engine: HttpClientEngine? = null) {
   }
 
   suspend fun close() {
-    receiveJob?.cancel()
-    runCatching { session?.close(CloseReason(CloseReason.Codes.NORMAL, "bye")) }
-    session = null
+    val s = sessionMutex.withLock {
+      val current = session
+      session = null
+      receiveJob?.cancel()
+      receiveJob = null
+      current
+    }
+    runCatching { s?.close(CloseReason(CloseReason.Codes.NORMAL, "bye")) }
     scope.cancel()
     httpClient.close()
     _state.value = ConnectionState.Disconnected
@@ -219,19 +230,37 @@ class HaClient(private val config: HaConfig, engine: HttpClientEngine? = null) {
       put("type", type)
       extra()
     }
-    s.send(json.encodeToString(JsonObject.serializer(), msg))
-    return withTimeout(30_000) {
-      val resp = deferred.await()
-      val success = resp["success"]?.jsonPrimitive?.content?.toBooleanStrictOrNull() ?: true
-      if (!success) {
-        val err = resp["error"]?.jsonObject?.get("message")?.jsonPrimitive?.content ?: "unknown"
-        error("HA command $type failed: $err")
+    try {
+      // Serialise WebSocket writes: Ktor's send is a suspend over a single
+      // outgoing channel, but cancelling one sender mid-encode while
+      // another tries to send produces interleaved/corrupted frames the
+      // server will close on. Holding [sessionMutex] also pins the
+      // current socket across the write so a reconnect can't swap it
+      // out under us.
+      sessionMutex.withLock {
+        val live = session ?: error("Not connected — socket closed before send (cmd=$type)")
+        if (live !== s) error("Connection replaced before send (cmd=$type)")
+        live.send(json.encodeToString(JsonObject.serializer(), msg))
       }
-      resp
+      return withTimeout(30_000) {
+        val resp = deferred.await()
+        val success = resp["success"]?.jsonPrimitive?.content?.toBooleanStrictOrNull() ?: true
+        if (!success) {
+          val err = resp["error"]?.jsonObject?.get("message")?.jsonPrimitive?.content ?: "unknown"
+          error("HA command $type failed: $err")
+        }
+        resp
+      }
+    } finally {
+      // Always remove our pending entry — covers normal completion,
+      // timeout, host-side cancellation (dashboard switch), and send
+      // failures. Leaking deferreds slowly grew the map on every reload.
+      pendingMutex.withLock { pending.remove(id) }
     }
   }
 
   private suspend fun receiveLoop(s: DefaultWebSocketSession) {
+    var failure: Throwable? = null
     try {
       for (frame in s.incoming) {
         val text = (frame as? Frame.Text)?.readText() ?: continue
@@ -240,12 +269,22 @@ class HaClient(private val config: HaConfig, engine: HttpClientEngine? = null) {
         pendingMutex.withLock { pending.remove(id) }?.complete(obj)
       }
     } catch (t: Throwable) {
-      pendingMutex.withLock {
-        pending.values.forEach { it.completeExceptionally(t) }
-        pending.clear()
-      }
-      _state.value = ConnectionState.Error
+      failure = t
     }
+    // The socket is gone — either the server closed `incoming` cleanly
+    // or we caught a throwable. Either way, the connection isn't usable
+    // anymore: drop our reference so the next [connect] reopens it
+    // instead of routing fresh `awaitCommand`s into a dead socket
+    // (which surfaces as `SocketException: Software caused connection
+    // abort` on the next send). Also fail any in-flight deferreds so
+    // their callers see a clear cause instead of timing out at 30s.
+    val cause = failure ?: IllegalStateException("WebSocket closed by peer")
+    pendingMutex.withLock {
+      pending.values.forEach { it.completeExceptionally(cause) }
+      pending.clear()
+    }
+    sessionMutex.withLock { if (session === s) session = null }
+    _state.value = ConnectionState.Disconnected
   }
 
   private suspend fun readMessage(s: DefaultWebSocketSession): JsonObject {
