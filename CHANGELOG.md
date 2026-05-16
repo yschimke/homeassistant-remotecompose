@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.1.23](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.22...v0.1.23) (2026-05-16)
+
+
+### Features
+
+* **app:** retry HA connection while resumed and on tap of status pill ([#269](https://github.com/yschimke/homeassistant-remotecompose/issues/269)) ([14cb90e](https://github.com/yschimke/homeassistant-remotecompose/commit/14cb90ef276d8a89be0759dba1969202e05b0071))
+* **auth:** upgrade cache-only session via refresh token on cold start ([#270](https://github.com/yschimke/homeassistant-remotecompose/issues/270)) ([744b355](https://github.com/yschimke/homeassistant-remotecompose/commit/744b355db048a0bc0931d1a360d9b9125479b734))
+* **image:** refresh picture-entity bitmaps without re-capturing the doc ([#267](https://github.com/yschimke/homeassistant-remotecompose/issues/267)) ([3706f4c](https://github.com/yschimke/homeassistant-remotecompose/commit/3706f4c5a50553952f7b27293ca25ebe94fa519b)), closes [#264](https://github.com/yschimke/homeassistant-remotecompose/issues/264)
+
+
+### Bug Fixes
+
+* **image:** resolve relative entity_picture paths against baseUrl ([#265](https://github.com/yschimke/homeassistant-remotecompose/issues/265)) ([fa2d135](https://github.com/yschimke/homeassistant-remotecompose/commit/fa2d1350a93eb6d01ec9f0f8a086ef09025271f9)), closes [#264](https://github.com/yschimke/homeassistant-remotecompose/issues/264)
+* **wearsync:** stop logging cancellation + wait for session connect ([#273](https://github.com/yschimke/homeassistant-remotecompose/issues/273)) ([ca6b2b6](https://github.com/yschimke/homeassistant-remotecompose/commit/ca6b2b61741221c17415e56094f91ac856544c9c))
+* **ws:** clear dead HA socket and bridge state into reconnect ([#272](https://github.com/yschimke/homeassistant-remotecompose/issues/272)) ([30e42d2](https://github.com/yschimke/homeassistant-remotecompose/commit/30e42d21a271a9b303225da49896c932756cfa32))
+
 ## [0.1.22](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.21...v0.1.22) (2026-05-15)
 
 
