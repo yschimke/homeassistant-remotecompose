@@ -27,7 +27,6 @@ import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.remote.creation.compose.state.rsp
 import androidx.compose.remote.creation.compose.text.RemoteTextStyle
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.wear.compose.remote.material3.RemoteIcon
@@ -84,28 +83,52 @@ fun RemoteHaPictureEntity(
                 contentAlignment = RemoteAlignment.Center,
             ) {
                 if (data.imageUrl != null) {
-                    // **Size-hypothesis test.** Switch to the bytes-form
-                    // named bitmap with a fixed 100×100 placeholder so
-                    // the captured `BitmapData` op carries real
-                    // dimensions. The URL form
-                    // (`addNamedBitmapUrl(name, url)`) doesn't take
-                    // width / height; the slot's dimensions appear to
-                    // end up 0×0 and the player draws nothing even
-                    // when both `BitmapLoader.loadBitmap` and the
-                    // override pump in valid bytes — see the gray-tile
-                    // investigation in #264. The host pushes a
-                    // bitmap scaled to 100×100 via
-                    // `setUserLocalBitmap(pictureBindingName(id), …)`;
-                    // `contentScale = Fit` stretches it back to the
-                    // tile area.
+                    // The bitmap encoding form is picked by the
+                    // embedding surface via [LocalPictureImageStrategy]:
+                    // dashboards use [PictureImageStrategy.Url] so the
+                    // player fetches at playback (Coil-backed loader);
+                    // widgets use [PictureImageStrategy.Inline] with
+                    // pre-fetched bytes baked into the doc (no loader
+                    // available at widget runtime). Both go through
+                    // [rememberLocalNamedRemoteBitmap], which is the
+                    // workaround for the alpha010 1×1 default in
+                    // upstream `addNamedBitmapUrl(name, url)` — see
+                    // [LocalNamedRemoteBitmap.kt] and #277.
                     val bindingName =
                         data.entityId?.let(::pictureBindingName) ?: data.imageUrl
-                    RemoteHaImageNamed(
-                        name = bindingName,
-                        bitmap = picturePlaceholderBitmap,
-                        contentDescription = data.name.rs,
-                        modifier = RemoteModifier.fillMaxSize(),
-                    )
+                    val rb =
+                        when (val strategy = LocalPictureImageStrategy.current) {
+                            is PictureImageStrategy.Url ->
+                                rememberLocalNamedRemoteBitmap(
+                                    name = bindingName,
+                                    url = data.imageUrl,
+                                    width = strategy.widthPx,
+                                    height = strategy.heightPx,
+                                )
+                            is PictureImageStrategy.Inline ->
+                                strategy.bitmapFor(data.imageUrl)?.let { bytes ->
+                                    rememberLocalNamedRemoteBitmap(
+                                        name = bindingName,
+                                    ) { bytes }
+                                }
+                        }
+                    if (rb != null) {
+                        androidx.compose.remote.creation.compose.layout.RemoteImage(
+                            remoteBitmap = rb,
+                            contentDescription = data.name.rs,
+                            modifier = RemoteModifier.fillMaxSize(),
+                        )
+                    } else {
+                        // Inline strategy with no pre-fetched bytes for
+                        // this URL — fall back to the icon path so the
+                        // widget renders something instead of a hole.
+                        RemoteIcon(
+                            imageVector = data.icon,
+                            contentDescription = data.name.rs,
+                            modifier = RemoteModifier.size(40.rdp),
+                            tint = accent.copy(alpha = accent.alpha * 0.55f.rf),
+                        )
+                    }
                 } else {
                     RemoteIcon(
                         imageVector = data.icon,
@@ -167,21 +190,12 @@ fun RemoteHaPictureEntity(
 }
 
 /**
- * Fixed-size placeholder bitmap captured into every picture-entity
- * document so the `BitmapData` op's width / height fields are
- * non-zero. See the `RemoteHaImageNamed` call above; the host swaps
- * this for a bitmap scaled to the same 512×512 size at runtime.
- *
- * 512×512 was picked to match what HA's `image_proxy` serves natively
- * for `image.*` entities (per the gray-tile diagnostic log), so the
- * common case is a no-op resize on the override path. Camera frames
- * (typically 1680×1080) downscale to 512×288 — still better than the
- * 100×100 probe we started with. The captured PNG is one solid colour
- * so the encoded BitmapData is tiny — the dimensions are what we
- * care about, not the pixels.
+ * Default pixel size used by [PictureImageStrategy.DefaultAppUrl] and
+ * by host code that scales pre-fetched bitmaps before pushing them as
+ * an override. Matches what HA's `image_proxy` serves natively for
+ * `image.*` entities (per the gray-tile diagnostic log), so the
+ * common case is a no-op on both paths. Camera frames (typically
+ * 1680×1080) downscale to 512×288 — still well above the tile's
+ * display size.
  */
 const val PICTURE_BITMAP_SIZE_PX: Int = 512
-
-private val picturePlaceholderBitmap: ImageBitmap by lazy {
-  ImageBitmap(PICTURE_BITMAP_SIZE_PX, PICTURE_BITMAP_SIZE_PX)
-}

@@ -3,6 +3,7 @@
 package ee.schimke.ha.previews
 
 import android.graphics.Bitmap
+import androidx.compose.remote.player.core.platform.BitmapLoader
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth as uiFillMaxWidth
 import androidx.compose.foundation.layout.height as uiHeight
@@ -19,6 +20,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.asAndroidBitmap
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import ee.schimke.ha.model.CardConfig
@@ -32,34 +34,38 @@ import ee.schimke.ha.rc.RenderChild
 import ee.schimke.ha.rc.androidXExperimentalWrap
 import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.components.HaTheme
+import ee.schimke.ha.rc.components.LocalPictureImageStrategy
+import ee.schimke.ha.rc.components.PictureImageStrategy
 import ee.schimke.ha.rc.components.ProvideHaTheme
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.contentOrNull
 
 /**
- * Picture-entity previews that drive the **named-bitmap override path**
- * end-to-end inside Robolectric — the same flow the device runs in
- * `DashboardViewScreen`:
+ * Picture-entity previews that exercise both [PictureImageStrategy]
+ * modes end-to-end inside Robolectric:
  *
- *  1. `PictureEntityCardConverter` renders `RemoteHaPictureEntity`,
- *     which captures `RemoteHaImageNamed(name, placeholder)` into the
- *     `.rc` document. The placeholder is a fixed-size blank bitmap so
- *     the `BitmapData` op carries non-zero width / height.
- *  2. `CachedCardPreview` walks the card for picture-entity ids, reads
- *     `entity_picture` from the snapshot, calls the
- *     `LocalRemoteImageResolver` for a fresh bitmap, and pushes via
- *     `StateUpdater.setUserLocalBitmap`.
- *  3. The player swaps the named-bitmap slot to the pushed bytes and
- *     re-renders.
+ *  - **App mode** (`AppMode_Light/Dark`) — captures the URL-form
+ *    named bitmap via [rememberLocalNamedRemoteBitmap] with explicit
+ *    dimensions. The host wires a fake Coil-backed `BitmapLoader`
+ *    that maps the URL to a known yellow-on-blue bitmap; the player
+ *    resolves it at playback exactly like the device's
+ *    `HaImageStack.imageLoader`. Renders the disc.
+ *  - **Widget mode** (`WidgetMode_Light`) — provides
+ *    [PictureImageStrategy.Inline] with a pre-fetched [ImageBitmap].
+ *    The converter bakes the bytes into the captured doc; no
+ *    `BitmapLoader` is wired, mirroring the widget runtime where no
+ *    loader is available. Also renders the disc — proves the same
+ *    visual outcome regardless of strategy.
+ *  - **Icon fallback** (`IconFallback_Light`) — snapshot has no
+ *    `entity_picture`, so the converter takes the [RemoteIcon] path
+ *    (vector ops, no `BitmapData`). Renders a camera icon.
  *
- * The fake resolver returns a known visible bitmap (yellow disc on a
- * blue field) — anything *but* a gray placeholder. If the rendered
- * preview shows the disc, the override pipeline is working at slot
- * level; if it stays gray, dimensions / encoding remain the suspect.
- *
- * The "icon" variant exercises the `imageUrl = null` branch so the
- * preview confirms the icon fallback path also still renders.
+ * Confirms the upstream gray-tile bug (#277) is bypassed via the
+ * local `addNamedBitmapUrlSized` writer workaround, and that the
+ * strategy abstraction routes correctly between the two production
+ * surfaces.
  */
 
 private const val PICTURE_TILE_WIDTH_DP = 360
@@ -135,14 +141,14 @@ private fun fakePictureResolver(): RemoteImageResolver = RemoteImageResolver { u
 }
 
 @Preview(
-  name = "picture-entity override (light)",
+  name = "picture-entity app-mode (light)",
   showBackground = false,
   widthDp = PICTURE_TILE_WIDTH_DP,
   heightDp = PICTURE_TILE_HEIGHT_DP,
 )
 @Composable
-fun PictureEntity_Override_Light() {
-  PictureEntityOverrideHost(
+fun PictureEntity_AppMode_Light() {
+  PictureEntityAppModeHost(
     theme = HaTheme.Light,
     card = pictureSampleCard,
     snapshot = pictureSampleSnapshotWithImage,
@@ -150,14 +156,14 @@ fun PictureEntity_Override_Light() {
 }
 
 @Preview(
-  name = "picture-entity override (dark)",
+  name = "picture-entity app-mode (dark)",
   showBackground = false,
   widthDp = PICTURE_TILE_WIDTH_DP,
   heightDp = PICTURE_TILE_HEIGHT_DP,
 )
 @Composable
-fun PictureEntity_Override_Dark() {
-  PictureEntityOverrideHost(
+fun PictureEntity_AppMode_Dark() {
+  PictureEntityAppModeHost(
     theme = HaTheme.Dark,
     card = pictureSampleCard,
     snapshot = pictureSampleSnapshotWithImage,
@@ -165,32 +171,45 @@ fun PictureEntity_Override_Dark() {
 }
 
 @Preview(
-  name = "picture-entity placeholder-only (light)",
+  name = "picture-entity widget-mode (light)",
   showBackground = false,
   widthDp = PICTURE_TILE_WIDTH_DP,
   heightDp = PICTURE_TILE_HEIGHT_DP,
 )
 @Composable
-fun PictureEntity_Placeholder_Light() {
-  // No resolver wired — the picture-entity card captures the
-  // placeholder bitmap into the doc but nothing pushes an override.
-  // The slot should render the placeholder (transparent → backdrop
-  // shows through).
-  Box(
-    modifier =
-      Modifier.uiFillMaxWidth().uiHeight(PICTURE_TILE_HEIGHT_DP.dp),
-  ) {
+fun PictureEntity_WidgetMode_Light() {
+  // Widget mode: no BitmapLoader at playback. The host pre-fetches
+  // the URL and exposes the bytes via PictureImageStrategy.Inline;
+  // the converter bakes them into the captured doc via
+  // `rememberLocalNamedRemoteBitmap(name) { bitmap }` (bytes form).
+  // The rendered output should be the yellow disc — proves the
+  // widget path renders without a loader.
+  val prefetched = remember { fakeOverrideBitmap(SAMPLE_PICTURE_BITMAP_PX).asImageBitmap() }
+  val strategy = remember(prefetched) {
+    PictureImageStrategy.Inline { url -> prefetched }
+  }
+  Box(modifier = Modifier.uiFillMaxWidth().uiHeight(PICTURE_TILE_HEIGHT_DP.dp)) {
     CachedCardPreview(
       cacheKey =
-        PictureOverridePreviewKey(pictureSampleCard, HaTheme.Light, withOverride = false),
+        PicturePreviewKey(pictureSampleCard, HaTheme.Light, withOverride = false),
       profile = androidXExperimentalWrap,
       modifier = Modifier.uiFillMaxWidth(),
       card = pictureSampleCard,
       snapshot = pictureSampleSnapshotWithImage,
     ) {
-      ProvideCardRegistry(defaultRegistry()) {
-        ProvideHaTheme(HaTheme.Light) {
-          RenderChild(pictureSampleCard, pictureSampleSnapshotWithImage, RemoteModifier.rcFillMaxWidth())
+      // The strategy provider must live INSIDE the
+      // `captureSingleRemoteDocument` sub-composition for the
+      // converter to see it — CompositionLocals from the outer
+      // tree don't propagate into the capture pass.
+      CompositionLocalProvider(LocalPictureImageStrategy provides strategy) {
+        ProvideCardRegistry(defaultRegistry()) {
+          ProvideHaTheme(HaTheme.Light) {
+            RenderChild(
+              pictureSampleCard,
+              pictureSampleSnapshotWithImage,
+              RemoteModifier.rcFillMaxWidth(),
+            )
+          }
         }
       }
     }
@@ -214,7 +233,7 @@ fun PictureEntity_IconFallback_Light() {
   ) {
     CachedCardPreview(
       cacheKey =
-        PictureOverridePreviewKey(
+        PicturePreviewKey(
           pictureSampleCardNoEntity,
           HaTheme.Light,
           withOverride = false,
@@ -238,20 +257,47 @@ fun PictureEntity_IconFallback_Light() {
 }
 
 @Composable
-private fun PictureEntityOverrideHost(
+private fun PictureEntityAppModeHost(
   theme: HaTheme,
   card: CardConfig,
   snapshot: HaSnapshot,
 ) {
+  val context = androidx.compose.ui.platform.LocalContext.current
   val resolver = remember { fakePictureResolver() }
+  // Wire a fake Coil-backed BitmapLoader so the URL-form named
+  // bitmap (which the converter now emits via the local
+  // `addNamedBitmapUrlSized` workaround) actually resolves in the
+  // preview env. Maps the snapshot's `entity_picture` URL to the
+  // same yellow-disc bitmap the resolver returns so the URL fetch
+  // and the override push produce the same pixels — the preview
+  // can't tell them apart by pixel, only by which path lit them up.
+  val resolvedUrl =
+    snapshot.states.values.firstNotNullOfOrNull {
+      it.attributes["entity_picture"]?.let { v ->
+        (v as? JsonPrimitive)?.contentOrNull
+      }
+    }
+  val sampleBitmap = remember { fakeOverrideBitmap(SAMPLE_PICTURE_BITMAP_PX) }
+  val bitmapLoader =
+    remember(context, resolvedUrl, sampleBitmap) {
+      if (resolvedUrl == null) {
+        BitmapLoader.UNSUPPORTED
+      } else {
+        previewCoilBitmapLoader(
+          context,
+          mappings = mapOf(resolvedUrl to sampleBitmap.asImageBitmap()),
+        )
+      }
+    }
   Box(modifier = Modifier.uiFillMaxWidth().uiHeight(PICTURE_TILE_HEIGHT_DP.dp)) {
     CompositionLocalProvider(LocalRemoteImageResolver provides resolver) {
       CachedCardPreview(
-        cacheKey = PictureOverridePreviewKey(card, theme, withOverride = true),
+        cacheKey = PicturePreviewKey(card, theme, withOverride = true),
         profile = androidXExperimentalWrap,
         modifier = Modifier.uiFillMaxWidth(),
         card = card,
         snapshot = snapshot,
+        bitmapLoader = bitmapLoader,
       ) {
         ProvideCardRegistry(defaultRegistry()) {
           ProvideHaTheme(theme) {
@@ -263,7 +309,7 @@ private fun PictureEntityOverrideHost(
   }
 }
 
-private data class PictureOverridePreviewKey(
+private data class PicturePreviewKey(
   val card: CardConfig,
   val theme: HaTheme,
   val withOverride: Boolean,
