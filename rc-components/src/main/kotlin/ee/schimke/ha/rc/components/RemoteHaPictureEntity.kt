@@ -27,6 +27,7 @@ import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.remote.creation.compose.state.rsp
 import androidx.compose.remote.creation.compose.text.RemoteTextStyle
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.wear.compose.remote.material3.RemoteIcon
@@ -83,19 +84,25 @@ fun RemoteHaPictureEntity(
                 contentAlignment = RemoteAlignment.Center,
             ) {
                 if (data.imageUrl != null) {
-                    // Pass a stable [name] derived from `entityId` so the host
-                    // can override the URL-fetched bytes via
-                    // `StateUpdater.setUserLocalBitmap(pictureBindingName(id), …)`.
-                    // The URL itself is still passed to the player's
-                    // `BitmapLoader` for first paint; the override stacks on
-                    // top of that for live refreshes / token rotation.
-                    // Anonymous-card fallback (no `entityId`) keeps the
-                    // default URL-as-name behaviour.
+                    // **Size-hypothesis test.** Switch to the bytes-form
+                    // named bitmap with a fixed 100×100 placeholder so
+                    // the captured `BitmapData` op carries real
+                    // dimensions. The URL form
+                    // (`addNamedBitmapUrl(name, url)`) doesn't take
+                    // width / height; the slot's dimensions appear to
+                    // end up 0×0 and the player draws nothing even
+                    // when both `BitmapLoader.loadBitmap` and the
+                    // override pump in valid bytes — see the gray-tile
+                    // investigation in #264. The host pushes a
+                    // bitmap scaled to 100×100 via
+                    // `setUserLocalBitmap(pictureBindingName(id), …)`;
+                    // `contentScale = Fit` stretches it back to the
+                    // tile area.
                     val bindingName =
                         data.entityId?.let(::pictureBindingName) ?: data.imageUrl
-                    RemoteHaImageUrl(
-                        url = data.imageUrl,
+                    RemoteHaImageNamed(
                         name = bindingName,
+                        bitmap = picturePlaceholderBitmap,
                         contentDescription = data.name.rs,
                         modifier = RemoteModifier.fillMaxSize(),
                     )
@@ -157,4 +164,16 @@ fun RemoteHaPictureEntity(
             }
         }
     }
+}
+
+/**
+ * Fixed-size placeholder bitmap captured into every picture-entity
+ * document so the `BitmapData` op's width / height fields are
+ * non-zero. See the `RemoteHaImageNamed` call above; the host swaps
+ * this for a bitmap scaled to the same 100×100 size at runtime.
+ */
+const val PICTURE_BITMAP_SIZE_PX: Int = 100
+
+private val picturePlaceholderBitmap: ImageBitmap by lazy {
+  ImageBitmap(PICTURE_BITMAP_SIZE_PX, PICTURE_BITMAP_SIZE_PX)
 }

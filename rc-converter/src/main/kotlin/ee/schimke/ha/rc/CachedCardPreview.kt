@@ -21,6 +21,7 @@ import androidx.compose.ui.platform.LocalContext
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.components.HA_ACTION_NAME
+import ee.schimke.ha.rc.components.PICTURE_BITMAP_SIZE_PX
 import ee.schimke.ha.rc.components.pictureBindingName
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.contentOrNull
@@ -286,22 +287,38 @@ private suspend fun pushPictureEntityBitmaps(
             "picture entity=$entityId url=$url" +
                 if (previous != null) " (was=$previous)" else " (first push)",
         )
-        val bitmap = runCatching { resolver.resolve(url) }.getOrElse { ex ->
+        val fetched = runCatching { resolver.resolve(url) }.getOrElse { ex ->
             Log.w(TAG, "picture entity=$entityId resolve threw: ${ex.message}", ex)
             null
         }
-        if (bitmap == null) {
+        if (fetched == null) {
             Log.w(TAG, "picture entity=$entityId resolver returned null bitmap for url=$url")
             continue
         }
+        // Picture-entity documents bake a fixed-size placeholder so
+        // the named-bitmap slot has non-zero dimensions (the URL form
+        // of `addNamedBitmap*` doesn't carry width/height — see
+        // `picturePlaceholderBitmap`). Scale the override to match
+        // so the player draws into the slot at the expected size.
+        val sized =
+            if (fetched.width == PICTURE_BITMAP_SIZE_PX && fetched.height == PICTURE_BITMAP_SIZE_PX) {
+                fetched
+            } else {
+                android.graphics.Bitmap.createScaledBitmap(
+                    fetched,
+                    PICTURE_BITMAP_SIZE_PX,
+                    PICTURE_BITMAP_SIZE_PX,
+                    /* filter = */ true,
+                )
+            }
         val name = pictureBindingName(entityId)
-        runCatching { updater.setUserLocalBitmap(name, bitmap) }
+        runCatching { updater.setUserLocalBitmap(name, sized) }
             .onSuccess {
                 pushedUrls[entityId] = url
                 Log.d(
                     TAG,
                     "picture entity=$entityId pushed name=$name " +
-                        "bitmap=${bitmap.width}x${bitmap.height}",
+                        "bitmap=${sized.width}x${sized.height} (fetched=${fetched.width}x${fetched.height})",
                 )
             }
             .onFailure { ex ->
