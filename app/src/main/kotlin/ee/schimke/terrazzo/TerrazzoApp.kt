@@ -496,14 +496,15 @@ private fun SessionConnectionStatus.toUiConnectionStatus(): ConnectionStatus = w
  * Translate the persisted last-viewed-dashboard pref into the local
  * `opened` sentinel/urlPath encoding `DashboardsRoot` uses:
  *
- *   - `null` (pref absent) → [DASHBOARD_UNSET] (show picker).
+ *   - `null` (pref absent) → `null` (HA's default dashboard). First
+ *     launch lands on the default dashboard rather than the picker;
+ *     the picker stays reachable via system-back from a view.
  *   - [PreferencesStore.DEFAULT_DASHBOARD_SENTINEL] → `null`
  *     (HA's default dashboard, whose `urlPath` is null over the wire).
- *   - any other string → that `urlPath`.
+ *   - any other string — that `urlPath`.
  */
 private fun initialDashboardToOpened(stored: String?): String? = when (stored) {
-    null -> DASHBOARD_UNSET
-    PreferencesStore.DEFAULT_DASHBOARD_SENTINEL -> null
+    null, PreferencesStore.DEFAULT_DASHBOARD_SENTINEL -> null
     else -> stored
 }
 

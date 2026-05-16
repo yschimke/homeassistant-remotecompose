@@ -23,10 +23,10 @@ import ee.schimke.ha.client.DashboardSummary
  * by the caller (`DashboardsRoot`) so the same data drives both this
  * screen and the top-bar quick-switcher dropdown without re-querying.
  *
- * The picker is the first-launch experience (when no `lastViewedDashboard`
- * pref is set) and the destination of the system-back gesture from a
- * dashboard view. With the new top-bar dropdown most users won't visit
- * this screen often once they've picked a dashboard.
+ * Reachable via the system-back gesture from a dashboard view — the
+ * app's home is the last-viewed (or HA-default) dashboard itself, so
+ * most users will use the top-bar dropdown to switch and won't visit
+ * this screen often.
  */
 @Composable
 fun DashboardPickerScreen(

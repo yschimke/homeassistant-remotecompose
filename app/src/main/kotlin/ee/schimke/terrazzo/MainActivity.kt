@@ -29,9 +29,9 @@ class MainActivity : ComponentActivity() {
         // the bypass even if the extra is present.
         //
         // Also clears the offline-cache instance pointer and the
-        // last-viewed-dashboard pref so the test starts on the
-        // dashboard picker every time, not auto-resumed onto a
-        // previous run's cached dashboard.
+        // last-viewed-dashboard pref so the test starts on HA's
+        // default demo dashboard every time, not auto-resumed onto
+        // a previous run's cached dashboard.
         if (BuildConfig.DEBUG && intent?.getBooleanExtra(EXTRA_TEST_DEMO_MODE, false) == true) {
             runBlocking {
                 graph.preferencesStore.setDemoMode(true)
