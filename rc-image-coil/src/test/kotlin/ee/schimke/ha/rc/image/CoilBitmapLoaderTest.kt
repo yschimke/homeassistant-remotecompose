@@ -130,6 +130,125 @@ class CoilBitmapLoaderTest {
         assertEquals(listOf(customKey), cache.getCalls)
         assertEquals(listOf(customKey), warmUpKeys)
     }
+
+    @Test
+    fun relativeNameResolvesAgainstBaseUrlForLookupAndWarmUp() {
+        // Home Assistant's `entity_picture` is path-only —
+        // `/api/camera_proxy/...?token=...`. Coil's HttpUriFetcher
+        // can't resolve a path-only URI; without resolution the
+        // memory-cache lookup misses every call and the warm-up
+        // silently errors. With baseUrl wired, both sides see the
+        // absolute URL.
+        val baseUrl = "https://ha.example.test"
+        val relative = "/api/camera_proxy/camera.front?token=abc"
+        val absolute = "$baseUrl$relative"
+        val cache = RecordingMemoryCache(initial = emptyMap())
+        val loader = StubImageLoader(memCache = cache)
+        val warmUpCalls = mutableListOf<Pair<String, MemoryCache.Key>>()
+
+        val coil =
+            object : CoilBitmapLoader(
+                context = NULL_CONTEXT,
+                imageLoader = loader,
+                baseUrl = baseUrl,
+            ) {
+                override fun warmUpAsync(name: String, key: MemoryCache.Key) {
+                    warmUpCalls += name to key
+                }
+            }
+
+        coil.loadBitmap(relative)
+
+        assertEquals(listOf(MemoryCache.Key(absolute)), cache.getCalls)
+        assertEquals(listOf(absolute to MemoryCache.Key(absolute)), warmUpCalls)
+    }
+
+    @Test
+    fun absoluteAndSchemedNamesPassThroughEvenWithBaseUrl() {
+        // Anything that isn't a relative server path is forwarded
+        // unchanged: HTTPS, content://, file://, android.resource://,
+        // and untyped non-slash names (e.g. registry-style "logo").
+        val baseUrl = "https://ha.example.test/"
+        val cache = RecordingMemoryCache(initial = emptyMap())
+        val loader = StubImageLoader(memCache = cache)
+        val warmUpNames = mutableListOf<String>()
+
+        val coil =
+            object : CoilBitmapLoader(
+                context = NULL_CONTEXT,
+                imageLoader = loader,
+                baseUrl = baseUrl,
+            ) {
+                override fun warmUpAsync(name: String, key: MemoryCache.Key) {
+                    warmUpNames += name
+                }
+            }
+
+        listOf(
+            "https://cdn.example.test/icon.png",
+            "content://media/external/images/42",
+            "file:///data/local/tmp/img.png",
+            "android.resource://ee.schimke.terrazzo/2131099648",
+            "logo",
+        ).forEach { coil.loadBitmap(it) }
+
+        assertEquals(
+            listOf(
+                "https://cdn.example.test/icon.png",
+                "content://media/external/images/42",
+                "file:///data/local/tmp/img.png",
+                "android.resource://ee.schimke.terrazzo/2131099648",
+                "logo",
+            ),
+            warmUpNames,
+        )
+    }
+
+    @Test
+    fun trailingSlashOnBaseUrlIsTrimmedSoResolutionHasOneSeparator() {
+        val cache = RecordingMemoryCache(initial = emptyMap())
+        val loader = StubImageLoader(memCache = cache)
+        val warmUpNames = mutableListOf<String>()
+
+        val coil =
+            object : CoilBitmapLoader(
+                context = NULL_CONTEXT,
+                imageLoader = loader,
+                baseUrl = "https://ha.example.test/",
+            ) {
+                override fun warmUpAsync(name: String, key: MemoryCache.Key) {
+                    warmUpNames += name
+                }
+            }
+
+        coil.loadBitmap("/api/image_proxy/foo")
+
+        assertEquals(listOf("https://ha.example.test/api/image_proxy/foo"), warmUpNames)
+    }
+
+    @Test
+    fun nullBaseUrlLeavesRelativeNameUntouched() {
+        // Back-compat path: when no baseUrl is wired (preview / tests
+        // that haven't been updated), relative names still flow
+        // through. The fetch will fail like before — this just
+        // confirms we didn't change the legacy behaviour.
+        val name = "/api/camera_proxy/camera.x"
+        val cache = RecordingMemoryCache(initial = emptyMap())
+        val loader = StubImageLoader(memCache = cache)
+        val warmUpNames = mutableListOf<String>()
+
+        val coil =
+            object : CoilBitmapLoader(context = NULL_CONTEXT, imageLoader = loader) {
+                override fun warmUpAsync(name: String, key: MemoryCache.Key) {
+                    warmUpNames += name
+                }
+            }
+
+        coil.loadBitmap(name)
+
+        assertEquals(listOf(MemoryCache.Key(name)), cache.getCalls)
+        assertEquals(listOf(name), warmUpNames)
+    }
 }
 
 private val NULL_CONTEXT = ContextWrapper(null)

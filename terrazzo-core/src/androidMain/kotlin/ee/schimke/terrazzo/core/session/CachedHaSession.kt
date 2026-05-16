@@ -31,6 +31,9 @@ class CachedHaSession(private val delegate: HaSession, private val cache: Offlin
   override val baseUrl: String
     get() = delegate.baseUrl
 
+  override val accessToken: String?
+    get() = delegate.accessToken
+
   override val refreshIntervalMillis: Long?
     get() = delegate.refreshIntervalMillis
   override val connectionStatus: StateFlow<SessionConnectionStatus>
