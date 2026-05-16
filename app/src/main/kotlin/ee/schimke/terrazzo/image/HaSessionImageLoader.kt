@@ -2,6 +2,7 @@ package ee.schimke.terrazzo.image
 
 import android.content.Context
 import coil3.ImageLoader
+import coil3.disk.DiskCache
 import coil3.network.okhttp.OkHttpNetworkFetcherFactory
 import ee.schimke.terrazzo.core.network.LanConnectionPolicy
 import ee.schimke.terrazzo.core.network.LanConnectionPolicyInterceptor
@@ -9,6 +10,7 @@ import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.Response
+import okio.Path.Companion.toOkioPath
 
 /**
  * Build a Coil [ImageLoader] scoped to a single HA session.
@@ -31,6 +33,13 @@ import okhttp3.Response
  * [accessToken] may be `null` for demo / offline sessions. In that
  * case we still install the LAN-policy interceptor, but skip the
  * bearer.
+ *
+ * **Disk cache.** Coil 3 doesn't wire one by default. Without it the
+ * bytes Coil already fetched would be re-downloaded on every cold
+ * start (Coil's memory cache is process-scoped). Park a small cache
+ * under [Context.getCacheDir] so picture-entity thumbnails / addon
+ * icons survive an app restart; the OS can still reclaim the dir
+ * when free space is low.
  */
 fun haSessionImageLoader(
   context: Context,
@@ -48,10 +57,18 @@ fun haSessionImageLoader(
         }
       }
       .build()
-  return ImageLoader.Builder(context)
+  val app = context.applicationContext
+  return ImageLoader.Builder(app)
     .components { add(OkHttpNetworkFetcherFactory(callFactory = { client })) }
+    .diskCache {
+      DiskCache.Builder()
+        .directory(app.cacheDir.resolve(IMAGE_CACHE_DIR).toOkioPath())
+        .build()
+    }
     .build()
 }
+
+private const val IMAGE_CACHE_DIR = "ha_image_cache"
 
 /**
  * OkHttp interceptor that attaches `Authorization: Bearer …` to requests
