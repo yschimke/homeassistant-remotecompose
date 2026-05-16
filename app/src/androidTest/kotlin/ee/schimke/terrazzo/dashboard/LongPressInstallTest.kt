@@ -52,16 +52,15 @@ class LongPressInstallTest {
             .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK)
             .putExtra(MainActivity.EXTRA_TEST_DEMO_MODE, true)
         context.startActivity(launch)
-        // Wait for the dashboard picker. The shell is now a Scaffold +
-        // TopAppBar (the old NavigationSuiteScaffold is gone), so the
-        // first stable user-visible string after demo-mode short-
-        // circuits auth is the picker's TopAppBar title. Demo-mode
-        // also clears the last-viewed-dashboard pref so we always
-        // land on the picker, never auto-resumed onto a dashboard
-        // from a previous test run.
+        // Wait for the dashboard view. Demo-mode clears the
+        // last-viewed-dashboard pref, so the app lands on HA's
+        // default dashboard (the first board in DemoData.BOARDS,
+        // "Security") rather than auto-resuming from a previous
+        // run. "Security" appears as the title in the top-bar
+        // dashboard switcher.
         assertTrue(
-            "dashboard picker did not surface within 15s",
-            device.wait(Until.hasObject(By.text("Pick a dashboard")), 15_000),
+            "Security dashboard did not surface within 15s",
+            device.wait(Until.hasObject(By.text("Security")), 15_000),
         )
     }
 
@@ -72,13 +71,10 @@ class LongPressInstallTest {
 
     @Test
     fun longPressOnDashboardCard_opensInstallSheet() {
-        // The DashboardPickerScreen lists the seven captured demo
-        // dashboards (see `DemoData.BOARDS`); the first entry is
-        // "Security". Tapping it opens the dashboard view.
-        val pickerEntry = device.wait(Until.findObject(By.text("Security")), 10_000)
-        assertNotNull("dashboard picker did not list 'Security' within 10s", pickerEntry)
-        pickerEntry!!.click()
-
+        // Demo mode lands directly on the "Security" dashboard (the
+        // first board in `DemoData.BOARDS`, exposed as HA's default
+        // dashboard); the test exercises the long-press → install
+        // sheet flow on its first card.
         val card = waitForFirstCard()
         // uiautomator's longClick uses the platform long-press timeout,
         // so this matches what a real user's finger does — and that's
