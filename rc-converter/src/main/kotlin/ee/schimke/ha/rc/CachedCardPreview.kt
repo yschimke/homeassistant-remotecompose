@@ -140,9 +140,17 @@ fun CachedCardPreview(
             }
             ids
         }
-    // The handle survives recomposition but is replaced if the player
+    // The handles survive recomposition but get replaced if the player
     // is torn down and rebuilt (cache invalidation, theme flip).
     val updaterHolder = remember { mutableStateOf<StateUpdater?>(null) }
+    // Hold the player View so the picture-entity push can call
+    // `invalidate()` after a `setUserLocalBitmap` — that override
+    // updates the named-data map but doesn't itself mark the View
+    // dirty, so without an explicit invalidate the previous frame
+    // sticks on screen.
+    val playerHolder = remember {
+        mutableStateOf<androidx.compose.remote.player.view.RemoteComposePlayer?>(null)
+    }
     // Tracks the last value we pushed for each binding so a redundant
     // snapshot recompose doesn't re-issue identical writes. Reset when
     // [cacheKey] changes — the new document carries its own initial
@@ -176,13 +184,21 @@ fun CachedCardPreview(
     ) {
         LaunchedEffect(updaterHolder.value, snapshot) {
             val updater = updaterHolder.value ?: return@LaunchedEffect
-            pushPictureEntityBitmaps(
-                updater = updater,
-                entityIds = pictureEntityIds,
-                snapshot = snapshot,
-                pushedUrls = pushedPictureUrls,
-                resolver = imageResolver,
-            )
+            val didPush =
+                pushPictureEntityBitmaps(
+                    updater = updater,
+                    entityIds = pictureEntityIds,
+                    snapshot = snapshot,
+                    pushedUrls = pushedPictureUrls,
+                    resolver = imageResolver,
+                )
+            if (didPush) {
+                // `setUserLocalBitmap` writes through `setNamedDataOverride`
+                // which mutates the named-data map but doesn't invalidate
+                // the player View — without this call the View keeps
+                // painting the doc's baked placeholder. See #264.
+                playerHolder.value?.invalidate()
+            }
         }
     }
 
@@ -196,7 +212,10 @@ fun CachedCardPreview(
         documentBytes = cardDocument.bytes,
         modifier = modifier,
         bitmapLoader = bitmapLoader,
-        init = { player -> updaterHolder.value = player.stateUpdater },
+        init = { player ->
+            updaterHolder.value = player.stateUpdater
+            playerHolder.value = player
+        },
         onNamedAction = { name, value ->
             if (name == HA_ACTION_NAME) {
                 decodeHaAction(value)?.let(dispatcher::dispatch)
@@ -264,7 +283,8 @@ private suspend fun pushPictureEntityBitmaps(
     snapshot: HaSnapshot,
     pushedUrls: MutableMap<String, String>,
     resolver: RemoteImageResolver,
-) {
+): Boolean {
+    var pushedAny = false
     for (entityId in entityIds) {
         val url =
             snapshot.states[entityId]
@@ -315,6 +335,7 @@ private suspend fun pushPictureEntityBitmaps(
         runCatching { updater.setUserLocalBitmap(name, sized) }
             .onSuccess {
                 pushedUrls[entityId] = url
+                pushedAny = true
                 Log.d(
                     TAG,
                     "picture entity=$entityId pushed name=$name " +
@@ -325,4 +346,5 @@ private suspend fun pushPictureEntityBitmaps(
                 Log.w(TAG, "picture entity=$entityId setUserLocalBitmap failed: ${ex.message}", ex)
             }
     }
+    return pushedAny
 }

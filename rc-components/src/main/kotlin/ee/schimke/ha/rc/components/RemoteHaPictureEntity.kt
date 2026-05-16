@@ -170,9 +170,17 @@ fun RemoteHaPictureEntity(
  * Fixed-size placeholder bitmap captured into every picture-entity
  * document so the `BitmapData` op's width / height fields are
  * non-zero. See the `RemoteHaImageNamed` call above; the host swaps
- * this for a bitmap scaled to the same 100×100 size at runtime.
+ * this for a bitmap scaled to the same 512×512 size at runtime.
+ *
+ * 512×512 was picked to match what HA's `image_proxy` serves natively
+ * for `image.*` entities (per the gray-tile diagnostic log), so the
+ * common case is a no-op resize on the override path. Camera frames
+ * (typically 1680×1080) downscale to 512×288 — still better than the
+ * 100×100 probe we started with. The captured PNG is one solid colour
+ * so the encoded BitmapData is tiny — the dimensions are what we
+ * care about, not the pixels.
  */
-const val PICTURE_BITMAP_SIZE_PX: Int = 100
+const val PICTURE_BITMAP_SIZE_PX: Int = 512
 
 private val picturePlaceholderBitmap: ImageBitmap by lazy {
   ImageBitmap(PICTURE_BITMAP_SIZE_PX, PICTURE_BITMAP_SIZE_PX)
