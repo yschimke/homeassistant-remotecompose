@@ -18,6 +18,7 @@ import ee.schimke.terrazzo.core.pin.WearWidgetSlot
 import ee.schimke.terrazzo.core.pin.WearWidgetSlotsStore
 import ee.schimke.terrazzo.core.prefs.PreferencesStore
 import ee.schimke.terrazzo.core.session.HaSession
+import ee.schimke.terrazzo.core.session.SessionConnectionStatus
 import ee.schimke.terrazzo.core.wearsync.WearSyncManager
 import ee.schimke.terrazzo.wearsync.proto.CardSummary
 import ee.schimke.terrazzo.wearsync.proto.DashboardData
@@ -36,6 +37,7 @@ import ee.schimke.terrazzo.wearsync.proto.WearWidgetSlots
 import ee.schimke.terrazzo.wearsync.proto.WidgetSlot
 import ee.schimke.terrazzo.wearsync.proto.decodeProto
 import ee.schimke.terrazzo.wearsync.proto.encodeProto
+import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -45,6 +47,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -212,6 +215,10 @@ class MobileWearSyncManager(
     }
 
     private suspend fun publishDashboards(session: HaSession) {
+        // Wait until the session has finished its initial connect; otherwise
+        // listDashboards() hits "Not connected" because the UI drives
+        // session.connect() lazily via the dashboard list.
+        session.connectionStatus.first { it == SessionConnectionStatus.Connected }
         runCatching {
             val summaries = session.listDashboards()
             for (summary in summaries) {
@@ -225,7 +232,10 @@ class MobileWearSyncManager(
                 )
                 writeDataItem(WearSyncPaths.dashboardPath(summary.urlPath), encodeProto(data))
             }
-        }.onFailure { Log.w(TAG, "publishDashboards failed", it) }
+        }.onFailure {
+            if (it is CancellationException) throw it
+            Log.w(TAG, "publishDashboards failed", it)
+        }
     }
 
     /**
@@ -239,8 +249,11 @@ class MobileWearSyncManager(
         val cadence = session.refreshIntervalMillis ?: 30_000L
         // Reset snapshot baseline so the first push is a full set.
         lastSnapshot = emptyMap()
+        session.connectionStatus.first { it == SessionConnectionStatus.Connected }
         while (true) {
-            val snapshot = runCatching { session.loadDashboard(null).second }.getOrNull()
+            val snapshot = runCatching { session.loadDashboard(null).second }
+                .onFailure { if (it is CancellationException) throw it }
+                .getOrNull()
             if (snapshot != null) {
                 val current = snapshot.states.mapValues { (_, state) -> state.toEntityValue() }
                 val streaming = hasPinned || isLeaseFresh(leaseState.value)
@@ -270,7 +283,10 @@ class MobileWearSyncManager(
                 messageClient.sendMessage(node.id, WearSyncPaths.STREAM_MESSAGE, bytes).await()
             }
             statsStore.recordMessageSent(System.currentTimeMillis())
-        }.onFailure { Log.w(TAG, "pushStream failed", it) }
+        }.onFailure {
+            if (it is CancellationException) throw it
+            Log.w(TAG, "pushStream failed", it)
+        }
         lastSnapshot = values
     }
 
@@ -282,7 +298,10 @@ class MobileWearSyncManager(
             }
             dataClient.putDataItem(request.asPutDataRequest().setUrgent()).await()
             statsStore.recordWrite(System.currentTimeMillis())
-        }.onFailure { Log.w(TAG, "writeDataItem $path failed", it) }
+        }.onFailure {
+            if (it is CancellationException) throw it
+            Log.w(TAG, "writeDataItem $path failed", it)
+        }
     }
 
     companion object {
