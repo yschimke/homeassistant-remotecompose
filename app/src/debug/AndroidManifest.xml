@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Debug-variant overlay. Merged into the final manifest only when
+  building `:app:assembleDebug` / `:installDebug` — release builds
+  don't see `WidgetPreviewActivity`.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <application>
+
+        <!--
+          Debug-only preview of the widget render pipeline. Captures a
+          picture-entity card with `PictureImageStrategy.Inline`,
+          wraps it in `RemoteViews.DrawInstructions`, and inflates the
+          resulting `RemoteViews` inside the activity layout — same
+          path `TerrazzoWidgetProvider` takes to the launcher.
+
+          Exported so adb can launch it:
+            adb shell am start -n ee.schimke.harc/ee.schimke.terrazzo.widget.WidgetPreviewActivity
+
+          Not in the launcher (no MAIN/LAUNCHER intent filter) so it
+          doesn't clutter the home screen even in debug builds.
+        -->
+        <activity
+            android:name=".widget.WidgetPreviewActivity"
+            android:exported="true"
+            android:label="Widget preview" />
+
+    </application>
+</manifest>
