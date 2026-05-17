@@ -5,6 +5,7 @@ import ee.schimke.ha.client.HaClient
 import ee.schimke.ha.client.HaConfig
 import ee.schimke.ha.client.HaInstanceConfig
 import ee.schimke.ha.model.Dashboard
+import ee.schimke.ha.model.HaNotification
 import ee.schimke.ha.model.HaSnapshot
 import io.ktor.client.engine.HttpClientEngine
 import kotlinx.coroutines.CoroutineScope
@@ -13,8 +14,11 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
 import kotlinx.serialization.json.JsonObject
 
 /**
@@ -44,6 +48,25 @@ interface HaSession {
      * null until we wire real subscriptions.
      */
     val refreshIntervalMillis: Long? get() = null
+
+    /**
+     * Current set of HA *persistent notifications* — the bell-icon list
+     * in HA's frontend. Updated reactively as HA fires
+     * `persistent_notifications_updated`. Sessions that can't observe
+     * HA (demo, offline) hold an empty list forever.
+     *
+     * Note: this is NOT mobile-app push. HA delivers those via FCM /
+     * APNS and they don't appear on the WebSocket. This is what shows
+     * up when an automation calls `persistent_notification.create` or
+     * an integration raises a discovery banner.
+     */
+    val notifications: StateFlow<List<HaNotification>>
+        get() = EMPTY_NOTIFICATIONS
+
+    companion object {
+        private val EMPTY_NOTIFICATIONS: StateFlow<List<HaNotification>> =
+            MutableStateFlow(emptyList())
+    }
 
     suspend fun connect()
     suspend fun listDashboards(): List<DashboardSummary>
@@ -88,6 +111,8 @@ class LiveHaSession(
         HaClient(HaConfig(baseUrl = baseUrl, accessToken = accessToken), engine = engine)
     private val _connectionStatus = MutableStateFlow(SessionConnectionStatus.Connecting)
     override val connectionStatus: StateFlow<SessionConnectionStatus> = _connectionStatus
+    private val _notifications = MutableStateFlow<List<HaNotification>>(emptyList())
+    override val notifications: StateFlow<List<HaNotification>> = _notifications.asStateFlow()
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
     init {
@@ -112,6 +137,28 @@ class LiveHaSession(
                 }
             }
             .launchIn(scope)
+
+        // Bootstrap the persistent-notification stream on every Ready
+        // transition. `collectLatest` cancels the previous body when
+        // state changes, so a Disconnected → Ready cycle re-seeds and
+        // re-subscribes cleanly without doubling up collectors. The
+        // previously seen list is kept on the floor in between so the
+        // UI doesn't blink to empty during a brief reconnect.
+        scope.launch {
+            client.state.collectLatest { state ->
+                if (state != HaClient.ConnectionState.Ready) return@collectLatest
+                runCatching { _notifications.value = client.fetchPersistentNotifications() }
+                runCatching { client.subscribeEvents("persistent_notifications_updated") }
+                    .getOrNull()
+                    ?.collect {
+                        // The event payload is empty — HA only signals
+                        // "something changed". Refetch to learn what.
+                        runCatching {
+                            _notifications.value = client.fetchPersistentNotifications()
+                        }
+                    }
+            }
+        }
     }
 
     override suspend fun connect() {

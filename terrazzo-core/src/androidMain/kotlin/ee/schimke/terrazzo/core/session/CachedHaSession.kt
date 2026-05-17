@@ -3,6 +3,7 @@ package ee.schimke.terrazzo.core.session
 import ee.schimke.ha.client.DashboardSummary
 import ee.schimke.ha.client.HaInstanceConfig
 import ee.schimke.ha.model.Dashboard
+import ee.schimke.ha.model.HaNotification
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.terrazzo.core.cache.OfflineCacheStorage
 import kotlinx.coroutines.flow.StateFlow
@@ -39,6 +40,9 @@ class CachedHaSession(private val delegate: HaSession, private val cache: Offlin
     get() = delegate.refreshIntervalMillis
   override val connectionStatus: StateFlow<SessionConnectionStatus>
     get() = delegate.connectionStatus
+
+  override val notifications: StateFlow<List<HaNotification>>
+    get() = delegate.notifications
 
   override suspend fun connect() {
     runCatching { delegate.connect() }

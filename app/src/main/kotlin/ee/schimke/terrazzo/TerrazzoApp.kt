@@ -64,6 +64,7 @@ import ee.schimke.terrazzo.dashboard.rememberSelectedDashboardListState
 import ee.schimke.terrazzo.core.network.LanConnectionPolicy
 import ee.schimke.terrazzo.discovery.DiscoveryScreen
 import ee.schimke.terrazzo.wearsync.WearWidgetsScreen
+import ee.schimke.terrazzo.notifications.NotificationBell
 import ee.schimke.terrazzo.widget.WidgetInstallSheet
 import ee.schimke.terrazzo.widget.WidgetRefreshScheduler
 import ee.schimke.terrazzo.widget.WidgetsScreen
@@ -516,6 +517,27 @@ private fun DashboardsRoot(
     val connectionStatus = sessionConnection.toUiConnectionStatus()
     val snackbars = remember { SnackbarHostState() }
     val lifecycleOwner = LocalLifecycleOwner.current
+    val notifications by session.notifications.collectAsState()
+
+    // Snackbar pop on arrival: remember the ids we've already announced
+    // so the next composition (or a refetch that returns the same list)
+    // doesn't re-fire. The initial seed is what's already there when
+    // the user opens the app — we treat those as already-seen.
+    val seenIds = remember { mutableStateOf<Set<String>?>(null) }
+    LaunchedEffect(notifications) {
+        val previous = seenIds.value
+        if (previous == null) {
+            seenIds.value = notifications.map { it.notificationId }.toSet()
+            return@LaunchedEffect
+        }
+        val current = notifications.map { it.notificationId }.toSet()
+        val fresh = notifications.filter { it.notificationId !in previous }
+        seenIds.value = current
+        fresh.forEach { n ->
+            val label = n.title?.takeIf { it.isNotBlank() } ?: n.notificationId
+            snackbars.showSnackbar(label)
+        }
+    }
 
     // Keep the HA connection alive while the user has the app open.
     // While the activity is RESUMED, watch for a Failed status and
@@ -578,6 +600,7 @@ private fun DashboardsRoot(
                     }
                 },
                 actions = {
+                    NotificationBell(notifications = notifications)
                     Surface(
                         onClick = onRetryConnection,
                         color = connectionStatus.color.copy(alpha = 0.16f),
