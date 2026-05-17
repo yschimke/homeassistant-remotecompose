@@ -305,6 +305,16 @@ private fun AuthenticatedShell(
     var screen by rememberSaveable { mutableStateOf(AppScreen.Dashboards) }
     var selectionEntry by rememberSaveable { mutableStateOf(SelectionEntry.Signin) }
 
+    // Snapshot of the persisted selection at the moment the user
+    // entered the ChooseDashboards screen. Captured here (rather than
+    // observed via `collectAsState` inside the screen) because
+    // DataStore reads are async: a Flow-based read would start as
+    // `null`, the screen would default to "all checked", and the
+    // saved subset would silently clobber the user's existing choice
+    // when the real value arrived after composition.
+    var selectionInitial by remember { mutableStateOf<Set<String>?>(null) }
+    var selectionInitialResolved by remember { mutableStateOf(false) }
+
     // First-run gate: if the user hasn't been through the selection
     // screen for this session, force them onto it before opening any
     // dashboard. We snapshot the pref once per session (rather than
@@ -322,24 +332,31 @@ private fun AuthenticatedShell(
             screen != AppScreen.ChooseDashboards
         ) {
             selectionEntry = SelectionEntry.Signin
+            // The gate fires precisely because no selection is
+            // persisted, so the snapshot for the screen is `null`
+            // (defaults to "all checked").
+            selectionInitial = null
+            selectionInitialResolved = true
             screen = AppScreen.ChooseDashboards
         }
     }
 
-    // System-back from Settings / Widgets returns to the dashboards
-    // root. Inside DashboardsRoot another BackHandler routes view →
-    // picker; the platform handles back at the picker (exits app).
-    // The signin-gate variant of ChooseDashboards swallows back (the
-    // user has to pick something before continuing); the settings
-    // re-edit variant routes back to Settings.
-    val backEnabled =
-        screen != AppScreen.Dashboards &&
-            !(screen == AppScreen.ChooseDashboards && selectionEntry == SelectionEntry.Signin)
-    BackHandler(enabled = backEnabled) {
-        screen = when (screen) {
-            AppScreen.SyncDiagnostics -> AppScreen.Settings
-            AppScreen.ChooseDashboards -> AppScreen.Settings
-            else -> AppScreen.Dashboards
+    // System-back routing. The signin-gate variant of ChooseDashboards
+    // *swallows* back — the user has to pick at least one dashboard
+    // before continuing — so the handler stays enabled and the
+    // callback no-ops (a disabled `BackHandler` lets Android's
+    // activity-level back through, which would exit the app). The
+    // settings re-edit variant routes back to Settings. Other
+    // non-Dashboards screens follow their existing rules. Inside
+    // DashboardsRoot another BackHandler routes view → picker; the
+    // platform handles back at the picker (exits app).
+    BackHandler(enabled = screen != AppScreen.Dashboards) {
+        when {
+            screen == AppScreen.ChooseDashboards &&
+                selectionEntry == SelectionEntry.Signin -> Unit
+            screen == AppScreen.ChooseDashboards -> screen = AppScreen.Settings
+            screen == AppScreen.SyncDiagnostics -> screen = AppScreen.Settings
+            else -> screen = AppScreen.Dashboards
         }
     }
 
@@ -362,6 +379,11 @@ private fun AuthenticatedShell(
             onOpenSyncDiagnostics = { screen = AppScreen.SyncDiagnostics },
             onManageDashboards = {
                 selectionEntry = SelectionEntry.Settings
+                selectionInitialResolved = false
+                scope.launch {
+                    selectionInitial = graph.preferencesStore.selectedDashboardUrlsNow()
+                    selectionInitialResolved = true
+                }
                 screen = AppScreen.ChooseDashboards
             },
         )
@@ -387,32 +409,50 @@ private fun AuthenticatedShell(
         )
         AppScreen.ChooseDashboards -> {
             val rawList by rememberDashboardListState(session)
-            val currentSelection by graph.preferencesStore.selectedDashboardUrls
-                .collectAsState(initial = null)
-            DashboardSelectionScreen(
-                state = rawList,
-                initialSelection = currentSelection,
-                onConfirm = { urls ->
-                    scope.launch {
-                        graph.preferencesStore.setSelectedDashboardUrls(urls)
-                    }
-                    // Avoid stranding the user on this screen between
-                    // the pref write and the snapshot flag flipping.
-                    selectionMissingAtSignin = false
-                    screen = when (selectionEntry) {
-                        SelectionEntry.Signin -> AppScreen.Dashboards
-                        SelectionEntry.Settings -> AppScreen.Settings
-                    }
-                },
-                onBack = when (selectionEntry) {
-                    SelectionEntry.Signin -> null
-                    SelectionEntry.Settings -> { { screen = AppScreen.Settings } }
-                },
-                title = when (selectionEntry) {
-                    SelectionEntry.Signin -> "Choose dashboards"
-                    SelectionEntry.Settings -> "Manage dashboards"
-                },
-            )
+            // Render the screen only once we have a snapshot of the
+            // persisted selection in hand. Without the gate, the
+            // settings re-edit path would briefly mount with
+            // `initialSelection = null` (defaulting to "all checked")
+            // and the user's saved subset would only arrive after the
+            // screen's internal `selected` state was already seeded.
+            if (!selectionInitialResolved) {
+                DashboardSelectionScreen(
+                    state = DashboardListState.Loading,
+                    initialSelection = null,
+                    onConfirm = {},
+                    onBack = null,
+                    title = when (selectionEntry) {
+                        SelectionEntry.Signin -> "Choose dashboards"
+                        SelectionEntry.Settings -> "Manage dashboards"
+                    },
+                )
+            } else {
+                DashboardSelectionScreen(
+                    state = rawList,
+                    initialSelection = selectionInitial,
+                    onConfirm = { urls ->
+                        scope.launch {
+                            graph.preferencesStore.setSelectedDashboardUrls(urls)
+                        }
+                        // Avoid stranding the user on this screen
+                        // between the pref write and the snapshot
+                        // flag flipping.
+                        selectionMissingAtSignin = false
+                        screen = when (selectionEntry) {
+                            SelectionEntry.Signin -> AppScreen.Dashboards
+                            SelectionEntry.Settings -> AppScreen.Settings
+                        }
+                    },
+                    onBack = when (selectionEntry) {
+                        SelectionEntry.Signin -> null
+                        SelectionEntry.Settings -> { { screen = AppScreen.Settings } }
+                    },
+                    title = when (selectionEntry) {
+                        SelectionEntry.Signin -> "Choose dashboards"
+                        SelectionEntry.Settings -> "Manage dashboards"
+                    },
+                )
+            }
         }
     }
 }
