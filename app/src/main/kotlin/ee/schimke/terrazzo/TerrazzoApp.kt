@@ -339,6 +339,10 @@ private fun DashboardsRoot(
     var opened by rememberSaveable {
         mutableStateOf(initialDashboardToOpened(initialDashboard))
     }
+    // Safe default: button taps are ignored until the user explicitly
+    // flips the chip to Write. Survives config changes; intentionally
+    // resets on cold start so we never silently start in Write.
+    var readOnly by rememberSaveable { mutableStateOf(true) }
     var installPending by remember { mutableStateOf<Pair<CardConfig, HaSnapshot>?>(null) }
     val openedValue = opened
 
@@ -427,6 +431,20 @@ private fun DashboardsRoot(
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
                         )
                     }
+                    val modeColor = if (readOnly) READ_ONLY_COLOR else WRITE_COLOR
+                    Surface(
+                        onClick = { readOnly = !readOnly },
+                        color = modeColor.copy(alpha = 0.16f),
+                        shape = MaterialTheme.shapes.small,
+                        modifier = Modifier.padding(end = 8.dp),
+                    ) {
+                        Text(
+                            text = if (readOnly) "Read" else "Write",
+                            color = modeColor,
+                            style = MaterialTheme.typography.labelSmall,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
+                        )
+                    }
                     TopBarOverflowMenu(
                         onOpenSettings = onOpenSettings,
                         onOpenWidgets = onOpenWidgets,
@@ -459,6 +477,7 @@ private fun DashboardsRoot(
             DashboardViewScreen(
                 session = session,
                 urlPath = openedValue,
+                readOnly = readOnly,
                 onCardLongPress = { card ->
                     // In demo mode the preview — and the installed widget —
                     // render against the current fake snapshot so values
@@ -506,6 +525,9 @@ enum class ConnectionStatus(val label: String, val color: Color) {
     Connecting("Connecting", Color(0xFF2E7D32)),
     Connected("Connected", Color(0xFF1976D2)),
 }
+
+private val READ_ONLY_COLOR = Color(0xFF455A64)
+private val WRITE_COLOR = Color(0xFFE65100)
 
 private fun SessionConnectionStatus.toUiConnectionStatus(): ConnectionStatus = when (this) {
     SessionConnectionStatus.Failed -> ConnectionStatus.Failed
