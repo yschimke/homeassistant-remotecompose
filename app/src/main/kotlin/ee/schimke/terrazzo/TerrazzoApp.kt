@@ -54,11 +54,13 @@ import ee.schimke.terrazzo.core.session.HaSession
 import ee.schimke.terrazzo.core.session.SessionConnectionStatus
 import ee.schimke.terrazzo.dashboard.DashboardListState
 import ee.schimke.terrazzo.dashboard.DashboardPickerScreen
+import ee.schimke.terrazzo.dashboard.DashboardSelectionScreen
 import ee.schimke.terrazzo.dashboard.DashboardSwitcher
 import ee.schimke.terrazzo.dashboard.DashboardViewScreen
 import ee.schimke.terrazzo.dashboard.ManagePinnedScreen
 import ee.schimke.terrazzo.dashboard.TopBarOverflowMenu
 import ee.schimke.terrazzo.dashboard.rememberDashboardListState
+import ee.schimke.terrazzo.dashboard.rememberSelectedDashboardListState
 import ee.schimke.terrazzo.core.network.LanConnectionPolicy
 import ee.schimke.terrazzo.discovery.DiscoveryScreen
 import ee.schimke.terrazzo.wearsync.WearWidgetsScreen
@@ -205,6 +207,11 @@ fun TerrazzoApp(
                     // jumping into a dashboard that may not exist on
                     // the new instance.
                     graph.preferencesStore.clearLastViewedDashboard()
+                    // Same reasoning for the dashboard selection set:
+                    // the new identity may expose a different set of
+                    // dashboards, so re-run selection rather than
+                    // carry over the previous instance's choices.
+                    graph.preferencesStore.clearSelectedDashboardUrls()
                     previous?.close()
                 }
                 if (enabled) {
@@ -221,6 +228,7 @@ fun TerrazzoApp(
                 scope.launch {
                     graph.preferencesStore.setDemoMode(false)
                     graph.preferencesStore.clearLastViewedDashboard()
+                    graph.preferencesStore.clearSelectedDashboardUrls()
                     // Wipe cached dashboards / snapshots and the
                     // refresh-token vault entry so the next user on
                     // this device can't read the previous account's
@@ -260,7 +268,27 @@ private fun UnauthenticatedScreen(
     )
 }
 
-private enum class AppScreen { Dashboards, Settings, Widgets, Pinned, WearWidgets, SyncDiagnostics, Logs }
+private enum class AppScreen {
+    Dashboards,
+    Settings,
+    Widgets,
+    Pinned,
+    WearWidgets,
+    SyncDiagnostics,
+    Logs,
+    ChooseDashboards,
+}
+
+/**
+ * How the user arrived on [AppScreen.ChooseDashboards]. The two paths
+ * differ in two ways:
+ *  - **Back / confirm destination** — signin-gate confirm lands on
+ *    Dashboards; settings re-edit lands on Settings.
+ *  - **Back affordance** — signin gate has no back (the user MUST
+ *    pick before getting to a dashboard); settings entry has a back
+ *    arrow that returns to Settings.
+ */
+private enum class SelectionEntry { Signin, Settings }
 
 @Composable
 private fun AuthenticatedShell(
@@ -269,18 +297,51 @@ private fun AuthenticatedShell(
     onToggleDemo: (Boolean) -> Unit,
     onSignOut: () -> Unit,
 ) {
+    val context = LocalContext.current
+    val app = remember(context) { context.applicationContext as TerrazzoApplication }
+    val graph = LocalTerrazzoGraph.current
+    val scope = rememberCoroutineScope()
+
     var screen by rememberSaveable { mutableStateOf(AppScreen.Dashboards) }
+    var selectionEntry by rememberSaveable { mutableStateOf(SelectionEntry.Signin) }
+
+    // First-run gate: if the user hasn't been through the selection
+    // screen for this session, force them onto it before opening any
+    // dashboard. We snapshot the pref once per session (rather than
+    // observing it as a Flow) so the screen doesn't auto-dismiss the
+    // moment the confirm callback writes the pref.
+    var selectionResolved by remember(session) { mutableStateOf(false) }
+    var selectionMissingAtSignin by remember(session) { mutableStateOf(false) }
+    LaunchedEffect(session) {
+        selectionMissingAtSignin = graph.preferencesStore.selectedDashboardUrlsNow() == null
+        selectionResolved = true
+    }
+    LaunchedEffect(selectionResolved, selectionMissingAtSignin) {
+        if (selectionResolved &&
+            selectionMissingAtSignin &&
+            screen != AppScreen.ChooseDashboards
+        ) {
+            selectionEntry = SelectionEntry.Signin
+            screen = AppScreen.ChooseDashboards
+        }
+    }
 
     // System-back from Settings / Widgets returns to the dashboards
     // root. Inside DashboardsRoot another BackHandler routes view →
     // picker; the platform handles back at the picker (exits app).
-    BackHandler(enabled = screen != AppScreen.Dashboards) {
-        screen = if (screen == AppScreen.SyncDiagnostics) AppScreen.Settings else AppScreen.Dashboards
+    // The signin-gate variant of ChooseDashboards swallows back (the
+    // user has to pick something before continuing); the settings
+    // re-edit variant routes back to Settings.
+    val backEnabled =
+        screen != AppScreen.Dashboards &&
+            !(screen == AppScreen.ChooseDashboards && selectionEntry == SelectionEntry.Signin)
+    BackHandler(enabled = backEnabled) {
+        screen = when (screen) {
+            AppScreen.SyncDiagnostics -> AppScreen.Settings
+            AppScreen.ChooseDashboards -> AppScreen.Settings
+            else -> AppScreen.Dashboards
+        }
     }
-
-    val context = LocalContext.current
-    val app = remember(context) { context.applicationContext as TerrazzoApplication }
-    val graph = LocalTerrazzoGraph.current
 
     when (screen) {
         AppScreen.Dashboards -> DashboardsRoot(
@@ -299,6 +360,10 @@ private fun AuthenticatedShell(
             onSignOut = onSignOut,
             onBack = { screen = AppScreen.Dashboards },
             onOpenSyncDiagnostics = { screen = AppScreen.SyncDiagnostics },
+            onManageDashboards = {
+                selectionEntry = SelectionEntry.Settings
+                screen = AppScreen.ChooseDashboards
+            },
         )
         AppScreen.Widgets -> WidgetsScreen(
             onBack = { screen = AppScreen.Dashboards },
@@ -320,6 +385,35 @@ private fun AuthenticatedShell(
         AppScreen.Logs -> ee.schimke.terrazzo.logs.LogsScreen(
             onBack = { screen = AppScreen.Dashboards },
         )
+        AppScreen.ChooseDashboards -> {
+            val rawList by rememberDashboardListState(session)
+            val currentSelection by graph.preferencesStore.selectedDashboardUrls
+                .collectAsState(initial = null)
+            DashboardSelectionScreen(
+                state = rawList,
+                initialSelection = currentSelection,
+                onConfirm = { urls ->
+                    scope.launch {
+                        graph.preferencesStore.setSelectedDashboardUrls(urls)
+                    }
+                    // Avoid stranding the user on this screen between
+                    // the pref write and the snapshot flag flipping.
+                    selectionMissingAtSignin = false
+                    screen = when (selectionEntry) {
+                        SelectionEntry.Signin -> AppScreen.Dashboards
+                        SelectionEntry.Settings -> AppScreen.Settings
+                    }
+                },
+                onBack = when (selectionEntry) {
+                    SelectionEntry.Signin -> null
+                    SelectionEntry.Settings -> { { screen = AppScreen.Settings } }
+                },
+                title = when (selectionEntry) {
+                    SelectionEntry.Signin -> "Choose dashboards"
+                    SelectionEntry.Settings -> "Manage dashboards"
+                },
+            )
+        }
     }
 }
 
@@ -342,7 +436,7 @@ private fun DashboardsRoot(
 ) {
     val graph = LocalTerrazzoGraph.current
     val scope = rememberCoroutineScope()
-    val dashboards by rememberDashboardListState(session)
+    val dashboards by rememberSelectedDashboardListState(session)
     val context = LocalContext.current
     val app = remember(context) { context.applicationContext as TerrazzoApplication }
     val wearWidgetsSupported by app.wearCapabilityProbe
@@ -587,6 +681,7 @@ private fun SettingsScreen(
     onSignOut: () -> Unit,
     onBack: () -> Unit,
     onOpenSyncDiagnostics: () -> Unit,
+    onManageDashboards: () -> Unit,
 ) {
     val isDemo = session is DemoHaSession
     val graph = LocalTerrazzoGraph.current
@@ -652,6 +747,23 @@ private fun SettingsScreen(
                     checked = isDemo,
                     onCheckedChange = onToggleDemo,
                 )
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text("Manage dashboards", style = MaterialTheme.typography.titleMedium)
+                    Text(
+                        "Pick which custom and built-in Home Assistant dashboards " +
+                            "appear in the picker and the top-bar switcher.",
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                }
+                Spacer(Modifier.width(12.dp))
+                OutlinedButton(onClick = onManageDashboards) { Text("Choose") }
             }
 
             ThemeSection(
