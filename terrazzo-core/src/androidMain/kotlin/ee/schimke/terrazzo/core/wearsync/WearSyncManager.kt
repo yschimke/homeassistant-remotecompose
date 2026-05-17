@@ -18,6 +18,21 @@ import kotlinx.coroutines.flow.StateFlow
 interface WearSyncManager {
     fun setSession(session: HaSession?)
     val streamActive: StateFlow<Boolean>
+
+    /**
+     * Whether the wear data-layer API is usable on this device. Stays
+     * `true` on unknown / not-yet-probed (optimistic) and flips to
+     * `false` once a Google Play Services call comes back with
+     * `API_NOT_CONNECTED` — typically a phone without a paired Wear
+     * device or without the wearable component installed, though it
+     * can also fire on a transient Play Services disconnect. A
+     * recovery probe flips it back once the API is reachable again,
+     * so a flap doesn't latch the manager off. UI layers gate
+     * wear-only entry points on this so diagnostics / pairing actions
+     * don't dangle when the platform can't honour them.
+     */
+    val wearableAvailable: StateFlow<Boolean>
+
     fun start(
         scope: CoroutineScope,
         prefs: PreferencesStore,
@@ -29,11 +44,13 @@ interface WearSyncManager {
 /**
  * Inert [WearSyncManager] for environments without a paired wear device
  * (previews, Robolectric, unit tests). All side-effecting methods are
- * no-ops; [streamActive] stays false.
+ * no-ops; [streamActive] stays false and [wearableAvailable] reports
+ * false so wear-only UI is hidden.
  */
 class NoOpWearSyncManager : WearSyncManager {
     override fun setSession(session: HaSession?) {}
     override val streamActive: StateFlow<Boolean> = MutableStateFlow(false)
+    override val wearableAvailable: StateFlow<Boolean> = MutableStateFlow(false)
     override fun start(
         scope: CoroutineScope,
         prefs: PreferencesStore,
