@@ -27,6 +27,7 @@ fun TopBarOverflowMenu(
     onOpenWidgets: () -> Unit,
     onOpenPinned: () -> Unit,
     onOpenWearWidgets: (() -> Unit)?,
+    onOpenLogs: (() -> Unit)?,
     onSignOut: () -> Unit,
 ) {
     var expanded by remember { mutableStateOf(false) }
@@ -54,6 +55,13 @@ fun TopBarOverflowMenu(
             DropdownMenuItem(
                 text = { Text("Wear widgets") },
                 onClick = { expanded = false; onOpenWearWidgets() },
+            )
+        }
+        // Hidden unless the user enabled the logs view in Settings.
+        if (onOpenLogs != null) {
+            DropdownMenuItem(
+                text = { Text("Logs") },
+                onClick = { expanded = false; onOpenLogs() },
             )
         }
         DropdownMenuItem(
