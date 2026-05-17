@@ -7,6 +7,8 @@ import ee.schimke.terrazzo.core.auth.HaAuthService
 import ee.schimke.terrazzo.core.auth.TokenVault
 import ee.schimke.terrazzo.core.cache.OfflineCache
 import ee.schimke.terrazzo.core.logs.LogStore
+import ee.schimke.terrazzo.core.mobileapp.MobileAppRegistrar
+import ee.schimke.terrazzo.core.mobileapp.MobileAppStore
 import ee.schimke.terrazzo.core.monitor.CardMonitor
 import ee.schimke.terrazzo.core.network.HttpEngineFactory
 import ee.schimke.terrazzo.core.network.LanConnectionPolicy
@@ -33,6 +35,8 @@ import ee.schimke.terrazzo.core.widget.WidgetStore
 interface TerrazzoGraph {
     val tokenVault: TokenVault
     val authService: HaAuthService
+    val mobileAppStore: MobileAppStore
+    val mobileAppRegistrar: MobileAppRegistrar
     val widgetStore: WidgetStore
     val pinStore: PinStore
     val wearWidgetSlotsStore: WearWidgetSlotsStore

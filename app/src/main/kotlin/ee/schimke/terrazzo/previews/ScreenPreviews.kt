@@ -25,6 +25,8 @@ import ee.schimke.terrazzo.core.auth.TokenVault
 import ee.schimke.terrazzo.core.cache.OfflineCache
 import ee.schimke.terrazzo.core.di.HaSessionFactory
 import ee.schimke.terrazzo.core.di.TerrazzoGraph
+import ee.schimke.terrazzo.core.mobileapp.MobileAppRegistrar
+import ee.schimke.terrazzo.core.mobileapp.MobileAppStore
 import ee.schimke.terrazzo.core.monitor.CardMonitor
 import ee.schimke.terrazzo.core.pin.PinStore
 import ee.schimke.terrazzo.core.pin.WearWidgetSlotsStore
@@ -109,6 +111,9 @@ private fun rememberPreviewGraph(): TerrazzoGraph {
             // is cheap and reaches no network until the user signs in.
             override val tokenVault: TokenVault = TokenVault(context)
             override val authService: HaAuthService = HaAuthService(context)
+            override val mobileAppStore: MobileAppStore = MobileAppStore(context)
+            override val mobileAppRegistrar: MobileAppRegistrar
+                get() = error("mobileAppRegistrar not wired in previews")
             override val sessionFactory: HaSessionFactory
                 get() = error("sessionFactory not wired in previews")
             override val lanConnectionPolicy: ee.schimke.terrazzo.core.network.LanConnectionPolicy
