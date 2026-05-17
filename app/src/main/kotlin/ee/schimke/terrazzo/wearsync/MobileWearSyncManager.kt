@@ -2,6 +2,8 @@ package ee.schimke.terrazzo.wearsync
 
 import android.content.Context
 import android.util.Log
+import com.google.android.gms.common.api.ApiException
+import com.google.android.gms.common.api.CommonStatusCodes
 import com.google.android.gms.wearable.DataClient
 import com.google.android.gms.wearable.MessageClient
 import com.google.android.gms.wearable.NodeClient
@@ -96,6 +98,7 @@ class MobileWearSyncManager(
 
     private val sessionState: MutableStateFlow<HaSession?> = MutableStateFlow(null)
     private val leaseState: MutableStateFlow<Long> = MutableStateFlow(0L)
+    private val wearableAvailableState: MutableStateFlow<Boolean> = MutableStateFlow(true)
     private lateinit var managerScope: CoroutineScope
     private var streamJob: Job? = null
     private var lastSnapshot: Map<String, EntityValue> = emptyMap()
@@ -123,6 +126,8 @@ class MobileWearSyncManager(
             .stateIn(managerScope, SharingStarted.Eagerly, false)
     }
 
+    override val wearableAvailable: StateFlow<Boolean> = wearableAvailableState
+
     /**
      * Wires the manager to its data sources. Call once from
      * Application.onCreate. Subsequent session changes use [setSession].
@@ -134,7 +139,13 @@ class MobileWearSyncManager(
         slotsStore: WearWidgetSlotsStore,
     ) {
         managerScope = scope
-        messageClient.addListener(leaseListener)
+        // addListener returns a Task; observe it so an API_NOT_CONNECTED
+        // failure (no Wearable component on this device) flips us into
+        // the disabled state instead of silently never delivering leases.
+        runCatching {
+            messageClient.addListener(leaseListener)
+                .addOnFailureListener { handleFailure("addListener", it) }
+        }.onFailure { handleFailure("addListener", it) }
 
         // Demo-mode flag → /wear/settings (and base url annotation).
         scope.launch {
@@ -215,6 +226,7 @@ class MobileWearSyncManager(
     }
 
     private suspend fun publishDashboards(session: HaSession) {
+        if (!wearableAvailableState.value) return
         // Wait until the session has finished its initial connect; otherwise
         // listDashboards() hits "Not connected" because the UI drives
         // session.connect() lazily via the dashboard list.
@@ -234,7 +246,7 @@ class MobileWearSyncManager(
             }
         }.onFailure {
             if (it is CancellationException) throw it
-            Log.w(TAG, "publishDashboards failed", it)
+            handleFailure("publishDashboards", it)
         }
     }
 
@@ -246,11 +258,12 @@ class MobileWearSyncManager(
      * 30 s heartbeat so values aren't infinitely stale.
      */
     private suspend fun sessionPump(session: HaSession, hasPinned: Boolean) {
+        if (!wearableAvailableState.value) return
         val cadence = session.refreshIntervalMillis ?: 30_000L
         // Reset snapshot baseline so the first push is a full set.
         lastSnapshot = emptyMap()
         session.connectionStatus.first { it == SessionConnectionStatus.Connected }
-        while (true) {
+        while (wearableAvailableState.value) {
             val snapshot = runCatching { session.loadDashboard(null).second }
                 .onFailure { if (it is CancellationException) throw it }
                 .getOrNull()
@@ -271,6 +284,7 @@ class MobileWearSyncManager(
     }
 
     private suspend fun pushStream(values: Map<String, EntityValue>) {
+        if (!wearableAvailableState.value) return
         val deltas = values.entries
             .filter { (k, v) -> lastSnapshot[k] != v }
             .map { (k, v) -> EntityDelta(entityId = k, value = v) }
@@ -285,12 +299,13 @@ class MobileWearSyncManager(
             statsStore.recordMessageSent(System.currentTimeMillis())
         }.onFailure {
             if (it is CancellationException) throw it
-            Log.w(TAG, "pushStream failed", it)
+            handleFailure("pushStream", it)
         }
         lastSnapshot = values
     }
 
     private suspend fun writeDataItem(path: String, bytes: ByteArray) {
+        if (!wearableAvailableState.value) return
         runCatching {
             val request = PutDataMapRequest.create(path).apply {
                 dataMap.putByteArray(KEY_PROTO, bytes)
@@ -300,8 +315,31 @@ class MobileWearSyncManager(
             statsStore.recordWrite(System.currentTimeMillis())
         }.onFailure {
             if (it is CancellationException) throw it
-            Log.w(TAG, "writeDataItem $path failed", it)
+            handleFailure("writeDataItem $path", it)
         }
+    }
+
+    /**
+     * Funnels every wear data-layer failure through one place so the
+     * "API unavailable" case (no wearable component / no paired watch)
+     * disables the manager after a single log line instead of warning
+     * on every snapshot tick. Other failures still surface at WARN.
+     */
+    private fun handleFailure(operation: String, error: Throwable) {
+        if (isWearableUnavailable(error)) {
+            if (wearableAvailableState.compareAndSet(expect = true, update = false)) {
+                Log.i(TAG, "Wearable API unavailable; disabling wear sync ($operation)")
+                streamJob?.cancel()
+                streamJob = null
+            }
+            return
+        }
+        Log.w(TAG, "$operation failed", error)
+    }
+
+    private fun isWearableUnavailable(error: Throwable): Boolean {
+        val api = error as? ApiException ?: return false
+        return api.statusCode == CommonStatusCodes.API_NOT_CONNECTED
     }
 
     companion object {
