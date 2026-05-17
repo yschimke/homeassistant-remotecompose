@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.1.26](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.25...v0.1.26) (2026-05-17)
+
+
+### Features
+
+* **auth:** register install with HA mobile_app integration ([#294](https://github.com/yschimke/homeassistant-remotecompose/issues/294)) ([01b9203](https://github.com/yschimke/homeassistant-remotecompose/commit/01b920358053d71036bdaed98feaf0c21a636f50))
+* **auth:** register install with HA mobile_app integration after OAuth ([#295](https://github.com/yschimke/homeassistant-remotecompose/issues/295)) ([2a7d0dd](https://github.com/yschimke/homeassistant-remotecompose/commit/2a7d0dd6096820ca4c118816ed78d30b9dc54bdd))
+* **auth:** register install with HA mobile_app integration after OAuth ([#296](https://github.com/yschimke/homeassistant-remotecompose/issues/296)) ([fe9ca5a](https://github.com/yschimke/homeassistant-remotecompose/commit/fe9ca5ae1a030bce0819baf01ec33f8b6072c90a))
+* **dashboard:** pick custom + built-in dashboards during signin ([#292](https://github.com/yschimke/homeassistant-remotecompose/issues/292)) ([3f54956](https://github.com/yschimke/homeassistant-remotecompose/commit/3f54956b23e57fb69ba38f447a0bdeec093ef098))
+* **notifications:** surface HA persistent notifications via WebSocket ([#297](https://github.com/yschimke/homeassistant-remotecompose/issues/297)) ([a8676b6](https://github.com/yschimke/homeassistant-remotecompose/commit/a8676b6e2a02d13a361d426c627acecd0f539291))
+
+
+### Bug Fixes
+
+* **wearsync:** disable cleanly when Wearable API is unavailable ([#291](https://github.com/yschimke/homeassistant-remotecompose/issues/291)) ([0e61aed](https://github.com/yschimke/homeassistant-remotecompose/commit/0e61aed85bbad40d8196b3ddaefd09488d8ac3c9))
+
 ## [0.1.25](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.24...v0.1.25) (2026-05-17)
 
 
