@@ -40,7 +40,20 @@ class WearCapabilityProbe(context: Context) {
         val listener = CapabilityClient.OnCapabilityChangedListener { info ->
             trySend(info.nodes.isNotEmpty())
         }
-        capabilityClient.addListener(listener, CAPABILITY)
+        runCatching {
+            capabilityClient.addListener(listener, CAPABILITY)
+                .addOnFailureListener { error ->
+                    // Devices without the Wearable component fail here
+                    // with ApiException(API_NOT_CONNECTED). Silently
+                    // emit false so the rest of the UI hides wear-only
+                    // affordances instead of waiting forever.
+                    Log.i(TAG, "capability listener unavailable: ${error.message}")
+                    trySend(false)
+                }
+        }.onFailure {
+            Log.i(TAG, "capability listener unavailable: ${it.message}")
+            trySend(false)
+        }
         // Seed with the current state — addListener doesn't replay.
         runCatching {
             capabilityClient
@@ -48,12 +61,10 @@ class WearCapabilityProbe(context: Context) {
                 .addOnSuccessListener { info: CapabilityInfo ->
                     trySend(info.nodes.isNotEmpty())
                 }
-                .addOnFailureListener { error ->
-                    Log.w(TAG, "getCapability failed", error)
+                .addOnFailureListener {
                     trySend(false)
                 }
         }.onFailure {
-            Log.w(TAG, "capability probe init failed", it)
             trySend(false)
         }
         awaitClose { runCatching { capabilityClient.removeListener(listener) } }

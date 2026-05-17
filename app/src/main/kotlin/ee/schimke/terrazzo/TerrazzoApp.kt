@@ -378,22 +378,27 @@ private fun AuthenticatedShell(
             onOpenLogs = { screen = AppScreen.Logs },
             onSignOut = onSignOut,
         )
-        AppScreen.Settings -> SettingsScreen(
-            session = session,
-            onToggleDemo = onToggleDemo,
-            onSignOut = onSignOut,
-            onBack = { screen = AppScreen.Dashboards },
-            onOpenSyncDiagnostics = { screen = AppScreen.SyncDiagnostics },
-            onManageDashboards = {
-                selectionEntry = SelectionEntry.Settings
-                selectionInitialResolved = false
-                scope.launch {
-                    selectionInitial = graph.preferencesStore.selectedDashboardUrlsNow()
-                    selectionInitialResolved = true
-                }
-                screen = AppScreen.ChooseDashboards
-            },
-        )
+        AppScreen.Settings -> {
+            val wearReady by graph.wearSyncManager.wearableAvailable.collectAsState()
+            SettingsScreen(
+                session = session,
+                onToggleDemo = onToggleDemo,
+                onSignOut = onSignOut,
+                onBack = { screen = AppScreen.Dashboards },
+                onOpenSyncDiagnostics = if (wearReady) {
+                    { screen = AppScreen.SyncDiagnostics }
+                } else null,
+                onManageDashboards = {
+                    selectionEntry = SelectionEntry.Settings
+                    selectionInitialResolved = false
+                    scope.launch {
+                        selectionInitial = graph.preferencesStore.selectedDashboardUrlsNow()
+                        selectionInitialResolved = true
+                    }
+                    screen = AppScreen.ChooseDashboards
+                },
+            )
+        }
         AppScreen.Widgets -> WidgetsScreen(
             onBack = { screen = AppScreen.Dashboards },
         )
@@ -749,7 +754,7 @@ private fun SettingsScreen(
     onToggleDemo: (Boolean) -> Unit,
     onSignOut: () -> Unit,
     onBack: () -> Unit,
-    onOpenSyncDiagnostics: () -> Unit,
+    onOpenSyncDiagnostics: (() -> Unit)?,
     onManageDashboards: () -> Unit,
 ) {
     val isDemo = session is DemoHaSession
@@ -950,9 +955,13 @@ private fun SettingsScreen(
 
             // Sync diagnostics — buried at the bottom of Settings on
             // purpose. Shows DataItem write / MessageClient send counts
-            // so power users can sanity-check wear-side chatter.
-            androidx.compose.material3.TextButton(onClick = onOpenSyncDiagnostics) {
-                Text("Sync diagnostics")
+            // so power users can sanity-check wear-side chatter. Hidden
+            // when the device has no usable Wearable API (no paired
+            // watch / wearable component) so the link doesn't dangle.
+            if (onOpenSyncDiagnostics != null) {
+                androidx.compose.material3.TextButton(onClick = onOpenSyncDiagnostics) {
+                    Text("Sync diagnostics")
+                }
             }
         }
     }
