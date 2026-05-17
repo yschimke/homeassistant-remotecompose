@@ -2,6 +2,7 @@ package ee.schimke.ha.client
 
 import ee.schimke.ha.model.Dashboard
 import ee.schimke.ha.model.EntityState
+import ee.schimke.ha.model.HaNotification
 import ee.schimke.ha.model.HaSnapshot
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.HttpClientEngine
@@ -20,8 +21,12 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
@@ -75,6 +80,13 @@ class HaClient(private val config: HaConfig, engine: HttpClientEngine? = null) {
   private var nextId = 1
   private val pending = mutableMapOf<Int, CompletableDeferred<JsonObject>>()
   private val pendingMutex = Mutex()
+  // Long-lived subscriptions keyed by the same request id as the
+  // `subscribe_events` ack. The ack lands in [pending] and is consumed
+  // once; subsequent `type:"event"` frames carrying that id are routed
+  // here forever (well, until [close]). Separate from [pending] so a
+  // subscription's lifecycle isn't tied to the one-shot deferred.
+  private val subscriptions = mutableMapOf<Int, MutableSharedFlow<JsonObject>>()
+  private val subscriptionsMutex = Mutex()
   // Guards mutation of [session] / [receiveJob] and serialises [send] so two
   // concurrent commands can't interleave frames on the same socket.
   private val sessionMutex = Mutex()
@@ -203,6 +215,72 @@ class HaClient(private val config: HaConfig, engine: HttpClientEngine? = null) {
     }
   }
 
+  /**
+   * Subscribe to a Home Assistant event type and stream every matching event over the returned
+   * [SharedFlow]. Cold callers see only events that arrive after they start collecting; nothing is
+   * buffered for late subscribers beyond a small backlog so a brief composition gap doesn't drop
+   * the newest emit.
+   *
+   * The subscription lives until [close] (or until the socket dies and the receive loop clears the
+   * registry). HA's `unsubscribe_events` command isn't surfaced — callers either care for the
+   * session's lifetime or not at all.
+   */
+  suspend fun subscribeEvents(eventType: String): SharedFlow<JsonObject> {
+    val s = session ?: error("Not connected — call connect() first")
+    val id = idMutex.withLock { nextId++ }
+    val flow =
+      MutableSharedFlow<JsonObject>(
+        extraBufferCapacity = 64,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST,
+      )
+    subscriptionsMutex.withLock { subscriptions[id] = flow }
+    val deferred = CompletableDeferred<JsonObject>()
+    pendingMutex.withLock { pending[id] = deferred }
+    val msg = buildJsonObject {
+      put("id", id)
+      put("type", "subscribe_events")
+      put("event_type", eventType)
+    }
+    try {
+      sessionMutex.withLock {
+        val live = session ?: error("Not connected — socket closed before subscribe")
+        if (live !== s) error("Connection replaced before subscribe")
+        live.send(json.encodeToString(JsonObject.serializer(), msg))
+      }
+      val resp = withTimeout(30_000) { deferred.await() }
+      val success = resp["success"]?.jsonPrimitive?.content?.toBooleanStrictOrNull() ?: true
+      if (!success) {
+        val err = resp["error"]?.jsonObject?.get("message")?.jsonPrimitive?.content ?: "unknown"
+        subscriptionsMutex.withLock { subscriptions.remove(id) }
+        error("HA subscribe_events($eventType) failed: $err")
+      }
+      return flow.asSharedFlow()
+    } catch (t: Throwable) {
+      subscriptionsMutex.withLock { subscriptions.remove(id) }
+      throw t
+    } finally {
+      pendingMutex.withLock { pending.remove(id) }
+    }
+  }
+
+  /**
+   * Fetch the current set of HA persistent notifications — the things behind the frontend's bell
+   * icon. One-shot; pair with [subscribeEvents]`("persistent_notifications_updated")` for live
+   * updates (HA's update event is empty, so refetching is the only way to learn the new contents).
+   */
+  suspend fun fetchPersistentNotifications(): List<HaNotification> {
+    val arr = runCommandArray("persistent_notification/get")
+    return arr.map { el ->
+      val obj = el.jsonObject
+      HaNotification(
+        notificationId = obj["notification_id"]?.jsonPrimitive?.content ?: "",
+        title = obj["title"]?.nullableString(),
+        message = obj["message"]?.nullableString() ?: "",
+        createdAt = obj["created_at"]?.nullableString(),
+      )
+    }
+  }
+
   suspend fun close() {
     val s = sessionMutex.withLock {
       val current = session
@@ -282,7 +360,17 @@ class HaClient(private val config: HaConfig, engine: HttpClientEngine? = null) {
         val text = (frame as? Frame.Text)?.readText() ?: continue
         val obj = json.parseToJsonElement(text).jsonObject
         val id = obj["id"]?.jsonPrimitive?.intOrNullSafe() ?: continue
-        pendingMutex.withLock { pending.remove(id) }?.complete(obj)
+        when (obj["type"]?.jsonPrimitive?.content) {
+          // `subscribe_events` streams `type:"event"` frames sharing the
+          // subscription's request id. Route them to the live flow; do
+          // NOT touch [pending] (the ack already consumed that slot).
+          "event" -> {
+            val flow = subscriptionsMutex.withLock { subscriptions[id] }
+            flow?.tryEmit(obj["event"]?.jsonObject ?: continue)
+          }
+          // Everything else (result, pong, …) is a one-shot response.
+          else -> pendingMutex.withLock { pending.remove(id) }?.complete(obj)
+        }
       }
     } catch (t: Throwable) {
       failure = t
@@ -299,6 +387,11 @@ class HaClient(private val config: HaConfig, engine: HttpClientEngine? = null) {
       pending.values.forEach { it.completeExceptionally(cause) }
       pending.clear()
     }
+    // Drop subscription flows too: the server-side subscriptions died
+    // with the socket, so future events would never land. Callers
+    // observing the flow stop seeing emissions; HaSession's reconnect
+    // will re-subscribe with a fresh id.
+    subscriptionsMutex.withLock { subscriptions.clear() }
     sessionMutex.withLock { if (session === s) session = null }
     _state.value = ConnectionState.Disconnected
   }
