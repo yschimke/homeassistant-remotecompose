@@ -113,6 +113,8 @@ private fun rememberPreviewGraph(): TerrazzoGraph {
                 get() = error("sessionFactory not wired in previews")
             override val lanConnectionPolicy: ee.schimke.terrazzo.core.network.LanConnectionPolicy
                 get() = error("lanConnectionPolicy not wired in previews")
+            override val sessionWriteMode: ee.schimke.terrazzo.core.session.SessionWriteMode =
+                ee.schimke.terrazzo.core.session.SessionWriteMode()
             override val cardMonitor: CardMonitor
                 get() = object : CardMonitor {
                     override val isEnabled: Boolean = false

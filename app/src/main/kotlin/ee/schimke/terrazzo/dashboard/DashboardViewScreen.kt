@@ -124,6 +124,7 @@ fun DashboardViewScreen(
     urlPath: String?,
     onCardLongPress: (CardConfig) -> Unit,
     contentPadding: PaddingValues = PaddingValues(0.dp),
+    readOnly: Boolean = true,
 ) {
     val cache = LocalTerrazzoGraph.current.offlineCache
     // Seed from disk so the first composition shows the last-known
@@ -195,7 +196,7 @@ fun DashboardViewScreen(
         0L
     }
 
-    val actionDispatcher = rememberDashboardActionDispatcher(session)
+    val actionDispatcher = rememberDashboardActionDispatcher(session, readOnly = readOnly)
 
     CompositionLocalProvider(
         LocalHaActionDispatcher provides actionDispatcher,

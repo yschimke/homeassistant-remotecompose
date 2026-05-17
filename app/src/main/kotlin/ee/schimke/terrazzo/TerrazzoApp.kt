@@ -37,6 +37,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -339,6 +340,16 @@ private fun DashboardsRoot(
     var opened by rememberSaveable {
         mutableStateOf(initialDashboardToOpened(initialDashboard))
     }
+    // Two-layer write-mode state:
+    //   - `permanentWriteMode` is the persisted opt-in (Settings).
+    //   - `sessionWriteMode` is a process-scoped override the chip writes
+    //     to. Null means "no override yet" — fall back to the permanent
+    //     setting, which on a fresh cold start is the read-only default.
+    val permanentWrite by graph.preferencesStore.permanentWriteMode
+        .collectAsState(initial = false)
+    val sessionWrite by graph.sessionWriteMode.writeMode.collectAsState()
+    val writeMode = sessionWrite ?: permanentWrite
+    val readOnly = !writeMode
     var installPending by remember { mutableStateOf<Pair<CardConfig, HaSnapshot>?>(null) }
     val openedValue = opened
 
@@ -427,6 +438,21 @@ private fun DashboardsRoot(
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
                         )
                     }
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(end = 8.dp),
+                    ) {
+                        Text(
+                            text = if (readOnly) "Read" else "Write",
+                            color = if (readOnly) READ_ONLY_COLOR else WRITE_COLOR,
+                            style = MaterialTheme.typography.labelSmall,
+                            modifier = Modifier.padding(end = 4.dp),
+                        )
+                        Switch(
+                            checked = writeMode,
+                            onCheckedChange = { graph.sessionWriteMode.set(it) },
+                        )
+                    }
                     TopBarOverflowMenu(
                         onOpenSettings = onOpenSettings,
                         onOpenWidgets = onOpenWidgets,
@@ -459,6 +485,7 @@ private fun DashboardsRoot(
             DashboardViewScreen(
                 session = session,
                 urlPath = openedValue,
+                readOnly = readOnly,
                 onCardLongPress = { card ->
                     // In demo mode the preview — and the installed widget —
                     // render against the current fake snapshot so values
@@ -506,6 +533,9 @@ enum class ConnectionStatus(val label: String, val color: Color) {
     Connecting("Connecting", Color(0xFF2E7D32)),
     Connected("Connected", Color(0xFF1976D2)),
 }
+
+private val READ_ONLY_COLOR = Color(0xFF455A64)
+private val WRITE_COLOR = Color(0xFFE65100)
 
 private fun SessionConnectionStatus.toUiConnectionStatus(): ConnectionStatus = when (this) {
     SessionConnectionStatus.Failed -> ConnectionStatus.Failed
@@ -555,6 +585,7 @@ private fun SettingsScreen(
     val gridLayoutEnabled by graph.preferencesStore.experimentalGridLayout.collectAsState(initial = false)
     val collapsedModeEnabled by graph.preferencesStore.collapsedMode.collectAsState(initial = true)
     val logsViewEnabled by graph.preferencesStore.logsViewEnabled.collectAsState(initial = false)
+    val permanentWriteEnabled by graph.preferencesStore.permanentWriteMode.collectAsState(initial = false)
 
     Scaffold(
         topBar = {
@@ -684,6 +715,29 @@ private fun SettingsScreen(
                     checked = logsViewEnabled,
                     onCheckedChange = { enabled ->
                         scope.launch { graph.preferencesStore.setLogsViewEnabled(enabled) }
+                    },
+                )
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text("Permanent write mode", style = MaterialTheme.typography.titleMedium)
+                    Text(
+                        "When off, every relaunch starts in Read so taps on the dashboard " +
+                            "(and on home-screen widgets) never silently fire HA service " +
+                            "calls. Turn on if you trust this device and prefer Write by " +
+                            "default; the chip in the top bar still overrides per session.",
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                }
+                Switch(
+                    checked = permanentWriteEnabled,
+                    onCheckedChange = { enabled ->
+                        scope.launch { graph.preferencesStore.setPermanentWriteMode(enabled) }
                     },
                 )
             }
