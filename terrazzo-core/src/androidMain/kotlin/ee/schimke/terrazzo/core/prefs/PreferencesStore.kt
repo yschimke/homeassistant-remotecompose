@@ -104,6 +104,21 @@ class PreferencesStore(private val context: Context) {
     }
 
     /**
+     * Hidden debug surface that exposes the in-memory
+     * [ee.schimke.terrazzo.core.logs.LogStore] buffer (WebSocket data
+     * updates touching dashboard entities, connect / disconnect
+     * events, locally-dispatched service calls). Off by default; the
+     * toggle lives in Settings and the corresponding overflow-menu
+     * entry only appears while it's on.
+     */
+    val logsViewEnabled: Flow<Boolean>
+        get() = context.store.data.map { it[LOGS_VIEW_KEY] ?: false }
+
+    suspend fun setLogsViewEnabled(enabled: Boolean) {
+        context.store.edit { it[LOGS_VIEW_KEY] = enabled }
+    }
+
+    /**
      * The dashboard the user last opened. Drives auto-launch: on cold
      * start, [ee.schimke.terrazzo.MainActivity] reads this once and
      * seeds the dashboard nav-state, so a single-dashboard or 2-3
@@ -155,6 +170,7 @@ class PreferencesStore(private val context: Context) {
         private val LAST_VIEWED_KEY = stringPreferencesKey("last_viewed_dashboard")
         private val GRID_LAYOUT_KEY = booleanPreferencesKey("experimental_grid_layout")
         private val COLLAPSED_MODE_KEY = booleanPreferencesKey("collapsed_mode")
+        private val LOGS_VIEW_KEY = booleanPreferencesKey("logs_view_enabled")
 
         /** Stored value for HA's default (unnamed) dashboard. */
         const val DEFAULT_DASHBOARD_SENTINEL: String = "__default__"

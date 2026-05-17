@@ -246,7 +246,7 @@ private fun UnauthenticatedScreen(
     )
 }
 
-private enum class AppScreen { Dashboards, Settings, Widgets, Pinned, WearWidgets, SyncDiagnostics }
+private enum class AppScreen { Dashboards, Settings, Widgets, Pinned, WearWidgets, SyncDiagnostics, Logs }
 
 @Composable
 private fun AuthenticatedShell(
@@ -276,6 +276,7 @@ private fun AuthenticatedShell(
             onOpenWidgets = { screen = AppScreen.Widgets },
             onOpenPinned = { screen = AppScreen.Pinned },
             onOpenWearWidgets = { screen = AppScreen.WearWidgets },
+            onOpenLogs = { screen = AppScreen.Logs },
             onSignOut = onSignOut,
         )
         AppScreen.Settings -> SettingsScreen(
@@ -302,6 +303,9 @@ private fun AuthenticatedShell(
                 onBack = { screen = AppScreen.Settings },
             )
         }
+        AppScreen.Logs -> ee.schimke.terrazzo.logs.LogsScreen(
+            onBack = { screen = AppScreen.Dashboards },
+        )
     }
 }
 
@@ -319,6 +323,7 @@ private fun DashboardsRoot(
     onOpenWidgets: () -> Unit,
     onOpenPinned: () -> Unit,
     onOpenWearWidgets: () -> Unit,
+    onOpenLogs: () -> Unit,
     onSignOut: () -> Unit,
 ) {
     val graph = LocalTerrazzoGraph.current
@@ -329,6 +334,7 @@ private fun DashboardsRoot(
     val wearWidgetsSupported by app.wearCapabilityProbe
         .stateFlow(scope)
         .collectAsState()
+    val logsViewEnabled by graph.preferencesStore.logsViewEnabled.collectAsState(initial = false)
 
     var opened by rememberSaveable {
         mutableStateOf(initialDashboardToOpened(initialDashboard))
@@ -362,6 +368,20 @@ private fun DashboardsRoot(
                     runCatching { session.connect() }
                 }
             }
+        }
+    }
+
+    // Mirror live connection-status transitions into the debug log
+    // buffer so the Logs view (when enabled) shows reconnect timing.
+    // StateFlow already de-duplicates identical emissions, so each
+    // entry here corresponds to a real transition.
+    val logStore = graph.logStore
+    LaunchedEffect(session, logStore) {
+        session.connectionStatus.collect { status ->
+            logStore.recordConnection(
+                status = status.toLogStatus(),
+                message = session.baseUrl,
+            )
         }
     }
 
@@ -412,6 +432,7 @@ private fun DashboardsRoot(
                         onOpenWidgets = onOpenWidgets,
                         onOpenPinned = onOpenPinned,
                         onOpenWearWidgets = if (wearWidgetsSupported) onOpenWearWidgets else null,
+                        onOpenLogs = if (logsViewEnabled) onOpenLogs else null,
                         onSignOut = onSignOut,
                     )
                 },
@@ -492,6 +513,13 @@ private fun SessionConnectionStatus.toUiConnectionStatus(): ConnectionStatus = w
     SessionConnectionStatus.Connected -> ConnectionStatus.Connected
 }
 
+private fun SessionConnectionStatus.toLogStatus(): ee.schimke.terrazzo.core.logs.LogConnectionStatus =
+    when (this) {
+        SessionConnectionStatus.Failed -> ee.schimke.terrazzo.core.logs.LogConnectionStatus.Error
+        SessionConnectionStatus.Connecting -> ee.schimke.terrazzo.core.logs.LogConnectionStatus.Connecting
+        SessionConnectionStatus.Connected -> ee.schimke.terrazzo.core.logs.LogConnectionStatus.Connected
+    }
+
 /**
  * Translate the persisted last-viewed-dashboard pref into the local
  * `opened` sentinel/urlPath encoding `DashboardsRoot` uses:
@@ -526,6 +554,7 @@ private fun SettingsScreen(
     val darkPref by graph.preferencesStore.darkMode.collectAsState(initial = DarkModePref.Follow)
     val gridLayoutEnabled by graph.preferencesStore.experimentalGridLayout.collectAsState(initial = false)
     val collapsedModeEnabled by graph.preferencesStore.collapsedMode.collectAsState(initial = true)
+    val logsViewEnabled by graph.preferencesStore.logsViewEnabled.collectAsState(initial = false)
 
     Scaffold(
         topBar = {
@@ -633,6 +662,28 @@ private fun SettingsScreen(
                     checked = collapsedModeEnabled,
                     onCheckedChange = { enabled ->
                         scope.launch { graph.preferencesStore.setCollapsedMode(enabled) }
+                    },
+                )
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text("Show logs view", style = MaterialTheme.typography.titleMedium)
+                    Text(
+                        "Exposes a debug screen via the overflow menu listing recent " +
+                            "dashboard-entity updates, connect / disconnect events, and " +
+                            "locally-dispatched service calls. In-memory only.",
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                }
+                Switch(
+                    checked = logsViewEnabled,
+                    onCheckedChange = { enabled ->
+                        scope.launch { graph.preferencesStore.setLogsViewEnabled(enabled) }
                     },
                 )
             }

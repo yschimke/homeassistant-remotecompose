@@ -6,6 +6,7 @@ import dev.zacsweers.metro.SingleIn
 import ee.schimke.terrazzo.core.auth.HaAuthService
 import ee.schimke.terrazzo.core.auth.TokenVault
 import ee.schimke.terrazzo.core.cache.OfflineCache
+import ee.schimke.terrazzo.core.logs.LogStore
 import ee.schimke.terrazzo.core.monitor.CardMonitor
 import ee.schimke.terrazzo.core.network.HttpEngineFactory
 import ee.schimke.terrazzo.core.network.LanConnectionPolicy
@@ -40,6 +41,7 @@ interface TerrazzoGraph {
     val cardMonitor: CardMonitor
     val wearSyncManager: WearSyncManager
     val lanConnectionPolicy: LanConnectionPolicy
+    val logStore: LogStore
 
     fun interface Factory {
         fun create(context: Context): TerrazzoGraph

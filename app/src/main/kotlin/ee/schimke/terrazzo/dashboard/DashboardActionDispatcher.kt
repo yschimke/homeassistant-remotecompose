@@ -14,6 +14,8 @@ import ee.schimke.ha.rc.CardDocumentCache
 import ee.schimke.ha.rc.HaActionDispatcher
 import ee.schimke.ha.rc.LocalCardDocumentCache
 import ee.schimke.ha.rc.components.HaAction
+import ee.schimke.terrazzo.LocalTerrazzoGraph
+import ee.schimke.terrazzo.core.logs.LogStore
 import ee.schimke.terrazzo.core.session.CoverCommand
 import ee.schimke.terrazzo.core.session.DemoData
 import ee.schimke.terrazzo.core.session.DemoHaSession
@@ -47,8 +49,9 @@ fun rememberDashboardActionDispatcher(session: HaSession): HaActionDispatcher {
     val context = LocalContext.current
     val cache = LocalCardDocumentCache.current
     val scope = rememberCoroutineScope()
-    return remember(session, context, cache, scope) {
-        val core = DashboardActionDispatcher(context.applicationContext, session, cache, scope)
+    val logStore = LocalTerrazzoGraph.current.logStore
+    return remember(session, context, cache, scope, logStore) {
+        val core = DashboardActionDispatcher(context.applicationContext, session, cache, scope, logStore)
         // The keypad coordinator buffers per-key host actions and
         // translates ARM intents into a single `call_service` with the
         // entered code attached. Other action variants pass through.
@@ -61,8 +64,14 @@ private class DashboardActionDispatcher(
     private val session: HaSession,
     private val cache: CardDocumentCache,
     private val scope: CoroutineScope,
+    private val logStore: LogStore,
 ) : HaActionDispatcher {
     override fun dispatch(action: HaAction) {
+        // Log every dispatched action (before any network round-trip)
+        // so the debug Logs view sees the tap even if the call fails.
+        // Unwired variants are still recorded so the screen reflects
+        // that the tap landed.
+        recordToLog(action)
         when (action) {
             is HaAction.Url -> launchUrl(action.url)
             is HaAction.Toggle -> handleToggle(action.entityId)
@@ -76,6 +85,21 @@ private class DashboardActionDispatcher(
             is HaAction.AlarmIntent,
             HaAction.None -> Log.i(TAG, "Action not yet wired: $action")
         }
+    }
+
+    private fun recordToLog(action: HaAction) {
+        val (summary, entityId) = when (action) {
+            is HaAction.Url -> "Open URL: ${action.url}" to null
+            is HaAction.Toggle -> "Toggle" to action.entityId
+            is HaAction.CallService ->
+                "Call ${action.domain}.${action.service}" to action.entityId
+            is HaAction.MoreInfo -> "More info" to action.entityId
+            is HaAction.Navigate -> "Navigate to ${action.path}" to null
+            is HaAction.AlarmKey -> "Alarm key ${action.key}" to action.entityId
+            is HaAction.AlarmIntent -> "Alarm ${action.service}" to action.entityId
+            HaAction.None -> return
+        }
+        logStore.recordLocalAction(summary = summary, entityId = entityId)
     }
 
     private fun launchUrl(url: String) {

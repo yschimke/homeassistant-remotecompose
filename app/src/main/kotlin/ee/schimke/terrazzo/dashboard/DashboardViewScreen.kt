@@ -139,6 +139,7 @@ fun DashboardViewScreen(
         mutableStateOf(seed)
     }
 
+    val logStore = LocalTerrazzoGraph.current.logStore
     LaunchedEffect(session, urlPath) {
         // Poll when the session opts in (demo mode does, at ~1s) so
         // values visibly change; a one-shot fetch otherwise.
@@ -146,6 +147,11 @@ fun DashboardViewScreen(
             try {
                 val (dashboard, snapshot) = session.loadDashboard(urlPath)
                 state = DashboardState.Ready(dashboard, snapshot)
+                // Feed the debug log buffer. The store diffs each
+                // snapshot against the previous one and emits a
+                // DataUpdate per changed entity, filtered to entities
+                // this dashboard actually references.
+                logStore.recordDashboardSnapshot(dashboard, snapshot)
             } catch (ce: CancellationException) {
                 // Dashboard switch or composition leaving — let the new
                 // LaunchedEffect take over. `runCatching` used to absorb
@@ -180,6 +186,7 @@ fun DashboardViewScreen(
                 runCatching { session.loadDashboard(urlPath) }
                     .onSuccess { (dashboard, snapshot) ->
                         state = DashboardState.Ready(dashboard, snapshot)
+                        logStore.recordDashboardSnapshot(dashboard, snapshot)
                     }
             }
         }

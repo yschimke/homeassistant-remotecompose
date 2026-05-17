@@ -119,6 +119,8 @@ private fun rememberPreviewGraph(): TerrazzoGraph {
                     override fun start(card: CardConfig, durationMinutes: Int) {}
                 }
             override val wearSyncManager: WearSyncManager = NoOpWearSyncManager()
+            override val logStore: ee.schimke.terrazzo.core.logs.LogStore =
+                ee.schimke.terrazzo.core.logs.LogStore()
         }
     }
 }
