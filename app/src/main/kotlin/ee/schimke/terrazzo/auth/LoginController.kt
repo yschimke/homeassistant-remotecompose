@@ -15,6 +15,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import ee.schimke.terrazzo.LocalTerrazzoGraph
 import ee.schimke.terrazzo.core.auth.HaAuthService
 import ee.schimke.terrazzo.core.auth.TokenVault
+import ee.schimke.terrazzo.core.mobileapp.MobileAppRegistrar
 import kotlinx.coroutines.launch
 import net.openid.appauth.AuthorizationException
 import net.openid.appauth.AuthorizationResponse
@@ -42,6 +43,7 @@ import net.openid.appauth.AuthorizationResponse
 class LoginController internal constructor(
     private val authService: HaAuthService,
     private val vault: TokenVault,
+    private val mobileAppRegistrar: MobileAppRegistrar,
     private val launcher: ActivityResultLauncher<Intent>,
     private val scope: kotlinx.coroutines.CoroutineScope,
     private val pendingBaseUrl: MutableState<String?>,
@@ -82,7 +84,14 @@ class LoginController internal constructor(
                         return@onSuccess
                     }
                     vault.put(baseUrl, refresh)
+                    // mobile_app registration is best-effort: HA may have the integration
+                    // disabled, or be temporarily unreachable. Fire it after `onReady` so
+                    // a slow registration round-trip can't stall sign-in behind its
+                    // timeout window — the UI advances immediately and the device just
+                    // won't appear as a notifiable target until a later retry.
                     onReady(baseUrl, access)
+                    runCatching { mobileAppRegistrar.register(baseUrl, access) }
+                        .onFailure { ex -> Log.w(TAG, "mobile_app registration failed", ex) }
                 }
                 .onFailure { ex ->
                     val authFailure = ex as? AuthorizationException
@@ -107,6 +116,7 @@ fun rememberLoginController(
     val graph = LocalTerrazzoGraph.current
     val authService = graph.authService
     val vault = graph.tokenVault
+    val mobileAppRegistrar = graph.mobileAppRegistrar
     val scope = rememberCoroutineScope()
     val pendingBaseUrl = remember { mutableStateOf<String?>(null) }
 
@@ -116,7 +126,7 @@ fun rememberLoginController(
     }
 
     val controller = remember(launcher) {
-        LoginController(authService, vault, launcher, scope, pendingBaseUrl, onReady, onError)
+        LoginController(authService, vault, mobileAppRegistrar, launcher, scope, pendingBaseUrl, onReady, onError)
     }
     LaunchedEffect(controller) { controllerRef.value = controller }
     return controller

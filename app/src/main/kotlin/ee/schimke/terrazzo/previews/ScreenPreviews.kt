@@ -25,6 +25,8 @@ import ee.schimke.terrazzo.core.auth.TokenVault
 import ee.schimke.terrazzo.core.cache.OfflineCache
 import ee.schimke.terrazzo.core.di.HaSessionFactory
 import ee.schimke.terrazzo.core.di.TerrazzoGraph
+import ee.schimke.terrazzo.core.mobileapp.MobileAppRegistrar
+import ee.schimke.terrazzo.core.mobileapp.MobileAppStore
 import ee.schimke.terrazzo.core.monitor.CardMonitor
 import ee.schimke.terrazzo.core.pin.PinStore
 import ee.schimke.terrazzo.core.pin.WearWidgetSlotsStore
@@ -122,6 +124,9 @@ private fun rememberPreviewGraph(): TerrazzoGraph {
                     remoteUrlStore = remoteUrlStore,
                 )
             override val authService: HaAuthService = HaAuthService(context, httpEngineFactory)
+            override val mobileAppStore: MobileAppStore = MobileAppStore(context)
+            override val mobileAppRegistrar: MobileAppRegistrar =
+                MobileAppRegistrar(context, mobileAppStore, httpEngineFactory)
             override val sessionFactory: HaSessionFactory
                 get() = error("sessionFactory not wired in previews")
             override val sessionWriteMode: ee.schimke.terrazzo.core.session.SessionWriteMode =
