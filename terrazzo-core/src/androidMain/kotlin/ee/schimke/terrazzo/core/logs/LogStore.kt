@@ -1,16 +1,25 @@
 package ee.schimke.terrazzo.core.logs
 
+import android.content.Context
+import androidx.datastore.core.DataStore
+import androidx.datastore.dataStore
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 import ee.schimke.ha.model.Dashboard
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.terrazzo.core.di.AppScope
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 
 /**
- * In-memory log buffer for the debug Logs view. Hidden behind a
+ * Persistent log buffer for the debug Logs view. Hidden behind a
  * preference (default off); when enabled the app feeds three event
  * streams here:
  *
@@ -27,13 +36,26 @@ import kotlinx.coroutines.flow.asStateFlow
  *    by the dashboard's action dispatcher. Captured *before* the
  *    network round-trip so a failed send is still visible.
  *
+ * Persisted to disk via a Proto DataStore so events survive process
+ * death. The in-memory ring is the source of truth for reads / the
+ * UI flow; writes are mirrored to disk asynchronously on the store's
+ * own IO scope so callers never block on the file. On cold start the
+ * file is loaded once and pruned against the current clock — old
+ * data updates age out automatically.
+ *
  * The store is process-singleton: all hooks share the same buffer
- * regardless of which dashboard / session is active. A single
- * [clear] empties everything; useful from the screen itself.
+ * regardless of which dashboard / session is active. [clear] empties
+ * both the in-memory ring and the persisted copy.
  */
 @SingleIn(AppScope::class)
 @Inject
-class LogStore {
+class LogStore(context: Context) {
+
+    private val dataStore: DataStore<PersistedLogBuffer> = context.logStore
+    // Owns disk reads / writes; SupervisorJob so one failure doesn't
+    // kill the rest. Lives for the process — LogStore is AppScope so
+    // never cancelled.
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     private val lock = Any()
     private val entries: ArrayDeque<LogEntry> = ArrayDeque()
@@ -43,9 +65,46 @@ class LogStore {
 
     /**
      * Pluggable so tests can drive time. Production uses
-     * [System.currentTimeMillis] via the default constructor.
+     * [System.currentTimeMillis].
      */
     var clock: () -> Long = { System.currentTimeMillis() }
+
+    /**
+     * Suspend until the persisted buffer has been loaded into memory.
+     * Tests use this to deterministically read state that was written
+     * to disk in a prior run; production callers (the LogsScreen
+     * `collectAsState`) just observe [flow] and see entries appear
+     * when load finishes.
+     */
+    suspend fun awaitInitialLoad() {
+        loadJob.join()
+    }
+
+    private val loadJob: Job = scope.launch {
+        val persisted = dataStore.data.first()
+        val loaded = persisted.entries.mapNotNull { it.toModel() }
+        val now = clock()
+        val merged: Boolean
+        synchronized(lock) {
+            // Merge — do NOT replace. Events recorded while this
+            // suspending load is in flight (e.g. the connection
+            // observer firing during boot) live in `entries` already;
+            // a naive `clear() + addAll(loaded)` would drop them.
+            // Loaded entries are older by construction, so prepend
+            // and sort to keep the chronological order the UI relies
+            // on. `distinct()` guards against a clean restart where
+            // an entry could in principle land twice.
+            val current = entries.toList()
+            entries.clear()
+            entries.addAll((loaded + current).distinct().sortedBy { it.timestamp })
+            prune(now)
+            merged = current.isNotEmpty()
+        }
+        publish()
+        // Anything recorded during the load gap was only in memory;
+        // flush so disk reflects the merged ring.
+        if (merged) persistAsync()
+    }
 
     fun recordConnection(status: LogConnectionStatus, message: String? = null) {
         addEntry(
@@ -99,7 +158,10 @@ class LogStore {
                 prune(now)
             }
         }
-        if (updates.isNotEmpty()) publish()
+        if (updates.isNotEmpty()) {
+            publish()
+            persistAsync()
+        }
     }
 
     fun clear() {
@@ -108,6 +170,7 @@ class LogStore {
             lastSeenStates.clear()
         }
         _flow.value = emptyList()
+        persistAsync()
     }
 
     private fun addEntry(entry: LogEntry) {
@@ -116,6 +179,7 @@ class LogStore {
             prune(entry.timestamp)
         }
         publish()
+        persistAsync()
     }
 
     private fun prune(now: Long) {
@@ -132,12 +196,37 @@ class LogStore {
         _flow.value = synchronized(lock) { entries.toList() }
     }
 
+    /**
+     * Fire a write of the current ring to disk. The snapshot is read
+     * *inside* [DataStore.updateData] so its sequential transform
+     * mutex orders writes by completion, not by launch — otherwise
+     * two concurrent `persistAsync` calls could land on disk in the
+     * opposite order from their in-memory ordering, leaving disk
+     * state stale. The `runCatching` swallows IO errors — a missed
+     * write on the debug surface isn't worth crashing the app.
+     */
+    private fun persistAsync() {
+        scope.launch {
+            runCatching {
+                dataStore.updateData {
+                    val snapshot = synchronized(lock) { entries.map { it.toPersisted() } }
+                    PersistedLogBuffer(entries = snapshot)
+                }
+            }
+        }
+    }
+
     companion object {
         /** Data updates older than this are dropped on every write. */
         const val DATA_UPDATE_RETENTION_MS: Long = 5 * 60 * 1000L
 
         /** Hard cap so a chatty session can't grow the buffer without bound. */
         const val MAX_ENTRIES: Int = 500
+
+        private val Context.logStore: DataStore<PersistedLogBuffer> by dataStore(
+            fileName = "terrazzo_logs.pb",
+            serializer = protoBufStoreSerializer(PersistedLogBuffer()),
+        )
     }
 }
 

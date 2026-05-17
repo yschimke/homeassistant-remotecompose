@@ -120,7 +120,7 @@ private fun rememberPreviewGraph(): TerrazzoGraph {
                 }
             override val wearSyncManager: WearSyncManager = NoOpWearSyncManager()
             override val logStore: ee.schimke.terrazzo.core.logs.LogStore =
-                ee.schimke.terrazzo.core.logs.LogStore()
+                ee.schimke.terrazzo.core.logs.LogStore(context)
         }
     }
 }
