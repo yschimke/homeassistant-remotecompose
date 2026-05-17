@@ -3,6 +3,7 @@ package ee.schimke.terrazzo.core.session
 import ee.schimke.ha.client.DashboardSummary
 import ee.schimke.ha.client.HaClient
 import ee.schimke.ha.client.HaConfig
+import ee.schimke.ha.client.HaInstanceConfig
 import ee.schimke.ha.model.Dashboard
 import ee.schimke.ha.model.HaSnapshot
 import io.ktor.client.engine.HttpClientEngine
@@ -47,6 +48,13 @@ interface HaSession {
     suspend fun connect()
     suspend fun listDashboards(): List<DashboardSummary>
     suspend fun loadDashboard(urlPath: String?): Pair<Dashboard, HaSnapshot>
+
+    /**
+     * Fetch HA's `get_config` payload — version + `internal_url` / `external_url`. Live sessions
+     * round-trip the WebSocket; demo / offline sessions return null so callers can skip the
+     * persist-public-URL side effect.
+     */
+    suspend fun fetchInstanceConfig(): HaInstanceConfig? = null
 
     /**
      * Fire-and-await an HA service call. The dashboard's
@@ -118,6 +126,7 @@ class LiveHaSession(
         val snapshot = client.snapshot()
         return dashboard to snapshot
     }
+    override suspend fun fetchInstanceConfig(): HaInstanceConfig = client.fetchConfig()
     override suspend fun callService(
         domain: String,
         service: String,
