@@ -8,6 +8,7 @@ import android.util.Log
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.platform.LocalContext
 import ee.schimke.ha.rc.AlarmKeypadCoordinator
 import ee.schimke.ha.rc.CardDocumentCache
@@ -45,13 +46,26 @@ import kotlinx.coroutines.launch
  * doesn't update.
  */
 @Composable
-fun rememberDashboardActionDispatcher(session: HaSession): HaActionDispatcher {
+fun rememberDashboardActionDispatcher(
+    session: HaSession,
+    readOnly: Boolean = true,
+): HaActionDispatcher {
     val context = LocalContext.current
     val cache = LocalCardDocumentCache.current
     val scope = rememberCoroutineScope()
     val logStore = LocalTerrazzoGraph.current.logStore
+    // Read fresh each dispatch so toggling the chip takes effect without
+    // recreating the dispatcher (and losing AlarmKeypadCoordinator state).
+    val readOnlyState = rememberUpdatedState(readOnly)
     return remember(session, context, cache, scope, logStore) {
-        val core = DashboardActionDispatcher(context.applicationContext, session, cache, scope, logStore)
+        val core = DashboardActionDispatcher(
+            context.applicationContext,
+            session,
+            cache,
+            scope,
+            logStore,
+            readOnly = { readOnlyState.value },
+        )
         // The keypad coordinator buffers per-key host actions and
         // translates ARM intents into a single `call_service` with the
         // entered code attached. Other action variants pass through.
@@ -65,6 +79,7 @@ private class DashboardActionDispatcher(
     private val cache: CardDocumentCache,
     private val scope: CoroutineScope,
     private val logStore: LogStore,
+    private val readOnly: () -> Boolean,
 ) : HaActionDispatcher {
     override fun dispatch(action: HaAction) {
         // Log every dispatched action (before any network round-trip)
@@ -74,8 +89,20 @@ private class DashboardActionDispatcher(
         recordToLog(action)
         when (action) {
             is HaAction.Url -> launchUrl(action.url)
-            is HaAction.Toggle -> handleToggle(action.entityId)
-            is HaAction.CallService -> handleCallService(action)
+            is HaAction.Toggle -> {
+                if (readOnly()) {
+                    Log.i(TAG, "Read-only mode: dropping toggle for ${action.entityId}")
+                    return
+                }
+                handleToggle(action.entityId)
+            }
+            is HaAction.CallService -> {
+                if (readOnly()) {
+                    Log.i(TAG, "Read-only mode: dropping ${action.domain}.${action.service}")
+                    return
+                }
+                handleCallService(action)
+            }
             is HaAction.MoreInfo,
             is HaAction.Navigate,
             // AlarmKey / AlarmIntent should be intercepted upstream by

@@ -119,6 +119,21 @@ class PreferencesStore(private val context: Context) {
     }
 
     /**
+     * Permanent write mode. When off (the default), every cold start
+     * seeds the dashboard write/read chip with Read, so a relaunch never
+     * silently leaves the app capable of firing service calls. When on,
+     * cold start seeds with Write — opt-in for users who trust their
+     * device + workflow. Independent of the in-session chip toggle:
+     * flipping the chip overrides the seed for the current process.
+     */
+    val permanentWriteMode: Flow<Boolean>
+        get() = context.store.data.map { it[PERMANENT_WRITE_KEY] ?: false }
+
+    suspend fun setPermanentWriteMode(enabled: Boolean) {
+        context.store.edit { it[PERMANENT_WRITE_KEY] = enabled }
+    }
+
+    /**
      * The dashboard the user last opened. Drives auto-launch: on cold
      * start, [ee.schimke.terrazzo.MainActivity] reads this once and
      * seeds the dashboard nav-state, so a single-dashboard or 2-3
@@ -171,6 +186,7 @@ class PreferencesStore(private val context: Context) {
         private val GRID_LAYOUT_KEY = booleanPreferencesKey("experimental_grid_layout")
         private val COLLAPSED_MODE_KEY = booleanPreferencesKey("collapsed_mode")
         private val LOGS_VIEW_KEY = booleanPreferencesKey("logs_view_enabled")
+        private val PERMANENT_WRITE_KEY = booleanPreferencesKey("permanent_write_mode")
 
         /** Stored value for HA's default (unnamed) dashboard. */
         const val DEFAULT_DASHBOARD_SENTINEL: String = "__default__"
