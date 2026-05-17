@@ -25,6 +25,8 @@ import ee.schimke.terrazzo.core.auth.TokenVault
 import ee.schimke.terrazzo.core.cache.OfflineCache
 import ee.schimke.terrazzo.core.di.HaSessionFactory
 import ee.schimke.terrazzo.core.di.TerrazzoGraph
+import ee.schimke.terrazzo.core.mobileapp.MobileAppRegistrar
+import ee.schimke.terrazzo.core.mobileapp.MobileAppStore
 import ee.schimke.terrazzo.core.monitor.CardMonitor
 import ee.schimke.terrazzo.core.pin.PinStore
 import ee.schimke.terrazzo.core.pin.WearWidgetSlotsStore
@@ -36,6 +38,7 @@ import ee.schimke.terrazzo.core.wearsync.WearSyncManager
 import ee.schimke.terrazzo.core.widget.WidgetStore
 import ee.schimke.terrazzo.dashboard.DashboardListState
 import ee.schimke.terrazzo.dashboard.DashboardPickerScreen
+import ee.schimke.terrazzo.dashboard.DashboardSelectionScreen
 import ee.schimke.terrazzo.dashboard.DashboardViewScreen
 import ee.schimke.terrazzo.discovery.DiscoveryScreen
 import ee.schimke.terrazzo.ui.TerrazzoTheme
@@ -121,6 +124,9 @@ private fun rememberPreviewGraph(): TerrazzoGraph {
                     remoteUrlStore = remoteUrlStore,
                 )
             override val authService: HaAuthService = HaAuthService(context, httpEngineFactory)
+            override val mobileAppStore: MobileAppStore = MobileAppStore(context)
+            override val mobileAppRegistrar: MobileAppRegistrar =
+                MobileAppRegistrar(context, mobileAppStore, httpEngineFactory)
             override val sessionFactory: HaSessionFactory
                 get() = error("sessionFactory not wired in previews")
             override val sessionWriteMode: ee.schimke.terrazzo.core.session.SessionWriteMode =
@@ -266,6 +272,72 @@ fun Screen_DashboardView_ThemeStyle(
         session = demoSession(),
         urlPath = null,
         onCardLongPress = {},
+    )
+}
+
+/**
+ * Sample dashboard list for the selection-screen previews: a couple of
+ * named custom dashboards (what HA actually returns from
+ * `lovelace/dashboards/list`). The screen itself stitches in the
+ * built-in "Overview" entry on top of this.
+ */
+private val SELECTION_SAMPLE_DASHBOARDS = listOf(
+    DashboardSummary(urlPath = "lovelace-mobile", title = "Living room"),
+    DashboardSummary(urlPath = "lovelace-garage", title = "Garage"),
+    DashboardSummary(urlPath = "energy", title = "Energy"),
+)
+
+@Preview(
+    name = "dashboard selection · signin",
+    showBackground = false,
+    widthDp = PHONE_WIDTH_DP,
+    heightDp = PHONE_HEIGHT_DP,
+)
+@Composable
+fun Screen_DashboardSelection_Signin() = PhoneHost {
+    DashboardSelectionScreen(
+        state = DashboardListState.Ready(SELECTION_SAMPLE_DASHBOARDS),
+        initialSelection = null,
+        onConfirm = {},
+        onBack = null,
+    )
+}
+
+@Preview(
+    name = "dashboard selection · settings",
+    showBackground = false,
+    widthDp = PHONE_WIDTH_DP,
+    heightDp = PHONE_HEIGHT_DP,
+)
+@Composable
+fun Screen_DashboardSelection_Settings() = PhoneHost {
+    DashboardSelectionScreen(
+        state = DashboardListState.Ready(SELECTION_SAMPLE_DASHBOARDS),
+        initialSelection = setOf(
+            PreferencesStore.DEFAULT_DASHBOARD_SENTINEL,
+            "lovelace-mobile",
+        ),
+        onConfirm = {},
+        onBack = {},
+        title = "Manage dashboards",
+    )
+}
+
+@Preview(
+    name = "dashboard selection · theme",
+    showBackground = false,
+    widthDp = PHONE_WIDTH_DP,
+    heightDp = PHONE_HEIGHT_DP,
+)
+@Composable
+fun Screen_DashboardSelection_ThemeStyle(
+    @PreviewParameter(ThemeStyleProvider::class) style: ThemeStyle,
+) = PhoneHost(style = style) {
+    DashboardSelectionScreen(
+        state = DashboardListState.Ready(SELECTION_SAMPLE_DASHBOARDS),
+        initialSelection = null,
+        onConfirm = {},
+        onBack = null,
     )
 }
 
