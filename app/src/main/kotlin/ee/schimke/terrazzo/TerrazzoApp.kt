@@ -146,6 +146,18 @@ fun TerrazzoApp(
     // can render dashboards / live values from whatever's current.
     LaunchedEffect(session) { wearSync.setSession(session) }
 
+    // Once a live session has finished connecting, ask HA for its
+    // config and stash the `external_url` so the OkHttp interceptor
+    // can swap in the public host when LAN isn't reachable
+    // (e.g. on cellular). A demo / offline session returns null
+    // from [fetchInstanceConfig], so this no-ops there.
+    LaunchedEffect(session) {
+        val s = session ?: return@LaunchedEffect
+        s.connectionStatus.first { it == SessionConnectionStatus.Connected }
+        val config = runCatching { s.fetchInstanceConfig() }.getOrNull() ?: return@LaunchedEffect
+        graph.remoteUrlStore.setExternalUrl(s.baseUrl, config.externalUrl)
+    }
+
     // Plumb session credentials into the process-wide image stack so
     // the singleton OkHttp client adds `Authorization: Bearer …` to
     // same-host fetches without rebuilding the loader. Demo / null
@@ -216,6 +228,7 @@ fun TerrazzoApp(
                     if (previousBaseUrl != null) {
                         graph.offlineCache.clearInstance(previousBaseUrl)
                         runCatching { graph.tokenVault.clear(previousBaseUrl) }
+                        graph.remoteUrlStore.clear(previousBaseUrl)
                     }
                     previous?.close()
                 }
@@ -613,6 +626,14 @@ private fun SettingsScreen(
                 if (isDemo) "Demo mode — offline fake data" else session.baseUrl,
                 style = MaterialTheme.typography.bodyMedium,
             )
+            if (!isDemo) {
+                val externalUrl by graph.remoteUrlStore.externalUrl(session.baseUrl)
+                    .collectAsState(initial = null)
+                externalUrl?.let { url ->
+                    Text("Public URL (away from home)", style = MaterialTheme.typography.labelMedium)
+                    Text(url, style = MaterialTheme.typography.bodyMedium)
+                }
+            }
 
             Row(
                 modifier = Modifier.fillMaxWidth(),

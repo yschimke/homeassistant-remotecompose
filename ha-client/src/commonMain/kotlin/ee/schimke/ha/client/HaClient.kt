@@ -134,6 +134,22 @@ class HaClient(private val config: HaConfig, engine: HttpClientEngine? = null) {
     return json.decodeFromJsonElement(Dashboard.serializer(), result)
   }
 
+  /**
+   * Fetch the HA instance's `config` payload — same shape `GET /api/config` returns over REST,
+   * exposed here over the already-open WebSocket so we don't pay a separate TCP/TLS handshake. Used
+   * to pick up the user's configured `external_url` (Nabu Casa / reverse-proxy hostname) so the app
+   * can route over the public URL when away from the LAN.
+   */
+  suspend fun fetchConfig(): HaInstanceConfig {
+    val result = runCommand("get_config")
+    return HaInstanceConfig(
+      version = result["version"]?.jsonPrimitive?.content,
+      locationName = result["location_name"]?.jsonPrimitive?.content,
+      internalUrl = result["internal_url"]?.nullableString(),
+      externalUrl = result["external_url"]?.nullableString(),
+    )
+  }
+
   /** Top-level Lovelace dashboards registered in `lovelace/dashboards`. */
   suspend fun listDashboards(): List<DashboardSummary> {
     val result = runCommandArray("lovelace/dashboards/list")
@@ -324,3 +340,23 @@ private fun String.toWsUrl(): String =
 
 @Serializable
 data class DashboardSummary(val urlPath: String?, val title: String, val icon: String? = null)
+
+/**
+ * Subset of HA's `config` payload we care about. HA's `external_url` is set when the user has
+ * configured remote access (Nabu Casa, reverse proxy, etc.); `internal_url` is what the user
+ * configured for LAN access. Either may be null if the user hasn't set them.
+ */
+@Serializable
+data class HaInstanceConfig(
+  val version: String? = null,
+  val locationName: String? = null,
+  val internalUrl: String? = null,
+  val externalUrl: String? = null,
+)
+
+private fun kotlinx.serialization.json.JsonElement.nullableString(): String? =
+  when (this) {
+    is kotlinx.serialization.json.JsonNull -> null
+    is kotlinx.serialization.json.JsonPrimitive -> content
+    else -> null
+  }
