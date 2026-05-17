@@ -319,11 +319,17 @@ private fun AuthenticatedShell(
     // screen for this session, force them onto it before opening any
     // dashboard. We snapshot the pref once per session (rather than
     // observing it as a Flow) so the screen doesn't auto-dismiss the
-    // moment the confirm callback writes the pref.
+    // moment the confirm callback writes the pref. Demo mode skips
+    // the gate entirely — `DemoData.BOARDS` is a curated showcase set
+    // and there's no per-user "which of MY dashboards" question to
+    // answer, so going straight to a dashboard matches both the
+    // try-the-app intent and the instrumented test's expectations.
     var selectionResolved by remember(session) { mutableStateOf(false) }
     var selectionMissingAtSignin by remember(session) { mutableStateOf(false) }
     LaunchedEffect(session) {
-        selectionMissingAtSignin = graph.preferencesStore.selectedDashboardUrlsNow() == null
+        val isDemo = session is DemoHaSession
+        selectionMissingAtSignin =
+            !isDemo && graph.preferencesStore.selectedDashboardUrlsNow() == null
         selectionResolved = true
     }
     LaunchedEffect(selectionResolved, selectionMissingAtSignin) {
