@@ -18,6 +18,7 @@ import ee.schimke.terrazzo.core.session.DemoHaSession
 import ee.schimke.terrazzo.core.session.HaSession
 import ee.schimke.terrazzo.core.session.LiveHaSession
 import ee.schimke.terrazzo.core.session.OfflineOnlySession
+import ee.schimke.terrazzo.core.session.SessionWriteMode
 import ee.schimke.terrazzo.core.wearsync.WearSyncManager
 import ee.schimke.terrazzo.core.widget.WidgetStore
 
@@ -42,6 +43,7 @@ interface TerrazzoGraph {
     val wearSyncManager: WearSyncManager
     val lanConnectionPolicy: LanConnectionPolicy
     val logStore: LogStore
+    val sessionWriteMode: SessionWriteMode
 
     fun interface Factory {
         fun create(context: Context): TerrazzoGraph
