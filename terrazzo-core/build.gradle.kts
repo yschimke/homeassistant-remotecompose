@@ -24,8 +24,10 @@ kotlin {
       implementation(project(":ha-client"))
       implementation(libs.kotlinx.coroutines.core)
       implementation(libs.kotlinx.serialization.json)
+      implementation(libs.kotlinx.serialization.protobuf)
     }
     androidMain.dependencies {
+      implementation(libs.androidx.datastore)
       implementation(libs.androidx.datastore.preferences)
       implementation(libs.appauth)
       implementation(libs.ktor.client.okhttp)
