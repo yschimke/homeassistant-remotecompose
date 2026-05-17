@@ -1,6 +1,7 @@
 package ee.schimke.terrazzo.core.session
 
 import ee.schimke.ha.client.DashboardSummary
+import ee.schimke.ha.client.HaInstanceConfig
 import ee.schimke.ha.model.Dashboard
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.terrazzo.core.cache.OfflineCacheStorage
@@ -65,6 +66,8 @@ class CachedHaSession(private val delegate: HaSession, private val cache: Offlin
       }
       .getOrElse { ex -> cached ?: throw ex }
   }
+
+  override suspend fun fetchInstanceConfig(): HaInstanceConfig? = delegate.fetchInstanceConfig()
 
   override suspend fun close() {
     delegate.close()
