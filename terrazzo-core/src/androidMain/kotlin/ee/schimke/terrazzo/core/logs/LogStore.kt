@@ -84,12 +84,26 @@ class LogStore(context: Context) {
         val persisted = dataStore.data.first()
         val loaded = persisted.entries.mapNotNull { it.toModel() }
         val now = clock()
+        val merged: Boolean
         synchronized(lock) {
+            // Merge — do NOT replace. Events recorded while this
+            // suspending load is in flight (e.g. the connection
+            // observer firing during boot) live in `entries` already;
+            // a naive `clear() + addAll(loaded)` would drop them.
+            // Loaded entries are older by construction, so prepend
+            // and sort to keep the chronological order the UI relies
+            // on. `distinct()` guards against a clean restart where
+            // an entry could in principle land twice.
+            val current = entries.toList()
             entries.clear()
-            entries.addAll(loaded)
+            entries.addAll((loaded + current).distinct().sortedBy { it.timestamp })
             prune(now)
+            merged = current.isNotEmpty()
         }
         publish()
+        // Anything recorded during the load gap was only in memory;
+        // flush so disk reflects the merged ring.
+        if (merged) persistAsync()
     }
 
     fun recordConnection(status: LogConnectionStatus, message: String? = null) {
@@ -183,17 +197,21 @@ class LogStore(context: Context) {
     }
 
     /**
-     * Fire a write of the current ring to disk. Writes queue inside
-     * DataStore (`updateData` is sequential), so a burst of events
-     * coalesces naturally without us tracking versions. The
-     * `runCatching` swallows IO errors — a missed write on the debug
-     * surface isn't worth crashing the app.
+     * Fire a write of the current ring to disk. The snapshot is read
+     * *inside* [DataStore.updateData] so its sequential transform
+     * mutex orders writes by completion, not by launch — otherwise
+     * two concurrent `persistAsync` calls could land on disk in the
+     * opposite order from their in-memory ordering, leaving disk
+     * state stale. The `runCatching` swallows IO errors — a missed
+     * write on the debug surface isn't worth crashing the app.
      */
     private fun persistAsync() {
-        val snapshot = synchronized(lock) { entries.map { it.toPersisted() } }
         scope.launch {
             runCatching {
-                dataStore.updateData { PersistedLogBuffer(entries = snapshot) }
+                dataStore.updateData {
+                    val snapshot = synchronized(lock) { entries.map { it.toPersisted() } }
+                    PersistedLogBuffer(entries = snapshot)
+                }
             }
         }
     }
