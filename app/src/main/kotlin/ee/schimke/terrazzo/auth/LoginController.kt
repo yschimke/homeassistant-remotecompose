@@ -85,11 +85,13 @@ class LoginController internal constructor(
                     }
                     vault.put(baseUrl, refresh)
                     // mobile_app registration is best-effort: HA may have the integration
-                    // disabled, or be temporarily unreachable. Login still succeeds; the
-                    // user just won't appear as a notifiable device until the next attempt.
+                    // disabled, or be temporarily unreachable. Fire it after `onReady` so
+                    // a slow registration round-trip can't stall sign-in behind its
+                    // timeout window — the UI advances immediately and the device just
+                    // won't appear as a notifiable target until a later retry.
+                    onReady(baseUrl, access)
                     runCatching { mobileAppRegistrar.register(baseUrl, access) }
                         .onFailure { ex -> Log.w(TAG, "mobile_app registration failed", ex) }
-                    onReady(baseUrl, access)
                 }
                 .onFailure { ex ->
                     val authFailure = ex as? AuthorizationException
