@@ -6,21 +6,30 @@ import android.net.Uri
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
 import ee.schimke.terrazzo.core.di.AppScope
+import ee.schimke.terrazzo.core.network.HttpEngineFactory
+import io.ktor.client.HttpClient
+import io.ktor.client.request.forms.submitForm
+import io.ktor.client.statement.bodyAsText
+import io.ktor.http.Parameters
+import io.ktor.http.isSuccess
 import java.net.HttpURLConnection
 import java.net.URL
 import javax.net.ssl.HttpsURLConnection
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonNull
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.jsonObject
 import net.openid.appauth.AppAuthConfiguration
 import net.openid.appauth.AuthorizationException
 import net.openid.appauth.AuthorizationRequest
 import net.openid.appauth.AuthorizationResponse
 import net.openid.appauth.AuthorizationService
 import net.openid.appauth.AuthorizationServiceConfiguration
-import net.openid.appauth.GrantTypeValues
 import net.openid.appauth.ResponseTypeValues
-import net.openid.appauth.TokenRequest
 import net.openid.appauth.TokenResponse
 import net.openid.appauth.connectivity.ConnectionBuilder
 
@@ -47,10 +56,21 @@ import net.openid.appauth.connectivity.ConnectionBuilder
  * refresh token is handed to [TokenVault] for persistence; the access
  * token is returned to the caller and held in memory for the
  * WebSocket connection lifetime.
+ *
+ * Refresh path: [refreshAccessToken] bypasses AppAuth and posts the
+ * `grant_type=refresh_token` form directly through Ktor on top of the
+ * shared [HttpEngineFactory] OkHttp engine. That means
+ * `RemoteUrlInterceptor` + `LanConnectionPolicyInterceptor` see the
+ * request and can rewrite a LAN-only base URL to the instance's public
+ * URL when the device is away from home. AppAuth's
+ * `performTokenRequest` runs on its own `HttpURLConnection` and can't
+ * be re-routed without a heavier `ConnectionBuilder` bridge — initial
+ * sign-in still uses that path, but the user is usually on the LAN
+ * they just typed the URL for, so it's not a blocker.
  */
 @SingleIn(AppScope::class)
 @Inject
-class HaAuthService(context: Context) {
+class HaAuthService(context: Context, httpEngineFactory: HttpEngineFactory) {
 
     // Allow HTTP for the integration Docker container. AppAuth's
     // default ConnectionBuilder rejects non-HTTPS endpoints at the
@@ -62,7 +82,16 @@ class HaAuthService(context: Context) {
             .build(),
     )
 
-    fun close() = appAuth.dispose()
+    // Shares the engine (and its interceptor chain) with HaClient /
+    // AddonClient so token refresh participates in the same URL-rewrite
+    // + LAN-policy gating. Cheap — Ktor reuses the OkHttp dispatcher /
+    // connection pool from the engine.
+    private val httpClient: HttpClient = HttpClient(httpEngineFactory.engine)
+
+    fun close() {
+        appAuth.dispose()
+        httpClient.close()
+    }
 
     /**
      * Build the pending-intent payload an Activity uses to launch the
@@ -106,31 +135,65 @@ class HaAuthService(context: Context) {
      * stub session to a live one without sending the user back through
      * the Custom Tab. HA usually doesn't rotate the refresh token on
      * this exchange, but if it does the response carries the new one.
+     *
+     * Goes through the shared OkHttp engine so the request is gated by
+     * `LanConnectionPolicyInterceptor` and rewritten to the public URL
+     * by `RemoteUrlInterceptor` when the device can't reach the LAN
+     * base URL (e.g. cellular, away from home).
      */
-    suspend fun refreshAccessToken(baseUrl: String, refreshToken: String): TokenResponse =
-        suspendCancellableCoroutine { cont ->
-            val config = AuthorizationServiceConfiguration(
-                Uri.parse("$baseUrl/auth/authorize"),
-                Uri.parse("$baseUrl/auth/token"),
-            )
-            val request = TokenRequest.Builder(config, CLIENT_ID)
-                .setGrantType(GrantTypeValues.REFRESH_TOKEN)
-                .setRefreshToken(refreshToken)
-                .build()
-            appAuth.performTokenRequest(request) { tokens, ex ->
-                when {
-                    tokens != null -> cont.resume(tokens)
-                    ex != null -> cont.resumeWithException(ex)
-                    else -> cont.resumeWithException(AuthorizationException.GeneralErrors.NETWORK_ERROR)
-                }
-            }
+    suspend fun refreshAccessToken(baseUrl: String, refreshToken: String): RefreshedTokens {
+        val tokenUrl = "${baseUrl.trim().removeSuffix("/")}/auth/token"
+        val response = httpClient.submitForm(
+            url = tokenUrl,
+            formParameters = Parameters.build {
+                append("grant_type", "refresh_token")
+                append("refresh_token", refreshToken)
+                append("client_id", CLIENT_ID)
+            },
+        )
+        val body = response.bodyAsText()
+        if (!response.status.isSuccess()) {
+            error("HA token refresh failed: ${response.status} $body")
         }
+        return parseTokenResponse(body)
+    }
 
     companion object {
         const val CLIENT_ID = "https://yschimke.github.io/homeassistant-remotecompose/terrazzo-auth/index.html"
         const val REDIRECT_URI = "rcha://auth-callback"
+
+        private val tokenJson = Json { ignoreUnknownKeys = true; isLenient = true }
+
+        fun parseTokenResponse(body: String): RefreshedTokens {
+            val obj: JsonObject = tokenJson.parseToJsonElement(body).jsonObject
+            return RefreshedTokens(
+                accessToken = obj.stringOrNull("access_token"),
+                refreshToken = obj.stringOrNull("refresh_token"),
+                expiresInSeconds = obj["expires_in"]?.let {
+                    (it as? JsonPrimitive)?.content?.toLongOrNull()
+                },
+                tokenType = obj.stringOrNull("token_type"),
+            )
+        }
+
+        private fun JsonObject.stringOrNull(key: String): String? = when (val v = this[key]) {
+            null, JsonNull -> null
+            is JsonPrimitive -> v.content
+            else -> null
+        }
     }
 }
+
+/**
+ * Result of a refresh-token exchange. Fields mirror the OAuth response shape so the call site
+ * can read `accessToken` and (optionally) `refreshToken` if HA rotated it.
+ */
+data class RefreshedTokens(
+    val accessToken: String?,
+    val refreshToken: String?,
+    val expiresInSeconds: Long?,
+    val tokenType: String?,
+)
 
 /**
  * AppAuth `ConnectionBuilder` that accepts both HTTPS and plain HTTP.

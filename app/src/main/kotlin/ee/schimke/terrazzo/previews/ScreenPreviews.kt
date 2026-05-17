@@ -108,13 +108,21 @@ private fun rememberPreviewGraph(): TerrazzoGraph {
             // authService → AppAuth client config) so a real instance
             // is cheap and reaches no network until the user signs in.
             override val tokenVault: TokenVault = TokenVault(context)
-            override val authService: HaAuthService = HaAuthService(context)
-            override val sessionFactory: HaSessionFactory
-                get() = error("sessionFactory not wired in previews")
-            override val lanConnectionPolicy: ee.schimke.terrazzo.core.network.LanConnectionPolicy
-                get() = error("lanConnectionPolicy not wired in previews")
             override val remoteUrlStore: ee.schimke.terrazzo.core.network.RemoteUrlStore =
                 ee.schimke.terrazzo.core.network.RemoteUrlStore(context)
+            // Real LAN policy + engine — both are cheap (no network
+            // until something fires a request) and HaAuthService needs
+            // the engine in its constructor now.
+            override val lanConnectionPolicy: ee.schimke.terrazzo.core.network.LanConnectionPolicy =
+                ee.schimke.terrazzo.core.network.LanConnectionPolicy(context)
+            private val httpEngineFactory =
+                ee.schimke.terrazzo.core.network.HttpEngineFactory(
+                    policy = lanConnectionPolicy,
+                    remoteUrlStore = remoteUrlStore,
+                )
+            override val authService: HaAuthService = HaAuthService(context, httpEngineFactory)
+            override val sessionFactory: HaSessionFactory
+                get() = error("sessionFactory not wired in previews")
             override val sessionWriteMode: ee.schimke.terrazzo.core.session.SessionWriteMode =
                 ee.schimke.terrazzo.core.session.SessionWriteMode()
             override val cardMonitor: CardMonitor
