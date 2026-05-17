@@ -177,6 +177,51 @@ class PreferencesStore(private val context: Context) {
         context.store.edit { it.remove(LAST_VIEWED_KEY) }
     }
 
+    /**
+     * The set of dashboards the user has chosen to surface in the
+     * picker and the top-bar switcher. Drives signin gating: a `null`
+     * value means the user hasn't been through the selection screen
+     * yet for this instance, so the auth flow stops on the selection
+     * step before opening any dashboard. A non-null set — even an
+     * empty one — counts as "user has decided"; the empty case is
+     * handled by the picker UI rather than re-triggering selection.
+     *
+     * Encoding mirrors [lastViewedDashboard]: HA's default dashboard
+     * (`urlPath = null` over the wire) is stored as
+     * [DEFAULT_DASHBOARD_SENTINEL] so it round-trips through a
+     * `Set<String>` cleanly.
+     */
+    val selectedDashboardUrls: Flow<Set<String>?>
+        get() = context.store.data.map { prefs ->
+            if (SELECTED_DASHBOARDS_KEY !in prefs) null
+            else prefs[SELECTED_DASHBOARDS_KEY]!!
+                .split('\n')
+                .filter { it.isNotEmpty() }
+                .toSet()
+        }
+
+    suspend fun selectedDashboardUrlsNow(): Set<String>? = selectedDashboardUrls.first()
+
+    /**
+     * Persist the user's dashboard choices. Each `urlPath` is encoded
+     * as itself; the built-in (default) dashboard uses
+     * [DEFAULT_DASHBOARD_SENTINEL]. The stored string is a `\n`-joined
+     * list; HA url_paths are `[a-z0-9_-]+` so newline can't appear
+     * inside an entry.
+     */
+    suspend fun setSelectedDashboardUrls(urls: Set<String>) {
+        context.store.edit { it[SELECTED_DASHBOARDS_KEY] = urls.joinToString("\n") }
+    }
+
+    /**
+     * Forget the dashboard selection. Called on sign-out / demo toggle
+     * so the next session re-runs selection against whatever
+     * dashboards the new instance exposes.
+     */
+    suspend fun clearSelectedDashboardUrls() {
+        context.store.edit { it.remove(SELECTED_DASHBOARDS_KEY) }
+    }
+
     companion object {
         private val Context.store by preferencesDataStore(name = "terrazzo_prefs")
         private val DEMO_KEY = booleanPreferencesKey("demo_mode")
@@ -187,6 +232,7 @@ class PreferencesStore(private val context: Context) {
         private val COLLAPSED_MODE_KEY = booleanPreferencesKey("collapsed_mode")
         private val LOGS_VIEW_KEY = booleanPreferencesKey("logs_view_enabled")
         private val PERMANENT_WRITE_KEY = booleanPreferencesKey("permanent_write_mode")
+        private val SELECTED_DASHBOARDS_KEY = stringPreferencesKey("selected_dashboards")
 
         /** Stored value for HA's default (unnamed) dashboard. */
         const val DEFAULT_DASHBOARD_SENTINEL: String = "__default__"

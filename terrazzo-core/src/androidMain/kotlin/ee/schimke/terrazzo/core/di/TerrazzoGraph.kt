@@ -12,6 +12,7 @@ import ee.schimke.terrazzo.core.mobileapp.MobileAppStore
 import ee.schimke.terrazzo.core.monitor.CardMonitor
 import ee.schimke.terrazzo.core.network.HttpEngineFactory
 import ee.schimke.terrazzo.core.network.LanConnectionPolicy
+import ee.schimke.terrazzo.core.network.RemoteUrlStore
 import ee.schimke.terrazzo.core.pin.PinStore
 import ee.schimke.terrazzo.core.pin.WearWidgetSlotsStore
 import ee.schimke.terrazzo.core.prefs.PreferencesStore
@@ -46,6 +47,7 @@ interface TerrazzoGraph {
     val cardMonitor: CardMonitor
     val wearSyncManager: WearSyncManager
     val lanConnectionPolicy: LanConnectionPolicy
+    val remoteUrlStore: RemoteUrlStore
     val logStore: LogStore
     val sessionWriteMode: SessionWriteMode
 

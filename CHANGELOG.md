@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.1.25](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.24...v0.1.25) (2026-05-17)
+
+
+### Features
+
+* **app:** add hidden logs view for WS data, connection events, local actions ([#285](https://github.com/yschimke/homeassistant-remotecompose/issues/285)) ([32ccc56](https://github.com/yschimke/homeassistant-remotecompose/commit/32ccc5618733b3082053fb93abba69856aea51c7))
+* **auth:** route token refresh through OkHttp engine ([#290](https://github.com/yschimke/homeassistant-remotecompose/issues/290)) ([3b8aea9](https://github.com/yschimke/homeassistant-remotecompose/commit/3b8aea962cd48a283f0dfe0a2dc98ff0a0536d41))
+* **dashboard:** add Read/Write chip next to the connection chip ([#286](https://github.com/yschimke/homeassistant-remotecompose/issues/286)) ([f99805a](https://github.com/yschimke/homeassistant-remotecompose/commit/f99805a38f36bc46bc73d1d8a6ef2c7b0fe6bc60))
+* **discovery:** mDNS scan in Discovery screen with click-to-pick ([#289](https://github.com/yschimke/homeassistant-remotecompose/issues/289)) ([91c0993](https://github.com/yschimke/homeassistant-remotecompose/commit/91c09931e7b066085f65e519bcf48849d39721a4))
+* **logs:** persist log buffer via Proto DataStore ([#288](https://github.com/yschimke/homeassistant-remotecompose/issues/288)) ([808edc2](https://github.com/yschimke/homeassistant-remotecompose/commit/808edc2b2c4ca1baf214c810ba577ebdb46b655a))
+
 ## [0.1.24](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.23...v0.1.24) (2026-05-16)
 
 
