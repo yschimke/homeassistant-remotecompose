@@ -34,7 +34,7 @@ kotlinx-datetime = "0.8.0"
 logback = "1.5.32"
 junit-jupiter-bom = "6.0.3"
 mockserver = "5.15.0"
-indriya = "2.2.3"
+indriya = "2.2.4"
 
 # Preview tooling
 compose-preview-plugin = "0.10.16"
