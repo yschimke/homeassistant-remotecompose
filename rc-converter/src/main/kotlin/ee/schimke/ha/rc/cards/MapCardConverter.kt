@@ -10,13 +10,11 @@ import androidx.compose.remote.creation.compose.layout.RemoteRow
 import androidx.compose.remote.creation.compose.layout.RemoteText
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.background
-import androidx.compose.remote.creation.compose.modifier.border
 import androidx.compose.remote.creation.compose.modifier.clip
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.modifier.size
 import androidx.compose.remote.creation.compose.shapes.RemoteCircleShape
-import androidx.compose.remote.creation.compose.shapes.RemoteRoundedCornerShape
 import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rs
@@ -29,6 +27,7 @@ import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.CardConverter
 import ee.schimke.ha.rc.components.LocalHaTheme
+import ee.schimke.ha.rc.components.cardChrome
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -64,9 +63,7 @@ class MapCardConverter : CardConverter {
         RemoteBox(
             modifier = modifier
                 .fillMaxWidth()
-                .clip(RemoteRoundedCornerShape(12.rdp))
-                .background(theme.cardBackground.rc)
-                .border(1.rdp, theme.divider.rc, RemoteRoundedCornerShape(12.rdp))
+                .then(cardChrome(theme.cardBackground, theme.divider))
                 .padding(horizontal = 12.rdp, vertical = 10.rdp),
         ) {
             RemoteColumn(verticalArrangement = RemoteArrangement.spacedBy(6.rdp)) {
