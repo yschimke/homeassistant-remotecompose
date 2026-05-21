@@ -38,6 +38,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.wear.compose.remote.material3.RemoteIcon
 import ee.schimke.ha.rc.components.HaAction
 import ee.schimke.ha.rc.components.LocalHaTheme
+import ee.schimke.ha.rc.components.cardChrome
 import ee.schimke.ha.rc.components.toRemoteAction
 
 /**
@@ -75,9 +76,7 @@ fun RemoteHaShutter(data: HaShutterCardData, modifier: RemoteModifier = RemoteMo
     RemoteBox(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RemoteRoundedCornerShape(12.rdp))
-            .background(theme.cardBackground.rc)
-            .border(1.rdp, theme.divider.rc, RemoteRoundedCornerShape(12.rdp))
+            .then(cardChrome(theme.cardBackground, theme.divider))
             .padding(horizontal = 12.rdp, vertical = 10.rdp),
     ) {
         RemoteColumn(verticalArrangement = RemoteArrangement.spacedBy(10.rdp)) {

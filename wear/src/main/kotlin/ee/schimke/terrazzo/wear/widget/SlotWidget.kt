@@ -26,6 +26,7 @@ import ee.schimke.ha.rc.RenderChild
 import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.cards.shutter.withEnhancedShutter
 import ee.schimke.ha.rc.components.HaTheme
+import ee.schimke.ha.rc.components.ProvideCardChrome
 import ee.schimke.ha.rc.components.ProvideHaTheme
 import ee.schimke.ha.rc.components.ThemeStyle
 import ee.schimke.ha.rc.components.haThemeFor
@@ -100,10 +101,16 @@ abstract class SlotWidget(internal val slotIndex: Int) : GlanceWearWidget() {
                 ProvideCardRegistry(registry) {
                     ProvideHaTheme(theme) {
                         ProvideCardSizeMode(CardSizeMode.Fixed) {
-                            if (card != null) {
-                                RenderChild(card, snapshot, RemoteModifier.fillMaxWidth())
-                            } else {
-                                EmptySlotPlaceholder(slotIndex, theme)
+                            // The Glance Wear container already supplies its
+                            // own shape + brush via WearWidgetBrush, so
+                            // suppress the per-card rounded clip + divider
+                            // border that would otherwise double up.
+                            ProvideCardChrome(enabled = false) {
+                                if (card != null) {
+                                    RenderChild(card, snapshot, RemoteModifier.fillMaxWidth())
+                                } else {
+                                    EmptySlotPlaceholder(slotIndex, theme)
+                                }
                             }
                         }
                     }

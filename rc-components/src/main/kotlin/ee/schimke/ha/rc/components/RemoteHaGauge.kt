@@ -14,17 +14,13 @@ import androidx.compose.remote.creation.compose.layout.RemoteRow
 import androidx.compose.remote.creation.compose.layout.RemoteSize
 import androidx.compose.remote.creation.compose.layout.RemoteText
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
-import androidx.compose.remote.creation.compose.modifier.background
-import androidx.compose.remote.creation.compose.modifier.border
 import androidx.compose.remote.creation.compose.modifier.clickable
-import androidx.compose.remote.creation.compose.modifier.clip
 import androidx.compose.remote.creation.compose.modifier.fillMaxHeight
 import androidx.compose.remote.creation.compose.modifier.fillMaxSize
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.creation.compose.modifier.height
 import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.modifier.width
-import androidx.compose.remote.creation.compose.shapes.RemoteRoundedCornerShape
 import androidx.compose.remote.creation.compose.state.RemoteFloat
 import androidx.compose.remote.creation.compose.state.asRemotePaint
 import androidx.compose.remote.creation.compose.state.rc
@@ -92,9 +88,7 @@ fun RemoteHaGauge(
         modifier = modifier
             .then(clickable)
             .fillMaxWidth()
-            .clip(RemoteRoundedCornerShape(12.rdp))
-            .background(theme.cardBackground.rc)
-            .border(1.rdp, theme.divider.rc, RemoteRoundedCornerShape(12.rdp))
+            .then(cardChrome(theme.cardBackground, theme.divider))
             .padding(horizontal = 14.rdp, vertical = 12.rdp),
     ) {
         RemoteColumn(
@@ -194,9 +188,7 @@ fun RemoteHaGaugeStacked(
         modifier =
             modifier
                 .then(clickable)
-                .clip(RemoteRoundedCornerShape(12.rdp))
-                .background(theme.cardBackground.rc)
-                .border(1.rdp, theme.divider.rc, RemoteRoundedCornerShape(12.rdp))
+                .then(cardChrome(theme.cardBackground, theme.divider))
                 .padding(8.rdp),
         contentAlignment = RemoteAlignment.BottomCenter,
     ) {
@@ -294,9 +286,7 @@ fun RemoteHaGaugeWide(
         modifier =
             modifier
                 .then(clickable)
-                .clip(RemoteRoundedCornerShape(12.rdp))
-                .background(theme.cardBackground.rc)
-                .border(1.rdp, theme.divider.rc, RemoteRoundedCornerShape(12.rdp))
+                .then(cardChrome(theme.cardBackground, theme.divider))
                 .padding(horizontal = 8.rdp, vertical = 6.rdp),
         verticalAlignment = RemoteAlignment.Bottom,
         horizontalArrangement = RemoteArrangement.spacedBy(8.rdp),

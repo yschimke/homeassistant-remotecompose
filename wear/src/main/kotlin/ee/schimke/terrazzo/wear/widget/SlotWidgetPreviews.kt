@@ -28,12 +28,15 @@ import ee.schimke.ha.rc.RenderChild
 import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.cards.shutter.withEnhancedShutter
 import ee.schimke.ha.rc.components.HaTheme
+import ee.schimke.ha.rc.components.ProvideCardChrome
 import ee.schimke.ha.rc.components.ProvideHaTheme
 import ee.schimke.ha.rc.components.ThemeStyle
 import ee.schimke.ha.rc.components.haThemeFor
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.put
 
 /**
@@ -50,7 +53,7 @@ import kotlinx.serialization.json.put
  * wear-profile regressions in CI.
  */
 
-private class PreviewSlotWidget(
+internal class PreviewSlotWidget(
     private val card: CardConfig?,
     private val snapshot: HaSnapshot,
     private val slotIndex: Int = 0,
@@ -67,10 +70,15 @@ private class PreviewSlotWidget(
                 ProvideCardRegistry(registry) {
                     ProvideHaTheme(theme) {
                         ProvideCardSizeMode(CardSizeMode.Fixed) {
-                            if (card != null) {
-                                RenderChild(card, snapshot, RemoteModifier.fillMaxWidth())
-                            } else {
-                                PreviewEmptyPlaceholder(slotIndex, theme)
+                            // Match the runtime SlotWidget: the wear
+                            // container already paints the shape + brush, so
+                            // skip the per-card chrome to avoid doubling up.
+                            ProvideCardChrome(enabled = false) {
+                                if (card != null) {
+                                    RenderChild(card, snapshot, RemoteModifier.fillMaxWidth())
+                                } else {
+                                    PreviewEmptyPlaceholder(slotIndex, theme)
+                                }
                             }
                         }
                     }
@@ -87,9 +95,9 @@ private fun PreviewEmptyPlaceholder(slotIndex: Int, theme: HaTheme) {
     }
 }
 
-private enum class ContainerType { Small, Large }
+internal enum class ContainerType { Small, Large }
 
-private fun cardConfig(
+internal fun cardConfig(
     type: String,
     build: kotlinx.serialization.json.JsonObjectBuilder.() -> Unit,
 ): CardConfig {
@@ -100,10 +108,20 @@ private fun cardConfig(
     return CardConfig(type = type, raw = obj)
 }
 
-private fun snapshotOf(vararg states: EntityState): HaSnapshot =
+internal fun snapshotOf(vararg states: EntityState): HaSnapshot =
     HaSnapshot(states = states.associateBy { it.entityId })
 
-private fun entityState(
+private val previewCardJson = Json { ignoreUnknownKeys = true; isLenient = true }
+
+/** Decode a YAML-like JSON card config string — the same authoring shape
+ *  the dashboard fixtures and HA's lovelace YAML use. */
+internal fun cardFromJson(json: String): CardConfig {
+    val obj = previewCardJson.parseToJsonElement(json).jsonObject
+    val type = (obj["type"] as JsonPrimitive).content
+    return CardConfig(type = type, raw = obj)
+}
+
+internal fun entityState(
     id: String,
     state: String,
     friendlyName: String? = null,
@@ -119,7 +137,7 @@ private fun entityState(
 }
 
 @Composable
-private fun SlotWidgetPreviewFixture(
+internal fun SlotWidgetPreviewFixture(
     card: CardConfig?,
     snapshot: HaSnapshot,
     container: ContainerType,

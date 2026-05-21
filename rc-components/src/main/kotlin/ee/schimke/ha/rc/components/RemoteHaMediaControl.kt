@@ -50,9 +50,7 @@ fun RemoteHaMediaControl(data: HaMediaControlData, modifier: RemoteModifier = Re
     RemoteBox(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RemoteRoundedCornerShape(12.rdp))
-            .background(theme.cardBackground.rc)
-            .border(1.rdp, theme.divider.rc, RemoteRoundedCornerShape(12.rdp))
+            .then(cardChrome(theme.cardBackground, theme.divider))
             .padding(horizontal = 12.rdp, vertical = 12.rdp),
     ) {
         RemoteRow(

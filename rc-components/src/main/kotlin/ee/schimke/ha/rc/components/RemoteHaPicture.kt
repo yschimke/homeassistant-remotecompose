@@ -50,9 +50,7 @@ fun RemoteHaPicture(data: HaPictureCardData, modifier: RemoteModifier = RemoteMo
             .then(click)
             .fillMaxWidth()
             .height(140.rdp)
-            .clip(RemoteRoundedCornerShape(12.rdp))
-            .background(theme.divider.rc)
-            .border(1.rdp, theme.divider.rc, RemoteRoundedCornerShape(12.rdp)),
+            .then(cardChrome(theme.divider, theme.divider)),
         contentAlignment = RemoteAlignment.Center,
     ) {
         RemoteIcon(
@@ -114,9 +112,7 @@ fun RemoteHaPictureGlance(
     RemoteBox(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RemoteRoundedCornerShape(12.rdp))
-            .background(theme.divider.rc)
-            .border(1.rdp, theme.divider.rc, RemoteRoundedCornerShape(12.rdp)),
+            .then(cardChrome(theme.divider, theme.divider)),
     ) {
         RemoteColumn {
             RemoteBox(
@@ -217,9 +213,7 @@ fun RemoteHaPictureElements(
         modifier = modifier
             .fillMaxWidth()
             .height(PICTURE_ELEMENTS_CANVAS_H_DP.rdp)
-            .clip(RemoteRoundedCornerShape(12.rdp))
-            .background(theme.divider.rc)
-            .border(1.rdp, theme.divider.rc, RemoteRoundedCornerShape(12.rdp)),
+            .then(cardChrome(theme.divider, theme.divider)),
         contentAlignment = RemoteAlignment.TopStart,
     ) {
         RemoteBox(
