@@ -15,7 +15,6 @@ import androidx.compose.remote.creation.compose.layout.RemoteSize
 import androidx.compose.remote.creation.compose.layout.RemoteText
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.background
-import androidx.compose.remote.creation.compose.modifier.border
 import androidx.compose.remote.creation.compose.modifier.clip
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.creation.compose.modifier.height
@@ -70,9 +69,7 @@ fun RemoteHaStatisticsGraph(
     RemoteBox(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RemoteRoundedCornerShape(12.rdp))
-            .background(theme.cardBackground.rc)
-            .border(1.rdp, theme.divider.rc, RemoteRoundedCornerShape(12.rdp))
+            .then(cardChrome(theme.cardBackground, theme.divider))
             .padding(horizontal = 14.rdp, vertical = 10.rdp),
     ) {
         RemoteColumn(verticalArrangement = RemoteArrangement.spacedBy(6.rdp)) {

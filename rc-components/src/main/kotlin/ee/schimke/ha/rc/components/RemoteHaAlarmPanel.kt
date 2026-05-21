@@ -52,9 +52,7 @@ fun RemoteHaAlarmPanel(data: HaAlarmPanelData, modifier: RemoteModifier = Remote
     RemoteBox(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RemoteRoundedCornerShape(12.rdp))
-            .background(theme.cardBackground.rc)
-            .border(1.rdp, theme.divider.rc, RemoteRoundedCornerShape(12.rdp))
+            .then(cardChrome(theme.cardBackground, theme.divider))
             .padding(horizontal = 14.rdp, vertical = 12.rdp),
     ) {
         RemoteColumn(verticalArrangement = RemoteArrangement.spacedBy(10.rdp)) {
