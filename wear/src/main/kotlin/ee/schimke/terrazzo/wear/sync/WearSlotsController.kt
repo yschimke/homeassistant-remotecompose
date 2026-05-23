@@ -19,15 +19,21 @@ import ee.schimke.terrazzo.wear.widget.Slot4LargeWidgetService
 import ee.schimke.terrazzo.wear.widget.Slot4SmallWidgetService
 import ee.schimke.terrazzo.wear.widget.WearCardDataTier
 import ee.schimke.terrazzo.wear.widget.wearCardDataTier
+import ee.schimke.terrazzo.wearsync.proto.PinnedCardSet
 import ee.schimke.terrazzo.wearsync.proto.SlotSizePref
 import ee.schimke.terrazzo.wearsync.proto.WearWidgetSlots
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 
 /**
- * Watches [WearSyncRepository.slots] and keeps the 10 slot widget
- * services in sync with the user's mobile-side assignments. Each slot
+ * Watches [WearSyncRepository.slots] + [WearSyncRepository.pinned] and
+ * keeps the 10 slot widget services in sync with the user's
+ * mobile-side assignments. Both flows are combined so the tier gate
+ * (see below) recomputes whenever either changes — pinned-card
+ * metadata edits and the `/wear/slots` ↔ `/wear/pinned` arrival race
+ * both need a re-apply, not just slot edits. Each slot
  * has two services (small + large) so the system widget picker can
  * filter by container type:
  *
@@ -74,7 +80,13 @@ class WearSlotsController(
             return
         }
         scope.launch {
-            repo.slots.collectLatest { applySlots(it) }
+            // Combine slots + pinned so tier gating recomputes whenever
+            // either flow emits. Pinned-only changes (same cardKey, new
+            // card.type) and the init race where /wear/slots arrives
+            // before /wear/pinned both need a re-apply, not just slot
+            // edits. `combine` emits on every change of either source.
+            combine(repo.slots, repo.pinned) { slots, pinned -> slots to pinned }
+                .collectLatest { (slots, pinned) -> applySlots(slots, pinned) }
         }
     }
 
@@ -88,14 +100,16 @@ class WearSlotsController(
         }
     }
 
-    private fun applySlots(slots: WearWidgetSlots) {
+    private fun applySlots(slots: WearWidgetSlots, pinned: PinnedCardSet) {
         val pm = context.packageManager
         // Per-cardKey type lookup so we can gate the large variant on
         // the card's data tier. A null lookup (slot assigned but the
         // pinned card hasn't synced yet) defaults to Both — we don't
         // know what type it is, so don't pre-emptively hide the large
-        // service; the next slots update will revisit.
-        val typeByKey = readPinnedTypeByKey()
+        // service; the next pinned emission will revisit.
+        val typeByKey = pinned.cards
+            .filter { it.cardKey.isNotEmpty() && it.card.type.isNotEmpty() }
+            .associate { it.cardKey to it.card.type }
         for (i in 0 until SLOT_COUNT) {
             val slot = slots.slots.firstOrNull { it.slotIndex == i }
             val assigned = slot?.cardKey?.isNotEmpty() == true
@@ -114,14 +128,6 @@ class WearSlotsController(
             applyComponent(pm, SLOT_LARGE_COMPONENTS[i], enableLarge)
         }
     }
-
-    private fun readPinnedTypeByKey(): Map<String, String> =
-        runCatching { WearOfflineStore(context).readPinned() }
-            .getOrNull()
-            ?.cards
-            ?.filter { it.cardKey.isNotEmpty() && it.card.type.isNotEmpty() }
-            ?.associate { it.cardKey to it.card.type }
-            ?: emptyMap()
 
     private fun applyComponent(pm: PackageManager, component: Class<*>, enabled: Boolean) {
         val name = ComponentName(context, component)
