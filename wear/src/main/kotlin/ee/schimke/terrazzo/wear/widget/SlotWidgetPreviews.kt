@@ -29,6 +29,7 @@ import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.cards.shutter.withEnhancedShutter
 import ee.schimke.ha.rc.components.HaTheme
 import ee.schimke.ha.rc.components.ProvideCardChrome
+import ee.schimke.ha.rc.components.ProvideFlowLayoutSupport
 import ee.schimke.ha.rc.components.ProvideHaTheme
 import ee.schimke.ha.rc.components.ThemeStyle
 import ee.schimke.ha.rc.components.haThemeFor
@@ -72,12 +73,22 @@ internal class PreviewSlotWidget(
                         ProvideCardSizeMode(CardSizeMode.Fixed) {
                             // Match the runtime SlotWidget: the wear
                             // container already paints the shape + brush, so
-                            // skip the per-card chrome to avoid doubling up.
+                            // skip the per-card chrome to avoid doubling up;
+                            // and tell HA card components to use the
+                            // non-wrapping fallback for `RemoteFlowRow`
+                            // since Glance Wear's capture profile rejects
+                            // FlowLayout (op 240).
                             ProvideCardChrome(enabled = false) {
-                                if (card != null) {
-                                    RenderChild(card, snapshot, RemoteModifier.fillMaxWidth())
-                                } else {
-                                    PreviewEmptyPlaceholder(slotIndex, theme)
+                                ProvideFlowLayoutSupport(enabled = false) {
+                                    if (card != null) {
+                                        RenderChild(
+                                            card,
+                                            snapshot,
+                                            RemoteModifier.fillMaxWidth(),
+                                        )
+                                    } else {
+                                        PreviewEmptyPlaceholder(slotIndex, theme)
+                                    }
                                 }
                             }
                         }
