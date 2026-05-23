@@ -17,6 +17,8 @@ import ee.schimke.terrazzo.wear.widget.Slot3LargeWidgetService
 import ee.schimke.terrazzo.wear.widget.Slot3SmallWidgetService
 import ee.schimke.terrazzo.wear.widget.Slot4LargeWidgetService
 import ee.schimke.terrazzo.wear.widget.Slot4SmallWidgetService
+import ee.schimke.terrazzo.wear.widget.WearCardDataTier
+import ee.schimke.terrazzo.wear.widget.wearCardDataTier
 import ee.schimke.terrazzo.wearsync.proto.SlotSizePref
 import ee.schimke.terrazzo.wearsync.proto.WearWidgetSlots
 import kotlinx.coroutines.CoroutineScope
@@ -35,6 +37,13 @@ import kotlinx.coroutines.launch
  *     decides which subset is enabled. Disabled services don't appear
  *     in the picker, so the user's "Small only" choice on the phone
  *     genuinely hides the large variant.
+ *   - **Low-data card type** ([WearCardDataTier.SmallOnly]) — large
+ *     is force-disabled regardless of `SlotSizePref`. Cards whose
+ *     identity depends on payloads the wear sync proto can't carry
+ *     (forecast, history, calendar events, …) render as an
+ *     under-filled chip at the large container, so the picker hides
+ *     that variant. See `docs/architecture/adaptive-card-layouts.md`
+ *     § "Wear data-layer reality".
  *
  * Below [WEAR_WIDGETS_MIN_SDK] every component stays disabled
  * regardless of phone-side assignment; the alpha library short-circuits
@@ -81,16 +90,38 @@ class WearSlotsController(
 
     private fun applySlots(slots: WearWidgetSlots) {
         val pm = context.packageManager
+        // Per-cardKey type lookup so we can gate the large variant on
+        // the card's data tier. A null lookup (slot assigned but the
+        // pinned card hasn't synced yet) defaults to Both — we don't
+        // know what type it is, so don't pre-emptively hide the large
+        // service; the next slots update will revisit.
+        val typeByKey = readPinnedTypeByKey()
         for (i in 0 until SLOT_COUNT) {
             val slot = slots.slots.firstOrNull { it.slotIndex == i }
             val assigned = slot?.cardKey?.isNotEmpty() == true
             val sizePref = SlotSizePref.fromWire(slot?.size ?: SlotSizePref.Both.wireValue)
-            val enableSmall = assigned && sizePref.advertisesSmall
-            val enableLarge = assigned && sizePref.advertisesLarge
+            val tier = slot?.cardKey?.let { typeByKey[it] }
+                ?.let { wearCardDataTier(it) }
+                ?: WearCardDataTier.Both
+            // If the user asked for LargeOnly but the card type can't
+            // fill the large container, fall back to small rather than
+            // hiding the slot entirely — the user explicitly chose to
+            // surface this slot in the picker.
+            val largeFallback = sizePref.advertisesLarge && !tier.supportsLarge
+            val enableSmall = assigned && (sizePref.advertisesSmall || largeFallback)
+            val enableLarge = assigned && sizePref.advertisesLarge && tier.supportsLarge
             applyComponent(pm, SLOT_SMALL_COMPONENTS[i], enableSmall)
             applyComponent(pm, SLOT_LARGE_COMPONENTS[i], enableLarge)
         }
     }
+
+    private fun readPinnedTypeByKey(): Map<String, String> =
+        runCatching { WearOfflineStore(context).readPinned() }
+            .getOrNull()
+            ?.cards
+            ?.filter { it.cardKey.isNotEmpty() && it.card.type.isNotEmpty() }
+            ?.associate { it.cardKey to it.card.type }
+            ?: emptyMap()
 
     private fun applyComponent(pm: PackageManager, component: Class<*>, enabled: Boolean) {
         val name = ComponentName(context, component)

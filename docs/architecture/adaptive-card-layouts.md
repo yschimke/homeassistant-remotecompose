@@ -188,6 +188,133 @@ The ladder is per-card, not a fixed cascade.
 identity. Once the chrome can't fit, the next-most-useful thing is
 which-and-how-many.)
 
+## Data priorities
+
+The degradation ladder above says _what composition_ to draw at each
+canvas size. **Data priorities** answer the orthogonal question: when
+the renderer has every layout but not every field, which fields stay
+on screen?
+
+Every card's data inventory falls into five priority bands. **P1** is
+what makes the card a card — drop it and the user can't tell what
+they're looking at. **P5** is the first thing on the chopping block
+when the canvas tightens.
+
+| P | Field role | What dropping it costs |
+|---|---|---|
+| **P1** | **Identity + key value.** The visual element (icon, dial, pictogram) plus the live state that motivates the glance. | Card becomes indistinguishable from a blank chip — defeats the glance entirely. |
+| **P2** | **Disambiguating name.** Entity-specific label like "Living Room" or "Front door". | Two same-type cards look identical; the user can't tell which lamp is on. |
+| **P3** | **Unit + qualifying state.** The suffix that turns the number into a reading (°C, %, min), or the secondary value that gives the primary one intent — target temp, brightness level, track title. | The number is meaningless without context, or the user sees current state without the intent. |
+| **P4** | **Chrome and history hints.** Range labels (0–100), last-changed timestamps, severity captions, trend arrows, dividers, status sub-text. | Card loses polish but still reads. First to drop on tight surfaces. |
+| **P5** | **Bulk content.** List rows, forecast days, sparkline samples, calendar events, log entries — anything time-series or N-of-many. | Card collapses to its identity row only. List/graph cards stop _being_ list/graph cards; acceptable only if the alternative is overflow. |
+
+The ladder rungs map onto these directly:
+
+- **Full** carries P1 + P2 + P3 + P4 + P5.
+- **Reflowed** keeps P1 + P2 + P3; P4 compresses, P5 trims.
+- **Identity + value** keeps P1 + P3; P2 drops.
+- **Identity** keeps P1; everything else drops.
+- **Value** falls back to the textual P1 + P3 with no visual — last resort.
+
+**Rule of thumb:** drop priorities right-to-left as the canvas
+shrinks. Never drop P1 — if the canvas can't carry the identity,
+switch to a smaller identity (icon-only chip) before stripping it.
+
+### Per-card data inventory
+
+| Card | P1 (identity + key value) | P2 (name) | P3 (unit / secondary) | P4 (chrome) | P5 (bulk) |
+|---|---|---|---|---|---|
+| tile | tinted icon + state | name | unit | last-changed | — |
+| entity | icon + state | name | unit | — | — |
+| button | tinted icon | name | — | — | — |
+| gauge | half-arc + value | name | unit | min/max, severity | — |
+| light | tinted icon + on/off | name | brightness | colour swatch | — |
+| picture-entity | image | name | state badge | overlay scrim | — |
+| sensor | icon + state | name | unit | trend arrow | history sparkline |
+| statistic | icon + value | name | unit, period | trend | — |
+| thermostat | mode icon + current temp | room name | target temp + HVAC action | min/max range | controls strip |
+| humidifier | icon + current humidity | room name | target + action | min/max range | controls strip |
+| alarm-panel | shield icon + state | panel name | — | last-changed | keypad |
+| media-control | art + play/pause | speaker name | track title | artist, progress | seek bar |
+| bambu-spool | filament swatch + name | tray label | remaining % | material code | — |
+| heading | text | — | — | — | — |
+| markdown | text body | title | — | — | — |
+| clock | clock face | — | timezone | — | — |
+| picture | image | name (overlay) | — | — | — |
+| entities | first row | title | — | dividers | additional rows |
+| glance | first cell | title | unit chip | — | additional cells |
+| area | name + dominant entity | area name | summary count | — | per-entity grid |
+| picture-glance | image | title | — | — | entity chip strip |
+| picture-elements | image | — | — | — | positioned overlays |
+| entity-filter | matched count | filter label | — | — | matched rows |
+| vertical / horizontal / grid stacks | first child's P1 | first child's P2 | — | — | additional children |
+| weather-forecast | current icon + temp | location | unit | feels-like, humidity | forecast days |
+| logbook | latest entry | title | — | timestamps | older entries |
+| history-graph | spark + latest value | title | unit | y-axis labels | history series |
+| statistics-graph | bar + latest value | title | unit, period | y-axis labels | stat series |
+| todo-list | counter | title | — | — | item rows |
+| calendar | next event icon | title | event time | venue | additional events |
+| bambu-print-status | progress arc + % | printer name | layer x/y, time remaining | nozzle/bed temps | thumbnail, sub-stages |
+| bambu-print-control | progress + status | printer name | action buttons | — | extended controls |
+| bambu-ams | active tray colour + filament | AMS name | remaining % | tray index | per-tray rows |
+
+### Wear data-layer reality
+
+The wear data-layer proto (`LiveValues` in `WearSyncProto.kt`) carries
+**state + friendly_name + unit + device_class** per entity, and nothing
+else. Mapped onto the priority bands:
+
+- **P1** (state) ✓
+- **P2** (friendly_name) ✓
+- **P3** (unit) ✓ — _but only for cards whose P3 is the unit suffix_,
+  not those whose P3 is a secondary value (target temp, brightness,
+  track title, media position).
+- **P4** ✗ — no last-changed, no trend, no severity, no progress fields.
+- **P5** ✗ — no history, no forecast, no list payloads, no calendar
+  events, no todo items.
+
+That's the only data a Wear slot widget sees today. Two consequences
+follow.
+
+**1. Cards whose identity needs P4 / P5 advertise the small container
+only on Wear.** Their P1 is bound to a payload the data layer can't
+carry, so at the large container they would render as their stripped
+tier with a lot of empty space. The set today is **`heading`,
+`markdown`, `clock`, `weather-forecast`, `logbook`, `history-graph`,
+`statistics-graph`, `todo-list`, `calendar`**. The list lives in
+[`WearCardDataTier`](../../wear/src/main/kotlin/ee/schimke/terrazzo/wear/widget/WearCardDataTier.kt);
+[`WearSlotsController`](../../wear/src/main/kotlin/ee/schimke/terrazzo/wear/sync/WearSlotsController.kt)
+gates the large slot service on this classifier so the system widget
+picker hides large for low-data cards regardless of the phone-side
+`SlotSizePref`. (If the user explicitly chose `LargeOnly`, the
+controller falls back to the small variant rather than hiding the slot
+entirely — they wanted _some_ surfacing.)
+
+**2. Cards whose P5 is a list of additional _entities_ can fill the
+large container** by feeding more entities through the data-layer
+(each carries its own P1 + P2 + P3). `entities`, `glance`, `area`,
+`picture-glance`, `picture-elements`, `entity-filter`, and the
+`*-stack` cards all benefit from a richer fixture at the large size
+and a leaner one at the small size — same composition, different
+payload, demonstrating how the renderer's ladder picks up the
+breakpoint.
+
+The per-card preview convention in
+[`CardSlotWidgetPreviews.kt`](../../wear/src/main/kotlin/ee/schimke/terrazzo/wear/widget/CardSlotWidgetPreviews.kt)
+follows directly from those two rules:
+
+- **Small-only** `@Preview` for the low-data card types listed above.
+- **Separate `*Small` / `*Large` fixtures** (the small one stripped,
+  the large one filled) for list-shaped cards.
+- **A single shared fixture, both `@Preview` sizes**, for single-entity
+  cards (tile, button, gauge, thermostat, etc.) — the data is the
+  same; the renderer's own ladder picks the right tier.
+
+A reviewer scanning the wear preview list should see this shape
+mirrored: one small entry for each low-data card, a small+large pair
+for each multi-entity card, and a matching pair for single-entity
+cards.
+
 ## Implementation guidance
 
 ### Where the variants live
