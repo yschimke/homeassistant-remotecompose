@@ -1,7 +1,6 @@
 plugins {
   alias(libs.plugins.android.application)
   alias(libs.plugins.compose.compiler)
-  alias(libs.plugins.compose.preview)
 }
 
 android {
@@ -23,12 +22,6 @@ android {
     targetCompatibility = JavaVersion.toVersion(libs.versions.java.get())
   }
   kotlin { jvmToolchain(libs.versions.java.get().toInt()) }
-}
-
-composePreview {
-  variant.set("debug")
-  sdkVersion.set(34)
-  enabled.set(true)
 }
 
 dependencies {

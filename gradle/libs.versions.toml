@@ -36,8 +36,16 @@ junit-jupiter-bom = "6.0.3"
 mockserver = "5.15.0"
 indriya = "2.2.4"
 
-# Preview tooling
-compose-preview-plugin = "0.10.16"
+# Preview tooling — pinned compose-ai-tools release. The CLI and the
+# `ee.schimke.composeai.preview` Gradle plugin ship as a single release,
+# so one version covers both. We no longer apply the plugin from any
+# module — the CLI auto-injects it via `--init-script` on every
+# invocation — but the [plugins] alias below still references this
+# version key so Renovate's gradle manager keeps tracking new releases
+# of the plugin marker. The preview-baselines / preview-comment GitHub
+# Actions read this key (`catalog-key: compose-preview-plugin`) to pin
+# the CLI release they install on the runner.
+compose-preview-plugin = "0.11.1"
 tapmoc = "0.4.2"
 
 # Image loading (BitmapLoader / RemoteCompose named-bitmap resolution)
@@ -185,6 +193,10 @@ kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref 
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+# Renovate tracking hook for compose-ai-tools. The CLI auto-injects this
+# plugin via `--init-script`, so no module applies the alias directly —
+# keeping the [plugins] entry lets Renovate's gradle manager continue
+# proposing version bumps against the plugin marker.
 compose-preview = { id = "ee.schimke.composeai.preview", version.ref = "compose-preview-plugin" }
 metro = { id = "dev.zacsweers.metro", version.ref = "metro" }
 tapmoc = { id = "com.gradleup.tapmoc", version.ref = "tapmoc" }

@@ -16,7 +16,6 @@ val appVersionCode: Int =
 plugins {
   alias(libs.plugins.android.application)
   alias(libs.plugins.compose.compiler)
-  alias(libs.plugins.compose.preview)
   alias(libs.plugins.metro)
   alias(libs.plugins.tapmoc)
   alias(libs.plugins.kotlin.serialization)
@@ -31,9 +30,9 @@ android {
     // Widget playback via RemoteViews.DrawInstructions needs API 35+
     // (VANILLA_ICE_CREAM). We still compile / target the newest
     // available SDK via `compileSdk` / `targetSdk`. Keeping minSdk
-    // at 35 (not 36) lets Robolectric's SDK-35 framework — which
-    // compose-preview 0.7.8 tops out at — parse this module's
-    // apk-for-local-test during renderPreviews.
+    // at 35 (not 36) lets the Robolectric framework the compose-preview
+    // CLI ships with parse this module's apk-for-local-test during
+    // composePreviewRender.
     minSdk = 35
     targetSdk = libs.versions.android.targetSdk.get().toInt()
     versionCode = appVersionCode
@@ -80,12 +79,6 @@ android {
 tapmoc {
   java(libs.versions.java.get().toInt())
   kotlin(libs.versions.kotlin.get())
-}
-
-composePreview {
-  variant.set("debug")
-  sdkVersion.set(35)
-  enabled.set(true)
 }
 
 play {

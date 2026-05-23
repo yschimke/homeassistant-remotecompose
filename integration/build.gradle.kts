@@ -12,9 +12,16 @@ dependencies {
 tasks.test {
   useJUnitPlatform()
 
-  // Our rendered PNGs come from `:previews:renderAllPreviews`. Wire it so
-  // `./gradlew :integration:test` is a single command.
-  dependsOn(":previews:renderAllPreviews")
+  // Rendered PNGs come from the compose-preview CLI's `composePreviewRender`
+  // task, which the CLI's auto-inject init script materialises on the
+  // `:previews` module — run `compose-preview show` locally (or let the
+  // preview-baselines / preview-comment GitHub Actions do it in CI) before
+  // `./gradlew :integration:test`. The task isn't visible to a plain
+  // `./gradlew` invocation, so we wire `dependsOn` only when it exists;
+  // missing PNGs are tolerated by the dynamic tests' assumeTrue skips.
+  rootProject.findProject(":previews")?.tasks?.findByName("composePreviewRender")?.let {
+    dependsOn(it)
+  }
 
   systemProperty(
     "ha.rendered.dir",
