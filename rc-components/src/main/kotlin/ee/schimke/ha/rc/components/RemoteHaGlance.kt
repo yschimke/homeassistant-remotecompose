@@ -8,6 +8,7 @@ import androidx.compose.remote.creation.compose.layout.RemoteBox
 import androidx.compose.remote.creation.compose.layout.RemoteColumn
 import androidx.compose.remote.creation.compose.layout.RemoteComposable
 import androidx.compose.remote.creation.compose.layout.RemoteFlowRow
+import androidx.compose.remote.creation.compose.layout.RemoteRow
 import androidx.compose.remote.creation.compose.layout.RemoteText
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.clickable
@@ -55,13 +56,26 @@ fun RemoteHaGlance(data: HaGlanceData, modifier: RemoteModifier = RemoteModifier
             // HA's glance spaces cells evenly across the card width.
             // FlowRow handles wrapping when more cells arrive than fit
             // the row; within each row, distribute the cells using
-            // SpaceEvenly instead of packing them to the start.
-            RemoteFlowRow(
-                modifier = RemoteModifier.fillMaxWidth(),
-                horizontalArrangement = RemoteArrangement.SpaceEvenly,
-                verticalArrangement = RemoteArrangement.spacedBy(6.rdp),
-            ) {
-                data.cells.forEach { cell -> RemoteHaGlanceCell(cell) }
+            // SpaceEvenly instead of packing them to the start. On
+            // surfaces whose capture profile rejects FlowLayout
+            // (Glance Wear), fall back to a non-wrapping RemoteRow —
+            // cells overflow visually on a narrow watch slot, but the
+            // composition captures instead of throwing.
+            if (LocalSupportsFlowLayout.current) {
+                RemoteFlowRow(
+                    modifier = RemoteModifier.fillMaxWidth(),
+                    horizontalArrangement = RemoteArrangement.SpaceEvenly,
+                    verticalArrangement = RemoteArrangement.spacedBy(6.rdp),
+                ) {
+                    data.cells.forEach { cell -> RemoteHaGlanceCell(cell) }
+                }
+            } else {
+                RemoteRow(
+                    modifier = RemoteModifier.fillMaxWidth(),
+                    horizontalArrangement = RemoteArrangement.SpaceEvenly,
+                ) {
+                    data.cells.forEach { cell -> RemoteHaGlanceCell(cell) }
+                }
             }
         }
     }

@@ -45,6 +45,11 @@ fun RemoteHaHorizontalStack(
  * HA `grid` card — N-column flow of children. Approximates `hui-grid-card.ts`;
  * actual breakpoint logic lives per-row in HA (uses CSS grid), we use
  * [RemoteFlowRow] which wraps when the row overflows.
+ *
+ * On surfaces that don't admit experimental ops (Glance Wear, gated
+ * by [LocalSupportsFlowLayout]) the grid degrades to a non-wrapping
+ * [RemoteRow]. Children overflow visually on a narrow watch slot, but
+ * the composition captures instead of throwing.
  */
 @Composable
 @RemoteComposable
@@ -52,9 +57,16 @@ fun RemoteHaGrid(
     modifier: RemoteModifier = RemoteModifier,
     content: @Composable @RemoteComposable () -> Unit,
 ) {
-    RemoteFlowRow(
-        modifier = modifier,
-        horizontalArrangement = RemoteArrangement.spacedBy(8.rdp),
-        verticalArrangement = RemoteArrangement.spacedBy(8.rdp),
-    ) { content() }
+    if (LocalSupportsFlowLayout.current) {
+        RemoteFlowRow(
+            modifier = modifier,
+            horizontalArrangement = RemoteArrangement.spacedBy(8.rdp),
+            verticalArrangement = RemoteArrangement.spacedBy(8.rdp),
+        ) { content() }
+    } else {
+        RemoteRow(
+            modifier = modifier,
+            horizontalArrangement = RemoteArrangement.spacedBy(8.rdp),
+        ) { content() }
+    }
 }
