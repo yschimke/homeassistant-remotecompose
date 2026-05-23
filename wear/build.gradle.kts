@@ -15,7 +15,6 @@ val wearVersionCode: Int =
 plugins {
   alias(libs.plugins.android.application)
   alias(libs.plugins.compose.compiler)
-  alias(libs.plugins.compose.preview)
   alias(libs.plugins.kotlin.serialization)
   alias(libs.plugins.play.publisher)
 }
@@ -43,12 +42,6 @@ android {
     // source lint checks for this module.
     checkGeneratedSources = false
   }
-}
-
-composePreview {
-  variant.set("debug")
-  sdkVersion.set(34)
-  enabled.set(true)
 }
 
 play {
