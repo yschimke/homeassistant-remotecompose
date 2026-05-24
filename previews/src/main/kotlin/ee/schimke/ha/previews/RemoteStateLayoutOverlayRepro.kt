@@ -31,6 +31,7 @@ import androidx.compose.remote.creation.compose.state.rf
 import androidx.compose.remote.creation.compose.state.ri
 import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
@@ -39,6 +40,7 @@ import ee.schimke.ha.rc.CachedCardPreview
 import ee.schimke.ha.rc.androidXExperimentalWrap
 import ee.schimke.ha.rc.components.HaTheme
 import ee.schimke.ha.rc.enableRemoteComposeWrapContent
+import java.util.UUID
 
 /**
  * Self-contained repro for the alpha010 `RemoteStateLayout` overlay
@@ -136,9 +138,11 @@ fun RemoteStateLayoutOverlayRepro() {
 @Composable
 private fun BugCell(widthDp: Int, heightDp: Int) {
     LabelledRcCell("bug ${widthDp}×${heightDp}", widthDp, heightDp, BugKey(widthDp, heightDp)) {
-        val width = wideExpr("__overlay_w_bug")
+        val width = wideExpr()
         val isWide = width.ge(ThresholdPx.rf)
-        RemoteText(text = width.toRemoteString(IntFormat), color = Color.Transparent.rc)
+        // Materialise the named expression (#224 forcing function);
+        // transparent so it doesn't compete with the branch content.
+        RemoteText(text = width.toRemoteString(IntFormat), color = Color(0xFF333333).rc)
         RemoteStateLayout(isWide) { wide ->
             if (wide) {
                 BlueBottom(RemoteModifier.rcFillMaxSize())
@@ -152,11 +156,11 @@ private fun BugCell(widthDp: Int, heightDp: Int) {
 @Composable
 private fun FixCell(widthDp: Int, heightDp: Int) {
     LabelledRcCell("fix ${widthDp}×${heightDp}", widthDp, heightDp, FixKey(widthDp, heightDp)) {
-        val width = wideExpr("__overlay_w_fix")
+        val width = wideExpr()
         val isWide = width.ge(ThresholdPx.rf)
         val wideVisible = isWide.select(1.ri, 0.ri)
         val narrowVisible = isWide.select(0.ri, 1.ri)
-        RemoteText(text = width.toRemoteString(IntFormat), color = Color.Transparent.rc)
+        RemoteText(text = width.toRemoteString(IntFormat), color = Color(0xFF333333).rc)
         RemoteStateLayout(isWide) { wide ->
             if (wide) {
                 BlueBottom(RemoteModifier.rcFillMaxSize().visibility(wideVisible))
@@ -167,9 +171,17 @@ private fun FixCell(widthDp: Int, heightDp: Int) {
     }
 }
 
+// Per-call-site unique name — sharing a stable name across captures
+// makes alpha010 hand back a cached expression bound to the *first*
+// capture's component, so every subsequent cell reads the same baked
+// width and the predicate never flips. Mirrors `RemoteSizeBreakpoint`.
 @Composable
-private fun wideExpr(name: String): RemoteFloat =
-    RemoteFloat.createNamedRemoteFloatExpression(name, RemoteState.Domain.User) { componentWidth() }
+private fun wideExpr(): RemoteFloat {
+    val name = remember { "__overlay_w_${UUID.randomUUID()}" }
+    return RemoteFloat.createNamedRemoteFloatExpression(name, RemoteState.Domain.User) {
+        componentWidth()
+    }
+}
 
 @Composable
 private fun RedTop(modifier: RemoteModifier) {
