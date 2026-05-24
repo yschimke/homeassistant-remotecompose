@@ -8,11 +8,13 @@ import androidx.compose.remote.creation.compose.layout.RemoteText
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.fillMaxSize
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
+import androidx.compose.remote.creation.compose.modifier.visibility
 import androidx.compose.remote.creation.compose.state.RemoteFloat
 import androidx.compose.remote.creation.compose.state.RemoteState
 import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rf
+import androidx.compose.remote.creation.compose.state.ri
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
@@ -117,11 +119,29 @@ class GaugeCardConverter : CardConverter {
             )
 
             val data = gaugeData(card, snapshot)
+            // alpha010 StateLayout never clears `inTransition` while the
+            // gauge's measure-animated sweep is in flight, so the
+            // transition's overlay path keeps painting the previous
+            // branch's children on top of the current one (Wear L cell
+            // in `CardPreviewMatrix_Gauge` shows it on main). The
+            // `Modifier.visibility(...)` on each branch's immediate
+            // child makes `Component.paint()` short-circuit on
+            // `isGone()` for the non-active branch, squashing the
+            // overlay. 1 = VISIBLE, 0 = GONE per
+            // `Component$Visibility` (remote-core alpha010).
+            val stackedVisibility = hasRoomForStacked.select(1.ri, 0.ri)
+            val wideVisibility = hasRoomForStacked.select(0.ri, 1.ri)
             RemoteStateLayout(hasRoomForStacked) { tall ->
                 if (tall) {
-                    RemoteHaGaugeStacked(data, RemoteModifier.fillMaxSize())
+                    RemoteHaGaugeStacked(
+                        data,
+                        RemoteModifier.fillMaxSize().visibility(stackedVisibility),
+                    )
                 } else {
-                    RemoteHaGaugeWide(data, RemoteModifier.fillMaxSize())
+                    RemoteHaGaugeWide(
+                        data,
+                        RemoteModifier.fillMaxSize().visibility(wideVisibility),
+                    )
                 }
             }
         }
