@@ -39,7 +39,8 @@ import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.CachedCardPreview
 import ee.schimke.ha.rc.CardSizeMode
-import ee.schimke.ha.rc.LocalPreviewClock
+import ee.schimke.ha.rc.FixedHaClock
+import ee.schimke.ha.rc.LocalHaClock
 import ee.schimke.ha.rc.ProvideCardRegistry
 import ee.schimke.ha.rc.ProvideCardSizeMode
 import ee.schimke.ha.rc.RenderChild
@@ -137,7 +138,7 @@ fun CardPreviewMatrix(
 ) {
     enableRemoteComposeWrapContent()
     val registry = defaultRegistry()
-    CompositionLocalProvider(LocalPreviewClock provides PreviewNow) {
+    CompositionLocalProvider(LocalHaClock provides FixedHaClock(PreviewNow)) {
         ProvideCardRegistry(registry) {
             ProvideHaTheme(HaTheme.Dark) {
                 Column(

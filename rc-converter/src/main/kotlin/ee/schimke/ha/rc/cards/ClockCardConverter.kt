@@ -6,10 +6,10 @@ import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.CardConverter
-import ee.schimke.ha.rc.LocalPreviewClock
+import ee.schimke.ha.rc.HaClock
+import ee.schimke.ha.rc.LocalHaClock
 import ee.schimke.ha.rc.components.HaClockData
 import ee.schimke.ha.rc.components.RemoteHaClock
-import java.time.Instant
 import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
@@ -24,8 +24,11 @@ import kotlinx.serialization.json.jsonPrimitive
  * those variants tick live too. The zone shift is captured at encode
  * time; DST transitions during playback fall to the next re-encode.
  *
- * When [LocalPreviewClock] is in scope the converter encodes a static
- * label instead, so preview PNGs stay deterministic across renders.
+ * Wall-clock reads go through [LocalHaClock] — production renders see
+ * [ee.schimke.ha.rc.SystemHaClock] and tick live, while previews /
+ * tests inject a [ee.schimke.ha.rc.FixedHaClock] whose `isFrozen` flag
+ * flips the converter onto a static-label path so the captured `.rc`
+ * bytes (and therefore the rendered PNG) stay byte-stable across runs.
  */
 class ClockCardConverter : CardConverter {
     override val cardType: String = CardTypes.CLOCK
@@ -47,31 +50,31 @@ class ClockCardConverter : CardConverter {
         val showSeconds = card.raw["show_seconds"]?.jsonPrimitive?.content?.toBooleanStrictOrNull() ?: false
         val timeFmt = card.raw["time_format"]?.jsonPrimitive?.content
 
-        val previewNow = LocalPreviewClock.current
+        val clock = LocalHaClock.current
         val use24Hour = timeFmt != "12"
 
-        // Preview clock in scope → freeze to a static label so preview
+        // Frozen clock in scope → encode a static label so preview
         // PNGs are stable. Otherwise the time_zone / show_seconds path
         // ticks live via per-field RemoteFloat formatting in the
         // composable; no override at all → defaultTimeString.
-        val staticLabel = if (previewNow != null) {
+        val staticLabel = if (clock.isFrozen) {
             val pattern = when {
                 timeFmt == "12" -> if (showSeconds) "h:mm:ss a" else "h:mm a"
                 else -> if (showSeconds) "HH:mm:ss" else "HH:mm"
             }
-            clockNow(tz, previewNow).format(DateTimeFormatter.ofPattern(pattern))
+            clockNow(tz, clock).format(DateTimeFormatter.ofPattern(pattern))
         } else null
 
         val zoneOffsetMinutes = if (tz != null) {
-            val now = Instant.now()
+            val now = clock.now()
             val target = tz.rules.getOffset(now).totalSeconds / 60
-            val host = ZoneId.systemDefault().rules.getOffset(now).totalSeconds / 60
+            val host = clock.zone().rules.getOffset(now).totalSeconds / 60
             target - host
         } else 0
 
         val display = card.raw["display"]?.jsonPrimitive?.content ?: "primary"
         val secondaryLabel = if (display == "primary") {
-            clockNow(tz, previewNow).format(DateTimeFormatter.ofPattern("EEE d MMM"))
+            clockNow(tz, clock).format(DateTimeFormatter.ofPattern("EEE d MMM"))
         } else null
         val size = card.raw["clock_size"]?.jsonPrimitive?.content
         val isLarge = size == "large" || size == "medium"
@@ -91,7 +94,7 @@ class ClockCardConverter : CardConverter {
     }
 }
 
-private fun clockNow(tz: ZoneId?, previewNow: ZonedDateTime?): ZonedDateTime {
-    val zone = tz ?: previewNow?.zone ?: ZoneId.systemDefault()
-    return previewNow?.withZoneSameInstant(zone) ?: ZonedDateTime.now(zone)
+private fun clockNow(tz: ZoneId?, clock: HaClock): ZonedDateTime {
+    val zone = tz ?: clock.zone()
+    return ZonedDateTime.ofInstant(clock.now(), zone)
 }

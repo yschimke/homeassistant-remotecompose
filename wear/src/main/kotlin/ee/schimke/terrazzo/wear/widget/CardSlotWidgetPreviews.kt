@@ -6,7 +6,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.tooling.preview.Preview
 import ee.schimke.ha.model.HaSnapshot
-import ee.schimke.ha.rc.LocalPreviewClock
+import ee.schimke.ha.rc.FixedHaClock
+import ee.schimke.ha.rc.LocalHaClock
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
 
@@ -62,14 +63,15 @@ fun WearMarkdownSmall() = wearCardPreview(markdownFixture(), ContainerType.Small
  * Clock card normally binds `RemoteTimeDefaults.defaultTimeString` so
  * the player ticks the time without a re-encode — at preview capture
  * that resolves to wall-clock time and the PNG drifts each minute.
- * Inject a [previewNow] so the [ClockCardConverter] takes its static-
- * label path; the default matches the frozen "now" used by the other
- * preview entry points (`CardPreviews.PreviewNow`).
+ * Inject a [previewNow] and surface it via [LocalHaClock] as a
+ * [FixedHaClock] so [ClockCardConverter] takes its static-label path;
+ * the default matches the frozen "now" used by the other preview
+ * entry points.
  */
 @Preview(name = "wear · clock (small)")
 @Composable
 fun WearClockSmall(previewNow: ZonedDateTime = WearPreviewNow) {
-    CompositionLocalProvider(LocalPreviewClock provides previewNow) {
+    CompositionLocalProvider(LocalHaClock provides FixedHaClock(previewNow)) {
         wearCardPreview(clockFixture(), ContainerType.Small)
     }
 }
