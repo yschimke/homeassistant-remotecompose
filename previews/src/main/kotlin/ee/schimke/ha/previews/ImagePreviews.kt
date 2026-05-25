@@ -11,7 +11,7 @@ import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.creation.compose.modifier.height
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rs
-import androidx.compose.remote.tooling.preview.RemotePreview
+import androidx.compose.remote.tooling.preview.RemoteContentPreview
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -250,7 +250,7 @@ private fun ProbeUrlHost(theme: HaTheme, url: String) {
 @Composable
 private fun ImageHost(theme: HaTheme, content: @Composable @RemoteComposable () -> Unit) {
     Box(modifier = Modifier.uiFillMaxWidth().uiHeight(IMAGE_BOX_HEIGHT_DP.dp)) {
-        RemotePreview(profile = androidXExperimental) {
+        RemoteContentPreview(profile = androidXExperimental) {
             ProvideHaTheme(theme) { content() }
         }
     }

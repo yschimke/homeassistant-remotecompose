@@ -27,7 +27,7 @@ package androidx.glance.wear.tooling.preview
 import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
-import androidx.compose.remote.tooling.preview.RemoteDocPreview
+import androidx.compose.remote.tooling.preview.RemoteDocumentPreview
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -41,7 +41,7 @@ import kotlinx.coroutines.runBlocking
  * Previews a [GlanceWearWidget] within a widget container in the Android Studio Preview.
  *
  * This utility function calls [GlanceWearWidget.provideWidgetData] to get the widget's layout,
- * captures it into a Remote Compose document, and displays it using [RemoteDocPreview]. This
+ * captures it into a Remote Compose document, and displays it using [RemoteDocumentPreview]. This
  * ensures the preview accurately reflects how the widget will appear to users, including
  * container-specific properties like padding and corner radius.
  *
@@ -66,7 +66,7 @@ public fun WearWidgetPreview(
             }
         }
 
-    RemoteDocPreview(
+    RemoteDocumentPreview(
         document,
         modifier =
             modifier

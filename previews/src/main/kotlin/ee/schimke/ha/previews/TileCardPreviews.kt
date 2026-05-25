@@ -2,7 +2,7 @@
 
 package ee.schimke.ha.previews
 
-import androidx.compose.remote.tooling.preview.RemotePreview
+import androidx.compose.remote.tooling.preview.RemoteContentPreview
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import ee.schimke.ha.rc.ProvideCardRegistry
@@ -26,7 +26,7 @@ private const val TILE_HEIGHT_DP = 43
 
 @Composable
 private fun TileHost(theme: HaTheme, content: @Composable () -> Unit) {
-    RemotePreview(profile = androidXExperimental) {
+    RemoteContentPreview(profile = androidXExperimental) {
         ProvideCardRegistry(defaultRegistry()) {
             ProvideHaTheme(theme) { content() }
         }

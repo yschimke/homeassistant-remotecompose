@@ -2,7 +2,7 @@
 
 package ee.schimke.ha.previews
 
-import androidx.compose.remote.tooling.preview.RemotePreview
+import androidx.compose.remote.tooling.preview.RemoteContentPreview
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import ee.schimke.ha.model.EntityState
@@ -31,7 +31,7 @@ private const val CARD_HEIGHT_DP = 300
 
 @Composable
 private fun ShutterHost(theme: HaTheme, content: @Composable () -> Unit) {
-    RemotePreview(profile = androidXExperimental) {
+    RemoteContentPreview(profile = androidXExperimental) {
         ProvideCardRegistry(defaultRegistry().withEnhancedShutter()) {
             ProvideHaTheme(theme) { content() }
         }
