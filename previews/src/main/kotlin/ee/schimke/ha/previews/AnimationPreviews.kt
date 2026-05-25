@@ -15,7 +15,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import ee.schimke.ha.model.HaSnapshot
-import ee.schimke.ha.rc.LocalPreviewClock
+import ee.schimke.ha.rc.FixedHaClock
+import ee.schimke.ha.rc.LocalHaClock
 import ee.schimke.ha.rc.ProvideCardRegistry
 import ee.schimke.ha.rc.RenderChild
 import ee.schimke.ha.rc.androidXExperimental
@@ -178,7 +179,7 @@ private fun gaugeFrameCardJson(): String =
 @Composable
 private fun GaugeFrameHost(theme: HaTheme, content: @Composable () -> Unit) {
     RemotePreview(profile = androidXExperimental) {
-        CompositionLocalProvider(LocalPreviewClock provides PreviewNow) {
+        CompositionLocalProvider(LocalHaClock provides FixedHaClock(PreviewNow)) {
             ProvideCardRegistry(defaultRegistry()) {
                 ProvideHaTheme(theme) { content() }
             }

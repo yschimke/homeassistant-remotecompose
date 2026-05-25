@@ -31,6 +31,7 @@ fun TvKioskPreview_Demo() {
             style = ThemeStyle.TerrazzoKiosk,
             demoMode = true,
             modifier = Modifier.fillMaxSize(),
+            frozenNowMs = TV_PREVIEW_NOW_MS,
         )
     }
 }
@@ -43,6 +44,7 @@ fun TvKioskPreview_Live() {
             style = ThemeStyle.TerrazzoKiosk,
             demoMode = false,
             modifier = Modifier.fillMaxSize(),
+            frozenNowMs = TV_PREVIEW_NOW_MS,
         )
     }
 }
@@ -55,6 +57,7 @@ fun TvKioskPreview_HomePalette() {
             style = ThemeStyle.TerrazzoHome,
             demoMode = true,
             modifier = Modifier.fillMaxSize(),
+            frozenNowMs = TV_PREVIEW_NOW_MS,
         )
     }
 }
