@@ -10,7 +10,7 @@ play-publisher = "4.0.0"
 metro = "1.1.1"
 
 # Compose
-compose-bom = "2026.05.00"
+compose-bom = "2026.05.01"
 compose-compiler = "1.5.15"
 
 # RemoteCompose (alpha — APIs change per release)
