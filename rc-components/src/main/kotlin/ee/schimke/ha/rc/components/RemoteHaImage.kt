@@ -78,7 +78,7 @@ fun RemoteHaImageNamed(
     contentScale: ContentScale = ContentScale.Fit,
     domain: RemoteState.Domain = RemoteState.Domain.User,
 ) {
-    val rb = rememberNamedRemoteBitmap(name = name, domain = domain, content = { bitmap })
+    val rb = rememberNamedRemoteBitmap(name = name, domain = domain, value = { bitmap })
     RemoteImage(
         remoteBitmap = rb,
         contentDescription = contentDescription,

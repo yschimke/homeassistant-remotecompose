@@ -19,7 +19,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
-import androidx.compose.remote.tooling.preview.RemotePreview
+import androidx.compose.remote.tooling.preview.RemoteContentPreview
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -183,7 +183,7 @@ private fun ThemeShowcase(style: ThemeStyle, darkTheme: Boolean) {
                             .clip(RoundedCornerShape(12.dp))
                             .background(haTheme.cardBackground),
                     ) {
-                        RemotePreview(profile = androidXExperimental) {
+                        RemoteContentPreview(profile = androidXExperimental) {
                             ProvideCardRegistry(defaultRegistry()) {
                                 ProvideHaTheme(haTheme) {
                                     RenderChild(
@@ -202,7 +202,7 @@ private fun ThemeShowcase(style: ThemeStyle, darkTheme: Boolean) {
                             .clip(RoundedCornerShape(12.dp))
                             .background(haTheme.cardBackground),
                     ) {
-                        RemotePreview(profile = androidXExperimental) {
+                        RemoteContentPreview(profile = androidXExperimental) {
                             ProvideCardRegistry(defaultRegistry()) {
                                 ProvideHaTheme(haTheme) {
                                     RenderChild(

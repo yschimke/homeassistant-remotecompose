@@ -7,7 +7,7 @@ import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.creation.compose.state.RemoteBoolean
 import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rf
-import androidx.compose.remote.tooling.preview.RemotePreview
+import androidx.compose.remote.tooling.preview.RemoteContentPreview
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.graphics.Color
@@ -77,7 +77,7 @@ class ToggleProgressFramesProvider : PreviewParameterProvider<Pair<String, Float
 fun Toggle_Animation_Light(
     @PreviewParameter(ToggleProgressFramesProvider::class) frame: Pair<String, Float>,
 ) {
-    RemotePreview(profile = androidXExperimental) {
+    RemoteContentPreview(profile = androidXExperimental) {
         ProvideHaTheme(HaTheme.Light) {
             RemoteHaToggleSwitchByProgress(
                 progress = frame.second.rf,
@@ -93,7 +93,7 @@ fun Toggle_Animation_Light(
 fun Toggle_Animation_Dark(
     @PreviewParameter(ToggleProgressFramesProvider::class) frame: Pair<String, Float>,
 ) {
-    RemotePreview(profile = androidXExperimental) {
+    RemoteContentPreview(profile = androidXExperimental) {
         ProvideHaTheme(HaTheme.Dark) {
             RemoteHaToggleSwitchByProgress(
                 progress = frame.second.rf,
@@ -114,7 +114,7 @@ fun Toggle_Animation_Dark(
 @Preview(name = "toggle-animated (light)", showBackground = false, widthDp = 40, heightDp = 24)
 @Composable
 fun Toggle_Animated_Light() {
-    RemotePreview(profile = androidXExperimental) {
+    RemoteContentPreview(profile = androidXExperimental) {
         ProvideHaTheme(HaTheme.Light) {
             RemoteHaToggleSwitch(
                 isOn = RemoteBoolean(false),
@@ -128,7 +128,7 @@ fun Toggle_Animated_Light() {
 @Preview(name = "toggle-animated (dark)", showBackground = false, widthDp = 40, heightDp = 24)
 @Composable
 fun Toggle_Animated_Dark() {
-    RemotePreview(profile = androidXExperimental) {
+    RemoteContentPreview(profile = androidXExperimental) {
         ProvideHaTheme(HaTheme.Dark) {
             RemoteHaToggleSwitch(
                 isOn = RemoteBoolean(false),
@@ -178,7 +178,7 @@ private fun gaugeFrameCardJson(): String =
 
 @Composable
 private fun GaugeFrameHost(theme: HaTheme, content: @Composable () -> Unit) {
-    RemotePreview(profile = androidXExperimental) {
+    RemoteContentPreview(profile = androidXExperimental) {
         CompositionLocalProvider(LocalHaClock provides FixedHaClock(PreviewNow)) {
             ProvideCardRegistry(defaultRegistry()) {
                 ProvideHaTheme(theme) { content() }
