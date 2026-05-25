@@ -86,8 +86,8 @@ compose-material-icons-extended = { module = "androidx.compose.material:material
 activity-compose = { module = "androidx.activity:activity-compose", version = "1.13.0" }
 
 # Wear Compose (stub module — full app lands later)
-wear-compose-material3 = { module = "androidx.wear.compose:compose-material3", version = "1.6.1" }
-wear-compose-foundation = { module = "androidx.wear.compose:compose-foundation", version = "1.6.1" }
+wear-compose-material3 = { module = "androidx.wear.compose:compose-material3", version = "1.6.2" }
+wear-compose-foundation = { module = "androidx.wear.compose:compose-foundation", version = "1.6.2" }
 wear-tooling-preview = { module = "androidx.wear:wear-tooling-preview", version = "1.0.0" }
 
 # AndroidX Glance Wear — Wear OS widget framework (alpha).
