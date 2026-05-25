@@ -22,7 +22,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.unit.dp
 import ee.schimke.ha.rc.components.ThemeStyle
 import kotlinx.coroutines.delay
@@ -33,20 +32,31 @@ import kotlinx.coroutines.delay
  * [TvDemoData] and tick on a 2 s cadence so the room sees motion; when
  * off, the tiles show a static "live data placeholder" until full HA
  * wiring lands.
+ *
+ * [frozenNowMs] pins the clock to a fixed instant for `@Preview` renders
+ * so the PNG is byte-stable — sine-driven values in `TvDemoData.tiles`
+ * would otherwise drift between runs. Production callers leave it null
+ * and the tiles tick on a 2 s cadence off the wall clock. Gating this
+ * on `LocalInspectionMode.current` was the previous approach but
+ * Robolectric-based preview renderers leave inspection mode off (see
+ * the compose-preview skill's a11y reference), so the previews picked
+ * up wall-clock values; an explicit parameter side-steps the
+ * inspection-mode contract entirely.
  */
 @Composable
-fun TvKioskPreview(style: ThemeStyle, demoMode: Boolean, modifier: Modifier = Modifier) {
+fun TvKioskPreview(
+    style: ThemeStyle,
+    demoMode: Boolean,
+    modifier: Modifier = Modifier,
+    frozenNowMs: Long? = null,
+) {
     val cs = MaterialTheme.colorScheme
 
-    // In `@Preview` rendering, freeze the clock to a fixed instant so the
-    // PNG is byte-stable across captures — sine-driven values in
-    // TvDemoData.tiles(nowMs) would otherwise drift between runs.
-    val inInspection = LocalInspectionMode.current
     var nowMs by remember {
-        mutableLongStateOf(if (inInspection) PREVIEW_NOW_MS else System.currentTimeMillis())
+        mutableLongStateOf(frozenNowMs ?: System.currentTimeMillis())
     }
-    LaunchedEffect(demoMode, inInspection) {
-        if (!demoMode || inInspection) return@LaunchedEffect
+    LaunchedEffect(demoMode, frozenNowMs) {
+        if (!demoMode || frozenNowMs != null) return@LaunchedEffect
         while (true) {
             nowMs = System.currentTimeMillis()
             delay(2_000)
@@ -151,11 +161,12 @@ private val PLACEHOLDER_TILES = listOf(
     TvDemoData.Tile("Media", "—"),
 )
 
-// Fixed wall-clock instant used when rendering inside `@Preview` so
-// TvDemoData's sine-driven values land on the same numbers every run.
-// 2024-01-01T12:00:00Z — not 0L, since the lights/media indices land on
-// the same bucket that production demo mode is most often in.
-private const val PREVIEW_NOW_MS: Long = 1_704_110_400_000L
+// Fixed wall-clock instant the `@Preview` entries pass via
+// [TvKioskPreview]'s `frozenNowMs` so `TvDemoData`'s sine-driven values
+// land on the same numbers every run. 2024-01-01T12:00:00Z — not 0L,
+// since the lights/media indices land on the same bucket that
+// production demo mode is most often in.
+internal const val TV_PREVIEW_NOW_MS: Long = 1_704_110_400_000L
 
 @Composable
 private fun Tile(

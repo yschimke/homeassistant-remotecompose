@@ -18,7 +18,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import ee.schimke.ha.model.HaSnapshot
-import ee.schimke.ha.rc.LocalPreviewClock
+import ee.schimke.ha.rc.FixedHaClock
+import ee.schimke.ha.rc.LocalHaClock
 import ee.schimke.ha.rc.ProvideCardRegistry
 import ee.schimke.ha.rc.RenderChild
 import ee.schimke.ha.rc.androidXExperimental
@@ -96,7 +97,7 @@ private val PreviewNow: ZonedDateTime =
 @Composable
 internal fun CardHost(theme: HaTheme, content: @Composable () -> Unit) {
     RemotePreview(profile = androidXExperimental) {
-        CompositionLocalProvider(LocalPreviewClock provides PreviewNow) {
+        CompositionLocalProvider(LocalHaClock provides FixedHaClock(PreviewNow)) {
             ProvideCardRegistry(defaultRegistry()) {
                 ProvideHaTheme(theme) { content() }
             }
@@ -389,7 +390,7 @@ private fun PlayerSlot(
 ) {
     Box(modifier = Modifier.uiFillMaxWidth().height(heightDp.dp)) {
         RemotePreview(profile = androidXExperimental) {
-            CompositionLocalProvider(LocalPreviewClock provides PreviewNow) {
+            CompositionLocalProvider(LocalHaClock provides FixedHaClock(PreviewNow)) {
                 ProvideCardRegistry(defaultRegistry()) {
                     ProvideHaTheme(theme) { content() }
                 }
@@ -635,10 +636,10 @@ private fun lightCardConfig() = card(
 // ——— clock ———
 //
 // Production binds RemoteTimeDefaults.defaultTimeString so the player
-// ticks the time once a minute without a re-encode. Previews install
-// a frozen LocalPreviewClock via CardHost, which forces the converter
-// onto its static-label path — the rendered PNG always shows the same
-// time so the screenshot diff stays meaningful.
+// ticks the time once a minute without a re-encode. Previews install a
+// FixedHaClock (LocalHaClock.isFrozen == true) via CardHost, which
+// forces the converter onto its static-label path — the rendered PNG
+// always shows the same time so the screenshot diff stays meaningful.
 
 @Preview(name = "clock (light)", showBackground = false, widthDp = 200, heightDp = 100)
 @Composable
