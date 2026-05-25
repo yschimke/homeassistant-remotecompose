@@ -2,7 +2,7 @@ package ee.schimke.ha.rc.components
 
 import androidx.annotation.RestrictTo
 import androidx.compose.remote.creation.compose.action.Action
-import androidx.compose.remote.creation.compose.action.HostAction
+import androidx.compose.remote.creation.compose.action.hostAction
 import androidx.compose.remote.creation.compose.state.rs
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -107,5 +107,5 @@ private val json = Json { ignoreUnknownKeys = true }
 fun HaAction.toRemoteAction(): Action? {
     if (this is HaAction.None) return null
     val payload = json.encodeToString(HaAction.serializer(), this)
-    return HostAction(name = HA_ACTION_NAME.rs, value = payload.rs)
+    return hostAction(HA_ACTION_NAME.rs, payload.rs)
 }

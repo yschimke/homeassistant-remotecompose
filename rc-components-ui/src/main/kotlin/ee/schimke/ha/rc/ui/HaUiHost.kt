@@ -2,9 +2,8 @@
 
 package ee.schimke.ha.rc.ui
 
-import androidx.compose.foundation.layout.Box
 import androidx.compose.remote.creation.compose.layout.RemoteComposable
-import androidx.compose.remote.tooling.preview.RemotePreview
+import androidx.compose.remote.tooling.preview.RemoteContentPreview
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import ee.schimke.ha.rc.components.HaTheme
@@ -26,9 +25,9 @@ import ee.schimke.ha.rc.components.ProvideHaTheme
  *    provide is a passthrough when no override is set.
  *
  * Action callbacks: the embedded RemoteCompose document delivers
- * `HostAction`s at playback time. `RemotePreview` doesn't expose the
- * named-action stream, so apps that want HA service dispatch must drop
- * to Tier-1 (use `RemoteHa*` directly inside their own
+ * `HostAction`s at playback time. `RemoteContentPreview` doesn't expose
+ * the named-action stream, so apps that want HA service dispatch must
+ * drop to Tier-1 (use `RemoteHa*` directly inside their own
  * `RemoteDocumentPlayer(onNamedAction = …)`). Tier-2 is for
  * visual embedding.
  */
@@ -38,9 +37,7 @@ internal fun HaUiHost(
     theme: HaTheme = LocalHaTheme.current,
     content: @Composable @RemoteComposable () -> Unit,
 ) {
-    Box(modifier) {
-        RemotePreview(profile = haUiEmbedProfile) {
-            ProvideHaTheme(theme) { content() }
-        }
+    RemoteContentPreview(modifier = modifier, profile = haUiEmbedProfile) {
+        ProvideHaTheme(theme) { content() }
     }
 }

@@ -2,7 +2,7 @@
 
 package ee.schimke.ha.previews
 
-import androidx.compose.remote.tooling.preview.RemotePreview
+import androidx.compose.remote.tooling.preview.RemoteContentPreview
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -49,7 +49,7 @@ private const val SINGLE_HEIGHT_DP = 172
 
 @Composable
 private fun GarageHost(theme: HaTheme, content: @Composable () -> Unit) {
-    RemotePreview(profile = androidXExperimental) {
+    RemoteContentPreview(profile = androidXExperimental) {
         ProvideCardRegistry(defaultRegistry().withGarageShutter()) {
             ProvideHaTheme(theme) { content() }
         }
