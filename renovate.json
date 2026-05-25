@@ -45,6 +45,12 @@
     {
       "matchManagers": ["github-actions"],
       "groupName": "github-actions"
+    },
+    {
+      "matchPackageNames": ["junit:junit"],
+      "description": "Stay on JUnit 4; don't auto-bump to 5.x/6.x (Jupiter is a different API).",
+      "allowedVersions": "/^4\\./",
+      "enabled": false
     }
   ]
 }

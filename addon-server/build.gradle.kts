@@ -36,9 +36,5 @@ dependencies {
 
   testImplementation(libs.kotlin.test)
   testImplementation(libs.kotlinx.coroutines.test)
-  testImplementation(platform(libs.junit.jupiter.bom))
-  testImplementation(libs.junit.jupiter)
-  testRuntimeOnly(libs.junit.platform.launcher)
+  testImplementation(libs.junit)
 }
-
-tasks.test { useJUnitPlatform() }

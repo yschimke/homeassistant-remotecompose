@@ -1,9 +1,9 @@
 package ee.schimke.ha.integration
 
 import java.io.File
-import kotlin.test.assertTrue
-import org.junit.jupiter.api.Assumptions.assumeTrue
-import org.junit.jupiter.api.Test
+import org.junit.Assert.assertTrue
+import org.junit.Assume.assumeTrue
+import org.junit.Test
 
 /**
  * Pixel-level regression tests for the `tile` converter.
@@ -50,14 +50,14 @@ class TileCardPixelDiffTest {
     val rendered = locateRendered(previewName)
     val reference = referenceFile(referenceRelPath)
     assumeTrue(
-      reference.exists(),
       "reference $referenceRelPath missing — run integration/scripts/capture-references.sh",
+      reference.exists(),
     )
     val report = ImageDiff.compare(rendered, reference)
     println(report)
     assertTrue(
-      report.pctChanged <= maxPctChanged,
       "pixel diff above threshold: ${report.pctChanged}% > $maxPctChanged% — $report",
+      report.pctChanged <= maxPctChanged,
     )
   }
 
