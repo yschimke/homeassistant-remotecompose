@@ -597,13 +597,27 @@ fun CardPreviewMatrix_WeatherForecast() {
 fun CardPreviewMatrix_Entities() {
     val card = card(
         """{"type":"entities","title":"Living Room","entities":[
-            "sensor.living_room","light.kitchen","switch.coffee_maker","lock.front_door"
+            "sensor.living_room","light.office_lamp","switch.coffee_maker","lock.front_door"
         ]}"""
     )
+    // Pick entries from Fixtures.mixed whose isActive resolves to false
+    // (sensor / off light / off switch / locked lock) so the entities
+    // rows' toggle switches don't kick off their 0.20 s
+    // `animateRemoteFloat` tween on document start — otherwise the
+    // matrix's per-cell capture lands mid-tween and the PNG drifts
+    // between runs.
     CardPreviewMatrix(
         card = card,
-        snapshot = Fixtures.mixed,
+        snapshot = entitiesMatrixSnapshot,
         baseGridSize = WidgetGridSize(cellsW = 4, cellsH = 3),
         label = "entities · living-room cards",
     )
 }
+
+private val entitiesMatrixSnapshot: HaSnapshot =
+    Fixtures.mixed.let { mixed ->
+        val coffeeOff = mixed.states.getValue("switch.coffee_maker").let {
+            it.copy(state = "off")
+        }
+        mixed.copy(states = mixed.states + ("switch.coffee_maker" to coffeeOff))
+    }
