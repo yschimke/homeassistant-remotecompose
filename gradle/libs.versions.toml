@@ -32,7 +32,7 @@ kotlinx-serialization = "1.11.0"
 kotlinx-coroutines = "1.11.0"
 kotlinx-datetime = "0.8.0"
 logback = "1.5.32"
-junit-jupiter-bom = "6.0.3"
+junit = "4.13.2"
 mockserver = "6.0.0"
 indriya = "2.2.4"
 
@@ -176,9 +176,7 @@ androidx-lifecycle-process = { module = "androidx.lifecycle:lifecycle-process", 
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
 kotlin-test-junit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlin" }
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinx-coroutines" }
-junit-jupiter-bom = { module = "org.junit:junit-bom", version.ref = "junit-jupiter-bom" }
-junit-jupiter = { module = "org.junit.jupiter:junit-jupiter" }
-junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher" }
+junit = { module = "junit:junit", version.ref = "junit" }
 mockserver-netty = { module = "org.mock-server:mockserver-netty", version.ref = "mockserver" }
 mockserver-client-java = { module = "org.mock-server:mockserver-client-java", version.ref = "mockserver" }
 
