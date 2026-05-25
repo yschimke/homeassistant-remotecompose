@@ -14,8 +14,8 @@ compose-bom = "2026.05.00"
 compose-compiler = "1.5.15"
 
 # RemoteCompose (alpha — APIs change per release)
-remote-compose = "1.0.0-alpha010"
-remote-material3 = "1.0.0-alpha03"
+remote-compose = "1.0.0-alpha11"
+remote-material3 = "1.0.0-alpha04"
 
 # AndroidX Glance Wear (alpha — runtime feature gated on Wear OS 7+ / API 37
 # inside the library; we use it for the per-slot wear widgets).
