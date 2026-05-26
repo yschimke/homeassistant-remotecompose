@@ -10,11 +10,11 @@ dependencies {
 tasks.test {
   // Rendered PNGs come from the compose-preview CLI's `composePreviewRender`
   // task, which the CLI's auto-inject init script materialises on the
-  // `:previews` module — run `compose-preview show` locally (or let the
-  // preview-baselines / preview-comment GitHub Actions do it in CI) before
-  // `./gradlew :integration:test`. The task isn't visible to a plain
+  // `:previews` module — run `compose-preview show` locally (CI does this
+  // in the `test` job before `./gradlew test`) so the renders exist before
+  // the pixel-diff suites run. The task isn't visible to a plain
   // `./gradlew` invocation, so we wire `dependsOn` only when it exists;
-  // missing PNGs are tolerated by the parameterized tests' assumeTrue skips.
+  // the pixel-diff tests hard-fail when the renders are missing.
   rootProject.findProject(":previews")?.tasks?.findByName("composePreviewRender")?.let {
     dependsOn(it)
   }

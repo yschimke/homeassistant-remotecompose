@@ -39,14 +39,23 @@ jobs:
           distribution: temurin
           java-version: 21
       - uses: gradle/actions/setup-gradle@v6
+      # `:integration:test`'s pixel-diff suites require rendered PNGs
+      # under `previews/build/compose-previews/renders/`. The
+      # compose-preview Gradle plugin isn't applied to any module — its
+      # `composePreviewRender` task is materialised by the CLI's
+      # auto-inject init script on demand — so we install the CLI and
+      # render before `./gradlew test`. (The `compose-preview` workflow
+      # still publishes baselines / PR comments separately; this step is
+      # local to the test job and doesn't push anything.)
+      - uses: yschimke/compose-ai-tools/.github/actions/install@v0.11.10
+        with:
+          version: catalog
+          catalog-key: compose-preview-plugin
+      - name: Render @Preview composables
+        run: compose-preview show --json > /dev/null
       # `test` fans out to every module: Android library / app modules get
       # their `testDebugUnitTest`, JVM modules (`:integration`, KMP common)
-      # get plain `test`. The compose-preview Gradle plugin is no longer
-      # applied to any module — its `composePreviewRender` task is
-      # materialised by the CLI's auto-inject init script on demand, so the
-      # Robolectric-backed pixel renders are produced by the preview-baselines
-      # / preview-comment workflows (not this job). `:integration:test`
-      # tolerates missing PNGs via assumeTrue skips.
+      # get plain `test`.
       - run: ./gradlew test --stacktrace
       - name: Upload test reports
         if: always()
