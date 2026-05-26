@@ -49,7 +49,7 @@ jobs:
       # local to the test job and doesn't push anything.)
       - uses: yschimke/compose-ai-tools/.github/actions/install@v0.11.10
         with:
-          cli-version: catalog
+          version: catalog
           catalog-key: compose-preview-plugin
       - name: Render @Preview composables
         run: compose-preview show --json > /dev/null
