@@ -1,0 +1,49 @@
+name: Compose Preview
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize]
+  workflow_dispatch:
+
+# Workflow-level: read only. The render job widens to write below so fork
+# PRs running via `pull_request` don't inherit write scopes by default.
+permissions:
+  contents: read
+
+concurrency:
+  # `push` to main / `workflow_dispatch` end with a `git push` to the shared
+  # `compose-preview/main` branch — don't cancel those mid-flight (a cancel
+  # between commit-tree and push can leave the remote half-advanced). PRs
+  # are safe to cancel; the comment composite handles being interrupted.
+  group: compose-preview-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  apply:
+    name: Render previews (baseline or PR comment, auto-selected)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      # The composite action either pushes to compose-preview/main (baseline
+      # mode) or appends to compose-preview/pr + posts a sticky PR comment
+      # (comment mode). Both paths need write contents; comment mode also
+      # needs pull-requests write.
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          # The composite action pushes via an explicit token in the remote
+          # URL embedded in its push step, so we don't need the default git
+          # credentials persisted here.
+          persist-credentials: false
+      - uses: ./.github/actions/setup
+        with:
+          cache-read-only: ${{ github.event_name == 'pull_request' && 'true' || 'false' }}
+      - uses: yschimke/compose-ai-tools/.github/actions/apply@v0.11.10
+        with:
+          cli-version: catalog
+          catalog-key: compose-preview-plugin
