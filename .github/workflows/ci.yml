@@ -47,12 +47,17 @@ jobs:
       # render before `./gradlew test`. (The `compose-preview` workflow
       # still publishes baselines / PR comments separately; this step is
       # local to the test job and doesn't push anything.)
-      - uses: yschimke/compose-ai-tools/.github/actions/install@v0.11.10
+      - uses: yschimke/compose-ai-tools/.github/actions/install@v0.12.0
         with:
           version: catalog
           catalog-key: compose-preview-plugin
       - name: Render @Preview composables
-        run: compose-preview show --json > /dev/null
+        # Only the `previews` module feeds `:integration:test`'s
+        # pixel-diff suites (they read `previews/build/compose-previews/
+        # renders/`). Render just that module — auto-detection across
+        # every module otherwise trips on `demo-app`, which has no
+        # `@Preview` tooling coord on its classpath and aborts the run.
+        run: compose-preview show --module previews --json > /dev/null
       # `test` fans out to every module: Android library / app modules get
       # their `testDebugUnitTest`, JVM modules (`:integration`, KMP common)
       # get plain `test`.
