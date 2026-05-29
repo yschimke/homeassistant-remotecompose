@@ -7,6 +7,8 @@ import androidx.compose.runtime.Composable
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.HaSnapshot
+import ee.schimke.ha.model.JinjaTemplate
+import ee.schimke.ha.model.TemplateBindings
 import ee.schimke.ha.rc.CardConverter
 import ee.schimke.ha.rc.components.HaMarkdownData
 import ee.schimke.ha.rc.components.LiveValues
@@ -24,7 +26,16 @@ class MarkdownCardConverter : CardConverter {
         val content = card.raw["content"]?.let {
             (it as? kotlinx.serialization.json.JsonPrimitive)?.content
         }.orEmpty()
-        val lines = content.count { it == '\n' } + 1
+        // A rendered template can expand/collapse vs. its source (control
+        // flow, multi-line filters); size to the rendered text when the
+        // evaluator can produce it, so the slot matches what's drawn.
+        val text =
+            if (TemplateBindings.needsTemplateRender(content)) {
+                JinjaTemplate.render(content, snapshot) ?: content
+            } else {
+                content
+            }
+        val lines = text.count { it == '\n' } + 1
         val title = if (card.raw["title"] != null) 32 else 0
         return title + 16 + 24 * lines // rough heuristic; title + top-pad + per-line.
     }
@@ -33,6 +44,26 @@ class MarkdownCardConverter : CardConverter {
     override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
         val title = card.raw["title"]?.jsonPrimitive?.content
         val content = card.raw["content"]?.jsonPrimitive?.content ?: ""
+
+        // Full Jinja templates (control flow, filters, state_attr, …)
+        // can't be the simple per-expression binding, so evaluate them
+        // in-process with JinjaTemplate and parse the rendered markdown
+        // for full fidelity (headings / bold / lists). Anything the
+        // evaluator can't handle falls back to a placeholder rather than
+        // dumping raw source. The host folds the rendered value into the
+        // document cache key, so new output re-encodes.
+        if (TemplateBindings.needsTemplateRender(content)) {
+            val rendered = JinjaTemplate.render(content, snapshot)
+            val blocks =
+                if (rendered != null) {
+                    Markdown.parse(rendered)
+                } else {
+                    listOf(MarkdownBlock(MarkdownBlock.Kind.Paragraph, "…"))
+                }
+            RemoteHaMarkdown(HaMarkdownData(title = title, blocks = blocks), modifier = modifier)
+            return
+        }
+
         val template = MarkdownTemplateBindings.from(content, snapshot)
         val blocks = Markdown.parse(template.rendered).bind(template)
         RemoteHaMarkdown(HaMarkdownData(title = title, blocks = blocks), modifier = modifier)
