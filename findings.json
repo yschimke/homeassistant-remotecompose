@@ -1157,30 +1157,30 @@
           "viewDescription": "android.view.View  desc=\"Living Room\""
         },
         {
-          "boundsInScreen": "640,744,1333,783",
-          "level": "ERROR",
-          "message": "This item's height is 15dp. Consider making the height of this touch target 48dp or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Living Room\""
-        },
-        {
-          "boundsInScreen": "640,783,1333,797",
-          "level": "ERROR",
-          "message": "This item's height is 5dp. Consider making the height of this touch target 48dp or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Office lamp\""
-        },
-        {
-          "boundsInScreen": "1417,744,2299,786",
+          "boundsInScreen": "640,744,1333,785",
           "level": "ERROR",
           "message": "This item's height is 16dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Living Room\""
         },
         {
-          "boundsInScreen": "1417,786,2299,797",
+          "boundsInScreen": "640,785,1333,797",
           "level": "ERROR",
-          "message": "This item's height is 4dp. Consider making the height of this touch target 48dp or larger.",
+          "message": "This item's height is 5dp. Consider making the height of this touch target 48dp or larger.",
+          "type": "TouchTargetSizeCheck",
+          "viewDescription": "android.view.View  desc=\"Office lamp\""
+        },
+        {
+          "boundsInScreen": "1417,744,2299,788",
+          "level": "ERROR",
+          "message": "This item's height is 17dp. Consider making the height of this touch target 48dp or larger.",
+          "type": "TouchTargetSizeCheck",
+          "viewDescription": "android.view.View  desc=\"Living Room\""
+        },
+        {
+          "boundsInScreen": "1417,788,2299,797",
+          "level": "ERROR",
+          "message": "This item's height is 3dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Office lamp\""
         },
@@ -3217,84 +3217,84 @@
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "32,1646,1044,1858",
+          "boundsInScreen": "32,1646,1044,1738",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "32,1879,1044,2343",
+          "boundsInScreen": "32,1759,1044,2223",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "32,2375,1044,2485",
+          "boundsInScreen": "32,2255,1044,2365",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "32,2506,1044,2645",
+          "boundsInScreen": "32,2386,1044,2525",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "32,2666,1044,3014",
+          "boundsInScreen": "32,2546,1044,2894",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "32,3035,1044,3247",
+          "boundsInScreen": "32,2915,1044,3007",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "32,3268,1044,3732",
+          "boundsInScreen": "32,3028,1044,3492",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "32,3764,1044,3874",
+          "boundsInScreen": "32,3524,1044,3634",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "32,3895,1044,4034",
+          "boundsInScreen": "32,3655,1044,3794",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "32,4055,1044,4403",
+          "boundsInScreen": "32,3815,1044,4163",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "32,4424,1044,4676",
+          "boundsInScreen": "32,4184,1044,4276",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "32,4697,1044,4725",
+          "boundsInScreen": "32,4297,1044,4725",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
@@ -3322,102 +3322,123 @@
           "viewDescription": "android.view.View  desc=\"Open PRs\""
         },
         {
-          "boundsInScreen": "32,1879,1044,1995",
+          "boundsInScreen": "32,1759,1044,1875",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Latest PR\""
         },
         {
-          "boundsInScreen": "32,1995,1044,2111",
+          "boundsInScreen": "32,1875,1044,1991",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Latest issue\""
         },
         {
-          "boundsInScreen": "32,2111,1044,2227",
+          "boundsInScreen": "32,1991,1044,2107",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Latest release\""
         },
         {
-          "boundsInScreen": "32,2227,1044,2343",
+          "boundsInScreen": "32,2107,1044,2223",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Latest tag\""
         },
         {
-          "boundsInScreen": "32,2666,1044,2782",
+          "boundsInScreen": "32,2546,1044,2662",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Stars\""
         },
         {
-          "boundsInScreen": "32,2782,1044,2898",
+          "boundsInScreen": "32,2662,1044,2778",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Open issues\""
         },
         {
-          "boundsInScreen": "32,2898,1044,3014",
+          "boundsInScreen": "32,2778,1044,2894",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Open PRs\""
         },
         {
-          "boundsInScreen": "32,3268,1044,3384",
+          "boundsInScreen": "32,3028,1044,3144",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Latest PR\""
         },
         {
-          "boundsInScreen": "32,3384,1044,3500",
+          "boundsInScreen": "32,3144,1044,3260",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Latest issue\""
         },
         {
-          "boundsInScreen": "32,3500,1044,3616",
+          "boundsInScreen": "32,3260,1044,3376",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Latest release\""
         },
         {
-          "boundsInScreen": "32,3616,1044,3732",
+          "boundsInScreen": "32,3376,1044,3492",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Latest tag\""
         },
         {
-          "boundsInScreen": "32,4055,1044,4171",
+          "boundsInScreen": "32,3815,1044,3931",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Stars\""
         },
         {
-          "boundsInScreen": "32,4171,1044,4287",
+          "boundsInScreen": "32,3931,1044,4047",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Open issues\""
         },
         {
-          "boundsInScreen": "32,4287,1044,4403",
+          "boundsInScreen": "32,4047,1044,4163",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Open PRs\""
+        },
+        {
+          "boundsInScreen": "32,4297,1044,4413",
+          "level": "ERROR",
+          "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
+          "type": "TouchTargetSizeCheck",
+          "viewDescription": "android.view.View  desc=\"Latest PR\""
+        },
+        {
+          "boundsInScreen": "32,4413,1044,4529",
+          "level": "ERROR",
+          "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
+          "type": "TouchTargetSizeCheck",
+          "viewDescription": "android.view.View  desc=\"Latest issue\""
+        },
+        {
+          "boundsInScreen": "32,4529,1044,4645",
+          "level": "ERROR",
+          "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
+          "type": "TouchTargetSizeCheck",
+          "viewDescription": "android.view.View  desc=\"Latest release\""
         }
       ],
       "functionName": "DashboardGithubMobile",
@@ -3466,63 +3487,63 @@
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "53,1646,1002,1858",
+          "boundsInScreen": "53,1646,1002,1738",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "53,1879,1002,2343",
+          "boundsInScreen": "53,1759,1002,2223",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "53,2375,1002,2485",
+          "boundsInScreen": "53,2255,1002,2365",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "53,2506,1002,2605",
+          "boundsInScreen": "53,2386,1002,2485",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "53,2626,1002,2974",
+          "boundsInScreen": "53,2506,1002,2854",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "53,2995,1002,3207",
+          "boundsInScreen": "53,2875,1002,2967",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "53,3228,1002,3692",
+          "boundsInScreen": "53,2988,1002,3452",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "53,3724,1002,3834",
+          "boundsInScreen": "53,3484,1002,3594",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "53,3855,1002,4147",
+          "boundsInScreen": "53,3615,1002,3907",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
@@ -3550,63 +3571,63 @@
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "1098,924,2047,1136",
+          "boundsInScreen": "1098,924,2047,1016",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "1098,1157,2047,1621",
+          "boundsInScreen": "1098,1037,2047,1501",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "1098,1653,2047,1763",
+          "boundsInScreen": "1098,1533,2047,1643",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "1098,1784,2047,1923",
+          "boundsInScreen": "1098,1664,2047,1803",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "1098,1944,2047,2292",
+          "boundsInScreen": "1098,1824,2047,2172",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "1098,2313,2047,2565",
+          "boundsInScreen": "1098,2193,2047,2285",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "1098,2586,2047,3050",
+          "boundsInScreen": "1098,2306,2047,2770",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "1098,3082,2047,3192",
+          "boundsInScreen": "1098,2802,2047,2912",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "1098,3213,2047,3445",
+          "boundsInScreen": "1098,2933,2047,3165",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
@@ -3634,77 +3655,77 @@
           "viewDescription": "android.view.View  desc=\"Open PRs\""
         },
         {
-          "boundsInScreen": "53,1879,1002,1995",
+          "boundsInScreen": "53,1759,1002,1875",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Latest PR\""
         },
         {
-          "boundsInScreen": "53,1995,1002,2111",
+          "boundsInScreen": "53,1875,1002,1991",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Latest issue\""
         },
         {
-          "boundsInScreen": "53,2111,1002,2227",
+          "boundsInScreen": "53,1991,1002,2107",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Latest release\""
         },
         {
-          "boundsInScreen": "53,2227,1002,2343",
+          "boundsInScreen": "53,2107,1002,2223",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Latest tag\""
         },
         {
-          "boundsInScreen": "53,2626,1002,2742",
+          "boundsInScreen": "53,2506,1002,2622",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Stars\""
         },
         {
-          "boundsInScreen": "53,2742,1002,2858",
+          "boundsInScreen": "53,2622,1002,2738",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Open issues\""
         },
         {
-          "boundsInScreen": "53,2858,1002,2974",
+          "boundsInScreen": "53,2738,1002,2854",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Open PRs\""
         },
         {
-          "boundsInScreen": "53,3228,1002,3344",
+          "boundsInScreen": "53,2988,1002,3104",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Latest PR\""
         },
         {
-          "boundsInScreen": "53,3344,1002,3460",
+          "boundsInScreen": "53,3104,1002,3220",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Latest issue\""
         },
         {
-          "boundsInScreen": "53,3460,1002,3576",
+          "boundsInScreen": "53,3220,1002,3336",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Latest release\""
         },
         {
-          "boundsInScreen": "53,3576,1002,3692",
+          "boundsInScreen": "53,3336,1002,3452",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
@@ -3732,91 +3753,91 @@
           "viewDescription": "android.view.View  desc=\"Open PRs\""
         },
         {
-          "boundsInScreen": "1098,1157,2047,1273",
+          "boundsInScreen": "1098,1037,2047,1153",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Latest PR\""
         },
         {
-          "boundsInScreen": "1098,1273,2047,1389",
+          "boundsInScreen": "1098,1153,2047,1269",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Latest issue\""
         },
         {
-          "boundsInScreen": "1098,1389,2047,1505",
+          "boundsInScreen": "1098,1269,2047,1385",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Latest release\""
         },
         {
-          "boundsInScreen": "1098,1505,2047,1621",
+          "boundsInScreen": "1098,1385,2047,1501",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Latest tag\""
         },
         {
-          "boundsInScreen": "1098,1944,2047,2060",
+          "boundsInScreen": "1098,1824,2047,1940",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Stars\""
         },
         {
-          "boundsInScreen": "1098,2060,2047,2176",
+          "boundsInScreen": "1098,1940,2047,2056",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Open issues\""
         },
         {
-          "boundsInScreen": "1098,2176,2047,2292",
+          "boundsInScreen": "1098,2056,2047,2172",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Open PRs\""
         },
         {
-          "boundsInScreen": "1098,2586,2047,2702",
+          "boundsInScreen": "1098,2306,2047,2422",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Latest PR\""
         },
         {
-          "boundsInScreen": "1098,2702,2047,2818",
+          "boundsInScreen": "1098,2422,2047,2538",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Latest issue\""
         },
         {
-          "boundsInScreen": "1098,2818,2047,2934",
+          "boundsInScreen": "1098,2538,2047,2654",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Latest release\""
         },
         {
-          "boundsInScreen": "1098,2934,2047,3050",
+          "boundsInScreen": "1098,2654,2047,2770",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Latest tag\""
         },
         {
-          "boundsInScreen": "1098,3213,2047,3329",
+          "boundsInScreen": "1098,2933,2047,3049",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"square/okhttp\""
         },
         {
-          "boundsInScreen": "1098,3329,2047,3445",
+          "boundsInScreen": "1098,3049,2047,3165",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
@@ -3869,49 +3890,70 @@
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "32,1629,1044,2921",
+          "boundsInScreen": "32,1629,1044,2195",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "32,2942,1044,3052",
+          "boundsInScreen": "32,2216,1044,2326",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "32,3073,1044,3582",
+          "boundsInScreen": "32,2347,1044,2856",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "32,3603,1044,3713",
+          "boundsInScreen": "32,2877,1044,2987",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "32,3734,1044,4198",
+          "boundsInScreen": "32,3008,1044,3472",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "32,4219,1044,4573",
+          "boundsInScreen": "32,3493,1044,3847",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "32,4594,1044,4704",
+          "boundsInScreen": "32,3868,1044,3978",
+          "level": "ERROR",
+          "message": "This item may not have a label readable by screen readers.",
+          "type": "SpeakableTextPresentCheck",
+          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
+        },
+        {
+          "boundsInScreen": "32,3999,1044,4471",
+          "level": "ERROR",
+          "message": "This item may not have a label readable by screen readers.",
+          "type": "SpeakableTextPresentCheck",
+          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
+        },
+        {
+          "boundsInScreen": "32,4492,1044,4602",
+          "level": "ERROR",
+          "message": "This item may not have a label readable by screen readers.",
+          "type": "SpeakableTextPresentCheck",
+          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
+        },
+        {
+          "boundsInScreen": "32,4623,1044,4725",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
@@ -3932,53 +3974,88 @@
           "viewDescription": "android.view.View  desc=\"Nodes seen\""
         },
         {
-          "boundsInScreen": "32,2447,1044,2563",
+          "boundsInScreen": "32,1721,1044,1837",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Path length\""
         },
         {
-          "boundsInScreen": "32,2563,1044,2679",
+          "boundsInScreen": "32,1837,1044,1953",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Req OK\""
         },
         {
-          "boundsInScreen": "32,2679,1044,2795",
+          "boundsInScreen": "32,1953,1044,2069",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Req fail\""
         },
         {
-          "boundsInScreen": "32,3734,1044,3850",
+          "boundsInScreen": "32,3008,1044,3124",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Battery %\""
         },
         {
-          "boundsInScreen": "32,3850,1044,3966",
+          "boundsInScreen": "32,3124,1044,3240",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Battery V\""
         },
         {
-          "boundsInScreen": "32,3966,1044,4082",
+          "boundsInScreen": "32,3240,1044,3356",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Ch1 voltage\""
         },
         {
-          "boundsInScreen": "32,4082,1044,4198",
+          "boundsInScreen": "32,3356,1044,3472",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Uptime\""
+        },
+        {
+          "boundsInScreen": "63,4025,1012,4109",
+          "level": "ERROR",
+          "message": "This item's height is 32dp. Consider making the height of this touch target 48dp or larger.",
+          "type": "TouchTargetSizeCheck",
+          "viewDescription": "android.view.View  desc=\"Recipient type\""
+        },
+        {
+          "boundsInScreen": "63,4109,1012,4193",
+          "level": "ERROR",
+          "message": "This item's height is 32dp. Consider making the height of this touch target 48dp or larger.",
+          "type": "TouchTargetSizeCheck",
+          "viewDescription": "android.view.View  desc=\"Channel\""
+        },
+        {
+          "boundsInScreen": "63,4193,1012,4277",
+          "level": "ERROR",
+          "message": "This item's height is 32dp. Consider making the height of this touch target 48dp or larger.",
+          "type": "TouchTargetSizeCheck",
+          "viewDescription": "android.view.View  desc=\"Contact / Room\""
+        },
+        {
+          "boundsInScreen": "63,4277,1012,4361",
+          "level": "ERROR",
+          "message": "This item's height is 32dp. Consider making the height of this touch target 48dp or larger.",
+          "type": "TouchTargetSizeCheck",
+          "viewDescription": "android.view.View  desc=\"Message\""
+        },
+        {
+          "boundsInScreen": "63,4361,1012,4444",
+          "level": "ERROR",
+          "message": "This item's height is 32dp. Consider making the height of this touch target 48dp or larger.",
+          "type": "TouchTargetSizeCheck",
+          "viewDescription": "android.view.View  desc=\"Last delivery\""
         }
       ],
       "functionName": "DashboardMeshcoreMobile",
@@ -4027,42 +4104,63 @@
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "53,1629,1002,2921",
+          "boundsInScreen": "53,1629,1002,2195",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "53,2942,1002,3052",
+          "boundsInScreen": "53,2216,1002,2326",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "53,3073,1002,3807",
+          "boundsInScreen": "53,2347,1002,3081",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "53,3828,1002,3938",
+          "boundsInScreen": "53,3102,1002,3212",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "53,3959,1002,4423",
+          "boundsInScreen": "53,3233,1002,3697",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "53,4444,1002,4725",
+          "boundsInScreen": "53,3718,1002,4072",
+          "level": "ERROR",
+          "message": "This item may not have a label readable by screen readers.",
+          "type": "SpeakableTextPresentCheck",
+          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
+        },
+        {
+          "boundsInScreen": "53,4093,1002,4203",
+          "level": "ERROR",
+          "message": "This item may not have a label readable by screen readers.",
+          "type": "SpeakableTextPresentCheck",
+          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
+        },
+        {
+          "boundsInScreen": "53,4224,1002,4696",
+          "level": "ERROR",
+          "message": "This item may not have a label readable by screen readers.",
+          "type": "SpeakableTextPresentCheck",
+          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
+        },
+        {
+          "boundsInScreen": "53,4717,1002,4725",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
@@ -4083,53 +4181,88 @@
           "viewDescription": "android.view.View  desc=\"Nodes seen\""
         },
         {
-          "boundsInScreen": "53,2447,1002,2563",
+          "boundsInScreen": "53,1721,1002,1837",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Path length\""
         },
         {
-          "boundsInScreen": "53,2563,1002,2679",
+          "boundsInScreen": "53,1837,1002,1953",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Req OK\""
         },
         {
-          "boundsInScreen": "53,2679,1002,2795",
+          "boundsInScreen": "53,1953,1002,2069",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Req fail\""
         },
         {
-          "boundsInScreen": "53,3959,1002,4075",
+          "boundsInScreen": "53,3233,1002,3349",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Battery %\""
         },
         {
-          "boundsInScreen": "53,4075,1002,4191",
+          "boundsInScreen": "53,3349,1002,3465",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Battery V\""
         },
         {
-          "boundsInScreen": "53,4191,1002,4307",
+          "boundsInScreen": "53,3465,1002,3581",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Ch1 voltage\""
         },
         {
-          "boundsInScreen": "53,4307,1002,4423",
+          "boundsInScreen": "53,3581,1002,3697",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Uptime\""
+        },
+        {
+          "boundsInScreen": "84,4250,970,4334",
+          "level": "ERROR",
+          "message": "This item's height is 32dp. Consider making the height of this touch target 48dp or larger.",
+          "type": "TouchTargetSizeCheck",
+          "viewDescription": "android.view.View  desc=\"Recipient type\""
+        },
+        {
+          "boundsInScreen": "84,4334,970,4418",
+          "level": "ERROR",
+          "message": "This item's height is 32dp. Consider making the height of this touch target 48dp or larger.",
+          "type": "TouchTargetSizeCheck",
+          "viewDescription": "android.view.View  desc=\"Channel\""
+        },
+        {
+          "boundsInScreen": "84,4418,970,4502",
+          "level": "ERROR",
+          "message": "This item's height is 32dp. Consider making the height of this touch target 48dp or larger.",
+          "type": "TouchTargetSizeCheck",
+          "viewDescription": "android.view.View  desc=\"Contact / Room\""
+        },
+        {
+          "boundsInScreen": "84,4502,970,4586",
+          "level": "ERROR",
+          "message": "This item's height is 32dp. Consider making the height of this touch target 48dp or larger.",
+          "type": "TouchTargetSizeCheck",
+          "viewDescription": "android.view.View  desc=\"Message\""
+        },
+        {
+          "boundsInScreen": "84,4586,970,4669",
+          "level": "ERROR",
+          "message": "This item's height is 32dp. Consider making the height of this touch target 48dp or larger.",
+          "type": "TouchTargetSizeCheck",
+          "viewDescription": "android.view.View  desc=\"Last delivery\""
         }
       ],
       "functionName": "DashboardMeshcoreTablet",
@@ -4178,35 +4311,35 @@
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "32,1407,1044,1742",
+          "boundsInScreen": "32,1407,1044,1499",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "32,1763,1044,1873",
+          "boundsInScreen": "32,1520,1044,1630",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "32,1894,1044,2902",
+          "boundsInScreen": "32,1651,1044,2659",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "32,2923,1044,3033",
+          "boundsInScreen": "32,2680,1044,2790",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "32,3054,1044,3432",
+          "boundsInScreen": "32,2811,1044,3189",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
@@ -4287,35 +4420,35 @@
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "53,1407,1002,1782",
+          "boundsInScreen": "53,1407,1002,1499",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "53,1803,1002,1913",
+          "boundsInScreen": "53,1520,1002,1630",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "53,1934,1002,2942",
+          "boundsInScreen": "53,1651,1002,2659",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "53,2963,1002,3073",
+          "boundsInScreen": "53,2680,1002,2790",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "53,3094,1002,3472",
+          "boundsInScreen": "53,2811,1002,3189",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
@@ -7015,9 +7148,9 @@
           "viewDescription": "android.view.View  desc=\"Coffee maker\""
         },
         {
-          "boundsInScreen": "500,1798,603,1984",
+          "boundsInScreen": "499,1798,603,1984",
           "level": "ERROR",
-          "message": "This item's width is 39dp. Consider making the width of this touch target 48dp or larger.",
+          "message": "This item's width is 40dp. Consider making the width of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Kitchen\""
         }

@@ -1,6 +1,6 @@
 # Accessibility Report
 
-_Auto-generated from `compose-preview/a11y/pr`. 259 preview(s) across 4 module(s) · 947 error(s) · 3 warning(s) · 17 info._
+_Auto-generated from `compose-preview/a11y/pr`. 259 preview(s) across 4 module(s) · 966 error(s) · 3 warning(s) · 17 info._
 
 Browse inline; image URLs are pinned to the commit SHA on the baseline branch so links keep resolving after merge.
 
@@ -358,10 +358,10 @@ _No findings._
 | 11 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Living Room" | This item's height is 26dp. Consider making the height of this touch target 48dp or larger. |
 | 12 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Living Room" | This item's height is 32dp. Consider making the height of this touch target 48dp or larger. |
 | 13 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Living Room" | This item's height is 32dp. Consider making the height of this touch target 48dp or larger. |
-| 14 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Living Room" | This item's height is 15dp. Consider making the height of this touch target 48dp or larger. |
+| 14 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Living Room" | This item's height is 16dp. Consider making the height of this touch target 48dp or larger. |
 | 15 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Office lamp" | This item's height is 5dp. Consider making the height of this touch target 48dp or larger. |
-| 16 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Living Room" | This item's height is 16dp. Consider making the height of this touch target 48dp or larger. |
-| 17 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Office lamp" | This item's height is 4dp. Consider making the height of this touch target 48dp or larger. |
+| 16 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Living Room" | This item's height is 17dp. Consider making the height of this touch target 48dp or larger. |
+| 17 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Office lamp" | This item's height is 3dp. Consider making the height of this touch target 48dp or larger. |
 | 18 | INFO | DuplicateSpeakableTextCheck | android.widget.TextView | This non-clickable item's speakable text: "Terrazzo slot" is identical to that of 1 other item(s). |
 
 ### `CardPreviewMatrix_Entity`
@@ -779,6 +779,9 @@ _No findings._
 | 32 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Stars" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
 | 33 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Open issues" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
 | 34 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Open PRs" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 35 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Latest PR" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 36 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Latest issue" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 37 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Latest release" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
 
 ### `DashboardGithubTablet`
 
@@ -861,15 +864,23 @@ _No findings._
 | 10 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
 | 11 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
 | 12 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 13 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Status" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 14 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Nodes seen" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 15 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Path length" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 16 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Req OK" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 17 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Req fail" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 18 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Battery %" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 19 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Battery V" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 20 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Ch1 voltage" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 21 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Uptime" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 13 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
+| 14 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
+| 15 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
+| 16 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Status" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 17 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Nodes seen" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 18 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Path length" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 19 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Req OK" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 20 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Req fail" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 21 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Battery %" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 22 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Battery V" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 23 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Ch1 voltage" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 24 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Uptime" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 25 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Recipient type" | This item's height is 32dp. Consider making the height of this touch target 48dp or larger. |
+| 26 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Channel" | This item's height is 32dp. Consider making the height of this touch target 48dp or larger. |
+| 27 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Contact / Room" | This item's height is 32dp. Consider making the height of this touch target 48dp or larger. |
+| 28 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Message" | This item's height is 32dp. Consider making the height of this touch target 48dp or larger. |
+| 29 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Last delivery" | This item's height is 32dp. Consider making the height of this touch target 48dp or larger. |
 
 ### `DashboardMeshcoreTablet`
 
@@ -888,15 +899,23 @@ _No findings._
 | 9 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
 | 10 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
 | 11 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 12 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Status" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 13 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Nodes seen" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 14 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Path length" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 15 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Req OK" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 16 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Req fail" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 17 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Battery %" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 18 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Battery V" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 19 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Ch1 voltage" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 20 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Uptime" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 12 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
+| 13 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
+| 14 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
+| 15 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Status" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 16 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Nodes seen" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 17 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Path length" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 18 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Req OK" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 19 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Req fail" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 20 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Battery %" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 21 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Battery V" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 22 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Ch1 voltage" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 23 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Uptime" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 24 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Recipient type" | This item's height is 32dp. Consider making the height of this touch target 48dp or larger. |
+| 25 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Channel" | This item's height is 32dp. Consider making the height of this touch target 48dp or larger. |
+| 26 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Contact / Room" | This item's height is 32dp. Consider making the height of this touch target 48dp or larger. |
+| 27 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Message" | This item's height is 32dp. Consider making the height of this touch target 48dp or larger. |
+| 28 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Last delivery" | This item's height is 32dp. Consider making the height of this touch target 48dp or larger. |
 
 ### `DashboardNetworksMobile`
 
@@ -1708,7 +1727,7 @@ _No findings._
 | 8 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Living Room" | This item's height is 32dp. Consider making the height of this touch target 48dp or larger. |
 | 9 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Kitchen" | This item's height is 34dp. Consider making the height of this touch target 48dp or larger. |
 | 10 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Coffee maker" | This item's height is 34dp. Consider making the height of this touch target 48dp or larger. |
-| 11 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Kitchen" | This item's width is 39dp. Consider making the width of this touch target 48dp or larger. |
+| 11 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Kitchen" | This item's width is 40dp. Consider making the width of this touch target 48dp or larger. |
 
 ### `Sizing_TightSlot_PaintMeasure`
 
