@@ -26,12 +26,12 @@ class MarkdownCardConverter : CardConverter {
         val content = card.raw["content"]?.let {
             (it as? kotlinx.serialization.json.JsonPrimitive)?.content
         }.orEmpty()
-        // Templates rendered by HA can expand/collapse vs. their source
-        // (control flow, multi-line filters); size to the rendered text
-        // when we have it, so the slot matches what's actually drawn.
+        // A rendered template can expand/collapse vs. its source (control
+        // flow, multi-line filters); size to the rendered text when the
+        // evaluator can produce it, so the slot matches what's drawn.
         val text =
-            if (TemplateBindings.needsServerRender(content)) {
-                renderedTemplate(content, snapshot) ?: content
+            if (TemplateBindings.needsTemplateRender(content)) {
+                JinjaTemplate.render(content, snapshot) ?: content
             } else {
                 content
             }
@@ -46,21 +46,18 @@ class MarkdownCardConverter : CardConverter {
         val content = card.raw["content"]?.jsonPrimitive?.content ?: ""
 
         // Full Jinja templates (control flow, filters, state_attr, …)
-        // can't be the simple per-expression binding. Prefer HA's own
-        // render (snapshot.templates, populated by the live session);
-        // otherwise fall back to the in-process JinjaTemplate evaluator
-        // so previews / demo / offline still show real content. Either
-        // way we parse the rendered markdown for full fidelity
-        // (headings / bold / lists). The host folds the rendered value
-        // into the document cache key, so new output re-encodes.
-        if (TemplateBindings.needsServerRender(content)) {
-            val rendered = renderedTemplate(content, snapshot)
+        // can't be the simple per-expression binding, so evaluate them
+        // in-process with JinjaTemplate and parse the rendered markdown
+        // for full fidelity (headings / bold / lists). Anything the
+        // evaluator can't handle falls back to a placeholder rather than
+        // dumping raw source. The host folds the rendered value into the
+        // document cache key, so new output re-encodes.
+        if (TemplateBindings.needsTemplateRender(content)) {
+            val rendered = JinjaTemplate.render(content, snapshot)
             val blocks =
                 if (rendered != null) {
                     Markdown.parse(rendered)
                 } else {
-                    // Evaluator couldn't handle it and there's no live
-                    // render yet — placeholder beats dumping raw source.
                     listOf(MarkdownBlock(MarkdownBlock.Kind.Paragraph, "…"))
                 }
             RemoteHaMarkdown(HaMarkdownData(title = title, blocks = blocks), modifier = modifier)
@@ -71,15 +68,6 @@ class MarkdownCardConverter : CardConverter {
         val blocks = Markdown.parse(template.rendered).bind(template)
         RemoteHaMarkdown(HaMarkdownData(title = title, blocks = blocks), modifier = modifier)
     }
-
-    /**
-     * The rendered output for a server-render template: HA's own render
-     * if the live session supplied it, else the in-process evaluator's
-     * best effort, else null.
-     */
-    private fun renderedTemplate(content: String, snapshot: HaSnapshot): String? =
-        snapshot.templates[TemplateBindings.templateKey(content)]
-            ?: JinjaTemplate.render(content, snapshot)
 
     private fun List<MarkdownBlock>.bind(template: MarkdownTemplateBindings): List<MarkdownBlock> =
         map { block ->

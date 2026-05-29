@@ -7,7 +7,6 @@ import ee.schimke.ha.client.HaInstanceConfig
 import ee.schimke.ha.model.Dashboard
 import ee.schimke.ha.model.HaNotification
 import ee.schimke.ha.model.HaSnapshot
-import ee.schimke.ha.model.TemplateBindings
 import io.ktor.client.engine.HttpClientEngine
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -172,19 +171,7 @@ class LiveHaSession(
     override suspend fun loadDashboard(urlPath: String?): Pair<Dashboard, HaSnapshot> {
         val dashboard = client.fetchDashboard(urlPath)
         val snapshot = client.snapshot()
-        // Markdown cards whose `content:` is a full Jinja2 template can't
-        // be evaluated in-process — render them on HA (the same engine
-        // its frontend uses) and fold the results into the snapshot,
-        // keyed so MarkdownCardConverter can find them. One render per
-        // refresh; the dashboard's poll loop re-renders on the next tick.
-        val templates = TemplateBindings.dashboardTemplates(dashboard)
-        if (templates.isEmpty()) return dashboard to snapshot
-        val rendered = LinkedHashMap<String, String>(templates.size)
-        for (ref in templates) {
-            runCatching { client.renderTemplate(ref.template) }
-                .onSuccess { rendered[ref.key] = it }
-        }
-        return dashboard to snapshot.copy(templates = rendered)
+        return dashboard to snapshot
     }
     override suspend fun fetchInstanceConfig(): HaInstanceConfig = client.fetchConfig()
     override suspend fun callService(

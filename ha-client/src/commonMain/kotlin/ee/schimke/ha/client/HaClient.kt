@@ -28,7 +28,6 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -37,7 +36,6 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
@@ -262,67 +260,6 @@ class HaClient(private val config: HaConfig, engine: HttpClientEngine? = null) {
       throw t
     } finally {
       pendingMutex.withLock { pending.remove(id) }
-    }
-  }
-
-  /**
-   * Render a Jinja2 template against the live `hass` object and return the result as a string — the
-   * same engine HA's frontend uses for `markdown` card content.
-   *
-   * HA's `render_template` is a subscription: it acks, then streams a `type:"event"` frame with the
-   * rendered `result` on each re-render of a referenced entity. We take the first emission as a
-   * one-shot render (the dashboard view polls, so each refresh re-renders) and then cancel the
-   * server-side subscription so it doesn't leak. The flow keeps `replay = 1` so the result isn't
-   * lost if HA emits it before this coroutine starts collecting.
-   *
-   * Throws if HA rejects the template or no result arrives within [timeoutMs]; callers treat that
-   * as "no render available" and fall back to a placeholder.
-   */
-  suspend fun renderTemplate(template: String, timeoutMs: Long = 10_000): String {
-    val s = session ?: error("Not connected — call connect() first")
-    val id = idMutex.withLock { nextId++ }
-    val flow =
-      MutableSharedFlow<JsonObject>(
-        replay = 1,
-        extraBufferCapacity = 8,
-        onBufferOverflow = BufferOverflow.DROP_OLDEST,
-      )
-    subscriptionsMutex.withLock { subscriptions[id] = flow }
-    val deferred = CompletableDeferred<JsonObject>()
-    pendingMutex.withLock { pending[id] = deferred }
-    val msg = buildJsonObject {
-      put("id", id)
-      put("type", "render_template")
-      put("template", template)
-      // Surface render errors as a failed result rather than streaming
-      // partial/error events we'd have to special-case.
-      put("report_errors", false)
-    }
-    try {
-      sessionMutex.withLock {
-        val live = session ?: error("Not connected — socket closed before render_template")
-        if (live !== s) error("Connection replaced before render_template")
-        live.send(json.encodeToString(JsonObject.serializer(), msg))
-      }
-      val ack = withTimeout(timeoutMs) { deferred.await() }
-      val success = ack["success"]?.jsonPrimitive?.content?.toBooleanStrictOrNull() ?: true
-      if (!success) {
-        val err = ack["error"]?.jsonObject?.get("message")?.jsonPrimitive?.content ?: "unknown"
-        error("HA render_template failed: $err")
-      }
-      val event = withTimeout(timeoutMs) { flow.first() }
-      val result = event["result"]
-      return when (result) {
-        is JsonPrimitive -> result.content
-        null -> error("HA render_template returned no result: $event")
-        else -> result.toString()
-      }
-    } finally {
-      pendingMutex.withLock { pending.remove(id) }
-      subscriptionsMutex.withLock { subscriptions.remove(id) }
-      // Cancel the server-side render subscription. HA's generic
-      // unsubscribe handler keys on the original command id.
-      runCatching { awaitCommand("unsubscribe_events") { put("subscription", id) } }
     }
   }
 

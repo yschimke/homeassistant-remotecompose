@@ -14,11 +14,11 @@ import kotlinx.serialization.json.longOrNull
  * A deliberately small in-process evaluator for the subset of Home Assistant's Jinja2 that the
  * bundled dashboards actually use.
  *
- * This is **not** a Jinja engine. HA's server-side renderer is the authoritative path
- * ([HaSnapshot.templates], populated by the live session). This evaluator is the fallback used
- * wherever there is no live HA to render against — `@Preview`s, demo mode, the offline cache, and
- * the first frame before the first live `render_template` round-trip returns — so those surfaces
- * show real content instead of a placeholder.
+ * `markdown` card templates are rendered here, locally, against the [HaSnapshot] — there is no
+ * round-trip to HA's `render_template`. That keeps live, preview, demo and offline rendering
+ * identical and avoids the WebSocket latency of a per-card server render. The trade-off: this is a
+ * subset, not a full Jinja engine, so anything it can't evaluate makes [render] return `null` and
+ * the caller falls back to a placeholder rather than showing wrong output.
  *
  * Supported surface (everything the demo dashboards exercise):
  * - statements: `{% set x = … %}`, `{% if … %}` / `{% elif … %}` / `{% else %}` / `{% endif %}`

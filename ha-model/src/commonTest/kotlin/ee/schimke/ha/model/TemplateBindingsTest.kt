@@ -25,26 +25,28 @@ class TemplateBindingsTest {
       .trimIndent()
 
   @Test
-  fun needsServerRender_flagsStatementBlocks() {
-    assertTrue(TemplateBindings.needsServerRender(scriptyTemplate))
-    assertTrue(TemplateBindings.needsServerRender("{% if true %}x{% endif %}"))
-    assertTrue(TemplateBindings.needsServerRender("{# a comment #}"))
+  fun needsTemplateRender_flagsStatementBlocks() {
+    assertTrue(TemplateBindings.needsTemplateRender(scriptyTemplate))
+    assertTrue(TemplateBindings.needsTemplateRender("{% if true %}x{% endif %}"))
+    assertTrue(TemplateBindings.needsTemplateRender("{# a comment #}"))
   }
 
   @Test
-  fun needsServerRender_flagsNonTrivialExpressions() {
-    assertTrue(TemplateBindings.needsServerRender("{{ state_attr('x', 'y') }}"))
-    assertTrue(TemplateBindings.needsServerRender("{{ states('x') | round(1) }}"))
+  fun needsTemplateRender_flagsNonTrivialExpressions() {
+    assertTrue(TemplateBindings.needsTemplateRender("{{ state_attr('x', 'y') }}"))
+    assertTrue(TemplateBindings.needsTemplateRender("{{ states('x') | round(1) }}"))
     // Double-quoted states() isn't handled by the simple binding either.
-    assertTrue(TemplateBindings.needsServerRender("""{{ states("x") }}"""))
+    assertTrue(TemplateBindings.needsTemplateRender("""{{ states("x") }}"""))
   }
 
   @Test
-  fun needsServerRender_leavesSimpleContentToTheLiveBinding() {
-    assertFalse(TemplateBindings.needsServerRender("## Notes\nplain text"))
-    assertFalse(TemplateBindings.needsServerRender("Temp: {{ states('sensor.t') }}"))
+  fun needsTemplateRender_leavesSimpleContentToTheLiveBinding() {
+    assertFalse(TemplateBindings.needsTemplateRender("## Notes\nplain text"))
+    assertFalse(TemplateBindings.needsTemplateRender("Temp: {{ states('sensor.t') }}"))
     assertFalse(
-      TemplateBindings.needsServerRender("A {{ states('sensor.a') }} / B {{ states('sensor.b') }}")
+      TemplateBindings.needsTemplateRender(
+        "A {{ states('sensor.a') }} / B {{ states('sensor.b') }}"
+      )
     )
   }
 

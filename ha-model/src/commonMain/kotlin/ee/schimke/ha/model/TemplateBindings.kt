@@ -8,34 +8,31 @@ import kotlinx.serialization.json.JsonPrimitive
 /**
  * A Jinja2 template found in a card, paired with a stable [key].
  *
- * The key is the map key into [HaSnapshot.templates]: the host renders the template against the
- * live `hass` object (HA's WebSocket `render_template` command) and stores the result under [key];
- * a converter looks the result back up by recomputing the same key from the card's `content`.
- * Identical templates collapse to one key, so a dashboard that repeats a template renders it once.
+ * The key de-duplicates identical templates (a dashboard that repeats a template renders it once)
+ * and keys the per-card cache-key map the host builds from [JinjaTemplate] output.
  */
 data class TemplateRef(val key: String, val template: String)
 
 /**
  * Detection + stable keying for HA `markdown` card templates.
  *
- * HA's frontend evaluates a markdown card's `content:` through the server-side Jinja2 engine and
- * renders only the result. This library has no Jinja engine, so anything beyond the trivial `{{
- * states('entity') }}` interpolation — control flow (`{% … %}`), comments (`{# … #}`), filters, or
- * `state_attr(...)` — cannot be represented by the per-expression live binding in
- * `MarkdownCardConverter.MarkdownTemplateBindings`. [needsServerRender] flags exactly those cards
- * so the host can render them on HA and feed the result back via [HaSnapshot.templates].
+ * A markdown card's `content:` may be a Jinja2 template. The trivial `{{ states('entity') }}`
+ * interpolation is handled by the per-expression live binding in
+ * `MarkdownCardConverter.MarkdownTemplateBindings`; anything richer — control flow (`{% … %}`),
+ * comments (`{# … #}`), filters, or `state_attr(...)` — is evaluated in-process by [JinjaTemplate].
+ * [needsTemplateRender] flags exactly the cards that take the [JinjaTemplate] path.
  */
 object TemplateBindings {
   private val exprRegex = Regex("\\{\\{\\s*(.*?)\\s*\\}\\}", RegexOption.DOT_MATCHES_ALL)
   private val simpleStates = Regex("^states\\('[^']+'\\)$")
 
   /**
-   * True when [content] uses Jinja that the simple per-expression binding can't represent and so
-   * must be rendered by HA:
+   * True when [content] uses Jinja that the simple per-expression binding can't represent, so it
+   * must go through the [JinjaTemplate] evaluator:
    * - any statement block `{% … %}` or comment `{# … #}`, or
    * - any `{{ … }}` expression that isn't a bare `states('id')`.
    */
-  fun needsServerRender(content: String): Boolean {
+  fun needsTemplateRender(content: String): Boolean {
     if (content.contains("{%") || content.contains("{#")) return true
     for (match in exprRegex.findAll(content)) {
       if (!simpleStates.matches(match.groupValues[1].trim())) return true
@@ -44,8 +41,7 @@ object TemplateBindings {
   }
 
   /**
-   * Stable content-derived key for a template (FNV-1a over the trimmed source, hex). Deterministic
-   * across processes so the host that renders and the converter that reads agree, and so two cards
+   * Stable content-derived key for a template (FNV-1a over the trimmed source, hex). Two cards
    * sharing a template share a key.
    */
   fun templateKey(content: String): String {
@@ -68,9 +64,8 @@ object TemplateBindings {
   }
 
   /**
-   * Every server-render template across a dashboard's views and sections, de-duplicated by
-   * [TemplateRef.key]. The live session renders each once per refresh and writes the results into
-   * [HaSnapshot.templates].
+   * Every template across a dashboard's views and sections that needs the [JinjaTemplate]
+   * evaluator, de-duplicated by [TemplateRef.key].
    */
   fun dashboardTemplates(dashboard: Dashboard): List<TemplateRef> {
     val out = LinkedHashMap<String, TemplateRef>()
@@ -89,7 +84,7 @@ object TemplateBindings {
         val type = (element["type"] as? JsonPrimitive)?.content
         if (type == CardTypes.MARKDOWN) {
           val content = (element["content"] as? JsonPrimitive)?.content
-          if (content != null && needsServerRender(content)) {
+          if (content != null && needsTemplateRender(content)) {
             val key = templateKey(content)
             out.getOrPut(key) { TemplateRef(key, content) }
           }

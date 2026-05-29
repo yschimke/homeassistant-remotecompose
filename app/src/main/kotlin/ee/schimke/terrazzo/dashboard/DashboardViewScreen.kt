@@ -897,15 +897,14 @@ private fun CardSlot(
     // exception: hosts that mutate state out-of-band (demo mode taps)
     // bump it to force a re-encode on the next composition.
     val haTheme = remember(style, dark) { haThemeFor(style, dark) }
-    // Markdown templates are baked into the document (full markdown
-    // fidelity), so unlike entity state they DO belong in the cache key:
-    // when the rendered text changes, the key changes and the card
-    // re-encodes. Use HA's own render when present, else the in-process
-    // evaluator (so demo/offline value drift re-encodes too). Empty for
-    // non-template cards, so their keys stay stable.
+    // Markdown templates are evaluated in-process and baked into the
+    // document (full markdown fidelity), so unlike entity state they DO
+    // belong in the cache key: when the rendered text changes, the key
+    // changes and the card re-encodes. Empty for non-template cards, so
+    // their keys stay stable.
     val templateValues = remember(card, snapshot) {
         TemplateBindings.cardTemplates(card)
-            .associate { it.key to (snapshot.templates[it.key] ?: JinjaTemplate.render(it.template, snapshot)) }
+            .associate { it.key to JinjaTemplate.render(it.template, snapshot) }
     }
     val cacheKey = remember(card, style, dark, captureEpoch, templateValues) {
         CardSlotCacheKey(card, style, dark, captureEpoch, templateValues)

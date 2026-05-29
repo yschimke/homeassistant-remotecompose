@@ -20,14 +20,6 @@ data class HaSnapshot(
   val history: Map<String, List<HistoryPoint>> = emptyMap(),
   val statistics: Map<String, List<StatisticPoint>> = emptyMap(),
   val forecasts: Map<String, JsonObject> = emptyMap(),
-  /**
-   * Server-rendered HA `markdown` card templates, keyed by [TemplateBindings.templateKey]. A card
-   * whose `content:` is a full Jinja2 template (control flow, filters, `state_attr`, …) can't be
-   * evaluated in-process, so the live session renders it on HA and drops the result here;
-   * [TemplateBindings.needsServerRender] decides which cards qualify. Empty for demo / offline
-   * sessions, which fall back to a placeholder.
-   */
-  val templates: Map<String, String> = emptyMap(),
 )
 
 @Serializable
