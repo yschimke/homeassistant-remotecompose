@@ -53,6 +53,7 @@ import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.Dashboard
 import ee.schimke.ha.model.HaSnapshot
+import ee.schimke.ha.model.TemplateBindings
 import ee.schimke.terrazzo.LocalTerrazzoGraph
 import ee.schimke.terrazzo.core.pin.MobilePinnedSection
 import ee.schimke.terrazzo.core.pin.PinStore
@@ -895,8 +896,17 @@ private fun CardSlot(
     // exception: hosts that mutate state out-of-band (demo mode taps)
     // bump it to force a re-encode on the next composition.
     val haTheme = remember(style, dark) { haThemeFor(style, dark) }
-    val cacheKey = remember(card, style, dark, captureEpoch) {
-        CardSlotCacheKey(card, style, dark, captureEpoch)
+    // Server-rendered markdown templates are baked into the document
+    // (full markdown fidelity), so unlike entity state they DO belong in
+    // the cache key: when HA re-renders a template to new text, the key
+    // changes and the card re-encodes. Empty for non-template cards, so
+    // their keys stay stable.
+    val templateValues = remember(card, snapshot) {
+        TemplateBindings.cardTemplates(card)
+            .associate { it.key to snapshot.templates[it.key] }
+    }
+    val cacheKey = remember(card, style, dark, captureEpoch, templateValues) {
+        CardSlotCacheKey(card, style, dark, captureEpoch, templateValues)
     }
     val context = androidx.compose.ui.platform.LocalContext.current
     val bitmapLoader = remember(context, baseUrl, imageLoader) {
@@ -945,6 +955,7 @@ private data class CardSlotCacheKey(
     val style: ThemeStyle,
     val dark: Boolean,
     val captureEpoch: Long,
+    val templateValues: Map<String, String?>,
 )
 
 /**
