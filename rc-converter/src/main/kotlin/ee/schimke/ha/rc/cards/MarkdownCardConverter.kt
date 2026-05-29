@@ -7,6 +7,7 @@ import androidx.compose.runtime.Composable
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.HaSnapshot
+import ee.schimke.ha.model.JinjaTemplate
 import ee.schimke.ha.model.TemplateBindings
 import ee.schimke.ha.rc.CardConverter
 import ee.schimke.ha.rc.components.HaMarkdownData
@@ -30,7 +31,7 @@ class MarkdownCardConverter : CardConverter {
         // when we have it, so the slot matches what's actually drawn.
         val text =
             if (TemplateBindings.needsServerRender(content)) {
-                snapshot.templates[TemplateBindings.templateKey(content)] ?: content
+                renderedTemplate(content, snapshot) ?: content
             } else {
                 content
             }
@@ -45,21 +46,21 @@ class MarkdownCardConverter : CardConverter {
         val content = card.raw["content"]?.jsonPrimitive?.content ?: ""
 
         // Full Jinja templates (control flow, filters, state_attr, …)
-        // can't be evaluated here. The live session renders them on HA
-        // into snapshot.templates; we parse that rendered markdown the
-        // same way as static content. The host folds the rendered value
-        // into the document cache key, so a new render re-encodes — this
-        // is the higher-fidelity path that keeps headings / bold / lists
-        // instead of binding the whole output to one live string slot.
+        // can't be the simple per-expression binding. Prefer HA's own
+        // render (snapshot.templates, populated by the live session);
+        // otherwise fall back to the in-process JinjaTemplate evaluator
+        // so previews / demo / offline still show real content. Either
+        // way we parse the rendered markdown for full fidelity
+        // (headings / bold / lists). The host folds the rendered value
+        // into the document cache key, so new output re-encodes.
         if (TemplateBindings.needsServerRender(content)) {
-            val rendered = snapshot.templates[TemplateBindings.templateKey(content)]
+            val rendered = renderedTemplate(content, snapshot)
             val blocks =
                 if (rendered != null) {
                     Markdown.parse(rendered)
                 } else {
-                    // Not yet rendered (first paint) or no live session
-                    // (demo / offline). Show a neutral placeholder rather
-                    // than dumping the raw template source.
+                    // Evaluator couldn't handle it and there's no live
+                    // render yet — placeholder beats dumping raw source.
                     listOf(MarkdownBlock(MarkdownBlock.Kind.Paragraph, "…"))
                 }
             RemoteHaMarkdown(HaMarkdownData(title = title, blocks = blocks), modifier = modifier)
@@ -70,6 +71,15 @@ class MarkdownCardConverter : CardConverter {
         val blocks = Markdown.parse(template.rendered).bind(template)
         RemoteHaMarkdown(HaMarkdownData(title = title, blocks = blocks), modifier = modifier)
     }
+
+    /**
+     * The rendered output for a server-render template: HA's own render
+     * if the live session supplied it, else the in-process evaluator's
+     * best effort, else null.
+     */
+    private fun renderedTemplate(content: String, snapshot: HaSnapshot): String? =
+        snapshot.templates[TemplateBindings.templateKey(content)]
+            ?: JinjaTemplate.render(content, snapshot)
 
     private fun List<MarkdownBlock>.bind(template: MarkdownTemplateBindings): List<MarkdownBlock> =
         map { block ->
