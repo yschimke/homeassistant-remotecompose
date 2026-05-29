@@ -1,5 +1,28 @@
 # Changelog
 
+## [0.1.27](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.26...v0.1.27) (2026-05-29)
+
+
+### Features
+
+* **markdown:** render Jinja templates via HA server-side templating ([#327](https://github.com/yschimke/homeassistant-remotecompose/issues/327)) ([5ac4942](https://github.com/yschimke/homeassistant-remotecompose/commit/5ac4942878c94e9b303f5c45573b970caded26bb))
+* **wear:** add per-card slot widget previews; suppress card chrome inside wear widgets ([#303](https://github.com/yschimke/homeassistant-remotecompose/issues/303)) ([f1a2bd8](https://github.com/yschimke/homeassistant-remotecompose/commit/f1a2bd8d4f5f4cbde3f0956cb3661f10b79ce62d))
+* **wear:** hide large slot for low-data card types ([#304](https://github.com/yschimke/homeassistant-remotecompose/issues/304)) ([a1b679d](https://github.com/yschimke/homeassistant-remotecompose/commit/a1b679dd653f39fed613eeffd6b6683fa5b95014))
+
+
+### Bug Fixes
+
+* **deps:** align with remote-compose alpha11 API changes ([#322](https://github.com/yschimke/homeassistant-remotecompose/issues/322)) ([03c3027](https://github.com/yschimke/homeassistant-remotecompose/commit/03c3027a5f6163b080e4fd3908ded0ce878bc91c))
+* **deps:** update androidx-wear-tv to v1.6.2 ([#313](https://github.com/yschimke/homeassistant-remotecompose/issues/313)) ([bdef581](https://github.com/yschimke/homeassistant-remotecompose/commit/bdef5813bb158ff875f066984f95c42b79e2d5d2))
+* **deps:** update dependency androidx.compose:compose-bom to v2026.05.01 ([#314](https://github.com/yschimke/homeassistant-remotecompose/issues/314)) ([0630f5e](https://github.com/yschimke/homeassistant-remotecompose/commit/0630f5e453fda50269fb179711c7341561c09e86))
+* **deps:** update dependency androidx.navigation3:navigation3-runtime to v1.2.0-alpha03 ([#315](https://github.com/yschimke/homeassistant-remotecompose/issues/315)) ([1b5ad9c](https://github.com/yschimke/homeassistant-remotecompose/commit/1b5ad9ca0b66567c71f75995c0d195025d09ae5f))
+* **deps:** update dependency androidx.navigation3:navigation3-ui to v1.2.0-alpha03 ([#316](https://github.com/yschimke/homeassistant-remotecompose/issues/316)) ([5a17e9a](https://github.com/yschimke/homeassistant-remotecompose/commit/5a17e9aa555c6b5cfb4aca11cce20a618fdf51bc))
+* **deps:** update dependency tech.units:indriya to v2.2.4 ([#301](https://github.com/yschimke/homeassistant-remotecompose/issues/301)) ([4f9b128](https://github.com/yschimke/homeassistant-remotecompose/commit/4f9b12890c8bee85de420291424e629b4e664406))
+* **deps:** update glance.wear to v1.0.0-alpha10 ([#317](https://github.com/yschimke/homeassistant-remotecompose/issues/317)) ([c544b77](https://github.com/yschimke/homeassistant-remotecompose/commit/c544b77d141926342fdab05e53e228b55feee622))
+* **deps:** update mockserver to v6 ([#320](https://github.com/yschimke/homeassistant-remotecompose/issues/320)) ([b4d7a0a](https://github.com/yschimke/homeassistant-remotecompose/commit/b4d7a0a5687f3a56ca368957a2682aab4f7f1e98))
+* **deps:** update remote-compose ([#318](https://github.com/yschimke/homeassistant-remotecompose/issues/318)) ([fe85d87](https://github.com/yschimke/homeassistant-remotecompose/commit/fe85d871786d89de157bd55aaca7a485857e9304))
+* **wear:** non-flow fallback for glance / grid in Wear slots ([#308](https://github.com/yschimke/homeassistant-remotecompose/issues/308)) ([82e494e](https://github.com/yschimke/homeassistant-remotecompose/commit/82e494e4f4bf27653c8145a11c1329e12929e842))
+
 ## [0.1.26](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.25...v0.1.26) (2026-05-17)
 
 
