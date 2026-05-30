@@ -143,6 +143,21 @@ fun RemoteHaArcDialWide(
                 markerStrokePx = 8f,
                 paddingPx = 3f,
             )
+            // Preserve the card's key pictogram (e.g. the light bulb) on
+            // the compact wide tier — the arc + value alone don't say
+            // *what kind* of card this is. Centred inside the mini-arc,
+            // tinted by accent, matching the full dial. No-op for cards
+            // with no centerIcon (thermostat / humidifier use a mode
+            // chip instead). See docs/architecture/adaptive-card-layouts.md
+            // §"Identity before density".
+            if (data.centerIcon != null) {
+                RemoteIcon(
+                    imageVector = data.centerIcon,
+                    contentDescription = data.name.rs,
+                    modifier = RemoteModifier.size(20.rdp),
+                    tint = data.accent.rc,
+                )
+            }
         }
         RemoteColumn(
             modifier = RemoteModifier.weight(1f),

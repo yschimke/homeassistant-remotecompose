@@ -53,6 +53,20 @@ density (range labels, names, severity captions) before stripping the
 shape that announces what kind of card you're looking at. Text-only is
 the last fallback, never the first compact tier.
 
+**Joining a shared layout family doesn't grant identity for free — the
+family's _compact_ variant has to render _your_ key element.** A shared
+reflow composable that draws only the generic shape + value silently
+drops a card's distinguishing pictogram on exactly the small cells
+where it matters most. Concrete example: routing `light` through the
+arc-dial family looked like an identity _win_, but `RemoteHaArcDialWide`
+only drew the arc + value and ignored `HaArcDialData.centerIcon`, so the
+bulb — light's whole identity — vanished on every Wear cell and the
+`3×3` launcher base while still showing on the full `4×4` dial. The fix
+is to teach the shared compact variant to carry the key element
+(`centerIcon`), not to special-case the card. **When you move a card
+into a family, render its key element at the family's _smallest_ tier
+and check the matrix there first.**
+
 ### 2. Reflow before remove
 
 When space tightens, the first move is to reorient — move elements
@@ -475,9 +489,11 @@ and is reused. The families today:
 
 The "Arc-dial control" family is the reference implementation: a single
 `RenderArcDial` width-ladder gives thermostat and humidifier a clean
-Wide-row↔Full-card transition with the dial retained at every size. The
-open work is bringing the other families up to that bar — see the
-per-family issues.
+Wide-row↔Full-card transition with the dial retained at every size.
+`light` joined the family too — but only correctly once
+`RemoteHaArcDialWide` was taught to render `centerIcon` (the bulb); the
+arc + value alone don't say "light" (see Principle 1). The open work is
+bringing the other families up to that bar — see the per-family issues.
 
 ## Anti-patterns
 
