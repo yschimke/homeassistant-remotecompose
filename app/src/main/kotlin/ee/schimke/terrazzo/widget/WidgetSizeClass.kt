@@ -23,29 +23,29 @@ import ee.schimke.ha.rc.WidgetSizeConstraints
  * adding a class is just a new subclass + XML + manifest receiver, no
  * render logic.
  */
-internal enum class WidgetSizeClass(val providerClassName: String) {
+internal enum class WidgetSizeClass(val providerClass: Class<out TerrazzoWidgetProvider>) {
     /**
      * Button-shaped single-entity cards (tile, button, entity): a small,
      * near-square cell that pairs with other small widgets.
      * `@xml/terrazzo_widget_info_small`.
      */
-    Small("ee.schimke.terrazzo.widget.TerrazzoWidgetProviderSmall"),
+    Small(TerrazzoWidgetProviderSmall::class.java),
 
     /**
      * The default: wide list/hero cards at a comfortable couple of rows.
      * Backed by the base [TerrazzoWidgetProvider] so existing installs
      * keep working. `@xml/terrazzo_widget_info`.
      */
-    Standard("ee.schimke.terrazzo.widget.TerrazzoWidgetProvider"),
+    Standard(TerrazzoWidgetProvider::class.java),
 
     /**
      * Tall list cards (entities/glance with many rows) that want vertical
      * room by default. `@xml/terrazzo_widget_info_tall`.
      */
-    Tall("ee.schimke.terrazzo.widget.TerrazzoWidgetProviderTall");
+    Tall(TerrazzoWidgetProviderTall::class.java);
 
     fun componentName(context: Context): ComponentName =
-        ComponentName(context.packageName, providerClassName)
+        ComponentName(context, providerClass)
 
     companion object {
         /** Default height (dp) at or above which a Full-width card pins Tall. */
