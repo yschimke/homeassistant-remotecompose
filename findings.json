@@ -1157,16 +1157,16 @@
           "viewDescription": "android.view.View  desc=\"Living Room\""
         },
         {
-          "boundsInScreen": "640,744,1333,788",
+          "boundsInScreen": "640,744,1333,785",
           "level": "ERROR",
-          "message": "This item's height is 17dp. Consider making the height of this touch target 48dp or larger.",
+          "message": "This item's height is 16dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Living Room\""
         },
         {
-          "boundsInScreen": "640,788,1333,797",
+          "boundsInScreen": "640,785,1333,797",
           "level": "ERROR",
-          "message": "This item's height is 3dp. Consider making the height of this touch target 48dp or larger.",
+          "message": "This item's height is 5dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Office lamp\""
         },
@@ -7042,7 +7042,7 @@
           "viewDescription": "android.view.View  desc=\"Kitchen\""
         },
         {
-          "boundsInScreen": "52,1346,462,1435",
+          "boundsInScreen": "52,1346,462,1434",
           "level": "ERROR",
           "message": "This item's height is 34dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
@@ -7063,7 +7063,7 @@
           "viewDescription": "android.view.View  desc=\"Kitchen\""
         },
         {
-          "boundsInScreen": "52,1897,777,1986",
+          "boundsInScreen": "52,1897,777,1985",
           "level": "ERROR",
           "message": "This item's height is 34dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
