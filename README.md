@@ -1,6 +1,6 @@
 # Accessibility Report
 
-_Auto-generated from `compose-preview/a11y/pr`. 261 preview(s) across 4 module(s) · 965 error(s) · 3 warning(s) · 17 info._
+_Auto-generated from `compose-preview/a11y/pr`. 261 preview(s) across 4 module(s) · 1009 error(s) · 3 warning(s) · 17 info._
 
 Browse inline; image URLs are pinned to the commit SHA on the baseline branch so links keep resolving after merge.
 
@@ -358,10 +358,10 @@ _No findings._
 | 11 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Living Room" | This item's height is 26dp. Consider making the height of this touch target 48dp or larger. |
 | 12 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Living Room" | This item's height is 32dp. Consider making the height of this touch target 48dp or larger. |
 | 13 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Living Room" | This item's height is 32dp. Consider making the height of this touch target 48dp or larger. |
-| 14 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Living Room" | This item's height is 16dp. Consider making the height of this touch target 48dp or larger. |
-| 15 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Office lamp" | This item's height is 5dp. Consider making the height of this touch target 48dp or larger. |
-| 16 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Living Room" | This item's height is 17dp. Consider making the height of this touch target 48dp or larger. |
-| 17 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Office lamp" | This item's height is 3dp. Consider making the height of this touch target 48dp or larger. |
+| 14 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Living Room" | This item's height is 17dp. Consider making the height of this touch target 48dp or larger. |
+| 15 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Office lamp" | This item's height is 3dp. Consider making the height of this touch target 48dp or larger. |
+| 16 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Living Room" | This item's height is 18dp. Consider making the height of this touch target 48dp or larger. |
+| 17 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Office lamp" | This item's height is 2dp. Consider making the height of this touch target 48dp or larger. |
 | 18 | INFO | DuplicateSpeakableTextCheck | android.widget.TextView | This non-clickable item's speakable text: "Terrazzo slot" is identical to that of 1 other item(s). |
 
 ### `CardPreviewMatrix_Entity`
@@ -540,12 +540,14 @@ _No findings._
 | 15 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Nozzle" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
 | 16 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Bed" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
 | 17 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Remaining" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 18 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Status" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 19 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Stage" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 20 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Progress" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 21 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Nozzle" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 22 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Bed" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 23 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Remaining" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 18 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 15dp. Consider making the height of this touch target 48dp or larger. |
+| 19 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Status" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 20 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Stage" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 21 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Progress" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 22 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Nozzle" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 23 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Bed" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 24 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Remaining" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 25 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 15dp. Consider making the height of this touch target 48dp or larger. |
 
 ### `Dashboard3dPrintingTablet`
 
@@ -574,18 +576,20 @@ _No findings._
 | 19 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Nozzle" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
 | 20 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Bed" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
 | 21 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Remaining" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 22 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Status" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 23 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Stage" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 24 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Progress" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 25 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Nozzle" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 26 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Bed" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 27 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Remaining" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 28 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Progress" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 29 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Current layer" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 30 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Total layers" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 31 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Remaining" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 32 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Started" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 33 | ERROR | TouchTargetSizeCheck | android.view.View  desc="ETA" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 22 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 15dp. Consider making the height of this touch target 48dp or larger. |
+| 23 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Status" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 24 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Stage" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 25 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Progress" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 26 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Nozzle" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 27 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Bed" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 28 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Remaining" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 29 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 15dp. Consider making the height of this touch target 48dp or larger. |
+| 30 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Progress" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 31 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Current layer" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 32 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Total layers" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 33 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Remaining" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 34 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Started" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 35 | ERROR | TouchTargetSizeCheck | android.view.View  desc="ETA" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
 
 ### `DashboardClimateMobile`
 
@@ -762,26 +766,42 @@ _No findings._
 | 15 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
 | 16 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
 | 17 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 18 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Stars" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 19 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Open issues" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 20 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Open PRs" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 21 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Latest PR" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 22 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Latest issue" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 23 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Latest release" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 24 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Latest tag" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 25 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Stars" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 26 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Open issues" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 27 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Open PRs" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 28 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Latest PR" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 29 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Latest issue" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 30 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Latest release" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 31 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Latest tag" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 32 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Stars" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 33 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Open issues" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 34 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Open PRs" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 35 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Latest PR" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 36 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Latest issue" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 37 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Latest release" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 18 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 18dp. Consider making the height of this touch target 48dp or larger. |
+| 19 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 18dp. Consider making the height of this touch target 48dp or larger. |
+| 20 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 18dp. Consider making the height of this touch target 48dp or larger. |
+| 21 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 18dp. Consider making the height of this touch target 48dp or larger. |
+| 22 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 18dp. Consider making the height of this touch target 48dp or larger. |
+| 23 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Stars" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 24 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Open issues" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 25 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Open PRs" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 26 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Latest PR" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 27 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Latest issue" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 28 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Latest release" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 29 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Latest tag" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 30 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 18dp. Consider making the height of this touch target 48dp or larger. |
+| 31 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 18dp. Consider making the height of this touch target 48dp or larger. |
+| 32 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 18dp. Consider making the height of this touch target 48dp or larger. |
+| 33 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 18dp. Consider making the height of this touch target 48dp or larger. |
+| 34 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 18dp. Consider making the height of this touch target 48dp or larger. |
+| 35 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 18dp. Consider making the height of this touch target 48dp or larger. |
+| 36 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 18dp. Consider making the height of this touch target 48dp or larger. |
+| 37 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Stars" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 38 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Open issues" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 39 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Open PRs" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 40 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Latest PR" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 41 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Latest issue" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 42 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Latest release" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 43 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Latest tag" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 44 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 18dp. Consider making the height of this touch target 48dp or larger. |
+| 45 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 18dp. Consider making the height of this touch target 48dp or larger. |
+| 46 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 18dp. Consider making the height of this touch target 48dp or larger. |
+| 47 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 18dp. Consider making the height of this touch target 48dp or larger. |
+| 48 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 18dp. Consider making the height of this touch target 48dp or larger. |
+| 49 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 18dp. Consider making the height of this touch target 48dp or larger. |
+| 50 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Stars" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 51 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Open issues" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 52 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Open PRs" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 53 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Latest PR" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
 
 ### `DashboardGithubTablet`
 
@@ -815,13 +835,13 @@ _No findings._
 | 24 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
 | 25 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
 | 26 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 27 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Stars" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 28 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Open issues" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 29 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Open PRs" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 30 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Latest PR" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 31 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Latest issue" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 32 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Latest release" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 33 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Latest tag" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 27 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 18dp. Consider making the height of this touch target 48dp or larger. |
+| 28 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 18dp. Consider making the height of this touch target 48dp or larger. |
+| 29 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 18dp. Consider making the height of this touch target 48dp or larger. |
+| 30 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 18dp. Consider making the height of this touch target 48dp or larger. |
+| 31 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 18dp. Consider making the height of this touch target 48dp or larger. |
+| 32 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 18dp. Consider making the height of this touch target 48dp or larger. |
+| 33 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 18dp. Consider making the height of this touch target 48dp or larger. |
 | 34 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Stars" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
 | 35 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Open issues" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
 | 36 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Open PRs" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
@@ -829,22 +849,46 @@ _No findings._
 | 38 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Latest issue" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
 | 39 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Latest release" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
 | 40 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Latest tag" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 41 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Stars" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 42 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Open issues" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 43 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Open PRs" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 44 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Latest PR" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 45 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Latest issue" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 46 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Latest release" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 47 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Latest tag" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 48 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Stars" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 49 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Open issues" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 50 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Open PRs" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 51 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Latest PR" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 52 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Latest issue" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 53 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Latest release" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 54 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Latest tag" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 55 | ERROR | TouchTargetSizeCheck | android.view.View  desc="square/okhttp" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 56 | ERROR | TouchTargetSizeCheck | android.view.View  desc="google/horologist" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 41 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 18dp. Consider making the height of this touch target 48dp or larger. |
+| 42 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 18dp. Consider making the height of this touch target 48dp or larger. |
+| 43 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 18dp. Consider making the height of this touch target 48dp or larger. |
+| 44 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 18dp. Consider making the height of this touch target 48dp or larger. |
+| 45 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 18dp. Consider making the height of this touch target 48dp or larger. |
+| 46 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 18dp. Consider making the height of this touch target 48dp or larger. |
+| 47 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Stars" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 48 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Open issues" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 49 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Open PRs" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 50 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Latest PR" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 51 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Latest issue" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 52 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Latest release" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 53 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Latest tag" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 54 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 18dp. Consider making the height of this touch target 48dp or larger. |
+| 55 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 18dp. Consider making the height of this touch target 48dp or larger. |
+| 56 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 18dp. Consider making the height of this touch target 48dp or larger. |
+| 57 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 18dp. Consider making the height of this touch target 48dp or larger. |
+| 58 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 18dp. Consider making the height of this touch target 48dp or larger. |
+| 59 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Stars" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 60 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Open issues" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 61 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Open PRs" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 62 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Latest PR" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 63 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Latest issue" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 64 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Latest release" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 65 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Latest tag" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 66 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 18dp. Consider making the height of this touch target 48dp or larger. |
+| 67 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 18dp. Consider making the height of this touch target 48dp or larger. |
+| 68 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 18dp. Consider making the height of this touch target 48dp or larger. |
+| 69 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 18dp. Consider making the height of this touch target 48dp or larger. |
+| 70 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 18dp. Consider making the height of this touch target 48dp or larger. |
+| 71 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 18dp. Consider making the height of this touch target 48dp or larger. |
+| 72 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Stars" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 73 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Open issues" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 74 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Open PRs" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 75 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Latest PR" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 76 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Latest issue" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 77 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Latest release" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 78 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Latest tag" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 79 | ERROR | TouchTargetSizeCheck | android.view.View  desc="square/okhttp" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 80 | ERROR | TouchTargetSizeCheck | android.view.View  desc="google/horologist" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
 
 ### `DashboardMeshcoreMobile`
 
