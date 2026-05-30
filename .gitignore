@@ -11,4 +11,9 @@ captures/
 */.compose-preview-history/
 */bin/
 
+# Crashlytics key — opt-in per developer; presence enables the Firebase
+# crash reporter at build time (see app/build.gradle.kts). Keep out of VCS.
+google-services.json
+*/google-services.json
+
 __pycache__/

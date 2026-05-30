@@ -11,11 +11,13 @@ import dev.zacsweers.metro.createGraphFactory
 import ee.schimke.ha.rc.enableRemoteComposeWrapContent
 import ee.schimke.terrazzo.core.di.TerrazzoGraph
 import ee.schimke.terrazzo.core.monitor.CardMonitor
+import ee.schimke.terrazzo.crash.CrashReporter
 import ee.schimke.terrazzo.di.AppGraph
 import ee.schimke.terrazzo.image.HaImageStack
 import ee.schimke.terrazzo.monitor.createMonitor
 import ee.schimke.terrazzo.wearsync.MobileSyncStatsStore
 import ee.schimke.terrazzo.wearsync.MobileWearSyncManager
+import kotlinx.coroutines.plus
 
 /**
  * Holds the singleton [TerrazzoGraph] so every Android entry point —
@@ -46,6 +48,10 @@ class TerrazzoApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        // Install crash logging first so anything that throws during the
+        // rest of startup is still captured (the in-app LogStore sink is
+        // always wired; Crashlytics rides along when a key is configured).
+        installCrashLogging()
         // Flip the RemoteCompose player into wrap-content sizing —
         // see enableRemoteComposeWrapContent's KDoc. Combined with the
         // wrap-friendly profile (androidXExperimentalWrap) this lets
@@ -60,13 +66,51 @@ class TerrazzoApplication : Application() {
         // demo / pinned-card updates even when the phone UI is in the
         // background). PreferencesStore + WidgetStore are read from the
         // graph; the manager owns its own lazy DataClient/MessageClient.
+        // Adopt the LogStore's CoroutineExceptionHandler on the wear-sync
+        // scope: a stray failure in background sync gets logged instead of
+        // propagating to the thread's default handler and taking the whole
+        // UI process down. The `+ handler` keeps the lifecycle Job (and its
+        // cancellation) intact.
         graph.wearSyncManager.start(
-            scope = ProcessLifecycleOwner.get().lifecycleScope,
+            scope = ProcessLifecycleOwner.get().lifecycleScope + graph.logStore.coroutineExceptionHandler,
             prefs = graph.preferencesStore,
             pinStore = graph.pinStore,
             slotsStore = graph.wearWidgetSlotsStore,
         )
     }
+
+    /**
+     * Route uncaught exceptions to the in-app [LogStore] (persisted
+     * synchronously so the trace survives the imminent process kill)
+     * and, when configured, to Crashlytics — then chain to whatever
+     * handler was already installed so the platform's default crash
+     * behaviour (dialog / process death) is preserved. Coroutine
+     * failures that escape a root scope without their own handler also
+     * land here, since they propagate to the thread's default handler.
+     */
+    private fun installCrashLogging() {
+        // install() registers Crashlytics' own uncaught handler (when a
+        // key is configured), so we capture `previous` *after* it — our
+        // handler records to the LogStore then chains through, letting
+        // Crashlytics report the fatal crash natively. We deliberately
+        // don't also call crashReporter.recordCrash here: that path is
+        // for non-fatal reports and would double-count an uncaught crash.
+        crashReporter.install(applicationContext)
+        val previous = Thread.getDefaultUncaughtExceptionHandler()
+        Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
+            runCatching { graph.logStore.recordCrash(throwable, thread, fatal = true) }
+            previous?.uncaughtException(thread, throwable)
+        }
+    }
+
+    /**
+     * Optional external crash sink. Resolves to a Firebase-backed
+     * reporter only when the app was built with a Crashlytics key
+     * (`google-services.json` present at build time); otherwise it's a
+     * no-op and the app runs crash-reporting-free off the [LogStore]
+     * sink alone.
+     */
+    private val crashReporter: CrashReporter by lazy { CrashReporter.create() }
 
     private fun registerNotificationChannels() {
         val nm = getSystemService(NotificationManager::class.java) ?: return

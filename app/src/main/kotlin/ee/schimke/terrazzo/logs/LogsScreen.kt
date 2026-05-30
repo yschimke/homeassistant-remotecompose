@@ -1,5 +1,6 @@
 package ee.schimke.terrazzo.logs
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -26,6 +27,9 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -40,8 +44,11 @@ import java.util.Locale
 
 /**
  * Debug surface for the [ee.schimke.terrazzo.core.logs.LogStore]
- * buffer. Three sections, reverse-chronological inside each:
+ * buffer. Four sections, reverse-chronological inside each:
  *
+ *   - **Crashes** — uncaught exceptions (and caught coroutine failures)
+ *     captured by the crash plumbing. Recorded regardless of this
+ *     screen's preference; tap a row to expand the full stack trace.
  *   - **Data updates** — entity state changes seen on the WebSocket,
  *     filtered to entities referenced by the currently-rendered
  *     dashboard so background entities don't drown the view. Kept for
@@ -60,6 +67,7 @@ fun LogsScreen(onBack: () -> Unit) {
     val store = LocalTerrazzoGraph.current.logStore
     val entries by store.flow.collectAsState()
 
+    val crashes = entries.filterIsInstance<LogEntry.Crash>().sortedByDescending { it.timestamp }
     val dataUpdates = entries.filterIsInstance<LogEntry.DataUpdate>().sortedByDescending { it.timestamp }
     val connections = entries.filterIsInstance<LogEntry.Connection>().sortedByDescending { it.timestamp }
     val actions = entries.filterIsInstance<LogEntry.LocalAction>().sortedByDescending { it.timestamp }
@@ -85,6 +93,10 @@ fun LogsScreen(onBack: () -> Unit) {
             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
+            section("Crashes (${crashes.size})") {
+                if (crashes.isEmpty()) emptyHint("No crashes recorded. 🎉")
+                else crashes.forEach { CrashRow(it) }
+            }
             section("Connection (${connections.size})") {
                 if (connections.isEmpty()) emptyHint("No connection events yet.")
                 else connections.forEach { ConnectionRow(it) }
@@ -141,6 +153,69 @@ private fun ConnectionRow(entry: LogEntry.Connection) {
         leading = { StatusChip(entry.status) },
         primary = entry.status.label,
         secondary = entry.message,
+    )
+}
+
+@Composable
+private fun CrashRow(entry: LogEntry.Crash) {
+    var expanded by remember { mutableStateOf(false) }
+    Column(
+        modifier = Modifier.fillMaxWidth()
+            .clickable { expanded = !expanded }
+            .padding(vertical = 4.dp),
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            Text(
+                text = formatTime(entry.timestamp),
+                style = MaterialTheme.typography.labelSmall,
+                fontFamily = FontFamily.Monospace,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            CrashChip(fatal = entry.fatal)
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    entry.summary,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color(0xFFD32F2F),
+                )
+                Text(
+                    "thread: ${entry.threadName}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
+        if (expanded) {
+            Text(
+                text = entry.stackTrace,
+                style = MaterialTheme.typography.labelSmall,
+                fontFamily = FontFamily.Monospace,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(top = 4.dp),
+            )
+        }
+    }
+}
+
+@Composable
+private fun CrashChip(fatal: Boolean) {
+    val color = if (fatal) Color(0xFFD32F2F) else Color(0xFFF57C00)
+    AssistChip(
+        onClick = {},
+        enabled = false,
+        label = {
+            Text(
+                if (fatal) "FATAL" else "CAUGHT",
+                style = MaterialTheme.typography.labelSmall,
+            )
+        },
+        colors = AssistChipDefaults.assistChipColors(
+            disabledContainerColor = color.copy(alpha = 0.16f),
+            disabledLabelColor = color,
+        ),
     )
 }
 
