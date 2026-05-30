@@ -7340,9 +7340,9 @@
           "viewDescription": "android.view.View  desc=\"Coffee maker\""
         },
         {
-          "boundsInScreen": "499,1546,603,1732",
+          "boundsInScreen": "500,1546,603,1732",
           "level": "ERROR",
-          "message": "This item's width is 40dp. Consider making the width of this touch target 48dp or larger.",
+          "message": "This item's width is 39dp. Consider making the width of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Kitchen\""
         }

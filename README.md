@@ -1767,7 +1767,7 @@ _No findings._
 | 8 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Living Room" | This item's height is 32dp. Consider making the height of this touch target 48dp or larger. |
 | 9 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Kitchen" | This item's height is 34dp. Consider making the height of this touch target 48dp or larger. |
 | 10 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Coffee maker" | This item's height is 34dp. Consider making the height of this touch target 48dp or larger. |
-| 11 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Kitchen" | This item's width is 40dp. Consider making the width of this touch target 48dp or larger. |
+| 11 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Kitchen" | This item's width is 39dp. Consider making the width of this touch target 48dp or larger. |
 
 ### `Sizing_SlackSlot_PaintMeasure`
 
