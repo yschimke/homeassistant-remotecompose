@@ -369,6 +369,16 @@ class HaClient(private val config: HaConfig, engine: HttpClientEngine? = null) {
       current
     }
     runCatching { s?.close(CloseReason(CloseReason.Codes.NORMAL, "background")) }
+    // We nulled [session] above, so the cancelled receive loop bails out
+    // of its own tail cleanup (see [receiveLoop]). Do that cleanup here
+    // instead: fail in-flight commands so callers don't hang to the 30s
+    // timeout, and drop the now-dead subscription flows. A fresh [connect]
+    // re-subscribes with new ids.
+    pendingMutex.withLock {
+      pending.values.forEach { it.completeExceptionally(IllegalStateException("disconnected")) }
+      pending.clear()
+    }
+    subscriptionsMutex.withLock { subscriptions.clear() }
     _state.value = ConnectionState.Disconnected
   }
 
@@ -474,6 +484,23 @@ class HaClient(private val config: HaConfig, engine: HttpClientEngine? = null) {
     // abort` on the next send). Also fail any in-flight deferreds so
     // their callers see a clear cause instead of timing out at 30s.
     val cause = failure ?: IllegalStateException("WebSocket closed by peer")
+    // Claim ownership before touching shared state. If a newer [connect]
+    // has already swapped in a replacement socket, THIS loop is stale and
+    // must not clobber the live connection — don't fail its pending
+    // commands, drop its subscriptions, or stomp its Ready state back to
+    // Disconnected. [disconnect]/[close] cancel this loop, but a cancelled
+    // coroutine can still reach here and run the cleanup via the mutex
+    // fast path, so the `session === s` guard (not cancellation alone) is
+    // what makes a quick background→foreground bounce safe.
+    val stillOurs = sessionMutex.withLock {
+      if (session === s) {
+        session = null
+        true
+      } else {
+        false
+      }
+    }
+    if (!stillOurs) return
     pendingMutex.withLock {
       pending.values.forEach { it.completeExceptionally(cause) }
       pending.clear()
@@ -483,7 +510,6 @@ class HaClient(private val config: HaConfig, engine: HttpClientEngine? = null) {
     // observing the flow stop seeing emissions; HaSession's reconnect
     // will re-subscribe with a fresh id.
     subscriptionsMutex.withLock { subscriptions.clear() }
-    sessionMutex.withLock { if (session === s) session = null }
     _state.value = ConnectionState.Disconnected
   }
 
