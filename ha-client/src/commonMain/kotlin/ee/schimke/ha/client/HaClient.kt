@@ -82,14 +82,33 @@ class HaClient(private val config: HaConfig, engine: HttpClientEngine? = null) {
   private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
   private val idMutex = Mutex()
   private var nextId = 1
-  private val pending = mutableMapOf<Int, CompletableDeferred<JsonObject>>()
+
+  // In-flight one-shot commands, each tagged with the socket that issued
+  // it. The tag lets teardown fail only the entries for a dying socket, so
+  // an interleaved reconnect — whose pending entries carry a different
+  // owner — never has its in-flight commands completed out from under it.
+  // Ids are globally monotonic and never reused, so a stale socket's ids
+  // can't collide with a replacement's.
+  private class Pending(
+    val owner: DefaultWebSocketSession,
+    val deferred: CompletableDeferred<JsonObject>,
+  )
+
+  private val pending = mutableMapOf<Int, Pending>()
   private val pendingMutex = Mutex()
+
   // Long-lived subscriptions keyed by the same request id as the
   // `subscribe_events` ack. The ack lands in [pending] and is consumed
   // once; subsequent `type:"event"` frames carrying that id are routed
   // here forever (well, until [close]). Separate from [pending] so a
-  // subscription's lifecycle isn't tied to the one-shot deferred.
-  private val subscriptions = mutableMapOf<Int, MutableSharedFlow<JsonObject>>()
+  // subscription's lifecycle isn't tied to the one-shot deferred, and
+  // tagged with its owning socket for the same scoped-teardown reason.
+  private class Subscription(
+    val owner: DefaultWebSocketSession,
+    val flow: MutableSharedFlow<JsonObject>,
+  )
+
+  private val subscriptions = mutableMapOf<Int, Subscription>()
   private val subscriptionsMutex = Mutex()
   // Guards mutation of [session] / [receiveJob] and serialises [send] so two
   // concurrent commands can't interleave frames on the same socket.
@@ -237,9 +256,9 @@ class HaClient(private val config: HaConfig, engine: HttpClientEngine? = null) {
         extraBufferCapacity = 64,
         onBufferOverflow = BufferOverflow.DROP_OLDEST,
       )
-    subscriptionsMutex.withLock { subscriptions[id] = flow }
+    subscriptionsMutex.withLock { subscriptions[id] = Subscription(s, flow) }
     val deferred = CompletableDeferred<JsonObject>()
-    pendingMutex.withLock { pending[id] = deferred }
+    pendingMutex.withLock { pending[id] = Pending(s, deferred) }
     val msg = buildJsonObject {
       put("id", id)
       put("type", "subscribe_events")
@@ -369,17 +388,15 @@ class HaClient(private val config: HaConfig, engine: HttpClientEngine? = null) {
       current
     }
     runCatching { s?.close(CloseReason(CloseReason.Codes.NORMAL, "background")) }
-    // We nulled [session] above, so the cancelled receive loop bails out
-    // of its own tail cleanup (see [receiveLoop]). Do that cleanup here
-    // instead: fail in-flight commands so callers don't hang to the 30s
-    // timeout, and drop the now-dead subscription flows. A fresh [connect]
-    // re-subscribes with new ids.
-    pendingMutex.withLock {
-      pending.values.forEach { it.completeExceptionally(IllegalStateException("disconnected")) }
-      pending.clear()
-    }
-    subscriptionsMutex.withLock { subscriptions.clear() }
-    _state.value = ConnectionState.Disconnected
+    // Owner-scoped cleanup: fail only this socket's in-flight commands so
+    // callers don't hang to the 30s timeout, and drop its subscriptions.
+    // A fresh [connect] re-subscribes with new ids.
+    if (s != null) failPending(s, IllegalStateException("disconnected"))
+    // Publish Disconnected only if no replacement [connect] slipped in
+    // while [s] was closing (it could have grabbed [sessionMutex] the
+    // moment we released it above and already be Connecting/Ready). Without
+    // this guard we'd clobber the replacement's fresh state.
+    sessionMutex.withLock { if (session == null) _state.value = ConnectionState.Disconnected }
   }
 
   suspend fun close() {
@@ -391,6 +408,10 @@ class HaClient(private val config: HaConfig, engine: HttpClientEngine? = null) {
       current
     }
     runCatching { s?.close(CloseReason(CloseReason.Codes.NORMAL, "bye")) }
+    // Fail this socket's in-flight commands before tearing the scope down,
+    // so awaiting callers fail fast instead of hanging on a cancelled
+    // receive loop that can't run its own cleanup.
+    if (s != null) failPending(s, IllegalStateException("closed"))
     scope.cancel()
     httpClient.close()
     _state.value = ConnectionState.Disconnected
@@ -419,7 +440,7 @@ class HaClient(private val config: HaConfig, engine: HttpClientEngine? = null) {
     val s = session ?: error("Not connected — call connect() first")
     val id = idMutex.withLock { nextId++ }
     val deferred = CompletableDeferred<JsonObject>()
-    pendingMutex.withLock { pending[id] = deferred }
+    pendingMutex.withLock { pending[id] = Pending(s, deferred) }
     val msg = buildJsonObject {
       put("id", id)
       put("type", type)
@@ -466,11 +487,11 @@ class HaClient(private val config: HaConfig, engine: HttpClientEngine? = null) {
           // subscription's request id. Route them to the live flow; do
           // NOT touch [pending] (the ack already consumed that slot).
           "event" -> {
-            val flow = subscriptionsMutex.withLock { subscriptions[id] }
+            val flow = subscriptionsMutex.withLock { subscriptions[id]?.flow }
             flow?.tryEmit(obj["event"]?.jsonObject ?: continue)
           }
           // Everything else (result, pong, …) is a one-shot response.
-          else -> pendingMutex.withLock { pending.remove(id) }?.complete(obj)
+          else -> pendingMutex.withLock { pending.remove(id) }?.deferred?.complete(obj)
         }
       }
     } catch (t: Throwable) {
@@ -484,33 +505,43 @@ class HaClient(private val config: HaConfig, engine: HttpClientEngine? = null) {
     // abort` on the next send). Also fail any in-flight deferreds so
     // their callers see a clear cause instead of timing out at 30s.
     val cause = failure ?: IllegalStateException("WebSocket closed by peer")
-    // Claim ownership before touching shared state. If a newer [connect]
-    // has already swapped in a replacement socket, THIS loop is stale and
-    // must not clobber the live connection — don't fail its pending
-    // commands, drop its subscriptions, or stomp its Ready state back to
-    // Disconnected. [disconnect]/[close] cancel this loop, but a cancelled
-    // coroutine can still reach here and run the cleanup via the mutex
-    // fast path, so the `session === s` guard (not cancellation alone) is
-    // what makes a quick background→foreground bounce safe.
-    val stillOurs = sessionMutex.withLock {
+    // Fail/drop only *this* socket's in-flight commands and subscriptions
+    // (see [failPending]). This is owner-scoped, so it runs safely even if
+    // a newer [connect] already swapped in a replacement socket — the
+    // replacement's entries carry a different owner and are left intact.
+    failPending(s, cause)
+    // The connection state, however, is shared: only the still-current
+    // owner may null the live ref and publish Disconnected. If a newer
+    // socket has taken over (a quick background→foreground bounce, where a
+    // cancelled loop can still reach here via the mutex fast path), leave
+    // its Ready state alone.
+    sessionMutex.withLock {
       if (session === s) {
         session = null
-        true
-      } else {
-        false
+        _state.value = ConnectionState.Disconnected
       }
     }
-    if (!stillOurs) return
+  }
+
+  /**
+   * Fail every in-flight command and drop every subscription owned by socket [s], leaving entries
+   * owned by any other (replacement) socket untouched. Pending callers see [cause] immediately
+   * instead of waiting out the 30s command timeout; subscription flows stop emitting and a fresh
+   * [connect] re-subscribes with new ids. Safe to call more than once — already-removed entries are
+   * simply absent.
+   */
+  private suspend fun failPending(s: DefaultWebSocketSession, cause: Throwable) {
     pendingMutex.withLock {
-      pending.values.forEach { it.completeExceptionally(cause) }
-      pending.clear()
+      val iter = pending.entries.iterator()
+      while (iter.hasNext()) {
+        val entry = iter.next()
+        if (entry.value.owner === s) {
+          entry.value.deferred.completeExceptionally(cause)
+          iter.remove()
+        }
+      }
     }
-    // Drop subscription flows too: the server-side subscriptions died
-    // with the socket, so future events would never land. Callers
-    // observing the flow stop seeing emissions; HaSession's reconnect
-    // will re-subscribe with a fresh id.
-    subscriptionsMutex.withLock { subscriptions.clear() }
-    _state.value = ConnectionState.Disconnected
+    subscriptionsMutex.withLock { subscriptions.entries.removeAll { it.value.owner === s } }
   }
 
   private suspend fun readMessage(s: DefaultWebSocketSession): JsonObject {
