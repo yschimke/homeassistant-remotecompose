@@ -6,6 +6,8 @@ Auto-generated from `main`. Browse inline or compare against PR branches.
 
 | Preview | Image |
 |---------|-------|
+| `CardFlashPreview` | <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/main/renders/app/CardFlashPreview_Card_flash_on_data_change.gif" width="150" /> |
+| `DataGridOverlayPreview` | <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/main/renders/app/DataGridOverlayPreview_Data_grid_overlay.png" width="150" /> |
 | `Play_Phone_01_HomeLight` | <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/main/renders/app/Play_Phone_01_HomeLight_play_phone_home_light.png" width="150" /> |
 | `Play_Phone_02_HomeDark` | <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/main/renders/app/Play_Phone_02_HomeDark_play_phone_home_dark.png" width="150" /> |
 | `Play_Phone_03_Discovery` | <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/main/renders/app/Play_Phone_03_Discovery_play_phone_discovery.png" width="150" /> |
