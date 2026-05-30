@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 // Snapshot helper that renders a Glance Wear widget inside a
-// simulated circular watch face (black background, app icon + label
-// overlay, widget below). Mirrors the WearWidget sample preview helper
+// simulated circular watch face (black background, app icon overlay at
+// the top, widget below). Mirrors the WearWidget sample preview helper
 // from https://github.com/android/wear-os-samples/pull/1371. The
 // upstream sample marks the helper as "temporary, drop once
 // androidx.glance.wear:wear-tooling-preview ships the equivalent
@@ -49,19 +49,16 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.glance.wear.GlanceWearWidget
 import androidx.glance.wear.core.WearWidgetParams
-import androidx.wear.compose.material3.Text
 import ee.schimke.ha.rc.components.R
 import kotlinx.coroutines.runBlocking
 
 /**
  * Previews a [GlanceWearWidget] inside a simulated Wear OS watch face
- * — a circular black surface with the app icon and title at the top
- * and the widget rendered below.
+ * — a circular black surface with the app icon at the top and the
+ * widget rendered below.
  *
  * Goes a step beyond [WearWidgetPreview] (which renders just the
  * widget rectangle) so reviewers can sanity-check how a widget reads
@@ -71,9 +68,6 @@ import kotlinx.coroutines.runBlocking
  * @param params The [WearWidgetParams] describing container type,
  *   dimensions and padding.
  * @param modifier The [Modifier] applied to the inner widget surface.
- * @param title Caption rendered above the widget; defaults to the
- *   widget's class simple-name with spaces inserted before each
- *   uppercase letter.
  */
 @SuppressLint("RestrictedApi")
 @Composable
@@ -81,7 +75,6 @@ public fun WearWidgetPreviewSnapshot(
     widget: GlanceWearWidget,
     params: WearWidgetParams,
     modifier: Modifier = Modifier,
-    title: String = widget.javaClass.simpleName.replace(Regex("(?<=.)(?=\\p{Lu})"), " "),
 ) {
     val context = LocalContext.current
     val document =
@@ -120,13 +113,6 @@ public fun WearWidgetPreviewSnapshot(
                     colorFilter = ColorFilter.tint(Color(0xFF424242)),
                 )
             }
-            Text(
-                text = title,
-                color = Color.White,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(top = 2.dp),
-            )
         }
     }
 }
