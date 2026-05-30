@@ -767,6 +767,8 @@ private fun SettingsScreen(
     val gridLayoutEnabled by graph.preferencesStore.experimentalGridLayout.collectAsState(initial = false)
     val collapsedModeEnabled by graph.preferencesStore.collapsedMode.collectAsState(initial = true)
     val logsViewEnabled by graph.preferencesStore.logsViewEnabled.collectAsState(initial = false)
+    val flashOnDataChange by graph.preferencesStore.flashOnDataChange.collectAsState(initial = false)
+    val dataGridOverlay by graph.preferencesStore.dataGridOverlay.collectAsState(initial = false)
     val permanentWriteEnabled by graph.preferencesStore.permanentWriteMode.collectAsState(initial = false)
 
     Scaffold(
@@ -922,6 +924,50 @@ private fun SettingsScreen(
                     checked = logsViewEnabled,
                     onCheckedChange = { enabled ->
                         scope.launch { graph.preferencesStore.setLogsViewEnabled(enabled) }
+                    },
+                )
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text("Debug: flash cards on data change", style = MaterialTheme.typography.titleMedium)
+                    Text(
+                        "Briefly highlight a card whenever the entity state it renders " +
+                            "changes. Handy with demo mode to see which cards are live. " +
+                            "Visual only — nothing about the rendered card changes.",
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                }
+                Switch(
+                    checked = flashOnDataChange,
+                    onCheckedChange = { enabled ->
+                        scope.launch { graph.preferencesStore.setFlashOnDataChange(enabled) }
+                    },
+                )
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text("Debug: data grid overlay", style = MaterialTheme.typography.titleMedium)
+                    Text(
+                        "Float a grid over the dashboard listing every entity its cards " +
+                            "use — the key, current value, and how long ago it last changed. " +
+                            "Tap ✕ on the panel to dismiss.",
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                }
+                Switch(
+                    checked = dataGridOverlay,
+                    onCheckedChange = { enabled ->
+                        scope.launch { graph.preferencesStore.setDataGridOverlay(enabled) }
                     },
                 )
             }
