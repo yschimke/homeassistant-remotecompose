@@ -3,8 +3,13 @@ package ee.schimke.ha.rc
 import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.cards.MarkdownCardConverter
+import ee.schimke.ha.rc.cards.haExprToken
+import ee.schimke.ha.rc.components.Markdown
+import ee.schimke.ha.rc.components.MarkdownInline
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 class MarkdownCardConverterTest {
 
@@ -35,7 +40,7 @@ class MarkdownCardConverterTest {
                 snapshot,
             )
 
-        assertEquals("Temperature: __HA_EXPR_0__", template.rendered)
+        assertEquals("Temperature: ${haExprToken(0)}", template.rendered)
     }
 
     @Test
@@ -51,7 +56,7 @@ class MarkdownCardConverterTest {
                 snapshot,
             )
 
-        assertEquals("Temperature:\n__HA_EXPR_0__", template.rendered)
+        assertEquals("Temperature:\n${haExprToken(0)}", template.rendered)
     }
 
     @Test
@@ -62,7 +67,10 @@ class MarkdownCardConverterTest {
                 snapshot,
             )
 
-        assertEquals("Temp __HA_EXPR_0__ / Humidity __HA_EXPR_1__", template.rendered)
+        assertEquals(
+            "Temp ${haExprToken(0)} / Humidity ${haExprToken(1)}",
+            template.rendered,
+        )
     }
 
     @Test
@@ -84,6 +92,48 @@ class MarkdownCardConverterTest {
     }
 
     @Test
+    fun inlineTemplateTokenNextToLinkStaysBound() {
+        // A line mixing a simple {{ states('x') }} binding with a link takes
+        // the rich flow-row path (hasInlineMarkup). The tokenised text run
+        // must survive markdown parsing and resolve to a live binding rather
+        // than rendering the literal token. This mirrors
+        // MarkdownCardConverter.bind, which calls template.bind per inline run.
+        val content =
+            "{{ states('sensor.living_room_temperature') }} [history](/lovelace/history)"
+        val template = MarkdownCardConverter.MarkdownTemplateBindings.from(content, snapshot)
+        assertEquals("${haExprToken(0)} [history](/lovelace/history)", template.rendered)
+
+        val block = Markdown.parse(template.rendered).single()
+        assertTrue(block.hasInlineMarkup)
+
+        // The token survives parsing intact (a `__…__` token would be eaten
+        // as bold emphasis and the binding lost).
+        val textRun = block.inlines.filterIsInstance<MarkdownInline.Text>().single()
+        assertTrue(textRun.text.contains(haExprToken(0)))
+        // Non-null bound string ⇒ the run renders the live state, not the token.
+        assertNotNull(template.bind(textRun.text))
+
+        val link = block.inlines.filterIsInstance<MarkdownInline.Link>().single()
+        assertEquals("history", link.text)
+        assertEquals("/lovelace/history", link.url)
+    }
+
+    @Test
+    fun plainTemplateTokenSurvivesParsingAndStaysBound() {
+        // Regression: the binding token must not be markdown-active. A
+        // `__…__` token parsed as bold emphasis, stripping the delimiters
+        // so the bind regex missed it and the card showed the literal text.
+        val template =
+            MarkdownCardConverter.MarkdownTemplateBindings.from(
+                "Temperature: {{ states('sensor.living_room_temperature') }}",
+                snapshot,
+            )
+        val block = Markdown.parse(template.rendered).single()
+        assertTrue(block.text.contains(haExprToken(0)), "token was altered by parsing: ${block.text}")
+        assertNotNull(template.bind(block.text))
+    }
+
+    @Test
     fun templatesCanBeEmbeddedInMarkdownFormatting() {
         val template =
             MarkdownCardConverter.MarkdownTemplateBindings.from(
@@ -91,6 +141,6 @@ class MarkdownCardConverterTest {
                 snapshot,
             )
 
-        assertEquals("- **Temp**: __HA_EXPR_0__ °C", template.rendered)
+        assertEquals("- **Temp**: ${haExprToken(0)} °C", template.rendered)
     }
 }

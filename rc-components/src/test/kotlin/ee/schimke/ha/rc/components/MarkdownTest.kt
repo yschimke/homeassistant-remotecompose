@@ -56,26 +56,38 @@ class MarkdownTest {
     }
 
     @Test
-    fun linksKeepLabelDropUrl() {
+    fun linksKeepLabelAndUrl() {
         val blocks = Markdown.parse("see [meshcore-mobile](https://example.com/x)")
         assertEquals(1, blocks.size)
         assertEquals("see meshcore-mobile", blocks[0].text)
+        assertTrue(blocks[0].hasInlineMarkup)
+        val link = blocks[0].inlines.filterIsInstance<MarkdownInline.Link>().single()
+        assertEquals("meshcore-mobile", link.text)
+        assertEquals("https://example.com/x", link.url)
     }
 
     @Test
-    fun imagesAreDropped() {
+    fun imagesAreKept() {
         val blocks = Markdown.parse("alt text ![pic](x.png) trailing")
         assertEquals(1, blocks.size)
         assertEquals("alt text trailing", blocks[0].text)
+        val image = blocks[0].inlines.filterIsInstance<MarkdownInline.Image>().single()
+        assertEquals("x.png", image.url)
+        assertEquals("pic", image.alt)
     }
 
     @Test
-    fun linkedImageCollapsesToEmpty() {
-        // Outer link's label is the image itself; image is dropped, leaving
-        // no visible text → no block emitted.
+    fun linkedImageBecomesLinkedBadge() {
+        // `[![ci](src)](href)` — the image survives as a badge that links
+        // to the outer href; it contributes no visible text.
         val blocks =
             Markdown.parse("[![ci](https://img/badge.svg)](https://ci.example/run)")
-        assertTrue(blocks.isEmpty(), "expected no block, got $blocks")
+        assertEquals(1, blocks.size)
+        assertEquals("", blocks[0].text)
+        assertTrue(blocks[0].hasInlineMarkup)
+        val image = blocks[0].inlines.filterIsInstance<MarkdownInline.Image>().single()
+        assertEquals("https://img/badge.svg", image.url)
+        assertEquals("https://ci.example/run", image.href)
     }
 
     @Test
@@ -130,11 +142,51 @@ class MarkdownTest {
             [![ci](https://img/badge.svg)](https://ci/url)
         """.trimIndent()
         val blocks = Markdown.parse(src)
-        // heading + link + italic-line + (linked image collapses to empty → dropped)
-        assertEquals(3, blocks.size)
+        // heading + link-line + italic-line + linked-badge image
+        assertEquals(4, blocks.size)
         assertEquals(MarkdownBlock.Kind.Heading, blocks[0].kind)
         assertEquals("meshcore-mobile", blocks[0].text)
         assertEquals("meshcore-mobile", blocks[1].text)
+        assertEquals(
+            "https://github.com/yschimke/meshcore-mobile",
+            blocks[1].inlines.filterIsInstance<MarkdownInline.Link>().single().url,
+        )
         assertEquals("Mobile companion for MeshCore", blocks[2].text)
+        val badge = blocks[3].inlines.filterIsInstance<MarkdownInline.Image>().single()
+        assertEquals("https://img/badge.svg", badge.url)
+        assertEquals("https://ci/url", badge.href)
+    }
+
+    @Test
+    fun headingLinkIsClickable() {
+        val blocks = Markdown.parse("## [repo](https://example.com/repo)")
+        assertEquals(1, blocks.size)
+        assertEquals(MarkdownBlock.Kind.Heading, blocks[0].kind)
+        assertTrue(blocks[0].hasInlineMarkup)
+        assertEquals(
+            "https://example.com/repo",
+            blocks[0].inlines.filterIsInstance<MarkdownInline.Link>().single().url,
+        )
+    }
+
+    @Test
+    fun badgeRowKeepsEveryBadge() {
+        val src =
+            "[![ci](https://img/ci.svg)](https://ci) " +
+                "[![fmt](https://img/fmt.svg)](https://fmt)"
+        val blocks = Markdown.parse(src)
+        assertEquals(1, blocks.size)
+        val images = blocks[0].inlines.filterIsInstance<MarkdownInline.Image>()
+        assertEquals(2, images.size)
+        assertEquals("https://img/ci.svg", images[0].url)
+        assertEquals("https://img/fmt.svg", images[1].url)
+    }
+
+    @Test
+    fun plainParagraphHasNoInlineMarkup() {
+        val blocks = Markdown.parse("just **bold** text")
+        assertEquals(1, blocks.size)
+        assertTrue(!blocks[0].hasInlineMarkup)
+        assertEquals("just bold text", blocks[0].text)
     }
 }

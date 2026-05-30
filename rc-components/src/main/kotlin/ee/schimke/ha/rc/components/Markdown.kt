@@ -9,25 +9,82 @@ import org.intellij.markdown.flavours.gfm.GFMTokenTypes
 import org.intellij.markdown.parser.MarkdownParser
 
 /**
- * Block-level markdown element. Inline syntax (links, images, emphasis,
- * code spans) has already been collapsed to plain text — RemoteText
- * applies one style per node.
+ * One inline run inside a [MarkdownBlock]. The parser keeps links and
+ * images as their own spans instead of flattening the whole block to
+ * plain text, so [RemoteHaMarkdown] can lay a paragraph out as a flow
+ * row of styled runs — link labels in the accent colour, badge images
+ * fetched by URL — rather than dropping the URLs on the floor.
+ */
+sealed interface MarkdownInline {
+    /** Visible text this span contributes to the block (empty for images). */
+    val text: String
+
+    /**
+     * Plain run; rendered with the block's own text style. [boundText]
+     * carries the live `RemoteString` when [text] holds a
+     * `{{ states('x') }}` binding token, so the rich-inline path keeps
+     * updating instead of drawing the literal token.
+     */
+    data class Text(
+        override val text: String,
+        val boundText: androidx.compose.remote.creation.compose.state.RemoteString? = null,
+    ) : MarkdownInline
+
+    /** `[label](url)` — a clickable, accent-coloured run. [boundText]
+     *  carries the live label when it holds a binding token. */
+    data class Link(
+        override val text: String,
+        val url: String,
+        val boundText: androidx.compose.remote.creation.compose.state.RemoteString? = null,
+    ) : MarkdownInline
+
+    /**
+     * `![alt](url)`, or the image inside a `[![alt](url)](href)` badge.
+     * [url] is the image source the host's `BitmapLoader` resolves;
+     * [href] is the optional link the surrounding `[…]` points at.
+     * Images contribute no visible text.
+     */
+    data class Image(
+        val url: String,
+        val alt: String,
+        val href: String? = null,
+    ) : MarkdownInline {
+        override val text: String get() = ""
+    }
+}
+
+/**
+ * Block-level markdown element. [inlines] carries the block's inline
+ * runs (text / links / images); [text] is the concatenated visible text,
+ * kept for height heuristics and the simple `{{ states('x') }}` binding
+ * path. Plain blocks (no links or images) still render as a single
+ * RemoteText; only [hasInlineMarkup] blocks take the flow-row path.
  */
 data class MarkdownBlock(
     val kind: Kind,
     val text: String,
     val boundText: androidx.compose.remote.creation.compose.state.RemoteString? = null,
     val level: Int = 0,
+    val inlines: List<MarkdownInline> = listOf(MarkdownInline.Text(text)),
 ) {
     enum class Kind { Heading, Paragraph, Bullet, Divider }
+
+    /**
+     * True when the block carries links or images — these need the
+     * inline flow-row path in [RemoteHaMarkdown]. A plain block renders
+     * as one [androidx.compose.remote.creation.compose.layout.RemoteText].
+     */
+    val hasInlineMarkup: Boolean
+        get() = inlines.any { it is MarkdownInline.Link || it is MarkdownInline.Image }
 }
 
 /**
  * Markdown → block list using JetBrains' multiplatform parser. The
- * parser is responsible for block boundaries (CommonMark + GFM
- * extensions); we walk the AST and emit one [MarkdownBlock] per
- * top-level block, dropping inline markup so each block can be
- * rendered with a single text style.
+ * parser owns block boundaries (CommonMark + GFM extensions); we walk
+ * the AST and emit one [MarkdownBlock] per top-level block. Inline
+ * syntax is split into [MarkdownInline] runs so links and images
+ * survive to the renderer; emphasis / code markup collapses to plain
+ * text.
  */
 object Markdown {
     private val flavour = GFMFlavourDescriptor()
@@ -42,28 +99,25 @@ object Markdown {
 
     private fun visit(node: ASTNode, src: String, out: MutableList<MarkdownBlock>) {
         when (node.type) {
-            MarkdownElementTypes.ATX_1 -> heading(node, src, 1, out)
-            MarkdownElementTypes.ATX_2 -> heading(node, src, 2, out)
-            MarkdownElementTypes.ATX_3 -> heading(node, src, 3, out)
-            MarkdownElementTypes.ATX_4 -> heading(node, src, 4, out)
-            MarkdownElementTypes.ATX_5 -> heading(node, src, 5, out)
-            MarkdownElementTypes.ATX_6 -> heading(node, src, 6, out)
-            MarkdownElementTypes.SETEXT_1 -> heading(node, src, 1, out)
-            MarkdownElementTypes.SETEXT_2 -> heading(node, src, 2, out)
-            MarkdownElementTypes.PARAGRAPH -> {
-                val text = visibleText(node, src)
-                if (text.isNotEmpty()) out += MarkdownBlock(MarkdownBlock.Kind.Paragraph, text)
-            }
+            MarkdownElementTypes.ATX_1 -> emit(MarkdownBlock.Kind.Heading, node, src, 1, out)
+            MarkdownElementTypes.ATX_2 -> emit(MarkdownBlock.Kind.Heading, node, src, 2, out)
+            MarkdownElementTypes.ATX_3 -> emit(MarkdownBlock.Kind.Heading, node, src, 3, out)
+            MarkdownElementTypes.ATX_4 -> emit(MarkdownBlock.Kind.Heading, node, src, 4, out)
+            MarkdownElementTypes.ATX_5 -> emit(MarkdownBlock.Kind.Heading, node, src, 5, out)
+            MarkdownElementTypes.ATX_6 -> emit(MarkdownBlock.Kind.Heading, node, src, 6, out)
+            MarkdownElementTypes.SETEXT_1 -> emit(MarkdownBlock.Kind.Heading, node, src, 1, out)
+            MarkdownElementTypes.SETEXT_2 -> emit(MarkdownBlock.Kind.Heading, node, src, 2, out)
+            MarkdownElementTypes.PARAGRAPH -> emit(MarkdownBlock.Kind.Paragraph, node, src, 0, out)
             MarkdownElementTypes.UNORDERED_LIST,
             MarkdownElementTypes.ORDERED_LIST -> {
                 for (item in node.children) {
                     if (item.type == MarkdownElementTypes.LIST_ITEM) {
-                        val text = visibleText(item, src)
-                        if (text.isNotEmpty()) out += MarkdownBlock(MarkdownBlock.Kind.Bullet, text)
+                        emit(MarkdownBlock.Kind.Bullet, item, src, 0, out)
                     }
                 }
             }
-            MarkdownTokenTypes.HORIZONTAL_RULE -> out += MarkdownBlock(MarkdownBlock.Kind.Divider, "")
+            MarkdownTokenTypes.HORIZONTAL_RULE ->
+                out += MarkdownBlock(MarkdownBlock.Kind.Divider, "", inlines = emptyList())
             MarkdownElementTypes.CODE_FENCE,
             MarkdownElementTypes.CODE_BLOCK -> {
                 node.getTextInNode(src).toString().lineSequence()
@@ -78,42 +132,64 @@ object Markdown {
         }
     }
 
-    private fun heading(node: ASTNode, src: String, level: Int, out: MutableList<MarkdownBlock>) {
-        val text = visibleText(node, src)
-        if (text.isNotEmpty()) {
-            out += MarkdownBlock(MarkdownBlock.Kind.Heading, text, level = level)
+    private fun emit(
+        kind: MarkdownBlock.Kind,
+        node: ASTNode,
+        src: String,
+        level: Int,
+        out: MutableList<MarkdownBlock>,
+    ) {
+        val inlines = normalize(inlineSpans(node, src))
+        if (inlines.isEmpty()) return
+        out += MarkdownBlock(kind, textOf(inlines), level = level, inlines = inlines)
+    }
+
+    /** Concatenated visible text, whitespace-collapsed — used for height
+     *  heuristics and the simple state-binding path. */
+    private fun textOf(spans: List<MarkdownInline>): String =
+        spans.joinToString("") { it.text }.replace(HORIZONTAL_WHITESPACE, " ").trim()
+
+    // --- inline walk -------------------------------------------------------
+
+    private fun inlineSpans(node: ASTNode, src: String): List<MarkdownInline> {
+        val out = mutableListOf<MarkdownInline>()
+        val sb = StringBuilder()
+        appendInline(node, src, sb, out)
+        flush(sb, out)
+        return out
+    }
+
+    private fun flush(sb: StringBuilder, out: MutableList<MarkdownInline>) {
+        if (sb.isNotEmpty()) {
+            out += MarkdownInline.Text(sb.toString())
+            sb.setLength(0)
         }
     }
 
-    /** Concatenate visible inline text, dropping images and link URLs. */
-    private fun visibleText(node: ASTNode, src: String): String {
-        val sb = StringBuilder()
-        appendVisible(node, src, sb)
-        return sb.toString().replace(HORIZONTAL_WHITESPACE, " ").trim()
-    }
-
-    private fun appendVisible(node: ASTNode, src: String, sb: StringBuilder) {
+    private fun appendInline(
+        node: ASTNode,
+        src: String,
+        sb: StringBuilder,
+        out: MutableList<MarkdownInline>,
+    ) {
         when (node.type) {
-            MarkdownElementTypes.IMAGE -> return
+            MarkdownElementTypes.IMAGE -> {
+                flush(sb, out)
+                out += imageSpan(node, src, href = null)
+                return
+            }
             MarkdownElementTypes.AUTOLINK -> {
-                sb.append(
-                    node.getTextInNode(src).toString().trim().removePrefix("<").removeSuffix(">"),
-                )
+                flush(sb, out)
+                val url = node.getTextInNode(src).toString().trim()
+                    .removePrefix("<").removeSuffix(">")
+                out += MarkdownInline.Link(url, url)
                 return
             }
             MarkdownElementTypes.INLINE_LINK,
             MarkdownElementTypes.FULL_REFERENCE_LINK,
             MarkdownElementTypes.SHORT_REFERENCE_LINK -> {
-                node.children
-                    .firstOrNull { it.type == MarkdownElementTypes.LINK_TEXT }
-                    ?.let { linkText ->
-                        for (c in linkText.children) {
-                            if (c.type != MarkdownTokenTypes.LBRACKET &&
-                                c.type != MarkdownTokenTypes.RBRACKET) {
-                                appendVisible(c, src, sb)
-                            }
-                        }
-                    }
+                flush(sb, out)
+                appendLink(node, src, out)
                 return
             }
         }
@@ -125,8 +201,100 @@ object Markdown {
                 else -> sb.append(node.getTextInNode(src))
             }
         } else {
-            node.children.forEach { appendVisible(it, src, sb) }
+            node.children.forEach { appendInline(it, src, sb, out) }
         }
+    }
+
+    private fun appendLink(node: ASTNode, src: String, out: MutableList<MarkdownInline>) {
+        // The link's own destination is a direct child (the image inside a
+        // badge has its own, deeper, LINK_DESTINATION — don't grab that one).
+        val dest = node.children
+            .firstOrNull { it.type == MarkdownElementTypes.LINK_DESTINATION }
+            ?.let { linkUrl(it, src) }
+        val label = node.children.firstOrNull { it.type == MarkdownElementTypes.LINK_TEXT }
+        val image = label?.let { firstDescendant(it, MarkdownElementTypes.IMAGE) }
+        if (image != null) {
+            // `[![alt](src)](href)` — render the badge image, link it to href.
+            out += imageSpan(image, src, href = dest)
+            return
+        }
+        val text = label?.let { labelText(it, src) }.orEmpty()
+        if (text.isEmpty()) return
+        out += if (dest != null) MarkdownInline.Link(text, dest) else MarkdownInline.Text(text)
+    }
+
+    private fun imageSpan(node: ASTNode, src: String, href: String?): MarkdownInline.Image {
+        val url = firstDescendant(node, MarkdownElementTypes.LINK_DESTINATION)
+            ?.let { linkUrl(it, src) }.orEmpty()
+        val alt = firstDescendant(node, MarkdownElementTypes.LINK_TEXT)
+            ?.let { labelText(it, src) }.orEmpty()
+        return MarkdownInline.Image(url = url, alt = alt, href = href)
+    }
+
+    private fun linkUrl(node: ASTNode, src: String): String =
+        node.getTextInNode(src).toString().trim().removePrefix("<").removeSuffix(">")
+
+    /** Visible text of a `[…]` label, dropping brackets, markup and any
+     *  nested image. */
+    private fun labelText(label: ASTNode, src: String): String {
+        val sb = StringBuilder()
+        for (child in label.children) {
+            if (child.type == MarkdownTokenTypes.LBRACKET ||
+                child.type == MarkdownTokenTypes.RBRACKET
+            ) {
+                continue
+            }
+            appendPlain(child, src, sb)
+        }
+        return sb.toString().replace(HORIZONTAL_WHITESPACE, " ").trim()
+    }
+
+    private fun appendPlain(node: ASTNode, src: String, sb: StringBuilder) {
+        if (node.type == MarkdownElementTypes.IMAGE) return
+        if (node.children.isEmpty()) {
+            when (node.type) {
+                MarkdownTokenTypes.EOL,
+                MarkdownTokenTypes.HARD_LINE_BREAK -> sb.append(' ')
+                in MARKUP_TOKENS -> Unit
+                else -> sb.append(node.getTextInNode(src))
+            }
+        } else {
+            node.children.forEach { appendPlain(it, src, sb) }
+        }
+    }
+
+    private fun firstDescendant(node: ASTNode, type: org.intellij.markdown.IElementType): ASTNode? {
+        if (node.type == type) return node
+        for (child in node.children) {
+            firstDescendant(child, type)?.let { return it }
+        }
+        return null
+    }
+
+    /** Collapse horizontal whitespace, merge adjacent text runs, drop the
+     *  empties, and trim the block's leading / trailing whitespace. */
+    private fun normalize(spans: List<MarkdownInline>): List<MarkdownInline> {
+        val merged = mutableListOf<MarkdownInline>()
+        for (span in spans) {
+            if (span is MarkdownInline.Text) {
+                val collapsed = span.text.replace(HORIZONTAL_WHITESPACE, " ")
+                val last = merged.lastOrNull()
+                if (last is MarkdownInline.Text) {
+                    merged[merged.lastIndex] = MarkdownInline.Text(last.text + collapsed)
+                } else {
+                    merged += MarkdownInline.Text(collapsed)
+                }
+            } else {
+                merged += span
+            }
+        }
+        (merged.firstOrNull() as? MarkdownInline.Text)?.let {
+            merged[0] = MarkdownInline.Text(it.text.trimStart())
+        }
+        (merged.lastOrNull() as? MarkdownInline.Text)?.let {
+            merged[merged.lastIndex] = MarkdownInline.Text(it.text.trimEnd())
+        }
+        return merged.filterNot { it is MarkdownInline.Text && it.text.isEmpty() }
     }
 
     private val HORIZONTAL_WHITESPACE = Regex("[ \\t\\x0B\\f\\r]+")
