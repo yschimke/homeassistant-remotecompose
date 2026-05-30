@@ -64,12 +64,13 @@ import java.text.DecimalFormat
  *   the captured intrinsic.
  * @param axis which runtime dimension the thresholds gate on —
  *   [BreakpointAxis.Width] (default, reads `componentWidth()`) or
- *   [BreakpointAxis.Height] (reads `componentHeight()`). Height-axis
- *   ladders let a card reflow when the cell is too short for its
- *   default layout — e.g. a vertical list collapsing to a horizontal
- *   icon strip. Only one axis per ladder: alpha010 collapses 2-D /
- *   cross-axis gates to tier 0 (#224, see `GaugeCardConverter`), so
- *   pick the axis that best discriminates the card's variants.
+ *   [BreakpointAxis.Height] (reads `componentHeight()`). Gate on the
+ *   axis the host *pins*: launcher and matrix cells pin width and let
+ *   height wrap, so only a width gate reads a stable value there; use
+ *   [BreakpointAxis.Height] only where height is fixed (e.g. a Wear
+ *   slot). Keep it to a **single** threshold — alpha010 collapses
+ *   multi-rung (nested) and 2-D / cross-axis gates to tier 0 (#224,
+ *   see `GaugeCardConverter`).
  * @param content invoked per tier; index ranges `0..thresholdsDp.size`.
  */
 @Composable

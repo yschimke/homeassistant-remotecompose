@@ -179,18 +179,28 @@ The ladder is per-card, not a fixed cascade.
 
 | Tier | Min size | Layout |
 |------|----------|--------|
-| 1. Full | `h ≥ 200` | title chrome + N rows — matches Wrap |
-| 2. Title-and-rows | `96 ≤ h < 200` | first three rows, no title chrome |
-| 3. **Icon strip (reflow)** | `h < 96` | rows repacked as a horizontal `glance`-style strip of icon · name · state cells |
+| 1. Full | `w < 260` | title chrome + N rows — matches Wrap |
+| 2. **Icon strip (reflow)** | `w ≥ 260` | rows repacked as a horizontal `glance`-style strip of icon · name · state cells |
 
-Implemented as a **height-axis** `RemoteSizeBreakpoint`
-(`thresholdsDp = [96, 200], axis = Height`): the list's natural layout
-is a vertical stack, so height is what decides how much fits. Tier 3 is
-the "column of N rows → row of N icons" reflow — the rows can't stack,
-so they repack sideways rather than dropping to a single row. (No
-identity-only tier — entities is a list, the rows _are_ the identity;
-once rows can't stack, the next-most-useful thing is
-which-and-how-many, which the strip preserves.)
+Implemented as a **single-threshold width-axis** `RemoteSizeBreakpoint`
+(`thresholdsDp = [260], axis = Width`): drag the widget wider and the
+column of rows repacks into a row of icons. Two deliberate constraints,
+both learned from the matrix preview:
+
+- **Single threshold.** A multi-rung ladder lowers to nested
+  `RemoteStateLayout`s, which alpha010 collapses to tier 0 at playback
+  (#224, same as `GaugeCardConverter`) — a two-rung version pinned every
+  widget cell to one tier.
+- **Width, not height.** Every Fixed-mode surface (the matrix `@Preview`
+  cell and the launcher) pins width and lets height follow, so only a
+  width gate reads a stable canvas dimension and fires consistently. A
+  height gate reads the wrap-content height in those surfaces and
+  mis-selects. (`componentHeight()` _does_ work where height is pinned —
+  e.g. the Wear S vs L gauge — which is why the axis is available; it's
+  just not the right axis for a launcher list reflow.)
+
+(No identity-only tier — entities is a list, the rows _are_ the
+identity; the strip keeps which-and-how-many.)
 
 ## Data priorities
 
@@ -379,13 +389,17 @@ source of truth, not individual @Preview entries.
 The current state is the placeholder, not the philosophy:
 
 1. `RemoteSizeBreakpoint` now takes a `BreakpointAxis` — `Width`
-   (default) or `Height` — so a ladder can gate on either dimension.
-   `entities` uses the height axis to reflow its row column into an
-   icon strip when the cell is too short to stack rows. A *true* 2-D /
-   aspect gate is still blocked: alpha010 collapses cross-axis and
-   `.and()`-composed predicates to tier 0 (#224), so each ladder must
-   pick the single axis that best discriminates its variants — see
-   `GaugeCardConverter` for the height-only gate it settled on.
+   (default) or `Height`. Two playback realities, both confirmed against
+   the matrix preview, constrain how it's used: (a) only a **single**
+   threshold fires — multi-rung ladders lower to nested
+   `RemoteStateLayout`s that alpha010 collapses to tier 0 (#224); and
+   (b) a gate only reads a **stable** value on the axis the surface
+   *pins* — launcher/matrix cells pin width and wrap height, so a height
+   gate mis-selects there (it works where height is pinned, e.g. the
+   Wear gauge). A *true* 2-D / aspect gate remains blocked (#224). Net:
+   `entities` reflows on a single width threshold; per-card ladders
+   should pick the one pinned axis that best discriminates their
+   variants — see `GaugeCardConverter`.
 2. Tile / entity / button / gauge ship two-tier ladders
    (`Full → CompactStateChip`). That's the value-fallback path,
    skipping every reflow / identity tier above it. Each card needs

@@ -51,36 +51,27 @@ class EntitiesCardConverter : CardConverter {
         when (LocalCardSizeMode.current) {
             CardSizeMode.Wrap -> FullList(card, snapshot, modifier, maxRows = Int.MAX_VALUE)
             CardSizeMode.Fixed ->
-                // Height-axis ladder: the list's natural layout is a
-                // vertical stack of 44 dp rows, so it's *height* that
-                // decides how much of it fits — break on that, not
-                // width (a wide-but-short cell still can't stack rows).
-                // Single axis keeps us clear of the alpha010 2-D-gate
-                // collapse (#224, see GaugeCardConverter).
+                // Width-axis reflow: as the widget is dragged wider, the
+                // vertical column of rows repacks into a horizontal strip
+                // of icon cells ("column of N rows -> row of N icons").
+                //
+                // Width, not height, for two reasons: (1) it's the axis
+                // every Fixed-mode surface pins (the matrix preview and
+                // the launcher both fix width and let height follow), so
+                // the gate fires consistently and is reviewable in the
+                // matrix; a height gate reads an unstable wrap-height
+                // there. (2) SINGLE threshold — a multi-rung ladder lowers
+                // to nested RemoteStateLayouts, which alpha010 collapses
+                // to tier 0 at playback (#224, see GaugeCardConverter).
                 RemoteSizeBreakpoint(
-                    thresholdsDp = intArrayOf(96, 200),
+                    thresholdsDp = intArrayOf(260),
                     modifier = modifier,
-                    axis = BreakpointAxis.Height,
+                    axis = BreakpointAxis.Width,
                 ) { tier ->
                     when (tier) {
-                        // Tier 0: too short to stack rows — reflow the
-                        // column of rows into a horizontal strip of icon
-                        // cells (the "column of N rows -> row of N icons"
-                        // reflow). Each cell still carries icon + name +
-                        // state, so identity survives the repack.
-                        0 -> IconStrip(card, snapshot, RemoteModifier.fillMaxWidth())
-                        // Tier 1: some vertical room — first three rows,
-                        // no title chrome.
-                        1 ->
-                            FullList(
-                                card,
-                                snapshot,
-                                RemoteModifier.fillMaxWidth(),
-                                maxRows = 3,
-                                forceTitle = false,
-                            )
-                        // Tier 2: roomy — everything (matches Wrap).
-                        else ->
+                        // Tier 0 (w < 260): the natural vertical list, same
+                        // as Wrap — narrow cells stack rows.
+                        0 ->
                             FullList(
                                 card,
                                 snapshot,
@@ -88,6 +79,11 @@ class EntitiesCardConverter : CardConverter {
                                 maxRows = Int.MAX_VALUE,
                                 forceTitle = true,
                             )
+                        // Tier 1 (w >= 260): wide enough to lay the
+                        // entities out side by side — reflow into a strip
+                        // of icon | name | state cells. Each cell keeps its
+                        // identity, so nothing is dropped, just repacked.
+                        else -> IconStrip(card, snapshot, RemoteModifier.fillMaxWidth())
                     }
                 }
         }
