@@ -72,6 +72,20 @@ interface HaSession {
     }
 
     suspend fun connect()
+
+    /**
+     * Gracefully park the live connection without tearing the session
+     * down (unlike [close], which makes it unusable). Sessions holding a
+     * socket close it with a clean reason and move to
+     * [SessionConnectionStatus.Disconnected]; sessions with nothing to
+     * disconnect (demo, offline) no-op. Pair with [connect] to resume.
+     *
+     * Driven by the app-lifecycle hook: when the app backgrounds we drop
+     * the WebSocket here so the OS tearing it down later doesn't surface
+     * as a spurious Error, and reopen it via [connect] on return.
+     */
+    suspend fun disconnect() {}
+
     suspend fun listDashboards(): List<DashboardSummary>
     suspend fun loadDashboard(urlPath: String?): Pair<Dashboard, HaSnapshot>
 
@@ -130,6 +144,14 @@ enum class SessionConnectionStatus {
     Failed,
     Connecting,
     Connected,
+
+    /**
+     * Intentionally parked — the app backgrounded and we closed the
+     * socket cleanly. Distinct from [Failed] so the log paints it as a
+     * neutral "Disconnected" rather than a red "Error", and so the
+     * foreground reconnect hook knows to reopen it.
+     */
+    Disconnected,
 }
 
 /** Live session backed by an HA WebSocket. */
@@ -145,6 +167,13 @@ class LiveHaSession(
     private val _notifications = MutableStateFlow<List<HaNotification>>(emptyList())
     override val notifications: StateFlow<List<HaNotification>> = _notifications.asStateFlow()
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+
+    // True while we've intentionally parked the socket (app backgrounded
+    // via [disconnect]). Gates the state bridge so the HaClient.Disconnected
+    // that follows surfaces as a clean [SessionConnectionStatus.Disconnected]
+    // rather than [Failed] — an *unexpected* mid-flight death (parked ==
+    // false) still maps to Failed so the reconnect loop wakes up.
+    @Volatile private var parked = false
 
     init {
         // Bridge the underlying socket's state into our session status so
@@ -162,7 +191,10 @@ class LiveHaSession(
                     HaClient.ConnectionState.Connecting,
                     HaClient.ConnectionState.Authenticating ->
                         _connectionStatus.value = SessionConnectionStatus.Connecting
-                    HaClient.ConnectionState.Disconnected,
+                    HaClient.ConnectionState.Disconnected ->
+                        _connectionStatus.value =
+                            if (parked) SessionConnectionStatus.Disconnected
+                            else SessionConnectionStatus.Failed
                     HaClient.ConnectionState.Error ->
                         _connectionStatus.value = SessionConnectionStatus.Failed
                 }
@@ -193,10 +225,17 @@ class LiveHaSession(
     }
 
     override suspend fun connect() {
+        parked = false
         _connectionStatus.value = SessionConnectionStatus.Connecting
         runCatching { client.connect() }
             .onSuccess { _connectionStatus.value = SessionConnectionStatus.Connected }
             .onFailure { _connectionStatus.value = SessionConnectionStatus.Failed; throw it }
+    }
+
+    override suspend fun disconnect() {
+        parked = true
+        runCatching { client.disconnect() }
+        _connectionStatus.value = SessionConnectionStatus.Disconnected
     }
     override suspend fun listDashboards(): List<DashboardSummary> = client.listDashboards()
     override suspend fun loadDashboard(urlPath: String?): Pair<Dashboard, HaSnapshot> {

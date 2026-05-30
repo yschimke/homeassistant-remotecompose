@@ -353,6 +353,25 @@ class HaClient(private val config: HaConfig, engine: HttpClientEngine? = null) {
     callService(domain = "persistent_notification", service = "dismiss_all")
   }
 
+  /**
+   * Gracefully tear down the live WebSocket but keep the client reusable — unlike [close], which
+   * also cancels the client scope and the HTTP engine. Used when the app goes to the background: we
+   * close the socket with a NORMAL reason and reset to [ConnectionState.Disconnected], ready for a
+   * fresh [connect] when the app returns to the foreground. Cancelling [receiveJob] also runs its
+   * cleanup (failing in-flight commands, clearing subscriptions), same as a peer-side close.
+   */
+  suspend fun disconnect() {
+    val s = sessionMutex.withLock {
+      val current = session
+      session = null
+      receiveJob?.cancel()
+      receiveJob = null
+      current
+    }
+    runCatching { s?.close(CloseReason(CloseReason.Codes.NORMAL, "background")) }
+    _state.value = ConnectionState.Disconnected
+  }
+
   suspend fun close() {
     val s = sessionMutex.withLock {
       val current = session
