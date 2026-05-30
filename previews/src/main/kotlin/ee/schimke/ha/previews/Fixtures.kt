@@ -430,6 +430,38 @@ object Fixtures {
         )
     }
 
+    /** Sensors with long friendly names and **no** recorder history, so
+     *  each row summarises as "no data" and falls back to "No samples".
+     *  Reproduces the GitHub "Open issues per repo" dashboard card where
+     *  a long repo name used to overrun the right-aligned summary. */
+    val issuesNoData: HaSnapshot = run {
+        fun issueSensor(id: String, name: String) = id to EntityState(
+            entityId = id,
+            state = "unknown",
+            attributes = JsonObject(mapOf("friendly_name" to JsonPrimitive(name))),
+        )
+        HaSnapshot(
+            states = mapOf(
+                issueSensor(
+                    "sensor.gh_meshcore_mobile_issues",
+                    "yschimke/meshcore-mobile Issues",
+                ),
+                issueSensor(
+                    "sensor.gh_compose_ai_tools_issues",
+                    "yschimke/compose-ai-tools Issues",
+                ),
+                issueSensor(
+                    "sensor.gh_remotecompose_issues",
+                    "yschimke/homeassistant-remotecompose Issues",
+                ),
+                issueSensor(
+                    "sensor.gh_cadence_issues",
+                    "yschimke/cadence Issues",
+                ),
+            ),
+        )
+    }
+
     /** Hourly statistics for an energy-consumption sensor — synthetic
      *  series so the statistics-graph preview has data to plot. */
     val energyStatistics: HaSnapshot = run {

@@ -122,6 +122,7 @@ private fun BarRow(row: HaHistoryGraphRow, theme: HaTheme) {
             style = RemoteTextStyle.Default,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
+            modifier = RemoteModifier.weight(1f).padding(end = 8.rdp),
         )
         RemoteText(
             text = row.summary,
@@ -150,7 +151,10 @@ private fun Legend(row: HaHistoryGraphRow, theme: HaTheme) {
         verticalAlignment = RemoteAlignment.CenterVertically,
         horizontalArrangement = RemoteArrangement.SpaceBetween,
     ) {
-        RemoteRow(verticalAlignment = RemoteAlignment.CenterVertically) {
+        RemoteRow(
+            verticalAlignment = RemoteAlignment.CenterVertically,
+            modifier = RemoteModifier.weight(1f).padding(end = 8.rdp),
+        ) {
             RemoteBox(
                 modifier = RemoteModifier
                     .height(10.rdp)
@@ -165,7 +169,7 @@ private fun Legend(row: HaHistoryGraphRow, theme: HaTheme) {
                 style = RemoteTextStyle.Default,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                modifier = RemoteModifier.padding(start = 6.rdp),
+                modifier = RemoteModifier.weight(1f).padding(start = 6.rdp),
             )
         }
         RemoteText(
