@@ -73,6 +73,14 @@ class CachedHaSession(private val delegate: HaSession, private val cache: Offlin
 
   override suspend fun fetchInstanceConfig(): HaInstanceConfig? = delegate.fetchInstanceConfig()
 
+  // History is a live-only, on-demand read (the card-history screen) — we
+  // don't cache it, but we must forward so the wrapped live session
+  // actually hits HA's recorder instead of the no-op interface default.
+  override suspend fun fetchHistory(
+    entityIds: List<String>,
+    hours: Int,
+  ): Map<String, List<ee.schimke.ha.model.HistoryPoint>> = delegate.fetchHistory(entityIds, hours)
+
   override suspend fun close() {
     delegate.close()
   }

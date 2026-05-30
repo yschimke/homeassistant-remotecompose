@@ -18,7 +18,8 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 /**
- * uiautomator-driven regression test for the long-press → install flow.
+ * uiautomator-driven regression test for the long-press → card-history
+ * flow (and the install link reachable from it).
  *
  * The dashboard renders each card inside a `RemotePreview` whose
  * underlying RC player consumes pointer events on the **Main** pass to
@@ -38,7 +39,7 @@ import org.junit.runner.RunWith
  * the discovery / IndieAuth flow that can't reach anything from CI.
  */
 @RunWith(AndroidJUnit4::class)
-class LongPressInstallTest {
+class LongPressHistoryTest {
 
     private val device: UiDevice =
         UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
@@ -70,11 +71,11 @@ class LongPressInstallTest {
     }
 
     @Test
-    fun longPressOnDashboardCard_opensInstallSheet() {
+    fun longPressOnDashboardCard_opensHistoryThenInstallSheet() {
         // Demo mode lands directly on the "Security" dashboard (the
         // first board in `DemoData.BOARDS`, exposed as HA's default
-        // dashboard); the test exercises the long-press → install
-        // sheet flow on its first card.
+        // dashboard); the test exercises the long-press → history
+        // screen flow on its first card.
         val card = waitForFirstCard()
         // uiautomator's longClick uses the platform long-press timeout,
         // so this matches what a real user's finger does — and that's
@@ -82,17 +83,32 @@ class LongPressInstallTest {
         // `viewConfiguration.longPressTimeoutMillis` measures against.
         card.longClick()
 
-        // WidgetInstallSheet.kt opens with the headline below.
-        val sheetVisible = device.wait(
-            Until.hasObject(By.text("Add to Home Screen")),
+        // CardHistoryScreen renders an "Other actions" links section.
+        val historyVisible = device.wait(
+            Until.hasObject(By.text("Other actions")),
             5_000,
         )
         assertTrue(
-            "install sheet did not surface after long-press — long-press " +
+            "card-history screen did not surface after long-press — long-press " +
                 "is being swallowed by the RC player again, see " +
                 "Modifier.longPressBeforeChild",
-            sheetVisible,
+            historyVisible,
         )
+
+        // The "Add to Home Screen" link opens the existing install sheet.
+        val installLink = device.wait(
+            Until.findObject(By.textContains("Add to Home Screen")),
+            5_000,
+        )
+        assertNotNull("history screen missing the Add to Home Screen link", installLink)
+        installLink!!.click()
+
+        // WidgetInstallSheet.kt opens with this descriptive line.
+        val sheetVisible = device.wait(
+            Until.hasObject(By.textContains("keep itself up to date")),
+            5_000,
+        )
+        assertTrue("install sheet did not surface from the history screen", sheetVisible)
     }
 
     private fun waitForFirstCard(): UiObject2 {

@@ -124,7 +124,7 @@ import kotlinx.serialization.json.jsonPrimitive
 fun DashboardViewScreen(
     session: HaSession,
     urlPath: String?,
-    onCardLongPress: (CardConfig) -> Unit,
+    onCardLongPress: (CardConfig, HaSnapshot) -> Unit,
     contentPadding: PaddingValues = PaddingValues(0.dp),
     readOnly: Boolean = true,
 ) {
@@ -238,9 +238,14 @@ private fun DashboardList(
     snapshot: HaSnapshot,
     baseUrl: String,
     dashboardUrlPath: String,
-    onCardLongPress: (CardConfig) -> Unit,
+    onCardLongPress: (CardConfig, HaSnapshot) -> Unit,
     contentPadding: PaddingValues,
 ) {
+    // The inner card renderers only carry a `(CardConfig) -> Unit`
+    // long-press lambda; bind the current snapshot here (DashboardList is
+    // the lowest point that holds both) so callers upstairs get the exact
+    // frame the user pressed.
+    val onLongPress: (CardConfig) -> Unit = { card -> onCardLongPress(card, snapshot) }
     val registry = remember { defaultRegistry().withEnhancedShutter() }
     val layout = remember(dashboard) { buildDashboardLayout(dashboard) }
     val cfg = rememberLayoutConfig()
@@ -329,7 +334,7 @@ private fun DashboardList(
                     },
                     baseUrl = baseUrl,
                     imageLoader = imageLoader,
-                    onLongPress = onCardLongPress,
+                    onLongPress = onLongPress,
                     pinContext = SectionPinContext(
                         baseUrl = baseUrl,
                         dashboardUrlPath = dashboardUrlPath,

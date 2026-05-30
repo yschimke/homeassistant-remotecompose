@@ -48,10 +48,10 @@ import ee.schimke.terrazzo.auth.rememberLoginController
 import ee.schimke.terrazzo.core.prefs.DarkModePref
 import ee.schimke.terrazzo.core.prefs.PreferencesStore
 import ee.schimke.terrazzo.core.prefs.ThemePref
-import ee.schimke.terrazzo.core.session.DemoData
 import ee.schimke.terrazzo.core.session.DemoHaSession
 import ee.schimke.terrazzo.core.session.HaSession
 import ee.schimke.terrazzo.core.session.SessionConnectionStatus
+import ee.schimke.terrazzo.dashboard.CardHistoryScreen
 import ee.schimke.terrazzo.dashboard.DashboardListState
 import ee.schimke.terrazzo.dashboard.DashboardPickerScreen
 import ee.schimke.terrazzo.dashboard.DashboardSelectionScreen
@@ -510,10 +510,16 @@ private fun DashboardsRoot(
     val writeMode = sessionWrite ?: permanentWrite
     val readOnly = !writeMode
     var installPending by remember { mutableStateOf<Pair<CardConfig, HaSnapshot>?>(null) }
+    // Long-press opens a per-card history screen (card + history chart +
+    // links). Holds the pressed card plus the snapshot it was pressed
+    // against, so the preview at the top matches the dashboard frame.
+    var historyTarget by remember { mutableStateOf<Pair<CardConfig, HaSnapshot>?>(null) }
     val openedValue = opened
 
-    // System-back: view → picker; on the picker the platform handles it.
-    BackHandler(enabled = openedValue != DASHBOARD_UNSET) {
+    // System-back: history → dashboard, then view → picker; on the picker
+    // the platform handles it. The history overlay takes precedence, so
+    // the dashboard's view→picker handler stays disabled while it's up.
+    BackHandler(enabled = historyTarget == null && openedValue != DASHBOARD_UNSET) {
         opened = DASHBOARD_UNSET
     }
 
@@ -585,6 +591,18 @@ private fun DashboardsRoot(
         }
     }
 
+    val historyOverlay = historyTarget
+    if (historyOverlay != null) {
+        val (historyCard, historySnapshot) = historyOverlay
+        BackHandler { historyTarget = null }
+        CardHistoryScreen(
+            session = session,
+            card = historyCard,
+            snapshot = historySnapshot,
+            onBack = { historyTarget = null },
+            onAddToHomeScreen = { installPending = historyCard to historySnapshot },
+        )
+    } else {
     Scaffold(
         topBar = {
             TopAppBar(
@@ -667,18 +685,14 @@ private fun DashboardsRoot(
                 session = session,
                 urlPath = openedValue,
                 readOnly = readOnly,
-                onCardLongPress = { card ->
-                    // In demo mode the preview — and the installed widget —
-                    // render against the current fake snapshot so values
-                    // aren't empty. Live mode uses an empty snapshot; the
-                    // pinned widget will refresh from HA on first tick.
-                    val previewSnapshot =
-                        if (session is DemoHaSession) DemoData.snapshot() else HaSnapshot()
-                    installPending = card to previewSnapshot
-                },
+                // Long-press opens the card-history screen, handed the
+                // live snapshot the card was pressed against so the
+                // preview at the top matches the dashboard frame.
+                onCardLongPress = { card, snapshot -> historyTarget = card to snapshot },
                 contentPadding = padding,
             )
         }
+    }
     }
 
     val monitorContext = LocalContext.current
