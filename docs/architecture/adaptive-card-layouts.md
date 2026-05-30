@@ -117,12 +117,55 @@ Rule of thumb: pick the `baseGridSize` that matches the card's
 typical pinned-card-shaped slot. That's also what the matrix's
 "middle" cell shows, and what the `±1` neighbours bracket.
 
+### 7. Earn the canvas — enrich upward, don't only degrade downward
+
+The ladder is **bidirectional**. The principles above describe what to
+_drop_ as the cell shrinks; this one describes what to _add_ as it
+grows. A bigger widget must show **more** — more data, a larger key
+element, finer chrome — never the same content floating in a pool of
+empty space.
+
+The failure mode is concrete and visible in the matrix today: `tile`,
+`entity`, `button`, `entities`, and `weather-forecast` all render their
+largest preview cell as the base layout pinned to the top-left with the
+bottom 50–70 % of the cell blank. The card degrades gracefully but does
+not _enrich_ — the user paid for a `4×2` and got a `2×1`'s worth of
+information.
+
+`Full` (= wrap = the HA reference) is **not** the ceiling. When the cell
+is bigger than the natural shape, a card should reach for an **Expanded**
+tier above `Full`: promote P4/P5 data that the compact tiers dropped
+(a sensor's history sparkline, a tile's last-changed line, a button's
+state value under the name), scale the key element to the available
+room (a gauge dial that grows with the cell), or center the content so
+the whitespace is balanced rather than dumped at the bottom. The
+cheapest correct version of "earn the canvas" is **centering**; the
+better version is **promoting the next data priority**.
+
+### 8. No dead space
+
+Every tier is responsible for the **whole cell** it is handed, not just
+the rectangle its content naturally occupies. A composed layout either
+fills the cell (key element scales, list grows more rows/cells) or
+centers within it (so the margin is symmetric). A single row of content
+glued to the top edge with a blank cell beneath it is a bug, not a
+tier — it reads as "the card broke", which is exactly the reaction
+Principle 4 (_compact ≠ stripped_) warns against, at the opposite end of
+the size range.
+
+This is the upward-size twin of "defaulting to text": text-at-the-top of
+an empty cell is the large-canvas version of the same laziness.
+
 ## The degradation ladder (recipe)
 
 Per card, declare an ordered list of layout variants from
 most-detail to least-detail. At playback the runtime picks the
 highest tier whose minimum dimensions fit the canvas:
 
+0. **Expanded** — _bigger_ than the HA reference. Promotes a P4/P5
+   field the `Full` tier doesn't show (history row, last-changed,
+   secondary value) and/or scales the key element to the cell. Only
+   reached on cells larger than the natural shape; see Principle 7.
 1. **Full** — HA reference. Same as wrap mode.
 2. **Reflowed** — same elements, repacked. Often a column-to-row
    swap. The cell where the user's screenshot lost its gauge belongs
@@ -133,8 +176,22 @@ highest tier whose minimum dimensions fit the canvas:
 5. **Value** — text chip. Last resort.
 
 A card doesn't have to populate every rung — `entities` skips the
-identity-only tier (it's a list card; the rows _are_ the identity).
-The ladder is per-card, not a fixed cascade.
+identity-only tier (it's a list card; the rows _are_ the identity);
+a `tile` may have no Expanded tier and instead just **center** its
+`Full` content on a large cell. The ladder is per-card, not a fixed
+cascade. But every card must have an answer for both ends: a legible
+identity at the smallest cell (Principle 1) **and** a filled or
+centered layout at the largest (Principles 7–8).
+
+> **alpha010 reality check.** Runtime tier selection currently fires on
+> a _single_ breakpoint per card (#224) — nested ladders collapse to
+> tier 0 at playback. So "Expanded / Full / Reflowed / …" is the design
+> target, not something a converter can encode as 4 live rungs today.
+> In practice each card picks the **one** transition that buys the most
+> (e.g. gauge: Wide↔Stacked; entities: list↔strip) and uses _centering_
+> rather than a distinct tier to satisfy Principle 8 at the large end,
+> which costs no extra breakpoint. Revisit when a true multi-rung /
+> aspect gate lands.
 
 ## Worked examples
 
@@ -366,6 +423,59 @@ showing all six cells (app + 3×widget + 2×wear). A tier change lands
 when the matrix passes review at every size — the matrix is the
 source of truth, not individual @Preview entries.
 
+### Design-review checklist
+
+Run every card (or shared layout family) through these five questions
+at each of the three launcher sizes (`base−1`, `base`, `base+1`) plus
+both Wear containers. They are the rubric a matrix review is graded
+against; a card that can't answer all five isn't done.
+
+1. **Hierarchy of data.** Is there a clear P1→P5 order on the cell —
+   one dominant key element, a secondary value, then chrome? Or do
+   competing elements read at the same weight? (Map to the per-card
+   data inventory above.)
+2. **Enrichment with size.** Does the card show _more_ as the cell
+   grows — more rows, a promoted field, a larger key element — or just
+   the same content with more whitespace? (Principle 7.)
+3. **Key-element retention.** Is the one element that says _what kind
+   of card this is_ (gauge dial, tile icon, weather glyph, lock
+   pictogram) present at **every** size, including the smallest tier?
+   If the smallest tier is a text chip, the icon was dropped too early
+   (Principle 1 + the "hiding the icon first" anti-pattern).
+4. **Space usage.** Does each tier fill or center within its cell, with
+   no content glued to one edge over a blank half-cell? (Principle 8.)
+5. **Appropriate sizes.** Does the advertised size ladder match what
+   the data can fill? A card whose content tops out at `2×1` should not
+   default a `4×2` base, and the matrix `±1` neighbours should both look
+   intentional. If `base+1` is mostly empty, either the base is wrong or
+   the card needs an Expanded tier.
+
+A "no" on any row is a design bug, tracked per shared layout family in
+the issues filed off the widget design review (see the layout-family
+breakdown below).
+
+### Shared layout families
+
+Cards are not redesigned one-by-one — they cluster into a handful of
+**shared layouts**, and the ladder/enrichment work lands once per family
+and is reused. The families today:
+
+| Family | Key element | Cards | Shared composable(s) | Ladder state |
+|---|---|---|---|---|
+| **Icon + state row/tile** | tinted icon | `tile`, `entity`, `sensor`, `statistic` | `RemoteHaTile`, `RemoteHaEntityRow` | tile/entity: `Full↔CompactStateChip`; sensor/statistic: none |
+| **Icon-centred button** | large tinted icon | `button` | `RemoteHaButton` / `RemoteHaToggleButton` | `Full↔CompactStateChip` |
+| **Arc-dial control** | the arc/dial | `gauge`, `thermostat`, `humidifier`, `light` | `RemoteHaGauge*`, `RemoteHaArcDial*`, `RenderArcDial` | thermostat/humidifier/gauge: Wide↔Full; `light`: **none (outlier)** |
+| **Multi-entity list/strip** | first row/cell | `entities`, `glance`, `area`, `picture-glance`, `entity-filter`, `*-stack` | `RemoteHaEntities`, `RemoteHaGlance` | entities: `list↔strip`; others: none |
+| **Hero + supporting detail** | condition/art/shield + value | `weather-forecast`, `media-control`, `alarm-panel` | `RemoteHaWeatherForecast*`, `RemoteHaMediaControl`, `RemoteHaAlarmPanel` | weather: `Full↔Wide`; others: none |
+| **Bulk / time-series** | spark/list head | `history-graph`, `statistics-graph`, `logbook`, `todo-list`, `calendar`, `markdown` | per-card | none — Wear `SmallOnly` |
+| **Picture / image** | the image | `picture`, `picture-entity`, `picture-elements` | `RemoteHaImage*` | none |
+
+The "Arc-dial control" family is the reference implementation: a single
+`RenderArcDial` width-ladder gives thermostat and humidifier a clean
+Wide-row↔Full-card transition with the dial retained at every size. The
+open work is bringing the other families up to that bar — see the
+per-family issues.
+
 ## Anti-patterns
 
 - **Defaulting to text.** Never the first move; rarely the right
@@ -420,3 +530,28 @@ The current state is the placeholder, not the philosophy:
    should set the file convention — the mini-arc gauge is a good
    candidate because it has an obvious reflow target and is the card
    the screenshot called out.
+5. **`CompactStateChip` is wired as the _second_ tier, not the last.**
+   `tile`, `entity`, and `button` go `Full → CompactStateChip` at a
+   single 120 dp gate, so the `1×1` cell renders as top-left text with
+   **no icon** — a direct violation of Principle 1 and the "hiding the
+   icon first" anti-pattern, visible in the matrix today. Each needs an
+   icon-only identity tier between `Full` and the text chip; the chip
+   should only appear when even a `40×40` icon won't fit.
+6. **Large cells pad with whitespace instead of enriching (Principle
+   7).** Confirmed in the matrix at `base+1` for `tile`, `entity`,
+   `button`, `entities`, and `weather-forecast`: content pins to the
+   top-left and the bottom half of the cell is blank. The minimum fix
+   is centering (`No dead space`, Principle 8); the better fix is an
+   Expanded tier. Tracked per layout family in the design-review issues.
+7. **`light` is outside the arc-dial family.** `thermostat` and
+   `humidifier` route through `RenderArcDial` and get the Wide↔Full
+   ladder + dial retention for free; `LightCardConverter` calls
+   `RemoteHaArcDial` directly with no `CardSizeMode` branch, so it never
+   reflows or degrades. It should join the shared `RenderArcDial` path.
+8. **Gauge matrix shows the #309 overlay artifact.** The Wear L /
+   widget cells render both `RemoteHaGaugeWide` and
+   `RemoteHaGaugeStacked` on top of each other (double value + double
+   arc). This is the alpha010 `RemoteStateLayout` overlay bug (#309),
+   not a layout-design fault, but it makes the gauge family un-reviewable
+   in the matrix until the visibility-modifier workaround there is
+   re-confirmed against the current alpha.
