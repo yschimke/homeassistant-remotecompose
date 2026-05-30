@@ -32,10 +32,12 @@ import ee.schimke.terrazzo.core.pin.PinStore
 import ee.schimke.terrazzo.core.pin.WearWidgetSlotsStore
 import ee.schimke.terrazzo.core.prefs.DarkModePref
 import ee.schimke.terrazzo.core.prefs.PreferencesStore
+import ee.schimke.terrazzo.core.session.DemoData
 import ee.schimke.terrazzo.core.session.DemoHaSession
 import ee.schimke.terrazzo.core.wearsync.NoOpWearSyncManager
 import ee.schimke.terrazzo.core.wearsync.WearSyncManager
 import ee.schimke.terrazzo.core.widget.WidgetStore
+import ee.schimke.terrazzo.dashboard.CardHistoryScreen
 import ee.schimke.terrazzo.dashboard.DashboardListState
 import ee.schimke.terrazzo.dashboard.DashboardPickerScreen
 import ee.schimke.terrazzo.dashboard.DashboardSelectionScreen
@@ -43,6 +45,8 @@ import ee.schimke.terrazzo.dashboard.DashboardViewScreen
 import ee.schimke.terrazzo.discovery.DiscoveryScreen
 import ee.schimke.terrazzo.ui.TerrazzoTheme
 import ee.schimke.terrazzo.widget.WidgetsScreen
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 
 /**
  * Phone-sized device previews, one per top-level screen, plus a set of
@@ -272,6 +276,47 @@ fun Screen_DashboardView_ThemeStyle(
         session = demoSession(),
         urlPath = null,
         onCardLongPress = { _, _ -> },
+    )
+}
+
+/**
+ * Sample card + snapshot for the card-history screen previews. A tile
+ * bound to a numeric demo sensor (`sensor.downstairs_temperature`) so
+ * the history section renders a populated line chart: [demoSession]
+ * synthesizes a plausible series for that entity, and [DemoData.snapshot]
+ * supplies its friendly name + unit.
+ */
+private val HISTORY_SAMPLE_CARD = CardConfig(
+    type = "tile",
+    raw = buildJsonObject {
+        put("type", "tile")
+        put("entity", "sensor.downstairs_temperature")
+    },
+)
+
+@Preview(name = "card history", showBackground = false, widthDp = PHONE_WIDTH_DP, heightDp = PHONE_HEIGHT_DP)
+@Composable
+fun Screen_CardHistory() = PhoneHost {
+    CardHistoryScreen(
+        session = demoSession(),
+        card = HISTORY_SAMPLE_CARD,
+        snapshot = DemoData.snapshot(),
+        onBack = {},
+        onAddToHomeScreen = {},
+    )
+}
+
+@Preview(name = "card history · theme", showBackground = false, widthDp = PHONE_WIDTH_DP, heightDp = PHONE_HEIGHT_DP)
+@Composable
+fun Screen_CardHistory_ThemeStyle(
+    @PreviewParameter(ThemeStyleProvider::class) style: ThemeStyle,
+) = PhoneHost(style = style) {
+    CardHistoryScreen(
+        session = demoSession(),
+        card = HISTORY_SAMPLE_CARD,
+        snapshot = DemoData.snapshot(),
+        onBack = {},
+        onAddToHomeScreen = {},
     )
 }
 
