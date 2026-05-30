@@ -18,6 +18,7 @@ import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -167,6 +168,37 @@ class LiveHaSessionReconnectTest {
         withTimeout(3_000) {
           session.connectionStatus.filter { it == SessionConnectionStatus.Connected }.first()
         }
+        assertEquals("Home", session.loadDashboard(null).first.title)
+      } finally {
+        session.close()
+      }
+    }
+  }
+
+  @Test
+  fun quick_background_then_foreground_bounce_stays_connected() {
+    runBlocking {
+      val session = LiveHaSession(baseUrl = baseUrl, accessToken = "test-token")
+      try {
+        session.connect()
+        assertEquals(SessionConnectionStatus.Connected, session.connectionStatus.value)
+
+        // Background, then immediately foreground. disconnect() cancels the
+        // receive loop but doesn't join it; the cancelled loop's tail can
+        // still run via the mutex fast path. With the `session === s` guard
+        // it must NOT stomp the replacement connection back to Disconnected
+        // (which the bridge maps to Failed). Before the guard this raced to
+        // a spurious Failed and dropped the notification subscription.
+        session.disconnect()
+        session.connect()
+        withTimeout(3_000) {
+          session.connectionStatus.filter { it == SessionConnectionStatus.Connected }.first()
+        }
+
+        // Let the stale receive loop run its (now no-op) tail, then confirm
+        // we're still Connected and the socket is actually usable.
+        delay(200)
+        assertEquals(SessionConnectionStatus.Connected, session.connectionStatus.value)
         assertEquals("Home", session.loadDashboard(null).first.title)
       } finally {
         session.close()
