@@ -108,6 +108,7 @@ private fun Row(row: HaHistoryGraphRow, theme: HaTheme) {
             style = RemoteTextStyle.Default,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
+            modifier = RemoteModifier.weight(1f).padding(end = 8.rdp),
         )
         RemoteText(
             text = row.summary,
