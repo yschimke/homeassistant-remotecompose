@@ -106,6 +106,9 @@ dependencies {
   implementation(libs.compose.ui.text.google.fonts)
   implementation(libs.compose.ui.tooling.preview)
   debugImplementation(libs.compose.ui.tooling)
+  // Debug-only: @AnimatedPreview drives the compose-preview GIF capture
+  // of the card-flash debug feature. Kept out of the release APK.
+  debugImplementation("ee.schimke.composeai:preview-annotations:0.8.12")
   implementation(libs.activity.compose)
   implementation(libs.materialkolor)
 
