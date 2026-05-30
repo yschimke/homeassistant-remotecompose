@@ -21,7 +21,9 @@ import ee.schimke.ha.rc.RenderChild
 import ee.schimke.ha.rc.cardHeightDp
 import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.cards.shutter.withEnhancedShutter
+import ee.schimke.ha.rc.components.ProvideCardChrome
 import ee.schimke.ha.rc.components.ProvideHaTheme
+import ee.schimke.ha.rc.components.RemoteHaWidgetSurface
 import ee.schimke.ha.rc.components.ThemeStyle
 import ee.schimke.ha.rc.components.haThemeFor
 import ee.schimke.ha.rc.widgetsProfile
@@ -109,7 +111,22 @@ class TerrazzoWidgetProvider : AppWidgetProvider() {
                     ProvideCardRegistry(registry) {
                         ProvideHaTheme(haTheme) {
                             ProvideCardSizeMode(CardSizeMode.Fixed) {
-                                RenderChild(entry.card, snapshot, RemoteModifier.fillMaxWidth())
+                                // The widget surface paints the themed
+                                // card background across the whole
+                                // capture canvas, so the launcher cell is
+                                // fully covered even when the card's
+                                // content is shorter than the slot.
+                                // Suppress the inner card's own chrome so
+                                // it doesn't draw a second frame inside.
+                                ProvideCardChrome(enabled = false) {
+                                    RemoteHaWidgetSurface {
+                                        RenderChild(
+                                            entry.card,
+                                            snapshot,
+                                            RemoteModifier.fillMaxWidth(),
+                                        )
+                                    }
+                                }
                             }
                         }
                     }
