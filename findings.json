@@ -1139,14 +1139,14 @@
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "609,661,1365,1122",
+          "boundsInScreen": "609,661,1365,1323",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "1386,661,2331,1122",
+          "boundsInScreen": "1386,661,2331,1543",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
@@ -7340,9 +7340,9 @@
           "viewDescription": "android.view.View  desc=\"Coffee maker\""
         },
         {
-          "boundsInScreen": "500,1546,603,1732",
+          "boundsInScreen": "499,1546,603,1732",
           "level": "ERROR",
-          "message": "This item's width is 39dp. Consider making the width of this touch target 48dp or larger.",
+          "message": "This item's width is 40dp. Consider making the width of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Kitchen\""
         }
