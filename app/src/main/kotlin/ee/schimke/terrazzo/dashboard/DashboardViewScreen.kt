@@ -351,6 +351,7 @@ private fun DashboardList(
                 dashboard = dashboard,
                 snapshot = snapshot,
                 onClose = { pinScope.launch { preferencesStore.setDataGridOverlay(false) } },
+                contentPadding = contentPadding,
             )
         }
     }

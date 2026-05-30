@@ -119,8 +119,10 @@ internal fun BoxScope.CardChangeFlash(signature: String) {
  * animates values but may not carry `last_changed`) as well as live.
  *
  * The panel floats top-centre and only intercepts touches within its own
- * bounds, so the dashboard underneath stays scrollable. [onClose] is
- * wired to the Settings toggle so the ✕ truly dismisses it.
+ * bounds, so the dashboard underneath stays scrollable. [contentPadding]
+ * is the host scaffold's inset (status bar / top app bar) so the panel
+ * lands below the chrome rather than under it. [onClose] is wired to the
+ * Settings toggle so the ✕ truly dismisses it.
  */
 @Composable
 internal fun DataGridOverlay(
@@ -128,6 +130,7 @@ internal fun DataGridOverlay(
     snapshot: HaSnapshot,
     onClose: () -> Unit,
     modifier: Modifier = Modifier,
+    contentPadding: PaddingValues = PaddingValues(0.dp),
 ) {
     val refs = remember(dashboard) { referencedEntities(dashboard).sorted() }
     // Reset the change-tracking when the dashboard swaps so stale times
@@ -153,7 +156,7 @@ internal fun DataGridOverlay(
         }
     }
 
-    Box(modifier = modifier.fillMaxSize()) {
+    Box(modifier = modifier.fillMaxSize().padding(contentPadding)) {
         Surface(
             color = Color(0xE61C1B1F),
             contentColor = Color.White,
