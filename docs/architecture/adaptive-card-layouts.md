@@ -140,7 +140,10 @@ state value under the name), scale the key element to the available
 room (a gauge dial that grows with the cell), or center the content so
 the whitespace is balanced rather than dumped at the bottom. The
 cheapest correct version of "earn the canvas" is **centering**; the
-better version is **promoting the next data priority**.
+better version is **promoting the next data priority**. (Note the
+alpha010 caveat in Known gaps: centring must be done _inside_ each tier
+composable — `fillMaxSize` + self-centre — not via a wrapper's
+`contentAlignment`, which is a no-op for `fillMaxWidth` children.)
 
 ### 8. No dead space
 
@@ -540,9 +543,18 @@ The current state is the placeholder, not the philosophy:
 6. **Large cells pad with whitespace instead of enriching (Principle
    7).** Confirmed in the matrix at `base+1` for `tile`, `entity`,
    `button`, `entities`, and `weather-forecast`: content pins to the
-   top-left and the bottom half of the cell is blank. The minimum fix
-   is centering (`No dead space`, Principle 8); the better fix is an
-   Expanded tier. Tracked per layout family in the design-review issues.
+   top-left and the bottom half of the cell is blank. The fix is an
+   Expanded tier or centring (`No dead space`, Principle 8). **Caveat
+   learned the hard way:** centring cannot be retrofitted by setting
+   `contentAlignment = Center` on a wrapper `RemoteBox` — in alpha010 a
+   `fillMaxWidth` (wrap-height) child is still pinned to the top of a
+   centring box, so a wrapper-level alignment is a no-op (verified by
+   re-rendering tile/entity/button/entities — pixel-identical). The
+   arc-dial cards only _look_ centred because `RemoteHaArcDialWide`
+   itself `fillMaxSize`s and centres its content **internally**. So the
+   "fill the cell" work is per-tier-composable (each variant must fill
+   and self-centre, like the arc-dial Wide row), not a one-line wrapper
+   change. Tracked per layout family in the design-review issues.
 7. **`light` is outside the arc-dial family.** `thermostat` and
    `humidifier` route through `RenderArcDial` and get the Wide↔Full
    ladder + dial retention for free; `LightCardConverter` calls
