@@ -2,10 +2,13 @@ package ee.schimke.terrazzo.widget
 
 import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
-import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import ee.schimke.ha.model.CardConfig
+import ee.schimke.ha.model.HaSnapshot
+import ee.schimke.ha.rc.cardSizeConstraints
+import ee.schimke.ha.rc.cards.defaultRegistry
+import ee.schimke.ha.rc.cards.shutter.withEnhancedShutter
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 
@@ -41,7 +44,15 @@ class WidgetInstaller(private val context: Context) {
         val appWidgetManager = AppWidgetManager.getInstance(context)
         if (!appWidgetManager.isRequestPinAppWidgetSupported) return false
 
-        val provider = ComponentName(context, TerrazzoWidgetProvider::class.java)
+        // Pick the provider variant whose appwidget-provider metadata
+        // matches the card's supported-size band, so the launcher offers
+        // the right default cell + resize bounds. Rendering is identical
+        // across variants (all inherit TerrazzoWidgetProvider). The
+        // snapshot only feeds payload-dependent sizing (e.g. entities
+        // row count comes from card.raw), so an empty one is fine here.
+        val registry = defaultRegistry().withEnhancedShutter()
+        val constraints = registry.cardSizeConstraints(card, HaSnapshot())
+        val provider = WidgetSizeClass.forConstraints(constraints).componentName(context)
 
         val callback = Intent(context, WidgetInstallReceiver::class.java).apply {
             action = WidgetInstallReceiver.ACTION_PIN_CONFIRMED

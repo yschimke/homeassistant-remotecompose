@@ -1,22 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  AppWidget provider metadata for Terrazzo widgets. One XML covers
-  every installed instance; the provider resolves per-widget config
-  from DataStore at render time.
+  AppWidget provider metadata for the STANDARD Terrazzo size class — the
+  default for wide list/hero cards. One XML per size class (see also
+  terrazzo_widget_info_small / _tall); WidgetSizeClass picks the matching
+  provider at pin time from the card's WidgetSizeConstraints.
 
-  Size: min values are 1dp so the launcher imposes no floor — the
-  widget renders at whatever cell size the user picks. `resizeMode`
-  lets them grow it freely in both axes.
+  We set only a comfortable default cell (`targetCell*`) and otherwise
+  leave resize free — a low `minResize*` floor and no ceiling — so the
+  launcher's own grid governs what sizes are offered. The card's
+  Fixed-mode breakpoint ladders adapt to whatever cell results; we don't
+  try to constrain sizes the launcher would otherwise allow.
 
   `updatePeriodMillis="0"` — we drive updates imperatively from a
-  background worker when HA state changes; the 30-minute minimum of
-  the framework poll would give stale readings anyway.
+  background worker when HA state changes; the 30-minute minimum of the
+  framework poll would give stale readings anyway.
 -->
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
-    android:minWidth="1dp"
-    android:minHeight="1dp"
-    android:minResizeWidth="1dp"
-    android:minResizeHeight="1dp"
+    android:minWidth="40dp"
+    android:minHeight="40dp"
+    android:targetCellWidth="4"
+    android:targetCellHeight="2"
+    android:minResizeWidth="40dp"
+    android:minResizeHeight="40dp"
     android:resizeMode="horizontal|vertical"
     android:updatePeriodMillis="0"
     android:widgetCategory="home_screen"

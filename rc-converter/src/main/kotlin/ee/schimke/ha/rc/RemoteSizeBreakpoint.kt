@@ -62,12 +62,22 @@ import java.text.DecimalFormat
  *   `RemoteModifier.fillMaxWidth()` (or `fillMaxSize()`) so the
  *   playback width reflects the host's runtime canvas rather than
  *   the captured intrinsic.
+ * @param axis which runtime dimension the thresholds gate on —
+ *   [BreakpointAxis.Width] (default, reads `componentWidth()`) or
+ *   [BreakpointAxis.Height] (reads `componentHeight()`). Gate on the
+ *   axis the host *pins*: launcher and matrix cells pin width and let
+ *   height wrap, so only a width gate reads a stable value there; use
+ *   [BreakpointAxis.Height] only where height is fixed (e.g. a Wear
+ *   slot). Keep it to a **single** threshold — alpha010 collapses
+ *   multi-rung (nested) and 2-D / cross-axis gates to tier 0 (#224,
+ *   see `GaugeCardConverter`).
  * @param content invoked per tier; index ranges `0..thresholdsDp.size`.
  */
 @Composable
 fun RemoteSizeBreakpoint(
     thresholdsDp: IntArray,
     modifier: RemoteModifier = RemoteModifier,
+    axis: BreakpointAxis = BreakpointAxis.Width,
     content: @Composable (tier: Int) -> Unit,
 ) {
     require(thresholdsDp.isNotEmpty()) { "RemoteSizeBreakpoint needs at least one threshold" }
@@ -79,14 +89,17 @@ fun RemoteSizeBreakpoint(
     // own expression. Sharing a stable name across captures (the
     // tempting "memoize by thresholds" path) lets alpha010 hand back a
     // cached expression bound to the *first* capture's component, which
-    // makes every subsequent cell read the same baked width.
-    val uniqueName = remember { "${WidthExpressionPrefix}${java.util.UUID.randomUUID()}" }
-    val width =
+    // makes every subsequent cell read the same baked dimension.
+    val uniqueName = remember { "${BreakpointExpressionPrefix}${java.util.UUID.randomUUID()}" }
+    val dimension =
         RemoteFloat.createNamedRemoteFloatExpression(
             name = uniqueName,
             domain = RemoteState.Domain.User,
         ) {
-            componentWidth()
+            when (axis) {
+                BreakpointAxis.Width -> componentWidth()
+                BreakpointAxis.Height -> componentHeight()
+            }
         }
 
     RemoteBox(modifier = modifier) {
@@ -107,11 +120,11 @@ fun RemoteSizeBreakpoint(
         // into the document so the runtime can evaluate the predicate
         // correctly.
         RemoteText(
-            text = width.toRemoteString(InvisibleFormat),
+            text = dimension.toRemoteString(InvisibleFormat),
             color = Color.Transparent.rc,
         )
         BreakpointTier(
-            width = width,
+            dimension = dimension,
             thresholdsDp = thresholdsDp,
             baseTier = 0,
             modifier = RemoteModifier,
@@ -120,18 +133,25 @@ fun RemoteSizeBreakpoint(
     }
 }
 
+/** Which runtime dimension a [RemoteSizeBreakpoint] ladder gates on. */
+enum class BreakpointAxis {
+    Width,
+    Height,
+}
+
 private val InvisibleFormat = DecimalFormat("0")
 
 /**
  * Recursive helper that walks the threshold list highest-first,
- * picking the upper variant when `width >= thresholdsDp[hi]` and
+ * picking the upper variant when `dimension >= thresholdsDp[hi]` and
  * recursing on the remaining smaller thresholds otherwise. Lowers to
  * `RemoteStateLayout(RemoteBoolean)`, which is the only state-layout
- * overload that respects the live state in alpha010.
+ * overload that respects the live state in alpha010. [dimension] is
+ * the live width or height in px, per the ladder's [BreakpointAxis].
  */
 @Composable
 private fun BreakpointTier(
-    width: RemoteFloat,
+    dimension: RemoteFloat,
     thresholdsDp: IntArray,
     baseTier: Int,
     modifier: RemoteModifier,
@@ -143,13 +163,13 @@ private fun BreakpointTier(
     }
     val highestIndex = thresholdsDp.size - 1
     val highestThresholdPx = thresholdsDp[highestIndex].rdp.toPx()
-    val isAtOrAbove = width.ge(highestThresholdPx)
+    val isAtOrAbove = dimension.ge(highestThresholdPx)
     RemoteStateLayout(isAtOrAbove, modifier = modifier) { atOrAbove ->
         if (atOrAbove) {
             content(baseTier + thresholdsDp.size)
         } else {
             BreakpointTier(
-                width = width,
+                dimension = dimension,
                 thresholdsDp = thresholdsDp.copyOfRange(0, highestIndex),
                 baseTier = baseTier,
                 modifier = RemoteModifier,
@@ -159,4 +179,4 @@ private fun BreakpointTier(
     }
 }
 
-private const val WidthExpressionPrefix = "__terrazzo_breakpoint_w_"
+private const val BreakpointExpressionPrefix = "__terrazzo_breakpoint_"

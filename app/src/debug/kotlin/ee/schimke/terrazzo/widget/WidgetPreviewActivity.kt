@@ -35,7 +35,9 @@ import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.cards.shutter.withEnhancedShutter
 import ee.schimke.ha.rc.components.LocalPictureImageStrategy
 import ee.schimke.ha.rc.components.PictureImageStrategy
+import ee.schimke.ha.rc.components.ProvideCardChrome
 import ee.schimke.ha.rc.components.ProvideHaTheme
+import ee.schimke.ha.rc.components.RemoteHaWidgetSurface
 import ee.schimke.ha.rc.components.ThemeStyle
 import ee.schimke.ha.rc.components.haThemeFor
 import ee.schimke.ha.rc.widgetsProfile
@@ -120,7 +122,14 @@ class WidgetPreviewActivity : Activity() {
               ProvideCardRegistry(registry) {
                 ProvideHaTheme(haTheme) {
                   ProvideCardSizeMode(CardSizeMode.Fixed) {
-                    RenderChild(SAMPLE_CARD, SAMPLE_SNAPSHOT, RemoteModifier.fillMaxWidth())
+                    // Same full-canvas surface the launcher widget uses,
+                    // so the preview shows the background filling the tile
+                    // rather than wrapping to the card content.
+                    ProvideCardChrome(enabled = false) {
+                      RemoteHaWidgetSurface {
+                        RenderChild(SAMPLE_CARD, SAMPLE_SNAPSHOT, RemoteModifier.fillMaxWidth())
+                      }
+                    }
                   }
                 }
               }

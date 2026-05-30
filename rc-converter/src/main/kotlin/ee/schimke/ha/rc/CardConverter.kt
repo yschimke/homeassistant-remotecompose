@@ -71,6 +71,59 @@ interface CardConverter {
      */
     fun naturalWidthClass(card: CardConfig, snapshot: HaSnapshot): CardWidthClass =
         CardWidthClass.Full
+
+    /**
+     * The comfortable default size this card wants when pinned as a
+     * launcher widget, in dp — the cell it should occupy before the
+     * user resizes it.
+     *
+     * This is the **per-card supported-size contract**: it answers "what
+     * size should this widget pin at?" so the host can offer a sensible
+     * default cell. We deliberately don't express hard min/max bounds —
+     * the launcher's own grid governs how small or large a widget can
+     * get, and the card's Fixed-mode breakpoint ladders adapt to
+     * whatever cell results. On the phone, `WidgetSizeClass` maps this
+     * default onto a provider variant whose `targetCell*` matches.
+     *
+     * The default derives from [naturalWidthClass] (Compact cards pin
+     * small and near-square; Full cards pin wide) and [naturalHeightDp]
+     * (so payload-sized cards like `entities` advertise a taller default
+     * as rows are added). Override when a card's comfortable size doesn't
+     * follow from those two.
+     */
+    fun sizeConstraints(card: CardConfig, snapshot: HaSnapshot): WidgetSizeConstraints {
+        val height = naturalHeightDp(card, snapshot)
+        return when (naturalWidthClass(card, snapshot)) {
+            CardWidthClass.Compact ->
+                WidgetSizeConstraints(
+                    defaultWidthDp = 160,
+                    defaultHeightDp = height.coerceAtLeast(40),
+                )
+            CardWidthClass.Full ->
+                WidgetSizeConstraints(
+                    defaultWidthDp = 320,
+                    defaultHeightDp = height.coerceAtLeast(48),
+                )
+        }
+    }
+}
+
+/**
+ * A card's comfortable default launcher-widget size, in dp. Emitted by
+ * [CardConverter.sizeConstraints] and mapped onto a host's discrete
+ * cells (on the phone, a `WidgetSizeClass` provider variant). It's a
+ * preferred default, not a hard bound — resize beyond it is up to the
+ * launcher; the card's breakpoint ladders adapt to whatever results.
+ */
+data class WidgetSizeConstraints(
+    val defaultWidthDp: Int,
+    val defaultHeightDp: Int,
+) {
+    init {
+        require(defaultWidthDp > 0 && defaultHeightDp > 0) {
+            "default size must be positive: $defaultWidthDp x $defaultHeightDp"
+        }
+    }
 }
 
 /**
