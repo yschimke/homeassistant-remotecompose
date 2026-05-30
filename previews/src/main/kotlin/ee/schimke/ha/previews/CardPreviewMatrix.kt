@@ -550,6 +550,30 @@ fun CardPreviewMatrix_Button() {
 }
 
 @Preview(
+    name = "matrix — light",
+    showBackground = false,
+    widthDp = MATRIX_CANVAS_WIDTH_DP,
+    heightDp = 780,
+)
+@Composable
+fun CardPreviewMatrix_Light() {
+    val card = card("""{"type":"light","entity":"light.kitchen","name":"Kitchen"}""")
+    // Light is an arc-dial card (brightness ring + bulb): same shared
+    // RenderArcDial ladder as thermostat / humidifier, so it shares the
+    // 3×3 natural shape — Wide arc-row on narrow cells, full vertical
+    // card with steppers on wide ones. The bulb-ring identity survives
+    // at every size. See docs/architecture/adaptive-card-layouts.md
+    // §"Arc-dial control".
+    CardPreviewMatrix(
+        card = card,
+        snapshot = Fixtures.mixed,
+        baseGridSize = WidgetGridSize(cellsW = 3, cellsH = 3),
+        appWidthDp = 240,
+        label = "light · light.kitchen",
+    )
+}
+
+@Preview(
     name = "matrix — thermostat",
     showBackground = false,
     widthDp = MATRIX_CANVAS_WIDTH_DP,
