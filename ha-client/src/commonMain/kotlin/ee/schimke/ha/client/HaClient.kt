@@ -281,6 +281,28 @@ class HaClient(private val config: HaConfig, engine: HttpClientEngine? = null) {
     }
   }
 
+  /**
+   * Dismiss a single persistent notification by id — the equivalent of tapping the X next to one
+   * entry behind HA's frontend bell. Routed through the `persistent_notification.dismiss` service;
+   * HA then fires `persistent_notifications_updated` so any active subscription refetches the
+   * now-shorter list.
+   */
+  suspend fun dismissNotification(notificationId: String) {
+    callService(
+      domain = "persistent_notification",
+      service = "dismiss",
+      serviceData = buildJsonObject { put("notification_id", notificationId) },
+    )
+  }
+
+  /**
+   * Dismiss every persistent notification at once — HA's `persistent_notification.dismiss_all`
+   * service, the "clear all" affordance behind the frontend bell.
+   */
+  suspend fun dismissAllNotifications() {
+    callService(domain = "persistent_notification", service = "dismiss_all")
+  }
+
   suspend fun close() {
     val s = sessionMutex.withLock {
       val current = session
