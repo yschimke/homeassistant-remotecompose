@@ -93,6 +93,15 @@ android {
       applicationIdSuffix = ".experimental"
     }
   }
+  // `experimental` is a local side-by-side install (`.experimental`
+  // applicationId suffix); it is never shipped to Play — the internal track
+  // hosts ee.schimke.harc. Disable Play publishing for it so the umbrella
+  // `:app:publishBundle` task the release job runs doesn't drag in
+  // `bundleExperimental`. That assembly would otherwise fail at
+  // `processExperimentalGoogleServices` (Crashlytics' google-services.json has
+  // no client for the suffixed package) and, even past that, Play would reject
+  // a bundle whose package isn't the listing's.
+  playConfigs { register("experimental") { enabled.set(false) } }
   buildFeatures {
     compose = true
     buildConfig = true
