@@ -152,13 +152,11 @@ internal fun SlotWidgetPreviewFixture(
     card: CardConfig?,
     snapshot: HaSnapshot,
     container: ContainerType,
-    title: String = "Terrazzo slot",
 ) {
     val params = if (container == ContainerType.Large) largePreviewParams else smallPreviewParams
     WearWidgetPreviewSnapshot(
         widget = PreviewSlotWidget(card = card, snapshot = snapshot),
         params = params,
-        title = title,
     )
 }
 
