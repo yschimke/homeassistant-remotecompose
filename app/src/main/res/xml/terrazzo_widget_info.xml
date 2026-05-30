@@ -1,27 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  AppWidget provider metadata for the STANDARD Terrazzo size class — the
-  default for wide list/hero cards. One XML per size class (see also
-  terrazzo_widget_info_small / _tall); WidgetSizeClass picks the matching
-  provider at pin time from the card's WidgetSizeConstraints.
+  STANDARD Terrazzo size class — the default for wide list/hero cards.
+  One XML per size class (see also terrazzo_widget_info_small / _tall);
+  WidgetSizeClass picks the matching provider at pin time from the card's
+  WidgetSizeConstraints.
 
-  We set only a comfortable default cell (`targetCell*`) and otherwise
-  leave resize free — a low `minResize*` floor and no ceiling — so the
-  launcher's own grid governs what sizes are offered. The card's
-  Fixed-mode breakpoint ladders adapt to whatever cell results; we don't
-  try to constrain sizes the launcher would otherwise allow.
+  Opinionated range, ~2x1 .. 4x3 cells: `targetCell*` is the comfortable
+  default the widget pins at, and `min/maxResize*` bound the resize
+  handles so the card can't be dragged out to an oversized slot it would
+  only half-fill. The card's breakpoint ladders adapt within the range;
+  the widget surface fills the whole cell so there's no blank band.
 
   `updatePeriodMillis="0"` — we drive updates imperatively from a
   background worker when HA state changes; the 30-minute minimum of the
   framework poll would give stale readings anyway.
 -->
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
-    android:minWidth="40dp"
-    android:minHeight="40dp"
+    android:minWidth="130dp"
+    android:minHeight="60dp"
     android:targetCellWidth="4"
     android:targetCellHeight="2"
-    android:minResizeWidth="40dp"
-    android:minResizeHeight="40dp"
+    android:minResizeWidth="130dp"
+    android:minResizeHeight="60dp"
+    android:maxResizeWidth="300dp"
+    android:maxResizeHeight="220dp"
     android:resizeMode="horizontal|vertical"
     android:updatePeriodMillis="0"
     android:widgetCategory="home_screen"
