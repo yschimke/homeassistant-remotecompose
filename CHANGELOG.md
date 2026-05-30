@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.30](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.29...v0.1.30) (2026-05-30)
+
+
+### Bug Fixes
+
+* **release:** add -dontwarn rules for androidx.window OEM extensions ([#358](https://github.com/yschimke/homeassistant-remotecompose/issues/358)) ([2959ed1](https://github.com/yschimke/homeassistant-remotecompose/commit/2959ed19e1742f6ad091fb4767af54be1b5751e2))
+
 ## [0.1.29](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.28...v0.1.29) (2026-05-30)
 
 
