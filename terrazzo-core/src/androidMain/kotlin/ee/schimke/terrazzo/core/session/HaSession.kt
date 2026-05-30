@@ -7,7 +7,10 @@ import ee.schimke.ha.client.HaInstanceConfig
 import ee.schimke.ha.model.Dashboard
 import ee.schimke.ha.model.HaNotification
 import ee.schimke.ha.model.HaSnapshot
+import ee.schimke.ha.model.HistoryPoint
 import io.ktor.client.engine.HttpClientEngine
+import kotlin.time.Clock
+import kotlin.time.Duration.Companion.hours
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -91,6 +94,18 @@ interface HaSession {
         entityId: String? = null,
         serviceData: JsonObject = JsonObject(emptyMap()),
     ): Unit = Unit
+
+    /**
+     * Fetch recorder history for [entityIds] over the last [hours]. The
+     * card-history screen calls this to draw a chart for whatever
+     * entities a card references. Keyed by entity id; each value is the
+     * entity's state changes in chronological order. Sessions that can't
+     * reach HA's recorder (offline) default to empty.
+     */
+    suspend fun fetchHistory(
+        entityIds: List<String>,
+        hours: Int = 24,
+    ): Map<String, List<HistoryPoint>> = emptyMap()
 
     /**
      * Dismiss a single persistent notification by id — removes it from
@@ -196,6 +211,13 @@ class LiveHaSession(
         entityId: String?,
         serviceData: JsonObject,
     ) = client.callService(domain, service, entityId, serviceData)
+    override suspend fun fetchHistory(
+        entityIds: List<String>,
+        hours: Int,
+    ): Map<String, List<HistoryPoint>> {
+        val end = Clock.System.now()
+        return client.fetchHistory(entityIds, end - hours.hours, end)
+    }
     override suspend fun dismissNotification(notificationId: String) {
         // Optimistically drop it so the bell/sheet update on the tap
         // without waiting for HA's round-trip; the

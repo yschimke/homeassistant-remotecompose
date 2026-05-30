@@ -5,10 +5,12 @@ import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.Dashboard
 import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HaSnapshot
+import ee.schimke.ha.model.HistoryPoint
 import ee.schimke.ha.model.Section
 import ee.schimke.ha.model.View
 import kotlin.math.roundToInt
 import kotlin.math.sin
+import kotlin.time.Instant
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.serialization.json.Json
@@ -53,6 +55,10 @@ class DemoHaSession(
     override suspend fun listDashboards(): List<DashboardSummary> = DemoData.dashboards
     override suspend fun loadDashboard(urlPath: String?): Pair<Dashboard, HaSnapshot> =
         DemoData.dashboard(urlPath) to DemoData.snapshot(clock(), actionRouter)
+    override suspend fun fetchHistory(
+        entityIds: List<String>,
+        hours: Int,
+    ): Map<String, List<HistoryPoint>> = DemoData.history(entityIds, hours, clock())
     override suspend fun close() = Unit
 }
 
@@ -126,6 +132,30 @@ object DemoData {
         val drifted = baseStates.mapValues { (id, st) -> drift(id, st, nowMs) }
         val withOverrides = router.snapshotOverrides(drifted, nowMs)
         return HaSnapshot(states = withOverrides)
+    }
+
+    /**
+     * Synthesize a plausible history series for [entityIds] by sampling
+     * the same [drift] curve backwards in time. Numeric sensors trace
+     * the sinusoid the live demo animates; on/off entities reproduce the
+     * toggle cadence as a step series. Unknown entities yield no points.
+     * Sampled at ~15-minute resolution, clamped to a sane point count so
+     * a 7-day window doesn't produce thousands of samples.
+     */
+    fun history(
+        entityIds: List<String>,
+        hours: Int,
+        nowMs: Long = System.currentTimeMillis(),
+    ): Map<String, List<HistoryPoint>> {
+        val pointCount = (hours * 4).coerceIn(12, 96)
+        val stepMs = (hours * 3_600_000L / pointCount).coerceAtLeast(1L)
+        return entityIds.associateWith { id ->
+            val base = baseStates[id] ?: return@associateWith emptyList()
+            (pointCount downTo 0).map { k ->
+                val t = nowMs - k * stepMs
+                HistoryPoint(ts = Instant.fromEpochMilliseconds(t), state = drift(id, base, t).state)
+            }
+        }
     }
 
     private fun urlPathToSlug(urlPath: String?): String {

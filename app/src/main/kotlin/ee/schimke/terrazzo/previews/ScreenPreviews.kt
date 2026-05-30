@@ -239,7 +239,7 @@ fun Screen_DashboardView() = PhoneHost {
     DashboardViewScreen(
         session = demoSession(),
         urlPath = null,
-        onCardLongPress = {},
+        onCardLongPress = { _, _ -> },
     )
 }
 
@@ -254,7 +254,7 @@ fun Screen_DashboardView_PhoneLandscapeMedium() = PhoneHost {
     DashboardViewScreen(
         session = demoSession(),
         urlPath = null,
-        onCardLongPress = {},
+        onCardLongPress = { _, _ -> },
     )
 }
 
@@ -271,7 +271,7 @@ fun Screen_DashboardView_ThemeStyle(
     DashboardViewScreen(
         session = demoSession(),
         urlPath = null,
-        onCardLongPress = {},
+        onCardLongPress = { _, _ -> },
     )
 }
 
@@ -357,14 +357,14 @@ class ThemeStyleProvider : PreviewParameterProvider<ThemeStyle> {
 @Preview(name = "play · phone · home (light)", showBackground = false, device = PIXEL_2_DEVICE)
 @Composable
 fun Play_Phone_01_HomeLight() = PhoneHost(darkMode = DarkModePref.Light) {
-    DashboardViewScreen(session = demoSession(), urlPath = null, onCardLongPress = {})
+    DashboardViewScreen(session = demoSession(), urlPath = null, onCardLongPress = { _, _ -> })
 }
 
 /** Phone slot 2 — dark dashboard (the "home screen"). */
 @Preview(name = "play · phone · home (dark)", showBackground = false, device = PIXEL_2_DEVICE)
 @Composable
 fun Play_Phone_02_HomeDark() = PhoneHost(darkMode = DarkModePref.Dark) {
-    DashboardViewScreen(session = demoSession(), urlPath = null, onCardLongPress = {})
+    DashboardViewScreen(session = demoSession(), urlPath = null, onCardLongPress = { _, _ -> })
 }
 
 /** Phone slot 3 — discovery / first-launch flow. */
@@ -401,13 +401,13 @@ fun Play_Phone_05_Widgets() = PhoneHost(darkMode = DarkModePref.Light) {
 @Preview(name = "play · 7-inch · home", showBackground = false, device = TABLET_7_DEVICE)
 @Composable
 fun Play_Tablet7_01_Home() = PhoneHost(darkMode = DarkModePref.Light) {
-    DashboardViewScreen(session = demoSession(), urlPath = null, onCardLongPress = {})
+    DashboardViewScreen(session = demoSession(), urlPath = null, onCardLongPress = { _, _ -> })
 }
 
 /** 10-inch tablet slot 1 — home (dashboard view). */
 @Preview(name = "play · 10-inch · home", showBackground = false, device = TABLET_10_DEVICE)
 @Composable
 fun Play_Tablet10_01_Home() = PhoneHost(darkMode = DarkModePref.Light) {
-    DashboardViewScreen(session = demoSession(), urlPath = null, onCardLongPress = {})
+    DashboardViewScreen(session = demoSession(), urlPath = null, onCardLongPress = { _, _ -> })
 }
 
