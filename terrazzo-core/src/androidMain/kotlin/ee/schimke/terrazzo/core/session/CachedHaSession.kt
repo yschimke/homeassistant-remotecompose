@@ -7,6 +7,7 @@ import ee.schimke.ha.model.HaNotification
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.terrazzo.core.cache.OfflineCacheStorage
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.serialization.json.JsonObject
 
 /**
  * Offline-first wrapper around any [HaSession]. Every successful live
@@ -72,6 +73,22 @@ class CachedHaSession(private val delegate: HaSession, private val cache: Offlin
   }
 
   override suspend fun fetchInstanceConfig(): HaInstanceConfig? = delegate.fetchInstanceConfig()
+
+  // Writes aren't cached — forward straight to the delegate. Without this
+  // the interface's no-op default would swallow every service call when a
+  // live session is wrapped (the production path), so taps would silently
+  // do nothing.
+  override suspend fun callService(
+    domain: String,
+    service: String,
+    entityId: String?,
+    serviceData: JsonObject,
+  ) = delegate.callService(domain, service, entityId, serviceData)
+
+  override suspend fun dismissNotification(notificationId: String) =
+    delegate.dismissNotification(notificationId)
+
+  override suspend fun dismissAllNotifications() = delegate.dismissAllNotifications()
 
   override suspend fun close() {
     delegate.close()
