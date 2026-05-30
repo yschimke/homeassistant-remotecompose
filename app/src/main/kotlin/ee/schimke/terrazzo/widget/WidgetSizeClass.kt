@@ -15,8 +15,16 @@ import ee.schimke.ha.rc.WidgetSizeConstraints
  * subclass + `appwidget-provider` XML (see [providerClass] and the
  * `@xml/terrazzo_widget_info*` resources). [WidgetInstaller] reads the
  * card's [WidgetSizeConstraints], maps it here, and pins the matching
- * component so the launcher offers the right default cell and resize
- * handles.
+ * component.
+ *
+ * Each class is an **opinionated range** — a `targetCell*` default plus
+ * `min/maxResize*` bounds — so the launcher offers a sensible default
+ * cell and won't let the card be dragged out to an oversized slot it
+ * would only half-fill:
+ *
+ *   * [Small]    — ~1x1 .. 2x2 (single-entity chips)
+ *   * [Standard] — ~2x1 .. 4x3 (default list/hero)
+ *   * [Tall]     — ~2x2 .. 4x4 (many-row lists)
  *
  * Rendering itself is identical across variants — every provider
  * subclass inherits [TerrazzoWidgetProvider]'s id-driven capture — so

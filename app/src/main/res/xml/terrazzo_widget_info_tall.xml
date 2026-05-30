@@ -2,18 +2,23 @@
 <!--
   TALL Terrazzo size class — list cards (entities/glance) with enough
   rows to want vertical room by default. Backed by
-  TerrazzoWidgetProviderTall; chosen by WidgetSizeClass.Tall. Comfortable
-  default cell only; resize stays free so the user can still shrink it
-  (and the entities height-axis ladder can reflow to its icon strip) —
-  see terrazzo_widget_info.xml for the shared rationale.
+  TerrazzoWidgetProviderTall; chosen by WidgetSizeClass.Tall.
+
+  Opinionated range, ~2x2 .. 4x4 cells: room for several rows, but
+  capped so a list can't be dragged out to a slot far taller than its
+  content. The width-axis reflow still kicks in past ~260dp wide; the
+  widget surface fills the cell either way. See terrazzo_widget_info.xml
+  for the shared rationale.
 -->
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
-    android:minWidth="40dp"
-    android:minHeight="40dp"
+    android:minWidth="150dp"
+    android:minHeight="120dp"
     android:targetCellWidth="4"
     android:targetCellHeight="3"
-    android:minResizeWidth="40dp"
-    android:minResizeHeight="40dp"
+    android:minResizeWidth="150dp"
+    android:minResizeHeight="120dp"
+    android:maxResizeWidth="300dp"
+    android:maxResizeHeight="340dp"
     android:resizeMode="horizontal|vertical"
     android:updatePeriodMillis="0"
     android:widgetCategory="home_screen"

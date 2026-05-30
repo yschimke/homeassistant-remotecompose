@@ -404,11 +404,18 @@ The current state is the placeholder, not the philosophy:
    (`Full → CompactStateChip`). That's the value-fallback path,
    skipping every reflow / identity tier above it. Each card needs
    the worked-example ladder above.
-3. The Fixed-mode previews currently render uniformly stripped (the
-   screenshot). That's a sign the runtime tier selection isn't
-   firing — the named-expression `componentWidth()` may be capturing
-   a literal at recording time rather than evaluating live at
-   playback. Confirm before investing in per-card ladders.
+3. Runtime tier selection **does** fire — the matrix preview shows tile
+   switching chip↔full and entities switching list↔strip per size. Two
+   gotchas were shaped around: the `componentWidth()` named expression
+   only materialises when a visible node references it (the transparent
+   forcing-`RemoteText` in `RemoteSizeBreakpoint`), and the default
+   `RemoteStateLayout` swap is a 300 ms `FADE_IN/FADE_OUT` whose
+   mid-flight frame the in-process preview player captures, leaving the
+   outgoing branch ghosting behind the incoming one. The breakpoint
+   pins the swap to zero duration (`immediateSwap`) so only the selected
+   branch is ever drawn. (Binding branch opacity via `alpha(select(…))`
+   does **not** work — the derived float doesn't materialise (#224) and
+   blanks the selected branch too.)
 4. Compact-tier composables don't exist yet. The first card to land
    should set the file convention — the mini-arc gauge is a good
    candidate because it has an obvious reflow target and is the card
