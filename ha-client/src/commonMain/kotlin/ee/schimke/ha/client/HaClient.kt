@@ -4,6 +4,7 @@ import ee.schimke.ha.model.Dashboard
 import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HaNotification
 import ee.schimke.ha.model.HaSnapshot
+import ee.schimke.ha.model.HistoryPoint
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.HttpClientEngine
 import io.ktor.client.plugins.websocket.WebSockets
@@ -15,6 +16,7 @@ import io.ktor.websocket.Frame
 import io.ktor.websocket.close
 import io.ktor.websocket.readText
 import io.ktor.websocket.send
+import kotlin.time.Instant
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -36,6 +38,8 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.add
+import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
@@ -279,6 +283,52 @@ class HaClient(private val config: HaConfig, engine: HttpClientEngine? = null) {
         createdAt = obj["created_at"]?.nullableString(),
       )
     }
+  }
+
+  /**
+   * Fetch recorder history for [entityIds] over `[startTime, endTime]` via HA's
+   * `history/history_during_period` WebSocket command. The result is keyed by entity id; each value
+   * is the entity's state changes in chronological order.
+   *
+   * Requested with `minimal_response` + `no_attributes` so the payload is just `{ s: <state>, lu:
+   * <last-updated epoch seconds> }` per point — enough to draw a sparkline / state timeline without
+   * hauling every attribute change across the socket. `significant_changes_only` is left off so
+   * on/off entities keep every flip (otherwise HA elides the intermediate transitions a timeline
+   * needs).
+   */
+  suspend fun fetchHistory(
+    entityIds: List<String>,
+    startTime: Instant,
+    endTime: Instant? = null,
+  ): Map<String, List<HistoryPoint>> {
+    if (entityIds.isEmpty()) return emptyMap()
+    val result =
+      runCommand("history/history_during_period") {
+        put("start_time", startTime.toString())
+        if (endTime != null) put("end_time", endTime.toString())
+        put("entity_ids", buildJsonArray { entityIds.forEach { add(it) } })
+        put("minimal_response", true)
+        put("no_attributes", true)
+        put("significant_changes_only", false)
+      }
+    return result.mapValues { (_, points) ->
+      (points as? JsonArray ?: JsonArray(emptyList())).mapNotNull { parseHistoryPoint(it) }
+    }
+  }
+
+  /**
+   * Decode one compressed history entry. HA emits `s` for the state and a float epoch-seconds
+   * timestamp under `lu` (last updated), falling back to `lc` (last changed) on the first sample of
+   * a run. Anything missing a state or timestamp is dropped rather than guessed.
+   */
+  private fun parseHistoryPoint(element: kotlinx.serialization.json.JsonElement): HistoryPoint? {
+    val obj = element as? JsonObject ?: return null
+    val state = obj["s"]?.jsonPrimitive?.content ?: return null
+    val seconds = (obj["lu"] ?: obj["lc"])?.jsonPrimitive?.content?.toDoubleOrNull() ?: return null
+    return HistoryPoint(
+      ts = Instant.fromEpochMilliseconds((seconds * 1000).toLong()),
+      state = state,
+    )
   }
 
   /**
