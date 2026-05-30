@@ -14,6 +14,7 @@ import ee.schimke.ha.rc.components.HaMarkdownData
 import ee.schimke.ha.rc.components.LiveValues
 import ee.schimke.ha.rc.components.Markdown
 import ee.schimke.ha.rc.components.MarkdownBlock
+import ee.schimke.ha.rc.components.MarkdownInline
 import ee.schimke.ha.rc.components.RemoteHaMarkdown
 import androidx.compose.remote.creation.compose.state.RemoteString
 import androidx.compose.remote.creation.compose.state.rs
@@ -71,7 +72,23 @@ class MarkdownCardConverter : CardConverter {
 
     private fun List<MarkdownBlock>.bind(template: MarkdownTemplateBindings): List<MarkdownBlock> =
         map { block ->
-            block.copy(boundText = template.bind(block.text))
+            // Bind the whole-block text (the single-RemoteText path) *and*
+            // each inline run — a line that mixes a {{ states('x') }} token
+            // with a link/image takes the rich flow-row path, which renders
+            // per inline and would otherwise draw the literal token and stop
+            // live-updating. template.bind returns null for token-free runs.
+            block.copy(
+                boundText = template.bind(block.text),
+                inlines = block.inlines.map { inline ->
+                    when (inline) {
+                        is MarkdownInline.Text ->
+                            inline.copy(boundText = template.bind(inline.text))
+                        is MarkdownInline.Link ->
+                            inline.copy(boundText = template.bind(inline.text))
+                        is MarkdownInline.Image -> inline
+                    }
+                },
+            )
         }
 
     internal data class MarkdownTemplateBindings(
@@ -81,11 +98,10 @@ class MarkdownCardConverter : CardConverter {
         data class Binding(val token: String, val entityId: String, val initial: String)
 
         fun bind(text: String): RemoteString? {
-            val tokenRegex = Regex("__HA_EXPR_\\d+__")
-            if (!tokenRegex.containsMatchIn(text)) return null
+            if (!EXPR_TOKEN_REGEX.containsMatchIn(text)) return null
             var expr: RemoteString = "".rs
             var cursor = 0
-            tokenRegex.findAll(text).forEach { match ->
+            EXPR_TOKEN_REGEX.findAll(text).forEach { match ->
                 if (match.range.first > cursor) expr += text.substring(cursor, match.range.first)
                 val binding = bindings.firstOrNull { it.token == match.value }
                 expr += if (binding != null) {
@@ -109,7 +125,7 @@ class MarkdownCardConverter : CardConverter {
                     val body = match.groupValues[1]
                     val entityId = Regex("states\\('([^']+)'\\)").find(body)?.groupValues?.get(1)
                     if (entityId != null) {
-                        val token = "__HA_EXPR_${index++}__"
+                        val token = haExprToken(index++)
                         val initial = snapshot.states[entityId]?.state ?: "—"
                         bindings += Binding(token = token, entityId = entityId, initial = initial)
                         token
@@ -122,3 +138,20 @@ class MarkdownCardConverter : CardConverter {
         }
     }
 }
+
+/**
+ * Binding-token sentinels for the simple `{{ states('x') }}` path.
+ *
+ * Private Use Area code points (U+E000 / U+E001) wrap the index so the
+ * token survives markdown parsing untouched. The previous `__HA_EXPR_n__`
+ * form was eaten as bold emphasis (`__…__`), which stripped the
+ * delimiters to `HA_EXPR_n` — the bind regex then missed it and the card
+ * showed the literal text instead of the live state. PUA code points are
+ * never markdown control characters and never occur in real content.
+ */
+internal const val HA_EXPR_OPEN: String = "\uE000"
+internal const val HA_EXPR_CLOSE: String = "\uE001"
+
+internal fun haExprToken(index: Int): String = "$HA_EXPR_OPEN$index$HA_EXPR_CLOSE"
+
+private val EXPR_TOKEN_REGEX = Regex("$HA_EXPR_OPEN\\d+$HA_EXPR_CLOSE")
