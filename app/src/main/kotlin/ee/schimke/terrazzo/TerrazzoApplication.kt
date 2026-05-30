@@ -101,6 +101,14 @@ class TerrazzoApplication : Application() {
             runCatching { graph.logStore.recordCrash(throwable, thread, fatal = true) }
             previous?.uncaughtException(thread, throwable)
         }
+        // Forward caught/non-fatal crashes (e.g. coroutine failures routed
+        // through the LogStore's CoroutineExceptionHandler) to the backend
+        // as non-fatals. Fatal crashes aren't routed here — they're already
+        // reported by the backend's own uncaught handler via the chain above.
+        // This is the first `graph` access, which triggers graph init; we do
+        // it *after* installing the handler so a failure during init is still
+        // captured rather than escaping uncovered.
+        graph.logStore.nonFatalSink = crashReporter::recordCrash
     }
 
     /**

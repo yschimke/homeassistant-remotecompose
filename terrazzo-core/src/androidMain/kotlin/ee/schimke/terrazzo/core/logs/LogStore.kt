@@ -134,6 +134,17 @@ class LogStore(context: Context) {
     }
 
     /**
+     * Forwards *non-fatal* crashes to an external backend (Crashlytics)
+     * when one is configured. terrazzo-core carries no Firebase
+     * dependency, so the app installs the bridge here once its reporter
+     * is up; until then it's a no-op and only the in-app buffer is
+     * written. Fatal crashes are deliberately *not* routed through this:
+     * the backend's own uncaught-exception handler already reports those,
+     * and forwarding would double-count them.
+     */
+    var nonFatalSink: (Throwable) -> Unit = {}
+
+    /**
      * Record an exception in the buffer. Unlike the other feeders this
      * is *not* gated on the debug-logs preference — a crash is worth
      * keeping even if the user never opened the Logs screen, so the
@@ -144,7 +155,8 @@ class LogStore(context: Context) {
      * *synchronously* via [persistBlocking] because the async IO scope
      * wouldn't survive the imminent kill. Non-fatal reports — a caught
      * coroutine failure routed through [coroutineExceptionHandler] —
-     * ride the normal async path.
+     * ride the normal async path and are additionally forwarded to
+     * [nonFatalSink].
      */
     fun recordCrash(
         throwable: Throwable,
@@ -163,7 +175,13 @@ class LogStore(context: Context) {
             prune(entry.timestamp)
         }
         publish()
-        if (fatal) persistBlocking() else persistAsync()
+        if (fatal) {
+            persistBlocking()
+        } else {
+            persistAsync()
+            // Best-effort: a failing backend mustn't mask the original error.
+            runCatching { nonFatalSink(throwable) }
+        }
     }
 
     /**
