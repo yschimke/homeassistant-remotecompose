@@ -90,6 +90,10 @@ class CachedHaSession(private val delegate: HaSession, private val cache: Offlin
 
   override suspend fun dismissAllNotifications() = delegate.dismissAllNotifications()
 
+  override suspend fun disconnect() {
+    delegate.disconnect()
+  }
+
   override suspend fun close() {
     delegate.close()
   }
