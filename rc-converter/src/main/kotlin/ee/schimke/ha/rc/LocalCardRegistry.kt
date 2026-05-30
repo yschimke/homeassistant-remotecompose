@@ -66,4 +66,24 @@ fun CardRegistry.cardWidthClass(card: CardConfig, snapshot: HaSnapshot): CardWid
     return converter?.naturalWidthClass(card, snapshot) ?: CardWidthClass.Full
 }
 
+/**
+ * Host-side lookup of a card's [WidgetSizeConstraints] — the supported
+ * size band used to pick a launcher widget's default cell and resize
+ * limits. Unknown / unsupported cards fall back to the
+ * unsupported-placeholder converter's band; failing that, a
+ * conservative full-width band.
+ */
+fun CardRegistry.cardSizeConstraints(card: CardConfig, snapshot: HaSnapshot): WidgetSizeConstraints {
+    val converter = get(card.type) ?: get(UNSUPPORTED_CARD_TYPE)
+    return converter?.sizeConstraints(card, snapshot)
+        ?: WidgetSizeConstraints(
+            minWidthDp = 160,
+            minHeightDp = 48,
+            defaultWidthDp = 320,
+            defaultHeightDp = 160,
+            maxWidthDp = WidgetSizeConstraints.UNBOUNDED,
+            maxHeightDp = WidgetSizeConstraints.UNBOUNDED,
+        )
+}
+
 internal const val UNSUPPORTED_CARD_TYPE = "__unsupported__"

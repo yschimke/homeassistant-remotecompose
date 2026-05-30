@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  TALL Terrazzo size class — list cards (entities/glance) with enough
+  rows to want vertical room by default. Backed by
+  TerrazzoWidgetProviderTall; chosen by WidgetSizeClass.Tall. See
+  terrazzo_widget_info.xml for the shared rationale.
+-->
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:minWidth="180dp"
+    android:minHeight="110dp"
+    android:targetCellWidth="4"
+    android:targetCellHeight="3"
+    android:minResizeWidth="180dp"
+    android:minResizeHeight="110dp"
+    android:maxResizeWidth="360dp"
+    android:maxResizeHeight="600dp"
+    android:resizeMode="horizontal|vertical"
+    android:updatePeriodMillis="0"
+    android:widgetCategory="home_screen"
+    android:initialLayout="@layout/terrazzo_widget_initial" />

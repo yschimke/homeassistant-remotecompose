@@ -71,6 +71,82 @@ interface CardConverter {
      */
     fun naturalWidthClass(card: CardConfig, snapshot: HaSnapshot): CardWidthClass =
         CardWidthClass.Full
+
+    /**
+     * The size band this card supports when pinned as a launcher
+     * widget — its minimum legible size, the default it should pin at,
+     * and the largest size worth growing to. Expressed in dp.
+     *
+     * This is the **per-card supported-size contract**: it answers
+     * "how big can this widget be?" so the launcher can offer a
+     * sensible default cell and constrain the resize handles
+     * (`minResize*` / `maxResize*` in the `appwidget-provider`). Hosts
+     * quantise the band onto whatever discrete cells they support — on
+     * the phone, `WidgetSizeClass` maps it onto a provider variant.
+     *
+     * The default derives from [naturalWidthClass] (Compact cards get a
+     * small, near-square band; Full cards a wide band that may grow
+     * unbounded) and [naturalHeightDp] (the default height, so
+     * payload-sized cards like `entities` automatically advertise a
+     * taller default as rows are added). Override when a card's band
+     * doesn't follow from those two — e.g. a card that must stay square,
+     * or one with a hard maximum useful size.
+     */
+    fun sizeConstraints(card: CardConfig, snapshot: HaSnapshot): WidgetSizeConstraints {
+        val height = naturalHeightDp(card, snapshot)
+        return when (naturalWidthClass(card, snapshot)) {
+            CardWidthClass.Compact ->
+                WidgetSizeConstraints(
+                    minWidthDp = 80,
+                    minHeightDp = 40,
+                    defaultWidthDp = 160,
+                    defaultHeightDp = height.coerceAtLeast(40),
+                    maxWidthDp = 250,
+                    maxHeightDp = 250,
+                )
+            CardWidthClass.Full ->
+                WidgetSizeConstraints(
+                    minWidthDp = 160,
+                    minHeightDp = 48,
+                    defaultWidthDp = 320,
+                    defaultHeightDp = height.coerceAtLeast(48),
+                    maxWidthDp = WidgetSizeConstraints.UNBOUNDED,
+                    maxHeightDp = WidgetSizeConstraints.UNBOUNDED,
+                )
+        }
+    }
+}
+
+/**
+ * Per-card supported-size band for launcher widgets, in dp. Emitted by
+ * [CardConverter.sizeConstraints]. `min`/`max` bound the resize handles;
+ * `default` is the cell the card pins at before the user resizes.
+ *
+ * A `max*` of [UNBOUNDED] means "no useful ceiling — let it grow with
+ * the slot" (the widget surface background fills whatever cell results,
+ * so over-tall list cards stay framed).
+ */
+data class WidgetSizeConstraints(
+    val minWidthDp: Int,
+    val minHeightDp: Int,
+    val defaultWidthDp: Int,
+    val defaultHeightDp: Int,
+    val maxWidthDp: Int,
+    val maxHeightDp: Int,
+) {
+    init {
+        require(minWidthDp <= defaultWidthDp && defaultWidthDp <= maxWidthDp) {
+            "width band must be min<=default<=max: $minWidthDp/$defaultWidthDp/$maxWidthDp"
+        }
+        require(minHeightDp <= defaultHeightDp && defaultHeightDp <= maxHeightDp) {
+            "height band must be min<=default<=max: $minHeightDp/$defaultHeightDp/$maxHeightDp"
+        }
+    }
+
+    companion object {
+        /** Sentinel for an unbounded maximum dimension. */
+        const val UNBOUNDED = Int.MAX_VALUE
+    }
 }
 
 /**
