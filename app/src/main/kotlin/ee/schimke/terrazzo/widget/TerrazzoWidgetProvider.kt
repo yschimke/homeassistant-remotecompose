@@ -21,7 +21,9 @@ import ee.schimke.ha.rc.RenderChild
 import ee.schimke.ha.rc.cardHeightDp
 import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.cards.shutter.withEnhancedShutter
+import ee.schimke.ha.rc.components.ProvideCardChrome
 import ee.schimke.ha.rc.components.ProvideHaTheme
+import ee.schimke.ha.rc.components.RemoteHaWidgetSurface
 import ee.schimke.ha.rc.components.ThemeStyle
 import ee.schimke.ha.rc.components.haThemeFor
 import ee.schimke.ha.rc.widgetsProfile
@@ -58,7 +60,7 @@ import kotlinx.coroutines.runBlocking
  * `RemoteViews.DrawInstructions`. The app's minSdk of 36 already
  * satisfies this; the `@RequiresApi` is here only to keep lint quiet.
  */
-class TerrazzoWidgetProvider : AppWidgetProvider() {
+open class TerrazzoWidgetProvider : AppWidgetProvider() {
 
     override fun onUpdate(
         context: Context,
@@ -109,7 +111,22 @@ class TerrazzoWidgetProvider : AppWidgetProvider() {
                     ProvideCardRegistry(registry) {
                         ProvideHaTheme(haTheme) {
                             ProvideCardSizeMode(CardSizeMode.Fixed) {
-                                RenderChild(entry.card, snapshot, RemoteModifier.fillMaxWidth())
+                                // The widget surface paints the themed
+                                // card background across the whole
+                                // capture canvas, so the launcher cell is
+                                // fully covered even when the card's
+                                // content is shorter than the slot.
+                                // Suppress the inner card's own chrome so
+                                // it doesn't draw a second frame inside.
+                                ProvideCardChrome(enabled = false) {
+                                    RemoteHaWidgetSurface {
+                                        RenderChild(
+                                            entry.card,
+                                            snapshot,
+                                            RemoteModifier.fillMaxWidth(),
+                                        )
+                                    }
+                                }
                             }
                         }
                     }
@@ -154,3 +171,19 @@ class TerrazzoWidgetProvider : AppWidgetProvider() {
         const val TAG = "TerrazzoWidgetProvider"
     }
 }
+
+/**
+ * Size-class provider variants. They share [TerrazzoWidgetProvider]'s
+ * id-driven rendering verbatim — the only thing that differs is the
+ * `appwidget-provider` metadata declared against each in the manifest
+ * (`targetCell*` default + `min/maxResize*` bounds), which is how a
+ * card's [WidgetSizeClass][ee.schimke.terrazzo.widget.WidgetSizeClass]
+ * reaches the launcher's resize UI. [WidgetInstaller] picks the
+ * matching component at pin time; refresh broadcasts can still target
+ * the base provider since rendering only ever keys off the widget id.
+ *
+ * @see WidgetSizeClass
+ */
+class TerrazzoWidgetProviderSmall : TerrazzoWidgetProvider()
+
+class TerrazzoWidgetProviderTall : TerrazzoWidgetProvider()

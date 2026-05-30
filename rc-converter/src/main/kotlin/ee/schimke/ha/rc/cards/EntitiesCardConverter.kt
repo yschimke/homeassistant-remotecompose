@@ -8,6 +8,7 @@ import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.model.toTyped
+import ee.schimke.ha.rc.BreakpointAxis
 import ee.schimke.ha.rc.CardConverter
 import ee.schimke.ha.rc.CardSizeMode
 import ee.schimke.ha.rc.HaStateColor
@@ -15,9 +16,12 @@ import ee.schimke.ha.rc.LocalCardSizeMode
 import ee.schimke.ha.rc.RemoteSizeBreakpoint
 import ee.schimke.ha.rc.components.HaEntitiesData
 import ee.schimke.ha.rc.components.HaEntityRowData
+import ee.schimke.ha.rc.components.HaGlanceCellData
+import ee.schimke.ha.rc.components.HaGlanceData
 import ee.schimke.ha.rc.components.HaToggleAccent
 import ee.schimke.ha.rc.components.LiveValues
 import ee.schimke.ha.rc.components.RemoteHaEntities
+import ee.schimke.ha.rc.components.RemoteHaGlance
 import ee.schimke.ha.rc.defaultTapActionFor
 import ee.schimke.ha.rc.formatState
 import ee.schimke.ha.rc.icons.HaIconMap
@@ -47,28 +51,83 @@ class EntitiesCardConverter : CardConverter {
         when (LocalCardSizeMode.current) {
             CardSizeMode.Wrap -> FullList(card, snapshot, modifier, maxRows = Int.MAX_VALUE)
             CardSizeMode.Fixed ->
+                // Width-axis reflow: as the widget is dragged wider, the
+                // vertical column of rows repacks into a horizontal strip
+                // of icon cells ("column of N rows -> row of N icons").
+                //
+                // Width, not height, for two reasons: (1) it's the axis
+                // every Fixed-mode surface pins (the matrix preview and
+                // the launcher both fix width and let height follow), so
+                // the gate fires consistently and is reviewable in the
+                // matrix; a height gate reads an unstable wrap-height
+                // there. (2) SINGLE threshold — a multi-rung ladder lowers
+                // to nested RemoteStateLayouts, which alpha010 collapses
+                // to tier 0 at playback (#224, see GaugeCardConverter).
                 RemoteSizeBreakpoint(
-                    thresholdsDp = intArrayOf(160, 240),
+                    thresholdsDp = intArrayOf(260),
                     modifier = modifier,
+                    axis = BreakpointAxis.Width,
                 ) { tier ->
-                    // Tier 0: cramped — top row only.
-                    // Tier 1: medium — first three rows, no title chrome.
-                    // Tier 2: roomy — everything (matches Wrap output).
-                    val (rows, keepTitle) =
-                        when (tier) {
-                            0 -> 1 to false
-                            1 -> 3 to false
-                            else -> Int.MAX_VALUE to true
-                        }
-                    FullList(
-                        card,
-                        snapshot,
-                        RemoteModifier.fillMaxWidth(),
-                        maxRows = rows,
-                        forceTitle = keepTitle,
-                    )
+                    when (tier) {
+                        // Tier 0 (w < 260): the natural vertical list, same
+                        // as Wrap — narrow cells stack rows.
+                        0 ->
+                            FullList(
+                                card,
+                                snapshot,
+                                RemoteModifier.fillMaxWidth(),
+                                maxRows = Int.MAX_VALUE,
+                                forceTitle = true,
+                            )
+                        // Tier 1 (w >= 260): wide enough to lay the
+                        // entities out side by side — reflow into a strip
+                        // of icon | name | state cells. Each cell keeps its
+                        // identity, so nothing is dropped, just repacked.
+                        else -> IconStrip(card, snapshot, RemoteModifier.fillMaxWidth())
+                    }
                 }
         }
+    }
+
+    /**
+     * Wide-thin reflow: the same entities, repacked as a horizontal
+     * strip of [RemoteHaGlance] icon cells instead of a vertical list.
+     * Reuses the glance component so the cells match the `glance` card
+     * exactly. Title chrome is dropped — at this height the strip is
+     * all that fits.
+     */
+    @Composable
+    private fun IconStrip(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
+        val entries: List<JsonElement> = card.raw["entities"]?.jsonArray ?: emptyList()
+        val cells =
+            entries.mapNotNull { el ->
+                val (eid, row) = normalize(el)
+                val entity = eid?.let { snapshot.states[it] }
+                val name =
+                    row?.get("name")?.jsonPrimitive?.content
+                        ?: entity?.attributes?.get("friendly_name")?.jsonPrimitive?.content
+                        ?: eid
+                        ?: "—"
+                val tapCfg = row?.get("tap_action")?.jsonObject
+                val tapAction =
+                    if (tapCfg != null) parseHaAction(tapCfg, eid) else defaultTapActionFor(eid)
+                val isActive = entity?.toTyped()?.isActive
+                HaGlanceCellData(
+                    entityId = eid,
+                    name = name,
+                    state = LiveValues.state(eid, formatState(entity)),
+                    icon = HaIconMap.resolve(row?.get("icon")?.jsonPrimitive?.content, entity),
+                    accent =
+                        HaToggleAccent(
+                            activeAccent = HaStateColor.activeFor(entity).rc,
+                            inactiveAccent = HaStateColor.inactiveFor(entity).rc,
+                            initiallyOn = isActive ?: false,
+                            toggleable = isActive != null,
+                        ),
+                    tapAction = tapAction,
+                )
+            }
+        RemoteHaGlance(HaGlanceData(title = null, cells = cells), modifier = modifier)
     }
 
     @Composable
