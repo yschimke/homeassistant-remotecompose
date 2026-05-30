@@ -31,7 +31,7 @@ internal data class PersistedLogBuffer(
 @Serializable
 internal data class PersistedLogEntry(
     @ProtoNumber(1) val timestamp: Long = 0L,
-    /** 0 = connection · 1 = local action · 2 = data update. */
+    /** 0 = connection · 1 = local action · 2 = data update · 3 = crash. */
     @ProtoNumber(2) val kind: Int = 0,
     /** Ordinal of [LogConnectionStatus]; -1 when [kind] != 0. */
     @ProtoNumber(3) val connectionStatus: Int = -1,
@@ -40,11 +40,15 @@ internal data class PersistedLogEntry(
     @ProtoNumber(6) val entityId: String = "",
     @ProtoNumber(7) val fromState: String = "",
     @ProtoNumber(8) val toState: String = "",
+    @ProtoNumber(9) val stackTrace: String = "",
+    @ProtoNumber(10) val threadName: String = "",
+    @ProtoNumber(11) val fatal: Boolean = false,
 )
 
 internal const val KIND_CONNECTION: Int = 0
 internal const val KIND_LOCAL_ACTION: Int = 1
 internal const val KIND_DATA_UPDATE: Int = 2
+internal const val KIND_CRASH: Int = 3
 
 internal fun LogEntry.toPersisted(): PersistedLogEntry = when (this) {
     is LogEntry.Connection -> PersistedLogEntry(
@@ -65,6 +69,14 @@ internal fun LogEntry.toPersisted(): PersistedLogEntry = when (this) {
         entityId = entityId,
         fromState = fromState,
         toState = toState,
+    )
+    is LogEntry.Crash -> PersistedLogEntry(
+        timestamp = timestamp,
+        kind = KIND_CRASH,
+        summary = summary,
+        stackTrace = stackTrace,
+        threadName = threadName,
+        fatal = fatal,
     )
 }
 
@@ -87,6 +99,13 @@ internal fun PersistedLogEntry.toModel(): LogEntry? = when (kind) {
         entityId = entityId,
         fromState = fromState,
         toState = toState,
+    )
+    KIND_CRASH -> LogEntry.Crash(
+        timestamp = timestamp,
+        threadName = threadName,
+        summary = summary,
+        stackTrace = stackTrace,
+        fatal = fatal,
     )
     else -> null
 }

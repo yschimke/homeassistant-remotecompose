@@ -8,6 +8,7 @@ import dev.zacsweers.metro.SingleIn
 import ee.schimke.ha.model.Dashboard
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.terrazzo.core.di.AppScope
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -17,6 +18,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeoutOrNull
 
 /**
  * Persistent log buffer for the debug Logs view. Hidden behind a
@@ -35,6 +38,10 @@ import kotlinx.coroutines.launch
  *  - **Local actions** — button taps, toggles, service calls dispatched
  *    by the dashboard's action dispatcher. Captured *before* the
  *    network round-trip so a failed send is still visible.
+ *  - **Crashes** — uncaught exceptions (persisted synchronously so the
+ *    trace survives the process kill) and caught coroutine failures fed
+ *    via [recordCrash]. Unlike the streams above these are recorded
+ *    even when the debug-logs preference is off.
  *
  * Persisted to disk via a Proto DataStore so events survive process
  * death. The in-memory ring is the source of truth for reads / the
@@ -127,6 +134,54 @@ class LogStore(context: Context) {
     }
 
     /**
+     * Record an exception in the buffer. Unlike the other feeders this
+     * is *not* gated on the debug-logs preference — a crash is worth
+     * keeping even if the user never opened the Logs screen, so the
+     * trace is there the moment they flip the toggle to diagnose.
+     *
+     * [fatal] marks an uncaught crash that's about to take the process
+     * down (the uncaught-exception handler). Those persist
+     * *synchronously* via [persistBlocking] because the async IO scope
+     * wouldn't survive the imminent kill. Non-fatal reports — a caught
+     * coroutine failure routed through [coroutineExceptionHandler] —
+     * ride the normal async path.
+     */
+    fun recordCrash(
+        throwable: Throwable,
+        thread: Thread = Thread.currentThread(),
+        fatal: Boolean = true,
+    ) {
+        val entry = LogEntry.Crash(
+            timestamp = clock(),
+            threadName = thread.name,
+            summary = throwable.summarize(),
+            stackTrace = throwable.stackTraceToString(),
+            fatal = fatal,
+        )
+        synchronized(lock) {
+            entries.addLast(entry)
+            prune(entry.timestamp)
+        }
+        publish()
+        if (fatal) persistBlocking() else persistAsync()
+    }
+
+    /**
+     * Drop-in [CoroutineExceptionHandler] for the app's top-level
+     * scopes (e.g. the process-lifecycle wear-sync scope). An exception
+     * that escapes a root `launch` lands here and is recorded as a
+     * non-fatal crash; the scope is already torn down by the time the
+     * handler runs. Adopting this on a background scope keeps a stray
+     * failure there from propagating to the thread's default handler
+     * and killing the whole UI process — while still capturing the
+     * trace in the in-app log.
+     */
+    val coroutineExceptionHandler: CoroutineExceptionHandler =
+        CoroutineExceptionHandler { _, throwable ->
+            recordCrash(throwable, fatal = false)
+        }
+
+    /**
      * Diff [snapshot] against the last recorded snapshot for any
      * entity referenced by [dashboard], emitting one
      * [LogEntry.DataUpdate] per changed entity. First call after
@@ -216,12 +271,38 @@ class LogStore(context: Context) {
         }
     }
 
+    /**
+     * Synchronous sibling of [persistAsync] for the fatal-crash path.
+     * Blocks the calling thread until the ring is on disk because the
+     * uncaught-exception handler runs microseconds before the default
+     * handler kills the process — a write dispatched to [scope] would
+     * never flush. Time-boxed by [PERSIST_BLOCKING_TIMEOUT_MS] so a
+     * wedged DataStore write can't hang the dying process, and wrapped
+     * in `runCatching` for the same reason [persistAsync] is: a missed
+     * write on the debug surface mustn't mask the original crash.
+     */
+    private fun persistBlocking() {
+        runCatching {
+            runBlocking {
+                withTimeoutOrNull(PERSIST_BLOCKING_TIMEOUT_MS) {
+                    dataStore.updateData {
+                        val snapshot = synchronized(lock) { entries.map { it.toPersisted() } }
+                        PersistedLogBuffer(entries = snapshot)
+                    }
+                }
+            }
+        }
+    }
+
     companion object {
         /** Data updates older than this are dropped on every write. */
         const val DATA_UPDATE_RETENTION_MS: Long = 5 * 60 * 1000L
 
         /** Hard cap so a chatty session can't grow the buffer without bound. */
         const val MAX_ENTRIES: Int = 500
+
+        /** Upper bound on the blocking disk flush in the crash path. */
+        const val PERSIST_BLOCKING_TIMEOUT_MS: Long = 1_000L
 
         private val Context.logStore: DataStore<PersistedLogBuffer> by dataStore(
             fileName = "terrazzo_logs.pb",
@@ -254,4 +335,24 @@ sealed interface LogEntry {
         val summary: String,
         val entityId: String? = null,
     ) : LogEntry
+
+    /**
+     * An exception captured by the crash plumbing. [fatal] distinguishes
+     * an uncaught crash that took the process down from a non-fatal
+     * report (a coroutine failure that was logged but recovered).
+     */
+    data class Crash(
+        override val timestamp: Long,
+        val threadName: String,
+        val summary: String,
+        val stackTrace: String,
+        val fatal: Boolean,
+    ) : LogEntry
+}
+
+/** `ClassName: message`, or just the class name when there's no message. */
+private fun Throwable.summarize(): String {
+    val name = this::class.qualifiedName ?: this::class.simpleName ?: "Throwable"
+    val msg = message
+    return if (msg.isNullOrBlank()) name else "$name: $msg"
 }
