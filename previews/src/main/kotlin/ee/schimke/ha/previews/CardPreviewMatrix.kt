@@ -46,7 +46,9 @@ import ee.schimke.ha.rc.RenderChild
 import ee.schimke.ha.rc.androidXExperimentalWrap
 import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.components.HaTheme
+import ee.schimke.ha.rc.components.ProvideCardChrome
 import ee.schimke.ha.rc.components.ProvideHaTheme
+import ee.schimke.ha.rc.components.RemoteHaWidgetSurface
 import ee.schimke.ha.rc.enableRemoteComposeWrapContent
 import ee.schimke.ha.rc.components.R as ComponentsR
 import java.time.ZoneOffset
@@ -297,7 +299,15 @@ private fun FixedModeCell(
                     ProvideCardRegistry(defaultRegistry()) {
                         ProvideHaTheme(HaTheme.Dark) {
                             ProvideCardSizeMode(CardSizeMode.Fixed) {
-                                RenderChild(card, snapshot, RemoteModifier.rcFillMaxWidth())
+                                // Same full-canvas surface the launcher
+                                // widget wraps the card in, so the preview
+                                // fills the cell instead of leaving blank
+                                // space below short content.
+                                ProvideCardChrome(enabled = false) {
+                                    RemoteHaWidgetSurface {
+                                        RenderChild(card, snapshot, RemoteModifier.rcFillMaxWidth())
+                                    }
+                                }
                             }
                         }
                     }
@@ -361,7 +371,15 @@ private fun WatchFaceCell(
                         ProvideCardRegistry(defaultRegistry()) {
                             ProvideHaTheme(HaTheme.Dark) {
                                 ProvideCardSizeMode(CardSizeMode.Fixed) {
-                                    RenderChild(card, snapshot, RemoteModifier.rcFillMaxWidth())
+                                    ProvideCardChrome(enabled = false) {
+                                        RemoteHaWidgetSurface {
+                                            RenderChild(
+                                                card,
+                                                snapshot,
+                                                RemoteModifier.rcFillMaxWidth(),
+                                            )
+                                        }
+                                    }
                                 }
                             }
                         }
