@@ -96,6 +96,11 @@ class TerrazzoApplication : Application() {
         // don't also call crashReporter.recordCrash here: that path is
         // for non-fatal reports and would double-count an uncaught crash.
         crashReporter.install(applicationContext)
+        // Forward caught/non-fatal crashes (e.g. coroutine failures routed
+        // through the LogStore's CoroutineExceptionHandler) to the backend
+        // as non-fatals. Fatal crashes aren't routed here — they're already
+        // reported by the backend's own uncaught handler via the chain below.
+        graph.logStore.nonFatalSink = crashReporter::recordCrash
         val previous = Thread.getDefaultUncaughtExceptionHandler()
         Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
             runCatching { graph.logStore.recordCrash(throwable, thread, fatal = true) }
