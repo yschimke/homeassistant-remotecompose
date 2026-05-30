@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.1.28](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.27...v0.1.28) (2026-05-30)
+
+
+### Features
+
+* add Firebase Analytics alongside Crashlytics ([#342](https://github.com/yschimke/homeassistant-remotecompose/issues/342)) ([c8218bd](https://github.com/yschimke/homeassistant-remotecompose/commit/c8218bd94af29ba2ff8b829282ece2609595eb4b))
+* capture crashes via LogStore sink and optional Crashlytics ([#330](https://github.com/yschimke/homeassistant-remotecompose/issues/330)) ([ae026c2](https://github.com/yschimke/homeassistant-remotecompose/commit/ae026c20d07168e1c26a3562f57c27cf71154d5f))
+* forward non-fatal coroutine crashes to Crashlytics ([#333](https://github.com/yschimke/homeassistant-remotecompose/issues/333)) ([cc2d6fa](https://github.com/yschimke/homeassistant-remotecompose/commit/cc2d6fababa61eebc48fbbf4d9ca0527e35ffc1f))
+* **markdown:** render links and badge images inline ([#331](https://github.com/yschimke/homeassistant-remotecompose/issues/331)) ([e952891](https://github.com/yschimke/homeassistant-remotecompose/commit/e95289182ceee48fbcfe177254c10ad7c2029a49))
+
+
+### Bug Fixes
+
+* **cards:** stop long names overrunning the summary in graph rows ([#329](https://github.com/yschimke/homeassistant-remotecompose/issues/329)) ([582108f](https://github.com/yschimke/homeassistant-remotecompose/commit/582108fa5012f048a7c180841438e4e0c4ea5d4b))
+* **connection:** stop a stale receive loop clobbering a replacement socket ([#343](https://github.com/yschimke/homeassistant-remotecompose/issues/343)) ([93c7b41](https://github.com/yschimke/homeassistant-remotecompose/commit/93c7b41d76836a10e9be14372afa3d2d7263738f))
+* **dashboard:** isolate per-dashboard and per-card state with key() ([#336](https://github.com/yschimke/homeassistant-remotecompose/issues/336)) ([7fc5be7](https://github.com/yschimke/homeassistant-remotecompose/commit/7fc5be70b78d13d8447c8ffb3485e091f46e2acf))
+* **wear:** drop title overlay from widget previews ([#345](https://github.com/yschimke/homeassistant-remotecompose/issues/345)) ([f72149d](https://github.com/yschimke/homeassistant-remotecompose/commit/f72149d6f63700e05f4d741b7d3b04dff32d245a))
+
 ## [0.1.27](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.26...v0.1.27) (2026-05-29)
 
 
