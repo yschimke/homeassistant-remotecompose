@@ -60,6 +60,7 @@ import ee.schimke.terrazzo.LocalTerrazzoGraph
 import ee.schimke.terrazzo.core.pin.MobilePinnedSection
 import ee.schimke.terrazzo.core.pin.PinStore
 import ee.schimke.terrazzo.core.pin.PinnedCardData
+import ee.schimke.terrazzo.core.logs.referencedEntities
 import ee.schimke.terrazzo.core.session.DemoHaSession
 import ee.schimke.terrazzo.core.session.HaSession
 import ee.schimke.ha.rc.CachedCardPreview
@@ -252,10 +253,13 @@ private fun DashboardList(
     val cfg = rememberLayoutConfig()
     val pinStore = LocalTerrazzoGraph.current.pinStore
     val pinScope = rememberCoroutineScope()
-    val useGridLayout by LocalTerrazzoGraph.current
-        .preferencesStore.experimentalGridLayout.collectAsState(initial = false)
-    val collapsedMode by LocalTerrazzoGraph.current
-        .preferencesStore.collapsedMode.collectAsState(initial = true)
+    val preferencesStore = LocalTerrazzoGraph.current.preferencesStore
+    val useGridLayout by preferencesStore.experimentalGridLayout.collectAsState(initial = false)
+    val collapsedMode by preferencesStore.collapsedMode.collectAsState(initial = true)
+    // Debug data-visualisation toggles (Settings). Both default off so
+    // production renders are untouched; reads are cheap StateFlows.
+    val flashOnDataChange by preferencesStore.flashOnDataChange.collectAsState(initial = false)
+    val dataGridOverlay by preferencesStore.dataGridOverlay.collectAsState(initial = false)
     // Pull the process-singleton image stack (a Metro AppScope binding —
     // see AppGraph.haImageStack). Coil documents that exactly one
     // DiskCache per directory is safe; the stack owns that single
@@ -308,6 +312,7 @@ private fun DashboardList(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.TopCenter,
     ) {
+        CompositionLocalProvider(LocalFlashOnDataChange provides flashOnDataChange) {
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
@@ -345,6 +350,15 @@ private fun DashboardList(
                     ),
                 )
             }
+        }
+        }
+        if (dataGridOverlay) {
+            DataGridOverlay(
+                dashboard = dashboard,
+                snapshot = snapshot,
+                onClose = { pinScope.launch { preferencesStore.setDataGridOverlay(false) } },
+                contentPadding = contentPadding,
+            )
         }
     }
 }
@@ -908,6 +922,13 @@ private fun CardSlot(
     val dark = LocalIsDarkTheme.current
     val captureEpoch = LocalCardCaptureEpoch.current
     val debugBorders = LocalRcDebugBorders.current
+    // Debug flash-on-change: fingerprint the entity states this card
+    // renders so the slot can flash when any of them move. Refs are
+    // resolved once per card; the signature is only built when the
+    // feature is on, so production pays a single set computation.
+    val flashOnChange = LocalFlashOnDataChange.current
+    val flashRefs = remember(card) { referencedEntities(card) }
+    val flashSignature = if (flashOnChange) cardStateSignature(snapshot, flashRefs) else null
     // The document's paint colours are baked at capture; re-encode when
     // theme flips. Snapshot is deliberately NOT in the cache key —
     // entity values flow into the running player by named binding
@@ -965,6 +986,9 @@ private fun CardSlot(
                     RenderChild(card, snapshot, RemoteModifier.fillMaxWidth())
                 }
             }
+        }
+        if (flashSignature != null) {
+            CardChangeFlash(flashSignature)
         }
     }
 }

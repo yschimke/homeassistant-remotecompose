@@ -119,6 +119,38 @@ class PreferencesStore(private val context: Context) {
     }
 
     /**
+     * Debug aid: flash each dashboard card whenever the entity state it
+     * renders changes. The host watches the polled snapshot for every
+     * entity a card references (see
+     * [ee.schimke.terrazzo.core.logs.referencedEntities]) and, on a
+     * value change, paints a brief fading highlight over that card's
+     * slot. Off by default; pairs well with demo mode (which animates
+     * values every ~1s) to see which cards are live. In-memory only —
+     * it changes nothing about the rendered document.
+     */
+    val flashOnDataChange: Flow<Boolean>
+        get() = context.store.data.map { it[FLASH_ON_CHANGE_KEY] ?: false }
+
+    suspend fun setFlashOnDataChange(enabled: Boolean) {
+        context.store.edit { it[FLASH_ON_CHANGE_KEY] = enabled }
+    }
+
+    /**
+     * Debug aid: overlay a translucent grid of the live data the
+     * current dashboard's cards consume — one row per referenced
+     * entity, showing the entity id (key), its current state (value),
+     * and how long ago that value last changed. Off by default; the
+     * grid floats above the dashboard and updates in place as snapshots
+     * arrive. In-memory only.
+     */
+    val dataGridOverlay: Flow<Boolean>
+        get() = context.store.data.map { it[DATA_GRID_OVERLAY_KEY] ?: false }
+
+    suspend fun setDataGridOverlay(enabled: Boolean) {
+        context.store.edit { it[DATA_GRID_OVERLAY_KEY] = enabled }
+    }
+
+    /**
      * Permanent write mode. When off (the default), every cold start
      * seeds the dashboard write/read chip with Read, so a relaunch never
      * silently leaves the app capable of firing service calls. When on,
@@ -231,6 +263,8 @@ class PreferencesStore(private val context: Context) {
         private val GRID_LAYOUT_KEY = booleanPreferencesKey("experimental_grid_layout")
         private val COLLAPSED_MODE_KEY = booleanPreferencesKey("collapsed_mode")
         private val LOGS_VIEW_KEY = booleanPreferencesKey("logs_view_enabled")
+        private val FLASH_ON_CHANGE_KEY = booleanPreferencesKey("flash_on_data_change")
+        private val DATA_GRID_OVERLAY_KEY = booleanPreferencesKey("data_grid_overlay")
         private val PERMANENT_WRITE_KEY = booleanPreferencesKey("permanent_write_mode")
         private val SELECTED_DASHBOARDS_KEY = stringPreferencesKey("selected_dashboards")
 

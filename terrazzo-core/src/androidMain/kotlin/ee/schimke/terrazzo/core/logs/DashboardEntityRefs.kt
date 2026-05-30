@@ -1,5 +1,6 @@
 package ee.schimke.terrazzo.core.logs
 
+import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.Dashboard
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
@@ -21,13 +22,25 @@ import kotlinx.serialization.json.JsonPrimitive
  * practice — icon names use `mdi:` (colon, not dot), template strings
  * have whitespace, etc.
  */
-internal fun referencedEntities(dashboard: Dashboard): Set<String> {
+fun referencedEntities(dashboard: Dashboard): Set<String> {
     val out = mutableSetOf<String>()
     for (view in dashboard.views) {
         view.cards.forEach { walk(it.raw, out) }
         view.sections.forEach { sec -> sec.cards.forEach { walk(it.raw, out) } }
         view.badges.forEach { walk(it, out) }
     }
+    return out
+}
+
+/**
+ * Same heuristic as the dashboard-level [referencedEntities], scoped to
+ * a single card's config. Used by the per-card debug surfaces (flash on
+ * data change) that need to know which entities one card slot depends
+ * on. Returns entity ids in no particular order.
+ */
+fun referencedEntities(card: CardConfig): Set<String> {
+    val out = mutableSetOf<String>()
+    walk(card.raw, out)
     return out
 }
 
