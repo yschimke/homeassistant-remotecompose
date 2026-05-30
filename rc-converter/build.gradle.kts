@@ -24,6 +24,11 @@ dependencies {
 
   implementation(platform(libs.compose.bom))
   implementation(libs.compose.ui)
+  // Tooling-preview annotation jar — `compose-preview render` (0.12.0)
+  // fails fast on any Android+compose module that can't reach the
+  // @Preview annotation class, even when the module has no @Preview
+  // composables of its own.
+  implementation(libs.compose.ui.tooling.preview)
   implementation(libs.compose.foundation)
   implementation(libs.compose.material3)
   implementation(libs.compose.material.icons.extended)
