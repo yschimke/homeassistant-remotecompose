@@ -79,6 +79,13 @@ android {
       if (releaseKeystorePath != null) {
         signingConfig = signingConfigs.getByName("release")
       }
+      // FirebaseCrashReporter is loaded reflectively, so R8 would strip or
+      // rename it in minified builds without an explicit keep rule. Only
+      // needed (and the class only present) when a key is configured; the
+      // experimental build type inherits this via initWith below.
+      if (crashlyticsEnabled) {
+        proguardFiles(file("crashlytics-rules.pro"))
+      }
     }
     create("experimental") {
       initWith(getByName("release"))
