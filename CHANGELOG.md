@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.29](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.28...v0.1.29) (2026-05-30)
+
+
+### Bug Fixes
+
+* **widget:** fill the launcher cell instead of wrapping to content ([#347](https://github.com/yschimke/homeassistant-remotecompose/issues/347)) ([99ce743](https://github.com/yschimke/homeassistant-remotecompose/commit/99ce7439d17bfc979ed03062ddb75aa9efa4b410))
+
 ## [0.1.28](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.27...v0.1.28) (2026-05-30)
 
 
