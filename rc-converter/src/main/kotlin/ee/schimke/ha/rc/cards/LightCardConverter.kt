@@ -13,7 +13,6 @@ import ee.schimke.ha.rc.CardConverter
 import ee.schimke.ha.rc.components.HaAction
 import ee.schimke.ha.rc.components.HaArcDialData
 import ee.schimke.ha.rc.components.HaModeChip
-import ee.schimke.ha.rc.components.RemoteHaArcDial
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonPrimitive
 
@@ -24,6 +23,12 @@ import kotlinx.serialization.json.jsonPrimitive
  * to choose accent. Centre icon is a bulb so the card reads visually as
  * a light at a glance. Tap toggles the light; the +/- steppers fire
  * `light.turn_on` with `brightness_step` of 25 (~10%).
+ *
+ * Renders through the shared [RenderArcDial] ladder (same path as
+ * `thermostat` / `humidifier`) so Fixed-mode launcher / Wear cells get
+ * the arc-left Wide row on narrow surfaces and the full vertical card
+ * with steppers otherwise — the bulb-ring identity survives at every
+ * size instead of stretching the full dial into short cells.
  */
 class LightCardConverter : CardConverter {
     override val cardType: String = CardTypes.LIGHT
@@ -62,7 +67,7 @@ class LightCardConverter : CardConverter {
         val tap = entityId?.let { HaAction.Toggle(it) } ?: HaAction.None
         val (inc, dec) = brightnessSteppers(entityId, isOn, brightness)
 
-        RemoteHaArcDial(
+        RenderArcDial(
             HaArcDialData(
                 entityId = entityId,
                 name = name,
