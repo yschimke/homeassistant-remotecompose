@@ -606,7 +606,17 @@ private fun DashboardsRoot(
                     }
                 },
                 actions = {
-                    NotificationBell(notifications = notifications)
+                    NotificationBell(
+                        notifications = notifications,
+                        onDismiss = { n ->
+                            scope.launch {
+                                runCatching { session.dismissNotification(n.notificationId) }
+                            }
+                        },
+                        onClearAll = {
+                            scope.launch { runCatching { session.dismissAllNotifications() } }
+                        },
+                    )
                     Surface(
                         onClick = onRetryConnection,
                         color = connectionStatus.color.copy(alpha = 0.16f),

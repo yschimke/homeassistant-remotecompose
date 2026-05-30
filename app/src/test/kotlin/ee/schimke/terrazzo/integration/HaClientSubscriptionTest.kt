@@ -89,6 +89,42 @@ class HaClientSubscriptionTest {
   }
 
   @Test
+  fun dismissNotification_sends_dismiss_call_service() {
+    runBlocking {
+      val client = HaClient(HaConfig(baseUrl = baseUrl, accessToken = "test-token"))
+      try {
+        client.connect()
+        client.dismissNotification("welcome")
+        val sent = withTimeout(2_000) { handler.calledServices.receive() }
+        assertEquals("persistent_notification", sent["domain"]?.jsonPrimitive?.content)
+        assertEquals("dismiss", sent["service"]?.jsonPrimitive?.content)
+        assertEquals(
+          "welcome",
+          sent["service_data"]?.jsonObject?.get("notification_id")?.jsonPrimitive?.content,
+        )
+      } finally {
+        client.close()
+      }
+    }
+  }
+
+  @Test
+  fun dismissAllNotifications_sends_dismiss_all_call_service() {
+    runBlocking {
+      val client = HaClient(HaConfig(baseUrl = baseUrl, accessToken = "test-token"))
+      try {
+        client.connect()
+        client.dismissAllNotifications()
+        val sent = withTimeout(2_000) { handler.calledServices.receive() }
+        assertEquals("persistent_notification", sent["domain"]?.jsonPrimitive?.content)
+        assertEquals("dismiss_all", sent["service"]?.jsonPrimitive?.content)
+      } finally {
+        client.close()
+      }
+    }
+  }
+
+  @Test
   fun subscribeEvents_delivers_event_frame_after_ack() {
     runBlocking {
       val client = HaClient(HaConfig(baseUrl = baseUrl, accessToken = "test-token"))
@@ -162,11 +198,18 @@ class HaClientSubscriptionTest {
     @Volatile private var subscriptionId: Int? = null
     val pushes: Channel<JsonObject> = Channel(Channel.UNLIMITED)
 
+    /** Every `call_service` frame the client sends, in arrival order, for assertions. */
+    val calledServices: Channel<JsonObject> = Channel(Channel.UNLIMITED)
+
     fun handle(msg: JsonObject): List<JsonObject> {
       val type = msg["type"]?.jsonPrimitive?.content ?: return emptyList()
       if (type == "auth") return listOf(buildJsonObject { put("type", "auth_ok") })
       val id = msg["id"]?.jsonPrimitive?.intOrNull ?: return emptyList()
       return when (type) {
+        "call_service" -> {
+          calledServices.trySend(msg)
+          listOf(result(id, JsonObject(emptyMap())))
+        }
         "persistent_notification/get" ->
           listOf(
             result(
