@@ -36,6 +36,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -797,21 +798,26 @@ private fun SectionColumn(
             )
         }
         section.cards.forEach { card ->
-            // No `height(...)` — the wrap-adaptive player (see
-            // `CachedCardPreview` / `WrapAdaptiveRemoteDocumentPlayer`)
-            // sizes itself to the document's intrinsic content height
-            // after a paint-context warmup, so the slot wraps to the
-            // card's actual rendered height instead of pinning per-card
-            // via `naturalHeightDp`.
-            CardSlot(
-                card = card,
-                snapshot = snapshot,
-                registry = registry,
-                baseUrl = baseUrl,
-                imageLoader = imageLoader,
-                onLongPress = onLongPress,
-                modifier = Modifier.fillMaxWidth(),
-            )
+            // Key by the card config so each slot's hosted player is tied
+            // to its card identity, not its position in the section — a
+            // reused slot must not keep a previous card's `AndroidView`.
+            key(card) {
+                // No `height(...)` — the wrap-adaptive player (see
+                // `CachedCardPreview` / `WrapAdaptiveRemoteDocumentPlayer`)
+                // sizes itself to the document's intrinsic content height
+                // after a paint-context warmup, so the slot wraps to the
+                // card's actual rendered height instead of pinning per-card
+                // via `naturalHeightDp`.
+                CardSlot(
+                    card = card,
+                    snapshot = snapshot,
+                    registry = registry,
+                    baseUrl = baseUrl,
+                    imageLoader = imageLoader,
+                    onLongPress = onLongPress,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
         }
     }
 }
@@ -863,15 +869,22 @@ private fun CardRow(
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         row.cards.forEach { card ->
-            CardSlot(
-                card = card,
-                snapshot = snapshot,
-                registry = registry,
-                baseUrl = baseUrl,
-                imageLoader = imageLoader,
-                onLongPress = onLongPress,
-                modifier = Modifier.weight(1f),
-            )
+            // Key by the card config so a slot never inherits an
+            // unrelated card's hosted player when repacking shifts cards
+            // between rows (e.g. a width-class change re-chunks the row).
+            // Without it the reused `AndroidView` would keep the prior
+            // card's view — the same staleness seen on dashboard switch.
+            key(card) {
+                CardSlot(
+                    card = card,
+                    snapshot = snapshot,
+                    registry = registry,
+                    baseUrl = baseUrl,
+                    imageLoader = imageLoader,
+                    onLongPress = onLongPress,
+                    modifier = Modifier.weight(1f),
+                )
+            }
         }
     }
 }

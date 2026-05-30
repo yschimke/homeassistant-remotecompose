@@ -510,6 +510,31 @@ private fun historyGraphCard() = card(
         "entities":["sensor.outside_temp","sensor.upstairs_temp"]}""",
 )
 
+// Regression guard: long entity names with no recorder data must
+// truncate (ellipsis) rather than overrun the right-aligned "no data"
+// summary. See the "Open issues per repo" dashboard card. No HA
+// reference exists for this synthetic case; the canvas is deliberately
+// narrow (300 dp) so the longest repo name has to truncate — that's the
+// behaviour under test, not a reference-matched size.
+
+@Preview(name = "history-graph no-data (light)", showBackground = false, widthDp = 300, heightDp = 240)
+@Composable
+fun HistoryGraphNoData_Light() = CardHost(HaTheme.Light) {
+    RenderChild(issuesGraphCard(), Fixtures.issuesNoData, RemoteModifier.fillMaxWidth())
+}
+
+@Preview(name = "history-graph no-data (dark)", showBackground = false, widthDp = 300, heightDp = 240)
+@Composable
+fun HistoryGraphNoData_Dark() = CardHost(HaTheme.Dark) {
+    RenderChild(issuesGraphCard(), Fixtures.issuesNoData, RemoteModifier.fillMaxWidth())
+}
+
+private fun issuesGraphCard() = card(
+    """{"type":"history-graph","title":"Open issues per repo","hours_to_show":336,
+        "entities":["sensor.gh_meshcore_mobile_issues","sensor.gh_compose_ai_tools_issues",
+        "sensor.gh_remotecompose_issues","sensor.gh_cadence_issues"]}""",
+)
+
 // ——— bambu print-status ———
 
 @Preview(name = "bambu print-status (light)", showBackground = false, widthDp = 381, heightDp = 168)

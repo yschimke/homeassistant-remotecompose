@@ -107,6 +107,22 @@ interface HaSession {
         hours: Int = 24,
     ): Map<String, List<HistoryPoint>> = emptyMap()
 
+    /**
+     * Dismiss a single persistent notification by id — removes it from
+     * HA's bell-icon list. Live sessions round-trip
+     * `persistent_notification.dismiss`; HA then re-broadcasts the
+     * shortened list over the subscription. Sessions that can't observe
+     * notifications (demo, offline) no-op.
+     */
+    suspend fun dismissNotification(notificationId: String): Unit = Unit
+
+    /**
+     * Clear every persistent notification at once
+     * (`persistent_notification.dismiss_all`). Default no-op for sessions
+     * with nothing to clear.
+     */
+    suspend fun dismissAllNotifications(): Unit = Unit
+
     suspend fun close()
 }
 
@@ -201,6 +217,18 @@ class LiveHaSession(
     ): Map<String, List<HistoryPoint>> {
         val end = Clock.System.now()
         return client.fetchHistory(entityIds, end - hours.hours, end)
+    }
+    override suspend fun dismissNotification(notificationId: String) {
+        // Optimistically drop it so the bell/sheet update on the tap
+        // without waiting for HA's round-trip; the
+        // `persistent_notifications_updated` refetch then confirms the
+        // authoritative list (and restores it if the dismiss failed).
+        _notifications.value = _notifications.value.filterNot { it.notificationId == notificationId }
+        client.dismissNotification(notificationId)
+    }
+    override suspend fun dismissAllNotifications() {
+        _notifications.value = emptyList()
+        client.dismissAllNotifications()
     }
     override suspend fun close() {
         client.close()

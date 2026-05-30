@@ -32,6 +32,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -623,7 +624,17 @@ private fun DashboardsRoot(
                     }
                 },
                 actions = {
-                    NotificationBell(notifications = notifications)
+                    NotificationBell(
+                        notifications = notifications,
+                        onDismiss = { n ->
+                            scope.launch {
+                                runCatching { session.dismissNotification(n.notificationId) }
+                            }
+                        },
+                        onClearAll = {
+                            scope.launch { runCatching { session.dismissAllNotifications() } }
+                        },
+                    )
                     Surface(
                         onClick = onRetryConnection,
                         color = connectionStatus.color.copy(alpha = 0.16f),
@@ -681,16 +692,27 @@ private fun DashboardsRoot(
                 contentPadding = padding,
             )
         } else {
-            DashboardViewScreen(
-                session = session,
-                urlPath = openedValue,
-                readOnly = readOnly,
-                // Long-press opens the card-history screen, handed the
-                // live snapshot the card was pressed against so the
-                // preview at the top matches the dashboard frame.
-                onCardLongPress = { card, snapshot -> historyTarget = card to snapshot },
-                contentPadding = padding,
-            )
+            // Key on the opened dashboard so switching dashboards
+            // disposes the previous one's whole render subtree —
+            // crucially the per-card `AndroidView` players — instead of
+            // reusing their composition slots. The players are hosted via
+            // `AndroidView(factory = { view })`, whose factory runs once
+            // per node; without a fresh node on switch, a reused slot
+            // keeps showing the previous dashboard's view until a
+            // collapse/expand forces recreation. Re-seeding from the
+            // offline cache makes the new dashboard paint immediately.
+            key(openedValue) {
+                DashboardViewScreen(
+                    session = session,
+                    urlPath = openedValue,
+                    readOnly = readOnly,
+                    // Long-press opens the card-history screen, handed the
+                    // live snapshot the card was pressed against so the
+                    // preview at the top matches the dashboard frame.
+                    onCardLongPress = { card, snapshot -> historyTarget = card to snapshot },
+                    contentPadding = padding,
+                )
+            }
         }
     }
     }
