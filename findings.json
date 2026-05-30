@@ -221,8 +221,8 @@
       "variant": "spec:width=411dp,height=731dp,dpi=320"
     },
     {
-      "annotatedBasename": "Play_Tablet10_01_Home_play_10-inch_home.a11y.png",
-      "cleanBasename": "Play_Tablet10_01_Home_play_10-inch_home.png",
+      "annotatedBasename": "Play_Tablet10_01_Home_play_10_inch_home.a11y.png",
+      "cleanBasename": "Play_Tablet10_01_Home_play_10_inch_home.png",
       "findings": [
         {
           "boundsInScreen": "33,101,1087,370",
@@ -295,8 +295,8 @@
       "variant": "spec:width=800dp,height=1280dp,dpi=224"
     },
     {
-      "annotatedBasename": "Play_Tablet7_01_Home_play_7-inch_home.a11y.png",
-      "cleanBasename": "Play_Tablet7_01_Home_play_7-inch_home.png",
+      "annotatedBasename": "Play_Tablet7_01_Home_play_7_inch_home.a11y.png",
+      "cleanBasename": "Play_Tablet7_01_Home_play_7_inch_home.png",
       "findings": [
         {
           "boundsInScreen": "36,108,864,431",
@@ -633,8 +633,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "CardPreviewsKt.AlarmPanel_Dark_alarm-panel_dark.a11y.png",
-      "cleanBasename": "CardPreviewsKt.AlarmPanel_Dark_alarm-panel_dark.png",
+      "annotatedBasename": "AlarmPanel_Dark_alarm_panel_dark.a11y.png",
+      "cleanBasename": "AlarmPanel_Dark_alarm_panel_dark.png",
       "findings": [
         {
           "boundsInScreen": "0,0,840,994",
@@ -665,8 +665,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "CardPreviewsKt.AlarmPanel_Light_alarm-panel_light.a11y.png",
-      "cleanBasename": "CardPreviewsKt.AlarmPanel_Light_alarm-panel_light.png",
+      "annotatedBasename": "AlarmPanel_Light_alarm_panel_light.a11y.png",
+      "cleanBasename": "AlarmPanel_Light_alarm_panel_light.png",
       "findings": [
         {
           "boundsInScreen": "0,0,840,994",
@@ -697,8 +697,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "AppIconPreviewsKt.AppIcon_Dark_app-icon_dark.a11y.png",
-      "cleanBasename": "AppIconPreviewsKt.AppIcon_Dark_app-icon_dark.png",
+      "annotatedBasename": "AppIcon_Dark_app_icon_dark.a11y.png",
+      "cleanBasename": "AppIcon_Dark_app_icon_dark.png",
       "findings": [],
       "functionName": "AppIcon_Dark",
       "module": "previews",
@@ -707,8 +707,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "AppIconPreviewsKt.AppIcon_Light_app-icon_light.a11y.png",
-      "cleanBasename": "AppIconPreviewsKt.AppIcon_Light_app-icon_light.png",
+      "annotatedBasename": "AppIcon_Light_app_icon_light.a11y.png",
+      "cleanBasename": "AppIcon_Light_app_icon_light.png",
       "findings": [],
       "functionName": "AppIcon_Light",
       "module": "previews",
@@ -717,8 +717,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "CardPreviewsKt.Area_Dark_area_dark.a11y.png",
-      "cleanBasename": "CardPreviewsKt.Area_Dark_area_dark.png",
+      "annotatedBasename": "Area_Dark_area_dark.a11y.png",
+      "cleanBasename": "Area_Dark_area_dark.png",
       "findings": [
         {
           "boundsInScreen": "0,0,735,364",
@@ -756,8 +756,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "CardPreviewsKt.Area_Light_area_light.a11y.png",
-      "cleanBasename": "CardPreviewsKt.Area_Light_area_light.png",
+      "annotatedBasename": "Area_Light_area_light.a11y.png",
+      "cleanBasename": "Area_Light_area_light.png",
       "findings": [
         {
           "boundsInScreen": "0,0,735,364",
@@ -795,8 +795,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "CardPreviewsKt.BambuAms_Dark_bambu_ams_dark.a11y.png",
-      "cleanBasename": "CardPreviewsKt.BambuAms_Dark_bambu_ams_dark.png",
+      "annotatedBasename": "BambuAms_Dark_bambu_ams_dark.a11y.png",
+      "cleanBasename": "BambuAms_Dark_bambu_ams_dark.png",
       "findings": [
         {
           "boundsInScreen": "0,0,997,338",
@@ -813,8 +813,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "CardPreviewsKt.BambuAms_Light_bambu_ams_light.a11y.png",
-      "cleanBasename": "CardPreviewsKt.BambuAms_Light_bambu_ams_light.png",
+      "annotatedBasename": "BambuAms_Light_bambu_ams_light.a11y.png",
+      "cleanBasename": "BambuAms_Light_bambu_ams_light.png",
       "findings": [
         {
           "boundsInScreen": "0,0,997,338",
@@ -831,8 +831,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "CardPreviewsKt.BambuPrintControl_Dark_bambu_print-control_dark.a11y.png",
-      "cleanBasename": "CardPreviewsKt.BambuPrintControl_Dark_bambu_print-control_dark.png",
+      "annotatedBasename": "BambuPrintControl_Dark_bambu_print_control_dark.a11y.png",
+      "cleanBasename": "BambuPrintControl_Dark_bambu_print_control_dark.png",
       "findings": [
         {
           "boundsInScreen": "0,0,997,322",
@@ -849,8 +849,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "CardPreviewsKt.BambuPrintControl_Light_bambu_print-control_light.a11y.png",
-      "cleanBasename": "CardPreviewsKt.BambuPrintControl_Light_bambu_print-control_light.png",
+      "annotatedBasename": "BambuPrintControl_Light_bambu_print_control_light.a11y.png",
+      "cleanBasename": "BambuPrintControl_Light_bambu_print_control_light.png",
       "findings": [
         {
           "boundsInScreen": "0,0,997,322",
@@ -867,8 +867,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "CardPreviewsKt.BambuPrintStatus_Dark_bambu_print-status_dark.a11y.png",
-      "cleanBasename": "CardPreviewsKt.BambuPrintStatus_Dark_bambu_print-status_dark.png",
+      "annotatedBasename": "BambuPrintStatus_Dark_bambu_print_status_dark.a11y.png",
+      "cleanBasename": "BambuPrintStatus_Dark_bambu_print_status_dark.png",
       "findings": [
         {
           "boundsInScreen": "0,0,997,441",
@@ -885,8 +885,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "CardPreviewsKt.BambuPrintStatus_Light_bambu_print-status_light.a11y.png",
-      "cleanBasename": "CardPreviewsKt.BambuPrintStatus_Light_bambu_print-status_light.png",
+      "annotatedBasename": "BambuPrintStatus_Light_bambu_print_status_light.a11y.png",
+      "cleanBasename": "BambuPrintStatus_Light_bambu_print_status_light.png",
       "findings": [
         {
           "boundsInScreen": "0,0,997,441",
@@ -903,8 +903,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "CardPreviewsKt.BambuSpool_Dark_bambu_spool_dark.a11y.png",
-      "cleanBasename": "CardPreviewsKt.BambuSpool_Dark_bambu_spool_dark.png",
+      "annotatedBasename": "BambuSpool_Dark_bambu_spool_dark.a11y.png",
+      "cleanBasename": "BambuSpool_Dark_bambu_spool_dark.png",
       "findings": [
         {
           "boundsInScreen": "0,0,997,252",
@@ -921,8 +921,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "CardPreviewsKt.BambuSpool_Light_bambu_spool_light.a11y.png",
-      "cleanBasename": "CardPreviewsKt.BambuSpool_Light_bambu_spool_light.png",
+      "annotatedBasename": "BambuSpool_Light_bambu_spool_light.a11y.png",
+      "cleanBasename": "BambuSpool_Light_bambu_spool_light.png",
       "findings": [
         {
           "boundsInScreen": "0,0,997,252",
@@ -959,8 +959,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "CardPreviewsKt.Calendar_Dark_calendar_dark.a11y.png",
-      "cleanBasename": "CardPreviewsKt.Calendar_Dark_calendar_dark.png",
+      "annotatedBasename": "Calendar_Dark_calendar_dark.a11y.png",
+      "cleanBasename": "Calendar_Dark_calendar_dark.png",
       "findings": [
         {
           "boundsInScreen": "0,0,997,574",
@@ -977,8 +977,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "CardPreviewsKt.Calendar_Light_calendar_light.a11y.png",
-      "cleanBasename": "CardPreviewsKt.Calendar_Light_calendar_light.png",
+      "annotatedBasename": "Calendar_Light_calendar_light.a11y.png",
+      "cleanBasename": "Calendar_Light_calendar_light.png",
       "findings": [
         {
           "boundsInScreen": "0,0,997,574",
@@ -995,8 +995,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "CardPreviewMatrixKt.CardPreviewMatrix_Button_matrix_button.a11y.png",
-      "cleanBasename": "CardPreviewMatrixKt.CardPreviewMatrix_Button_matrix_button.png",
+      "annotatedBasename": "CardPreviewMatrix_Button_matrix_button.a11y.png",
+      "cleanBasename": "CardPreviewMatrix_Button_matrix_button.png",
       "findings": [
         {
           "boundsInScreen": "21,137,861,381",
@@ -1062,8 +1062,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "CardPreviewMatrixKt.CardPreviewMatrix_Entities_matrix_entities.a11y.png",
-      "cleanBasename": "CardPreviewMatrixKt.CardPreviewMatrix_Entities_matrix_entities.png",
+      "annotatedBasename": "CardPreviewMatrix_Entities_matrix_entities.a11y.png",
+      "cleanBasename": "CardPreviewMatrix_Entities_matrix_entities.png",
       "findings": [
         {
           "boundsInScreen": "21,137,861,598",
@@ -1157,30 +1157,30 @@
           "viewDescription": "android.view.View  desc=\"Living Room\""
         },
         {
-          "boundsInScreen": "640,744,1333,791",
+          "boundsInScreen": "640,744,1333,787",
+          "level": "ERROR",
+          "message": "This item's height is 16dp. Consider making the height of this touch target 48dp or larger.",
+          "type": "TouchTargetSizeCheck",
+          "viewDescription": "android.view.View  desc=\"Living Room\""
+        },
+        {
+          "boundsInScreen": "640,787,1333,797",
+          "level": "ERROR",
+          "message": "This item's height is 4dp. Consider making the height of this touch target 48dp or larger.",
+          "type": "TouchTargetSizeCheck",
+          "viewDescription": "android.view.View  desc=\"Office lamp\""
+        },
+        {
+          "boundsInScreen": "1417,744,2299,790",
           "level": "ERROR",
           "message": "This item's height is 18dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Living Room\""
         },
         {
-          "boundsInScreen": "640,791,1333,797",
+          "boundsInScreen": "1417,790,2299,797",
           "level": "ERROR",
-          "message": "This item's height is 2dp. Consider making the height of this touch target 48dp or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Office lamp\""
-        },
-        {
-          "boundsInScreen": "1417,744,2299,794",
-          "level": "ERROR",
-          "message": "This item's height is 19dp. Consider making the height of this touch target 48dp or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Living Room\""
-        },
-        {
-          "boundsInScreen": "1417,794,2299,797",
-          "level": "ERROR",
-          "message": "This item's height is 1dp. Consider making the height of this touch target 48dp or larger.",
+          "message": "This item's height is 3dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Office lamp\""
         },
@@ -1199,8 +1199,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "CardPreviewMatrixKt.CardPreviewMatrix_Entity_matrix_entity.a11y.png",
-      "cleanBasename": "CardPreviewMatrixKt.CardPreviewMatrix_Entity_matrix_entity.png",
+      "annotatedBasename": "CardPreviewMatrix_Entity_matrix_entity.a11y.png",
+      "cleanBasename": "CardPreviewMatrix_Entity_matrix_entity.png",
       "findings": [
         {
           "boundsInScreen": "21,137,861,226",
@@ -1301,8 +1301,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "CardPreviewMatrixKt.CardPreviewMatrix_Gauge_matrix_gauge.a11y.png",
-      "cleanBasename": "CardPreviewMatrixKt.CardPreviewMatrix_Gauge_matrix_gauge.png",
+      "annotatedBasename": "CardPreviewMatrix_Gauge_matrix_gauge.a11y.png",
+      "cleanBasename": "CardPreviewMatrix_Gauge_matrix_gauge.png",
       "findings": [
         {
           "boundsInScreen": "21,137,861,562",
@@ -1368,8 +1368,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "CardPreviewMatrixKt.CardPreviewMatrix_Humidifier_matrix_humidifier.a11y.png",
-      "cleanBasename": "CardPreviewMatrixKt.CardPreviewMatrix_Humidifier_matrix_humidifier.png",
+      "annotatedBasename": "CardPreviewMatrix_Humidifier_matrix_humidifier.a11y.png",
+      "cleanBasename": "CardPreviewMatrix_Humidifier_matrix_humidifier.png",
       "findings": [
         {
           "boundsInScreen": "21,137,651,846",
@@ -1456,8 +1456,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "CardPreviewMatrixKt.CardPreviewMatrix_Thermostat_matrix_thermostat.a11y.png",
-      "cleanBasename": "CardPreviewMatrixKt.CardPreviewMatrix_Thermostat_matrix_thermostat.png",
+      "annotatedBasename": "CardPreviewMatrix_Thermostat_matrix_thermostat.a11y.png",
+      "cleanBasename": "CardPreviewMatrix_Thermostat_matrix_thermostat.png",
       "findings": [
         {
           "boundsInScreen": "21,137,651,846",
@@ -1544,8 +1544,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "CardPreviewMatrixKt.CardPreviewMatrix_Tile_matrix_tile.a11y.png",
-      "cleanBasename": "CardPreviewMatrixKt.CardPreviewMatrix_Tile_matrix_tile.png",
+      "annotatedBasename": "CardPreviewMatrix_Tile_matrix_tile.a11y.png",
+      "cleanBasename": "CardPreviewMatrix_Tile_matrix_tile.png",
       "findings": [
         {
           "boundsInScreen": "21,137,861,253",
@@ -1639,8 +1639,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "CardPreviewMatrixKt.CardPreviewMatrix_WeatherForecast_matrix_weather-forecast.a11y.png",
-      "cleanBasename": "CardPreviewMatrixKt.CardPreviewMatrix_WeatherForecast_matrix_weather-forecast.png",
+      "annotatedBasename": "CardPreviewMatrix_WeatherForecast_matrix_weather_forecast.a11y.png",
+      "cleanBasename": "CardPreviewMatrix_WeatherForecast_matrix_weather_forecast.png",
       "findings": [
         {
           "boundsInScreen": "21,137,861,494",
@@ -1699,8 +1699,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "CardPreviewsKt.Clock_Dark_clock_dark.a11y.png",
-      "cleanBasename": "CardPreviewsKt.Clock_Dark_clock_dark.png",
+      "annotatedBasename": "Clock_Dark_clock_dark.a11y.png",
+      "cleanBasename": "Clock_Dark_clock_dark.png",
       "findings": [
         {
           "boundsInScreen": "0,0,525,259",
@@ -1717,8 +1717,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "CardPreviewsKt.Clock_Light_clock_light.a11y.png",
-      "cleanBasename": "CardPreviewsKt.Clock_Light_clock_light.png",
+      "annotatedBasename": "Clock_Light_clock_light.a11y.png",
+      "cleanBasename": "Clock_Light_clock_light.png",
       "findings": [
         {
           "boundsInScreen": "0,0,525,259",
@@ -1735,8 +1735,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "CardPreviewsKt.Clock_Seconds_clock_seconds.a11y.png",
-      "cleanBasename": "CardPreviewsKt.Clock_Seconds_clock_seconds.png",
+      "annotatedBasename": "Clock_Seconds_clock_seconds.a11y.png",
+      "cleanBasename": "Clock_Seconds_clock_seconds.png",
       "findings": [
         {
           "boundsInScreen": "0,0,574,259",
@@ -1753,8 +1753,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "CardPreviewsKt.Clock_Zone_clock_zone.a11y.png",
-      "cleanBasename": "CardPreviewsKt.Clock_Zone_clock_zone.png",
+      "annotatedBasename": "Clock_Zone_clock_zone.a11y.png",
+      "cleanBasename": "Clock_Zone_clock_zone.png",
       "findings": [
         {
           "boundsInScreen": "0,0,574,259",
@@ -1771,8 +1771,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "ComponentWidthRuntimeProbeKt.ComponentWidthRuntimeProbe_componentWidth_runtime_probe.a11y.png",
-      "cleanBasename": "ComponentWidthRuntimeProbeKt.ComponentWidthRuntimeProbe_componentWidth_runtime_probe.png",
+      "annotatedBasename": "ComponentWidthRuntimeProbe_componentWidth_runtime_probe.a11y.png",
+      "cleanBasename": "ComponentWidthRuntimeProbe_componentWidth_runtime_probe.png",
       "findings": [
         {
           "boundsInScreen": "21,68,38,105",
@@ -1852,8 +1852,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "DashboardPreviewsKt.Dashboard3dPrintingMobile_dashboard_3d-printing_mobile.a11y.png",
-      "cleanBasename": "DashboardPreviewsKt.Dashboard3dPrintingMobile_dashboard_3d-printing_mobile.png",
+      "annotatedBasename": "Dashboard3dPrintingMobile_dashboard_3d_printing_mobile.a11y.png",
+      "cleanBasename": "Dashboard3dPrintingMobile_dashboard_3d_printing_mobile.png",
       "findings": [
         {
           "boundsInScreen": "32,264,1044,374",
@@ -2024,8 +2024,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "DashboardPreviewsKt.Dashboard3dPrintingTablet_dashboard_3d-printing_tablet.a11y.png",
-      "cleanBasename": "DashboardPreviewsKt.Dashboard3dPrintingTablet_dashboard_3d-printing_tablet.png",
+      "annotatedBasename": "Dashboard3dPrintingTablet_dashboard_3d_printing_tablet.a11y.png",
+      "cleanBasename": "Dashboard3dPrintingTablet_dashboard_3d_printing_tablet.png",
       "findings": [
         {
           "boundsInScreen": "53,264,1002,374",
@@ -2266,8 +2266,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "DashboardPreviewsKt.DashboardClimateMobile_dashboard_climate_mobile.a11y.png",
-      "cleanBasename": "DashboardPreviewsKt.DashboardClimateMobile_dashboard_climate_mobile.png",
+      "annotatedBasename": "DashboardClimateMobile_dashboard_climate_mobile.a11y.png",
+      "cleanBasename": "DashboardClimateMobile_dashboard_climate_mobile.png",
       "findings": [
         {
           "boundsInScreen": "32,264,1044,374",
@@ -2452,8 +2452,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "DashboardPreviewsKt.DashboardClimateTablet_dashboard_climate_tablet.a11y.png",
-      "cleanBasename": "DashboardPreviewsKt.DashboardClimateTablet_dashboard_climate_tablet.png",
+      "annotatedBasename": "DashboardClimateTablet_dashboard_climate_tablet.a11y.png",
+      "cleanBasename": "DashboardClimateTablet_dashboard_climate_tablet.png",
       "findings": [
         {
           "boundsInScreen": "53,264,1002,374",
@@ -2680,8 +2680,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "DashboardPreviewsKt.DashboardEnergyMobile_dashboard_energy_mobile.a11y.png",
-      "cleanBasename": "DashboardPreviewsKt.DashboardEnergyMobile_dashboard_energy_mobile.png",
+      "annotatedBasename": "DashboardEnergyMobile_dashboard_energy_mobile.a11y.png",
+      "cleanBasename": "DashboardEnergyMobile_dashboard_energy_mobile.png",
       "findings": [
         {
           "boundsInScreen": "32,264,1044,374",
@@ -2929,8 +2929,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "DashboardPreviewsKt.DashboardEnergyTablet_dashboard_energy_tablet.a11y.png",
-      "cleanBasename": "DashboardPreviewsKt.DashboardEnergyTablet_dashboard_energy_tablet.png",
+      "annotatedBasename": "DashboardEnergyTablet_dashboard_energy_tablet.a11y.png",
+      "cleanBasename": "DashboardEnergyTablet_dashboard_energy_tablet.png",
       "findings": [
         {
           "boundsInScreen": "53,264,1002,374",
@@ -3178,8 +3178,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "DashboardPreviewsKt.DashboardGithubMobile_dashboard_github_mobile.a11y.png",
-      "cleanBasename": "DashboardPreviewsKt.DashboardGithubMobile_dashboard_github_mobile.png",
+      "annotatedBasename": "DashboardGithubMobile_dashboard_github_mobile.a11y.png",
+      "cleanBasename": "DashboardGithubMobile_dashboard_github_mobile.png",
       "findings": [
         {
           "boundsInScreen": "32,264,1044,374",
@@ -3217,84 +3217,84 @@
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "32,1646,1044,1858",
+          "boundsInScreen": "32,1646,1044,1738",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "32,1879,1044,2343",
+          "boundsInScreen": "32,1759,1044,2223",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "32,2375,1044,2485",
+          "boundsInScreen": "32,2255,1044,2365",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "32,2506,1044,2645",
+          "boundsInScreen": "32,2386,1044,2525",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "32,2666,1044,3014",
+          "boundsInScreen": "32,2546,1044,2894",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "32,3035,1044,3247",
+          "boundsInScreen": "32,2915,1044,3007",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "32,3268,1044,3732",
+          "boundsInScreen": "32,3028,1044,3492",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "32,3764,1044,3874",
+          "boundsInScreen": "32,3524,1044,3634",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "32,3895,1044,4034",
+          "boundsInScreen": "32,3655,1044,3794",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "32,4055,1044,4403",
+          "boundsInScreen": "32,3815,1044,4163",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "32,4424,1044,4676",
+          "boundsInScreen": "32,4184,1044,4276",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "32,4697,1044,4725",
+          "boundsInScreen": "32,4297,1044,4725",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
@@ -3322,102 +3322,123 @@
           "viewDescription": "android.view.View  desc=\"Open PRs\""
         },
         {
-          "boundsInScreen": "32,1879,1044,1995",
+          "boundsInScreen": "32,1759,1044,1875",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Latest PR\""
         },
         {
-          "boundsInScreen": "32,1995,1044,2111",
+          "boundsInScreen": "32,1875,1044,1991",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Latest issue\""
         },
         {
-          "boundsInScreen": "32,2111,1044,2227",
+          "boundsInScreen": "32,1991,1044,2107",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Latest release\""
         },
         {
-          "boundsInScreen": "32,2227,1044,2343",
+          "boundsInScreen": "32,2107,1044,2223",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Latest tag\""
         },
         {
-          "boundsInScreen": "32,2666,1044,2782",
+          "boundsInScreen": "32,2546,1044,2662",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Stars\""
         },
         {
-          "boundsInScreen": "32,2782,1044,2898",
+          "boundsInScreen": "32,2662,1044,2778",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Open issues\""
         },
         {
-          "boundsInScreen": "32,2898,1044,3014",
+          "boundsInScreen": "32,2778,1044,2894",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Open PRs\""
         },
         {
-          "boundsInScreen": "32,3268,1044,3384",
+          "boundsInScreen": "32,3028,1044,3144",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Latest PR\""
         },
         {
-          "boundsInScreen": "32,3384,1044,3500",
+          "boundsInScreen": "32,3144,1044,3260",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Latest issue\""
         },
         {
-          "boundsInScreen": "32,3500,1044,3616",
+          "boundsInScreen": "32,3260,1044,3376",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Latest release\""
         },
         {
-          "boundsInScreen": "32,3616,1044,3732",
+          "boundsInScreen": "32,3376,1044,3492",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Latest tag\""
         },
         {
-          "boundsInScreen": "32,4055,1044,4171",
+          "boundsInScreen": "32,3815,1044,3931",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Stars\""
         },
         {
-          "boundsInScreen": "32,4171,1044,4287",
+          "boundsInScreen": "32,3931,1044,4047",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Open issues\""
         },
         {
-          "boundsInScreen": "32,4287,1044,4403",
+          "boundsInScreen": "32,4047,1044,4163",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Open PRs\""
+        },
+        {
+          "boundsInScreen": "32,4297,1044,4413",
+          "level": "ERROR",
+          "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
+          "type": "TouchTargetSizeCheck",
+          "viewDescription": "android.view.View  desc=\"Latest PR\""
+        },
+        {
+          "boundsInScreen": "32,4413,1044,4529",
+          "level": "ERROR",
+          "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
+          "type": "TouchTargetSizeCheck",
+          "viewDescription": "android.view.View  desc=\"Latest issue\""
+        },
+        {
+          "boundsInScreen": "32,4529,1044,4645",
+          "level": "ERROR",
+          "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
+          "type": "TouchTargetSizeCheck",
+          "viewDescription": "android.view.View  desc=\"Latest release\""
         }
       ],
       "functionName": "DashboardGithubMobile",
@@ -3427,8 +3448,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "DashboardPreviewsKt.DashboardGithubTablet_dashboard_github_tablet.a11y.png",
-      "cleanBasename": "DashboardPreviewsKt.DashboardGithubTablet_dashboard_github_tablet.png",
+      "annotatedBasename": "DashboardGithubTablet_dashboard_github_tablet.a11y.png",
+      "cleanBasename": "DashboardGithubTablet_dashboard_github_tablet.png",
       "findings": [
         {
           "boundsInScreen": "53,264,1002,374",
@@ -3466,63 +3487,63 @@
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "53,1646,1002,1858",
+          "boundsInScreen": "53,1646,1002,1738",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "53,1879,1002,2343",
+          "boundsInScreen": "53,1759,1002,2223",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "53,2375,1002,2485",
+          "boundsInScreen": "53,2255,1002,2365",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "53,2506,1002,2605",
+          "boundsInScreen": "53,2386,1002,2485",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "53,2626,1002,2974",
+          "boundsInScreen": "53,2506,1002,2854",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "53,2995,1002,3207",
+          "boundsInScreen": "53,2875,1002,2967",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "53,3228,1002,3692",
+          "boundsInScreen": "53,2988,1002,3452",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "53,3724,1002,3834",
+          "boundsInScreen": "53,3484,1002,3594",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "53,3855,1002,4147",
+          "boundsInScreen": "53,3615,1002,3907",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
@@ -3550,63 +3571,63 @@
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "1098,924,2047,1136",
+          "boundsInScreen": "1098,924,2047,1016",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "1098,1157,2047,1621",
+          "boundsInScreen": "1098,1037,2047,1501",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "1098,1653,2047,1763",
+          "boundsInScreen": "1098,1533,2047,1643",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "1098,1784,2047,1923",
+          "boundsInScreen": "1098,1664,2047,1803",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "1098,1944,2047,2292",
+          "boundsInScreen": "1098,1824,2047,2172",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "1098,2313,2047,2565",
+          "boundsInScreen": "1098,2193,2047,2285",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "1098,2586,2047,3050",
+          "boundsInScreen": "1098,2306,2047,2770",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "1098,3082,2047,3192",
+          "boundsInScreen": "1098,2802,2047,2912",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "1098,3213,2047,3445",
+          "boundsInScreen": "1098,2933,2047,3165",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
@@ -3634,77 +3655,77 @@
           "viewDescription": "android.view.View  desc=\"Open PRs\""
         },
         {
-          "boundsInScreen": "53,1879,1002,1995",
+          "boundsInScreen": "53,1759,1002,1875",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Latest PR\""
         },
         {
-          "boundsInScreen": "53,1995,1002,2111",
+          "boundsInScreen": "53,1875,1002,1991",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Latest issue\""
         },
         {
-          "boundsInScreen": "53,2111,1002,2227",
+          "boundsInScreen": "53,1991,1002,2107",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Latest release\""
         },
         {
-          "boundsInScreen": "53,2227,1002,2343",
+          "boundsInScreen": "53,2107,1002,2223",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Latest tag\""
         },
         {
-          "boundsInScreen": "53,2626,1002,2742",
+          "boundsInScreen": "53,2506,1002,2622",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Stars\""
         },
         {
-          "boundsInScreen": "53,2742,1002,2858",
+          "boundsInScreen": "53,2622,1002,2738",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Open issues\""
         },
         {
-          "boundsInScreen": "53,2858,1002,2974",
+          "boundsInScreen": "53,2738,1002,2854",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Open PRs\""
         },
         {
-          "boundsInScreen": "53,3228,1002,3344",
+          "boundsInScreen": "53,2988,1002,3104",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Latest PR\""
         },
         {
-          "boundsInScreen": "53,3344,1002,3460",
+          "boundsInScreen": "53,3104,1002,3220",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Latest issue\""
         },
         {
-          "boundsInScreen": "53,3460,1002,3576",
+          "boundsInScreen": "53,3220,1002,3336",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Latest release\""
         },
         {
-          "boundsInScreen": "53,3576,1002,3692",
+          "boundsInScreen": "53,3336,1002,3452",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
@@ -3732,91 +3753,91 @@
           "viewDescription": "android.view.View  desc=\"Open PRs\""
         },
         {
-          "boundsInScreen": "1098,1157,2047,1273",
+          "boundsInScreen": "1098,1037,2047,1153",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Latest PR\""
         },
         {
-          "boundsInScreen": "1098,1273,2047,1389",
+          "boundsInScreen": "1098,1153,2047,1269",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Latest issue\""
         },
         {
-          "boundsInScreen": "1098,1389,2047,1505",
+          "boundsInScreen": "1098,1269,2047,1385",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Latest release\""
         },
         {
-          "boundsInScreen": "1098,1505,2047,1621",
+          "boundsInScreen": "1098,1385,2047,1501",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Latest tag\""
         },
         {
-          "boundsInScreen": "1098,1944,2047,2060",
+          "boundsInScreen": "1098,1824,2047,1940",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Stars\""
         },
         {
-          "boundsInScreen": "1098,2060,2047,2176",
+          "boundsInScreen": "1098,1940,2047,2056",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Open issues\""
         },
         {
-          "boundsInScreen": "1098,2176,2047,2292",
+          "boundsInScreen": "1098,2056,2047,2172",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Open PRs\""
         },
         {
-          "boundsInScreen": "1098,2586,2047,2702",
+          "boundsInScreen": "1098,2306,2047,2422",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Latest PR\""
         },
         {
-          "boundsInScreen": "1098,2702,2047,2818",
+          "boundsInScreen": "1098,2422,2047,2538",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Latest issue\""
         },
         {
-          "boundsInScreen": "1098,2818,2047,2934",
+          "boundsInScreen": "1098,2538,2047,2654",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Latest release\""
         },
         {
-          "boundsInScreen": "1098,2934,2047,3050",
+          "boundsInScreen": "1098,2654,2047,2770",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Latest tag\""
         },
         {
-          "boundsInScreen": "1098,3213,2047,3329",
+          "boundsInScreen": "1098,2933,2047,3049",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"square/okhttp\""
         },
         {
-          "boundsInScreen": "1098,3329,2047,3445",
+          "boundsInScreen": "1098,3049,2047,3165",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
@@ -3830,8 +3851,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "DashboardPreviewsKt.DashboardMeshcoreMobile_dashboard_meshcore_mobile.a11y.png",
-      "cleanBasename": "DashboardPreviewsKt.DashboardMeshcoreMobile_dashboard_meshcore_mobile.png",
+      "annotatedBasename": "DashboardMeshcoreMobile_dashboard_meshcore_mobile.a11y.png",
+      "cleanBasename": "DashboardMeshcoreMobile_dashboard_meshcore_mobile.png",
       "findings": [
         {
           "boundsInScreen": "32,264,1044,374",
@@ -3869,49 +3890,63 @@
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "32,1629,1044,2921",
+          "boundsInScreen": "32,1629,1044,2318",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "32,2942,1044,3052",
+          "boundsInScreen": "32,2339,1044,2449",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "32,3073,1044,3582",
+          "boundsInScreen": "32,2470,1044,2979",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "32,3603,1044,3713",
+          "boundsInScreen": "32,3000,1044,3110",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "32,3734,1044,4198",
+          "boundsInScreen": "32,3131,1044,3595",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "32,4219,1044,4573",
+          "boundsInScreen": "32,3616,1044,3970",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "32,4594,1044,4704",
+          "boundsInScreen": "32,3991,1044,4101",
+          "level": "ERROR",
+          "message": "This item may not have a label readable by screen readers.",
+          "type": "SpeakableTextPresentCheck",
+          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
+        },
+        {
+          "boundsInScreen": "32,4122,1044,4594",
+          "level": "ERROR",
+          "message": "This item may not have a label readable by screen readers.",
+          "type": "SpeakableTextPresentCheck",
+          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
+        },
+        {
+          "boundsInScreen": "32,4615,1044,4725",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
@@ -3932,53 +3967,88 @@
           "viewDescription": "android.view.View  desc=\"Nodes seen\""
         },
         {
-          "boundsInScreen": "32,2447,1044,2563",
+          "boundsInScreen": "32,1844,1044,1960",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Path length\""
         },
         {
-          "boundsInScreen": "32,2563,1044,2679",
+          "boundsInScreen": "32,1960,1044,2076",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Req OK\""
         },
         {
-          "boundsInScreen": "32,2679,1044,2795",
+          "boundsInScreen": "32,2076,1044,2192",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Req fail\""
         },
         {
-          "boundsInScreen": "32,3734,1044,3850",
+          "boundsInScreen": "32,3131,1044,3247",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Battery %\""
         },
         {
-          "boundsInScreen": "32,3850,1044,3966",
+          "boundsInScreen": "32,3247,1044,3363",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Battery V\""
         },
         {
-          "boundsInScreen": "32,3966,1044,4082",
+          "boundsInScreen": "32,3363,1044,3479",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Ch1 voltage\""
         },
         {
-          "boundsInScreen": "32,4082,1044,4198",
+          "boundsInScreen": "32,3479,1044,3595",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Uptime\""
+        },
+        {
+          "boundsInScreen": "63,4148,1012,4232",
+          "level": "ERROR",
+          "message": "This item's height is 32dp. Consider making the height of this touch target 48dp or larger.",
+          "type": "TouchTargetSizeCheck",
+          "viewDescription": "android.view.View  desc=\"Recipient type\""
+        },
+        {
+          "boundsInScreen": "63,4232,1012,4316",
+          "level": "ERROR",
+          "message": "This item's height is 32dp. Consider making the height of this touch target 48dp or larger.",
+          "type": "TouchTargetSizeCheck",
+          "viewDescription": "android.view.View  desc=\"Channel\""
+        },
+        {
+          "boundsInScreen": "63,4316,1012,4400",
+          "level": "ERROR",
+          "message": "This item's height is 32dp. Consider making the height of this touch target 48dp or larger.",
+          "type": "TouchTargetSizeCheck",
+          "viewDescription": "android.view.View  desc=\"Contact / Room\""
+        },
+        {
+          "boundsInScreen": "63,4400,1012,4484",
+          "level": "ERROR",
+          "message": "This item's height is 32dp. Consider making the height of this touch target 48dp or larger.",
+          "type": "TouchTargetSizeCheck",
+          "viewDescription": "android.view.View  desc=\"Message\""
+        },
+        {
+          "boundsInScreen": "63,4484,1012,4567",
+          "level": "ERROR",
+          "message": "This item's height is 32dp. Consider making the height of this touch target 48dp or larger.",
+          "type": "TouchTargetSizeCheck",
+          "viewDescription": "android.view.View  desc=\"Last delivery\""
         }
       ],
       "functionName": "DashboardMeshcoreMobile",
@@ -3988,8 +4058,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "DashboardPreviewsKt.DashboardMeshcoreTablet_dashboard_meshcore_tablet.a11y.png",
-      "cleanBasename": "DashboardPreviewsKt.DashboardMeshcoreTablet_dashboard_meshcore_tablet.png",
+      "annotatedBasename": "DashboardMeshcoreTablet_dashboard_meshcore_tablet.a11y.png",
+      "cleanBasename": "DashboardMeshcoreTablet_dashboard_meshcore_tablet.png",
       "findings": [
         {
           "boundsInScreen": "53,264,1002,374",
@@ -4027,42 +4097,56 @@
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "53,1629,1002,2921",
+          "boundsInScreen": "53,1629,1002,2318",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "53,2942,1002,3052",
+          "boundsInScreen": "53,2339,1002,2449",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "53,3073,1002,3807",
+          "boundsInScreen": "53,2470,1002,3204",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "53,3828,1002,3938",
+          "boundsInScreen": "53,3225,1002,3335",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "53,3959,1002,4423",
+          "boundsInScreen": "53,3356,1002,3820",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "53,4444,1002,4725",
+          "boundsInScreen": "53,3841,1002,4195",
+          "level": "ERROR",
+          "message": "This item may not have a label readable by screen readers.",
+          "type": "SpeakableTextPresentCheck",
+          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
+        },
+        {
+          "boundsInScreen": "53,4216,1002,4326",
+          "level": "ERROR",
+          "message": "This item may not have a label readable by screen readers.",
+          "type": "SpeakableTextPresentCheck",
+          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
+        },
+        {
+          "boundsInScreen": "53,4347,1002,4725",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
@@ -4083,53 +4167,81 @@
           "viewDescription": "android.view.View  desc=\"Nodes seen\""
         },
         {
-          "boundsInScreen": "53,2447,1002,2563",
+          "boundsInScreen": "53,1844,1002,1960",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Path length\""
         },
         {
-          "boundsInScreen": "53,2563,1002,2679",
+          "boundsInScreen": "53,1960,1002,2076",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Req OK\""
         },
         {
-          "boundsInScreen": "53,2679,1002,2795",
+          "boundsInScreen": "53,2076,1002,2192",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Req fail\""
         },
         {
-          "boundsInScreen": "53,3959,1002,4075",
+          "boundsInScreen": "53,3356,1002,3472",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Battery %\""
         },
         {
-          "boundsInScreen": "53,4075,1002,4191",
+          "boundsInScreen": "53,3472,1002,3588",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Battery V\""
         },
         {
-          "boundsInScreen": "53,4191,1002,4307",
+          "boundsInScreen": "53,3588,1002,3704",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Ch1 voltage\""
         },
         {
-          "boundsInScreen": "53,4307,1002,4423",
+          "boundsInScreen": "53,3704,1002,3820",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Uptime\""
+        },
+        {
+          "boundsInScreen": "84,4373,970,4457",
+          "level": "ERROR",
+          "message": "This item's height is 32dp. Consider making the height of this touch target 48dp or larger.",
+          "type": "TouchTargetSizeCheck",
+          "viewDescription": "android.view.View  desc=\"Recipient type\""
+        },
+        {
+          "boundsInScreen": "84,4457,970,4541",
+          "level": "ERROR",
+          "message": "This item's height is 32dp. Consider making the height of this touch target 48dp or larger.",
+          "type": "TouchTargetSizeCheck",
+          "viewDescription": "android.view.View  desc=\"Channel\""
+        },
+        {
+          "boundsInScreen": "84,4541,970,4625",
+          "level": "ERROR",
+          "message": "This item's height is 32dp. Consider making the height of this touch target 48dp or larger.",
+          "type": "TouchTargetSizeCheck",
+          "viewDescription": "android.view.View  desc=\"Contact / Room\""
+        },
+        {
+          "boundsInScreen": "84,4625,970,4709",
+          "level": "ERROR",
+          "message": "This item's height is 32dp. Consider making the height of this touch target 48dp or larger.",
+          "type": "TouchTargetSizeCheck",
+          "viewDescription": "android.view.View  desc=\"Message\""
         }
       ],
       "functionName": "DashboardMeshcoreTablet",
@@ -4139,8 +4251,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "DashboardPreviewsKt.DashboardNetworksMobile_dashboard_networks_mobile.a11y.png",
-      "cleanBasename": "DashboardPreviewsKt.DashboardNetworksMobile_dashboard_networks_mobile.png",
+      "annotatedBasename": "DashboardNetworksMobile_dashboard_networks_mobile.a11y.png",
+      "cleanBasename": "DashboardNetworksMobile_dashboard_networks_mobile.png",
       "findings": [
         {
           "boundsInScreen": "32,264,1044,374",
@@ -4178,35 +4290,35 @@
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "32,1407,1044,1742",
+          "boundsInScreen": "32,1407,1044,1542",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "32,1763,1044,1873",
+          "boundsInScreen": "32,1563,1044,1673",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "32,1894,1044,2902",
+          "boundsInScreen": "32,1694,1044,2702",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "32,2923,1044,3033",
+          "boundsInScreen": "32,2723,1044,2833",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "32,3054,1044,3432",
+          "boundsInScreen": "32,2854,1044,3232",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
@@ -4248,8 +4360,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "DashboardPreviewsKt.DashboardNetworksTablet_dashboard_networks_tablet.a11y.png",
-      "cleanBasename": "DashboardPreviewsKt.DashboardNetworksTablet_dashboard_networks_tablet.png",
+      "annotatedBasename": "DashboardNetworksTablet_dashboard_networks_tablet.a11y.png",
+      "cleanBasename": "DashboardNetworksTablet_dashboard_networks_tablet.png",
       "findings": [
         {
           "boundsInScreen": "53,264,1002,374",
@@ -4287,35 +4399,35 @@
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "53,1407,1002,1782",
+          "boundsInScreen": "53,1407,1002,1542",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "53,1803,1002,1913",
+          "boundsInScreen": "53,1563,1002,1673",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "53,1934,1002,2942",
+          "boundsInScreen": "53,1694,1002,2702",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "53,2963,1002,3073",
+          "boundsInScreen": "53,2723,1002,2833",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "53,3094,1002,3472",
+          "boundsInScreen": "53,2854,1002,3232",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
@@ -4357,8 +4469,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "DashboardPreviewsKt.DashboardSecurityMobile_dashboard_security_mobile.a11y.png",
-      "cleanBasename": "DashboardPreviewsKt.DashboardSecurityMobile_dashboard_security_mobile.png",
+      "annotatedBasename": "DashboardSecurityMobile_dashboard_security_mobile.a11y.png",
+      "cleanBasename": "DashboardSecurityMobile_dashboard_security_mobile.png",
       "findings": [
         {
           "boundsInScreen": "32,264,1044,374",
@@ -4487,8 +4599,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "DashboardPreviewsKt.DashboardSecurityTablet_dashboard_security_tablet.a11y.png",
-      "cleanBasename": "DashboardPreviewsKt.DashboardSecurityTablet_dashboard_security_tablet.png",
+      "annotatedBasename": "DashboardSecurityTablet_dashboard_security_tablet.a11y.png",
+      "cleanBasename": "DashboardSecurityTablet_dashboard_security_tablet.png",
       "findings": [
         {
           "boundsInScreen": "53,264,1002,374",
@@ -4617,8 +4729,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "CardPreviewsKt.Dashboard_Dark_dashboard_dark.a11y.png",
-      "cleanBasename": "CardPreviewsKt.Dashboard_Dark_dashboard_dark.png",
+      "annotatedBasename": "Dashboard_Dark_dashboard_dark.a11y.png",
+      "cleanBasename": "Dashboard_Dark_dashboard_dark.png",
       "findings": [
         {
           "boundsInScreen": "0,0,997,95",
@@ -4691,8 +4803,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "CardPreviewsKt.Dashboard_Light_dashboard_light.a11y.png",
-      "cleanBasename": "CardPreviewsKt.Dashboard_Light_dashboard_light.png",
+      "annotatedBasename": "Dashboard_Light_dashboard_light.a11y.png",
+      "cleanBasename": "Dashboard_Light_dashboard_light.png",
       "findings": [
         {
           "boundsInScreen": "0,0,997,95",
@@ -4765,8 +4877,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "CardPreviewsKt.Entities_Dark_entities_dark.a11y.png",
-      "cleanBasename": "CardPreviewsKt.Entities_Dark_entities_dark.png",
+      "annotatedBasename": "Entities_Dark_entities_dark.a11y.png",
+      "cleanBasename": "Entities_Dark_entities_dark.png",
       "findings": [
         {
           "boundsInScreen": "0,0,997,441",
@@ -4804,8 +4916,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "CardPreviewsKt.Entities_Light_entities_light.a11y.png",
-      "cleanBasename": "CardPreviewsKt.Entities_Light_entities_light.png",
+      "annotatedBasename": "Entities_Light_entities_light.a11y.png",
+      "cleanBasename": "Entities_Light_entities_light.png",
       "findings": [
         {
           "boundsInScreen": "0,0,997,441",
@@ -4843,8 +4955,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "ResponsiveCardPreviewsKt.Entities_Responsive_Light_entities_responsive_narrow.a11y.png",
-      "cleanBasename": "ResponsiveCardPreviewsKt.Entities_Responsive_Light_entities_responsive_narrow.png",
+      "annotatedBasename": "Entities_Responsive_Light_entities_responsive_narrow.a11y.png",
+      "cleanBasename": "Entities_Responsive_Light_entities_responsive_narrow.png",
       "findings": [
         {
           "boundsInScreen": "0,0,679,469",
@@ -4882,8 +4994,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "CardPreviewsKt.EntityFilter_Dark_entity-filter_dark.a11y.png",
-      "cleanBasename": "CardPreviewsKt.EntityFilter_Dark_entity-filter_dark.png",
+      "annotatedBasename": "EntityFilter_Dark_entity_filter_dark.a11y.png",
+      "cleanBasename": "EntityFilter_Dark_entity_filter_dark.png",
       "findings": [
         {
           "boundsInScreen": "0,0,997,388",
@@ -4907,8 +5019,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "CardPreviewsKt.EntityFilter_Light_entity-filter_light.a11y.png",
-      "cleanBasename": "CardPreviewsKt.EntityFilter_Light_entity-filter_light.png",
+      "annotatedBasename": "EntityFilter_Light_entity_filter_light.a11y.png",
+      "cleanBasename": "EntityFilter_Light_entity_filter_light.png",
       "findings": [
         {
           "boundsInScreen": "0,0,997,388",
@@ -4932,8 +5044,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "CardPreviewsKt.Entity_Dark_entity_dark.a11y.png",
-      "cleanBasename": "CardPreviewsKt.Entity_Dark_entity_dark.png",
+      "annotatedBasename": "Entity_Dark_entity_dark.a11y.png",
+      "cleanBasename": "Entity_Dark_entity_dark.png",
       "findings": [
         {
           "boundsInScreen": "0,0,488,236",
@@ -4950,8 +5062,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "CardPreviewsKt.Entity_Light_entity_light.a11y.png",
-      "cleanBasename": "CardPreviewsKt.Entity_Light_entity_light.png",
+      "annotatedBasename": "Entity_Light_entity_light.a11y.png",
+      "cleanBasename": "Entity_Light_entity_light.png",
       "findings": [
         {
           "boundsInScreen": "0,0,488,236",
@@ -5008,8 +5120,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "GarageShutterCardPreviewsKt.Garage_TwoEntities_Dark_garage_two-entities_dark.a11y.png",
-      "cleanBasename": "GarageShutterCardPreviewsKt.Garage_TwoEntities_Dark_garage_two-entities_dark.png",
+      "annotatedBasename": "Garage_TwoEntities_Dark_garage_two_entities_dark.a11y.png",
+      "cleanBasename": "Garage_TwoEntities_Dark_garage_two_entities_dark.png",
       "findings": [
         {
           "boundsInScreen": "0,0,735,889",
@@ -5068,8 +5180,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "GarageShutterCardPreviewsKt.Garage_TwoEntities_Light_garage_two-entities_light.a11y.png",
-      "cleanBasename": "GarageShutterCardPreviewsKt.Garage_TwoEntities_Light_garage_two-entities_light.png",
+      "annotatedBasename": "Garage_TwoEntities_Light_garage_two_entities_light.a11y.png",
+      "cleanBasename": "Garage_TwoEntities_Light_garage_two_entities_light.png",
       "findings": [
         {
           "boundsInScreen": "0,0,735,889",
@@ -5148,8 +5260,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "CardPreviewsKt.Gauge_Dark_gauge_dark.a11y.png",
-      "cleanBasename": "CardPreviewsKt.Gauge_Dark_gauge_dark.png",
+      "annotatedBasename": "Gauge_Dark_gauge_dark.a11y.png",
+      "cleanBasename": "Gauge_Dark_gauge_dark.png",
       "findings": [
         {
           "boundsInScreen": "0,0,488,391",
@@ -5166,8 +5278,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "CardPreviewsKt.Gauge_Light_gauge_light.a11y.png",
-      "cleanBasename": "CardPreviewsKt.Gauge_Light_gauge_light.png",
+      "annotatedBasename": "Gauge_Light_gauge_light.a11y.png",
+      "cleanBasename": "Gauge_Light_gauge_light.png",
       "findings": [
         {
           "boundsInScreen": "0,0,488,391",
@@ -5184,8 +5296,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "CardPreviewsKt.Glance_Dark_glance_dark.a11y.png",
-      "cleanBasename": "CardPreviewsKt.Glance_Dark_glance_dark.png",
+      "annotatedBasename": "Glance_Dark_glance_dark.a11y.png",
+      "cleanBasename": "Glance_Dark_glance_dark.png",
       "findings": [
         {
           "boundsInScreen": "0,0,997,388",
@@ -5209,8 +5321,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "CardPreviewsKt.Glance_Light_glance_light.a11y.png",
-      "cleanBasename": "CardPreviewsKt.Glance_Light_glance_light.png",
+      "annotatedBasename": "Glance_Light_glance_light.a11y.png",
+      "cleanBasename": "Glance_Light_glance_light.png",
       "findings": [
         {
           "boundsInScreen": "0,0,997,388",
@@ -5234,8 +5346,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "ResponsiveCardPreviewsKt.Glance_Responsive_Dark_glance_responsive_narrow.a11y.png",
-      "cleanBasename": "ResponsiveCardPreviewsKt.Glance_Responsive_Dark_glance_responsive_narrow.png",
+      "annotatedBasename": "Glance_Responsive_Dark_glance_responsive_narrow.a11y.png",
+      "cleanBasename": "Glance_Responsive_Dark_glance_responsive_narrow.png",
       "findings": [
         {
           "boundsInScreen": "0,0,679,443",
@@ -5259,8 +5371,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "CardPreviewsKt.Grid_Dark_grid_dark.a11y.png",
-      "cleanBasename": "CardPreviewsKt.Grid_Dark_grid_dark.png",
+      "annotatedBasename": "Grid_Dark_grid_dark.a11y.png",
+      "cleanBasename": "Grid_Dark_grid_dark.png",
       "findings": [
         {
           "boundsInScreen": "0,0,819,244",
@@ -5277,8 +5389,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "CardPreviewsKt.Grid_Light_grid_light.a11y.png",
-      "cleanBasename": "CardPreviewsKt.Grid_Light_grid_light.png",
+      "annotatedBasename": "Grid_Light_grid_light.a11y.png",
+      "cleanBasename": "Grid_Light_grid_light.png",
       "findings": [
         {
           "boundsInScreen": "0,0,819,244",
@@ -5295,8 +5407,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "CardPreviewsKt.Heading_Dark_heading_dark.a11y.png",
-      "cleanBasename": "CardPreviewsKt.Heading_Dark_heading_dark.png",
+      "annotatedBasename": "Heading_Dark_heading_dark.a11y.png",
+      "cleanBasename": "Heading_Dark_heading_dark.png",
       "findings": [
         {
           "boundsInScreen": "0,0,280,44",
@@ -5313,8 +5425,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "CardPreviewsKt.Heading_Light_heading_light.a11y.png",
-      "cleanBasename": "CardPreviewsKt.Heading_Light_heading_light.png",
+      "annotatedBasename": "Heading_Light_heading_light.a11y.png",
+      "cleanBasename": "Heading_Light_heading_light.png",
       "findings": [
         {
           "boundsInScreen": "0,0,280,44",
@@ -5331,8 +5443,44 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "CardPreviewsKt.HistoryGraph_Dark_history-graph_dark.a11y.png",
-      "cleanBasename": "CardPreviewsKt.HistoryGraph_Dark_history-graph_dark.png",
+      "annotatedBasename": "HistoryGraphNoData_Dark_history_graph_no_data_dark.a11y.png",
+      "cleanBasename": "HistoryGraphNoData_Dark_history_graph_no_data_dark.png",
+      "findings": [
+        {
+          "boundsInScreen": "0,0,784,630",
+          "level": "ERROR",
+          "message": "This item may not have a label readable by screen readers.",
+          "type": "SpeakableTextPresentCheck",
+          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
+        }
+      ],
+      "functionName": "HistoryGraphNoData_Dark",
+      "module": "previews",
+      "previewId": "ee.schimke.ha.previews.CardPreviewsKt.HistoryGraphNoData_Dark_history-graph no-data (dark)",
+      "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
+      "variant": ""
+    },
+    {
+      "annotatedBasename": "HistoryGraphNoData_Light_history_graph_no_data_light.a11y.png",
+      "cleanBasename": "HistoryGraphNoData_Light_history_graph_no_data_light.png",
+      "findings": [
+        {
+          "boundsInScreen": "0,0,784,630",
+          "level": "ERROR",
+          "message": "This item may not have a label readable by screen readers.",
+          "type": "SpeakableTextPresentCheck",
+          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
+        }
+      ],
+      "functionName": "HistoryGraphNoData_Light",
+      "module": "previews",
+      "previewId": "ee.schimke.ha.previews.CardPreviewsKt.HistoryGraphNoData_Light_history-graph no-data (light)",
+      "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
+      "variant": ""
+    },
+    {
+      "annotatedBasename": "HistoryGraph_Dark_history_graph_dark.a11y.png",
+      "cleanBasename": "HistoryGraph_Dark_history_graph_dark.png",
       "findings": [
         {
           "boundsInScreen": "0,0,997,469",
@@ -5349,8 +5497,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "CardPreviewsKt.HistoryGraph_Light_history-graph_light.a11y.png",
-      "cleanBasename": "CardPreviewsKt.HistoryGraph_Light_history-graph_light.png",
+      "annotatedBasename": "HistoryGraph_Light_history_graph_light.a11y.png",
+      "cleanBasename": "HistoryGraph_Light_history_graph_light.png",
       "findings": [
         {
           "boundsInScreen": "0,0,997,469",
@@ -5367,8 +5515,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "CardPreviewsKt.HorizontalStack_Dark_horizontal-stack_dark.a11y.png",
-      "cleanBasename": "CardPreviewsKt.HorizontalStack_Dark_horizontal-stack_dark.png",
+      "annotatedBasename": "HorizontalStack_Dark_horizontal_stack_dark.a11y.png",
+      "cleanBasename": "HorizontalStack_Dark_horizontal_stack_dark.png",
       "findings": [
         {
           "boundsInScreen": "0,0,399,241",
@@ -5385,8 +5533,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "CardPreviewsKt.HorizontalStack_Light_horizontal-stack_light.a11y.png",
-      "cleanBasename": "CardPreviewsKt.HorizontalStack_Light_horizontal-stack_light.png",
+      "annotatedBasename": "HorizontalStack_Light_horizontal_stack_light.a11y.png",
+      "cleanBasename": "HorizontalStack_Light_horizontal_stack_light.png",
       "findings": [
         {
           "boundsInScreen": "0,0,399,241",
@@ -5403,8 +5551,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "CardPreviewsKt.Humidifier_Dark_humidifier_dark.a11y.png",
-      "cleanBasename": "CardPreviewsKt.Humidifier_Dark_humidifier_dark.png",
+      "annotatedBasename": "Humidifier_Dark_humidifier_dark.a11y.png",
+      "cleanBasename": "Humidifier_Dark_humidifier_dark.png",
       "findings": [
         {
           "boundsInScreen": "0,0,630,758",
@@ -5435,8 +5583,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "CardPreviewsKt.Humidifier_Light_humidifier_light.a11y.png",
-      "cleanBasename": "CardPreviewsKt.Humidifier_Light_humidifier_light.png",
+      "annotatedBasename": "Humidifier_Light_humidifier_light.a11y.png",
+      "cleanBasename": "Humidifier_Light_humidifier_light.png",
       "findings": [
         {
           "boundsInScreen": "0,0,630,758",
@@ -5467,8 +5615,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "ImagePreviewsKt.ImageInline_Dark_image-inline_dark.a11y.png",
-      "cleanBasename": "ImagePreviewsKt.ImageInline_Dark_image-inline_dark.png",
+      "annotatedBasename": "ImageInline_Dark_image_inline_dark.a11y.png",
+      "cleanBasename": "ImageInline_Dark_image_inline_dark.png",
       "findings": [
         {
           "boundsInScreen": "0,0,525,252",
@@ -5485,8 +5633,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "ImagePreviewsKt.ImageInline_Light_image-inline_light.a11y.png",
-      "cleanBasename": "ImagePreviewsKt.ImageInline_Light_image-inline_light.png",
+      "annotatedBasename": "ImageInline_Light_image_inline_light.a11y.png",
+      "cleanBasename": "ImageInline_Light_image_inline_light.png",
       "findings": [
         {
           "boundsInScreen": "0,0,525,252",
@@ -5503,8 +5651,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "ImagePreviewsKt.ImageNamed_Dark_image-named_dark.a11y.png",
-      "cleanBasename": "ImagePreviewsKt.ImageNamed_Dark_image-named_dark.png",
+      "annotatedBasename": "ImageNamed_Dark_image_named_dark.a11y.png",
+      "cleanBasename": "ImageNamed_Dark_image_named_dark.png",
       "findings": [
         {
           "boundsInScreen": "0,0,525,252",
@@ -5521,8 +5669,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "ImagePreviewsKt.ImageNamed_Light_image-named_light.a11y.png",
-      "cleanBasename": "ImagePreviewsKt.ImageNamed_Light_image-named_light.png",
+      "annotatedBasename": "ImageNamed_Light_image_named_light.a11y.png",
+      "cleanBasename": "ImageNamed_Light_image_named_light.png",
       "findings": [
         {
           "boundsInScreen": "0,0,525,252",
@@ -5539,8 +5687,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "ImagePreviewsKt.ImageUrl_FakeCoil_Dark_image-url_fake-coil_dark.a11y.png",
-      "cleanBasename": "ImagePreviewsKt.ImageUrl_FakeCoil_Dark_image-url_fake-coil_dark.png",
+      "annotatedBasename": "ImageUrl_FakeCoil_Dark_image_url_fake_coil_dark.a11y.png",
+      "cleanBasename": "ImageUrl_FakeCoil_Dark_image_url_fake_coil_dark.png",
       "findings": [
         {
           "boundsInScreen": "0,0,525,252",
@@ -5557,8 +5705,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "ImagePreviewsKt.ImageUrl_FakeCoil_Light_image-url_fake-coil_light.a11y.png",
-      "cleanBasename": "ImagePreviewsKt.ImageUrl_FakeCoil_Light_image-url_fake-coil_light.png",
+      "annotatedBasename": "ImageUrl_FakeCoil_Light_image_url_fake_coil_light.a11y.png",
+      "cleanBasename": "ImageUrl_FakeCoil_Light_image_url_fake_coil_light.png",
       "findings": [
         {
           "boundsInScreen": "0,0,525,252",
@@ -5575,8 +5723,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "ImagePreviewsKt.ImageUrl_Probe_Frame0_image-url_probe_frame_0.a11y.png",
-      "cleanBasename": "ImagePreviewsKt.ImageUrl_Probe_Frame0_image-url_probe_frame_0.png",
+      "annotatedBasename": "ImageUrl_Probe_Frame0_image_url_probe_frame_0.a11y.png",
+      "cleanBasename": "ImageUrl_Probe_Frame0_image_url_probe_frame_0.png",
       "findings": [
         {
           "boundsInScreen": "0,0,525,252",
@@ -5593,8 +5741,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "ImagePreviewsKt.ImageUrl_Probe_Frame1_image-url_probe_frame_1.a11y.png",
-      "cleanBasename": "ImagePreviewsKt.ImageUrl_Probe_Frame1_image-url_probe_frame_1.png",
+      "annotatedBasename": "ImageUrl_Probe_Frame1_image_url_probe_frame_1.a11y.png",
+      "cleanBasename": "ImageUrl_Probe_Frame1_image_url_probe_frame_1.png",
       "findings": [
         {
           "boundsInScreen": "0,0,525,252",
@@ -5611,8 +5759,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "CardPreviewsKt.LightCard_Dark_light_card_dark.a11y.png",
-      "cleanBasename": "CardPreviewsKt.LightCard_Dark_light_card_dark.png",
+      "annotatedBasename": "LightCard_Dark_light_card_dark.a11y.png",
+      "cleanBasename": "LightCard_Dark_light_card_dark.png",
       "findings": [
         {
           "boundsInScreen": "0,0,630,653",
@@ -5629,8 +5777,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "CardPreviewsKt.LightCard_Light_light_card_light.a11y.png",
-      "cleanBasename": "CardPreviewsKt.LightCard_Light_light_card_light.png",
+      "annotatedBasename": "LightCard_Light_light_card_light.a11y.png",
+      "cleanBasename": "LightCard_Light_light_card_light.png",
       "findings": [
         {
           "boundsInScreen": "0,0,630,653",
@@ -5647,8 +5795,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "CardPreviewsKt.Logbook_Dark_logbook_dark.a11y.png",
-      "cleanBasename": "CardPreviewsKt.Logbook_Dark_logbook_dark.png",
+      "annotatedBasename": "Logbook_Dark_logbook_dark.a11y.png",
+      "cleanBasename": "Logbook_Dark_logbook_dark.png",
       "findings": [
         {
           "boundsInScreen": "0,0,997,391",
@@ -5665,8 +5813,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "CardPreviewsKt.Logbook_Light_logbook_light.a11y.png",
-      "cleanBasename": "CardPreviewsKt.Logbook_Light_logbook_light.png",
+      "annotatedBasename": "Logbook_Light_logbook_light.a11y.png",
+      "cleanBasename": "Logbook_Light_logbook_light.png",
       "findings": [
         {
           "boundsInScreen": "0,0,997,391",
@@ -5683,8 +5831,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "CardPreviewsKt.Markdown_Dark_markdown_dark.a11y.png",
-      "cleanBasename": "CardPreviewsKt.Markdown_Dark_markdown_dark.png",
+      "annotatedBasename": "Markdown_Dark_markdown_dark.a11y.png",
+      "cleanBasename": "Markdown_Dark_markdown_dark.png",
       "findings": [
         {
           "boundsInScreen": "0,0,997,275",
@@ -5701,8 +5849,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "CardPreviewsKt.Markdown_Light_markdown_light.a11y.png",
-      "cleanBasename": "CardPreviewsKt.Markdown_Light_markdown_light.png",
+      "annotatedBasename": "Markdown_Light_markdown_light.a11y.png",
+      "cleanBasename": "Markdown_Light_markdown_light.png",
       "findings": [
         {
           "boundsInScreen": "0,0,997,275",
@@ -5719,8 +5867,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "ResponsiveCardPreviewsKt.Markdown_Responsive_Light_markdown_responsive_narrow.a11y.png",
-      "cleanBasename": "ResponsiveCardPreviewsKt.Markdown_Responsive_Light_markdown_responsive_narrow.png",
+      "annotatedBasename": "Markdown_Responsive_Light_markdown_responsive_narrow.a11y.png",
+      "cleanBasename": "Markdown_Responsive_Light_markdown_responsive_narrow.png",
       "findings": [
         {
           "boundsInScreen": "0,0,679,364",
@@ -5737,8 +5885,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "CardPreviewsKt.MediaControl_Dark_media-control_dark.a11y.png",
-      "cleanBasename": "CardPreviewsKt.MediaControl_Dark_media-control_dark.png",
+      "annotatedBasename": "MediaControl_Dark_media_control_dark.a11y.png",
+      "cleanBasename": "MediaControl_Dark_media_control_dark.png",
       "findings": [
         {
           "boundsInScreen": "0,0,997,441",
@@ -5776,8 +5924,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "CardPreviewsKt.MediaControl_Light_media-control_light.a11y.png",
-      "cleanBasename": "CardPreviewsKt.MediaControl_Light_media-control_light.png",
+      "annotatedBasename": "MediaControl_Light_media_control_light.a11y.png",
+      "cleanBasename": "MediaControl_Light_media_control_light.png",
       "findings": [
         {
           "boundsInScreen": "0,0,997,441",
@@ -5815,8 +5963,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "CardPreviewsKt.PictureElements_Dark_picture-elements_dark.a11y.png",
-      "cleanBasename": "CardPreviewsKt.PictureElements_Dark_picture-elements_dark.png",
+      "annotatedBasename": "PictureElements_Dark_picture_elements_dark.a11y.png",
+      "cleanBasename": "PictureElements_Dark_picture_elements_dark.png",
       "findings": [
         {
           "boundsInScreen": "0,0,997,469",
@@ -5840,8 +5988,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "CardPreviewsKt.PictureElements_Light_picture-elements_light.a11y.png",
-      "cleanBasename": "CardPreviewsKt.PictureElements_Light_picture-elements_light.png",
+      "annotatedBasename": "PictureElements_Light_picture_elements_light.a11y.png",
+      "cleanBasename": "PictureElements_Light_picture_elements_light.png",
       "findings": [
         {
           "boundsInScreen": "0,0,997,469",
@@ -5865,8 +6013,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "PictureEntityStrategyPreviewsKt.PictureEntity_AppMode_Dark_picture-entity_app-mode_dark.a11y.png",
-      "cleanBasename": "PictureEntityStrategyPreviewsKt.PictureEntity_AppMode_Dark_picture-entity_app-mode_dark.png",
+      "annotatedBasename": "PictureEntity_AppMode_Dark_picture_entity_app_mode_dark.a11y.png",
+      "cleanBasename": "PictureEntity_AppMode_Dark_picture_entity_app_mode_dark.png",
       "findings": [
         {
           "boundsInScreen": "0,0,945,420",
@@ -5883,8 +6031,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "PictureEntityStrategyPreviewsKt.PictureEntity_AppMode_Light_picture-entity_app-mode_light.a11y.png",
-      "cleanBasename": "PictureEntityStrategyPreviewsKt.PictureEntity_AppMode_Light_picture-entity_app-mode_light.png",
+      "annotatedBasename": "PictureEntity_AppMode_Light_picture_entity_app_mode_light.a11y.png",
+      "cleanBasename": "PictureEntity_AppMode_Light_picture_entity_app_mode_light.png",
       "findings": [
         {
           "boundsInScreen": "0,0,945,420",
@@ -5901,8 +6049,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "CardPreviewsKt.PictureEntity_Dark_picture-entity_dark.a11y.png",
-      "cleanBasename": "CardPreviewsKt.PictureEntity_Dark_picture-entity_dark.png",
+      "annotatedBasename": "PictureEntity_Dark_picture_entity_dark.a11y.png",
+      "cleanBasename": "PictureEntity_Dark_picture_entity_dark.png",
       "findings": [
         {
           "boundsInScreen": "0,0,819,420",
@@ -5919,8 +6067,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "PictureEntityStrategyPreviewsKt.PictureEntity_IconFallback_Light_picture-entity_icon-fallback_light.a11y.png",
-      "cleanBasename": "PictureEntityStrategyPreviewsKt.PictureEntity_IconFallback_Light_picture-entity_icon-fallback_light.png",
+      "annotatedBasename": "PictureEntity_IconFallback_Light_picture_entity_icon_fallback_light.a11y.png",
+      "cleanBasename": "PictureEntity_IconFallback_Light_picture_entity_icon_fallback_light.png",
       "findings": [
         {
           "boundsInScreen": "0,0,945,420",
@@ -5937,8 +6085,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "CardPreviewsKt.PictureEntity_Light_picture-entity_light.a11y.png",
-      "cleanBasename": "CardPreviewsKt.PictureEntity_Light_picture-entity_light.png",
+      "annotatedBasename": "PictureEntity_Light_picture_entity_light.a11y.png",
+      "cleanBasename": "PictureEntity_Light_picture_entity_light.png",
       "findings": [
         {
           "boundsInScreen": "0,0,819,420",
@@ -5955,8 +6103,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "PictureEntityStrategyPreviewsKt.PictureEntity_WidgetMode_Light_picture-entity_widget-mode_light.a11y.png",
-      "cleanBasename": "PictureEntityStrategyPreviewsKt.PictureEntity_WidgetMode_Light_picture-entity_widget-mode_light.png",
+      "annotatedBasename": "PictureEntity_WidgetMode_Light_picture_entity_widget_mode_light.a11y.png",
+      "cleanBasename": "PictureEntity_WidgetMode_Light_picture_entity_widget_mode_light.png",
       "findings": [
         {
           "boundsInScreen": "0,0,945,420",
@@ -5973,8 +6121,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "CardPreviewsKt.PictureGlance_Dark_picture-glance_dark.a11y.png",
-      "cleanBasename": "CardPreviewsKt.PictureGlance_Dark_picture-glance_dark.png",
+      "annotatedBasename": "PictureGlance_Dark_picture_glance_dark.a11y.png",
+      "cleanBasename": "PictureGlance_Dark_picture_glance_dark.png",
       "findings": [
         {
           "boundsInScreen": "0,0,997,441",
@@ -6019,8 +6167,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "CardPreviewsKt.PictureGlance_Light_picture-glance_light.a11y.png",
-      "cleanBasename": "CardPreviewsKt.PictureGlance_Light_picture-glance_light.png",
+      "annotatedBasename": "PictureGlance_Light_picture_glance_light.a11y.png",
+      "cleanBasename": "PictureGlance_Light_picture_glance_light.png",
       "findings": [
         {
           "boundsInScreen": "0,0,997,441",
@@ -6065,8 +6213,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "CardPreviewsKt.Picture_Dark_picture_dark.a11y.png",
-      "cleanBasename": "CardPreviewsKt.Picture_Dark_picture_dark.png",
+      "annotatedBasename": "Picture_Dark_picture_dark.a11y.png",
+      "cleanBasename": "Picture_Dark_picture_dark.png",
       "findings": [
         {
           "boundsInScreen": "0,0,840,364",
@@ -6083,8 +6231,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "CardPreviewsKt.Picture_Light_picture_light.a11y.png",
-      "cleanBasename": "CardPreviewsKt.Picture_Light_picture_light.png",
+      "annotatedBasename": "Picture_Light_picture_light.a11y.png",
+      "cleanBasename": "Picture_Light_picture_light.png",
       "findings": [
         {
           "boundsInScreen": "0,0,840,364",
@@ -6101,8 +6249,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "PlayStoreGraphicsPreviewsKt.Play_Feature_1024x500_play_feature_1024x500.a11y.png",
-      "cleanBasename": "PlayStoreGraphicsPreviewsKt.Play_Feature_1024x500_play_feature_1024x500.png",
+      "annotatedBasename": "Play_Feature_1024x500_play_feature_1024x500.a11y.png",
+      "cleanBasename": "Play_Feature_1024x500_play_feature_1024x500.png",
       "findings": [],
       "functionName": "Play_Feature_1024x500",
       "module": "previews",
@@ -6112,7 +6260,7 @@
     },
     {
       "annotatedBasename": "",
-      "cleanBasename": "PlayStoreGraphicsPreviewsKt.Play_Icon_512_play_icon_512.png",
+      "cleanBasename": "Play_Icon_512_play_icon_512.png",
       "findings": [],
       "functionName": "Play_Icon_512",
       "module": "previews",
@@ -6121,8 +6269,8 @@
       "variant": "spec:width=256dp,height=256dp,dpi=320"
     },
     {
-      "annotatedBasename": "CardPreviewsKt.Sensor_Dark_sensor_dark.a11y.png",
-      "cleanBasename": "CardPreviewsKt.Sensor_Dark_sensor_dark.png",
+      "annotatedBasename": "Sensor_Dark_sensor_dark.a11y.png",
+      "cleanBasename": "Sensor_Dark_sensor_dark.png",
       "findings": [
         {
           "boundsInScreen": "0,0,840,338",
@@ -6139,8 +6287,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "CardPreviewsKt.Sensor_Light_sensor_light.a11y.png",
-      "cleanBasename": "CardPreviewsKt.Sensor_Light_sensor_light.png",
+      "annotatedBasename": "Sensor_Light_sensor_light.a11y.png",
+      "cleanBasename": "Sensor_Light_sensor_light.png",
       "findings": [
         {
           "boundsInScreen": "0,0,840,338",
@@ -6157,8 +6305,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "ShutterCardPreviewsKt.Shutter_Dark_shutter_dark.a11y.png",
-      "cleanBasename": "ShutterCardPreviewsKt.Shutter_Dark_shutter_dark.png",
+      "annotatedBasename": "Shutter_Dark_shutter_dark.a11y.png",
+      "cleanBasename": "Shutter_Dark_shutter_dark.png",
       "findings": [
         {
           "boundsInScreen": "0,0,735,784",
@@ -6217,8 +6365,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "ShutterCardPreviewsKt.Shutter_Light_shutter_light.a11y.png",
-      "cleanBasename": "ShutterCardPreviewsKt.Shutter_Light_shutter_light.png",
+      "annotatedBasename": "Shutter_Light_shutter_light.a11y.png",
+      "cleanBasename": "Shutter_Light_shutter_light.png",
       "findings": [
         {
           "boundsInScreen": "0,0,735,784",
@@ -6277,8 +6425,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "SizingExperimentPreviewsKt.Sizing_ConstraintMatrix_PaintMeasure_sizing_width_height_matrix_paint-measure_profile.a11y.png",
-      "cleanBasename": "SizingExperimentPreviewsKt.Sizing_ConstraintMatrix_PaintMeasure_sizing_width_height_matrix_paint-measure_profile.png",
+      "annotatedBasename": "Sizing_ConstraintMatrix_PaintMeasure_sizing_width_height_matrix_paint_measure_profile.a11y.png",
+      "cleanBasename": "Sizing_ConstraintMatrix_PaintMeasure_sizing_width_height_matrix_paint_measure_profile.png",
       "findings": [
         {
           "boundsInScreen": "21,205,494,318",
@@ -6477,8 +6625,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "SizingExperimentPreviewsKt.Sizing_ConstraintMatrix_Wrap_sizing_width_height_matrix_wrap_profile.a11y.png",
-      "cleanBasename": "SizingExperimentPreviewsKt.Sizing_ConstraintMatrix_Wrap_sizing_width_height_matrix_wrap_profile.png",
+      "annotatedBasename": "Sizing_ConstraintMatrix_Wrap_sizing_width_height_matrix_wrap_profile.a11y.png",
+      "cleanBasename": "Sizing_ConstraintMatrix_Wrap_sizing_width_height_matrix_wrap_profile.png",
       "findings": [
         {
           "boundsInScreen": "21,205,494,318",
@@ -6677,8 +6825,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "SizingExperimentPreviewsKt.Sizing_FixedSlot_PaintMeasure_sizing_fixed_slot_paint-measure_profile.a11y.png",
-      "cleanBasename": "SizingExperimentPreviewsKt.Sizing_FixedSlot_PaintMeasure_sizing_fixed_slot_paint-measure_profile.png",
+      "annotatedBasename": "Sizing_FixedSlot_PaintMeasure_sizing_fixed_slot_paint_measure_profile.a11y.png",
+      "cleanBasename": "Sizing_FixedSlot_PaintMeasure_sizing_fixed_slot_paint_measure_profile.png",
       "findings": [
         {
           "boundsInScreen": "24,156,1052,269",
@@ -6765,8 +6913,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "SizingExperimentPreviewsKt.Sizing_FixedSlot_Wrap_sizing_fixed_slot_wrap_profile.a11y.png",
-      "cleanBasename": "SizingExperimentPreviewsKt.Sizing_FixedSlot_Wrap_sizing_fixed_slot_wrap_profile.png",
+      "annotatedBasename": "Sizing_FixedSlot_Wrap_sizing_fixed_slot_wrap_profile.a11y.png",
+      "cleanBasename": "Sizing_FixedSlot_Wrap_sizing_fixed_slot_wrap_profile.png",
       "findings": [
         {
           "boundsInScreen": "24,156,1052,269",
@@ -6853,8 +7001,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "SizingExperimentPreviewsKt.Sizing_SlackSlot_PaintMeasure_sizing_slack_slot_paint-measure_profile.a11y.png",
-      "cleanBasename": "SizingExperimentPreviewsKt.Sizing_SlackSlot_PaintMeasure_sizing_slack_slot_paint-measure_profile.png",
+      "annotatedBasename": "Sizing_SlackSlot_PaintMeasure_sizing_slack_slot_paint_measure_profile.a11y.png",
+      "cleanBasename": "Sizing_SlackSlot_PaintMeasure_sizing_slack_slot_paint_measure_profile.png",
       "findings": [
         {
           "boundsInScreen": "24,156,1052,332",
@@ -6941,8 +7089,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "SizingExperimentPreviewsKt.Sizing_SlackSlot_Wrap_sizing_slack_slot_wrap_profile.a11y.png",
-      "cleanBasename": "SizingExperimentPreviewsKt.Sizing_SlackSlot_Wrap_sizing_slack_slot_wrap_profile.png",
+      "annotatedBasename": "Sizing_SlackSlot_Wrap_sizing_slack_slot_wrap_profile.a11y.png",
+      "cleanBasename": "Sizing_SlackSlot_Wrap_sizing_slack_slot_wrap_profile.png",
       "findings": [
         {
           "boundsInScreen": "24,156,1052,272",
@@ -7029,8 +7177,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "SizingExperimentPreviewsKt.Sizing_TightSlot_PaintMeasure_sizing_tight_slot_paint-measure_profile.a11y.png",
-      "cleanBasename": "SizingExperimentPreviewsKt.Sizing_TightSlot_PaintMeasure_sizing_tight_slot_paint-measure_profile.png",
+      "annotatedBasename": "Sizing_TightSlot_PaintMeasure_sizing_tight_slot_paint_measure_profile.a11y.png",
+      "cleanBasename": "Sizing_TightSlot_PaintMeasure_sizing_tight_slot_paint_measure_profile.png",
       "findings": [
         {
           "boundsInScreen": "24,156,1052,227",
@@ -7117,8 +7265,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "SizingExperimentPreviewsKt.Sizing_TightSlot_Wrap_sizing_tight_slot_wrap_profile.a11y.png",
-      "cleanBasename": "SizingExperimentPreviewsKt.Sizing_TightSlot_Wrap_sizing_tight_slot_wrap_profile.png",
+      "annotatedBasename": "Sizing_TightSlot_Wrap_sizing_tight_slot_wrap_profile.a11y.png",
+      "cleanBasename": "Sizing_TightSlot_Wrap_sizing_tight_slot_wrap_profile.png",
       "findings": [
         {
           "boundsInScreen": "24,156,1052,227",
@@ -7191,7 +7339,7 @@
           "viewDescription": "android.view.View  desc=\"Coffee maker\""
         },
         {
-          "boundsInScreen": "499,1378,602,1564",
+          "boundsInScreen": "500,1378,603,1564",
           "level": "ERROR",
           "message": "This item's width is 39dp. Consider making the width of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
@@ -7205,8 +7353,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "SizingExperimentPreviewsKt.Sizing_WidthPinnedHeightAdaptive_sizing_width_pinned_height_adaptive.a11y.png",
-      "cleanBasename": "SizingExperimentPreviewsKt.Sizing_WidthPinnedHeightAdaptive_sizing_width_pinned_height_adaptive.png",
+      "annotatedBasename": "Sizing_WidthPinnedHeightAdaptive_sizing_width_pinned_height_adaptive.a11y.png",
+      "cleanBasename": "Sizing_WidthPinnedHeightAdaptive_sizing_width_pinned_height_adaptive.png",
       "findings": [
         {
           "boundsInScreen": "21,211,494,327",
@@ -7251,8 +7399,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "CardPreviewsKt.Statistic_Dark_statistic_dark.a11y.png",
-      "cleanBasename": "CardPreviewsKt.Statistic_Dark_statistic_dark.png",
+      "annotatedBasename": "Statistic_Dark_statistic_dark.a11y.png",
+      "cleanBasename": "Statistic_Dark_statistic_dark.png",
       "findings": [
         {
           "boundsInScreen": "0,0,630,286",
@@ -7269,8 +7417,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "CardPreviewsKt.Statistic_Light_statistic_light.a11y.png",
-      "cleanBasename": "CardPreviewsKt.Statistic_Light_statistic_light.png",
+      "annotatedBasename": "Statistic_Light_statistic_light.a11y.png",
+      "cleanBasename": "Statistic_Light_statistic_light.png",
       "findings": [
         {
           "boundsInScreen": "0,0,630,286",
@@ -7287,8 +7435,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "CardPreviewsKt.StatisticsGraph_Dark_statistics-graph_dark.a11y.png",
-      "cleanBasename": "CardPreviewsKt.StatisticsGraph_Dark_statistics-graph_dark.png",
+      "annotatedBasename": "StatisticsGraph_Dark_statistics_graph_dark.a11y.png",
+      "cleanBasename": "StatisticsGraph_Dark_statistics_graph_dark.png",
       "findings": [
         {
           "boundsInScreen": "0,0,997,525",
@@ -7305,8 +7453,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "CardPreviewsKt.StatisticsGraph_Light_statistics-graph_light.a11y.png",
-      "cleanBasename": "CardPreviewsKt.StatisticsGraph_Light_statistics-graph_light.png",
+      "annotatedBasename": "StatisticsGraph_Light_statistics_graph_light.a11y.png",
+      "cleanBasename": "StatisticsGraph_Light_statistics_graph_light.png",
       "findings": [
         {
           "boundsInScreen": "0,0,997,525",
@@ -7323,8 +7471,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "ThemePreviewsKt.Theme_Home_Dark_theme_Home_dark.a11y.png",
-      "cleanBasename": "ThemePreviewsKt.Theme_Home_Dark_theme_Home_dark.png",
+      "annotatedBasename": "Theme_Home_Dark_theme_Home_dark.a11y.png",
+      "cleanBasename": "Theme_Home_Dark_theme_Home_dark.png",
       "findings": [
         {
           "boundsInScreen": "63,454,882,601",
@@ -7355,8 +7503,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "ThemePreviewsKt.Theme_Home_Light_theme_Home_light.a11y.png",
-      "cleanBasename": "ThemePreviewsKt.Theme_Home_Light_theme_Home_light.png",
+      "annotatedBasename": "Theme_Home_Light_theme_Home_light.a11y.png",
+      "cleanBasename": "Theme_Home_Light_theme_Home_light.png",
       "findings": [
         {
           "boundsInScreen": "63,454,882,601",
@@ -7387,8 +7535,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "ThemePreviewsKt.Theme_Kiosk_Dark_theme_Kiosk_dark.a11y.png",
-      "cleanBasename": "ThemePreviewsKt.Theme_Kiosk_Dark_theme_Kiosk_dark.png",
+      "annotatedBasename": "Theme_Kiosk_Dark_theme_Kiosk_dark.a11y.png",
+      "cleanBasename": "Theme_Kiosk_Dark_theme_Kiosk_dark.png",
       "findings": [
         {
           "boundsInScreen": "63,454,882,601",
@@ -7419,8 +7567,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "ThemePreviewsKt.Theme_Kiosk_Light_theme_Kiosk_light.a11y.png",
-      "cleanBasename": "ThemePreviewsKt.Theme_Kiosk_Light_theme_Kiosk_light.png",
+      "annotatedBasename": "Theme_Kiosk_Light_theme_Kiosk_light.a11y.png",
+      "cleanBasename": "Theme_Kiosk_Light_theme_Kiosk_light.png",
       "findings": [
         {
           "boundsInScreen": "63,454,882,601",
@@ -7451,8 +7599,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "ThemePreviewsKt.Theme_Material3_Dark_theme_Material3_dark.a11y.png",
-      "cleanBasename": "ThemePreviewsKt.Theme_Material3_Dark_theme_Material3_dark.png",
+      "annotatedBasename": "Theme_Material3_Dark_theme_Material3_dark.a11y.png",
+      "cleanBasename": "Theme_Material3_Dark_theme_Material3_dark.png",
       "findings": [
         {
           "boundsInScreen": "63,454,882,601",
@@ -7483,8 +7631,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "ThemePreviewsKt.Theme_Material3_Light_theme_Material3_light.a11y.png",
-      "cleanBasename": "ThemePreviewsKt.Theme_Material3_Light_theme_Material3_light.png",
+      "annotatedBasename": "Theme_Material3_Light_theme_Material3_light.a11y.png",
+      "cleanBasename": "Theme_Material3_Light_theme_Material3_light.png",
       "findings": [
         {
           "boundsInScreen": "63,454,882,601",
@@ -7515,8 +7663,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "ThemePreviewsKt.Theme_Minimalist_Dark_theme_Minimalist_dark.a11y.png",
-      "cleanBasename": "ThemePreviewsKt.Theme_Minimalist_Dark_theme_Minimalist_dark.png",
+      "annotatedBasename": "Theme_Minimalist_Dark_theme_Minimalist_dark.a11y.png",
+      "cleanBasename": "Theme_Minimalist_Dark_theme_Minimalist_dark.png",
       "findings": [
         {
           "boundsInScreen": "63,454,882,601",
@@ -7547,8 +7695,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "ThemePreviewsKt.Theme_Minimalist_Light_theme_Minimalist_light.a11y.png",
-      "cleanBasename": "ThemePreviewsKt.Theme_Minimalist_Light_theme_Minimalist_light.png",
+      "annotatedBasename": "Theme_Minimalist_Light_theme_Minimalist_light.a11y.png",
+      "cleanBasename": "Theme_Minimalist_Light_theme_Minimalist_light.png",
       "findings": [
         {
           "boundsInScreen": "63,454,882,601",
@@ -7579,8 +7727,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "ThemePreviewsKt.Theme_Mushroom_Dark_theme_Mushroom_dark.a11y.png",
-      "cleanBasename": "ThemePreviewsKt.Theme_Mushroom_Dark_theme_Mushroom_dark.png",
+      "annotatedBasename": "Theme_Mushroom_Dark_theme_Mushroom_dark.a11y.png",
+      "cleanBasename": "Theme_Mushroom_Dark_theme_Mushroom_dark.png",
       "findings": [
         {
           "boundsInScreen": "63,454,882,601",
@@ -7611,8 +7759,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "ThemePreviewsKt.Theme_Mushroom_Light_theme_Mushroom_light.a11y.png",
-      "cleanBasename": "ThemePreviewsKt.Theme_Mushroom_Light_theme_Mushroom_light.png",
+      "annotatedBasename": "Theme_Mushroom_Light_theme_Mushroom_light.a11y.png",
+      "cleanBasename": "Theme_Mushroom_Light_theme_Mushroom_light.png",
       "findings": [
         {
           "boundsInScreen": "63,454,882,601",
@@ -7643,8 +7791,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "CardPreviewsKt.Thermostat_Dark_thermostat_dark.a11y.png",
-      "cleanBasename": "CardPreviewsKt.Thermostat_Dark_thermostat_dark.png",
+      "annotatedBasename": "Thermostat_Dark_thermostat_dark.a11y.png",
+      "cleanBasename": "Thermostat_Dark_thermostat_dark.png",
       "findings": [
         {
           "boundsInScreen": "0,0,630,758",
@@ -7675,8 +7823,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "CardPreviewsKt.Thermostat_Light_thermostat_light.a11y.png",
-      "cleanBasename": "CardPreviewsKt.Thermostat_Light_thermostat_light.png",
+      "annotatedBasename": "Thermostat_Light_thermostat_light.a11y.png",
+      "cleanBasename": "Thermostat_Light_thermostat_light.png",
       "findings": [
         {
           "boundsInScreen": "0,0,630,758",
@@ -7717,8 +7865,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "TileCardPreviewsKt.Tile_LightOn_tile_light_on.a11y.png",
-      "cleanBasename": "TileCardPreviewsKt.Tile_LightOn_tile_light_on.png",
+      "annotatedBasename": "Tile_LightOn_tile_light_on.a11y.png",
+      "cleanBasename": "Tile_LightOn_tile_light_on.png",
       "findings": [
         {
           "boundsInScreen": "0,0,488,110",
@@ -7735,8 +7883,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "TileCardPreviewsKt.Tile_LightOn_Dark_tile_light_on_dark.a11y.png",
-      "cleanBasename": "TileCardPreviewsKt.Tile_LightOn_Dark_tile_light_on_dark.png",
+      "annotatedBasename": "Tile_LightOn_Dark_tile_light_on_dark.a11y.png",
+      "cleanBasename": "Tile_LightOn_Dark_tile_light_on_dark.png",
       "findings": [
         {
           "boundsInScreen": "0,0,488,110",
@@ -7773,8 +7921,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "ResponsiveCardPreviewsKt.Tile_Responsive_Dark_tile_responsive_narrow.a11y.png",
-      "cleanBasename": "ResponsiveCardPreviewsKt.Tile_Responsive_Dark_tile_responsive_narrow.png",
+      "annotatedBasename": "Tile_Responsive_Dark_tile_responsive_narrow.a11y.png",
+      "cleanBasename": "Tile_Responsive_Dark_tile_responsive_narrow.png",
       "findings": [
         {
           "boundsInScreen": "0,0,391,126",
@@ -7791,8 +7939,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "TileCardPreviewsKt.Tile_TemperatureSensor_tile_sensor_temperature.a11y.png",
-      "cleanBasename": "TileCardPreviewsKt.Tile_TemperatureSensor_tile_sensor_temperature.png",
+      "annotatedBasename": "Tile_TemperatureSensor_tile_sensor_temperature.a11y.png",
+      "cleanBasename": "Tile_TemperatureSensor_tile_sensor_temperature.png",
       "findings": [
         {
           "boundsInScreen": "0,0,488,110",
@@ -7809,8 +7957,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "TileCardPreviewsKt.Tile_TemperatureSensor_Dark_tile_sensor_temperature_dark.a11y.png",
-      "cleanBasename": "TileCardPreviewsKt.Tile_TemperatureSensor_Dark_tile_sensor_temperature_dark.png",
+      "annotatedBasename": "Tile_TemperatureSensor_Dark_tile_sensor_temperature_dark.a11y.png",
+      "cleanBasename": "Tile_TemperatureSensor_Dark_tile_sensor_temperature_dark.png",
       "findings": [
         {
           "boundsInScreen": "0,0,488,110",
@@ -7827,8 +7975,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "CardPreviewsKt.TodoList_Dark_todo-list_dark.a11y.png",
-      "cleanBasename": "CardPreviewsKt.TodoList_Dark_todo-list_dark.png",
+      "annotatedBasename": "TodoList_Dark_todo_list_dark.a11y.png",
+      "cleanBasename": "TodoList_Dark_todo_list_dark.png",
       "findings": [
         {
           "boundsInScreen": "0,0,840,574",
@@ -7866,8 +8014,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "CardPreviewsKt.TodoList_Light_todo-list_light.a11y.png",
-      "cleanBasename": "CardPreviewsKt.TodoList_Light_todo-list_light.png",
+      "annotatedBasename": "TodoList_Light_todo_list_light.a11y.png",
+      "cleanBasename": "TodoList_Light_todo_list_light.png",
       "findings": [
         {
           "boundsInScreen": "0,0,840,574",
@@ -7905,8 +8053,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "ToggleSwitchPreviewsKt.ToggleByProgress_Mid_toggle_progress_0.5.a11y.png",
-      "cleanBasename": "ToggleSwitchPreviewsKt.ToggleByProgress_Mid_toggle_progress_0.5.png",
+      "annotatedBasename": "5.a11y.png",
+      "cleanBasename": "5.png",
       "findings": [
         {
           "boundsInScreen": "0,0,105,63",
@@ -7923,8 +8071,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "ToggleSwitchPreviewsKt.ToggleByProgress_Off_toggle_progress_0.0.a11y.png",
-      "cleanBasename": "ToggleSwitchPreviewsKt.ToggleByProgress_Off_toggle_progress_0.0.png",
+      "annotatedBasename": "ToggleByProgress_Off_toggle_progress_0.0.a11y.png",
+      "cleanBasename": "ToggleByProgress_Off_toggle_progress_0.0.png",
       "findings": [
         {
           "boundsInScreen": "0,0,105,63",
@@ -7941,8 +8089,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "ToggleSwitchPreviewsKt.ToggleByProgress_On_toggle_progress_1.0.a11y.png",
-      "cleanBasename": "ToggleSwitchPreviewsKt.ToggleByProgress_On_toggle_progress_1.0.png",
+      "annotatedBasename": "ToggleByProgress_On_toggle_progress_1.0.a11y.png",
+      "cleanBasename": "ToggleByProgress_On_toggle_progress_1.0.png",
       "findings": [
         {
           "boundsInScreen": "0,0,105,63",
@@ -7959,8 +8107,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "ToggleSwitchPreviewsKt.ToggleInitial_Off_toggle_initial_off.a11y.png",
-      "cleanBasename": "ToggleSwitchPreviewsKt.ToggleInitial_Off_toggle_initial_off.png",
+      "annotatedBasename": "ToggleInitial_Off_toggle_initial_off.a11y.png",
+      "cleanBasename": "ToggleInitial_Off_toggle_initial_off.png",
       "findings": [
         {
           "boundsInScreen": "0,0,105,63",
@@ -7977,8 +8125,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "ToggleSwitchPreviewsKt.ToggleInitial_On_toggle_initial_on.a11y.png",
-      "cleanBasename": "ToggleSwitchPreviewsKt.ToggleInitial_On_toggle_initial_on.png",
+      "annotatedBasename": "ToggleInitial_On_toggle_initial_on.a11y.png",
+      "cleanBasename": "ToggleInitial_On_toggle_initial_on.png",
       "findings": [
         {
           "boundsInScreen": "0,0,105,63",
@@ -7995,8 +8143,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "ToggleSwitchPreviewsKt.ToggleInitial_On_Dark_toggle_initial_on_dark.a11y.png",
-      "cleanBasename": "ToggleSwitchPreviewsKt.ToggleInitial_On_Dark_toggle_initial_on_dark.png",
+      "annotatedBasename": "ToggleInitial_On_Dark_toggle_initial_on_dark.a11y.png",
+      "cleanBasename": "ToggleInitial_On_Dark_toggle_initial_on_dark.png",
       "findings": [
         {
           "boundsInScreen": "0,0,105,63",
@@ -8013,8 +8161,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "AnimationPreviewsKt.Toggle_Animated_Dark_toggle-animated_dark.a11y.png",
-      "cleanBasename": "AnimationPreviewsKt.Toggle_Animated_Dark_toggle-animated_dark.png",
+      "annotatedBasename": "Toggle_Animated_Dark_toggle_animated_dark.a11y.png",
+      "cleanBasename": "Toggle_Animated_Dark_toggle_animated_dark.png",
       "findings": [
         {
           "boundsInScreen": "0,0,105,63",
@@ -8031,8 +8179,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "AnimationPreviewsKt.Toggle_Animated_Light_toggle-animated_light.a11y.png",
-      "cleanBasename": "AnimationPreviewsKt.Toggle_Animated_Light_toggle-animated_light.png",
+      "annotatedBasename": "Toggle_Animated_Light_toggle_animated_light.a11y.png",
+      "cleanBasename": "Toggle_Animated_Light_toggle_animated_light.png",
       "findings": [
         {
           "boundsInScreen": "0,0,105,63",
@@ -8069,8 +8217,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "CardPreviewsKt.Unsupported_Dark_unsupported_dark.a11y.png",
-      "cleanBasename": "CardPreviewsKt.Unsupported_Dark_unsupported_dark.png",
+      "annotatedBasename": "Unsupported_Dark_unsupported_dark.a11y.png",
+      "cleanBasename": "Unsupported_Dark_unsupported_dark.png",
       "findings": [
         {
           "boundsInScreen": "0,0,364,223",
@@ -8087,8 +8235,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "CardPreviewsKt.Unsupported_Light_unsupported_light.a11y.png",
-      "cleanBasename": "CardPreviewsKt.Unsupported_Light_unsupported_light.png",
+      "annotatedBasename": "Unsupported_Light_unsupported_light.a11y.png",
+      "cleanBasename": "Unsupported_Light_unsupported_light.png",
       "findings": [
         {
           "boundsInScreen": "0,0,364,223",
@@ -8105,8 +8253,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "CardPreviewsKt.VerticalStack_Dark_vertical-stack_dark.a11y.png",
-      "cleanBasename": "CardPreviewsKt.VerticalStack_Dark_vertical-stack_dark.png",
+      "annotatedBasename": "VerticalStack_Dark_vertical_stack_dark.a11y.png",
+      "cleanBasename": "VerticalStack_Dark_vertical_stack_dark.png",
       "findings": [
         {
           "boundsInScreen": "0,0,609,259",
@@ -8123,8 +8271,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "CardPreviewsKt.VerticalStack_Light_vertical-stack_light.a11y.png",
-      "cleanBasename": "CardPreviewsKt.VerticalStack_Light_vertical-stack_light.png",
+      "annotatedBasename": "VerticalStack_Light_vertical_stack_light.a11y.png",
+      "cleanBasename": "VerticalStack_Light_vertical_stack_light.png",
       "findings": [
         {
           "boundsInScreen": "0,0,609,259",
@@ -8141,8 +8289,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "CardPreviewsKt.WeatherForecast_Dark_weather-forecast_dark.a11y.png",
-      "cleanBasename": "CardPreviewsKt.WeatherForecast_Dark_weather-forecast_dark.png",
+      "annotatedBasename": "WeatherForecast_Dark_weather_forecast_dark.a11y.png",
+      "cleanBasename": "WeatherForecast_Dark_weather_forecast_dark.png",
       "findings": [
         {
           "boundsInScreen": "0,0,997,441",
@@ -8159,8 +8307,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "CardPreviewsKt.WeatherForecast_Light_weather-forecast_light.a11y.png",
-      "cleanBasename": "CardPreviewsKt.WeatherForecast_Light_weather-forecast_light.png",
+      "annotatedBasename": "WeatherForecast_Light_weather_forecast_light.a11y.png",
+      "cleanBasename": "WeatherForecast_Light_weather_forecast_light.png",
       "findings": [
         {
           "boundsInScreen": "0,0,997,441",
@@ -8177,8 +8325,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "WrapContentHeightReproKt.WrapContentHeightFixAlpha010_wrap-content_height_fix_WrapAdaptive_player.a11y.png",
-      "cleanBasename": "WrapContentHeightReproKt.WrapContentHeightFixAlpha010_wrap-content_height_fix_WrapAdaptive_player.png",
+      "annotatedBasename": "WrapContentHeightFixAlpha010_wrap_content_height_fix_WrapAdaptive_player.a11y.png",
+      "cleanBasename": "WrapContentHeightFixAlpha010_wrap_content_height_fix_WrapAdaptive_player.png",
       "findings": [
         {
           "boundsInScreen": "21,253,494,311",
@@ -8202,8 +8350,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "WrapContentHeightReproKt.WrapContentHeightReproAlpha010_wrap-content_height_repro_alpha010.a11y.png",
-      "cleanBasename": "WrapContentHeightReproKt.WrapContentHeightReproAlpha010_wrap-content_height_repro_alpha010.png",
+      "annotatedBasename": "WrapContentHeightReproAlpha010_wrap_content_height_repro_alpha010.a11y.png",
+      "cleanBasename": "WrapContentHeightReproAlpha010_wrap_content_height_repro_alpha010.png",
       "findings": [
         {
           "boundsInScreen": "21,875,494,933",
@@ -8258,8 +8406,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "widget.SlotWidgetPreviewsKt.SlotWidgetPreview_Empty_Slot_widget_empty_placeholder.a11y.png",
-      "cleanBasename": "widget.SlotWidgetPreviewsKt.SlotWidgetPreview_Empty_Slot_widget_empty_placeholder.png",
+      "annotatedBasename": "SlotWidgetPreview_Empty_Slot_widget_empty_placeholder.a11y.png",
+      "cleanBasename": "SlotWidgetPreview_Empty_Slot_widget_empty_placeholder.png",
       "findings": [
         {
           "boundsInScreen": "0,96,317,296",
@@ -8276,8 +8424,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "widget.SlotWidgetPreviewsKt.SlotWidgetPreview_EntitiesLarge_Slot_widget_entities_large.a11y.png",
-      "cleanBasename": "widget.SlotWidgetPreviewsKt.SlotWidgetPreview_EntitiesLarge_Slot_widget_entities_large.png",
+      "annotatedBasename": "SlotWidgetPreview_EntitiesLarge_Slot_widget_entities_large.a11y.png",
+      "cleanBasename": "SlotWidgetPreview_EntitiesLarge_Slot_widget_entities_large.png",
       "findings": [
         {
           "boundsInScreen": "0,37,317,317",
@@ -8301,8 +8449,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "widget.SlotWidgetPreviewsKt.SlotWidgetPreview_TileSmall_Slot_widget_tile_small.a11y.png",
-      "cleanBasename": "widget.SlotWidgetPreviewsKt.SlotWidgetPreview_TileSmall_Slot_widget_tile_small.png",
+      "annotatedBasename": "SlotWidgetPreview_TileSmall_Slot_widget_tile_small.a11y.png",
+      "cleanBasename": "SlotWidgetPreview_TileSmall_Slot_widget_tile_small.png",
       "findings": [
         {
           "boundsInScreen": "0,96,317,296",
@@ -8319,8 +8467,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "widget.CardSlotWidgetPreviewsKt.WearAlarmPanelLarge_wear_alarm-panel_large.a11y.png",
-      "cleanBasename": "widget.CardSlotWidgetPreviewsKt.WearAlarmPanelLarge_wear_alarm-panel_large.png",
+      "annotatedBasename": "WearAlarmPanelLarge_wear_alarm_panel_large.a11y.png",
+      "cleanBasename": "WearAlarmPanelLarge_wear_alarm_panel_large.png",
       "findings": [
         {
           "boundsInScreen": "0,37,317,317",
@@ -8344,8 +8492,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "widget.CardSlotWidgetPreviewsKt.WearAlarmPanelSmall_wear_alarm-panel_small.a11y.png",
-      "cleanBasename": "widget.CardSlotWidgetPreviewsKt.WearAlarmPanelSmall_wear_alarm-panel_small.png",
+      "annotatedBasename": "WearAlarmPanelSmall_wear_alarm_panel_small.a11y.png",
+      "cleanBasename": "WearAlarmPanelSmall_wear_alarm_panel_small.png",
       "findings": [
         {
           "boundsInScreen": "0,96,317,296",
@@ -8362,8 +8510,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "widget.CardSlotWidgetPreviewsKt.WearAreaLarge_wear_area_large.a11y.png",
-      "cleanBasename": "widget.CardSlotWidgetPreviewsKt.WearAreaLarge_wear_area_large.png",
+      "annotatedBasename": "WearAreaLarge_wear_area_large.a11y.png",
+      "cleanBasename": "WearAreaLarge_wear_area_large.png",
       "findings": [
         {
           "boundsInScreen": "0,37,317,317",
@@ -8394,8 +8542,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "widget.CardSlotWidgetPreviewsKt.WearAreaSmall_wear_area_small.a11y.png",
-      "cleanBasename": "widget.CardSlotWidgetPreviewsKt.WearAreaSmall_wear_area_small.png",
+      "annotatedBasename": "WearAreaSmall_wear_area_small.a11y.png",
+      "cleanBasename": "WearAreaSmall_wear_area_small.png",
       "findings": [
         {
           "boundsInScreen": "0,96,317,296",
@@ -8412,8 +8560,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "widget.CardSlotWidgetPreviewsKt.WearBambuAmsLarge_wear_bambu_ams_large.a11y.png",
-      "cleanBasename": "widget.CardSlotWidgetPreviewsKt.WearBambuAmsLarge_wear_bambu_ams_large.png",
+      "annotatedBasename": "WearBambuAmsLarge_wear_bambu_ams_large.a11y.png",
+      "cleanBasename": "WearBambuAmsLarge_wear_bambu_ams_large.png",
       "findings": [
         {
           "boundsInScreen": "0,37,317,317",
@@ -8430,8 +8578,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "widget.CardSlotWidgetPreviewsKt.WearBambuAmsSmall_wear_bambu_ams_small.a11y.png",
-      "cleanBasename": "widget.CardSlotWidgetPreviewsKt.WearBambuAmsSmall_wear_bambu_ams_small.png",
+      "annotatedBasename": "WearBambuAmsSmall_wear_bambu_ams_small.a11y.png",
+      "cleanBasename": "WearBambuAmsSmall_wear_bambu_ams_small.png",
       "findings": [
         {
           "boundsInScreen": "0,96,317,296",
@@ -8448,8 +8596,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "widget.CardSlotWidgetPreviewsKt.WearBambuPrintControlLarge_wear_bambu_print-control_large.a11y.png",
-      "cleanBasename": "widget.CardSlotWidgetPreviewsKt.WearBambuPrintControlLarge_wear_bambu_print-control_large.png",
+      "annotatedBasename": "WearBambuPrintControlLarge_wear_bambu_print_control_large.a11y.png",
+      "cleanBasename": "WearBambuPrintControlLarge_wear_bambu_print_control_large.png",
       "findings": [
         {
           "boundsInScreen": "0,37,317,317",
@@ -8466,8 +8614,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "widget.CardSlotWidgetPreviewsKt.WearBambuPrintControlSmall_wear_bambu_print-control_small.a11y.png",
-      "cleanBasename": "widget.CardSlotWidgetPreviewsKt.WearBambuPrintControlSmall_wear_bambu_print-control_small.png",
+      "annotatedBasename": "WearBambuPrintControlSmall_wear_bambu_print_control_small.a11y.png",
+      "cleanBasename": "WearBambuPrintControlSmall_wear_bambu_print_control_small.png",
       "findings": [
         {
           "boundsInScreen": "0,96,317,296",
@@ -8484,8 +8632,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "widget.CardSlotWidgetPreviewsKt.WearBambuPrintStatusLarge_wear_bambu_print-status_large.a11y.png",
-      "cleanBasename": "widget.CardSlotWidgetPreviewsKt.WearBambuPrintStatusLarge_wear_bambu_print-status_large.png",
+      "annotatedBasename": "WearBambuPrintStatusLarge_wear_bambu_print_status_large.a11y.png",
+      "cleanBasename": "WearBambuPrintStatusLarge_wear_bambu_print_status_large.png",
       "findings": [
         {
           "boundsInScreen": "0,37,317,317",
@@ -8502,8 +8650,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "widget.CardSlotWidgetPreviewsKt.WearBambuPrintStatusSmall_wear_bambu_print-status_small.a11y.png",
-      "cleanBasename": "widget.CardSlotWidgetPreviewsKt.WearBambuPrintStatusSmall_wear_bambu_print-status_small.png",
+      "annotatedBasename": "WearBambuPrintStatusSmall_wear_bambu_print_status_small.a11y.png",
+      "cleanBasename": "WearBambuPrintStatusSmall_wear_bambu_print_status_small.png",
       "findings": [
         {
           "boundsInScreen": "0,96,317,296",
@@ -8520,8 +8668,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "widget.CardSlotWidgetPreviewsKt.WearBambuSpoolLarge_wear_bambu_spool_large.a11y.png",
-      "cleanBasename": "widget.CardSlotWidgetPreviewsKt.WearBambuSpoolLarge_wear_bambu_spool_large.png",
+      "annotatedBasename": "WearBambuSpoolLarge_wear_bambu_spool_large.a11y.png",
+      "cleanBasename": "WearBambuSpoolLarge_wear_bambu_spool_large.png",
       "findings": [
         {
           "boundsInScreen": "0,37,317,317",
@@ -8538,8 +8686,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "widget.CardSlotWidgetPreviewsKt.WearBambuSpoolSmall_wear_bambu_spool_small.a11y.png",
-      "cleanBasename": "widget.CardSlotWidgetPreviewsKt.WearBambuSpoolSmall_wear_bambu_spool_small.png",
+      "annotatedBasename": "WearBambuSpoolSmall_wear_bambu_spool_small.a11y.png",
+      "cleanBasename": "WearBambuSpoolSmall_wear_bambu_spool_small.png",
       "findings": [
         {
           "boundsInScreen": "0,96,317,296",
@@ -8556,8 +8704,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "widget.CardSlotWidgetPreviewsKt.WearButtonLarge_wear_button_large.a11y.png",
-      "cleanBasename": "widget.CardSlotWidgetPreviewsKt.WearButtonLarge_wear_button_large.png",
+      "annotatedBasename": "WearButtonLarge_wear_button_large.a11y.png",
+      "cleanBasename": "WearButtonLarge_wear_button_large.png",
       "findings": [
         {
           "boundsInScreen": "0,37,317,317",
@@ -8574,8 +8722,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "widget.CardSlotWidgetPreviewsKt.WearButtonSmall_wear_button_small.a11y.png",
-      "cleanBasename": "widget.CardSlotWidgetPreviewsKt.WearButtonSmall_wear_button_small.png",
+      "annotatedBasename": "WearButtonSmall_wear_button_small.a11y.png",
+      "cleanBasename": "WearButtonSmall_wear_button_small.png",
       "findings": [
         {
           "boundsInScreen": "0,96,317,296",
@@ -8592,8 +8740,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "widget.CardSlotWidgetPreviewsKt.WearCalendarSmall_wear_calendar_small.a11y.png",
-      "cleanBasename": "widget.CardSlotWidgetPreviewsKt.WearCalendarSmall_wear_calendar_small.png",
+      "annotatedBasename": "WearCalendarSmall_wear_calendar_small.a11y.png",
+      "cleanBasename": "WearCalendarSmall_wear_calendar_small.png",
       "findings": [
         {
           "boundsInScreen": "0,96,317,296",
@@ -8610,8 +8758,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "ui.WearPreviewsKt.WearDashboardPreview_Wear_dashboard.a11y.png",
-      "cleanBasename": "ui.WearPreviewsKt.WearDashboardPreview_Wear_dashboard.png",
+      "annotatedBasename": "WearDashboardPreview_Wear_dashboard.a11y.png",
+      "cleanBasename": "WearDashboardPreview_Wear_dashboard.png",
       "findings": [
         {
           "boundsInScreen": "36,290,70,323",
@@ -8628,8 +8776,8 @@
       "variant": "wearos_small_round"
     },
     {
-      "annotatedBasename": "ui.WearPreviewsKt.WearDashboardsPreview_Wear_dashboards.a11y.png",
-      "cleanBasename": "ui.WearPreviewsKt.WearDashboardsPreview_Wear_dashboards.png",
+      "annotatedBasename": "WearDashboardsPreview_Wear_dashboards.a11y.png",
+      "cleanBasename": "WearDashboardsPreview_Wear_dashboards.png",
       "findings": [],
       "functionName": "WearDashboardsPreview",
       "module": "wear",
@@ -8638,8 +8786,8 @@
       "variant": "wearos_small_round"
     },
     {
-      "annotatedBasename": "widget.CardSlotWidgetPreviewsKt.WearEntitiesLarge_wear_entities_large.a11y.png",
-      "cleanBasename": "widget.CardSlotWidgetPreviewsKt.WearEntitiesLarge_wear_entities_large.png",
+      "annotatedBasename": "WearEntitiesLarge_wear_entities_large.a11y.png",
+      "cleanBasename": "WearEntitiesLarge_wear_entities_large.png",
       "findings": [
         {
           "boundsInScreen": "0,37,317,317",
@@ -8663,8 +8811,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "widget.CardSlotWidgetPreviewsKt.WearEntitiesSmall_wear_entities_small.a11y.png",
-      "cleanBasename": "widget.CardSlotWidgetPreviewsKt.WearEntitiesSmall_wear_entities_small.png",
+      "annotatedBasename": "WearEntitiesSmall_wear_entities_small.a11y.png",
+      "cleanBasename": "WearEntitiesSmall_wear_entities_small.png",
       "findings": [
         {
           "boundsInScreen": "0,96,317,296",
@@ -8688,8 +8836,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "widget.CardSlotWidgetPreviewsKt.WearEntityFilterLarge_wear_entity-filter_large.a11y.png",
-      "cleanBasename": "widget.CardSlotWidgetPreviewsKt.WearEntityFilterLarge_wear_entity-filter_large.png",
+      "annotatedBasename": "WearEntityFilterLarge_wear_entity_filter_large.a11y.png",
+      "cleanBasename": "WearEntityFilterLarge_wear_entity_filter_large.png",
       "findings": [
         {
           "boundsInScreen": "0,37,317,317",
@@ -8720,8 +8868,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "widget.CardSlotWidgetPreviewsKt.WearEntityFilterSmall_wear_entity-filter_small.a11y.png",
-      "cleanBasename": "widget.CardSlotWidgetPreviewsKt.WearEntityFilterSmall_wear_entity-filter_small.png",
+      "annotatedBasename": "WearEntityFilterSmall_wear_entity_filter_small.a11y.png",
+      "cleanBasename": "WearEntityFilterSmall_wear_entity_filter_small.png",
       "findings": [
         {
           "boundsInScreen": "0,96,317,296",
@@ -8745,8 +8893,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "widget.CardSlotWidgetPreviewsKt.WearEntityLarge_wear_entity_large.a11y.png",
-      "cleanBasename": "widget.CardSlotWidgetPreviewsKt.WearEntityLarge_wear_entity_large.png",
+      "annotatedBasename": "WearEntityLarge_wear_entity_large.a11y.png",
+      "cleanBasename": "WearEntityLarge_wear_entity_large.png",
       "findings": [
         {
           "boundsInScreen": "0,37,317,317",
@@ -8763,8 +8911,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "widget.CardSlotWidgetPreviewsKt.WearEntitySmall_wear_entity_small.a11y.png",
-      "cleanBasename": "widget.CardSlotWidgetPreviewsKt.WearEntitySmall_wear_entity_small.png",
+      "annotatedBasename": "WearEntitySmall_wear_entity_small.a11y.png",
+      "cleanBasename": "WearEntitySmall_wear_entity_small.png",
       "findings": [
         {
           "boundsInScreen": "0,96,317,296",
@@ -8781,8 +8929,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "widget.CardSlotWidgetPreviewsKt.WearGaugeLarge_wear_gauge_large.a11y.png",
-      "cleanBasename": "widget.CardSlotWidgetPreviewsKt.WearGaugeLarge_wear_gauge_large.png",
+      "annotatedBasename": "WearGaugeLarge_wear_gauge_large.a11y.png",
+      "cleanBasename": "WearGaugeLarge_wear_gauge_large.png",
       "findings": [
         {
           "boundsInScreen": "0,37,317,317",
@@ -8799,8 +8947,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "widget.CardSlotWidgetPreviewsKt.WearGaugeSmall_wear_gauge_small.a11y.png",
-      "cleanBasename": "widget.CardSlotWidgetPreviewsKt.WearGaugeSmall_wear_gauge_small.png",
+      "annotatedBasename": "WearGaugeSmall_wear_gauge_small.a11y.png",
+      "cleanBasename": "WearGaugeSmall_wear_gauge_small.png",
       "findings": [
         {
           "boundsInScreen": "0,96,317,296",
@@ -8817,8 +8965,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "widget.CardSlotWidgetPreviewsKt.WearGlanceLarge_wear_glance_large.a11y.png",
-      "cleanBasename": "widget.CardSlotWidgetPreviewsKt.WearGlanceLarge_wear_glance_large.png",
+      "annotatedBasename": "WearGlanceLarge_wear_glance_large.a11y.png",
+      "cleanBasename": "WearGlanceLarge_wear_glance_large.png",
       "findings": [
         {
           "boundsInScreen": "0,37,317,317",
@@ -8842,8 +8990,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "widget.CardSlotWidgetPreviewsKt.WearGlanceSmall_wear_glance_small.a11y.png",
-      "cleanBasename": "widget.CardSlotWidgetPreviewsKt.WearGlanceSmall_wear_glance_small.png",
+      "annotatedBasename": "WearGlanceSmall_wear_glance_small.a11y.png",
+      "cleanBasename": "WearGlanceSmall_wear_glance_small.png",
       "findings": [
         {
           "boundsInScreen": "0,96,317,296",
@@ -8867,8 +9015,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "widget.CardSlotWidgetPreviewsKt.WearGridLarge_wear_grid_large.a11y.png",
-      "cleanBasename": "widget.CardSlotWidgetPreviewsKt.WearGridLarge_wear_grid_large.png",
+      "annotatedBasename": "WearGridLarge_wear_grid_large.a11y.png",
+      "cleanBasename": "WearGridLarge_wear_grid_large.png",
       "findings": [
         {
           "boundsInScreen": "0,37,317,317",
@@ -8885,8 +9033,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "widget.CardSlotWidgetPreviewsKt.WearGridSmall_wear_grid_small.a11y.png",
-      "cleanBasename": "widget.CardSlotWidgetPreviewsKt.WearGridSmall_wear_grid_small.png",
+      "annotatedBasename": "WearGridSmall_wear_grid_small.a11y.png",
+      "cleanBasename": "WearGridSmall_wear_grid_small.png",
       "findings": [
         {
           "boundsInScreen": "0,96,317,296",
@@ -8903,8 +9051,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "widget.CardSlotWidgetPreviewsKt.WearHeadingSmall_wear_heading_small.a11y.png",
-      "cleanBasename": "widget.CardSlotWidgetPreviewsKt.WearHeadingSmall_wear_heading_small.png",
+      "annotatedBasename": "WearHeadingSmall_wear_heading_small.a11y.png",
+      "cleanBasename": "WearHeadingSmall_wear_heading_small.png",
       "findings": [
         {
           "boundsInScreen": "0,96,317,296",
@@ -8921,8 +9069,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "widget.CardSlotWidgetPreviewsKt.WearHistoryGraphSmall_wear_history-graph_small.a11y.png",
-      "cleanBasename": "widget.CardSlotWidgetPreviewsKt.WearHistoryGraphSmall_wear_history-graph_small.png",
+      "annotatedBasename": "WearHistoryGraphSmall_wear_history_graph_small.a11y.png",
+      "cleanBasename": "WearHistoryGraphSmall_wear_history_graph_small.png",
       "findings": [
         {
           "boundsInScreen": "0,96,317,296",
@@ -8939,8 +9087,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "widget.CardSlotWidgetPreviewsKt.WearHorizontalStackLarge_wear_horizontal-stack_large.a11y.png",
-      "cleanBasename": "widget.CardSlotWidgetPreviewsKt.WearHorizontalStackLarge_wear_horizontal-stack_large.png",
+      "annotatedBasename": "WearHorizontalStackLarge_wear_horizontal_stack_large.a11y.png",
+      "cleanBasename": "WearHorizontalStackLarge_wear_horizontal_stack_large.png",
       "findings": [
         {
           "boundsInScreen": "0,37,317,317",
@@ -8957,8 +9105,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "widget.CardSlotWidgetPreviewsKt.WearHorizontalStackSmall_wear_horizontal-stack_small.a11y.png",
-      "cleanBasename": "widget.CardSlotWidgetPreviewsKt.WearHorizontalStackSmall_wear_horizontal-stack_small.png",
+      "annotatedBasename": "WearHorizontalStackSmall_wear_horizontal_stack_small.a11y.png",
+      "cleanBasename": "WearHorizontalStackSmall_wear_horizontal_stack_small.png",
       "findings": [
         {
           "boundsInScreen": "0,96,317,296",
@@ -8975,8 +9123,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "widget.CardSlotWidgetPreviewsKt.WearHumidifierLarge_wear_humidifier_large.a11y.png",
-      "cleanBasename": "widget.CardSlotWidgetPreviewsKt.WearHumidifierLarge_wear_humidifier_large.png",
+      "annotatedBasename": "WearHumidifierLarge_wear_humidifier_large.a11y.png",
+      "cleanBasename": "WearHumidifierLarge_wear_humidifier_large.png",
       "findings": [
         {
           "boundsInScreen": "0,37,317,317",
@@ -8993,8 +9141,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "widget.CardSlotWidgetPreviewsKt.WearHumidifierSmall_wear_humidifier_small.a11y.png",
-      "cleanBasename": "widget.CardSlotWidgetPreviewsKt.WearHumidifierSmall_wear_humidifier_small.png",
+      "annotatedBasename": "WearHumidifierSmall_wear_humidifier_small.a11y.png",
+      "cleanBasename": "WearHumidifierSmall_wear_humidifier_small.png",
       "findings": [
         {
           "boundsInScreen": "0,96,317,296",
@@ -9011,8 +9159,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "widget.CardSlotWidgetPreviewsKt.WearLightLarge_wear_light_large.a11y.png",
-      "cleanBasename": "widget.CardSlotWidgetPreviewsKt.WearLightLarge_wear_light_large.png",
+      "annotatedBasename": "WearLightLarge_wear_light_large.a11y.png",
+      "cleanBasename": "WearLightLarge_wear_light_large.png",
       "findings": [
         {
           "boundsInScreen": "0,37,317,317",
@@ -9029,8 +9177,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "widget.CardSlotWidgetPreviewsKt.WearLightSmall_wear_light_small.a11y.png",
-      "cleanBasename": "widget.CardSlotWidgetPreviewsKt.WearLightSmall_wear_light_small.png",
+      "annotatedBasename": "WearLightSmall_wear_light_small.a11y.png",
+      "cleanBasename": "WearLightSmall_wear_light_small.png",
       "findings": [
         {
           "boundsInScreen": "0,96,317,296",
@@ -9047,8 +9195,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "widget.CardSlotWidgetPreviewsKt.WearLogbookSmall_wear_logbook_small.a11y.png",
-      "cleanBasename": "widget.CardSlotWidgetPreviewsKt.WearLogbookSmall_wear_logbook_small.png",
+      "annotatedBasename": "WearLogbookSmall_wear_logbook_small.a11y.png",
+      "cleanBasename": "WearLogbookSmall_wear_logbook_small.png",
       "findings": [
         {
           "boundsInScreen": "0,96,317,296",
@@ -9065,8 +9213,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "widget.CardSlotWidgetPreviewsKt.WearMarkdownSmall_wear_markdown_small.a11y.png",
-      "cleanBasename": "widget.CardSlotWidgetPreviewsKt.WearMarkdownSmall_wear_markdown_small.png",
+      "annotatedBasename": "WearMarkdownSmall_wear_markdown_small.a11y.png",
+      "cleanBasename": "WearMarkdownSmall_wear_markdown_small.png",
       "findings": [
         {
           "boundsInScreen": "0,96,317,296",
@@ -9083,8 +9231,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "widget.CardSlotWidgetPreviewsKt.WearMediaControlLarge_wear_media-control_large.a11y.png",
-      "cleanBasename": "widget.CardSlotWidgetPreviewsKt.WearMediaControlLarge_wear_media-control_large.png",
+      "annotatedBasename": "WearMediaControlLarge_wear_media_control_large.a11y.png",
+      "cleanBasename": "WearMediaControlLarge_wear_media_control_large.png",
       "findings": [
         {
           "boundsInScreen": "0,37,317,317",
@@ -9101,8 +9249,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "widget.CardSlotWidgetPreviewsKt.WearMediaControlSmall_wear_media-control_small.a11y.png",
-      "cleanBasename": "widget.CardSlotWidgetPreviewsKt.WearMediaControlSmall_wear_media-control_small.png",
+      "annotatedBasename": "WearMediaControlSmall_wear_media_control_small.a11y.png",
+      "cleanBasename": "WearMediaControlSmall_wear_media_control_small.png",
       "findings": [
         {
           "boundsInScreen": "0,96,317,296",
@@ -9119,8 +9267,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "widget.CardSlotWidgetPreviewsKt.WearPictureElementsLarge_wear_picture-elements_large.a11y.png",
-      "cleanBasename": "widget.CardSlotWidgetPreviewsKt.WearPictureElementsLarge_wear_picture-elements_large.png",
+      "annotatedBasename": "WearPictureElementsLarge_wear_picture_elements_large.a11y.png",
+      "cleanBasename": "WearPictureElementsLarge_wear_picture_elements_large.png",
       "findings": [
         {
           "boundsInScreen": "0,37,317,317",
@@ -9137,8 +9285,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "widget.CardSlotWidgetPreviewsKt.WearPictureElementsSmall_wear_picture-elements_small.a11y.png",
-      "cleanBasename": "widget.CardSlotWidgetPreviewsKt.WearPictureElementsSmall_wear_picture-elements_small.png",
+      "annotatedBasename": "WearPictureElementsSmall_wear_picture_elements_small.a11y.png",
+      "cleanBasename": "WearPictureElementsSmall_wear_picture_elements_small.png",
       "findings": [
         {
           "boundsInScreen": "0,96,317,296",
@@ -9155,8 +9303,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "widget.CardSlotWidgetPreviewsKt.WearPictureEntityLarge_wear_picture-entity_large.a11y.png",
-      "cleanBasename": "widget.CardSlotWidgetPreviewsKt.WearPictureEntityLarge_wear_picture-entity_large.png",
+      "annotatedBasename": "WearPictureEntityLarge_wear_picture_entity_large.a11y.png",
+      "cleanBasename": "WearPictureEntityLarge_wear_picture_entity_large.png",
       "findings": [
         {
           "boundsInScreen": "0,37,317,317",
@@ -9173,8 +9321,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "widget.CardSlotWidgetPreviewsKt.WearPictureEntitySmall_wear_picture-entity_small.a11y.png",
-      "cleanBasename": "widget.CardSlotWidgetPreviewsKt.WearPictureEntitySmall_wear_picture-entity_small.png",
+      "annotatedBasename": "WearPictureEntitySmall_wear_picture_entity_small.a11y.png",
+      "cleanBasename": "WearPictureEntitySmall_wear_picture_entity_small.png",
       "findings": [
         {
           "boundsInScreen": "0,96,317,296",
@@ -9191,8 +9339,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "widget.CardSlotWidgetPreviewsKt.WearPictureGlanceLarge_wear_picture-glance_large.a11y.png",
-      "cleanBasename": "widget.CardSlotWidgetPreviewsKt.WearPictureGlanceLarge_wear_picture-glance_large.png",
+      "annotatedBasename": "WearPictureGlanceLarge_wear_picture_glance_large.a11y.png",
+      "cleanBasename": "WearPictureGlanceLarge_wear_picture_glance_large.png",
       "findings": [
         {
           "boundsInScreen": "0,37,317,317",
@@ -9209,8 +9357,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "widget.CardSlotWidgetPreviewsKt.WearPictureGlanceSmall_wear_picture-glance_small.a11y.png",
-      "cleanBasename": "widget.CardSlotWidgetPreviewsKt.WearPictureGlanceSmall_wear_picture-glance_small.png",
+      "annotatedBasename": "WearPictureGlanceSmall_wear_picture_glance_small.a11y.png",
+      "cleanBasename": "WearPictureGlanceSmall_wear_picture_glance_small.png",
       "findings": [
         {
           "boundsInScreen": "0,96,317,296",
@@ -9227,8 +9375,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "widget.CardSlotWidgetPreviewsKt.WearPictureLarge_wear_picture_large.a11y.png",
-      "cleanBasename": "widget.CardSlotWidgetPreviewsKt.WearPictureLarge_wear_picture_large.png",
+      "annotatedBasename": "WearPictureLarge_wear_picture_large.a11y.png",
+      "cleanBasename": "WearPictureLarge_wear_picture_large.png",
       "findings": [
         {
           "boundsInScreen": "0,37,317,317",
@@ -9245,8 +9393,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "widget.CardSlotWidgetPreviewsKt.WearPictureSmall_wear_picture_small.a11y.png",
-      "cleanBasename": "widget.CardSlotWidgetPreviewsKt.WearPictureSmall_wear_picture_small.png",
+      "annotatedBasename": "WearPictureSmall_wear_picture_small.a11y.png",
+      "cleanBasename": "WearPictureSmall_wear_picture_small.png",
       "findings": [
         {
           "boundsInScreen": "0,96,317,296",
@@ -9263,8 +9411,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "ui.WearPreviewsKt.WearSectionPreview_Wear_section.a11y.png",
-      "cleanBasename": "ui.WearPreviewsKt.WearSectionPreview_Wear_section.png",
+      "annotatedBasename": "WearSectionPreview_Wear_section.a11y.png",
+      "cleanBasename": "WearSectionPreview_Wear_section.png",
       "findings": [],
       "functionName": "WearSectionPreview",
       "module": "wear",
@@ -9273,8 +9421,8 @@
       "variant": "wearos_small_round"
     },
     {
-      "annotatedBasename": "widget.CardSlotWidgetPreviewsKt.WearSensorLarge_wear_sensor_large.a11y.png",
-      "cleanBasename": "widget.CardSlotWidgetPreviewsKt.WearSensorLarge_wear_sensor_large.png",
+      "annotatedBasename": "WearSensorLarge_wear_sensor_large.a11y.png",
+      "cleanBasename": "WearSensorLarge_wear_sensor_large.png",
       "findings": [
         {
           "boundsInScreen": "0,37,317,317",
@@ -9291,8 +9439,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "widget.CardSlotWidgetPreviewsKt.WearSensorSmall_wear_sensor_small.a11y.png",
-      "cleanBasename": "widget.CardSlotWidgetPreviewsKt.WearSensorSmall_wear_sensor_small.png",
+      "annotatedBasename": "WearSensorSmall_wear_sensor_small.a11y.png",
+      "cleanBasename": "WearSensorSmall_wear_sensor_small.png",
       "findings": [
         {
           "boundsInScreen": "0,96,317,296",
@@ -9309,8 +9457,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "ui.WearPreviewsKt.WearSettingsPreview_Wear_settings.a11y.png",
-      "cleanBasename": "ui.WearPreviewsKt.WearSettingsPreview_Wear_settings.png",
+      "annotatedBasename": "WearSettingsPreview_Wear_settings.a11y.png",
+      "cleanBasename": "WearSettingsPreview_Wear_settings.png",
       "findings": [],
       "functionName": "WearSettingsPreview",
       "module": "wear",
@@ -9319,8 +9467,8 @@
       "variant": "wearos_small_round"
     },
     {
-      "annotatedBasename": "widget.CardSlotWidgetPreviewsKt.WearStatisticLarge_wear_statistic_large.a11y.png",
-      "cleanBasename": "widget.CardSlotWidgetPreviewsKt.WearStatisticLarge_wear_statistic_large.png",
+      "annotatedBasename": "WearStatisticLarge_wear_statistic_large.a11y.png",
+      "cleanBasename": "WearStatisticLarge_wear_statistic_large.png",
       "findings": [
         {
           "boundsInScreen": "0,37,317,317",
@@ -9337,8 +9485,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "widget.CardSlotWidgetPreviewsKt.WearStatisticSmall_wear_statistic_small.a11y.png",
-      "cleanBasename": "widget.CardSlotWidgetPreviewsKt.WearStatisticSmall_wear_statistic_small.png",
+      "annotatedBasename": "WearStatisticSmall_wear_statistic_small.a11y.png",
+      "cleanBasename": "WearStatisticSmall_wear_statistic_small.png",
       "findings": [
         {
           "boundsInScreen": "0,96,317,296",
@@ -9355,8 +9503,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "widget.CardSlotWidgetPreviewsKt.WearStatisticsGraphSmall_wear_statistics-graph_small.a11y.png",
-      "cleanBasename": "widget.CardSlotWidgetPreviewsKt.WearStatisticsGraphSmall_wear_statistics-graph_small.png",
+      "annotatedBasename": "WearStatisticsGraphSmall_wear_statistics_graph_small.a11y.png",
+      "cleanBasename": "WearStatisticsGraphSmall_wear_statistics_graph_small.png",
       "findings": [
         {
           "boundsInScreen": "0,96,317,296",
@@ -9373,8 +9521,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "widget.CardSlotWidgetPreviewsKt.WearThermostatLarge_wear_thermostat_large.a11y.png",
-      "cleanBasename": "widget.CardSlotWidgetPreviewsKt.WearThermostatLarge_wear_thermostat_large.png",
+      "annotatedBasename": "WearThermostatLarge_wear_thermostat_large.a11y.png",
+      "cleanBasename": "WearThermostatLarge_wear_thermostat_large.png",
       "findings": [
         {
           "boundsInScreen": "0,37,317,317",
@@ -9391,8 +9539,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "widget.CardSlotWidgetPreviewsKt.WearThermostatSmall_wear_thermostat_small.a11y.png",
-      "cleanBasename": "widget.CardSlotWidgetPreviewsKt.WearThermostatSmall_wear_thermostat_small.png",
+      "annotatedBasename": "WearThermostatSmall_wear_thermostat_small.a11y.png",
+      "cleanBasename": "WearThermostatSmall_wear_thermostat_small.png",
       "findings": [
         {
           "boundsInScreen": "0,96,317,296",
@@ -9409,8 +9557,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "widget.CardSlotWidgetPreviewsKt.WearTileLarge_wear_tile_large.a11y.png",
-      "cleanBasename": "widget.CardSlotWidgetPreviewsKt.WearTileLarge_wear_tile_large.png",
+      "annotatedBasename": "WearTileLarge_wear_tile_large.a11y.png",
+      "cleanBasename": "WearTileLarge_wear_tile_large.png",
       "findings": [
         {
           "boundsInScreen": "0,37,317,317",
@@ -9427,8 +9575,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "widget.CardSlotWidgetPreviewsKt.WearTileSmall_wear_tile_small.a11y.png",
-      "cleanBasename": "widget.CardSlotWidgetPreviewsKt.WearTileSmall_wear_tile_small.png",
+      "annotatedBasename": "WearTileSmall_wear_tile_small.a11y.png",
+      "cleanBasename": "WearTileSmall_wear_tile_small.png",
       "findings": [
         {
           "boundsInScreen": "0,96,317,296",
@@ -9445,8 +9593,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "widget.CardSlotWidgetPreviewsKt.WearTodoListSmall_wear_todo-list_small.a11y.png",
-      "cleanBasename": "widget.CardSlotWidgetPreviewsKt.WearTodoListSmall_wear_todo-list_small.png",
+      "annotatedBasename": "WearTodoListSmall_wear_todo_list_small.a11y.png",
+      "cleanBasename": "WearTodoListSmall_wear_todo_list_small.png",
       "findings": [
         {
           "boundsInScreen": "0,96,317,296",
@@ -9463,8 +9611,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "ui.WearPreviewsKt.WearTopLevelPreview_Demo_Wear_top-level_demo.a11y.png",
-      "cleanBasename": "ui.WearPreviewsKt.WearTopLevelPreview_Demo_Wear_top-level_demo.png",
+      "annotatedBasename": "WearTopLevelPreview_Demo_Wear_top_level_demo.a11y.png",
+      "cleanBasename": "WearTopLevelPreview_Demo_Wear_top_level_demo.png",
       "findings": [],
       "functionName": "WearTopLevelPreview_Demo",
       "module": "wear",
@@ -9473,8 +9621,8 @@
       "variant": "wearos_small_round"
     },
     {
-      "annotatedBasename": "ui.WearPreviewsKt.WearTopLevelPreview_Empty_Wear_top-level_empty.a11y.png",
-      "cleanBasename": "ui.WearPreviewsKt.WearTopLevelPreview_Empty_Wear_top-level_empty.png",
+      "annotatedBasename": "WearTopLevelPreview_Empty_Wear_top_level_empty.a11y.png",
+      "cleanBasename": "WearTopLevelPreview_Empty_Wear_top_level_empty.png",
       "findings": [],
       "functionName": "WearTopLevelPreview_Empty",
       "module": "wear",
@@ -9483,8 +9631,8 @@
       "variant": "wearos_small_round"
     },
     {
-      "annotatedBasename": "ui.WearPreviewsKt.WearTopLevelPreview_Live_Wear_top-level_live.a11y.png",
-      "cleanBasename": "ui.WearPreviewsKt.WearTopLevelPreview_Live_Wear_top-level_live.png",
+      "annotatedBasename": "WearTopLevelPreview_Live_Wear_top_level_live.a11y.png",
+      "cleanBasename": "WearTopLevelPreview_Live_Wear_top_level_live.png",
       "findings": [],
       "functionName": "WearTopLevelPreview_Live",
       "module": "wear",
@@ -9493,8 +9641,8 @@
       "variant": "wearos_small_round"
     },
     {
-      "annotatedBasename": "widget.CardSlotWidgetPreviewsKt.WearUnsupportedLarge_wear_unsupported_large.a11y.png",
-      "cleanBasename": "widget.CardSlotWidgetPreviewsKt.WearUnsupportedLarge_wear_unsupported_large.png",
+      "annotatedBasename": "WearUnsupportedLarge_wear_unsupported_large.a11y.png",
+      "cleanBasename": "WearUnsupportedLarge_wear_unsupported_large.png",
       "findings": [
         {
           "boundsInScreen": "0,37,317,317",
@@ -9511,8 +9659,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "widget.CardSlotWidgetPreviewsKt.WearUnsupportedSmall_wear_unsupported_small.a11y.png",
-      "cleanBasename": "widget.CardSlotWidgetPreviewsKt.WearUnsupportedSmall_wear_unsupported_small.png",
+      "annotatedBasename": "WearUnsupportedSmall_wear_unsupported_small.a11y.png",
+      "cleanBasename": "WearUnsupportedSmall_wear_unsupported_small.png",
       "findings": [
         {
           "boundsInScreen": "0,96,317,296",
@@ -9529,8 +9677,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "widget.CardSlotWidgetPreviewsKt.WearVerticalStackLarge_wear_vertical-stack_large.a11y.png",
-      "cleanBasename": "widget.CardSlotWidgetPreviewsKt.WearVerticalStackLarge_wear_vertical-stack_large.png",
+      "annotatedBasename": "WearVerticalStackLarge_wear_vertical_stack_large.a11y.png",
+      "cleanBasename": "WearVerticalStackLarge_wear_vertical_stack_large.png",
       "findings": [
         {
           "boundsInScreen": "0,37,317,317",
@@ -9547,8 +9695,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "widget.CardSlotWidgetPreviewsKt.WearVerticalStackSmall_wear_vertical-stack_small.a11y.png",
-      "cleanBasename": "widget.CardSlotWidgetPreviewsKt.WearVerticalStackSmall_wear_vertical-stack_small.png",
+      "annotatedBasename": "WearVerticalStackSmall_wear_vertical_stack_small.a11y.png",
+      "cleanBasename": "WearVerticalStackSmall_wear_vertical_stack_small.png",
       "findings": [
         {
           "boundsInScreen": "0,96,317,296",
@@ -9565,8 +9713,8 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "widget.CardSlotWidgetPreviewsKt.WearWeatherForecastSmall_wear_weather-forecast_small.a11y.png",
-      "cleanBasename": "widget.CardSlotWidgetPreviewsKt.WearWeatherForecastSmall_wear_weather-forecast_small.png",
+      "annotatedBasename": "WearWeatherForecastSmall_wear_weather_forecast_small.a11y.png",
+      "cleanBasename": "WearWeatherForecastSmall_wear_weather_forecast_small.png",
       "findings": [
         {
           "boundsInScreen": "0,96,317,296",

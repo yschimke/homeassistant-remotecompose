@@ -1,6 +1,6 @@
 # Accessibility Report
 
-_Auto-generated from `compose-preview/a11y/main`. 259 preview(s) across 4 module(s) · 947 error(s) · 3 warning(s) · 17 info._
+_Auto-generated from `compose-preview/a11y/main`. 261 preview(s) across 4 module(s) · 965 error(s) · 3 warning(s) · 17 info._
 
 Browse inline; image URLs are pinned to the commit SHA on the baseline branch so links keep resolving after merge.
 
@@ -64,7 +64,7 @@ _No findings._
 
 ### `Play_Tablet10_01_Home` · `spec:width=800dp,height=1280dp,dpi=224`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/app/Play_Tablet10_01_Home_play_10-inch_home.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/app/Play_Tablet10_01_Home_play_10_inch_home.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -80,7 +80,7 @@ _No findings._
 
 ### `Play_Tablet7_01_Home` · `spec:width=600dp,height=960dp,dpi=240`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/app/Play_Tablet7_01_Home_play_7-inch_home.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/app/Play_Tablet7_01_Home_play_7_inch_home.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -184,7 +184,7 @@ _No findings._
 
 ### `AlarmPanel_Dark`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/CardPreviewsKt.AlarmPanel_Dark_alarm-panel_dark.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/AlarmPanel_Dark_alarm_panel_dark.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -194,7 +194,7 @@ _No findings._
 
 ### `AlarmPanel_Light`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/CardPreviewsKt.AlarmPanel_Light_alarm-panel_light.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/AlarmPanel_Light_alarm_panel_light.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -204,19 +204,19 @@ _No findings._
 
 ### `AppIcon_Dark`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/AppIconPreviewsKt.AppIcon_Dark_app-icon_dark.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/AppIcon_Dark_app_icon_dark.a11y.png" width="400" />
 
 _No findings._
 
 ### `AppIcon_Light`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/AppIconPreviewsKt.AppIcon_Light_app-icon_light.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/AppIcon_Light_app_icon_light.a11y.png" width="400" />
 
 _No findings._
 
 ### `Area_Dark`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/CardPreviewsKt.Area_Dark_area_dark.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/Area_Dark_area_dark.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -227,7 +227,7 @@ _No findings._
 
 ### `Area_Light`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/CardPreviewsKt.Area_Light_area_light.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/Area_Light_area_light.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -238,7 +238,7 @@ _No findings._
 
 ### `BambuAms_Dark`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/CardPreviewsKt.BambuAms_Dark_bambu_ams_dark.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/BambuAms_Dark_bambu_ams_dark.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -246,7 +246,7 @@ _No findings._
 
 ### `BambuAms_Light`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/CardPreviewsKt.BambuAms_Light_bambu_ams_light.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/BambuAms_Light_bambu_ams_light.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -254,7 +254,7 @@ _No findings._
 
 ### `BambuPrintControl_Dark`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/CardPreviewsKt.BambuPrintControl_Dark_bambu_print-control_dark.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/BambuPrintControl_Dark_bambu_print_control_dark.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -262,7 +262,7 @@ _No findings._
 
 ### `BambuPrintControl_Light`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/CardPreviewsKt.BambuPrintControl_Light_bambu_print-control_light.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/BambuPrintControl_Light_bambu_print_control_light.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -270,7 +270,7 @@ _No findings._
 
 ### `BambuPrintStatus_Dark`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/CardPreviewsKt.BambuPrintStatus_Dark_bambu_print-status_dark.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/BambuPrintStatus_Dark_bambu_print_status_dark.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -278,7 +278,7 @@ _No findings._
 
 ### `BambuPrintStatus_Light`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/CardPreviewsKt.BambuPrintStatus_Light_bambu_print-status_light.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/BambuPrintStatus_Light_bambu_print_status_light.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -286,7 +286,7 @@ _No findings._
 
 ### `BambuSpool_Dark`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/CardPreviewsKt.BambuSpool_Dark_bambu_spool_dark.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/BambuSpool_Dark_bambu_spool_dark.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -294,7 +294,7 @@ _No findings._
 
 ### `BambuSpool_Light`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/CardPreviewsKt.BambuSpool_Light_bambu_spool_light.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/BambuSpool_Light_bambu_spool_light.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -310,7 +310,7 @@ _No findings._
 
 ### `Calendar_Dark`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/CardPreviewsKt.Calendar_Dark_calendar_dark.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/Calendar_Dark_calendar_dark.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -318,7 +318,7 @@ _No findings._
 
 ### `Calendar_Light`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/CardPreviewsKt.Calendar_Light_calendar_light.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/Calendar_Light_calendar_light.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -326,7 +326,7 @@ _No findings._
 
 ### `CardPreviewMatrix_Button`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/CardPreviewMatrixKt.CardPreviewMatrix_Button_matrix_button.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/CardPreviewMatrix_Button_matrix_button.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -341,7 +341,7 @@ _No findings._
 
 ### `CardPreviewMatrix_Entities`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/CardPreviewMatrixKt.CardPreviewMatrix_Entities_matrix_entities.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/CardPreviewMatrix_Entities_matrix_entities.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -358,15 +358,15 @@ _No findings._
 | 11 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Living Room" | This item's height is 26dp. Consider making the height of this touch target 48dp or larger. |
 | 12 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Living Room" | This item's height is 32dp. Consider making the height of this touch target 48dp or larger. |
 | 13 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Living Room" | This item's height is 32dp. Consider making the height of this touch target 48dp or larger. |
-| 14 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Living Room" | This item's height is 18dp. Consider making the height of this touch target 48dp or larger. |
-| 15 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Office lamp" | This item's height is 2dp. Consider making the height of this touch target 48dp or larger. |
-| 16 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Living Room" | This item's height is 19dp. Consider making the height of this touch target 48dp or larger. |
-| 17 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Office lamp" | This item's height is 1dp. Consider making the height of this touch target 48dp or larger. |
+| 14 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Living Room" | This item's height is 16dp. Consider making the height of this touch target 48dp or larger. |
+| 15 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Office lamp" | This item's height is 4dp. Consider making the height of this touch target 48dp or larger. |
+| 16 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Living Room" | This item's height is 18dp. Consider making the height of this touch target 48dp or larger. |
+| 17 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Office lamp" | This item's height is 3dp. Consider making the height of this touch target 48dp or larger. |
 | 18 | INFO | DuplicateSpeakableTextCheck | android.widget.TextView | This non-clickable item's speakable text: "Terrazzo slot" is identical to that of 1 other item(s). |
 
 ### `CardPreviewMatrix_Entity`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/CardPreviewMatrixKt.CardPreviewMatrix_Entity_matrix_entity.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/CardPreviewMatrix_Entity_matrix_entity.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -386,7 +386,7 @@ _No findings._
 
 ### `CardPreviewMatrix_Gauge`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/CardPreviewMatrixKt.CardPreviewMatrix_Gauge_matrix_gauge.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/CardPreviewMatrix_Gauge_matrix_gauge.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -401,7 +401,7 @@ _No findings._
 
 ### `CardPreviewMatrix_Humidifier`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/CardPreviewMatrixKt.CardPreviewMatrix_Humidifier_matrix_humidifier.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/CardPreviewMatrix_Humidifier_matrix_humidifier.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -419,7 +419,7 @@ _No findings._
 
 ### `CardPreviewMatrix_Thermostat`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/CardPreviewMatrixKt.CardPreviewMatrix_Thermostat_matrix_thermostat.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/CardPreviewMatrix_Thermostat_matrix_thermostat.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -437,7 +437,7 @@ _No findings._
 
 ### `CardPreviewMatrix_Tile`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/CardPreviewMatrixKt.CardPreviewMatrix_Tile_matrix_tile.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/CardPreviewMatrix_Tile_matrix_tile.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -456,7 +456,7 @@ _No findings._
 
 ### `CardPreviewMatrix_WeatherForecast`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/CardPreviewMatrixKt.CardPreviewMatrix_WeatherForecast_matrix_weather-forecast.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/CardPreviewMatrix_WeatherForecast_matrix_weather_forecast.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -470,7 +470,7 @@ _No findings._
 
 ### `Clock_Dark`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/CardPreviewsKt.Clock_Dark_clock_dark.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/Clock_Dark_clock_dark.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -478,7 +478,7 @@ _No findings._
 
 ### `Clock_Light`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/CardPreviewsKt.Clock_Light_clock_light.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/Clock_Light_clock_light.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -486,7 +486,7 @@ _No findings._
 
 ### `Clock_Seconds`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/CardPreviewsKt.Clock_Seconds_clock_seconds.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/Clock_Seconds_clock_seconds.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -494,7 +494,7 @@ _No findings._
 
 ### `Clock_Zone`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/CardPreviewsKt.Clock_Zone_clock_zone.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/Clock_Zone_clock_zone.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -502,7 +502,7 @@ _No findings._
 
 ### `ComponentWidthRuntimeProbe`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/ComponentWidthRuntimeProbeKt.ComponentWidthRuntimeProbe_componentWidth_runtime_probe.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/ComponentWidthRuntimeProbe_componentWidth_runtime_probe.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -519,7 +519,7 @@ _No findings._
 
 ### `Dashboard3dPrintingMobile`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/DashboardPreviewsKt.Dashboard3dPrintingMobile_dashboard_3d-printing_mobile.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/Dashboard3dPrintingMobile_dashboard_3d_printing_mobile.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -549,7 +549,7 @@ _No findings._
 
 ### `Dashboard3dPrintingTablet`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/DashboardPreviewsKt.Dashboard3dPrintingTablet_dashboard_3d-printing_tablet.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/Dashboard3dPrintingTablet_dashboard_3d_printing_tablet.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -589,7 +589,7 @@ _No findings._
 
 ### `DashboardClimateMobile`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/DashboardPreviewsKt.DashboardClimateMobile_dashboard_climate_mobile.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/DashboardClimateMobile_dashboard_climate_mobile.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -621,7 +621,7 @@ _No findings._
 
 ### `DashboardClimateTablet`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/DashboardPreviewsKt.DashboardClimateTablet_dashboard_climate_tablet.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/DashboardClimateTablet_dashboard_climate_tablet.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -659,7 +659,7 @@ _No findings._
 
 ### `DashboardEnergyMobile`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/DashboardPreviewsKt.DashboardEnergyMobile_dashboard_energy_mobile.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/DashboardEnergyMobile_dashboard_energy_mobile.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -700,7 +700,7 @@ _No findings._
 
 ### `DashboardEnergyTablet`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/DashboardPreviewsKt.DashboardEnergyTablet_dashboard_energy_tablet.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/DashboardEnergyTablet_dashboard_energy_tablet.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -741,7 +741,7 @@ _No findings._
 
 ### `DashboardGithubMobile`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/DashboardPreviewsKt.DashboardGithubMobile_dashboard_github_mobile.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/DashboardGithubMobile_dashboard_github_mobile.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -779,10 +779,13 @@ _No findings._
 | 32 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Stars" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
 | 33 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Open issues" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
 | 34 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Open PRs" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 35 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Latest PR" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 36 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Latest issue" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 37 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Latest release" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
 
 ### `DashboardGithubTablet`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/DashboardPreviewsKt.DashboardGithubTablet_dashboard_github_tablet.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/DashboardGithubTablet_dashboard_github_tablet.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -845,7 +848,7 @@ _No findings._
 
 ### `DashboardMeshcoreMobile`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/DashboardPreviewsKt.DashboardMeshcoreMobile_dashboard_meshcore_mobile.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/DashboardMeshcoreMobile_dashboard_meshcore_mobile.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -861,19 +864,26 @@ _No findings._
 | 10 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
 | 11 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
 | 12 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 13 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Status" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 14 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Nodes seen" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 15 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Path length" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 16 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Req OK" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 17 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Req fail" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 18 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Battery %" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 19 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Battery V" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 20 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Ch1 voltage" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 21 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Uptime" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 13 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
+| 14 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
+| 15 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Status" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 16 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Nodes seen" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 17 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Path length" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 18 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Req OK" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 19 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Req fail" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 20 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Battery %" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 21 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Battery V" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 22 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Ch1 voltage" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 23 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Uptime" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 24 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Recipient type" | This item's height is 32dp. Consider making the height of this touch target 48dp or larger. |
+| 25 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Channel" | This item's height is 32dp. Consider making the height of this touch target 48dp or larger. |
+| 26 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Contact / Room" | This item's height is 32dp. Consider making the height of this touch target 48dp or larger. |
+| 27 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Message" | This item's height is 32dp. Consider making the height of this touch target 48dp or larger. |
+| 28 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Last delivery" | This item's height is 32dp. Consider making the height of this touch target 48dp or larger. |
 
 ### `DashboardMeshcoreTablet`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/DashboardPreviewsKt.DashboardMeshcoreTablet_dashboard_meshcore_tablet.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/DashboardMeshcoreTablet_dashboard_meshcore_tablet.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -888,19 +898,25 @@ _No findings._
 | 9 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
 | 10 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
 | 11 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 12 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Status" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 13 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Nodes seen" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 14 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Path length" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 15 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Req OK" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 16 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Req fail" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 17 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Battery %" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 18 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Battery V" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 19 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Ch1 voltage" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 20 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Uptime" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 12 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
+| 13 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
+| 14 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Status" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 15 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Nodes seen" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 16 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Path length" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 17 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Req OK" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 18 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Req fail" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 19 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Battery %" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 20 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Battery V" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 21 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Ch1 voltage" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 22 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Uptime" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 23 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Recipient type" | This item's height is 32dp. Consider making the height of this touch target 48dp or larger. |
+| 24 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Channel" | This item's height is 32dp. Consider making the height of this touch target 48dp or larger. |
+| 25 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Contact / Room" | This item's height is 32dp. Consider making the height of this touch target 48dp or larger. |
+| 26 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Message" | This item's height is 32dp. Consider making the height of this touch target 48dp or larger. |
 
 ### `DashboardNetworksMobile`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/DashboardPreviewsKt.DashboardNetworksMobile_dashboard_networks_mobile.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/DashboardNetworksMobile_dashboard_networks_mobile.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -921,7 +937,7 @@ _No findings._
 
 ### `DashboardNetworksTablet`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/DashboardPreviewsKt.DashboardNetworksTablet_dashboard_networks_tablet.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/DashboardNetworksTablet_dashboard_networks_tablet.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -942,7 +958,7 @@ _No findings._
 
 ### `DashboardSecurityMobile`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/DashboardPreviewsKt.DashboardSecurityMobile_dashboard_security_mobile.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/DashboardSecurityMobile_dashboard_security_mobile.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -966,7 +982,7 @@ _No findings._
 
 ### `DashboardSecurityTablet`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/DashboardPreviewsKt.DashboardSecurityTablet_dashboard_security_tablet.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/DashboardSecurityTablet_dashboard_security_tablet.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -990,7 +1006,7 @@ _No findings._
 
 ### `Dashboard_Dark`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/CardPreviewsKt.Dashboard_Dark_dashboard_dark.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/Dashboard_Dark_dashboard_dark.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -1006,7 +1022,7 @@ _No findings._
 
 ### `Dashboard_Light`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/CardPreviewsKt.Dashboard_Light_dashboard_light.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/Dashboard_Light_dashboard_light.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -1022,7 +1038,7 @@ _No findings._
 
 ### `Entities_Dark`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/CardPreviewsKt.Entities_Dark_entities_dark.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/Entities_Dark_entities_dark.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -1033,7 +1049,7 @@ _No findings._
 
 ### `Entities_Light`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/CardPreviewsKt.Entities_Light_entities_light.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/Entities_Light_entities_light.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -1044,7 +1060,7 @@ _No findings._
 
 ### `Entities_Responsive_Light`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/ResponsiveCardPreviewsKt.Entities_Responsive_Light_entities_responsive_narrow.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/Entities_Responsive_Light_entities_responsive_narrow.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -1055,7 +1071,7 @@ _No findings._
 
 ### `EntityFilter_Dark`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/CardPreviewsKt.EntityFilter_Dark_entity-filter_dark.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/EntityFilter_Dark_entity_filter_dark.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -1064,7 +1080,7 @@ _No findings._
 
 ### `EntityFilter_Light`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/CardPreviewsKt.EntityFilter_Light_entity-filter_light.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/EntityFilter_Light_entity_filter_light.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -1073,7 +1089,7 @@ _No findings._
 
 ### `Entity_Dark`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/CardPreviewsKt.Entity_Dark_entity_dark.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/Entity_Dark_entity_dark.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -1081,7 +1097,7 @@ _No findings._
 
 ### `Entity_Light`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/CardPreviewsKt.Entity_Light_entity_light.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/Entity_Light_entity_light.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -1105,7 +1121,7 @@ _No findings._
 
 ### `Garage_TwoEntities_Dark`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/GarageShutterCardPreviewsKt.Garage_TwoEntities_Dark_garage_two-entities_dark.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/Garage_TwoEntities_Dark_garage_two_entities_dark.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -1119,7 +1135,7 @@ _No findings._
 
 ### `Garage_TwoEntities_Light`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/GarageShutterCardPreviewsKt.Garage_TwoEntities_Light_garage_two-entities_light.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/Garage_TwoEntities_Light_garage_two_entities_light.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -1141,7 +1157,7 @@ _No findings._
 
 ### `Gauge_Dark`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/CardPreviewsKt.Gauge_Dark_gauge_dark.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/Gauge_Dark_gauge_dark.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -1149,7 +1165,7 @@ _No findings._
 
 ### `Gauge_Light`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/CardPreviewsKt.Gauge_Light_gauge_light.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/Gauge_Light_gauge_light.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -1157,7 +1173,7 @@ _No findings._
 
 ### `Glance_Dark`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/CardPreviewsKt.Glance_Dark_glance_dark.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/Glance_Dark_glance_dark.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -1166,7 +1182,7 @@ _No findings._
 
 ### `Glance_Light`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/CardPreviewsKt.Glance_Light_glance_light.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/Glance_Light_glance_light.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -1175,7 +1191,7 @@ _No findings._
 
 ### `Glance_Responsive_Dark`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/ResponsiveCardPreviewsKt.Glance_Responsive_Dark_glance_responsive_narrow.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/Glance_Responsive_Dark_glance_responsive_narrow.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -1184,7 +1200,7 @@ _No findings._
 
 ### `Grid_Dark`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/CardPreviewsKt.Grid_Dark_grid_dark.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/Grid_Dark_grid_dark.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -1192,7 +1208,7 @@ _No findings._
 
 ### `Grid_Light`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/CardPreviewsKt.Grid_Light_grid_light.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/Grid_Light_grid_light.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -1200,7 +1216,7 @@ _No findings._
 
 ### `Heading_Dark`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/CardPreviewsKt.Heading_Dark_heading_dark.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/Heading_Dark_heading_dark.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -1208,7 +1224,23 @@ _No findings._
 
 ### `Heading_Light`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/CardPreviewsKt.Heading_Light_heading_light.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/Heading_Light_heading_light.a11y.png" width="400" />
+
+| # | Level | Rule | Element | Message |
+|--:|---|---|---|---|
+| 1 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
+
+### `HistoryGraphNoData_Dark`
+
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/HistoryGraphNoData_Dark_history_graph_no_data_dark.a11y.png" width="400" />
+
+| # | Level | Rule | Element | Message |
+|--:|---|---|---|---|
+| 1 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
+
+### `HistoryGraphNoData_Light`
+
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/HistoryGraphNoData_Light_history_graph_no_data_light.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -1216,7 +1248,7 @@ _No findings._
 
 ### `HistoryGraph_Dark`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/CardPreviewsKt.HistoryGraph_Dark_history-graph_dark.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/HistoryGraph_Dark_history_graph_dark.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -1224,7 +1256,7 @@ _No findings._
 
 ### `HistoryGraph_Light`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/CardPreviewsKt.HistoryGraph_Light_history-graph_light.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/HistoryGraph_Light_history_graph_light.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -1232,7 +1264,7 @@ _No findings._
 
 ### `HorizontalStack_Dark`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/CardPreviewsKt.HorizontalStack_Dark_horizontal-stack_dark.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/HorizontalStack_Dark_horizontal_stack_dark.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -1240,7 +1272,7 @@ _No findings._
 
 ### `HorizontalStack_Light`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/CardPreviewsKt.HorizontalStack_Light_horizontal-stack_light.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/HorizontalStack_Light_horizontal_stack_light.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -1248,7 +1280,7 @@ _No findings._
 
 ### `Humidifier_Dark`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/CardPreviewsKt.Humidifier_Dark_humidifier_dark.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/Humidifier_Dark_humidifier_dark.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -1258,7 +1290,7 @@ _No findings._
 
 ### `Humidifier_Light`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/CardPreviewsKt.Humidifier_Light_humidifier_light.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/Humidifier_Light_humidifier_light.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -1268,7 +1300,7 @@ _No findings._
 
 ### `ImageInline_Dark`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/ImagePreviewsKt.ImageInline_Dark_image-inline_dark.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/ImageInline_Dark_image_inline_dark.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -1276,7 +1308,7 @@ _No findings._
 
 ### `ImageInline_Light`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/ImagePreviewsKt.ImageInline_Light_image-inline_light.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/ImageInline_Light_image_inline_light.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -1284,7 +1316,7 @@ _No findings._
 
 ### `ImageNamed_Dark`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/ImagePreviewsKt.ImageNamed_Dark_image-named_dark.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/ImageNamed_Dark_image_named_dark.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -1292,7 +1324,7 @@ _No findings._
 
 ### `ImageNamed_Light`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/ImagePreviewsKt.ImageNamed_Light_image-named_light.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/ImageNamed_Light_image_named_light.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -1300,7 +1332,7 @@ _No findings._
 
 ### `ImageUrl_FakeCoil_Dark`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/ImagePreviewsKt.ImageUrl_FakeCoil_Dark_image-url_fake-coil_dark.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/ImageUrl_FakeCoil_Dark_image_url_fake_coil_dark.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -1308,7 +1340,7 @@ _No findings._
 
 ### `ImageUrl_FakeCoil_Light`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/ImagePreviewsKt.ImageUrl_FakeCoil_Light_image-url_fake-coil_light.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/ImageUrl_FakeCoil_Light_image_url_fake_coil_light.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -1316,7 +1348,7 @@ _No findings._
 
 ### `ImageUrl_Probe_Frame0`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/ImagePreviewsKt.ImageUrl_Probe_Frame0_image-url_probe_frame_0.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/ImageUrl_Probe_Frame0_image_url_probe_frame_0.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -1324,7 +1356,7 @@ _No findings._
 
 ### `ImageUrl_Probe_Frame1`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/ImagePreviewsKt.ImageUrl_Probe_Frame1_image-url_probe_frame_1.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/ImageUrl_Probe_Frame1_image_url_probe_frame_1.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -1332,7 +1364,7 @@ _No findings._
 
 ### `LightCard_Dark`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/CardPreviewsKt.LightCard_Dark_light_card_dark.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/LightCard_Dark_light_card_dark.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -1340,7 +1372,7 @@ _No findings._
 
 ### `LightCard_Light`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/CardPreviewsKt.LightCard_Light_light_card_light.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/LightCard_Light_light_card_light.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -1348,7 +1380,7 @@ _No findings._
 
 ### `Logbook_Dark`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/CardPreviewsKt.Logbook_Dark_logbook_dark.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/Logbook_Dark_logbook_dark.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -1356,7 +1388,7 @@ _No findings._
 
 ### `Logbook_Light`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/CardPreviewsKt.Logbook_Light_logbook_light.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/Logbook_Light_logbook_light.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -1364,7 +1396,7 @@ _No findings._
 
 ### `Markdown_Dark`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/CardPreviewsKt.Markdown_Dark_markdown_dark.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/Markdown_Dark_markdown_dark.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -1372,7 +1404,7 @@ _No findings._
 
 ### `Markdown_Light`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/CardPreviewsKt.Markdown_Light_markdown_light.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/Markdown_Light_markdown_light.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -1380,7 +1412,7 @@ _No findings._
 
 ### `Markdown_Responsive_Light`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/ResponsiveCardPreviewsKt.Markdown_Responsive_Light_markdown_responsive_narrow.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/Markdown_Responsive_Light_markdown_responsive_narrow.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -1388,7 +1420,7 @@ _No findings._
 
 ### `MediaControl_Dark`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/CardPreviewsKt.MediaControl_Dark_media-control_dark.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/MediaControl_Dark_media_control_dark.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -1399,7 +1431,7 @@ _No findings._
 
 ### `MediaControl_Light`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/CardPreviewsKt.MediaControl_Light_media-control_light.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/MediaControl_Light_media_control_light.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -1410,7 +1442,7 @@ _No findings._
 
 ### `PictureElements_Dark`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/CardPreviewsKt.PictureElements_Dark_picture-elements_dark.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/PictureElements_Dark_picture_elements_dark.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -1419,7 +1451,7 @@ _No findings._
 
 ### `PictureElements_Light`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/CardPreviewsKt.PictureElements_Light_picture-elements_light.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/PictureElements_Light_picture_elements_light.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -1428,7 +1460,7 @@ _No findings._
 
 ### `PictureEntity_AppMode_Dark`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/PictureEntityStrategyPreviewsKt.PictureEntity_AppMode_Dark_picture-entity_app-mode_dark.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/PictureEntity_AppMode_Dark_picture_entity_app_mode_dark.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -1436,7 +1468,7 @@ _No findings._
 
 ### `PictureEntity_AppMode_Light`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/PictureEntityStrategyPreviewsKt.PictureEntity_AppMode_Light_picture-entity_app-mode_light.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/PictureEntity_AppMode_Light_picture_entity_app_mode_light.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -1444,7 +1476,7 @@ _No findings._
 
 ### `PictureEntity_Dark`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/CardPreviewsKt.PictureEntity_Dark_picture-entity_dark.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/PictureEntity_Dark_picture_entity_dark.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -1452,7 +1484,7 @@ _No findings._
 
 ### `PictureEntity_IconFallback_Light`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/PictureEntityStrategyPreviewsKt.PictureEntity_IconFallback_Light_picture-entity_icon-fallback_light.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/PictureEntity_IconFallback_Light_picture_entity_icon_fallback_light.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -1460,7 +1492,7 @@ _No findings._
 
 ### `PictureEntity_Light`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/CardPreviewsKt.PictureEntity_Light_picture-entity_light.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/PictureEntity_Light_picture_entity_light.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -1468,7 +1500,7 @@ _No findings._
 
 ### `PictureEntity_WidgetMode_Light`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/PictureEntityStrategyPreviewsKt.PictureEntity_WidgetMode_Light_picture-entity_widget-mode_light.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/PictureEntity_WidgetMode_Light_picture_entity_widget_mode_light.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -1476,7 +1508,7 @@ _No findings._
 
 ### `PictureGlance_Dark`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/CardPreviewsKt.PictureGlance_Dark_picture-glance_dark.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/PictureGlance_Dark_picture_glance_dark.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -1488,7 +1520,7 @@ _No findings._
 
 ### `PictureGlance_Light`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/CardPreviewsKt.PictureGlance_Light_picture-glance_light.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/PictureGlance_Light_picture_glance_light.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -1500,7 +1532,7 @@ _No findings._
 
 ### `Picture_Dark`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/CardPreviewsKt.Picture_Dark_picture_dark.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/Picture_Dark_picture_dark.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -1508,7 +1540,7 @@ _No findings._
 
 ### `Picture_Light`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/CardPreviewsKt.Picture_Light_picture_light.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/Picture_Light_picture_light.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -1516,19 +1548,19 @@ _No findings._
 
 ### `Play_Feature_1024x500` · `spec:width=512dp,height=250dp,dpi=320`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/PlayStoreGraphicsPreviewsKt.Play_Feature_1024x500_play_feature_1024x500.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/Play_Feature_1024x500_play_feature_1024x500.a11y.png" width="400" />
 
 _No findings._
 
 ### `Play_Icon_512` · `spec:width=256dp,height=256dp,dpi=320`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/PlayStoreGraphicsPreviewsKt.Play_Icon_512_play_icon_512.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/Play_Icon_512_play_icon_512.png" width="400" />
 
 _No findings._
 
 ### `Sensor_Dark`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/CardPreviewsKt.Sensor_Dark_sensor_dark.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/Sensor_Dark_sensor_dark.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -1536,7 +1568,7 @@ _No findings._
 
 ### `Sensor_Light`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/CardPreviewsKt.Sensor_Light_sensor_light.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/Sensor_Light_sensor_light.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -1544,7 +1576,7 @@ _No findings._
 
 ### `Shutter_Dark`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/ShutterCardPreviewsKt.Shutter_Dark_shutter_dark.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/Shutter_Dark_shutter_dark.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -1558,7 +1590,7 @@ _No findings._
 
 ### `Shutter_Light`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/ShutterCardPreviewsKt.Shutter_Light_shutter_light.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/Shutter_Light_shutter_light.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -1572,7 +1604,7 @@ _No findings._
 
 ### `Sizing_ConstraintMatrix_PaintMeasure`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/SizingExperimentPreviewsKt.Sizing_ConstraintMatrix_PaintMeasure_sizing_width_height_matrix_paint-measure_profile.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/Sizing_ConstraintMatrix_PaintMeasure_sizing_width_height_matrix_paint_measure_profile.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -1606,7 +1638,7 @@ _No findings._
 
 ### `Sizing_ConstraintMatrix_Wrap`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/SizingExperimentPreviewsKt.Sizing_ConstraintMatrix_Wrap_sizing_width_height_matrix_wrap_profile.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/Sizing_ConstraintMatrix_Wrap_sizing_width_height_matrix_wrap_profile.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -1640,7 +1672,7 @@ _No findings._
 
 ### `Sizing_FixedSlot_PaintMeasure`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/SizingExperimentPreviewsKt.Sizing_FixedSlot_PaintMeasure_sizing_fixed_slot_paint-measure_profile.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/Sizing_FixedSlot_PaintMeasure_sizing_fixed_slot_paint_measure_profile.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -1658,7 +1690,7 @@ _No findings._
 
 ### `Sizing_FixedSlot_Wrap`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/SizingExperimentPreviewsKt.Sizing_FixedSlot_Wrap_sizing_fixed_slot_wrap_profile.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/Sizing_FixedSlot_Wrap_sizing_fixed_slot_wrap_profile.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -1676,7 +1708,7 @@ _No findings._
 
 ### `Sizing_SlackSlot_PaintMeasure`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/SizingExperimentPreviewsKt.Sizing_SlackSlot_PaintMeasure_sizing_slack_slot_paint-measure_profile.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/Sizing_SlackSlot_PaintMeasure_sizing_slack_slot_paint_measure_profile.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -1694,7 +1726,7 @@ _No findings._
 
 ### `Sizing_SlackSlot_Wrap`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/SizingExperimentPreviewsKt.Sizing_SlackSlot_Wrap_sizing_slack_slot_wrap_profile.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/Sizing_SlackSlot_Wrap_sizing_slack_slot_wrap_profile.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -1712,7 +1744,7 @@ _No findings._
 
 ### `Sizing_TightSlot_PaintMeasure`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/SizingExperimentPreviewsKt.Sizing_TightSlot_PaintMeasure_sizing_tight_slot_paint-measure_profile.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/Sizing_TightSlot_PaintMeasure_sizing_tight_slot_paint_measure_profile.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -1730,7 +1762,7 @@ _No findings._
 
 ### `Sizing_TightSlot_Wrap`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/SizingExperimentPreviewsKt.Sizing_TightSlot_Wrap_sizing_tight_slot_wrap_profile.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/Sizing_TightSlot_Wrap_sizing_tight_slot_wrap_profile.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -1748,7 +1780,7 @@ _No findings._
 
 ### `Sizing_WidthPinnedHeightAdaptive`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/SizingExperimentPreviewsKt.Sizing_WidthPinnedHeightAdaptive_sizing_width_pinned_height_adaptive.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/Sizing_WidthPinnedHeightAdaptive_sizing_width_pinned_height_adaptive.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -1760,7 +1792,7 @@ _No findings._
 
 ### `Statistic_Dark`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/CardPreviewsKt.Statistic_Dark_statistic_dark.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/Statistic_Dark_statistic_dark.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -1768,7 +1800,7 @@ _No findings._
 
 ### `Statistic_Light`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/CardPreviewsKt.Statistic_Light_statistic_light.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/Statistic_Light_statistic_light.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -1776,7 +1808,7 @@ _No findings._
 
 ### `StatisticsGraph_Dark`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/CardPreviewsKt.StatisticsGraph_Dark_statistics-graph_dark.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/StatisticsGraph_Dark_statistics_graph_dark.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -1784,7 +1816,7 @@ _No findings._
 
 ### `StatisticsGraph_Light`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/CardPreviewsKt.StatisticsGraph_Light_statistics-graph_light.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/StatisticsGraph_Light_statistics_graph_light.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -1792,7 +1824,7 @@ _No findings._
 
 ### `Theme_Home_Dark`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/ThemePreviewsKt.Theme_Home_Dark_theme_Home_dark.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/Theme_Home_Dark_theme_Home_dark.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -1802,7 +1834,7 @@ _No findings._
 
 ### `Theme_Home_Light`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/ThemePreviewsKt.Theme_Home_Light_theme_Home_light.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/Theme_Home_Light_theme_Home_light.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -1812,7 +1844,7 @@ _No findings._
 
 ### `Theme_Kiosk_Dark`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/ThemePreviewsKt.Theme_Kiosk_Dark_theme_Kiosk_dark.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/Theme_Kiosk_Dark_theme_Kiosk_dark.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -1822,7 +1854,7 @@ _No findings._
 
 ### `Theme_Kiosk_Light`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/ThemePreviewsKt.Theme_Kiosk_Light_theme_Kiosk_light.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/Theme_Kiosk_Light_theme_Kiosk_light.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -1832,7 +1864,7 @@ _No findings._
 
 ### `Theme_Material3_Dark`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/ThemePreviewsKt.Theme_Material3_Dark_theme_Material3_dark.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/Theme_Material3_Dark_theme_Material3_dark.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -1842,7 +1874,7 @@ _No findings._
 
 ### `Theme_Material3_Light`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/ThemePreviewsKt.Theme_Material3_Light_theme_Material3_light.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/Theme_Material3_Light_theme_Material3_light.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -1852,7 +1884,7 @@ _No findings._
 
 ### `Theme_Minimalist_Dark`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/ThemePreviewsKt.Theme_Minimalist_Dark_theme_Minimalist_dark.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/Theme_Minimalist_Dark_theme_Minimalist_dark.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -1862,7 +1894,7 @@ _No findings._
 
 ### `Theme_Minimalist_Light`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/ThemePreviewsKt.Theme_Minimalist_Light_theme_Minimalist_light.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/Theme_Minimalist_Light_theme_Minimalist_light.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -1872,7 +1904,7 @@ _No findings._
 
 ### `Theme_Mushroom_Dark`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/ThemePreviewsKt.Theme_Mushroom_Dark_theme_Mushroom_dark.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/Theme_Mushroom_Dark_theme_Mushroom_dark.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -1882,7 +1914,7 @@ _No findings._
 
 ### `Theme_Mushroom_Light`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/ThemePreviewsKt.Theme_Mushroom_Light_theme_Mushroom_light.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/Theme_Mushroom_Light_theme_Mushroom_light.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -1892,7 +1924,7 @@ _No findings._
 
 ### `Thermostat_Dark`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/CardPreviewsKt.Thermostat_Dark_thermostat_dark.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/Thermostat_Dark_thermostat_dark.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -1902,7 +1934,7 @@ _No findings._
 
 ### `Thermostat_Light`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/CardPreviewsKt.Thermostat_Light_thermostat_light.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/Thermostat_Light_thermostat_light.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -1916,7 +1948,7 @@ _No findings._
 
 ### `Tile_LightOn`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/TileCardPreviewsKt.Tile_LightOn_tile_light_on.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/Tile_LightOn_tile_light_on.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -1924,7 +1956,7 @@ _No findings._
 
 ### `Tile_LightOn_Dark`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/TileCardPreviewsKt.Tile_LightOn_Dark_tile_light_on_dark.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/Tile_LightOn_Dark_tile_light_on_dark.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -1940,7 +1972,7 @@ _No findings._
 
 ### `Tile_Responsive_Dark`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/ResponsiveCardPreviewsKt.Tile_Responsive_Dark_tile_responsive_narrow.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/Tile_Responsive_Dark_tile_responsive_narrow.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -1948,7 +1980,7 @@ _No findings._
 
 ### `Tile_TemperatureSensor`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/TileCardPreviewsKt.Tile_TemperatureSensor_tile_sensor_temperature.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/Tile_TemperatureSensor_tile_sensor_temperature.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -1956,7 +1988,7 @@ _No findings._
 
 ### `Tile_TemperatureSensor_Dark`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/TileCardPreviewsKt.Tile_TemperatureSensor_Dark_tile_sensor_temperature_dark.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/Tile_TemperatureSensor_Dark_tile_sensor_temperature_dark.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -1964,7 +1996,7 @@ _No findings._
 
 ### `TodoList_Dark`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/CardPreviewsKt.TodoList_Dark_todo-list_dark.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/TodoList_Dark_todo_list_dark.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -1975,7 +2007,7 @@ _No findings._
 
 ### `TodoList_Light`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/CardPreviewsKt.TodoList_Light_todo-list_light.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/TodoList_Light_todo_list_light.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -1986,7 +2018,7 @@ _No findings._
 
 ### `ToggleByProgress_Mid`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/ToggleSwitchPreviewsKt.ToggleByProgress_Mid_toggle_progress_0.5.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/5.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -1994,7 +2026,7 @@ _No findings._
 
 ### `ToggleByProgress_Off`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/ToggleSwitchPreviewsKt.ToggleByProgress_Off_toggle_progress_0.0.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/ToggleByProgress_Off_toggle_progress_0.0.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -2002,7 +2034,7 @@ _No findings._
 
 ### `ToggleByProgress_On`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/ToggleSwitchPreviewsKt.ToggleByProgress_On_toggle_progress_1.0.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/ToggleByProgress_On_toggle_progress_1.0.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -2010,7 +2042,7 @@ _No findings._
 
 ### `ToggleInitial_Off`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/ToggleSwitchPreviewsKt.ToggleInitial_Off_toggle_initial_off.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/ToggleInitial_Off_toggle_initial_off.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -2018,7 +2050,7 @@ _No findings._
 
 ### `ToggleInitial_On`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/ToggleSwitchPreviewsKt.ToggleInitial_On_toggle_initial_on.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/ToggleInitial_On_toggle_initial_on.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -2026,7 +2058,7 @@ _No findings._
 
 ### `ToggleInitial_On_Dark`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/ToggleSwitchPreviewsKt.ToggleInitial_On_Dark_toggle_initial_on_dark.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/ToggleInitial_On_Dark_toggle_initial_on_dark.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -2034,7 +2066,7 @@ _No findings._
 
 ### `Toggle_Animated_Dark`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/AnimationPreviewsKt.Toggle_Animated_Dark_toggle-animated_dark.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/Toggle_Animated_Dark_toggle_animated_dark.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -2042,7 +2074,7 @@ _No findings._
 
 ### `Toggle_Animated_Light`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/AnimationPreviewsKt.Toggle_Animated_Light_toggle-animated_light.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/Toggle_Animated_Light_toggle_animated_light.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -2058,7 +2090,7 @@ _No findings._
 
 ### `Unsupported_Dark`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/CardPreviewsKt.Unsupported_Dark_unsupported_dark.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/Unsupported_Dark_unsupported_dark.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -2066,7 +2098,7 @@ _No findings._
 
 ### `Unsupported_Light`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/CardPreviewsKt.Unsupported_Light_unsupported_light.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/Unsupported_Light_unsupported_light.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -2074,7 +2106,7 @@ _No findings._
 
 ### `VerticalStack_Dark`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/CardPreviewsKt.VerticalStack_Dark_vertical-stack_dark.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/VerticalStack_Dark_vertical_stack_dark.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -2082,7 +2114,7 @@ _No findings._
 
 ### `VerticalStack_Light`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/CardPreviewsKt.VerticalStack_Light_vertical-stack_light.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/VerticalStack_Light_vertical_stack_light.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -2090,7 +2122,7 @@ _No findings._
 
 ### `WeatherForecast_Dark`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/CardPreviewsKt.WeatherForecast_Dark_weather-forecast_dark.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/WeatherForecast_Dark_weather_forecast_dark.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -2098,7 +2130,7 @@ _No findings._
 
 ### `WeatherForecast_Light`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/CardPreviewsKt.WeatherForecast_Light_weather-forecast_light.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/WeatherForecast_Light_weather_forecast_light.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -2106,7 +2138,7 @@ _No findings._
 
 ### `WrapContentHeightFixAlpha010`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/WrapContentHeightReproKt.WrapContentHeightFixAlpha010_wrap-content_height_fix_WrapAdaptive_player.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/WrapContentHeightFixAlpha010_wrap_content_height_fix_WrapAdaptive_player.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -2115,7 +2147,7 @@ _No findings._
 
 ### `WrapContentHeightReproAlpha010`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/WrapContentHeightReproKt.WrapContentHeightReproAlpha010_wrap-content_height_repro_alpha010.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/WrapContentHeightReproAlpha010_wrap_content_height_repro_alpha010.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -2147,7 +2179,7 @@ _No findings._
 
 ### `SlotWidgetPreview_Empty`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/widget.SlotWidgetPreviewsKt.SlotWidgetPreview_Empty_Slot_widget_empty_placeholder.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/SlotWidgetPreview_Empty_Slot_widget_empty_placeholder.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -2155,7 +2187,7 @@ _No findings._
 
 ### `SlotWidgetPreview_EntitiesLarge`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/widget.SlotWidgetPreviewsKt.SlotWidgetPreview_EntitiesLarge_Slot_widget_entities_large.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/SlotWidgetPreview_EntitiesLarge_Slot_widget_entities_large.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -2164,7 +2196,7 @@ _No findings._
 
 ### `SlotWidgetPreview_TileSmall`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/widget.SlotWidgetPreviewsKt.SlotWidgetPreview_TileSmall_Slot_widget_tile_small.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/SlotWidgetPreview_TileSmall_Slot_widget_tile_small.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -2172,7 +2204,7 @@ _No findings._
 
 ### `WearAlarmPanelLarge`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/widget.CardSlotWidgetPreviewsKt.WearAlarmPanelLarge_wear_alarm-panel_large.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/WearAlarmPanelLarge_wear_alarm_panel_large.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -2181,7 +2213,7 @@ _No findings._
 
 ### `WearAlarmPanelSmall`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/widget.CardSlotWidgetPreviewsKt.WearAlarmPanelSmall_wear_alarm-panel_small.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/WearAlarmPanelSmall_wear_alarm_panel_small.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -2189,7 +2221,7 @@ _No findings._
 
 ### `WearAreaLarge`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/widget.CardSlotWidgetPreviewsKt.WearAreaLarge_wear_area_large.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/WearAreaLarge_wear_area_large.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -2199,7 +2231,7 @@ _No findings._
 
 ### `WearAreaSmall`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/widget.CardSlotWidgetPreviewsKt.WearAreaSmall_wear_area_small.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/WearAreaSmall_wear_area_small.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -2207,7 +2239,7 @@ _No findings._
 
 ### `WearBambuAmsLarge`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/widget.CardSlotWidgetPreviewsKt.WearBambuAmsLarge_wear_bambu_ams_large.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/WearBambuAmsLarge_wear_bambu_ams_large.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -2215,7 +2247,7 @@ _No findings._
 
 ### `WearBambuAmsSmall`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/widget.CardSlotWidgetPreviewsKt.WearBambuAmsSmall_wear_bambu_ams_small.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/WearBambuAmsSmall_wear_bambu_ams_small.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -2223,7 +2255,7 @@ _No findings._
 
 ### `WearBambuPrintControlLarge`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/widget.CardSlotWidgetPreviewsKt.WearBambuPrintControlLarge_wear_bambu_print-control_large.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/WearBambuPrintControlLarge_wear_bambu_print_control_large.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -2231,7 +2263,7 @@ _No findings._
 
 ### `WearBambuPrintControlSmall`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/widget.CardSlotWidgetPreviewsKt.WearBambuPrintControlSmall_wear_bambu_print-control_small.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/WearBambuPrintControlSmall_wear_bambu_print_control_small.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -2239,7 +2271,7 @@ _No findings._
 
 ### `WearBambuPrintStatusLarge`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/widget.CardSlotWidgetPreviewsKt.WearBambuPrintStatusLarge_wear_bambu_print-status_large.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/WearBambuPrintStatusLarge_wear_bambu_print_status_large.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -2247,7 +2279,7 @@ _No findings._
 
 ### `WearBambuPrintStatusSmall`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/widget.CardSlotWidgetPreviewsKt.WearBambuPrintStatusSmall_wear_bambu_print-status_small.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/WearBambuPrintStatusSmall_wear_bambu_print_status_small.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -2255,7 +2287,7 @@ _No findings._
 
 ### `WearBambuSpoolLarge`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/widget.CardSlotWidgetPreviewsKt.WearBambuSpoolLarge_wear_bambu_spool_large.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/WearBambuSpoolLarge_wear_bambu_spool_large.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -2263,7 +2295,7 @@ _No findings._
 
 ### `WearBambuSpoolSmall`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/widget.CardSlotWidgetPreviewsKt.WearBambuSpoolSmall_wear_bambu_spool_small.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/WearBambuSpoolSmall_wear_bambu_spool_small.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -2271,7 +2303,7 @@ _No findings._
 
 ### `WearButtonLarge`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/widget.CardSlotWidgetPreviewsKt.WearButtonLarge_wear_button_large.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/WearButtonLarge_wear_button_large.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -2279,7 +2311,7 @@ _No findings._
 
 ### `WearButtonSmall`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/widget.CardSlotWidgetPreviewsKt.WearButtonSmall_wear_button_small.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/WearButtonSmall_wear_button_small.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -2287,7 +2319,7 @@ _No findings._
 
 ### `WearCalendarSmall`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/widget.CardSlotWidgetPreviewsKt.WearCalendarSmall_wear_calendar_small.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/WearCalendarSmall_wear_calendar_small.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -2295,7 +2327,7 @@ _No findings._
 
 ### `WearDashboardPreview` · `wearos_small_round`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/ui.WearPreviewsKt.WearDashboardPreview_Wear_dashboard.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/WearDashboardPreview_Wear_dashboard.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -2303,13 +2335,13 @@ _No findings._
 
 ### `WearDashboardsPreview` · `wearos_small_round`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/ui.WearPreviewsKt.WearDashboardsPreview_Wear_dashboards.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/WearDashboardsPreview_Wear_dashboards.a11y.png" width="400" />
 
 _No findings._
 
 ### `WearEntitiesLarge`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/widget.CardSlotWidgetPreviewsKt.WearEntitiesLarge_wear_entities_large.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/WearEntitiesLarge_wear_entities_large.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -2318,7 +2350,7 @@ _No findings._
 
 ### `WearEntitiesSmall`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/widget.CardSlotWidgetPreviewsKt.WearEntitiesSmall_wear_entities_small.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/WearEntitiesSmall_wear_entities_small.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -2327,7 +2359,7 @@ _No findings._
 
 ### `WearEntityFilterLarge`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/widget.CardSlotWidgetPreviewsKt.WearEntityFilterLarge_wear_entity-filter_large.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/WearEntityFilterLarge_wear_entity_filter_large.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -2337,7 +2369,7 @@ _No findings._
 
 ### `WearEntityFilterSmall`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/widget.CardSlotWidgetPreviewsKt.WearEntityFilterSmall_wear_entity-filter_small.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/WearEntityFilterSmall_wear_entity_filter_small.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -2346,7 +2378,7 @@ _No findings._
 
 ### `WearEntityLarge`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/widget.CardSlotWidgetPreviewsKt.WearEntityLarge_wear_entity_large.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/WearEntityLarge_wear_entity_large.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -2354,7 +2386,7 @@ _No findings._
 
 ### `WearEntitySmall`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/widget.CardSlotWidgetPreviewsKt.WearEntitySmall_wear_entity_small.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/WearEntitySmall_wear_entity_small.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -2362,7 +2394,7 @@ _No findings._
 
 ### `WearGaugeLarge`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/widget.CardSlotWidgetPreviewsKt.WearGaugeLarge_wear_gauge_large.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/WearGaugeLarge_wear_gauge_large.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -2370,7 +2402,7 @@ _No findings._
 
 ### `WearGaugeSmall`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/widget.CardSlotWidgetPreviewsKt.WearGaugeSmall_wear_gauge_small.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/WearGaugeSmall_wear_gauge_small.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -2378,7 +2410,7 @@ _No findings._
 
 ### `WearGlanceLarge`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/widget.CardSlotWidgetPreviewsKt.WearGlanceLarge_wear_glance_large.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/WearGlanceLarge_wear_glance_large.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -2387,7 +2419,7 @@ _No findings._
 
 ### `WearGlanceSmall`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/widget.CardSlotWidgetPreviewsKt.WearGlanceSmall_wear_glance_small.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/WearGlanceSmall_wear_glance_small.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -2396,7 +2428,7 @@ _No findings._
 
 ### `WearGridLarge`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/widget.CardSlotWidgetPreviewsKt.WearGridLarge_wear_grid_large.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/WearGridLarge_wear_grid_large.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -2404,7 +2436,7 @@ _No findings._
 
 ### `WearGridSmall`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/widget.CardSlotWidgetPreviewsKt.WearGridSmall_wear_grid_small.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/WearGridSmall_wear_grid_small.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -2412,7 +2444,7 @@ _No findings._
 
 ### `WearHeadingSmall`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/widget.CardSlotWidgetPreviewsKt.WearHeadingSmall_wear_heading_small.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/WearHeadingSmall_wear_heading_small.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -2420,7 +2452,7 @@ _No findings._
 
 ### `WearHistoryGraphSmall`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/widget.CardSlotWidgetPreviewsKt.WearHistoryGraphSmall_wear_history-graph_small.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/WearHistoryGraphSmall_wear_history_graph_small.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -2428,7 +2460,7 @@ _No findings._
 
 ### `WearHorizontalStackLarge`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/widget.CardSlotWidgetPreviewsKt.WearHorizontalStackLarge_wear_horizontal-stack_large.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/WearHorizontalStackLarge_wear_horizontal_stack_large.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -2436,7 +2468,7 @@ _No findings._
 
 ### `WearHorizontalStackSmall`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/widget.CardSlotWidgetPreviewsKt.WearHorizontalStackSmall_wear_horizontal-stack_small.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/WearHorizontalStackSmall_wear_horizontal_stack_small.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -2444,7 +2476,7 @@ _No findings._
 
 ### `WearHumidifierLarge`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/widget.CardSlotWidgetPreviewsKt.WearHumidifierLarge_wear_humidifier_large.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/WearHumidifierLarge_wear_humidifier_large.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -2452,7 +2484,7 @@ _No findings._
 
 ### `WearHumidifierSmall`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/widget.CardSlotWidgetPreviewsKt.WearHumidifierSmall_wear_humidifier_small.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/WearHumidifierSmall_wear_humidifier_small.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -2460,7 +2492,7 @@ _No findings._
 
 ### `WearLightLarge`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/widget.CardSlotWidgetPreviewsKt.WearLightLarge_wear_light_large.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/WearLightLarge_wear_light_large.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -2468,7 +2500,7 @@ _No findings._
 
 ### `WearLightSmall`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/widget.CardSlotWidgetPreviewsKt.WearLightSmall_wear_light_small.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/WearLightSmall_wear_light_small.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -2476,7 +2508,7 @@ _No findings._
 
 ### `WearLogbookSmall`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/widget.CardSlotWidgetPreviewsKt.WearLogbookSmall_wear_logbook_small.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/WearLogbookSmall_wear_logbook_small.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -2484,7 +2516,7 @@ _No findings._
 
 ### `WearMarkdownSmall`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/widget.CardSlotWidgetPreviewsKt.WearMarkdownSmall_wear_markdown_small.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/WearMarkdownSmall_wear_markdown_small.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -2492,7 +2524,7 @@ _No findings._
 
 ### `WearMediaControlLarge`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/widget.CardSlotWidgetPreviewsKt.WearMediaControlLarge_wear_media-control_large.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/WearMediaControlLarge_wear_media_control_large.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -2500,7 +2532,7 @@ _No findings._
 
 ### `WearMediaControlSmall`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/widget.CardSlotWidgetPreviewsKt.WearMediaControlSmall_wear_media-control_small.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/WearMediaControlSmall_wear_media_control_small.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -2508,7 +2540,7 @@ _No findings._
 
 ### `WearPictureElementsLarge`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/widget.CardSlotWidgetPreviewsKt.WearPictureElementsLarge_wear_picture-elements_large.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/WearPictureElementsLarge_wear_picture_elements_large.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -2516,7 +2548,7 @@ _No findings._
 
 ### `WearPictureElementsSmall`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/widget.CardSlotWidgetPreviewsKt.WearPictureElementsSmall_wear_picture-elements_small.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/WearPictureElementsSmall_wear_picture_elements_small.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -2524,7 +2556,7 @@ _No findings._
 
 ### `WearPictureEntityLarge`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/widget.CardSlotWidgetPreviewsKt.WearPictureEntityLarge_wear_picture-entity_large.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/WearPictureEntityLarge_wear_picture_entity_large.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -2532,7 +2564,7 @@ _No findings._
 
 ### `WearPictureEntitySmall`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/widget.CardSlotWidgetPreviewsKt.WearPictureEntitySmall_wear_picture-entity_small.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/WearPictureEntitySmall_wear_picture_entity_small.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -2540,7 +2572,7 @@ _No findings._
 
 ### `WearPictureGlanceLarge`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/widget.CardSlotWidgetPreviewsKt.WearPictureGlanceLarge_wear_picture-glance_large.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/WearPictureGlanceLarge_wear_picture_glance_large.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -2548,7 +2580,7 @@ _No findings._
 
 ### `WearPictureGlanceSmall`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/widget.CardSlotWidgetPreviewsKt.WearPictureGlanceSmall_wear_picture-glance_small.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/WearPictureGlanceSmall_wear_picture_glance_small.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -2556,7 +2588,7 @@ _No findings._
 
 ### `WearPictureLarge`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/widget.CardSlotWidgetPreviewsKt.WearPictureLarge_wear_picture_large.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/WearPictureLarge_wear_picture_large.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -2564,7 +2596,7 @@ _No findings._
 
 ### `WearPictureSmall`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/widget.CardSlotWidgetPreviewsKt.WearPictureSmall_wear_picture_small.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/WearPictureSmall_wear_picture_small.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -2572,13 +2604,13 @@ _No findings._
 
 ### `WearSectionPreview` · `wearos_small_round`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/ui.WearPreviewsKt.WearSectionPreview_Wear_section.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/WearSectionPreview_Wear_section.a11y.png" width="400" />
 
 _No findings._
 
 ### `WearSensorLarge`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/widget.CardSlotWidgetPreviewsKt.WearSensorLarge_wear_sensor_large.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/WearSensorLarge_wear_sensor_large.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -2586,7 +2618,7 @@ _No findings._
 
 ### `WearSensorSmall`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/widget.CardSlotWidgetPreviewsKt.WearSensorSmall_wear_sensor_small.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/WearSensorSmall_wear_sensor_small.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -2594,13 +2626,13 @@ _No findings._
 
 ### `WearSettingsPreview` · `wearos_small_round`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/ui.WearPreviewsKt.WearSettingsPreview_Wear_settings.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/WearSettingsPreview_Wear_settings.a11y.png" width="400" />
 
 _No findings._
 
 ### `WearStatisticLarge`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/widget.CardSlotWidgetPreviewsKt.WearStatisticLarge_wear_statistic_large.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/WearStatisticLarge_wear_statistic_large.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -2608,7 +2640,7 @@ _No findings._
 
 ### `WearStatisticSmall`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/widget.CardSlotWidgetPreviewsKt.WearStatisticSmall_wear_statistic_small.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/WearStatisticSmall_wear_statistic_small.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -2616,7 +2648,7 @@ _No findings._
 
 ### `WearStatisticsGraphSmall`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/widget.CardSlotWidgetPreviewsKt.WearStatisticsGraphSmall_wear_statistics-graph_small.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/WearStatisticsGraphSmall_wear_statistics_graph_small.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -2624,7 +2656,7 @@ _No findings._
 
 ### `WearThermostatLarge`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/widget.CardSlotWidgetPreviewsKt.WearThermostatLarge_wear_thermostat_large.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/WearThermostatLarge_wear_thermostat_large.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -2632,7 +2664,7 @@ _No findings._
 
 ### `WearThermostatSmall`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/widget.CardSlotWidgetPreviewsKt.WearThermostatSmall_wear_thermostat_small.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/WearThermostatSmall_wear_thermostat_small.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -2640,7 +2672,7 @@ _No findings._
 
 ### `WearTileLarge`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/widget.CardSlotWidgetPreviewsKt.WearTileLarge_wear_tile_large.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/WearTileLarge_wear_tile_large.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -2648,7 +2680,7 @@ _No findings._
 
 ### `WearTileSmall`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/widget.CardSlotWidgetPreviewsKt.WearTileSmall_wear_tile_small.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/WearTileSmall_wear_tile_small.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -2656,7 +2688,7 @@ _No findings._
 
 ### `WearTodoListSmall`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/widget.CardSlotWidgetPreviewsKt.WearTodoListSmall_wear_todo-list_small.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/WearTodoListSmall_wear_todo_list_small.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -2664,25 +2696,25 @@ _No findings._
 
 ### `WearTopLevelPreview_Demo` · `wearos_small_round`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/ui.WearPreviewsKt.WearTopLevelPreview_Demo_Wear_top-level_demo.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/WearTopLevelPreview_Demo_Wear_top_level_demo.a11y.png" width="400" />
 
 _No findings._
 
 ### `WearTopLevelPreview_Empty` · `wearos_small_round`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/ui.WearPreviewsKt.WearTopLevelPreview_Empty_Wear_top-level_empty.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/WearTopLevelPreview_Empty_Wear_top_level_empty.a11y.png" width="400" />
 
 _No findings._
 
 ### `WearTopLevelPreview_Live` · `wearos_small_round`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/ui.WearPreviewsKt.WearTopLevelPreview_Live_Wear_top-level_live.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/WearTopLevelPreview_Live_Wear_top_level_live.a11y.png" width="400" />
 
 _No findings._
 
 ### `WearUnsupportedLarge`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/widget.CardSlotWidgetPreviewsKt.WearUnsupportedLarge_wear_unsupported_large.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/WearUnsupportedLarge_wear_unsupported_large.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -2690,7 +2722,7 @@ _No findings._
 
 ### `WearUnsupportedSmall`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/widget.CardSlotWidgetPreviewsKt.WearUnsupportedSmall_wear_unsupported_small.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/WearUnsupportedSmall_wear_unsupported_small.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -2698,7 +2730,7 @@ _No findings._
 
 ### `WearVerticalStackLarge`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/widget.CardSlotWidgetPreviewsKt.WearVerticalStackLarge_wear_vertical-stack_large.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/WearVerticalStackLarge_wear_vertical_stack_large.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -2706,7 +2738,7 @@ _No findings._
 
 ### `WearVerticalStackSmall`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/widget.CardSlotWidgetPreviewsKt.WearVerticalStackSmall_wear_vertical-stack_small.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/WearVerticalStackSmall_wear_vertical_stack_small.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -2714,7 +2746,7 @@ _No findings._
 
 ### `WearWeatherForecastSmall`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/widget.CardSlotWidgetPreviewsKt.WearWeatherForecastSmall_wear_weather-forecast_small.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/wear/WearWeatherForecastSmall_wear_weather_forecast_small.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
