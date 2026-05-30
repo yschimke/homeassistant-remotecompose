@@ -379,6 +379,41 @@
       "variant": "spec:width=600dp,height=960dp,dpi=240"
     },
     {
+      "annotatedBasename": "Screen_CardHistory_card_history.a11y.png",
+      "cleanBasename": "Screen_CardHistory_card_history.png",
+      "findings": [
+        {
+          "boundsInScreen": "74,221,1004,337",
+          "level": "ERROR",
+          "message": "This item may not have a label readable by screen readers.",
+          "type": "SpeakableTextPresentCheck",
+          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
+        },
+        {
+          "boundsInScreen": "74,221,1004,337",
+          "level": "ERROR",
+          "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
+          "type": "TouchTargetSizeCheck",
+          "viewDescription": "android.view.View  desc=\"Downstairs Temperature\""
+        }
+      ],
+      "functionName": "Screen_CardHistory",
+      "module": "app",
+      "previewId": "ee.schimke.terrazzo.previews.ScreenPreviewsKt.Screen_CardHistory_card history",
+      "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/previews/ScreenPreviews.kt",
+      "variant": ""
+    },
+    {
+      "annotatedBasename": "",
+      "cleanBasename": "",
+      "findings": [],
+      "functionName": "Screen_CardHistory_ThemeStyle",
+      "module": "app",
+      "previewId": "ee.schimke.terrazzo.previews.ScreenPreviewsKt.Screen_CardHistory_ThemeStyle_card history \u00b7 theme",
+      "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/previews/ScreenPreviews.kt",
+      "variant": ""
+    },
+    {
       "annotatedBasename": "Screen_DashboardPicker_dashboard_picker.a11y.png",
       "cleanBasename": "Screen_DashboardPicker_dashboard_picker.png",
       "findings": [],
@@ -1167,30 +1202,30 @@
           "viewDescription": "android.view.View  desc=\"Living Room\""
         },
         {
-          "boundsInScreen": "640,744,1333,782",
+          "boundsInScreen": "640,744,1333,788",
           "level": "ERROR",
-          "message": "This item's height is 14dp. Consider making the height of this touch target 48dp or larger.",
+          "message": "This item's height is 17dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Living Room\""
         },
         {
-          "boundsInScreen": "640,782,1333,797",
+          "boundsInScreen": "640,788,1333,797",
           "level": "ERROR",
-          "message": "This item's height is 6dp. Consider making the height of this touch target 48dp or larger.",
+          "message": "This item's height is 3dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Office lamp\""
         },
         {
-          "boundsInScreen": "1417,744,2299,781",
+          "boundsInScreen": "1417,744,2299,792",
           "level": "ERROR",
-          "message": "This item's height is 14dp. Consider making the height of this touch target 48dp or larger.",
+          "message": "This item's height is 18dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Living Room\""
         },
         {
-          "boundsInScreen": "1417,781,2299,797",
+          "boundsInScreen": "1417,792,2299,797",
           "level": "ERROR",
-          "message": "This item's height is 6dp. Consider making the height of this touch target 48dp or larger.",
+          "message": "This item's height is 2dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Office lamp\""
         },
@@ -7305,9 +7340,9 @@
           "viewDescription": "android.view.View  desc=\"Coffee maker\""
         },
         {
-          "boundsInScreen": "499,1546,603,1732",
+          "boundsInScreen": "500,1546,603,1732",
           "level": "ERROR",
-          "message": "This item's width is 40dp. Consider making the width of this touch target 48dp or larger.",
+          "message": "This item's width is 39dp. Consider making the width of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Kitchen\""
         }

@@ -1,6 +1,6 @@
 # Accessibility Report
 
-_Auto-generated from `compose-preview/a11y/pr`. 262 preview(s) across 4 module(s) · 1009 error(s) · 3 warning(s) · 17 info._
+_Auto-generated from `compose-preview/a11y/pr`. 264 preview(s) across 4 module(s) · 1011 error(s) · 3 warning(s) · 17 info._
 
 Browse inline; image URLs are pinned to the commit SHA on the baseline branch so links keep resolving after merge.
 
@@ -99,6 +99,19 @@ _No findings._
 | 7 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Stop" | This item's size is 32dp x 32dp. Consider making this touch target 48dp wide and 48dp high or larger. |
 | 8 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Close" | This item's size is 32dp x 32dp. Consider making this touch target 48dp wide and 48dp high or larger. |
 | 9 | INFO | DuplicateSpeakableTextCheck | android.view.View | This non-clickable item's speakable text: "dashboard-card:grid" is identical to that of 2 other item(s). |
+
+### `Screen_CardHistory`
+
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/pr/renders/app/Screen_CardHistory_card_history.a11y.png" width="400" />
+
+| # | Level | Rule | Element | Message |
+|--:|---|---|---|---|
+| 1 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
+| 2 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Downstairs Temperature" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+
+### `Screen_CardHistory_ThemeStyle`
+
+_No findings._
 
 ### `Screen_DashboardPicker`
 
@@ -364,10 +377,10 @@ _No findings._
 | 11 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Living Room" | This item's height is 26dp. Consider making the height of this touch target 48dp or larger. |
 | 12 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Living Room" | This item's height is 32dp. Consider making the height of this touch target 48dp or larger. |
 | 13 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Living Room" | This item's height is 32dp. Consider making the height of this touch target 48dp or larger. |
-| 14 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Living Room" | This item's height is 14dp. Consider making the height of this touch target 48dp or larger. |
-| 15 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Office lamp" | This item's height is 6dp. Consider making the height of this touch target 48dp or larger. |
-| 16 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Living Room" | This item's height is 14dp. Consider making the height of this touch target 48dp or larger. |
-| 17 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Office lamp" | This item's height is 6dp. Consider making the height of this touch target 48dp or larger. |
+| 14 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Living Room" | This item's height is 17dp. Consider making the height of this touch target 48dp or larger. |
+| 15 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Office lamp" | This item's height is 3dp. Consider making the height of this touch target 48dp or larger. |
+| 16 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Living Room" | This item's height is 18dp. Consider making the height of this touch target 48dp or larger. |
+| 17 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Office lamp" | This item's height is 2dp. Consider making the height of this touch target 48dp or larger. |
 | 18 | INFO | DuplicateSpeakableTextCheck | android.widget.TextView | This non-clickable item's speakable text: "Terrazzo slot" is identical to that of 1 other item(s). |
 
 ### `CardPreviewMatrix_Entity`
@@ -1754,7 +1767,7 @@ _No findings._
 | 8 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Living Room" | This item's height is 32dp. Consider making the height of this touch target 48dp or larger. |
 | 9 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Kitchen" | This item's height is 34dp. Consider making the height of this touch target 48dp or larger. |
 | 10 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Coffee maker" | This item's height is 34dp. Consider making the height of this touch target 48dp or larger. |
-| 11 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Kitchen" | This item's width is 40dp. Consider making the width of this touch target 48dp or larger. |
+| 11 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Kitchen" | This item's width is 39dp. Consider making the width of this touch target 48dp or larger. |
 
 ### `Sizing_SlackSlot_PaintMeasure`
 
