@@ -39,6 +39,8 @@ concurrency:
 #   HARC_KEY_ALIAS                key alias inside the keystore
 #   HARC_KEY_PASSWORD             key password
 #   PLAY_SERVICE_ACCOUNT_JSON     service account JSON; presence gates Play upload
+#   GOOGLE_SERVICES_JSON          base64 of app/google-services.json; presence
+#                                 enables Firebase Crashlytics in release builds
 jobs:
   release:
     name: Build & publish release
@@ -51,6 +53,7 @@ jobs:
       TAG_NAME: ${{ github.ref_type == 'tag' && github.ref_name || inputs.tag }}
       HAS_SIGNING_KEYSTORE: ${{ secrets.SIGNING_KEYSTORE != '' }}
       HAS_PLAY_CREDENTIALS: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON != '' }}
+      HAS_GOOGLE_SERVICES: ${{ secrets.GOOGLE_SERVICES_JSON != '' }}
       PUBLISH_WEAR: ${{ inputs.publish_wear || false }}
     steps:
       - uses: actions/checkout@v6
@@ -59,6 +62,18 @@ jobs:
       - uses: ./.github/actions/setup
         with:
           cache-read-only: 'true'
+
+      # Must land at app/google-services.json (the path is hard-coded in the
+      # build logic) and exist before the first Gradle call — `crashlyticsEnabled`
+      # is evaluated at configuration time. Present → Crashlytics is wired into
+      # the release build; absent → the build is unchanged (no-op reporter).
+      - name: Write google-services.json (enables Crashlytics)
+        if: env.HAS_GOOGLE_SERVICES == 'true'
+        env:
+          GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
+        run: |
+          set -euo pipefail
+          printf '%s' "$GOOGLE_SERVICES_JSON" | base64 -d > app/google-services.json
 
       - name: Decode signing keystore
         if: env.HAS_SIGNING_KEYSTORE == 'true'
@@ -116,6 +131,7 @@ jobs:
             echo "- Tag: ${TAG_NAME}"
             echo "- Signing keystore configured: ${HAS_SIGNING_KEYSTORE}"
             echo "- Play credentials configured: ${HAS_PLAY_CREDENTIALS}"
+            echo "- Crashlytics configured: ${HAS_GOOGLE_SERVICES}"
             if [[ "${HAS_SIGNING_KEYSTORE}" == "true" && "${HAS_PLAY_CREDENTIALS}" == "true" ]]; then
               echo "- Play publish step: app attempted (internal track)"
               echo "- Wear publish enabled: ${PUBLISH_WEAR}"
