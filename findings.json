@@ -1,6 +1,16 @@
 {
   "entries": [
     {
+      "annotatedBasename": "",
+      "cleanBasename": "DataGridOverlayPreview_Data_grid_overlay.png",
+      "findings": [],
+      "functionName": "DataGridOverlayPreview",
+      "module": "app",
+      "previewId": "ee.schimke.terrazzo.previews.CardDebugPreviewsKt.DataGridOverlayPreview_Data grid overlay",
+      "sourceFile": "src/debug/kotlin/ee/schimke/terrazzo/previews/CardDebugPreviews.kt",
+      "variant": ""
+    },
+    {
       "annotatedBasename": "Play_Phone_01_HomeLight_play_phone_home_light.a11y.png",
       "cleanBasename": "Play_Phone_01_HomeLight_play_phone_home_light.png",
       "findings": [
@@ -1157,30 +1167,30 @@
           "viewDescription": "android.view.View  desc=\"Living Room\""
         },
         {
-          "boundsInScreen": "640,744,1333,785",
+          "boundsInScreen": "640,744,1333,782",
           "level": "ERROR",
-          "message": "This item's height is 16dp. Consider making the height of this touch target 48dp or larger.",
+          "message": "This item's height is 14dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Living Room\""
         },
         {
-          "boundsInScreen": "640,785,1333,797",
+          "boundsInScreen": "640,782,1333,797",
           "level": "ERROR",
-          "message": "This item's height is 5dp. Consider making the height of this touch target 48dp or larger.",
+          "message": "This item's height is 6dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Office lamp\""
         },
         {
-          "boundsInScreen": "1417,744,2299,792",
+          "boundsInScreen": "1417,744,2299,781",
           "level": "ERROR",
-          "message": "This item's height is 18dp. Consider making the height of this touch target 48dp or larger.",
+          "message": "This item's height is 14dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Living Room\""
         },
         {
-          "boundsInScreen": "1417,792,2299,797",
+          "boundsInScreen": "1417,781,2299,797",
           "level": "ERROR",
-          "message": "This item's height is 2dp. Consider making the height of this touch target 48dp or larger.",
+          "message": "This item's height is 6dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Office lamp\""
         },
@@ -7042,7 +7052,7 @@
           "viewDescription": "android.view.View  desc=\"Kitchen\""
         },
         {
-          "boundsInScreen": "52,1346,462,1434",
+          "boundsInScreen": "52,1346,462,1435",
           "level": "ERROR",
           "message": "This item's height is 34dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
@@ -7063,7 +7073,7 @@
           "viewDescription": "android.view.View  desc=\"Kitchen\""
         },
         {
-          "boundsInScreen": "52,1897,777,1985",
+          "boundsInScreen": "52,1897,777,1986",
           "level": "ERROR",
           "message": "This item's height is 34dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
@@ -7295,9 +7305,9 @@
           "viewDescription": "android.view.View  desc=\"Coffee maker\""
         },
         {
-          "boundsInScreen": "500,1546,603,1732",
+          "boundsInScreen": "499,1546,603,1732",
           "level": "ERROR",
-          "message": "This item's width is 39dp. Consider making the width of this touch target 48dp or larger.",
+          "message": "This item's width is 40dp. Consider making the width of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Kitchen\""
         }
