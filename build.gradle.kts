@@ -1,5 +1,25 @@
 import com.ncorti.ktfmt.gradle.KtfmtExtension
 
+buildscript {
+  // Crashlytics is opt-in. Only put the Google Services / Crashlytics
+  // Gradle plugins on the buildscript classpath when an
+  // `app/google-services.json` is present — without it nothing here
+  // resolves, so the default build is byte-for-byte unaffected and pulls
+  // in no Firebase tooling. The path is resolved relative to the root
+  // project dir (Gradle's working directory). Versions are only fetched
+  // by developers who have configured a key; bump as needed.
+  if (java.io.File("app/google-services.json").exists()) {
+    repositories {
+      google()
+      mavenCentral()
+    }
+    dependencies {
+      classpath("com.google.gms:google-services:4.4.4")
+      classpath("com.google.firebase:firebase-crashlytics-gradle:3.0.6")
+    }
+  }
+}
+
 plugins {
   alias(libs.plugins.android.application) apply false
   alias(libs.plugins.android.library) apply false

@@ -22,6 +22,19 @@ plugins {
   alias(libs.plugins.play.publisher)
 }
 
+// Crashlytics is opt-in and gated on a real key. When
+// `app/google-services.json` is present we apply the Google Services +
+// Crashlytics Gradle plugins, compile the Firebase-backed reporter
+// (src/crashlytics), and pull in the SDK; otherwise the app builds and
+// runs unchanged against NoopCrashReporter. The matching plugin classpath
+// is added conditionally in the root build.gradle.kts.
+val crashlyticsEnabled = file("google-services.json").exists()
+
+if (crashlyticsEnabled) {
+  apply(plugin = "com.google.gms.google-services")
+  apply(plugin = "com.google.firebase.crashlytics")
+}
+
 android {
   namespace = "ee.schimke.terrazzo"
   compileSdk = libs.versions.android.compileSdk.get().toInt()
@@ -41,6 +54,10 @@ android {
     // Exposed to AndroidManifest via placeholders so the IndieAuth
     // redirect scheme is declared in one place.
     manifestPlaceholders["appAuthRedirectScheme"] = "rcha"
+
+    // Read at runtime by CrashReporter.create() to decide whether to
+    // resolve the Firebase-backed reporter or fall back to a no-op.
+    buildConfigField("boolean", "CRASHLYTICS_ENABLED", crashlyticsEnabled.toString())
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
@@ -72,6 +89,12 @@ android {
   buildFeatures {
     compose = true
     buildConfig = true
+  }
+  // The Firebase-backed CrashReporter only joins the compilation when a
+  // key is configured; src/main stays free of any Firebase import so the
+  // no-key build needs none of the SDK.
+  if (crashlyticsEnabled) {
+    sourceSets.getByName("main").kotlin.srcDir("src/crashlytics/kotlin")
   }
   kotlin { jvmToolchain(libs.versions.java.get().toInt()) }
 }
@@ -142,6 +165,12 @@ dependencies {
 
   implementation(libs.kotlinx.coroutines.core)
   implementation(libs.kotlinx.serialization.json)
+
+  // Crashlytics SDK — only when a key is configured (see crashlyticsEnabled).
+  if (crashlyticsEnabled) {
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.crashlytics)
+  }
 
   testImplementation(libs.kotlin.test.junit)
   testImplementation(libs.kotlinx.coroutines.test)
