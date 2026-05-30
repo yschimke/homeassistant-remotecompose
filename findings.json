@@ -1157,25 +1157,32 @@
           "viewDescription": "android.view.View  desc=\"Living Room\""
         },
         {
-          "boundsInScreen": "640,744,1333,796",
+          "boundsInScreen": "640,744,1333,788",
           "level": "ERROR",
-          "message": "This item's height is 20dp. Consider making the height of this touch target 48dp or larger.",
+          "message": "This item's height is 17dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Living Room\""
         },
         {
-          "boundsInScreen": "640,796,1333,797",
+          "boundsInScreen": "640,788,1333,797",
           "level": "ERROR",
-          "message": "This item's height is 0dp. Consider making the height of this touch target 48dp or larger.",
+          "message": "This item's height is 3dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Office lamp\""
         },
         {
-          "boundsInScreen": "1417,744,2299,797",
+          "boundsInScreen": "1417,744,2299,792",
           "level": "ERROR",
-          "message": "This item's height is 20dp. Consider making the height of this touch target 48dp or larger.",
+          "message": "This item's height is 18dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Living Room\""
+        },
+        {
+          "boundsInScreen": "1417,792,2299,797",
+          "level": "ERROR",
+          "message": "This item's height is 2dp. Consider making the height of this touch target 48dp or larger.",
+          "type": "TouchTargetSizeCheck",
+          "viewDescription": "android.view.View  desc=\"Office lamp\""
         },
         {
           "boundsInScreen": "1028,230,1191,263",
@@ -7640,7 +7647,7 @@
           "viewDescription": "android.view.View  desc=\"Coffee maker\""
         },
         {
-          "boundsInScreen": "500,1378,603,1564",
+          "boundsInScreen": "499,1378,602,1564",
           "level": "ERROR",
           "message": "This item's width is 39dp. Consider making the width of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
