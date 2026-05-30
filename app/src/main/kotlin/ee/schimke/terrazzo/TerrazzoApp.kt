@@ -32,6 +32,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -663,21 +664,32 @@ private fun DashboardsRoot(
                 contentPadding = padding,
             )
         } else {
-            DashboardViewScreen(
-                session = session,
-                urlPath = openedValue,
-                readOnly = readOnly,
-                onCardLongPress = { card ->
-                    // In demo mode the preview — and the installed widget —
-                    // render against the current fake snapshot so values
-                    // aren't empty. Live mode uses an empty snapshot; the
-                    // pinned widget will refresh from HA on first tick.
-                    val previewSnapshot =
-                        if (session is DemoHaSession) DemoData.snapshot() else HaSnapshot()
-                    installPending = card to previewSnapshot
-                },
-                contentPadding = padding,
-            )
+            // Key on the opened dashboard so switching dashboards
+            // disposes the previous one's whole render subtree —
+            // crucially the per-card `AndroidView` players — instead of
+            // reusing their composition slots. The players are hosted via
+            // `AndroidView(factory = { view })`, whose factory runs once
+            // per node; without a fresh node on switch, a reused slot
+            // keeps showing the previous dashboard's view until a
+            // collapse/expand forces recreation. Re-seeding from the
+            // offline cache makes the new dashboard paint immediately.
+            key(openedValue) {
+                DashboardViewScreen(
+                    session = session,
+                    urlPath = openedValue,
+                    readOnly = readOnly,
+                    onCardLongPress = { card ->
+                        // In demo mode the preview — and the installed widget —
+                        // render against the current fake snapshot so values
+                        // aren't empty. Live mode uses an empty snapshot; the
+                        // pinned widget will refresh from HA on first tick.
+                        val previewSnapshot =
+                            if (session is DemoHaSession) DemoData.snapshot() else HaSnapshot()
+                        installPending = card to previewSnapshot
+                    },
+                    contentPadding = padding,
+                )
+            }
         }
     }
 
