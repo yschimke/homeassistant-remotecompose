@@ -131,6 +131,25 @@ compose-preview show --json        # renders and prints PNG paths
 compose-preview render --filter tile
 ```
 
+### Preview bundles
+
+`compose-preview bundle pack` packs previews into a **PNG+ZIP polyglot** — one
+file that is both the cover PNG (the default preview) and a ZIP holding the
+remaining previews plus the minimal classpath to replay them. It travels
+detached from the project: drop it in Downloads, open it, and the cover renders
+like any PNG.
+
+```sh
+compose-preview bundle pack --module previews   # -> previews/build/compose-previews/bundle.png
+compose-preview bundle inspect previews/build/compose-previews/bundle.png
+compose-preview bundle extract previews/build/compose-previews/bundle.png -o out
+```
+
+The [Preview Bundle workflow](.github/workflows/preview-bundle.yml) packs a
+sample bundle in CI and prints each preview to the terminal (graphics protocol
+when available, ASCII fallback otherwise). See
+[docs/preview-bundles.md](docs/preview-bundles.md).
+
 ## Fetching HA config
 
 `HaClient` (in `ha-client`) wraps the WebSocket commands the converter

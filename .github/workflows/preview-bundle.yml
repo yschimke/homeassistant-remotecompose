@@ -1,0 +1,129 @@
+name: Preview Bundle
+
+# Builds a portable preview bundle and prints it to the terminal.
+#
+# A "preview bundle" is the PNG+ZIP polyglot produced by
+# `compose-preview bundle pack`: the file is simultaneously a valid PNG (the
+# cover — i.e. the default preview you see when you open it) and a valid ZIP
+# whose well-known interior holds the remaining previews plus the minimal
+# classpath needed to replay them. Because everything travels inside the one
+# file it works detached from the project — drop it in Downloads, open it, and
+# the cover renders like any other PNG.
+#
+# This job packs one sample bundle for the `previews` module (cover + the other
+# previews in the ZIP) and then dumps each preview to the terminal. It prefers
+# the CLI's terminal image protocol ("the TUI") and falls back to ASCII art via
+# chafa so the previews are visible in plain CI logs. The ASCII rendering won't
+# look great, but it works on any terminal.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: preview-bundle-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  BUNDLE: previews/build/compose-previews/bundle.png
+
+jobs:
+  bundle:
+    name: Pack a sample preview bundle and show it in the terminal
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: ./.github/actions/setup
+        with:
+          # Read-only on PRs so untrusted runs can't poison the Gradle cache.
+          cache-read-only: ${{ github.event_name == 'pull_request' && 'true' || 'false' }}
+
+      # The compose-preview Gradle plugin isn't applied to any module — its
+      # render task is materialised on demand by the CLI's auto-inject init
+      # script — so install the CLI before we render/pack. Same version the
+      # other workflows pin via the catalog.
+      - uses: yschimke/compose-ai-tools/.github/actions/install@v0.12.0
+        with:
+          version: catalog
+          catalog-key: compose-preview-plugin
+
+      # chafa is the ASCII fallback: a terminal image viewer that uses the
+      # terminal's graphics protocol when one is available and degrades to
+      # ASCII/Unicode symbols when it isn't (which is the case in CI logs).
+      - name: Install chafa (terminal image viewer / ASCII fallback)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends chafa
+
+      # `bundle pack` runs the render task itself, then packs the previews into
+      # the polyglot at $BUNDLE (the default "bundle root" output location).
+      # The first discovered preview becomes the cover (the default preview);
+      # every other preview is stored inside the ZIP. We must pass --module:
+      # bare auto-detection fans out across every module and trips on
+      # `demo-app`, which has no @Preview tooling on its classpath.
+      - name: Pack the sample preview bundle
+        run: compose-preview bundle pack --module previews -o "$BUNDLE"
+
+      - name: Inspect the bundle
+        run: compose-preview bundle inspect "$BUNDLE"
+
+      - name: Show previews in the terminal (TUI with ASCII fallback)
+        run: |
+          set -euo pipefail
+
+          # --- The TUI -----------------------------------------------------
+          # The CLI can paint rendered previews inline using the terminal's
+          # image protocol (kitty graphics). It's TTY-gated and auto-off when
+          # stdout is piped, so in CI logs it stays silent — the ASCII
+          # fallback below is what actually shows up. Kept here so a human
+          # running this locally in a capable terminal gets the real thing.
+          echo "::group::TUI — terminal image protocol (silent unless run in a graphics-capable terminal)"
+          compose-preview show --module previews --images=kitty || true
+          echo "::endgroup::"
+
+          # --- ASCII fallback ----------------------------------------------
+          # Render every preview the bundle carries. The bundle file itself is
+          # the cover (default preview); the rest live inside the ZIP, so we
+          # extract them and ASCII-print each one.
+          render_ascii() {
+            # Prefer a graphics protocol when the terminal advertises one;
+            # otherwise force plain ASCII glyphs so the output survives any
+            # log viewer. Won't look great, but it works everywhere.
+            chafa --size 100x48 "$1" 2>/dev/null \
+              || chafa -f symbols --symbols ascii --size 100x48 "$1" \
+              || echo "(could not render $1)"
+          }
+
+          echo "==> Cover (default preview): $BUNDLE"
+          render_ascii "$BUNDLE"
+
+          rm -rf bundle-extracted && mkdir -p bundle-extracted
+          compose-preview bundle extract "$BUNDLE" -o bundle-extracted
+
+          echo "==> Additional previews (well-known location inside the bundle):"
+          found=0
+          while IFS= read -r png; do
+            found=1
+            echo "── ${png#bundle-extracted/} ──"
+            render_ascii "$png"
+          done < <(find bundle-extracted -type f -name '*.png' | sort)
+          [ "$found" -eq 1 ] || echo "(no additional previews extracted)"
+
+      - name: Upload the bundle
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: preview-bundle
+          path: |
+            ${{ env.BUNDLE }}
+            bundle-extracted/**
+          if-no-files-found: warn
