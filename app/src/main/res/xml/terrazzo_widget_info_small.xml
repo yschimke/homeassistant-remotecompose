@@ -3,8 +3,8 @@
   SMALL Terrazzo size class — button-shaped single-entity cards (tile,
   button, entity). Near-square default cell that pairs with other small
   widgets. Backed by TerrazzoWidgetProviderSmall; chosen by
-  WidgetSizeClass.Small. See terrazzo_widget_info.xml for the shared
-  rationale.
+  WidgetSizeClass.Small. Comfortable default cell only; resize stays free
+  (see terrazzo_widget_info.xml for the shared rationale).
 -->
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
     android:minWidth="40dp"
@@ -13,8 +13,6 @@
     android:targetCellHeight="1"
     android:minResizeWidth="40dp"
     android:minResizeHeight="40dp"
-    android:maxResizeWidth="200dp"
-    android:maxResizeHeight="200dp"
     android:resizeMode="horizontal|vertical"
     android:updatePeriodMillis="0"
     android:widgetCategory="home_screen"
