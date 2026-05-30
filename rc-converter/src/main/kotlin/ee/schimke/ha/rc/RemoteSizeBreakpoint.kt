@@ -2,10 +2,12 @@
 
 package ee.schimke.ha.rc
 
+import androidx.compose.remote.core.operations.layout.animation.AnimationSpec
 import androidx.compose.remote.creation.compose.layout.RemoteBox
 import androidx.compose.remote.creation.compose.layout.RemoteStateLayout
 import androidx.compose.remote.creation.compose.layout.RemoteText
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
+import androidx.compose.remote.creation.compose.modifier.animationSpec
 import androidx.compose.remote.creation.compose.state.RemoteFloat
 import androidx.compose.remote.creation.compose.state.RemoteState
 import androidx.compose.remote.creation.compose.state.rc
@@ -148,6 +150,16 @@ private val InvisibleFormat = DecimalFormat("0")
  * `RemoteStateLayout(RemoteBoolean)`, which is the only state-layout
  * overload that respects the live state in alpha010. [dimension] is
  * the live width or height in px, per the ladder's [BreakpointAxis].
+ *
+ * Each branch is additionally [branchGate]d — its opacity is bound to
+ * the same live boolean so that a player which draws *every* recorded
+ * state-layout variant (the in-process AndroidX/Robolectric preview
+ * player does, leaving the unselected branch ghosting behind the
+ * selected one) keeps the inactive branch fully transparent. The gate
+ * also zeroes the swap animation so the transition is immediate rather
+ * than a 300 ms cross-fade that shows both branches mid-flight. The
+ * launcher's platform runtime already shows a single branch; the gate
+ * is belt-and-suspenders that costs nothing there.
  */
 @Composable
 private fun BreakpointTier(
@@ -166,17 +178,45 @@ private fun BreakpointTier(
     val isAtOrAbove = dimension.ge(highestThresholdPx)
     RemoteStateLayout(isAtOrAbove, modifier = modifier) { atOrAbove ->
         if (atOrAbove) {
-            content(baseTier + thresholdsDp.size)
+            RemoteBox(modifier = RemoteModifier.immediateSwap()) {
+                content(baseTier + thresholdsDp.size)
+            }
         } else {
-            BreakpointTier(
-                dimension = dimension,
-                thresholdsDp = thresholdsDp.copyOfRange(0, highestIndex),
-                baseTier = baseTier,
-                modifier = RemoteModifier,
-                content = content,
-            )
+            RemoteBox(modifier = RemoteModifier.immediateSwap()) {
+                BreakpointTier(
+                    dimension = dimension,
+                    thresholdsDp = thresholdsDp.copyOfRange(0, highestIndex),
+                    baseTier = baseTier,
+                    modifier = RemoteModifier,
+                    content = content,
+                )
+            }
         }
     }
 }
+
+/**
+ * Pin a state-layout branch's enter/exit animation to zero duration so
+ * the swap is immediate. The default `RemoteStateLayout` transition is
+ * a 300 ms FADE_IN/FADE_OUT cross-fade; the in-process preview player
+ * captures a frame mid-fade, leaving the outgoing branch half-visible
+ * behind the incoming one (the "ghosting"). Zero duration removes the
+ * cross-fade window so only the selected branch is ever drawn.
+ *
+ * NB: we deliberately do *not* gate the branch with `alpha(select(…))`
+ * — the derived float doesn't reliably materialise in alpha010 (#224),
+ * which blanks the *selected* branch too.
+ */
+private fun RemoteModifier.immediateSwap(): RemoteModifier =
+    animationSpec(
+        -1,
+        /* motionDuration = */ 0f,
+        /* motionEasingType = */ 1,
+        /* visibilityDuration = */ 0f,
+        /* visibilityEasingType = */ 1,
+        AnimationSpec.ANIMATION.FADE_IN,
+        AnimationSpec.ANIMATION.FADE_OUT,
+        true,
+    )
 
 private const val BreakpointExpressionPrefix = "__terrazzo_breakpoint_"
