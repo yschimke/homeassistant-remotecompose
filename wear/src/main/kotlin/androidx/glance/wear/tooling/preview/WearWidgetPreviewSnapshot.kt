@@ -120,13 +120,15 @@ public fun WearWidgetPreviewSnapshot(
                     colorFilter = ColorFilter.tint(Color(0xFF424242)),
                 )
             }
-            Text(
-                text = title,
-                color = Color.White,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(top = 2.dp),
-            )
+            if (title.isNotEmpty()) {
+                Text(
+                    text = title,
+                    color = Color.White,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(top = 2.dp),
+                )
+            }
         }
     }
 }
