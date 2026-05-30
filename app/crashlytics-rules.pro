@@ -9,3 +9,28 @@
 -keep class ee.schimke.terrazzo.crash.FirebaseCrashReporter {
     <init>();
 }
+
+# Crashlytics pulls in firebase-sessions, which adds androidx.window:window
+# as a *direct* dependency. That makes androidx.window.layout.adapter.* live,
+# and R8 then sees its references to the OEM window-extension classes
+# (androidx.window.extensions.** / androidx.window.sidecar.**) that are
+# provided by the system at runtime and never bundled — a hard "Missing
+# classes" R8 error. These rules only matter in the Crashlytics-enabled
+# release build (the non-Crashlytics build never resolves window directly),
+# which is why they live here rather than in an always-applied proguard file.
+-dontwarn androidx.window.extensions.WindowExtensions
+-dontwarn androidx.window.extensions.WindowExtensionsProvider
+-dontwarn androidx.window.extensions.area.ExtensionWindowAreaPresentation
+-dontwarn androidx.window.extensions.core.util.function.Consumer
+-dontwarn androidx.window.extensions.core.util.function.Function
+-dontwarn androidx.window.extensions.core.util.function.Predicate
+-dontwarn androidx.window.extensions.layout.DisplayFeature
+-dontwarn androidx.window.extensions.layout.FoldingFeature
+-dontwarn androidx.window.extensions.layout.WindowLayoutComponent
+-dontwarn androidx.window.extensions.layout.WindowLayoutInfo
+-dontwarn androidx.window.sidecar.SidecarDeviceState
+-dontwarn androidx.window.sidecar.SidecarDisplayFeature
+-dontwarn androidx.window.sidecar.SidecarInterface$SidecarCallback
+-dontwarn androidx.window.sidecar.SidecarInterface
+-dontwarn androidx.window.sidecar.SidecarProvider
+-dontwarn androidx.window.sidecar.SidecarWindowLayoutInfo
