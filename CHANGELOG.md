@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.31](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.30...v0.1.31) (2026-05-30)
+
+
+### Bug Fixes
+
+* **release:** unblock R8 minify and Play publish in the release job ([#360](https://github.com/yschimke/homeassistant-remotecompose/issues/360)) ([8c6132e](https://github.com/yschimke/homeassistant-remotecompose/commit/8c6132edf67b55103330f95d7c0eb410e6fcf929))
+
 ## [0.1.30](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.29...v0.1.30) (2026-05-30)
 
 
