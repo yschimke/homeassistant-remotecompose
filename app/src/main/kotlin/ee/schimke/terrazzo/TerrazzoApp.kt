@@ -74,9 +74,11 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /**
  * Root composable. Two phases:
@@ -551,19 +553,40 @@ private fun DashboardsRoot(
         }
     }
 
-    // Keep the HA connection alive while the user has the app open.
-    // While the activity is RESUMED, watch for a Failed status and
-    // retry with a short backoff. Each retry either lands at Connected
-    // (loop idles) or at Failed (StateFlow re-emits and we retry
-    // again). When the activity is paused the [repeatOnLifecycle] scope
-    // cancels, so we stop poking the network in the background.
+    // Tie the HA connection to the foreground. We hold the socket open
+    // only while the activity is RESUMED:
+    //
+    //  - On entering the foreground, if we parked the socket on the way
+    //    out (or a prior attempt failed), reconnect now so the user sees
+    //    "Connecting" immediately instead of a stale status.
+    //  - While foregrounded, watch for a Failed status and retry with a
+    //    short backoff. Each retry lands at Connected (loop idles) or at
+    //    Failed (StateFlow re-emits and we retry again).
+    //  - On leaving the foreground, cleanly disconnect. Without this the
+    //    OS tears the idle socket down in the background and the next
+    //    read-loop failure logs a spurious Error; a clean disconnect logs
+    //    a neutral "Disconnected" instead.
     LaunchedEffect(session, lifecycleOwner) {
         lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
-            while (true) {
-                session.connectionStatus.first { it == SessionConnectionStatus.Failed }
-                delay(RECONNECT_BACKOFF_MS)
-                if (session.connectionStatus.value == SessionConnectionStatus.Failed) {
-                    runCatching { session.connect() }
+            val status = session.connectionStatus.value
+            if (status == SessionConnectionStatus.Disconnected ||
+                status == SessionConnectionStatus.Failed
+            ) {
+                runCatching { session.connect() }
+            }
+            try {
+                while (true) {
+                    session.connectionStatus.first { it == SessionConnectionStatus.Failed }
+                    delay(RECONNECT_BACKOFF_MS)
+                    if (session.connectionStatus.value == SessionConnectionStatus.Failed) {
+                        runCatching { session.connect() }
+                    }
+                }
+            } finally {
+                // repeatOnLifecycle has cancelled us; close the socket
+                // outside the cancelled scope so the suspend call runs.
+                withContext(NonCancellable) {
+                    runCatching { session.disconnect() }
                 }
             }
         }
@@ -749,6 +772,7 @@ enum class ConnectionStatus(val label: String, val color: Color) {
     Failed("Failed", Color(0xFFD32F2F)),
     Connecting("Connecting", Color(0xFF2E7D32)),
     Connected("Connected", Color(0xFF1976D2)),
+    Disconnected("Paused", Color(0xFF757575)),
 }
 
 private val READ_ONLY_COLOR = Color(0xFF455A64)
@@ -758,6 +782,7 @@ private fun SessionConnectionStatus.toUiConnectionStatus(): ConnectionStatus = w
     SessionConnectionStatus.Failed -> ConnectionStatus.Failed
     SessionConnectionStatus.Connecting -> ConnectionStatus.Connecting
     SessionConnectionStatus.Connected -> ConnectionStatus.Connected
+    SessionConnectionStatus.Disconnected -> ConnectionStatus.Disconnected
 }
 
 private fun SessionConnectionStatus.toLogStatus(): ee.schimke.terrazzo.core.logs.LogConnectionStatus =
@@ -765,6 +790,7 @@ private fun SessionConnectionStatus.toLogStatus(): ee.schimke.terrazzo.core.logs
         SessionConnectionStatus.Failed -> ee.schimke.terrazzo.core.logs.LogConnectionStatus.Error
         SessionConnectionStatus.Connecting -> ee.schimke.terrazzo.core.logs.LogConnectionStatus.Connecting
         SessionConnectionStatus.Connected -> ee.schimke.terrazzo.core.logs.LogConnectionStatus.Connected
+        SessionConnectionStatus.Disconnected -> ee.schimke.terrazzo.core.logs.LogConnectionStatus.Disconnected
     }
 
 /**

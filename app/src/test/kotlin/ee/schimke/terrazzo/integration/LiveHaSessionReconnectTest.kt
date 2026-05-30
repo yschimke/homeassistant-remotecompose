@@ -139,6 +139,41 @@ class LiveHaSessionReconnectTest {
     }
   }
 
+  @Test
+  fun disconnect_parks_cleanly_as_disconnected_not_failed() {
+    runBlocking {
+      val session = LiveHaSession(baseUrl = baseUrl, accessToken = "test-token")
+      try {
+        session.connect()
+        assertEquals(SessionConnectionStatus.Connected, session.connectionStatus.value)
+
+        // Backgrounding: park the socket. This must read as a clean
+        // Disconnected, not Failed — otherwise the log paints it red as
+        // an "Error" on every app switch (the bug this fixes) and the
+        // reconnect loop treats an intentional park as a fault.
+        session.disconnect()
+        assertEquals(SessionConnectionStatus.Disconnected, session.connectionStatus.value)
+
+        // The HaClient.Disconnected that the socket close emits behind us
+        // must not flip the bridge back to Failed. Settle, then assert we
+        // held Disconnected.
+        withTimeout(3_000) {
+          session.connectionStatus.filter { it == SessionConnectionStatus.Disconnected }.first()
+        }
+        assertEquals(SessionConnectionStatus.Disconnected, session.connectionStatus.value)
+
+        // Foregrounding: reconnect restores a live, usable session.
+        session.connect()
+        withTimeout(3_000) {
+          session.connectionStatus.filter { it == SessionConnectionStatus.Connected }.first()
+        }
+        assertEquals("Home", session.loadDashboard(null).first.title)
+      } finally {
+        session.close()
+      }
+    }
+  }
+
   private fun newServer(port: Int): EmbeddedServer<*, *> =
     embeddedServer(CIO, port = port, host = "127.0.0.1") {
         install(WebSockets)
