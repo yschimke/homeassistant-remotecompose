@@ -173,10 +173,14 @@ dependencies {
   implementation(libs.kotlinx.coroutines.core)
   implementation(libs.kotlinx.serialization.json)
 
-  // Crashlytics SDK — only when a key is configured (see crashlyticsEnabled).
+  // Firebase SDK — only when a google-services.json key is configured (see
+  // crashlyticsEnabled). Analytics rides alongside Crashlytics: it auto-inits
+  // via the google-services-generated config and gives Crashlytics richer
+  // breadcrumb / user-velocity data; no app code needed.
   if (crashlyticsEnabled) {
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.crashlytics)
+    implementation(libs.firebase.analytics)
   }
 
   testImplementation(libs.kotlin.test.junit)

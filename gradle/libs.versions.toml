@@ -63,7 +63,7 @@ play-services-wearable = "20.0.1"
 
 # Firebase Crashlytics (opt-in — only resolved when a google-services.json
 # key is configured; see app/build.gradle.kts `crashlyticsEnabled`).
-firebase-bom = "34.4.0"
+firebase-bom = "34.14.0"
 
 [libraries]
 # RemoteCompose authoring / playback
@@ -187,10 +187,12 @@ mockserver-client-java = { module = "org.mock-server:mockserver-client-java", ve
 jetbrains-markdown = { module = "org.jetbrains:markdown", version.ref = "jetbrains-markdown" }
 indriya = { module = "tech.units:indriya", version.ref = "indriya" }
 
-# Firebase Crashlytics — pulled into :app only when a Crashlytics key is
-# configured (the BoM aligns the Crashlytics + analytics artifact versions).
+# Firebase — pulled into :app only when a google-services.json key is
+# configured (the BoM aligns the Crashlytics + analytics artifact versions,
+# so these carry no explicit version).
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebase-bom" }
 firebase-crashlytics = { module = "com.google.firebase:firebase-crashlytics" }
+firebase-analytics = { module = "com.google.firebase:firebase-analytics" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
