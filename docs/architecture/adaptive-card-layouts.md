@@ -179,14 +179,18 @@ The ladder is per-card, not a fixed cascade.
 
 | Tier | Min size | Layout |
 |------|----------|--------|
-| 1. Full | 240 × 96 | title chrome + N rows |
-| 2. Title-and-rows | 200 × 64 | rows trimmed to fit height |
-| 3. First-row-only | 160 × 40 | title hidden, single row visible |
-| 4. Title chip | smaller | title + "+N more" badge |
+| 1. Full | `h ≥ 200` | title chrome + N rows — matches Wrap |
+| 2. Title-and-rows | `96 ≤ h < 200` | first three rows, no title chrome |
+| 3. **Icon strip (reflow)** | `h < 96` | rows repacked as a horizontal `glance`-style strip of icon · name · state cells |
 
-(No identity-only tier — entities is a list, the rows _are_ the
-identity. Once the chrome can't fit, the next-most-useful thing is
-which-and-how-many.)
+Implemented as a **height-axis** `RemoteSizeBreakpoint`
+(`thresholdsDp = [96, 200], axis = Height`): the list's natural layout
+is a vertical stack, so height is what decides how much fits. Tier 3 is
+the "column of N rows → row of N icons" reflow — the rows can't stack,
+so they repack sideways rather than dropping to a single row. (No
+identity-only tier — entities is a list, the rows _are_ the identity;
+once rows can't stack, the next-most-useful thing is
+which-and-how-many, which the strip preserves.)
 
 ## Data priorities
 
@@ -374,8 +378,14 @@ source of truth, not individual @Preview entries.
 
 The current state is the placeholder, not the philosophy:
 
-1. `RemoteSizeBreakpoint` reads `componentWidth()` only. Need a 2D
-   variant before any reflow ladder can land.
+1. `RemoteSizeBreakpoint` now takes a `BreakpointAxis` — `Width`
+   (default) or `Height` — so a ladder can gate on either dimension.
+   `entities` uses the height axis to reflow its row column into an
+   icon strip when the cell is too short to stack rows. A *true* 2-D /
+   aspect gate is still blocked: alpha010 collapses cross-axis and
+   `.and()`-composed predicates to tier 0 (#224), so each ladder must
+   pick the single axis that best discriminates its variants — see
+   `GaugeCardConverter` for the height-only gate it settled on.
 2. Tile / entity / button / gauge ship two-tier ladders
    (`Full → CompactStateChip`). That's the value-fallback path,
    skipping every reflow / identity tier above it. Each card needs
