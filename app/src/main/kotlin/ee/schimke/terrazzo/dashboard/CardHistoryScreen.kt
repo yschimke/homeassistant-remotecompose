@@ -222,11 +222,12 @@ private fun ResizableLauncherPreview(session: HaSession, card: CardConfig, snaps
     }
 
     // Quantise the card's continuous size hint onto the launcher size
-    // class, then read its resize range in whole cells.
+    // class, then read its resize range in whole cells from the same
+    // appwidget-provider metadata the launcher uses.
     val sizeClass = remember(card, snapshot) {
         WidgetSizeClass.forConstraints(registry.cardSizeConstraints(card, snapshot))
     }
-    val bounds = sizeClass.gridBounds
+    val bounds = remember(sizeClass, context) { sizeClass.gridBounds(context) }
 
     // Current slot, in cells. Starts at the comfortable default the
     // widget pins at; resized by dragging the corner handle.

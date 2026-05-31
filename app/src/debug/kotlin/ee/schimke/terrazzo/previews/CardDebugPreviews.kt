@@ -28,6 +28,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -205,8 +206,9 @@ private fun FauxDashboardBackdrop() {
 @Composable
 private fun ResizeWidgetPreview() {
     TerrazzoTheme(style = ThemeStyle.TerrazzoHome, darkMode = DarkModePref.Light) {
-        val bounds = WidgetSizeClass.Standard.gridBounds
-        val steps = remember { dragSteps(bounds) }
+        val context = LocalContext.current
+        val bounds = remember(context) { WidgetSizeClass.Standard.gridBounds(context) }
+        val steps = remember(bounds) { dragSteps(bounds) }
         val transition = rememberInfiniteTransition(label = "resize-demo")
         val t by
             transition.animateFloat(
