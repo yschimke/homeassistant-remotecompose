@@ -74,6 +74,22 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
         }
     }
 
+    /**
+     * The launcher tells us these widget ids were removed from the home
+     * screen. Drop their persisted rows so the install cap frees the
+     * slots back up — a stale row would otherwise keep burning one of
+     * the five even though nothing renders for it anymore.
+     */
+    override fun onDeleted(context: Context, appWidgetIds: IntArray) {
+        super.onDeleted(context, appWidgetIds)
+        val store = context.terrazzoGraph().widgetStore
+        runBlocking {
+            for (id in appWidgetIds) {
+                store.remove(id)
+            }
+        }
+    }
+
     @RequiresApi(Build.VERSION_CODES.VANILLA_ICE_CREAM)
     private fun renderAndPublish(
         context: Context,
