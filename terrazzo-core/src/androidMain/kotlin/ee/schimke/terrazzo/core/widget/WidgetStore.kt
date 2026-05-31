@@ -60,6 +60,38 @@ class WidgetStore(private val context: Context) {
         }
     }
 
+    /**
+     * Drops every persisted entry whose widget id is not in [liveIds],
+     * returning the number of orphaned rows pruned.
+     *
+     * [liveIds] is the authoritative set the launcher reports via
+     * `AppWidgetManager.getAppWidgetIds()`. Removing a widget from the
+     * home screen normally routes through `AppWidgetProvider.onDeleted`,
+     * but that callback is easy to miss — the app may not be alive when
+     * the user drags the widget off, the launcher's data can be cleared,
+     * or a pin offered for a temporary install is dropped. Without this
+     * reconcile the rows leak and [count] keeps charging for widgets
+     * that no longer exist, eventually wedging the cap at "0 of 5 slots
+     * free". Treat the launcher as the source of truth and prune to it.
+     */
+    suspend fun retainOnly(liveIds: Set<Int>): Int {
+        var pruned = 0
+        context.store.edit { prefs ->
+            val storedIds = prefs.asMap().keys
+                .mapNotNull { widgetIdFromKey(it.name) }
+                .distinct()
+            for (id in storedIds) {
+                if (id !in liveIds) {
+                    prefs.remove(baseUrlKey(id))
+                    prefs.remove(cardTypeKey(id))
+                    prefs.remove(cardJsonKey(id))
+                    pruned++
+                }
+            }
+        }
+        return pruned
+    }
+
     private fun Preferences.allEntries(): List<Entry> =
         asMap().keys
             .mapNotNull { k -> widgetIdFromKey(k.name) }

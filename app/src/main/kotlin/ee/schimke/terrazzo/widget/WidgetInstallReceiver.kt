@@ -41,6 +41,10 @@ class WidgetInstallReceiver : BroadcastReceiver() {
 
         val store = context.terrazzoGraph().widgetStore
         runBlocking {
+            // Reconcile against the launcher first so rows left behind by
+            // widgets the user already removed don't count toward the cap
+            // and reject this fresh install.
+            WidgetSync.reconcile(context)
             if (store.isFull()) {
                 // Hit the cap between when the user tapped "Add" and
                 // when the launcher confirmed. Drop the oldest install

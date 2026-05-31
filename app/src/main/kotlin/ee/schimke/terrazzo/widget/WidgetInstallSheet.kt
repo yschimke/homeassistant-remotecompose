@@ -107,7 +107,13 @@ fun WidgetInstallSheet(
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     var installedCount by remember { mutableIntStateOf(0) }
-    LaunchedEffect(Unit) { installedCount = store.count() }
+    LaunchedEffect(Unit) {
+        // Heal rows for widgets the user has since removed from the
+        // launcher before trusting the count, so the "slots free" line
+        // and the cap reflect what's actually installed.
+        WidgetSync.reconcile(context.applicationContext)
+        installedCount = store.count()
+    }
 
     val previewSize = remember(card, snapshot) {
         WidgetSizing.forPreview(registry.cardHeightDp(card, snapshot))
