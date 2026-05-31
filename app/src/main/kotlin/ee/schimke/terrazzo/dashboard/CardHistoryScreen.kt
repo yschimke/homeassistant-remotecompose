@@ -72,7 +72,6 @@ import ee.schimke.ha.rc.CardSizeMode
 import ee.schimke.ha.rc.ProvideCardRegistry
 import ee.schimke.ha.rc.ProvideCardSizeMode
 import ee.schimke.ha.rc.RenderChild
-import ee.schimke.ha.rc.androidXExperimentalWrap
 import ee.schimke.ha.rc.cardSizeConstraints
 import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.cards.shutter.withEnhancedShutter
@@ -81,6 +80,7 @@ import ee.schimke.ha.rc.components.ProvideHaTheme
 import ee.schimke.ha.rc.components.RemoteHaWidgetSurface
 import ee.schimke.ha.rc.components.ThemeStyle
 import ee.schimke.ha.rc.components.haThemeFor
+import ee.schimke.ha.rc.widgetsProfile
 import ee.schimke.ha.rc.image.CoilBitmapLoader
 import ee.schimke.terrazzo.LocalHaImageStack
 import ee.schimke.terrazzo.core.session.DemoData
@@ -255,7 +255,12 @@ private fun ResizableLauncherPreview(session: HaSession, card: CardConfig, snaps
         ) {
             CachedCardPreview(
                 cacheKey = LauncherPreviewKey(card, style, dark, cellsW, cellsH),
-                profile = androidXExperimentalWrap,
+                // Capture with the launcher's constrained op vocabulary —
+                // the same widgetsProfile TerrazzoWidgetProvider and the
+                // install sheet use — so a card that the launcher runtime
+                // would reject or render empty looks the same here as on
+                // the home screen, not artificially richer.
+                profile = widgetsProfile,
                 card = card,
                 snapshot = snapshot,
                 bitmapLoader = bitmapLoader,
