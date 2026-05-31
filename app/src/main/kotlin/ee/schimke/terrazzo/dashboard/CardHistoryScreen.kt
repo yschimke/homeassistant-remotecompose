@@ -5,20 +5,28 @@ package ee.schimke.terrazzo.dashboard
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AddToHomeScreen
 import androidx.compose.material.icons.filled.Link
+import androidx.compose.material.icons.filled.OpenInFull
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
@@ -34,16 +42,23 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
@@ -53,12 +68,17 @@ import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.model.HistoryPoint
 import ee.schimke.ha.rc.CachedCardPreview
+import ee.schimke.ha.rc.CardSizeMode
 import ee.schimke.ha.rc.ProvideCardRegistry
+import ee.schimke.ha.rc.ProvideCardSizeMode
 import ee.schimke.ha.rc.RenderChild
 import ee.schimke.ha.rc.androidXExperimentalWrap
+import ee.schimke.ha.rc.cardSizeConstraints
 import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.cards.shutter.withEnhancedShutter
+import ee.schimke.ha.rc.components.ProvideCardChrome
 import ee.schimke.ha.rc.components.ProvideHaTheme
+import ee.schimke.ha.rc.components.RemoteHaWidgetSurface
 import ee.schimke.ha.rc.components.ThemeStyle
 import ee.schimke.ha.rc.components.haThemeFor
 import ee.schimke.ha.rc.image.CoilBitmapLoader
@@ -67,6 +87,10 @@ import ee.schimke.terrazzo.core.session.DemoData
 import ee.schimke.terrazzo.core.session.HaSession
 import ee.schimke.terrazzo.ui.LocalIsDarkTheme
 import ee.schimke.terrazzo.ui.LocalThemeStyle
+import ee.schimke.terrazzo.widget.LAUNCHER_CELL_HEIGHT_DP
+import ee.schimke.terrazzo.widget.LAUNCHER_CELL_WIDTH_DP
+import ee.schimke.terrazzo.widget.LauncherGridBounds
+import ee.schimke.terrazzo.widget.WidgetSizeClass
 import kotlinx.serialization.json.jsonPrimitive
 
 /**
@@ -156,9 +180,34 @@ fun CardHistoryScreen(
     }
 }
 
-/** Top region: the card rendered exactly as it appears on the dashboard. */
+/**
+ * Top region: the card previewed as a launcher widget on a resizable
+ * slot.
+ *
+ * The card's [WidgetSizeClass] — the same one [ee.schimke.terrazzo.widget.WidgetInstaller]
+ * pins when you tap "Add to Home Screen" — defines a resize range in
+ * whole launcher cells, with a smallest and largest slot. We draw that
+ * grid behind the card, dash-outline the smallest and largest sizes,
+ * and let the user drag the corner handle to resize the widget across
+ * the range a cell at a time. The card re-renders in launcher mode
+ * (fixed size, full-bleed surface, no in-app chrome) at each slot, so
+ * it's a faithful preview of how the widget reflows before committing
+ * to a home-screen position.
+ */
 @Composable
 private fun CardPreviewCard(session: HaSession, card: CardConfig, snapshot: HaSnapshot) {
+    OutlinedCard(modifier = Modifier.fillMaxWidth()) {
+        Box(
+            modifier = Modifier.fillMaxWidth().padding(12.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            ResizableLauncherPreview(session = session, card = card, snapshot = snapshot)
+        }
+    }
+}
+
+@Composable
+private fun ResizableLauncherPreview(session: HaSession, card: CardConfig, snapshot: HaSnapshot) {
     val context = LocalContext.current
     val registry = remember { defaultRegistry().withEnhancedShutter() }
     val style = LocalThemeStyle.current
@@ -172,33 +221,237 @@ private fun CardPreviewCard(session: HaSession, card: CardConfig, snapshot: HaSn
         CoilBitmapLoader(context.applicationContext, imageLoader = imageLoader, baseUrl = session.baseUrl)
     }
 
-    OutlinedCard(modifier = Modifier.fillMaxWidth()) {
-        Box(
-            modifier = Modifier.fillMaxWidth().padding(12.dp),
-            contentAlignment = Alignment.Center,
+    // Quantise the card's continuous size hint onto the launcher size
+    // class, then read its resize range in whole cells.
+    val sizeClass = remember(card, snapshot) {
+        WidgetSizeClass.forConstraints(registry.cardSizeConstraints(card, snapshot))
+    }
+    val bounds = sizeClass.gridBounds
+
+    // Current slot, in cells. Starts at the comfortable default the
+    // widget pins at; resized by dragging the corner handle.
+    var cellsW by remember(sizeClass) { mutableIntStateOf(bounds.defaultCellsW) }
+    var cellsH by remember(sizeClass) { mutableIntStateOf(bounds.defaultCellsH) }
+
+    val gridColor = MaterialTheme.colorScheme.outlineVariant
+    val smallestColor = MaterialTheme.colorScheme.tertiary
+    val largestColor = MaterialTheme.colorScheme.secondary
+    val currentColor = MaterialTheme.colorScheme.primary
+
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
+        LauncherGrid(
+            bounds = bounds,
+            cellsW = cellsW,
+            cellsH = cellsH,
+            onResize = { w, h -> cellsW = w; cellsH = h },
+            gridColor = gridColor,
+            smallestColor = smallestColor,
+            largestColor = largestColor,
+            currentColor = currentColor,
         ) {
             CachedCardPreview(
-                cacheKey = HistoryPreviewCacheKey(card, style, dark),
+                cacheKey = LauncherPreviewKey(card, style, dark, cellsW, cellsH),
                 profile = androidXExperimentalWrap,
                 card = card,
                 snapshot = snapshot,
                 bitmapLoader = bitmapLoader,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxSize(),
             ) {
                 ProvideCardRegistry(registry) {
                     ProvideHaTheme(haTheme) {
-                        RenderChild(card, snapshot, RemoteModifier.rcFillMaxWidth())
+                        // The same fixed-size, full-bleed surface the
+                        // launcher widget wraps the card in (no in-app
+                        // card chrome), so the preview matches the slot.
+                        ProvideCardSizeMode(CardSizeMode.Fixed) {
+                            ProvideCardChrome(enabled = false) {
+                                RemoteHaWidgetSurface {
+                                    RenderChild(card, snapshot, RemoteModifier.rcFillMaxWidth())
+                                }
+                            }
+                        }
                     }
                 }
             }
         }
+
+        ResizeLegend(
+            bounds = bounds,
+            cellsW = cellsW,
+            cellsH = cellsH,
+            smallestColor = smallestColor,
+            largestColor = largestColor,
+            currentColor = currentColor,
+        )
     }
 }
 
-private data class HistoryPreviewCacheKey(
+/**
+ * Draws the launcher grid (one cell = [LAUNCHER_CELL_WIDTH_DP] ×
+ * [LAUNCHER_CELL_HEIGHT_DP] dp) spanning the largest slot, dash-outlines
+ * the smallest and largest sizes, and overlays [content] (the card)
+ * sized to the current slot with a draggable resize handle at its
+ * bottom-right corner.
+ */
+@Composable
+private fun LauncherGrid(
+    bounds: LauncherGridBounds,
+    cellsW: Int,
+    cellsH: Int,
+    onResize: (Int, Int) -> Unit,
+    gridColor: Color,
+    smallestColor: Color,
+    largestColor: Color,
+    currentColor: Color,
+    content: @Composable () -> Unit,
+) {
+    val density = LocalDensity.current
+    val cellWpx = with(density) { LAUNCHER_CELL_WIDTH_DP.dp.toPx() }
+    val cellHpx = with(density) { LAUNCHER_CELL_HEIGHT_DP.dp.toPx() }
+    // Drag distance not yet spent on a cell step, in px. Reset between
+    // gestures so a fresh drag starts from the current slot edge.
+    var dragX by remember { mutableFloatStateOf(0f) }
+    var dragY by remember { mutableFloatStateOf(0f) }
+
+    val gridWidthDp = (bounds.maxCellsW * LAUNCHER_CELL_WIDTH_DP).dp
+    val gridHeightDp = (bounds.maxCellsH * LAUNCHER_CELL_HEIGHT_DP).dp
+    val currentWidthDp = (cellsW * LAUNCHER_CELL_WIDTH_DP).dp
+    val currentHeightDp = (cellsH * LAUNCHER_CELL_HEIGHT_DP).dp
+
+    Box(modifier = Modifier.size(gridWidthDp, gridHeightDp)) {
+        // Backdrop: cell grid + smallest/largest size outlines.
+        Canvas(modifier = Modifier.matchParentSize()) {
+            val dash = PathEffect.dashPathEffect(floatArrayOf(10f, 8f))
+            for (i in 0..bounds.maxCellsW) {
+                val x = (i * cellWpx).coerceAtMost(size.width)
+                drawLine(gridColor, Offset(x, 0f), Offset(x, size.height), 1.dp.toPx())
+            }
+            for (j in 0..bounds.maxCellsH) {
+                val y = (j * cellHpx).coerceAtMost(size.height)
+                drawLine(gridColor, Offset(0f, y), Offset(size.width, y), 1.dp.toPx())
+            }
+            // Largest size = the whole grid; smallest = top-left block.
+            drawRect(
+                color = largestColor,
+                topLeft = Offset.Zero,
+                size = Size(size.width, size.height),
+                style = Stroke(width = 2.dp.toPx(), pathEffect = dash),
+            )
+            drawRect(
+                color = smallestColor,
+                topLeft = Offset.Zero,
+                size = Size(bounds.minCellsW * cellWpx, bounds.minCellsH * cellHpx),
+                style = Stroke(width = 2.dp.toPx(), pathEffect = dash),
+            )
+        }
+
+        // The card at its current slot, anchored top-left so it grows
+        // toward the handle.
+        Box(
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .size(currentWidthDp, currentHeightDp)
+                .border(2.dp, currentColor),
+        ) {
+            content()
+        }
+
+        // Resize handle at the current slot's bottom-right corner. A
+        // drag of one cell's width / height steps the slot by one cell,
+        // clamped to the size class's min/max range.
+        Box(
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .offset(
+                    x = currentWidthDp - HANDLE_SIZE_DP.dp / 2,
+                    y = currentHeightDp - HANDLE_SIZE_DP.dp / 2,
+                )
+                .size(HANDLE_SIZE_DP.dp)
+                .clip(CircleShape)
+                .background(currentColor)
+                .pointerInput(bounds) {
+                    detectDragGestures(
+                        onDragEnd = { dragX = 0f; dragY = 0f },
+                        onDragCancel = { dragX = 0f; dragY = 0f },
+                    ) { change, drag ->
+                        change.consume()
+                        dragX += drag.x
+                        dragY += drag.y
+                        var w = cellsW
+                        var h = cellsH
+                        while (dragX >= cellWpx && w < bounds.maxCellsW) { w++; dragX -= cellWpx }
+                        while (dragX <= -cellWpx && w > bounds.minCellsW) { w--; dragX += cellWpx }
+                        while (dragY >= cellHpx && h < bounds.maxCellsH) { h++; dragY -= cellHpx }
+                        while (dragY <= -cellHpx && h > bounds.minCellsH) { h--; dragY += cellHpx }
+                        // Don't bank drag past the clamp, or the user
+                        // has to "unwind" it before the slot moves back.
+                        if (w == bounds.maxCellsW) dragX = dragX.coerceAtMost(0f)
+                        if (w == bounds.minCellsW) dragX = dragX.coerceAtLeast(0f)
+                        if (h == bounds.maxCellsH) dragY = dragY.coerceAtMost(0f)
+                        if (h == bounds.minCellsH) dragY = dragY.coerceAtLeast(0f)
+                        if (w != cellsW || h != cellsH) onResize(w, h)
+                    }
+                },
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                Icons.Filled.OpenInFull,
+                contentDescription = "Resize widget preview",
+                tint = MaterialTheme.colorScheme.onPrimary,
+                modifier = Modifier.size(16.dp),
+            )
+        }
+    }
+}
+
+/** Colour-keyed caption: current / smallest / largest slot, in cells. */
+@Composable
+private fun ResizeLegend(
+    bounds: LauncherGridBounds,
+    cellsW: Int,
+    cellsH: Int,
+    smallestColor: Color,
+    largestColor: Color,
+    currentColor: Color,
+) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+            LegendSwatch(currentColor, "Now $cellsW×$cellsH")
+            LegendSwatch(smallestColor, "Min ${bounds.minCellsW}×${bounds.minCellsH}")
+            LegendSwatch(largestColor, "Max ${bounds.maxCellsW}×${bounds.maxCellsH}")
+        }
+        Text(
+            "Drag the handle to resize the widget",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+}
+
+@Composable
+private fun LegendSwatch(color: Color, label: String) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(modifier = Modifier.size(10.dp).clip(CircleShape).background(color))
+        Text(label, style = MaterialTheme.typography.labelSmall)
+    }
+}
+
+private const val HANDLE_SIZE_DP = 28
+
+private data class LauncherPreviewKey(
     val card: CardConfig,
     val style: ThemeStyle,
     val dark: Boolean,
+    val cellsW: Int,
+    val cellsH: Int,
 )
 
 /** Middle region: range chips + one chart block per entity. */

@@ -55,6 +55,23 @@ internal enum class WidgetSizeClass(val providerClass: Class<out TerrazzoWidgetP
     fun componentName(context: Context): ComponentName =
         ComponentName(context, providerClass)
 
+    /**
+     * The launcher resize range for this size class, in whole grid
+     * cells — the smallest and largest home-screen slots the widget
+     * will occupy, plus the comfortable default it pins at. Quantises
+     * the `min/maxResize*` and `targetCell*` values in the matching
+     * `@xml/terrazzo_widget_info*` provider metadata onto the
+     * [LAUNCHER_CELL_WIDTH_DP] × [LAUNCHER_CELL_HEIGHT_DP] grid, and
+     * matches the `~AxB .. CxD` ranges in each constant's KDoc above.
+     * The card-history screen draws this range as a resizable preview.
+     */
+    val gridBounds: LauncherGridBounds
+        get() = when (this) {
+            Small -> LauncherGridBounds(minCellsW = 1, minCellsH = 1, defaultCellsW = 2, defaultCellsH = 1, maxCellsW = 2, maxCellsH = 2)
+            Standard -> LauncherGridBounds(minCellsW = 2, minCellsH = 1, defaultCellsW = 4, defaultCellsH = 2, maxCellsW = 4, maxCellsH = 3)
+            Tall -> LauncherGridBounds(minCellsW = 2, minCellsH = 2, defaultCellsW = 4, defaultCellsH = 3, maxCellsW = 4, maxCellsH = 4)
+        }
+
     companion object {
         /** Default height (dp) at or above which a Full-width card pins Tall. */
         private const val TALL_DEFAULT_HEIGHT_DP = 200
@@ -72,3 +89,29 @@ internal enum class WidgetSizeClass(val providerClass: Class<out TerrazzoWidgetP
         }
     }
 }
+
+/**
+ * Approximate size of one launcher home-screen cell on a typical phone,
+ * in dp. Widget slots are an integer number of these cells; the
+ * card-history resize preview tiles its grid on this unit. Mirrors the
+ * `LauncherCellWidthDp` / `LauncherCellHeightDp` constants the
+ * `CardPreviewMatrix` @Preview renders against, so the in-app preview
+ * and the tooling matrix quantise to the same grid.
+ */
+internal const val LAUNCHER_CELL_WIDTH_DP = 72
+internal const val LAUNCHER_CELL_HEIGHT_DP = 84
+
+/**
+ * A [WidgetSizeClass]'s resize range expressed in whole launcher cells:
+ * the smallest and largest slots the launcher will let the widget
+ * occupy, plus the comfortable default it pins at. See
+ * [WidgetSizeClass.gridBounds].
+ */
+internal data class LauncherGridBounds(
+    val minCellsW: Int,
+    val minCellsH: Int,
+    val defaultCellsW: Int,
+    val defaultCellsH: Int,
+    val maxCellsW: Int,
+    val maxCellsH: Int,
+)
