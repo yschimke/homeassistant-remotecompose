@@ -19,6 +19,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Lightbulb
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -39,6 +40,13 @@ import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.model.View
 import ee.schimke.terrazzo.dashboard.CardChangeFlash
 import ee.schimke.terrazzo.dashboard.DataGridOverlay
+import ee.schimke.terrazzo.core.prefs.DarkModePref
+import ee.schimke.terrazzo.dashboard.LauncherGrid
+import ee.schimke.terrazzo.dashboard.ResizeLegend
+import ee.schimke.terrazzo.ui.TerrazzoTheme
+import ee.schimke.terrazzo.widget.LauncherGridBounds
+import ee.schimke.terrazzo.widget.WidgetSizeClass
+import ee.schimke.ha.rc.components.ThemeStyle
 import kotlin.time.Instant
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -179,6 +187,116 @@ private fun FauxDashboardBackdrop() {
                     .height(72.dp)
                     .background(Color(0xFFD9D9E3), RoundedCornerShape(16.dp))
             )
+        }
+    }
+}
+
+/**
+ * Animated walk-through of the card-history screen's resizable launcher
+ * preview ([LauncherGrid] / [ResizeLegend]). An infinite transition
+ * steps the slot diagonally out to the largest size and back — the same
+ * cell-snapped path a finger drag on the corner handle produces — so the
+ * handle, current-slot outline, and legend animate across the size
+ * class's range against the static smallest/largest guides.
+ * `@AnimatedPreview` captures it as a GIF.
+ */
+@Preview(name = "Resize widget preview", widthDp = 360, heightDp = 460, showBackground = true)
+@AnimatedPreview(durationMs = 4500, frameIntervalMs = 150, showCurves = false)
+@Composable
+private fun ResizeWidgetPreview() {
+    TerrazzoTheme(style = ThemeStyle.TerrazzoHome, darkMode = DarkModePref.Light) {
+        val bounds = WidgetSizeClass.Standard.gridBounds
+        val steps = remember { dragSteps(bounds) }
+        val transition = rememberInfiniteTransition(label = "resize-demo")
+        val t by
+            transition.animateFloat(
+                initialValue = 0f,
+                targetValue = steps.size.toFloat(),
+                animationSpec =
+                    infiniteRepeatable(
+                        animation = tween(durationMillis = 4500, easing = LinearEasing),
+                        repeatMode = RepeatMode.Restart,
+                    ),
+                label = "step",
+            )
+        val (w, h) = steps[t.toInt().coerceIn(0, steps.lastIndex)]
+
+        val gridColor = MaterialTheme.colorScheme.outlineVariant
+        val smallestColor = MaterialTheme.colorScheme.tertiary
+        val largestColor = MaterialTheme.colorScheme.secondary
+        val currentColor = MaterialTheme.colorScheme.primary
+
+        Box(
+            modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background),
+            contentAlignment = Alignment.Center,
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+            ) {
+                Text(
+                    "Resizing widget on the launcher grid",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                )
+                LauncherGrid(
+                    bounds = bounds,
+                    cellsW = w,
+                    cellsH = h,
+                    onResize = { _, _ -> },
+                    gridColor = gridColor,
+                    smallestColor = smallestColor,
+                    largestColor = largestColor,
+                    currentColor = currentColor,
+                ) {
+                    FauxWidgetCard()
+                }
+                ResizeLegend(
+                    bounds = bounds,
+                    cellsW = w,
+                    cellsH = h,
+                    smallestColor = smallestColor,
+                    largestColor = largestColor,
+                    currentColor = currentColor,
+                )
+            }
+        }
+    }
+}
+
+/**
+ * The cell sizes a there-and-back diagonal drag of the corner handle
+ * passes through: grow width to max, then height to max, then shrink
+ * back to the smallest slot. One entry per cell-snapped step.
+ */
+private fun dragSteps(b: LauncherGridBounds): List<Pair<Int, Int>> {
+    val out = mutableListOf<Pair<Int, Int>>()
+    var w = b.minCellsW
+    var h = b.minCellsH
+    out.add(w to h)
+    while (w < b.maxCellsW) { w++; out.add(w to h) }
+    while (h < b.maxCellsH) { h++; out.add(w to h) }
+    while (h > b.minCellsH) { h--; out.add(w to h) }
+    while (w > b.minCellsW) { w--; out.add(w to h) }
+    return out
+}
+
+/** A themed tile-shaped stand-in that fills the current launcher slot. */
+@Composable
+private fun FauxWidgetCard() {
+    Surface(
+        color = MaterialTheme.colorScheme.surfaceVariant,
+        contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+        shape = RoundedCornerShape(12.dp),
+        modifier = Modifier.fillMaxSize(),
+    ) {
+        Column(
+            modifier = Modifier.padding(12.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            Icon(Icons.Filled.Lightbulb, contentDescription = null, modifier = Modifier.size(24.dp))
+            Text("Living room", fontSize = 13.sp, fontWeight = FontWeight.Medium)
+            Text("On", fontSize = 12.sp)
         }
     }
 }

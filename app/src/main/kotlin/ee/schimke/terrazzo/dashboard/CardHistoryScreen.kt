@@ -296,7 +296,7 @@ private fun ResizableLauncherPreview(session: HaSession, card: CardConfig, snaps
  * bottom-right corner.
  */
 @Composable
-private fun LauncherGrid(
+internal fun LauncherGrid(
     bounds: LauncherGridBounds,
     cellsW: Int,
     cellsH: Int,
@@ -408,7 +408,7 @@ private fun LauncherGrid(
 
 /** Colour-keyed caption: current / smallest / largest slot, in cells. */
 @Composable
-private fun ResizeLegend(
+internal fun ResizeLegend(
     bounds: LauncherGridBounds,
     cellsW: Int,
     cellsH: Int,
