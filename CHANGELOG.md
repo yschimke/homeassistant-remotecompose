@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.1.32](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.31...v0.1.32) (2026-05-31)
+
+
+### Features
+
+* **dashboard:** make history-screen preview resizable to launcher sizes ([#364](https://github.com/yschimke/homeassistant-remotecompose/issues/364)) ([d541c1d](https://github.com/yschimke/homeassistant-remotecompose/commit/d541c1d9320e128643e7fc015e2774e5c05f445a))
+
+
+### Bug Fixes
+
+* **widget:** reconcile install slots with the launcher's widget set ([#362](https://github.com/yschimke/homeassistant-remotecompose/issues/362)) ([e28b697](https://github.com/yschimke/homeassistant-remotecompose/commit/e28b697f3493acc3072a8d9d84d79121d13b7569))
+
 ## [0.1.31](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.30...v0.1.31) (2026-05-30)
 
 
