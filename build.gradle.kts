@@ -15,7 +15,7 @@ buildscript {
     }
     dependencies {
       classpath("com.google.gms:google-services:4.4.4")
-      classpath("com.google.firebase:firebase-crashlytics-gradle:3.0.6")
+      classpath("com.google.firebase:firebase-crashlytics-gradle:3.0.7")
     }
   }
 }
