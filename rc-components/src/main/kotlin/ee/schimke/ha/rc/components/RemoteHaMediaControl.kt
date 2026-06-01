@@ -20,6 +20,7 @@ import androidx.compose.remote.creation.compose.modifier.background
 import androidx.compose.remote.creation.compose.modifier.border
 import androidx.compose.remote.creation.compose.modifier.clickable
 import androidx.compose.remote.creation.compose.modifier.clip
+import androidx.compose.remote.creation.compose.modifier.fillMaxHeight
 import androidx.compose.remote.creation.compose.modifier.fillMaxSize
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.creation.compose.modifier.height
@@ -58,116 +59,137 @@ fun RemoteHaMediaControl(
             .then(cardChrome(theme.cardBackground, theme.divider))
             .padding(horizontal = 12.rdp, vertical = 12.rdp),
     ) {
-        // The art-beside-body Row is nested inside a Column rather than
-        // sitting directly under the Box. The wrapper is deliberate: a
-        // fillMaxSize Box (this card's root, or the breakpoint's
-        // immediateSwap wrapper in Fixed mode) with a fillMaxSize *Row* as
-        // its direct child renders blank in the alpha010 wrap-capture,
-        // whereas a Column child fills correctly. When the host hands us a
-        // taller cell than the row needs (Fixed mode, large launcher
-        // widget), `fillHeight` centres the row vertically rather than
-        // gluing it to the top edge (Principle 8).
+        // Box→Column→Row, never Box→Row: a fillMaxSize Row directly under a
+        // wrap-content Box (this card's root, or the breakpoint's
+        // immediateSwap wrapper in Fixed mode) captures blank in alpha010;
+        // the Column buffer fixes it (see § Known gaps #9).
         RemoteColumn(
             modifier =
                 if (fillHeight) RemoteModifier.fillMaxSize() else RemoteModifier.fillMaxWidth(),
-            verticalArrangement =
-                if (fillHeight) RemoteArrangement.Center else RemoteArrangement.spacedBy(0.rdp),
         ) {
             RemoteRow(
-                modifier = RemoteModifier.fillMaxWidth(),
+                modifier =
+                    if (fillHeight) RemoteModifier.fillMaxSize() else RemoteModifier.fillMaxWidth(),
                 verticalAlignment = RemoteAlignment.CenterVertically,
             ) {
-                // Body
-                RemoteColumn(modifier = RemoteModifier.weight(1f).padding(end = 12.rdp)) {
-                RemoteText(
-                    text = data.playerName.rs,
-                    color = data.accent.rc,
-                    fontSize = 11.rsp,
-                    fontWeight = FontWeight.Medium,
-                    style = RemoteTextStyle.Default,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                RemoteText(
-                    text = LiveValues.attribute(data.entityId, "media_title", data.title),
-                    color = theme.primaryText.rc,
-                    fontSize = 16.rsp,
-                    fontWeight = FontWeight.Medium,
-                    style = RemoteTextStyle.Default,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                if (data.artist != null) {
-                    RemoteText(
-                        text = LiveValues.attribute(data.entityId, "media_artist", data.artist),
-                        color = theme.secondaryText.rc,
-                        fontSize = 12.rsp,
-                        style = RemoteTextStyle.Default,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
-                RemoteRow(
-                    modifier = RemoteModifier.padding(top = 6.rdp),
-                    horizontalArrangement = RemoteArrangement.spacedBy(4.rdp),
-                    verticalAlignment = RemoteAlignment.CenterVertically,
+                // Body. In fillHeight mode (a cell taller than the controls
+                // need) weighted spacers push the title to the top, the
+                // transport to the middle and the seek bar to the bottom so
+                // the controls span the cell instead of clustering at the
+                // top over a blank half (Principle 7/8). Otherwise the column
+                // wraps its content as the HA reference does.
+                RemoteColumn(
+                    modifier =
+                        if (fillHeight)
+                            RemoteModifier.weight(1f).fillMaxHeight().padding(end = 12.rdp)
+                        else RemoteModifier.weight(1f).padding(end = 12.rdp),
                 ) {
-                    TransportButton(Icons.Filled.SkipPrevious, data.previousAction, data.accent)
-                    TransportButton(
-                        if (data.isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow,
-                        data.playPauseAction,
-                        data.accent,
-                        big = true,
+                    TitleBlock(data, theme)
+                    if (fillHeight) RemoteBox(modifier = RemoteModifier.weight(1f))
+                    TransportRow(data)
+                    if (fillHeight) RemoteBox(modifier = RemoteModifier.weight(1f))
+                    SeekBlock(data, theme)
+                }
+                // Album-art placeholder, vertically centred beside the body.
+                RemoteBox(
+                    modifier = RemoteModifier
+                        .size(96.rdp)
+                        .clip(RemoteRoundedCornerShape(8.rdp))
+                        .background(data.accent.rc.copy(alpha = data.accent.rc.alpha * 0.15f.rf)),
+                    contentAlignment = RemoteAlignment.Center,
+                ) {
+                    RemoteIcon(
+                        imageVector = Icons.Filled.MusicNote,
+                        contentDescription = data.title.rs,
+                        modifier = RemoteModifier.size(40.rdp),
+                        tint = data.accent.rc,
                     )
-                    TransportButton(Icons.Filled.SkipNext, data.nextAction, data.accent)
-                }
-                ProgressBar(data.positionFraction, data.accent, theme)
-                if (data.positionLabel != null && data.durationLabel != null) {
-                    RemoteRow(
-                        modifier = RemoteModifier.fillMaxWidth(),
-                        horizontalArrangement = RemoteArrangement.SpaceBetween,
-                    ) {
-                        RemoteText(
-                            text =
-                                LiveValues.attribute(
-                                    data.entityId,
-                                    "media_position_label",
-                                    data.positionLabel,
-                                ),
-                            color = theme.secondaryText.rc,
-                            fontSize = 11.rsp,
-                            style = RemoteTextStyle.Default,
-                        )
-                        RemoteText(
-                            text =
-                                LiveValues.attribute(
-                                    data.entityId,
-                                    "media_duration_label",
-                                    data.durationLabel,
-                                ),
-                            color = theme.secondaryText.rc,
-                            fontSize = 11.rsp,
-                            style = RemoteTextStyle.Default,
-                        )
-                    }
                 }
             }
-            // Album-art placeholder
-            RemoteBox(
-                modifier = RemoteModifier
-                    .size(96.rdp)
-                    .clip(RemoteRoundedCornerShape(8.rdp))
-                    .background(data.accent.rc.copy(alpha = data.accent.rc.alpha * 0.15f.rf)),
-                contentAlignment = RemoteAlignment.Center,
-            ) {
-                RemoteIcon(
-                    imageVector = Icons.Filled.MusicNote,
-                    contentDescription = data.title.rs,
-                    modifier = RemoteModifier.size(40.rdp),
-                    tint = data.accent.rc,
-                )
-            }
-            }
+        }
+    }
+}
+
+@Composable
+private fun TitleBlock(data: HaMediaControlData, theme: HaTheme) {
+    RemoteText(
+        text = data.playerName.rs,
+        color = data.accent.rc,
+        fontSize = 11.rsp,
+        fontWeight = FontWeight.Medium,
+        style = RemoteTextStyle.Default,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+    )
+    RemoteText(
+        text = LiveValues.attribute(data.entityId, "media_title", data.title),
+        color = theme.primaryText.rc,
+        fontSize = 16.rsp,
+        fontWeight = FontWeight.Medium,
+        style = RemoteTextStyle.Default,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+    )
+    if (data.artist != null) {
+        RemoteText(
+            text = LiveValues.attribute(data.entityId, "media_artist", data.artist),
+            color = theme.secondaryText.rc,
+            fontSize = 12.rsp,
+            style = RemoteTextStyle.Default,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+    }
+}
+
+@Composable
+private fun TransportRow(data: HaMediaControlData) {
+    RemoteRow(
+        modifier = RemoteModifier.padding(top = 6.rdp),
+        horizontalArrangement = RemoteArrangement.spacedBy(4.rdp),
+        verticalAlignment = RemoteAlignment.CenterVertically,
+    ) {
+        TransportButton(Icons.Filled.SkipPrevious, data.previousAction, data.accent)
+        TransportButton(
+            if (data.isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow,
+            data.playPauseAction,
+            data.accent,
+            big = true,
+        )
+        TransportButton(Icons.Filled.SkipNext, data.nextAction, data.accent)
+    }
+}
+
+@Composable
+private fun SeekBlock(data: HaMediaControlData, theme: HaTheme) {
+    ProgressBar(data.positionFraction, data.accent, theme)
+    if (data.positionLabel != null && data.durationLabel != null) {
+        RemoteRow(
+            modifier = RemoteModifier.fillMaxWidth(),
+            horizontalArrangement = RemoteArrangement.SpaceBetween,
+        ) {
+            RemoteText(
+                text =
+                    LiveValues.attribute(
+                        data.entityId,
+                        "media_position_label",
+                        data.positionLabel,
+                    ),
+                color = theme.secondaryText.rc,
+                fontSize = 11.rsp,
+                style = RemoteTextStyle.Default,
+            )
+            RemoteText(
+                text =
+                    LiveValues.attribute(
+                        data.entityId,
+                        "media_duration_label",
+                        data.durationLabel,
+                    ),
+                color = theme.secondaryText.rc,
+                fontSize = 11.rsp,
+                style = RemoteTextStyle.Default,
+            )
         }
     }
 }

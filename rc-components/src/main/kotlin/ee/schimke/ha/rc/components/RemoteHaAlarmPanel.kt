@@ -15,6 +15,7 @@ import androidx.compose.remote.creation.compose.modifier.background
 import androidx.compose.remote.creation.compose.modifier.border
 import androidx.compose.remote.creation.compose.modifier.clickable
 import androidx.compose.remote.creation.compose.modifier.clip
+import androidx.compose.remote.creation.compose.modifier.fillMaxHeight
 import androidx.compose.remote.creation.compose.modifier.fillMaxSize
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.creation.compose.modifier.padding
@@ -61,14 +62,13 @@ fun RemoteHaAlarmPanel(
             .padding(horizontal = 14.rdp, vertical = 12.rdp),
     ) {
         // On a taller cell than the keypad needs (Fixed mode, large
-        // launcher widget) the column fills the height and centres its
-        // block so it sits in the middle rather than glued to the top
-        // over a blank bottom half (Principle 8).
+        // launcher widget) the status + buttons stay at the top and the
+        // keypad takes the remaining height, spreading its rows to fill it
+        // rather than the whole block gluing to the top over a blank bottom
+        // half (Principle 7/8).
         RemoteColumn(
             modifier = if (fillHeight) RemoteModifier.fillMaxSize() else RemoteModifier.fillMaxWidth(),
-            verticalArrangement =
-                if (fillHeight) RemoteArrangement.spacedBy(10.rdp, RemoteAlignment.CenterVertically)
-                else RemoteArrangement.spacedBy(10.rdp),
+            verticalArrangement = RemoteArrangement.spacedBy(10.rdp),
         ) {
             StatusRow(data, statusByKey, initialStatus, theme)
 
@@ -84,7 +84,17 @@ fun RemoteHaAlarmPanel(
                 }
             }
 
-            if (data.showKeypad) Keypad(data.entityId, keypadAccent, theme)
+            if (data.showKeypad) {
+                Keypad(
+                    data.entityId,
+                    keypadAccent,
+                    theme,
+                    modifier =
+                        if (fillHeight) RemoteModifier.weight(1f).fillMaxHeight()
+                        else RemoteModifier,
+                    fill = fillHeight,
+                )
+            }
         }
     }
 }
@@ -242,10 +252,13 @@ private fun Keypad(
     entityId: String?,
     accent: androidx.compose.ui.graphics.Color,
     theme: HaTheme,
+    modifier: RemoteModifier = RemoteModifier,
+    fill: Boolean = false,
 ) {
     RemoteColumn(
-        modifier = RemoteModifier.fillMaxWidth().padding(top = 6.rdp),
-        verticalArrangement = RemoteArrangement.spacedBy(6.rdp),
+        modifier = modifier.fillMaxWidth().padding(top = 6.rdp),
+        verticalArrangement =
+            if (fill) RemoteArrangement.SpaceEvenly else RemoteArrangement.spacedBy(6.rdp),
         horizontalAlignment = RemoteAlignment.CenterHorizontally,
     ) {
         listOf(listOf("1", "2", "3"), listOf("4", "5", "6"), listOf("7", "8", "9"))
