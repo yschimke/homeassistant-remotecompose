@@ -466,7 +466,7 @@ and is reused. The families today:
 | Family | Key element | Cards | Shared composable(s) | Ladder state |
 |---|---|---|---|---|
 | **Icon + state row/tile** | tinted icon | `tile`, `entity`, `sensor`, `statistic` | `RemoteHaTile`, `RemoteHaEntityRow` | tile/entity: `Full↔CompactStateChip`; sensor/statistic: none |
-| **Icon-centred button** | large tinted icon | `button` | `RemoteHaButton` / `RemoteHaToggleButton` | `Full↔CompactStateChip` |
+| **Icon-centred button** | large tinted icon | `button` | `RemoteHaButton` / `RemoteHaToggleButton` / `RemoteHaButtonIcon` | `icon-only ↔ icon+name` (2-D gate) |
 | **Arc-dial control** | the arc/dial | `gauge`, `thermostat`, `humidifier`, `light` | `RemoteHaGauge*`, `RemoteHaArcDial*`, `RenderArcDial` | thermostat/humidifier/gauge: Wide↔Full; `light`: **none (outlier)** |
 | **Multi-entity list/strip** | first row/cell | `entities`, `glance`, `area`, `picture-glance`, `entity-filter`, `*-stack` | `RemoteHaEntities`, `RemoteHaGlance` | entities: `list↔strip`; others: none |
 | **Hero + supporting detail** | condition/art/shield + value | `weather-forecast`, `media-control`, `alarm-panel` | `RemoteHaWeatherForecast*`, `RemoteHaMediaControl`, `RemoteHaAlarmPanel` | weather: `Full↔Wide`; others: none |
@@ -509,14 +509,24 @@ The current state is the placeholder, not the philosophy:
    (b) a gate only reads a **stable** value on the axis the surface
    *pins* — launcher/matrix cells pin width and wrap height, so a height
    gate mis-selects there (it works where height is pinned, e.g. the
-   Wear gauge). A *true* 2-D / aspect gate remains blocked (#224). Net:
-   `entities` reflows on a single width threshold; per-card ladders
-   should pick the one pinned axis that best discriminates their
-   variants — see `GaugeCardConverter`.
-2. Tile / entity / button / gauge ship two-tier ladders
+   Wear gauge). A multi-rung or `RemoteBoolean.and()`-composed aspect
+   gate remains blocked (#224). A **single-expression** 2-D gate does
+   work, though: `min(w, h · minW/minH).ge(minW)` is one boolean off one
+   float, true only when `w ≥ minW` **and** `h ≥ minH`, so it sidesteps
+   the `.and()` / nested-state-layout collapse — `ButtonCardConverter`
+   (#352) uses it to send narrow-tall (`1×1`) and wide-short (Wear S)
+   cells to the icon-only tier while wide-and-tall cells keep the name,
+   something no single width- or height-only gate can do. Net:
+   `entities` reflows on a single width threshold; per-card ladders pick
+   the one pinned axis (or the single-`min` 2-D form) that best
+   discriminates their variants — see `GaugeCardConverter` /
+   `ButtonCardConverter`.
+2. Tile / entity / gauge ship two-tier ladders
    (`Full → CompactStateChip`). That's the value-fallback path,
    skipping every reflow / identity tier above it. Each card needs
-   the worked-example ladder above.
+   the worked-example ladder above. (`button` no longer uses
+   `CompactStateChip` — its small tier is the icon-only
+   `RemoteHaButtonIcon`, see #352.)
 3. Runtime tier selection **does** fire — the matrix preview shows tile
    switching chip↔full and entities switching list↔strip per size. Two
    gotchas were shaped around: the `componentWidth()` named expression
@@ -534,27 +544,33 @@ The current state is the placeholder, not the philosophy:
    candidate because it has an obvious reflow target and is the card
    the screenshot called out.
 5. **`CompactStateChip` is wired as the _second_ tier, not the last.**
-   `tile`, `entity`, and `button` go `Full → CompactStateChip` at a
-   single 120 dp gate, so the `1×1` cell renders as top-left text with
-   **no icon** — a direct violation of Principle 1 and the "hiding the
-   icon first" anti-pattern, visible in the matrix today. Each needs an
-   icon-only identity tier between `Full` and the text chip; the chip
-   should only appear when even a `40×40` icon won't fit.
+   `tile` and `entity` go `Full → CompactStateChip` at a single 120 dp
+   gate, so the `1×1` cell renders as top-left text with **no icon** — a
+   direct violation of Principle 1 and the "hiding the icon first"
+   anti-pattern, visible in the matrix today. Each needs an icon-only
+   identity tier between `Full` and the text chip; the chip should only
+   appear when even a `40×40` icon won't fit. **`button` is done (#352):**
+   it now ladders `icon-only ↔ icon+name` (`RemoteHaButtonIcon` ↔
+   `RemoteHaButton`), so the `1×1` cell keeps the tinted icon instead of
+   dropping to text.
 6. **Large cells pad with whitespace instead of enriching (Principle
    7).** Confirmed in the matrix at `base+1` for `tile`, `entity`,
-   `button`, `entities`, and `weather-forecast`: content pins to the
-   top-left and the bottom half of the cell is blank. The fix is an
-   Expanded tier or centring (`No dead space`, Principle 8). **Caveat
-   learned the hard way:** centring cannot be retrofitted by setting
+   `entities`, and `weather-forecast`: content pins to the top-left and
+   the bottom half of the cell is blank. The fix is an Expanded tier or
+   centring (`No dead space`, Principle 8). **Caveat learned the hard
+   way:** centring cannot be retrofitted by setting
    `contentAlignment = Center` on a wrapper `RemoteBox` — in alpha010 a
    `fillMaxWidth` (wrap-height) child is still pinned to the top of a
    centring box, so a wrapper-level alignment is a no-op (verified by
-   re-rendering tile/entity/button/entities — pixel-identical). The
-   arc-dial cards only _look_ centred because `RemoteHaArcDialWide`
-   itself `fillMaxSize`s and centres its content **internally**. So the
-   "fill the cell" work is per-tier-composable (each variant must fill
-   and self-centre, like the arc-dial Wide row), not a one-line wrapper
-   change. Tracked per layout family in the design-review issues.
+   re-rendering tile/entity/entities — pixel-identical). The arc-dial
+   cards only _look_ centred because `RemoteHaArcDialWide` itself
+   `fillMaxSize`s and centres its content **internally**. So the "fill
+   the cell" work is per-tier-composable (each variant must fill and
+   self-centre, like the arc-dial Wide row), not a one-line wrapper
+   change. **`button` is done (#352):** its `icon+name` tier takes the
+   Fixed-mode `fillMaxSize` modifier and centres a wrap-content column,
+   so `base+1` / Wear L centre instead of pinning top-left. Tracked per
+   layout family in the design-review issues.
 7. **`light` is outside the arc-dial family.** `thermostat` and
    `humidifier` route through `RenderArcDial` and get the Wide↔Full
    ladder + dial retention for free; `LightCardConverter` calls
