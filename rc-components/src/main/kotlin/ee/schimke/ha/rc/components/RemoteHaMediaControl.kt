@@ -20,6 +20,7 @@ import androidx.compose.remote.creation.compose.modifier.background
 import androidx.compose.remote.creation.compose.modifier.border
 import androidx.compose.remote.creation.compose.modifier.clickable
 import androidx.compose.remote.creation.compose.modifier.clip
+import androidx.compose.remote.creation.compose.modifier.fillMaxSize
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.creation.compose.modifier.height
 import androidx.compose.remote.creation.compose.modifier.padding
@@ -45,20 +46,39 @@ import androidx.wear.compose.remote.material3.RemoteIcon
  */
 @Composable
 @RemoteComposable
-fun RemoteHaMediaControl(data: HaMediaControlData, modifier: RemoteModifier = RemoteModifier) {
+fun RemoteHaMediaControl(
+    data: HaMediaControlData,
+    modifier: RemoteModifier = RemoteModifier,
+    fillHeight: Boolean = false,
+) {
     val theme = haTheme()
     RemoteBox(
         modifier = modifier
-            .fillMaxWidth()
+            .then(if (fillHeight) RemoteModifier.fillMaxSize() else RemoteModifier.fillMaxWidth())
             .then(cardChrome(theme.cardBackground, theme.divider))
             .padding(horizontal = 12.rdp, vertical = 12.rdp),
     ) {
-        RemoteRow(
-            modifier = RemoteModifier.fillMaxWidth(),
-            verticalAlignment = RemoteAlignment.CenterVertically,
+        // The art-beside-body Row is nested inside a Column rather than
+        // sitting directly under the Box. The wrapper is deliberate: a
+        // fillMaxSize Box (this card's root, or the breakpoint's
+        // immediateSwap wrapper in Fixed mode) with a fillMaxSize *Row* as
+        // its direct child renders blank in the alpha010 wrap-capture,
+        // whereas a Column child fills correctly. When the host hands us a
+        // taller cell than the row needs (Fixed mode, large launcher
+        // widget), `fillHeight` centres the row vertically rather than
+        // gluing it to the top edge (Principle 8).
+        RemoteColumn(
+            modifier =
+                if (fillHeight) RemoteModifier.fillMaxSize() else RemoteModifier.fillMaxWidth(),
+            verticalArrangement =
+                if (fillHeight) RemoteArrangement.Center else RemoteArrangement.spacedBy(0.rdp),
         ) {
-            // Body
-            RemoteColumn(modifier = RemoteModifier.weight(1f).padding(end = 12.rdp)) {
+            RemoteRow(
+                modifier = RemoteModifier.fillMaxWidth(),
+                verticalAlignment = RemoteAlignment.CenterVertically,
+            ) {
+                // Body
+                RemoteColumn(modifier = RemoteModifier.weight(1f).padding(end = 12.rdp)) {
                 RemoteText(
                     text = data.playerName.rs,
                     color = data.accent.rc,
@@ -147,7 +167,81 @@ fun RemoteHaMediaControl(data: HaMediaControlData, modifier: RemoteModifier = Re
                     tint = data.accent.rc,
                 )
             }
+            }
         }
+    }
+}
+
+/**
+ * Wide-thin Fixed-mode media variant — album-art swatch on the left,
+ * title (+ player name) in the middle, a single play/pause button on
+ * the right. Targets short/narrow widget cells (Wear S/L, the `3×1`
+ * launcher chip) where the full card's transport row + seek bar won't
+ * fit. Keeps the card's identity (art + play/pause, P1) and the track
+ * title (P3); drops the prev/next transport, seek bar and time labels
+ * (P4/P5). The full card with the seek bar returns once the cell is
+ * wide enough.
+ */
+@Composable
+@RemoteComposable
+fun RemoteHaMediaControlWide(
+    data: HaMediaControlData,
+    modifier: RemoteModifier = RemoteModifier,
+) {
+    val theme = haTheme()
+    RemoteRow(
+        modifier = modifier
+            .then(cardChrome(theme.cardBackground, theme.divider))
+            .padding(horizontal = 10.rdp, vertical = 8.rdp),
+        verticalAlignment = RemoteAlignment.CenterVertically,
+        horizontalArrangement = RemoteArrangement.spacedBy(10.rdp),
+    ) {
+        RemoteBox(
+            modifier = RemoteModifier
+                .size(40.rdp)
+                .clip(RemoteRoundedCornerShape(6.rdp))
+                .background(data.accent.rc.copy(alpha = data.accent.rc.alpha * 0.15f.rf)),
+            contentAlignment = RemoteAlignment.Center,
+        ) {
+            RemoteIcon(
+                imageVector = Icons.Filled.MusicNote,
+                contentDescription = data.title.rs,
+                modifier = RemoteModifier.size(22.rdp),
+                tint = data.accent.rc,
+            )
+        }
+        RemoteColumn(
+            modifier = RemoteModifier.weight(1f),
+            verticalArrangement = RemoteArrangement.Center,
+        ) {
+            RemoteText(
+                text = LiveValues.attribute(data.entityId, "media_title", data.title),
+                color = theme.primaryText.rc,
+                fontSize = 14.rsp,
+                fontWeight = FontWeight.Medium,
+                style = RemoteTextStyle.Default,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            RemoteText(
+                text = data.playerName.rs,
+                color = theme.secondaryText.rc,
+                fontSize = 11.rsp,
+                style = RemoteTextStyle.Default,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+        // Non-clickable play/pause glyph (not a TransportButton): the
+        // same RemoteAction captured in both breakpoint branches blanks
+        // the Full tier in alpha010, and a tiny chip is a glance target —
+        // the tap opens the full card.
+        RemoteIcon(
+            imageVector = if (data.isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow,
+            contentDescription = "play/pause".rs,
+            modifier = RemoteModifier.size(22.rdp),
+            tint = data.accent.rc,
+        )
     }
 }
 

@@ -6,6 +6,7 @@ import androidx.compose.material.icons.filled.LockOpen
 import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
+import androidx.compose.remote.creation.compose.modifier.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -15,11 +16,15 @@ import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.model.alarmStateIntFromRaw
 import ee.schimke.ha.rc.CardConverter
+import ee.schimke.ha.rc.CardSizeMode
+import ee.schimke.ha.rc.LocalCardSizeMode
+import ee.schimke.ha.rc.RemoteSizeBreakpoint
 import ee.schimke.ha.rc.components.HaAction
 import ee.schimke.ha.rc.components.HaAlarmAction
 import ee.schimke.ha.rc.components.HaAlarmPanelData
 import ee.schimke.ha.rc.components.HaAlarmStatus
 import ee.schimke.ha.rc.components.RemoteHaAlarmPanel
+import ee.schimke.ha.rc.components.RemoteHaAlarmPanelWide
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.booleanOrNull
@@ -86,20 +91,48 @@ class AlarmPanelCardConverter : CardConverter {
                 }
                 .orEmpty()
 
-        RemoteHaAlarmPanel(
-            HaAlarmPanelData(
-                entityId = entityId,
-                title = title,
-                initialStateInt = alarmStateIntFromRaw(state),
-                statuses = AlarmStatuses,
-                actions = actions,
-                showKeypad =
-                    card.raw["show_keypad"]?.jsonPrimitive?.content?.toBooleanStrictOrNull() ?: true,
-            ),
-            modifier = modifier,
+        val data = HaAlarmPanelData(
+            entityId = entityId,
+            title = title,
+            initialStateInt = alarmStateIntFromRaw(state),
+            statuses = AlarmStatuses,
+            actions = actions,
+            showKeypad =
+                card.raw["show_keypad"]?.jsonPrimitive?.content?.toBooleanStrictOrNull() ?: true,
         )
+
+        // Single-gate Wide↔Full ladder, mirroring the arc-dial family
+        // (see RenderArcDial / #355): the shield + state hero (and its
+        // live state binding) is kept at every size; narrow cells drop
+        // the ARM buttons + keypad to the Wide chip, wide cells get the
+        // full keypad card.
+        when (LocalCardSizeMode.current) {
+            CardSizeMode.Wrap -> RemoteHaAlarmPanel(data, modifier)
+            CardSizeMode.Fixed ->
+                RemoteSizeBreakpoint(
+                    thresholdsDp = intArrayOf(AlarmFullMinDp),
+                    modifier = modifier.fillMaxSize(),
+                ) { tier ->
+                    when (tier) {
+                        0 -> RemoteHaAlarmPanelWide(data, RemoteModifier.fillMaxSize())
+                        else ->
+                            RemoteHaAlarmPanel(
+                                data,
+                                RemoteModifier.fillMaxSize(),
+                                fillHeight = true,
+                            )
+                    }
+                }
+        }
     }
 }
+
+// Below this width the keypad's three 48 dp columns can't sit beside
+// the chrome padding, so we drop to the Wide shield+state chip (Wear
+// and the smaller launcher cell land here); at or above it the full
+// keypad card renders. Set above the 200 dp Wear width so both Wear
+// containers stay on the Wide chip.
+private const val AlarmFullMinDp = 250
 
 private val AccentArmed = Color(0xFF43A047)
 private val AccentPending = Color(0xFFFFA000)

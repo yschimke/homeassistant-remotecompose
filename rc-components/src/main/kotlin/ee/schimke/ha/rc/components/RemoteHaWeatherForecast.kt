@@ -45,6 +45,7 @@ import androidx.wear.compose.remote.material3.RemoteIcon
 fun RemoteHaWeatherForecast(
     data: HaWeatherForecastData,
     modifier: RemoteModifier = RemoteModifier,
+    fillHeight: Boolean = false,
 ) {
     val theme = haTheme()
     RemoteBox(
@@ -53,10 +54,30 @@ fun RemoteHaWeatherForecast(
             .then(cardChrome(theme.cardBackground, theme.divider))
             .padding(horizontal = 14.rdp, vertical = 12.rdp),
     ) {
-        RemoteColumn(verticalArrangement = RemoteArrangement.spacedBy(10.rdp)) {
+        RemoteColumn(
+            modifier = if (fillHeight) RemoteModifier.fillMaxSize() else RemoteModifier.fillMaxWidth(),
+            verticalArrangement = RemoteArrangement.spacedBy(10.rdp),
+        ) {
             CurrentRow(data, theme)
             if (data.days.isNotEmpty()) {
-                ForecastStrip(data.days, theme)
+                if (fillHeight) {
+                    // Expanded (Fixed mode): the forecast strip grows to
+                    // claim the remaining vertical space and centres
+                    // within it, so a tall cell (e.g. 6×3) doesn't leave
+                    // its bottom half blank — Principle 7/8, "earn the
+                    // canvas / no dead space". Centring is done *inside*
+                    // this composable (weighted fill + self-centre), not
+                    // via a wrapper alignment, which is a no-op in
+                    // alpha010 for a fillMaxWidth child.
+                    RemoteBox(
+                        modifier = RemoteModifier.fillMaxWidth().weight(1f),
+                        contentAlignment = RemoteAlignment.Center,
+                    ) {
+                        ForecastStrip(data.days, theme)
+                    }
+                } else {
+                    ForecastStrip(data.days, theme)
+                }
             }
         }
     }

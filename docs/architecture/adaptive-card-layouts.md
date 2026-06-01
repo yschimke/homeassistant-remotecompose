@@ -469,7 +469,7 @@ and is reused. The families today:
 | **Icon-centred button** | large tinted icon | `button` | `RemoteHaButton` / `RemoteHaToggleButton` | `Full↔CompactStateChip` |
 | **Arc-dial control** | the arc/dial | `gauge`, `thermostat`, `humidifier`, `light` | `RemoteHaGauge*`, `RemoteHaArcDial*`, `RenderArcDial` | thermostat/humidifier/gauge: Wide↔Full; `light`: **none (outlier)** |
 | **Multi-entity list/strip** | first row/cell | `entities`, `glance`, `area`, `picture-glance`, `entity-filter`, `*-stack` | `RemoteHaEntities`, `RemoteHaGlance` | entities: `list↔strip`; others: none |
-| **Hero + supporting detail** | condition/art/shield + value | `weather-forecast`, `media-control`, `alarm-panel` | `RemoteHaWeatherForecast*`, `RemoteHaMediaControl`, `RemoteHaAlarmPanel` | weather: `Full↔Wide`; others: none |
+| **Hero + supporting detail** | condition/art/shield + value | `weather-forecast`, `media-control`, `alarm-panel` | `RemoteHaWeatherForecast*`, `RemoteHaMediaControl*`, `RemoteHaAlarmPanel*` | all three `Wide↔Full` |
 | **Bulk / time-series** | spark/list head | `history-graph`, `statistics-graph`, `logbook`, `todo-list`, `calendar`, `markdown` | per-card | none — Wear `SmallOnly` |
 | **Picture / image** | the image | `picture`, `picture-entity`, `picture-elements` | `RemoteHaImage*` | none |
 
@@ -567,3 +567,21 @@ The current state is the placeholder, not the philosophy:
    not a layout-design fault, but it makes the gauge family un-reviewable
    in the matrix until the visibility-modifier workaround there is
    re-confirmed against the current alpha.
+9. **Two breakpoint quirks the `media-control` ladder hit (#355), both
+   alpha010-specific:**
+   - **A fill-size `RemoteRow` directly under a wrap-content `RemoteBox`
+     captures blank.** The breakpoint wraps each tier in a wrap-content
+     `RemoteBox` (`immediateSwap`), so a tier composable whose root is a
+     `fillMaxSize` row (`RemoteHaMediaControl` was Box→Row) renders
+     nothing. Nesting the row inside a `RemoteColumn` (Box→Column→Row,
+     mirroring `RemoteHaWeatherForecast`) fixes it. Rule of thumb: a
+     tier composable's fill child should be a column, not a bare row.
+   - **The same `clickable` `RemoteAction` captured in *both* breakpoint
+     branches blanks the larger tier.** `media-control`'s play/pause
+     action appeared in both the Wide chip and the Full card; the Full
+     tier then captured blank. `weather` (no actions) and the arc-dial
+     cards (steppers only in the Full tier, never the Wide one) sidestep
+     this by construction. The fix used: the Wide chip's play/pause is a
+     **non-clickable glyph** — the tap target lives only in the Full
+     tier. When adding a ladder to an interactive card, keep each
+     `RemoteAction` in a single tier.

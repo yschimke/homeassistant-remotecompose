@@ -631,6 +631,50 @@ fun CardPreviewMatrix_WeatherForecast() {
 }
 
 @Preview(
+    name = "matrix — media-control",
+    showBackground = false,
+    widthDp = MATRIX_CANVAS_WIDTH_DP,
+    heightDp = 620,
+)
+@Composable
+fun CardPreviewMatrix_MediaControl() {
+    val card = card("""{"type":"media-control","entity":"media_player.office_speaker"}""")
+    // Hero + supporting-detail family (#355): art + play/pause hero
+    // retained at every size; narrow cells drop the transport row +
+    // seek bar to the Wide chip, wide cells get the full card. The
+    // natural launcher shape is a wide row, so the base is 4×2.
+    CardPreviewMatrix(
+        card = card,
+        snapshot = Fixtures.mediaPlaying,
+        baseGridSize = WidgetGridSize(cellsW = 4, cellsH = 2),
+        label = "media-control · media_player.office_speaker",
+    )
+}
+
+@Preview(
+    name = "matrix — alarm-panel",
+    showBackground = false,
+    widthDp = MATRIX_CANVAS_WIDTH_DP,
+    heightDp = 900,
+)
+@Composable
+fun CardPreviewMatrix_AlarmPanel() {
+    val card = card("""{"type":"alarm-panel","entity":"alarm_control_panel.house"}""")
+    // Hero + supporting-detail family (#355): shield + state hero (with
+    // its live state binding) retained at every size; narrow cells drop
+    // the ARM buttons + keypad to the Wide chip, wide cells get the full
+    // keypad card. The keypad makes the natural launcher shape a tall
+    // portrait block, so the base is 4×5.
+    CardPreviewMatrix(
+        card = card,
+        snapshot = Fixtures.alarmDisarmed,
+        baseGridSize = WidgetGridSize(cellsW = 4, cellsH = 5),
+        appWidthDp = 280,
+        label = "alarm-panel · alarm_control_panel.house",
+    )
+}
+
+@Preview(
     name = "matrix — entities",
     showBackground = false,
     widthDp = MATRIX_CANVAS_WIDTH_DP,
