@@ -1,6 +1,6 @@
 # Accessibility Report
 
-_Auto-generated from `compose-preview/a11y/pr`. 267 preview(s) across 4 module(s) · 1046 error(s) · 3 warning(s) · 20 info._
+_Auto-generated from `compose-preview/a11y/pr`. 265 preview(s) across 4 module(s) · 1020 error(s) · 3 warning(s) · 18 info._
 
 Browse inline; image URLs are pinned to the commit SHA on the baseline branch so links keep resolving after merge.
 
@@ -343,26 +343,6 @@ _No findings._
 |--:|---|---|---|---|
 | 1 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
 
-### `CardPreviewMatrix_AlarmPanel`
-
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/pr/renders/previews/CardPreviewMatrix_AlarmPanel_matrix_alarm_panel.a11y.png" width="400" />
-
-| # | Level | Rule | Element | Message |
-|--:|---|---|---|---|
-| 1 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 2 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 3 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 4 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 5 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 6 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 7 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 30dp. Consider making the height of this touch target 48dp or larger. |
-| 8 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 30dp. Consider making the height of this touch target 48dp or larger. |
-| 9 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 30dp. Consider making the height of this touch target 48dp or larger. |
-| 10 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 30dp. Consider making the height of this touch target 48dp or larger. |
-| 11 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 30dp. Consider making the height of this touch target 48dp or larger. |
-| 12 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 30dp. Consider making the height of this touch target 48dp or larger. |
-| 13 | INFO | DuplicateSpeakableTextCheck | android.widget.TextView | This non-clickable item's speakable text: "Terrazzo slot" is identical to that of 1 other item(s). |
-
 ### `CardPreviewMatrix_Button`
 
 <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/pr/renders/previews/CardPreviewMatrix_Button_matrix_button.a11y.png" width="400" />
@@ -394,14 +374,16 @@ _No findings._
 | 8 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Office lamp" | This item's height is 34dp. Consider making the height of this touch target 48dp or larger. |
 | 9 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Coffee maker" | This item's height is 34dp. Consider making the height of this touch target 48dp or larger. |
 | 10 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Front door" | This item's height is 34dp. Consider making the height of this touch target 48dp or larger. |
-| 11 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Living Room" | This item's height is 4dp. Consider making the height of this touch target 48dp or larger. |
-| 12 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Living Room" | This item's height is 32dp. Consider making the height of this touch target 48dp or larger. |
-| 13 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Office lamp" | This item's height is 11dp. Consider making the height of this touch target 48dp or larger. |
-| 14 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Living Room" | This item's height is 32dp. Consider making the height of this touch target 48dp or larger. |
-| 15 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Office lamp" | This item's height is 34dp. Consider making the height of this touch target 48dp or larger. |
-| 16 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Coffee maker" | This item's height is 34dp. Consider making the height of this touch target 48dp or larger. |
-| 17 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Front door" | This item's height is 26dp. Consider making the height of this touch target 48dp or larger. |
-| 18 | INFO | DuplicateSpeakableTextCheck | android.widget.TextView | This non-clickable item's speakable text: "Terrazzo slot" is identical to that of 1 other item(s). |
+| 11 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Living Room" | This item's size is 34dp x 2dp. Consider making this touch target 48dp wide and 48dp high or larger. |
+| 12 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Office lamp" | This item's size is 28dp x 2dp. Consider making this touch target 48dp wide and 48dp high or larger. |
+| 13 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Coffee maker" | This item's size is 28dp x 2dp. Consider making this touch target 48dp wide and 48dp high or larger. |
+| 14 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Living Room" | This item's height is 41dp. Consider making the height of this touch target 48dp or larger. |
+| 15 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Office lamp" | This item's height is 41dp. Consider making the height of this touch target 48dp or larger. |
+| 16 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Living Room" | This item's height is 32dp. Consider making the height of this touch target 48dp or larger. |
+| 17 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Office lamp" | This item's height is 34dp. Consider making the height of this touch target 48dp or larger. |
+| 18 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Coffee maker" | This item's height is 34dp. Consider making the height of this touch target 48dp or larger. |
+| 19 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Front door" | This item's height is 26dp. Consider making the height of this touch target 48dp or larger. |
+| 20 | INFO | DuplicateSpeakableTextCheck | android.widget.TextView | This non-clickable item's speakable text: "Terrazzo slot" is identical to that of 1 other item(s). |
 
 ### `CardPreviewMatrix_Entity`
 
@@ -470,29 +452,6 @@ _No findings._
 | 6 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
 | 7 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 46dp. Consider making the height of this touch target 48dp or larger. |
 | 8 | INFO | DuplicateSpeakableTextCheck | android.widget.TextView | This non-clickable item's speakable text: "Terrazzo slot" is identical to that of 1 other item(s). |
-
-### `CardPreviewMatrix_MediaControl`
-
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/pr/renders/previews/CardPreviewMatrix_MediaControl_matrix_media_control.a11y.png" width="400" />
-
-| # | Level | Rule | Element | Message |
-|--:|---|---|---|---|
-| 1 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 2 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 3 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 4 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 5 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 6 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 7 | ERROR | TouchTargetSizeCheck | android.view.View  desc="transport" | This item's size is 32dp x 32dp. Consider making this touch target 48dp wide and 48dp high or larger. |
-| 8 | ERROR | TouchTargetSizeCheck | android.view.View  desc="transport" | This item's size is 40dp x 40dp. Consider making this touch target 48dp wide and 48dp high or larger. |
-| 9 | ERROR | TouchTargetSizeCheck | android.view.View  desc="transport" | This item's size is 32dp x 32dp. Consider making this touch target 48dp wide and 48dp high or larger. |
-| 10 | ERROR | TouchTargetSizeCheck | android.view.View  desc="transport" | This item's size is 32dp x 32dp. Consider making this touch target 48dp wide and 48dp high or larger. |
-| 11 | ERROR | TouchTargetSizeCheck | android.view.View  desc="transport" | This item's size is 40dp x 40dp. Consider making this touch target 48dp wide and 48dp high or larger. |
-| 12 | ERROR | TouchTargetSizeCheck | android.view.View  desc="transport" | This item's size is 32dp x 32dp. Consider making this touch target 48dp wide and 48dp high or larger. |
-| 13 | ERROR | TouchTargetSizeCheck | android.view.View  desc="transport" | This item's size is 32dp x 32dp. Consider making this touch target 48dp wide and 48dp high or larger. |
-| 14 | ERROR | TouchTargetSizeCheck | android.view.View  desc="transport" | This item's size is 40dp x 40dp. Consider making this touch target 48dp wide and 48dp high or larger. |
-| 15 | ERROR | TouchTargetSizeCheck | android.view.View  desc="transport" | This item's size is 32dp x 32dp. Consider making this touch target 48dp wide and 48dp high or larger. |
-| 16 | INFO | DuplicateSpeakableTextCheck | android.widget.TextView | This non-clickable item's speakable text: "Terrazzo slot" is identical to that of 1 other item(s). |
 
 ### `CardPreviewMatrix_Thermostat`
 
@@ -1861,7 +1820,7 @@ _No findings._
 | 8 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Living Room" | This item's height is 32dp. Consider making the height of this touch target 48dp or larger. |
 | 9 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Kitchen" | This item's height is 34dp. Consider making the height of this touch target 48dp or larger. |
 | 10 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Coffee maker" | This item's height is 34dp. Consider making the height of this touch target 48dp or larger. |
-| 11 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Kitchen" | This item's width is 39dp. Consider making the width of this touch target 48dp or larger. |
+| 11 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Kitchen" | This item's width is 40dp. Consider making the width of this touch target 48dp or larger. |
 
 ### `Sizing_TightSlot_PaintMeasure`
 
@@ -2313,8 +2272,7 @@ _No findings._
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
 | 1 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 2 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Living Room" | This item's height is 32dp. Consider making the height of this touch target 48dp or larger. |
-| 3 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Kitchen" | This item's height is 31dp. Consider making the height of this touch target 48dp or larger. |
+| 2 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Kitchen" | This item's width is 15dp. Consider making the width of this touch target 48dp or larger. |
 
 ### `SlotWidgetPreview_TileSmall`
 
@@ -2331,6 +2289,7 @@ _No findings._
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
 | 1 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
+| 2 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 30dp. Consider making the height of this touch target 48dp or larger. |
 
 ### `WearAlarmPanelSmall`
 
@@ -2467,8 +2426,7 @@ _No findings._
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
 | 1 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 2 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Living Room" | This item's height is 32dp. Consider making the height of this touch target 48dp or larger. |
-| 3 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Kitchen" | This item's height is 31dp. Consider making the height of this touch target 48dp or larger. |
+| 2 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Kitchen" | This item's width is 15dp. Consider making the width of this touch target 48dp or larger. |
 
 ### `WearEntitiesSmall`
 
@@ -2477,7 +2435,7 @@ _No findings._
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
 | 1 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 2 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Living Room" | This item's height is 32dp. Consider making the height of this touch target 48dp or larger. |
+| 2 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Living Room" | This item's height is 40dp. Consider making the height of this touch target 48dp or larger. |
 
 ### `WearEntityFilterLarge`
 
