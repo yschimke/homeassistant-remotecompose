@@ -1,15 +1,21 @@
 package ee.schimke.ha.rc.cards
 
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
+import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.HaSnapshot
+import ee.schimke.ha.rc.BreakpointAxis
 import ee.schimke.ha.rc.CardConverter
+import ee.schimke.ha.rc.CardSizeMode
+import ee.schimke.ha.rc.LocalCardSizeMode
+import ee.schimke.ha.rc.RemoteSizeBreakpoint
 import ee.schimke.ha.rc.components.HaCalendarData
 import ee.schimke.ha.rc.components.HaCalendarEvent
 import ee.schimke.ha.rc.components.RemoteHaCalendar
+import ee.schimke.ha.rc.components.RemoteHaCalendarIdentity
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -59,14 +65,29 @@ class CalendarCardConverter : CardConverter {
             }
         }.take(8)
 
-        RemoteHaCalendar(
-            HaCalendarData(
-                title = title,
-                rangeLabel = "Next ${initialDays} days",
-                events = events,
-            ),
-            modifier = modifier,
+        val data = HaCalendarData(
+            title = title,
+            rangeLabel = "Next ${initialDays} days",
+            events = events,
         )
+
+        when (LocalCardSizeMode.current) {
+            CardSizeMode.Wrap -> RemoteHaCalendar(data, modifier = modifier)
+            // Narrow → next-event identity; wider → the full agenda.
+            // Single width gate (#224).
+            CardSizeMode.Fixed ->
+                RemoteSizeBreakpoint(
+                    thresholdsDp = intArrayOf(BULK_IDENTITY_THRESHOLD_DP),
+                    modifier = modifier,
+                    axis = BreakpointAxis.Width,
+                ) { tier ->
+                    if (tier == 0) {
+                        RemoteHaCalendarIdentity(data, RemoteModifier.fillMaxWidth())
+                    } else {
+                        RemoteHaCalendar(data, RemoteModifier.fillMaxWidth())
+                    }
+                }
+        }
     }
 }
 

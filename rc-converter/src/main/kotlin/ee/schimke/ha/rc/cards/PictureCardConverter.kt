@@ -8,6 +8,8 @@ import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.CardConverter
+import ee.schimke.ha.rc.CardSizeMode
+import ee.schimke.ha.rc.LocalCardSizeMode
 import ee.schimke.ha.rc.components.HaPictureCardData
 import ee.schimke.ha.rc.components.RemoteHaPicture
 import ee.schimke.ha.rc.parseHaAction
@@ -26,6 +28,10 @@ class PictureCardConverter : CardConverter {
         val image = card.raw["image"]?.jsonPrimitive?.content
         val name = card.raw["name"]?.jsonPrimitive?.content
         val tap = parseHaAction(card.raw["tap_action"]?.jsonObject, defaultEntityId = null)
+        // The image is the identity: dashboard keeps the HA reference
+        // band; launcher / Wear fill the whole cell so the picture (the
+        // placeholder until a host wires an image channel) is edge-to-edge
+        // with the name as a bottom scrim, never letterboxed.
         RemoteHaPicture(
             HaPictureCardData(
                 name = name,
@@ -34,6 +40,7 @@ class PictureCardConverter : CardConverter {
                 tapAction = tap,
             ),
             modifier = modifier,
+            fillHeight = LocalCardSizeMode.current == CardSizeMode.Fixed,
         )
     }
 }

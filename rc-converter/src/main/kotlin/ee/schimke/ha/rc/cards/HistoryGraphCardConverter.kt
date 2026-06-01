@@ -1,17 +1,23 @@
 package ee.schimke.ha.rc.cards
 
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
+import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.runtime.Composable
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.model.HistoryPoint
+import ee.schimke.ha.rc.BreakpointAxis
 import ee.schimke.ha.rc.CardConverter
+import ee.schimke.ha.rc.CardSizeMode
 import ee.schimke.ha.rc.HaStateColor
+import ee.schimke.ha.rc.LocalCardSizeMode
+import ee.schimke.ha.rc.RemoteSizeBreakpoint
 import ee.schimke.ha.rc.components.HaHistoryGraphData
 import ee.schimke.ha.rc.components.HaHistoryGraphRow
 import ee.schimke.ha.rc.components.LiveValues
 import ee.schimke.ha.rc.components.RemoteHaHistoryGraph
+import ee.schimke.ha.rc.components.RemoteHaHistoryGraphIdentity
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -58,10 +64,30 @@ class HistoryGraphCardConverter : CardConverter {
                 )
             }
 
-        RemoteHaHistoryGraph(
-            HaHistoryGraphData(title = title, rangeLabel = "Last ${hours}h", rows = rows),
-            modifier = modifier,
-        )
+        val data = HaHistoryGraphData(title = title, rangeLabel = "Last ${hours}h", rows = rows)
+
+        when (LocalCardSizeMode.current) {
+            // Dashboard: the full per-row graph (HA reference).
+            CardSizeMode.Wrap -> RemoteHaHistoryGraph(data, modifier = modifier)
+            // Launcher / Wear: a single width gate (alpha010 collapses
+            // multi-rung ladders to tier 0 — #224, see GaugeCardConverter).
+            // Narrow → identity tier (first spark + latest value); wider →
+            // the full graph, which fills the larger cell by drawing every
+            // series. Width, not height: every Fixed-mode surface pins
+            // width and lets height follow (see EntitiesCardConverter).
+            CardSizeMode.Fixed ->
+                RemoteSizeBreakpoint(
+                    thresholdsDp = intArrayOf(BULK_IDENTITY_THRESHOLD_DP),
+                    modifier = modifier,
+                    axis = BreakpointAxis.Width,
+                ) { tier ->
+                    if (tier == 0) {
+                        RemoteHaHistoryGraphIdentity(data, RemoteModifier.fillMaxWidth())
+                    } else {
+                        RemoteHaHistoryGraph(data, RemoteModifier.fillMaxWidth())
+                    }
+                }
+        }
     }
 }
 

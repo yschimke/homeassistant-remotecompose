@@ -3,14 +3,20 @@ package ee.schimke.ha.rc.cards
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.History
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
+import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.runtime.Composable
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.HaSnapshot
+import ee.schimke.ha.rc.BreakpointAxis
 import ee.schimke.ha.rc.CardConverter
+import ee.schimke.ha.rc.CardSizeMode
+import ee.schimke.ha.rc.LocalCardSizeMode
+import ee.schimke.ha.rc.RemoteSizeBreakpoint
 import ee.schimke.ha.rc.components.HaLogbookData
 import ee.schimke.ha.rc.components.HaLogbookEntry
 import ee.schimke.ha.rc.components.RemoteHaLogbook
+import ee.schimke.ha.rc.components.RemoteHaLogbookIdentity
 import ee.schimke.ha.rc.formatState
 import ee.schimke.ha.rc.icons.HaIconMap
 import kotlinx.serialization.json.JsonArray
@@ -51,7 +57,25 @@ class LogbookCardConverter : CardConverter {
                 icon = HaIconMap.resolve(null, entity),
             )
         }
-        RemoteHaLogbook(HaLogbookData(title = title, entries = entries), modifier = modifier)
+        val data = HaLogbookData(title = title, entries = entries)
+
+        when (LocalCardSizeMode.current) {
+            CardSizeMode.Wrap -> RemoteHaLogbook(data, modifier = modifier)
+            // Narrow → latest-entry identity; wider → the full list.
+            // Single width gate (#224).
+            CardSizeMode.Fixed ->
+                RemoteSizeBreakpoint(
+                    thresholdsDp = intArrayOf(BULK_IDENTITY_THRESHOLD_DP),
+                    modifier = modifier,
+                    axis = BreakpointAxis.Width,
+                ) { tier ->
+                    if (tier == 0) {
+                        RemoteHaLogbookIdentity(data, RemoteModifier.fillMaxWidth())
+                    } else {
+                        RemoteHaLogbook(data, RemoteModifier.fillMaxWidth())
+                    }
+                }
+        }
     }
 }
 

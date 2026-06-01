@@ -2,6 +2,9 @@
 
 package ee.schimke.ha.previews
 
+import android.graphics.Bitmap
+import android.graphics.Canvas as AndroidCanvas
+import android.graphics.Paint as AndroidPaint
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -19,9 +22,12 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Density
@@ -47,6 +53,8 @@ import ee.schimke.ha.rc.RenderChild
 import ee.schimke.ha.rc.androidXExperimentalWrap
 import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.components.HaTheme
+import ee.schimke.ha.rc.components.LocalPictureImageStrategy
+import ee.schimke.ha.rc.components.PictureImageStrategy
 import ee.schimke.ha.rc.components.ProvideCardChrome
 import ee.schimke.ha.rc.components.ProvideHaTheme
 import ee.schimke.ha.rc.components.RemoteHaWidgetSurface
@@ -137,6 +145,12 @@ fun CardPreviewMatrix(
     baseGridSize: WidgetGridSize,
     appWidthDp: Int = 320,
     label: String? = null,
+    // Picture cards: a strategy that bakes a real bitmap into every cell
+    // so the matrix shows the image filling / cropping the cell rather
+    // than the icon fallback. Threaded into each cell's capture content
+    // (a `CompositionLocal` from the outer tree wouldn't reach the
+    // capture pass). Null → cards use their default app-URL strategy.
+    imageStrategy: PictureImageStrategy? = null,
 ) {
     enableRemoteComposeWrapContent()
     val registry = defaultRegistry()
@@ -175,18 +189,21 @@ fun CardPreviewMatrix(
                             snapshot = snapshot,
                             cellWidthDp = appWidthDp,
                             label = "App ${appWidthDp}dp",
+                            imageStrategy = imageStrategy,
                         )
                         WatchFaceCell(
                             card = card,
                             snapshot = snapshot,
                             sizeDp = WearSmall,
                             label = "Wear S",
+                            imageStrategy = imageStrategy,
                         )
                         WatchFaceCell(
                             card = card,
                             snapshot = snapshot,
                             sizeDp = WearLarge,
                             label = "Wear L",
+                            imageStrategy = imageStrategy,
                         )
                     }
                     // Row 2 — three launcher widget sizes around the base
@@ -204,12 +221,14 @@ fun CardPreviewMatrix(
                                 (baseGridSize - 1).heightDp,
                             ),
                             label = "Widget ${(baseGridSize - 1).label}",
+                            imageStrategy = imageStrategy,
                         )
                         FixedModeCell(
                             card = card,
                             snapshot = snapshot,
                             sizeDp = WidgetSizeDp(baseGridSize.widthDp, baseGridSize.heightDp),
                             label = "Widget ${baseGridSize.label}",
+                            imageStrategy = imageStrategy,
                         )
                         FixedModeCell(
                             card = card,
@@ -219,11 +238,30 @@ fun CardPreviewMatrix(
                                 (baseGridSize + 1).heightDp,
                             ),
                             label = "Widget ${(baseGridSize + 1).label}",
+                            imageStrategy = imageStrategy,
                         )
                     }
                 }
             }
         }
+    }
+}
+
+/**
+ * Wrap [content] in [LocalPictureImageStrategy] when [strategy] is set,
+ * so picture cards bake the supplied bitmap. Must be called **inside**
+ * the capture content block — a `CompositionLocal` from the outer tree
+ * doesn't propagate into the RemoteCompose capture pass.
+ */
+@Composable
+private fun WithImageStrategy(
+    strategy: PictureImageStrategy?,
+    content: @Composable () -> Unit,
+) {
+    if (strategy != null) {
+        CompositionLocalProvider(LocalPictureImageStrategy provides strategy, content = content)
+    } else {
+        content()
     }
 }
 
@@ -233,6 +271,7 @@ private fun WrapModeCell(
     snapshot: HaSnapshot,
     cellWidthDp: Int,
     label: String,
+    imageStrategy: PictureImageStrategy? = null,
 ) {
     // Wrap mode: outer column width pinned, height adaptive. Border
     // hugs the card's intrinsic content so the cell shape and the
@@ -249,7 +288,9 @@ private fun WrapModeCell(
                 ProvideCardRegistry(defaultRegistry()) {
                     ProvideHaTheme(HaTheme.Dark) {
                         ProvideCardSizeMode(CardSizeMode.Wrap) {
-                            RenderChild(card, snapshot, RemoteModifier.rcFillMaxWidth())
+                            WithImageStrategy(imageStrategy) {
+                                RenderChild(card, snapshot, RemoteModifier.rcFillMaxWidth())
+                            }
                         }
                     }
                 }
@@ -265,6 +306,7 @@ private fun FixedModeCell(
     sizeDp: WidgetSizeDp,
     label: String,
     densityScale: Float? = null,
+    imageStrategy: PictureImageStrategy? = null,
 ) {
     // Fixed mode: cell is exactly sizeDp. Border draws the container
     // shape so the launcher / wear widget bounds are visible even
@@ -306,7 +348,13 @@ private fun FixedModeCell(
                                 // space below short content.
                                 ProvideCardChrome(enabled = false) {
                                     RemoteHaWidgetSurface {
-                                        RenderChild(card, snapshot, RemoteModifier.rcFillMaxWidth())
+                                        WithImageStrategy(imageStrategy) {
+                                            RenderChild(
+                                                card,
+                                                snapshot,
+                                                RemoteModifier.rcFillMaxWidth(),
+                                            )
+                                        }
                                     }
                                 }
                             }
@@ -336,6 +384,7 @@ private fun WatchFaceCell(
     snapshot: HaSnapshot,
     sizeDp: WidgetSizeDp,
     label: String,
+    imageStrategy: PictureImageStrategy? = null,
 ) {
     val parentDensity = LocalDensity.current
     val cellDensity = Density(WearDensityScale, parentDensity.fontScale)
@@ -374,11 +423,13 @@ private fun WatchFaceCell(
                                 ProvideCardSizeMode(CardSizeMode.Fixed) {
                                     ProvideCardChrome(enabled = false) {
                                         RemoteHaWidgetSurface {
-                                            RenderChild(
-                                                card,
-                                                snapshot,
-                                                RemoteModifier.rcFillMaxWidth(),
-                                            )
+                                            WithImageStrategy(imageStrategy) {
+                                                RenderChild(
+                                                    card,
+                                                    snapshot,
+                                                    RemoteModifier.rcFillMaxWidth(),
+                                                )
+                                            }
                                         }
                                     }
                                 }
@@ -664,3 +715,161 @@ private val entitiesMatrixSnapshot: HaSnapshot =
         }
         mixed.copy(states = mixed.states + ("switch.coffee_maker" to coffeeOff))
     }
+
+// ── Picture + Bulk/time-series families (#356) ───────────────────────
+//
+// Two lower-priority families. Picture cards make the image the identity
+// at every size — it fills and crops the cell (no letterbox), name as a
+// bottom scrim, dropping to a state-only badge at the smallest cell. The
+// bulk / time-series cards add an identity tier at narrow cells (spark +
+// latest value / "N left" / next event / latest entry / title + first
+// line) and fill wider cells with the full list/graph. See
+// docs/architecture/adaptive-card-layouts.md §"Picture family" and
+// §"Bulk / time-series".
+
+@Preview(
+    name = "matrix — picture-entity",
+    showBackground = false,
+    widthDp = MATRIX_CANVAS_WIDTH_DP,
+    heightDp = 620,
+)
+@Composable
+fun CardPreviewMatrix_PictureEntity() {
+    val card = card(
+        """{"type":"picture-entity","entity":"camera.driveway","name":"Driveway",
+            "show_name":true,"show_state":true}"""
+    )
+    // Bake a landscape sample bitmap into every cell so the matrix shows
+    // the image filling and cropping the cell rather than the offline
+    // icon fallback. The widget surface uses Inline (no playback loader);
+    // a CompositionLocal set here reaches the capture via the matrix's
+    // per-cell WithImageStrategy wrapper.
+    val sample = remember { landscapeSampleBitmap() }
+    val strategy = remember(sample) { PictureImageStrategy.Inline { sample } }
+    CardPreviewMatrix(
+        card = card,
+        snapshot = Fixtures.cameraWithPicture,
+        baseGridSize = WidgetGridSize(cellsW = 3, cellsH = 2),
+        label = "picture-entity · camera.driveway",
+        imageStrategy = strategy,
+    )
+}
+
+@Preview(
+    name = "matrix — history-graph",
+    showBackground = false,
+    widthDp = MATRIX_CANVAS_WIDTH_DP,
+    heightDp = 620,
+)
+@Composable
+fun CardPreviewMatrix_HistoryGraph() {
+    val card = card(
+        """{"type":"history-graph","title":"Temperature","hours_to_show":24,
+            "entities":["sensor.outside_temp","sensor.upstairs_temp"]}"""
+    )
+    CardPreviewMatrix(
+        card = card,
+        snapshot = Fixtures.temperatureHistory,
+        baseGridSize = WidgetGridSize(cellsW = 3, cellsH = 2),
+        label = "history-graph · temperature",
+    )
+}
+
+@Preview(
+    name = "matrix — todo-list",
+    showBackground = false,
+    widthDp = MATRIX_CANVAS_WIDTH_DP,
+    heightDp = 620,
+)
+@Composable
+fun CardPreviewMatrix_TodoList() {
+    val card = card("""{"type":"todo-list","entity":"todo.shopping","title":"Shopping list"}""")
+    CardPreviewMatrix(
+        card = card,
+        snapshot = Fixtures.shoppingList,
+        baseGridSize = WidgetGridSize(cellsW = 3, cellsH = 2),
+        label = "todo-list · todo.shopping",
+    )
+}
+
+@Preview(
+    name = "matrix — calendar",
+    showBackground = false,
+    widthDp = MATRIX_CANVAS_WIDTH_DP,
+    heightDp = 620,
+)
+@Composable
+fun CardPreviewMatrix_Calendar() {
+    val card = card(
+        """{"type":"calendar","title":"Family calendar","initial_view":"listWeek",
+            "entities":["calendar.family"]}"""
+    )
+    CardPreviewMatrix(
+        card = card,
+        snapshot = Fixtures.calendarEvents,
+        baseGridSize = WidgetGridSize(cellsW = 3, cellsH = 2),
+        label = "calendar · calendar.family",
+    )
+}
+
+@Preview(
+    name = "matrix — logbook",
+    showBackground = false,
+    widthDp = MATRIX_CANVAS_WIDTH_DP,
+    heightDp = 620,
+)
+@Composable
+fun CardPreviewMatrix_Logbook() {
+    val card = card(
+        """{"type":"logbook","title":"Recent activity","hours_to_show":24,
+            "entities":["binary_sensor.front_door","binary_sensor.garage_motion"]}"""
+    )
+    CardPreviewMatrix(
+        card = card,
+        snapshot = Fixtures.activity,
+        baseGridSize = WidgetGridSize(cellsW = 3, cellsH = 2),
+        label = "logbook · recent activity",
+    )
+}
+
+@Preview(
+    name = "matrix — markdown",
+    showBackground = false,
+    widthDp = MATRIX_CANVAS_WIDTH_DP,
+    heightDp = 620,
+)
+@Composable
+fun CardPreviewMatrix_Markdown() {
+    val card = card(
+        """{"type":"markdown","title":"Notes","content":"Welcome home.\nTemperature is normal."}"""
+    )
+    CardPreviewMatrix(
+        card = card,
+        snapshot = Fixtures.mixed,
+        baseGridSize = WidgetGridSize(cellsW = 3, cellsH = 2),
+        label = "markdown · notes",
+    )
+}
+
+/**
+ * Landscape (16:9) sample image for the picture-entity matrix: blue sky,
+ * a sun, a green ground band. The non-square aspect makes the
+ * fill-crop visible — square / tall cells crop the sides, a wide cell
+ * shows more, and nothing letterboxes.
+ */
+private fun landscapeSampleBitmap(): ImageBitmap {
+    val w = 480
+    val h = 270
+    val bmp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
+    val canvas = AndroidCanvas(bmp)
+    val sky = AndroidPaint().apply { color = android.graphics.Color.rgb(0x37, 0x6C, 0xC4) }
+    canvas.drawRect(0f, 0f, w.toFloat(), h.toFloat(), sky)
+    val sun = AndroidPaint().apply {
+        isAntiAlias = true
+        color = android.graphics.Color.rgb(0xFF, 0xC1, 0x07)
+    }
+    canvas.drawCircle(w * 0.74f, h * 0.30f, h * 0.16f, sun)
+    val ground = AndroidPaint().apply { color = android.graphics.Color.rgb(0x2E, 0x7D, 0x32) }
+    canvas.drawRect(0f, h * 0.66f, w.toFloat(), h.toFloat(), ground)
+    return bmp.asImageBitmap()
+}
