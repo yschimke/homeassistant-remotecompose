@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.33](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.32...v0.1.33) (2026-06-01)
+
+
+### Bug Fixes
+
+* **deps:** update dependency com.google.firebase:firebase-crashlytics-gradle to v3.0.7 ([#368](https://github.com/yschimke/homeassistant-remotecompose/issues/368)) ([ae419d1](https://github.com/yschimke/homeassistant-remotecompose/commit/ae419d16b4798d589e0e01451f6d6cf8c7e651a9))
+* **deps:** update dependency ee.schimke.composeai:preview-annotations to v0.12.1 ([#369](https://github.com/yschimke/homeassistant-remotecompose/issues/369)) ([e98092a](https://github.com/yschimke/homeassistant-remotecompose/commit/e98092a8924f7d15bf50757ca50a9ebdbed3d8e7))
+
 ## [0.1.32](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.31...v0.1.32) (2026-05-31)
 
 
