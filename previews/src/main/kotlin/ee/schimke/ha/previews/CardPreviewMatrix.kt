@@ -48,6 +48,7 @@ import ee.schimke.ha.rc.androidXExperimentalWrap
 import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.components.HaTheme
 import ee.schimke.ha.rc.components.ProvideCardChrome
+import ee.schimke.ha.rc.components.ProvideFlowLayoutSupport
 import ee.schimke.ha.rc.components.ProvideHaTheme
 import ee.schimke.ha.rc.components.RemoteHaWidgetSurface
 import ee.schimke.ha.rc.enableRemoteComposeWrapContent
@@ -373,12 +374,21 @@ private fun WatchFaceCell(
                             ProvideHaTheme(HaTheme.Dark) {
                                 ProvideCardSizeMode(CardSizeMode.Fixed) {
                                     ProvideCardChrome(enabled = false) {
-                                        RemoteHaWidgetSurface {
-                                            RenderChild(
-                                                card,
-                                                snapshot,
-                                                RemoteModifier.rcFillMaxWidth(),
-                                            )
+                                        // Mirror the real Glance Wear slot
+                                        // surface, which disables FlowLayout
+                                        // (its capture profile rejects op
+                                        // 240); cards then take their
+                                        // non-wrapping compact path here too,
+                                        // so the matrix wear cells show what
+                                        // the watch actually draws.
+                                        ProvideFlowLayoutSupport(enabled = false) {
+                                            RemoteHaWidgetSurface {
+                                                RenderChild(
+                                                    card,
+                                                    snapshot,
+                                                    RemoteModifier.rcFillMaxWidth(),
+                                                )
+                                            }
                                         }
                                     }
                                 }
