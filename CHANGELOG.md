@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.1.36](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.35...v0.1.36) (2026-06-02)
+
+
+### Features
+
+* **cards:** keep all cards live over data updates ([#388](https://github.com/yschimke/homeassistant-remotecompose/issues/388)) ([58b4127](https://github.com/yschimke/homeassistant-remotecompose/commit/58b41274c2791bf0acaa945a0ec3a2af839b7177))
+
+
+### Bug Fixes
+
+* **dashboard:** render and smoothly resize the widget preview ([#393](https://github.com/yschimke/homeassistant-remotecompose/issues/393)) ([a45f4e7](https://github.com/yschimke/homeassistant-remotecompose/commit/a45f4e71f68d9c037a7614d7efac1772a3843fbf))
+* **rc:** don't crash the host screen when a constrained capture profile rejects a card ([#391](https://github.com/yschimke/homeassistant-remotecompose/issues/391)) ([d132e96](https://github.com/yschimke/homeassistant-remotecompose/commit/d132e965dd59c2414cd5641bbc8744335c05dafe))
+* **rc:** downscale fetched bitmaps to the slot ceiling so camera frames render ([#395](https://github.com/yschimke/homeassistant-remotecompose/issues/395)) ([2c0b017](https://github.com/yschimke/homeassistant-remotecompose/commit/2c0b01763228a9185e806c32ec4c24fb54408111))
+
 ## [0.1.35](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.34...v0.1.35) (2026-06-02)
 
 
