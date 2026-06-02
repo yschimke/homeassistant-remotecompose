@@ -1,14 +1,15 @@
 package ee.schimke.terrazzo.widget
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.outlined.Widgets
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -17,7 +18,9 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 
 /**
@@ -43,13 +46,32 @@ fun WidgetsScreen(onBack: () -> Unit) {
     },
     contentWindowInsets = WindowInsets.safeDrawing,
   ) { padding ->
+    // Always-empty for now (the install list lands in a later pass),
+    // so this is a proper centred empty state rather than a stray
+    // line of text pinned to the top-left.
     Column(
-      modifier =
-        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(padding).padding(24.dp)
+      modifier = Modifier.fillMaxSize().padding(padding).padding(horizontal = 32.dp),
+      verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterVertically),
+      horizontalAlignment = Alignment.CenterHorizontally,
     ) {
+      Icon(
+        imageVector = Icons.Outlined.Widgets,
+        contentDescription = null,
+        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier.size(56.dp),
+      )
       Text(
-        "Long-press a card on a dashboard to install it here. Up to 5.",
+        text = "No widgets yet",
+        style = MaterialTheme.typography.titleMedium,
+        textAlign = TextAlign.Center,
+      )
+      Text(
+        text =
+          "Long-press a card on a dashboard to add it to your home " +
+            "screen. You can pin up to 5.",
         style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        textAlign = TextAlign.Center,
       )
     }
   }
