@@ -10,23 +10,19 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.serialization.json.JsonObject
 
 /**
- * Offline-first wrapper around any [HaSession]. Every successful live
- * fetch is mirrored to the [OfflineCacheStorage]; every read falls back
- * to the cache when the live call fails, and the cache is the first
- * thing the UI sees on cold start.
+ * Offline-first wrapper around any [HaSession]. Every successful live fetch is mirrored to the
+ * [OfflineCacheStorage]; every read falls back to the cache when the live call fails, and the cache
+ * is the first thing the UI sees on cold start.
  *
  * Failure-mode contract:
- *   - [listDashboards] / [loadDashboard] **never** throw if a cached
- *     value exists. They throw only on first-ever fetch when the
- *     network is also unavailable.
- *   - On every successful live fetch the returned value is also
- *     persisted via [OfflineCache], so a subsequent cold start with no
- *     network still has data.
+ * - [listDashboards] / [loadDashboard] **never** throw if a cached value exists. They throw only on
+ *   first-ever fetch when the network is also unavailable.
+ * - On every successful live fetch the returned value is also persisted via [OfflineCache], so a
+ *   subsequent cold start with no network still has data.
  *
- * This wraps both [LiveHaSession] (real HA) and [DemoHaSession] (which
- * is already a deterministic source — wrapping it is a no-op cache
- * write that costs nothing). Demo callers can skip the wrapper if they
- * prefer; production sessions always use it.
+ * This wraps both [LiveHaSession] (real HA) and [DemoHaSession] (which is already a deterministic
+ * source — wrapping it is a no-op cache write that costs nothing). Demo callers can skip the
+ * wrapper if they prefer; production sessions always use it.
  */
 class CachedHaSession(private val delegate: HaSession, private val cache: OfflineCacheStorage) :
   HaSession {
@@ -39,6 +35,7 @@ class CachedHaSession(private val delegate: HaSession, private val cache: Offlin
 
   override val refreshIntervalMillis: Long?
     get() = delegate.refreshIntervalMillis
+
   override val connectionStatus: StateFlow<SessionConnectionStatus>
     get() = delegate.connectionStatus
 
@@ -61,9 +58,10 @@ class CachedHaSession(private val delegate: HaSession, private val cache: Offlin
   }
 
   override suspend fun loadDashboard(urlPath: String?): Pair<Dashboard, HaSnapshot> {
-    val cached = cache.dashboard(baseUrl, urlPath)?.let { d ->
-      d to (cache.snapshot(baseUrl, urlPath) ?: HaSnapshot())
-    }
+    val cached =
+      cache.dashboard(baseUrl, urlPath)?.let { d ->
+        d to (cache.snapshot(baseUrl, urlPath) ?: HaSnapshot())
+      }
     return runCatching { delegate.loadDashboard(urlPath) }
       .onSuccess { (dashboard, snapshot) ->
         cache.putDashboard(baseUrl, urlPath, dashboard)

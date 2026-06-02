@@ -53,24 +53,24 @@ import kotlinx.coroutines.runBlocking
 @SuppressLint("RestrictedApi")
 @Composable
 public fun WearWidgetPreview(
-    widget: GlanceWearWidget,
-    params: WearWidgetParams,
-    modifier: Modifier = Modifier,
+  widget: GlanceWearWidget,
+  params: WearWidgetParams,
+  modifier: Modifier = Modifier,
 ) {
-    val context = LocalContext.current
-    val document =
-        remember(widget, params, context) {
-            runBlocking {
-                val widgetData = widget.provideWidgetData(context, params)
-                widgetData.captureRawContent(context, params).rcDocument
-            }
-        }
+  val context = LocalContext.current
+  val document =
+    remember(widget, params, context) {
+      runBlocking {
+        val widgetData = widget.provideWidgetData(context, params)
+        widgetData.captureRawContent(context, params).rcDocument
+      }
+    }
 
-    RemoteDocumentPreview(
-        document,
-        modifier =
-            modifier
-                .width((params.widthDp + 2f * params.horizontalPaddingDp).dp)
-                .height((params.heightDp + 2f * params.verticalPaddingDp).dp),
-    )
+  RemoteDocumentPreview(
+    document,
+    modifier =
+      modifier
+        .width((params.widthDp + 2f * params.horizontalPaddingDp).dp)
+        .height((params.heightDp + 2f * params.verticalPaddingDp).dp),
+  )
 }

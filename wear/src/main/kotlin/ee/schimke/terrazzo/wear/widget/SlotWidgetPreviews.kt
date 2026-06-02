@@ -41,202 +41,205 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.put
 
 /**
- * Wear-specific @Preview fixtures that exercise the Glance Wear
- * capture path end-to-end (via [WearWidgetPreviewSnapshot] /
- * [WearWidgetDocument]). [WearWidgetPreviewSnapshot] wraps the
- * captured widget in a simulated circular watch face so reviewers can
- * eyeball how the card reads against the watch chrome.
+ * Wear-specific @Preview fixtures that exercise the Glance Wear capture path end-to-end (via
+ * [WearWidgetPreviewSnapshot] / [WearWidgetDocument]). [WearWidgetPreviewSnapshot] wraps the
+ * captured widget in a simulated circular watch face so reviewers can eyeball how the card reads
+ * against the watch chrome.
  *
- * The cross-surface "how does this card look at each size" picture
- * lives in [ee.schimke.ha.previews.CardPreviewMatrix] — these previews
- * are kept thin and deliberately wear-shaped: small + large slot
- * containers, dark theme, one fixture per shape so we catch
+ * The cross-surface "how does this card look at each size" picture lives in
+ * [ee.schimke.ha.previews.CardPreviewMatrix] — these previews are kept thin and deliberately
+ * wear-shaped: small + large slot containers, dark theme, one fixture per shape so we catch
  * wear-profile regressions in CI.
  */
-
 internal class PreviewSlotWidget(
-    private val card: CardConfig?,
-    private val snapshot: HaSnapshot,
-    private val slotIndex: Int = 0,
+  private val card: CardConfig?,
+  private val snapshot: HaSnapshot,
+  private val slotIndex: Int = 0,
 ) : GlanceWearWidget() {
-    override suspend fun provideWidgetData(
-        context: Context,
-        params: WearWidgetParams,
-    ): WearWidgetData {
-        val theme = haThemeFor(ThemeStyle.TerrazzoHome, darkTheme = true)
-        val registry = defaultRegistry().withEnhancedShutter()
-        return WearWidgetDocument(
-            background = WearWidgetBrush.Companion,
-            content = {
-                ProvideCardRegistry(registry) {
-                    ProvideHaTheme(theme) {
-                        ProvideCardSizeMode(CardSizeMode.Fixed) {
-                            // Match the runtime SlotWidget: the wear
-                            // container already paints the shape + brush, so
-                            // skip the per-card chrome to avoid doubling up;
-                            // and tell HA card components to use the
-                            // non-wrapping fallback for `RemoteFlowRow`
-                            // since Glance Wear's capture profile rejects
-                            // FlowLayout (op 240).
-                            ProvideCardChrome(enabled = false) {
-                                ProvideFlowLayoutSupport(enabled = false) {
-                                    if (card != null) {
-                                        RenderChild(
-                                            card,
-                                            snapshot,
-                                            RemoteModifier.fillMaxWidth(),
-                                        )
-                                    } else {
-                                        PreviewEmptyPlaceholder(slotIndex, theme)
-                                    }
-                                }
-                            }
-                        }
-                    }
+  override suspend fun provideWidgetData(
+    context: Context,
+    params: WearWidgetParams,
+  ): WearWidgetData {
+    val theme = haThemeFor(ThemeStyle.TerrazzoHome, darkTheme = true)
+    val registry = defaultRegistry().withEnhancedShutter()
+    return WearWidgetDocument(
+      background = WearWidgetBrush.Companion,
+      content = {
+        ProvideCardRegistry(registry) {
+          ProvideHaTheme(theme) {
+            ProvideCardSizeMode(CardSizeMode.Fixed) {
+              // Match the runtime SlotWidget: the wear
+              // container already paints the shape + brush, so
+              // skip the per-card chrome to avoid doubling up;
+              // and tell HA card components to use the
+              // non-wrapping fallback for `RemoteFlowRow`
+              // since Glance Wear's capture profile rejects
+              // FlowLayout (op 240).
+              ProvideCardChrome(enabled = false) {
+                ProvideFlowLayoutSupport(enabled = false) {
+                  if (card != null) {
+                    RenderChild(card, snapshot, RemoteModifier.fillMaxWidth())
+                  } else {
+                    PreviewEmptyPlaceholder(slotIndex, theme)
+                  }
                 }
-            },
-        )
-    }
+              }
+            }
+          }
+        }
+      },
+    )
+  }
 }
 
 @Composable
 private fun PreviewEmptyPlaceholder(slotIndex: Int, theme: HaTheme) {
-    RemoteBox(modifier = RemoteModifier.fillMaxWidth()) {
-        RemoteText(text = "Slot ${slotIndex + 1}", color = theme.primaryText.rc)
-    }
+  RemoteBox(modifier = RemoteModifier.fillMaxWidth()) {
+    RemoteText(text = "Slot ${slotIndex + 1}", color = theme.primaryText.rc)
+  }
 }
 
-internal enum class ContainerType { Small, Large }
+internal enum class ContainerType {
+  Small,
+  Large,
+}
 
 internal fun cardConfig(
-    type: String,
-    build: kotlinx.serialization.json.JsonObjectBuilder.() -> Unit,
+  type: String,
+  build: kotlinx.serialization.json.JsonObjectBuilder.() -> Unit,
 ): CardConfig {
-    val obj = buildJsonObject {
-        put("type", type)
-        build()
-    }
-    return CardConfig(type = type, raw = obj)
+  val obj = buildJsonObject {
+    put("type", type)
+    build()
+  }
+  return CardConfig(type = type, raw = obj)
 }
 
 internal fun snapshotOf(vararg states: EntityState): HaSnapshot =
-    HaSnapshot(states = states.associateBy { it.entityId })
+  HaSnapshot(states = states.associateBy { it.entityId })
 
-private val previewCardJson = Json { ignoreUnknownKeys = true; isLenient = true }
+private val previewCardJson = Json {
+  ignoreUnknownKeys = true
+  isLenient = true
+}
 
-/** Decode a YAML-like JSON card config string — the same authoring shape
- *  the dashboard fixtures and HA's lovelace YAML use. */
+/**
+ * Decode a YAML-like JSON card config string — the same authoring shape the dashboard fixtures and
+ * HA's lovelace YAML use.
+ */
 internal fun cardFromJson(json: String): CardConfig {
-    val obj = previewCardJson.parseToJsonElement(json).jsonObject
-    val type = (obj["type"] as JsonPrimitive).content
-    return CardConfig(type = type, raw = obj)
+  val obj = previewCardJson.parseToJsonElement(json).jsonObject
+  val type = (obj["type"] as JsonPrimitive).content
+  return CardConfig(type = type, raw = obj)
 }
 
 internal fun entityState(
-    id: String,
-    state: String,
-    friendlyName: String? = null,
-    unit: String? = null,
-    deviceClass: String? = null,
+  id: String,
+  state: String,
+  friendlyName: String? = null,
+  unit: String? = null,
+  deviceClass: String? = null,
 ): EntityState {
-    val attrs = buildMap<String, JsonPrimitive> {
-        friendlyName?.let { put("friendly_name", JsonPrimitive(it)) }
-        unit?.let { put("unit_of_measurement", JsonPrimitive(it)) }
-        deviceClass?.let { put("device_class", JsonPrimitive(it)) }
+  val attrs =
+    buildMap<String, JsonPrimitive> {
+      friendlyName?.let { put("friendly_name", JsonPrimitive(it)) }
+      unit?.let { put("unit_of_measurement", JsonPrimitive(it)) }
+      deviceClass?.let { put("device_class", JsonPrimitive(it)) }
     }
-    return EntityState(entityId = id, state = state, attributes = JsonObject(attrs))
+  return EntityState(entityId = id, state = state, attributes = JsonObject(attrs))
 }
 
 @Composable
 internal fun SlotWidgetPreviewFixture(
-    card: CardConfig?,
-    snapshot: HaSnapshot,
-    container: ContainerType,
+  card: CardConfig?,
+  snapshot: HaSnapshot,
+  container: ContainerType,
 ) {
-    val params = if (container == ContainerType.Large) largePreviewParams else smallPreviewParams
-    WearWidgetPreviewSnapshot(
-        widget = PreviewSlotWidget(card = card, snapshot = snapshot),
-        params = params,
-    )
+  val params = if (container == ContainerType.Large) largePreviewParams else smallPreviewParams
+  WearWidgetPreviewSnapshot(
+    widget = PreviewSlotWidget(card = card, snapshot = snapshot),
+    params = params,
+  )
 }
 
 @Preview(name = "Slot widget — tile (small)")
 @Composable
 fun SlotWidgetPreview_TileSmall() {
-    val card = cardConfig("tile") {
-        put("entity", "sensor.living_room_temperature")
-        put("name", "Living Room")
+  val card =
+    cardConfig("tile") {
+      put("entity", "sensor.living_room_temperature")
+      put("name", "Living Room")
     }
-    val snapshot = snapshotOf(
-        entityState(
-            id = "sensor.living_room_temperature",
-            state = "21.5",
-            friendlyName = "Living Room",
-            unit = "°C",
-            deviceClass = "temperature",
-        ),
+  val snapshot =
+    snapshotOf(
+      entityState(
+        id = "sensor.living_room_temperature",
+        state = "21.5",
+        friendlyName = "Living Room",
+        unit = "°C",
+        deviceClass = "temperature",
+      )
     )
-    SlotWidgetPreviewFixture(card, snapshot, ContainerType.Small)
+  SlotWidgetPreviewFixture(card, snapshot, ContainerType.Small)
 }
 
 @Preview(name = "Slot widget — entities (large)")
 @Composable
 fun SlotWidgetPreview_EntitiesLarge() {
-    val card = CardConfig(
-        type = "entities",
-        raw = buildJsonObject {
-            put("type", "entities")
-            put("title", "Living Room")
-            put(
-                "entities",
-                kotlinx.serialization.json.buildJsonArray {
-                    add(JsonPrimitive("sensor.living_room_temperature"))
-                    add(JsonPrimitive("light.kitchen"))
-                },
-            )
+  val card =
+    CardConfig(
+      type = "entities",
+      raw =
+        buildJsonObject {
+          put("type", "entities")
+          put("title", "Living Room")
+          put(
+            "entities",
+            kotlinx.serialization.json.buildJsonArray {
+              add(JsonPrimitive("sensor.living_room_temperature"))
+              add(JsonPrimitive("light.kitchen"))
+            },
+          )
         },
     )
-    val snapshot = snapshotOf(
-        entityState(
-            id = "sensor.living_room_temperature",
-            state = "21.5",
-            friendlyName = "Living Room",
-            unit = "°C",
-            deviceClass = "temperature",
-        ),
-        entityState(
-            id = "light.kitchen",
-            state = "on",
-            friendlyName = "Kitchen",
-        ),
+  val snapshot =
+    snapshotOf(
+      entityState(
+        id = "sensor.living_room_temperature",
+        state = "21.5",
+        friendlyName = "Living Room",
+        unit = "°C",
+        deviceClass = "temperature",
+      ),
+      entityState(id = "light.kitchen", state = "on", friendlyName = "Kitchen"),
     )
-    SlotWidgetPreviewFixture(card, snapshot, ContainerType.Large)
+  SlotWidgetPreviewFixture(card, snapshot, ContainerType.Large)
 }
 
 @Preview(name = "Slot widget — empty placeholder")
 @Composable
 fun SlotWidgetPreview_Empty() {
-    SlotWidgetPreviewFixture(card = null, snapshot = HaSnapshot(), container = ContainerType.Small)
+  SlotWidgetPreviewFixture(card = null, snapshot = HaSnapshot(), container = ContainerType.Small)
 }
 
 private val largePreviewParams =
-    WearWidgetParams(
-        instanceId = WidgetInstanceId("widgets", 1),
-        containerType = ContainerInfo.CONTAINER_TYPE_LARGE,
-        widthDp = 200f,
-        heightDp = 112f,
-        verticalPaddingDp = 8f,
-        horizontalPaddingDp = 8f,
-        cornerRadiusDp = 26f,
-    )
+  WearWidgetParams(
+    instanceId = WidgetInstanceId("widgets", 1),
+    containerType = ContainerInfo.CONTAINER_TYPE_LARGE,
+    widthDp = 200f,
+    heightDp = 112f,
+    verticalPaddingDp = 8f,
+    horizontalPaddingDp = 8f,
+    cornerRadiusDp = 26f,
+  )
 
 private val smallPreviewParams =
-    WearWidgetParams(
-        instanceId = WidgetInstanceId("widgets", 2),
-        containerType = ContainerInfo.CONTAINER_TYPE_SMALL,
-        widthDp = 200f,
-        heightDp = 60f,
-        verticalPaddingDp = 8f,
-        horizontalPaddingDp = 8f,
-        cornerRadiusDp = 26f,
-    )
+  WearWidgetParams(
+    instanceId = WidgetInstanceId("widgets", 2),
+    containerType = ContainerInfo.CONTAINER_TYPE_SMALL,
+    widthDp = 200f,
+    heightDp = 60f,
+    verticalPaddingDp = 8f,
+    horizontalPaddingDp = 8f,
+    cornerRadiusDp = 26f,
+  )

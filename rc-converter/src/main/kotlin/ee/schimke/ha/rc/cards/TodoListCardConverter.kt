@@ -23,88 +23,87 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonPrimitive
 
 /**
- * `todo-list` card. HA carries todo items in the entity's `items`
- * attribute (each item: {summary, status: needs_action | completed}).
- * Tapping a row fires `todo.update_item` with the entity id, the
- * item's summary as the lookup key, and the *flipped* status. Players
- * without a service-call channel will leave the row visually
- * unchanged after a tap (no in-document optimistic flip yet — would
- * need a MutableRemoteString per item, follow-up).
+ * `todo-list` card. HA carries todo items in the entity's `items` attribute (each item: {summary,
+ * status: needs_action | completed}). Tapping a row fires `todo.update_item` with the entity id,
+ * the item's summary as the lookup key, and the *flipped* status. Players without a service-call
+ * channel will leave the row visually unchanged after a tap (no in-document optimistic flip yet —
+ * would need a MutableRemoteString per item, follow-up).
  */
 class TodoListCardConverter : CardConverter {
-    override val cardType: String = CardTypes.TODO_LIST
+  override val cardType: String = CardTypes.TODO_LIST
 
-    override fun naturalHeightDp(card: CardConfig, snapshot: HaSnapshot): Int = 220
+  override fun naturalHeightDp(card: CardConfig, snapshot: HaSnapshot): Int = 220
 
-    @Composable
-    override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
-        val entityId = card.raw["entity"]?.jsonPrimitive?.content
-        val entity = entityId?.let { snapshot.states[it] }
-        val title = card.raw["title"]?.jsonPrimitive?.content
-            ?: entity?.attributes?.get("friendly_name")?.jsonPrimitive?.content
-            ?: entityId
-            ?: "To-do list"
+  @Composable
+  override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
+    val entityId = card.raw["entity"]?.jsonPrimitive?.content
+    val entity = entityId?.let { snapshot.states[it] }
+    val title =
+      card.raw["title"]?.jsonPrimitive?.content
+        ?: entity?.attributes?.get("friendly_name")?.jsonPrimitive?.content
+        ?: entityId
+        ?: "To-do list"
 
-        val items = entity?.attributes?.get("items") as? JsonArray ?: JsonArray(emptyList())
-        val active = mutableListOf<HaTodoItem>()
-        val completed = mutableListOf<HaTodoItem>()
-        items.forEach { el ->
-            val obj = el as? JsonObject ?: return@forEach
-            val summary = obj["summary"]?.jsonPrimitive?.content ?: return@forEach
-            val status = obj["status"]?.jsonPrimitive?.content
-            val isCompleted = status == "completed"
-            val tap = updateItemAction(entityId, summary, isCompleted)
-            val item = HaTodoItem(summary = summary, tapAction = tap)
-            if (isCompleted) completed += item else active += item
-        }
+    val items = entity?.attributes?.get("items") as? JsonArray ?: JsonArray(emptyList())
+    val active = mutableListOf<HaTodoItem>()
+    val completed = mutableListOf<HaTodoItem>()
+    items.forEach { el ->
+      val obj = el as? JsonObject ?: return@forEach
+      val summary = obj["summary"]?.jsonPrimitive?.content ?: return@forEach
+      val status = obj["status"]?.jsonPrimitive?.content
+      val isCompleted = status == "completed"
+      val tap = updateItemAction(entityId, summary, isCompleted)
+      val item = HaTodoItem(summary = summary, tapAction = tap)
+      if (isCompleted) completed += item else active += item
+    }
 
-        val data = HaTodoListData(title = title, activeItems = active, completedItems = completed)
+    val data = HaTodoListData(title = title, activeItems = active, completedItems = completed)
 
-        when (LocalCardSizeMode.current) {
-            CardSizeMode.Wrap -> RemoteHaTodoList(data, modifier = modifier)
-            // Narrow → "N left" identity counter; wider → the full
-            // active/completed list. Single width gate (#224).
-            CardSizeMode.Fixed ->
-                RemoteSizeBreakpoint(
-                    thresholdsDp = intArrayOf(BULK_IDENTITY_THRESHOLD_DP),
-                    modifier = modifier,
-                    axis = BreakpointAxis.Width,
-                ) { tier ->
-                    if (tier == 0) {
-                        RemoteHaTodoListIdentity(data, RemoteModifier.fillMaxWidth())
-                    } else {
-                        RemoteHaTodoList(data, RemoteModifier.fillMaxWidth())
-                    }
-                }
+    when (LocalCardSizeMode.current) {
+      CardSizeMode.Wrap -> RemoteHaTodoList(data, modifier = modifier)
+      // Narrow → "N left" identity counter; wider → the full
+      // active/completed list. Single width gate (#224).
+      CardSizeMode.Fixed ->
+        RemoteSizeBreakpoint(
+          thresholdsDp = intArrayOf(BULK_IDENTITY_THRESHOLD_DP),
+          modifier = modifier,
+          axis = BreakpointAxis.Width,
+        ) { tier ->
+          if (tier == 0) {
+            RemoteHaTodoListIdentity(data, RemoteModifier.fillMaxWidth())
+          } else {
+            RemoteHaTodoList(data, RemoteModifier.fillMaxWidth())
+          }
         }
     }
+  }
 }
 
 /**
- * Build the `todo.update_item` call-service action for one row. The
- * service signature on the HA side is:
+ * Build the `todo.update_item` call-service action for one row. The service signature on the HA
+ * side is:
  *
- *   service: todo.update_item
- *   target:  { entity_id }
- *   data:    { item: <summary>, status: needs_action | completed }
+ * service: todo.update_item target: { entity_id } data: { item: <summary>, status: needs_action |
+ * completed }
  *
- * The `item:` field is a positional lookup — todo entities address
- * items by their visible summary, not by an opaque id.
+ * The `item:` field is a positional lookup — todo entities address items by their visible summary,
+ * not by an opaque id.
  */
 private fun updateItemAction(
-    entityId: String?,
-    summary: String,
-    currentlyCompleted: Boolean,
+  entityId: String?,
+  summary: String,
+  currentlyCompleted: Boolean,
 ): HaAction {
-    if (entityId == null) return HaAction.None
-    val newStatus = if (currentlyCompleted) "needs_action" else "completed"
-    return HaAction.CallService(
-        domain = "todo",
-        service = "update_item",
-        entityId = entityId,
-        serviceData = buildJsonObject {
-            put("item", JsonPrimitive(summary))
-            put("status", JsonPrimitive(newStatus))
-        },
-    )
+  if (entityId == null) return HaAction.None
+  val newStatus = if (currentlyCompleted) "needs_action" else "completed"
+  return HaAction.CallService(
+    domain = "todo",
+    service = "update_item",
+    entityId = entityId,
+    serviceData =
+      buildJsonObject {
+        put("item", JsonPrimitive(summary))
+        put("status", JsonPrimitive(newStatus))
+      },
+  )
 }

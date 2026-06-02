@@ -36,22 +36,19 @@ import kotlinx.serialization.json.put
 /**
  * Regression for "Failed: Software caused connection abort" on dashboard switch.
  *
- * Before the fix: when the underlying WebSocket died (server hang-up, idle TCP
- * timeout, network change), `HaClient.receiveLoop` set `state = Error` but left
- * `session` pointing at the dead socket. The next `awaitCommand` (e.g. a
- * dashboard switch triggering `lovelace/config`) called `send` on that socket
- * and Android surfaced `SocketException: Software caused connection abort` —
- * with no path back to a healthy session, because `LiveHaSession.connectionStatus`
- * was never wired to the underlying HaClient state. So the app's
- * `repeatOnLifecycle(RESUMED)` reconnect loop (which watches `connectionStatus`)
- * never fired either.
+ * Before the fix: when the underlying WebSocket died (server hang-up, idle TCP timeout, network
+ * change), `HaClient.receiveLoop` set `state = Error` but left `session` pointing at the dead
+ * socket. The next `awaitCommand` (e.g. a dashboard switch triggering `lovelace/config`) called
+ * `send` on that socket and Android surfaced `SocketException: Software caused connection abort` —
+ * with no path back to a healthy session, because `LiveHaSession.connectionStatus` was never wired
+ * to the underlying HaClient state. So the app's `repeatOnLifecycle(RESUMED)` reconnect loop (which
+ * watches `connectionStatus`) never fired either.
  *
  * After the fix:
- *   - `receiveLoop` clears `session` and flips state to `Disconnected` on the way
- *     out, so the next send fails fast with a clear "Not connected" error instead
- *     of a raw SocketException.
- *   - `LiveHaSession` observes `HaClient.state` and propagates Disconnected/Error
- *     to `connectionStatus = Failed`, so the existing reconnect loop wakes up.
+ * - `receiveLoop` clears `session` and flips state to `Disconnected` on the way out, so the next
+ *   send fails fast with a clear "Not connected" error instead of a raw SocketException.
+ * - `LiveHaSession` observes `HaClient.state` and propagates Disconnected/Error to
+ *   `connectionStatus = Failed`, so the existing reconnect loop wakes up.
  */
 class LiveHaSessionReconnectTest {
 

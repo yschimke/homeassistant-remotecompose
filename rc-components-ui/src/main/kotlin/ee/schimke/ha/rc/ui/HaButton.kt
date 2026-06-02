@@ -10,17 +10,16 @@ import ee.schimke.ha.rc.components.RemoteHaToggleButton
 /** Compose-UI Tier-2 wrapper around [RemoteHaButton]. */
 @Composable
 fun HaButton(data: HaButtonUiData, modifier: Modifier = Modifier) {
-    HaUiHost(modifier) { RemoteHaButton(data.toRemote()) }
+  HaUiHost(modifier) { RemoteHaButton(data.toRemote()) }
 }
 
 /**
  * Compose-UI Tier-2 wrapper around [RemoteHaToggleButton].
  *
- * The Tier-1 toggle button uses an in-document `MutableRemoteBoolean`
- * for optimistic flip; that survives intact here — only the input data
- * is reshaped from plain types.
+ * The Tier-1 toggle button uses an in-document `MutableRemoteBoolean` for optimistic flip; that
+ * survives intact here — only the input data is reshaped from plain types.
  */
 @Composable
 fun HaToggleButton(data: HaButtonUiData, modifier: Modifier = Modifier) {
-    HaUiHost(modifier) { RemoteHaToggleButton(data.toRemote()) }
+  HaUiHost(modifier) { RemoteHaToggleButton(data.toRemote()) }
 }

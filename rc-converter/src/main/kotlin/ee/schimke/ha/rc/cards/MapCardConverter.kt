@@ -37,101 +37,98 @@ import kotlinx.serialization.json.jsonPrimitive
 /**
  * HA `map` card — list of entities with optional locations.
  *
- * The "real" map card uses Leaflet to render a slippy-map background.
- * We can't ship tiles in a `.rc` document, so this converter renders
- * a flat card chrome with each tracked entity as a labelled dot. It
- * preserves the slot the dashboard expects without faking map tiles.
+ * The "real" map card uses Leaflet to render a slippy-map background. We can't ship tiles in a
+ * `.rc` document, so this converter renders a flat card chrome with each tracked entity as a
+ * labelled dot. It preserves the slot the dashboard expects without faking map tiles.
  *
- * Reads `entities:` (string or `{ entity }`); falls back to the title
- * heuristic from other cards.
+ * Reads `entities:` (string or `{ entity }`); falls back to the title heuristic from other cards.
  */
 class MapCardConverter : CardConverter {
-    override val cardType: String = CardTypes.MAP
+  override val cardType: String = CardTypes.MAP
 
-    override fun naturalHeightDp(card: CardConfig, snapshot: HaSnapshot): Int {
-        val entities = entityIds(card)
-        val title = if (card.raw["title"] != null) 28 else 0
-        return title + 24 + 28 * entities.size.coerceAtLeast(1)
-    }
+  override fun naturalHeightDp(card: CardConfig, snapshot: HaSnapshot): Int {
+    val entities = entityIds(card)
+    val title = if (card.raw["title"] != null) 28 else 0
+    return title + 24 + 28 * entities.size.coerceAtLeast(1)
+  }
 
-    @Composable
-    override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
-        val theme = LocalHaTheme.current
-        val title = card.raw["title"]?.jsonPrimitive?.content
-        val entities = entityIds(card)
+  @Composable
+  override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
+    val theme = LocalHaTheme.current
+    val title = card.raw["title"]?.jsonPrimitive?.content
+    val entities = entityIds(card)
 
-        RemoteBox(
-            modifier = modifier
-                .fillMaxWidth()
-                .then(cardChrome(theme.cardBackground, theme.divider))
-                .padding(horizontal = 12.rdp, vertical = 10.rdp),
-        ) {
-            RemoteColumn(verticalArrangement = RemoteArrangement.spacedBy(6.rdp)) {
-                if (title != null) {
-                    RemoteText(
-                        text = title.rs,
-                        color = theme.primaryText.rc,
-                        fontSize = 15.rsp,
-                        fontWeight = FontWeight.Medium,
-                        style = RemoteTextStyle.Default,
-                    )
-                }
-                if (entities.isEmpty()) {
-                    RemoteText(
-                        text = "No entities".rs,
-                        color = theme.secondaryText.rc,
-                        fontSize = 13.rsp,
-                        style = RemoteTextStyle.Default,
-                    )
-                } else {
-                    entities.forEach { id -> EntityRow(id, snapshot) }
-                }
-            }
+    RemoteBox(
+      modifier =
+        modifier
+          .fillMaxWidth()
+          .then(cardChrome(theme.cardBackground, theme.divider))
+          .padding(horizontal = 12.rdp, vertical = 10.rdp)
+    ) {
+      RemoteColumn(verticalArrangement = RemoteArrangement.spacedBy(6.rdp)) {
+        if (title != null) {
+          RemoteText(
+            text = title.rs,
+            color = theme.primaryText.rc,
+            fontSize = 15.rsp,
+            fontWeight = FontWeight.Medium,
+            style = RemoteTextStyle.Default,
+          )
         }
-    }
-
-    @Composable
-    private fun EntityRow(entityId: String, snapshot: HaSnapshot) {
-        val theme = LocalHaTheme.current
-        val state = snapshot.states[entityId]
-        val name = state?.attributes?.get("friendly_name")?.jsonPrimitive?.content ?: entityId
-        val lat = state?.attributes?.get("latitude")?.jsonPrimitive?.content
-        val lon = state?.attributes?.get("longitude")?.jsonPrimitive?.content
-        val coords = if (lat != null && lon != null) "$lat, $lon" else (state?.state ?: "—")
-
-        RemoteRow(
-            verticalAlignment = RemoteAlignment.CenterVertically,
-            horizontalArrangement = RemoteArrangement.spacedBy(8.rdp),
-        ) {
-            RemoteBox(
-                modifier = RemoteModifier
-                    .size(8.rdp)
-                    .clip(RemoteCircleShape)
-                    .background(theme.placeholderAccent.rc),
-            )
-            RemoteText(
-                text = name.rs,
-                color = theme.primaryText.rc,
-                fontSize = 13.rsp,
-                style = RemoteTextStyle.Default,
-            )
-            RemoteText(
-                text = coords.rs,
-                color = theme.secondaryText.rc,
-                fontSize = 12.rsp,
-                style = RemoteTextStyle.Default,
-            )
+        if (entities.isEmpty()) {
+          RemoteText(
+            text = "No entities".rs,
+            color = theme.secondaryText.rc,
+            fontSize = 13.rsp,
+            style = RemoteTextStyle.Default,
+          )
+        } else {
+          entities.forEach { id -> EntityRow(id, snapshot) }
         }
+      }
     }
+  }
+
+  @Composable
+  private fun EntityRow(entityId: String, snapshot: HaSnapshot) {
+    val theme = LocalHaTheme.current
+    val state = snapshot.states[entityId]
+    val name = state?.attributes?.get("friendly_name")?.jsonPrimitive?.content ?: entityId
+    val lat = state?.attributes?.get("latitude")?.jsonPrimitive?.content
+    val lon = state?.attributes?.get("longitude")?.jsonPrimitive?.content
+    val coords = if (lat != null && lon != null) "$lat, $lon" else (state?.state ?: "—")
+
+    RemoteRow(
+      verticalAlignment = RemoteAlignment.CenterVertically,
+      horizontalArrangement = RemoteArrangement.spacedBy(8.rdp),
+    ) {
+      RemoteBox(
+        modifier =
+          RemoteModifier.size(8.rdp).clip(RemoteCircleShape).background(theme.placeholderAccent.rc)
+      )
+      RemoteText(
+        text = name.rs,
+        color = theme.primaryText.rc,
+        fontSize = 13.rsp,
+        style = RemoteTextStyle.Default,
+      )
+      RemoteText(
+        text = coords.rs,
+        color = theme.secondaryText.rc,
+        fontSize = 12.rsp,
+        style = RemoteTextStyle.Default,
+      )
+    }
+  }
 }
 
 private fun entityIds(card: CardConfig): List<String> {
-    val arr: JsonArray = card.raw["entities"]?.jsonArray ?: return emptyList()
-    return arr.mapNotNull { el ->
-        when (el) {
-            is JsonPrimitive -> el.content
-            is JsonObject -> el["entity"]?.jsonPrimitive?.content
-            else -> null
-        }
+  val arr: JsonArray = card.raw["entities"]?.jsonArray ?: return emptyList()
+  return arr.mapNotNull { el ->
+    when (el) {
+      is JsonPrimitive -> el.content
+      is JsonObject -> el["entity"]?.jsonPrimitive?.content
+      else -> null
     }
+  }
 }

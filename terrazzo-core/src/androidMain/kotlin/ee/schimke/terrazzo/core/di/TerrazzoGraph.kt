@@ -26,71 +26,67 @@ import ee.schimke.terrazzo.core.wearsync.WearSyncManager
 import ee.schimke.terrazzo.core.widget.WidgetStore
 
 /**
- * The app's dependency graph. Created once in [android.app.Application.onCreate]
- * and handed down through the Compose tree via a CompositionLocal.
+ * The app's dependency graph. Created once in [android.app.Application.onCreate] and handed down
+ * through the Compose tree via a CompositionLocal.
  *
- * `HaSession` isn't a graph binding — it's constructed per-login via
- * [HaSessionFactory], since each session needs a live baseUrl + access
- * token pair.
+ * `HaSession` isn't a graph binding — it's constructed per-login via [HaSessionFactory], since each
+ * session needs a live baseUrl + access token pair.
  */
 interface TerrazzoGraph {
-    val tokenVault: TokenVault
-    val authService: HaAuthService
-    val mobileAppStore: MobileAppStore
-    val mobileAppRegistrar: MobileAppRegistrar
-    val widgetStore: WidgetStore
-    val pinStore: PinStore
-    val wearWidgetSlotsStore: WearWidgetSlotsStore
-    val preferencesStore: PreferencesStore
-    val offlineCache: OfflineCache
-    val sessionFactory: HaSessionFactory
-    val cardMonitor: CardMonitor
-    val wearSyncManager: WearSyncManager
-    val lanConnectionPolicy: LanConnectionPolicy
-    val remoteUrlStore: RemoteUrlStore
-    val logStore: LogStore
-    val sessionWriteMode: SessionWriteMode
+  val tokenVault: TokenVault
+  val authService: HaAuthService
+  val mobileAppStore: MobileAppStore
+  val mobileAppRegistrar: MobileAppRegistrar
+  val widgetStore: WidgetStore
+  val pinStore: PinStore
+  val wearWidgetSlotsStore: WearWidgetSlotsStore
+  val preferencesStore: PreferencesStore
+  val offlineCache: OfflineCache
+  val sessionFactory: HaSessionFactory
+  val cardMonitor: CardMonitor
+  val wearSyncManager: WearSyncManager
+  val lanConnectionPolicy: LanConnectionPolicy
+  val remoteUrlStore: RemoteUrlStore
+  val logStore: LogStore
+  val sessionWriteMode: SessionWriteMode
 
-    fun interface Factory {
-        fun create(context: Context): TerrazzoGraph
-    }
+  fun interface Factory {
+    fun create(context: Context): TerrazzoGraph
+  }
 }
 
 /**
- * Factory for [HaSession]. Pulled from the graph so Compose call sites
- * don't `new` the class directly.
+ * Factory for [HaSession]. Pulled from the graph so Compose call sites don't `new` the class
+ * directly.
  *
- * Live sessions are wrapped in [CachedHaSession] so the UI gets a cache
- * fallback automatically — every fetched dashboard / snapshot is mirrored
- * to disk and read on cold start before the network has a chance to
- * answer. Demo sessions skip the wrapper since their data is already
- * deterministic and re-derived from `DemoData`.
+ * Live sessions are wrapped in [CachedHaSession] so the UI gets a cache fallback automatically —
+ * every fetched dashboard / snapshot is mirrored to disk and read on cold start before the network
+ * has a chance to answer. Demo sessions skip the wrapper since their data is already deterministic
+ * and re-derived from `DemoData`.
  *
- * [createCachedOnly] returns a cache-backed session whose `delegate` is
- * a no-op stub — used during cold-start auto-resume when we don't yet
- * have a valid access token (refresh in progress, or refresh failed
- * due to no network). The UI still paints from the on-disk cache; once
- * the access token is minted the session is replaced with a real
- * [CachedHaSession] wrapping a [LiveHaSession].
+ * [createCachedOnly] returns a cache-backed session whose `delegate` is a no-op stub — used during
+ * cold-start auto-resume when we don't yet have a valid access token (refresh in progress, or
+ * refresh failed due to no network). The UI still paints from the on-disk cache; once the access
+ * token is minted the session is replaced with a real [CachedHaSession] wrapping a [LiveHaSession].
  */
 @SingleIn(AppScope::class)
 @Inject
 class HaSessionFactory(
-    private val cache: OfflineCache,
-    private val httpEngineFactory: HttpEngineFactory,
+  private val cache: OfflineCache,
+  private val httpEngineFactory: HttpEngineFactory,
 ) {
-    fun create(baseUrl: String, accessToken: String): HaSession =
-        CachedHaSession(
-            LiveHaSession(
-                baseUrl = baseUrl,
-                accessToken = accessToken,
-                engine = httpEngineFactory.engine,
-            ),
-            cache,
-        )
+  fun create(baseUrl: String, accessToken: String): HaSession =
+    CachedHaSession(
+      LiveHaSession(
+        baseUrl = baseUrl,
+        accessToken = accessToken,
+        engine = httpEngineFactory.engine,
+      ),
+      cache,
+    )
 
-    fun createCachedOnly(baseUrl: String): HaSession =
-        CachedHaSession(OfflineOnlySession(baseUrl), cache)
+  fun createCachedOnly(baseUrl: String): HaSession =
+    CachedHaSession(OfflineOnlySession(baseUrl), cache)
 
-    fun createDemo(): HaSession = DemoHaSession()
+  fun createDemo(): HaSession = DemoHaSession()
 }

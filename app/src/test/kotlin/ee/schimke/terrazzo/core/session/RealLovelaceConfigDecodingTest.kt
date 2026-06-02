@@ -3,25 +3,24 @@ package ee.schimke.terrazzo.core.session
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.Dashboard
 import ee.schimke.ha.model.Section
-import ee.schimke.ha.model.View
 import kotlin.test.Test
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonPrimitive
 
 /**
  * Regression test for the live-HA decoding bug: `HaClient.fetchDashboard` previously decoded each
- * card via the default kotlinx-serialization decoder for `CardConfig(type, raw)`. Real Lovelace JSON
- * emits per-card fields (`entity`, `name`, …) directly on the card object — there is no `raw`
+ * card via the default kotlinx-serialization decoder for `CardConfig(type, raw)`. Real Lovelace
+ * JSON emits per-card fields (`entity`, `name`, …) directly on the card object — there is no `raw`
  * wrapper on the wire — so every card decoded with `raw = {}` and converters rendered blanks.
  *
- * This test runs the production decoding path (same `Json` config as [ee.schimke.ha.client.HaClient]
- * — `ignoreUnknownKeys = true`, `isLenient = true`) over real bundled Lovelace JSON and asserts that
- * card-level fields survive into [CardConfig.raw]. If `CardConfig`'s serializer regresses to the
- * default member-by-member decoder, every assertion below fails.
+ * This test runs the production decoding path (same `Json` config as
+ * [ee.schimke.ha.client.HaClient] — `ignoreUnknownKeys = true`, `isLenient = true`) over real
+ * bundled Lovelace JSON and asserts that card-level fields survive into [CardConfig.raw]. If
+ * `CardConfig`'s serializer regresses to the default member-by-member decoder, every assertion
+ * below fails.
  */
 class RealLovelaceConfigDecodingTest {
 
@@ -76,7 +75,10 @@ class RealLovelaceConfigDecodingTest {
     // No card config should arrive with an empty `raw` — that was the
     // exact symptom of the bug.
     val emptyRaw = cards.filter { it.raw.isEmpty() }
-    assertTrue(emptyRaw.isEmpty(), "expected every card.raw populated, but ${emptyRaw.size} were empty")
+    assertTrue(
+      emptyRaw.isEmpty(),
+      "expected every card.raw populated, but ${emptyRaw.size} were empty",
+    )
 
     // Tile cards in this dashboard always have an `entity` and most have a `name`. Both fields are
     // top-level on the wire and would be dropped by the default serializer.
@@ -103,22 +105,17 @@ class RealLovelaceConfigDecodingTest {
     // doesn't include (markdown, picture-entity, weather-forecast, etc.)
     // also exercise the production decoding path.
     val slugs =
-      listOf(
-        "security",
-        "3d_printing",
-        "climate",
-        "energy",
-        "github",
-        "meshcore",
-        "networks",
-      )
+      listOf("security", "3d_printing", "climate", "energy", "github", "meshcore", "networks")
 
     for (slug in slugs) {
       val dashboard = loadDashboard(slug)
       val cards = walkCards(dashboard).toList()
       assertTrue(cards.isNotEmpty(), "$slug: expected non-empty card list")
       val empty = cards.filter { it.raw.isEmpty() }
-      assertTrue(empty.isEmpty(), "$slug: ${empty.size} cards decoded with empty raw (types=${empty.map { it.type }.distinct()})")
+      assertTrue(
+        empty.isEmpty(),
+        "$slug: ${empty.size} cards decoded with empty raw (types=${empty.map { it.type }.distinct()})",
+      )
     }
   }
 }

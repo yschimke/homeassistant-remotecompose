@@ -7,6 +7,7 @@ import ee.schimke.terrazzo.core.cache.OfflineCacheStorage
 import ee.schimke.terrazzo.core.session.CachedHaSession
 import ee.schimke.terrazzo.core.session.HaSession
 import ee.schimke.terrazzo.core.session.LiveHaSession
+import ee.schimke.terrazzo.core.session.SessionConnectionStatus
 import io.ktor.server.application.install
 import io.ktor.server.cio.CIO
 import io.ktor.server.engine.EmbeddedServer
@@ -29,7 +30,6 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import ee.schimke.terrazzo.core.session.SessionConnectionStatus
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
@@ -42,23 +42,19 @@ import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 
 /**
- * End-to-end test of the offline-first contract through `HaClient` (the
- * real WebSocket client) and `CachedHaSession` (the wrapper).
+ * End-to-end test of the offline-first contract through `HaClient` (the real WebSocket client) and
+ * `CachedHaSession` (the wrapper).
  *
- * Spins up an embedded Ktor server that speaks just enough of HA's
- * WebSocket protocol — `auth_required` / `auth_ok` handshake plus
- * `lovelace/dashboards/list`, `lovelace/config`, and `get_states`
- * commands matched by id. Drives the session, persists the cache,
- * stops the server, then asserts a fresh cache-only session reads the
- * same dashboard. That's "the activity loads".
+ * Spins up an embedded Ktor server that speaks just enough of HA's WebSocket protocol —
+ * `auth_required` / `auth_ok` handshake plus `lovelace/dashboards/list`, `lovelace/config`, and
+ * `get_states` commands matched by id. Drives the session, persists the cache, stops the server,
+ * then asserts a fresh cache-only session reads the same dashboard. That's "the activity loads".
  *
- * Why Ktor and not mockserver: HA's WebSocket protocol is full-duplex
- * (server pushes `auth_required` first, then commands ride atop a
- * persistent connection with monotonic ids). mockserver-netty's
- * WebSocket layer is for its own callback infrastructure, not for
- * faking an arbitrary protocol. Ktor server is already a project dep
- * (the `addon-server` module), so this stays a single-library fake.
- * The HTTP-side companion test (`OfflineFirstAddonHttpTest`) uses
+ * Why Ktor and not mockserver: HA's WebSocket protocol is full-duplex (server pushes
+ * `auth_required` first, then commands ride atop a persistent connection with monotonic ids).
+ * mockserver-netty's WebSocket layer is for its own callback infrastructure, not for faking an
+ * arbitrary protocol. Ktor server is already a project dep (the `addon-server` module), so this
+ * stays a single-library fake. The HTTP-side companion test (`OfflineFirstAddonHttpTest`) uses
  * mockserver where it shines.
  */
 class OfflineFirstWebSocketFlowTest {
@@ -169,12 +165,12 @@ class OfflineFirstWebSocketFlowTest {
   }
 
   /**
-   * Stand-in for the production `OfflineOnlySession` (which is
-   * `internal` to `terrazzo-core`). Always throws on live calls so
-   * `CachedHaSession` exercises its cache-fallback path.
+   * Stand-in for the production `OfflineOnlySession` (which is `internal` to `terrazzo-core`).
+   * Always throws on live calls so `CachedHaSession` exercises its cache-fallback path.
    */
   private class AlwaysOfflineSession(override val baseUrl: String) : HaSession {
-    override val connectionStatus: StateFlow<SessionConnectionStatus> = MutableStateFlow(SessionConnectionStatus.Failed)
+    override val connectionStatus: StateFlow<SessionConnectionStatus> =
+      MutableStateFlow(SessionConnectionStatus.Failed)
 
     override suspend fun connect() = Unit
 
@@ -187,10 +183,9 @@ class OfflineFirstWebSocketFlowTest {
   }
 
   /**
-   * Minimal HA-protocol simulator. Covers the three commands HaClient
-   * sends today (`lovelace/dashboards/list`, `lovelace/config`,
-   * `get_states`) and replies with the matching `id`. State is
-   * mutable so a test can drive an "update" between two fetches.
+   * Minimal HA-protocol simulator. Covers the three commands HaClient sends today
+   * (`lovelace/dashboards/list`, `lovelace/config`, `get_states`) and replies with the matching
+   * `id`. State is mutable so a test can drive an "update" between two fetches.
    */
   private class HaProtocolHandler {
     @Volatile private var livingRoom = "21.4"

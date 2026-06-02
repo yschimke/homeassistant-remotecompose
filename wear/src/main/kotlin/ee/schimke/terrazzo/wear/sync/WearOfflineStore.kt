@@ -12,15 +12,12 @@ import ee.schimke.terrazzo.wearsync.proto.encodeProto
 import java.io.File
 
 /**
- * Watch-side offline store. The wear data layer is push-only (phone
- * writes DataItems and ephemeral MessageClient deltas), so on cold
- * launch with the phone unreachable the [WearSyncRepository] would have
- * nothing to render. This store persists every proto blob the
- * repository handles so the watch boots from disk and overlays live
- * data when the phone reconnects.
+ * Watch-side offline store. The wear data layer is push-only (phone writes DataItems and ephemeral
+ * MessageClient deltas), so on cold launch with the phone unreachable the [WearSyncRepository]
+ * would have nothing to render. This store persists every proto blob the repository handles so the
+ * watch boots from disk and overlays live data when the phone reconnects.
  *
  * Layout under the wear app's `filesDir/terrazzo/wear/`:
- *
  * ```
  *   settings.pb        — WearSettings
  *   pinned.pb          — PinnedCardSet
@@ -30,9 +27,8 @@ import java.io.File
  *   dashboards/<file>  — DashboardData per `urlPath`
  * ```
  *
- * Files are proto wire bytes (the same encoding the wear data layer
- * itself uses), written via tmp+rename so a kill mid-write doesn't
- * leave half-written cache files.
+ * Files are proto wire bytes (the same encoding the wear data layer itself uses), written via
+ * tmp+rename so a kill mid-write doesn't leave half-written cache files.
  */
 class WearOfflineStore(context: Context) {
 

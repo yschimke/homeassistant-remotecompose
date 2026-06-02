@@ -32,48 +32,36 @@ import okio.Path.Companion.toOkioPath
 /**
  * Process-wide image stack for HA-aware fetches.
  *
- * Owns the single [DiskCache] and single [ImageLoader] every screen
- * shares — `DiskCache` documents that **only one instance per
- * directory** is safe (otherwise the journals can interleave and
- * corrupt). Park the binding at [AppScope] so `DashboardViewScreen`
- * and `WidgetInstallSheet` (and anyone else who renders cards) reuse
- * the same loader instead of constructing per-screen ones pointing at
- * the same `cacheDir/ha_image_cache` path.
+ * Owns the single [DiskCache] and single [ImageLoader] every screen shares — `DiskCache` documents
+ * that **only one instance per directory** is safe (otherwise the journals can interleave and
+ * corrupt). Park the binding at [AppScope] so `DashboardViewScreen` and `WidgetInstallSheet` (and
+ * anyone else who renders cards) reuse the same loader instead of constructing per-screen ones
+ * pointing at the same `cacheDir/ha_image_cache` path.
  *
- * The bearer-auth interceptor reads its token through a provider
- * lambda that closes over [haHost] / [accessToken], so the loader
- * itself never has to be rebuilt when the session changes. Callers
- * push the active session via [setAuth] (`HaSession` exposes
- * `baseUrl` + `accessToken`); the interceptor picks up the new
- * values on the next request. The session host is matched
- * case-insensitively; only same-host requests get the bearer, so
- * external CDN thumbnails referenced from a dashboard don't leak the
- * token.
+ * The bearer-auth interceptor reads its token through a provider lambda that closes over [haHost] /
+ * [accessToken], so the loader itself never has to be rebuilt when the session changes. Callers
+ * push the active session via [setAuth] (`HaSession` exposes `baseUrl` + `accessToken`); the
+ * interceptor picks up the new values on the next request. The session host is matched
+ * case-insensitively; only same-host requests get the bearer, so external CDN thumbnails referenced
+ * from a dashboard don't leak the token.
  *
- * Also exposes [resolve] for hosts that need to pre-fetch a URL to
- * an Android [Bitmap] — used by widget capture, which has no
- * playback-time `BitmapLoader` and must bake fetched bytes into the
- * `.rc` doc inline. Same resolution rule as `CoilBitmapLoader`: a
- * leading `/` is prefixed with the current HA base URL, anything
- * else (absolute, `content://`, …) passes through.
+ * Also exposes [resolve] for hosts that need to pre-fetch a URL to an Android [Bitmap] — used by
+ * widget capture, which has no playback-time `BitmapLoader` and must bake fetched bytes into the
+ * `.rc` doc inline. Same resolution rule as `CoilBitmapLoader`: a leading `/` is prefixed with the
+ * current HA base URL, anything else (absolute, `content://`, …) passes through.
  */
 @SingleIn(AppScope::class)
 @Inject
-class HaImageStack(
-  private val context: Context,
-  private val lanPolicy: LanConnectionPolicy,
-) {
+class HaImageStack(private val context: Context, private val lanPolicy: LanConnectionPolicy) {
 
   @Volatile private var baseUrl: String? = null
   @Volatile private var haHost: String? = null
   @Volatile private var accessToken: String? = null
 
   /**
-   * Push the active session's base URL + bearer token. Callers wire
-   * this from the session-change point (`HaSession` exposes both
-   * values). Subsequent fetches use the new pair on the next request
-   * — the interceptor reads through the provider lambdas rather than
-   * captured constants.
+   * Push the active session's base URL + bearer token. Callers wire this from the session-change
+   * point (`HaSession` exposes both values). Subsequent fetches use the new pair on the next
+   * request — the interceptor reads through the provider lambdas rather than captured constants.
    */
   fun setAuth(baseUrl: String?, accessToken: String?) {
     this.baseUrl = baseUrl
@@ -97,9 +85,8 @@ class HaImageStack(
   }
 
   /**
-   * The shared Coil loader. Lazy so a process that never renders an
-   * image (background services, tests) doesn't pay the OkHttp / disk
-   * cache construction cost.
+   * The shared Coil loader. Lazy so a process that never renders an image (background services,
+   * tests) doesn't pay the OkHttp / disk cache construction cost.
    */
   val imageLoader: ImageLoader by lazy {
     val client =
@@ -117,16 +104,14 @@ class HaImageStack(
   }
 
   /**
-   * Pre-fetch the image at [url] to an Android [Bitmap]. Used by
-   * widget capture, which must bake the bytes into the doc because
-   * widget runtime has no `BitmapLoader`. Returns `null` on fetch /
+   * Pre-fetch the image at [url] to an Android [Bitmap]. Used by widget capture, which must bake
+   * the bytes into the doc because widget runtime has no `BitmapLoader`. Returns `null` on fetch /
    * decode failure so callers can fall back to an icon path.
    */
   suspend fun resolve(url: String): Bitmap? {
     val resolved = resolveAgainstBase(url)
     Log.d(TAG, "resolve request input=$url resolved=$resolved")
-    val request =
-      ImageRequest.Builder(context).data(resolved).allowHardware(false).build()
+    val request = ImageRequest.Builder(context).data(resolved).allowHardware(false).build()
     return when (val result = imageLoader.execute(request)) {
       is SuccessResult -> {
         val img = result.image
@@ -164,26 +149,22 @@ class HaImageStack(
   }
 
   /**
-   * Coil [EventListener] that logs each stage of an image request to
-   * logcat under [TAG]. Filterable with
+   * Coil [EventListener] that logs each stage of an image request to logcat under [TAG]. Filterable
+   * with
    *
    * ```
    * adb logcat -s HaImageStack
    * ```
    *
-   * The default Coil pipeline runs many stages (size resolve → map →
-   * key → fetch → decode → transform → transition); we only emit a
-   * line for the ones useful for diagnosing why a tile stays gray:
-   * the chosen fetcher (network vs. memory cache hit), the fetch
-   * outcome with its [DataSource] (so a stale fetch from `MEMORY` /
-   * `DISK` is visible), and the final success / error.
+   * The default Coil pipeline runs many stages (size resolve → map → key → fetch → decode →
+   * transform → transition); we only emit a line for the ones useful for diagnosing why a tile
+   * stays gray: the chosen fetcher (network vs. memory cache hit), the fetch outcome with its
+   * [DataSource] (so a stale fetch from `MEMORY` / `DISK` is visible), and the final success /
+   * error.
    */
   private object LoggingEventListener : EventListener() {
     override fun fetchStart(request: ImageRequest, fetcher: Fetcher, options: Options) {
-      Log.d(
-        TAG,
-        "fetchStart data=${request.data} fetcher=${fetcher::class.java.simpleName}",
-      )
+      Log.d(TAG, "fetchStart data=${request.data} fetcher=${fetcher::class.java.simpleName}")
     }
 
     override fun fetchEnd(
@@ -210,10 +191,7 @@ class HaImageStack(
       val dims =
         if (img is BitmapImage) "${img.bitmap.width}x${img.bitmap.height}"
         else img::class.java.simpleName
-      Log.d(
-        TAG,
-        "onSuccess data=${request.data} dataSource=${result.dataSource} image=$dims",
-      )
+      Log.d(TAG, "onSuccess data=${request.data} dataSource=${result.dataSource} image=$dims")
     }
 
     override fun onError(request: ImageRequest, result: ErrorResult) {

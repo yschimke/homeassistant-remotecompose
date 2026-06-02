@@ -38,48 +38,39 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 
 /**
- * Picture-entity previews that exercise both [PictureImageStrategy]
- * modes end-to-end inside Robolectric — the side-by-side proof that
- * the URL-form 1×1 bug from #277 is bypassed:
+ * Picture-entity previews that exercise both [PictureImageStrategy] modes end-to-end inside
+ * Robolectric — the side-by-side proof that the URL-form 1×1 bug from #277 is bypassed:
  *
- *  - **App mode** (`AppMode_Light/Dark`) — captures the URL form via
- *    `rememberLocalNamedRemoteBitmap` with explicit 512×512
- *    dimensions. The host wires a fake Coil-backed `BitmapLoader`
- *    that maps the URL to a known yellow-on-blue bitmap; the player
- *    resolves it at playback exactly like the device's
- *    `HaImageStack.imageLoader`. Renders the disc.
- *  - **Widget mode** (`WidgetMode_Light`) — provides
- *    [PictureImageStrategy.Inline] with a pre-fetched [ImageBitmap].
- *    The converter bakes the bytes into the captured doc; no
- *    `BitmapLoader` is wired, mirroring the widget runtime where no
- *    loader is available. Also renders the disc — proves the same
- *    visual outcome from a self-contained doc.
- *  - **Icon fallback** (`IconFallback_Light`) — snapshot has no
- *    `entity_picture`, so the converter takes the `RemoteIcon` path
- *    (vector ops, no `BitmapData`). Renders a camera icon.
+ * - **App mode** (`AppMode_Light/Dark`) — captures the URL form via
+ *   `rememberLocalNamedRemoteBitmap` with explicit 512×512 dimensions. The host wires a fake
+ *   Coil-backed `BitmapLoader` that maps the URL to a known yellow-on-blue bitmap; the player
+ *   resolves it at playback exactly like the device's `HaImageStack.imageLoader`. Renders the disc.
+ * - **Widget mode** (`WidgetMode_Light`) — provides [PictureImageStrategy.Inline] with a
+ *   pre-fetched [ImageBitmap]. The converter bakes the bytes into the captured doc; no
+ *   `BitmapLoader` is wired, mirroring the widget runtime where no loader is available. Also
+ *   renders the disc — proves the same visual outcome from a self-contained doc.
+ * - **Icon fallback** (`IconFallback_Light`) — snapshot has no `entity_picture`, so the converter
+ *   takes the `RemoteIcon` path (vector ops, no `BitmapData`). Renders a camera icon.
  *
- * The strategy `CompositionLocalProvider` must live **inside** the
- * `CachedCardPreview` content block — `captureSingleRemoteDocument`
- * creates a sub-composition that doesn't inherit `CompositionLocal`s
- * from the outer tree.
+ * The strategy `CompositionLocalProvider` must live **inside** the `CachedCardPreview` content
+ * block — `captureSingleRemoteDocument` creates a sub-composition that doesn't inherit
+ * `CompositionLocal`s from the outer tree.
  */
-
 private const val PICTURE_TILE_WIDTH_DP = 360
 private const val PICTURE_TILE_HEIGHT_DP = 160
 private const val SAMPLE_PICTURE_BITMAP_PX = 512
 
 private val pictureSampleCard: CardConfig =
   card(
-    """{"type":"picture-entity","entity":"camera.preview_cam","name":"Preview cam","show_name":true,"show_state":true}""",
+    """{"type":"picture-entity","entity":"camera.preview_cam","name":"Preview cam","show_name":true,"show_state":true}"""
   )
 
 private val pictureSampleCardNoEntity: CardConfig =
   card(
-    """{"type":"picture-entity","entity":"camera.offline_cam","name":"Offline cam","show_name":true,"show_state":false}""",
+    """{"type":"picture-entity","entity":"camera.offline_cam","name":"Offline cam","show_name":true,"show_state":false}"""
   )
 
-private const val SAMPLE_PICTURE_URL =
-  "/api/camera_proxy/camera.preview_cam?token=preview-token"
+private const val SAMPLE_PICTURE_URL = "/api/camera_proxy/camera.preview_cam?token=preview-token"
 
 private val pictureSampleSnapshotWithImage: HaSnapshot =
   HaSnapshot(
@@ -94,10 +85,10 @@ private val pictureSampleSnapshotWithImage: HaSnapshot =
                 mapOf(
                   "friendly_name" to JsonPrimitive("Preview cam"),
                   "entity_picture" to JsonPrimitive(SAMPLE_PICTURE_URL),
-                ),
+                )
               ),
-          ),
-      ),
+          )
+      )
   )
 
 private val pictureSampleSnapshotNoImage: HaSnapshot =
@@ -109,8 +100,8 @@ private val pictureSampleSnapshotNoImage: HaSnapshot =
             entityId = "camera.offline_cam",
             state = "idle",
             attributes = JsonObject(mapOf("friendly_name" to JsonPrimitive("Offline cam"))),
-          ),
-      ),
+          )
+      )
   )
 
 /** Visible test bitmap — yellow disc on blue. */
@@ -253,8 +244,4 @@ private fun AppModeHost(theme: HaTheme) {
   }
 }
 
-private data class PicturePreviewKey(
-  val card: CardConfig,
-  val theme: HaTheme,
-  val widget: Boolean,
-)
+private data class PicturePreviewKey(val card: CardConfig, val theme: HaTheme, val widget: Boolean)

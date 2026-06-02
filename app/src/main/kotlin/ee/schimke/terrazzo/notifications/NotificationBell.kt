@@ -32,112 +32,100 @@ import androidx.compose.ui.unit.dp
 import ee.schimke.ha.model.HaNotification
 
 /**
- * Top-bar bell that surfaces HA's *persistent notifications* — the same
- * list HA's frontend shows behind its bell icon. A badge with the count
- * appears when the list is non-empty; tapping opens a bottom sheet
- * listing every notification with title + message + timestamp.
+ * Top-bar bell that surfaces HA's *persistent notifications* — the same list HA's frontend shows
+ * behind its bell icon. A badge with the count appears when the list is non-empty; tapping opens a
+ * bottom sheet listing every notification with title + message + timestamp.
  *
- * Each row carries a dismiss (X) button and the sheet header a "Clear
- * all" action; both delegate up via [onDismiss] / [onClearAll], which
- * `DashboardsRoot` wires to `HaSession.dismissNotification` /
- * `dismissAllNotifications`. HA echoes the removal back over the
- * subscription, so the list updates reactively — this composable stays
- * presentational and never mutates the list itself.
+ * Each row carries a dismiss (X) button and the sheet header a "Clear all" action; both delegate up
+ * via [onDismiss] / [onClearAll], which `DashboardsRoot` wires to `HaSession.dismissNotification` /
+ * `dismissAllNotifications`. HA echoes the removal back over the subscription, so the list updates
+ * reactively — this composable stays presentational and never mutates the list itself.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NotificationBell(
-    notifications: List<HaNotification>,
-    modifier: Modifier = Modifier,
-    onDismiss: (HaNotification) -> Unit = {},
-    onClearAll: () -> Unit = {},
+  notifications: List<HaNotification>,
+  modifier: Modifier = Modifier,
+  onDismiss: (HaNotification) -> Unit = {},
+  onClearAll: () -> Unit = {},
 ) {
-    var sheetOpen by remember { mutableStateOf(false) }
-    IconButton(onClick = { sheetOpen = true }, modifier = modifier) {
-        BadgedBox(
-            badge = {
-                if (notifications.isNotEmpty()) {
-                    Badge { Text(notifications.size.toString()) }
-                }
-            },
-        ) {
-            Icon(Icons.Outlined.Notifications, contentDescription = "Notifications")
+  var sheetOpen by remember { mutableStateOf(false) }
+  IconButton(onClick = { sheetOpen = true }, modifier = modifier) {
+    BadgedBox(
+      badge = {
+        if (notifications.isNotEmpty()) {
+          Badge { Text(notifications.size.toString()) }
         }
+      }
+    ) {
+      Icon(Icons.Outlined.Notifications, contentDescription = "Notifications")
     }
+  }
 
-    if (sheetOpen) {
-        val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-        ModalBottomSheet(
-            onDismissRequest = { sheetOpen = false },
-            sheetState = sheetState,
-        ) {
-            NotificationSheetContent(
-                notifications = notifications,
-                onDismiss = onDismiss,
-                onClearAll = onClearAll,
-            )
-        }
+  if (sheetOpen) {
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    ModalBottomSheet(onDismissRequest = { sheetOpen = false }, sheetState = sheetState) {
+      NotificationSheetContent(
+        notifications = notifications,
+        onDismiss = onDismiss,
+        onClearAll = onClearAll,
+      )
     }
+  }
 }
 
 @Composable
 private fun NotificationSheetContent(
-    notifications: List<HaNotification>,
-    onDismiss: (HaNotification) -> Unit,
-    onClearAll: () -> Unit,
+  notifications: List<HaNotification>,
+  onDismiss: (HaNotification) -> Unit,
+  onClearAll: () -> Unit,
 ) {
-    Column(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+  Column(
+    modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 16.dp),
+    verticalArrangement = Arrangement.spacedBy(12.dp),
+  ) {
+    Row(
+      modifier = Modifier.fillMaxWidth(),
+      horizontalArrangement = Arrangement.SpaceBetween,
+      verticalAlignment = Alignment.CenterVertically,
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text("Notifications", style = MaterialTheme.typography.headlineSmall)
-            if (notifications.isNotEmpty()) {
-                TextButton(onClick = onClearAll) { Text("Clear all") }
-            }
-        }
-        if (notifications.isEmpty()) {
-            Text(
-                "Nothing from Home Assistant right now.",
-                style = MaterialTheme.typography.bodyMedium,
-            )
-        } else {
-            LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                items(notifications, key = { it.notificationId }) { n ->
-                    NotificationRow(n, onDismiss = { onDismiss(n) })
-                    HorizontalDivider()
-                }
-            }
-        }
+      Text("Notifications", style = MaterialTheme.typography.headlineSmall)
+      if (notifications.isNotEmpty()) {
+        TextButton(onClick = onClearAll) { Text("Clear all") }
+      }
     }
+    if (notifications.isEmpty()) {
+      Text("Nothing from Home Assistant right now.", style = MaterialTheme.typography.bodyMedium)
+    } else {
+      LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        items(notifications, key = { it.notificationId }) { n ->
+          NotificationRow(n, onDismiss = { onDismiss(n) })
+          HorizontalDivider()
+        }
+      }
+    }
+  }
 }
 
 @Composable
 private fun NotificationRow(notification: HaNotification, onDismiss: () -> Unit) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Column(
-            modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(4.dp),
-        ) {
-            val title = notification.title?.takeIf { it.isNotBlank() } ?: notification.notificationId
-            Text(title, style = MaterialTheme.typography.titleMedium)
-            if (notification.message.isNotBlank()) {
-                Text(notification.message, style = MaterialTheme.typography.bodyMedium)
-            }
-            notification.createdAt?.takeIf { it.isNotBlank() }?.let {
-                Text(it, style = MaterialTheme.typography.labelSmall)
-            }
-        }
-        IconButton(onClick = onDismiss) {
-            Icon(Icons.Outlined.Close, contentDescription = "Dismiss notification")
-        }
+  Row(
+    modifier = Modifier.fillMaxWidth(),
+    horizontalArrangement = Arrangement.spacedBy(8.dp),
+    verticalAlignment = Alignment.CenterVertically,
+  ) {
+    Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+      val title = notification.title?.takeIf { it.isNotBlank() } ?: notification.notificationId
+      Text(title, style = MaterialTheme.typography.titleMedium)
+      if (notification.message.isNotBlank()) {
+        Text(notification.message, style = MaterialTheme.typography.bodyMedium)
+      }
+      notification.createdAt
+        ?.takeIf { it.isNotBlank() }
+        ?.let { Text(it, style = MaterialTheme.typography.labelSmall) }
     }
+    IconButton(onClick = onDismiss) {
+      Icon(Icons.Outlined.Close, contentDescription = "Dismiss notification")
+    }
+  }
 }

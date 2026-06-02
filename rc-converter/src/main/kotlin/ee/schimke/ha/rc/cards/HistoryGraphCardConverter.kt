@@ -25,91 +25,88 @@ import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonPrimitive
 
 /**
- * `history-graph` card. Renders one sparkline per entity using the
- * snapshot's `history[entityId]`. Per-row summary text is bound to
- * `<entity>.state`; each sample is bound to `<entity>.numeric.<index>`
- * so a host can push the next window of values without re-encoding the
- * document. The y-axis range is fixed at encode time from the captured
- * samples — values that drift well outside the initial range will clip
- * to the canvas, in which case the host should re-encode.
+ * `history-graph` card. Renders one sparkline per entity using the snapshot's `history[entityId]`.
+ * Per-row summary text is bound to `<entity>.state`; each sample is bound to
+ * `<entity>.numeric.<index>` so a host can push the next window of values without re-encoding the
+ * document. The y-axis range is fixed at encode time from the captured samples — values that drift
+ * well outside the initial range will clip to the canvas, in which case the host should re-encode.
  */
 class HistoryGraphCardConverter : CardConverter {
-    override val cardType: String = CardTypes.HISTORY_GRAPH
+  override val cardType: String = CardTypes.HISTORY_GRAPH
 
-    override fun naturalHeightDp(card: CardConfig, snapshot: HaSnapshot): Int {
-        val rows = entityIds(card).size.coerceAtLeast(1)
-        val title = if (card.raw["title"] != null) 24 else 0
-        // ~52 dp per row (label + sparkline + spacing) + range label + padding.
-        return title + 16 + 52 * rows + 20
+  override fun naturalHeightDp(card: CardConfig, snapshot: HaSnapshot): Int {
+    val rows = entityIds(card).size.coerceAtLeast(1)
+    val title = if (card.raw["title"] != null) 24 else 0
+    // ~52 dp per row (label + sparkline + spacing) + range label + padding.
+    return title + 16 + 52 * rows + 20
+  }
+
+  @Composable
+  override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
+    val title = card.raw["title"]?.jsonPrimitive?.content
+    val hours = card.raw["hours_to_show"]?.jsonPrimitive?.content?.toIntOrNull() ?: 24
+    val ids = entityIds(card)
+
+    val rows = ids.map { id ->
+      val entity = snapshot.states[id]
+      val name = entity?.attributes?.get("friendly_name")?.jsonPrimitive?.content ?: id
+      val history = snapshot.history[id].orEmpty()
+      val numeric = history.mapNotNull { it.state.toFloatOrNull() }
+      HaHistoryGraphRow(
+        entityId = id,
+        name = name,
+        summary = LiveValues.state(id, summarise(history)),
+        accent = HaStateColor.activeFor(entity),
+        points = numeric,
+      )
     }
 
-    @Composable
-    override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
-        val title = card.raw["title"]?.jsonPrimitive?.content
-        val hours = card.raw["hours_to_show"]?.jsonPrimitive?.content?.toIntOrNull() ?: 24
-        val ids = entityIds(card)
+    val data = HaHistoryGraphData(title = title, rangeLabel = "Last ${hours}h", rows = rows)
 
-        val rows =
-            ids.map { id ->
-                val entity = snapshot.states[id]
-                val name = entity?.attributes?.get("friendly_name")?.jsonPrimitive?.content ?: id
-                val history = snapshot.history[id].orEmpty()
-                val numeric = history.mapNotNull { it.state.toFloatOrNull() }
-                HaHistoryGraphRow(
-                    entityId = id,
-                    name = name,
-                    summary = LiveValues.state(id, summarise(history)),
-                    accent = HaStateColor.activeFor(entity),
-                    points = numeric,
-                )
-            }
-
-        val data = HaHistoryGraphData(title = title, rangeLabel = "Last ${hours}h", rows = rows)
-
-        when (LocalCardSizeMode.current) {
-            // Dashboard: the full per-row graph (HA reference).
-            CardSizeMode.Wrap -> RemoteHaHistoryGraph(data, modifier = modifier)
-            // Launcher / Wear: a single width gate (alpha010 collapses
-            // multi-rung ladders to tier 0 — #224, see GaugeCardConverter).
-            // Narrow → identity tier (first spark + latest value); wider →
-            // the full graph, which fills the larger cell by drawing every
-            // series. Width, not height: every Fixed-mode surface pins
-            // width and lets height follow (see EntitiesCardConverter).
-            CardSizeMode.Fixed ->
-                RemoteSizeBreakpoint(
-                    thresholdsDp = intArrayOf(BULK_IDENTITY_THRESHOLD_DP),
-                    modifier = modifier,
-                    axis = BreakpointAxis.Width,
-                ) { tier ->
-                    if (tier == 0) {
-                        RemoteHaHistoryGraphIdentity(data, RemoteModifier.fillMaxWidth())
-                    } else {
-                        RemoteHaHistoryGraph(data, RemoteModifier.fillMaxWidth())
-                    }
-                }
+    when (LocalCardSizeMode.current) {
+      // Dashboard: the full per-row graph (HA reference).
+      CardSizeMode.Wrap -> RemoteHaHistoryGraph(data, modifier = modifier)
+      // Launcher / Wear: a single width gate (alpha010 collapses
+      // multi-rung ladders to tier 0 — #224, see GaugeCardConverter).
+      // Narrow → identity tier (first spark + latest value); wider →
+      // the full graph, which fills the larger cell by drawing every
+      // series. Width, not height: every Fixed-mode surface pins
+      // width and lets height follow (see EntitiesCardConverter).
+      CardSizeMode.Fixed ->
+        RemoteSizeBreakpoint(
+          thresholdsDp = intArrayOf(BULK_IDENTITY_THRESHOLD_DP),
+          modifier = modifier,
+          axis = BreakpointAxis.Width,
+        ) { tier ->
+          if (tier == 0) {
+            RemoteHaHistoryGraphIdentity(data, RemoteModifier.fillMaxWidth())
+          } else {
+            RemoteHaHistoryGraph(data, RemoteModifier.fillMaxWidth())
+          }
         }
     }
+  }
 }
 
 private fun summarise(points: List<HistoryPoint>): String {
-    if (points.isEmpty()) return "no data"
-    val numeric = points.mapNotNull { it.state.toDoubleOrNull() }
-    if (numeric.isEmpty()) return "${points.size} samples"
-    val min = numeric.min()
-    val max = numeric.max()
-    val fmt: (Double) -> String = { d ->
-        if (d == d.toLong().toDouble()) d.toLong().toString() else "%.1f".format(d)
-    }
-    return "${fmt(min)} – ${fmt(max)} (${points.size})"
+  if (points.isEmpty()) return "no data"
+  val numeric = points.mapNotNull { it.state.toDoubleOrNull() }
+  if (numeric.isEmpty()) return "${points.size} samples"
+  val min = numeric.min()
+  val max = numeric.max()
+  val fmt: (Double) -> String = { d ->
+    if (d == d.toLong().toDouble()) d.toLong().toString() else "%.1f".format(d)
+  }
+  return "${fmt(min)} – ${fmt(max)} (${points.size})"
 }
 
 private fun entityIds(card: CardConfig): List<String> {
-    val arr: JsonArray = card.raw["entities"]?.jsonArray ?: return emptyList()
-    return arr.mapNotNull { el ->
-        when (el) {
-            is JsonPrimitive -> el.content
-            is JsonObject -> el["entity"]?.jsonPrimitive?.content
-            else -> null
-        }
+  val arr: JsonArray = card.raw["entities"]?.jsonArray ?: return emptyList()
+  return arr.mapNotNull { el ->
+    when (el) {
+      is JsonPrimitive -> el.content
+      is JsonObject -> el["entity"]?.jsonPrimitive?.content
+      else -> null
     }
+  }
 }

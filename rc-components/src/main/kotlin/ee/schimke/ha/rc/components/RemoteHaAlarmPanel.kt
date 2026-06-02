@@ -34,273 +34,270 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.wear.compose.remote.material3.RemoteIcon
 
 /**
- * `alarm-panel` card — title, status badge, ARM action buttons, and
- * the numeric keypad (matches HA's reference). Each keypad key fires
- * its own [HaAction.AlarmKey] host action; the host's
- * `AlarmKeypadCoordinator` accumulates the keys and submits a
- * combined `alarm_control_panel.alarm_*` call once the user finishes
- * an attempt. The .rc document carries no in-band buffer.
+ * `alarm-panel` card — title, status badge, ARM action buttons, and the numeric keypad (matches
+ * HA's reference). Each keypad key fires its own [HaAction.AlarmKey] host action; the host's
+ * `AlarmKeypadCoordinator` accumulates the keys and submits a combined
+ * `alarm_control_panel.alarm_*` call once the user finishes an attempt. The .rc document carries no
+ * in-band buffer.
  */
 @Composable
 @RemoteComposable
 fun RemoteHaAlarmPanel(
-    data: HaAlarmPanelData,
-    modifier: RemoteModifier = RemoteModifier,
-    fillHeight: Boolean = false,
+  data: HaAlarmPanelData,
+  modifier: RemoteModifier = RemoteModifier,
+  fillHeight: Boolean = false,
 ) {
-    val theme = haTheme()
-    val statusByKey = data.statuses.associateBy { it.stateKey }
-    val initialStatus = statusByKey[data.initialStateInt] ?: data.statuses.first()
-    // Keypad accent stays tied to the initial state — keypad chrome is
-    // permanent at capture time, the live binding only swaps the status
-    // chrome above.
-    val keypadAccent = initialStatus.accent
-    RemoteBox(
-        modifier = modifier
-            .fillMaxWidth()
-            .then(cardChrome(theme.cardBackground, theme.divider))
-            .padding(horizontal = 14.rdp, vertical = 12.rdp),
+  val theme = haTheme()
+  val statusByKey = data.statuses.associateBy { it.stateKey }
+  val initialStatus = statusByKey[data.initialStateInt] ?: data.statuses.first()
+  // Keypad accent stays tied to the initial state — keypad chrome is
+  // permanent at capture time, the live binding only swaps the status
+  // chrome above.
+  val keypadAccent = initialStatus.accent
+  RemoteBox(
+    modifier =
+      modifier
+        .fillMaxWidth()
+        .then(cardChrome(theme.cardBackground, theme.divider))
+        .padding(horizontal = 14.rdp, vertical = 12.rdp)
+  ) {
+    // On a taller cell than the keypad needs (Fixed mode, large
+    // launcher widget) the status + buttons stay at the top and the
+    // keypad takes the remaining height, spreading its rows to fill it
+    // rather than the whole block gluing to the top over a blank bottom
+    // half (Principle 7/8).
+    RemoteColumn(
+      modifier = if (fillHeight) RemoteModifier.fillMaxSize() else RemoteModifier.fillMaxWidth(),
+      verticalArrangement = RemoteArrangement.spacedBy(10.rdp),
     ) {
-        // On a taller cell than the keypad needs (Fixed mode, large
-        // launcher widget) the status + buttons stay at the top and the
-        // keypad takes the remaining height, spreading its rows to fill it
-        // rather than the whole block gluing to the top over a blank bottom
-        // half (Principle 7/8).
-        RemoteColumn(
-            modifier = if (fillHeight) RemoteModifier.fillMaxSize() else RemoteModifier.fillMaxWidth(),
-            verticalArrangement = RemoteArrangement.spacedBy(10.rdp),
+      StatusRow(data, statusByKey, initialStatus, theme)
+
+      // ARM AWAY / ARM HOME / DISARM buttons.
+      if (data.actions.isNotEmpty()) {
+        RemoteRow(
+          modifier = RemoteModifier.fillMaxWidth(),
+          horizontalArrangement =
+            RemoteArrangement.spacedBy(8.rdp, RemoteAlignment.CenterHorizontally),
         ) {
-            StatusRow(data, statusByKey, initialStatus, theme)
-
-            // ARM AWAY / ARM HOME / DISARM buttons.
-            if (data.actions.isNotEmpty()) {
-                RemoteRow(
-                    modifier = RemoteModifier.fillMaxWidth(),
-                    horizontalArrangement = RemoteArrangement.spacedBy(8.rdp, RemoteAlignment.CenterHorizontally),
-                ) {
-                    data.actions.forEach { action ->
-                        ActionPill(action, theme)
-                    }
-                }
-            }
-
-            if (data.showKeypad) {
-                Keypad(
-                    data.entityId,
-                    keypadAccent,
-                    theme,
-                    modifier =
-                        if (fillHeight) RemoteModifier.weight(1f).fillMaxHeight()
-                        else RemoteModifier,
-                    fill = fillHeight,
-                )
-            }
+          data.actions.forEach { action -> ActionPill(action, theme) }
         }
+      }
+
+      if (data.showKeypad) {
+        Keypad(
+          data.entityId,
+          keypadAccent,
+          theme,
+          modifier = if (fillHeight) RemoteModifier.weight(1f).fillMaxHeight() else RemoteModifier,
+          fill = fillHeight,
+        )
+      }
     }
+  }
 }
 
 /**
- * Wide-thin Fixed-mode alarm variant — the state shield on the left,
- * panel name + live status label on the right, no ARM buttons and no
- * keypad. Targets short/narrow widget cells (Wear S/L, the smaller
- * launcher chip) where the full keypad won't fit. Keeps the card's
- * identity (shield + state, P1) and its disambiguating name (P2) and
- * stays live: the same `RemoteStateLayout` over the state-int keys
- * swaps the shield colour + label at playback. The keypad (P5) returns
- * once the cell is tall/wide enough for the full card.
+ * Wide-thin Fixed-mode alarm variant — the state shield on the left, panel name + live status label
+ * on the right, no ARM buttons and no keypad. Targets short/narrow widget cells (Wear S/L, the
+ * smaller launcher chip) where the full keypad won't fit. Keeps the card's identity (shield +
+ * state, P1) and its disambiguating name (P2) and stays live: the same `RemoteStateLayout` over the
+ * state-int keys swaps the shield colour + label at playback. The keypad (P5) returns once the cell
+ * is tall/wide enough for the full card.
  */
 @Composable
 @RemoteComposable
 fun RemoteHaAlarmPanelWide(data: HaAlarmPanelData, modifier: RemoteModifier = RemoteModifier) {
-    val theme = haTheme()
-    val statusByKey = data.statuses.associateBy { it.stateKey }
-    val initialStatus = statusByKey[data.initialStateInt] ?: data.statuses.first()
-    val keys = data.statuses.map { it.stateKey }.toIntArray()
-    val stateInt = LiveValues.intState(data.entityId, data.initialStateInt)
-    RemoteBox(
-        modifier = modifier
-            .then(cardChrome(theme.cardBackground, theme.divider))
-            .padding(horizontal = 12.rdp, vertical = 8.rdp),
-    ) {
-        RemoteStateLayout(stateInt, *keys, modifier = RemoteModifier.fillMaxSize()) { key ->
-            val status = statusByKey[key] ?: initialStatus
-            RemoteRow(
-                modifier = RemoteModifier.fillMaxSize(),
-                verticalAlignment = RemoteAlignment.CenterVertically,
-                horizontalArrangement = RemoteArrangement.spacedBy(10.rdp),
-            ) {
-                RemoteBox(
-                    modifier = RemoteModifier
-                        .size(40.rdp)
-                        .clip(RemoteCircleShape)
-                        .border(2.rdp, status.accent.rc, RemoteCircleShape),
-                    contentAlignment = RemoteAlignment.Center,
-                ) {
-                    RemoteIcon(
-                        imageVector = status.icon,
-                        contentDescription = status.label.rs,
-                        modifier = RemoteModifier.size(22.rdp),
-                        tint = status.accent.rc,
-                    )
-                }
-                RemoteColumn(
-                    modifier = RemoteModifier.weight(1f),
-                    verticalArrangement = RemoteArrangement.Center,
-                ) {
-                    RemoteText(
-                        text = data.title.rs,
-                        color = theme.primaryText.rc,
-                        fontSize = 14.rsp,
-                        fontWeight = FontWeight.Medium,
-                        style = RemoteTextStyle.Default,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                    RemoteText(
-                        text = status.label.rs,
-                        color = status.accent.rc,
-                        fontSize = 12.rsp,
-                        style = RemoteTextStyle.Default,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
-            }
+  val theme = haTheme()
+  val statusByKey = data.statuses.associateBy { it.stateKey }
+  val initialStatus = statusByKey[data.initialStateInt] ?: data.statuses.first()
+  val keys = data.statuses.map { it.stateKey }.toIntArray()
+  val stateInt = LiveValues.intState(data.entityId, data.initialStateInt)
+  RemoteBox(
+    modifier =
+      modifier
+        .then(cardChrome(theme.cardBackground, theme.divider))
+        .padding(horizontal = 12.rdp, vertical = 8.rdp)
+  ) {
+    RemoteStateLayout(stateInt, *keys, modifier = RemoteModifier.fillMaxSize()) { key ->
+      val status = statusByKey[key] ?: initialStatus
+      RemoteRow(
+        modifier = RemoteModifier.fillMaxSize(),
+        verticalAlignment = RemoteAlignment.CenterVertically,
+        horizontalArrangement = RemoteArrangement.spacedBy(10.rdp),
+      ) {
+        RemoteBox(
+          modifier =
+            RemoteModifier.size(40.rdp)
+              .clip(RemoteCircleShape)
+              .border(2.rdp, status.accent.rc, RemoteCircleShape),
+          contentAlignment = RemoteAlignment.Center,
+        ) {
+          RemoteIcon(
+            imageVector = status.icon,
+            contentDescription = status.label.rs,
+            modifier = RemoteModifier.size(22.rdp),
+            tint = status.accent.rc,
+          )
         }
+        RemoteColumn(
+          modifier = RemoteModifier.weight(1f),
+          verticalArrangement = RemoteArrangement.Center,
+        ) {
+          RemoteText(
+            text = data.title.rs,
+            color = theme.primaryText.rc,
+            fontSize = 14.rsp,
+            fontWeight = FontWeight.Medium,
+            style = RemoteTextStyle.Default,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+          )
+          RemoteText(
+            text = status.label.rs,
+            color = status.accent.rc,
+            fontSize = 12.rsp,
+            style = RemoteTextStyle.Default,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+          )
+        }
+      }
     }
+  }
 }
 
 @Composable
 @RemoteComposable
 private fun StatusRow(
-    data: HaAlarmPanelData,
-    statusByKey: Map<Int, HaAlarmStatus>,
-    initialStatus: HaAlarmStatus,
-    theme: HaTheme,
+  data: HaAlarmPanelData,
+  statusByKey: Map<Int, HaAlarmStatus>,
+  initialStatus: HaAlarmStatus,
+  theme: HaTheme,
 ) {
-    val keys = data.statuses.map { it.stateKey }.toIntArray()
-    val stateInt = LiveValues.intState(data.entityId, data.initialStateInt)
-    RemoteStateLayout(stateInt, *keys) { key ->
-        val status = statusByKey[key] ?: initialStatus
-        RemoteRow(
-            modifier = RemoteModifier.fillMaxWidth(),
-            verticalAlignment = RemoteAlignment.CenterVertically,
-            horizontalArrangement = RemoteArrangement.SpaceBetween,
-        ) {
-            RemoteColumn {
-                RemoteText(
-                    text = data.title.rs,
-                    color = theme.primaryText.rc,
-                    fontSize = 16.rsp,
-                    fontWeight = FontWeight.Medium,
-                    style = RemoteTextStyle.Default,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                RemoteText(
-                    text = status.label.rs,
-                    color = status.accent.rc,
-                    fontSize = 12.rsp,
-                    style = RemoteTextStyle.Default,
-                    maxLines = 1,
-                )
-            }
-            RemoteBox(
-                modifier = RemoteModifier
-                    .size(40.rdp)
-                    .clip(RemoteCircleShape)
-                    .border(2.rdp, status.accent.rc, RemoteCircleShape),
-                contentAlignment = RemoteAlignment.Center,
-            ) {
-                RemoteIcon(
-                    imageVector = status.icon,
-                    contentDescription = status.label.rs,
-                    modifier = RemoteModifier.size(22.rdp),
-                    tint = status.accent.rc,
-                )
-            }
-        }
+  val keys = data.statuses.map { it.stateKey }.toIntArray()
+  val stateInt = LiveValues.intState(data.entityId, data.initialStateInt)
+  RemoteStateLayout(stateInt, *keys) { key ->
+    val status = statusByKey[key] ?: initialStatus
+    RemoteRow(
+      modifier = RemoteModifier.fillMaxWidth(),
+      verticalAlignment = RemoteAlignment.CenterVertically,
+      horizontalArrangement = RemoteArrangement.SpaceBetween,
+    ) {
+      RemoteColumn {
+        RemoteText(
+          text = data.title.rs,
+          color = theme.primaryText.rc,
+          fontSize = 16.rsp,
+          fontWeight = FontWeight.Medium,
+          style = RemoteTextStyle.Default,
+          maxLines = 1,
+          overflow = TextOverflow.Ellipsis,
+        )
+        RemoteText(
+          text = status.label.rs,
+          color = status.accent.rc,
+          fontSize = 12.rsp,
+          style = RemoteTextStyle.Default,
+          maxLines = 1,
+        )
+      }
+      RemoteBox(
+        modifier =
+          RemoteModifier.size(40.rdp)
+            .clip(RemoteCircleShape)
+            .border(2.rdp, status.accent.rc, RemoteCircleShape),
+        contentAlignment = RemoteAlignment.Center,
+      ) {
+        RemoteIcon(
+          imageVector = status.icon,
+          contentDescription = status.label.rs,
+          modifier = RemoteModifier.size(22.rdp),
+          tint = status.accent.rc,
+        )
+      }
     }
+  }
 }
 
 @Composable
 private fun ActionPill(action: HaAlarmAction, theme: HaTheme) {
-    val click = action.tapAction.toRemoteAction()
-        ?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
-    val accent = action.accent.rc
-    RemoteBox(
-        modifier = RemoteModifier.then(click)
-            .clip(RemoteRoundedCornerShape(6.rdp))
-            .background(accent.copy(alpha = accent.alpha * 0.0f.rf))
-            .border(1.rdp, accent, RemoteRoundedCornerShape(6.rdp))
-            .padding(horizontal = 14.rdp, vertical = 8.rdp),
-        contentAlignment = RemoteAlignment.Center,
-    ) {
-        RemoteText(
-            text = action.label.rs,
-            color = accent,
-            fontSize = 12.rsp,
-            fontWeight = FontWeight.Medium,
-            style = RemoteTextStyle.Default,
-            maxLines = 1,
-        )
-    }
+  val click =
+    action.tapAction.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
+  val accent = action.accent.rc
+  RemoteBox(
+    modifier =
+      RemoteModifier.then(click)
+        .clip(RemoteRoundedCornerShape(6.rdp))
+        .background(accent.copy(alpha = accent.alpha * 0.0f.rf))
+        .border(1.rdp, accent, RemoteRoundedCornerShape(6.rdp))
+        .padding(horizontal = 14.rdp, vertical = 8.rdp),
+    contentAlignment = RemoteAlignment.Center,
+  ) {
+    RemoteText(
+      text = action.label.rs,
+      color = accent,
+      fontSize = 12.rsp,
+      fontWeight = FontWeight.Medium,
+      style = RemoteTextStyle.Default,
+      maxLines = 1,
+    )
+  }
 }
 
 @Composable
 private fun Keypad(
-    entityId: String?,
-    accent: androidx.compose.ui.graphics.Color,
-    theme: HaTheme,
-    modifier: RemoteModifier = RemoteModifier,
-    fill: Boolean = false,
+  entityId: String?,
+  accent: androidx.compose.ui.graphics.Color,
+  theme: HaTheme,
+  modifier: RemoteModifier = RemoteModifier,
+  fill: Boolean = false,
 ) {
-    RemoteColumn(
-        modifier = modifier.fillMaxWidth().padding(top = 6.rdp),
-        verticalArrangement =
-            if (fill) RemoteArrangement.SpaceEvenly else RemoteArrangement.spacedBy(6.rdp),
-        horizontalAlignment = RemoteAlignment.CenterHorizontally,
-    ) {
-        listOf(listOf("1", "2", "3"), listOf("4", "5", "6"), listOf("7", "8", "9"))
-            .forEach { row ->
-                RemoteRow(horizontalArrangement = RemoteArrangement.spacedBy(8.rdp)) {
-                    row.forEach { KeypadKey(entityId, it, it, accent, theme) }
-                }
-            }
-        RemoteRow(horizontalArrangement = RemoteArrangement.spacedBy(8.rdp)) {
-            RemoteBox(modifier = RemoteModifier.size(48.rdp))
-            KeypadKey(entityId, "0", "0", accent, theme)
-            KeypadKey(entityId, "⌫", "backspace", accent, theme)
-        }
+  RemoteColumn(
+    modifier = modifier.fillMaxWidth().padding(top = 6.rdp),
+    verticalArrangement =
+      if (fill) RemoteArrangement.SpaceEvenly else RemoteArrangement.spacedBy(6.rdp),
+    horizontalAlignment = RemoteAlignment.CenterHorizontally,
+  ) {
+    listOf(listOf("1", "2", "3"), listOf("4", "5", "6"), listOf("7", "8", "9")).forEach { row ->
+      RemoteRow(horizontalArrangement = RemoteArrangement.spacedBy(8.rdp)) {
+        row.forEach { KeypadKey(entityId, it, it, accent, theme) }
+      }
     }
+    RemoteRow(horizontalArrangement = RemoteArrangement.spacedBy(8.rdp)) {
+      RemoteBox(modifier = RemoteModifier.size(48.rdp))
+      KeypadKey(entityId, "0", "0", accent, theme)
+      KeypadKey(entityId, "⌫", "backspace", accent, theme)
+    }
+  }
 }
 
 @Composable
 private fun KeypadKey(
-    entityId: String?,
-    label: String,
-    key: String,
-    accent: androidx.compose.ui.graphics.Color,
-    theme: HaTheme,
+  entityId: String?,
+  label: String,
+  key: String,
+  accent: androidx.compose.ui.graphics.Color,
+  theme: HaTheme,
 ) {
-    val click = entityId
-        ?.let { HaAction.AlarmKey(it, key).toRemoteAction() }
-        ?.let { RemoteModifier.clickable(it) }
-        ?: RemoteModifier
-    RemoteBox(
-        modifier = RemoteModifier.then(click)
-            .size(48.rdp)
-            .clip(RemoteRoundedCornerShape(6.rdp))
-            .border(1.rdp, accent.rc, RemoteRoundedCornerShape(6.rdp)),
-        contentAlignment = RemoteAlignment.Center,
-    ) {
-        RemoteText(
-            text = label.rs,
-            color = accent.rc,
-            fontSize = 16.rsp,
-            fontWeight = FontWeight.Medium,
-            style = RemoteTextStyle.Default,
-            maxLines = 1,
-        )
-    }
+  val click =
+    entityId
+      ?.let { HaAction.AlarmKey(it, key).toRemoteAction() }
+      ?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
+  RemoteBox(
+    modifier =
+      RemoteModifier.then(click)
+        .size(48.rdp)
+        .clip(RemoteRoundedCornerShape(6.rdp))
+        .border(1.rdp, accent.rc, RemoteRoundedCornerShape(6.rdp)),
+    contentAlignment = RemoteAlignment.Center,
+  ) {
+    RemoteText(
+      text = label.rs,
+      color = accent.rc,
+      fontSize = 16.rsp,
+      fontWeight = FontWeight.Medium,
+      style = RemoteTextStyle.Default,
+      maxLines = 1,
+    )
+  }
 }

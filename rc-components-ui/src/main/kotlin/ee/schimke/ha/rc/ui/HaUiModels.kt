@@ -23,73 +23,58 @@ import ee.schimke.ha.rc.components.Markdown
 /**
  * Tier-2 mirror of [HaToggleAccent] expressed in plain Compose types.
  *
- * - [isOn] = `null` ⇒ read-only entity (sensor / weather / …); the
- *   active accent is used unconditionally.
- * - [isOn] = `true` / `false` ⇒ toggleable entity at the given on-state;
- *   colour is selected at document build time. For live re-binding,
- *   reach for the Tier-1 [HaToggleAccent] directly.
+ * - [isOn] = `null` ⇒ read-only entity (sensor / weather / …); the active accent is used
+ *   unconditionally.
+ * - [isOn] = `true` / `false` ⇒ toggleable entity at the given on-state; colour is selected at
+ *   document build time. For live re-binding, reach for the Tier-1 [HaToggleAccent] directly.
  */
 data class HaToggleAccentUi(
-    val activeAccent: Color,
-    val inactiveAccent: Color,
-    val isOn: Boolean? = null,
+  val activeAccent: Color,
+  val inactiveAccent: Color,
+  val isOn: Boolean? = null,
 )
 
 data class HaTileUiData(
-    val name: String,
-    val state: String,
-    val icon: ImageVector,
-    val accent: HaToggleAccentUi,
-    val tapAction: HaAction = HaAction.None,
+  val name: String,
+  val state: String,
+  val icon: ImageVector,
+  val accent: HaToggleAccentUi,
+  val tapAction: HaAction = HaAction.None,
 )
 
 data class HaButtonUiData(
-    val name: String,
-    val icon: ImageVector,
-    val accent: HaToggleAccentUi,
-    val showName: Boolean = true,
-    val tapAction: HaAction = HaAction.None,
+  val name: String,
+  val icon: ImageVector,
+  val accent: HaToggleAccentUi,
+  val showName: Boolean = true,
+  val tapAction: HaAction = HaAction.None,
 )
 
 data class HaEntityRowUiData(
-    val name: String,
-    val state: String,
-    val icon: ImageVector,
-    val accent: HaToggleAccentUi,
-    val tapAction: HaAction = HaAction.None,
+  val name: String,
+  val state: String,
+  val icon: ImageVector,
+  val accent: HaToggleAccentUi,
+  val tapAction: HaAction = HaAction.None,
 )
 
-data class HaEntitiesUiData(
-    val title: String?,
-    val rows: List<HaEntityRowUiData>,
-)
+data class HaEntitiesUiData(val title: String?, val rows: List<HaEntityRowUiData>)
 
 data class HaGlanceCellUiData(
-    val name: String,
-    val state: String,
-    val icon: ImageVector,
-    val accent: HaToggleAccentUi,
-    val tapAction: HaAction = HaAction.None,
+  val name: String,
+  val state: String,
+  val icon: ImageVector,
+  val accent: HaToggleAccentUi,
+  val tapAction: HaAction = HaAction.None,
 )
 
-data class HaGlanceUiData(
-    val title: String?,
-    val cells: List<HaGlanceCellUiData>,
-)
+data class HaGlanceUiData(val title: String?, val cells: List<HaGlanceCellUiData>)
 
-data class HaMarkdownUiData(
-    val title: String?,
-    val lines: List<String>,
-)
+data class HaMarkdownUiData(val title: String?, val lines: List<String>)
 
-data class HaHeadingUiData(
-    val title: String,
-    val style: HaHeadingStyle = HaHeadingStyle.Title,
-)
+data class HaHeadingUiData(val title: String, val style: HaHeadingStyle = HaHeadingStyle.Title)
 
-data class HaUnsupportedUiData(
-    val cardType: String,
-)
+data class HaUnsupportedUiData(val cardType: String)
 
 // ——— plain → Remote bridges ———
 //
@@ -100,70 +85,63 @@ data class HaUnsupportedUiData(
 // `.rc` form.
 
 internal fun HaToggleAccentUi.toRemote(): HaToggleAccent =
-    HaToggleAccent(
-        activeAccent = activeAccent.rc,
-        inactiveAccent = inactiveAccent.rc,
-        initiallyOn = isOn ?: false,
-        toggleable = isOn != null,
-    )
+  HaToggleAccent(
+    activeAccent = activeAccent.rc,
+    inactiveAccent = inactiveAccent.rc,
+    initiallyOn = isOn ?: false,
+    toggleable = isOn != null,
+  )
 
 internal fun HaTileUiData.toRemote(): HaTileData =
-    HaTileData(
-        entityId = null,
-        name = name,
-        state = LiveValues.state(null, state),
-        icon = icon,
-        accent = accent.toRemote(),
-        tapAction = tapAction,
-    )
+  HaTileData(
+    entityId = null,
+    name = name,
+    state = LiveValues.state(null, state),
+    icon = icon,
+    accent = accent.toRemote(),
+    tapAction = tapAction,
+  )
 
 internal fun HaButtonUiData.toRemote(): HaButtonData =
-    HaButtonData(
-        entityId = null,
-        name = name,
-        icon = icon,
-        accent = accent.toRemote(),
-        showName = showName,
-        tapAction = tapAction,
-    )
+  HaButtonData(
+    entityId = null,
+    name = name,
+    icon = icon,
+    accent = accent.toRemote(),
+    showName = showName,
+    tapAction = tapAction,
+  )
 
 internal fun HaEntityRowUiData.toRemote(): HaEntityRowData =
-    HaEntityRowData(
-        entityId = null,
-        name = name,
-        state = LiveValues.state(null, state),
-        icon = icon,
-        accent = accent.toRemote(),
-        tapAction = tapAction,
-    )
+  HaEntityRowData(
+    entityId = null,
+    name = name,
+    state = LiveValues.state(null, state),
+    icon = icon,
+    accent = accent.toRemote(),
+    tapAction = tapAction,
+  )
 
 internal fun HaEntitiesUiData.toRemote(): HaEntitiesData =
-    HaEntitiesData(
-        title = title,
-        rows = rows.map { it.toRemote() },
-    )
+  HaEntitiesData(title = title, rows = rows.map { it.toRemote() })
 
 internal fun HaGlanceCellUiData.toRemote(): HaGlanceCellData =
-    HaGlanceCellData(
-        entityId = null,
-        name = name,
-        state = LiveValues.state(null, state),
-        icon = icon,
-        accent = accent.toRemote(),
-        tapAction = tapAction,
-    )
+  HaGlanceCellData(
+    entityId = null,
+    name = name,
+    state = LiveValues.state(null, state),
+    icon = icon,
+    accent = accent.toRemote(),
+    tapAction = tapAction,
+  )
 
 internal fun HaGlanceUiData.toRemote(): HaGlanceData =
-    HaGlanceData(
-        title = title,
-        cells = cells.map { it.toRemote() },
-    )
+  HaGlanceData(title = title, cells = cells.map { it.toRemote() })
 
 internal fun HaMarkdownUiData.toRemote(): HaMarkdownData =
-    HaMarkdownData(title = title, blocks = Markdown.parse(lines.joinToString("\n")))
+  HaMarkdownData(title = title, blocks = Markdown.parse(lines.joinToString("\n")))
 
-internal fun HaHeadingUiData.toRemote(): HaHeadingData =
-    HaHeadingData(title = title, style = style)
+internal fun HaHeadingUiData.toRemote(): HaHeadingData = HaHeadingData(title = title, style = style)
 
 internal fun HaUnsupportedUiData.toRemote(): HaUnsupportedData =
-    HaUnsupportedData(cardType = cardType)
+  HaUnsupportedData(cardType = cardType)

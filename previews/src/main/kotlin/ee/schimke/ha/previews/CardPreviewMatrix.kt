@@ -21,26 +21,25 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.unit.Density
-import androidx.compose.ui.unit.sp
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth as rcFillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.CachedCardPreview
@@ -58,464 +57,399 @@ import ee.schimke.ha.rc.components.PictureImageStrategy
 import ee.schimke.ha.rc.components.ProvideCardChrome
 import ee.schimke.ha.rc.components.ProvideFlowLayoutSupport
 import ee.schimke.ha.rc.components.ProvideHaTheme
+import ee.schimke.ha.rc.components.R as ComponentsR
 import ee.schimke.ha.rc.components.RemoteHaWidgetSurface
 import ee.schimke.ha.rc.enableRemoteComposeWrapContent
-import ee.schimke.ha.rc.components.R as ComponentsR
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
 
 /**
- * Single preview template that renders the same card across the three
- * surfaces it ships on:
+ * Single preview template that renders the same card across the three surfaces it ships on:
  *
- *   a) **App preferred** (wrap mode) — the in-app dashboard tile. The
- *      template chooses what to show; height flows from the captured
- *      document's intrinsic content via [CachedCardPreview]'s wrap
- *      adaptive player. Width pins to [appWidthDp].
- *   b) **Three launcher widget sizes** (fixed mode) — the user's
- *      base [baseGridSize], plus a smaller (±1 cell) and larger
- *      (±1 cell) variant. Cells are sized via [LauncherCellWidthDp] /
- *      [LauncherCellHeightDp]; the card runs through the rc-converter
- *      with `CardSizeMode.Fixed`, so converters that opted into
- *      `RemoteSizeBreakpoint` adapt to each cell's runtime width.
- *   c) **Two wear widget sizes** (fixed mode) — the small and large
- *      Glance Wear container shapes the slot widgets advertise.
+ * a) **App preferred** (wrap mode) — the in-app dashboard tile. The template chooses what to show;
+ * height flows from the captured document's intrinsic content via [CachedCardPreview]'s wrap
+ * adaptive player. Width pins to [appWidthDp]. b) **Three launcher widget sizes** (fixed mode) —
+ * the user's base [baseGridSize], plus a smaller (±1 cell) and larger (±1 cell) variant. Cells are
+ * sized via [LauncherCellWidthDp] / [LauncherCellHeightDp]; the card runs through the rc-converter
+ * with `CardSizeMode.Fixed`, so converters that opted into `RemoteSizeBreakpoint` adapt to each
+ * cell's runtime width. c) **Two wear widget sizes** (fixed mode) — the small and large Glance Wear
+ * container shapes the slot widgets advertise.
  *
- * Wear is dark-only and the launcher widgets render against the
- * launcher's dark surface; the app dashboard tile shares the same
- * Compose theme model. The matrix uses [HaTheme.Dark] for every cell —
- * one preview is the source of truth for what the card looks like at
- * each scale.
+ * Wear is dark-only and the launcher widgets render against the launcher's dark surface; the app
+ * dashboard tile shares the same Compose theme model. The matrix uses [HaTheme.Dark] for every cell
+ * — one preview is the source of truth for what the card looks like at each scale.
  */
-
 const val LauncherCellWidthDp: Int = 72
 const val LauncherCellHeightDp: Int = 84
 
 /**
- * Launcher widget size in cells. Each cell is [LauncherCellWidthDp] ×
- * [LauncherCellHeightDp] dp. Use [`-`] / [`+`] to derive the
- * smaller / larger neighbouring sizes that share the same aspect; the
- * smaller variant clamps to a `1×1` floor so a `2×1` chip doesn't try
- * to shrink to a degenerate `1×0` cell.
+ * Launcher widget size in cells. Each cell is [LauncherCellWidthDp] × [LauncherCellHeightDp] dp.
+ * Use [`-`] / [`+`] to derive the smaller / larger neighbouring sizes that share the same aspect;
+ * the smaller variant clamps to a `1×1` floor so a `2×1` chip doesn't try to shrink to a degenerate
+ * `1×0` cell.
  */
 data class WidgetGridSize(val cellsW: Int, val cellsH: Int) {
-    init {
-        require(cellsW >= 1 && cellsH >= 1) { "cells must be >= 1: ${cellsW}x${cellsH}" }
-    }
+  init {
+    require(cellsW >= 1 && cellsH >= 1) { "cells must be >= 1: ${cellsW}x${cellsH}" }
+  }
 
-    val widthDp: Int get() = cellsW * LauncherCellWidthDp
-    val heightDp: Int get() = cellsH * LauncherCellHeightDp
+  val widthDp: Int
+    get() = cellsW * LauncherCellWidthDp
 
-    operator fun plus(delta: Int): WidgetGridSize =
-        WidgetGridSize(cellsW + delta, cellsH + delta)
+  val heightDp: Int
+    get() = cellsH * LauncherCellHeightDp
 
-    operator fun minus(delta: Int): WidgetGridSize =
-        WidgetGridSize(
-            cellsW = (cellsW - delta).coerceAtLeast(1),
-            cellsH = (cellsH - delta).coerceAtLeast(1),
-        )
+  operator fun plus(delta: Int): WidgetGridSize = WidgetGridSize(cellsW + delta, cellsH + delta)
 
-    val label: String get() = "${cellsW}×${cellsH}"
+  operator fun minus(delta: Int): WidgetGridSize =
+    WidgetGridSize(
+      cellsW = (cellsW - delta).coerceAtLeast(1),
+      cellsH = (cellsH - delta).coerceAtLeast(1),
+    )
+
+  val label: String
+    get() = "${cellsW}×${cellsH}"
 }
 
 private val WearSmall = WidgetSizeDp(widthDp = 200, heightDp = 60)
 private val WearLarge = WidgetSizeDp(widthDp = 200, heightDp = 112)
 
 /**
- * Wear watches typically run at ~2.0× density (xhdpi). The launcher /
- * mobile dashboard cells inherit the @Preview's density (≈2.625×, the
- * project standard for HA reference parity), so each surface in the
- * matrix renders at the density it would on the real device.
+ * Wear watches typically run at ~2.0× density (xhdpi). The launcher / mobile dashboard cells
+ * inherit the @Preview's density (≈2.625×, the project standard for HA reference parity), so each
+ * surface in the matrix renders at the density it would on the real device.
  */
 private const val WearDensityScale: Float = 2f
 
 private data class WidgetSizeDp(val widthDp: Int, val heightDp: Int)
 
 /**
- * Frozen "now" so converters that read wall-clock time encode a
- * static label — same trick as [CardPreviews]; keeps the rendered
- * preview deterministic.
+ * Frozen "now" so converters that read wall-clock time encode a static label — same trick as
+ * [CardPreviews]; keeps the rendered preview deterministic.
  */
-private val PreviewNow: ZonedDateTime =
-    ZonedDateTime.of(2026, 5, 5, 10, 8, 0, 0, ZoneOffset.UTC)
+private val PreviewNow: ZonedDateTime = ZonedDateTime.of(2026, 5, 5, 10, 8, 0, 0, ZoneOffset.UTC)
 
 @Composable
 fun CardPreviewMatrix(
-    card: CardConfig,
-    snapshot: HaSnapshot,
-    baseGridSize: WidgetGridSize,
-    appWidthDp: Int = 320,
-    label: String? = null,
-    // Picture cards: a strategy that bakes a real bitmap into every cell
-    // so the matrix shows the image filling / cropping the cell rather
-    // than the icon fallback. Threaded into each cell's capture content
-    // (a `CompositionLocal` from the outer tree wouldn't reach the
-    // capture pass). Null → cards use their default app-URL strategy.
-    imageStrategy: PictureImageStrategy? = null,
+  card: CardConfig,
+  snapshot: HaSnapshot,
+  baseGridSize: WidgetGridSize,
+  appWidthDp: Int = 320,
+  label: String? = null,
+  // Picture cards: a strategy that bakes a real bitmap into every cell
+  // so the matrix shows the image filling / cropping the cell rather
+  // than the icon fallback. Threaded into each cell's capture content
+  // (a `CompositionLocal` from the outer tree wouldn't reach the
+  // capture pass). Null → cards use their default app-URL strategy.
+  imageStrategy: PictureImageStrategy? = null,
 ) {
-    enableRemoteComposeWrapContent()
-    val registry = defaultRegistry()
-    CompositionLocalProvider(LocalHaClock provides FixedHaClock(PreviewNow)) {
-        ProvideCardRegistry(registry) {
-            ProvideHaTheme(HaTheme.Dark) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(6.dp),
-                ) {
-                    if (label != null) {
-                        Text(
-                            text = label,
-                            style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = HaTheme.Dark.primaryText,
-                        )
-                    }
-                    // Row 1 — App preferred + the two Wear container shapes.
-                    // App renders at the mobile preview density; the wear
-                    // cells render inside a circular watch-face frame at
-                    // wear-typical 2× density (see WatchFaceCell). The
-                    // frame matches the WearWidgetPreviewSnapshot helper
-                    // used by the slot widget previews — same chrome
-                    // (black 227dp circle, app icon, label band) so the
-                    // matrix shows the card in its actual surface, not
-                    // as a floating rectangle.
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    ) {
-                        WrapModeCell(
-                            card = card,
-                            snapshot = snapshot,
-                            cellWidthDp = appWidthDp,
-                            label = "App ${appWidthDp}dp",
-                            imageStrategy = imageStrategy,
-                        )
-                        WatchFaceCell(
-                            card = card,
-                            snapshot = snapshot,
-                            sizeDp = WearSmall,
-                            label = "Wear S",
-                            imageStrategy = imageStrategy,
-                        )
-                        WatchFaceCell(
-                            card = card,
-                            snapshot = snapshot,
-                            sizeDp = WearLarge,
-                            label = "Wear L",
-                            imageStrategy = imageStrategy,
-                        )
-                    }
-                    // Row 2 — three launcher widget sizes around the base
-                    // (smaller, base, larger). All share the launcher
-                    // density inherited from the @Preview.
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    ) {
-                        FixedModeCell(
-                            card = card,
-                            snapshot = snapshot,
-                            sizeDp = WidgetSizeDp(
-                                (baseGridSize - 1).widthDp,
-                                (baseGridSize - 1).heightDp,
-                            ),
-                            label = "Widget ${(baseGridSize - 1).label}",
-                            imageStrategy = imageStrategy,
-                        )
-                        FixedModeCell(
-                            card = card,
-                            snapshot = snapshot,
-                            sizeDp = WidgetSizeDp(baseGridSize.widthDp, baseGridSize.heightDp),
-                            label = "Widget ${baseGridSize.label}",
-                            imageStrategy = imageStrategy,
-                        )
-                        FixedModeCell(
-                            card = card,
-                            snapshot = snapshot,
-                            sizeDp = WidgetSizeDp(
-                                (baseGridSize + 1).widthDp,
-                                (baseGridSize + 1).heightDp,
-                            ),
-                            label = "Widget ${(baseGridSize + 1).label}",
-                            imageStrategy = imageStrategy,
-                        )
-                    }
-                }
-            }
+  enableRemoteComposeWrapContent()
+  val registry = defaultRegistry()
+  CompositionLocalProvider(LocalHaClock provides FixedHaClock(PreviewNow)) {
+    ProvideCardRegistry(registry) {
+      ProvideHaTheme(HaTheme.Dark) {
+        Column(
+          modifier = Modifier.fillMaxWidth().padding(8.dp),
+          verticalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+          if (label != null) {
+            Text(
+              text = label,
+              style = MaterialTheme.typography.titleSmall,
+              fontWeight = FontWeight.Bold,
+              color = HaTheme.Dark.primaryText,
+            )
+          }
+          // Row 1 — App preferred + the two Wear container shapes.
+          // App renders at the mobile preview density; the wear
+          // cells render inside a circular watch-face frame at
+          // wear-typical 2× density (see WatchFaceCell). The
+          // frame matches the WearWidgetPreviewSnapshot helper
+          // used by the slot widget previews — same chrome
+          // (black 227dp circle, app icon, label band) so the
+          // matrix shows the card in its actual surface, not
+          // as a floating rectangle.
+          Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+          ) {
+            WrapModeCell(
+              card = card,
+              snapshot = snapshot,
+              cellWidthDp = appWidthDp,
+              label = "App ${appWidthDp}dp",
+              imageStrategy = imageStrategy,
+            )
+            WatchFaceCell(
+              card = card,
+              snapshot = snapshot,
+              sizeDp = WearSmall,
+              label = "Wear S",
+              imageStrategy = imageStrategy,
+            )
+            WatchFaceCell(
+              card = card,
+              snapshot = snapshot,
+              sizeDp = WearLarge,
+              label = "Wear L",
+              imageStrategy = imageStrategy,
+            )
+          }
+          // Row 2 — three launcher widget sizes around the base
+          // (smaller, base, larger). All share the launcher
+          // density inherited from the @Preview.
+          Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+          ) {
+            FixedModeCell(
+              card = card,
+              snapshot = snapshot,
+              sizeDp = WidgetSizeDp((baseGridSize - 1).widthDp, (baseGridSize - 1).heightDp),
+              label = "Widget ${(baseGridSize - 1).label}",
+              imageStrategy = imageStrategy,
+            )
+            FixedModeCell(
+              card = card,
+              snapshot = snapshot,
+              sizeDp = WidgetSizeDp(baseGridSize.widthDp, baseGridSize.heightDp),
+              label = "Widget ${baseGridSize.label}",
+              imageStrategy = imageStrategy,
+            )
+            FixedModeCell(
+              card = card,
+              snapshot = snapshot,
+              sizeDp = WidgetSizeDp((baseGridSize + 1).widthDp, (baseGridSize + 1).heightDp),
+              label = "Widget ${(baseGridSize + 1).label}",
+              imageStrategy = imageStrategy,
+            )
+          }
         }
+      }
     }
+  }
 }
 
 /**
- * Wrap [content] in [LocalPictureImageStrategy] when [strategy] is set,
- * so picture cards bake the supplied bitmap. Must be called **inside**
- * the capture content block — a `CompositionLocal` from the outer tree
- * doesn't propagate into the RemoteCompose capture pass.
+ * Wrap [content] in [LocalPictureImageStrategy] when [strategy] is set, so picture cards bake the
+ * supplied bitmap. Must be called **inside** the capture content block — a `CompositionLocal` from
+ * the outer tree doesn't propagate into the RemoteCompose capture pass.
  */
 @Composable
-private fun WithImageStrategy(
-    strategy: PictureImageStrategy?,
-    content: @Composable () -> Unit,
-) {
-    if (strategy != null) {
-        CompositionLocalProvider(LocalPictureImageStrategy provides strategy, content = content)
-    } else {
-        content()
-    }
+private fun WithImageStrategy(strategy: PictureImageStrategy?, content: @Composable () -> Unit) {
+  if (strategy != null) {
+    CompositionLocalProvider(LocalPictureImageStrategy provides strategy, content = content)
+  } else {
+    content()
+  }
 }
 
 @Composable
 private fun WrapModeCell(
-    card: CardConfig,
-    snapshot: HaSnapshot,
-    cellWidthDp: Int,
-    label: String,
-    imageStrategy: PictureImageStrategy? = null,
+  card: CardConfig,
+  snapshot: HaSnapshot,
+  cellWidthDp: Int,
+  label: String,
+  imageStrategy: PictureImageStrategy? = null,
 ) {
-    // Wrap mode: outer column width pinned, height adaptive. Border
-    // hugs the card's intrinsic content so the cell shape and the
-    // card chrome line up.
-    CellLabelled(label = label, widthDp = cellWidthDp) {
-        Box(modifier = Modifier.width(cellWidthDp.dp).cellOutline()) {
-            CachedCardPreview(
-                cacheKey = MatrixCellKey(card, CardSizeMode.Wrap, cellWidthDp, null),
-                profile = androidXExperimentalWrap,
-                modifier = Modifier.width(cellWidthDp.dp),
-                card = card,
-                snapshot = snapshot,
-            ) {
-                ProvideCardRegistry(defaultRegistry()) {
-                    ProvideHaTheme(HaTheme.Dark) {
-                        ProvideCardSizeMode(CardSizeMode.Wrap) {
-                            WithImageStrategy(imageStrategy) {
-                                RenderChild(card, snapshot, RemoteModifier.rcFillMaxWidth())
-                            }
-                        }
-                    }
-                }
+  // Wrap mode: outer column width pinned, height adaptive. Border
+  // hugs the card's intrinsic content so the cell shape and the
+  // card chrome line up.
+  CellLabelled(label = label, widthDp = cellWidthDp) {
+    Box(modifier = Modifier.width(cellWidthDp.dp).cellOutline()) {
+      CachedCardPreview(
+        cacheKey = MatrixCellKey(card, CardSizeMode.Wrap, cellWidthDp, null),
+        profile = androidXExperimentalWrap,
+        modifier = Modifier.width(cellWidthDp.dp),
+        card = card,
+        snapshot = snapshot,
+      ) {
+        ProvideCardRegistry(defaultRegistry()) {
+          ProvideHaTheme(HaTheme.Dark) {
+            ProvideCardSizeMode(CardSizeMode.Wrap) {
+              WithImageStrategy(imageStrategy) {
+                RenderChild(card, snapshot, RemoteModifier.rcFillMaxWidth())
+              }
             }
+          }
         }
+      }
     }
+  }
 }
 
 @Composable
 private fun FixedModeCell(
-    card: CardConfig,
-    snapshot: HaSnapshot,
-    sizeDp: WidgetSizeDp,
-    label: String,
-    densityScale: Float? = null,
-    imageStrategy: PictureImageStrategy? = null,
+  card: CardConfig,
+  snapshot: HaSnapshot,
+  sizeDp: WidgetSizeDp,
+  label: String,
+  densityScale: Float? = null,
+  imageStrategy: PictureImageStrategy? = null,
 ) {
-    // Fixed mode: cell is exactly sizeDp. Border draws the container
-    // shape so the launcher / wear widget bounds are visible even
-    // when the card itself doesn't fill the cell.
-    //
-    // [densityScale] overrides LocalDensity for the cell so wear cells
-    // can render at watch-typical 2× density while launcher cells stay
-    // at the @Preview's mobile density. The captured `.rc` document
-    // bakes its dp coordinates against this density.
-    val parentDensity = LocalDensity.current
-    val cellDensity =
-        densityScale?.let { Density(it, parentDensity.fontScale) } ?: parentDensity
-    CompositionLocalProvider(LocalDensity provides cellDensity) {
-        CellLabelled(label = label, widthDp = sizeDp.widthDp) {
-            Box(
-                modifier =
-                    Modifier.size(sizeDp.widthDp.dp, sizeDp.heightDp.dp).cellOutline(),
-            ) {
-                CachedCardPreview(
-                    cacheKey =
-                        MatrixCellKey(
-                            card,
-                            CardSizeMode.Fixed,
-                            sizeDp.widthDp,
-                            sizeDp.heightDp,
-                            densityScale,
-                        ),
-                    profile = androidXExperimentalWrap,
-                    modifier = Modifier.fillMaxSize(),
-                    card = card,
-                    snapshot = snapshot,
-                ) {
-                    ProvideCardRegistry(defaultRegistry()) {
-                        ProvideHaTheme(HaTheme.Dark) {
-                            ProvideCardSizeMode(CardSizeMode.Fixed) {
-                                // Same full-canvas surface the launcher
-                                // widget wraps the card in, so the preview
-                                // fills the cell instead of leaving blank
-                                // space below short content.
-                                ProvideCardChrome(enabled = false) {
-                                    RemoteHaWidgetSurface {
-                                        WithImageStrategy(imageStrategy) {
-                                            RenderChild(
-                                                card,
-                                                snapshot,
-                                                RemoteModifier.rcFillMaxWidth(),
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-                        }
+  // Fixed mode: cell is exactly sizeDp. Border draws the container
+  // shape so the launcher / wear widget bounds are visible even
+  // when the card itself doesn't fill the cell.
+  //
+  // [densityScale] overrides LocalDensity for the cell so wear cells
+  // can render at watch-typical 2× density while launcher cells stay
+  // at the @Preview's mobile density. The captured `.rc` document
+  // bakes its dp coordinates against this density.
+  val parentDensity = LocalDensity.current
+  val cellDensity = densityScale?.let { Density(it, parentDensity.fontScale) } ?: parentDensity
+  CompositionLocalProvider(LocalDensity provides cellDensity) {
+    CellLabelled(label = label, widthDp = sizeDp.widthDp) {
+      Box(modifier = Modifier.size(sizeDp.widthDp.dp, sizeDp.heightDp.dp).cellOutline()) {
+        CachedCardPreview(
+          cacheKey =
+            MatrixCellKey(card, CardSizeMode.Fixed, sizeDp.widthDp, sizeDp.heightDp, densityScale),
+          profile = androidXExperimentalWrap,
+          modifier = Modifier.fillMaxSize(),
+          card = card,
+          snapshot = snapshot,
+        ) {
+          ProvideCardRegistry(defaultRegistry()) {
+            ProvideHaTheme(HaTheme.Dark) {
+              ProvideCardSizeMode(CardSizeMode.Fixed) {
+                // Same full-canvas surface the launcher
+                // widget wraps the card in, so the preview
+                // fills the cell instead of leaving blank
+                // space below short content.
+                ProvideCardChrome(enabled = false) {
+                  RemoteHaWidgetSurface {
+                    WithImageStrategy(imageStrategy) {
+                      RenderChild(card, snapshot, RemoteModifier.rcFillMaxWidth())
                     }
+                  }
                 }
+              }
             }
+          }
         }
+      }
     }
+  }
 }
 
 /**
- * Wear cell that frames the captured widget inside a simulated
- * circular watch face — 227dp black circle, app icon + "Terrazzo
- * slot" caption at the top, widget offset 14dp below centre.
- * Mirrors the visual chrome of
- * [androidx.glance.wear.tooling.preview.WearWidgetPreviewSnapshot]
- * (vendored from
- * https://github.com/android/wear-os-samples/pull/1371); this module
- * doesn't depend on `androidx.glance.wear` so the frame is inlined
- * rather than calling the snapshot helper directly. Keep the two
- * surfaces in sync if either side moves.
+ * Wear cell that frames the captured widget inside a simulated circular watch face — 227dp black
+ * circle, app icon + "Terrazzo slot" caption at the top, widget offset 14dp below centre. Mirrors
+ * the visual chrome of [androidx.glance.wear.tooling.preview.WearWidgetPreviewSnapshot] (vendored
+ * from https://github.com/android/wear-os-samples/pull/1371); this module doesn't depend on
+ * `androidx.glance.wear` so the frame is inlined rather than calling the snapshot helper directly.
+ * Keep the two surfaces in sync if either side moves.
  */
 @Composable
 private fun WatchFaceCell(
-    card: CardConfig,
-    snapshot: HaSnapshot,
-    sizeDp: WidgetSizeDp,
-    label: String,
-    imageStrategy: PictureImageStrategy? = null,
+  card: CardConfig,
+  snapshot: HaSnapshot,
+  sizeDp: WidgetSizeDp,
+  label: String,
+  imageStrategy: PictureImageStrategy? = null,
 ) {
-    val parentDensity = LocalDensity.current
-    val cellDensity = Density(WearDensityScale, parentDensity.fontScale)
-    CompositionLocalProvider(LocalDensity provides cellDensity) {
-        CellLabelled(label = label, widthDp = WatchFaceDiameterDp) {
-            Box(
-                modifier =
-                    Modifier
-                        .size(WatchFaceDiameterDp.dp)
-                        .clip(CircleShape)
-                        .background(Color.Black),
-                contentAlignment = Alignment.Center,
-            ) {
-                Box(
-                    modifier =
-                        Modifier
-                            .offset(y = 14.dp)
-                            .size(sizeDp.widthDp.dp, sizeDp.heightDp.dp),
-                ) {
-                    CachedCardPreview(
-                        cacheKey =
-                            MatrixCellKey(
-                                card,
-                                CardSizeMode.Fixed,
-                                sizeDp.widthDp,
-                                sizeDp.heightDp,
-                                WearDensityScale,
-                            ),
-                        profile = androidXExperimentalWrap,
-                        modifier = Modifier.fillMaxSize(),
-                        card = card,
-                        snapshot = snapshot,
-                    ) {
-                        ProvideCardRegistry(defaultRegistry()) {
-                            ProvideHaTheme(HaTheme.Dark) {
-                                ProvideCardSizeMode(CardSizeMode.Fixed) {
-                                    ProvideCardChrome(enabled = false) {
-                                        // Mirror the real Glance Wear slot
-                                        // surface, which disables FlowLayout
-                                        // (its capture profile rejects op
-                                        // 240); cards then take their
-                                        // non-wrapping compact path here too,
-                                        // so the matrix wear cells show what
-                                        // the watch actually draws.
-                                        ProvideFlowLayoutSupport(enabled = false) {
-                                            RemoteHaWidgetSurface {
-                                                WithImageStrategy(imageStrategy) {
-                                                    RenderChild(
-                                                        card,
-                                                        snapshot,
-                                                        RemoteModifier.rcFillMaxWidth(),
-                                                    )
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
+  val parentDensity = LocalDensity.current
+  val cellDensity = Density(WearDensityScale, parentDensity.fontScale)
+  CompositionLocalProvider(LocalDensity provides cellDensity) {
+    CellLabelled(label = label, widthDp = WatchFaceDiameterDp) {
+      Box(
+        modifier = Modifier.size(WatchFaceDiameterDp.dp).clip(CircleShape).background(Color.Black),
+        contentAlignment = Alignment.Center,
+      ) {
+        Box(modifier = Modifier.offset(y = 14.dp).size(sizeDp.widthDp.dp, sizeDp.heightDp.dp)) {
+          CachedCardPreview(
+            cacheKey =
+              MatrixCellKey(
+                card,
+                CardSizeMode.Fixed,
+                sizeDp.widthDp,
+                sizeDp.heightDp,
+                WearDensityScale,
+              ),
+            profile = androidXExperimentalWrap,
+            modifier = Modifier.fillMaxSize(),
+            card = card,
+            snapshot = snapshot,
+          ) {
+            ProvideCardRegistry(defaultRegistry()) {
+              ProvideHaTheme(HaTheme.Dark) {
+                ProvideCardSizeMode(CardSizeMode.Fixed) {
+                  ProvideCardChrome(enabled = false) {
+                    // Mirror the real Glance Wear slot
+                    // surface, which disables FlowLayout
+                    // (its capture profile rejects op
+                    // 240); cards then take their
+                    // non-wrapping compact path here too,
+                    // so the matrix wear cells show what
+                    // the watch actually draws.
+                    ProvideFlowLayoutSupport(enabled = false) {
+                      RemoteHaWidgetSurface {
+                        WithImageStrategy(imageStrategy) {
+                          RenderChild(card, snapshot, RemoteModifier.rcFillMaxWidth())
                         }
+                      }
                     }
+                  }
                 }
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.fillMaxSize().padding(top = 10.dp),
-                ) {
-                    Box(
-                        modifier =
-                            Modifier.size(40.dp).clip(CircleShape).background(Color(0xFFE0E0E0)),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Image(
-                            painter =
-                                painterResource(id = ComponentsR.drawable.ic_launcher_foreground),
-                            contentDescription = null,
-                            modifier = Modifier.size(38.dp),
-                            colorFilter = ColorFilter.tint(Color(0xFF424242)),
-                        )
-                    }
-                    Text(
-                        text = "Terrazzo slot",
-                        color = Color.White,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(top = 2.dp),
-                    )
-                }
+              }
             }
+          }
         }
+        Column(
+          horizontalAlignment = Alignment.CenterHorizontally,
+          modifier = Modifier.fillMaxSize().padding(top = 10.dp),
+        ) {
+          Box(
+            modifier = Modifier.size(40.dp).clip(CircleShape).background(Color(0xFFE0E0E0)),
+            contentAlignment = Alignment.Center,
+          ) {
+            Image(
+              painter = painterResource(id = ComponentsR.drawable.ic_launcher_foreground),
+              contentDescription = null,
+              modifier = Modifier.size(38.dp),
+              colorFilter = ColorFilter.tint(Color(0xFF424242)),
+            )
+          }
+          Text(
+            text = "Terrazzo slot",
+            color = Color.White,
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(top = 2.dp),
+          )
+        }
+      }
     }
+  }
 }
 
 private const val WatchFaceDiameterDp: Int = 227
 
 @Composable
-private fun CellLabelled(
-    label: String,
-    widthDp: Int,
-    content: @Composable () -> Unit,
-) {
-    Column(
-        modifier = Modifier.width(widthDp.dp),
-        verticalArrangement = Arrangement.spacedBy(2.dp),
-    ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelSmall,
-            color = HaTheme.Dark.secondaryText,
-        )
-        content()
-    }
+private fun CellLabelled(label: String, widthDp: Int, content: @Composable () -> Unit) {
+  Column(modifier = Modifier.width(widthDp.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+    Text(
+      text = label,
+      style = MaterialTheme.typography.labelSmall,
+      color = HaTheme.Dark.secondaryText,
+    )
+    content()
+  }
 }
 
 /**
- * Hairline outline used to mark each matrix cell. Background stays
- * transparent so card-drawn surfaces still show through; the border is
- * subtle enough to read as "this is the cell shape" without competing
- * with the card's own chrome.
+ * Hairline outline used to mark each matrix cell. Background stays transparent so card-drawn
+ * surfaces still show through; the border is subtle enough to read as "this is the cell shape"
+ * without competing with the card's own chrome.
  */
 private fun Modifier.cellOutline(): Modifier =
-    this.border(
-        width = 1.dp,
-        color = HaTheme.Dark.divider,
-    )
+  this.border(width = 1.dp, color = HaTheme.Dark.divider)
 
 private data class MatrixCellKey(
-    val card: CardConfig,
-    val mode: CardSizeMode,
-    val widthDp: Int,
-    val heightDp: Int?,
-    val densityScale: Float? = null,
+  val card: CardConfig,
+  val mode: CardSizeMode,
+  val widthDp: Int,
+  val heightDp: Int?,
+  val densityScale: Float? = null,
 )
 
 // ── @Preview entries ─────────────────────────────────────────────────
@@ -535,282 +469,282 @@ private data class MatrixCellKey(
 private const val MATRIX_CANVAS_WIDTH_DP = 1100
 
 @Preview(
-    name = "matrix — tile",
-    showBackground = false,
-    widthDp = MATRIX_CANVAS_WIDTH_DP,
-    heightDp = 400,
+  name = "matrix — tile",
+  showBackground = false,
+  widthDp = MATRIX_CANVAS_WIDTH_DP,
+  heightDp = 400,
 )
 @Composable
 fun CardPreviewMatrix_Tile() {
-    val card = card("""{"type":"tile","entity":"sensor.living_room","name":"Living Room"}""")
-    CardPreviewMatrix(
-        card = card,
-        snapshot = Fixtures.mixed,
-        baseGridSize = WidgetGridSize(cellsW = 2, cellsH = 1),
-        label = "tile · sensor.living_room",
-    )
+  val card = card("""{"type":"tile","entity":"sensor.living_room","name":"Living Room"}""")
+  CardPreviewMatrix(
+    card = card,
+    snapshot = Fixtures.mixed,
+    baseGridSize = WidgetGridSize(cellsW = 2, cellsH = 1),
+    label = "tile · sensor.living_room",
+  )
 }
 
 @Preview(
-    name = "matrix — entity",
-    showBackground = false,
-    widthDp = MATRIX_CANVAS_WIDTH_DP,
-    heightDp = 400,
+  name = "matrix — entity",
+  showBackground = false,
+  widthDp = MATRIX_CANVAS_WIDTH_DP,
+  heightDp = 400,
 )
 @Composable
 fun CardPreviewMatrix_Entity() {
-    val card = card("""{"type":"entity","entity":"lock.front_door","name":"Front door"}""")
-    // Base launcher shape is 2×1 — the row's natural pinned-card shape.
-    // The old 3×1 base left the matrix +1 neighbour (4×2) ~70 % empty
-    // (adaptive-card-layouts.md Q5 / §"Icon + state row/tile").
-    CardPreviewMatrix(
-        card = card,
-        snapshot = Fixtures.mixed,
-        baseGridSize = WidgetGridSize(cellsW = 2, cellsH = 1),
-        label = "entity · lock.front_door",
-    )
+  val card = card("""{"type":"entity","entity":"lock.front_door","name":"Front door"}""")
+  // Base launcher shape is 2×1 — the row's natural pinned-card shape.
+  // The old 3×1 base left the matrix +1 neighbour (4×2) ~70 % empty
+  // (adaptive-card-layouts.md Q5 / §"Icon + state row/tile").
+  CardPreviewMatrix(
+    card = card,
+    snapshot = Fixtures.mixed,
+    baseGridSize = WidgetGridSize(cellsW = 2, cellsH = 1),
+    label = "entity · lock.front_door",
+  )
 }
 
 @Preview(
-    name = "matrix — sensor",
-    showBackground = false,
-    widthDp = MATRIX_CANVAS_WIDTH_DP,
-    heightDp = 400,
+  name = "matrix — sensor",
+  showBackground = false,
+  widthDp = MATRIX_CANVAS_WIDTH_DP,
+  heightDp = 400,
 )
 @Composable
 fun CardPreviewMatrix_Sensor() {
-    val card = card("""{"type":"sensor","entity":"sensor.outside_temp","name":"Outside"}""")
-    // sensor's P5 is the history sparkline: dropped on the icon-chip tier
-    // (1×1), promoted back on the full tier (2×1 / 3×2). Uses the
-    // temperature-history fixture so the full tier has real samples to
-    // draw. See adaptive-card-layouts.md §"Icon + state row/tile".
-    CardPreviewMatrix(
-        card = card,
-        snapshot = Fixtures.temperatureHistory,
-        baseGridSize = WidgetGridSize(cellsW = 2, cellsH = 1),
-        label = "sensor · sensor.outside_temp",
-    )
+  val card = card("""{"type":"sensor","entity":"sensor.outside_temp","name":"Outside"}""")
+  // sensor's P5 is the history sparkline: dropped on the icon-chip tier
+  // (1×1), promoted back on the full tier (2×1 / 3×2). Uses the
+  // temperature-history fixture so the full tier has real samples to
+  // draw. See adaptive-card-layouts.md §"Icon + state row/tile".
+  CardPreviewMatrix(
+    card = card,
+    snapshot = Fixtures.temperatureHistory,
+    baseGridSize = WidgetGridSize(cellsW = 2, cellsH = 1),
+    label = "sensor · sensor.outside_temp",
+  )
 }
 
 @Preview(
-    name = "matrix — statistic",
-    showBackground = false,
-    widthDp = MATRIX_CANVAS_WIDTH_DP,
-    heightDp = 400,
+  name = "matrix — statistic",
+  showBackground = false,
+  widthDp = MATRIX_CANVAS_WIDTH_DP,
+  heightDp = 400,
 )
 @Composable
 fun CardPreviewMatrix_Statistic() {
-    val card =
-        card("""{"type":"statistic","entity":"sensor.living_room","name":"Living Room","period":"day","stat_type":"mean"}""")
-    CardPreviewMatrix(
-        card = card,
-        snapshot = Fixtures.mixed,
-        baseGridSize = WidgetGridSize(cellsW = 2, cellsH = 1),
-        label = "statistic · sensor.living_room",
+  val card =
+    card(
+      """{"type":"statistic","entity":"sensor.living_room","name":"Living Room","period":"day","stat_type":"mean"}"""
     )
+  CardPreviewMatrix(
+    card = card,
+    snapshot = Fixtures.mixed,
+    baseGridSize = WidgetGridSize(cellsW = 2, cellsH = 1),
+    label = "statistic · sensor.living_room",
+  )
 }
 
 @Preview(
-    name = "matrix — gauge",
-    showBackground = false,
-    widthDp = MATRIX_CANVAS_WIDTH_DP,
-    heightDp = 500,
+  name = "matrix — gauge",
+  showBackground = false,
+  widthDp = MATRIX_CANVAS_WIDTH_DP,
+  heightDp = 500,
 )
 @Composable
 fun CardPreviewMatrix_Gauge() {
-    val card = card(
-        """{"type":"gauge","entity":"sensor.living_room","name":"Battery","min":0,"max":100}"""
-    )
-    // Gauge's natural launcher shape is a horizontal pill (arc on the
-    // left, value · name on the right) — the Reflowed tier — not the
-    // tall arc-on-top stack that wrap mode shows. See
-    // docs/architecture/adaptive-card-layouts.md §6.
-    CardPreviewMatrix(
-        card = card,
-        snapshot = Fixtures.mixed,
-        baseGridSize = WidgetGridSize(cellsW = 2, cellsH = 1),
-        label = "gauge · sensor.living_room",
-    )
+  val card =
+    card("""{"type":"gauge","entity":"sensor.living_room","name":"Battery","min":0,"max":100}""")
+  // Gauge's natural launcher shape is a horizontal pill (arc on the
+  // left, value · name on the right) — the Reflowed tier — not the
+  // tall arc-on-top stack that wrap mode shows. See
+  // docs/architecture/adaptive-card-layouts.md §6.
+  CardPreviewMatrix(
+    card = card,
+    snapshot = Fixtures.mixed,
+    baseGridSize = WidgetGridSize(cellsW = 2, cellsH = 1),
+    label = "gauge · sensor.living_room",
+  )
 }
 
 @Preview(
-    name = "matrix — button",
-    showBackground = false,
-    widthDp = MATRIX_CANVAS_WIDTH_DP,
-    heightDp = 460,
+  name = "matrix — button",
+  showBackground = false,
+  widthDp = MATRIX_CANVAS_WIDTH_DP,
+  heightDp = 460,
 )
 @Composable
 fun CardPreviewMatrix_Button() {
-    val card = card(
-        """{"type":"button","entity":"light.kitchen","name":"Kitchen","show_state":true}"""
-    )
-    CardPreviewMatrix(
-        card = card,
-        snapshot = Fixtures.mixed,
-        baseGridSize = WidgetGridSize(cellsW = 2, cellsH = 1),
-        label = "button · light.kitchen",
-    )
+  val card =
+    card("""{"type":"button","entity":"light.kitchen","name":"Kitchen","show_state":true}""")
+  CardPreviewMatrix(
+    card = card,
+    snapshot = Fixtures.mixed,
+    baseGridSize = WidgetGridSize(cellsW = 2, cellsH = 1),
+    label = "button · light.kitchen",
+  )
 }
 
 @Preview(
-    name = "matrix — light",
-    showBackground = false,
-    widthDp = MATRIX_CANVAS_WIDTH_DP,
-    heightDp = 780,
+  name = "matrix — light",
+  showBackground = false,
+  widthDp = MATRIX_CANVAS_WIDTH_DP,
+  heightDp = 780,
 )
 @Composable
 fun CardPreviewMatrix_Light() {
-    val card = card("""{"type":"light","entity":"light.kitchen","name":"Kitchen"}""")
-    // Light is an arc-dial card (brightness ring + bulb): same shared
-    // RenderArcDial ladder as thermostat / humidifier, so it shares the
-    // 3×3 natural shape — Wide arc-row on narrow cells, full vertical
-    // card with steppers on wide ones. The bulb-ring identity survives
-    // at every size. See docs/architecture/adaptive-card-layouts.md
-    // §"Arc-dial control".
-    CardPreviewMatrix(
-        card = card,
-        snapshot = Fixtures.mixed,
-        baseGridSize = WidgetGridSize(cellsW = 3, cellsH = 3),
-        appWidthDp = 240,
-        label = "light · light.kitchen",
-    )
+  val card = card("""{"type":"light","entity":"light.kitchen","name":"Kitchen"}""")
+  // Light is an arc-dial card (brightness ring + bulb): same shared
+  // RenderArcDial ladder as thermostat / humidifier, so it shares the
+  // 3×3 natural shape — Wide arc-row on narrow cells, full vertical
+  // card with steppers on wide ones. The bulb-ring identity survives
+  // at every size. See docs/architecture/adaptive-card-layouts.md
+  // §"Arc-dial control".
+  CardPreviewMatrix(
+    card = card,
+    snapshot = Fixtures.mixed,
+    baseGridSize = WidgetGridSize(cellsW = 3, cellsH = 3),
+    appWidthDp = 240,
+    label = "light · light.kitchen",
+  )
 }
 
 @Preview(
-    name = "matrix — thermostat",
-    showBackground = false,
-    widthDp = MATRIX_CANVAS_WIDTH_DP,
-    heightDp = 780,
+  name = "matrix — thermostat",
+  showBackground = false,
+  widthDp = MATRIX_CANVAS_WIDTH_DP,
+  heightDp = 780,
 )
 @Composable
 fun CardPreviewMatrix_Thermostat() {
-    val card = card("""{"type":"thermostat","entity":"climate.living_room"}""")
-    CardPreviewMatrix(
-        card = card,
-        snapshot = Fixtures.thermostat,
-        baseGridSize = WidgetGridSize(cellsW = 3, cellsH = 3),
-        appWidthDp = 240,
-        label = "thermostat · climate.living_room",
-    )
+  val card = card("""{"type":"thermostat","entity":"climate.living_room"}""")
+  CardPreviewMatrix(
+    card = card,
+    snapshot = Fixtures.thermostat,
+    baseGridSize = WidgetGridSize(cellsW = 3, cellsH = 3),
+    appWidthDp = 240,
+    label = "thermostat · climate.living_room",
+  )
 }
 
 @Preview(
-    name = "matrix — humidifier",
-    showBackground = false,
-    widthDp = MATRIX_CANVAS_WIDTH_DP,
-    heightDp = 780,
+  name = "matrix — humidifier",
+  showBackground = false,
+  widthDp = MATRIX_CANVAS_WIDTH_DP,
+  heightDp = 780,
 )
 @Composable
 fun CardPreviewMatrix_Humidifier() {
-    val card = card("""{"type":"humidifier","entity":"humidifier.bedroom"}""")
-    CardPreviewMatrix(
-        card = card,
-        snapshot = Fixtures.humidifier,
-        baseGridSize = WidgetGridSize(cellsW = 3, cellsH = 3),
-        appWidthDp = 240,
-        label = "humidifier · humidifier.bedroom",
-    )
+  val card = card("""{"type":"humidifier","entity":"humidifier.bedroom"}""")
+  CardPreviewMatrix(
+    card = card,
+    snapshot = Fixtures.humidifier,
+    baseGridSize = WidgetGridSize(cellsW = 3, cellsH = 3),
+    appWidthDp = 240,
+    label = "humidifier · humidifier.bedroom",
+  )
 }
 
 @Preview(
-    name = "matrix — weather-forecast",
-    showBackground = false,
-    widthDp = MATRIX_CANVAS_WIDTH_DP,
-    heightDp = 580,
+  name = "matrix — weather-forecast",
+  showBackground = false,
+  widthDp = MATRIX_CANVAS_WIDTH_DP,
+  heightDp = 580,
 )
 @Composable
 fun CardPreviewMatrix_WeatherForecast() {
-    val card = card(
-        """{"type":"weather-forecast","entity":"weather.forecast_home",
+  val card =
+    card(
+      """{"type":"weather-forecast","entity":"weather.forecast_home",
             "show_current":true,"show_forecast":true}"""
     )
-    CardPreviewMatrix(
-        card = card,
-        snapshot = Fixtures.weather,
-        baseGridSize = WidgetGridSize(cellsW = 5, cellsH = 2),
-        appWidthDp = 320,
-        label = "weather-forecast · weather.forecast_home",
-    )
+  CardPreviewMatrix(
+    card = card,
+    snapshot = Fixtures.weather,
+    baseGridSize = WidgetGridSize(cellsW = 5, cellsH = 2),
+    appWidthDp = 320,
+    label = "weather-forecast · weather.forecast_home",
+  )
 }
 
 @Preview(
-    name = "matrix — media-control",
-    showBackground = false,
-    widthDp = MATRIX_CANVAS_WIDTH_DP,
-    heightDp = 620,
+  name = "matrix — media-control",
+  showBackground = false,
+  widthDp = MATRIX_CANVAS_WIDTH_DP,
+  heightDp = 620,
 )
 @Composable
 fun CardPreviewMatrix_MediaControl() {
-    val card = card("""{"type":"media-control","entity":"media_player.office_speaker"}""")
-    // Hero + supporting-detail family (#355): art + play/pause hero
-    // retained at every size; narrow cells drop the transport row +
-    // seek bar to the Wide chip, wide cells get the full card. The
-    // natural launcher shape is a wide row, so the base is 4×2.
-    CardPreviewMatrix(
-        card = card,
-        snapshot = Fixtures.mediaPlaying,
-        baseGridSize = WidgetGridSize(cellsW = 4, cellsH = 2),
-        label = "media-control · media_player.office_speaker",
-    )
+  val card = card("""{"type":"media-control","entity":"media_player.office_speaker"}""")
+  // Hero + supporting-detail family (#355): art + play/pause hero
+  // retained at every size; narrow cells drop the transport row +
+  // seek bar to the Wide chip, wide cells get the full card. The
+  // natural launcher shape is a wide row, so the base is 4×2.
+  CardPreviewMatrix(
+    card = card,
+    snapshot = Fixtures.mediaPlaying,
+    baseGridSize = WidgetGridSize(cellsW = 4, cellsH = 2),
+    label = "media-control · media_player.office_speaker",
+  )
 }
 
 @Preview(
-    name = "matrix — alarm-panel",
-    showBackground = false,
-    widthDp = MATRIX_CANVAS_WIDTH_DP,
-    heightDp = 900,
+  name = "matrix — alarm-panel",
+  showBackground = false,
+  widthDp = MATRIX_CANVAS_WIDTH_DP,
+  heightDp = 900,
 )
 @Composable
 fun CardPreviewMatrix_AlarmPanel() {
-    val card = card("""{"type":"alarm-panel","entity":"alarm_control_panel.house"}""")
-    // Hero + supporting-detail family (#355): shield + state hero (with
-    // its live state binding) retained at every size; narrow cells drop
-    // the ARM buttons + keypad to the Wide chip, wide cells get the full
-    // keypad card. The keypad makes the natural launcher shape a tall
-    // portrait block, so the base is 4×5.
-    CardPreviewMatrix(
-        card = card,
-        snapshot = Fixtures.alarmDisarmed,
-        baseGridSize = WidgetGridSize(cellsW = 4, cellsH = 5),
-        appWidthDp = 280,
-        label = "alarm-panel · alarm_control_panel.house",
-    )
+  val card = card("""{"type":"alarm-panel","entity":"alarm_control_panel.house"}""")
+  // Hero + supporting-detail family (#355): shield + state hero (with
+  // its live state binding) retained at every size; narrow cells drop
+  // the ARM buttons + keypad to the Wide chip, wide cells get the full
+  // keypad card. The keypad makes the natural launcher shape a tall
+  // portrait block, so the base is 4×5.
+  CardPreviewMatrix(
+    card = card,
+    snapshot = Fixtures.alarmDisarmed,
+    baseGridSize = WidgetGridSize(cellsW = 4, cellsH = 5),
+    appWidthDp = 280,
+    label = "alarm-panel · alarm_control_panel.house",
+  )
 }
 
 @Preview(
-    name = "matrix — entities",
-    showBackground = false,
-    widthDp = MATRIX_CANVAS_WIDTH_DP,
-    heightDp = 740,
+  name = "matrix — entities",
+  showBackground = false,
+  widthDp = MATRIX_CANVAS_WIDTH_DP,
+  heightDp = 740,
 )
 @Composable
 fun CardPreviewMatrix_Entities() {
-    val card = card(
-        """{"type":"entities","title":"Living Room","entities":[
+  val card =
+    card(
+      """{"type":"entities","title":"Living Room","entities":[
             "sensor.living_room","light.office_lamp","switch.coffee_maker","lock.front_door"
         ]}"""
     )
-    // Pick entries from Fixtures.mixed whose isActive resolves to false
-    // (sensor / off light / off switch / locked lock) so the entities
-    // rows' toggle switches don't kick off their 0.20 s
-    // `animateRemoteFloat` tween on document start — otherwise the
-    // matrix's per-cell capture lands mid-tween and the PNG drifts
-    // between runs.
-    CardPreviewMatrix(
-        card = card,
-        snapshot = entitiesMatrixSnapshot,
-        baseGridSize = WidgetGridSize(cellsW = 4, cellsH = 3),
-        label = "entities · living-room cards",
-    )
+  // Pick entries from Fixtures.mixed whose isActive resolves to false
+  // (sensor / off light / off switch / locked lock) so the entities
+  // rows' toggle switches don't kick off their 0.20 s
+  // `animateRemoteFloat` tween on document start — otherwise the
+  // matrix's per-cell capture lands mid-tween and the PNG drifts
+  // between runs.
+  CardPreviewMatrix(
+    card = card,
+    snapshot = entitiesMatrixSnapshot,
+    baseGridSize = WidgetGridSize(cellsW = 4, cellsH = 3),
+    label = "entities · living-room cards",
+  )
 }
 
 private val entitiesMatrixSnapshot: HaSnapshot =
-    Fixtures.mixed.let { mixed ->
-        val coffeeOff = mixed.states.getValue("switch.coffee_maker").let {
-            it.copy(state = "off")
-        }
-        mixed.copy(states = mixed.states + ("switch.coffee_maker" to coffeeOff))
-    }
+  Fixtures.mixed.let { mixed ->
+    val coffeeOff = mixed.states.getValue("switch.coffee_maker").let { it.copy(state = "off") }
+    mixed.copy(states = mixed.states + ("switch.coffee_maker" to coffeeOff))
+  }
 
 // ── Picture + Bulk/time-series families (#356) ───────────────────────
 //
@@ -824,148 +758,153 @@ private val entitiesMatrixSnapshot: HaSnapshot =
 // §"Bulk / time-series".
 
 @Preview(
-    name = "matrix — picture-entity",
-    showBackground = false,
-    widthDp = MATRIX_CANVAS_WIDTH_DP,
-    heightDp = 620,
+  name = "matrix — picture-entity",
+  showBackground = false,
+  widthDp = MATRIX_CANVAS_WIDTH_DP,
+  heightDp = 620,
 )
 @Composable
 fun CardPreviewMatrix_PictureEntity() {
-    val card = card(
-        """{"type":"picture-entity","entity":"camera.driveway","name":"Driveway",
+  val card =
+    card(
+      """{"type":"picture-entity","entity":"camera.driveway","name":"Driveway",
             "show_name":true,"show_state":true}"""
     )
-    // Bake a landscape sample bitmap into every cell so the matrix shows
-    // the image filling and cropping the cell rather than the offline
-    // icon fallback. The widget surface uses Inline (no playback loader);
-    // a CompositionLocal set here reaches the capture via the matrix's
-    // per-cell WithImageStrategy wrapper.
-    val sample = remember { landscapeSampleBitmap() }
-    val strategy = remember(sample) { PictureImageStrategy.Inline { sample } }
-    CardPreviewMatrix(
-        card = card,
-        snapshot = Fixtures.cameraWithPicture,
-        baseGridSize = WidgetGridSize(cellsW = 3, cellsH = 2),
-        label = "picture-entity · camera.driveway",
-        imageStrategy = strategy,
-    )
+  // Bake a landscape sample bitmap into every cell so the matrix shows
+  // the image filling and cropping the cell rather than the offline
+  // icon fallback. The widget surface uses Inline (no playback loader);
+  // a CompositionLocal set here reaches the capture via the matrix's
+  // per-cell WithImageStrategy wrapper.
+  val sample = remember { landscapeSampleBitmap() }
+  val strategy = remember(sample) { PictureImageStrategy.Inline { sample } }
+  CardPreviewMatrix(
+    card = card,
+    snapshot = Fixtures.cameraWithPicture,
+    baseGridSize = WidgetGridSize(cellsW = 3, cellsH = 2),
+    label = "picture-entity · camera.driveway",
+    imageStrategy = strategy,
+  )
 }
 
 @Preview(
-    name = "matrix — history-graph",
-    showBackground = false,
-    widthDp = MATRIX_CANVAS_WIDTH_DP,
-    heightDp = 620,
+  name = "matrix — history-graph",
+  showBackground = false,
+  widthDp = MATRIX_CANVAS_WIDTH_DP,
+  heightDp = 620,
 )
 @Composable
 fun CardPreviewMatrix_HistoryGraph() {
-    val card = card(
-        """{"type":"history-graph","title":"Temperature","hours_to_show":24,
+  val card =
+    card(
+      """{"type":"history-graph","title":"Temperature","hours_to_show":24,
             "entities":["sensor.outside_temp","sensor.upstairs_temp"]}"""
     )
-    CardPreviewMatrix(
-        card = card,
-        snapshot = Fixtures.temperatureHistory,
-        baseGridSize = WidgetGridSize(cellsW = 3, cellsH = 2),
-        label = "history-graph · temperature",
-    )
+  CardPreviewMatrix(
+    card = card,
+    snapshot = Fixtures.temperatureHistory,
+    baseGridSize = WidgetGridSize(cellsW = 3, cellsH = 2),
+    label = "history-graph · temperature",
+  )
 }
 
 @Preview(
-    name = "matrix — todo-list",
-    showBackground = false,
-    widthDp = MATRIX_CANVAS_WIDTH_DP,
-    heightDp = 620,
+  name = "matrix — todo-list",
+  showBackground = false,
+  widthDp = MATRIX_CANVAS_WIDTH_DP,
+  heightDp = 620,
 )
 @Composable
 fun CardPreviewMatrix_TodoList() {
-    val card = card("""{"type":"todo-list","entity":"todo.shopping","title":"Shopping list"}""")
-    CardPreviewMatrix(
-        card = card,
-        snapshot = Fixtures.shoppingList,
-        baseGridSize = WidgetGridSize(cellsW = 3, cellsH = 2),
-        label = "todo-list · todo.shopping",
-    )
+  val card = card("""{"type":"todo-list","entity":"todo.shopping","title":"Shopping list"}""")
+  CardPreviewMatrix(
+    card = card,
+    snapshot = Fixtures.shoppingList,
+    baseGridSize = WidgetGridSize(cellsW = 3, cellsH = 2),
+    label = "todo-list · todo.shopping",
+  )
 }
 
 @Preview(
-    name = "matrix — calendar",
-    showBackground = false,
-    widthDp = MATRIX_CANVAS_WIDTH_DP,
-    heightDp = 620,
+  name = "matrix — calendar",
+  showBackground = false,
+  widthDp = MATRIX_CANVAS_WIDTH_DP,
+  heightDp = 620,
 )
 @Composable
 fun CardPreviewMatrix_Calendar() {
-    val card = card(
-        """{"type":"calendar","title":"Family calendar","initial_view":"listWeek",
+  val card =
+    card(
+      """{"type":"calendar","title":"Family calendar","initial_view":"listWeek",
             "entities":["calendar.family"]}"""
     )
-    CardPreviewMatrix(
-        card = card,
-        snapshot = Fixtures.calendarEvents,
-        baseGridSize = WidgetGridSize(cellsW = 3, cellsH = 2),
-        label = "calendar · calendar.family",
-    )
+  CardPreviewMatrix(
+    card = card,
+    snapshot = Fixtures.calendarEvents,
+    baseGridSize = WidgetGridSize(cellsW = 3, cellsH = 2),
+    label = "calendar · calendar.family",
+  )
 }
 
 @Preview(
-    name = "matrix — logbook",
-    showBackground = false,
-    widthDp = MATRIX_CANVAS_WIDTH_DP,
-    heightDp = 620,
+  name = "matrix — logbook",
+  showBackground = false,
+  widthDp = MATRIX_CANVAS_WIDTH_DP,
+  heightDp = 620,
 )
 @Composable
 fun CardPreviewMatrix_Logbook() {
-    val card = card(
-        """{"type":"logbook","title":"Recent activity","hours_to_show":24,
+  val card =
+    card(
+      """{"type":"logbook","title":"Recent activity","hours_to_show":24,
             "entities":["binary_sensor.front_door","binary_sensor.garage_motion"]}"""
     )
-    CardPreviewMatrix(
-        card = card,
-        snapshot = Fixtures.activity,
-        baseGridSize = WidgetGridSize(cellsW = 3, cellsH = 2),
-        label = "logbook · recent activity",
-    )
+  CardPreviewMatrix(
+    card = card,
+    snapshot = Fixtures.activity,
+    baseGridSize = WidgetGridSize(cellsW = 3, cellsH = 2),
+    label = "logbook · recent activity",
+  )
 }
 
 @Preview(
-    name = "matrix — markdown",
-    showBackground = false,
-    widthDp = MATRIX_CANVAS_WIDTH_DP,
-    heightDp = 620,
+  name = "matrix — markdown",
+  showBackground = false,
+  widthDp = MATRIX_CANVAS_WIDTH_DP,
+  heightDp = 620,
 )
 @Composable
 fun CardPreviewMatrix_Markdown() {
-    val card = card(
-        """{"type":"markdown","title":"Notes","content":"Welcome home.\nTemperature is normal."}"""
+  val card =
+    card(
+      """{"type":"markdown","title":"Notes","content":"Welcome home.\nTemperature is normal."}"""
     )
-    CardPreviewMatrix(
-        card = card,
-        snapshot = Fixtures.mixed,
-        baseGridSize = WidgetGridSize(cellsW = 3, cellsH = 2),
-        label = "markdown · notes",
-    )
+  CardPreviewMatrix(
+    card = card,
+    snapshot = Fixtures.mixed,
+    baseGridSize = WidgetGridSize(cellsW = 3, cellsH = 2),
+    label = "markdown · notes",
+  )
 }
 
 /**
- * Landscape (16:9) sample image for the picture-entity matrix: blue sky,
- * a sun, a green ground band. The non-square aspect makes the
- * fill-crop visible — square / tall cells crop the sides, a wide cell
- * shows more, and nothing letterboxes.
+ * Landscape (16:9) sample image for the picture-entity matrix: blue sky, a sun, a green ground
+ * band. The non-square aspect makes the fill-crop visible — square / tall cells crop the sides, a
+ * wide cell shows more, and nothing letterboxes.
  */
 private fun landscapeSampleBitmap(): ImageBitmap {
-    val w = 480
-    val h = 270
-    val bmp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
-    val canvas = AndroidCanvas(bmp)
-    val sky = AndroidPaint().apply { color = android.graphics.Color.rgb(0x37, 0x6C, 0xC4) }
-    canvas.drawRect(0f, 0f, w.toFloat(), h.toFloat(), sky)
-    val sun = AndroidPaint().apply {
-        isAntiAlias = true
-        color = android.graphics.Color.rgb(0xFF, 0xC1, 0x07)
+  val w = 480
+  val h = 270
+  val bmp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
+  val canvas = AndroidCanvas(bmp)
+  val sky = AndroidPaint().apply { color = android.graphics.Color.rgb(0x37, 0x6C, 0xC4) }
+  canvas.drawRect(0f, 0f, w.toFloat(), h.toFloat(), sky)
+  val sun =
+    AndroidPaint().apply {
+      isAntiAlias = true
+      color = android.graphics.Color.rgb(0xFF, 0xC1, 0x07)
     }
-    canvas.drawCircle(w * 0.74f, h * 0.30f, h * 0.16f, sun)
-    val ground = AndroidPaint().apply { color = android.graphics.Color.rgb(0x2E, 0x7D, 0x32) }
-    canvas.drawRect(0f, h * 0.66f, w.toFloat(), h.toFloat(), ground)
-    return bmp.asImageBitmap()
+  canvas.drawCircle(w * 0.74f, h * 0.30f, h * 0.16f, sun)
+  val ground = AndroidPaint().apply { color = android.graphics.Color.rgb(0x2E, 0x7D, 0x32) }
+  canvas.drawRect(0f, h * 0.66f, w.toFloat(), h.toFloat(), ground)
+  return bmp.asImageBitmap()
 }

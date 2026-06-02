@@ -14,25 +14,22 @@ import androidx.compose.remote.creation.compose.text.RemoteTextStyle
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.font.FontWeight
 
-/**
- * HA `heading` card — section title inside a Sections view. Matches
- * `hui-heading-card.ts`.
- */
+/** HA `heading` card — section title inside a Sections view. Matches `hui-heading-card.ts`. */
 @Composable
 @RemoteComposable
 fun RemoteHaHeading(data: HaHeadingData, modifier: RemoteModifier = RemoteModifier) {
-    val theme = haTheme()
-    RemoteText(
-        text = data.title.rs,
-        modifier = modifier.padding(vertical = 8.rdp),
-        color = theme.primaryText.rc,
-        fontSize = data.style.sizeSp.rsp,
-        fontWeight = data.style.weight,
-        style = RemoteTextStyle.Default,
-    )
+  val theme = haTheme()
+  RemoteText(
+    text = data.title.rs,
+    modifier = modifier.padding(vertical = 8.rdp),
+    color = theme.primaryText.rc,
+    fontSize = data.style.sizeSp.rsp,
+    fontWeight = data.style.weight,
+    style = RemoteTextStyle.Default,
+  )
 }
 
 enum class HaHeadingStyle(val sizeSp: Int, val weight: FontWeight) {
-    Title(22, FontWeight.Medium),
-    Subtitle(16, FontWeight.Medium),
+  Title(22, FontWeight.Medium),
+  Subtitle(16, FontWeight.Medium),
 }

@@ -23,75 +23,76 @@ import ee.schimke.ha.rc.components.ThemeStyle
 import ee.schimke.terrazzo.wearsync.proto.WearSettings
 
 /**
- * Wear settings — theme picker plus a small "About" footer that shows
- * what phone the watch is paired with (and whether phone has demo mode
- * enabled). Demo mode itself is phone-driven; there's no toggle here.
+ * Wear settings — theme picker plus a small "About" footer that shows what phone the watch is
+ * paired with (and whether phone has demo mode enabled). Demo mode itself is phone-driven; there's
+ * no toggle here.
  */
 @Composable
 fun WearSettingsScreen(
-    selected: ThemeStyle,
-    settings: WearSettings,
-    onSelectTheme: (ThemeStyle) -> Unit,
-    onBack: () -> Unit,
-    modifier: Modifier = Modifier,
+  selected: ThemeStyle,
+  settings: WearSettings,
+  onSelectTheme: (ThemeStyle) -> Unit,
+  onBack: () -> Unit,
+  modifier: Modifier = Modifier,
 ) {
-    val listState = rememberScalingLazyListState()
-    ScalingLazyColumn(
-        state = listState,
-        modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(4.dp),
-        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
-    ) {
-        item { ListHeader { Text("Theme") } }
+  val listState = rememberScalingLazyListState()
+  ScalingLazyColumn(
+    state = listState,
+    modifier = modifier.fillMaxWidth(),
+    verticalArrangement = Arrangement.spacedBy(4.dp),
+    contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
+  ) {
+    item { ListHeader { Text("Theme") } }
 
-        item {
-            Text(
-                text = selected.tagline,
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
-            )
-        }
-
-        items(ThemeStyle.entries) { style ->
-            RadioButton(
-                selected = style == selected,
-                onSelect = { onSelectTheme(style) },
-                label = {
-                    Text(
-                        text = style.displayName,
-                        fontWeight = if (style == selected) FontWeight.SemiBold else FontWeight.Normal,
-                    )
-                },
-                modifier = Modifier.fillMaxWidth(),
-            )
-        }
-
-        item { Spacer(Modifier.height(8.dp)) }
-        item { ListHeader { Text("Phone") } }
-        item {
-            Text(
-                text = if (settings.demoMode) {
-                    "Demo mode (offline)"
-                } else if (settings.baseUrl.isNotEmpty()) {
-                    settings.baseUrl
-                } else {
-                    "Not connected"
-                },
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
-            )
-        }
-
-        item {
-            Button(
-                onClick = onBack,
-                modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.filledTonalButtonColors(),
-            ) {
-                Text("Back")
-            }
-        }
+    item {
+      Text(
+        text = selected.tagline,
+        style = MaterialTheme.typography.labelSmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+      )
     }
+
+    items(ThemeStyle.entries) { style ->
+      RadioButton(
+        selected = style == selected,
+        onSelect = { onSelectTheme(style) },
+        label = {
+          Text(
+            text = style.displayName,
+            fontWeight = if (style == selected) FontWeight.SemiBold else FontWeight.Normal,
+          )
+        },
+        modifier = Modifier.fillMaxWidth(),
+      )
+    }
+
+    item { Spacer(Modifier.height(8.dp)) }
+    item { ListHeader { Text("Phone") } }
+    item {
+      Text(
+        text =
+          if (settings.demoMode) {
+            "Demo mode (offline)"
+          } else if (settings.baseUrl.isNotEmpty()) {
+            settings.baseUrl
+          } else {
+            "Not connected"
+          },
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+      )
+    }
+
+    item {
+      Button(
+        onClick = onBack,
+        modifier = Modifier.fillMaxWidth(),
+        colors = ButtonDefaults.filledTonalButtonColors(),
+      ) {
+        Text("Back")
+      }
+    }
+  }
 }

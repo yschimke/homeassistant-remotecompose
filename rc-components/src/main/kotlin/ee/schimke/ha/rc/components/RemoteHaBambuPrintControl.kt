@@ -28,73 +28,72 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.wear.compose.remote.material3.RemoteIcon
 
 /**
- * `custom:ha-bambulab-print_control-card` — three-button pad that maps
- * to the printer's pause / resume / stop button entities.
+ * `custom:ha-bambulab-print_control-card` — three-button pad that maps to the printer's pause /
+ * resume / stop button entities.
  */
 @Composable
 @RemoteComposable
 fun RemoteHaBambuPrintControl(
-    data: HaBambuPrintControlData,
-    modifier: RemoteModifier = RemoteModifier,
+  data: HaBambuPrintControlData,
+  modifier: RemoteModifier = RemoteModifier,
 ) {
-    val theme = haTheme()
-    RemoteBox(
-        modifier = modifier
-            .fillMaxWidth()
-            .then(cardChrome(theme.cardBackground, theme.divider))
-            .padding(horizontal = 14.rdp, vertical = 12.rdp),
-    ) {
-        RemoteColumn(verticalArrangement = RemoteArrangement.spacedBy(8.rdp)) {
-            RemoteText(
-                text = data.printerName.rs,
-                color = theme.secondaryText.rc,
-                fontSize = 11.rsp,
-                style = RemoteTextStyle.Default,
-            )
-            RemoteRow(
-                modifier = RemoteModifier.fillMaxWidth(),
-                horizontalArrangement = RemoteArrangement.SpaceEvenly,
-                verticalAlignment = RemoteAlignment.CenterVertically,
-            ) {
-                listOfNotNull(data.pause, data.resume, data.stop).forEach { btn ->
-                    Button(btn, theme)
-                }
-            }
-        }
+  val theme = haTheme()
+  RemoteBox(
+    modifier =
+      modifier
+        .fillMaxWidth()
+        .then(cardChrome(theme.cardBackground, theme.divider))
+        .padding(horizontal = 14.rdp, vertical = 12.rdp)
+  ) {
+    RemoteColumn(verticalArrangement = RemoteArrangement.spacedBy(8.rdp)) {
+      RemoteText(
+        text = data.printerName.rs,
+        color = theme.secondaryText.rc,
+        fontSize = 11.rsp,
+        style = RemoteTextStyle.Default,
+      )
+      RemoteRow(
+        modifier = RemoteModifier.fillMaxWidth(),
+        horizontalArrangement = RemoteArrangement.SpaceEvenly,
+        verticalAlignment = RemoteAlignment.CenterVertically,
+      ) {
+        listOfNotNull(data.pause, data.resume, data.stop).forEach { btn -> Button(btn, theme) }
+      }
     }
+  }
 }
 
 @Composable
 private fun Button(button: HaBambuControlButton, theme: HaTheme) {
-    val click = button.tapAction.toRemoteAction()
-        ?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
-    RemoteColumn(
-        modifier = RemoteModifier.then(click),
-        horizontalAlignment = RemoteAlignment.CenterHorizontally,
+  val click =
+    button.tapAction.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
+  RemoteColumn(
+    modifier = RemoteModifier.then(click),
+    horizontalAlignment = RemoteAlignment.CenterHorizontally,
+  ) {
+    val accent = button.accent.rc
+    RemoteBox(
+      modifier =
+        RemoteModifier.size(48.rdp)
+          .clip(RemoteCircleShape)
+          .background(accent.copy(alpha = accent.alpha * 0.18f.rf)),
+      contentAlignment = RemoteAlignment.Center,
     ) {
-        val accent = button.accent.rc
-        RemoteBox(
-            modifier = RemoteModifier
-                .size(48.rdp)
-                .clip(RemoteCircleShape)
-                .background(accent.copy(alpha = accent.alpha * 0.18f.rf)),
-            contentAlignment = RemoteAlignment.Center,
-        ) {
-            RemoteIcon(
-                imageVector = button.icon,
-                contentDescription = button.label.rs,
-                modifier = RemoteModifier.size(24.rdp),
-                tint = accent,
-            )
-        }
-        RemoteBox(modifier = RemoteModifier.padding(top = 6.rdp)) {
-            RemoteText(
-                text = button.label.rs,
-                color = theme.primaryText.rc,
-                fontSize = 12.rsp,
-                fontWeight = FontWeight.Medium,
-                style = RemoteTextStyle.Default,
-            )
-        }
+      RemoteIcon(
+        imageVector = button.icon,
+        contentDescription = button.label.rs,
+        modifier = RemoteModifier.size(24.rdp),
+        tint = accent,
+      )
     }
+    RemoteBox(modifier = RemoteModifier.padding(top = 6.rdp)) {
+      RemoteText(
+        text = button.label.rs,
+        color = theme.primaryText.rc,
+        fontSize = 12.rsp,
+        fontWeight = FontWeight.Medium,
+        style = RemoteTextStyle.Default,
+      )
+    }
+  }
 }

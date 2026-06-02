@@ -9,5 +9,5 @@ import ee.schimke.ha.rc.components.RemoteHaHeading
 /** Compose-UI Tier-2 wrapper around [RemoteHaHeading]. */
 @Composable
 fun HaHeading(data: HaHeadingUiData, modifier: Modifier = Modifier) {
-    HaUiHost(modifier) { RemoteHaHeading(data.toRemote()) }
+  HaUiHost(modifier) { RemoteHaHeading(data.toRemote()) }
 }

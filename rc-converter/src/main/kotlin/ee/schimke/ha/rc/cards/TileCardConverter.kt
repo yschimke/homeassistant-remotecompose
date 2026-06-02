@@ -32,77 +32,72 @@ import kotlinx.serialization.json.jsonPrimitive
 /**
  * `tile` card — builds [HaTileData] from config + snapshot.
  *
- * In [CardSizeMode.Wrap] the card always renders the full HA-style tile.
- * In [CardSizeMode.Fixed] (launcher / wear widgets) the converter wraps
- * its output in a [RemoteSizeBreakpoint] icon-+-state ladder
- * (adaptive-card-layouts.md §"Icon + state row/tile"):
+ * In [CardSizeMode.Wrap] the card always renders the full HA-style tile. In [CardSizeMode.Fixed]
+ * (launcher / wear widgets) the converter wraps its output in a [RemoteSizeBreakpoint] icon-+-state
+ * ladder (adaptive-card-layouts.md §"Icon + state row/tile"):
  *
- *   * **Narrow** (`w < 96 dp`, e.g. a `1×1` launcher cell) →
- *     [RemoteHaIconChip], the tinted state icon centred over a single
- *     state line. Keeps the icon identity at the smallest size instead
- *     of dropping to a bare text chip (Principle 1).
- *   * **Full** (otherwise) → the HA-reference [RemoteHaTile], wrapped in
- *     [CenteredCell] so a tall cell (`3×2`) centres the row rather than
- *     gluing it to the top over a blank half (Principles 7–8).
+ * * **Narrow** (`w < 96 dp`, e.g. a `1×1` launcher cell) → [RemoteHaIconChip], the tinted state
+ *   icon centred over a single state line. Keeps the icon identity at the smallest size instead of
+ *   dropping to a bare text chip (Principle 1).
+ * * **Full** (otherwise) → the HA-reference [RemoteHaTile], wrapped in [CenteredCell] so a tall
+ *   cell (`3×2`) centres the row rather than gluing it to the top over a blank half (Principles
+ *   7–8).
  */
 class TileCardConverter : CardConverter {
-    override val cardType: String = CardTypes.TILE
+  override val cardType: String = CardTypes.TILE
 
-    override fun naturalHeightDp(card: CardConfig, snapshot: HaSnapshot): Int = 43
+  override fun naturalHeightDp(card: CardConfig, snapshot: HaSnapshot): Int = 43
 
-    override fun naturalWidthClass(card: CardConfig, snapshot: HaSnapshot): CardWidthClass =
-        CardWidthClass.Compact
+  override fun naturalWidthClass(card: CardConfig, snapshot: HaSnapshot): CardWidthClass =
+    CardWidthClass.Compact
 
-    @Composable
-    override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
-        when (LocalCardSizeMode.current) {
-            CardSizeMode.Wrap -> FullTile(card, snapshot, modifier)
-            CardSizeMode.Fixed ->
-                RemoteSizeBreakpoint(
-                    thresholdsDp = intArrayOf(96),
-                    modifier = modifier.fillMaxSize(),
-                ) { tier ->
-                    when (tier) {
-                        0 -> RemoteHaIconChip(tileData(card, snapshot), RemoteModifier.fillMaxSize())
-                        else -> CenteredCell { FullTile(card, snapshot, RemoteModifier.fillMaxWidth()) }
-                    }
-                }
+  @Composable
+  override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
+    when (LocalCardSizeMode.current) {
+      CardSizeMode.Wrap -> FullTile(card, snapshot, modifier)
+      CardSizeMode.Fixed ->
+        RemoteSizeBreakpoint(thresholdsDp = intArrayOf(96), modifier = modifier.fillMaxSize()) {
+          tier ->
+          when (tier) {
+            0 -> RemoteHaIconChip(tileData(card, snapshot), RemoteModifier.fillMaxSize())
+            else -> CenteredCell { FullTile(card, snapshot, RemoteModifier.fillMaxWidth()) }
+          }
         }
     }
+  }
 
-    @Composable
-    private fun FullTile(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
-        RemoteHaTile(tileData(card, snapshot), modifier = modifier)
-    }
+  @Composable
+  private fun FullTile(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
+    RemoteHaTile(tileData(card, snapshot), modifier = modifier)
+  }
 
-    @Composable
-    private fun tileData(card: CardConfig, snapshot: HaSnapshot): HaTileData {
-        val entityId = card.raw["entity"]?.jsonPrimitive?.content
-        val entity = entityId?.let { snapshot.states[it] }
-        val name =
-            card.raw["name"]?.jsonPrimitive?.content
-                ?: entity?.attributes?.get("friendly_name")?.jsonPrimitive?.content
-                ?: entityId
-                ?: "(no entity)"
-        val tapCfg = card.raw["tap_action"]?.jsonObject
-        val tapAction =
-            if (tapCfg != null) parseHaAction(tapCfg, entityId) else defaultTapActionFor(entityId)
-        val isActive = entity?.toTyped()?.isActive
+  @Composable
+  private fun tileData(card: CardConfig, snapshot: HaSnapshot): HaTileData {
+    val entityId = card.raw["entity"]?.jsonPrimitive?.content
+    val entity = entityId?.let { snapshot.states[it] }
+    val name =
+      card.raw["name"]?.jsonPrimitive?.content
+        ?: entity?.attributes?.get("friendly_name")?.jsonPrimitive?.content
+        ?: entityId
+        ?: "(no entity)"
+    val tapCfg = card.raw["tap_action"]?.jsonObject
+    val tapAction =
+      if (tapCfg != null) parseHaAction(tapCfg, entityId) else defaultTapActionFor(entityId)
+    val isActive = entity?.toTyped()?.isActive
 
-        return HaTileData(
-            entityId = entityId,
-            name = name,
-            state = LiveValues.state(entityId, formatState(entity)),
-            icon = HaIconMap.resolve(card.raw["icon"]?.jsonPrimitive?.content, entity),
-            accent =
-                HaToggleAccent(
-                    activeAccent = HaStateColor.activeFor(entity).rc,
-                    inactiveAccent = HaStateColor.inactiveFor(entity).rc,
-                    initiallyOn = isActive ?: false,
-                    toggleable = isActive != null,
-                ),
-            tapAction = tapAction,
-        )
-    }
+    return HaTileData(
+      entityId = entityId,
+      name = name,
+      state = LiveValues.state(entityId, formatState(entity)),
+      icon = HaIconMap.resolve(card.raw["icon"]?.jsonPrimitive?.content, entity),
+      accent =
+        HaToggleAccent(
+          activeAccent = HaStateColor.activeFor(entity).rc,
+          inactiveAccent = HaStateColor.inactiveFor(entity).rc,
+          initiallyOn = isActive ?: false,
+          toggleable = isActive != null,
+        ),
+      tapAction = tapAction,
+    )
+  }
 }
-

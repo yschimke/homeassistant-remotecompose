@@ -10,11 +10,11 @@ import ee.schimke.ha.rc.components.RemoteHaEntityRow
 /** Compose-UI Tier-2 wrapper around a single [RemoteHaEntityRow]. */
 @Composable
 fun HaEntityRow(data: HaEntityRowUiData, modifier: Modifier = Modifier) {
-    HaUiHost(modifier) { RemoteHaEntityRow(data.toRemote()) }
+  HaUiHost(modifier) { RemoteHaEntityRow(data.toRemote()) }
 }
 
 /** Compose-UI Tier-2 wrapper around [RemoteHaEntities]. */
 @Composable
 fun HaEntities(data: HaEntitiesUiData, modifier: Modifier = Modifier) {
-    HaUiHost(modifier) { RemoteHaEntities(data.toRemote()) }
+  HaUiHost(modifier) { RemoteHaEntities(data.toRemote()) }
 }

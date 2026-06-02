@@ -41,142 +41,127 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 
 /**
- * Per-slot wear widget. Ten concrete subclasses ([Slot0SmallWidget] /
- * [Slot0LargeWidget] … [Slot4SmallWidget] / [Slot4LargeWidget]); each
- * binds a fixed `slotIndex` and reads the matching slot from disk at
- * render time. Both small and large for the same slot share their
- * `cardKey` and therefore render the same card; the size split exists
- * only at the manifest / service level so the picker advertises both
- * container types.
+ * Per-slot wear widget. Ten concrete subclasses ([Slot0SmallWidget] / [Slot0LargeWidget] …
+ * [Slot4SmallWidget] / [Slot4LargeWidget]); each binds a fixed `slotIndex` and reads the matching
+ * slot from disk at render time. Both small and large for the same slot share their `cardKey` and
+ * therefore render the same card; the size split exists only at the manifest / service level so the
+ * picker advertises both container types.
  *
  * Render path mirrors the phone widget ([ee.schimke.terrazzo.widget.TerrazzoWidgetProvider]):
- *   1. [WearOfflineStore.readSlots] → find this slot's `cardKey`.
- *   2. [WearOfflineStore.readPinned] → resolve the [PinnedCard] and
- *      decode `rawJson` to a [CardConfig].
- *   3. [WearOfflineStore.readValues] → build an [HaSnapshot] from the
- *      pushed [LiveValues] (state + friendly_name + unit + device_class).
- *   4. Render via the rc-converter registry inside the
- *      [WearWidgetDocument] content lambda; Glance Wear captures the
- *      composition to RemoteCompose bytes for the watch's RC runtime.
+ * 1. [WearOfflineStore.readSlots] → find this slot's `cardKey`.
+ * 2. [WearOfflineStore.readPinned] → resolve the [PinnedCard] and decode `rawJson` to a
+ *    [CardConfig].
+ * 3. [WearOfflineStore.readValues] → build an [HaSnapshot] from the pushed [LiveValues] (state +
+ *    friendly_name + unit + device_class).
+ * 4. Render via the rc-converter registry inside the [WearWidgetDocument] content lambda; Glance
+ *    Wear captures the composition to RemoteCompose bytes for the watch's RC runtime.
  *
- * Wear is dark-only, so the theme is always resolved with `darkTheme = true`.
- * The user's selected [ThemeStyle] (read from [WearPrefs]) still drives
- * hue and font family.
+ * Wear is dark-only, so the theme is always resolved with `darkTheme = true`. The user's selected
+ * [ThemeStyle] (read from [WearPrefs]) still drives hue and font family.
  *
- * Limitations: cards that need history / statistics / forecasts won't
- * have that data — only the latest entity state flows over the data
- * layer today. Cards that lean on ops outside the Glance Wear capture
- * profile may fail to capture; the registry's
- * [ee.schimke.ha.rc.UNSUPPORTED_CARD_TYPE] fallback handles unknown
- * types but not in-range ops mismatches.
+ * Limitations: cards that need history / statistics / forecasts won't have that data — only the
+ * latest entity state flows over the data layer today. Cards that lean on ops outside the Glance
+ * Wear capture profile may fail to capture; the registry's [ee.schimke.ha.rc.UNSUPPORTED_CARD_TYPE]
+ * fallback handles unknown types but not in-range ops mismatches.
  *
- * Empty slots / un-paired widgets short-circuit to a placeholder
- * label; the matching service component is normally disabled via
- * [ee.schimke.terrazzo.wear.sync.WearSlotsController] before the
- * picker can surface them, but the fallback keeps a transient race
- * from showing an empty card.
+ * Empty slots / un-paired widgets short-circuit to a placeholder label; the matching service
+ * component is normally disabled via [ee.schimke.terrazzo.wear.sync.WearSlotsController] before the
+ * picker can surface them, but the fallback keeps a transient race from showing an empty card.
  */
 abstract class SlotWidget(internal val slotIndex: Int) : GlanceWearWidget() {
 
-    override suspend fun provideWidgetData(
-        context: Context,
-        params: WearWidgetParams,
-    ): WearWidgetData {
-        val app = context.applicationContext
-        val store = WearOfflineStore(app)
-        val slot = store.readSlots()?.slots?.firstOrNull { it.slotIndex == slotIndex }
-        val pinned = slot?.cardKey
-            ?.takeIf { it.isNotEmpty() }
-            ?.let { key -> store.readPinned()?.cards?.firstOrNull { it.cardKey == key } }
+  override suspend fun provideWidgetData(
+    context: Context,
+    params: WearWidgetParams,
+  ): WearWidgetData {
+    val app = context.applicationContext
+    val store = WearOfflineStore(app)
+    val slot = store.readSlots()?.slots?.firstOrNull { it.slotIndex == slotIndex }
+    val pinned =
+      slot
+        ?.cardKey
+        ?.takeIf { it.isNotEmpty() }
+        ?.let { key -> store.readPinned()?.cards?.firstOrNull { it.cardKey == key } }
 
-        val card = pinned?.card?.rawJson?.takeIf { it.isNotEmpty() }?.toCardConfigOrNull()
-        val snapshot = store.readValues().toSnapshot()
+    val card = pinned?.card?.rawJson?.takeIf { it.isNotEmpty() }?.toCardConfigOrNull()
+    val snapshot = store.readValues().toSnapshot()
 
-        val style = WearPrefs(app).themeStyle.first()
-        val theme = haThemeFor(style, darkTheme = true)
-        val registry = defaultRegistry().withEnhancedShutter()
+    val style = WearPrefs(app).themeStyle.first()
+    val theme = haThemeFor(style, darkTheme = true)
+    val registry = defaultRegistry().withEnhancedShutter()
 
-        return WearWidgetDocument(
-            background = WearWidgetBrush.Companion,
-            content = {
-                ProvideCardRegistry(registry) {
-                    ProvideHaTheme(theme) {
-                        ProvideCardSizeMode(CardSizeMode.Fixed) {
-                            // The Glance Wear container already supplies its
-                            // own shape + brush via WearWidgetBrush, so
-                            // suppress the per-card rounded clip + divider
-                            // border that would otherwise double up.
-                            //
-                            // Glance Wear's capture profile is fixed by
-                            // AndroidX to a stable op set that rejects
-                            // FlowLayout (op 240). Tell HA card components
-                            // to use a non-wrapping row fallback so cards
-                            // that lean on `RemoteFlowRow` (glance / grid /
-                            // entity-filter) capture instead of throwing.
-                            ProvideCardChrome(enabled = false) {
-                                ProvideFlowLayoutSupport(enabled = false) {
-                                    if (card != null) {
-                                        RenderChild(
-                                            card,
-                                            snapshot,
-                                            RemoteModifier.fillMaxWidth(),
-                                        )
-                                    } else {
-                                        EmptySlotPlaceholder(slotIndex, theme)
-                                    }
-                                }
-                            }
-                        }
-                    }
+    return WearWidgetDocument(
+      background = WearWidgetBrush.Companion,
+      content = {
+        ProvideCardRegistry(registry) {
+          ProvideHaTheme(theme) {
+            ProvideCardSizeMode(CardSizeMode.Fixed) {
+              // The Glance Wear container already supplies its
+              // own shape + brush via WearWidgetBrush, so
+              // suppress the per-card rounded clip + divider
+              // border that would otherwise double up.
+              //
+              // Glance Wear's capture profile is fixed by
+              // AndroidX to a stable op set that rejects
+              // FlowLayout (op 240). Tell HA card components
+              // to use a non-wrapping row fallback so cards
+              // that lean on `RemoteFlowRow` (glance / grid /
+              // entity-filter) capture instead of throwing.
+              ProvideCardChrome(enabled = false) {
+                ProvideFlowLayoutSupport(enabled = false) {
+                  if (card != null) {
+                    RenderChild(card, snapshot, RemoteModifier.fillMaxWidth())
+                  } else {
+                    EmptySlotPlaceholder(slotIndex, theme)
+                  }
                 }
-            },
-        )
-    }
+              }
+            }
+          }
+        }
+      },
+    )
+  }
 }
 
 /**
- * Tiny placeholder rendered when a slot has no assigned card or its
- * `rawJson` failed to decode. Keeps the watch surface non-empty during
- * the transient window where the slot is configured but the matching
- * `PinnedCard` hasn't synced yet.
+ * Tiny placeholder rendered when a slot has no assigned card or its `rawJson` failed to decode.
+ * Keeps the watch surface non-empty during the transient window where the slot is configured but
+ * the matching `PinnedCard` hasn't synced yet.
  */
 @Composable
 private fun EmptySlotPlaceholder(slotIndex: Int, theme: HaTheme) {
-    RemoteBox(modifier = RemoteModifier.fillMaxWidth()) {
-        RemoteText(text = "Slot ${slotIndex + 1}", color = theme.primaryText.rc)
-    }
+  RemoteBox(modifier = RemoteModifier.fillMaxWidth()) {
+    RemoteText(text = "Slot ${slotIndex + 1}", color = theme.primaryText.rc)
+  }
 }
 
 private val cardJson = Json { ignoreUnknownKeys = true }
 
 private fun String.toCardConfigOrNull(): CardConfig? =
-    runCatching { cardJson.decodeFromString(CardConfig.serializer(), this) }
-        .onFailure { Log.w("SlotWidget", "card decode failed", it) }
-        .getOrNull()
+  runCatching { cardJson.decodeFromString(CardConfig.serializer(), this) }
+    .onFailure { Log.w("SlotWidget", "card decode failed", it) }
+    .getOrNull()
 
 /**
- * Project the proto [LiveValues] snapshot into the [HaSnapshot] shape
- * card converters expect. Only the four fields the wire format carries
- * survive the round-trip — state, friendly_name, unit_of_measurement,
- * device_class. Cards reading other attributes will see them as absent.
+ * Project the proto [LiveValues] snapshot into the [HaSnapshot] shape card converters expect. Only
+ * the four fields the wire format carries survive the round-trip — state, friendly_name,
+ * unit_of_measurement, device_class. Cards reading other attributes will see them as absent.
  */
 private fun LiveValues?.toSnapshot(): HaSnapshot {
-    val live = this ?: return HaSnapshot()
-    val states = live.values.mapValues { (id, v) -> v.toEntityState(id) }
-    return HaSnapshot(states = states)
+  val live = this ?: return HaSnapshot()
+  val states = live.values.mapValues { (id, v) -> v.toEntityState(id) }
+  return HaSnapshot(states = states)
 }
 
 private fun EntityValue.toEntityState(entityId: String): EntityState {
-    val attrs = buildMap<String, JsonPrimitive> {
-        if (friendlyName.isNotEmpty()) put("friendly_name", JsonPrimitive(friendlyName))
-        if (unit.isNotEmpty()) put("unit_of_measurement", JsonPrimitive(unit))
-        if (deviceClass.isNotEmpty()) put("device_class", JsonPrimitive(deviceClass))
+  val attrs =
+    buildMap<String, JsonPrimitive> {
+      if (friendlyName.isNotEmpty()) put("friendly_name", JsonPrimitive(friendlyName))
+      if (unit.isNotEmpty()) put("unit_of_measurement", JsonPrimitive(unit))
+      if (deviceClass.isNotEmpty()) put("device_class", JsonPrimitive(deviceClass))
     }
-    return EntityState(
-        entityId = entityId,
-        state = state,
-        attributes = JsonObject(attrs),
-    )
+  return EntityState(entityId = entityId, state = state, attributes = JsonObject(attrs))
 }
 
 // One concrete widget per (slot, size) pair. The widget classes
@@ -206,54 +191,52 @@ class Slot4SmallWidget : SlotWidget(slotIndex = 4)
 class Slot4LargeWidget : SlotWidget(slotIndex = 4)
 
 /**
- * One [GlanceWearWidgetService] per (slot, size) pair. The system
- * binds these via `androidx.glance.wear.action.BIND_WIDGET_PROVIDER`
- * (or the legacy `androidx.wear.tiles.action.BIND_TILE_PROVIDER` for
- * tile-compat surfaces). The `widget` property exposed by
- * [GlanceWearWidgetService] (synthesised from its Java `getWidget()`
- * accessor) returns a stable instance per service.
+ * One [GlanceWearWidgetService] per (slot, size) pair. The system binds these via
+ * `androidx.glance.wear.action.BIND_WIDGET_PROVIDER` (or the legacy
+ * `androidx.wear.tiles.action.BIND_TILE_PROVIDER` for tile-compat surfaces). The `widget` property
+ * exposed by [GlanceWearWidgetService] (synthesised from its Java `getWidget()` accessor) returns a
+ * stable instance per service.
  *
- * Per-size manifest entries point at distinct
- * `wearwidget-provider` XML descriptors (`@xml/wear_slot_widget_provider_small`
- * vs `@xml/wear_slot_widget_provider_large`) so the picker filters
- * each service to one container type.
+ * Per-size manifest entries point at distinct `wearwidget-provider` XML descriptors
+ * (`@xml/wear_slot_widget_provider_small` vs `@xml/wear_slot_widget_provider_large`) so the picker
+ * filters each service to one container type.
  */
 class Slot0SmallWidgetService : GlanceWearWidgetService() {
-    override val widget: GlanceWearWidget = Slot0SmallWidget()
+  override val widget: GlanceWearWidget = Slot0SmallWidget()
 }
 
 class Slot0LargeWidgetService : GlanceWearWidgetService() {
-    override val widget: GlanceWearWidget = Slot0LargeWidget()
+  override val widget: GlanceWearWidget = Slot0LargeWidget()
 }
 
 class Slot1SmallWidgetService : GlanceWearWidgetService() {
-    override val widget: GlanceWearWidget = Slot1SmallWidget()
+  override val widget: GlanceWearWidget = Slot1SmallWidget()
 }
 
 class Slot1LargeWidgetService : GlanceWearWidgetService() {
-    override val widget: GlanceWearWidget = Slot1LargeWidget()
+  override val widget: GlanceWearWidget = Slot1LargeWidget()
 }
 
 class Slot2SmallWidgetService : GlanceWearWidgetService() {
-    override val widget: GlanceWearWidget = Slot2SmallWidget()
+  override val widget: GlanceWearWidget = Slot2SmallWidget()
 }
 
 class Slot2LargeWidgetService : GlanceWearWidgetService() {
-    override val widget: GlanceWearWidget = Slot2LargeWidget()
+  override val widget: GlanceWearWidget = Slot2LargeWidget()
 }
 
 class Slot3SmallWidgetService : GlanceWearWidgetService() {
-    override val widget: GlanceWearWidget = Slot3SmallWidget()
+  override val widget: GlanceWearWidget = Slot3SmallWidget()
 }
 
 class Slot3LargeWidgetService : GlanceWearWidgetService() {
-    override val widget: GlanceWearWidget = Slot3LargeWidget()
+  override val widget: GlanceWearWidget = Slot3LargeWidget()
 }
 
 class Slot4SmallWidgetService : GlanceWearWidgetService() {
-    override val widget: GlanceWearWidget = Slot4SmallWidget()
+  override val widget: GlanceWearWidget = Slot4SmallWidget()
 }
 
 class Slot4LargeWidgetService : GlanceWearWidgetService() {
-    override val widget: GlanceWearWidget = Slot4LargeWidget()
+  override val widget: GlanceWearWidget = Slot4LargeWidget()
 }

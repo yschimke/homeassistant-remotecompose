@@ -67,32 +67,13 @@ class CardPixelDiffTest(
         arrayOf("Markdown_Light_markdown_light", "markdown/notes_light.png", 40.0),
         arrayOf("Markdown_Dark_markdown_dark", "markdown/notes_dark.png", 40.0),
 
-        // gauge / weather-forecast / picture-entity / logbook —
-        // converters and previews exist (see CardPreviews.kt), but no HA
-        // reference captures yet. The cases below are wired so that once
-        // `integration/scripts/capture-references.sh` is run against the
-        // seeded HA the diff pops in automatically; until then each one
-        // skips via assumeTrue.
-        arrayOf("Gauge_Light_gauge_light", "gauge/battery_light.png", 40.0),
-        arrayOf("Gauge_Dark_gauge_dark", "gauge/battery_dark.png", 40.0),
-        arrayOf(
-          "WeatherForecast_Light_weather-forecast_light",
-          "weather-forecast/forecast_home_light.png",
-          40.0,
-        ),
-        arrayOf(
-          "WeatherForecast_Dark_weather-forecast_dark",
-          "weather-forecast/forecast_home_dark.png",
-          40.0,
-        ),
-        arrayOf(
-          "PictureEntity_Light_picture-entity_light",
-          "picture-entity/driveway_light.png",
-          50.0,
-        ),
-        arrayOf("PictureEntity_Dark_picture-entity_dark", "picture-entity/driveway_dark.png", 50.0),
-        arrayOf("Logbook_Light_logbook_light", "logbook/recent_activity_light.png", 40.0),
-        arrayOf("Logbook_Dark_logbook_dark", "logbook/recent_activity_dark.png", 40.0),
+        // NOTE: gauge / weather-forecast / picture-entity / logbook have
+        // converters and previews (see CardPreviews.kt) but no committed HA
+        // reference captures, so they are intentionally omitted here rather
+        // than wired as cases that only ever `assumeTrue`-skip (which read as
+        // coverage but assert nothing). Re-add an `arrayOf(...)` entry for
+        // each once `integration/scripts/capture-references.sh` lands its
+        // reference PNG under `references/`.
       )
   }
 

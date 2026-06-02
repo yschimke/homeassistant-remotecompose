@@ -7,11 +7,10 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
 /**
- * Stub session whose live calls always fail with [OfflineUnavailable].
- * Wrapped by [CachedHaSession] during cold-start auto-resume — the
- * cache supplies the data the UI renders, and as soon as the access
- * token is minted (or the user re-logs-in) the session is swapped for a
- * real [LiveHaSession]-backed one.
+ * Stub session whose live calls always fail with [OfflineUnavailable]. Wrapped by [CachedHaSession]
+ * during cold-start auto-resume — the cache supplies the data the UI renders, and as soon as the
+ * access token is minted (or the user re-logs-in) the session is swapped for a real
+ * [LiveHaSession]-backed one.
  */
 internal class OfflineOnlySession(override val baseUrl: String) : HaSession {
   override val refreshIntervalMillis: Long? = null

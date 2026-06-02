@@ -28,66 +28,65 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 
 /**
- * HA `glance` card — titled grid of compact entity cells. Each entry is
- * either a bare `entity_id` or `{ entity, name?, icon?, tap_action? }`.
+ * HA `glance` card — titled grid of compact entity cells. Each entry is either a bare `entity_id`
+ * or `{ entity, name?, icon?, tap_action? }`.
  */
 class GlanceCardConverter : CardConverter {
-    override val cardType: String = CardTypes.GLANCE
+  override val cardType: String = CardTypes.GLANCE
 
-    override fun naturalHeightDp(card: CardConfig, snapshot: HaSnapshot): Int {
-        val title = if (card.raw["title"] != null) 40 else 0
-        return title + 112 // HA glance cell is ~112dp tall (icon + name + state).
+  override fun naturalHeightDp(card: CardConfig, snapshot: HaSnapshot): Int {
+    val title = if (card.raw["title"] != null) 40 else 0
+    return title + 112 // HA glance cell is ~112dp tall (icon + name + state).
+  }
+
+  @Composable
+  override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
+    val title = card.raw["title"]?.jsonPrimitive?.content
+    val entries: List<JsonElement> = card.raw["entities"]?.jsonArray ?: emptyList()
+
+    val cells = entries.mapNotNull { el ->
+      val (eid, row) = normalize(el)
+      val entity = eid?.let { snapshot.states[it] }
+      val name =
+        row?.get("name")?.jsonPrimitive?.content
+          ?: entity?.attributes?.get("friendly_name")?.jsonPrimitive?.content
+          ?: eid
+          ?: "—"
+      val tapCfg = row?.get("tap_action")?.jsonObject
+      val tapAction = if (tapCfg != null) parseHaAction(tapCfg, eid) else defaultTapActionFor(eid)
+      val isActive = entity?.toTyped()?.isActive
+      HaGlanceCellData(
+        entityId = eid,
+        name = name,
+        state = LiveValues.state(eid, formatState(entity)),
+        icon = HaIconMap.resolve(row?.get("icon")?.jsonPrimitive?.content, entity),
+        accent =
+          HaToggleAccent(
+            activeAccent = HaStateColor.activeFor(entity).rc,
+            inactiveAccent = HaStateColor.inactiveFor(entity).rc,
+            initiallyOn = isActive ?: false,
+            toggleable = isActive != null,
+          ),
+        tapAction = tapAction,
+      )
     }
+    // In Fixed mode (launcher widget / Wear slot) the host pins a
+    // canvas taller than one row of cells; fill it (grid grows / row
+    // centres) instead of gluing the cells to the top over a blank
+    // half-cell. In Wrap mode (dashboard) the card flows to its
+    // content height, matching the HA reference.
+    val fillHeight = LocalCardSizeMode.current == CardSizeMode.Fixed
+    RemoteHaGlance(
+      HaGlanceData(title = title, cells = cells),
+      modifier = modifier,
+      fillHeight = fillHeight,
+    )
+  }
 
-    @Composable
-    override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
-        val title = card.raw["title"]?.jsonPrimitive?.content
-        val entries: List<JsonElement> = card.raw["entities"]?.jsonArray ?: emptyList()
-
-        val cells =
-            entries.mapNotNull { el ->
-                val (eid, row) = normalize(el)
-                val entity = eid?.let { snapshot.states[it] }
-                val name =
-                    row?.get("name")?.jsonPrimitive?.content
-                        ?: entity?.attributes?.get("friendly_name")?.jsonPrimitive?.content
-                        ?: eid
-                        ?: "—"
-                val tapCfg = row?.get("tap_action")?.jsonObject
-                val tapAction =
-                    if (tapCfg != null) parseHaAction(tapCfg, eid) else defaultTapActionFor(eid)
-                val isActive = entity?.toTyped()?.isActive
-                HaGlanceCellData(
-                    entityId = eid,
-                    name = name,
-                    state = LiveValues.state(eid, formatState(entity)),
-                    icon = HaIconMap.resolve(row?.get("icon")?.jsonPrimitive?.content, entity),
-                    accent =
-                        HaToggleAccent(
-                            activeAccent = HaStateColor.activeFor(entity).rc,
-                            inactiveAccent = HaStateColor.inactiveFor(entity).rc,
-                            initiallyOn = isActive ?: false,
-                            toggleable = isActive != null,
-                        ),
-                    tapAction = tapAction,
-                )
-            }
-        // In Fixed mode (launcher widget / Wear slot) the host pins a
-        // canvas taller than one row of cells; fill it (grid grows / row
-        // centres) instead of gluing the cells to the top over a blank
-        // half-cell. In Wrap mode (dashboard) the card flows to its
-        // content height, matching the HA reference.
-        val fillHeight = LocalCardSizeMode.current == CardSizeMode.Fixed
-        RemoteHaGlance(
-            HaGlanceData(title = title, cells = cells),
-            modifier = modifier,
-            fillHeight = fillHeight,
-        )
-    }
-
-    private fun normalize(el: JsonElement): Pair<String?, JsonObject?> = when (el) {
-        is JsonPrimitive -> el.content to null
-        is JsonObject -> (el["entity"]?.jsonPrimitive?.content) to el
-        else -> null to null
+  private fun normalize(el: JsonElement): Pair<String?, JsonObject?> =
+    when (el) {
+      is JsonPrimitive -> el.content to null
+      is JsonObject -> (el["entity"]?.jsonPrimitive?.content) to el
+      else -> null to null
     }
 }

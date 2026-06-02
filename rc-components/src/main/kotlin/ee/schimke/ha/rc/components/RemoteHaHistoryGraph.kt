@@ -31,8 +31,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 
 /**
- * HA `history-graph` card — title, range label, then one sparkline row
- * per entity.
+ * HA `history-graph` card — title, range label, then one sparkline row per entity.
  *
  * ```
  *   ┌─────────────────────────────────────────────┐
@@ -43,213 +42,213 @@ import androidx.compose.ui.text.style.TextOverflow
  *   └─────────────────────────────────────────────┘
  * ```
  *
- * Sparkline is captured from numeric `HistoryPoint`s. Each sample is
- * bound to `<entityId>.numeric.<index>`, so a host can push a sliding
- * window of values without re-encoding the document. The y-axis range
- * is captured from the initial values; samples that drift well outside
- * that range clip to the canvas (host re-encodes when that happens).
+ * Sparkline is captured from numeric `HistoryPoint`s. Each sample is bound to
+ * `<entityId>.numeric.<index>`, so a host can push a sliding window of values without re-encoding
+ * the document. The y-axis range is captured from the initial values; samples that drift well
+ * outside that range clip to the canvas (host re-encodes when that happens).
  */
 @Composable
 @RemoteComposable
-fun RemoteHaHistoryGraph(
-    data: HaHistoryGraphData,
-    modifier: RemoteModifier = RemoteModifier,
-) {
-    val theme = haTheme()
-    RemoteBox(
-        modifier = modifier
-            .fillMaxWidth()
-            .then(cardChrome(theme.cardBackground, theme.divider))
-            .padding(horizontal = 14.rdp, vertical = 10.rdp),
-    ) {
-        RemoteColumn(verticalArrangement = RemoteArrangement.spacedBy(6.rdp)) {
-            if (data.title != null) {
-                RemoteText(
-                    text = data.title.rs,
-                    color = theme.primaryText.rc,
-                    fontSize = 15.rsp,
-                    fontWeight = FontWeight.Medium,
-                    style = RemoteTextStyle.Default,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
-            RemoteText(
-                text = data.rangeLabel.rs,
-                color = theme.secondaryText.rc,
-                fontSize = 11.rsp,
-                style = RemoteTextStyle.Default,
-            )
-            if (data.rows.isEmpty()) {
-                RemoteText(
-                    text = "No entities".rs,
-                    color = theme.secondaryText.rc,
-                    fontSize = 13.rsp,
-                    style = RemoteTextStyle.Default,
-                )
-            } else {
-                data.rows.forEach { row -> Row(row, theme) }
-            }
-        }
+fun RemoteHaHistoryGraph(data: HaHistoryGraphData, modifier: RemoteModifier = RemoteModifier) {
+  val theme = haTheme()
+  RemoteBox(
+    modifier =
+      modifier
+        .fillMaxWidth()
+        .then(cardChrome(theme.cardBackground, theme.divider))
+        .padding(horizontal = 14.rdp, vertical = 10.rdp)
+  ) {
+    RemoteColumn(verticalArrangement = RemoteArrangement.spacedBy(6.rdp)) {
+      if (data.title != null) {
+        RemoteText(
+          text = data.title.rs,
+          color = theme.primaryText.rc,
+          fontSize = 15.rsp,
+          fontWeight = FontWeight.Medium,
+          style = RemoteTextStyle.Default,
+          maxLines = 1,
+          overflow = TextOverflow.Ellipsis,
+        )
+      }
+      RemoteText(
+        text = data.rangeLabel.rs,
+        color = theme.secondaryText.rc,
+        fontSize = 11.rsp,
+        style = RemoteTextStyle.Default,
+      )
+      if (data.rows.isEmpty()) {
+        RemoteText(
+          text = "No entities".rs,
+          color = theme.secondaryText.rc,
+          fontSize = 13.rsp,
+          style = RemoteTextStyle.Default,
+        )
+      } else {
+        data.rows.forEach { row -> Row(row, theme) }
+      }
     }
+  }
 }
 
 /**
- * Identity tier for the `history-graph` family — the smallest cell that
- * still says "this is a trend": the first series' sparkline + its latest
- * value, name above. Drops the per-row list and the range chrome (P4/P5)
- * but keeps the P1 identity (spark + value). Used by the Fixed-mode
- * converter at narrow launcher / Wear cells; see
- * docs/architecture/adaptive-card-layouts.md §"Bulk / time-series".
+ * Identity tier for the `history-graph` family — the smallest cell that still says "this is a
+ * trend": the first series' sparkline + its latest value, name above. Drops the per-row list and
+ * the range chrome (P4/P5) but keeps the P1 identity (spark + value). Used by the Fixed-mode
+ * converter at narrow launcher / Wear cells; see docs/architecture/adaptive-card-layouts.md §"Bulk
+ * / time-series".
  */
 @Composable
 @RemoteComposable
 fun RemoteHaHistoryGraphIdentity(
-    data: HaHistoryGraphData,
-    modifier: RemoteModifier = RemoteModifier,
+  data: HaHistoryGraphData,
+  modifier: RemoteModifier = RemoteModifier,
 ) {
-    val theme = haTheme()
-    val row = data.rows.firstOrNull()
-    RemoteBox(
-        modifier = modifier
-            .fillMaxSize()
-            .then(cardChrome(theme.cardBackground, theme.divider))
-            .padding(horizontal = 12.rdp, vertical = 10.rdp),
-        contentAlignment = RemoteAlignment.Center,
+  val theme = haTheme()
+  val row = data.rows.firstOrNull()
+  RemoteBox(
+    modifier =
+      modifier
+        .fillMaxSize()
+        .then(cardChrome(theme.cardBackground, theme.divider))
+        .padding(horizontal = 12.rdp, vertical = 10.rdp),
+    contentAlignment = RemoteAlignment.Center,
+  ) {
+    RemoteColumn(
+      modifier = RemoteModifier.fillMaxWidth(),
+      verticalArrangement = RemoteArrangement.spacedBy(4.rdp),
     ) {
-        RemoteColumn(
-            modifier = RemoteModifier.fillMaxWidth(),
-            verticalArrangement = RemoteArrangement.spacedBy(4.rdp),
-        ) {
-            RemoteText(
-                text = (row?.name ?: data.title ?: "History").rs,
-                color = theme.secondaryText.rc,
-                fontSize = 11.rsp,
-                style = RemoteTextStyle.Default,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-            if (row != null) {
-                RemoteText(
-                    text = row.summary,
-                    color = theme.primaryText.rc,
-                    fontSize = 22.rsp,
-                    fontWeight = FontWeight.SemiBold,
-                    style = RemoteTextStyle.Default,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                if (row.points.size >= 2) {
-                    Sparkline(row.entityId, row.points, row.accent, theme)
-                }
-            } else {
-                RemoteText(
-                    text = "No data".rs,
-                    color = theme.secondaryText.rc,
-                    fontSize = 13.rsp,
-                    style = RemoteTextStyle.Default,
-                )
-            }
+      RemoteText(
+        text = (row?.name ?: data.title ?: "History").rs,
+        color = theme.secondaryText.rc,
+        fontSize = 11.rsp,
+        style = RemoteTextStyle.Default,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+      )
+      if (row != null) {
+        RemoteText(
+          text = row.summary,
+          color = theme.primaryText.rc,
+          fontSize = 22.rsp,
+          fontWeight = FontWeight.SemiBold,
+          style = RemoteTextStyle.Default,
+          maxLines = 1,
+          overflow = TextOverflow.Ellipsis,
+        )
+        if (row.points.size >= 2) {
+          Sparkline(row.entityId, row.points, row.accent, theme)
         }
+      } else {
+        RemoteText(
+          text = "No data".rs,
+          color = theme.secondaryText.rc,
+          fontSize = 13.rsp,
+          style = RemoteTextStyle.Default,
+        )
+      }
     }
+  }
 }
 
 @Composable
 private fun Row(row: HaHistoryGraphRow, theme: HaTheme) {
-    RemoteRow(
-        modifier = RemoteModifier.fillMaxWidth(),
-        verticalAlignment = RemoteAlignment.CenterVertically,
-        horizontalArrangement = RemoteArrangement.SpaceBetween,
-    ) {
-        RemoteText(
-            text = row.name.rs,
-            color = theme.primaryText.rc,
-            fontSize = 12.rsp,
-            fontWeight = FontWeight.Medium,
-            style = RemoteTextStyle.Default,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = RemoteModifier.weight(1f).padding(end = 8.rdp),
-        )
-        RemoteText(
-            text = row.summary,
-            color = theme.secondaryText.rc,
-            fontSize = 11.rsp,
-            style = RemoteTextStyle.Default,
-            maxLines = 1,
-        )
-    }
-    if (row.points.size >= 2) {
-        Sparkline(row.entityId, row.points, row.accent, theme)
-    } else {
-        RemoteText(
-            text = "No samples".rs,
-            color = theme.secondaryText.rc,
-            fontSize = 11.rsp,
-            style = RemoteTextStyle.Default,
-        )
-    }
+  RemoteRow(
+    modifier = RemoteModifier.fillMaxWidth(),
+    verticalAlignment = RemoteAlignment.CenterVertically,
+    horizontalArrangement = RemoteArrangement.SpaceBetween,
+  ) {
+    RemoteText(
+      text = row.name.rs,
+      color = theme.primaryText.rc,
+      fontSize = 12.rsp,
+      fontWeight = FontWeight.Medium,
+      style = RemoteTextStyle.Default,
+      maxLines = 1,
+      overflow = TextOverflow.Ellipsis,
+      modifier = RemoteModifier.weight(1f).padding(end = 8.rdp),
+    )
+    RemoteText(
+      text = row.summary,
+      color = theme.secondaryText.rc,
+      fontSize = 11.rsp,
+      style = RemoteTextStyle.Default,
+      maxLines = 1,
+    )
+  }
+  if (row.points.size >= 2) {
+    Sparkline(row.entityId, row.points, row.accent, theme)
+  } else {
+    RemoteText(
+      text = "No samples".rs,
+      color = theme.secondaryText.rc,
+      fontSize = 11.rsp,
+      style = RemoteTextStyle.Default,
+    )
+  }
 }
 
 @Composable
 private fun Sparkline(entityId: String?, points: List<Float>, accent: Color, theme: HaTheme) {
-    val minP = points.min()
-    val maxP = points.max()
-    val span = (maxP - minP).takeIf { it > 0f } ?: 1f
+  val minP = points.min()
+  val maxP = points.max()
+  val span = (maxP - minP).takeIf { it > 0f } ?: 1f
 
-    // One named RemoteFloat per sample (`<entityId>.numeric.<i>`) so a
-    // host can push the next window of values without re-encoding. The
-    // y-range is fixed at encode time from the initial captured values;
-    // values that drift outside [minP, maxP] still render, just clipped
-    // by the canvas.
-    val bound: List<RemoteFloat> = LiveValues.numericPoints(entityId, points)
-    val minRf = minP.rf
-    val spanRf = span.rf
-    RemoteCanvas(modifier = RemoteModifier.fillMaxWidth().height(28.rdp)) {
-        val w = width
-        val h = height
-        val padX = 2f.rf
-        val padY = 3f.rf
-        val drawW = w - padX * 2f.rf
-        val drawH = h - padY * 2f.rf
+  // One named RemoteFloat per sample (`<entityId>.numeric.<i>`) so a
+  // host can push the next window of values without re-encoding. The
+  // y-range is fixed at encode time from the initial captured values;
+  // values that drift outside [minP, maxP] still render, just clipped
+  // by the canvas.
+  val bound: List<RemoteFloat> = LiveValues.numericPoints(entityId, points)
+  val minRf = minP.rf
+  val spanRf = span.rf
+  RemoteCanvas(modifier = RemoteModifier.fillMaxWidth().height(28.rdp)) {
+    val w = width
+    val h = height
+    val padX = 2f.rf
+    val padY = 3f.rf
+    val drawW = w - padX * 2f.rf
+    val drawH = h - padY * 2f.rf
 
-        // Faint baseline so an empty/flat row still shows the row's
-        // vertical extent.
-        val baseline = AndroidPaint().apply {
-            isAntiAlias = true
-            style = AndroidPaint.Style.STROKE
-            strokeWidth = 1f
-            color = theme.divider.toArgb()
-        }.asRemotePaint()
-        drawLine(
-            baseline,
-            RemoteOffset(padX, padY + drawH),
-            RemoteOffset(padX + drawW, padY + drawH),
-        )
-
-        val stroke = AndroidPaint().apply {
-            isAntiAlias = true
-            style = AndroidPaint.Style.STROKE
-            strokeWidth = 2f
-            strokeCap = AndroidPaint.Cap.ROUND
-            strokeJoin = AndroidPaint.Join.ROUND
-            color = accent.toArgb()
-        }.asRemotePaint()
-
-        val n = bound.size
-        for (i in 0 until n - 1) {
-            val x0 = padX + drawW * (i.toFloat() / (n - 1).toFloat()).rf
-            val x1 = padX + drawW * ((i + 1).toFloat() / (n - 1).toFloat()).rf
-            val y0 = padY + drawH * (1f.rf - (bound[i] - minRf) / spanRf)
-            val y1 = padY + drawH * (1f.rf - (bound[i + 1] - minRf) / spanRf)
-            drawLine(stroke, RemoteOffset(x0, y0), RemoteOffset(x1, y1))
+    // Faint baseline so an empty/flat row still shows the row's
+    // vertical extent.
+    val baseline =
+      AndroidPaint()
+        .apply {
+          isAntiAlias = true
+          style = AndroidPaint.Style.STROKE
+          strokeWidth = 1f
+          color = theme.divider.toArgb()
         }
+        .asRemotePaint()
+    drawLine(baseline, RemoteOffset(padX, padY + drawH), RemoteOffset(padX + drawW, padY + drawH))
+
+    val stroke =
+      AndroidPaint()
+        .apply {
+          isAntiAlias = true
+          style = AndroidPaint.Style.STROKE
+          strokeWidth = 2f
+          strokeCap = AndroidPaint.Cap.ROUND
+          strokeJoin = AndroidPaint.Join.ROUND
+          color = accent.toArgb()
+        }
+        .asRemotePaint()
+
+    val n = bound.size
+    for (i in 0 until n - 1) {
+      val x0 = padX + drawW * (i.toFloat() / (n - 1).toFloat()).rf
+      val x1 = padX + drawW * ((i + 1).toFloat() / (n - 1).toFloat()).rf
+      val y0 = padY + drawH * (1f.rf - (bound[i] - minRf) / spanRf)
+      val y1 = padY + drawH * (1f.rf - (bound[i + 1] - minRf) / spanRf)
+      drawLine(stroke, RemoteOffset(x0, y0), RemoteOffset(x1, y1))
     }
+  }
 }
 
-private fun Color.toArgb(): Int = android.graphics.Color.argb(
+private fun Color.toArgb(): Int =
+  android.graphics.Color.argb(
     (alpha * 255f).toInt(),
     (red * 255f).toInt(),
     (green * 255f).toInt(),
     (blue * 255f).toInt(),
-)
+  )

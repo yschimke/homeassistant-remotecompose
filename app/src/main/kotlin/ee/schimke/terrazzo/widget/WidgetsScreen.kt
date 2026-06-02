@@ -21,39 +21,36 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
 /**
- * Installed-widgets screen, reached via the dashboard top-bar's
- * overflow menu. Placeholder — wired in the next pass with:
- *   - list of installed `AppWidgetId`s + their card configs (from DataStore),
- *   - an "install new" entry that walks the user to a dashboard to long-press,
- *   - up-to-5 cap enforced here.
+ * Installed-widgets screen, reached via the dashboard top-bar's overflow menu. Placeholder — wired
+ * in the next pass with:
+ * - list of installed `AppWidgetId`s + their card configs (from DataStore),
+ * - an "install new" entry that walks the user to a dashboard to long-press,
+ * - up-to-5 cap enforced here.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WidgetsScreen(onBack: () -> Unit) {
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Installed widgets") },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-                    }
-                },
-            )
+  Scaffold(
+    topBar = {
+      TopAppBar(
+        title = { Text("Installed widgets") },
+        navigationIcon = {
+          IconButton(onClick = onBack) {
+            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+          }
         },
-        contentWindowInsets = WindowInsets.safeDrawing,
-    ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(padding)
-                .padding(24.dp),
-        ) {
-            Text(
-                "Long-press a card on a dashboard to install it here. Up to 5.",
-                style = MaterialTheme.typography.bodyMedium,
-            )
-        }
+      )
+    },
+    contentWindowInsets = WindowInsets.safeDrawing,
+  ) { padding ->
+    Column(
+      modifier =
+        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(padding).padding(24.dp)
+    ) {
+      Text(
+        "Long-press a card on a dashboard to install it here. Up to 5.",
+        style = MaterialTheme.typography.bodyMedium,
+      )
     }
+  }
 }

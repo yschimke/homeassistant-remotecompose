@@ -22,62 +22,60 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 
 /**
- * `statistic` card — single hero value (mean / min / max / sum) for one
- * entity, with optional period label + unit suffix.
+ * `statistic` card — single hero value (mean / min / max / sum) for one entity, with optional
+ * period label + unit suffix.
  */
 @Composable
 @RemoteComposable
-fun RemoteHaStatisticCard(
-    data: HaStatisticCardData,
-    modifier: RemoteModifier = RemoteModifier,
-) {
-    val theme = haTheme()
-    RemoteBox(
-        modifier = modifier
-            .fillMaxWidth()
-            .then(cardChrome(theme.cardBackground, theme.divider))
-            .padding(horizontal = 14.rdp, vertical = 12.rdp),
-    ) {
-        RemoteColumn(verticalArrangement = RemoteArrangement.spacedBy(4.rdp)) {
+fun RemoteHaStatisticCard(data: HaStatisticCardData, modifier: RemoteModifier = RemoteModifier) {
+  val theme = haTheme()
+  RemoteBox(
+    modifier =
+      modifier
+        .fillMaxWidth()
+        .then(cardChrome(theme.cardBackground, theme.divider))
+        .padding(horizontal = 14.rdp, vertical = 12.rdp)
+  ) {
+    RemoteColumn(verticalArrangement = RemoteArrangement.spacedBy(4.rdp)) {
+      RemoteText(
+        text = data.name.rs,
+        color = theme.secondaryText.rc,
+        fontSize = 12.rsp,
+        fontWeight = FontWeight.Medium,
+        style = RemoteTextStyle.Default,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+      )
+      RemoteRow(verticalAlignment = RemoteAlignment.Bottom) {
+        RemoteText(
+          text = data.valueLabel,
+          color = theme.primaryText.rc,
+          fontSize = 32.rsp,
+          fontWeight = FontWeight.SemiBold,
+          style = RemoteTextStyle.Default,
+          maxLines = 1,
+        )
+        if (data.unit != null) {
+          RemoteBox(modifier = RemoteModifier.padding(start = 4.rdp, bottom = 4.rdp)) {
             RemoteText(
-                text = data.name.rs,
-                color = theme.secondaryText.rc,
-                fontSize = 12.rsp,
-                fontWeight = FontWeight.Medium,
-                style = RemoteTextStyle.Default,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
+              text = data.unit.rs,
+              color = theme.secondaryText.rc,
+              fontSize = 14.rsp,
+              style = RemoteTextStyle.Default,
+              maxLines = 1,
             )
-            RemoteRow(verticalAlignment = RemoteAlignment.Bottom) {
-                RemoteText(
-                    text = data.valueLabel,
-                    color = theme.primaryText.rc,
-                    fontSize = 32.rsp,
-                    fontWeight = FontWeight.SemiBold,
-                    style = RemoteTextStyle.Default,
-                    maxLines = 1,
-                )
-                if (data.unit != null) {
-                    RemoteBox(modifier = RemoteModifier.padding(start = 4.rdp, bottom = 4.rdp)) {
-                        RemoteText(
-                            text = data.unit.rs,
-                            color = theme.secondaryText.rc,
-                            fontSize = 14.rsp,
-                            style = RemoteTextStyle.Default,
-                            maxLines = 1,
-                        )
-                    }
-                }
-            }
-            if (data.periodLabel != null) {
-                RemoteText(
-                    text = data.periodLabel.rs,
-                    color = data.accent.rc,
-                    fontSize = 11.rsp,
-                    style = RemoteTextStyle.Default,
-                    maxLines = 1,
-                )
-            }
+          }
         }
+      }
+      if (data.periodLabel != null) {
+        RemoteText(
+          text = data.periodLabel.rs,
+          color = data.accent.rc,
+          fontSize = 11.rsp,
+          style = RemoteTextStyle.Default,
+          maxLines = 1,
+        )
+      }
     }
+  }
 }

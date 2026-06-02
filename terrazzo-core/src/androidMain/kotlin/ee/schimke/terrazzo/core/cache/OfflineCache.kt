@@ -13,16 +13,14 @@ import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.Json
 
 /**
- * Persistent offline cache for the per-instance Home Assistant payloads
- * the UI reads (dashboard list, dashboard configs, entity snapshots).
+ * Persistent offline cache for the per-instance Home Assistant payloads the UI reads (dashboard
+ * list, dashboard configs, entity snapshots).
  *
- * Once the user has logged in and the app has fetched data once, every
- * subsequent launch must render the last-known data without a network.
- * `CachedHaSession` writes here on each successful live fetch; the UI
- * reads here first and then upgrades to live data when it arrives.
+ * Once the user has logged in and the app has fetched data once, every subsequent launch must
+ * render the last-known data without a network. `CachedHaSession` writes here on each successful
+ * live fetch; the UI reads here first and then upgrades to live data when it arrives.
  *
  * Layout under `filesDir/terrazzo/`:
- *
  * ```
  *   instance.json                       — { baseUrl } most-recent instance
  *   cache/<sha-baseUrl>/dashboards.json — List<DashboardSummary>
@@ -30,22 +28,19 @@ import kotlinx.serialization.json.Json
  *   cache/<sha-baseUrl>/snapshot/<urlPath>.json  — HaSnapshot
  * ```
  *
- * `urlPath` may be null (HA's default dashboard) — encoded as the file
- * name `_default` to match the wear-sync proto convention.
+ * `urlPath` may be null (HA's default dashboard) — encoded as the file name `_default` to match the
+ * wear-sync proto convention.
  *
- * Demo mode is intentionally not cached here: its session derives
- * dashboards + snapshot deterministically from `DemoData`, so a cache
- * lookup would always be redundant.
+ * Demo mode is intentionally not cached here: its session derives dashboards + snapshot
+ * deterministically from `DemoData`, so a cache lookup would always be redundant.
  */
 @SingleIn(AppScope::class)
 @Inject
-class OfflineCache(context: Context) :
-  OfflineCacheStorage(File(context.filesDir, "terrazzo"))
+class OfflineCache(context: Context) : OfflineCacheStorage(File(context.filesDir, "terrazzo"))
 
 /**
- * File-backed storage layer. Split out from [OfflineCache] so JVM unit
- * tests can construct against a temp directory without bringing in
- * Robolectric.
+ * File-backed storage layer. Split out from [OfflineCache] so JVM unit tests can construct against
+ * a temp directory without bringing in Robolectric.
  */
 open class OfflineCacheStorage(rootDir: File) {
 
@@ -58,9 +53,8 @@ open class OfflineCacheStorage(rootDir: File) {
   }
 
   /**
-   * The instance the user was last connected to. Used by
-   * `MainActivity` to decide whether to auto-resume on cold start
-   * versus showing the discovery / login screens.
+   * The instance the user was last connected to. Used by `MainActivity` to decide whether to
+   * auto-resume on cold start versus showing the discovery / login screens.
    */
   fun lastInstance(): String? =
     runCatching {
@@ -103,9 +97,8 @@ open class OfflineCacheStorage(rootDir: File) {
   }
 
   /**
-   * Wipe every cached payload for [baseUrl]. Called by sign-out so a
-   * subsequent user on the device can't read the previous account's
-   * dashboard config off disk.
+   * Wipe every cached payload for [baseUrl]. Called by sign-out so a subsequent user on the device
+   * can't read the previous account's dashboard config off disk.
    */
   fun clearInstance(baseUrl: String) {
     instanceDir(baseUrl).deleteRecursively()
@@ -155,9 +148,8 @@ private fun String?.encodeUrlPath(): String =
   this?.takeIf { it.isNotEmpty() }?.replace('/', '_') ?: "_default"
 
 /**
- * Atomic write — render to a sibling .tmp first then rename, so a kill
- * mid-write doesn't leave a half-written cache file that decodes as
- * partial data on next launch.
+ * Atomic write — render to a sibling .tmp first then rename, so a kill mid-write doesn't leave a
+ * half-written cache file that decodes as partial data on next launch.
  */
 private fun File.atomicWriteText(text: String) {
   val tmp = File(parentFile, "$name.tmp")

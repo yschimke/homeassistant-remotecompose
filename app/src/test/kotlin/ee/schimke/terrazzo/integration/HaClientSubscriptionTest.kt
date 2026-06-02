@@ -37,17 +37,16 @@ import kotlinx.serialization.json.put
 /**
  * Covers the new event-subscription dispatch path in [HaClient].
  *
- * Before the feature: `receiveLoop` matched every framed `id` against the one-shot `pending` map and
- * dropped anything else, so HA-side `type:"event"` frames went to /dev/null. Adding
+ * Before the feature: `receiveLoop` matched every framed `id` against the one-shot `pending` map
+ * and dropped anything else, so HA-side `type:"event"` frames went to /dev/null. Adding
  * persistent-notification support meant teaching the loop to route those event frames to a separate
  * per-subscription `SharedFlow` while keeping the existing `type:"result"` matching intact.
  *
  * The two tests pin both halves of that contract:
- *   - `fetchPersistentNotifications` round-trips a real `persistent_notification/get` reply and
- *     parses it.
- *   - `subscribeEvents` ack lands in `pending` (and the call returns), and the subsequent event
- *     frame sharing that id reaches the returned flow — i.e. the ack didn't dismantle the
- *     subscription.
+ * - `fetchPersistentNotifications` round-trips a real `persistent_notification/get` reply and
+ *   parses it.
+ * - `subscribeEvents` ack lands in `pending` (and the call returns), and the subsequent event frame
+ *   sharing that id reaches the returned flow — i.e. the ack didn't dismantle the subscription.
  */
 class HaClientSubscriptionTest {
 
@@ -235,7 +234,10 @@ class HaClientSubscriptionTest {
       }
     }
 
-    /** Push a single `persistent_notifications_updated` event on whatever id is currently subscribed. */
+    /**
+     * Push a single `persistent_notifications_updated` event on whatever id is currently
+     * subscribed.
+     */
     fun firePersistentNotificationsUpdated() {
       val subId = subscriptionId ?: error("no active subscription")
       pushes.trySend(
