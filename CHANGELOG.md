@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.1.35](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.34...v0.1.35) (2026-06-02)
+
+
+### Features
+
+* **cards:** adaptive Picture + Bulk widget layouts ([#356](https://github.com/yschimke/homeassistant-remotecompose/issues/356)) ([#381](https://github.com/yschimke/homeassistant-remotecompose/issues/381)) ([61727dc](https://github.com/yschimke/homeassistant-remotecompose/commit/61727dcd24aa51e290f46c2a14b8e24a4f327a59))
+
+
+### Bug Fixes
+
+* **app:** strip AdServices ad-id permissions to match Play declaration ([#383](https://github.com/yschimke/homeassistant-remotecompose/issues/383)) ([a39bb57](https://github.com/yschimke/homeassistant-remotecompose/commit/a39bb57c4dda963e7c5e417aad9d4a92a3a52b04))
+
 ## [0.1.34](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.33...v0.1.34) (2026-06-02)
 
 
