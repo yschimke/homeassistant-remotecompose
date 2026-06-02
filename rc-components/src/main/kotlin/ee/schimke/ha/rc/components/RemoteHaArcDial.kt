@@ -122,6 +122,14 @@ fun RemoteHaArcDialWide(
     val theme = haTheme()
     val click =
         data.tapAction.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
+    // NB: on tall cells (e.g. 3×3) this row sits high with dead space
+    // below — it can't self-centre. A `RemoteRow`/`RemoteColumn` doesn't
+    // propagate fill-height through the Fixed-mode size breakpoint, and a
+    // `fillMaxSize` `RemoteBox` wrapper with `contentAlignment = Center`
+    // is a no-op for a `fillMaxWidth` child in this alpha (the same
+    // RemoteStateLayout/fill limitation tracked as known-gap #6 in
+    // docs/architecture/adaptive-card-layouts.md). Left as-is until the
+    // upstream fix lands.
     RemoteRow(
         modifier =
             modifier
@@ -246,6 +254,11 @@ private fun ModeChip(chip: HaModeChip?, accent: Color) {
         is HaModeChip.Static ->
             ChipText(LiveValues.attribute(chip.entityId, chip.attribute, chip.initial), accent)
         is HaModeChip.Toggle -> {
+            // NB: a `RemoteStateLayout` here collapses to its captured
+            // branch when nested inside a Fixed-mode size breakpoint
+            // (#224), so callers that render through `RenderArcDial`
+            // should prefer [HaModeChip.Static]. This live-boolean form
+            // is correct only for the un-nested (Wrap) full card.
             val isOn = LiveValues.isOn(chip.entityId, chip.initiallyOn)
             if (isOn != null) {
                 RemoteStateLayout(isOn) { on ->

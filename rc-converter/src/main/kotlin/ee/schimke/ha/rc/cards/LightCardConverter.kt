@@ -49,20 +49,18 @@ class LightCardConverter : CardConverter {
         val fraction = if (isOn) (brightness ?: 255f) / 255f else 0f
         val accent = if (isOn) Color(0xFFFFBE3E) else Color(0xFFB0B0B0)
         val centerLabel = if (isOn) "${(fraction * 100f).toInt()}%" else "Off"
+        // Static chip (not Toggle): a `RemoteStateLayout`-backed Toggle
+        // chip nested inside the Fixed-mode `RenderArcDial` breakpoint
+        // collapses to its captured branch (#224), painting "Off" over
+        // the bulb on the full tier. Thermostat / humidifier use a Static
+        // chip for the same reason; the on/off label is baked at capture
+        // and refreshed on re-encode like every other arc-dial label.
         val modeChip =
-            if (entityId != null)
-                HaModeChip.Toggle(
-                    entityId = entityId,
-                    initiallyOn = isOn,
-                    onLabel = "On",
-                    offLabel = "Off",
-                )
-            else
-                HaModeChip.Static(
-                    entityId = null,
-                    attribute = "is_on_label",
-                    initial = if (isOn) "On" else "Off",
-                )
+            HaModeChip.Static(
+                entityId = entityId,
+                attribute = "is_on_label",
+                initial = if (isOn) "On" else "Off",
+            )
 
         val tap = entityId?.let { HaAction.Toggle(it) } ?: HaAction.None
         val (inc, dec) = brightnessSteppers(entityId, isOn, brightness)
