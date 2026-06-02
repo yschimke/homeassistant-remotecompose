@@ -15,6 +15,8 @@ import ee.schimke.ha.rc.CardSizeMode
 import ee.schimke.ha.rc.HaStateColor
 import ee.schimke.ha.rc.LocalCardSizeMode
 import ee.schimke.ha.rc.RemoteSizeBreakpoint
+import ee.schimke.ha.rc.cardDataSignature
+import ee.schimke.ha.rc.cardEntityIds
 import ee.schimke.ha.rc.components.HaStatisticCardData
 import ee.schimke.ha.rc.components.HaTileData
 import ee.schimke.ha.rc.components.HaToggleAccent
@@ -38,6 +40,11 @@ import kotlinx.serialization.json.jsonPrimitive
  */
 class StatisticCardConverter : CardConverter {
   override val cardType: String = CardTypes.STATISTIC
+
+  // Baked, non-bindable content (see CardConverter.dataSignature):
+  // re-encode when any referenced entity's snapshot data moves.
+  override fun dataSignature(card: CardConfig, snapshot: HaSnapshot): String =
+    cardDataSignature(cardEntityIds(card), snapshot)
 
   override fun naturalHeightDp(card: CardConfig, snapshot: HaSnapshot): Int = 110
 

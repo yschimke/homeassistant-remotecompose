@@ -72,6 +72,7 @@ import ee.schimke.ha.rc.CardSizeMode
 import ee.schimke.ha.rc.ProvideCardRegistry
 import ee.schimke.ha.rc.ProvideCardSizeMode
 import ee.schimke.ha.rc.RenderChild
+import ee.schimke.ha.rc.cardDataSignature
 import ee.schimke.ha.rc.cardSizeConstraints
 import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.cards.shutter.withEnhancedShutter
@@ -254,6 +255,7 @@ private fun ResizableLauncherPreview(session: HaSession, card: CardConfig, snaps
         profile = widgetsProfile,
         card = card,
         snapshot = snapshot,
+        liveBindings = registry.cardDataSignature(card, snapshot) == null,
         bitmapLoader = bitmapLoader,
         modifier = Modifier.fillMaxSize(),
       ) {
