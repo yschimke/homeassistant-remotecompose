@@ -25,6 +25,7 @@ import androidx.compose.ui.text.font.FontWeight
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.CardConverter
+import ee.schimke.ha.rc.cardDataSignature
 import ee.schimke.ha.rc.components.LiveValues
 import ee.schimke.ha.rc.components.LocalHaTheme
 import ee.schimke.ha.rc.components.cardChrome
@@ -54,6 +55,16 @@ open class BambuLabCardConverter(
   final override val cardType: String,
   private val variantLabel: String,
 ) : CardConverter {
+
+  // State line + per-field attribute labels (AMS trays, print %) are baked, not
+  // bound (see CardConverter.dataSignature), so re-encode when the printer
+  // entity's snapshot data moves. The id lives under `printer:` or `entity:`,
+  // which cardEntityIds doesn't walk.
+  override fun dataSignature(card: CardConfig, snapshot: HaSnapshot): String {
+    val printer = card.raw["printer"]?.jsonPrimitive?.content
+    val id = printer ?: card.raw["entity"]?.jsonPrimitive?.content ?: return ""
+    return cardDataSignature(setOf(id), snapshot)
+  }
 
   override fun naturalHeightDp(card: CardConfig, snapshot: HaSnapshot): Int = 96
 
