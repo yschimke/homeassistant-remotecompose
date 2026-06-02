@@ -47,9 +47,12 @@ sealed interface PictureImageStrategy {
 
   companion object {
     /**
-     * Sensible app-mode default. 512×512 matches what HA's `image_proxy` serves natively for
-     * `image.*` entities, and is large enough for camera frames (typically 1680×1080) downscaled to
-     * the tile area on the host side.
+     * Sensible app-mode default. This is the slot the player enforces as a **ceiling**: a fetched
+     * bitmap larger than `widthPx × heightPx` is rejected by `RemoteBitmapDecoder.checkBounds`
+     * ("dimensions don't match"). HA serves `entity_picture` / `camera_proxy` frames at the
+     * source's native resolution (no server-side resize), so the app-mode `BitmapLoader`
+     * (`CoilBitmapLoader`) downscales fetched frames to fit this cap before handing bytes to the
+     * player. Keep this in sync with `CoilBitmapLoader.DEFAULT_MAX_IMAGE_DIMENSION_PX` (512).
      */
     val DefaultAppUrl: Url = Url(widthPx = 512, heightPx = 512)
   }
