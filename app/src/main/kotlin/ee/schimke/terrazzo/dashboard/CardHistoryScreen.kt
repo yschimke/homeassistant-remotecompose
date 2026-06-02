@@ -4,6 +4,7 @@ package ee.schimke.terrazzo.dashboard
 
 import android.content.Intent
 import android.net.Uri
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -246,7 +247,11 @@ private fun ResizableLauncherPreview(session: HaSession, card: CardConfig, snaps
       currentColor = currentColor,
     ) {
       CachedCardPreview(
-        cacheKey = LauncherPreviewKey(card, style, dark, cellsW, cellsH),
+        // Size-independent: the captured document reflows to the slot
+        // at playback via its runtime size-breakpoints, so the same
+        // bytes serve every cell size — keying on cellsW/cellsH would
+        // only force a redundant (blocking) re-encode on every drag step.
+        cacheKey = LauncherPreviewKey(card, style, dark),
         // Capture with the launcher's constrained op vocabulary —
         // the same widgetsProfile TerrazzoWidgetProvider and the
         // install sheet use — so a card that the launcher runtime
@@ -314,8 +319,12 @@ internal fun LauncherGrid(
 
   val gridWidthDp = (bounds.maxCellsW * LAUNCHER_CELL_WIDTH_DP).dp
   val gridHeightDp = (bounds.maxCellsH * LAUNCHER_CELL_HEIGHT_DP).dp
-  val currentWidthDp = (cellsW * LAUNCHER_CELL_WIDTH_DP).dp
-  val currentHeightDp = (cellsH * LAUNCHER_CELL_HEIGHT_DP).dp
+  // Glide the slot (card, outline and handle) between cell steps rather
+  // than hard-snapping. The embedded player reuses its View across sizes,
+  // so each animated frame is a cheap re-measure — no re-encode.
+  val currentWidthDp by animateDpAsState((cellsW * LAUNCHER_CELL_WIDTH_DP).dp, label = "slotWidth")
+  val currentHeightDp by
+    animateDpAsState((cellsH * LAUNCHER_CELL_HEIGHT_DP).dp, label = "slotHeight")
 
   Box(modifier = Modifier.size(gridWidthDp, gridHeightDp)) {
     // Backdrop: cell grid + smallest/largest size outlines.
@@ -465,8 +474,6 @@ private data class LauncherPreviewKey(
   val card: CardConfig,
   val style: ThemeStyle,
   val dark: Boolean,
-  val cellsW: Int,
-  val cellsH: Int,
 )
 
 /** Middle region: range chips + one chart block per entity. */
