@@ -100,14 +100,25 @@ class WeatherForecastCardConverter : CardConverter {
                 ) { tier ->
                     when (tier) {
                         0 -> RemoteHaWeatherForecastWide(data, RemoteModifier.fillMaxSize())
-                        else -> RemoteHaWeatherForecast(data, RemoteModifier.fillMaxSize())
+                        else ->
+                            RemoteHaWeatherForecast(
+                                data,
+                                RemoteModifier.fillMaxSize(),
+                                fillHeight = true,
+                            )
                     }
                 }
         }
     }
 }
 
-private const val WeatherFullMinDp = 260
+// Below this width the full card's forecast strip can't sit under the
+// current row without cramping (the short `4×1` launcher cell, ~288 dp
+// wide but only ~84 dp tall, is the motivating case — #355), so we drop
+// to the Wide current-row-only variant. Above it the full card renders
+// and `fillHeight` lets it claim a taller cell instead of leaving the
+// bottom half blank.
+private const val WeatherFullMinDp = 300
 
 private fun weatherIcon(condition: String?): ImageVector = when (condition) {
     "sunny", "clear-night" -> Icons.Filled.WbSunny

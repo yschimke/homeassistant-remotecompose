@@ -10,6 +10,7 @@ import androidx.compose.remote.creation.compose.layout.RemoteComposable
 import androidx.compose.remote.creation.compose.layout.RemoteRow
 import androidx.compose.remote.creation.compose.layout.RemoteText
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
+import androidx.compose.remote.creation.compose.modifier.fillMaxHeight
 import androidx.compose.remote.creation.compose.modifier.fillMaxSize
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.creation.compose.modifier.padding
@@ -45,6 +46,7 @@ import androidx.wear.compose.remote.material3.RemoteIcon
 fun RemoteHaWeatherForecast(
     data: HaWeatherForecastData,
     modifier: RemoteModifier = RemoteModifier,
+    fillHeight: Boolean = false,
 ) {
     val theme = haTheme()
     RemoteBox(
@@ -53,10 +55,29 @@ fun RemoteHaWeatherForecast(
             .then(cardChrome(theme.cardBackground, theme.divider))
             .padding(horizontal = 14.rdp, vertical = 12.rdp),
     ) {
-        RemoteColumn(verticalArrangement = RemoteArrangement.spacedBy(10.rdp)) {
+        RemoteColumn(
+            modifier = if (fillHeight) RemoteModifier.fillMaxSize() else RemoteModifier.fillMaxWidth(),
+            verticalArrangement = RemoteArrangement.spacedBy(10.rdp),
+        ) {
             CurrentRow(data, theme)
             if (data.days.isNotEmpty()) {
-                ForecastStrip(data.days, theme)
+                if (fillHeight) {
+                    // Expanded (Fixed mode): the forecast strip claims the
+                    // remaining height and its day columns spread + enlarge
+                    // to fill it, so a tall cell (e.g. 6×3) is used rather
+                    // than left half-blank — Principle 7/8, "earn the canvas
+                    // / no dead space". The fill is done *inside* the strip
+                    // (weighted day columns + larger glyphs), not by centring
+                    // a compact strip in a wrapper.
+                    ForecastStrip(
+                        data.days,
+                        theme,
+                        modifier = RemoteModifier.fillMaxWidth().weight(1f),
+                        fill = true,
+                    )
+                } else {
+                    ForecastStrip(data.days, theme)
+                }
             }
         }
     }
@@ -181,34 +202,43 @@ fun RemoteHaWeatherForecastWide(
 }
 
 @Composable
-private fun ForecastStrip(days: List<HaWeatherDay>, theme: HaTheme) {
+private fun ForecastStrip(
+    days: List<HaWeatherDay>,
+    theme: HaTheme,
+    modifier: RemoteModifier = RemoteModifier,
+    fill: Boolean = false,
+) {
     RemoteRow(
-        modifier = RemoteModifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
         horizontalArrangement = RemoteArrangement.SpaceBetween,
+        verticalAlignment = RemoteAlignment.CenterVertically,
     ) {
         days.forEach { day ->
             RemoteColumn(
-                modifier = RemoteModifier.weight(1f),
+                modifier =
+                    if (fill) RemoteModifier.weight(1f).fillMaxHeight()
+                    else RemoteModifier.weight(1f),
                 horizontalAlignment = RemoteAlignment.CenterHorizontally,
-                verticalArrangement = RemoteArrangement.spacedBy(2.rdp),
+                verticalArrangement =
+                    if (fill) RemoteArrangement.SpaceEvenly else RemoteArrangement.spacedBy(2.rdp),
             ) {
                 RemoteText(
                     text = day.label.rs,
                     color = theme.secondaryText.rc,
-                    fontSize = 11.rsp,
+                    fontSize = if (fill) 13.rsp else 11.rsp,
                     style = RemoteTextStyle.Default,
                     maxLines = 1,
                 )
                 RemoteIcon(
                     imageVector = day.icon,
                     contentDescription = day.label.rs,
-                    modifier = RemoteModifier.size(20.rdp),
+                    modifier = RemoteModifier.size(if (fill) 32.rdp else 20.rdp),
                     tint = theme.primaryText.rc,
                 )
                 RemoteText(
                     text = day.high.rs,
                     color = theme.primaryText.rc,
-                    fontSize = 12.rsp,
+                    fontSize = if (fill) 15.rsp else 12.rsp,
                     fontWeight = FontWeight.Medium,
                     style = RemoteTextStyle.Default,
                     maxLines = 1,
@@ -216,7 +246,7 @@ private fun ForecastStrip(days: List<HaWeatherDay>, theme: HaTheme) {
                 RemoteText(
                     text = day.low.rs,
                     color = theme.secondaryText.rc,
-                    fontSize = 11.rsp,
+                    fontSize = if (fill) 13.rsp else 11.rsp,
                     style = RemoteTextStyle.Default,
                     maxLines = 1,
                 )
