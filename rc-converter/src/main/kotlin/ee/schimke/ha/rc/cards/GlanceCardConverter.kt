@@ -8,7 +8,9 @@ import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.model.toTyped
 import ee.schimke.ha.rc.CardConverter
+import ee.schimke.ha.rc.CardSizeMode
 import ee.schimke.ha.rc.HaStateColor
+import ee.schimke.ha.rc.LocalCardSizeMode
 import ee.schimke.ha.rc.components.HaGlanceCellData
 import ee.schimke.ha.rc.components.HaGlanceData
 import ee.schimke.ha.rc.components.HaToggleAccent
@@ -70,7 +72,17 @@ class GlanceCardConverter : CardConverter {
                     tapAction = tapAction,
                 )
             }
-        RemoteHaGlance(HaGlanceData(title = title, cells = cells), modifier = modifier)
+        // In Fixed mode (launcher widget / Wear slot) the host pins a
+        // canvas taller than one row of cells; fill it (grid grows / row
+        // centres) instead of gluing the cells to the top over a blank
+        // half-cell. In Wrap mode (dashboard) the card flows to its
+        // content height, matching the HA reference.
+        val fillHeight = LocalCardSizeMode.current == CardSizeMode.Fixed
+        RemoteHaGlance(
+            HaGlanceData(title = title, cells = cells),
+            modifier = modifier,
+            fillHeight = fillHeight,
+        )
     }
 
     private fun normalize(el: JsonElement): Pair<String?, JsonObject?> = when (el) {
