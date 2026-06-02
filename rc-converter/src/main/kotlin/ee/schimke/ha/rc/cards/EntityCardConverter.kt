@@ -1,6 +1,7 @@
 package ee.schimke.ha.rc.cards
 
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
+import androidx.compose.remote.creation.compose.modifier.fillMaxSize
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.runtime.Composable
@@ -16,9 +17,11 @@ import ee.schimke.ha.rc.HaStateColor
 import ee.schimke.ha.rc.LocalCardSizeMode
 import ee.schimke.ha.rc.RemoteSizeBreakpoint
 import ee.schimke.ha.rc.components.HaEntityRowData
+import ee.schimke.ha.rc.components.HaTileData
 import ee.schimke.ha.rc.components.HaToggleAccent
 import ee.schimke.ha.rc.components.LiveValues
 import ee.schimke.ha.rc.components.RemoteHaEntityRow
+import ee.schimke.ha.rc.components.RemoteHaIconChip
 import ee.schimke.ha.rc.defaultTapActionFor
 import ee.schimke.ha.rc.formatState
 import ee.schimke.ha.rc.icons.HaIconMap
@@ -26,7 +29,19 @@ import ee.schimke.ha.rc.parseHaAction
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 
-/** HA `entity` card — single-entity compact row. */
+/**
+ * HA `entity` card — single-entity compact row.
+ *
+ * In [CardSizeMode.Fixed] the converter runs the shared icon-+-state
+ * ladder (adaptive-card-layouts.md §"Icon + state row/tile"): a narrow
+ * cell (`w < 96 dp`) drops to the [RemoteHaIconChip] identity tier
+ * (tinted icon + state, no name), and the [RemoteHaEntityRow] full tier
+ * is wrapped in [CenteredCell] so a tall cell centres the row instead of
+ * leaving a blank lower half.
+ *
+ * Base launcher shape is `2×1` (see [CardPreviewMatrix_Entity]) — the
+ * old `3×1` left the matrix `+1` neighbour ~70 % empty (Q5).
+ */
 class EntityCardConverter : CardConverter {
     override val cardType: String = CardTypes.ENTITY
 
@@ -41,12 +56,18 @@ class EntityCardConverter : CardConverter {
             CardSizeMode.Wrap -> FullRow(card, snapshot, modifier)
             CardSizeMode.Fixed ->
                 RemoteSizeBreakpoint(
-                    thresholdsDp = intArrayOf(120),
-                    modifier = modifier,
+                    thresholdsDp = intArrayOf(96),
+                    modifier = modifier.fillMaxSize(),
                 ) { tier ->
                     when (tier) {
-                        0 -> CompactStateChip(card, snapshot)
-                        else -> FullRow(card, snapshot, RemoteModifier.fillMaxWidth())
+                        0 -> RemoteHaIconChip(iconChipData(card, snapshot), RemoteModifier.fillMaxSize())
+                        // The row fills the cell and self-centres via its
+                        // own `CenterVertically` (like RemoteHaGaugeWide),
+                        // so a tall cell isn't top-glued (Principle 8). A
+                        // `fillMaxWidth` wrap-height row collapses to zero
+                        // height under a filled-height parent in alpha010,
+                        // so `fillMaxSize`, not `CenteredCell`.
+                        else -> FullRow(card, snapshot, RemoteModifier.fillMaxSize())
                     }
                 }
         }
@@ -76,6 +97,32 @@ class EntityCardConverter : CardConverter {
                 tapAction = tapAction,
             ),
             modifier = modifier,
+        )
+    }
+
+    /** Identity-tier payload — same fields as the full row, shaped as
+     *  [HaTileData] so the shared [RemoteHaIconChip] can render it. */
+    @Composable
+    private fun iconChipData(card: CardConfig, snapshot: HaSnapshot): HaTileData {
+        val entityId = card.raw["entity"]?.jsonPrimitive?.content
+        val entity = entityId?.let { snapshot.states[it] }
+        val tapCfg = card.raw["tap_action"]?.jsonObject
+        val tapAction =
+            if (tapCfg != null) parseHaAction(tapCfg, entityId) else defaultTapActionFor(entityId)
+        val isActive = entity?.toTyped()?.isActive
+        return HaTileData(
+            entityId = entityId,
+            name = nameFor(card, entity, entityId),
+            state = LiveValues.state(entityId, formatState(entity)),
+            icon = HaIconMap.resolve(card.raw["icon"]?.jsonPrimitive?.content, entity),
+            accent =
+                HaToggleAccent(
+                    activeAccent = HaStateColor.activeFor(entity).rc,
+                    inactiveAccent = HaStateColor.inactiveFor(entity).rc,
+                    initiallyOn = isActive ?: false,
+                    toggleable = isActive != null,
+                ),
+            tapAction = tapAction,
         )
     }
 

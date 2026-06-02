@@ -465,7 +465,7 @@ and is reused. The families today:
 
 | Family | Key element | Cards | Shared composable(s) | Ladder state |
 |---|---|---|---|---|
-| **Icon + state row/tile** | tinted icon | `tile`, `entity`, `sensor`, `statistic` | `RemoteHaTile`, `RemoteHaEntityRow` | tile/entity: `Full↔CompactStateChip`; sensor/statistic: none |
+| **Icon + state row/tile** | tinted icon | `tile`, `entity`, `sensor`, `statistic` | `RemoteHaTile` (+`RemoteHaIconChip`), `RemoteHaEntityRow` | all four: `Full↔IconChip` (Full self-centred via `CenteredCell`) |
 | **Icon-centred button** | large tinted icon | `button` | `RemoteHaButton` / `RemoteHaToggleButton` | `Full↔CompactStateChip` |
 | **Arc-dial control** | the arc/dial | `gauge`, `thermostat`, `humidifier`, `light` | `RemoteHaGauge*`, `RemoteHaArcDial*`, `RenderArcDial` | thermostat/humidifier/gauge: Wide↔Full; `light`: **none (outlier)** |
 | **Multi-entity list/strip** | first row/cell | `entities`, `glance`, `area`, `picture-glance`, `entity-filter`, `*-stack` | `RemoteHaEntities`, `RemoteHaGlance` | entities: `list↔strip`; others: none |
@@ -513,10 +513,16 @@ The current state is the placeholder, not the philosophy:
    `entities` reflows on a single width threshold; per-card ladders
    should pick the one pinned axis that best discriminates their
    variants — see `GaugeCardConverter`.
-2. Tile / entity / button / gauge ship two-tier ladders
-   (`Full → CompactStateChip`). That's the value-fallback path,
-   skipping every reflow / identity tier above it. Each card needs
-   the worked-example ladder above.
+2. `button` still ships the `Full → CompactStateChip` text-only
+   ladder (the value-fallback path, skipping the identity tier above
+   it) and needs the worked-example ladder. The icon-+-state family
+   (`tile`, `entity`, `sensor`, `statistic`) now lands on
+   `Full ↔ RemoteHaIconChip`: the smallest cell keeps the tinted icon
+   (identity tier) instead of dropping to a text chip, and the `Full`
+   tier self-centres (`CenteredCell`) so tall cells fill rather than
+   top-glue. Still a single live breakpoint per card (#224) — the
+   reflow / expanded rungs between identity and full are the design
+   target, not encodable yet.
 3. Runtime tier selection **does** fire — the matrix preview shows tile
    switching chip↔full and entities switching list↔strip per size. Two
    gotchas were shaped around: the `componentWidth()` named expression

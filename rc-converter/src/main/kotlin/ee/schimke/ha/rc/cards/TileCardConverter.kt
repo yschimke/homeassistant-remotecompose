@@ -3,6 +3,7 @@
 package ee.schimke.ha.rc.cards
 
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
+import androidx.compose.remote.creation.compose.modifier.fillMaxSize
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.runtime.Composable
@@ -19,6 +20,7 @@ import ee.schimke.ha.rc.RemoteSizeBreakpoint
 import ee.schimke.ha.rc.components.HaTileData
 import ee.schimke.ha.rc.components.HaToggleAccent
 import ee.schimke.ha.rc.components.LiveValues
+import ee.schimke.ha.rc.components.RemoteHaIconChip
 import ee.schimke.ha.rc.components.RemoteHaTile
 import ee.schimke.ha.rc.defaultTapActionFor
 import ee.schimke.ha.rc.formatState
@@ -32,9 +34,16 @@ import kotlinx.serialization.json.jsonPrimitive
  *
  * In [CardSizeMode.Wrap] the card always renders the full HA-style tile.
  * In [CardSizeMode.Fixed] (launcher / wear widgets) the converter wraps
- * its output in a [RemoteSizeBreakpoint] so the runtime swaps to a
- * compact "state-only" chip on narrow surfaces (< 120 dp); above that
- * the widget shows the same tile as wrap mode.
+ * its output in a [RemoteSizeBreakpoint] icon-+-state ladder
+ * (adaptive-card-layouts.md §"Icon + state row/tile"):
+ *
+ *   * **Narrow** (`w < 96 dp`, e.g. a `1×1` launcher cell) →
+ *     [RemoteHaIconChip], the tinted state icon centred over a single
+ *     state line. Keeps the icon identity at the smallest size instead
+ *     of dropping to a bare text chip (Principle 1).
+ *   * **Full** (otherwise) → the HA-reference [RemoteHaTile], wrapped in
+ *     [CenteredCell] so a tall cell (`3×2`) centres the row rather than
+ *     gluing it to the top over a blank half (Principles 7–8).
  */
 class TileCardConverter : CardConverter {
     override val cardType: String = CardTypes.TILE
@@ -50,12 +59,12 @@ class TileCardConverter : CardConverter {
             CardSizeMode.Wrap -> FullTile(card, snapshot, modifier)
             CardSizeMode.Fixed ->
                 RemoteSizeBreakpoint(
-                    thresholdsDp = intArrayOf(120),
-                    modifier = modifier,
+                    thresholdsDp = intArrayOf(96),
+                    modifier = modifier.fillMaxSize(),
                 ) { tier ->
                     when (tier) {
-                        0 -> CompactStateChip(card, snapshot)
-                        else -> FullTile(card, snapshot, RemoteModifier.fillMaxWidth())
+                        0 -> RemoteHaIconChip(tileData(card, snapshot), RemoteModifier.fillMaxSize())
+                        else -> CenteredCell { FullTile(card, snapshot, RemoteModifier.fillMaxWidth()) }
                     }
                 }
         }
@@ -63,6 +72,11 @@ class TileCardConverter : CardConverter {
 
     @Composable
     private fun FullTile(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
+        RemoteHaTile(tileData(card, snapshot), modifier = modifier)
+    }
+
+    @Composable
+    private fun tileData(card: CardConfig, snapshot: HaSnapshot): HaTileData {
         val entityId = card.raw["entity"]?.jsonPrimitive?.content
         val entity = entityId?.let { snapshot.states[it] }
         val name =
@@ -75,22 +89,19 @@ class TileCardConverter : CardConverter {
             if (tapCfg != null) parseHaAction(tapCfg, entityId) else defaultTapActionFor(entityId)
         val isActive = entity?.toTyped()?.isActive
 
-        RemoteHaTile(
-            HaTileData(
-                entityId = entityId,
-                name = name,
-                state = LiveValues.state(entityId, formatState(entity)),
-                icon = HaIconMap.resolve(card.raw["icon"]?.jsonPrimitive?.content, entity),
-                accent =
-                    HaToggleAccent(
-                        activeAccent = HaStateColor.activeFor(entity).rc,
-                        inactiveAccent = HaStateColor.inactiveFor(entity).rc,
-                        initiallyOn = isActive ?: false,
-                        toggleable = isActive != null,
-                    ),
-                tapAction = tapAction,
-            ),
-            modifier = modifier,
+        return HaTileData(
+            entityId = entityId,
+            name = name,
+            state = LiveValues.state(entityId, formatState(entity)),
+            icon = HaIconMap.resolve(card.raw["icon"]?.jsonPrimitive?.content, entity),
+            accent =
+                HaToggleAccent(
+                    activeAccent = HaStateColor.activeFor(entity).rc,
+                    inactiveAccent = HaStateColor.inactiveFor(entity).rc,
+                    initiallyOn = isActive ?: false,
+                    toggleable = isActive != null,
+                ),
+            tapAction = tapAction,
         )
     }
 }
