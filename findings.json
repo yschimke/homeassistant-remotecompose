@@ -2863,35 +2863,35 @@
       "cleanBasename": "ComponentWidthRuntimeProbe_componentWidth_runtime_probe.png",
       "findings": [
         {
-          "boundsInScreen": "21,68,38,105",
+          "boundsInScreen": "21,68,231,278",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "252,68,269,105",
+          "boundsInScreen": "252,68,567,278",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "588,68,605,105",
+          "boundsInScreen": "588,68,1008,278",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "1029,68,1046,105",
+          "boundsInScreen": "1029,68,1554,278",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "1575,68,1592,105",
+          "boundsInScreen": "1575,68,2205,278",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
@@ -8046,28 +8046,28 @@
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "21,748,1019,864",
+          "boundsInScreen": "21,748,1019,958",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "21,1089,494,1461",
+          "boundsInScreen": "21,1089,494,1572",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "21,1640,809,2012",
+          "boundsInScreen": "21,1640,809,2123",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "21,2191,2079,2563",
+          "boundsInScreen": "21,2191,2079,2674",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
@@ -8130,7 +8130,7 @@
           "viewDescription": "android.view.View  desc=\"Kitchen\""
         },
         {
-          "boundsInScreen": "52,1346,462,1434",
+          "boundsInScreen": "52,1346,462,1435",
           "level": "ERROR",
           "message": "This item's height is 34dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
@@ -8327,21 +8327,21 @@
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "24,678,1052,762",
+          "boundsInScreen": "24,678,1052,804",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "24,889,1052,1261",
+          "boundsInScreen": "24,889,1052,1372",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "24,1457,1052,1758",
+          "boundsInScreen": "24,1457,1052,1856",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
@@ -8489,35 +8489,35 @@
       "cleanBasename": "Sizing_SlackSlot_Wrap_sizing_slack_slot_wrap_profile.png",
       "findings": [
         {
-          "boundsInScreen": "24,156,1052,272",
+          "boundsInScreen": "24,156,1052,332",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "24,417,1052,661",
+          "boundsInScreen": "24,417,1052,719",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "24,804,1052,888",
+          "boundsInScreen": "24,804,1052,993",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "24,1078,1052,1450",
+          "boundsInScreen": "24,1078,1052,1624",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "24,1709,1052,2010",
+          "boundsInScreen": "24,1709,1052,2171",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
@@ -8686,14 +8686,14 @@
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "24,763,1052,1135",
+          "boundsInScreen": "24,763,1052,1204",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "24,1289,1052,1590",
+          "boundsInScreen": "24,1289,1052,1646",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
@@ -8735,9 +8735,9 @@
           "viewDescription": "android.view.View  desc=\"Coffee maker\""
         },
         {
-          "boundsInScreen": "499,1378,603,1564",
+          "boundsInScreen": "500,1378,603,1564",
           "level": "ERROR",
-          "message": "This item's width is 40dp. Consider making the width of this touch target 48dp or larger.",
+          "message": "This item's width is 39dp. Consider making the width of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Kitchen\""
         }
