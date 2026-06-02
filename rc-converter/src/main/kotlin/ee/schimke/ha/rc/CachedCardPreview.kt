@@ -88,17 +88,31 @@ fun CachedCardPreview(
     remember(effectiveCacheKey) {
       cache.get(effectiveCacheKey)
         ?: runBlocking {
+            val captureContent: @RemoteComposable @Composable () -> Unit =
+              if (debugBorders) {
+                { DebugRcBorderWrapper { content() } }
+              } else {
+                content
+              }
+            // A constrained capture [profile] (e.g. `widgetsProfile`,
+            // the launcher's stricter op set) can reject a card whose
+            // ops fall outside its vocabulary by throwing mid-capture.
+            // This capture runs synchronously inside composition via
+            // `runBlocking`, so an uncaught throw would take down the
+            // whole host screen (the card-history preview captures every
+            // card with the widgets profile — see CardHistoryScreen).
+            // Degrade to an empty document instead: the card renders
+            // blank, matching how the launcher shows a widget it can't
+            // paint, rather than crashing the screen hosting the preview.
             val captured =
-              captureSingleRemoteDocument(
-                context = context,
-                profile = profile,
-                content =
-                  if (debugBorders) {
-                    { DebugRcBorderWrapper { content() } }
-                  } else {
-                    content
-                  },
-              )
+              runCatching {
+                  captureSingleRemoteDocument(
+                    context = context,
+                    profile = profile,
+                    content = captureContent,
+                  )
+                }
+                .getOrElse { captureSingleRemoteDocument(context = context, profile = profile) {} }
             CardDocument(bytes = captured.bytes, widthPx = 0, heightPx = 0)
           }
           .also { cache.put(effectiveCacheKey, it) }
