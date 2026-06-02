@@ -113,7 +113,23 @@ fun CachedCardPreview(
                     content = captureContent,
                   )
                 }
-                .getOrElse { captureSingleRemoteDocument(context = context, profile = profile) {} }
+                .recoverCatching {
+                  // First fall back to a blank document under the
+                  // requested profile — matches a launcher slot the
+                  // profile can't paint.
+                  captureSingleRemoteDocument(context = context, profile = profile) {}
+                }
+                .getOrElse {
+                  // The constrained profile rejected even an empty
+                  // capture (a blank document has no root ops to admit).
+                  // Capture the blank under the unconstrained AndroidX
+                  // profile, which never rejects, so the host screen
+                  // still composes instead of crashing a second time.
+                  captureSingleRemoteDocument(
+                    context = context,
+                    profile = RcPlatformProfiles.ANDROIDX,
+                  ) {}
+                }
             CardDocument(bytes = captured.bytes, widthPx = 0, heightPx = 0)
           }
           .also { cache.put(effectiveCacheKey, it) }

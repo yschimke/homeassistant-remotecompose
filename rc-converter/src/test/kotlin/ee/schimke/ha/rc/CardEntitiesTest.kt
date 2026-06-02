@@ -107,10 +107,7 @@ class CardEntitiesTest {
     val snapshot =
       HaSnapshot(
         states =
-          mapOf(
-            "alarm_control_panel.home" to
-              EntityState("alarm_control_panel.home", "armed_away")
-          )
+          mapOf("alarm_control_panel.home" to EntityState("alarm_control_panel.home", "armed_away"))
       )
     val bindings = cardSnapshotBindings(setOf("alarm_control_panel.home"), snapshot)
     // Alarm panels carry a domain-keyed int so the armed/disarmed chrome
@@ -120,8 +117,7 @@ class CardEntitiesTest {
 
   @Test
   fun dataSignatureChangesWithState() {
-    val before =
-      HaSnapshot(states = mapOf("sensor.temp" to EntityState("sensor.temp", "21.4")))
+    val before = HaSnapshot(states = mapOf("sensor.temp" to EntityState("sensor.temp", "21.4")))
     val after = HaSnapshot(states = mapOf("sensor.temp" to EntityState("sensor.temp", "22.0")))
     val ids = setOf("sensor.temp")
     assertTrue(cardDataSignature(ids, before) != cardDataSignature(ids, after))
