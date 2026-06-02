@@ -19,28 +19,23 @@ import org.mockserver.model.HttpResponse.response
 import org.mockserver.model.MediaType
 
 /**
- * HTTP-side companion to `OfflineFirstWebSocketFlowTest`. Drives
- * `AddonClient` (the REST client for the RemoteCompose HA add-on)
- * against a mockserver-netty fake, and verifies the offline-first
+ * HTTP-side companion to `OfflineFirstWebSocketFlowTest`. Drives `AddonClient` (the REST client for
+ * the RemoteCompose HA add-on) against a mockserver-netty fake, and verifies the offline-first
  * fallback contract on this surface:
  *
- *   1. With the server up, `AddonClient` round-trips the health
- *      probe and a dashboard fetch.
- *   2. The fetched dashboard is mirrored to `OfflineCacheStorage` so a
- *      later cold start can read it back without hitting the network.
- *   3. With the server down, `AddonClient.health()` returns `false`
- *      instead of throwing — exactly the fall-through signal the
- *      runtime uses to drop the addon from the `CardSource` chain.
- *   4. The cache still holds the dashboard from step 2, so the UI
- *      surface ("activity loads") would render from disk.
+ * 1. With the server up, `AddonClient` round-trips the health probe and a dashboard fetch.
+ * 2. The fetched dashboard is mirrored to `OfflineCacheStorage` so a later cold start can read it
+ *    back without hitting the network.
+ * 3. With the server down, `AddonClient.health()` returns `false` instead of throwing — exactly the
+ *    fall-through signal the runtime uses to drop the addon from the `CardSource` chain.
+ * 4. The cache still holds the dashboard from step 2, so the UI surface ("activity loads") would
+ *    render from disk.
  *
- * mockserver-netty is the right fit here: every endpoint is a plain
- * GET that maps cleanly to a `request().respond()` expectation, and
- * mockserver's lifecycle (`start` / `stop`) gives us a real socket
- * that can be torn down to simulate offline. (`fetchCardBytes` is
- * intentionally not exercised here — `CardKey.toCacheKey()` uses `#`
- * in the path which Ktor's URL builder treats as a fragment
- * delimiter; that's a separate concern from offline-first.)
+ * mockserver-netty is the right fit here: every endpoint is a plain GET that maps cleanly to a
+ * `request().respond()` expectation, and mockserver's lifecycle (`start` / `stop`) gives us a real
+ * socket that can be torn down to simulate offline. (`fetchCardBytes` is intentionally not
+ * exercised here — `CardKey.toCacheKey()` uses `#` in the path which Ktor's URL builder treats as a
+ * fragment delimiter; that's a separate concern from offline-first.)
  */
 class OfflineFirstAddonHttpTest {
 

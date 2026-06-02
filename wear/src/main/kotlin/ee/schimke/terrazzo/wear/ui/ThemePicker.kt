@@ -19,47 +19,44 @@ import androidx.wear.compose.material3.Text
 import ee.schimke.ha.rc.components.ThemeStyle
 
 /**
- * One-line theme picker for the watch: a [ScalingLazyColumn] of radio
- * rows (one per [ThemeStyle]) with the active palette name in the
- * header. Selecting a row calls [onSelect] which the caller writes to
- * [ee.schimke.terrazzo.wear.data.WearPrefs].
+ * One-line theme picker for the watch: a [ScalingLazyColumn] of radio rows (one per [ThemeStyle])
+ * with the active palette name in the header. Selecting a row calls [onSelect] which the caller
+ * writes to [ee.schimke.terrazzo.wear.data.WearPrefs].
  */
 @Composable
 fun WearThemePicker(
-    selected: ThemeStyle,
-    onSelect: (ThemeStyle) -> Unit,
-    modifier: Modifier = Modifier,
+  selected: ThemeStyle,
+  onSelect: (ThemeStyle) -> Unit,
+  modifier: Modifier = Modifier,
 ) {
-    val listState = rememberScalingLazyListState()
-    ScalingLazyColumn(
-        state = listState,
-        modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(4.dp),
-    ) {
-        item {
-            ListHeader { Text("Terrazzo theme") }
-        }
-        item {
-            Text(
-                text = selected.tagline,
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
-            )
-        }
-        items(ThemeStyle.entries) { style ->
-            RadioButton(
-                selected = style == selected,
-                onSelect = { onSelect(style) },
-                label = {
-                    Text(
-                        text = style.displayName,
-                        fontWeight = if (style == selected) FontWeight.SemiBold else FontWeight.Normal,
-                    )
-                },
-                modifier = Modifier.fillMaxWidth(),
-            )
-        }
-        item { Spacer(Modifier.height(8.dp)) }
+  val listState = rememberScalingLazyListState()
+  ScalingLazyColumn(
+    state = listState,
+    modifier = modifier.fillMaxWidth(),
+    verticalArrangement = Arrangement.spacedBy(4.dp),
+  ) {
+    item { ListHeader { Text("Terrazzo theme") } }
+    item {
+      Text(
+        text = selected.tagline,
+        style = MaterialTheme.typography.labelSmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+      )
     }
+    items(ThemeStyle.entries) { style ->
+      RadioButton(
+        selected = style == selected,
+        onSelect = { onSelect(style) },
+        label = {
+          Text(
+            text = style.displayName,
+            fontWeight = if (style == selected) FontWeight.SemiBold else FontWeight.Normal,
+          )
+        },
+        modifier = Modifier.fillMaxWidth(),
+      )
+    }
+    item { Spacer(Modifier.height(8.dp)) }
+  }
 }

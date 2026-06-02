@@ -15,9 +15,9 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 
 /**
- * Verifies the offline-first contract: writes are durable, reads are
- * keyed correctly, and missing entries return null without throwing
- * (so the UI can treat absence as "no cache yet" instead of an error).
+ * Verifies the offline-first contract: writes are durable, reads are keyed correctly, and missing
+ * entries return null without throwing (so the UI can treat absence as "no cache yet" instead of an
+ * error).
  */
 class OfflineCacheTest {
 
@@ -72,8 +72,7 @@ class OfflineCacheTest {
       )
     val homeSnap =
       HaSnapshot(
-        states =
-          mapOf("light.kitchen" to EntityState(entityId = "light.kitchen", state = "on")),
+        states = mapOf("light.kitchen" to EntityState(entityId = "light.kitchen", state = "on"))
       )
 
     c.putDashboard(instance, urlPath = null, dashboard = home)

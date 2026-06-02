@@ -9,88 +9,71 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 
 /**
- * User-intent abstractions mirroring Home Assistant's Lovelace tap/hold/
- * double-tap action model (see `home-assistant/frontend`
- * `src/data/lovelace/config/action.ts`).
+ * User-intent abstractions mirroring Home Assistant's Lovelace tap/hold/ double-tap action model
+ * (see `home-assistant/frontend` `src/data/lovelace/config/action.ts`).
  *
- * At render time these get serialized into a single RemoteCompose
- * [HostAction] carrying a JSON payload; the host intercepts the action
- * via `RemoteDocumentPlayer(onNamedAction = …)` and calls the
- * corresponding HA service / navigates / fires a URL. In `:rc-converter`
- * the playback path (`CachedCardPreview`, `CardPlayer`) wires that
- * callback to a composition-local `HaActionDispatcher`, so cards
- * themselves only need to emit actions and the host app supplies one
+ * At render time these get serialized into a single RemoteCompose [HostAction] carrying a JSON
+ * payload; the host intercepts the action via `RemoteDocumentPlayer(onNamedAction = …)` and calls
+ * the corresponding HA service / navigates / fires a URL. In `:rc-converter` the playback path
+ * (`CachedCardPreview`, `CardPlayer`) wires that callback to a composition-local
+ * `HaActionDispatcher`, so cards themselves only need to emit actions and the host app supplies one
  * dispatcher for the whole dashboard.
  *
- * The action name on the wire is always [HA_ACTION_NAME]; the payload is
- * the discriminated-union JSON of the sealed subtype.
+ * The action name on the wire is always [HA_ACTION_NAME]; the payload is the discriminated-union
+ * JSON of the sealed subtype.
  */
 @Serializable
 sealed interface HaAction {
-    @Serializable
-    data class CallService(
-        val domain: String,
-        val service: String,
-        val entityId: String? = null,
-        val serviceData: JsonObject = JsonObject(emptyMap()),
-    ) : HaAction
+  @Serializable
+  data class CallService(
+    val domain: String,
+    val service: String,
+    val entityId: String? = null,
+    val serviceData: JsonObject = JsonObject(emptyMap()),
+  ) : HaAction
 
-    /** Convenience: HA service `<domain>.toggle` on a single entity. */
-    @Serializable
-    data class Toggle(val entityId: String) : HaAction
+  /** Convenience: HA service `<domain>.toggle` on a single entity. */
+  @Serializable data class Toggle(val entityId: String) : HaAction
 
-    @Serializable
-    data class MoreInfo(val entityId: String) : HaAction
+  @Serializable data class MoreInfo(val entityId: String) : HaAction
 
-    @Serializable
-    data class Navigate(val path: String) : HaAction
+  @Serializable data class Navigate(val path: String) : HaAction
 
-    @Serializable
-    data class Url(val url: String) : HaAction
+  @Serializable data class Url(val url: String) : HaAction
 
-    /**
-     * One press on an alarm-panel keypad. Each digit / `backspace` /
-     * `clear` tap fires its own [AlarmKey] action; the host (typically
-     * via `AlarmKeypadCoordinator`) buffers the keys per [entityId] and
-     * combines them with the most-recent [AlarmIntent] to call
-     * `alarm_control_panel.alarm_*` with `code:` once it decides the
-     * user has finished entering an attempt.
-     *
-     * [key] is one of "0".."9", `"backspace"`, or `"clear"`. The .rc
-     * document carries a separate host action per key — there is no
-     * accumulated buffer in the document itself.
-     */
-    @Serializable
-    data class AlarmKey(val entityId: String, val key: String) : HaAction
+  /**
+   * One press on an alarm-panel keypad. Each digit / `backspace` / `clear` tap fires its own
+   * [AlarmKey] action; the host (typically via `AlarmKeypadCoordinator`) buffers the keys per
+   * [entityId] and combines them with the most-recent [AlarmIntent] to call
+   * `alarm_control_panel.alarm_*` with `code:` once it decides the user has finished entering an
+   * attempt.
+   *
+   * [key] is one of "0".."9", `"backspace"`, or `"clear"`. The .rc document carries a separate host
+   * action per key — there is no accumulated buffer in the document itself.
+   */
+  @Serializable data class AlarmKey(val entityId: String, val key: String) : HaAction
 
-    /**
-     * User intent to arm or disarm an alarm panel. Carries the bare
-     * service suffix ("arm_away", "arm_home", "disarm", …); the
-     * dispatcher decides when to actually call
-     * `alarm_control_panel.alarm_<service>`, attaching the buffered
-     * keypad code from any in-flight [AlarmKey]s.
-     *
-     * [codeLength] = 0 signals the entity does not require a code
-     * (e.g. `code_arm_required: false`) so the dispatcher should fire
-     * immediately. A positive value lets the dispatcher auto-flush as
-     * soon as the buffer fills. `null` means "length unknown — flush
-     * by idle-timeout heuristic".
-     */
-    @Serializable
-    data class AlarmIntent(
-        val entityId: String,
-        val service: String,
-        val codeLength: Int? = null,
-    ) : HaAction
+  /**
+   * User intent to arm or disarm an alarm panel. Carries the bare service suffix ("arm_away",
+   * "arm_home", "disarm", …); the dispatcher decides when to actually call
+   * `alarm_control_panel.alarm_<service>`, attaching the buffered keypad code from any in-flight
+   * [AlarmKey]s.
+   *
+   * [codeLength] = 0 signals the entity does not require a code (e.g. `code_arm_required: false`)
+   * so the dispatcher should fire immediately. A positive value lets the dispatcher auto-flush as
+   * soon as the buffer fills. `null` means "length unknown — flush by idle-timeout heuristic".
+   */
+  @Serializable
+  data class AlarmIntent(val entityId: String, val service: String, val codeLength: Int? = null) :
+    HaAction
 
-    @Serializable
-    data object None : HaAction
+  @Serializable data object None : HaAction
 }
 
 /**
- * Host-side action name. The playback path in `:rc-converter` listens
- * for `HostAction`s under this name and decodes the JSON payload into
- * an [HaAction] before forwarding to `LocalHaActionDispatcher`.
+ * Host-side action name. The playback path in `:rc-converter` listens for `HostAction`s under this
+ * name and decodes the JSON payload into an [HaAction] before forwarding to
+ * `LocalHaActionDispatcher`.
  */
 public const val HA_ACTION_NAME: String = "ha"
 
@@ -98,14 +81,14 @@ private val json = Json { ignoreUnknownKeys = true }
 
 /**
  * Wrap an [HaAction] as a RemoteCompose [Action] ready to be plugged into
- * `Modifier.clickable(action)`. Returns null for [HaAction.None] so callers
- * can treat "no action" as "no click handler".
+ * `Modifier.clickable(action)`. Returns null for [HaAction.None] so callers can treat "no action"
+ * as "no click handler".
  */
 @OptIn(ExperimentalStdlibApi::class)
 @Suppress("RestrictedApi")
 @RestrictTo(RestrictTo.Scope.LIBRARY)
 fun HaAction.toRemoteAction(): Action? {
-    if (this is HaAction.None) return null
-    val payload = json.encodeToString(HaAction.serializer(), this)
-    return hostAction(HA_ACTION_NAME.rs, payload.rs)
+  if (this is HaAction.None) return null
+  val payload = json.encodeToString(HaAction.serializer(), this)
+  return hostAction(HA_ACTION_NAME.rs, payload.rs)
 }

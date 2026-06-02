@@ -22,41 +22,42 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.wear.compose.remote.material3.RemoteIcon
 
 /**
- * Visible placeholder for card types we haven't implemented yet. Keeps
- * the dashboard renderable instead of silently dropping unknown cards.
+ * Visible placeholder for card types we haven't implemented yet. Keeps the dashboard renderable
+ * instead of silently dropping unknown cards.
  */
 @Composable
 @RemoteComposable
 fun RemoteHaUnsupported(data: HaUnsupportedData, modifier: RemoteModifier = RemoteModifier) {
-    val theme = haTheme()
-    RemoteBox(
-        modifier = modifier
-            .then(cardChrome(theme.placeholderBackground, theme.placeholderAccent))
-            .padding(12.rdp),
-        contentAlignment = RemoteAlignment.CenterStart,
-    ) {
-        RemoteColumn {
-            RemoteIcon(
-                imageVector = Icons.Filled.Widgets,
-                contentDescription = "Unsupported card".rs,
-                modifier = RemoteModifier.size(24.rdp),
-                tint = theme.placeholderAccent.rc,
-            )
-            RemoteBox(modifier = RemoteModifier.padding(top = 8.rdp)) {
-                RemoteText(
-                    text = "Not yet supported".rs,
-                    color = theme.primaryText.rc,
-                    fontSize = 14.rsp,
-                    fontWeight = FontWeight.Medium,
-                    style = RemoteTextStyle.Default,
-                )
-            }
-            RemoteText(
-                text = data.cardType.rs,
-                color = theme.secondaryText.rc,
-                fontSize = 12.rsp,
-                style = RemoteTextStyle.Default,
-            )
-        }
+  val theme = haTheme()
+  RemoteBox(
+    modifier =
+      modifier
+        .then(cardChrome(theme.placeholderBackground, theme.placeholderAccent))
+        .padding(12.rdp),
+    contentAlignment = RemoteAlignment.CenterStart,
+  ) {
+    RemoteColumn {
+      RemoteIcon(
+        imageVector = Icons.Filled.Widgets,
+        contentDescription = "Unsupported card".rs,
+        modifier = RemoteModifier.size(24.rdp),
+        tint = theme.placeholderAccent.rc,
+      )
+      RemoteBox(modifier = RemoteModifier.padding(top = 8.rdp)) {
+        RemoteText(
+          text = "Not yet supported".rs,
+          color = theme.primaryText.rc,
+          fontSize = 14.rsp,
+          fontWeight = FontWeight.Medium,
+          style = RemoteTextStyle.Default,
+        )
+      }
+      RemoteText(
+        text = data.cardType.rs,
+        color = theme.secondaryText.rc,
+        fontSize = 12.rsp,
+        style = RemoteTextStyle.Default,
+      )
     }
+  }
 }

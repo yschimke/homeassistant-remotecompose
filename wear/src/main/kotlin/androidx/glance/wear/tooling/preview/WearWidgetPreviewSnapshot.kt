@@ -56,63 +56,60 @@ import ee.schimke.ha.rc.components.R
 import kotlinx.coroutines.runBlocking
 
 /**
- * Previews a [GlanceWearWidget] inside a simulated Wear OS watch face
- * — a circular black surface with the app icon at the top and the
- * widget rendered below.
+ * Previews a [GlanceWearWidget] inside a simulated Wear OS watch face — a circular black surface
+ * with the app icon at the top and the widget rendered below.
  *
- * Goes a step beyond [WearWidgetPreview] (which renders just the
- * widget rectangle) so reviewers can sanity-check how a widget reads
- * against the surrounding watch chrome.
+ * Goes a step beyond [WearWidgetPreview] (which renders just the widget rectangle) so reviewers can
+ * sanity-check how a widget reads against the surrounding watch chrome.
  *
  * @param widget The [GlanceWearWidget] instance to preview.
- * @param params The [WearWidgetParams] describing container type,
- *   dimensions and padding.
+ * @param params The [WearWidgetParams] describing container type, dimensions and padding.
  * @param modifier The [Modifier] applied to the inner widget surface.
  */
 @SuppressLint("RestrictedApi")
 @Composable
 public fun WearWidgetPreviewSnapshot(
-    widget: GlanceWearWidget,
-    params: WearWidgetParams,
-    modifier: Modifier = Modifier,
+  widget: GlanceWearWidget,
+  params: WearWidgetParams,
+  modifier: Modifier = Modifier,
 ) {
-    val context = LocalContext.current
-    val document =
-        remember(widget, params, context) {
-            runBlocking {
-                val widgetData = widget.provideWidgetData(context, params)
-                widgetData.captureRawContent(context, params).rcDocument
-            }
-        }
-
-    Box(
-        modifier = Modifier.size(227.dp).clip(CircleShape).background(Color.Black),
-        contentAlignment = Alignment.Center,
-    ) {
-        RemoteDocumentPreview(
-            document,
-            modifier =
-                modifier
-                    .offset(y = 14.dp)
-                    .width((params.widthDp + 2f * params.horizontalPaddingDp).dp)
-                    .height((params.heightDp + 2f * params.verticalPaddingDp).dp),
-        )
-
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.fillMaxSize().padding(top = 10.dp),
-        ) {
-            Box(
-                modifier = Modifier.size(40.dp).clip(CircleShape).background(Color(0xFFE0E0E0)),
-                contentAlignment = Alignment.Center,
-            ) {
-                Image(
-                    painter = painterResource(id = R.drawable.ic_launcher_foreground),
-                    contentDescription = null,
-                    modifier = Modifier.size(38.dp),
-                    colorFilter = ColorFilter.tint(Color(0xFF424242)),
-                )
-            }
-        }
+  val context = LocalContext.current
+  val document =
+    remember(widget, params, context) {
+      runBlocking {
+        val widgetData = widget.provideWidgetData(context, params)
+        widgetData.captureRawContent(context, params).rcDocument
+      }
     }
+
+  Box(
+    modifier = Modifier.size(227.dp).clip(CircleShape).background(Color.Black),
+    contentAlignment = Alignment.Center,
+  ) {
+    RemoteDocumentPreview(
+      document,
+      modifier =
+        modifier
+          .offset(y = 14.dp)
+          .width((params.widthDp + 2f * params.horizontalPaddingDp).dp)
+          .height((params.heightDp + 2f * params.verticalPaddingDp).dp),
+    )
+
+    Column(
+      horizontalAlignment = Alignment.CenterHorizontally,
+      modifier = Modifier.fillMaxSize().padding(top = 10.dp),
+    ) {
+      Box(
+        modifier = Modifier.size(40.dp).clip(CircleShape).background(Color(0xFFE0E0E0)),
+        contentAlignment = Alignment.Center,
+      ) {
+        Image(
+          painter = painterResource(id = R.drawable.ic_launcher_foreground),
+          contentDescription = null,
+          modifier = Modifier.size(38.dp),
+          colorFilter = ColorFilter.tint(Color(0xFF424242)),
+        )
+      }
+    }
+  }
 }

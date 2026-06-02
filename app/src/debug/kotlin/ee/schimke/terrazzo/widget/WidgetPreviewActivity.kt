@@ -30,7 +30,6 @@ import ee.schimke.ha.rc.CardSizeMode
 import ee.schimke.ha.rc.ProvideCardRegistry
 import ee.schimke.ha.rc.ProvideCardSizeMode
 import ee.schimke.ha.rc.RenderChild
-import ee.schimke.ha.rc.cardHeightDp
 import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.cards.shutter.withEnhancedShutter
 import ee.schimke.ha.rc.components.LocalPictureImageStrategy
@@ -47,35 +46,29 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 
 /**
- * Debug activity that exercises the **widget rendering pipeline** —
- * [captureSingleRemoteDocument] with [widgetsProfile], wrapped in
- * `RemoteViews.DrawInstructions`, inflated as `RemoteViews` — for a
- * `picture-entity` card backed by [PictureImageStrategy.Inline].
+ * Debug activity that exercises the **widget rendering pipeline** — [captureSingleRemoteDocument]
+ * with [widgetsProfile], wrapped in `RemoteViews.DrawInstructions`, inflated as `RemoteViews` — for
+ * a `picture-entity` card backed by [PictureImageStrategy.Inline].
  *
- * Same code path as [TerrazzoWidgetProvider]: theme + registry
- * wiring, [widgetsProfile] capture, `DrawInstructions` build,
- * `updateAppWidget`. The only difference is the destination — here
- * the `RemoteViews` is `apply()`ed into a host `FrameLayout`
- * directly so the activity can show what a launcher would draw.
- * Lets us verify that the [PictureImageStrategy.Inline] (bytes-form
- * baked into the doc) actually paints under the stricter widget
- * runtime — no `BitmapLoader`, no override channel.
+ * Same code path as [TerrazzoWidgetProvider]: theme + registry wiring, [widgetsProfile] capture,
+ * `DrawInstructions` build, `updateAppWidget`. The only difference is the destination — here the
+ * `RemoteViews` is `apply()`ed into a host `FrameLayout` directly so the activity can show what a
+ * launcher would draw. Lets us verify that the [PictureImageStrategy.Inline] (bytes-form baked into
+ * the doc) actually paints under the stricter widget runtime — no `BitmapLoader`, no override
+ * channel.
  *
  * Launch via:
- *
  * ```
  * adb shell am start -n ee.schimke.harc/ee.schimke.terrazzo.widget.WidgetPreviewActivity
  * ```
  *
- * The sample bitmap is generated programmatically (yellow disc on a
- * blue field), so the activity is self-contained — no network, no
- * session needed. If the rendered tile shows the disc, the widget
- * path renders inline bitmaps correctly and `TerrazzoWidgetProvider`
- * just needs the pre-fetch wiring (walk `cardPictureEntityIds`,
- * resolve each URL via `HaImageStack.resolve`, provide [Inline]).
+ * The sample bitmap is generated programmatically (yellow disc on a blue field), so the activity is
+ * self-contained — no network, no session needed. If the rendered tile shows the disc, the widget
+ * path renders inline bitmaps correctly and `TerrazzoWidgetProvider` just needs the pre-fetch
+ * wiring (walk `cardPictureEntityIds`, resolve each URL via `HaImageStack.resolve`, provide
+ * [Inline]).
  *
- * API floor matches [TerrazzoWidgetProvider]:
- * `VANILLA_ICE_CREAM` / API 35 — needed for
+ * API floor matches [TerrazzoWidgetProvider]: `VANILLA_ICE_CREAM` / API 35 — needed for
  * `RemoteViews.DrawInstructions`.
  */
 @RequiresApi(Build.VERSION_CODES.VANILLA_ICE_CREAM)
@@ -109,34 +102,35 @@ class WidgetPreviewActivity : Activity() {
 
     val docBytes =
       runCatching {
-        runBlocking {
-          captureSingleRemoteDocument(
-            context = this@WidgetPreviewActivity,
-            creationDisplayInfo = RemoteCreationDisplayInfo(widthPx, heightPx, densityDpi),
-            profile = widgetsProfile,
-          ) {
-            // The Inline strategy provider must live inside the
-            // capture sub-composition — outer-tree CompositionLocals
-            // don't propagate through `captureSingleRemoteDocument`.
-            CompositionLocalProvider(LocalPictureImageStrategy provides strategy) {
-              ProvideCardRegistry(registry) {
-                ProvideHaTheme(haTheme) {
-                  ProvideCardSizeMode(CardSizeMode.Fixed) {
-                    // Same full-canvas surface the launcher widget uses,
-                    // so the preview shows the background filling the tile
-                    // rather than wrapping to the card content.
-                    ProvideCardChrome(enabled = false) {
-                      RemoteHaWidgetSurface {
-                        RenderChild(SAMPLE_CARD, SAMPLE_SNAPSHOT, RemoteModifier.fillMaxWidth())
+          runBlocking {
+              captureSingleRemoteDocument(
+                context = this@WidgetPreviewActivity,
+                creationDisplayInfo = RemoteCreationDisplayInfo(widthPx, heightPx, densityDpi),
+                profile = widgetsProfile,
+              ) {
+                // The Inline strategy provider must live inside the
+                // capture sub-composition — outer-tree CompositionLocals
+                // don't propagate through `captureSingleRemoteDocument`.
+                CompositionLocalProvider(LocalPictureImageStrategy provides strategy) {
+                  ProvideCardRegistry(registry) {
+                    ProvideHaTheme(haTheme) {
+                      ProvideCardSizeMode(CardSizeMode.Fixed) {
+                        // Same full-canvas surface the launcher widget uses,
+                        // so the preview shows the background filling the tile
+                        // rather than wrapping to the card content.
+                        ProvideCardChrome(enabled = false) {
+                          RemoteHaWidgetSurface {
+                            RenderChild(SAMPLE_CARD, SAMPLE_SNAPSHOT, RemoteModifier.fillMaxWidth())
+                          }
+                        }
                       }
                     }
                   }
                 }
               }
             }
-          }
-        }.bytes
-      }
+            .bytes
+        }
         .onFailure { Log.e(TAG, "widget capture failed", it) }
         .getOrNull()
 
@@ -150,7 +144,10 @@ class WidgetPreviewActivity : Activity() {
       return
     }
 
-    Log.d(TAG, "captured docBytes=${docBytes.size} bytes for ${WIDGET_PREVIEW_WIDTH_DP}x${WIDGET_PREVIEW_HEIGHT_DP}dp tile")
+    Log.d(
+      TAG,
+      "captured docBytes=${docBytes.size} bytes for ${WIDGET_PREVIEW_WIDTH_DP}x${WIDGET_PREVIEW_HEIGHT_DP}dp tile",
+    )
 
     val instructions = RemoteViews.DrawInstructions.Builder(listOf(docBytes)).build()
     val remoteViews = RemoteViews(instructions)
@@ -207,9 +204,8 @@ class WidgetPreviewActivity : Activity() {
     private const val SAMPLE_BITMAP_PX = 512
 
     /**
-     * Sample picture-entity card. Mirrors the shape the dashboard
-     * picker emits — a real installation would pull this from the
-     * pinned `WidgetStore`.
+     * Sample picture-entity card. Mirrors the shape the dashboard picker emits — a real
+     * installation would pull this from the pinned `WidgetStore`.
      */
     private val SAMPLE_CARD: CardConfig =
       Json.parseToJsonElement(
@@ -219,10 +215,9 @@ class WidgetPreviewActivity : Activity() {
         .let { CardConfig(type = (it["type"] as JsonPrimitive).content, raw = it) }
 
     /**
-     * Snapshot with an `entity_picture` attribute set so the
-     * converter takes the image branch (vs. the icon fallback). The
-     * URL value is a marker — the [PictureImageStrategy.Inline]
-     * resolver ignores it and returns the canned sample bitmap.
+     * Snapshot with an `entity_picture` attribute set so the converter takes the image branch (vs.
+     * the icon fallback). The URL value is a marker — the [PictureImageStrategy.Inline] resolver
+     * ignores it and returns the canned sample bitmap.
      */
     private val SAMPLE_SNAPSHOT: HaSnapshot =
       HaSnapshot(

@@ -16,10 +16,8 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import ee.schimke.ha.client.DashboardSummary
 import ee.schimke.ha.model.CardConfig
-import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.components.ThemeStyle
 import ee.schimke.terrazzo.LocalTerrazzoGraph
-import ee.schimke.terrazzo.TerrazzoApp
 import ee.schimke.terrazzo.core.auth.HaAuthService
 import ee.schimke.terrazzo.core.auth.TokenVault
 import ee.schimke.terrazzo.core.cache.OfflineCache
@@ -49,24 +47,21 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 
 /**
- * Phone-sized device previews, one per top-level screen, plus a set of
- * Play-Store-targeted previews used by the listing graphics pipeline.
+ * Phone-sized device previews, one per top-level screen, plus a set of Play-Store-targeted previews
+ * used by the listing graphics pipeline.
  *
- * Rendered by `:app:renderAllPreviews` so regressions (broken layouts,
- * missing theme tokens, a refactor that orphans a screen) show up in
- * CI's artifact bundle even before the emulator job runs.
+ * Rendered by `:app:renderAllPreviews` so regressions (broken layouts, missing theme tokens, a
+ * refactor that orphans a screen) show up in CI's artifact bundle even before the emulator job
+ * runs.
  *
- * Every preview is wrapped in [TerrazzoTheme] so a [ThemeStyle] is
- * exercised. Screens that read [LocalTerrazzoGraph] (DashboardViewScreen
- * touches `offlineCache` and `preferencesStore`) get a minimal preview
- * graph wired up below — the unused bindings throw on access.
+ * Every preview is wrapped in [TerrazzoTheme] so a [ThemeStyle] is exercised. Screens that read
+ * [LocalTerrazzoGraph] (DashboardViewScreen touches `offlineCache` and `preferencesStore`) get a
+ * minimal preview graph wired up below — the unused bindings throw on access.
  *
- * Default phone dimensions match Pixel 6 portrait so a full screen is
- * visible without scrolling. The Play-Store-targeted previews override
- * those via `@Preview(device = ...)` to land on Pixel 2 / 7-inch /
- * 10-inch tablet specs instead, with `dpi` chosen to keep the rendered
- * PNG under the 1800-pixel agent capture limit while preserving the
- * device's aspect ratio.
+ * Default phone dimensions match Pixel 6 portrait so a full screen is visible without scrolling.
+ * The Play-Store-targeted previews override those via `@Preview(device = ...)` to land on Pixel 2 /
+ * 7-inch / 10-inch tablet specs instead, with `dpi` chosen to keep the rendered PNG under the
+ * 1800-pixel agent capture limit while preserving the device's aspect ratio.
  */
 private const val PHONE_WIDTH_DP = 412
 private const val PHONE_HEIGHT_DP = 892
@@ -89,305 +84,333 @@ private const val TABLET_10_DEVICE = "spec:width=800dp,height=1280dp,dpi=224"
 // would re-seed the demo data each render and produce false preview
 // diffs on every PR.
 private const val DEMO_CLOCK_MS = 0L
+
 private fun demoSession() = DemoHaSession(clock = { DEMO_CLOCK_MS })
 
 /**
- * Minimal [TerrazzoGraph] for previews. Provides real instances of
- * [OfflineCache] and [PreferencesStore] (both are pure context-backed
- * file/DataStore wrappers, so they cost nothing in a Robolectric
- * harness) and throws on the rest — none of the previewed screens read
- * those bindings.
+ * Minimal [TerrazzoGraph] for previews. Provides real instances of [OfflineCache] and
+ * [PreferencesStore] (both are pure context-backed file/DataStore wrappers, so they cost nothing in
+ * a Robolectric harness) and throws on the rest — none of the previewed screens read those
+ * bindings.
  */
 @Composable
 private fun rememberPreviewGraph(): TerrazzoGraph {
-    val context = LocalContext.current.applicationContext
-    return remember(context) {
-        object : TerrazzoGraph {
-            override val offlineCache: OfflineCache = OfflineCache(context)
-            override val preferencesStore: PreferencesStore = PreferencesStore(context)
-            override val pinStore: PinStore = PinStore(context)
-            override val wearWidgetSlotsStore: WearWidgetSlotsStore = WearWidgetSlotsStore(context)
-            override val widgetStore: WidgetStore
-                get() = error("widgetStore not wired in previews")
-            // Previews compose TerrazzoApp's root, which builds a
-            // LoginController eagerly. Both bindings are pure
-            // context-backed wrappers (vault → encrypted DataStore,
-            // authService → AppAuth client config) so a real instance
-            // is cheap and reaches no network until the user signs in.
-            override val tokenVault: TokenVault = TokenVault(context)
-            override val remoteUrlStore: ee.schimke.terrazzo.core.network.RemoteUrlStore =
-                ee.schimke.terrazzo.core.network.RemoteUrlStore(context)
-            // Real LAN policy + engine — both are cheap (no network
-            // until something fires a request) and HaAuthService needs
-            // the engine in its constructor now.
-            override val lanConnectionPolicy: ee.schimke.terrazzo.core.network.LanConnectionPolicy =
-                ee.schimke.terrazzo.core.network.LanConnectionPolicy(context)
-            private val httpEngineFactory =
-                ee.schimke.terrazzo.core.network.HttpEngineFactory(
-                    policy = lanConnectionPolicy,
-                    remoteUrlStore = remoteUrlStore,
-                )
-            override val authService: HaAuthService = HaAuthService(context, httpEngineFactory)
-            override val mobileAppStore: MobileAppStore = MobileAppStore(context)
-            override val mobileAppRegistrar: MobileAppRegistrar =
-                MobileAppRegistrar(context, mobileAppStore, httpEngineFactory)
-            override val sessionFactory: HaSessionFactory
-                get() = error("sessionFactory not wired in previews")
-            override val sessionWriteMode: ee.schimke.terrazzo.core.session.SessionWriteMode =
-                ee.schimke.terrazzo.core.session.SessionWriteMode()
-            override val cardMonitor: CardMonitor
-                get() = object : CardMonitor {
-                    override val isEnabled: Boolean = false
-                    override fun start(card: CardConfig, durationMinutes: Int) {}
-                }
-            override val wearSyncManager: WearSyncManager = NoOpWearSyncManager()
-            override val logStore: ee.schimke.terrazzo.core.logs.LogStore =
-                ee.schimke.terrazzo.core.logs.LogStore(context)
-        }
+  val context = LocalContext.current.applicationContext
+  return remember(context) {
+    object : TerrazzoGraph {
+      override val offlineCache: OfflineCache = OfflineCache(context)
+      override val preferencesStore: PreferencesStore = PreferencesStore(context)
+      override val pinStore: PinStore = PinStore(context)
+      override val wearWidgetSlotsStore: WearWidgetSlotsStore = WearWidgetSlotsStore(context)
+      override val widgetStore: WidgetStore
+        get() = error("widgetStore not wired in previews")
+
+      // Previews compose TerrazzoApp's root, which builds a
+      // LoginController eagerly. Both bindings are pure
+      // context-backed wrappers (vault → encrypted DataStore,
+      // authService → AppAuth client config) so a real instance
+      // is cheap and reaches no network until the user signs in.
+      override val tokenVault: TokenVault = TokenVault(context)
+      override val remoteUrlStore: ee.schimke.terrazzo.core.network.RemoteUrlStore =
+        ee.schimke.terrazzo.core.network.RemoteUrlStore(context)
+      // Real LAN policy + engine — both are cheap (no network
+      // until something fires a request) and HaAuthService needs
+      // the engine in its constructor now.
+      override val lanConnectionPolicy: ee.schimke.terrazzo.core.network.LanConnectionPolicy =
+        ee.schimke.terrazzo.core.network.LanConnectionPolicy(context)
+      private val httpEngineFactory =
+        ee.schimke.terrazzo.core.network.HttpEngineFactory(
+          policy = lanConnectionPolicy,
+          remoteUrlStore = remoteUrlStore,
+        )
+      override val authService: HaAuthService = HaAuthService(context, httpEngineFactory)
+      override val mobileAppStore: MobileAppStore = MobileAppStore(context)
+      override val mobileAppRegistrar: MobileAppRegistrar =
+        MobileAppRegistrar(context, mobileAppStore, httpEngineFactory)
+      override val sessionFactory: HaSessionFactory
+        get() = error("sessionFactory not wired in previews")
+
+      override val sessionWriteMode: ee.schimke.terrazzo.core.session.SessionWriteMode =
+        ee.schimke.terrazzo.core.session.SessionWriteMode()
+      override val cardMonitor: CardMonitor
+        get() =
+          object : CardMonitor {
+            override val isEnabled: Boolean = false
+
+            override fun start(card: CardConfig, durationMinutes: Int) {}
+          }
+
+      override val wearSyncManager: WearSyncManager = NoOpWearSyncManager()
+      override val logStore: ee.schimke.terrazzo.core.logs.LogStore =
+        ee.schimke.terrazzo.core.logs.LogStore(context)
     }
+  }
 }
 
 @Composable
 private fun PhoneHost(
-    style: ThemeStyle = ThemeStyle.TerrazzoHome,
-    darkMode: DarkModePref = DarkModePref.Follow,
-    content: @Composable () -> Unit,
+  style: ThemeStyle = ThemeStyle.TerrazzoHome,
+  darkMode: DarkModePref = DarkModePref.Follow,
+  content: @Composable () -> Unit,
 ) {
-    val graph = rememberPreviewGraph()
-    TerrazzoTheme(style = style, darkMode = darkMode) {
-        CompositionLocalProvider(LocalTerrazzoGraph provides graph) {
-            // Paint the Material 3 surface as the page background — the
-            // dashboard cards sit on top, and without an explicit fill
-            // the preview's transparent background shows through and
-            // makes dark-mode cards look stranded on white.
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(MaterialTheme.colorScheme.background),
-            ) {
-                Scaffold { padding ->
-                    Box(modifier = Modifier.padding(padding)) {
-                        content()
-                    }
-                }
-            }
-        }
+  val graph = rememberPreviewGraph()
+  TerrazzoTheme(style = style, darkMode = darkMode) {
+    CompositionLocalProvider(LocalTerrazzoGraph provides graph) {
+      // Paint the Material 3 surface as the page background — the
+      // dashboard cards sit on top, and without an explicit fill
+      // the preview's transparent background shows through and
+      // makes dark-mode cards look stranded on white.
+      Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+        Scaffold { padding -> Box(modifier = Modifier.padding(padding)) { content() } }
+      }
     }
+  }
 }
 
 // --- Original screen previews -------------------------------------------
 
-@Preview(name = "discovery", showBackground = false, widthDp = PHONE_WIDTH_DP, heightDp = PHONE_HEIGHT_DP)
+@Preview(
+  name = "discovery",
+  showBackground = false,
+  widthDp = PHONE_WIDTH_DP,
+  heightDp = PHONE_HEIGHT_DP,
+)
 @Composable
-fun Screen_Discovery() = PhoneHost {
-    DiscoveryScreen(onInstancePicked = {}, onDemoSelected = {})
-}
+fun Screen_Discovery() = PhoneHost { DiscoveryScreen(onInstancePicked = {}, onDemoSelected = {}) }
 
-@Preview(name = "discovery · theme", showBackground = false, widthDp = PHONE_WIDTH_DP, heightDp = PHONE_HEIGHT_DP)
+@Preview(
+  name = "discovery · theme",
+  showBackground = false,
+  widthDp = PHONE_WIDTH_DP,
+  heightDp = PHONE_HEIGHT_DP,
+)
 @Composable
-fun Screen_Discovery_ThemeStyle(
-    @PreviewParameter(ThemeStyleProvider::class) style: ThemeStyle,
-) = PhoneHost(style = style) {
-    DiscoveryScreen(onInstancePicked = {}, onDemoSelected = {})
-}
+fun Screen_Discovery_ThemeStyle(@PreviewParameter(ThemeStyleProvider::class) style: ThemeStyle) =
+  PhoneHost(style = style) { DiscoveryScreen(onInstancePicked = {}, onDemoSelected = {}) }
 
-@Preview(name = "widgets", showBackground = false, widthDp = PHONE_WIDTH_DP, heightDp = PHONE_HEIGHT_DP)
+@Preview(
+  name = "widgets",
+  showBackground = false,
+  widthDp = PHONE_WIDTH_DP,
+  heightDp = PHONE_HEIGHT_DP,
+)
 @Composable
-fun Screen_Widgets() = PhoneHost {
-    WidgetsScreen(onBack = {})
-}
+fun Screen_Widgets() = PhoneHost { WidgetsScreen(onBack = {}) }
 
-@Preview(name = "widgets · theme", showBackground = false, widthDp = PHONE_WIDTH_DP, heightDp = PHONE_HEIGHT_DP)
+@Preview(
+  name = "widgets · theme",
+  showBackground = false,
+  widthDp = PHONE_WIDTH_DP,
+  heightDp = PHONE_HEIGHT_DP,
+)
 @Composable
-fun Screen_Widgets_ThemeStyle(
-    @PreviewParameter(ThemeStyleProvider::class) style: ThemeStyle,
-) = PhoneHost(style = style) {
-    WidgetsScreen(onBack = {})
-}
+fun Screen_Widgets_ThemeStyle(@PreviewParameter(ThemeStyleProvider::class) style: ThemeStyle) =
+  PhoneHost(style = style) { WidgetsScreen(onBack = {}) }
 
-@Preview(name = "dashboard picker", showBackground = false, widthDp = PHONE_WIDTH_DP, heightDp = PHONE_HEIGHT_DP)
+@Preview(
+  name = "dashboard picker",
+  showBackground = false,
+  widthDp = PHONE_WIDTH_DP,
+  heightDp = PHONE_HEIGHT_DP,
+)
 @Composable
 fun Screen_DashboardPicker() = PhoneHost {
-    DashboardPickerScreen(
-        state = DashboardListState.Ready(
-            dashboards = listOf(
-                DashboardSummary(urlPath = null, title = "Home"),
-                DashboardSummary(urlPath = "lovelace-mobile", title = "Living room"),
-                DashboardSummary(urlPath = "lovelace-garage", title = "Garage"),
-            ),
-        ),
-        onDashboardPicked = {},
-    )
-}
-
-@Preview(name = "dashboard picker · theme", showBackground = false, widthDp = PHONE_WIDTH_DP, heightDp = PHONE_HEIGHT_DP)
-@Composable
-fun Screen_DashboardPicker_ThemeStyle(
-    @PreviewParameter(ThemeStyleProvider::class) style: ThemeStyle,
-) = PhoneHost(style = style) {
-    DashboardPickerScreen(
-        state = DashboardListState.Ready(
-            dashboards = listOf(
-                DashboardSummary(urlPath = null, title = "Home"),
-                DashboardSummary(urlPath = "lovelace-mobile", title = "Living room"),
-                DashboardSummary(urlPath = "lovelace-garage", title = "Garage"),
-            ),
-        ),
-        onDashboardPicked = {},
-    )
-}
-
-@Preview(name = "dashboard view", showBackground = false, widthDp = PHONE_WIDTH_DP, heightDp = PHONE_HEIGHT_DP)
-@Composable
-fun Screen_DashboardView() = PhoneHost {
-    DashboardViewScreen(
-        session = demoSession(),
-        urlPath = null,
-        onCardLongPress = { _, _ -> },
-    )
+  DashboardPickerScreen(
+    state =
+      DashboardListState.Ready(
+        dashboards =
+          listOf(
+            DashboardSummary(urlPath = null, title = "Home"),
+            DashboardSummary(urlPath = "lovelace-mobile", title = "Living room"),
+            DashboardSummary(urlPath = "lovelace-garage", title = "Garage"),
+          )
+      ),
+    onDashboardPicked = {},
+  )
 }
 
 @Preview(
-    name = "dashboard view · phone landscape medium",
-    showBackground = false,
-    widthDp = PHONE_LANDSCAPE_MEDIUM_WIDTH_DP,
-    heightDp = PHONE_LANDSCAPE_MEDIUM_HEIGHT_DP,
+  name = "dashboard picker · theme",
+  showBackground = false,
+  widthDp = PHONE_WIDTH_DP,
+  heightDp = PHONE_HEIGHT_DP,
+)
+@Composable
+fun Screen_DashboardPicker_ThemeStyle(
+  @PreviewParameter(ThemeStyleProvider::class) style: ThemeStyle
+) =
+  PhoneHost(style = style) {
+    DashboardPickerScreen(
+      state =
+        DashboardListState.Ready(
+          dashboards =
+            listOf(
+              DashboardSummary(urlPath = null, title = "Home"),
+              DashboardSummary(urlPath = "lovelace-mobile", title = "Living room"),
+              DashboardSummary(urlPath = "lovelace-garage", title = "Garage"),
+            )
+        ),
+      onDashboardPicked = {},
+    )
+  }
+
+@Preview(
+  name = "dashboard view",
+  showBackground = false,
+  widthDp = PHONE_WIDTH_DP,
+  heightDp = PHONE_HEIGHT_DP,
+)
+@Composable
+fun Screen_DashboardView() = PhoneHost {
+  DashboardViewScreen(session = demoSession(), urlPath = null, onCardLongPress = { _, _ -> })
+}
+
+@Preview(
+  name = "dashboard view · phone landscape medium",
+  showBackground = false,
+  widthDp = PHONE_LANDSCAPE_MEDIUM_WIDTH_DP,
+  heightDp = PHONE_LANDSCAPE_MEDIUM_HEIGHT_DP,
 )
 @Composable
 fun Screen_DashboardView_PhoneLandscapeMedium() = PhoneHost {
-    DashboardViewScreen(
-        session = demoSession(),
-        urlPath = null,
-        onCardLongPress = { _, _ -> },
-    )
+  DashboardViewScreen(session = demoSession(), urlPath = null, onCardLongPress = { _, _ -> })
 }
 
 /**
- * Parameterised fan-out of [DashboardViewScreen] over every
- * [ThemeStyle]. Produces one PNG per curated palette so the PR can
- * compare them side-by-side against the same dashboard content.
+ * Parameterised fan-out of [DashboardViewScreen] over every [ThemeStyle]. Produces one PNG per
+ * curated palette so the PR can compare them side-by-side against the same dashboard content.
  */
-@Preview(name = "dashboard · theme", showBackground = false, widthDp = PHONE_WIDTH_DP, heightDp = PHONE_HEIGHT_DP)
+@Preview(
+  name = "dashboard · theme",
+  showBackground = false,
+  widthDp = PHONE_WIDTH_DP,
+  heightDp = PHONE_HEIGHT_DP,
+)
 @Composable
 fun Screen_DashboardView_ThemeStyle(
-    @PreviewParameter(ThemeStyleProvider::class) style: ThemeStyle,
-) = PhoneHost(style = style) {
-    DashboardViewScreen(
-        session = demoSession(),
-        urlPath = null,
-        onCardLongPress = { _, _ -> },
-    )
-}
+  @PreviewParameter(ThemeStyleProvider::class) style: ThemeStyle
+) =
+  PhoneHost(style = style) {
+    DashboardViewScreen(session = demoSession(), urlPath = null, onCardLongPress = { _, _ -> })
+  }
 
 /**
- * Sample card + snapshot for the card-history screen previews. A tile
- * bound to a numeric demo sensor (`sensor.downstairs_temperature`) so
- * the history section renders a populated line chart: [demoSession]
- * synthesizes a plausible series for that entity, and [DemoData.snapshot]
- * supplies its friendly name + unit.
+ * Sample card + snapshot for the card-history screen previews. A tile bound to a numeric demo
+ * sensor (`sensor.downstairs_temperature`) so the history section renders a populated line chart:
+ * [demoSession] synthesizes a plausible series for that entity, and [DemoData.snapshot] supplies
+ * its friendly name + unit.
  */
-private val HISTORY_SAMPLE_CARD = CardConfig(
+private val HISTORY_SAMPLE_CARD =
+  CardConfig(
     type = "tile",
-    raw = buildJsonObject {
+    raw =
+      buildJsonObject {
         put("type", "tile")
         put("entity", "sensor.downstairs_temperature")
-    },
-)
+      },
+  )
 
-@Preview(name = "card history", showBackground = false, widthDp = PHONE_WIDTH_DP, heightDp = PHONE_HEIGHT_DP)
+@Preview(
+  name = "card history",
+  showBackground = false,
+  widthDp = PHONE_WIDTH_DP,
+  heightDp = PHONE_HEIGHT_DP,
+)
 @Composable
 fun Screen_CardHistory() = PhoneHost {
-    CardHistoryScreen(
-        session = demoSession(),
-        card = HISTORY_SAMPLE_CARD,
-        snapshot = DemoData.snapshot(),
-        onBack = {},
-        onAddToHomeScreen = {},
-    )
+  CardHistoryScreen(
+    session = demoSession(),
+    card = HISTORY_SAMPLE_CARD,
+    snapshot = DemoData.snapshot(),
+    onBack = {},
+    onAddToHomeScreen = {},
+  )
 }
 
-@Preview(name = "card history · theme", showBackground = false, widthDp = PHONE_WIDTH_DP, heightDp = PHONE_HEIGHT_DP)
+@Preview(
+  name = "card history · theme",
+  showBackground = false,
+  widthDp = PHONE_WIDTH_DP,
+  heightDp = PHONE_HEIGHT_DP,
+)
 @Composable
-fun Screen_CardHistory_ThemeStyle(
-    @PreviewParameter(ThemeStyleProvider::class) style: ThemeStyle,
-) = PhoneHost(style = style) {
+fun Screen_CardHistory_ThemeStyle(@PreviewParameter(ThemeStyleProvider::class) style: ThemeStyle) =
+  PhoneHost(style = style) {
     CardHistoryScreen(
-        session = demoSession(),
-        card = HISTORY_SAMPLE_CARD,
-        snapshot = DemoData.snapshot(),
-        onBack = {},
-        onAddToHomeScreen = {},
+      session = demoSession(),
+      card = HISTORY_SAMPLE_CARD,
+      snapshot = DemoData.snapshot(),
+      onBack = {},
+      onAddToHomeScreen = {},
     )
-}
+  }
 
 /**
- * Sample dashboard list for the selection-screen previews: a couple of
- * named custom dashboards (what HA actually returns from
- * `lovelace/dashboards/list`). The screen itself stitches in the
+ * Sample dashboard list for the selection-screen previews: a couple of named custom dashboards
+ * (what HA actually returns from `lovelace/dashboards/list`). The screen itself stitches in the
  * built-in "Overview" entry on top of this.
  */
-private val SELECTION_SAMPLE_DASHBOARDS = listOf(
+private val SELECTION_SAMPLE_DASHBOARDS =
+  listOf(
     DashboardSummary(urlPath = "lovelace-mobile", title = "Living room"),
     DashboardSummary(urlPath = "lovelace-garage", title = "Garage"),
     DashboardSummary(urlPath = "energy", title = "Energy"),
-)
+  )
 
 @Preview(
-    name = "dashboard selection · signin",
-    showBackground = false,
-    widthDp = PHONE_WIDTH_DP,
-    heightDp = PHONE_HEIGHT_DP,
+  name = "dashboard selection · signin",
+  showBackground = false,
+  widthDp = PHONE_WIDTH_DP,
+  heightDp = PHONE_HEIGHT_DP,
 )
 @Composable
 fun Screen_DashboardSelection_Signin() = PhoneHost {
-    DashboardSelectionScreen(
-        state = DashboardListState.Ready(SELECTION_SAMPLE_DASHBOARDS),
-        initialSelection = null,
-        onConfirm = {},
-        onBack = null,
-    )
+  DashboardSelectionScreen(
+    state = DashboardListState.Ready(SELECTION_SAMPLE_DASHBOARDS),
+    initialSelection = null,
+    onConfirm = {},
+    onBack = null,
+  )
 }
 
 @Preview(
-    name = "dashboard selection · settings",
-    showBackground = false,
-    widthDp = PHONE_WIDTH_DP,
-    heightDp = PHONE_HEIGHT_DP,
+  name = "dashboard selection · settings",
+  showBackground = false,
+  widthDp = PHONE_WIDTH_DP,
+  heightDp = PHONE_HEIGHT_DP,
 )
 @Composable
 fun Screen_DashboardSelection_Settings() = PhoneHost {
-    DashboardSelectionScreen(
-        state = DashboardListState.Ready(SELECTION_SAMPLE_DASHBOARDS),
-        initialSelection = setOf(
-            PreferencesStore.DEFAULT_DASHBOARD_SENTINEL,
-            "lovelace-mobile",
-        ),
-        onConfirm = {},
-        onBack = {},
-        title = "Manage dashboards",
-    )
+  DashboardSelectionScreen(
+    state = DashboardListState.Ready(SELECTION_SAMPLE_DASHBOARDS),
+    initialSelection = setOf(PreferencesStore.DEFAULT_DASHBOARD_SENTINEL, "lovelace-mobile"),
+    onConfirm = {},
+    onBack = {},
+    title = "Manage dashboards",
+  )
 }
 
 @Preview(
-    name = "dashboard selection · theme",
-    showBackground = false,
-    widthDp = PHONE_WIDTH_DP,
-    heightDp = PHONE_HEIGHT_DP,
+  name = "dashboard selection · theme",
+  showBackground = false,
+  widthDp = PHONE_WIDTH_DP,
+  heightDp = PHONE_HEIGHT_DP,
 )
 @Composable
 fun Screen_DashboardSelection_ThemeStyle(
-    @PreviewParameter(ThemeStyleProvider::class) style: ThemeStyle,
-) = PhoneHost(style = style) {
+  @PreviewParameter(ThemeStyleProvider::class) style: ThemeStyle
+) =
+  PhoneHost(style = style) {
     DashboardSelectionScreen(
-        state = DashboardListState.Ready(SELECTION_SAMPLE_DASHBOARDS),
-        initialSelection = null,
-        onConfirm = {},
-        onBack = null,
+      state = DashboardListState.Ready(SELECTION_SAMPLE_DASHBOARDS),
+      initialSelection = null,
+      onConfirm = {},
+      onBack = null,
     )
-}
+  }
 
 class ThemeStyleProvider : PreviewParameterProvider<ThemeStyle> {
-    override val values: Sequence<ThemeStyle> = ThemeStyle.entries.asSequence()
+  override val values: Sequence<ThemeStyle> = ThemeStyle.entries.asSequence()
 }
 
 // --- Play Store listing graphics ----------------------------------------
@@ -401,58 +424,64 @@ class ThemeStyleProvider : PreviewParameterProvider<ThemeStyle> {
 /** Phone slot 1 — light dashboard (the "home screen"). */
 @Preview(name = "play · phone · home (light)", showBackground = false, device = PIXEL_2_DEVICE)
 @Composable
-fun Play_Phone_01_HomeLight() = PhoneHost(darkMode = DarkModePref.Light) {
+fun Play_Phone_01_HomeLight() =
+  PhoneHost(darkMode = DarkModePref.Light) {
     DashboardViewScreen(session = demoSession(), urlPath = null, onCardLongPress = { _, _ -> })
-}
+  }
 
 /** Phone slot 2 — dark dashboard (the "home screen"). */
 @Preview(name = "play · phone · home (dark)", showBackground = false, device = PIXEL_2_DEVICE)
 @Composable
-fun Play_Phone_02_HomeDark() = PhoneHost(darkMode = DarkModePref.Dark) {
+fun Play_Phone_02_HomeDark() =
+  PhoneHost(darkMode = DarkModePref.Dark) {
     DashboardViewScreen(session = demoSession(), urlPath = null, onCardLongPress = { _, _ -> })
-}
+  }
 
 /** Phone slot 3 — discovery / first-launch flow. */
 @Preview(name = "play · phone · discovery", showBackground = false, device = PIXEL_2_DEVICE)
 @Composable
-fun Play_Phone_03_Discovery() = PhoneHost(darkMode = DarkModePref.Light) {
+fun Play_Phone_03_Discovery() =
+  PhoneHost(darkMode = DarkModePref.Light) {
     DiscoveryScreen(onInstancePicked = {}, onDemoSelected = {})
-}
+  }
 
 /** Phone slot 4 — multi-dashboard picker. */
 @Preview(name = "play · phone · picker", showBackground = false, device = PIXEL_2_DEVICE)
 @Composable
-fun Play_Phone_04_Picker() = PhoneHost(darkMode = DarkModePref.Light) {
+fun Play_Phone_04_Picker() =
+  PhoneHost(darkMode = DarkModePref.Light) {
     DashboardPickerScreen(
-        state = DashboardListState.Ready(
-            dashboards = listOf(
-                DashboardSummary(urlPath = null, title = "Home"),
-                DashboardSummary(urlPath = "lovelace-mobile", title = "Living room"),
-                DashboardSummary(urlPath = "lovelace-garage", title = "Garage"),
-            ),
+      state =
+        DashboardListState.Ready(
+          dashboards =
+            listOf(
+              DashboardSummary(urlPath = null, title = "Home"),
+              DashboardSummary(urlPath = "lovelace-mobile", title = "Living room"),
+              DashboardSummary(urlPath = "lovelace-garage", title = "Garage"),
+            )
         ),
-        onDashboardPicked = {},
+      onDashboardPicked = {},
     )
-}
+  }
 
 /** Phone slot 5 — installed widgets. */
 @Preview(name = "play · phone · widgets", showBackground = false, device = PIXEL_2_DEVICE)
 @Composable
-fun Play_Phone_05_Widgets() = PhoneHost(darkMode = DarkModePref.Light) {
-    WidgetsScreen(onBack = {})
-}
+fun Play_Phone_05_Widgets() =
+  PhoneHost(darkMode = DarkModePref.Light) { WidgetsScreen(onBack = {}) }
 
 /** 7-inch tablet slot 1 — home (dashboard view). */
 @Preview(name = "play · 7-inch · home", showBackground = false, device = TABLET_7_DEVICE)
 @Composable
-fun Play_Tablet7_01_Home() = PhoneHost(darkMode = DarkModePref.Light) {
+fun Play_Tablet7_01_Home() =
+  PhoneHost(darkMode = DarkModePref.Light) {
     DashboardViewScreen(session = demoSession(), urlPath = null, onCardLongPress = { _, _ -> })
-}
+  }
 
 /** 10-inch tablet slot 1 — home (dashboard view). */
 @Preview(name = "play · 10-inch · home", showBackground = false, device = TABLET_10_DEVICE)
 @Composable
-fun Play_Tablet10_01_Home() = PhoneHost(darkMode = DarkModePref.Light) {
+fun Play_Tablet10_01_Home() =
+  PhoneHost(darkMode = DarkModePref.Light) {
     DashboardViewScreen(session = demoSession(), urlPath = null, onCardLongPress = { _, _ -> })
-}
-
+  }

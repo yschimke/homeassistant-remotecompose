@@ -13,262 +13,241 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 
 /**
- * User-selectable night-mode preference, layered above the system
- * setting so users can force dark or light regardless of the system
- * value. `Follow` is the default on mobile; Wear and TV ignore it (they
- * are dark-only / light-only respectively).
+ * User-selectable night-mode preference, layered above the system setting so users can force dark
+ * or light regardless of the system value. `Follow` is the default on mobile; Wear and TV ignore it
+ * (they are dark-only / light-only respectively).
  */
-enum class DarkModePref { Follow, Light, Dark }
+enum class DarkModePref {
+  Follow,
+  Light,
+  Dark,
+}
 
 /**
- * Top-level theme selection: Material 3 defaults, or one of the
- * curated Terrazzo palettes. The string values here match
- * `ThemeStyle.name` in the rc-components module so the two tables
- * stay in sync without an explicit mapper.
+ * Top-level theme selection: Material 3 defaults, or one of the curated Terrazzo palettes. The
+ * string values here match `ThemeStyle.name` in the rc-components module so the two tables stay in
+ * sync without an explicit mapper.
  */
-enum class ThemePref { Material3, TerrazzoHome, TerrazzoMushroom, TerrazzoMinimalist, TerrazzoKiosk }
+enum class ThemePref {
+  Material3,
+  TerrazzoHome,
+  TerrazzoMushroom,
+  TerrazzoMinimalist,
+  TerrazzoKiosk,
+}
 
 /**
- * Small app-level preferences. Demo-mode flag plus theme choice
- * (Material 3 vs one of four Terrazzo palettes) and dark-mode
- * preference. Reads are `Flow`s so the UI recomposes when the user
- * flips a switch in Settings; widget refresh takes a one-shot read
- * at update time.
+ * Small app-level preferences. Demo-mode flag plus theme choice (Material 3 vs one of four Terrazzo
+ * palettes) and dark-mode preference. Reads are `Flow`s so the UI recomposes when the user flips a
+ * switch in Settings; widget refresh takes a one-shot read at update time.
  */
 @SingleIn(AppScope::class)
 @Inject
 class PreferencesStore(private val context: Context) {
 
-    val demoMode: Flow<Boolean>
-        get() = context.store.data.map { it[DEMO_KEY] ?: false }
+  val demoMode: Flow<Boolean>
+    get() = context.store.data.map { it[DEMO_KEY] ?: false }
 
-    suspend fun demoModeNow(): Boolean = demoMode.first()
+  suspend fun demoModeNow(): Boolean = demoMode.first()
 
-    suspend fun setDemoMode(enabled: Boolean) {
-        context.store.edit { it[DEMO_KEY] = enabled }
-    }
+  suspend fun setDemoMode(enabled: Boolean) {
+    context.store.edit { it[DEMO_KEY] = enabled }
+  }
 
-    val themeStyle: Flow<ThemePref>
-        get() = context.store.data.map { prefs ->
-            prefs[THEME_KEY]?.let { runCatching { ThemePref.valueOf(it) }.getOrNull() }
-                ?: ThemePref.TerrazzoHome
-        }
+  val themeStyle: Flow<ThemePref>
+    get() =
+      context.store.data.map { prefs ->
+        prefs[THEME_KEY]?.let { runCatching { ThemePref.valueOf(it) }.getOrNull() }
+          ?: ThemePref.TerrazzoHome
+      }
 
-    suspend fun themeStyleNow(): ThemePref = themeStyle.first()
+  suspend fun themeStyleNow(): ThemePref = themeStyle.first()
 
-    suspend fun setThemeStyle(style: ThemePref) {
-        context.store.edit { it[THEME_KEY] = style.name }
-    }
+  suspend fun setThemeStyle(style: ThemePref) {
+    context.store.edit { it[THEME_KEY] = style.name }
+  }
 
-    val darkMode: Flow<DarkModePref>
-        get() = context.store.data.map { prefs ->
-            prefs[DARK_KEY]?.let { runCatching { DarkModePref.valueOf(it) }.getOrNull() }
-                ?: DarkModePref.Follow
-        }
+  val darkMode: Flow<DarkModePref>
+    get() =
+      context.store.data.map { prefs ->
+        prefs[DARK_KEY]?.let { runCatching { DarkModePref.valueOf(it) }.getOrNull() }
+          ?: DarkModePref.Follow
+      }
 
-    suspend fun darkModeNow(): DarkModePref = darkMode.first()
+  suspend fun darkModeNow(): DarkModePref = darkMode.first()
 
-    suspend fun setDarkMode(mode: DarkModePref) {
-        context.store.edit { it[DARK_KEY] = mode.name }
-    }
+  suspend fun setDarkMode(mode: DarkModePref) {
+    context.store.edit { it[DARK_KEY] = mode.name }
+  }
 
-    /**
-     * Opt-in to the experimental Compose 1.11 `Grid` API for the
-     * dashboard side-by-side section layout. Off by default so the
-     * stable `Row` + chunked path keeps shipping; flip from Settings
-     * to evaluate visual / behavioural parity against the legacy
-     * path. Compact / Medium widths render the same either way (the
-     * flag only takes effect in Expanded width with ≥2 sections).
-     */
-    val experimentalGridLayout: Flow<Boolean>
-        get() = context.store.data.map { it[GRID_LAYOUT_KEY] ?: false }
+  /**
+   * Opt-in to the experimental Compose 1.11 `Grid` API for the dashboard side-by-side section
+   * layout. Off by default so the stable `Row` + chunked path keeps shipping; flip from Settings to
+   * evaluate visual / behavioural parity against the legacy path. Compact / Medium widths render
+   * the same either way (the flag only takes effect in Expanded width with ≥2 sections).
+   */
+  val experimentalGridLayout: Flow<Boolean>
+    get() = context.store.data.map { it[GRID_LAYOUT_KEY] ?: false }
 
-    suspend fun setExperimentalGridLayout(enabled: Boolean) {
-        context.store.edit { it[GRID_LAYOUT_KEY] = enabled }
-    }
+  suspend fun setExperimentalGridLayout(enabled: Boolean) {
+    context.store.edit { it[GRID_LAYOUT_KEY] = enabled }
+  }
 
-    /**
-     * Collapsed-section mode for long single-column dashboards. When
-     * on, only the first section in a view stays expanded and the rest
-     * collapse to their headings; tapping a heading expands that
-     * section and collapses whichever was previously open. Defaults
-     * to on so a long dashboard's above-the-fold content is visible
-     * without scrolling. Wide / side-by-side layouts ignore this — the
-     * whole point there is to show every section at once.
-     */
-    val collapsedMode: Flow<Boolean>
-        get() = context.store.data.map { it[COLLAPSED_MODE_KEY] ?: true }
+  /**
+   * Collapsed-section mode for long single-column dashboards. When on, only the first section in a
+   * view stays expanded and the rest collapse to their headings; tapping a heading expands that
+   * section and collapses whichever was previously open. Defaults to on so a long dashboard's
+   * above-the-fold content is visible without scrolling. Wide / side-by-side layouts ignore this —
+   * the whole point there is to show every section at once.
+   */
+  val collapsedMode: Flow<Boolean>
+    get() = context.store.data.map { it[COLLAPSED_MODE_KEY] ?: true }
 
-    suspend fun setCollapsedMode(enabled: Boolean) {
-        context.store.edit { it[COLLAPSED_MODE_KEY] = enabled }
-    }
+  suspend fun setCollapsedMode(enabled: Boolean) {
+    context.store.edit { it[COLLAPSED_MODE_KEY] = enabled }
+  }
 
-    /**
-     * Hidden debug surface that exposes the in-memory
-     * [ee.schimke.terrazzo.core.logs.LogStore] buffer (WebSocket data
-     * updates touching dashboard entities, connect / disconnect
-     * events, locally-dispatched service calls). Off by default; the
-     * toggle lives in Settings and the corresponding overflow-menu
-     * entry only appears while it's on.
-     */
-    val logsViewEnabled: Flow<Boolean>
-        get() = context.store.data.map { it[LOGS_VIEW_KEY] ?: false }
+  /**
+   * Hidden debug surface that exposes the in-memory [ee.schimke.terrazzo.core.logs.LogStore] buffer
+   * (WebSocket data updates touching dashboard entities, connect / disconnect events,
+   * locally-dispatched service calls). Off by default; the toggle lives in Settings and the
+   * corresponding overflow-menu entry only appears while it's on.
+   */
+  val logsViewEnabled: Flow<Boolean>
+    get() = context.store.data.map { it[LOGS_VIEW_KEY] ?: false }
 
-    suspend fun setLogsViewEnabled(enabled: Boolean) {
-        context.store.edit { it[LOGS_VIEW_KEY] = enabled }
-    }
+  suspend fun setLogsViewEnabled(enabled: Boolean) {
+    context.store.edit { it[LOGS_VIEW_KEY] = enabled }
+  }
 
-    /**
-     * Debug aid: flash each dashboard card whenever the entity state it
-     * renders changes. The host watches the polled snapshot for every
-     * entity a card references (see
-     * [ee.schimke.terrazzo.core.logs.referencedEntities]) and, on a
-     * value change, paints a brief fading highlight over that card's
-     * slot. Off by default; pairs well with demo mode (which animates
-     * values every ~1s) to see which cards are live. In-memory only —
-     * it changes nothing about the rendered document.
-     */
-    val flashOnDataChange: Flow<Boolean>
-        get() = context.store.data.map { it[FLASH_ON_CHANGE_KEY] ?: false }
+  /**
+   * Debug aid: flash each dashboard card whenever the entity state it renders changes. The host
+   * watches the polled snapshot for every entity a card references (see
+   * [ee.schimke.terrazzo.core.logs.referencedEntities]) and, on a value change, paints a brief
+   * fading highlight over that card's slot. Off by default; pairs well with demo mode (which
+   * animates values every ~1s) to see which cards are live. In-memory only — it changes nothing
+   * about the rendered document.
+   */
+  val flashOnDataChange: Flow<Boolean>
+    get() = context.store.data.map { it[FLASH_ON_CHANGE_KEY] ?: false }
 
-    suspend fun setFlashOnDataChange(enabled: Boolean) {
-        context.store.edit { it[FLASH_ON_CHANGE_KEY] = enabled }
-    }
+  suspend fun setFlashOnDataChange(enabled: Boolean) {
+    context.store.edit { it[FLASH_ON_CHANGE_KEY] = enabled }
+  }
 
-    /**
-     * Debug aid: overlay a translucent grid of the live data the
-     * current dashboard's cards consume — one row per referenced
-     * entity, showing the entity id (key), its current state (value),
-     * and how long ago that value last changed. Off by default; the
-     * grid floats above the dashboard and updates in place as snapshots
-     * arrive. In-memory only.
-     */
-    val dataGridOverlay: Flow<Boolean>
-        get() = context.store.data.map { it[DATA_GRID_OVERLAY_KEY] ?: false }
+  /**
+   * Debug aid: overlay a translucent grid of the live data the current dashboard's cards consume —
+   * one row per referenced entity, showing the entity id (key), its current state (value), and how
+   * long ago that value last changed. Off by default; the grid floats above the dashboard and
+   * updates in place as snapshots arrive. In-memory only.
+   */
+  val dataGridOverlay: Flow<Boolean>
+    get() = context.store.data.map { it[DATA_GRID_OVERLAY_KEY] ?: false }
 
-    suspend fun setDataGridOverlay(enabled: Boolean) {
-        context.store.edit { it[DATA_GRID_OVERLAY_KEY] = enabled }
-    }
+  suspend fun setDataGridOverlay(enabled: Boolean) {
+    context.store.edit { it[DATA_GRID_OVERLAY_KEY] = enabled }
+  }
 
-    /**
-     * Permanent write mode. When off (the default), every cold start
-     * seeds the dashboard write/read chip with Read, so a relaunch never
-     * silently leaves the app capable of firing service calls. When on,
-     * cold start seeds with Write — opt-in for users who trust their
-     * device + workflow. Independent of the in-session chip toggle:
-     * flipping the chip overrides the seed for the current process.
-     */
-    val permanentWriteMode: Flow<Boolean>
-        get() = context.store.data.map { it[PERMANENT_WRITE_KEY] ?: false }
+  /**
+   * Permanent write mode. When off (the default), every cold start seeds the dashboard write/read
+   * chip with Read, so a relaunch never silently leaves the app capable of firing service calls.
+   * When on, cold start seeds with Write — opt-in for users who trust their device + workflow.
+   * Independent of the in-session chip toggle: flipping the chip overrides the seed for the current
+   * process.
+   */
+  val permanentWriteMode: Flow<Boolean>
+    get() = context.store.data.map { it[PERMANENT_WRITE_KEY] ?: false }
 
-    suspend fun setPermanentWriteMode(enabled: Boolean) {
-        context.store.edit { it[PERMANENT_WRITE_KEY] = enabled }
-    }
+  suspend fun setPermanentWriteMode(enabled: Boolean) {
+    context.store.edit { it[PERMANENT_WRITE_KEY] = enabled }
+  }
 
-    /**
-     * The dashboard the user last opened. Drives auto-launch: on cold
-     * start, [ee.schimke.terrazzo.MainActivity] reads this once and
-     * seeds the dashboard nav-state, so a single-dashboard or 2-3
-     * favourites user lands directly on their content rather than the
-     * picker.
-     *
-     * Encoding:
-     *   - **`null`** (key absent) — never opened a dashboard. Show the
-     *     picker.
-     *   - **[DEFAULT_DASHBOARD_SENTINEL]** — last dashboard was HA's
-     *     unnamed default (whose `urlPath` is `null` over the wire).
-     *     We can't distinguish "user hasn't picked" from "user picked
-     *     the default" if both encoded as `null`, so the default gets
-     *     a sentinel string.
-     *   - any other string — the named dashboard's `urlPath`.
-     */
-    val lastViewedDashboard: Flow<String?>
-        get() = context.store.data.map { it[LAST_VIEWED_KEY] }
+  /**
+   * The dashboard the user last opened. Drives auto-launch: on cold start,
+   * [ee.schimke.terrazzo.MainActivity] reads this once and seeds the dashboard nav-state, so a
+   * single-dashboard or 2-3 favourites user lands directly on their content rather than the picker.
+   *
+   * Encoding:
+   * - **`null`** (key absent) — never opened a dashboard. Show the picker.
+   * - **[DEFAULT_DASHBOARD_SENTINEL]** — last dashboard was HA's unnamed default (whose `urlPath`
+   *   is `null` over the wire). We can't distinguish "user hasn't picked" from "user picked the
+   *   default" if both encoded as `null`, so the default gets a sentinel string.
+   * - any other string — the named dashboard's `urlPath`.
+   */
+  val lastViewedDashboard: Flow<String?>
+    get() = context.store.data.map { it[LAST_VIEWED_KEY] }
 
-    suspend fun lastViewedDashboardNow(): String? = lastViewedDashboard.first()
+  suspend fun lastViewedDashboardNow(): String? = lastViewedDashboard.first()
 
-    /**
-     * Persist the dashboard the user just opened. Pass `null` for HA's
-     * default dashboard (which has no `urlPath`); the store encodes it
-     * as [DEFAULT_DASHBOARD_SENTINEL] so a subsequent
-     * [lastViewedDashboardNow] read can tell "default dashboard" apart
-     * from "never opened anything".
-     */
-    suspend fun setLastViewedDashboard(urlPath: String?) {
-        context.store.edit { it[LAST_VIEWED_KEY] = urlPath ?: DEFAULT_DASHBOARD_SENTINEL }
-    }
+  /**
+   * Persist the dashboard the user just opened. Pass `null` for HA's default dashboard (which has
+   * no `urlPath`); the store encodes it as [DEFAULT_DASHBOARD_SENTINEL] so a subsequent
+   * [lastViewedDashboardNow] read can tell "default dashboard" apart from "never opened anything".
+   */
+  suspend fun setLastViewedDashboard(urlPath: String?) {
+    context.store.edit { it[LAST_VIEWED_KEY] = urlPath ?: DEFAULT_DASHBOARD_SENTINEL }
+  }
 
-    /**
-     * Forget the last dashboard. Called on sign-out / demo toggle so a
-     * fresh session doesn't auto-jump into a dashboard from the
-     * previous instance — that dashboard might not exist on the new
-     * one, and even if it did the user just changed identity and
-     * deserves the picker.
-     */
-    suspend fun clearLastViewedDashboard() {
-        context.store.edit { it.remove(LAST_VIEWED_KEY) }
-    }
+  /**
+   * Forget the last dashboard. Called on sign-out / demo toggle so a fresh session doesn't
+   * auto-jump into a dashboard from the previous instance — that dashboard might not exist on the
+   * new one, and even if it did the user just changed identity and deserves the picker.
+   */
+  suspend fun clearLastViewedDashboard() {
+    context.store.edit { it.remove(LAST_VIEWED_KEY) }
+  }
 
-    /**
-     * The set of dashboards the user has chosen to surface in the
-     * picker and the top-bar switcher. Drives signin gating: a `null`
-     * value means the user hasn't been through the selection screen
-     * yet for this instance, so the auth flow stops on the selection
-     * step before opening any dashboard. A non-null set — even an
-     * empty one — counts as "user has decided"; the empty case is
-     * handled by the picker UI rather than re-triggering selection.
-     *
-     * Encoding mirrors [lastViewedDashboard]: HA's default dashboard
-     * (`urlPath = null` over the wire) is stored as
-     * [DEFAULT_DASHBOARD_SENTINEL] so it round-trips through a
-     * `Set<String>` cleanly.
-     */
-    val selectedDashboardUrls: Flow<Set<String>?>
-        get() = context.store.data.map { prefs ->
-            if (SELECTED_DASHBOARDS_KEY !in prefs) null
-            else prefs[SELECTED_DASHBOARDS_KEY]!!
-                .split('\n')
-                .filter { it.isNotEmpty() }
-                .toSet()
-        }
+  /**
+   * The set of dashboards the user has chosen to surface in the picker and the top-bar switcher.
+   * Drives signin gating: a `null` value means the user hasn't been through the selection screen
+   * yet for this instance, so the auth flow stops on the selection step before opening any
+   * dashboard. A non-null set — even an empty one — counts as "user has decided"; the empty case is
+   * handled by the picker UI rather than re-triggering selection.
+   *
+   * Encoding mirrors [lastViewedDashboard]: HA's default dashboard (`urlPath = null` over the wire)
+   * is stored as [DEFAULT_DASHBOARD_SENTINEL] so it round-trips through a `Set<String>` cleanly.
+   */
+  val selectedDashboardUrls: Flow<Set<String>?>
+    get() =
+      context.store.data.map { prefs ->
+        if (SELECTED_DASHBOARDS_KEY !in prefs) null
+        else prefs[SELECTED_DASHBOARDS_KEY]!!.split('\n').filter { it.isNotEmpty() }.toSet()
+      }
 
-    suspend fun selectedDashboardUrlsNow(): Set<String>? = selectedDashboardUrls.first()
+  suspend fun selectedDashboardUrlsNow(): Set<String>? = selectedDashboardUrls.first()
 
-    /**
-     * Persist the user's dashboard choices. Each `urlPath` is encoded
-     * as itself; the built-in (default) dashboard uses
-     * [DEFAULT_DASHBOARD_SENTINEL]. The stored string is a `\n`-joined
-     * list; HA url_paths are `[a-z0-9_-]+` so newline can't appear
-     * inside an entry.
-     */
-    suspend fun setSelectedDashboardUrls(urls: Set<String>) {
-        context.store.edit { it[SELECTED_DASHBOARDS_KEY] = urls.joinToString("\n") }
-    }
+  /**
+   * Persist the user's dashboard choices. Each `urlPath` is encoded as itself; the built-in
+   * (default) dashboard uses [DEFAULT_DASHBOARD_SENTINEL]. The stored string is a `\n`-joined list;
+   * HA url_paths are `[a-z0-9_-]+` so newline can't appear inside an entry.
+   */
+  suspend fun setSelectedDashboardUrls(urls: Set<String>) {
+    context.store.edit { it[SELECTED_DASHBOARDS_KEY] = urls.joinToString("\n") }
+  }
 
-    /**
-     * Forget the dashboard selection. Called on sign-out / demo toggle
-     * so the next session re-runs selection against whatever
-     * dashboards the new instance exposes.
-     */
-    suspend fun clearSelectedDashboardUrls() {
-        context.store.edit { it.remove(SELECTED_DASHBOARDS_KEY) }
-    }
+  /**
+   * Forget the dashboard selection. Called on sign-out / demo toggle so the next session re-runs
+   * selection against whatever dashboards the new instance exposes.
+   */
+  suspend fun clearSelectedDashboardUrls() {
+    context.store.edit { it.remove(SELECTED_DASHBOARDS_KEY) }
+  }
 
-    companion object {
-        private val Context.store by preferencesDataStore(name = "terrazzo_prefs")
-        private val DEMO_KEY = booleanPreferencesKey("demo_mode")
-        private val THEME_KEY = stringPreferencesKey("theme_style")
-        private val DARK_KEY = stringPreferencesKey("dark_mode")
-        private val LAST_VIEWED_KEY = stringPreferencesKey("last_viewed_dashboard")
-        private val GRID_LAYOUT_KEY = booleanPreferencesKey("experimental_grid_layout")
-        private val COLLAPSED_MODE_KEY = booleanPreferencesKey("collapsed_mode")
-        private val LOGS_VIEW_KEY = booleanPreferencesKey("logs_view_enabled")
-        private val FLASH_ON_CHANGE_KEY = booleanPreferencesKey("flash_on_data_change")
-        private val DATA_GRID_OVERLAY_KEY = booleanPreferencesKey("data_grid_overlay")
-        private val PERMANENT_WRITE_KEY = booleanPreferencesKey("permanent_write_mode")
-        private val SELECTED_DASHBOARDS_KEY = stringPreferencesKey("selected_dashboards")
+  companion object {
+    private val Context.store by preferencesDataStore(name = "terrazzo_prefs")
+    private val DEMO_KEY = booleanPreferencesKey("demo_mode")
+    private val THEME_KEY = stringPreferencesKey("theme_style")
+    private val DARK_KEY = stringPreferencesKey("dark_mode")
+    private val LAST_VIEWED_KEY = stringPreferencesKey("last_viewed_dashboard")
+    private val GRID_LAYOUT_KEY = booleanPreferencesKey("experimental_grid_layout")
+    private val COLLAPSED_MODE_KEY = booleanPreferencesKey("collapsed_mode")
+    private val LOGS_VIEW_KEY = booleanPreferencesKey("logs_view_enabled")
+    private val FLASH_ON_CHANGE_KEY = booleanPreferencesKey("flash_on_data_change")
+    private val DATA_GRID_OVERLAY_KEY = booleanPreferencesKey("data_grid_overlay")
+    private val PERMANENT_WRITE_KEY = booleanPreferencesKey("permanent_write_mode")
+    private val SELECTED_DASHBOARDS_KEY = stringPreferencesKey("selected_dashboards")
 
-        /** Stored value for HA's default (unnamed) dashboard. */
-        const val DEFAULT_DASHBOARD_SENTINEL: String = "__default__"
-    }
+    /** Stored value for HA's default (unnamed) dashboard. */
+    const val DEFAULT_DASHBOARD_SENTINEL: String = "__default__"
+  }
 }
