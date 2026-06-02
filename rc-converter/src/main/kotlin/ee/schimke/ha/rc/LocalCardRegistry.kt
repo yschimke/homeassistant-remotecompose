@@ -70,4 +70,13 @@ fun CardRegistry.cardSizeConstraints(
     ?: WidgetSizeConstraints(defaultWidthDp = 320, defaultHeightDp = 160)
 }
 
+/**
+ * Host-side lookup of a card's [CardConverter.dataSignature] — the fingerprint of baked,
+ * non-bindable content used to invalidate the render cache key. Null when the card keeps up through
+ * named bindings (the common case) or its type is unknown. The dashboard folds a non-null result
+ * into the card's cache key and skips the live-binding push for that card.
+ */
+fun CardRegistry.cardDataSignature(card: CardConfig, snapshot: HaSnapshot): String? =
+  get(card.type)?.dataSignature(card, snapshot)
+
 internal const val UNSUPPORTED_CARD_TYPE = "__unsupported__"

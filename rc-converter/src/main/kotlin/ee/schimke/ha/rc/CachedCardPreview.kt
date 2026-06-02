@@ -65,6 +65,7 @@ fun CachedCardPreview(
   modifier: Modifier = Modifier,
   card: CardConfig? = null,
   snapshot: HaSnapshot? = null,
+  liveBindings: Boolean = true,
   bitmapLoader: BitmapLoader = BitmapLoader.UNSUPPORTED,
   content: @RemoteComposable @Composable () -> Unit,
 ) {
@@ -88,17 +89,47 @@ fun CachedCardPreview(
     remember(effectiveCacheKey) {
       cache.get(effectiveCacheKey)
         ?: runBlocking {
+            val captureContent: @RemoteComposable @Composable () -> Unit =
+              if (debugBorders) {
+                { DebugRcBorderWrapper { content() } }
+              } else {
+                content
+              }
+            // A constrained capture [profile] (e.g. `widgetsProfile`,
+            // the launcher's stricter op set) can reject a card whose
+            // ops fall outside its vocabulary by throwing mid-capture.
+            // This capture runs synchronously inside composition via
+            // `runBlocking`, so an uncaught throw would take down the
+            // whole host screen (the card-history preview captures every
+            // card with the widgets profile — see CardHistoryScreen).
+            // Degrade to an empty document instead: the card renders
+            // blank, matching how the launcher shows a widget it can't
+            // paint, rather than crashing the screen hosting the preview.
             val captured =
-              captureSingleRemoteDocument(
-                context = context,
-                profile = profile,
-                content =
-                  if (debugBorders) {
-                    { DebugRcBorderWrapper { content() } }
-                  } else {
-                    content
-                  },
-              )
+              runCatching {
+                  captureSingleRemoteDocument(
+                    context = context,
+                    profile = profile,
+                    content = captureContent,
+                  )
+                }
+                .recoverCatching {
+                  // First fall back to a blank document under the
+                  // requested profile — matches a launcher slot the
+                  // profile can't paint.
+                  captureSingleRemoteDocument(context = context, profile = profile) {}
+                }
+                .getOrElse {
+                  // The constrained profile rejected even an empty
+                  // capture (a blank document has no root ops to admit).
+                  // Capture the blank under the unconstrained AndroidX
+                  // profile, which never rejects, so the host screen
+                  // still composes instead of crashing a second time.
+                  captureSingleRemoteDocument(
+                    context = context,
+                    profile = RcPlatformProfiles.ANDROIDX,
+                  ) {}
+                }
             CardDocument(bytes = captured.bytes, widthPx = 0, heightPx = 0)
           }
           .also { cache.put(effectiveCacheKey, it) }
@@ -116,7 +147,11 @@ fun CachedCardPreview(
   // bake, and we want the next push to be unconditional.
   val pushed = remember(cacheKey) { HashMap<String, Any?>() }
 
-  if (card != null && snapshot != null && entityIds.isNotEmpty()) {
+  // [liveBindings] is off for cards that refresh by document re-encode (those that declare a
+  // `CardConverter.dataSignature`): their dynamic content is baked, not bound, so pushing the
+  // entity's raw named bindings would clobber a per-card-formatted `<id>.state` with the plain
+  // value. The re-encode (driven by the signature in the cache key) is authoritative for them.
+  if (liveBindings && card != null && snapshot != null && entityIds.isNotEmpty()) {
     LaunchedEffect(updaterHolder.value, snapshot) {
       val updater = updaterHolder.value ?: return@LaunchedEffect
       pushSnapshotBindings(updater, entityIds, snapshot, pushed)
@@ -156,7 +191,8 @@ private data class DebugBorderedCacheKey(val inner: Any)
  *
  * Boolean bindings are pushed as ints — `LiveValues.isOn` creates a `RemoteBoolean` which alpha010
  * stores internally as a `RemoteInt` (0/1), and the player only exposes `setUserLocalInt` for that
- * channel.
+ * channel. Int (`<id>.state_int`) and float (`<id>.numeric_state`) bindings go through their own
+ * typed setters.
  */
 private fun pushSnapshotBindings(
   updater: StateUpdater,
@@ -173,5 +209,13 @@ private fun pushSnapshotBindings(
     if (pushed[name] == value) continue
     runCatching { updater.setUserLocalInt(name, if (value) 1 else 0) }
       .onSuccess { pushed[name] = value }
+  }
+  for ((name, value) in bindings.ints) {
+    if (pushed[name] == value) continue
+    runCatching { updater.setUserLocalInt(name, value) }.onSuccess { pushed[name] = value }
+  }
+  for ((name, value) in bindings.floats) {
+    if (pushed[name] == value) continue
+    runCatching { updater.setUserLocalFloat(name, value) }.onSuccess { pushed[name] = value }
   }
 }
