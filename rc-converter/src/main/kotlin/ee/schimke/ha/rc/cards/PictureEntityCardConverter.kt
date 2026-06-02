@@ -1,14 +1,19 @@
 package ee.schimke.ha.rc.cards
 
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
+import androidx.compose.remote.creation.compose.modifier.fillMaxSize
 import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.runtime.Composable
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.model.toTyped
+import ee.schimke.ha.rc.BreakpointAxis
 import ee.schimke.ha.rc.CardConverter
+import ee.schimke.ha.rc.CardSizeMode
 import ee.schimke.ha.rc.HaStateColor
+import ee.schimke.ha.rc.LocalCardSizeMode
+import ee.schimke.ha.rc.RemoteSizeBreakpoint
 import ee.schimke.ha.rc.components.HaPictureEntityData
 import ee.schimke.ha.rc.components.HaToggleAccent
 import ee.schimke.ha.rc.components.LiveValues
@@ -48,26 +53,55 @@ class PictureEntityCardConverter : CardConverter {
         val isActive = entity?.toTyped()?.isActive
         val imageUrl = entity?.attributes?.get("entity_picture")?.jsonPrimitive?.content
         val frameStamp = entity?.attributes?.get("demo_frame_stamp")?.jsonPrimitive?.content
-        RemoteHaPictureEntity(
-            HaPictureEntityData(
-                entityId = entityId,
-                name = name,
-                state = LiveValues.state(entityId, formatState(entity)),
-                icon = HaIconMap.resolve(card.raw["icon"]?.jsonPrimitive?.content, entity),
-                accent =
-                    HaToggleAccent(
-                        activeAccent = HaStateColor.activeFor(entity).rc,
-                        inactiveAccent = HaStateColor.inactiveFor(entity).rc,
-                        initiallyOn = isActive ?: false,
-                        toggleable = isActive != null,
-                    ),
-                showName = showName,
-                showState = showState,
-                imageUrl = imageUrl,
-                frameStamp = frameStamp,
-                tapAction = tapAction,
-            ),
-            modifier = modifier,
+        val data = HaPictureEntityData(
+            entityId = entityId,
+            name = name,
+            state = LiveValues.state(entityId, formatState(entity)),
+            icon = HaIconMap.resolve(card.raw["icon"]?.jsonPrimitive?.content, entity),
+            accent =
+                HaToggleAccent(
+                    activeAccent = HaStateColor.activeFor(entity).rc,
+                    inactiveAccent = HaStateColor.inactiveFor(entity).rc,
+                    initiallyOn = isActive ?: false,
+                    toggleable = isActive != null,
+                ),
+            showName = showName,
+            showState = showState,
+            imageUrl = imageUrl,
+            frameStamp = frameStamp,
+            tapAction = tapAction,
         )
+
+        when (LocalCardSizeMode.current) {
+            // Dashboard: the HA reference band (fixed natural height).
+            CardSizeMode.Wrap -> RemoteHaPictureEntity(data, modifier = modifier)
+            // Launcher / Wear: the image is the identity edge-to-edge —
+            // it fills and crops the whole cell at every size (no
+            // letterbox). A single width gate drops the name at the
+            // smallest cell so the state badge alone reads, and keeps the
+            // full name+state scrim on wider cells. Single threshold —
+            // alpha010 collapses nested ladders to tier 0 (#224).
+            CardSizeMode.Fixed ->
+                RemoteSizeBreakpoint(
+                    thresholdsDp = intArrayOf(PICTURE_IDENTITY_THRESHOLD_DP),
+                    modifier = modifier,
+                    axis = BreakpointAxis.Width,
+                ) { tier ->
+                    val tierData = if (tier == 0) data.copy(showName = false) else data
+                    RemoteHaPictureEntity(
+                        tierData,
+                        modifier = RemoteModifier.fillMaxSize(),
+                        fillHeight = true,
+                    )
+                }
+        }
     }
 }
+
+/**
+ * Width gate (dp) for the picture-entity identity tier. Below it (a
+ * `2×N` launcher cell) the name strip drops so only the state badge sits
+ * over the image; at or above it the full name+state scrim returns. Same
+ * ~72 dp cell maths as the bulk family ([BULK_IDENTITY_THRESHOLD_DP]).
+ */
+private const val PICTURE_IDENTITY_THRESHOLD_DP: Int = 180

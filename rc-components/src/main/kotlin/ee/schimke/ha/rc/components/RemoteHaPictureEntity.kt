@@ -25,6 +25,7 @@ import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.remote.creation.compose.state.rsp
 import androidx.compose.remote.creation.compose.text.RemoteTextStyle
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.wear.compose.remote.material3.RemoteIcon
@@ -46,12 +47,22 @@ import androidx.wear.compose.remote.material3.RemoteIcon
  * at capture time, so the image area renders a flat tinted placeholder
  * with a domain-appropriate icon. The bottom bar matches HA's standard
  * `hui-image-overlay`.
+ *
+ * The image is the card's identity at every size: it **fills and crops**
+ * to the cell ([ContentScale.Crop]) so it never letterboxes, with the
+ * name/state strip kept as a translucent scrim along the bottom. In
+ * [fillHeight] mode (launcher / Wear Fixed cells) the card grows to the
+ * full cell height instead of the [naturalHeightDp]-derived 160 dp the
+ * dashboard wraps to — so the picture earns the whole canvas rather than
+ * letterboxing into a band (see
+ * docs/architecture/adaptive-card-layouts.md §"Picture family").
  */
 @Composable
 @RemoteComposable
 fun RemoteHaPictureEntity(
     data: HaPictureEntityData,
     modifier: RemoteModifier = RemoteModifier,
+    fillHeight: Boolean = false,
 ) {
     val theme = haTheme()
     val isOnBinding =
@@ -63,11 +74,15 @@ fun RemoteHaPictureEntity(
         ?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
     val showStrip = data.showName || data.showState
 
+    // Wrap: width pinned, fixed natural height (HA reference band). Fixed:
+    // fill the whole cell so the image is the identity edge-to-edge.
+    val sizeModifier =
+        if (fillHeight) RemoteModifier.fillMaxSize() else RemoteModifier.fillMaxWidth().height(160.rdp)
+
     RemoteBox(
         modifier = modifier
             .then(clickable)
-            .fillMaxWidth()
-            .height(160.rdp)
+            .then(sizeModifier)
             .then(cardChrome(theme.divider, theme.divider)),
     ) {
         RemoteColumn(modifier = RemoteModifier.fillMaxSize()) {
@@ -113,6 +128,9 @@ fun RemoteHaPictureEntity(
                             remoteBitmap = rb,
                             contentDescription = data.name.rs,
                             modifier = RemoteModifier.fillMaxSize(),
+                            // Fill-crop, not letterbox: the image owns the
+                            // whole cell at any aspect (HA's `cover`).
+                            contentScale = ContentScale.Crop,
                         )
                     } else {
                         // Inline strategy with no pre-fetched bytes for

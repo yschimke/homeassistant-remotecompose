@@ -136,6 +136,18 @@ object Fixtures {
             mapOf("friendly_name" to "Driveway")),
     )
 
+    /** Camera entity carrying an `entity_picture` URL so the
+     *  picture-entity matrix exercises the real fill-crop image path. The
+     *  URL is never fetched — the matrix bakes a sample bitmap via an
+     *  Inline [ee.schimke.ha.rc.components.PictureImageStrategy]. */
+    val cameraWithPicture = snapshot(
+        state("camera.driveway", "streaming",
+            mapOf(
+                "friendly_name" to "Driveway",
+                "entity_picture" to "https://example.invalid/driveway.jpg",
+            )),
+    )
+
     val activity = snapshot(
         state("binary_sensor.front_door", "off",
             mapOf("friendly_name" to "Front door", "device_class" to "door")),

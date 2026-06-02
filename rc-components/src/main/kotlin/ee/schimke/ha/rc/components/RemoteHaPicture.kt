@@ -14,6 +14,7 @@ import androidx.compose.remote.creation.compose.modifier.background
 import androidx.compose.remote.creation.compose.modifier.border
 import androidx.compose.remote.creation.compose.modifier.clickable
 import androidx.compose.remote.creation.compose.modifier.clip
+import androidx.compose.remote.creation.compose.modifier.fillMaxSize
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.creation.compose.modifier.height
 import androidx.compose.remote.creation.compose.modifier.padding
@@ -41,15 +42,23 @@ import androidx.wear.compose.remote.material3.RemoteIcon
  */
 @Composable
 @RemoteComposable
-fun RemoteHaPicture(data: HaPictureCardData, modifier: RemoteModifier = RemoteModifier) {
+fun RemoteHaPicture(
+    data: HaPictureCardData,
+    modifier: RemoteModifier = RemoteModifier,
+    fillHeight: Boolean = false,
+) {
     val theme = haTheme()
     val click = data.tapAction.toRemoteAction()
         ?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
+    // Wrap: fixed natural band. Fixed: fill the whole cell so the image
+    // (placeholder until a host wires an image channel) is the identity
+    // edge-to-edge with the name as a bottom scrim.
+    val sizeModifier =
+        if (fillHeight) RemoteModifier.fillMaxSize() else RemoteModifier.fillMaxWidth().height(140.rdp)
     RemoteBox(
         modifier = modifier
             .then(click)
-            .fillMaxWidth()
-            .height(140.rdp)
+            .then(sizeModifier)
             .then(cardChrome(theme.divider, theme.divider)),
         contentAlignment = RemoteAlignment.Center,
     ) {

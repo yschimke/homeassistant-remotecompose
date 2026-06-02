@@ -3,19 +3,25 @@
 package ee.schimke.ha.rc.cards
 
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
+import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.runtime.Composable
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.model.JinjaTemplate
 import ee.schimke.ha.model.TemplateBindings
+import ee.schimke.ha.rc.BreakpointAxis
 import ee.schimke.ha.rc.CardConverter
+import ee.schimke.ha.rc.CardSizeMode
+import ee.schimke.ha.rc.LocalCardSizeMode
+import ee.schimke.ha.rc.RemoteSizeBreakpoint
 import ee.schimke.ha.rc.components.HaMarkdownData
 import ee.schimke.ha.rc.components.LiveValues
 import ee.schimke.ha.rc.components.Markdown
 import ee.schimke.ha.rc.components.MarkdownBlock
 import ee.schimke.ha.rc.components.MarkdownInline
 import ee.schimke.ha.rc.components.RemoteHaMarkdown
+import ee.schimke.ha.rc.components.RemoteHaMarkdownIdentity
 import androidx.compose.remote.creation.compose.state.RemoteString
 import androidx.compose.remote.creation.compose.state.rs
 import kotlinx.serialization.json.jsonPrimitive
@@ -61,13 +67,38 @@ class MarkdownCardConverter : CardConverter {
                 } else {
                     listOf(MarkdownBlock(MarkdownBlock.Kind.Paragraph, "…"))
                 }
-            RemoteHaMarkdown(HaMarkdownData(title = title, blocks = blocks), modifier = modifier)
+            RenderSized(HaMarkdownData(title = title, blocks = blocks), modifier)
             return
         }
 
         val template = MarkdownTemplateBindings.from(content, snapshot)
         val blocks = Markdown.parse(template.rendered).bind(template)
-        RemoteHaMarkdown(HaMarkdownData(title = title, blocks = blocks), modifier = modifier)
+        RenderSized(HaMarkdownData(title = title, blocks = blocks), modifier)
+    }
+
+    /**
+     * Shared sizing branch for both the template and simple-binding
+     * paths. Dashboard renders the full block list; launcher / Wear
+     * narrow cells drop to the identity tier (title + first line) and
+     * wider ones render the full body. Single width gate (#224).
+     */
+    @Composable
+    private fun RenderSized(data: HaMarkdownData, modifier: RemoteModifier) {
+        when (LocalCardSizeMode.current) {
+            CardSizeMode.Wrap -> RemoteHaMarkdown(data, modifier = modifier)
+            CardSizeMode.Fixed ->
+                RemoteSizeBreakpoint(
+                    thresholdsDp = intArrayOf(BULK_IDENTITY_THRESHOLD_DP),
+                    modifier = modifier,
+                    axis = BreakpointAxis.Width,
+                ) { tier ->
+                    if (tier == 0) {
+                        RemoteHaMarkdownIdentity(data, RemoteModifier.fillMaxWidth())
+                    } else {
+                        RemoteHaMarkdown(data, RemoteModifier.fillMaxWidth())
+                    }
+                }
+        }
     }
 
     private fun List<MarkdownBlock>.bind(template: MarkdownTemplateBindings): List<MarkdownBlock> =
