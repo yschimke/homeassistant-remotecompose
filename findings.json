@@ -1209,6 +1209,66 @@
       "variant": ""
     },
     {
+      "annotatedBasename": "CardPreviewMatrix_Calendar_matrix_calendar.a11y.png",
+      "cleanBasename": "CardPreviewMatrix_Calendar_matrix_calendar.png",
+      "findings": [
+        {
+          "boundsInScreen": "21,137,861,565",
+          "level": "ERROR",
+          "message": "This item may not have a label readable by screen readers.",
+          "type": "SpeakableTextPresentCheck",
+          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
+        },
+        {
+          "boundsInScreen": "909,321,1309,441",
+          "level": "ERROR",
+          "message": "This item may not have a label readable by screen readers.",
+          "type": "SpeakableTextPresentCheck",
+          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
+        },
+        {
+          "boundsInScreen": "1384,269,1784,493",
+          "level": "ERROR",
+          "message": "This item may not have a label readable by screen readers.",
+          "type": "SpeakableTextPresentCheck",
+          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
+        },
+        {
+          "boundsInScreen": "21,643,399,864",
+          "level": "ERROR",
+          "message": "This item may not have a label readable by screen readers.",
+          "type": "SpeakableTextPresentCheck",
+          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
+        },
+        {
+          "boundsInScreen": "420,643,987,1084",
+          "level": "ERROR",
+          "message": "This item may not have a label readable by screen readers.",
+          "type": "SpeakableTextPresentCheck",
+          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
+        },
+        {
+          "boundsInScreen": "1008,643,1764,1305",
+          "level": "ERROR",
+          "message": "This item may not have a label readable by screen readers.",
+          "type": "SpeakableTextPresentCheck",
+          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
+        },
+        {
+          "boundsInScreen": "1028,230,1191,263",
+          "level": "INFO",
+          "message": "This non-clickable item's speakable text: \"Terrazzo slot\" is identical to that of 1 other item(s).",
+          "type": "DuplicateSpeakableTextCheck",
+          "viewDescription": "android.widget.TextView"
+        }
+      ],
+      "functionName": "CardPreviewMatrix_Calendar",
+      "module": "previews",
+      "previewId": "ee.schimke.ha.previews.CardPreviewMatrixKt.CardPreviewMatrix_Calendar_matrix \u2014 calendar",
+      "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/CardPreviewMatrix.kt",
+      "variant": ""
+    },
+    {
       "annotatedBasename": "CardPreviewMatrix_Entities_matrix_entities.a11y.png",
       "cleanBasename": "CardPreviewMatrix_Entities_matrix_entities.png",
       "findings": [
@@ -1501,6 +1561,66 @@
       "variant": ""
     },
     {
+      "annotatedBasename": "CardPreviewMatrix_HistoryGraph_matrix_history_graph.a11y.png",
+      "cleanBasename": "CardPreviewMatrix_HistoryGraph_matrix_history_graph.png",
+      "findings": [
+        {
+          "boundsInScreen": "21,137,861,570",
+          "level": "ERROR",
+          "message": "This item may not have a label readable by screen readers.",
+          "type": "SpeakableTextPresentCheck",
+          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
+        },
+        {
+          "boundsInScreen": "909,321,1309,441",
+          "level": "ERROR",
+          "message": "This item may not have a label readable by screen readers.",
+          "type": "SpeakableTextPresentCheck",
+          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
+        },
+        {
+          "boundsInScreen": "1384,269,1784,493",
+          "level": "ERROR",
+          "message": "This item may not have a label readable by screen readers.",
+          "type": "SpeakableTextPresentCheck",
+          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
+        },
+        {
+          "boundsInScreen": "21,643,399,864",
+          "level": "ERROR",
+          "message": "This item may not have a label readable by screen readers.",
+          "type": "SpeakableTextPresentCheck",
+          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
+        },
+        {
+          "boundsInScreen": "420,643,987,1084",
+          "level": "ERROR",
+          "message": "This item may not have a label readable by screen readers.",
+          "type": "SpeakableTextPresentCheck",
+          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
+        },
+        {
+          "boundsInScreen": "1008,643,1764,1305",
+          "level": "ERROR",
+          "message": "This item may not have a label readable by screen readers.",
+          "type": "SpeakableTextPresentCheck",
+          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
+        },
+        {
+          "boundsInScreen": "1028,230,1191,263",
+          "level": "INFO",
+          "message": "This non-clickable item's speakable text: \"Terrazzo slot\" is identical to that of 1 other item(s).",
+          "type": "DuplicateSpeakableTextCheck",
+          "viewDescription": "android.widget.TextView"
+        }
+      ],
+      "functionName": "CardPreviewMatrix_HistoryGraph",
+      "module": "previews",
+      "previewId": "ee.schimke.ha.previews.CardPreviewMatrixKt.CardPreviewMatrix_HistoryGraph_matrix \u2014 history-graph",
+      "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/CardPreviewMatrix.kt",
+      "variant": ""
+    },
+    {
       "annotatedBasename": "CardPreviewMatrix_Humidifier_matrix_humidifier.a11y.png",
       "cleanBasename": "CardPreviewMatrix_Humidifier_matrix_humidifier.png",
       "findings": [
@@ -1656,6 +1776,126 @@
       "variant": ""
     },
     {
+      "annotatedBasename": "CardPreviewMatrix_Logbook_matrix_logbook.a11y.png",
+      "cleanBasename": "CardPreviewMatrix_Logbook_matrix_logbook.png",
+      "findings": [
+        {
+          "boundsInScreen": "21,137,861,443",
+          "level": "ERROR",
+          "message": "This item may not have a label readable by screen readers.",
+          "type": "SpeakableTextPresentCheck",
+          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
+        },
+        {
+          "boundsInScreen": "909,321,1309,441",
+          "level": "ERROR",
+          "message": "This item may not have a label readable by screen readers.",
+          "type": "SpeakableTextPresentCheck",
+          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
+        },
+        {
+          "boundsInScreen": "1384,269,1784,493",
+          "level": "ERROR",
+          "message": "This item may not have a label readable by screen readers.",
+          "type": "SpeakableTextPresentCheck",
+          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
+        },
+        {
+          "boundsInScreen": "21,643,399,864",
+          "level": "ERROR",
+          "message": "This item may not have a label readable by screen readers.",
+          "type": "SpeakableTextPresentCheck",
+          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
+        },
+        {
+          "boundsInScreen": "420,643,987,1084",
+          "level": "ERROR",
+          "message": "This item may not have a label readable by screen readers.",
+          "type": "SpeakableTextPresentCheck",
+          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
+        },
+        {
+          "boundsInScreen": "1008,643,1764,1305",
+          "level": "ERROR",
+          "message": "This item may not have a label readable by screen readers.",
+          "type": "SpeakableTextPresentCheck",
+          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
+        },
+        {
+          "boundsInScreen": "1028,230,1191,263",
+          "level": "INFO",
+          "message": "This non-clickable item's speakable text: \"Terrazzo slot\" is identical to that of 1 other item(s).",
+          "type": "DuplicateSpeakableTextCheck",
+          "viewDescription": "android.widget.TextView"
+        }
+      ],
+      "functionName": "CardPreviewMatrix_Logbook",
+      "module": "previews",
+      "previewId": "ee.schimke.ha.previews.CardPreviewMatrixKt.CardPreviewMatrix_Logbook_matrix \u2014 logbook",
+      "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/CardPreviewMatrix.kt",
+      "variant": ""
+    },
+    {
+      "annotatedBasename": "CardPreviewMatrix_Markdown_matrix_markdown.a11y.png",
+      "cleanBasename": "CardPreviewMatrix_Markdown_matrix_markdown.png",
+      "findings": [
+        {
+          "boundsInScreen": "21,137,861,327",
+          "level": "ERROR",
+          "message": "This item may not have a label readable by screen readers.",
+          "type": "SpeakableTextPresentCheck",
+          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
+        },
+        {
+          "boundsInScreen": "909,321,1309,441",
+          "level": "ERROR",
+          "message": "This item may not have a label readable by screen readers.",
+          "type": "SpeakableTextPresentCheck",
+          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
+        },
+        {
+          "boundsInScreen": "1384,269,1784,493",
+          "level": "ERROR",
+          "message": "This item may not have a label readable by screen readers.",
+          "type": "SpeakableTextPresentCheck",
+          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
+        },
+        {
+          "boundsInScreen": "21,643,399,864",
+          "level": "ERROR",
+          "message": "This item may not have a label readable by screen readers.",
+          "type": "SpeakableTextPresentCheck",
+          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
+        },
+        {
+          "boundsInScreen": "420,643,987,1084",
+          "level": "ERROR",
+          "message": "This item may not have a label readable by screen readers.",
+          "type": "SpeakableTextPresentCheck",
+          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
+        },
+        {
+          "boundsInScreen": "1008,643,1764,1305",
+          "level": "ERROR",
+          "message": "This item may not have a label readable by screen readers.",
+          "type": "SpeakableTextPresentCheck",
+          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
+        },
+        {
+          "boundsInScreen": "1028,230,1191,263",
+          "level": "INFO",
+          "message": "This non-clickable item's speakable text: \"Terrazzo slot\" is identical to that of 1 other item(s).",
+          "type": "DuplicateSpeakableTextCheck",
+          "viewDescription": "android.widget.TextView"
+        }
+      ],
+      "functionName": "CardPreviewMatrix_Markdown",
+      "module": "previews",
+      "previewId": "ee.schimke.ha.previews.CardPreviewMatrixKt.CardPreviewMatrix_Markdown_matrix \u2014 markdown",
+      "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/CardPreviewMatrix.kt",
+      "variant": ""
+    },
+    {
       "annotatedBasename": "CardPreviewMatrix_MediaControl_matrix_media_control.a11y.png",
       "cleanBasename": "CardPreviewMatrix_MediaControl_matrix_media_control.png",
       "findings": [
@@ -1775,6 +2015,73 @@
       "functionName": "CardPreviewMatrix_MediaControl",
       "module": "previews",
       "previewId": "ee.schimke.ha.previews.CardPreviewMatrixKt.CardPreviewMatrix_MediaControl_matrix \u2014 media-control",
+      "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/CardPreviewMatrix.kt",
+      "variant": ""
+    },
+    {
+      "annotatedBasename": "CardPreviewMatrix_PictureEntity_matrix_picture_entity.a11y.png",
+      "cleanBasename": "CardPreviewMatrix_PictureEntity_matrix_picture_entity.png",
+      "findings": [
+        {
+          "boundsInScreen": "21,137,861,557",
+          "level": "ERROR",
+          "message": "This item may not have a label readable by screen readers.",
+          "type": "SpeakableTextPresentCheck",
+          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
+        },
+        {
+          "boundsInScreen": "909,321,1309,441",
+          "level": "ERROR",
+          "message": "This item may not have a label readable by screen readers.",
+          "type": "SpeakableTextPresentCheck",
+          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
+        },
+        {
+          "boundsInScreen": "1384,269,1784,493",
+          "level": "ERROR",
+          "message": "This item may not have a label readable by screen readers.",
+          "type": "SpeakableTextPresentCheck",
+          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
+        },
+        {
+          "boundsInScreen": "21,643,399,864",
+          "level": "ERROR",
+          "message": "This item may not have a label readable by screen readers.",
+          "type": "SpeakableTextPresentCheck",
+          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
+        },
+        {
+          "boundsInScreen": "420,643,987,1084",
+          "level": "ERROR",
+          "message": "This item may not have a label readable by screen readers.",
+          "type": "SpeakableTextPresentCheck",
+          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
+        },
+        {
+          "boundsInScreen": "1008,643,1764,1305",
+          "level": "ERROR",
+          "message": "This item may not have a label readable by screen readers.",
+          "type": "SpeakableTextPresentCheck",
+          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
+        },
+        {
+          "boundsInScreen": "909,321,1309,441",
+          "level": "ERROR",
+          "message": "This item's height is 46dp. Consider making the height of this touch target 48dp or larger.",
+          "type": "TouchTargetSizeCheck",
+          "viewDescription": "android.view.View"
+        },
+        {
+          "boundsInScreen": "1028,230,1191,263",
+          "level": "INFO",
+          "message": "This non-clickable item's speakable text: \"Terrazzo slot\" is identical to that of 1 other item(s).",
+          "type": "DuplicateSpeakableTextCheck",
+          "viewDescription": "android.widget.TextView"
+        }
+      ],
+      "functionName": "CardPreviewMatrix_PictureEntity",
+      "module": "previews",
+      "previewId": "ee.schimke.ha.previews.CardPreviewMatrixKt.CardPreviewMatrix_PictureEntity_matrix \u2014 picture-entity",
       "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/CardPreviewMatrix.kt",
       "variant": ""
     },
@@ -2078,6 +2385,129 @@
       "functionName": "CardPreviewMatrix_Tile",
       "module": "previews",
       "previewId": "ee.schimke.ha.previews.CardPreviewMatrixKt.CardPreviewMatrix_Tile_matrix \u2014 tile",
+      "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/CardPreviewMatrix.kt",
+      "variant": ""
+    },
+    {
+      "annotatedBasename": "CardPreviewMatrix_TodoList_matrix_todo_list.a11y.png",
+      "cleanBasename": "CardPreviewMatrix_TodoList_matrix_todo_list.png",
+      "findings": [
+        {
+          "boundsInScreen": "21,137,861,626",
+          "level": "ERROR",
+          "message": "This item may not have a label readable by screen readers.",
+          "type": "SpeakableTextPresentCheck",
+          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
+        },
+        {
+          "boundsInScreen": "909,321,1309,441",
+          "level": "ERROR",
+          "message": "This item may not have a label readable by screen readers.",
+          "type": "SpeakableTextPresentCheck",
+          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
+        },
+        {
+          "boundsInScreen": "1384,269,1784,493",
+          "level": "ERROR",
+          "message": "This item may not have a label readable by screen readers.",
+          "type": "SpeakableTextPresentCheck",
+          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
+        },
+        {
+          "boundsInScreen": "21,689,399,910",
+          "level": "ERROR",
+          "message": "This item may not have a label readable by screen readers.",
+          "type": "SpeakableTextPresentCheck",
+          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
+        },
+        {
+          "boundsInScreen": "420,689,987,1130",
+          "level": "ERROR",
+          "message": "This item may not have a label readable by screen readers.",
+          "type": "SpeakableTextPresentCheck",
+          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
+        },
+        {
+          "boundsInScreen": "1008,689,1764,1351",
+          "level": "ERROR",
+          "message": "This item may not have a label readable by screen readers.",
+          "type": "SpeakableTextPresentCheck",
+          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
+        },
+        {
+          "boundsInScreen": "57,293,824,361",
+          "level": "ERROR",
+          "message": "This item's height is 26dp. Consider making the height of this touch target 48dp or larger.",
+          "type": "TouchTargetSizeCheck",
+          "viewDescription": "android.view.View  desc=\"Salt\""
+        },
+        {
+          "boundsInScreen": "57,382,824,451",
+          "level": "ERROR",
+          "message": "This item's height is 26dp. Consider making the height of this touch target 48dp or larger.",
+          "type": "TouchTargetSizeCheck",
+          "viewDescription": "android.view.View  desc=\"Butter\""
+        },
+        {
+          "boundsInScreen": "57,527,824,595",
+          "level": "ERROR",
+          "message": "This item's height is 26dp. Consider making the height of this touch target 48dp or larger.",
+          "type": "TouchTargetSizeCheck",
+          "viewDescription": "android.view.View  desc=\"Milk\""
+        },
+        {
+          "boundsInScreen": "456,845,950,913",
+          "level": "ERROR",
+          "message": "This item's height is 26dp. Consider making the height of this touch target 48dp or larger.",
+          "type": "TouchTargetSizeCheck",
+          "viewDescription": "android.view.View  desc=\"Salt\""
+        },
+        {
+          "boundsInScreen": "456,934,950,1003",
+          "level": "ERROR",
+          "message": "This item's height is 26dp. Consider making the height of this touch target 48dp or larger.",
+          "type": "TouchTargetSizeCheck",
+          "viewDescription": "android.view.View  desc=\"Butter\""
+        },
+        {
+          "boundsInScreen": "456,1079,950,1130",
+          "level": "ERROR",
+          "message": "This item's height is 19dp. Consider making the height of this touch target 48dp or larger.",
+          "type": "TouchTargetSizeCheck",
+          "viewDescription": "android.view.View  desc=\"Milk\""
+        },
+        {
+          "boundsInScreen": "1044,845,1727,913",
+          "level": "ERROR",
+          "message": "This item's height is 26dp. Consider making the height of this touch target 48dp or larger.",
+          "type": "TouchTargetSizeCheck",
+          "viewDescription": "android.view.View  desc=\"Salt\""
+        },
+        {
+          "boundsInScreen": "1044,934,1727,1003",
+          "level": "ERROR",
+          "message": "This item's height is 26dp. Consider making the height of this touch target 48dp or larger.",
+          "type": "TouchTargetSizeCheck",
+          "viewDescription": "android.view.View  desc=\"Butter\""
+        },
+        {
+          "boundsInScreen": "1044,1079,1727,1147",
+          "level": "ERROR",
+          "message": "This item's height is 26dp. Consider making the height of this touch target 48dp or larger.",
+          "type": "TouchTargetSizeCheck",
+          "viewDescription": "android.view.View  desc=\"Milk\""
+        },
+        {
+          "boundsInScreen": "1028,230,1191,263",
+          "level": "INFO",
+          "message": "This non-clickable item's speakable text: \"Terrazzo slot\" is identical to that of 1 other item(s).",
+          "type": "DuplicateSpeakableTextCheck",
+          "viewDescription": "android.widget.TextView"
+        }
+      ],
+      "functionName": "CardPreviewMatrix_TodoList",
+      "module": "previews",
+      "previewId": "ee.schimke.ha.previews.CardPreviewMatrixKt.CardPreviewMatrix_TodoList_matrix \u2014 todo-list",
       "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/CardPreviewMatrix.kt",
       "variant": ""
     },
@@ -7485,7 +7915,7 @@
           "viewDescription": "android.view.View  desc=\"Kitchen\""
         },
         {
-          "boundsInScreen": "52,1346,462,1435",
+          "boundsInScreen": "52,1346,462,1434",
           "level": "ERROR",
           "message": "This item's height is 34dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
