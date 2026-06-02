@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.1.34](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.33...v0.1.34) (2026-06-02)
+
+
+### Features
+
+* **button:** icon-only tier + fix name clipping on widget cells ([#376](https://github.com/yschimke/homeassistant-remotecompose/issues/376)) ([5ad76d0](https://github.com/yschimke/homeassistant-remotecompose/commit/5ad76d0c37220ee7101aafdf8e55271e436f8b32)), closes [#352](https://github.com/yschimke/homeassistant-remotecompose/issues/352)
+* **rc-converter:** icon+state Fixed-mode ladder for tile/entity/sensor/statistic ([#375](https://github.com/yschimke/homeassistant-remotecompose/issues/375)) ([567b4d4](https://github.com/yschimke/homeassistant-remotecompose/commit/567b4d4969ffb067c55ae83e1339fc7b8df97dc5)), closes [#351](https://github.com/yschimke/homeassistant-remotecompose/issues/351)
+* **widgets:** add Wide↔Full ladders to the hero+supporting-detail family ([#377](https://github.com/yschimke/homeassistant-remotecompose/issues/377)) ([7519e5a](https://github.com/yschimke/homeassistant-remotecompose/commit/7519e5a3ea414c01157e0102cb4a3c68f020ce82))
+
+
+### Bug Fixes
+
+* **gauge:** unblock and unify the arc-dial family ([#353](https://github.com/yschimke/homeassistant-remotecompose/issues/353)) ([#379](https://github.com/yschimke/homeassistant-remotecompose/issues/379)) ([372dd47](https://github.com/yschimke/homeassistant-remotecompose/commit/372dd47d25e7f40d9f87c67a4bb7882750011cfa))
+* **widget:** grow multi-entity strip into a grid that fills the cell ([#378](https://github.com/yschimke/homeassistant-remotecompose/issues/378)) ([5e4d529](https://github.com/yschimke/homeassistant-remotecompose/commit/5e4d5297e476ed4a9803a5c400c190d2fe97e967)), closes [#354](https://github.com/yschimke/homeassistant-remotecompose/issues/354)
+
 ## [0.1.33](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.32...v0.1.33) (2026-06-01)
 
 
