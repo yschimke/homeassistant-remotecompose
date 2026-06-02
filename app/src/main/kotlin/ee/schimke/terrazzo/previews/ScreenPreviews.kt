@@ -18,7 +18,10 @@ import ee.schimke.ha.client.DashboardSummary
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.components.ThemeStyle
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.ui.unit.dp
 import ee.schimke.terrazzo.LocalTerrazzoGraph
+import ee.schimke.terrazzo.SettingsScreen
 import ee.schimke.terrazzo.TerrazzoApp
 import ee.schimke.terrazzo.core.auth.HaAuthService
 import ee.schimke.terrazzo.core.auth.TokenVault
@@ -30,6 +33,13 @@ import ee.schimke.terrazzo.core.mobileapp.MobileAppStore
 import ee.schimke.terrazzo.core.monitor.CardMonitor
 import ee.schimke.terrazzo.core.pin.PinStore
 import ee.schimke.terrazzo.core.pin.WearWidgetSlotsStore
+import ee.schimke.terrazzo.core.logs.LogConnectionStatus
+import ee.schimke.terrazzo.core.logs.LogEntry
+import ee.schimke.terrazzo.core.pin.MobilePinnedCard
+import ee.schimke.terrazzo.core.pin.MobilePinnedSection
+import ee.schimke.terrazzo.core.pin.PinnedCardData
+import ee.schimke.terrazzo.core.pin.SlotSize
+import ee.schimke.terrazzo.core.pin.WearWidgetSlot
 import ee.schimke.terrazzo.core.prefs.DarkModePref
 import ee.schimke.terrazzo.core.prefs.PreferencesStore
 import ee.schimke.terrazzo.core.session.DemoData
@@ -42,8 +52,14 @@ import ee.schimke.terrazzo.dashboard.DashboardListState
 import ee.schimke.terrazzo.dashboard.DashboardPickerScreen
 import ee.schimke.terrazzo.dashboard.DashboardSelectionScreen
 import ee.schimke.terrazzo.dashboard.DashboardViewScreen
+import ee.schimke.terrazzo.dashboard.ManagePinnedContent
+import ee.schimke.terrazzo.dashboard.PinRowItem
 import ee.schimke.terrazzo.discovery.DiscoveryScreen
+import ee.schimke.terrazzo.logs.LogsContent
 import ee.schimke.terrazzo.ui.TerrazzoTheme
+import ee.schimke.terrazzo.wearsync.SyncDiagnosticsContent
+import ee.schimke.terrazzo.wearsync.WearWidgetsContent
+import ee.schimke.terrazzo.wearsync.proto.SyncStats
 import ee.schimke.terrazzo.widget.WidgetsScreen
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -217,6 +233,11 @@ fun Screen_DashboardPicker() = PhoneHost {
             ),
         ),
         onDashboardPicked = {},
+        // The real screen hosts the picker inside a Scaffold and hands
+        // it the top-bar inset as contentPadding; mirror that here so
+        // the first card isn't clipped flush against the preview's top
+        // edge.
+        contentPadding = PaddingValues(vertical = 12.dp),
     )
 }
 
@@ -234,6 +255,11 @@ fun Screen_DashboardPicker_ThemeStyle(
             ),
         ),
         onDashboardPicked = {},
+        // The real screen hosts the picker inside a Scaffold and hands
+        // it the top-bar inset as contentPadding; mirror that here so
+        // the first card isn't clipped flush against the preview's top
+        // edge.
+        contentPadding = PaddingValues(vertical = 12.dp),
     )
 }
 
@@ -386,6 +412,196 @@ fun Screen_DashboardSelection_ThemeStyle(
     )
 }
 
+/**
+ * Settings screen in demo mode. Reads theme / dark-mode / experimental
+ * toggles from the preview graph's real (empty) [PreferencesStore], so
+ * every row renders at its default value — this is the home of the
+ * theme picker (style guide §6.1), so a preview here guards the picker
+ * layout and the five palette rows against regressions.
+ */
+@Preview(name = "settings", showBackground = false, widthDp = PHONE_WIDTH_DP, heightDp = PHONE_HEIGHT_DP)
+@Composable
+fun Screen_Settings() = PhoneHost {
+    SettingsScreen(
+        session = demoSession(),
+        onToggleDemo = {},
+        onSignOut = {},
+        onBack = {},
+        onOpenSyncDiagnostics = {},
+        onManageDashboards = {},
+    )
+}
+
+@Preview(name = "settings · theme", showBackground = false, widthDp = PHONE_WIDTH_DP, heightDp = PHONE_HEIGHT_DP)
+@Composable
+fun Screen_Settings_ThemeStyle(
+    @PreviewParameter(ThemeStyleProvider::class) style: ThemeStyle,
+) = PhoneHost(style = style) {
+    SettingsScreen(
+        session = demoSession(),
+        onToggleDemo = {},
+        onSignOut = {},
+        onBack = {},
+        onOpenSyncDiagnostics = {},
+        onManageDashboards = {},
+    )
+}
+
+// --- Secondary / power-user screens -------------------------------------
+//
+// These read their data from runtime stores in production; each has a
+// stateless `*Content` layer (extracted for previewability) that takes
+// hand-rolled fixtures so the populated layout — not just the empty
+// state the preview graph's empty stores would produce — is exercised.
+
+// Fixed wall-clock anchor so the log timestamps render identically every
+// run (the rows format `HH:mm:ss` from these values).
+private const val LOG_ANCHOR_MS = 1_700_000_000_000L
+
+private val SAMPLE_CRASHES = listOf(
+    LogEntry.Crash(
+        timestamp = LOG_ANCHOR_MS,
+        threadName = "main",
+        summary = "IllegalStateException: no card renderer for type 'custom:mini-graph'",
+        stackTrace = "java.lang.IllegalStateException: no card renderer…\n  at ee.schimke.ha.rc.RenderChild(RenderChild.kt:48)",
+        fatal = true,
+    ),
+    LogEntry.Crash(
+        timestamp = LOG_ANCHOR_MS - 90_000,
+        threadName = "DefaultDispatcher-worker-3",
+        summary = "JobCancellationException: snapshot flow cancelled",
+        stackTrace = "kotlinx.coroutines.JobCancellationException…",
+        fatal = false,
+    ),
+)
+
+private val SAMPLE_CONNECTIONS = listOf(
+    LogEntry.Connection(LOG_ANCHOR_MS, LogConnectionStatus.Connected, "homeassistant.local:8123"),
+    LogEntry.Connection(LOG_ANCHOR_MS - 20_000, LogConnectionStatus.Connecting, null),
+    LogEntry.Connection(LOG_ANCHOR_MS - 35_000, LogConnectionStatus.Error, "handshake timed out after 10s"),
+)
+
+private val SAMPLE_ACTIONS = listOf(
+    LogEntry.LocalAction(LOG_ANCHOR_MS, "homeassistant.toggle", "light.kitchen"),
+    LogEntry.LocalAction(LOG_ANCHOR_MS - 4_000, "cover.open_cover", "cover.garage_door"),
+)
+
+private val SAMPLE_DATA_UPDATES = listOf(
+    LogEntry.DataUpdate(LOG_ANCHOR_MS, "sensor.living_room_temperature", "21.3", "21.4"),
+    LogEntry.DataUpdate(LOG_ANCHOR_MS - 3_000, "binary_sensor.front_door", "off", "on"),
+)
+
+@Preview(name = "logs", showBackground = false, widthDp = PHONE_WIDTH_DP, heightDp = PHONE_HEIGHT_DP)
+@Composable
+fun Screen_Logs() = PhoneHost {
+    LogsContent(
+        crashes = SAMPLE_CRASHES,
+        connections = SAMPLE_CONNECTIONS,
+        actions = SAMPLE_ACTIONS,
+        dataUpdates = SAMPLE_DATA_UPDATES,
+        onClear = {},
+        onBack = {},
+    )
+}
+
+@Preview(name = "logs · empty", showBackground = false, widthDp = PHONE_WIDTH_DP, heightDp = PHONE_HEIGHT_DP)
+@Composable
+fun Screen_Logs_Empty() = PhoneHost {
+    LogsContent(
+        crashes = emptyList(),
+        connections = emptyList(),
+        actions = emptyList(),
+        dataUpdates = emptyList(),
+        onClear = {},
+        onBack = {},
+    )
+}
+
+private const val SAMPLE_BASE_URL = "http://homeassistant.local:8123"
+
+private val SAMPLE_PIN_ITEMS: List<PinRowItem> = listOf(
+    PinRowItem.Card(
+        MobilePinnedCard(
+            key = "card-living",
+            baseUrl = SAMPLE_BASE_URL,
+            dashboardUrlPath = "lovelace-mobile",
+            card = PinnedCardData(type = "tile", title = "Living Room"),
+            orderIndex = 0,
+        ),
+    ),
+    PinRowItem.Section(
+        MobilePinnedSection(
+            key = "section-cameras",
+            baseUrl = SAMPLE_BASE_URL,
+            dashboardUrlPath = "lovelace-garage",
+            viewPath = "0",
+            sectionIndex = 1,
+            title = "Outdoor cameras",
+            cards = listOf(PinnedCardData(), PinnedCardData()),
+            orderIndex = 1,
+        ),
+    ),
+    PinRowItem.Card(
+        MobilePinnedCard(
+            key = "card-thermostat",
+            baseUrl = SAMPLE_BASE_URL,
+            dashboardUrlPath = "",
+            card = PinnedCardData(type = "thermostat", title = ""),
+            orderIndex = 2,
+        ),
+    ),
+)
+
+@Preview(name = "manage pinned", showBackground = false, widthDp = PHONE_WIDTH_DP, heightDp = PHONE_HEIGHT_DP)
+@Composable
+fun Screen_ManagePinned() = PhoneHost {
+    ManagePinnedContent(items = SAMPLE_PIN_ITEMS, onReorder = {}, onUnpin = {}, onBack = {})
+}
+
+@Preview(name = "manage pinned · empty", showBackground = false, widthDp = PHONE_WIDTH_DP, heightDp = PHONE_HEIGHT_DP)
+@Composable
+fun Screen_ManagePinned_Empty() = PhoneHost {
+    ManagePinnedContent(items = emptyList(), onReorder = {}, onUnpin = {}, onBack = {})
+}
+
+private val SAMPLE_WEAR_CARDS = listOf(
+    MobilePinnedCard("card-living", SAMPLE_BASE_URL, "lovelace-mobile", PinnedCardData(type = "tile", title = "Living Room"), 0),
+    MobilePinnedCard("card-garage", SAMPLE_BASE_URL, "lovelace-garage", PinnedCardData(type = "cover", title = "Garage Door"), 1),
+)
+
+private val SAMPLE_WEAR_SLOTS = listOf(
+    WearWidgetSlot(slotIndex = 0, cardKey = "card-living", size = SlotSize.Both),
+    WearWidgetSlot(slotIndex = 1, cardKey = "card-garage", size = SlotSize.SmallOnly),
+    WearWidgetSlot(slotIndex = 2, cardKey = ""),
+    WearWidgetSlot(slotIndex = 3, cardKey = ""),
+    WearWidgetSlot(slotIndex = 4, cardKey = ""),
+)
+
+@Preview(name = "wear widgets", showBackground = false, widthDp = PHONE_WIDTH_DP, heightDp = PHONE_HEIGHT_DP)
+@Composable
+fun Screen_WearWidgets() = PhoneHost {
+    WearWidgetsContent(
+        slots = SAMPLE_WEAR_SLOTS,
+        pinnedCards = SAMPLE_WEAR_CARDS,
+        onAssign = { _, _ -> },
+        onClear = {},
+        onSizeChange = { _, _ -> },
+        onBack = {},
+    )
+}
+
+private val SAMPLE_SYNC_STATS = SyncStats(
+    datastoreWrites = 128,
+    messageSends = 342,
+    recentSendMs = listOf(0L, 1_500L, 2_800L, 4_100L, 5_600L, 7_000L, 8_300L, 9_900L),
+)
+
+@Preview(name = "sync diagnostics", showBackground = false, widthDp = PHONE_WIDTH_DP, heightDp = PHONE_HEIGHT_DP)
+@Composable
+fun Screen_SyncDiagnostics() = PhoneHost {
+    SyncDiagnosticsContent(stats = SAMPLE_SYNC_STATS, streamActive = true, onReset = {}, onBack = {})
+}
+
 class ThemeStyleProvider : PreviewParameterProvider<ThemeStyle> {
     override val values: Sequence<ThemeStyle> = ThemeStyle.entries.asSequence()
 }
@@ -432,6 +648,11 @@ fun Play_Phone_04_Picker() = PhoneHost(darkMode = DarkModePref.Light) {
             ),
         ),
         onDashboardPicked = {},
+        // The real screen hosts the picker inside a Scaffold and hands
+        // it the top-bar inset as contentPadding; mirror that here so
+        // the first card isn't clipped flush against the preview's top
+        // edge.
+        contentPadding = PaddingValues(vertical = 12.dp),
     )
 }
 

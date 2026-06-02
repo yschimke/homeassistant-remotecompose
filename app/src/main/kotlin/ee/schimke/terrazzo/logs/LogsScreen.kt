@@ -61,7 +61,6 @@ import java.util.Locale
  * Hidden behind `PreferencesStore.logsViewEnabled` — the overflow menu
  * doesn't show the entry until the user flips the toggle in Settings.
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LogsScreen(onBack: () -> Unit) {
     val store = LocalTerrazzoGraph.current.logStore
@@ -72,6 +71,26 @@ fun LogsScreen(onBack: () -> Unit) {
     val connections = entries.filterIsInstance<LogEntry.Connection>().sortedByDescending { it.timestamp }
     val actions = entries.filterIsInstance<LogEntry.LocalAction>().sortedByDescending { it.timestamp }
 
+    LogsContent(
+        crashes = crashes,
+        connections = connections,
+        actions = actions,
+        dataUpdates = dataUpdates,
+        onClear = { store.clear() },
+        onBack = onBack,
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+internal fun LogsContent(
+    crashes: List<LogEntry.Crash>,
+    connections: List<LogEntry.Connection>,
+    actions: List<LogEntry.LocalAction>,
+    dataUpdates: List<LogEntry.DataUpdate>,
+    onClear: () -> Unit,
+    onBack: () -> Unit,
+) {
     Scaffold(
         topBar = {
             TopAppBar(
@@ -82,7 +101,7 @@ fun LogsScreen(onBack: () -> Unit) {
                     }
                 },
                 actions = {
-                    TextButton(onClick = { store.clear() }) { Text("Clear") }
+                    TextButton(onClick = onClear) { Text("Clear") }
                 },
             )
         },

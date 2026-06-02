@@ -45,7 +45,6 @@ import kotlinx.coroutines.launch
  * is the position the watch's top-level nav will render. New pins land
  * at the tail; the user reshuffles from this screen.
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ManagePinnedScreen(onBack: () -> Unit) {
     val pinStore = LocalTerrazzoGraph.current.pinStore
@@ -60,6 +59,29 @@ fun ManagePinnedScreen(onBack: () -> Unit) {
         }.sortedBy { it.orderIndex }
     }
 
+    ManagePinnedContent(
+        items = items,
+        onReorder = { newOrder -> scope.launch { pinStore.reorder(newOrder) } },
+        onUnpin = { item ->
+            scope.launch {
+                when (item) {
+                    is PinRowItem.Card -> pinStore.unpinCard(item.key)
+                    is PinRowItem.Section -> pinStore.unpinSection(item.key)
+                }
+            }
+        },
+        onBack = onBack,
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+internal fun ManagePinnedContent(
+    items: List<PinRowItem>,
+    onReorder: (List<String>) -> Unit,
+    onUnpin: (PinRowItem) -> Unit,
+    onBack: () -> Unit,
+) {
     Scaffold(
         topBar = {
             TopAppBar(
@@ -106,29 +128,18 @@ fun ManagePinnedScreen(onBack: () -> Unit) {
                     canMoveUp = index > 0,
                     canMoveDown = index >= 0 && index < items.lastIndex,
                     onMoveUp = {
-                        scope.launch {
-                            val reordered = items.toMutableList()
-                                .apply { add(index - 1, removeAt(index)) }
-                                .map { it.key }
-                            pinStore.reorder(reordered)
-                        }
+                        val reordered = items.toMutableList()
+                            .apply { add(index - 1, removeAt(index)) }
+                            .map { it.key }
+                        onReorder(reordered)
                     },
                     onMoveDown = {
-                        scope.launch {
-                            val reordered = items.toMutableList()
-                                .apply { add(index + 1, removeAt(index)) }
-                                .map { it.key }
-                            pinStore.reorder(reordered)
-                        }
+                        val reordered = items.toMutableList()
+                            .apply { add(index + 1, removeAt(index)) }
+                            .map { it.key }
+                        onReorder(reordered)
                     },
-                    onUnpin = {
-                        scope.launch {
-                            when (item) {
-                                is PinRowItem.Card -> pinStore.unpinCard(item.key)
-                                is PinRowItem.Section -> pinStore.unpinSection(item.key)
-                            }
-                        }
-                    },
+                    onUnpin = { onUnpin(item) },
                 )
             }
         }
@@ -168,7 +179,7 @@ private fun PinRow(
     }
 }
 
-private sealed interface PinRowItem {
+internal sealed interface PinRowItem {
     val key: String
     val orderIndex: Int
     val title: String

@@ -53,7 +53,6 @@ import kotlinx.coroutines.launch
  * so this screen always has a meaningful effect when the user gets to
  * it.
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WearWidgetsScreen(onBack: () -> Unit) {
     val pinStore = LocalTerrazzoGraph.current.pinStore
@@ -63,6 +62,26 @@ fun WearWidgetsScreen(onBack: () -> Unit) {
     val slots by slotsStore.slots.collectAsState(initial = emptyList())
     val pinnedCards by pinStore.cards.collectAsState(initial = emptyList())
 
+    WearWidgetsContent(
+        slots = slots,
+        pinnedCards = pinnedCards,
+        onAssign = { slotIndex, card -> scope.launch { slotsStore.setSlot(slotIndex, card.key) } },
+        onClear = { slotIndex -> scope.launch { slotsStore.clearSlot(slotIndex) } },
+        onSizeChange = { slotIndex, size -> scope.launch { slotsStore.setSize(slotIndex, size) } },
+        onBack = onBack,
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+internal fun WearWidgetsContent(
+    slots: List<WearWidgetSlot>,
+    pinnedCards: List<MobilePinnedCard>,
+    onAssign: (slotIndex: Int, card: MobilePinnedCard) -> Unit,
+    onClear: (slotIndex: Int) -> Unit,
+    onSizeChange: (slotIndex: Int, size: SlotSize) -> Unit,
+    onBack: () -> Unit,
+) {
     Scaffold(
         topBar = {
             TopAppBar(
@@ -106,15 +125,9 @@ fun WearWidgetsScreen(onBack: () -> Unit) {
                     SlotRow(
                         slot = slot,
                         pinnedCards = pinnedCards,
-                        onAssign = { card ->
-                            scope.launch { slotsStore.setSlot(slot.slotIndex, card.key) }
-                        },
-                        onClear = {
-                            scope.launch { slotsStore.clearSlot(slot.slotIndex) }
-                        },
-                        onSizeChange = { size ->
-                            scope.launch { slotsStore.setSize(slot.slotIndex, size) }
-                        },
+                        onAssign = { card -> onAssign(slot.slotIndex, card) },
+                        onClear = { onClear(slot.slotIndex) },
+                        onSizeChange = { size -> onSizeChange(slot.slotIndex, size) },
                     )
                 }
             }
