@@ -787,7 +787,7 @@ private fun initialDashboardToOpened(stored: String?): String? =
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun SettingsScreen(
+internal fun SettingsScreen(
   session: HaSession,
   onToggleDemo: (Boolean) -> Unit,
   onSignOut: () -> Unit,

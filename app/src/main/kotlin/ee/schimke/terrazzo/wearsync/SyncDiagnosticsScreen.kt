@@ -43,7 +43,6 @@ import kotlinx.coroutines.launch
  *   batching)
  * - rolling-window send frequency from [SyncStats.recentSendMs]
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SyncDiagnosticsScreen(
   statsStore: MobileSyncStatsStore,
@@ -52,7 +51,22 @@ fun SyncDiagnosticsScreen(
 ) {
   val stats by statsStore.flow.collectAsState(initial = SyncStats())
   val scope = rememberCoroutineScope()
+  SyncDiagnosticsContent(
+    stats = stats,
+    streamActive = streamActive,
+    onReset = { scope.launch { statsStore.reset() } },
+    onBack = onBack,
+  )
+}
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+internal fun SyncDiagnosticsContent(
+  stats: SyncStats,
+  streamActive: Boolean,
+  onReset: () -> Unit,
+  onBack: () -> Unit,
+) {
   Scaffold(
     topBar = {
       TopAppBar(
@@ -126,7 +140,7 @@ fun SyncDiagnosticsScreen(
 
       HorizontalDivider()
 
-      OutlinedButton(onClick = { scope.launch { statsStore.reset() } }) { Text("Reset counters") }
+      OutlinedButton(onClick = onReset) { Text("Reset counters") }
     }
   }
 }
