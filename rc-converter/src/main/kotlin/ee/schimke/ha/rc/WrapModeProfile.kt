@@ -18,8 +18,8 @@ import androidx.compose.remote.creation.profile.Profile
  * [androidx.compose.remote.player.view.platform.RemoteComposeView.onMeasure] report the document's
  * declared `mWidth`/`mHeight` to its parent regardless of the root layout's intrinsic size. With
  * the feature off, the player runs a real measure pass against the parent's `maxWidth`/`maxHeight`
- * and reports `mRootLayoutComponent.getWidth()/getHeight()` — the document's natural content size
- * — back up the View hierarchy.
+ * and reports `mRootLayoutComponent.getWidth()/getHeight()` — the document's natural content size —
+ * back up the View hierarchy.
  *
  * Visually a no-op when the host wraps the player in `Modifier.size(...)` /
  * `Modifier.fillMaxSize()` (the `EXACTLY` MeasureSpec ignores the intrinsic). Becomes useful when
@@ -32,22 +32,22 @@ import androidx.compose.remote.creation.profile.Profile
  * DOC_CONTENT_DESCRIPTION / DOC_PROFILES, which means we go through the writer's varargs
  * constructor at construction time rather than appending a second `HEADER` op afterwards. The
  * tradeoff: this path doesn't carry the `writerCallback` (no public setter for `mWriterCallback`
- * once the writer is built without it). The callback tracks PendingIntent-style side effects
- * issued from the writer; cards in this project don't issue any, so dropping it is safe today —
- * if/when widget-style PendingIntent actions get added the wrap profile will need to be revisited.
+ * once the writer is built without it). The callback tracks PendingIntent-style side effects issued
+ * from the writer; cards in this project don't issue any, so dropping it is safe today — if/when
+ * widget-style PendingIntent actions get added the wrap profile will need to be revisited.
  */
 val androidXExperimentalWrap: Profile =
-    Profile(
-        CoreDocument.DOCUMENT_API_LEVEL,
-        RcProfiles.PROFILE_ANDROIDX or RcProfiles.PROFILE_EXPERIMENTAL,
-        AndroidxRcPlatformServices(),
-    ) { creationDisplayInfo, profile, _ ->
-        RemoteComposeWriterAndroid(
-            profile,
-            RemoteComposeWriter.hTag(Header.DOC_WIDTH, creationDisplayInfo.width),
-            RemoteComposeWriter.hTag(Header.DOC_HEIGHT, creationDisplayInfo.height),
-            RemoteComposeWriter.hTag(Header.DOC_CONTENT_DESCRIPTION, ""),
-            RemoteComposeWriter.hTag(Header.DOC_PROFILES, profile.operationsProfiles),
-            RemoteComposeWriter.hTag(Header.FEATURE_PAINT_MEASURE, 0),
-        )
-    }
+  Profile(
+    CoreDocument.DOCUMENT_API_LEVEL,
+    RcProfiles.PROFILE_ANDROIDX or RcProfiles.PROFILE_EXPERIMENTAL,
+    AndroidxRcPlatformServices(),
+  ) { creationDisplayInfo, profile, _ ->
+    RemoteComposeWriterAndroid(
+      profile,
+      RemoteComposeWriter.hTag(Header.DOC_WIDTH, creationDisplayInfo.width),
+      RemoteComposeWriter.hTag(Header.DOC_HEIGHT, creationDisplayInfo.height),
+      RemoteComposeWriter.hTag(Header.DOC_CONTENT_DESCRIPTION, ""),
+      RemoteComposeWriter.hTag(Header.DOC_PROFILES, profile.operationsProfiles),
+      RemoteComposeWriter.hTag(Header.FEATURE_PAINT_MEASURE, 0),
+    )
+  }

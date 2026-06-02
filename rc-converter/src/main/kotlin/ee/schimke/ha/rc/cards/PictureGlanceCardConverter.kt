@@ -16,50 +16,51 @@ import ee.schimke.ha.rc.defaultTapActionFor
 import ee.schimke.ha.rc.icons.HaIconMap
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonPrimitive
 
 /** `picture-glance` card — image with a row of clickable entity cells. */
 class PictureGlanceCardConverter : CardConverter {
-    override val cardType: String = CardTypes.PICTURE_GLANCE
+  override val cardType: String = CardTypes.PICTURE_GLANCE
 
-    override fun naturalHeightDp(card: CardConfig, snapshot: HaSnapshot): Int = 168
+  override fun naturalHeightDp(card: CardConfig, snapshot: HaSnapshot): Int = 168
 
-    @Composable
-    override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
-        val image = card.raw["image"]?.jsonPrimitive?.content
-        val title = card.raw["title"]?.jsonPrimitive?.content
+  @Composable
+  override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
+    val image = card.raw["image"]?.jsonPrimitive?.content
+    val title = card.raw["title"]?.jsonPrimitive?.content
 
-        val ids: List<String> = (card.raw["entities"] as? JsonArray)?.mapNotNull { el ->
-            when (el) {
-                is JsonObject -> el["entity"]?.jsonPrimitive?.content
-                else -> el.jsonPrimitive.content
-            }
-        }.orEmpty()
+    val ids: List<String> =
+      (card.raw["entities"] as? JsonArray)
+        ?.mapNotNull { el ->
+          when (el) {
+            is JsonObject -> el["entity"]?.jsonPrimitive?.content
+            else -> el.jsonPrimitive.content
+          }
+        }
+        .orEmpty()
 
-        val cells =
-            ids.map { id ->
-                val entity = snapshot.states[id]
-                val name = entity?.attributes?.get("friendly_name")?.jsonPrimitive?.content ?: id
-                val active = entity?.state == "on" || entity?.state == "open"
-                HaPictureGlanceCell(
-                    entityId = id,
-                    icon = HaIconMap.resolve(null, entity),
-                    accent = HaStateColor.activeFor(entity),
-                    initiallyActive = active,
-                    label = name,
-                    tapAction = defaultTapActionFor(id),
-                )
-            }
-
-        RemoteHaPictureGlance(
-            HaPictureGlanceData(
-                title = title,
-                captionUrl = image,
-                placeholderIcon = Icons.Filled.Image,
-                cells = cells,
-            ),
-            modifier = modifier,
-        )
+    val cells = ids.map { id ->
+      val entity = snapshot.states[id]
+      val name = entity?.attributes?.get("friendly_name")?.jsonPrimitive?.content ?: id
+      val active = entity?.state == "on" || entity?.state == "open"
+      HaPictureGlanceCell(
+        entityId = id,
+        icon = HaIconMap.resolve(null, entity),
+        accent = HaStateColor.activeFor(entity),
+        initiallyActive = active,
+        label = name,
+        tapAction = defaultTapActionFor(id),
+      )
     }
+
+    RemoteHaPictureGlance(
+      HaPictureGlanceData(
+        title = title,
+        captionUrl = image,
+        placeholderIcon = Icons.Filled.Image,
+        cells = cells,
+      ),
+      modifier = modifier,
+    )
+  }
 }

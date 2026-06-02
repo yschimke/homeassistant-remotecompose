@@ -20,33 +20,34 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 
 /**
- * HA `entities` card — stacked list of [RemoteHaEntityRow]s with an
- * optional title header. Matches `hui-entities-card.ts` visually.
+ * HA `entities` card — stacked list of [RemoteHaEntityRow]s with an optional title header. Matches
+ * `hui-entities-card.ts` visually.
  */
 @Composable
 @RemoteComposable
 fun RemoteHaEntities(data: HaEntitiesData, modifier: RemoteModifier = RemoteModifier) {
-    val theme = haTheme()
-    RemoteBox(
-        modifier = modifier
-            .fillMaxWidth()
-            .then(cardChrome(theme.cardBackground, theme.divider))
-            .padding(horizontal = 12.rdp, vertical = 10.rdp),
-    ) {
-        RemoteColumn(horizontalAlignment = RemoteAlignment.Start) {
-            if (data.title != null) {
-                RemoteText(
-                    text = data.title.rs,
-                    color = theme.primaryText.rc,
-                    fontSize = adaptiveTitleSizeSp(data.title).rsp,
-                    fontWeight = FontWeight.Medium,
-                    style = RemoteTextStyle.Default,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                RemoteBox(modifier = RemoteModifier.padding(top = 4.rdp))
-            }
-            data.rows.forEach { row -> RemoteHaEntityRow(row) }
-        }
+  val theme = haTheme()
+  RemoteBox(
+    modifier =
+      modifier
+        .fillMaxWidth()
+        .then(cardChrome(theme.cardBackground, theme.divider))
+        .padding(horizontal = 12.rdp, vertical = 10.rdp)
+  ) {
+    RemoteColumn(horizontalAlignment = RemoteAlignment.Start) {
+      if (data.title != null) {
+        RemoteText(
+          text = data.title.rs,
+          color = theme.primaryText.rc,
+          fontSize = adaptiveTitleSizeSp(data.title).rsp,
+          fontWeight = FontWeight.Medium,
+          style = RemoteTextStyle.Default,
+          maxLines = 1,
+          overflow = TextOverflow.Ellipsis,
+        )
+        RemoteBox(modifier = RemoteModifier.padding(top = 4.rdp))
+      }
+      data.rows.forEach { row -> RemoteHaEntityRow(row) }
     }
+  }
 }

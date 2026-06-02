@@ -17,27 +17,29 @@ import java.util.concurrent.atomic.AtomicReference
  * Decides whether a base URL should be attempted from the device's current network.
  *
  * Used in two places:
- *  * Connect-time: before launching AppAuth so a bad URL surfaces immediately.
- *  * Per-request: via [LanConnectionPolicyInterceptor] on the OkHttp engine, so any code path that
- *    later builds a request can't slip past the gate.
+ * * Connect-time: before launching AppAuth so a bad URL surfaces immediately.
+ * * Per-request: via [LanConnectionPolicyInterceptor] on the OkHttp engine, so any code path that
+ *   later builds a request can't slip past the gate.
  *
  * Rules:
- *  * `https://…` is always allowed (TLS doesn't care about transport).
- *  * `http://…` to a LAN destination (loopback, RFC1918, link-local, `*.local`, `*.home.arpa`,
- *    `*.lan`, `*.home`, `*.internal`, the emulator host `10.0.2.2`, or a single-label hostname
- *    like `homeassistant`) is allowed only over Wi-Fi or Ethernet — never cellular.
- *  * `http://…` to a public destination is rejected.
+ * * `https://…` is always allowed (TLS doesn't care about transport).
+ * * `http://…` to a LAN destination (loopback, RFC1918, link-local, `*.local`, `*.home.arpa`,
+ *   `*.lan`, `*.home`, `*.internal`, the emulator host `10.0.2.2`, or a single-label hostname like
+ *   `homeassistant`) is allowed only over Wi-Fi or Ethernet — never cellular.
+ * * `http://…` to a public destination is rejected.
  *
- * Caching: the active-network transport is read once via [ConnectivityManager.registerDefaultNetworkCallback]
- * and refreshed when Android announces a change (network gained/lost, capabilities changed). Per-request
- * lookups never hit ConnectivityManager themselves — they read the cached [AtomicReference]. The host
- * classification is pure and stateless.
+ * Caching: the active-network transport is read once via
+ * [ConnectivityManager.registerDefaultNetworkCallback] and refreshed when Android announces a
+ * change (network gained/lost, capabilities changed). Per-request lookups never hit
+ * ConnectivityManager themselves — they read the cached [AtomicReference]. The host classification
+ * is pure and stateless.
  */
 @SingleIn(AppScope::class)
 @Inject
 class LanConnectionPolicy(context: Context) {
 
-  private val connectivity = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+  private val connectivity =
+    context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
   private val transport = AtomicReference(Transport.None)
 
   init {

@@ -25,7 +25,6 @@
 package androidx.glance.wear.tooling.preview
 
 import android.annotation.SuppressLint
-
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.glance.wear.core.ContainerInfo
 import androidx.glance.wear.core.WearWidgetParams
@@ -40,28 +39,28 @@ import androidx.glance.wear.core.WidgetInstanceId
  */
 @SuppressLint("RestrictedApi")
 public class WearWidgetParamsProvider : PreviewParameterProvider<WearWidgetParams> {
-    @SuppressLint("RestrictedApi")
-    override val values: Sequence<WearWidgetParams> =
-        sequenceOf(
-            // Large Widget Preview
-            WearWidgetParams(
-                instanceId = WidgetInstanceId("widgets", 1),
-                containerType = ContainerInfo.CONTAINER_TYPE_LARGE,
-                widthDp = 200f,
-                heightDp = 112f,
-                verticalPaddingDp = 8f,
-                horizontalPaddingDp = 8f,
-                cornerRadiusDp = 26f,
-            ),
-            // Small Widget Preview
-            WearWidgetParams(
-                instanceId = WidgetInstanceId("widgets", 2),
-                containerType = ContainerInfo.CONTAINER_TYPE_SMALL,
-                widthDp = 200f,
-                heightDp = 60f,
-                verticalPaddingDp = 8f,
-                horizontalPaddingDp = 8f,
-                cornerRadiusDp = 26f,
-            ),
-        )
+  @SuppressLint("RestrictedApi")
+  override val values: Sequence<WearWidgetParams> =
+    sequenceOf(
+      // Large Widget Preview
+      WearWidgetParams(
+        instanceId = WidgetInstanceId("widgets", 1),
+        containerType = ContainerInfo.CONTAINER_TYPE_LARGE,
+        widthDp = 200f,
+        heightDp = 112f,
+        verticalPaddingDp = 8f,
+        horizontalPaddingDp = 8f,
+        cornerRadiusDp = 26f,
+      ),
+      // Small Widget Preview
+      WearWidgetParams(
+        instanceId = WidgetInstanceId("widgets", 2),
+        containerType = ContainerInfo.CONTAINER_TYPE_SMALL,
+        widthDp = 200f,
+        heightDp = 60f,
+        verticalPaddingDp = 8f,
+        horizontalPaddingDp = 8f,
+        cornerRadiusDp = 26f,
+      ),
+    )
 }

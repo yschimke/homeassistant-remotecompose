@@ -32,99 +32,91 @@ import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.jsonPrimitive
 
 /**
- * `alarm-panel` card. Maps `alarm_control_panel.*` entity state into a
- * panel showing the disarmed/armed status, ARM action buttons (driven
- * by `states:` config — defaults to away/home), and the numeric
- * keypad.
+ * `alarm-panel` card. Maps `alarm_control_panel.*` entity state into a panel showing the
+ * disarmed/armed status, ARM action buttons (driven by `states:` config — defaults to away/home),
+ * and the numeric keypad.
  *
- * Each ARM/DISARM button emits an [HaAction.AlarmIntent] (rather than
- * a direct call-service); each keypad press emits an
- * [HaAction.AlarmKey]. The host's `AlarmKeypadCoordinator` buffers
- * keys and pairs them with the most recent intent before firing
- * `alarm_control_panel.alarm_*` with `code:`. When the entity reports
- * `code_arm_required: false` we forward `codeLength = 0` so the
- * coordinator skips buffering and dispatches immediately.
+ * Each ARM/DISARM button emits an [HaAction.AlarmIntent] (rather than a direct call-service); each
+ * keypad press emits an [HaAction.AlarmKey]. The host's `AlarmKeypadCoordinator` buffers keys and
+ * pairs them with the most recent intent before firing `alarm_control_panel.alarm_*` with `code:`.
+ * When the entity reports `code_arm_required: false` we forward `codeLength = 0` so the coordinator
+ * skips buffering and dispatches immediately.
  */
 class AlarmPanelCardConverter : CardConverter {
-    override val cardType: String = CardTypes.ALARM_PANEL
+  override val cardType: String = CardTypes.ALARM_PANEL
 
-    override fun naturalHeightDp(card: CardConfig, snapshot: HaSnapshot): Int = 380
+  override fun naturalHeightDp(card: CardConfig, snapshot: HaSnapshot): Int = 380
 
-    @Composable
-    override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
-        val entityId = card.raw["entity"]?.jsonPrimitive?.content
-        val entity = entityId?.let { snapshot.states[it] }
-        val title = card.raw["name"]?.jsonPrimitive?.content
-            ?: entity?.attributes?.get("friendly_name")?.jsonPrimitive?.content
-            ?: entityId
-            ?: "Alarm"
-        val state = entity?.state ?: "unknown"
-        val statesArr = (card.raw["states"] as? JsonArray)
-            ?.mapNotNull { (it as? JsonPrimitive)?.content }
-            ?: listOf("arm_away", "arm_home")
-        val codeRequired = entity?.attributes?.get("code_arm_required")
-            ?.jsonPrimitive?.booleanOrNull ?: true
-        // HA doesn't surface a structured length, so let the dashboard
-        // YAML pin one (`code_length: 4`); attribute-level hints are
-        // strings like "number" / "^\\d{4}$" that we don't parse.
-        val configuredLen = card.raw["code_length"]?.jsonPrimitive?.intOrNull
-        val codeLength: Int? = when {
-            !codeRequired -> 0
-            configuredLen != null && configuredLen > 0 -> configuredLen
-            else -> null
+  @Composable
+  override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
+    val entityId = card.raw["entity"]?.jsonPrimitive?.content
+    val entity = entityId?.let { snapshot.states[it] }
+    val title =
+      card.raw["name"]?.jsonPrimitive?.content
+        ?: entity?.attributes?.get("friendly_name")?.jsonPrimitive?.content
+        ?: entityId
+        ?: "Alarm"
+    val state = entity?.state ?: "unknown"
+    val statesArr =
+      (card.raw["states"] as? JsonArray)?.mapNotNull { (it as? JsonPrimitive)?.content }
+        ?: listOf("arm_away", "arm_home")
+    val codeRequired =
+      entity?.attributes?.get("code_arm_required")?.jsonPrimitive?.booleanOrNull ?: true
+    // HA doesn't surface a structured length, so let the dashboard
+    // YAML pin one (`code_length: 4`); attribute-level hints are
+    // strings like "number" / "^\\d{4}$" that we don't parse.
+    val configuredLen = card.raw["code_length"]?.jsonPrimitive?.intOrNull
+    val codeLength: Int? =
+      when {
+        !codeRequired -> 0
+        configuredLen != null && configuredLen > 0 -> configuredLen
+        else -> null
+      }
+    val actions =
+      entityId
+        ?.let { id ->
+          statesArr.map { suffix ->
+            val label = suffix.removePrefix("arm_").replace('_', ' ').uppercase()
+            HaAlarmAction(
+              label = "ARM $label",
+              accent = armAccent(suffix),
+              tapAction =
+                HaAction.AlarmIntent(entityId = id, service = suffix, codeLength = codeLength),
+            )
+          }
         }
-        val actions =
-            entityId
-                ?.let { id ->
-                    statesArr.map { suffix ->
-                        val label = suffix.removePrefix("arm_").replace('_', ' ').uppercase()
-                        HaAlarmAction(
-                            label = "ARM $label",
-                            accent = armAccent(suffix),
-                            tapAction = HaAction.AlarmIntent(
-                                entityId = id,
-                                service = suffix,
-                                codeLength = codeLength,
-                            ),
-                        )
-                    }
-                }
-                .orEmpty()
+        .orEmpty()
 
-        val data = HaAlarmPanelData(
-            entityId = entityId,
-            title = title,
-            initialStateInt = alarmStateIntFromRaw(state),
-            statuses = AlarmStatuses,
-            actions = actions,
-            showKeypad =
-                card.raw["show_keypad"]?.jsonPrimitive?.content?.toBooleanStrictOrNull() ?: true,
-        )
+    val data =
+      HaAlarmPanelData(
+        entityId = entityId,
+        title = title,
+        initialStateInt = alarmStateIntFromRaw(state),
+        statuses = AlarmStatuses,
+        actions = actions,
+        showKeypad =
+          card.raw["show_keypad"]?.jsonPrimitive?.content?.toBooleanStrictOrNull() ?: true,
+      )
 
-        // Single-gate Wide↔Full ladder, mirroring the arc-dial family
-        // (see RenderArcDial / #355): the shield + state hero (and its
-        // live state binding) is kept at every size; narrow cells drop
-        // the ARM buttons + keypad to the Wide chip, wide cells get the
-        // full keypad card.
-        when (LocalCardSizeMode.current) {
-            CardSizeMode.Wrap -> RemoteHaAlarmPanel(data, modifier)
-            CardSizeMode.Fixed ->
-                RemoteSizeBreakpoint(
-                    thresholdsDp = intArrayOf(AlarmFullMinDp),
-                    modifier = modifier.fillMaxSize(),
-                ) { tier ->
-                    when (tier) {
-                        0 -> RemoteHaAlarmPanelWide(data, RemoteModifier.fillMaxSize())
-                        else ->
-                            RemoteHaAlarmPanel(
-                                data,
-                                RemoteModifier.fillMaxSize(),
-                                fillHeight = true,
-                            )
-                    }
-                }
+    // Single-gate Wide↔Full ladder, mirroring the arc-dial family
+    // (see RenderArcDial / #355): the shield + state hero (and its
+    // live state binding) is kept at every size; narrow cells drop
+    // the ARM buttons + keypad to the Wide chip, wide cells get the
+    // full keypad card.
+    when (LocalCardSizeMode.current) {
+      CardSizeMode.Wrap -> RemoteHaAlarmPanel(data, modifier)
+      CardSizeMode.Fixed ->
+        RemoteSizeBreakpoint(
+          thresholdsDp = intArrayOf(AlarmFullMinDp),
+          modifier = modifier.fillMaxSize(),
+        ) { tier ->
+          when (tier) {
+            0 -> RemoteHaAlarmPanelWide(data, RemoteModifier.fillMaxSize())
+            else -> RemoteHaAlarmPanel(data, RemoteModifier.fillMaxSize(), fillHeight = true)
+          }
         }
     }
+  }
 }
 
 // Below this width the keypad's three 48 dp columns can't sit beside
@@ -140,41 +132,40 @@ private val AccentTriggered = Color(0xFFE53935)
 private val AccentNeutral = Color(0xFF757575)
 
 private fun status(key: Int, label: String, accent: Color, icon: ImageVector): HaAlarmStatus =
-    HaAlarmStatus(stateKey = key, label = label, accent = accent, icon = icon)
+  HaAlarmStatus(stateKey = key, label = label, accent = accent, icon = icon)
 
 /**
- * One [HaAlarmStatus] per wire key in [AlarmStateInt]. The list is the
- * complete set of variants the alarm-panel chrome can flip through at
- * playback — the host pushes any of these int keys and the
- * `RemoteStateLayout` swaps to the matching variant without a
- * re-encode. Order mirrors [AlarmStateInt.All] so keys stay aligned
- * with the wire contract.
+ * One [HaAlarmStatus] per wire key in [AlarmStateInt]. The list is the complete set of variants the
+ * alarm-panel chrome can flip through at playback — the host pushes any of these int keys and the
+ * `RemoteStateLayout` swaps to the matching variant without a re-encode. Order mirrors
+ * [AlarmStateInt.All] so keys stay aligned with the wire contract.
  */
 private val AlarmStatuses: List<HaAlarmStatus> =
-    listOf(
-        status(AlarmStateInt.Disarmed, "Disarmed", AccentArmed, Icons.Filled.LockOpen),
-        status(AlarmStateInt.ArmedHome, "Armed home", AccentArmed, Icons.Filled.Shield),
-        status(AlarmStateInt.ArmedAway, "Armed away", AccentArmed, Icons.Filled.Shield),
-        status(AlarmStateInt.ArmedNight, "Armed night", AccentArmed, Icons.Filled.Shield),
-        status(AlarmStateInt.ArmedVacation, "Armed vacation", AccentArmed, Icons.Filled.Shield),
-        status(
-            AlarmStateInt.ArmedCustomBypass,
-            "Armed custom bypass",
-            AccentArmed,
-            Icons.Filled.Shield,
-        ),
-        status(AlarmStateInt.Triggered, "Triggered", AccentTriggered, Icons.Filled.Warning),
-        status(AlarmStateInt.Pending, "Pending", AccentPending, Icons.Filled.Lock),
-        status(AlarmStateInt.Arming, "Arming", AccentPending, Icons.Filled.Lock),
-        status(AlarmStateInt.Disarming, "Disarming", AccentPending, Icons.Filled.Lock),
-        status(AlarmStateInt.Unavailable, "Unavailable", AccentNeutral, Icons.Filled.Lock),
-        status(AlarmStateInt.Unknown, "Unknown", AccentNeutral, Icons.Filled.Lock),
-    )
+  listOf(
+    status(AlarmStateInt.Disarmed, "Disarmed", AccentArmed, Icons.Filled.LockOpen),
+    status(AlarmStateInt.ArmedHome, "Armed home", AccentArmed, Icons.Filled.Shield),
+    status(AlarmStateInt.ArmedAway, "Armed away", AccentArmed, Icons.Filled.Shield),
+    status(AlarmStateInt.ArmedNight, "Armed night", AccentArmed, Icons.Filled.Shield),
+    status(AlarmStateInt.ArmedVacation, "Armed vacation", AccentArmed, Icons.Filled.Shield),
+    status(
+      AlarmStateInt.ArmedCustomBypass,
+      "Armed custom bypass",
+      AccentArmed,
+      Icons.Filled.Shield,
+    ),
+    status(AlarmStateInt.Triggered, "Triggered", AccentTriggered, Icons.Filled.Warning),
+    status(AlarmStateInt.Pending, "Pending", AccentPending, Icons.Filled.Lock),
+    status(AlarmStateInt.Arming, "Arming", AccentPending, Icons.Filled.Lock),
+    status(AlarmStateInt.Disarming, "Disarming", AccentPending, Icons.Filled.Lock),
+    status(AlarmStateInt.Unavailable, "Unavailable", AccentNeutral, Icons.Filled.Lock),
+    status(AlarmStateInt.Unknown, "Unknown", AccentNeutral, Icons.Filled.Lock),
+  )
 
-private fun armAccent(suffix: String): Color = when (suffix) {
+private fun armAccent(suffix: String): Color =
+  when (suffix) {
     "arm_away" -> Color(0xFF1565C0)
     "arm_home" -> Color(0xFF00838F)
     "arm_night" -> Color(0xFF6A1B9A)
     "disarm" -> Color(0xFFE53935)
     else -> Color(0xFF1565C0)
-}
+  }

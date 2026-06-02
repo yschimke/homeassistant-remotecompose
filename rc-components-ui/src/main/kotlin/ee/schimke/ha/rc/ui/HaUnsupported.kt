@@ -9,5 +9,5 @@ import ee.schimke.ha.rc.components.RemoteHaUnsupported
 /** Compose-UI Tier-2 wrapper around [RemoteHaUnsupported]. */
 @Composable
 fun HaUnsupported(data: HaUnsupportedUiData, modifier: Modifier = Modifier) {
-    HaUiHost(modifier) { RemoteHaUnsupported(data.toRemote()) }
+  HaUiHost(modifier) { RemoteHaUnsupported(data.toRemote()) }
 }

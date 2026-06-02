@@ -63,415 +63,419 @@ import kotlinx.serialization.json.jsonPrimitive
 /**
  * Phone-side sync engine. Mirrors:
  *
- *  - [PreferencesStore.demoMode] → `/wear/settings`
- *  - The current [HaSession]'s dashboards → `/wear/dashboard/<urlPath>`
- *    (one DataItem per dashboard, on first session-bind)
- *  - The current snapshot → `/wear/values` (DataStore-style at the wall
- *    refresh interval) **or** `/wear/stream` (MessageClient ephemeral
- *    deltas) when wear holds an active lease
- *  - [PinStore.cards] → `/wear/pinned`
- *  - [PinStore.sections] → `/wear/sections`
+ * - [PreferencesStore.demoMode] → `/wear/settings`
+ * - The current [HaSession]'s dashboards → `/wear/dashboard/<urlPath>` (one DataItem per dashboard,
+ *   on first session-bind)
+ * - The current snapshot → `/wear/values` (DataStore-style at the wall refresh interval) **or**
+ *   `/wear/stream` (MessageClient ephemeral deltas) when wear holds an active lease
+ * - [PinStore.cards] → `/wear/pinned`
+ * - [PinStore.sections] → `/wear/sections`
  *
- * Lease is tracked via MessageClient frames at `/wear/lease`: as long as
- * a recent lease arrived (or pinned cards exist) the manager streams
- * deltas at the live cadence; otherwise it batches into the
- * `/wear/values` DataItem so wear reads cold are still useful while
- * keeping radio-time low when the watch isn't engaged.
+ * Lease is tracked via MessageClient frames at `/wear/lease`: as long as a recent lease arrived (or
+ * pinned cards exist) the manager streams deltas at the live cadence; otherwise it batches into the
+ * `/wear/values` DataItem so wear reads cold are still useful while keeping radio-time low when the
+ * watch isn't engaged.
  *
  * Diagnostics: every write / send updates [MobileSyncStatsStore].
  */
 class MobileWearSyncManager(
-    private val context: Context,
-    private val statsStore: MobileSyncStatsStore,
+  private val context: Context,
+  private val statsStore: MobileSyncStatsStore,
 ) : WearSyncManager {
 
-    private val dataClient: DataClient by lazy { Wearable.getDataClient(context) }
-    private val messageClient: MessageClient by lazy { Wearable.getMessageClient(context) }
-    private val nodeClient: NodeClient by lazy { Wearable.getNodeClient(context) }
+  private val dataClient: DataClient by lazy { Wearable.getDataClient(context) }
+  private val messageClient: MessageClient by lazy { Wearable.getMessageClient(context) }
+  private val nodeClient: NodeClient by lazy { Wearable.getNodeClient(context) }
 
-    /** Lifted Horologist registry so future code can use `protoFlow`/`protoDataStore`. */
-    @OptIn(com.google.android.horologist.annotations.ExperimentalHorologistApi::class)
-    @Suppress("unused")
-    private val registry: WearDataLayerRegistry by lazy {
-        WearDataLayerRegistry.fromContext(application = context.applicationContext as android.app.Application, coroutineScope = managerScope)
-    }
+  /** Lifted Horologist registry so future code can use `protoFlow`/`protoDataStore`. */
+  @OptIn(com.google.android.horologist.annotations.ExperimentalHorologistApi::class)
+  @Suppress("unused")
+  private val registry: WearDataLayerRegistry by lazy {
+    WearDataLayerRegistry.fromContext(
+      application = context.applicationContext as android.app.Application,
+      coroutineScope = managerScope,
+    )
+  }
 
-    private val sessionState: MutableStateFlow<HaSession?> = MutableStateFlow(null)
-    private val leaseState: MutableStateFlow<Long> = MutableStateFlow(0L)
-    private val wearableAvailableState: MutableStateFlow<Boolean> = MutableStateFlow(true)
-    private lateinit var managerScope: CoroutineScope
-    private var streamJob: Job? = null
-    private var recoveryJob: Job? = null
-    private var lastSnapshot: Map<String, EntityValue> = emptyMap()
+  private val sessionState: MutableStateFlow<HaSession?> = MutableStateFlow(null)
+  private val leaseState: MutableStateFlow<Long> = MutableStateFlow(0L)
+  private val wearableAvailableState: MutableStateFlow<Boolean> = MutableStateFlow(true)
+  private lateinit var managerScope: CoroutineScope
+  private var streamJob: Job? = null
+  private var recoveryJob: Job? = null
+  private var lastSnapshot: Map<String, EntityValue> = emptyMap()
 
-    private val leaseListener = MessageClient.OnMessageReceivedListener { event ->
-        if (event.path != WearSyncPaths.LEASE_MESSAGE) return@OnMessageReceivedListener
-        val now = System.currentTimeMillis()
-        val lease: WearLease = decodeProto<WearLease>(event.data) ?: WearLease(sentAtMs = now)
-        leaseState.value = lease.sentAtMs.takeIf { it > 0 } ?: now
-        managerScope.launch { statsStore.recordLease(now) }
-    }
+  private val leaseListener = MessageClient.OnMessageReceivedListener { event ->
+    if (event.path != WearSyncPaths.LEASE_MESSAGE) return@OnMessageReceivedListener
+    val now = System.currentTimeMillis()
+    val lease: WearLease = decodeProto<WearLease>(event.data) ?: WearLease(sentAtMs = now)
+    leaseState.value = lease.sentAtMs.takeIf { it > 0 } ?: now
+    managerScope.launch { statsStore.recordLease(now) }
+  }
 
-    /** Update the active session whenever login/demo state changes. */
-    override fun setSession(session: HaSession?) {
-        sessionState.value = session
-    }
+  /** Update the active session whenever login/demo state changes. */
+  override fun setSession(session: HaSession?) {
+    sessionState.value = session
+  }
 
-    /**
-     * Whether the wear node currently has an active lease. Combined
-     * with pinned-cards count to decide between streaming and batched
-     * DataStore writes.
-     */
-    override val streamActive: StateFlow<Boolean> by lazy {
-        leaseState.map { isLeaseFresh(it) }
-            .stateIn(managerScope, SharingStarted.Eagerly, false)
-    }
+  /**
+   * Whether the wear node currently has an active lease. Combined with pinned-cards count to decide
+   * between streaming and batched DataStore writes.
+   */
+  override val streamActive: StateFlow<Boolean> by lazy {
+    leaseState.map { isLeaseFresh(it) }.stateIn(managerScope, SharingStarted.Eagerly, false)
+  }
 
-    override val wearableAvailable: StateFlow<Boolean> = wearableAvailableState
+  override val wearableAvailable: StateFlow<Boolean> = wearableAvailableState
 
-    /**
-     * Wires the manager to its data sources. Call once from
-     * Application.onCreate. Subsequent session changes use [setSession].
-     */
-    override fun start(
-        scope: CoroutineScope,
-        prefs: PreferencesStore,
-        pinStore: PinStore,
-        slotsStore: WearWidgetSlotsStore,
-    ) {
-        managerScope = scope
-        // addListener returns a Task; observe it so an API_NOT_CONNECTED
-        // failure (no Wearable component on this device) flips us into
-        // the disabled state instead of silently never delivering leases.
-        runCatching {
-            messageClient.addListener(leaseListener)
-                .addOnFailureListener { handleFailure("addListener", it) }
-        }.onFailure { handleFailure("addListener", it) }
-
-        // Demo-mode flag → /wear/settings (and base url annotation).
-        scope.launch {
-            combine(prefs.demoMode, sessionState) { demo, session ->
-                WearSettings(
-                    demoMode = demo,
-                    baseUrl = session?.baseUrl.orEmpty(),
-                    updatedAtMs = System.currentTimeMillis(),
-                )
-            }
-                .distinctUntilChanged()
-                .collect { writeDataItem(WearSyncPaths.SETTINGS, encodeProto(it)) }
+  /**
+   * Wires the manager to its data sources. Call once from Application.onCreate. Subsequent session
+   * changes use [setSession].
+   */
+  override fun start(
+    scope: CoroutineScope,
+    prefs: PreferencesStore,
+    pinStore: PinStore,
+    slotsStore: WearWidgetSlotsStore,
+  ) {
+    managerScope = scope
+    // addListener returns a Task; observe it so an API_NOT_CONNECTED
+    // failure (no Wearable component on this device) flips us into
+    // the disabled state instead of silently never delivering leases.
+    runCatching {
+        messageClient.addListener(leaseListener).addOnFailureListener {
+          handleFailure("addListener", it)
         }
+      }
+      .onFailure { handleFailure("addListener", it) }
 
-        // Pinned cards → /wear/pinned. Source switched from
-        // WidgetStore (phone home-screen widgets) to the new PinStore so
-        // the watch's top-level nav reflects the user's explicit Wear
-        // pins, decoupled from the phone widget set.
-        scope.launch {
-            pinStore.cards
-                .map { it.toProto() }
-                .distinctUntilChanged()
-                .collect { writeDataItem(WearSyncPaths.PINNED, encodeProto(it)) }
+    // Demo-mode flag → /wear/settings (and base url annotation).
+    scope.launch {
+      combine(prefs.demoMode, sessionState) { demo, session ->
+          WearSettings(
+            demoMode = demo,
+            baseUrl = session?.baseUrl.orEmpty(),
+            updatedAtMs = System.currentTimeMillis(),
+          )
         }
-
-        // Pinned sections → /wear/sections.
-        scope.launch {
-            pinStore.sections
-                .map { it.toProto() }
-                .distinctUntilChanged()
-                .collect { writeDataItem(WearSyncPaths.SECTIONS, encodeProto(it)) }
-        }
-
-        // Wear-widget slots → /wear/slots. Empty assignments survive
-        // the wire so the watch can disable matching widget providers.
-        scope.launch {
-            slotsStore.slots
-                .map { it.toProto() }
-                .distinctUntilChanged()
-                .collect { writeDataItem(WearSyncPaths.SLOTS, encodeProto(it)) }
-        }
-
-        // Session snapshot pump. Re-driven on every session change so the
-        // demo session and live session each get their own loop. The
-        // streaming-vs-batched decision now keys off the unified pin set
-        // (cards + sections); any pin keeps the live stream warm.
-        scope.launch {
-            combine(sessionState, pinStore.cards, pinStore.sections) { s, cards, sections ->
-                Triple(s, cards.isNotEmpty() || sections.isNotEmpty(), Unit)
-            }
-                .collectLatest { (session, hasPinned, _) ->
-                    streamJob?.cancel()
-                    streamJob = null
-                    if (session == null) return@collectLatest
-                    publishDashboards(session)
-                    streamJob = scope.launch { sessionPump(session, hasPinned) }
-                }
-        }
+        .distinctUntilChanged()
+        .collect { writeDataItem(WearSyncPaths.SETTINGS, encodeProto(it)) }
     }
 
-    /** Stops listening; safe to call from Application.onTerminate (rare). */
-    fun stop() {
-        runCatching { messageClient.removeListener(leaseListener) }
-        streamJob?.cancel()
-        recoveryJob?.cancel()
+    // Pinned cards → /wear/pinned. Source switched from
+    // WidgetStore (phone home-screen widgets) to the new PinStore so
+    // the watch's top-level nav reflects the user's explicit Wear
+    // pins, decoupled from the phone widget set.
+    scope.launch {
+      pinStore.cards
+        .map { it.toProto() }
+        .distinctUntilChanged()
+        .collect { writeDataItem(WearSyncPaths.PINNED, encodeProto(it)) }
     }
 
-
-    /**
-     * Wear → phone path. Ephemeral message delivered if wear-side
-     * activity is foreground. We record the lease arrival as the
-     * manager's window source.
-     */
-    @Suppress("unused")
-    private fun isLeaseFresh(at: Long): Boolean {
-        if (at <= 0L) return false
-        val now = System.currentTimeMillis()
-        return now - at <= WearSyncPaths.LEASE_WINDOW_MS
+    // Pinned sections → /wear/sections.
+    scope.launch {
+      pinStore.sections
+        .map { it.toProto() }
+        .distinctUntilChanged()
+        .collect { writeDataItem(WearSyncPaths.SECTIONS, encodeProto(it)) }
     }
 
-    private suspend fun publishDashboards(session: HaSession) {
-        if (!wearableAvailableState.value) return
-        // Wait until the session has finished its initial connect; otherwise
-        // listDashboards() hits "Not connected" because the UI drives
-        // session.connect() lazily via the dashboard list.
-        session.connectionStatus.first { it == SessionConnectionStatus.Connected }
-        runCatching {
-            val summaries = session.listDashboards()
-            for (summary in summaries) {
-                val (dashboard, snapshot) = session.loadDashboard(summary.urlPath)
-                val cards = dashboard.views.flatMap { it.cards }
-                val data = DashboardData(
-                    urlPath = summary.urlPath ?: "",
-                    title = dashboard.title ?: summary.title,
-                    cards = cards.map { it.toSummary(snapshot.states) },
-                    updatedAtMs = System.currentTimeMillis(),
-                )
-                writeDataItem(WearSyncPaths.dashboardPath(summary.urlPath), encodeProto(data))
-            }
-        }.onFailure {
-            if (it is CancellationException) throw it
-            handleFailure("publishDashboards", it)
+    // Wear-widget slots → /wear/slots. Empty assignments survive
+    // the wire so the watch can disable matching widget providers.
+    scope.launch {
+      slotsStore.slots
+        .map { it.toProto() }
+        .distinctUntilChanged()
+        .collect { writeDataItem(WearSyncPaths.SLOTS, encodeProto(it)) }
+    }
+
+    // Session snapshot pump. Re-driven on every session change so the
+    // demo session and live session each get their own loop. The
+    // streaming-vs-batched decision now keys off the unified pin set
+    // (cards + sections); any pin keeps the live stream warm.
+    scope.launch {
+      combine(sessionState, pinStore.cards, pinStore.sections) { s, cards, sections ->
+          Triple(s, cards.isNotEmpty() || sections.isNotEmpty(), Unit)
+        }
+        .collectLatest { (session, hasPinned, _) ->
+          streamJob?.cancel()
+          streamJob = null
+          if (session == null) return@collectLatest
+          publishDashboards(session)
+          streamJob = scope.launch { sessionPump(session, hasPinned) }
         }
     }
+  }
 
-    /**
-     * Repeatedly fetches snapshots from [session]; streams via
-     * MessageClient (deltas) when wear has a lease or pinned cards
-     * exist, otherwise batches into the DataStore-Proto entry. Live
-     * sessions that don't expose a refresh interval fall back to a
-     * 30 s heartbeat so values aren't infinitely stale.
-     */
-    private suspend fun sessionPump(session: HaSession, hasPinned: Boolean) {
-        val cadence = session.refreshIntervalMillis ?: 30_000L
-        // Reset snapshot baseline so the first push is a full set.
-        lastSnapshot = emptyMap()
-        session.connectionStatus.first { it == SessionConnectionStatus.Connected }
-        while (true) {
-            // Suspend (rather than exit) when the wear API isn't usable
-            // so a transient API_NOT_CONNECTED disconnect pauses the
-            // pump and resumes once the recovery probe re-flips the flag.
-            wearableAvailableState.first { it }
-            val snapshot = runCatching { session.loadDashboard(null).second }
-                .onFailure { if (it is CancellationException) throw it }
-                .getOrNull()
-            if (snapshot != null) {
-                val current = snapshot.states.mapValues { (_, state) -> state.toEntityValue() }
-                val streaming = hasPinned || isLeaseFresh(leaseState.value)
-                if (streaming) pushStream(current) else pushDataItem(current)
-            }
-            delay(cadence)
+  /** Stops listening; safe to call from Application.onTerminate (rare). */
+  fun stop() {
+    runCatching { messageClient.removeListener(leaseListener) }
+    streamJob?.cancel()
+    recoveryJob?.cancel()
+  }
+
+  /**
+   * Wear → phone path. Ephemeral message delivered if wear-side activity is foreground. We record
+   * the lease arrival as the manager's window source.
+   */
+  @Suppress("unused")
+  private fun isLeaseFresh(at: Long): Boolean {
+    if (at <= 0L) return false
+    val now = System.currentTimeMillis()
+    return now - at <= WearSyncPaths.LEASE_WINDOW_MS
+  }
+
+  private suspend fun publishDashboards(session: HaSession) {
+    if (!wearableAvailableState.value) return
+    // Wait until the session has finished its initial connect; otherwise
+    // listDashboards() hits "Not connected" because the UI drives
+    // session.connect() lazily via the dashboard list.
+    session.connectionStatus.first { it == SessionConnectionStatus.Connected }
+    runCatching {
+        val summaries = session.listDashboards()
+        for (summary in summaries) {
+          val (dashboard, snapshot) = session.loadDashboard(summary.urlPath)
+          val cards = dashboard.views.flatMap { it.cards }
+          val data =
+            DashboardData(
+              urlPath = summary.urlPath ?: "",
+              title = dashboard.title ?: summary.title,
+              cards = cards.map { it.toSummary(snapshot.states) },
+              updatedAtMs = System.currentTimeMillis(),
+            )
+          writeDataItem(WearSyncPaths.dashboardPath(summary.urlPath), encodeProto(data))
         }
-    }
+      }
+      .onFailure {
+        if (it is CancellationException) throw it
+        handleFailure("publishDashboards", it)
+      }
+  }
 
-    private suspend fun pushDataItem(values: Map<String, EntityValue>) {
-        val now = System.currentTimeMillis()
-        val payload = LiveValues(values = values, capturedAtMs = now)
-        writeDataItem(WearSyncPaths.VALUES, encodeProto(payload))
-        lastSnapshot = values
+  /**
+   * Repeatedly fetches snapshots from [session]; streams via MessageClient (deltas) when wear has a
+   * lease or pinned cards exist, otherwise batches into the DataStore-Proto entry. Live sessions
+   * that don't expose a refresh interval fall back to a 30 s heartbeat so values aren't infinitely
+   * stale.
+   */
+  private suspend fun sessionPump(session: HaSession, hasPinned: Boolean) {
+    val cadence = session.refreshIntervalMillis ?: 30_000L
+    // Reset snapshot baseline so the first push is a full set.
+    lastSnapshot = emptyMap()
+    session.connectionStatus.first { it == SessionConnectionStatus.Connected }
+    while (true) {
+      // Suspend (rather than exit) when the wear API isn't usable
+      // so a transient API_NOT_CONNECTED disconnect pauses the
+      // pump and resumes once the recovery probe re-flips the flag.
+      wearableAvailableState.first { it }
+      val snapshot =
+        runCatching { session.loadDashboard(null).second }
+          .onFailure { if (it is CancellationException) throw it }
+          .getOrNull()
+      if (snapshot != null) {
+        val current = snapshot.states.mapValues { (_, state) -> state.toEntityValue() }
+        val streaming = hasPinned || isLeaseFresh(leaseState.value)
+        if (streaming) pushStream(current) else pushDataItem(current)
+      }
+      delay(cadence)
     }
+  }
 
-    private suspend fun pushStream(values: Map<String, EntityValue>) {
-        if (!wearableAvailableState.value) return
-        val deltas = values.entries
-            .filter { (k, v) -> lastSnapshot[k] != v }
-            .map { (k, v) -> EntityDelta(entityId = k, value = v) }
-        if (deltas.isEmpty()) return
-        val frame = StreamUpdate(deltas = deltas, capturedAtMs = System.currentTimeMillis())
-        runCatching {
-            val nodes = nodeClient.connectedNodes.await()
-            val bytes = encodeProto(frame)
-            for (node in nodes) {
-                messageClient.sendMessage(node.id, WearSyncPaths.STREAM_MESSAGE, bytes).await()
-            }
-            statsStore.recordMessageSent(System.currentTimeMillis())
-        }.onFailure {
-            if (it is CancellationException) throw it
-            handleFailure("pushStream", it)
+  private suspend fun pushDataItem(values: Map<String, EntityValue>) {
+    val now = System.currentTimeMillis()
+    val payload = LiveValues(values = values, capturedAtMs = now)
+    writeDataItem(WearSyncPaths.VALUES, encodeProto(payload))
+    lastSnapshot = values
+  }
+
+  private suspend fun pushStream(values: Map<String, EntityValue>) {
+    if (!wearableAvailableState.value) return
+    val deltas =
+      values.entries
+        .filter { (k, v) -> lastSnapshot[k] != v }
+        .map { (k, v) -> EntityDelta(entityId = k, value = v) }
+    if (deltas.isEmpty()) return
+    val frame = StreamUpdate(deltas = deltas, capturedAtMs = System.currentTimeMillis())
+    runCatching {
+        val nodes = nodeClient.connectedNodes.await()
+        val bytes = encodeProto(frame)
+        for (node in nodes) {
+          messageClient.sendMessage(node.id, WearSyncPaths.STREAM_MESSAGE, bytes).await()
         }
-        lastSnapshot = values
-    }
+        statsStore.recordMessageSent(System.currentTimeMillis())
+      }
+      .onFailure {
+        if (it is CancellationException) throw it
+        handleFailure("pushStream", it)
+      }
+    lastSnapshot = values
+  }
 
-    private suspend fun writeDataItem(path: String, bytes: ByteArray) {
-        if (!wearableAvailableState.value) return
-        runCatching {
-            val request = PutDataMapRequest.create(path).apply {
-                dataMap.putByteArray(KEY_PROTO, bytes)
-                dataMap.putLong(KEY_TS, System.currentTimeMillis())
-            }
-            dataClient.putDataItem(request.asPutDataRequest().setUrgent()).await()
-            statsStore.recordWrite(System.currentTimeMillis())
-        }.onFailure {
-            if (it is CancellationException) throw it
-            handleFailure("writeDataItem $path", it)
+  private suspend fun writeDataItem(path: String, bytes: ByteArray) {
+    if (!wearableAvailableState.value) return
+    runCatching {
+        val request =
+          PutDataMapRequest.create(path).apply {
+            dataMap.putByteArray(KEY_PROTO, bytes)
+            dataMap.putLong(KEY_TS, System.currentTimeMillis())
+          }
+        dataClient.putDataItem(request.asPutDataRequest().setUrgent()).await()
+        statsStore.recordWrite(System.currentTimeMillis())
+      }
+      .onFailure {
+        if (it is CancellationException) throw it
+        handleFailure("writeDataItem $path", it)
+      }
+  }
+
+  /**
+   * Funnels every wear data-layer failure through one place so the "API unavailable" case (no
+   * wearable component / no paired watch) pauses the manager after a single log line instead of
+   * warning on every snapshot tick. A recovery probe flips availability back once Google Play
+   * Services is reachable again, so a transient disconnect (or a pair-after-launch) doesn't stay
+   * disabled for the rest of the process. Other failures still surface at WARN.
+   */
+  private fun handleFailure(operation: String, error: Throwable) {
+    if (isWearableUnavailable(error)) {
+      if (wearableAvailableState.compareAndSet(expect = true, update = false)) {
+        Log.i(TAG, "Wearable API unavailable; pausing wear sync ($operation)")
+        scheduleRecoveryProbe()
+      }
+      return
+    }
+    Log.w(TAG, "$operation failed", error)
+  }
+
+  private fun isWearableUnavailable(error: Throwable): Boolean {
+    val api = error as? ApiException ?: return false
+    return api.statusCode == CommonStatusCodes.API_NOT_CONNECTED
+  }
+
+  /**
+   * Polls [NodeClient.getConnectedNodes] while wear is marked unavailable; flips availability back
+   * on the first successful call so transient API_NOT_CONNECTED disconnects (or pairing happening
+   * after app start) don't latch the manager off forever.
+   */
+  private fun scheduleRecoveryProbe() {
+    if (!::managerScope.isInitialized) return
+    recoveryJob?.cancel()
+    recoveryJob = managerScope.launch {
+      while (!wearableAvailableState.value) {
+        delay(RECOVERY_PROBE_INTERVAL_MS)
+        val recovered = runCatching { nodeClient.connectedNodes.await() }.isSuccess
+        if (recovered) {
+          Log.i(TAG, "Wearable API available again; resuming wear sync")
+          wearableAvailableState.value = true
         }
+      }
     }
+  }
 
-    /**
-     * Funnels every wear data-layer failure through one place so the
-     * "API unavailable" case (no wearable component / no paired watch)
-     * pauses the manager after a single log line instead of warning on
-     * every snapshot tick. A recovery probe flips availability back
-     * once Google Play Services is reachable again, so a transient
-     * disconnect (or a pair-after-launch) doesn't stay disabled for
-     * the rest of the process. Other failures still surface at WARN.
-     */
-    private fun handleFailure(operation: String, error: Throwable) {
-        if (isWearableUnavailable(error)) {
-            if (wearableAvailableState.compareAndSet(expect = true, update = false)) {
-                Log.i(TAG, "Wearable API unavailable; pausing wear sync ($operation)")
-                scheduleRecoveryProbe()
-            }
-            return
-        }
-        Log.w(TAG, "$operation failed", error)
-    }
-
-    private fun isWearableUnavailable(error: Throwable): Boolean {
-        val api = error as? ApiException ?: return false
-        return api.statusCode == CommonStatusCodes.API_NOT_CONNECTED
-    }
-
-    /**
-     * Polls [NodeClient.getConnectedNodes] while wear is marked
-     * unavailable; flips availability back on the first successful
-     * call so transient API_NOT_CONNECTED disconnects (or pairing
-     * happening after app start) don't latch the manager off forever.
-     */
-    private fun scheduleRecoveryProbe() {
-        if (!::managerScope.isInitialized) return
-        recoveryJob?.cancel()
-        recoveryJob = managerScope.launch {
-            while (!wearableAvailableState.value) {
-                delay(RECOVERY_PROBE_INTERVAL_MS)
-                val recovered = runCatching { nodeClient.connectedNodes.await() }.isSuccess
-                if (recovered) {
-                    Log.i(TAG, "Wearable API available again; resuming wear sync")
-                    wearableAvailableState.value = true
-                }
-            }
-        }
-    }
-
-    companion object {
-        private const val TAG = "WearSync"
-        const val KEY_PROTO: String = "proto"
-        const val KEY_TS: String = "ts"
-        private const val RECOVERY_PROBE_INTERVAL_MS = 60_000L
-    }
+  companion object {
+    private const val TAG = "WearSync"
+    const val KEY_PROTO: String = "proto"
+    const val KEY_TS: String = "ts"
+    private const val RECOVERY_PROBE_INTERVAL_MS = 60_000L
+  }
 }
 
 private fun EntityState.toEntityValue(): EntityValue {
-    val attrs = attributes
-    return EntityValue(
-        state = state,
-        friendlyName = attrs["friendly_name"]?.jsonPrimitive?.contentOrNull.orEmpty(),
-        unit = attrs["unit_of_measurement"]?.jsonPrimitive?.contentOrNull.orEmpty(),
-        deviceClass = attrs["device_class"]?.jsonPrimitive?.contentOrNull.orEmpty(),
-    )
+  val attrs = attributes
+  return EntityValue(
+    state = state,
+    friendlyName = attrs["friendly_name"]?.jsonPrimitive?.contentOrNull.orEmpty(),
+    unit = attrs["unit_of_measurement"]?.jsonPrimitive?.contentOrNull.orEmpty(),
+    deviceClass = attrs["device_class"]?.jsonPrimitive?.contentOrNull.orEmpty(),
+  )
 }
 
 private fun CardConfig.toSummary(states: Map<String, EntityState> = emptyMap()): CardSummary {
-    val raw = this.raw
-    val title = raw["title"]?.jsonPrimitive?.contentOrNull
-        ?: raw["heading"]?.jsonPrimitive?.contentOrNull
-        ?: raw["name"]?.jsonPrimitive?.contentOrNull
-        ?: this.type
-    val primary = raw["entity"]?.jsonPrimitive?.contentOrNull
-        ?: raw["entities"]?.jsonArray?.firstOrNull()?.let {
-            (it as? JsonPrimitive)?.contentOrNull
-                ?: (it as? JsonObject)?.get("entity")?.jsonPrimitive?.contentOrNull
-        }
-        ?: ""
-    val resolvedTitle = states[primary]?.attributes?.get("friendly_name")
-        ?.jsonPrimitive?.contentOrNull ?: title
-    return CardSummary(
-        type = this.type,
-        title = resolvedTitle,
-        primaryEntityId = primary,
-        rawJson = json.encodeToString(JsonObject.serializer(), raw),
-    )
+  val raw = this.raw
+  val title =
+    raw["title"]?.jsonPrimitive?.contentOrNull
+      ?: raw["heading"]?.jsonPrimitive?.contentOrNull
+      ?: raw["name"]?.jsonPrimitive?.contentOrNull
+      ?: this.type
+  val primary =
+    raw["entity"]?.jsonPrimitive?.contentOrNull
+      ?: raw["entities"]?.jsonArray?.firstOrNull()?.let {
+        (it as? JsonPrimitive)?.contentOrNull
+          ?: (it as? JsonObject)?.get("entity")?.jsonPrimitive?.contentOrNull
+      }
+      ?: ""
+  val resolvedTitle =
+    states[primary]?.attributes?.get("friendly_name")?.jsonPrimitive?.contentOrNull ?: title
+  return CardSummary(
+    type = this.type,
+    title = resolvedTitle,
+    primaryEntityId = primary,
+    rawJson = json.encodeToString(JsonObject.serializer(), raw),
+  )
 }
 
 private val json = Json { ignoreUnknownKeys = true }
 
 /**
- * Convert the mobile pin store's pinned-card list into the proto wire
- * shape the watch consumes. Captured fields flow through unchanged —
- * the pin store is the source of truth for title / primary entity at
- * the time of pinning.
+ * Convert the mobile pin store's pinned-card list into the proto wire shape the watch consumes.
+ * Captured fields flow through unchanged — the pin store is the source of truth for title / primary
+ * entity at the time of pinning.
  */
 private fun List<MobilePinnedCard>.toProto(): PinnedCardSet =
-    PinnedCardSet(
-        cards = this.sortedBy { it.orderIndex }.map { entry ->
-            PinnedCard(
-                baseUrl = entry.baseUrl,
-                card = entry.card.toProto(),
-                cardKey = entry.key,
-                orderIndex = entry.orderIndex,
-            )
+  PinnedCardSet(
+    cards =
+      this.sortedBy { it.orderIndex }
+        .map { entry ->
+          PinnedCard(
+            baseUrl = entry.baseUrl,
+            card = entry.card.toProto(),
+            cardKey = entry.key,
+            orderIndex = entry.orderIndex,
+          )
         },
-        updatedAtMs = System.currentTimeMillis(),
-    )
+    updatedAtMs = System.currentTimeMillis(),
+  )
 
 @JvmName("slotsToProto")
 private fun List<WearWidgetSlot>.toProto(): WearWidgetSlots =
-    WearWidgetSlots(
-        slots = this.map {
-            WidgetSlot(
-                slotIndex = it.slotIndex,
-                cardKey = it.cardKey,
-                size = it.size.wireValue,
-            )
-        },
-        updatedAtMs = System.currentTimeMillis(),
-    )
+  WearWidgetSlots(
+    slots =
+      this.map {
+        WidgetSlot(slotIndex = it.slotIndex, cardKey = it.cardKey, size = it.size.wireValue)
+      },
+    updatedAtMs = System.currentTimeMillis(),
+  )
 
 @JvmName("sectionsToProto")
 private fun List<MobilePinnedSection>.toProto(): PinnedSectionSet =
-    PinnedSectionSet(
-        sections = this.sortedBy { it.orderIndex }.map { entry ->
-            PinnedSection(
-                baseUrl = entry.baseUrl,
-                dashboardUrlPath = entry.dashboardUrlPath,
-                viewPath = entry.viewPath,
-                sectionIndex = entry.sectionIndex,
-                title = entry.title,
-                cards = entry.cards.map { it.toProto() },
-                sectionKey = entry.key,
-                orderIndex = entry.orderIndex,
-            )
+  PinnedSectionSet(
+    sections =
+      this.sortedBy { it.orderIndex }
+        .map { entry ->
+          PinnedSection(
+            baseUrl = entry.baseUrl,
+            dashboardUrlPath = entry.dashboardUrlPath,
+            viewPath = entry.viewPath,
+            sectionIndex = entry.sectionIndex,
+            title = entry.title,
+            cards = entry.cards.map { it.toProto() },
+            sectionKey = entry.key,
+            orderIndex = entry.orderIndex,
+          )
         },
-        updatedAtMs = System.currentTimeMillis(),
-    )
+    updatedAtMs = System.currentTimeMillis(),
+  )
 
 private fun PinnedCardData.toProto(): CardSummary =
-    CardSummary(
-        type = this.type,
-        title = this.title,
-        primaryEntityId = this.primaryEntity,
-        rawJson = this.rawJson,
-    )
+  CardSummary(
+    type = this.type,
+    title = this.title,
+    primaryEntityId = this.primaryEntity,
+    rawJson = this.rawJson,
+  )
 
 private suspend fun <T> com.google.android.gms.tasks.Task<T>.await(): T =
-    kotlinx.coroutines.suspendCancellableCoroutine { cont ->
-        addOnSuccessListener { value -> cont.resumeWith(Result.success(value)) }
-        addOnFailureListener { error -> cont.resumeWith(Result.failure(error)) }
-    }
+  kotlinx.coroutines.suspendCancellableCoroutine { cont ->
+    addOnSuccessListener { value -> cont.resumeWith(Result.success(value)) }
+    addOnFailureListener { error -> cont.resumeWith(Result.failure(error)) }
+  }

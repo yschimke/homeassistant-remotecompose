@@ -12,19 +12,19 @@ import ee.schimke.ha.rc.components.RemoteHaHeading
 import kotlinx.serialization.json.jsonPrimitive
 
 class HeadingCardConverter : CardConverter {
-    override val cardType: String = CardTypes.HEADING
+  override val cardType: String = CardTypes.HEADING
 
-    override fun naturalHeightDp(card: CardConfig, snapshot: HaSnapshot): Int = 36
+  override fun naturalHeightDp(card: CardConfig, snapshot: HaSnapshot): Int = 36
 
-    @Composable
-    override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
-        val heading = card.raw["heading"]?.jsonPrimitive?.content
-            ?: card.raw["title"]?.jsonPrimitive?.content
-            ?: ""
-        val style = when (card.raw["heading_style"]?.jsonPrimitive?.content) {
-            "subtitle" -> HaHeadingStyle.Subtitle
-            else -> HaHeadingStyle.Title
-        }
-        RemoteHaHeading(HaHeadingData(title = heading, style = style), modifier = modifier)
-    }
+  @Composable
+  override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
+    val heading =
+      card.raw["heading"]?.jsonPrimitive?.content ?: card.raw["title"]?.jsonPrimitive?.content ?: ""
+    val style =
+      when (card.raw["heading_style"]?.jsonPrimitive?.content) {
+        "subtitle" -> HaHeadingStyle.Subtitle
+        else -> HaHeadingStyle.Title
+      }
+    RemoteHaHeading(HaHeadingData(title = heading, style = style), modifier = modifier)
+  }
 }

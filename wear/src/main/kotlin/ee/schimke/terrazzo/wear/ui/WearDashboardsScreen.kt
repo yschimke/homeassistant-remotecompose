@@ -23,139 +23,136 @@ import ee.schimke.terrazzo.wearsync.proto.DashboardData
 import ee.schimke.terrazzo.wearsync.proto.EntityValue
 
 /**
- * Browse-mode list — one row per dashboard the phone published. Tap a
- * row to drill into [WearDashboardScreen].
+ * Browse-mode list — one row per dashboard the phone published. Tap a row to drill into
+ * [WearDashboardScreen].
  */
 @Composable
 fun WearDashboardsScreen(
-    dashboards: List<DashboardData>,
-    onDashboardPicked: (DashboardData) -> Unit,
-    onBack: () -> Unit,
-    modifier: Modifier = Modifier,
+  dashboards: List<DashboardData>,
+  onDashboardPicked: (DashboardData) -> Unit,
+  onBack: () -> Unit,
+  modifier: Modifier = Modifier,
 ) {
-    val listState = rememberScalingLazyListState()
-    ScalingLazyColumn(
-        state = listState,
-        modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(4.dp),
-        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
-    ) {
-        item { ListHeader { Text("Dashboards") } }
+  val listState = rememberScalingLazyListState()
+  ScalingLazyColumn(
+    state = listState,
+    modifier = modifier.fillMaxWidth(),
+    verticalArrangement = Arrangement.spacedBy(4.dp),
+    contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
+  ) {
+    item { ListHeader { Text("Dashboards") } }
 
-        if (dashboards.isEmpty()) {
-            item {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 8.dp, vertical = 12.dp),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(
-                        text = "Waiting for the phone to publish dashboards…",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-            }
-        } else {
-            items(dashboards) { dashboard ->
-                Button(
-                    onClick = { onDashboardPicked(dashboard) },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.filledTonalButtonColors(),
-                ) {
-                    Column {
-                        Text(
-                            text = dashboard.title.ifEmpty { dashboard.urlPath.ifEmpty { "Default" } },
-                            style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.SemiBold,
-                        )
-                        Text(
-                            text = "${dashboard.cards.size} card${if (dashboard.cards.size == 1) "" else "s"}",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                }
-            }
+    if (dashboards.isEmpty()) {
+      item {
+        Box(
+          modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 12.dp),
+          contentAlignment = Alignment.Center,
+        ) {
+          Text(
+            text = "Waiting for the phone to publish dashboards…",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+          )
         }
-
-        item {
-            Button(
-                onClick = onBack,
-                modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.filledTonalButtonColors(),
-            ) {
-                Text("Back")
-            }
+      }
+    } else {
+      items(dashboards) { dashboard ->
+        Button(
+          onClick = { onDashboardPicked(dashboard) },
+          modifier = Modifier.fillMaxWidth(),
+          colors = ButtonDefaults.filledTonalButtonColors(),
+        ) {
+          Column {
+            Text(
+              text = dashboard.title.ifEmpty { dashboard.urlPath.ifEmpty { "Default" } },
+              style = MaterialTheme.typography.titleSmall,
+              fontWeight = FontWeight.SemiBold,
+            )
+            Text(
+              text = "${dashboard.cards.size} card${if (dashboard.cards.size == 1) "" else "s"}",
+              style = MaterialTheme.typography.labelSmall,
+              color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+          }
         }
+      }
     }
+
+    item {
+      Button(
+        onClick = onBack,
+        modifier = Modifier.fillMaxWidth(),
+        colors = ButtonDefaults.filledTonalButtonColors(),
+      ) {
+        Text("Back")
+      }
+    }
+  }
 }
 
 /** Single-dashboard drilldown — list each card with its primary entity value. */
 @Composable
 fun WearDashboardScreen(
-    dashboard: DashboardData,
-    values: Map<String, EntityValue>,
-    onBack: () -> Unit,
-    modifier: Modifier = Modifier,
+  dashboard: DashboardData,
+  values: Map<String, EntityValue>,
+  onBack: () -> Unit,
+  modifier: Modifier = Modifier,
 ) {
-    val listState = rememberScalingLazyListState()
-    ScalingLazyColumn(
-        state = listState,
-        modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(4.dp),
-        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
-    ) {
-        item { ListHeader { Text(dashboard.title.ifEmpty { "Dashboard" }) } }
+  val listState = rememberScalingLazyListState()
+  ScalingLazyColumn(
+    state = listState,
+    modifier = modifier.fillMaxWidth(),
+    verticalArrangement = Arrangement.spacedBy(4.dp),
+    contentPadding = PaddingValues(horizontal = 14.dp, vertical = 8.dp),
+  ) {
+    item { ListHeader { Text(dashboard.title.ifEmpty { "Dashboard" }) } }
 
-        if (dashboard.cards.isEmpty()) {
-            item {
-                Text(
-                    text = "Empty dashboard",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp),
-                )
+    if (dashboard.cards.isEmpty()) {
+      item {
+        Text(
+          text = "Empty dashboard",
+          style = MaterialTheme.typography.bodySmall,
+          color = MaterialTheme.colorScheme.onSurfaceVariant,
+          modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp),
+        )
+      }
+    } else {
+      items(dashboard.cards) { card ->
+        val value = values[card.primaryEntityId]
+        val displayState =
+          value
+            ?.let { v ->
+              buildString {
+                append(v.state)
+                if (v.unit.isNotEmpty()) append(" ${v.unit}")
+              }
             }
-        } else {
-            items(dashboard.cards) { card ->
-                val value = values[card.primaryEntityId]
-                val displayState = value?.let { v ->
-                    buildString {
-                        append(v.state)
-                        if (v.unit.isNotEmpty()) append(" ${v.unit}")
-                    }
-                }.orEmpty()
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 4.dp, vertical = 6.dp),
-                ) {
-                    Text(
-                        text = card.title.ifEmpty { card.primaryEntityId.ifEmpty { card.type } },
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.SemiBold,
-                    )
-                    if (displayState.isNotEmpty()) {
-                        Text(
-                            text = displayState,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.primary,
-                        )
-                    }
-                }
-            }
+            .orEmpty()
+        Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp, vertical = 6.dp)) {
+          Text(
+            text = card.title.ifEmpty { card.primaryEntityId.ifEmpty { card.type } },
+            style = MaterialTheme.typography.titleSmall,
+            fontWeight = FontWeight.SemiBold,
+          )
+          if (displayState.isNotEmpty()) {
+            Text(
+              text = displayState,
+              style = MaterialTheme.typography.bodyMedium,
+              color = MaterialTheme.colorScheme.primary,
+            )
+          }
         }
-
-        item {
-            Button(
-                onClick = onBack,
-                modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.filledTonalButtonColors(),
-            ) {
-                Text("Back")
-            }
-        }
+      }
     }
+
+    item {
+      Button(
+        onClick = onBack,
+        modifier = Modifier.fillMaxWidth(),
+        colors = ButtonDefaults.filledTonalButtonColors(),
+      ) {
+        Text("Back")
+      }
+    }
+  }
 }

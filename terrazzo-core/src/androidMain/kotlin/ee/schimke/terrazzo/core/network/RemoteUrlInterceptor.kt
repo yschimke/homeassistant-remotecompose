@@ -9,22 +9,21 @@ import okhttp3.Response
  * (`external_url`) URL when the LAN destination isn't usable from the current network.
  *
  * Examples:
- *  * On home Wi-Fi, the session base is `http://homeassistant.local:8123`.
- *    [LanConnectionPolicy] allows it → request goes through unchanged.
- *  * On cellular, the same `http://homeassistant.local:8123` is denied (plaintext
- *    LAN over cellular). If the store knows the public URL HA reports
- *    (`https://abc.ui.nabu.casa`), this interceptor rewrites the request to
- *    `https://abc.ui.nabu.casa/...`. HA accepts the same OAuth bearer over either
- *    URL, so headers (including `Authorization`) ride along unchanged.
+ * * On home Wi-Fi, the session base is `http://homeassistant.local:8123`. [LanConnectionPolicy]
+ *   allows it → request goes through unchanged.
+ * * On cellular, the same `http://homeassistant.local:8123` is denied (plaintext LAN over
+ *   cellular). If the store knows the public URL HA reports (`https://abc.ui.nabu.casa`), this
+ *   interceptor rewrites the request to `https://abc.ui.nabu.casa/...`. HA accepts the same OAuth
+ *   bearer over either URL, so headers (including `Authorization`) ride along unchanged.
  *
- * Sits before [LanConnectionPolicyInterceptor] so the rewrite happens first and the
- * downstream policy gate sees an already-public, allow-listed URL.
+ * Sits before [LanConnectionPolicyInterceptor] so the rewrite happens first and the downstream
+ * policy gate sees an already-public, allow-listed URL.
  *
  * Does nothing when:
- *  * The request URL is already on the public host (e.g. the user manually entered the
- *    Nabu Casa URL at login).
- *  * No public URL is on file for the request host.
- *  * The LAN policy would already allow the request.
+ * * The request URL is already on the public host (e.g. the user manually entered the Nabu Casa URL
+ *   at login).
+ * * No public URL is on file for the request host.
+ * * The LAN policy would already allow the request.
  */
 class RemoteUrlInterceptor(
   private val check: (String) -> LanConnectionPolicy.Verdict,
@@ -48,9 +47,5 @@ class RemoteUrlInterceptor(
   }
 
   private fun HttpUrl.rewriteTo(target: RemoteUrlStore.ExternalTarget): HttpUrl =
-    newBuilder()
-      .scheme(target.scheme)
-      .host(target.host)
-      .port(target.port)
-      .build()
+    newBuilder().scheme(target.scheme).host(target.host).port(target.port).build()
 }

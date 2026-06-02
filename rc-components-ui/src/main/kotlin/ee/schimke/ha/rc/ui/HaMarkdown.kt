@@ -9,5 +9,5 @@ import ee.schimke.ha.rc.components.RemoteHaMarkdown
 /** Compose-UI Tier-2 wrapper around [RemoteHaMarkdown]. */
 @Composable
 fun HaMarkdown(data: HaMarkdownUiData, modifier: Modifier = Modifier) {
-    HaUiHost(modifier) { RemoteHaMarkdown(data.toRemote()) }
+  HaUiHost(modifier) { RemoteHaMarkdown(data.toRemote()) }
 }

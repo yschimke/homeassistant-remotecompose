@@ -18,86 +18,87 @@ import ee.schimke.ha.rc.components.RemoteHaToggleSwitchByProgress
 /**
  * Dedicated previews for [RemoteHaToggleSwitch].
  *
- * - `ToggleByProgress_*` calls the progress-driven inner composable
- *   directly with literal RemoteFloats (0 / 0.5 / 1.0) — these prove the
- *   visual works for any constant progress.
- * - `ToggleInitial_*` uses the public [RemoteHaToggleSwitch] entry
- *   point with a constant `RemoteBoolean`. Currently STATIC: the
- *   constant picks one of the two literal RemoteFloats; the document
- *   never animates between them. See
- *   `docs/bugs/rc-alpha08-select-derived-float-layout.md` for why.
+ * - `ToggleByProgress_*` calls the progress-driven inner composable directly with literal
+ *   RemoteFloats (0 / 0.5 / 1.0) — these prove the visual works for any constant progress.
+ * - `ToggleInitial_*` uses the public [RemoteHaToggleSwitch] entry point with a constant
+ *   `RemoteBoolean`. Currently STATIC: the constant picks one of the two literal RemoteFloats; the
+ *   document never animates between them. See `docs/bugs/rc-alpha08-select-derived-float-layout.md`
+ *   for why.
  */
-
 private val PreviewActiveAccent = Color(0xFF2196F3)
 private val PreviewInactiveAccent = Color(0xFFB0B0B0)
 
 @Composable
 private fun SwitchHost(theme: HaTheme, content: @Composable () -> Unit) {
-    RemoteContentPreview(profile = androidXExperimental) {
-        ProvideHaTheme(theme) { content() }
-    }
+  RemoteContentPreview(profile = androidXExperimental) { ProvideHaTheme(theme) { content() } }
 }
 
 // ——— progress-driven (deterministic) ———
 
 @Preview(name = "toggle progress=0.0", showBackground = false, widthDp = 40, heightDp = 24)
 @Composable
-fun ToggleByProgress_Off() = SwitchHost(HaTheme.Light) {
+fun ToggleByProgress_Off() =
+  SwitchHost(HaTheme.Light) {
     RemoteHaToggleSwitchByProgress(
-        progress = 0f.rf,
-        activeAccent = PreviewActiveAccent.rc,
-        inactiveAccent = PreviewInactiveAccent.rc,
+      progress = 0f.rf,
+      activeAccent = PreviewActiveAccent.rc,
+      inactiveAccent = PreviewInactiveAccent.rc,
     )
-}
+  }
 
 @Preview(name = "toggle progress=0.5", showBackground = false, widthDp = 40, heightDp = 24)
 @Composable
-fun ToggleByProgress_Mid() = SwitchHost(HaTheme.Light) {
+fun ToggleByProgress_Mid() =
+  SwitchHost(HaTheme.Light) {
     RemoteHaToggleSwitchByProgress(
-        progress = 0.5f.rf,
-        activeAccent = PreviewActiveAccent.rc,
-        inactiveAccent = PreviewInactiveAccent.rc,
+      progress = 0.5f.rf,
+      activeAccent = PreviewActiveAccent.rc,
+      inactiveAccent = PreviewInactiveAccent.rc,
     )
-}
+  }
 
 @Preview(name = "toggle progress=1.0", showBackground = false, widthDp = 40, heightDp = 24)
 @Composable
-fun ToggleByProgress_On() = SwitchHost(HaTheme.Light) {
+fun ToggleByProgress_On() =
+  SwitchHost(HaTheme.Light) {
     RemoteHaToggleSwitchByProgress(
-        progress = 1f.rf,
-        activeAccent = PreviewActiveAccent.rc,
-        inactiveAccent = PreviewInactiveAccent.rc,
+      progress = 1f.rf,
+      activeAccent = PreviewActiveAccent.rc,
+      inactiveAccent = PreviewInactiveAccent.rc,
     )
-}
+  }
 
 // ——— boolean-driven (the public API an entity row uses) ———
 
 @Preview(name = "toggle initial=off", showBackground = false, widthDp = 40, heightDp = 24)
 @Composable
-fun ToggleInitial_Off() = SwitchHost(HaTheme.Light) {
+fun ToggleInitial_Off() =
+  SwitchHost(HaTheme.Light) {
     RemoteHaToggleSwitch(
-        isOn = RemoteBoolean(false),
-        activeAccent = PreviewActiveAccent.rc,
-        inactiveAccent = PreviewInactiveAccent.rc,
+      isOn = RemoteBoolean(false),
+      activeAccent = PreviewActiveAccent.rc,
+      inactiveAccent = PreviewInactiveAccent.rc,
     )
-}
+  }
 
 @Preview(name = "toggle initial=on", showBackground = false, widthDp = 40, heightDp = 24)
 @Composable
-fun ToggleInitial_On() = SwitchHost(HaTheme.Light) {
+fun ToggleInitial_On() =
+  SwitchHost(HaTheme.Light) {
     RemoteHaToggleSwitch(
-        isOn = RemoteBoolean(true),
-        activeAccent = PreviewActiveAccent.rc,
-        inactiveAccent = PreviewInactiveAccent.rc,
+      isOn = RemoteBoolean(true),
+      activeAccent = PreviewActiveAccent.rc,
+      inactiveAccent = PreviewInactiveAccent.rc,
     )
-}
+  }
 
 @Preview(name = "toggle initial=on (dark)", showBackground = false, widthDp = 40, heightDp = 24)
 @Composable
-fun ToggleInitial_On_Dark() = SwitchHost(HaTheme.Dark) {
+fun ToggleInitial_On_Dark() =
+  SwitchHost(HaTheme.Dark) {
     RemoteHaToggleSwitch(
-        isOn = RemoteBoolean(true),
-        activeAccent = PreviewActiveAccent.rc,
-        inactiveAccent = PreviewInactiveAccent.rc,
+      isOn = RemoteBoolean(true),
+      activeAccent = PreviewActiveAccent.rc,
+      inactiveAccent = PreviewInactiveAccent.rc,
     )
-}
+  }

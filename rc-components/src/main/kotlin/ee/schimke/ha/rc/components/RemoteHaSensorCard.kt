@@ -7,31 +7,27 @@ import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.runtime.Composable
 
 /**
- * `sensor` card — entity name + big value + small inline sparkline of
- * the recent history. Implemented as a single-row reuse of the
- * history-graph composable so the visual stays consistent.
+ * `sensor` card — entity name + big value + small inline sparkline of the recent history.
+ * Implemented as a single-row reuse of the history-graph composable so the visual stays consistent.
  */
 @Composable
 @RemoteComposable
-fun RemoteHaSensorCard(
-    data: HaSensorCardData,
-    modifier: RemoteModifier = RemoteModifier,
-) {
-    RemoteHaHistoryGraph(
-        HaHistoryGraphData(
-            title = null,
-            rangeLabel = data.rangeLabel ?: "",
-            rows =
-                listOf(
-                    HaHistoryGraphRow(
-                        entityId = data.entityId,
-                        name = data.name,
-                        summary = LiveValues.state(data.entityId, data.valueLabel),
-                        accent = data.accent,
-                        points = data.points,
-                    )
-                ),
+fun RemoteHaSensorCard(data: HaSensorCardData, modifier: RemoteModifier = RemoteModifier) {
+  RemoteHaHistoryGraph(
+    HaHistoryGraphData(
+      title = null,
+      rangeLabel = data.rangeLabel ?: "",
+      rows =
+        listOf(
+          HaHistoryGraphRow(
+            entityId = data.entityId,
+            name = data.name,
+            summary = LiveValues.state(data.entityId, data.valueLabel),
+            accent = data.accent,
+            points = data.points,
+          )
         ),
-        modifier = modifier,
-    )
+    ),
+    modifier = modifier,
+  )
 }

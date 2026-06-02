@@ -16,12 +16,11 @@ import okhttp3.Response
  * Cheap by design — the policy's transport answer is cached and refreshed by a `NetworkCallback`,
  * so this runs in constant time per request.
  *
- * Constructed with a check function rather than the policy class so tests don't need to spin up
- * a `ConnectivityManager` to exercise it.
+ * Constructed with a check function rather than the policy class so tests don't need to spin up a
+ * `ConnectivityManager` to exercise it.
  */
-class LanConnectionPolicyInterceptor(
-  private val check: (String) -> LanConnectionPolicy.Verdict
-) : Interceptor {
+class LanConnectionPolicyInterceptor(private val check: (String) -> LanConnectionPolicy.Verdict) :
+  Interceptor {
 
   constructor(policy: LanConnectionPolicy) : this(policy::check)
 

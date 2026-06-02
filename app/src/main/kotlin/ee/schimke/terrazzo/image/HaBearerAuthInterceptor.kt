@@ -4,15 +4,13 @@ import okhttp3.Interceptor
 import okhttp3.Response
 
 /**
- * OkHttp interceptor that attaches `Authorization: Bearer …` to requests
- * whose host matches the HA server's. Reads both the host and the
- * token through provider lambdas, so the OkHttp client can stay a
- * process-singleton: when [HaImageStack.setAuth] swaps the active
- * session, the next request picks up the new credentials with no
- * client rebuild.
+ * OkHttp interceptor that attaches `Authorization: Bearer …` to requests whose host matches the HA
+ * server's. Reads both the host and the token through provider lambdas, so the OkHttp client can
+ * stay a process-singleton: when [HaImageStack.setAuth] swaps the active session, the next request
+ * picks up the new credentials with no client rebuild.
  *
- * Off-host requests (external CDN icons, third-party thumbnails)
- * pass through unmodified so the bearer doesn't leak.
+ * Off-host requests (external CDN icons, third-party thumbnails) pass through unmodified so the
+ * bearer doesn't leak.
  */
 internal class HaBearerAuthInterceptor(
   private val haHost: () -> String?,

@@ -17,181 +17,158 @@ import ee.schimke.ha.rc.components.immediateSwap
 import java.text.DecimalFormat
 
 /**
- * Switch between layout variants based on the live component width at
- * playback time. Used by Fixed-mode card converters
- * (see [CardSizeMode.Fixed]) to adapt to the runtime widget size — the
- * launcher / Glance Wear tile surface decides the canvas, this picks
- * the variant that fits.
+ * Switch between layout variants based on the live component width at playback time. Used by
+ * Fixed-mode card converters (see [CardSizeMode.Fixed]) to adapt to the runtime widget size — the
+ * launcher / Glance Wear tile surface decides the canvas, this picks the variant that fits.
  *
- * Thresholds are an ascending list of widths in dp. For
- * `thresholdsDp = intArrayOf(120, 200)`:
+ * Thresholds are an ascending list of widths in dp. For `thresholdsDp = intArrayOf(120, 200)`:
  *
- *   width <  120 dp           → tier 0
- *   120 dp ≤ width < 200 dp   → tier 1
- *   width ≥  200 dp           → tier 2
+ * width < 120 dp → tier 0 120 dp ≤ width < 200 dp → tier 1 width ≥ 200 dp → tier 2
  *
- * The lambda is invoked once per tier during capture so each variant
- * is recorded into the document. At playback the active tier is
- * computed from `RemoteFloatContext.componentWidth()` and the runtime
- * swaps to the matching variant — no re-record needed.
+ * The lambda is invoked once per tier during capture so each variant is recorded into the document.
+ * At playback the active tier is computed from `RemoteFloatContext.componentWidth()` and the
+ * runtime swaps to the matching variant — no re-record needed.
  *
  * Implementation notes:
  *
- *   * `componentWidth()` reports the runtime canvas width in pixels.
- *     We compare against `<dp>.rdp.toPx()` so the dp→px conversion
- *     happens at playback against the host density — the captured
- *     document plays correctly across phone, wear, and launcher
- *     densities without re-encoding.
+ * * `componentWidth()` reports the runtime canvas width in pixels. We compare against
+ *   `<dp>.rdp.toPx()` so the dp→px conversion happens at playback against the host density — the
+ *   captured document plays correctly across phone, wear, and launcher densities without
+ *   re-encoding.
  *
- *   * The `RemoteStateLayout(RemoteInt, IntArray)` overload is broken
- *     in `androidx.compose.remote:remote-creation-compose:1.0.0-alpha010`
- *     — it always selects `keys[0]` regardless of the live int value
- *     (#224). The `RemoteStateLayout(RemoteBoolean)` overload works,
- *     so we lower the ladder into a chain of nested booleans, one
- *     per threshold.
+ * * The `RemoteStateLayout(RemoteInt, IntArray)` overload is broken in
+ *   `androidx.compose.remote:remote-creation-compose:1.0.0-alpha010` — it always selects `keys[0]`
+ *   regardless of the live int value (#224). The `RemoteStateLayout(RemoteBoolean)` overload works,
+ *   so we lower the ladder into a chain of nested booleans, one per threshold.
  *
- *   * The named expression that backs `componentWidth()` only writes
- *     itself into the document when it's visibly referenced by a
- *     drawing node — reading it transitively via the state-layout's
- *     bool predicate isn't enough (#224). We work around it by
- *     emitting a transparent `RemoteText` alongside the inner
- *     state-layout.
+ * * The named expression that backs `componentWidth()` only writes itself into the document when
+ *   it's visibly referenced by a drawing node — reading it transitively via the state-layout's bool
+ *   predicate isn't enough (#224). We work around it by emitting a transparent `RemoteText`
+ *   alongside the inner state-layout.
  *
- * @param thresholdsDp ascending breakpoint widths in dp; produces
- *   `thresholdsDp.size + 1` tier variants.
- * @param modifier applied to the outermost state layout. Pass
- *   `RemoteModifier.fillMaxWidth()` (or `fillMaxSize()`) so the
- *   playback width reflects the host's runtime canvas rather than
- *   the captured intrinsic.
- * @param axis which runtime dimension the thresholds gate on —
- *   [BreakpointAxis.Width] (default, reads `componentWidth()`) or
- *   [BreakpointAxis.Height] (reads `componentHeight()`). Gate on the
- *   axis the host *pins*: launcher and matrix cells pin width and let
- *   height wrap, so only a width gate reads a stable value there; use
- *   [BreakpointAxis.Height] only where height is fixed (e.g. a Wear
- *   slot). Keep it to a **single** threshold — alpha010 collapses
- *   multi-rung (nested) and 2-D / cross-axis gates to tier 0 (#224,
- *   see `GaugeCardConverter`).
+ * @param thresholdsDp ascending breakpoint widths in dp; produces `thresholdsDp.size + 1` tier
+ *   variants.
+ * @param modifier applied to the outermost state layout. Pass `RemoteModifier.fillMaxWidth()` (or
+ *   `fillMaxSize()`) so the playback width reflects the host's runtime canvas rather than the
+ *   captured intrinsic.
+ * @param axis which runtime dimension the thresholds gate on — [BreakpointAxis.Width] (default,
+ *   reads `componentWidth()`) or [BreakpointAxis.Height] (reads `componentHeight()`). Gate on the
+ *   axis the host *pins*: launcher and matrix cells pin width and let height wrap, so only a width
+ *   gate reads a stable value there; use [BreakpointAxis.Height] only where height is fixed (e.g. a
+ *   Wear slot). Keep it to a **single** threshold — alpha010 collapses multi-rung (nested) and 2-D
+ *   / cross-axis gates to tier 0 (#224, see `GaugeCardConverter`).
  * @param content invoked per tier; index ranges `0..thresholdsDp.size`.
  */
 @Composable
 fun RemoteSizeBreakpoint(
-    thresholdsDp: IntArray,
-    modifier: RemoteModifier = RemoteModifier,
-    axis: BreakpointAxis = BreakpointAxis.Width,
-    content: @Composable (tier: Int) -> Unit,
+  thresholdsDp: IntArray,
+  modifier: RemoteModifier = RemoteModifier,
+  axis: BreakpointAxis = BreakpointAxis.Width,
+  content: @Composable (tier: Int) -> Unit,
 ) {
-    require(thresholdsDp.isNotEmpty()) { "RemoteSizeBreakpoint needs at least one threshold" }
-    val sortedAscending =
-        (0 until thresholdsDp.size - 1).all { thresholdsDp[it] < thresholdsDp[it + 1] }
-    require(sortedAscending) { "thresholdsDp must be strictly ascending: ${thresholdsDp.toList()}" }
+  require(thresholdsDp.isNotEmpty()) { "RemoteSizeBreakpoint needs at least one threshold" }
+  val sortedAscending =
+    (0 until thresholdsDp.size - 1).all { thresholdsDp[it] < thresholdsDp[it + 1] }
+  require(sortedAscending) { "thresholdsDp must be strictly ascending: ${thresholdsDp.toList()}" }
 
-    // Use a per-call-site unique name so each breakpoint registers its
-    // own expression. Sharing a stable name across captures (the
-    // tempting "memoize by thresholds" path) lets alpha010 hand back a
-    // cached expression bound to the *first* capture's component, which
-    // makes every subsequent cell read the same baked dimension.
-    val uniqueName = remember { "${BreakpointExpressionPrefix}${java.util.UUID.randomUUID()}" }
-    val dimension =
-        RemoteFloat.createNamedRemoteFloatExpression(
-            name = uniqueName,
-            domain = RemoteState.Domain.User,
-        ) {
-            when (axis) {
-                BreakpointAxis.Width -> componentWidth()
-                BreakpointAxis.Height -> componentHeight()
-            }
-        }
-
-    RemoteBox(modifier = modifier) {
-        // TODO(#224): drop this transparent forcing-function once the
-        // alpha010 named-expression bug is fixed upstream.
-        //
-        // The named expression that backs `componentWidth()` is only
-        // written into the captured document if it's referenced by a
-        // visible node. Reading it transitively via
-        // `width.ge(...)` → RemoteBoolean → state-layout predicate
-        // does NOT trigger materialization in alpha010 — the runtime
-        // resolves the unregistered name to 0, the predicate is false
-        // for every cell, and every breakpoint collapses to tier 0.
-        //
-        // Emitting a RemoteText with `Color.Transparent` alongside the
-        // inner state-layout is the simplest forcing function: the
-        // width string isn't visible, but it pulls the named float
-        // into the document so the runtime can evaluate the predicate
-        // correctly.
-        RemoteText(
-            text = dimension.toRemoteString(InvisibleFormat),
-            color = Color.Transparent.rc,
-        )
-        BreakpointTier(
-            dimension = dimension,
-            thresholdsDp = thresholdsDp,
-            baseTier = 0,
-            modifier = RemoteModifier,
-            content = content,
-        )
+  // Use a per-call-site unique name so each breakpoint registers its
+  // own expression. Sharing a stable name across captures (the
+  // tempting "memoize by thresholds" path) lets alpha010 hand back a
+  // cached expression bound to the *first* capture's component, which
+  // makes every subsequent cell read the same baked dimension.
+  val uniqueName = remember { "${BreakpointExpressionPrefix}${java.util.UUID.randomUUID()}" }
+  val dimension =
+    RemoteFloat.createNamedRemoteFloatExpression(
+      name = uniqueName,
+      domain = RemoteState.Domain.User,
+    ) {
+      when (axis) {
+        BreakpointAxis.Width -> componentWidth()
+        BreakpointAxis.Height -> componentHeight()
+      }
     }
+
+  RemoteBox(modifier = modifier) {
+    // TODO(#224): drop this transparent forcing-function once the
+    // alpha010 named-expression bug is fixed upstream.
+    //
+    // The named expression that backs `componentWidth()` is only
+    // written into the captured document if it's referenced by a
+    // visible node. Reading it transitively via
+    // `width.ge(...)` → RemoteBoolean → state-layout predicate
+    // does NOT trigger materialization in alpha010 — the runtime
+    // resolves the unregistered name to 0, the predicate is false
+    // for every cell, and every breakpoint collapses to tier 0.
+    //
+    // Emitting a RemoteText with `Color.Transparent` alongside the
+    // inner state-layout is the simplest forcing function: the
+    // width string isn't visible, but it pulls the named float
+    // into the document so the runtime can evaluate the predicate
+    // correctly.
+    RemoteText(text = dimension.toRemoteString(InvisibleFormat), color = Color.Transparent.rc)
+    BreakpointTier(
+      dimension = dimension,
+      thresholdsDp = thresholdsDp,
+      baseTier = 0,
+      modifier = RemoteModifier,
+      content = content,
+    )
+  }
 }
 
 /** Which runtime dimension a [RemoteSizeBreakpoint] ladder gates on. */
 enum class BreakpointAxis {
-    Width,
-    Height,
+  Width,
+  Height,
 }
 
 private val InvisibleFormat = DecimalFormat("0")
 
 /**
- * Recursive helper that walks the threshold list highest-first,
- * picking the upper variant when `dimension >= thresholdsDp[hi]` and
- * recursing on the remaining smaller thresholds otherwise. Lowers to
- * `RemoteStateLayout(RemoteBoolean)`, which is the only state-layout
- * overload that respects the live state in alpha010. [dimension] is
- * the live width or height in px, per the ladder's [BreakpointAxis].
+ * Recursive helper that walks the threshold list highest-first, picking the upper variant when
+ * `dimension >= thresholdsDp[hi]` and recursing on the remaining smaller thresholds otherwise.
+ * Lowers to `RemoteStateLayout(RemoteBoolean)`, which is the only state-layout overload that
+ * respects the live state in alpha010. [dimension] is the live width or height in px, per the
+ * ladder's [BreakpointAxis].
  *
- * Each branch is additionally [branchGate]d — its opacity is bound to
- * the same live boolean so that a player which draws *every* recorded
- * state-layout variant (the in-process AndroidX/Robolectric preview
- * player does, leaving the unselected branch ghosting behind the
- * selected one) keeps the inactive branch fully transparent. The gate
- * also zeroes the swap animation so the transition is immediate rather
- * than a 300 ms cross-fade that shows both branches mid-flight. The
- * launcher's platform runtime already shows a single branch; the gate
- * is belt-and-suspenders that costs nothing there.
+ * Each branch is additionally [branchGate]d — its opacity is bound to the same live boolean so that
+ * a player which draws *every* recorded state-layout variant (the in-process AndroidX/Robolectric
+ * preview player does, leaving the unselected branch ghosting behind the selected one) keeps the
+ * inactive branch fully transparent. The gate also zeroes the swap animation so the transition is
+ * immediate rather than a 300 ms cross-fade that shows both branches mid-flight. The launcher's
+ * platform runtime already shows a single branch; the gate is belt-and-suspenders that costs
+ * nothing there.
  */
 @Composable
 private fun BreakpointTier(
-    dimension: RemoteFloat,
-    thresholdsDp: IntArray,
-    baseTier: Int,
-    modifier: RemoteModifier,
-    content: @Composable (tier: Int) -> Unit,
+  dimension: RemoteFloat,
+  thresholdsDp: IntArray,
+  baseTier: Int,
+  modifier: RemoteModifier,
+  content: @Composable (tier: Int) -> Unit,
 ) {
-    if (thresholdsDp.isEmpty()) {
-        content(baseTier)
-        return
+  if (thresholdsDp.isEmpty()) {
+    content(baseTier)
+    return
+  }
+  val highestIndex = thresholdsDp.size - 1
+  val highestThresholdPx = thresholdsDp[highestIndex].rdp.toPx()
+  val isAtOrAbove = dimension.ge(highestThresholdPx)
+  RemoteStateLayout(isAtOrAbove, modifier = modifier) { atOrAbove ->
+    if (atOrAbove) {
+      RemoteBox(modifier = RemoteModifier.immediateSwap()) { content(baseTier + thresholdsDp.size) }
+    } else {
+      RemoteBox(modifier = RemoteModifier.immediateSwap()) {
+        BreakpointTier(
+          dimension = dimension,
+          thresholdsDp = thresholdsDp.copyOfRange(0, highestIndex),
+          baseTier = baseTier,
+          modifier = RemoteModifier,
+          content = content,
+        )
+      }
     }
-    val highestIndex = thresholdsDp.size - 1
-    val highestThresholdPx = thresholdsDp[highestIndex].rdp.toPx()
-    val isAtOrAbove = dimension.ge(highestThresholdPx)
-    RemoteStateLayout(isAtOrAbove, modifier = modifier) { atOrAbove ->
-        if (atOrAbove) {
-            RemoteBox(modifier = RemoteModifier.immediateSwap()) {
-                content(baseTier + thresholdsDp.size)
-            }
-        } else {
-            RemoteBox(modifier = RemoteModifier.immediateSwap()) {
-                BreakpointTier(
-                    dimension = dimension,
-                    thresholdsDp = thresholdsDp.copyOfRange(0, highestIndex),
-                    baseTier = baseTier,
-                    modifier = RemoteModifier,
-                    content = content,
-                )
-            }
-        }
-    }
+  }
 }
 
 private const val BreakpointExpressionPrefix = "__terrazzo_breakpoint_"
