@@ -5,15 +5,24 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <!--
       firebase-analytics (pulled in alongside Crashlytics when a
-      google-services.json key is configured) transitively adds the
-      com.google.android.gms.permission.AD_ID permission via its
-      play-services-measurement dependency. We don't use the advertising
-      ID, and the Play Console declaration says so — strip the permission
-      here so the merged manifest matches that declaration. Crashlytics
-      (and Analytics, minus ad-id collection) keeps working. Harmless when
-      Firebase isn't applied: there's no such permission to remove.
+      google-services.json key is configured) transitively adds advertising
+      / ad-attribution permissions via play-services-measurement-api. We
+      don't use the advertising ID, and the Play Console declaration says
+      so — strip all of them here so the merged manifest matches that
+      declaration. Crashlytics (and Analytics, minus ad-id collection)
+      keeps working. Harmless when Firebase isn't applied: there are no such
+      permissions to remove.
+
+      Three permissions must go, not just one: removing only the legacy
+      com.google.android.gms.permission.AD_ID is not enough — Play's
+      advertising-ID check also trips on the newer Privacy Sandbox
+      AdServices ad-id permission (ACCESS_ADSERVICES_AD_ID), and reports it
+      under the legacy AD_ID name. ACCESS_ADSERVICES_ATTRIBUTION rides in
+      from the same dependency for conversion measurement we don't use.
     -->
     <uses-permission android:name="com.google.android.gms.permission.AD_ID" tools:node="remove" />
+    <uses-permission android:name="android.permission.ACCESS_ADSERVICES_AD_ID" tools:node="remove" />
+    <uses-permission android:name="android.permission.ACCESS_ADSERVICES_ATTRIBUTION" tools:node="remove" />
     <!-- mDNS discovery for _home-assistant._tcp instances on the LAN. -->
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE" />
