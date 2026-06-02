@@ -59,7 +59,7 @@
     "captureLabel": "",
     "functionName": "Play_Tablet10_01_Home",
     "renderBasename": "Play_Tablet10_01_Home_play_10_inch_home.png",
-    "sha256": "bd69652dc12fc0858d86b95aca86e0ef19768f6f38904db4ae0ca3645ec039c9",
+    "sha256": "056ef4487c139b5ae3756dead22e78b25638989865c93888327abbeb559e9da8",
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/previews/ScreenPreviews.kt"
   },
   "app/ee.schimke.terrazzo.previews.ScreenPreviewsKt.Play_Tablet7_01_Home_play \u00b7 7-inch \u00b7 home": {
@@ -73,42 +73,42 @@
     "captureLabel": "",
     "functionName": "Screen_CardHistory_ThemeStyle",
     "renderBasename": "Screen_CardHistory_ThemeStyle_card_history_theme_Material3.png",
-    "sha256": "345075e78bcdb1b413546091e63e85d5ab10c752f2f2c617941dbf0105a19d93",
+    "sha256": "7b3f543f8bca2f11d0ae0f2a79014e7863b1766b0fa74785810c4441addb97f9",
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/previews/ScreenPreviews.kt"
   },
   "app/ee.schimke.terrazzo.previews.ScreenPreviewsKt.Screen_CardHistory_ThemeStyle_card history \u00b7 theme#1": {
     "captureLabel": "",
     "functionName": "Screen_CardHistory_ThemeStyle",
     "renderBasename": "Screen_CardHistory_ThemeStyle_card_history_theme_TerrazzoHome.png",
-    "sha256": "5df684ade1f8c4f3f05f0a2bb152658e50e2974e85b294c7e355ba3078167ea0",
+    "sha256": "176d9554bd0db3d6bd1d81afc413dfd06422a321b38fed90a02d103c5b71b249",
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/previews/ScreenPreviews.kt"
   },
   "app/ee.schimke.terrazzo.previews.ScreenPreviewsKt.Screen_CardHistory_ThemeStyle_card history \u00b7 theme#2": {
     "captureLabel": "",
     "functionName": "Screen_CardHistory_ThemeStyle",
     "renderBasename": "Screen_CardHistory_ThemeStyle_card_history_theme_TerrazzoKiosk.png",
-    "sha256": "4274fccb2d41e1e4dab1f33b0ce741ad3e19ea64871bcab6f40cf85c1c1ad6a3",
+    "sha256": "298b81a9c5b4662553dde57267c8bb584d4251a74bf1c066b2f51f629b82abfe",
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/previews/ScreenPreviews.kt"
   },
   "app/ee.schimke.terrazzo.previews.ScreenPreviewsKt.Screen_CardHistory_ThemeStyle_card history \u00b7 theme#3": {
     "captureLabel": "",
     "functionName": "Screen_CardHistory_ThemeStyle",
     "renderBasename": "Screen_CardHistory_ThemeStyle_card_history_theme_TerrazzoMinimalist.png",
-    "sha256": "0261cd7120b9be0ebaea65a7cb8fb502e33366bfefa01911c47eead7369a1f50",
+    "sha256": "6d2ed3b3f09f7c8a077da5be79aa1a771c91760366b50203be0676b839f50a8f",
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/previews/ScreenPreviews.kt"
   },
   "app/ee.schimke.terrazzo.previews.ScreenPreviewsKt.Screen_CardHistory_ThemeStyle_card history \u00b7 theme#4": {
     "captureLabel": "",
     "functionName": "Screen_CardHistory_ThemeStyle",
     "renderBasename": "Screen_CardHistory_ThemeStyle_card_history_theme_TerrazzoMushroom.png",
-    "sha256": "3a605b3ce6f4243877194a7e1b9c289d59eb0fb211dbeeaa1f6b46d955ca2955",
+    "sha256": "fe65e4080f275027fe732bac15362ea99c12f846f96acff534f174fb317f9acf",
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/previews/ScreenPreviews.kt"
   },
   "app/ee.schimke.terrazzo.previews.ScreenPreviewsKt.Screen_CardHistory_card history": {
     "captureLabel": "",
     "functionName": "Screen_CardHistory",
     "renderBasename": "Screen_CardHistory_card_history.png",
-    "sha256": "5df684ade1f8c4f3f05f0a2bb152658e50e2974e85b294c7e355ba3078167ea0",
+    "sha256": "176d9554bd0db3d6bd1d81afc413dfd06422a321b38fed90a02d103c5b71b249",
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/previews/ScreenPreviews.kt"
   },
   "app/ee.schimke.terrazzo.previews.ScreenPreviewsKt.Screen_DashboardPicker_ThemeStyle_dashboard picker \u00b7 theme": {
@@ -605,42 +605,42 @@
     "captureLabel": "",
     "functionName": "CardPreviewMatrix_Button",
     "renderBasename": "CardPreviewMatrix_Button_matrix_button.png",
-    "sha256": "5c1b0063178bc8a5241986019613dbc488083f60b54b25071c195318b37b125f",
+    "sha256": "9c94cc1f0d39cb99ecb4c9aa2a45249494b40268af4f95db5060a3d347ac8dbd",
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/CardPreviewMatrix.kt"
   },
   "previews/ee.schimke.ha.previews.CardPreviewMatrixKt.CardPreviewMatrix_Calendar_matrix \u2014 calendar": {
     "captureLabel": "",
     "functionName": "CardPreviewMatrix_Calendar",
     "renderBasename": "CardPreviewMatrix_Calendar_matrix_calendar.png",
-    "sha256": "eb7ff2158490409eb774a0cef459612c8feace7b8efcd1ab5c5e65f4bb3ac09c",
+    "sha256": "ff43a5aaa3badacfd40f049d084099d7d3e200ad39383ab52866f7bbb4e0cd66",
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/CardPreviewMatrix.kt"
   },
   "previews/ee.schimke.ha.previews.CardPreviewMatrixKt.CardPreviewMatrix_Entities_matrix \u2014 entities": {
     "captureLabel": "",
     "functionName": "CardPreviewMatrix_Entities",
     "renderBasename": "CardPreviewMatrix_Entities_matrix_entities.png",
-    "sha256": "55b307fd3075c73cb7253f9a5d7837211a445a2f2c0515da6aaaa503b84ad9a2",
+    "sha256": "b6cacfd66bfcf2267baaac46847a68c968ff3e2f31ff956f6cbf8631e2b5ff66",
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/CardPreviewMatrix.kt"
   },
   "previews/ee.schimke.ha.previews.CardPreviewMatrixKt.CardPreviewMatrix_Entity_matrix \u2014 entity": {
     "captureLabel": "",
     "functionName": "CardPreviewMatrix_Entity",
     "renderBasename": "CardPreviewMatrix_Entity_matrix_entity.png",
-    "sha256": "aa1d648f4a804f1cf70e2ce7556fde09c3239c5198124eb44ceeb08abf9ff340",
+    "sha256": "457aaea76c5becc7684511e9d252466375406ea07303fd46f7a5238069c67773",
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/CardPreviewMatrix.kt"
   },
   "previews/ee.schimke.ha.previews.CardPreviewMatrixKt.CardPreviewMatrix_Gauge_matrix \u2014 gauge": {
     "captureLabel": "",
     "functionName": "CardPreviewMatrix_Gauge",
     "renderBasename": "CardPreviewMatrix_Gauge_matrix_gauge.png",
-    "sha256": "d869a1cc6d3f3edc00bf3eeab6db146be4835a83de848075dd6df052e60f781d",
+    "sha256": "4c25416e5c191df50a181aa34781d67ff4e9ea05f830c4e4b7b50372d58c9e24",
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/CardPreviewMatrix.kt"
   },
   "previews/ee.schimke.ha.previews.CardPreviewMatrixKt.CardPreviewMatrix_HistoryGraph_matrix \u2014 history-graph": {
     "captureLabel": "",
     "functionName": "CardPreviewMatrix_HistoryGraph",
     "renderBasename": "CardPreviewMatrix_HistoryGraph_matrix_history_graph.png",
-    "sha256": "92433c87194c1f0895b98bba50c7810167f08880b31e43a63bdb98f4649694f4",
+    "sha256": "f0367f49a1ca61b46b5ba1b655051573c279bf34eaa04539c8ca6b15f24305ce",
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/CardPreviewMatrix.kt"
   },
   "previews/ee.schimke.ha.previews.CardPreviewMatrixKt.CardPreviewMatrix_Humidifier_matrix \u2014 humidifier": {
@@ -675,7 +675,7 @@
     "captureLabel": "",
     "functionName": "CardPreviewMatrix_MediaControl",
     "renderBasename": "CardPreviewMatrix_MediaControl_matrix_media_control.png",
-    "sha256": "fcf730d993c1188c7ae9062f2b6a242d88f3bda50116383cabbd92dc2241f676",
+    "sha256": "5a7abf0b845feaeea8b36f6f55a4918ac064bc2fe16ce3de3d540aea995d66bf",
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/CardPreviewMatrix.kt"
   },
   "previews/ee.schimke.ha.previews.CardPreviewMatrixKt.CardPreviewMatrix_PictureEntity_matrix \u2014 picture-entity": {
@@ -717,7 +717,7 @@
     "captureLabel": "",
     "functionName": "CardPreviewMatrix_TodoList",
     "renderBasename": "CardPreviewMatrix_TodoList_matrix_todo_list.png",
-    "sha256": "115c9bf5ebd1bc292d8226387a7fd6ec6a16f60ccc7fcbc02a3134427aa15ba9",
+    "sha256": "eb71fa06a153b127c0f11e7a440ff1525bd559b1017108a38401dc5422b28845",
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/CardPreviewMatrix.kt"
   },
   "previews/ee.schimke.ha.previews.CardPreviewMatrixKt.CardPreviewMatrix_WeatherForecast_matrix \u2014 weather-forecast": {
@@ -1375,42 +1375,42 @@
     "captureLabel": "",
     "functionName": "DashboardClimateMobile",
     "renderBasename": "DashboardClimateMobile_dashboard_climate_mobile.png",
-    "sha256": "9806e80f174ab66b05e2a4b360c06a5dec75016b8e3fef878121929e18ef07ba",
+    "sha256": "97d07bf6fa55d72c13c4e1f078ecad63ab2e49064d34831d54373f2da75ec17c",
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/DashboardPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.DashboardPreviewsKt.DashboardClimateTablet_dashboard climate \u2014 tablet": {
     "captureLabel": "",
     "functionName": "DashboardClimateTablet",
     "renderBasename": "DashboardClimateTablet_dashboard_climate_tablet.png",
-    "sha256": "9bfd6c2a65ab6b15d8d0508d40223b9ef410ff0926c2eeaf8f0db57738836ee5",
+    "sha256": "7efc3a7b6c4dbc0ca455a212a7a0bdf34fd7e58176e8a2b288ef56643d8b77fb",
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/DashboardPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.DashboardPreviewsKt.DashboardEnergyMobile_dashboard energy \u2014 mobile": {
     "captureLabel": "",
     "functionName": "DashboardEnergyMobile",
     "renderBasename": "DashboardEnergyMobile_dashboard_energy_mobile.png",
-    "sha256": "ae1b83df7bae8c055883726b5ca11e35a8c099a9bc392f152a1570a4b0bfb12f",
+    "sha256": "7f72e9a0141695ba58a54c7081a99507291fdef6c39f49cdbe79c64a0174168d",
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/DashboardPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.DashboardPreviewsKt.DashboardEnergyTablet_dashboard energy \u2014 tablet": {
     "captureLabel": "",
     "functionName": "DashboardEnergyTablet",
     "renderBasename": "DashboardEnergyTablet_dashboard_energy_tablet.png",
-    "sha256": "9707358fd3e4e81e0da0df9000f5974717d5bc5bf609ffeb8501eddeb57bfccc",
+    "sha256": "4fc792b8e09c02fe7856e1c1711d42d913d78d25dd37bd0a8ba406101270b2f7",
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/DashboardPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.DashboardPreviewsKt.DashboardGithubMobile_dashboard github \u2014 mobile": {
     "captureLabel": "",
     "functionName": "DashboardGithubMobile",
     "renderBasename": "DashboardGithubMobile_dashboard_github_mobile.png",
-    "sha256": "45a8ea1f0d56f757bad7f54938ff694b3223d24008fdb474a6049a1f91ca627a",
+    "sha256": "7eabff4029b5116f8db31fc2d95ca642328b3e592a472ded37f376992db2e3db",
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/DashboardPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.DashboardPreviewsKt.DashboardGithubTablet_dashboard github \u2014 tablet": {
     "captureLabel": "",
     "functionName": "DashboardGithubTablet",
     "renderBasename": "DashboardGithubTablet_dashboard_github_tablet.png",
-    "sha256": "588c22ae9ed42a19a1eb68a30e1afbde8c6770615dde8a0deef25ea63d451df0",
+    "sha256": "8b947ac6da3d7f5da92511af5ed1ea1871bfd44b7b642908bc28e2f32fba238e",
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/DashboardPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.DashboardPreviewsKt.DashboardMeshcoreMobile_dashboard meshcore \u2014 mobile": {
@@ -1424,21 +1424,21 @@
     "captureLabel": "",
     "functionName": "DashboardMeshcoreTablet",
     "renderBasename": "DashboardMeshcoreTablet_dashboard_meshcore_tablet.png",
-    "sha256": "798f1e1a2b510c4b7324ca4b3fde17c870ae48cc7fcf640a0739c55b52a9a18a",
+    "sha256": "f3df695ff9e8d9a8224b5e36dc9a6ca8b1f15aaeb610a36d97d3041b4153213c",
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/DashboardPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.DashboardPreviewsKt.DashboardNetworksMobile_dashboard networks \u2014 mobile": {
     "captureLabel": "",
     "functionName": "DashboardNetworksMobile",
     "renderBasename": "DashboardNetworksMobile_dashboard_networks_mobile.png",
-    "sha256": "dfb39a35c95819588ef4f455a340569098d696a6051754fef4354169f6331dcd",
+    "sha256": "918d50e49b7c73dd942a1b6546fffaf6a9cc66ad22eea7fc6ef1becdbb275932",
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/DashboardPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.DashboardPreviewsKt.DashboardNetworksTablet_dashboard networks \u2014 tablet": {
     "captureLabel": "",
     "functionName": "DashboardNetworksTablet",
     "renderBasename": "DashboardNetworksTablet_dashboard_networks_tablet.png",
-    "sha256": "1eef8c91496ee8457ac5cccc20814e56f1a7088529c211c1e84c026c8b84c0d2",
+    "sha256": "1db66241340d1a180d505799b313b7cb7c66041875d35a4000c4a973b217b624",
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/DashboardPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.DashboardPreviewsKt.DashboardSecurityMobile_dashboard security \u2014 mobile": {
@@ -1809,7 +1809,7 @@
     "captureLabel": "",
     "functionName": "Sizing_ConstraintMatrix_Wrap",
     "renderBasename": "Sizing_ConstraintMatrix_Wrap_sizing_width_height_matrix_wrap_profile.png",
-    "sha256": "a3272a336ba19e3a7b72661b850e1ea0a1e12536139405d49a80797c6ef5ed4c",
+    "sha256": "7d46628592b8bce45795d206a6dd6ee7aa211c97c1a41e797a7a4f09c0885f7e",
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/SizingExperimentPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.SizingExperimentPreviewsKt.Sizing_FixedSlot_PaintMeasure_sizing \u2014 fixed slot, paint-measure profile": {
@@ -1823,7 +1823,7 @@
     "captureLabel": "",
     "functionName": "Sizing_FixedSlot_Wrap",
     "renderBasename": "Sizing_FixedSlot_Wrap_sizing_fixed_slot_wrap_profile.png",
-    "sha256": "aab34fdfec52feb61a89896bb44a224b898d8cc4d015141f4b0d22b56c70dafa",
+    "sha256": "4109cac773560bc7e3af5a83d9b610b82e571fc95196579e460b63f1bc238eed",
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/SizingExperimentPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.SizingExperimentPreviewsKt.Sizing_SlackSlot_PaintMeasure_sizing \u2014 slack slot, paint-measure profile": {
@@ -1837,7 +1837,7 @@
     "captureLabel": "",
     "functionName": "Sizing_SlackSlot_Wrap",
     "renderBasename": "Sizing_SlackSlot_Wrap_sizing_slack_slot_wrap_profile.png",
-    "sha256": "4b4c62cd2ccf3a747635ea4fc8d55673e80ce70f4da009169923f7bdefbd315f",
+    "sha256": "95ba39986f94a8d3cabd1e60093aa14cb0d632bfe985fd21174dddf3b060004f",
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/SizingExperimentPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.SizingExperimentPreviewsKt.Sizing_TightSlot_PaintMeasure_sizing \u2014 tight slot, paint-measure profile": {
@@ -1851,14 +1851,14 @@
     "captureLabel": "",
     "functionName": "Sizing_TightSlot_Wrap",
     "renderBasename": "Sizing_TightSlot_Wrap_sizing_tight_slot_wrap_profile.png",
-    "sha256": "dad1fddc3c415ceaacceac29d9c9458d0152fd0df43d569b6a0620bef04dbd4b",
+    "sha256": "bd651b7b4a6210dc6ddd12525fa1d01ee198bbd66cb71dafca9860a049e784c2",
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/SizingExperimentPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.SizingExperimentPreviewsKt.Sizing_WidthPinnedHeightAdaptive_sizing \u2014 width pinned, height adaptive": {
     "captureLabel": "",
     "functionName": "Sizing_WidthPinnedHeightAdaptive",
     "renderBasename": "Sizing_WidthPinnedHeightAdaptive_sizing_width_pinned_height_adaptive.png",
-    "sha256": "61a51ef7e6a11806771a8cc93f76beea5c328274aa1041ac43bc072347fdf737",
+    "sha256": "a9e07f8f370760b0d9a67ffe64563d2ddff61e20057765e7f7afc9dd184e7b98",
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/SizingExperimentPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.ThemePreviewsKt.Theme_Home_Dark_theme_ Home (dark)": {
