@@ -85,14 +85,48 @@ class CardEntitiesTest {
           )
       )
     val bindings = cardSnapshotBindings(setOf("light.kitchen", "sensor.temp"), snapshot)
+    // `.state` carries the formatted display string (matches the converters'
+    // `formatState` bake), not the raw HA state — so `on` capitalises and a
+    // numeric value stays as-is.
     assertEquals(
-      mapOf("light.kitchen.state" to "on", "sensor.temp.state" to "21.4"),
+      mapOf("light.kitchen.state" to "On", "sensor.temp.state" to "21.4"),
       bindings.strings,
     )
     assertEquals(
       mapOf("light.kitchen.is_on" to true, "sensor.temp.is_on" to false),
       bindings.booleans,
     )
+    // Numeric states get a parsed float binding so gauges track the value;
+    // non-numeric states (`on`) contribute none.
+    assertEquals(mapOf("sensor.temp.numeric_state" to 21.4f), bindings.floats)
+    assertTrue(bindings.ints.isEmpty())
+  }
+
+  @Test
+  fun snapshotBindingsEmitDomainStateInt() {
+    val snapshot =
+      HaSnapshot(
+        states =
+          mapOf(
+            "alarm_control_panel.home" to
+              EntityState("alarm_control_panel.home", "armed_away")
+          )
+      )
+    val bindings = cardSnapshotBindings(setOf("alarm_control_panel.home"), snapshot)
+    // Alarm panels carry a domain-keyed int so the armed/disarmed chrome
+    // variant flips without a re-encode.
+    assertEquals(setOf("alarm_control_panel.home.state_int"), bindings.ints.keys)
+  }
+
+  @Test
+  fun dataSignatureChangesWithState() {
+    val before =
+      HaSnapshot(states = mapOf("sensor.temp" to EntityState("sensor.temp", "21.4")))
+    val after = HaSnapshot(states = mapOf("sensor.temp" to EntityState("sensor.temp", "22.0")))
+    val ids = setOf("sensor.temp")
+    assertTrue(cardDataSignature(ids, before) != cardDataSignature(ids, after))
+    // Same snapshot → stable signature (no spurious re-encode).
+    assertEquals(cardDataSignature(ids, before), cardDataSignature(ids, before))
   }
 
   @Test
@@ -111,6 +145,8 @@ class CardEntitiesTest {
     val bindings = cardSnapshotBindings(emptySet(), HaSnapshot())
     assertTrue(bindings.strings.isEmpty())
     assertTrue(bindings.booleans.isEmpty())
+    assertTrue(bindings.ints.isEmpty())
+    assertTrue(bindings.floats.isEmpty())
   }
 
   @Test

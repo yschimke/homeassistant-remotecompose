@@ -1,6 +1,7 @@
 package ee.schimke.ha.rc
 
 import ee.schimke.ha.model.CardConfig
+import ee.schimke.ha.model.HaLiveBindings
 import ee.schimke.ha.model.HaSnapshot
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
@@ -59,9 +60,21 @@ private fun addEntityId(value: JsonPrimitive, out: MutableSet<String>) {
 
 /**
  * Named bindings for one card's [entityIds] under the current [snapshot]. Mirrors the
- * `addon-server` `/v1/stream` push shape (see `StreamRoute.kt`): for each entity id present in the
- * snapshot, `<id>.state` (string) and `<id>.is_on` (bool) — the same names `LiveValues` bakes into
- * the document at capture time.
+ * `addon-server` `/v1/stream` push shape (see `StreamRoute.kt`) and the names `LiveValues` bakes
+ * into the document at capture time. For each entity id present in the snapshot:
+ * - `<id>.state` (string) — the **formatted** display string, matching `formatState` (what the
+ *   converters bake), not the raw HA state. Pushing the raw state would replace e.g. `"21.5 °C"`
+ *   with `"21.5"` on the first update.
+ * - `<id>.is_on` (bool) — active flag.
+ * - `<id>.state_int` (int) — domain-keyed state variant, where one exists ([HaLiveBindings.stateInt]);
+ *   used by alarm-panel chrome.
+ * - `<id>.numeric_state` (float) — parsed numeric state ([HaLiveBindings.numericState]); used by
+ *   gauges / arcs that derive their sweep in-document.
+ *
+ * This is the value side of the live-binding contract: every binding here is host-reproducible from
+ * the snapshot alone. Bindings whose value is formatted per-card, derived, or structural (forecast
+ * strips, history sparklines, list contents, arc fill fractions) can't be reproduced here — those
+ * cards opt into a document re-encode instead (see `CardConverter.dataSignature`).
  *
  * Used by `CachedCardPreview` to push live updates into the running player without re-encoding.
  * Entities missing from the snapshot are skipped: there's no defined "absent" value, and the
@@ -70,18 +83,53 @@ private fun addEntityId(value: JsonPrimitive, out: MutableSet<String>) {
 data class CardSnapshotBindings(
   val strings: Map<String, String>,
   val booleans: Map<String, Boolean>,
+  val ints: Map<String, Int>,
+  val floats: Map<String, Float>,
 )
 
 fun cardSnapshotBindings(entityIds: Set<String>, snapshot: HaSnapshot): CardSnapshotBindings {
-  if (entityIds.isEmpty()) return CardSnapshotBindings(emptyMap(), emptyMap())
+  if (entityIds.isEmpty()) {
+    return CardSnapshotBindings(emptyMap(), emptyMap(), emptyMap(), emptyMap())
+  }
   val strings = LinkedHashMap<String, String>(entityIds.size)
   val booleans = LinkedHashMap<String, Boolean>(entityIds.size)
+  val ints = LinkedHashMap<String, Int>(entityIds.size)
+  val floats = LinkedHashMap<String, Float>(entityIds.size)
   for (id in entityIds) {
     val state = snapshot.states[id] ?: continue
-    strings["$id.state"] = state.state
+    strings["$id.state"] = formatState(state)
     booleans["$id.is_on"] = state.state == "on"
+    HaLiveBindings.stateInt(id, state.state)?.let { ints["$id.state_int"] = it }
+    HaLiveBindings.numericState(state.state)?.let { floats["$id.numeric_state"] = it }
   }
-  return CardSnapshotBindings(strings, booleans)
+  return CardSnapshotBindings(strings, booleans, ints, floats)
+}
+
+/**
+ * A coarse fingerprint of the snapshot-derived content a card *bakes* into its document, for cards
+ * that can't express their live data as host-pushable named bindings (see [cardSnapshotBindings]).
+ * Folded into the card's render cache key by the dashboard, so the document re-encodes whenever the
+ * baked content moves — the only update path for structural / derived / per-card-formatted cards.
+ *
+ * Covers everything a converter might read for [entityIds]: primary state, last-updated,
+ * attributes, and the history / statistics / forecast slices of the snapshot. Over-inclusion only
+ * costs a redundant (identical) re-encode, so this stays deliberately broad rather than trying to
+ * know which slice each card reads.
+ */
+fun cardDataSignature(entityIds: Set<String>, snapshot: HaSnapshot): String {
+  if (entityIds.isEmpty()) return ""
+  return buildString {
+    for (id in entityIds) {
+      val s = snapshot.states[id]
+      append(id).append('=').append(s?.state)
+      append('@').append(s?.lastUpdated)
+      append('#').append(s?.attributes?.hashCode())
+      append("~h").append(snapshot.history[id]?.hashCode())
+      append("~s").append(snapshot.statistics[id]?.hashCode())
+      append("~f").append(snapshot.forecasts[id]?.hashCode())
+      append(';')
+    }
+  }
 }
 
 /**

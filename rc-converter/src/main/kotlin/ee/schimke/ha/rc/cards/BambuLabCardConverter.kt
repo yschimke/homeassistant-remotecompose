@@ -25,6 +25,7 @@ import androidx.compose.ui.text.font.FontWeight
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.CardConverter
+import ee.schimke.ha.rc.cardDataSignature
 import ee.schimke.ha.rc.components.LiveValues
 import ee.schimke.ha.rc.components.LocalHaTheme
 import ee.schimke.ha.rc.components.cardChrome
@@ -54,6 +55,17 @@ open class BambuLabCardConverter(
   final override val cardType: String,
   private val variantLabel: String,
 ) : CardConverter {
+
+  // Signature for the chrome-only fallback render (variant label + the configured
+  // printer entity + state) — baked, not bound (see CardConverter.dataSignature).
+  // The id lives under `printer:` or `entity:`, which cardEntityIds doesn't walk.
+  // Subclasses that discover sensors via resolvePrinterPrefix override this to base
+  // the signature on the entities they actually render.
+  override fun dataSignature(card: CardConfig, snapshot: HaSnapshot): String {
+    val printer = card.raw["printer"]?.jsonPrimitive?.content
+    val id = printer ?: card.raw["entity"]?.jsonPrimitive?.content ?: return ""
+    return cardDataSignature(setOf(id), snapshot)
+  }
 
   override fun naturalHeightDp(card: CardConfig, snapshot: HaSnapshot): Int = 96
 
@@ -120,6 +132,13 @@ open class BambuLabCardConverter(
  */
 class BambuLabAmsCardConverter :
   BambuLabCardConverter(cardType = "custom:ha-bambulab-ams-card", variantLabel = "AMS") {
+  // Renders discovered `sensor.<prefix>_ams_1_tray_*`, not the configured printer
+  // entity — base over the discovered trays so live tray changes re-encode.
+  override fun dataSignature(card: CardConfig, snapshot: HaSnapshot): String {
+    val prefix = resolvePrinterPrefix(card, snapshot) ?: return super.dataSignature(card, snapshot)
+    return cardDataSignature(amsTrayEntityIds(prefix), snapshot)
+  }
+
   @Composable
   override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
     val prefix = resolvePrinterPrefix(card, snapshot)
@@ -146,6 +165,13 @@ class BambuLabAmsCardConverter :
  */
 class BambuLabSpoolCardConverter :
   BambuLabCardConverter(cardType = "custom:ha-bambulab-spool-card", variantLabel = "Spool") {
+  // Renders one of the discovered `sensor.<prefix>_ams_1_tray_*` slots — base over
+  // the whole tray set so a change to any (or to which is active) re-encodes.
+  override fun dataSignature(card: CardConfig, snapshot: HaSnapshot): String {
+    val prefix = resolvePrinterPrefix(card, snapshot) ?: return super.dataSignature(card, snapshot)
+    return cardDataSignature(amsTrayEntityIds(prefix), snapshot)
+  }
+
   @Composable
   override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
     val prefix = resolvePrinterPrefix(card, snapshot)
@@ -238,6 +264,13 @@ class BambuLabPrintStatusCardConverter :
     cardType = "custom:ha-bambulab-print_status-card",
     variantLabel = "Print status",
   ) {
+  // Renders discovered `sensor.<prefix>_*` (progress, stage, layers, temps), not the
+  // configured printer entity — base over those so live print data re-encodes.
+  override fun dataSignature(card: CardConfig, snapshot: HaSnapshot): String {
+    val prefix = resolvePrinterPrefix(card, snapshot) ?: return super.dataSignature(card, snapshot)
+    return cardDataSignature(printStatusEntityIds(prefix), snapshot)
+  }
+
   @Composable
   override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
     val prefix = resolvePrinterPrefix(card, snapshot)
@@ -278,6 +311,33 @@ internal fun resolvePrinterPrefix(card: CardConfig, snapshot: HaSnapshot): Strin
     snapshot.states.keys.firstOrNull { it.startsWith("button.") && it.endsWith("_pause_printing") }
   if (btn != null) return btn.removePrefix("button.").removeSuffix("_pause_printing")
   return null
+}
+
+/** Tray sensors the AMS / spool render paths read (`sensor.<prefix>_ams_1_tray_1..4`). */
+private fun amsTrayEntityIds(prefix: String): Set<String> =
+  (1..4).map { "sensor.${prefix}_ams_1_tray_$it" }.toSet()
+
+/** Sensors [buildPrintStatusData] reads for the print-status card. */
+private fun printStatusEntityIds(prefix: String): Set<String> = buildSet {
+  add("sensor.${prefix}_print_progress")
+  add("sensor.${prefix}_current_stage")
+  add("sensor.${prefix}_print_status")
+  add("sensor.${prefix}_current_layer")
+  add("sensor.${prefix}_total_layer_count")
+  add("sensor.${prefix}_remaining_time")
+  add("sensor.${prefix}_nozzle_temperature")
+  add("sensor.${prefix}_target_nozzle_temperature")
+  add("sensor.${prefix}_bed_temperature")
+  add("sensor.${prefix}_target_bed_temperature")
+}
+
+/** Buttons + name sensors [buildPrintControlData] reads for the control pad. */
+private fun printControlEntityIds(prefix: String): Set<String> = buildSet {
+  add("button.${prefix}_pause_printing")
+  add("button.${prefix}_resume_printing")
+  add("button.${prefix}_stop_printing")
+  add("sensor.${prefix}_print_progress")
+  add("sensor.${prefix}_print_status")
 }
 
 private fun buildPrintStatusData(
@@ -374,6 +434,13 @@ class BambuLabPrintControlCardConverter :
     cardType = "custom:ha-bambulab-print_control-card",
     variantLabel = "Print control",
   ) {
+  // Renders discovered `button.<prefix>_*` controls + a name sensor, not the
+  // configured printer entity — base over those so availability changes re-encode.
+  override fun dataSignature(card: CardConfig, snapshot: HaSnapshot): String {
+    val prefix = resolvePrinterPrefix(card, snapshot) ?: return super.dataSignature(card, snapshot)
+    return cardDataSignature(printControlEntityIds(prefix), snapshot)
+  }
+
   @Composable
   override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
     val data = buildPrintControlData(card, snapshot)
@@ -391,6 +458,13 @@ class BambuLabSkipObjectCardConverter :
     cardType = "custom:ha-bambulab-skipobject-card",
     variantLabel = "Print control",
   ) {
+  // Renders discovered `button.<prefix>_*` controls + a name sensor, not the
+  // configured printer entity — base over those so availability changes re-encode.
+  override fun dataSignature(card: CardConfig, snapshot: HaSnapshot): String {
+    val prefix = resolvePrinterPrefix(card, snapshot) ?: return super.dataSignature(card, snapshot)
+    return cardDataSignature(printControlEntityIds(prefix), snapshot)
+  }
+
   @Composable
   override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
     val data = buildPrintControlData(card, snapshot)

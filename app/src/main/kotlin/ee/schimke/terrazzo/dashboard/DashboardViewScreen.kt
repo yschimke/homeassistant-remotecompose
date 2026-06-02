@@ -65,6 +65,7 @@ import ee.schimke.ha.rc.LocalRcDebugBorders
 import ee.schimke.ha.rc.ProvideCardRegistry
 import ee.schimke.ha.rc.RenderChild
 import ee.schimke.ha.rc.androidXExperimentalWrap
+import ee.schimke.ha.rc.cardDataSignature
 import ee.schimke.ha.rc.cardWidthClass
 import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.cards.shutter.withEnhancedShutter
@@ -913,9 +914,17 @@ private fun CardSlot(
         it.key to JinjaTemplate.render(it.template, snapshot)
       }
     }
+  // Cards whose live content is baked rather than bound (forecast strips,
+  // history sparklines, to-do/calendar/logbook lists, arc fills) advertise a
+  // data signature; folding it into the cache key re-encodes the document when
+  // that content moves. Null for binding-backed cards, whose key stays stable
+  // while named-binding pushes carry the updates (see CachedCardPreview).
+  // `liveBindings` is the inverse flag: a re-encode card skips the push so its
+  // per-card-formatted bake isn't clobbered by a raw value.
+  val dataSignature = remember(card, snapshot) { registry.cardDataSignature(card, snapshot) }
   val cacheKey =
-    remember(card, style, dark, captureEpoch, templateValues) {
-      CardSlotCacheKey(card, style, dark, captureEpoch, templateValues)
+    remember(card, style, dark, captureEpoch, templateValues, dataSignature) {
+      CardSlotCacheKey(card, style, dark, captureEpoch, templateValues, dataSignature)
     }
   val context = androidx.compose.ui.platform.LocalContext.current
   val bitmapLoader =
@@ -944,6 +953,7 @@ private fun CardSlot(
       profile = androidXExperimentalWrap,
       card = card,
       snapshot = snapshot,
+      liveBindings = dataSignature == null,
       bitmapLoader = bitmapLoader,
     ) {
       ProvideCardRegistry(registry) {
@@ -962,6 +972,7 @@ private data class CardSlotCacheKey(
   val dark: Boolean,
   val captureEpoch: Long,
   val templateValues: Map<String, String?>,
+  val dataSignature: String?,
 )
 
 /**

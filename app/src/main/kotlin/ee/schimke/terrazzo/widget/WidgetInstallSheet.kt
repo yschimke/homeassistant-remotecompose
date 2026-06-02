@@ -40,6 +40,7 @@ import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.CachedCardPreview
 import ee.schimke.ha.rc.ProvideCardRegistry
 import ee.schimke.ha.rc.RenderChild
+import ee.schimke.ha.rc.cardDataSignature
 import ee.schimke.ha.rc.cardHeightDp
 import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.cards.shutter.withEnhancedShutter
@@ -140,6 +141,7 @@ fun WidgetInstallSheet(
           profile = widgetsProfile,
           card = card,
           snapshot = snapshot,
+          liveBindings = registry.cardDataSignature(card, snapshot) == null,
           bitmapLoader = bitmapLoader,
           modifier = Modifier.width(previewSize.widthDp.dp).height(previewSize.heightDp.dp),
         ) {

@@ -7,6 +7,8 @@ import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.CardConverter
+import ee.schimke.ha.rc.cardDataSignature
+import ee.schimke.ha.rc.cardEntityIds
 import ee.schimke.ha.rc.components.HaAction
 import ee.schimke.ha.rc.components.HaArcDialData
 import ee.schimke.ha.rc.components.HaModeChip
@@ -21,6 +23,11 @@ import kotlinx.serialization.json.jsonPrimitive
  */
 class HumidifierCardConverter : CardConverter {
   override val cardType: String = CardTypes.HUMIDIFIER
+
+  // Baked, non-bindable content (see CardConverter.dataSignature):
+  // re-encode when any referenced entity's snapshot data moves.
+  override fun dataSignature(card: CardConfig, snapshot: HaSnapshot): String =
+    cardDataSignature(cardEntityIds(card), snapshot)
 
   override fun naturalHeightDp(card: CardConfig, snapshot: HaSnapshot): Int = 290
 

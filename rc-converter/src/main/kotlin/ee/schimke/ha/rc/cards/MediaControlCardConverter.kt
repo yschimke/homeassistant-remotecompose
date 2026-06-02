@@ -26,6 +26,23 @@ import kotlinx.serialization.json.jsonPrimitive
 class MediaControlCardConverter : CardConverter {
   override val cardType: String = CardTypes.MEDIA_CONTROL
 
+  // Title / artist / artwork / progress are baked from attributes, not bound
+  // (see CardConverter.dataSignature), so re-encode when the track changes.
+  // media_position ticks every second and is excluded on purpose — the progress
+  // bar is baked at capture and re-encoding each frame would be wasteful.
+  override fun dataSignature(card: CardConfig, snapshot: HaSnapshot): String {
+    val id = card.raw["entity"]?.jsonPrimitive?.content ?: return ""
+    val s = snapshot.states[id] ?: return "$id="
+    val a = s.attributes
+    return buildString {
+      append(id).append('=').append(s.state)
+      append('|').append(a["media_title"])
+      append('|').append(a["media_artist"])
+      append('|').append(a["media_duration"])
+      append('|').append(a["entity_picture"])
+    }
+  }
+
   override fun naturalHeightDp(card: CardConfig, snapshot: HaSnapshot): Int = 168
 
   @Composable
