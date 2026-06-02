@@ -466,7 +466,7 @@ and is reused. The families today:
 | Family | Key element | Cards | Shared composable(s) | Ladder state |
 |---|---|---|---|---|
 | **Icon + state row/tile** | tinted icon | `tile`, `entity`, `sensor`, `statistic` | `RemoteHaTile` (+`RemoteHaIconChip`), `RemoteHaEntityRow` | all four: `Full↔IconChip` (Full self-centred via `CenteredCell`) |
-| **Icon-centred button** | large tinted icon | `button` | `RemoteHaButton` / `RemoteHaToggleButton` | `Full↔CompactStateChip` |
+| **Icon-centred button** | large tinted icon | `button` | `RemoteHaButton` / `RemoteHaToggleButton` / `RemoteHaButtonIcon` | `icon-only ↔ icon+name` (2-D gate) |
 | **Arc-dial control** | the arc/dial | `gauge`, `thermostat`, `humidifier`, `light` | `RemoteHaGauge*`, `RemoteHaArcDial*`, `RenderArcDial` | thermostat/humidifier/light: Wide↔Full (width); gauge: Wide↔Stacked (height) — all via shared `RemoteSizeBreakpoint` |
 | **Multi-entity list/strip** | first row/cell | `entities`, `glance`, `area`, `picture-glance`, `entity-filter`, `*-stack` | `RemoteHaEntities`, `RemoteHaGlance` | entities: `list↔strip`; others: none |
 | **Hero + supporting detail** | condition/art/shield + value | `weather-forecast`, `media-control`, `alarm-panel` | `RemoteHaWeatherForecast*`, `RemoteHaMediaControl*`, `RemoteHaAlarmPanel*` | all three `Wide↔Full` |
@@ -511,20 +511,27 @@ The current state is the placeholder, not the philosophy:
    (b) a gate only reads a **stable** value on the axis the surface
    *pins* — launcher/matrix cells pin width and wrap height, so a height
    gate mis-selects there (it works where height is pinned, e.g. the
-   Wear gauge). A *true* 2-D / aspect gate remains blocked (#224). Net:
-   `entities` reflows on a single width threshold; per-card ladders
-   should pick the one pinned axis that best discriminates their
-   variants — see `GaugeCardConverter`.
-2. `button` still ships the `Full → CompactStateChip` text-only
-   ladder (the value-fallback path, skipping the identity tier above
-   it) and needs the worked-example ladder. The icon-+-state family
-   (`tile`, `entity`, `sensor`, `statistic`) now lands on
-   `Full ↔ RemoteHaIconChip`: the smallest cell keeps the tinted icon
-   (identity tier) instead of dropping to a text chip, and the `Full`
-   tier self-centres (`CenteredCell`) so tall cells fill rather than
-   top-glue. Still a single live breakpoint per card (#224) — the
-   reflow / expanded rungs between identity and full are the design
-   target, not encodable yet.
+   Wear gauge). A multi-rung or `RemoteBoolean.and()`-composed aspect
+   gate remains blocked (#224). A **single-expression** 2-D gate does
+   work, though: `min(w, h · minW/minH).ge(minW)` is one boolean off one
+   float, true only when `w ≥ minW` **and** `h ≥ minH`, so it sidesteps
+   the `.and()` / nested-state-layout collapse — `ButtonCardConverter`
+   (#352) uses it to send narrow-tall (`1×1`) and wide-short (Wear S)
+   cells to the icon-only tier while wide-and-tall cells keep the name,
+   something no single width- or height-only gate can do. Net:
+   `entities` reflows on a single width threshold; per-card ladders pick
+   the one pinned axis (or the single-`min` 2-D form) that best
+   discriminates their variants — see `GaugeCardConverter` /
+   `ButtonCardConverter`.
+2. The icon-+-state family (`tile`, `entity`, `sensor`, `statistic`)
+   now lands on `Full ↔ RemoteHaIconChip`: the smallest cell keeps the
+   tinted icon (identity tier) instead of dropping to a text chip, and
+   the `Full` tier self-centres (`CenteredCell`) so tall cells fill
+   rather than top-glue. `button` ladders `icon-only ↔ icon+name`
+   (`RemoteHaButtonIcon` ↔ `RemoteHaButton`, #352) — also an identity
+   tier, no `CompactStateChip` text fallback. Still a single live
+   breakpoint per card (#224) — the reflow / expanded rungs between
+   identity and full are the design target, not encodable yet.
 3. Runtime tier selection **does** fire — the matrix preview shows tile
    switching chip↔full and entities switching list↔strip per size. Two
    gotchas were shaped around: the `componentWidth()` named expression
@@ -541,36 +548,42 @@ The current state is the placeholder, not the philosophy:
    should set the file convention — the mini-arc gauge is a good
    candidate because it has an obvious reflow target and is the card
    the screenshot called out.
-5. **`CompactStateChip` is wired as the _second_ tier, not the last.**
-   `tile`, `entity`, and `button` go `Full → CompactStateChip` at a
-   single 120 dp gate, so the `1×1` cell renders as top-left text with
-   **no icon** — a direct violation of Principle 1 and the "hiding the
-   icon first" anti-pattern, visible in the matrix today. Each needs an
-   icon-only identity tier between `Full` and the text chip; the chip
-   should only appear when even a `40×40` icon won't fit.
+5. **`CompactStateChip` is now the last resort, not the second tier.**
+   The icon families fixed this: `tile`, `entity`, `sensor`, `statistic`
+   ladder `Full ↔ RemoteHaIconChip` and `button` ladders
+   `icon-only ↔ icon+name` (`RemoteHaButtonIcon` ↔ `RemoteHaButton`,
+   #352), so the `1×1` cell keeps the tinted icon instead of dropping to
+   top-left text; the text chip only appears when even a `40×40` icon
+   won't fit. (Historically `tile` / `entity` / `button` went
+   `Full → CompactStateChip` at a single 120 dp gate — a Principle 1 /
+   "hiding the icon first" violation, visible in the matrix at the time.)
 6. **Large cells pad with whitespace instead of enriching (Principle
-   7).** Confirmed in the matrix at `base+1` for `tile`, `entity`,
-   `button`, `entities`, and `weather-forecast`: content pins to the
-   top-left and the bottom half of the cell is blank. The fix is an
-   Expanded tier or centring (`No dead space`, Principle 8). **Caveat
-   learned the hard way:** centring cannot be retrofitted by setting
+   7).** Still visible at `base+1` for the list / hero families
+   (`entities`, `weather-forecast`): content pins to the top-left and
+   the bottom half of the cell is blank. The fix is an Expanded tier or
+   centring (`No dead space`, Principle 8). **Caveat learned the hard
+   way:** centring cannot be retrofitted by setting
    `contentAlignment = Center` on a wrapper `RemoteBox` — in alpha010 a
    `fillMaxWidth` (wrap-height) child is still pinned to the top of a
    centring box, so a wrapper-level alignment is a no-op (verified by
-   re-rendering tile/entity/button/entities — pixel-identical). It bit the
-   arc-dial Wide row too in #353: on a tall cell (e.g. `3×3`)
-   `RemoteHaArcDialWide` — a bare `RemoteRow` tier-root — sits high with
-   dead space below and couldn't be retrofitted to self-centre. #355 found
-   the way through: nest the tier content in a `fillMaxSize` `RemoteColumn`
-   and let **weighted children / `SpaceEvenly` / `fillMaxHeight`**
-   distribute it. The hero family (weather, media, alarm) fills its large
-   cells this way today — the forecast strip's day columns, the media
-   title/transport/seek bands, and the alarm keypad all expand through the
-   breakpoint (see #9). What does *not* work is a bare `RemoteRow`
-   tier-root or a `fillMaxSize` `RemoteBox` wrapper with
-   `contentAlignment = Center`; the fill must live inside the tier
-   composable as a column of weighted sections (or a self-painting
-   `RemoteBox` like `RemoteHaGaugeStacked`).
+   re-rendering — pixel-identical). Where the child is **wrap-sized**,
+   though, `fillMaxSize` + centre *does* work: the icon families
+   self-centre via `CenteredCell` (#375), `button`'s `icon+name` tier
+   centres a wrap-content column (#352), and the hero family (weather,
+   media, alarm) fills its large cells with **weighted children /
+   `SpaceEvenly` / `fillMaxHeight`** inside a `fillMaxSize` `RemoteColumn`
+   (#355) — the forecast day columns, the media title/transport/seek
+   bands and the alarm keypad all expand through the breakpoint (see #9).
+   What does *not* work is a bare `RemoteRow` tier-root (it measures to
+   zero height under a filled-height constraint and vanishes) or a
+   `fillMaxSize` `RemoteBox` wrapper with `contentAlignment = Center` (the
+   same no-op). The holdout is the arc-dial **Wide row**: on a tall cell
+   (e.g. `3×3`) `RemoteHaArcDialWide` is a bare row that sits high with
+   dead space below and can't be retrofitted without becoming a column
+   (or a `RemoteBox` that fills *and self-positions its own drawing*, like
+   `RemoteHaGaugeStacked`, which is the other shape that fills today, all
+   confirmed by re-render in #353). Tracked per layout family in the
+   design-review issues.
 7. ~~**`light` is outside the arc-dial family.**~~ **Resolved.** `light`
    routes through the shared `RenderArcDial` ladder (Wide↔Full) with the
    bulb-ring dial retained at every size, and the on/off mode chip is a
