@@ -47,7 +47,7 @@ jobs:
       # render before `./gradlew test`. (The `compose-preview` workflow
       # still publishes baselines / PR comments separately; this step is
       # local to the test job and doesn't push anything.)
-      - uses: yschimke/compose-ai-tools/.github/actions/install@v0.12.4
+      - uses: yschimke/compose-ai-tools/.github/actions/install@v0.12.5
         with:
           version: catalog
           catalog-key: compose-preview-plugin
