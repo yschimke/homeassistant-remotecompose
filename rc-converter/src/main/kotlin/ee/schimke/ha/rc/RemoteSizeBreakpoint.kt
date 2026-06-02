@@ -2,12 +2,10 @@
 
 package ee.schimke.ha.rc
 
-import androidx.compose.remote.core.operations.layout.animation.AnimationSpec
 import androidx.compose.remote.creation.compose.layout.RemoteBox
 import androidx.compose.remote.creation.compose.layout.RemoteStateLayout
 import androidx.compose.remote.creation.compose.layout.RemoteText
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
-import androidx.compose.remote.creation.compose.modifier.animationSpec
 import androidx.compose.remote.creation.compose.state.RemoteFloat
 import androidx.compose.remote.creation.compose.state.RemoteState
 import androidx.compose.remote.creation.compose.state.rc
@@ -15,6 +13,7 @@ import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
+import ee.schimke.ha.rc.components.immediateSwap
 import java.text.DecimalFormat
 
 /**
@@ -194,29 +193,5 @@ private fun BreakpointTier(
         }
     }
 }
-
-/**
- * Pin a state-layout branch's enter/exit animation to zero duration so
- * the swap is immediate. The default `RemoteStateLayout` transition is
- * a 300 ms FADE_IN/FADE_OUT cross-fade; the in-process preview player
- * captures a frame mid-fade, leaving the outgoing branch half-visible
- * behind the incoming one (the "ghosting"). Zero duration removes the
- * cross-fade window so only the selected branch is ever drawn.
- *
- * NB: we deliberately do *not* gate the branch with `alpha(select(…))`
- * — the derived float doesn't reliably materialise in alpha010 (#224),
- * which blanks the *selected* branch too.
- */
-private fun RemoteModifier.immediateSwap(): RemoteModifier =
-    animationSpec(
-        -1,
-        /* motionDuration = */ 0f,
-        /* motionEasingType = */ 1,
-        /* visibilityDuration = */ 0f,
-        /* visibilityEasingType = */ 1,
-        AnimationSpec.ANIMATION.FADE_IN,
-        AnimationSpec.ANIMATION.FADE_OUT,
-        true,
-    )
 
 private const val BreakpointExpressionPrefix = "__terrazzo_breakpoint_"

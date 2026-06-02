@@ -467,17 +467,19 @@ and is reused. The families today:
 |---|---|---|---|---|
 | **Icon + state row/tile** | tinted icon | `tile`, `entity`, `sensor`, `statistic` | `RemoteHaTile` (+`RemoteHaIconChip`), `RemoteHaEntityRow` | all four: `Full↔IconChip` (Full self-centred via `CenteredCell`) |
 | **Icon-centred button** | large tinted icon | `button` | `RemoteHaButton` / `RemoteHaToggleButton` / `RemoteHaButtonIcon` | `icon-only ↔ icon+name` (2-D gate) |
-| **Arc-dial control** | the arc/dial | `gauge`, `thermostat`, `humidifier`, `light` | `RemoteHaGauge*`, `RemoteHaArcDial*`, `RenderArcDial` | thermostat/humidifier/gauge: Wide↔Full; `light`: **none (outlier)** |
+| **Arc-dial control** | the arc/dial | `gauge`, `thermostat`, `humidifier`, `light` | `RemoteHaGauge*`, `RemoteHaArcDial*`, `RenderArcDial` | thermostat/humidifier/light: Wide↔Full (width); gauge: Wide↔Stacked (height) — all via shared `RemoteSizeBreakpoint` |
 | **Multi-entity list/strip** | first row/cell | `entities`, `glance`, `area`, `picture-glance`, `entity-filter`, `*-stack` | `RemoteHaEntities`, `RemoteHaGlance` | entities: `list↔strip`; others: none |
 | **Hero + supporting detail** | condition/art/shield + value | `weather-forecast`, `media-control`, `alarm-panel` | `RemoteHaWeatherForecast*`, `RemoteHaMediaControl`, `RemoteHaAlarmPanel` | weather: `Full↔Wide`; others: none |
 | **Bulk / time-series** | spark/list head | `history-graph`, `statistics-graph`, `logbook`, `todo-list`, `calendar`, `markdown` | per-card | none — Wear `SmallOnly` |
 | **Picture / image** | the image | `picture`, `picture-entity`, `picture-elements` | `RemoteHaImage*` | none |
 
-The "Arc-dial control" family is the reference implementation: a single
-`RenderArcDial` width-ladder gives thermostat and humidifier a clean
-Wide-row↔Full-card transition with the dial retained at every size. The
-open work is bringing the other families up to that bar — see the
-per-family issues.
+The "Arc-dial control" family is the reference implementation. The shared
+`RenderArcDial` width-ladder gives thermostat, humidifier, and `light` a
+clean Wide-row↔Full-card transition with the dial retained at every size;
+`gauge` rides the same `RemoteSizeBreakpoint` helper on the height axis
+(Wide↔Stacked) so it inherits the `immediateSwap` overlay workaround
+rather than a hand-rolled `RemoteStateLayout`. The open work is bringing
+the other families up to that bar — see the per-family issues.
 
 ## Anti-patterns
 
@@ -564,22 +566,30 @@ The current state is the placeholder, not the philosophy:
    `contentAlignment = Center` on a wrapper `RemoteBox` — in alpha010 a
    `fillMaxWidth` (wrap-height) child is still pinned to the top of a
    centring box, so a wrapper-level alignment is a no-op (verified by
-   re-rendering — pixel-identical). So the "fill the cell" work is
-   per-tier-composable (each variant must fill and self-centre): the
-   icon families now do it via `CenteredCell`, `button` via its
-   `fillMaxSize` icon+name tier (#352), and the arc-dial cards via
-   `RemoteHaArcDialWide` (which `fillMaxSize`s and centres its content
-   internally). The remaining offenders are the list / hero families.
-   Tracked per layout family in the design-review issues.
-7. **`light` is outside the arc-dial family.** `thermostat` and
-   `humidifier` route through `RenderArcDial` and get the Wide↔Full
-   ladder + dial retention for free; `LightCardConverter` calls
-   `RemoteHaArcDial` directly with no `CardSizeMode` branch, so it never
-   reflows or degrades. It should join the shared `RenderArcDial` path.
-8. **Gauge matrix shows the #309 overlay artifact.** The Wear L /
-   widget cells render both `RemoteHaGaugeWide` and
-   `RemoteHaGaugeStacked` on top of each other (double value + double
-   arc). This is the alpha010 `RemoteStateLayout` overlay bug (#309),
-   not a layout-design fault, but it makes the gauge family un-reviewable
-   in the matrix until the visibility-modifier workaround there is
-   re-confirmed against the current alpha.
+   re-rendering — pixel-identical). Where the child is **wrap-sized**,
+   though, `fillMaxSize` + centre *does* work: the icon families
+   self-centre via `CenteredCell` (#375) and `button`'s `icon+name` tier
+   centres a wrap-content column (#352), so both fill / centre on big
+   cells. The arc-dial **Wide row** is the holdout: on a tall cell (e.g.
+   `3×3`) `RemoteHaArcDialWide` sits high with dead space below and can't
+   be retrofitted — a `RemoteRow`/`RemoteColumn` doesn't propagate
+   fill-height through the breakpoint, and a `fillMaxSize` `RemoteBox`
+   wrapper with `contentAlignment = Center` is the same no-op (all
+   confirmed by re-render in #353). A `RemoteBox` that fills *and
+   self-positions its own drawing* (e.g. `RemoteHaGaugeStacked`, which
+   paints an arc backdrop and bottom-aligns its overlay) is the only
+   shape that fills a tall cell without an upstream fix. Remaining
+   offenders: the list / hero families and the arc-dial Wide row. Tracked
+   per layout family in the design-review issues.
+7. ~~**`light` is outside the arc-dial family.**~~ **Resolved.** `light`
+   routes through the shared `RenderArcDial` ladder (Wide↔Full) with the
+   bulb-ring dial retained at every size, and the on/off mode chip is a
+   `Static` chip (a `Toggle` chip's nested `RemoteStateLayout` collapses
+   to its captured branch inside the Fixed-mode breakpoint — #224 — which
+   painted "Off" over the bulb on the full tier).
+8. ~~**Gauge matrix shows the #309 overlay artifact.**~~ **Resolved.**
+   `GaugeCardConverter` no longer hand-rolls a `RemoteStateLayout`; it
+   routes through the shared `RemoteSizeBreakpoint` (height axis), so it
+   inherits the `immediateSwap` workaround and the Wear L / widget cells
+   render a single tier instead of double-painting `RemoteHaGaugeWide`
+   over `RemoteHaGaugeStacked`.
