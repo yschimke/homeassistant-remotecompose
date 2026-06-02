@@ -11,8 +11,8 @@ package ee.schimke.ha.model
  * it.
  *
  * This object is that single source of truth for the *value* side of the contract. The *name* side
- * lives in `LiveValues` (rc-components), which bakes the matching names into the document at capture
- * time.
+ * lives in `LiveValues` (rc-components), which bakes the matching names into the document at
+ * capture time.
  *
  * Keep these in lockstep: a binding a converter bakes is only "live" if the host can reproduce its
  * value here from the snapshot alone (no card config). Bindings whose value is formatted, derived,
@@ -23,9 +23,9 @@ object HaLiveBindings {
 
   /**
    * Parsed numeric form of an entity's primary state ↔ `<entityId>.numeric_state`. Gauges / arcs
-   * bind this and compute their sweep in-document, so pushing the raw number keeps them live without
-   * a re-encode. Non-numeric or non-finite states (e.g. `"on"`, `"unavailable"`) have no numeric
-   * form and return null.
+   * bind this and compute their sweep in-document, so pushing the raw number keeps them live
+   * without a re-encode. Non-numeric or non-finite states (e.g. `"on"`, `"unavailable"`) have no
+   * numeric form and return null.
    */
   fun numericState(state: String): Float? = state.toFloatOrNull()?.takeIf { it.isFinite() }
 

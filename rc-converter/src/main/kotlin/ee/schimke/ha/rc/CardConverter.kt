@@ -42,16 +42,16 @@ interface CardConverter {
    * This is the second half of the live-update contract. A card keeps up with Home Assistant in one
    * of two ways:
    * 1. **Named bindings (default).** The card binds host-reproducible values (`<id>.state`,
-   *    `<id>.is_on`, `<id>.numeric_state`, `<id>.state_int`) via `LiveValues`, and a host pushes new
-   *    values by name into the running player with no re-encode (see `cardSnapshotBindings`). Return
-   *    null — the default.
-   * 2. **Document re-encode.** The card bakes content a host can't reproduce from the snapshot alone
-   *    — a per-card-formatted label, a forecast strip, a history sparkline, a to-do/calendar/logbook
-   *    list, an arc fill fraction. Return a string that changes whenever that baked content changes
-   *    (typically `cardDataSignature(cardEntityIds(card), snapshot)`). The dashboard folds it into
-   *    the render cache key, so the document re-encodes on every relevant data change, and the host
-   *    skips the named-binding push for this card (so it doesn't clobber the formatted bake with a
-   *    raw value).
+   *    `<id>.is_on`, `<id>.numeric_state`, `<id>.state_int`) via `LiveValues`, and a host pushes
+   *    new values by name into the running player with no re-encode (see `cardSnapshotBindings`).
+   *    Return null — the default.
+   * 2. **Document re-encode.** The card bakes content a host can't reproduce from the snapshot
+   *    alone — a per-card-formatted label, a forecast strip, a history sparkline, a
+   *    to-do/calendar/logbook list, an arc fill fraction. Return a string that changes whenever
+   *    that baked content changes (typically `cardDataSignature(cardEntityIds(card), snapshot)`).
+   *    The dashboard folds it into the render cache key, so the document re-encodes on every
+   *    relevant data change, and the host skips the named-binding push for this card (so it doesn't
+   *    clobber the formatted bake with a raw value).
    *
    * Prefer (1): it's cheaper (no re-encode) and animates. Reach for (2) only when the content
    * genuinely can't be expressed as a binding.

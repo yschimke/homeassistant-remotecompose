@@ -66,8 +66,8 @@ private fun addEntityId(value: JsonPrimitive, out: MutableSet<String>) {
  *   converters bake), not the raw HA state. Pushing the raw state would replace e.g. `"21.5 °C"`
  *   with `"21.5"` on the first update.
  * - `<id>.is_on` (bool) — active flag.
- * - `<id>.state_int` (int) — domain-keyed state variant, where one exists ([HaLiveBindings.stateInt]);
- *   used by alarm-panel chrome.
+ * - `<id>.state_int` (int) — domain-keyed state variant, where one exists
+ *   ([HaLiveBindings.stateInt]); used by alarm-panel chrome.
  * - `<id>.numeric_state` (float) — parsed numeric state ([HaLiveBindings.numericState]); used by
  *   gauges / arcs that derive their sweep in-document.
  *
