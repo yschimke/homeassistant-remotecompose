@@ -68,20 +68,16 @@ import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.model.HistoryPoint
 import ee.schimke.ha.rc.CachedCardPreview
-import ee.schimke.ha.rc.CardSizeMode
 import ee.schimke.ha.rc.ProvideCardRegistry
-import ee.schimke.ha.rc.ProvideCardSizeMode
 import ee.schimke.ha.rc.RenderChild
+import ee.schimke.ha.rc.androidXExperimentalWrap
 import ee.schimke.ha.rc.cardSizeConstraints
 import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.cards.shutter.withEnhancedShutter
-import ee.schimke.ha.rc.components.ProvideCardChrome
 import ee.schimke.ha.rc.components.ProvideHaTheme
-import ee.schimke.ha.rc.components.RemoteHaWidgetSurface
 import ee.schimke.ha.rc.components.ThemeStyle
 import ee.schimke.ha.rc.components.haThemeFor
 import ee.schimke.ha.rc.image.CoilBitmapLoader
-import ee.schimke.ha.rc.widgetsProfile
 import ee.schimke.terrazzo.LocalHaImageStack
 import ee.schimke.terrazzo.core.session.DemoData
 import ee.schimke.terrazzo.core.session.HaSession
@@ -246,30 +242,22 @@ private fun ResizableLauncherPreview(session: HaSession, card: CardConfig, snaps
     ) {
       CachedCardPreview(
         cacheKey = LauncherPreviewKey(card, style, dark, cellsW, cellsH),
-        // Capture with the launcher's constrained op vocabulary —
-        // the same widgetsProfile TerrazzoWidgetProvider and the
-        // install sheet use — so a card that the launcher runtime
-        // would reject or render empty looks the same here as on
-        // the home screen, not artificially richer.
-        profile = widgetsProfile,
+        // Render with the same wrap-adaptive profile the dashboard
+        // uses, not the launcher's stricter `widgetsProfile`. That
+        // profile's capture runs synchronously here during
+        // composition (CachedCardPreview's runBlocking) and hangs
+        // on-device for some cards, blocking the whole card-history
+        // screen from ever painting. The resize grid still shows how
+        // the card reflows across launcher slot sizes; only the
+        // strict-vocabulary fidelity of the inner render is dropped.
+        profile = androidXExperimentalWrap,
         card = card,
         snapshot = snapshot,
         bitmapLoader = bitmapLoader,
         modifier = Modifier.fillMaxSize(),
       ) {
         ProvideCardRegistry(registry) {
-          ProvideHaTheme(haTheme) {
-            // The same fixed-size, full-bleed surface the
-            // launcher widget wraps the card in (no in-app
-            // card chrome), so the preview matches the slot.
-            ProvideCardSizeMode(CardSizeMode.Fixed) {
-              ProvideCardChrome(enabled = false) {
-                RemoteHaWidgetSurface {
-                  RenderChild(card, snapshot, RemoteModifier.rcFillMaxWidth())
-                }
-              }
-            }
-          }
+          ProvideHaTheme(haTheme) { RenderChild(card, snapshot, RemoteModifier.rcFillMaxWidth()) }
         }
       }
     }

@@ -2,7 +2,9 @@
 
 package ee.schimke.ha.rc
 
+import android.content.Context
 import androidx.annotation.RestrictTo
+import androidx.compose.foundation.layout.Box
 import androidx.compose.remote.creation.compose.capture.captureSingleRemoteDocument
 import androidx.compose.remote.creation.compose.layout.RemoteComposable
 import androidx.compose.remote.creation.profile.Profile
@@ -14,13 +16,17 @@ import androidx.compose.remote.player.core.state.StateUpdater
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalInspectionMode
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.components.HA_ACTION_NAME
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 
 /**
  * Cached counterpart to upstream `androidx.compose.remote.tooling.preview.RemotePreview`.
@@ -84,38 +90,41 @@ fun CachedCardPreview(
       if (debugBorders) DebugBorderedCacheKey(cacheKey) else cacheKey
     }
 
-  val cardDocument =
-    remember(effectiveCacheKey) {
-      cache.get(effectiveCacheKey)
-        ?: runBlocking {
-            val captureContent: @RemoteComposable @Composable () -> Unit =
-              if (debugBorders) {
-                { DebugRcBorderWrapper { content() } }
-              } else {
-                content
+  val inspectionMode = LocalInspectionMode.current
+
+  // A process-scoped [cache] hit is the common case (the cache
+  // outlives Activity recreation and is shared across slots) and is
+  // served synchronously below, so a warm slot paints its bytes on
+  // the first composition with no encode.
+  //
+  // A miss has to encode. In the live app, do that OFF the main
+  // thread via [produceState] + [captureDispatcher] so a slow capture
+  // never blocks composition: a strict capture [profile] can take
+  // long enough that a `runBlocking` encode here would freeze the
+  // whole hosting screen until it finished. The slot renders empty
+  // until the document is ready, then swaps it in.
+  //
+  // Under tooling ([LocalInspectionMode] — @Preview rendering and the
+  // screenshot/pixel-diff pipeline) keep encoding synchronously: that
+  // renderer composes in a single shot and snapshots without awaiting
+  // background work, so an async encode would capture an empty slot.
+  val cardDocument: CardDocument? =
+    if (inspectionMode) {
+      remember(effectiveCacheKey) {
+        cache.get(effectiveCacheKey)
+          ?: runBlocking { encodeCardDocument(context, profile, debugBorders, content) }
+            .also { cache.put(effectiveCacheKey, it) }
+      }
+    } else {
+      produceState<CardDocument?>(initialValue = cache.get(effectiveCacheKey), effectiveCacheKey) {
+          if (value != null) return@produceState
+          value =
+            withContext(captureDispatcher) {
+                encodeCardDocument(context, profile, debugBorders, content)
               }
-            // A constrained capture [profile] (e.g. `widgetsProfile`,
-            // the launcher's stricter op set) can reject a card whose
-            // ops fall outside its vocabulary by throwing mid-capture.
-            // This capture runs synchronously inside composition via
-            // `runBlocking`, so an uncaught throw would take down the
-            // whole host screen (the card-history preview captures every
-            // card with the widgets profile — see CardHistoryScreen).
-            // Degrade to an empty document instead: the card renders
-            // blank, matching how the launcher shows a widget it can't
-            // paint, rather than crashing the screen hosting the preview.
-            val captured =
-              runCatching {
-                  captureSingleRemoteDocument(
-                    context = context,
-                    profile = profile,
-                    content = captureContent,
-                  )
-                }
-                .getOrElse { captureSingleRemoteDocument(context = context, profile = profile) {} }
-            CardDocument(bytes = captured.bytes, widthPx = 0, heightPx = 0)
-          }
-          .also { cache.put(effectiveCacheKey, it) }
+              .also { cache.put(effectiveCacheKey, it) }
+        }
+        .value
     }
 
   val dispatcher = LocalHaActionDispatcher.current
@@ -143,17 +152,55 @@ fun CachedCardPreview(
   // axis without the alpha010 bug ballooning the slot to the
   // authored canvas size; pinned EXACTLY constraints continue to
   // dominate the inner View's measure.
-  WrapAdaptiveRemoteDocumentPlayer(
-    documentBytes = cardDocument.bytes,
-    modifier = modifier,
-    bitmapLoader = bitmapLoader,
-    init = { player -> updaterHolder.value = player.stateUpdater },
-    onNamedAction = { name, value ->
-      if (name == HA_ACTION_NAME) {
-        decodeHaAction(value)?.let(dispatcher::dispatch)
-      }
-    },
-  )
+  val document = cardDocument
+  if (document != null) {
+    WrapAdaptiveRemoteDocumentPlayer(
+      documentBytes = document.bytes,
+      modifier = modifier,
+      bitmapLoader = bitmapLoader,
+      init = { player -> updaterHolder.value = player.stateUpdater },
+      onNamedAction = { name, value ->
+        if (name == HA_ACTION_NAME) {
+          decodeHaAction(value)?.let(dispatcher::dispatch)
+        }
+      },
+    )
+  } else {
+    // Reserve the slot while the document encodes off the main
+    // thread, so a card popping in doesn't reflow the surrounding
+    // layout once it's ready.
+    Box(modifier)
+  }
+}
+
+/**
+ * Capture dispatcher for off-main-thread document encodes. [captureSingleRemoteDocument] composes
+ * the card headlessly (no `VirtualDisplay`, safe off the main thread — see [captureCardDocument]),
+ * but the capture pipeline isn't known to be reentrant, so serialise encodes onto a single
+ * background thread rather than fanning every slot's first paint out across the
+ * [Dispatchers.Default] pool at once.
+ */
+private val captureDispatcher = Dispatchers.Default.limitedParallelism(1)
+
+/** Encode [content] to a [CardDocument] under [profile], wrapping in debug borders when asked. */
+private suspend fun encodeCardDocument(
+  context: Context,
+  profile: Profile,
+  debugBorders: Boolean,
+  content: @RemoteComposable @Composable () -> Unit,
+): CardDocument {
+  val captured =
+    captureSingleRemoteDocument(
+      context = context,
+      profile = profile,
+      content =
+        if (debugBorders) {
+          { DebugRcBorderWrapper { content() } }
+        } else {
+          content
+        },
+    )
+  return CardDocument(bytes = captured.bytes, widthPx = 0, heightPx = 0)
 }
 
 /**
