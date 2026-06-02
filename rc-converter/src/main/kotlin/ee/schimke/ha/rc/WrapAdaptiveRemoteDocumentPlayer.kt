@@ -50,6 +50,16 @@ import kotlin.math.min
  *
  * Single-View, no throwaway measurer — the same view we warm up is the one Compose displays.
  * Re-warms only when [documentBytes] or the parent's constraints change.
+ *
+ * **Pinned (EXACTLY) slots.** When the parent fixes *both* axes (`Modifier.size(...)`, or a
+ * `fillMaxSize()` inside an already-sized box — the card-history resize preview), the intrinsic
+ * measurement above is the wrong model: a full-bleed `fillMaxSize()` document (the launcher widget
+ * surface, [ee.schimke.ha.rc.components.RemoteHaWidgetSurface]) has *no* intrinsic size, so steps
+ * 2–4 would collapse the slot to ~1px and render blank. Instead we play the document at the
+ * parent's EXACT size — exactly as the launcher widget does — so it fills the slot and its runtime
+ * size-breakpoints (see `RemoteSizeBreakpoint`) read the real canvas. The View is then reused
+ * across size changes (it just re-measures), so an animated slot resizes smoothly without
+ * re-decoding or re-priming each frame.
  */
 @Composable
 fun WrapAdaptiveRemoteDocumentPlayer(
@@ -64,25 +74,47 @@ fun WrapAdaptiveRemoteDocumentPlayer(
     val density = LocalDensity.current
     val maxWPx = constraints.maxWidth
     val maxHPx = constraints.maxHeight
-    val view =
-      remember(documentBytes, maxWPx, maxHPx) {
-        RemoteComposePlayer(context).apply {
-          setBitmapLoader(bitmapLoader)
-          setDocument(RemoteDocument(decode(documentBytes)))
-          primeAndMeasure(this, maxWPx, maxHPx)
-          init(this)
-          // The View only exposes id-keyed action callbacks.
-          // The dashboard's `decodeHaAction` is keyed on the
-          // payload value (it doesn't care about the name),
-          // so we surface the id as the synthetic name and
-          // pass the value through.
-          addIdActionListener { id, value -> onNamedAction(id.toString(), value) }
+
+    if (constraints.hasFixedWidth && constraints.hasFixedHeight) {
+      // The parent pins the slot. Play at EXACTLY that size and reuse
+      // the View across resizes — the BoxWithConstraints is already
+      // sized by the parent, so a `fillMaxSize` document fills it and
+      // animating the slot just re-measures the (single) View.
+      val view =
+        remember(documentBytes) {
+          RemoteComposePlayer(context).apply {
+            setBitmapLoader(bitmapLoader)
+            setDocument(RemoteDocument(decode(documentBytes)))
+            // One off-screen draw warms the paint context so the first
+            // on-screen frame isn't blank; EXACTLY constraints size the
+            // View directly, so no intrinsic re-measure is needed.
+            primeFixed(this, maxWPx, maxHPx)
+            init(this)
+            addIdActionListener { id, value -> onNamedAction(id.toString(), value) }
+          }
         }
-      }
-    val widthDp = with(density) { clampWarmupDimension(view.measuredWidth, maxWPx).toDp() }
-    val heightDp = with(density) { clampWarmupDimension(view.measuredHeight, maxHPx).toDp() }
-    Box(modifier = Modifier.size(widthDp, heightDp)) {
       AndroidView(factory = { view }, modifier = Modifier.fillMaxSize())
+    } else {
+      val view =
+        remember(documentBytes, maxWPx, maxHPx) {
+          RemoteComposePlayer(context).apply {
+            setBitmapLoader(bitmapLoader)
+            setDocument(RemoteDocument(decode(documentBytes)))
+            primeAndMeasure(this, maxWPx, maxHPx)
+            init(this)
+            // The View only exposes id-keyed action callbacks.
+            // The dashboard's `decodeHaAction` is keyed on the
+            // payload value (it doesn't care about the name),
+            // so we surface the id as the synthetic name and
+            // pass the value through.
+            addIdActionListener { id, value -> onNamedAction(id.toString(), value) }
+          }
+        }
+      val widthDp = with(density) { clampWarmupDimension(view.measuredWidth, maxWPx).toDp() }
+      val heightDp = with(density) { clampWarmupDimension(view.measuredHeight, maxHPx).toDp() }
+      Box(modifier = Modifier.size(widthDp, heightDp)) {
+        AndroidView(factory = { view }, modifier = Modifier.fillMaxSize())
+      }
     }
   }
 }
@@ -119,6 +151,24 @@ private fun primeAndMeasure(view: RemoteComposePlayer, maxWPx: Int, maxHPx: Int)
   warmupBmp.recycle()
   view.forceLayout()
   view.measure(widthSpec, heightSpec)
+}
+
+/**
+ * Single off-screen `measure → layout → draw` at an EXACTLY-sized slot, purely to populate the
+ * `AndroidPaintContext` (the first on-screen frame would otherwise be blank). Unlike
+ * [primeAndMeasure] there's no intrinsic re-measure: an EXACTLY constraint sizes the View directly,
+ * and subsequent (e.g. animated) sizes are handled by the View re-measuring in place.
+ */
+private fun primeFixed(view: RemoteComposePlayer, wPx: Int, hPx: Int) {
+  val w = wPx.coerceIn(1, MAX_WARMUP_DIMENSION_PX)
+  val h = hPx.coerceIn(1, MAX_WARMUP_DIMENSION_PX)
+  val widthSpec = View.MeasureSpec.makeMeasureSpec(w, View.MeasureSpec.EXACTLY)
+  val heightSpec = View.MeasureSpec.makeMeasureSpec(h, View.MeasureSpec.EXACTLY)
+  view.measure(widthSpec, heightSpec)
+  view.layout(0, 0, w, h)
+  val warmupBmp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
+  view.draw(Canvas(warmupBmp))
+  warmupBmp.recycle()
 }
 
 private fun clampWarmupDimension(measuredPx: Int, constraintMaxPx: Int): Int {
