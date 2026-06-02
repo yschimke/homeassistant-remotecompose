@@ -15,6 +15,8 @@ import androidx.compose.remote.creation.compose.modifier.background
 import androidx.compose.remote.creation.compose.modifier.border
 import androidx.compose.remote.creation.compose.modifier.clickable
 import androidx.compose.remote.creation.compose.modifier.clip
+import androidx.compose.remote.creation.compose.modifier.fillMaxHeight
+import androidx.compose.remote.creation.compose.modifier.fillMaxSize
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.modifier.size
@@ -41,7 +43,11 @@ import androidx.wear.compose.remote.material3.RemoteIcon
  */
 @Composable
 @RemoteComposable
-fun RemoteHaAlarmPanel(data: HaAlarmPanelData, modifier: RemoteModifier = RemoteModifier) {
+fun RemoteHaAlarmPanel(
+    data: HaAlarmPanelData,
+    modifier: RemoteModifier = RemoteModifier,
+    fillHeight: Boolean = false,
+) {
     val theme = haTheme()
     val statusByKey = data.statuses.associateBy { it.stateKey }
     val initialStatus = statusByKey[data.initialStateInt] ?: data.statuses.first()
@@ -55,7 +61,15 @@ fun RemoteHaAlarmPanel(data: HaAlarmPanelData, modifier: RemoteModifier = Remote
             .then(cardChrome(theme.cardBackground, theme.divider))
             .padding(horizontal = 14.rdp, vertical = 12.rdp),
     ) {
-        RemoteColumn(verticalArrangement = RemoteArrangement.spacedBy(10.rdp)) {
+        // On a taller cell than the keypad needs (Fixed mode, large
+        // launcher widget) the status + buttons stay at the top and the
+        // keypad takes the remaining height, spreading its rows to fill it
+        // rather than the whole block gluing to the top over a blank bottom
+        // half (Principle 7/8).
+        RemoteColumn(
+            modifier = if (fillHeight) RemoteModifier.fillMaxSize() else RemoteModifier.fillMaxWidth(),
+            verticalArrangement = RemoteArrangement.spacedBy(10.rdp),
+        ) {
             StatusRow(data, statusByKey, initialStatus, theme)
 
             // ARM AWAY / ARM HOME / DISARM buttons.
@@ -70,7 +84,88 @@ fun RemoteHaAlarmPanel(data: HaAlarmPanelData, modifier: RemoteModifier = Remote
                 }
             }
 
-            if (data.showKeypad) Keypad(data.entityId, keypadAccent, theme)
+            if (data.showKeypad) {
+                Keypad(
+                    data.entityId,
+                    keypadAccent,
+                    theme,
+                    modifier =
+                        if (fillHeight) RemoteModifier.weight(1f).fillMaxHeight()
+                        else RemoteModifier,
+                    fill = fillHeight,
+                )
+            }
+        }
+    }
+}
+
+/**
+ * Wide-thin Fixed-mode alarm variant — the state shield on the left,
+ * panel name + live status label on the right, no ARM buttons and no
+ * keypad. Targets short/narrow widget cells (Wear S/L, the smaller
+ * launcher chip) where the full keypad won't fit. Keeps the card's
+ * identity (shield + state, P1) and its disambiguating name (P2) and
+ * stays live: the same `RemoteStateLayout` over the state-int keys
+ * swaps the shield colour + label at playback. The keypad (P5) returns
+ * once the cell is tall/wide enough for the full card.
+ */
+@Composable
+@RemoteComposable
+fun RemoteHaAlarmPanelWide(data: HaAlarmPanelData, modifier: RemoteModifier = RemoteModifier) {
+    val theme = haTheme()
+    val statusByKey = data.statuses.associateBy { it.stateKey }
+    val initialStatus = statusByKey[data.initialStateInt] ?: data.statuses.first()
+    val keys = data.statuses.map { it.stateKey }.toIntArray()
+    val stateInt = LiveValues.intState(data.entityId, data.initialStateInt)
+    RemoteBox(
+        modifier = modifier
+            .then(cardChrome(theme.cardBackground, theme.divider))
+            .padding(horizontal = 12.rdp, vertical = 8.rdp),
+    ) {
+        RemoteStateLayout(stateInt, *keys, modifier = RemoteModifier.fillMaxSize()) { key ->
+            val status = statusByKey[key] ?: initialStatus
+            RemoteRow(
+                modifier = RemoteModifier.fillMaxSize(),
+                verticalAlignment = RemoteAlignment.CenterVertically,
+                horizontalArrangement = RemoteArrangement.spacedBy(10.rdp),
+            ) {
+                RemoteBox(
+                    modifier = RemoteModifier
+                        .size(40.rdp)
+                        .clip(RemoteCircleShape)
+                        .border(2.rdp, status.accent.rc, RemoteCircleShape),
+                    contentAlignment = RemoteAlignment.Center,
+                ) {
+                    RemoteIcon(
+                        imageVector = status.icon,
+                        contentDescription = status.label.rs,
+                        modifier = RemoteModifier.size(22.rdp),
+                        tint = status.accent.rc,
+                    )
+                }
+                RemoteColumn(
+                    modifier = RemoteModifier.weight(1f),
+                    verticalArrangement = RemoteArrangement.Center,
+                ) {
+                    RemoteText(
+                        text = data.title.rs,
+                        color = theme.primaryText.rc,
+                        fontSize = 14.rsp,
+                        fontWeight = FontWeight.Medium,
+                        style = RemoteTextStyle.Default,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    RemoteText(
+                        text = status.label.rs,
+                        color = status.accent.rc,
+                        fontSize = 12.rsp,
+                        style = RemoteTextStyle.Default,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+            }
         }
     }
 }
@@ -157,10 +252,13 @@ private fun Keypad(
     entityId: String?,
     accent: androidx.compose.ui.graphics.Color,
     theme: HaTheme,
+    modifier: RemoteModifier = RemoteModifier,
+    fill: Boolean = false,
 ) {
     RemoteColumn(
-        modifier = RemoteModifier.fillMaxWidth().padding(top = 6.rdp),
-        verticalArrangement = RemoteArrangement.spacedBy(6.rdp),
+        modifier = modifier.fillMaxWidth().padding(top = 6.rdp),
+        verticalArrangement =
+            if (fill) RemoteArrangement.SpaceEvenly else RemoteArrangement.spacedBy(6.rdp),
         horizontalAlignment = RemoteAlignment.CenterHorizontally,
     ) {
         listOf(listOf("1", "2", "3"), listOf("4", "5", "6"), listOf("7", "8", "9"))

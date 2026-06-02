@@ -1,15 +1,20 @@
 package ee.schimke.ha.rc.cards
 
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
+import androidx.compose.remote.creation.compose.modifier.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.CardConverter
+import ee.schimke.ha.rc.CardSizeMode
+import ee.schimke.ha.rc.LocalCardSizeMode
+import ee.schimke.ha.rc.RemoteSizeBreakpoint
 import ee.schimke.ha.rc.components.HaAction
 import ee.schimke.ha.rc.components.HaMediaControlData
 import ee.schimke.ha.rc.components.RemoteHaMediaControl
+import ee.schimke.ha.rc.components.RemoteHaMediaControlWide
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonPrimitive
 
@@ -48,25 +53,47 @@ class MediaControlCardConverter : CardConverter {
             )
         } ?: HaAction.None
 
-        RemoteHaMediaControl(
-            HaMediaControlData(
-                entityId = entityId,
-                playerName = playerName,
-                title = title,
-                artist = artist,
-                accent = accent,
-                isPlaying = isPlaying,
-                positionFraction = fraction,
-                positionLabel = if (dur > 0f) formatHms(pos.toLong()) else null,
-                durationLabel = if (dur > 0f) formatHms(dur.toLong()) else null,
-                previousAction = svc("media_previous_track"),
-                playPauseAction = svc(if (isPlaying) "media_pause" else "media_play"),
-                nextAction = svc("media_next_track"),
-            ),
-            modifier = modifier,
+        val data = HaMediaControlData(
+            entityId = entityId,
+            playerName = playerName,
+            title = title,
+            artist = artist,
+            accent = accent,
+            isPlaying = isPlaying,
+            positionFraction = fraction,
+            positionLabel = if (dur > 0f) formatHms(pos.toLong()) else null,
+            durationLabel = if (dur > 0f) formatHms(dur.toLong()) else null,
+            previousAction = svc("media_previous_track"),
+            playPauseAction = svc(if (isPlaying) "media_pause" else "media_play"),
+            nextAction = svc("media_next_track"),
         )
+
+        // Single-gate Wide↔Full ladder, mirroring the arc-dial family
+        // (see RenderArcDial / #355): the art + play/pause hero is kept
+        // at every size; narrow cells drop the transport row + seek bar
+        // to the Wide chip, wide cells get the full card.
+        when (LocalCardSizeMode.current) {
+            CardSizeMode.Wrap -> RemoteHaMediaControl(data, modifier)
+            CardSizeMode.Fixed ->
+                RemoteSizeBreakpoint(
+                    thresholdsDp = intArrayOf(MediaFullMinDp),
+                    modifier = modifier.fillMaxSize(),
+                ) { tier ->
+                    when (tier) {
+                        0 -> RemoteHaMediaControlWide(data, RemoteModifier.fillMaxSize())
+                        else ->
+                            RemoteHaMediaControl(
+                                data,
+                                RemoteModifier.fillMaxSize(),
+                                fillHeight = true,
+                            )
+                    }
+                }
+        }
     }
 }
+
+private const val MediaFullMinDp = 260
 
 private fun formatHms(totalSeconds: Long): String {
     if (totalSeconds < 0) return "0:00"

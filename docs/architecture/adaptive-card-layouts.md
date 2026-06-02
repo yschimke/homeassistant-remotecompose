@@ -469,7 +469,7 @@ and is reused. The families today:
 | **Icon-centred button** | large tinted icon | `button` | `RemoteHaButton` / `RemoteHaToggleButton` / `RemoteHaButtonIcon` | `icon-only ↔ icon+name` (2-D gate) |
 | **Arc-dial control** | the arc/dial | `gauge`, `thermostat`, `humidifier`, `light` | `RemoteHaGauge*`, `RemoteHaArcDial*`, `RenderArcDial` | thermostat/humidifier/light: Wide↔Full (width); gauge: Wide↔Stacked (height) — all via shared `RemoteSizeBreakpoint` |
 | **Multi-entity list/strip** | first row/cell | `entities`, `glance`, `area`, `picture-glance`, `entity-filter`, `*-stack` | `RemoteHaEntities`, `RemoteHaGlance` | entities: `list↔strip`; others: none |
-| **Hero + supporting detail** | condition/art/shield + value | `weather-forecast`, `media-control`, `alarm-panel` | `RemoteHaWeatherForecast*`, `RemoteHaMediaControl`, `RemoteHaAlarmPanel` | weather: `Full↔Wide`; others: none |
+| **Hero + supporting detail** | condition/art/shield + value | `weather-forecast`, `media-control`, `alarm-panel` | `RemoteHaWeatherForecast*`, `RemoteHaMediaControl*`, `RemoteHaAlarmPanel*` | all three `Wide↔Full` |
 | **Bulk / time-series** | spark/list head | `history-graph`, `statistics-graph`, `logbook`, `todo-list`, `calendar`, `markdown` | per-card | none — Wear `SmallOnly` |
 | **Picture / image** | the image | `picture`, `picture-entity`, `picture-elements` | `RemoteHaImage*` | none |
 
@@ -568,19 +568,22 @@ The current state is the placeholder, not the philosophy:
    centring box, so a wrapper-level alignment is a no-op (verified by
    re-rendering — pixel-identical). Where the child is **wrap-sized**,
    though, `fillMaxSize` + centre *does* work: the icon families
-   self-centre via `CenteredCell` (#375) and `button`'s `icon+name` tier
-   centres a wrap-content column (#352), so both fill / centre on big
-   cells. The arc-dial **Wide row** is the holdout: on a tall cell (e.g.
-   `3×3`) `RemoteHaArcDialWide` sits high with dead space below and can't
-   be retrofitted — a `RemoteRow`/`RemoteColumn` doesn't propagate
-   fill-height through the breakpoint, and a `fillMaxSize` `RemoteBox`
-   wrapper with `contentAlignment = Center` is the same no-op (all
-   confirmed by re-render in #353). A `RemoteBox` that fills *and
-   self-positions its own drawing* (e.g. `RemoteHaGaugeStacked`, which
-   paints an arc backdrop and bottom-aligns its overlay) is the only
-   shape that fills a tall cell without an upstream fix. Remaining
-   offenders: the list / hero families and the arc-dial Wide row. Tracked
-   per layout family in the design-review issues.
+   self-centre via `CenteredCell` (#375), `button`'s `icon+name` tier
+   centres a wrap-content column (#352), and the hero family (weather,
+   media, alarm) fills its large cells with **weighted children /
+   `SpaceEvenly` / `fillMaxHeight`** inside a `fillMaxSize` `RemoteColumn`
+   (#355) — the forecast day columns, the media title/transport/seek
+   bands and the alarm keypad all expand through the breakpoint (see #9).
+   What does *not* work is a bare `RemoteRow` tier-root (it measures to
+   zero height under a filled-height constraint and vanishes) or a
+   `fillMaxSize` `RemoteBox` wrapper with `contentAlignment = Center` (the
+   same no-op). The holdout is the arc-dial **Wide row**: on a tall cell
+   (e.g. `3×3`) `RemoteHaArcDialWide` is a bare row that sits high with
+   dead space below and can't be retrofitted without becoming a column
+   (or a `RemoteBox` that fills *and self-positions its own drawing*, like
+   `RemoteHaGaugeStacked`, which is the other shape that fills today, all
+   confirmed by re-render in #353). Tracked per layout family in the
+   design-review issues.
 7. ~~**`light` is outside the arc-dial family.**~~ **Resolved.** `light`
    routes through the shared `RenderArcDial` ladder (Wide↔Full) with the
    bulb-ring dial retained at every size, and the on/off mode chip is a
@@ -593,3 +596,21 @@ The current state is the placeholder, not the philosophy:
    inherits the `immediateSwap` workaround and the Wear L / widget cells
    render a single tier instead of double-painting `RemoteHaGaugeWide`
    over `RemoteHaGaugeStacked`.
+9. **Two breakpoint quirks the `media-control` ladder hit (#355), both
+   alpha010-specific:**
+   - **A fill-size `RemoteRow` directly under a wrap-content `RemoteBox`
+     captures blank.** The breakpoint wraps each tier in a wrap-content
+     `RemoteBox` (`immediateSwap`), so a tier composable whose root is a
+     `fillMaxSize` row (`RemoteHaMediaControl` was Box→Row) renders
+     nothing. Nesting the row inside a `RemoteColumn` (Box→Column→Row,
+     mirroring `RemoteHaWeatherForecast`) fixes it. Rule of thumb: a
+     tier composable's fill child should be a column, not a bare row.
+   - **The same `clickable` `RemoteAction` captured in *both* breakpoint
+     branches blanks the larger tier.** `media-control`'s play/pause
+     action appeared in both the Wide chip and the Full card; the Full
+     tier then captured blank. `weather` (no actions) and the arc-dial
+     cards (steppers only in the Full tier, never the Wide one) sidestep
+     this by construction. The fix used: the Wide chip's play/pause is a
+     **non-clickable glyph** — the tap target lives only in the Full
+     tier. When adding a ladder to an interactive card, keep each
+     `RemoteAction` in a single tier.
