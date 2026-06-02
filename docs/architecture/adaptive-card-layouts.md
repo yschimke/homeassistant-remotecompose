@@ -262,6 +262,62 @@ both learned from the matrix preview:
 (No identity-only tier — entities is a list, the rows _are_ the
 identity; the strip keeps which-and-how-many.)
 
+### Picture family (`picture`, `picture-entity`)
+
+The **image is the identity at every size** — so it fills and crops the
+cell (`ContentScale.Crop`, HA's `cover`) rather than letterboxing into a
+band, with the name/state as a translucent bottom **scrim** rather than a
+column row that steals height. Base shape ~`3×2`.
+
+| Tier | Min width | Layout |
+|------|-----------|--------|
+| Wrap (dashboard) | width pinned | HA reference band (fixed natural height), image fill-crop + scrim |
+| Identity | `w < 180` | image fill-crop fills the whole cell; **name dropped** — only the state badge sits over the image |
+| Full | `w ≥ 180` | image fill-crop fills the whole cell + name + state scrim |
+
+Implemented as a **single-threshold width-axis** `RemoteSizeBreakpoint`
+in `PictureEntityCardConverter`: below the gate the converter passes
+`showName = false` (state badge only), at/above it the full name+state
+scrim returns. Both Fixed tiers pass `fillHeight = true` so the card
+grows to the whole cell instead of the `naturalHeightDp` band. The plain
+`picture` card has no entity state, so it just fills the cell in Fixed
+mode (no breakpoint). Matrix: `CardPreviewMatrix_PictureEntity` (bakes a
+landscape sample bitmap via an Inline `PictureImageStrategy` so the
+fill-crop is visible — square/tall cells crop the sides, nothing
+letterboxes).
+
+### Bulk / time-series family (`history-graph`, `statistics-graph`, `logbook`, `todo-list`, `calendar`, `markdown`)
+
+These cards render a list/graph into widget cells. At small cells they
+need an **identity tier** (the P1 essence, not the whole list); at large
+cells the full list/graph fills by drawing more of the data it already
+has. Base shape ~`3×2`.
+
+| Card | Identity tier (`w < 180`) | Full (`w ≥ 180`) |
+|------|---------------------------|------------------|
+| history-graph | first spark + latest value | every series row |
+| todo-list | **"N left"** counter + title | active/completed rows |
+| calendar | next event (dot · when · summary) | full agenda |
+| logbook | latest entry (icon · name · state) | full entry list |
+| markdown | title + first line | full block list |
+
+Each is a **single-threshold width-axis** `RemoteSizeBreakpoint`
+(`thresholdsDp = [180]`, the shared `BULK_IDENTITY_THRESHOLD_DP`): tier 0
+draws a card-specific identity composable (`RemoteHa*Identity`, shipped
+beside the full composable in `rc-components`), tier 1 the full card.
+Wrap mode always renders the full card (HA reference). On **Wear** these
+are `SmallOnly` per `WearCardDataTier` (their P1 binds to P4/P5 data the
+data-layer can't carry), so the watch only ever sees the identity tier —
+which is exactly what the gate selects at the Wear cell width. Matrices:
+`CardPreviewMatrix_HistoryGraph` / `_TodoList` / `_Calendar` / `_Logbook`
+/ `_Markdown`.
+
+> The full tier still tops out at the data it's given — a 2-series graph
+> or a 3-item list leaves blank space in a `4×3` cell. That's the same
+> "earn the canvas" gap the tile / entity / gauge cards have (see Known
+> gaps); the genuine **Expanded** end ("draw more rows/series/events")
+> needs a richer payload, not a layout change.
+
 ## Data priorities
 
 The degradation ladder above says _what composition_ to draw at each
@@ -470,8 +526,8 @@ and is reused. The families today:
 | **Arc-dial control** | the arc/dial | `gauge`, `thermostat`, `humidifier`, `light` | `RemoteHaGauge*`, `RemoteHaArcDial*`, `RenderArcDial` | thermostat/humidifier/light: Wide↔Full (width); gauge: Wide↔Stacked (height) — all via shared `RemoteSizeBreakpoint` |
 | **Multi-entity list/strip** | first row/cell | `entities`, `glance`, `area`, `picture-glance`, `entity-filter`, `*-stack` | `RemoteHaEntities`, `RemoteHaGlance` | entities: `list↔strip`; others: none |
 | **Hero + supporting detail** | condition/art/shield + value | `weather-forecast`, `media-control`, `alarm-panel` | `RemoteHaWeatherForecast*`, `RemoteHaMediaControl*`, `RemoteHaAlarmPanel*` | all three `Wide↔Full` |
-| **Bulk / time-series** | spark/list head | `history-graph`, `statistics-graph`, `logbook`, `todo-list`, `calendar`, `markdown` | per-card | none — Wear `SmallOnly` |
-| **Picture / image** | the image | `picture`, `picture-entity`, `picture-elements` | `RemoteHaImage*` | none |
+| **Bulk / time-series** | spark/list head | `history-graph`, `statistics-graph`, `logbook`, `todo-list`, `calendar`, `markdown` | per-card + `RemoteHa*Identity` | `Identity↔Full` (width `180`); Wear `SmallOnly` |
+| **Picture / image** | the image | `picture`, `picture-entity`, `picture-elements` | `RemoteHaImage*`, `RemoteHaPictureEntity` | picture-entity: fill-crop + `Identity↔Full` (width `180`); picture: fill-crop; `picture-elements`: none |
 
 The "Arc-dial control" family is the reference implementation. The shared
 `RenderArcDial` width-ladder gives thermostat, humidifier, and `light` a

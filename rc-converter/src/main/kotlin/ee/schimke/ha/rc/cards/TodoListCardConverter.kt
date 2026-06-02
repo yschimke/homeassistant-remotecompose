@@ -1,15 +1,21 @@
 package ee.schimke.ha.rc.cards
 
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
+import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.runtime.Composable
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.HaSnapshot
+import ee.schimke.ha.rc.BreakpointAxis
 import ee.schimke.ha.rc.CardConverter
+import ee.schimke.ha.rc.CardSizeMode
+import ee.schimke.ha.rc.LocalCardSizeMode
+import ee.schimke.ha.rc.RemoteSizeBreakpoint
 import ee.schimke.ha.rc.components.HaAction
 import ee.schimke.ha.rc.components.HaTodoItem
 import ee.schimke.ha.rc.components.HaTodoListData
 import ee.schimke.ha.rc.components.RemoteHaTodoList
+import ee.schimke.ha.rc.components.RemoteHaTodoListIdentity
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -52,10 +58,25 @@ class TodoListCardConverter : CardConverter {
             if (isCompleted) completed += item else active += item
         }
 
-        RemoteHaTodoList(
-            HaTodoListData(title = title, activeItems = active, completedItems = completed),
-            modifier = modifier,
-        )
+        val data = HaTodoListData(title = title, activeItems = active, completedItems = completed)
+
+        when (LocalCardSizeMode.current) {
+            CardSizeMode.Wrap -> RemoteHaTodoList(data, modifier = modifier)
+            // Narrow → "N left" identity counter; wider → the full
+            // active/completed list. Single width gate (#224).
+            CardSizeMode.Fixed ->
+                RemoteSizeBreakpoint(
+                    thresholdsDp = intArrayOf(BULK_IDENTITY_THRESHOLD_DP),
+                    modifier = modifier,
+                    axis = BreakpointAxis.Width,
+                ) { tier ->
+                    if (tier == 0) {
+                        RemoteHaTodoListIdentity(data, RemoteModifier.fillMaxWidth())
+                    } else {
+                        RemoteHaTodoList(data, RemoteModifier.fillMaxWidth())
+                    }
+                }
+        }
     }
 }
 

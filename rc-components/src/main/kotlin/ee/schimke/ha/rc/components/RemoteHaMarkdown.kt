@@ -2,6 +2,7 @@
 
 package ee.schimke.ha.rc.components
 
+import androidx.compose.remote.creation.compose.layout.RemoteAlignment
 import androidx.compose.remote.creation.compose.layout.RemoteArrangement
 import androidx.compose.remote.creation.compose.layout.RemoteBox
 import androidx.compose.remote.creation.compose.layout.RemoteColumn
@@ -13,6 +14,7 @@ import androidx.compose.remote.creation.compose.layout.RemoteText
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.background
 import androidx.compose.remote.creation.compose.modifier.clickable
+import androidx.compose.remote.creation.compose.modifier.fillMaxSize
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.creation.compose.modifier.height
 import androidx.compose.remote.creation.compose.modifier.padding
@@ -100,6 +102,55 @@ fun RemoteHaMarkdown(data: HaMarkdownData, modifier: RemoteModifier = RemoteModi
                             fontWeight = FontWeight.Normal,
                         )
                 }
+            }
+        }
+    }
+}
+
+/**
+ * Identity tier for the `markdown` family — the title plus the first
+ * line of body. The smallest cell that still says "this is the X note
+ * and it starts with…"; drops the rest of the body (P5) but keeps the
+ * P1 identity (title + first line). Used by the Fixed-mode converter at
+ * narrow launcher / Wear cells; see
+ * docs/architecture/adaptive-card-layouts.md §"Bulk / time-series".
+ */
+@Composable
+@RemoteComposable
+fun RemoteHaMarkdownIdentity(data: HaMarkdownData, modifier: RemoteModifier = RemoteModifier) {
+    val theme = haTheme()
+    val firstLine = data.blocks.firstOrNull { it.kind != MarkdownBlock.Kind.Divider }
+    RemoteBox(
+        modifier = modifier
+            .fillMaxSize()
+            .then(cardChrome(theme.cardBackground, theme.divider))
+            .padding(horizontal = 12.rdp, vertical = 10.rdp),
+        contentAlignment = RemoteAlignment.Center,
+    ) {
+        RemoteColumn(
+            modifier = RemoteModifier.fillMaxWidth(),
+            verticalArrangement = RemoteArrangement.spacedBy(4.rdp),
+        ) {
+            if (data.title != null) {
+                RemoteText(
+                    text = data.title.rs,
+                    color = theme.primaryText.rc,
+                    fontSize = 16.rsp,
+                    fontWeight = FontWeight.SemiBold,
+                    style = RemoteTextStyle.Default,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+            if (firstLine != null) {
+                RemoteText(
+                    text = firstLine.boundText ?: firstLine.text.rs,
+                    color = theme.secondaryText.rc,
+                    fontSize = 13.rsp,
+                    style = RemoteTextStyle.Default,
+                    maxLines = if (data.title != null) 2 else 3,
+                    overflow = TextOverflow.Ellipsis,
+                )
             }
         }
     }

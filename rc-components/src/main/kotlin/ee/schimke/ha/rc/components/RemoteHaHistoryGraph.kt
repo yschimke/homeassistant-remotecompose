@@ -13,6 +13,7 @@ import androidx.compose.remote.creation.compose.layout.RemoteOffset
 import androidx.compose.remote.creation.compose.layout.RemoteRow
 import androidx.compose.remote.creation.compose.layout.RemoteText
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
+import androidx.compose.remote.creation.compose.modifier.fillMaxSize
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.creation.compose.modifier.height
 import androidx.compose.remote.creation.compose.modifier.padding
@@ -88,6 +89,66 @@ fun RemoteHaHistoryGraph(
                 )
             } else {
                 data.rows.forEach { row -> Row(row, theme) }
+            }
+        }
+    }
+}
+
+/**
+ * Identity tier for the `history-graph` family — the smallest cell that
+ * still says "this is a trend": the first series' sparkline + its latest
+ * value, name above. Drops the per-row list and the range chrome (P4/P5)
+ * but keeps the P1 identity (spark + value). Used by the Fixed-mode
+ * converter at narrow launcher / Wear cells; see
+ * docs/architecture/adaptive-card-layouts.md §"Bulk / time-series".
+ */
+@Composable
+@RemoteComposable
+fun RemoteHaHistoryGraphIdentity(
+    data: HaHistoryGraphData,
+    modifier: RemoteModifier = RemoteModifier,
+) {
+    val theme = haTheme()
+    val row = data.rows.firstOrNull()
+    RemoteBox(
+        modifier = modifier
+            .fillMaxSize()
+            .then(cardChrome(theme.cardBackground, theme.divider))
+            .padding(horizontal = 12.rdp, vertical = 10.rdp),
+        contentAlignment = RemoteAlignment.Center,
+    ) {
+        RemoteColumn(
+            modifier = RemoteModifier.fillMaxWidth(),
+            verticalArrangement = RemoteArrangement.spacedBy(4.rdp),
+        ) {
+            RemoteText(
+                text = (row?.name ?: data.title ?: "History").rs,
+                color = theme.secondaryText.rc,
+                fontSize = 11.rsp,
+                style = RemoteTextStyle.Default,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            if (row != null) {
+                RemoteText(
+                    text = row.summary,
+                    color = theme.primaryText.rc,
+                    fontSize = 22.rsp,
+                    fontWeight = FontWeight.SemiBold,
+                    style = RemoteTextStyle.Default,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                if (row.points.size >= 2) {
+                    Sparkline(row.entityId, row.points, row.accent, theme)
+                }
+            } else {
+                RemoteText(
+                    text = "No data".rs,
+                    color = theme.secondaryText.rc,
+                    fontSize = 13.rsp,
+                    style = RemoteTextStyle.Default,
+                )
             }
         }
     }

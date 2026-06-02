@@ -14,6 +14,7 @@ import androidx.compose.remote.creation.compose.layout.RemoteRow
 import androidx.compose.remote.creation.compose.layout.RemoteText
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.clickable
+import androidx.compose.remote.creation.compose.modifier.fillMaxSize
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.modifier.size
@@ -71,6 +72,51 @@ fun RemoteHaTodoList(data: HaTodoListData, modifier: RemoteModifier = RemoteModi
                     style = RemoteTextStyle.Default,
                 )
             }
+        }
+    }
+}
+
+/**
+ * Identity tier for the `todo-list` family — a big "N left" counter +
+ * the list title. The smallest cell that still says "this is a to-do
+ * list and here's how much is outstanding"; drops the item rows (P5)
+ * but keeps the P1 identity (the count). Used by the Fixed-mode
+ * converter at narrow launcher / Wear cells; see
+ * docs/architecture/adaptive-card-layouts.md §"Bulk / time-series".
+ */
+@Composable
+@RemoteComposable
+fun RemoteHaTodoListIdentity(data: HaTodoListData, modifier: RemoteModifier = RemoteModifier) {
+    val theme = haTheme()
+    val remaining = data.activeItems.size
+    RemoteBox(
+        modifier = modifier
+            .fillMaxSize()
+            .then(cardChrome(theme.cardBackground, theme.divider))
+            .padding(horizontal = 14.rdp, vertical = 12.rdp),
+        contentAlignment = RemoteAlignment.Center,
+    ) {
+        RemoteColumn(
+            modifier = RemoteModifier.fillMaxWidth(),
+            verticalArrangement = RemoteArrangement.spacedBy(2.rdp),
+        ) {
+            RemoteText(
+                text = data.title.rs,
+                color = theme.secondaryText.rc,
+                fontSize = 12.rsp,
+                style = RemoteTextStyle.Default,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            RemoteText(
+                text = (if (remaining == 0) "All done" else "$remaining left").rs,
+                color = theme.primaryText.rc,
+                fontSize = 24.rsp,
+                fontWeight = FontWeight.SemiBold,
+                style = RemoteTextStyle.Default,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
         }
     }
 }
