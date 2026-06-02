@@ -32,12 +32,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import ee.schimke.terrazzo.LocalTerrazzoGraph
 import ee.schimke.terrazzo.core.logs.LogConnectionStatus
 import ee.schimke.terrazzo.core.logs.LogEntry
+import ee.schimke.terrazzo.ui.statusColors
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -198,7 +198,7 @@ private fun CrashRow(entry: LogEntry.Crash) {
                 Text(
                     entry.summary,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = Color(0xFFD32F2F),
+                    color = statusColors.error,
                 )
                 Text(
                     "thread: ${entry.threadName}",
@@ -221,7 +221,7 @@ private fun CrashRow(entry: LogEntry.Crash) {
 
 @Composable
 private fun CrashChip(fatal: Boolean) {
-    val color = if (fatal) Color(0xFFD32F2F) else Color(0xFFF57C00)
+    val color = if (fatal) statusColors.error else statusColors.warning
     AssistChip(
         onClick = {},
         enabled = false,
@@ -293,10 +293,10 @@ private fun LogRow(
 @Composable
 private fun StatusChip(status: LogConnectionStatus) {
     val color = when (status) {
-        LogConnectionStatus.Connected -> Color(0xFF1976D2)
-        LogConnectionStatus.Connecting -> Color(0xFF2E7D32)
-        LogConnectionStatus.Disconnected -> Color(0xFF757575)
-        LogConnectionStatus.Error -> Color(0xFFD32F2F)
+        LogConnectionStatus.Connected -> statusColors.info
+        LogConnectionStatus.Connecting -> statusColors.success
+        LogConnectionStatus.Disconnected -> statusColors.neutral
+        LogConnectionStatus.Error -> statusColors.error
     }
     AssistChip(
         onClick = {},

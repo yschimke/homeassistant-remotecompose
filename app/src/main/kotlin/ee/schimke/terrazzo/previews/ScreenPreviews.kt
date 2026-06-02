@@ -504,6 +504,25 @@ fun Screen_Logs() = PhoneHost {
     )
 }
 
+/**
+ * Dark variant — guards that the semantic status colours
+ * ([ee.schimke.terrazzo.ui.statusColors]) stay legible on a dark
+ * surface (the severity chips and crash text used to be baked
+ * light-only hex literals).
+ */
+@Preview(name = "logs · dark", showBackground = false, widthDp = PHONE_WIDTH_DP, heightDp = PHONE_HEIGHT_DP)
+@Composable
+fun Screen_Logs_Dark() = PhoneHost(darkMode = DarkModePref.Dark) {
+    LogsContent(
+        crashes = SAMPLE_CRASHES,
+        connections = SAMPLE_CONNECTIONS,
+        actions = SAMPLE_ACTIONS,
+        dataUpdates = SAMPLE_DATA_UPDATES,
+        onClear = {},
+        onBack = {},
+    )
+}
+
 @Preview(name = "logs · empty", showBackground = false, widthDp = PHONE_WIDTH_DP, heightDp = PHONE_HEIGHT_DP)
 @Composable
 fun Screen_Logs_Empty() = PhoneHost {

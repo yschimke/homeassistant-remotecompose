@@ -29,6 +29,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -67,6 +68,7 @@ import ee.schimke.terrazzo.discovery.DiscoveryScreen
 import ee.schimke.terrazzo.wearsync.WearWidgetsScreen
 import ee.schimke.terrazzo.notifications.NotificationBell
 import ee.schimke.terrazzo.widget.WidgetInstallSheet
+import ee.schimke.terrazzo.ui.statusColors
 import ee.schimke.terrazzo.widget.WidgetRefreshScheduler
 import ee.schimke.terrazzo.widget.WidgetsScreen
 import androidx.compose.material3.SnackbarHost
@@ -658,15 +660,16 @@ private fun DashboardsRoot(
                             scope.launch { runCatching { session.dismissAllNotifications() } }
                         },
                     )
+                    val statusColor = connectionStatus.statusColor()
                     Surface(
                         onClick = onRetryConnection,
-                        color = connectionStatus.color.copy(alpha = 0.16f),
+                        color = statusColor.copy(alpha = 0.16f),
                         shape = MaterialTheme.shapes.small,
                         modifier = Modifier.padding(end = 8.dp),
                     ) {
                         Text(
                             text = connectionStatus.label,
-                            color = connectionStatus.color,
+                            color = statusColor,
                             style = MaterialTheme.typography.labelSmall,
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
                         )
@@ -677,7 +680,7 @@ private fun DashboardsRoot(
                     ) {
                         Text(
                             text = if (readOnly) "Read" else "Write",
-                            color = if (readOnly) READ_ONLY_COLOR else WRITE_COLOR,
+                            color = if (readOnly) statusColors.readOnly else statusColors.warning,
                             style = MaterialTheme.typography.labelSmall,
                             modifier = Modifier.padding(end = 4.dp),
                         )
@@ -768,15 +771,22 @@ private const val DASHBOARD_UNSET = "__none__"
  */
 private const val RECONNECT_BACKOFF_MS = 5_000L
 
-enum class ConnectionStatus(val label: String, val color: Color) {
-    Failed("Failed", Color(0xFFD32F2F)),
-    Connecting("Connecting", Color(0xFF2E7D32)),
-    Connected("Connected", Color(0xFF1976D2)),
-    Disconnected("Paused", Color(0xFF757575)),
+enum class ConnectionStatus(val label: String) {
+    Failed("Failed"),
+    Connecting("Connecting"),
+    Connected("Connected"),
+    Disconnected("Paused"),
 }
 
-private val READ_ONLY_COLOR = Color(0xFF455A64)
-private val WRITE_COLOR = Color(0xFFE65100)
+/** Theme-aware chrome colour for the top-bar connection chip. */
+@Composable
+@ReadOnlyComposable
+private fun ConnectionStatus.statusColor(): Color = when (this) {
+    ConnectionStatus.Failed -> statusColors.error
+    ConnectionStatus.Connecting -> statusColors.success
+    ConnectionStatus.Connected -> statusColors.info
+    ConnectionStatus.Disconnected -> statusColors.neutral
+}
 
 private fun SessionConnectionStatus.toUiConnectionStatus(): ConnectionStatus = when (this) {
     SessionConnectionStatus.Failed -> ConnectionStatus.Failed
