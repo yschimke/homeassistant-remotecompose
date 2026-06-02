@@ -168,8 +168,15 @@ private fun ButtonBody(
         data.tapAction.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
     val chipDp = if (compact) CompactChipDp else FullChipDp
     val iconDp = if (compact) CompactIconDp else FullIconDp
-    val verticalPadDp = if (compact) 8 else 12
+    val verticalPadDp = if (compact) 6 else 12
     val namePadDp = if (compact) 4 else 6
+    // Widget (compact) tier gives the name a touch more presence than
+    // the dashboard's 13sp — a single button has no extra data to fill a
+    // big cell with, so a bolder label is the cheapest way to use the
+    // space. 15sp + 6dp vertical padding still clears the shortest
+    // icon+name cell (`2×1`, 84dp) without clipping. Wrap mode keeps 13sp
+    // so the dashboard pixel-diff references are unchanged.
+    val nameSizeSp = if (compact) 15 else 13
     // Not using `fillMaxWidth()` by default: buttons placed in a grid or
     // horizontal-stack should wrap-content so the flow layout can pack
     // multiple across the row. Standalone / Fixed-mode callers pass an
@@ -188,7 +195,7 @@ private fun ButtonBody(
                     RemoteText(
                         text = data.name.rs,
                         color = theme.primaryText.rc,
-                        fontSize = 13.rsp,
+                        fontSize = nameSizeSp.rsp,
                         fontWeight = FontWeight.Medium,
                         style = RemoteTextStyle.Default,
                         maxLines = 1,
