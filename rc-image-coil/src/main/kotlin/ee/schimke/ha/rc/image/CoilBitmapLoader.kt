@@ -69,6 +69,20 @@ import java.util.concurrent.ConcurrentHashMap
  * can't resolve a path-only URI, so a relative `name` would fetch to silent error and the memory
  * cache would stay empty. Pass [baseUrl] to resolve names starting with `/` against the HA server's
  * origin before the cache lookup / enqueue; keep the document itself host-agnostic.
+ *
+ * **Decode-bound clamp ([maxImageDimensionPx]).** The player rejects a fetched bitmap whose decoded
+ * size is *larger* than the slot the document declared via `addBitmapUrl(url, w, h)`:
+ * `RemoteBitmapDecoder.checkBounds` throws `dimensions don't match <fetched> vs <slot>` when
+ * `fetchedW > w || fetchedH > h`. Home Assistant serves `entity_picture` / `camera_proxy` frames at
+ * the source's native resolution (e.g. a 640×480 camera), with no server-side resize — so a native
+ * frame routinely overflows a picture-entity's `512×512` slot and the tile renders black with that
+ * red error. The loader doesn't learn the per-slot dimensions (`loadBitmap` only gets the URL), so
+ * we clamp every encoded bitmap to a single longest-edge cap: anything larger is downscaled
+ * (aspect-preserving) so it fits within `maxImageDimensionPx × maxImageDimensionPx`; anything
+ * already within is passed through untouched. The clamp is **downscale-only** — small images
+ * (markdown badges, icons) are never upscaled, so they keep fitting their own smaller slots exactly
+ * as before. Keep the default in sync with `PictureImageStrategy.DefaultAppUrl` (512); a cap larger
+ * than the smallest slot dimension would let a frame overflow that slot.
  */
 open class CoilBitmapLoader(
   private val context: Context,
@@ -76,6 +90,7 @@ open class CoilBitmapLoader(
   private val baseUrl: String? = null,
   private val compressFormat: Bitmap.CompressFormat = Bitmap.CompressFormat.PNG,
   private val compressQuality: Int = 100,
+  private val maxImageDimensionPx: Int = DEFAULT_MAX_IMAGE_DIMENSION_PX,
   private val configure: ImageRequest.Builder.() -> Unit = {},
 ) : BitmapLoader {
 
@@ -149,15 +164,40 @@ open class CoilBitmapLoader(
   protected open fun encodeImage(image: Image): ByteArray? {
     if (image !is BitmapImage) return null
     val source = image.bitmap
-    val encodable =
+    val software =
       if (source.config == Bitmap.Config.HARDWARE) {
         source.copy(Bitmap.Config.ARGB_8888, /* isMutable= */ false) ?: return null
       } else {
         source
       }
+    // Clamp to the slot ceiling so the player's checkBounds accepts the bytes — see the class
+    // doc. Downscale-only: smaller images return [software] unchanged.
+    val encodable = downscaleToFit(software)
     val out = ByteArrayOutputStream(encodable.allocationByteCount.coerceAtLeast(1024))
     encodable.compress(compressFormat, compressQuality, out)
+    // Recycle only bitmaps we allocated here, never the caller's cached [source]: the scaled copy
+    // (if any) first, then the hardware→software copy (if any). The chained `!==` checks avoid a
+    // double recycle when no copy/scale happened.
+    if (encodable !== software) encodable.recycle()
+    if (software !== source) software.recycle()
     return out.toByteArray()
+  }
+
+  /**
+   * Aspect-preserving downscale so the longest edge is at most [maxImageDimensionPx]. Returns
+   * [bitmap] unchanged when it already fits (or the cap is non-positive) — never upscales, so small
+   * images keep their native size and their own smaller slots.
+   */
+  private fun downscaleToFit(bitmap: Bitmap): Bitmap {
+    val cap = maxImageDimensionPx
+    if (cap <= 0) return bitmap
+    val w = bitmap.width
+    val h = bitmap.height
+    if (w <= cap && h <= cap) return bitmap
+    val scale = cap.toFloat() / maxOf(w, h)
+    val newW = (w * scale).toInt().coerceAtLeast(1)
+    val newH = (h * scale).toInt().coerceAtLeast(1)
+    return Bitmap.createScaledBitmap(bitmap, newW, newH, /* filter= */ true)
   }
 
   /**
@@ -203,8 +243,14 @@ open class CoilBitmapLoader(
     Miss,
   }
 
-  private companion object {
+  companion object {
     private const val TAG = "CoilBitmapLoader"
     private val EMPTY = ByteArray(0)
+
+    /**
+     * Default longest-edge cap for fetched bitmaps. Matches `PictureImageStrategy.DefaultAppUrl`
+     * (512×512), the slot picture-entity cards declare; keep the two in sync.
+     */
+    const val DEFAULT_MAX_IMAGE_DIMENSION_PX = 512
   }
 }
