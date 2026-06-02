@@ -465,19 +465,21 @@ and is reused. The families today:
 
 | Family | Key element | Cards | Shared composable(s) | Ladder state |
 |---|---|---|---|---|
-| **Icon + state row/tile** | tinted icon | `tile`, `entity`, `sensor`, `statistic` | `RemoteHaTile`, `RemoteHaEntityRow` | tile/entity: `Full↔CompactStateChip`; sensor/statistic: none |
+| **Icon + state row/tile** | tinted icon | `tile`, `entity`, `sensor`, `statistic` | `RemoteHaTile` (+`RemoteHaIconChip`), `RemoteHaEntityRow` | all four: `Full↔IconChip` (Full self-centred via `CenteredCell`) |
 | **Icon-centred button** | large tinted icon | `button` | `RemoteHaButton` / `RemoteHaToggleButton` | `Full↔CompactStateChip` |
-| **Arc-dial control** | the arc/dial | `gauge`, `thermostat`, `humidifier`, `light` | `RemoteHaGauge*`, `RemoteHaArcDial*`, `RenderArcDial` | thermostat/humidifier/gauge: Wide↔Full; `light`: **none (outlier)** |
+| **Arc-dial control** | the arc/dial | `gauge`, `thermostat`, `humidifier`, `light` | `RemoteHaGauge*`, `RemoteHaArcDial*`, `RenderArcDial` | thermostat/humidifier/light: Wide↔Full (width); gauge: Wide↔Stacked (height) — all via shared `RemoteSizeBreakpoint` |
 | **Multi-entity list/strip** | first row/cell | `entities`, `glance`, `area`, `picture-glance`, `entity-filter`, `*-stack` | `RemoteHaEntities`, `RemoteHaGlance` | entities: `list↔strip`; others: none |
 | **Hero + supporting detail** | condition/art/shield + value | `weather-forecast`, `media-control`, `alarm-panel` | `RemoteHaWeatherForecast*`, `RemoteHaMediaControl*`, `RemoteHaAlarmPanel*` | all three `Wide↔Full` |
 | **Bulk / time-series** | spark/list head | `history-graph`, `statistics-graph`, `logbook`, `todo-list`, `calendar`, `markdown` | per-card | none — Wear `SmallOnly` |
 | **Picture / image** | the image | `picture`, `picture-entity`, `picture-elements` | `RemoteHaImage*` | none |
 
-The "Arc-dial control" family is the reference implementation: a single
-`RenderArcDial` width-ladder gives thermostat and humidifier a clean
-Wide-row↔Full-card transition with the dial retained at every size. The
-open work is bringing the other families up to that bar — see the
-per-family issues.
+The "Arc-dial control" family is the reference implementation. The shared
+`RenderArcDial` width-ladder gives thermostat, humidifier, and `light` a
+clean Wide-row↔Full-card transition with the dial retained at every size;
+`gauge` rides the same `RemoteSizeBreakpoint` helper on the height axis
+(Wide↔Stacked) so it inherits the `immediateSwap` overlay workaround
+rather than a hand-rolled `RemoteStateLayout`. The open work is bringing
+the other families up to that bar — see the per-family issues.
 
 ## Anti-patterns
 
@@ -513,10 +515,16 @@ The current state is the placeholder, not the philosophy:
    `entities` reflows on a single width threshold; per-card ladders
    should pick the one pinned axis that best discriminates their
    variants — see `GaugeCardConverter`.
-2. Tile / entity / button / gauge ship two-tier ladders
-   (`Full → CompactStateChip`). That's the value-fallback path,
-   skipping every reflow / identity tier above it. Each card needs
-   the worked-example ladder above.
+2. `button` still ships the `Full → CompactStateChip` text-only
+   ladder (the value-fallback path, skipping the identity tier above
+   it) and needs the worked-example ladder. The icon-+-state family
+   (`tile`, `entity`, `sensor`, `statistic`) now lands on
+   `Full ↔ RemoteHaIconChip`: the smallest cell keeps the tinted icon
+   (identity tier) instead of dropping to a text chip, and the `Full`
+   tier self-centres (`CenteredCell`) so tall cells fill rather than
+   top-glue. Still a single live breakpoint per card (#224) — the
+   reflow / expanded rungs between identity and full are the design
+   target, not encodable yet.
 3. Runtime tier selection **does** fire — the matrix preview shows tile
    switching chip↔full and entities switching list↔strip per size. Two
    gotchas were shaped around: the `componentWidth()` named expression
@@ -549,24 +557,32 @@ The current state is the placeholder, not the philosophy:
    `contentAlignment = Center` on a wrapper `RemoteBox` — in alpha010 a
    `fillMaxWidth` (wrap-height) child is still pinned to the top of a
    centring box, so a wrapper-level alignment is a no-op (verified by
-   re-rendering tile/entity/button/entities — pixel-identical). The
-   arc-dial cards only _look_ centred because `RemoteHaArcDialWide`
-   itself `fillMaxSize`s and centres its content **internally**. So the
-   "fill the cell" work is per-tier-composable (each variant must fill
-   and self-centre, like the arc-dial Wide row), not a one-line wrapper
-   change. Tracked per layout family in the design-review issues.
-7. **`light` is outside the arc-dial family.** `thermostat` and
-   `humidifier` route through `RenderArcDial` and get the Wide↔Full
-   ladder + dial retention for free; `LightCardConverter` calls
-   `RemoteHaArcDial` directly with no `CardSizeMode` branch, so it never
-   reflows or degrades. It should join the shared `RenderArcDial` path.
-8. **Gauge matrix shows the #309 overlay artifact.** The Wear L /
-   widget cells render both `RemoteHaGaugeWide` and
-   `RemoteHaGaugeStacked` on top of each other (double value + double
-   arc). This is the alpha010 `RemoteStateLayout` overlay bug (#309),
-   not a layout-design fault, but it makes the gauge family un-reviewable
-   in the matrix until the visibility-modifier workaround there is
-   re-confirmed against the current alpha.
+   re-rendering tile/entity/button/entities — pixel-identical). It bit the
+   arc-dial Wide row too in #353: on a tall cell (e.g. `3×3`)
+   `RemoteHaArcDialWide` — a bare `RemoteRow` tier-root — sits high with
+   dead space below and couldn't be retrofitted to self-centre. #355 found
+   the way through: nest the tier content in a `fillMaxSize` `RemoteColumn`
+   and let **weighted children / `SpaceEvenly` / `fillMaxHeight`**
+   distribute it. The hero family (weather, media, alarm) fills its large
+   cells this way today — the forecast strip's day columns, the media
+   title/transport/seek bands, and the alarm keypad all expand through the
+   breakpoint (see #9). What does *not* work is a bare `RemoteRow`
+   tier-root or a `fillMaxSize` `RemoteBox` wrapper with
+   `contentAlignment = Center`; the fill must live inside the tier
+   composable as a column of weighted sections (or a self-painting
+   `RemoteBox` like `RemoteHaGaugeStacked`).
+7. ~~**`light` is outside the arc-dial family.**~~ **Resolved.** `light`
+   routes through the shared `RenderArcDial` ladder (Wide↔Full) with the
+   bulb-ring dial retained at every size, and the on/off mode chip is a
+   `Static` chip (a `Toggle` chip's nested `RemoteStateLayout` collapses
+   to its captured branch inside the Fixed-mode breakpoint — #224 — which
+   painted "Off" over the bulb on the full tier).
+8. ~~**Gauge matrix shows the #309 overlay artifact.**~~ **Resolved.**
+   `GaugeCardConverter` no longer hand-rolls a `RemoteStateLayout`; it
+   routes through the shared `RemoteSizeBreakpoint` (height axis), so it
+   inherits the `immediateSwap` workaround and the Wear L / widget cells
+   render a single tier instead of double-painting `RemoteHaGaugeWide`
+   over `RemoteHaGaugeStacked`.
 9. **Two breakpoint quirks the `media-control` ladder hit (#355), both
    alpha010-specific:**
    - **A fill-size `RemoteRow` directly under a wrap-content `RemoteBox`

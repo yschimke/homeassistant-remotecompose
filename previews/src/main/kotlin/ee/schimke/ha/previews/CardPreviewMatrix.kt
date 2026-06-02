@@ -48,6 +48,7 @@ import ee.schimke.ha.rc.androidXExperimentalWrap
 import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.components.HaTheme
 import ee.schimke.ha.rc.components.ProvideCardChrome
+import ee.schimke.ha.rc.components.ProvideFlowLayoutSupport
 import ee.schimke.ha.rc.components.ProvideHaTheme
 import ee.schimke.ha.rc.components.RemoteHaWidgetSurface
 import ee.schimke.ha.rc.enableRemoteComposeWrapContent
@@ -373,12 +374,21 @@ private fun WatchFaceCell(
                             ProvideHaTheme(HaTheme.Dark) {
                                 ProvideCardSizeMode(CardSizeMode.Fixed) {
                                     ProvideCardChrome(enabled = false) {
-                                        RemoteHaWidgetSurface {
-                                            RenderChild(
-                                                card,
-                                                snapshot,
-                                                RemoteModifier.rcFillMaxWidth(),
-                                            )
+                                        // Mirror the real Glance Wear slot
+                                        // surface, which disables FlowLayout
+                                        // (its capture profile rejects op
+                                        // 240); cards then take their
+                                        // non-wrapping compact path here too,
+                                        // so the matrix wear cells show what
+                                        // the watch actually draws.
+                                        ProvideFlowLayoutSupport(enabled = false) {
+                                            RemoteHaWidgetSurface {
+                                                RenderChild(
+                                                    card,
+                                                    snapshot,
+                                                    RemoteModifier.rcFillMaxWidth(),
+                                                )
+                                            }
                                         }
                                     }
                                 }
@@ -499,11 +509,53 @@ fun CardPreviewMatrix_Tile() {
 @Composable
 fun CardPreviewMatrix_Entity() {
     val card = card("""{"type":"entity","entity":"lock.front_door","name":"Front door"}""")
+    // Base launcher shape is 2×1 — the row's natural pinned-card shape.
+    // The old 3×1 base left the matrix +1 neighbour (4×2) ~70 % empty
+    // (adaptive-card-layouts.md Q5 / §"Icon + state row/tile").
     CardPreviewMatrix(
         card = card,
         snapshot = Fixtures.mixed,
-        baseGridSize = WidgetGridSize(cellsW = 3, cellsH = 1),
+        baseGridSize = WidgetGridSize(cellsW = 2, cellsH = 1),
         label = "entity · lock.front_door",
+    )
+}
+
+@Preview(
+    name = "matrix — sensor",
+    showBackground = false,
+    widthDp = MATRIX_CANVAS_WIDTH_DP,
+    heightDp = 400,
+)
+@Composable
+fun CardPreviewMatrix_Sensor() {
+    val card = card("""{"type":"sensor","entity":"sensor.outside_temp","name":"Outside"}""")
+    // sensor's P5 is the history sparkline: dropped on the icon-chip tier
+    // (1×1), promoted back on the full tier (2×1 / 3×2). Uses the
+    // temperature-history fixture so the full tier has real samples to
+    // draw. See adaptive-card-layouts.md §"Icon + state row/tile".
+    CardPreviewMatrix(
+        card = card,
+        snapshot = Fixtures.temperatureHistory,
+        baseGridSize = WidgetGridSize(cellsW = 2, cellsH = 1),
+        label = "sensor · sensor.outside_temp",
+    )
+}
+
+@Preview(
+    name = "matrix — statistic",
+    showBackground = false,
+    widthDp = MATRIX_CANVAS_WIDTH_DP,
+    heightDp = 400,
+)
+@Composable
+fun CardPreviewMatrix_Statistic() {
+    val card =
+        card("""{"type":"statistic","entity":"sensor.living_room","name":"Living Room","period":"day","stat_type":"mean"}""")
+    CardPreviewMatrix(
+        card = card,
+        snapshot = Fixtures.mixed,
+        baseGridSize = WidgetGridSize(cellsW = 2, cellsH = 1),
+        label = "statistic · sensor.living_room",
     )
 }
 

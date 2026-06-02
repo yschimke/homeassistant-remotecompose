@@ -47,6 +47,11 @@
       "groupName": "github-actions"
     },
     {
+      "matchPackageNames": ["org.jetbrains.kotlinx:kotlinx-datetime"],
+      "description": "Avoid the -0.6.x-compat binaries; track mainline versions only.",
+      "allowedVersions": "!/-compat$/"
+    },
+    {
       "matchPackageNames": ["junit:junit"],
       "description": "Stay on JUnit 4; don't auto-bump to 5.x/6.x (Jupiter is a different API).",
       "allowedVersions": "/^4\\./",
