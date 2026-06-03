@@ -1,4 +1,5 @@
 plugins {
+  id("harc.base-conventions")
   alias(libs.plugins.kotlin.multiplatform)
   alias(libs.plugins.android.kmp.library)
   alias(libs.plugins.metro)
