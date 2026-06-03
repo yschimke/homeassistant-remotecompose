@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.37](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.36...v0.1.37) (2026-06-03)
+
+
+### Features
+
+* **history:** add axed line chart to card history detail ([#398](https://github.com/yschimke/homeassistant-remotecompose/issues/398)) ([f4e6222](https://github.com/yschimke/homeassistant-remotecompose/commit/f4e622264eb56c9df60fc9b560b8a6cdd41e67f7))
+
 ## [0.1.36](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.35...v0.1.36) (2026-06-02)
 
 
