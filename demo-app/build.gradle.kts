@@ -1,4 +1,5 @@
 plugins {
+  id("harc.base-conventions")
   alias(libs.plugins.android.application)
   alias(libs.plugins.compose.compiler)
 }

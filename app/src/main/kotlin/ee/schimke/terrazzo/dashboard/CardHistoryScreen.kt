@@ -25,8 +25,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.AddToHomeScreen
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.AddToHomeScreen
 import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.filled.OpenInFull
 import androidx.compose.material3.CircularProgressIndicator
@@ -715,7 +715,7 @@ private fun LinksSection(
   Text("Other actions", style = MaterialTheme.typography.titleMedium)
 
   FilledTonalButton(onClick = onAddToHomeScreen, modifier = Modifier.fillMaxWidth()) {
-    Icon(Icons.Filled.AddToHomeScreen, contentDescription = null)
+    Icon(Icons.AutoMirrored.Filled.AddToHomeScreen, contentDescription = null)
     Text("  Add to Home Screen")
   }
 

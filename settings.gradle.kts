@@ -1,4 +1,10 @@
 pluginManagement {
+  // Convention plugins (e.g. `harc.base-conventions`) live in this included
+  // build. The shared ktfmt + dependency-hygiene setup that used to sit in a
+  // root `allprojects {}` block is now a convention plugin each project
+  // applies — cleaner, and it keeps the build ready for Isolated Projects
+  // (which forbids the cross-project `allprojects {}` form).
+  includeBuild("build-logic")
   repositories {
     gradlePluginPortal()
     google()

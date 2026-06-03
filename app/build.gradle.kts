@@ -14,6 +14,7 @@ val appVersionCode: Int =
     .coerceAtLeast(1)
 
 plugins {
+  id("harc.base-conventions")
   alias(libs.plugins.android.application)
   alias(libs.plugins.compose.compiler)
   alias(libs.plugins.metro)
@@ -110,7 +111,7 @@ android {
   // key is configured; src/main stays free of any Firebase import so the
   // no-key build needs none of the SDK.
   if (crashlyticsEnabled) {
-    sourceSets.getByName("main").kotlin.srcDir("src/crashlytics/kotlin")
+    sourceSets.getByName("main").kotlin.directories.add("src/crashlytics/kotlin")
   }
   kotlin { jvmToolchain(libs.versions.java.get().toInt()) }
 }
