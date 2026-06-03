@@ -5,7 +5,6 @@ package ee.schimke.terrazzo.dashboard
 import android.content.Intent
 import android.graphics.Paint
 import android.net.Uri
-import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -329,12 +328,13 @@ internal fun LauncherGrid(
 
   val gridWidthDp = (bounds.maxCellsW * LAUNCHER_CELL_WIDTH_DP).dp
   val gridHeightDp = (bounds.maxCellsH * LAUNCHER_CELL_HEIGHT_DP).dp
-  // Glide the slot (card, outline and handle) between cell steps rather
-  // than hard-snapping. The embedded player reuses its View across sizes,
-  // so each animated frame is a cheap re-measure — no re-encode.
-  val currentWidthDp by animateDpAsState((cellsW * LAUNCHER_CELL_WIDTH_DP).dp, label = "slotWidth")
-  val currentHeightDp by
-    animateDpAsState((cellsH * LAUNCHER_CELL_HEIGHT_DP).dp, label = "slotHeight")
+  // Snap the slot (card, outline and handle) to whole cells, the way the
+  // launcher does. The embedded player is rebuilt at each slot size (a
+  // re-used RemoteComposePlayer paints blank / doesn't fill when
+  // re-measured at a new size — see WrapAdaptiveRemoteDocumentPlayer), so
+  // we step per cell rather than tweening through intermediate sizes.
+  val currentWidthDp = (cellsW * LAUNCHER_CELL_WIDTH_DP).dp
+  val currentHeightDp = (cellsH * LAUNCHER_CELL_HEIGHT_DP).dp
 
   Box(modifier = Modifier.size(gridWidthDp, gridHeightDp)) {
     // Backdrop: cell grid + smallest/largest size outlines.
