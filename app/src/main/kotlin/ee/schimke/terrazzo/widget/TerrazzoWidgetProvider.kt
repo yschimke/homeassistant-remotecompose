@@ -70,6 +70,25 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
   }
 
   /**
+   * The launcher calls this when the user resizes the widget (the cell span changed). Re-capture
+   * the card at the new slot size and republish: the `.rc` document bakes its canvas size at
+   * capture time, so without a fresh capture the launcher keeps painting the old document — which,
+   * replayed into the new (larger or smaller) cell, leaves the surface short of the slot edges or,
+   * on a re-used player, blank. Re-rendering authors the document at the new size so the surface
+   * fills the cell and the card's size-breakpoints reflow to it.
+   */
+  override fun onAppWidgetOptionsChanged(
+    context: Context,
+    appWidgetManager: AppWidgetManager,
+    appWidgetId: Int,
+    newOptions: android.os.Bundle,
+  ) {
+    super.onAppWidgetOptionsChanged(context, appWidgetManager, appWidgetId, newOptions)
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.VANILLA_ICE_CREAM) return
+    renderAndPublish(context, appWidgetManager, appWidgetId)
+  }
+
+  /**
    * The launcher tells us these widget ids were removed from the home screen. Drop their persisted
    * rows so the install cap frees the slots back up — a stale row would otherwise keep burning one
    * of the five even though nothing renders for it anymore.

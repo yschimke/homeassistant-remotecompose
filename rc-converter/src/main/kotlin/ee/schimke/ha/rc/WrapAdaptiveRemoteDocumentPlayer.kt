@@ -15,6 +15,7 @@ import androidx.compose.remote.player.core.RemoteDocument
 import androidx.compose.remote.player.core.platform.BitmapLoader
 import androidx.compose.remote.player.view.RemoteComposePlayer
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -57,9 +58,11 @@ import kotlin.math.min
  * surface, [ee.schimke.ha.rc.components.RemoteHaWidgetSurface]) has *no* intrinsic size, so steps
  * 2–4 would collapse the slot to ~1px and render blank. Instead we play the document at the
  * parent's EXACT size — exactly as the launcher widget does — so it fills the slot and its runtime
- * size-breakpoints (see `RemoteSizeBreakpoint`) read the real canvas. The View is then reused
- * across size changes (it just re-measures), so an animated slot resizes smoothly without
- * re-decoding or re-priming each frame.
+ * size-breakpoints (see `RemoteSizeBreakpoint`) read the real canvas. The View is rebuilt (and
+ * re-primed) whenever that size changes: a `RemoteComposePlayer` re-measured at a new size after
+ * its first draw paints blank or only fills up to its first size, so re-using one View across a
+ * resize is exactly the "widget goes blank once resized" bug. Decoded bytes are cached by the
+ * caller, so a resize only rebuilds the View + prime, not the document.
  */
 @Composable
 fun WrapAdaptiveRemoteDocumentPlayer(
@@ -76,12 +79,23 @@ fun WrapAdaptiveRemoteDocumentPlayer(
     val maxHPx = constraints.maxHeight
 
     if (constraints.hasFixedWidth && constraints.hasFixedHeight) {
-      // The parent pins the slot. Play at EXACTLY that size and reuse
-      // the View across resizes — the BoxWithConstraints is already
-      // sized by the parent, so a `fillMaxSize` document fills it and
-      // animating the slot just re-measures the (single) View.
+      // The parent pins the slot (EXACTLY on both axes) — the launcher
+      // widget and the long-press resize preview, whose size is forced
+      // from outside. Build the player for this exact size and rebuild
+      // it whenever the size changes (key on width/height too).
+      //
+      // We deliberately do NOT re-use one primed View across resizes: a
+      // `RemoteComposePlayer` that has been measured + drawn once paints
+      // blank — or only fills up to its first size — when it is later
+      // re-measured at a different size (its layout is cached at the
+      // first draw and never rebuilt; with `FEATURE_PAINT_MEASURE = 1`
+      // it doesn't even re-run the document measure). That is the
+      // "widget goes blank / doesn't fill once resized" bug. Re-keying
+      // on the size gives each slot a freshly primed View that fills it
+      // and reflows its size-breakpoints; the caller caches the decoded
+      // bytes, so only the View + prime is rebuilt per (discrete) size.
       val view =
-        remember(documentBytes) {
+        remember(documentBytes, maxWPx, maxHPx) {
           RemoteComposePlayer(context).apply {
             setBitmapLoader(bitmapLoader)
             setDocument(RemoteDocument(decode(documentBytes)))
@@ -93,7 +107,8 @@ fun WrapAdaptiveRemoteDocumentPlayer(
             addIdActionListener { id, value -> onNamedAction(id.toString(), value) }
           }
         }
-      AndroidView(factory = { view }, modifier = Modifier.fillMaxSize())
+      // Swap the embedded View when a resize produces a new instance.
+      key(view) { AndroidView(factory = { view }, modifier = Modifier.fillMaxSize()) }
     } else {
       val view =
         remember(documentBytes, maxWPx, maxHPx) {
