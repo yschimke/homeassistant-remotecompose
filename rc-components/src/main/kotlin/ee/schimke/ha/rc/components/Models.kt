@@ -147,9 +147,25 @@ data class HaWeatherForecastData(
   val temperature: String,
   /** Optional secondary line — feels like, low/high, or extra detail. */
   val supportingLine: String?,
+  /**
+   * Today's high / low summary shown under the headline temperature (e.g. `16.7 °C / 14.1 °C`).
+   * Null when no forecast day is available.
+   */
+  val highLow: String? = null,
   val icon: ImageVector,
   val days: List<HaWeatherDay> = emptyList(),
+  /**
+   * Extra current-conditions read-outs (feels-like, humidity, wind, pressure, …) sourced from the
+   * weather entity's attributes. Only surfaced in the roomy variants — the full app card and the
+   * expanded (tall) widget — where there's space below the forecast strip; the compact widget tiers
+   * drop them (Principle 2/4, "reflow before remove / compact ≠ stripped" — identity + forecast win
+   * the limited canvas first).
+   */
+  val extras: List<HaWeatherExtra> = emptyList(),
 )
+
+/** One supplementary current-conditions read-out in a weather card's extra-info row. */
+data class HaWeatherExtra(val icon: ImageVector, val label: String, val value: String)
 
 /**
  * One column in a weather forecast strip. Permanent — forecast values are captured at encode time

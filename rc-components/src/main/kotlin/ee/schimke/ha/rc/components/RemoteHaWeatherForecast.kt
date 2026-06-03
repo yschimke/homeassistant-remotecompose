@@ -10,11 +10,14 @@ import androidx.compose.remote.creation.compose.layout.RemoteComposable
 import androidx.compose.remote.creation.compose.layout.RemoteRow
 import androidx.compose.remote.creation.compose.layout.RemoteText
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
+import androidx.compose.remote.creation.compose.modifier.background
+import androidx.compose.remote.creation.compose.modifier.clip
 import androidx.compose.remote.creation.compose.modifier.fillMaxHeight
 import androidx.compose.remote.creation.compose.modifier.fillMaxSize
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.modifier.size
+import androidx.compose.remote.creation.compose.shapes.RemoteRoundedCornerShape
 import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rs
@@ -46,6 +49,7 @@ fun RemoteHaWeatherForecast(
   data: HaWeatherForecastData,
   modifier: RemoteModifier = RemoteModifier,
   fillHeight: Boolean = false,
+  showExtras: Boolean = true,
 ) {
   val theme = haTheme()
   RemoteBox(
@@ -78,6 +82,13 @@ fun RemoteHaWeatherForecast(
         } else {
           ForecastStrip(data.days, theme)
         }
+      }
+      // Extra current-conditions read-outs claim the bottom of the roomy
+      // variants. Folding them in here keeps the "everything about the
+      // weather in one place" identity rather than spilling humidity /
+      // wind / pressure into separate sibling cards.
+      if (showExtras && data.extras.isNotEmpty()) {
+        ExtraInfoRow(data.extras, theme)
       }
     }
   }
@@ -128,15 +139,77 @@ private fun CurrentRow(data: HaWeatherForecastData, theme: HaTheme) {
         }
       }
     }
-    RemoteText(
-      text = LiveValues.attribute(data.entityId, "temperature_label", data.temperature),
-      color = theme.primaryText.rc,
-      fontSize = 28.rsp,
-      fontWeight = FontWeight.Light,
-      style = RemoteTextStyle.Default,
-      maxLines = 1,
-      overflow = TextOverflow.Ellipsis,
-    )
+    RemoteColumn(horizontalAlignment = RemoteAlignment.End) {
+      RemoteText(
+        text = LiveValues.attribute(data.entityId, "temperature_label", data.temperature),
+        color = theme.primaryText.rc,
+        fontSize = 28.rsp,
+        fontWeight = FontWeight.Light,
+        style = RemoteTextStyle.Default,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+      )
+      if (data.highLow != null) {
+        RemoteText(
+          text = data.highLow.rs,
+          color = theme.secondaryText.rc,
+          fontSize = 13.rsp,
+          style = RemoteTextStyle.Default,
+          maxLines = 1,
+          overflow = TextOverflow.Ellipsis,
+        )
+      }
+    }
+  }
+}
+
+/**
+ * Bottom strip of supplementary current-conditions read-outs — each a small inset chip with an
+ * icon, value, and label. Mirrors the forecast strip's spread-and-centre column layout so the two
+ * rows read as one coherent block.
+ */
+@Composable
+private fun ExtraInfoRow(extras: List<HaWeatherExtra>, theme: HaTheme) {
+  RemoteRow(
+    modifier = RemoteModifier.fillMaxWidth(),
+    horizontalArrangement = RemoteArrangement.spacedBy(8.rdp),
+    verticalAlignment = RemoteAlignment.CenterVertically,
+  ) {
+    extras.forEach { extra ->
+      RemoteColumn(
+        modifier =
+          RemoteModifier.weight(1f)
+            .clip(RemoteRoundedCornerShape(10.rdp))
+            .background(theme.divider.rc)
+            .padding(horizontal = 4.rdp, vertical = 8.rdp),
+        horizontalAlignment = RemoteAlignment.CenterHorizontally,
+        verticalArrangement = RemoteArrangement.spacedBy(3.rdp),
+      ) {
+        RemoteIcon(
+          imageVector = extra.icon,
+          contentDescription = extra.label.rs,
+          modifier = RemoteModifier.size(16.rdp),
+          tint = theme.secondaryText.rc,
+        )
+        RemoteText(
+          text = extra.value.rs,
+          color = theme.primaryText.rc,
+          fontSize = 13.rsp,
+          fontWeight = FontWeight.Medium,
+          style = RemoteTextStyle.Default,
+          maxLines = 1,
+          overflow = TextOverflow.Ellipsis,
+        )
+        RemoteText(
+          text = extra.label.rs,
+          color = theme.secondaryText.rc,
+          fontSize = 10.rsp,
+          style = RemoteTextStyle.Default,
+          maxLines = 1,
+          overflow = TextOverflow.Ellipsis,
+        )
+      }
+    }
   }
 }
 
