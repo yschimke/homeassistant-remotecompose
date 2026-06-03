@@ -407,15 +407,21 @@ private fun pictureEntityCard() =
   )
 
 // ——— weather-forecast ———
+//
+// Taller than HA's 168 dp reference card on purpose: the full app card
+// folds the current-conditions chips (feels / humidity / wind / pressure)
+// under the forecast strip, which HA surfaces in separate sibling cards.
+// The canvas is sized to that taller content (measured via
+// `scripts/check-preview-waste.py`), not the HA capture.
 
-@Preview(name = "weather-forecast (light)", showBackground = false, widthDp = 381, heightDp = 168)
+@Preview(name = "weather-forecast (light)", showBackground = false, widthDp = 381, heightDp = 224)
 @Composable
 fun WeatherForecast_Light() =
   CardHost(HaTheme.Light) {
     RenderChild(weatherForecastCard(), Fixtures.weather, RemoteModifier.fillMaxWidth())
   }
 
-@Preview(name = "weather-forecast (dark)", showBackground = false, widthDp = 381, heightDp = 168)
+@Preview(name = "weather-forecast (dark)", showBackground = false, widthDp = 381, heightDp = 224)
 @Composable
 fun WeatherForecast_Dark() =
   CardHost(HaTheme.Dark) {
