@@ -17,3 +17,6 @@ google-services.json
 */google-services.json
 
 __pycache__/
+
+# Generated design board (regenerate via scripts/build-design-board.py)
+design/design-board.html
