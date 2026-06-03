@@ -53,11 +53,15 @@ class WeatherForecastCardConverter : CardConverter {
   override fun dataSignature(card: CardConfig, snapshot: HaSnapshot): String =
     cardDataSignature(cardEntityIds(card), snapshot)
 
-  // The high/low line under the headline temperature adds a row to the
-  // current-conditions block. The default pin stays "medium" (current row
-  // + forecast, no conditions chips) — those only surface once the user
-  // grows the widget past WeatherExtrasMinHeightDp.
-  override fun naturalHeightDp(card: CardConfig, snapshot: HaSnapshot): Int = 178
+  // Height hint for the Wrap render — the dashboard card and, crucially, the
+  // Add-to-Home-Screen preview (WidgetInstallSheet sizes its preview box from
+  // cardHeightDp and renders in Wrap mode). The Wrap card stacks current row +
+  // high/low + forecast strip + the conditions-chip row, so it needs the full
+  // ~222 dp; advertising the shorter forecast-only height clipped the chips in
+  // that pin preview. The Fixed widget tiers don't draw the chips and simply
+  // fill whatever (smaller) cell they're given, so over-reserving here is
+  // harmless — the forecast strip grows to take up the slack.
+  override fun naturalHeightDp(card: CardConfig, snapshot: HaSnapshot): Int = 224
 
   @Composable
   override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
