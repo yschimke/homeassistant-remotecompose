@@ -8,10 +8,15 @@ buildscript {
   // Gradle plugins on the buildscript classpath when an
   // `app/google-services.json` is present — without it nothing here
   // resolves, so the default build is byte-for-byte unaffected and pulls
-  // in no Firebase tooling. The path is resolved relative to the root
-  // project dir (Gradle's working directory). Versions are only fetched
-  // by developers who have configured a key; bump as needed.
-  if (java.io.File("app/google-services.json").exists()) {
+  // in no Firebase tooling. Resolve against `rootDir` (not a CWD-relative
+  // `java.io.File`) so the check matches the app module's Gradle `file(…)`
+  // lookup regardless of the launcher's working directory — e.g. the VS
+  // Code / Android Studio Compose preview daemon starts Gradle from a
+  // different CWD, which made this classpath silently drop out while the
+  // app still applied the plugin, failing with "Plugin … not found".
+  // Versions are only fetched by developers who have configured a key;
+  // bump as needed.
+  if (rootDir.resolve("app/google-services.json").exists()) {
     repositories {
       google()
       mavenCentral()
