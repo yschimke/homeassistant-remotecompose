@@ -13,6 +13,7 @@ val wearVersionCode: Int =
     .coerceAtLeast(2)
 
 plugins {
+  id("harc.base-conventions")
   alias(libs.plugins.android.application)
   alias(libs.plugins.compose.compiler)
   alias(libs.plugins.kotlin.serialization)

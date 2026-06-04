@@ -1,4 +1,7 @@
-plugins { alias(libs.plugins.android.library) }
+plugins {
+  id("harc.base-conventions")
+  alias(libs.plugins.android.library)
+}
 
 android {
   namespace = "ee.schimke.ha.rc.image"

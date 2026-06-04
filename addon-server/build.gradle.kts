@@ -1,4 +1,5 @@
 plugins {
+  id("harc.base-conventions")
   alias(libs.plugins.kotlin.jvm)
   alias(libs.plugins.kotlin.serialization)
   application
