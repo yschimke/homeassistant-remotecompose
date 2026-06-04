@@ -1,4 +1,7 @@
-plugins { alias(libs.plugins.kotlin.jvm) }
+plugins {
+  id("harc.base-conventions")
+  alias(libs.plugins.kotlin.jvm)
+}
 
 kotlin { jvmToolchain(libs.versions.java.get().toInt()) }
 
