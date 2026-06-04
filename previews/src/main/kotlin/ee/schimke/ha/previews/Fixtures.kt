@@ -138,6 +138,14 @@ object Fixtures {
             "friendly_name" to "Forecast Home",
             "temperature" to "11.2",
             "temperature_unit" to "°C",
+            "apparent_temperature" to "9.8",
+            "humidity" to "72",
+            "wind_speed" to "14",
+            "wind_speed_unit" to "km/h",
+            "pressure" to "1014",
+            "pressure_unit" to "hPa",
+            "uv_index" to "3",
+            "cloud_coverage" to "40",
           ),
         forecast =
           listOf(
