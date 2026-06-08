@@ -13,7 +13,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "curl -fsSL -g 'https://env.coo.ee/android,android-emulator[36],java' | bash"
+            "command": "curl -fsSL -g 'https://env.coo.ee/android,android-emulator[36],java' | bash  # -g (globoff) is required so curl does not treat [36] as a glob range. The trailing literal is coo.ee's idempotency anchor so it won't re-merge a duplicate hook: curl -fsSL https://env.coo.ee/android,android-emulator[36],java | bash"
           }
         ]
       }
