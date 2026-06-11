@@ -1,6 +1,6 @@
 # Accessibility Report
 
-_Auto-generated from `compose-preview/a11y/pr`. 284 preview(s) across 4 module(s) · 1100 error(s) · 17 warning(s) · 31 info._
+_Auto-generated from `compose-preview/a11y/pr`. 284 preview(s) across 4 module(s) · 1100 error(s) · 17 warning(s) · 32 info._
 
 Browse inline; image URLs are pinned to the commit SHA on the baseline branch so links keep resolving after merge.
 
@@ -8,9 +8,11 @@ Browse inline; image URLs are pinned to the commit SHA on the baseline branch so
 
 ### `DataGridOverlayPreview`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/pr/renders/app/DataGridOverlayPreview_Data_grid_overlay.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/pr/renders/app/DataGridOverlayPreview_Data_grid_overlay.a11y.png" width="400" />
 
-_No findings._
+| # | Level | Rule | Element | Message |
+|--:|---|---|---|---|
+| 1 | INFO | DuplicateSpeakableTextCheck | android.widget.TextView | This non-clickable item's speakable text: "off" is identical to that of 1 other item(s). |
 
 ### `Play_Phone_01_HomeLight` · `spec:width=411dp,height=731dp,dpi=320`
 
