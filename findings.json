@@ -1,9 +1,17 @@
 {
   "entries": [
     {
-      "annotatedBasename": "",
+      "annotatedBasename": "DataGridOverlayPreview_Data_grid_overlay.a11y.png",
       "cleanBasename": "DataGridOverlayPreview_Data_grid_overlay.png",
-      "findings": [],
+      "findings": [
+        {
+          "boundsInScreen": "521,185,833,219",
+          "level": "INFO",
+          "message": "This non-clickable item's speakable text: \"off\" is identical to that of 1 other item(s).",
+          "type": "DuplicateSpeakableTextCheck",
+          "viewDescription": "android.widget.TextView"
+        }
+      ],
       "functionName": "DataGridOverlayPreview",
       "module": "app",
       "previewId": "ee.schimke.terrazzo.previews.CardDebugPreviewsKt.DataGridOverlayPreview_Data grid overlay",
