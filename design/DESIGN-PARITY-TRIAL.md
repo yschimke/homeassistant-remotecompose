@@ -115,12 +115,15 @@ trial works.
    semantic findings are "root has no role/label". Getting real semantics out of
    `compose-preview` today means `compose-preview a11y`, which (a) is a separate
    expensive pass — it walks ATF over the **entire module** (185 previews here),
-   `--filter` only narrows the *printed* output, not the work — and (b) emits an
-   `accessibility.json` shape that the design-parity candidate path
-   (`SpawnComposePreviewCli`, which reads `data/<id>/a11y/hierarchy.json`)
-   doesn't yet consume. Live `compose-preview` candidate rendering (incl.
-   semantics) is exactly what #8 part 2 defers; this trial confirms the gap on a
-   real module.
+   `--filter` only narrows the *printed* output, not the work — and (b) it surfaces
+   findings via the daemon / `accessibility.json` rather than writing the on-disk
+   `data/<id>/a11y/hierarchy.json` that the design-parity candidate path
+   (`SpawnComposePreviewCli`) reads. That on-disk hierarchy product is only
+   emitted when the `a11y` kind is enabled in the consumer's
+   `composePreview { previewExtensions { a11y { … } } }` Gradle config (not set
+   here), so a plain `compose-preview show` leaves `data/` empty. Net: wiring
+   live `compose-preview` semantics into the candidate render is exactly what #8
+   part 2 defers, and this trial confirms the gap on a real module.
 
 5. **Reference tokens omitted on purpose.** Claude Design has no token export
    here, and emitting hand-authored token values would have produced bogus
