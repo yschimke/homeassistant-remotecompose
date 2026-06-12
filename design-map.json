@@ -1,0 +1,15 @@
+{
+  "$schema": "https://github.com/yschimke/design-parity/schema/design-map.schema.json",
+  "components": [
+    {
+      "code": "previews/src/main/kotlin/ee/schimke/ha/previews/TileCardPreviews.kt#Tile_TemperatureSensor",
+      "source": "claude-design",
+      "ref": "design/reference/tile-temperature-sensor.html"
+    },
+    {
+      "code": "previews/src/main/kotlin/ee/schimke/ha/previews/TileCardPreviews.kt#Tile_LightOn",
+      "source": "claude-design",
+      "ref": "design/reference/tile-light-on.html"
+    }
+  ]
+}

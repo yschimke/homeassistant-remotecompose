@@ -1,0 +1,66 @@
+<!doctype html>
+<!--
+  Committed Claude Design HTML export for the "light on" tile card.
+
+  See tile-temperature-sensor.html for how the @design-parity/adapter-claude-design
+  adapter consumes this file. The handoff `src` paths reuse the committed
+  ground-truth references under references/tile/, resolved relative to this file.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Tile · Light On — Claude Design export</title>
+    <style>
+      .tile {
+        box-sizing: border-box;
+        width: 187px;
+        height: 43px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 8px 12px;
+        border-radius: 12px;
+        background: #fff3d6;
+        font-family: Inter, system-ui, sans-serif;
+      }
+      .tile .icon {
+        width: 28px;
+        height: 28px;
+        border-radius: 14px;
+        background: #f5b912;
+      }
+      .tile .text { display: flex; flex-direction: column; }
+      .tile .title { font-size: 13px; font-weight: 600; color: #1a1c1e; }
+      .tile .state { font-size: 12px; color: #44474e; }
+    </style>
+  </head>
+  <body>
+    <div class="tile">
+      <div class="icon"></div>
+      <div class="text">
+        <span class="title">Kitchen</span>
+        <span class="state">On</span>
+      </div>
+    </div>
+
+    <script type="application/design-parity+json">
+      {
+        "componentId": "previews/src/main/kotlin/ee/schimke/ha/previews/TileCardPreviews.kt#Tile_LightOn",
+        "images": [
+          {
+            "state": "default",
+            "theme": "light",
+            "size": "compact",
+            "src": "../../references/tile/light_on_light.png"
+          },
+          {
+            "state": "default",
+            "theme": "dark",
+            "size": "compact",
+            "src": "../../references/tile/light_on_dark.png"
+          }
+        ]
+      }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,74 @@
+<!doctype html>
+<!--
+  Committed Claude Design HTML export for the temperature-sensor tile card.
+
+  Claude Design is a research preview with no read API and no Figma export, so
+  the design reference is committed as this HTML document and resolved by the
+  @design-parity/adapter-claude-design adapter via the repo-root design-map.json
+  (the `claude-design` entry points here).
+
+  The visible markup below is a lightweight mock of the design; the
+  application/design-parity+json <script> at the end is the machine-readable
+  handoff manifest the adapter actually reads. Its image `src` paths reuse the
+  ground-truth HA-frontend reference PNGs already committed under references/tile/
+  (resolved relative to THIS file), so design-parity diffs the Compose candidate
+  against the same captures the :integration pixel-diff tests use.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Tile · Temperature Sensor — Claude Design export</title>
+    <style>
+      .tile {
+        box-sizing: border-box;
+        width: 187px;
+        height: 43px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 8px 12px;
+        border-radius: 12px;
+        background: #f2f2f7;
+        font-family: Inter, system-ui, sans-serif;
+      }
+      .tile .icon {
+        width: 28px;
+        height: 28px;
+        border-radius: 14px;
+        background: #d8dce4;
+      }
+      .tile .text { display: flex; flex-direction: column; }
+      .tile .title { font-size: 13px; font-weight: 600; color: #1a1c1e; }
+      .tile .state { font-size: 12px; color: #44474e; }
+    </style>
+  </head>
+  <body>
+    <div class="tile">
+      <div class="icon"></div>
+      <div class="text">
+        <span class="title">Living Room</span>
+        <span class="state">21.5 °C</span>
+      </div>
+    </div>
+
+    <script type="application/design-parity+json">
+      {
+        "componentId": "previews/src/main/kotlin/ee/schimke/ha/previews/TileCardPreviews.kt#Tile_TemperatureSensor",
+        "images": [
+          {
+            "state": "default",
+            "theme": "light",
+            "size": "compact",
+            "src": "../../references/tile/temperature_sensor_light.png"
+          },
+          {
+            "state": "default",
+            "theme": "dark",
+            "size": "compact",
+            "src": "../../references/tile/temperature_sensor_dark.png"
+          }
+        ]
+      }
+    </script>
+  </body>
+</html>

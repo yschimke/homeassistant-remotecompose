@@ -1,0 +1,46 @@
+[
+  {
+    "componentId": "previews/src/main/kotlin/ee/schimke/ha/previews/TileCardPreviews.kt#Tile_TemperatureSensor",
+    "images": [
+      {
+        "state": "default",
+        "theme": "light",
+        "size": "compact",
+        "uri": "design/candidates/normalized/tile_temperature_sensor_light.png",
+        "width": 492,
+        "height": 112
+      },
+      {
+        "state": "default",
+        "theme": "dark",
+        "size": "compact",
+        "uri": "design/candidates/normalized/tile_temperature_sensor_dark.png",
+        "width": 492,
+        "height": 112
+      }
+    ],
+    "semantics": { "theme": "light", "root": {} }
+  },
+  {
+    "componentId": "previews/src/main/kotlin/ee/schimke/ha/previews/TileCardPreviews.kt#Tile_LightOn",
+    "images": [
+      {
+        "state": "default",
+        "theme": "light",
+        "size": "compact",
+        "uri": "design/candidates/normalized/tile_light_on_light.png",
+        "width": 492,
+        "height": 112
+      },
+      {
+        "state": "default",
+        "theme": "dark",
+        "size": "compact",
+        "uri": "design/candidates/normalized/tile_light_on_dark.png",
+        "width": 492,
+        "height": 112
+      }
+    ],
+    "semantics": { "theme": "light", "root": {} }
+  }
+]
