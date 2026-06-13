@@ -1,0 +1,29 @@
+{
+  "$schema": "https://github.com/yschimke/design-parity/schema/design-map.schema.json",
+  "components": [
+    {
+      "code": "previews/src/main/kotlin/ee/schimke/ha/previews/TileCardPreviews.kt#Tile_TemperatureSensor",
+      "source": "claude-design",
+      "ref": "design/reference/tile-temperature-sensor.html",
+      "previewId": "ee.schimke.ha.previews.TileCardPreviewsKt.Tile_TemperatureSensor_tile — sensor temperature"
+    },
+    {
+      "code": "previews/src/main/kotlin/ee/schimke/ha/previews/TileCardPreviews.kt#Tile_TemperatureSensor_Dark",
+      "source": "claude-design",
+      "ref": "design/reference/tile-temperature-sensor-dark.html",
+      "previewId": "ee.schimke.ha.previews.TileCardPreviewsKt.Tile_TemperatureSensor_Dark_tile — sensor temperature (dark)"
+    },
+    {
+      "code": "previews/src/main/kotlin/ee/schimke/ha/previews/TileCardPreviews.kt#Tile_LightOn",
+      "source": "claude-design",
+      "ref": "design/reference/tile-light-on.html",
+      "previewId": "ee.schimke.ha.previews.TileCardPreviewsKt.Tile_LightOn_tile — light on"
+    },
+    {
+      "code": "previews/src/main/kotlin/ee/schimke/ha/previews/TileCardPreviews.kt#Tile_LightOn_Dark",
+      "source": "claude-design",
+      "ref": "design/reference/tile-light-on-dark.html",
+      "previewId": "ee.schimke.ha.previews.TileCardPreviewsKt.Tile_LightOn_Dark_tile — light on (dark)"
+    }
+  ]
+}

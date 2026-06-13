@@ -1,0 +1,45 @@
+<!doctype html>
+<!--
+  Committed Claude Design HTML export for a single tile @Preview.
+
+  Consumed by @design-parity/adapter-claude-design via the repo-root
+  design-map.json (source: "claude-design"). One export == one component, so
+  there is one file per @Preview (matching the compose-ai-tools bundle's
+  per-preview granularity). The handoff `src` reuses the committed ground-truth
+  HA-frontend capture under references/tile/ (resolved relative to this file).
+
+  The handoff image carries NO `theme`: the compose candidate is rendered from a
+  @Preview that themes via ProvideHaTheme(HaTheme.Dark/Light), so its uiMode is
+  unset and the candidate image has no theme to pair on. Both sides therefore
+  key on state/size only (default/compact). See DESIGN-PARITY-TRIAL.md.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Light On (light) — Claude Design export</title>
+    <style>
+      .tile { box-sizing:border-box; width:187px; height:43px; display:flex;
+        align-items:center; gap:12px; padding:8px 12px; border-radius:12px;
+        background:#fff3d6; font-family:Inter,system-ui,sans-serif; }
+      .tile .icon { width:28px; height:28px; border-radius:14px; background:#f5b912; }
+      .tile .text { display:flex; flex-direction:column; }
+      .tile .title { font-size:13px; font-weight:600; }
+      .tile .state { font-size:12px; opacity:.7; }
+    </style>
+  </head>
+  <body>
+    <div class="tile">
+      <div class="icon"></div>
+      <div class="text"><span class="title">Kitchen</span><span class="state">On</span></div>
+    </div>
+
+    <script type="application/design-parity+json">
+      {
+        "componentId": "previews/src/main/kotlin/ee/schimke/ha/previews/TileCardPreviews.kt#Tile_LightOn",
+        "images": [
+          { "state": "default", "size": "compact", "src": "../../references/tile/light_on_light.png" }
+        ]
+      }
+    </script>
+  </body>
+</html>
