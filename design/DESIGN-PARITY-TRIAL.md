@@ -125,6 +125,64 @@ score is 100% only because of a 2px dimension drift** — see friction #4.
    `design-parity run --out` (or have the run write the per-component
    reference/verdict JSON alongside the triptychs).
 
+## Part 2 — live daemon path, native findings ingested (#43)
+
+The static-bundle verdict above is visual + structural only (no semantics in the
+bundle, friction #3). design-parity #43 adds the **daemon** candidate source,
+which ingests the renderer's **native** a11y/i18n findings. This part exercises
+that ingest end-to-end on the same tiles, upgrading the verdict to real
+accessibility findings.
+
+### What worked, and the one sandbox blocker
+
+- **The stdio JSON-RPC transport is built and unit-tested** (`StdioDaemonClient`
+  / `JsonRpcConnection` / `FrameDecoder` in `@design-parity/candidate`, PR #46).
+- **Driving a live standalone daemon via `compose-preview bundle daemon
+  tile-bundle.png` is blocked in this environment**: the bundle is `backend=android`,
+  which needs the **Android daemon sidecar** (`compose-preview-android-daemon-0.15.0.zip`,
+  ~382 MB, shipped separately and pointed at via
+  `-Dcomposeai.cli.libDaemonAndroidDir=…`). It isn't in the CLI tarball and isn't
+  installed here, so the daemon exits before the JSON-RPC handshake. *(New
+  friction — and a nudge toward Principle 6: a CMP/desktop bundle would have
+  rendered with the bundled desktop daemon, no 382 MB sidecar.)*
+- **The native data products themselves render fine** through the Gradle-backed
+  path that `compose-preview` already uses here. `compose-preview a11y --json`
+  writes per-preview `a11y-atf.json`, `a11y-hierarchy.json`,
+  `a11y-touchTargets.json`, `i18n-translations.json` under
+  `build/compose-previews/data/<id>/` — **the same shapes the daemon's
+  `data/fetch` returns**. So the ingest was validated by pointing a disk-backed
+  `DaemonDataClient` at those files (image from the bundle), driving the real
+  `daemonSource` → `nativeChecks` → `diff`. Captured under
+  [`design/candidates/native-data/`](candidates/native-data/) for provenance.
+
+### Verdict (daemon path)
+
+Each tile is now **`fail`** (advisory under `code-led`; `blocked: false`), with
+the a11y findings coming from the **renderer's native ATF** and the structural
+findings from design-parity's own diff:
+
+```
+…#Tile_TemperatureSensor — fail
+- [a11y/error] This item may not have a label readable by screen readers.
+               (androidx.compose.remote.player.view.RemoteComposePlayer)
+- [a11y/error] Touch target 185.9×41.9dp belowMinimum
+- [semantic/warn] … (theme coverage / root role+label / unpaired variant)
+```
+
+Both a11y errors are **genuine**: the tile renders as a single
+`RemoteComposePlayer` with no merged screen-reader label, and its 41.9 dp height
+is under the 48 dp touch-target minimum. Pages:
+[`out/daemon-parity-*.html`](../out/). This is exactly the #43 contract — a11y/i18n
+from the renderer, token/visual/semantic from design-parity — proven on a real
+component; only the live stdio daemon spin-up (vs the on-disk products) is the
+remaining environment-gated step.
+
+### Extra friction
+
+8. **`compose-preview a11y --id <one>` still renders the whole module** (185
+   previews here) — `--id`/`--filter` narrow the *printed* output, not the ATF
+   walk. Getting one component's native products is a full-module cost.
+
 ## Files added by this trial
 
 ```
@@ -132,6 +190,8 @@ design-map.json                              # correspondence + explicit preview
 .design-parity.json                          # parity direction (code-led)
 design/reference/tile-*.html                 # 4 Claude Design exports (one per @Preview, no theme)
 design/candidates/tile-bundle.png            # compose-ai-tools portable bundle (PNG+ZIP polyglot)
-out/parity-*.html                            # 4 self-contained comparison pages
+design/candidates/native-data/*/             # native a11y/i18n data products (daemon path, #43)
+out/parity-*.html                            # 4 static-bundle comparison pages
+out/daemon-parity-*.html                     # 4 daemon-path pages (native a11y findings)
 design/DESIGN-PARITY-TRIAL.md                # this report
 ```

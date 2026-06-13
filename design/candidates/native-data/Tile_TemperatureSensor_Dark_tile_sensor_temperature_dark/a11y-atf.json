@@ -1,0 +1,1 @@
+{"findings":[{"level":"ERROR","type":"SpeakableTextPresentCheck","message":"This item may not have a label readable by screen readers.","viewDescription":"androidx.compose.remote.player.view.RemoteComposePlayer","boundsInScreen":"0,0,488,110"}]}
