@@ -19,7 +19,7 @@ remote-material3 = "1.0.0-alpha04"
 
 # AndroidX Glance Wear (alpha — runtime feature gated on Wear OS 7+ / API 37
 # inside the library; we use it for the per-slot wear widgets).
-glance-wear = "1.0.0-alpha10"
+glance-wear = "1.0.0-alpha12"
 
 # Android
 android-minSdk = "29"
