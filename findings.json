@@ -1227,6 +1227,42 @@
       "variant": ""
     },
     {
+      "annotatedBasename": "Button_On_Dark_button_on_dark.a11y.png",
+      "cleanBasename": "Button_On_Dark_button_on_dark.png",
+      "findings": [
+        {
+          "boundsInScreen": "0,0,488,236",
+          "level": "ERROR",
+          "message": "This item may not have a label readable by screen readers.",
+          "type": "SpeakableTextPresentCheck",
+          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
+        }
+      ],
+      "functionName": "Button_On_Dark",
+      "module": "previews",
+      "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Button_On_Dark_button on (dark)",
+      "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
+      "variant": ""
+    },
+    {
+      "annotatedBasename": "Button_On_Light_button_on_light.a11y.png",
+      "cleanBasename": "Button_On_Light_button_on_light.png",
+      "findings": [
+        {
+          "boundsInScreen": "0,0,488,236",
+          "level": "ERROR",
+          "message": "This item may not have a label readable by screen readers.",
+          "type": "SpeakableTextPresentCheck",
+          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
+        }
+      ],
+      "functionName": "Button_On_Light",
+      "module": "previews",
+      "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Button_On_Light_button on (light)",
+      "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
+      "variant": ""
+    },
+    {
       "annotatedBasename": "Calendar_Dark_calendar_dark.a11y.png",
       "cleanBasename": "Calendar_Dark_calendar_dark.png",
       "findings": [
