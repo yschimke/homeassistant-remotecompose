@@ -6,6 +6,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.staticCompositionLocalOf
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
+import ee.schimke.ha.rc.components.LocalRemoteAnimationsEnabled
 
 /**
  * Composition local that lets stack / grid / conditional cards recurse into the registry for their
@@ -20,7 +21,16 @@ val LocalCardRegistry =
 
 @Composable
 fun ProvideCardRegistry(registry: CardRegistry, content: @Composable () -> Unit) {
-  CompositionLocalProvider(LocalCardRegistry provides registry, content = content)
+  // A frozen clock (previews / tests provide a [FixedHaClock]) also freezes value tweens: the
+  // encoded document carries the settled value with no startup animation, so a screenshot capture
+  // can't land mid-tween and drift the PNG between runs. Production's [SystemHaClock] leaves
+  // `isFrozen == false`, so live host writebacks keep animating. Same contract the clock card uses
+  // for its static-label path — see [LocalRemoteAnimationsEnabled].
+  CompositionLocalProvider(
+    LocalCardRegistry provides registry,
+    LocalRemoteAnimationsEnabled provides !LocalHaClock.current.isFrozen,
+    content = content,
+  )
 }
 
 /**
