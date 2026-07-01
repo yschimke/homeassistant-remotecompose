@@ -18,6 +18,7 @@ import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import ee.schimke.ha.client.DashboardSummary
 import ee.schimke.ha.model.CardConfig
+import ee.schimke.ha.model.HistoryPoint
 import ee.schimke.ha.rc.components.ThemeStyle
 import ee.schimke.terrazzo.LocalTerrazzoGraph
 import ee.schimke.terrazzo.SettingsScreen
@@ -52,6 +53,7 @@ import ee.schimke.terrazzo.dashboard.DashboardSelectionScreen
 import ee.schimke.terrazzo.dashboard.DashboardViewScreen
 import ee.schimke.terrazzo.dashboard.ManagePinnedContent
 import ee.schimke.terrazzo.dashboard.PinRowItem
+import ee.schimke.terrazzo.dashboard.historyEntityIds
 import ee.schimke.terrazzo.discovery.DiscoveryScreen
 import ee.schimke.terrazzo.logs.LogsContent
 import ee.schimke.terrazzo.ui.TerrazzoTheme
@@ -336,6 +338,16 @@ private val HISTORY_SAMPLE_CARD =
       },
   )
 
+/**
+ * History series for [HISTORY_SAMPLE_CARD], computed synchronously off the same frozen
+ * [DEMO_CLOCK_MS] the preview session reads, for the default 24-hour range. Seeding
+ * [CardHistoryScreen] with this makes the first composition render the settled chart instead of the
+ * async loading spinner, so the screenshot can't capture the spinner mid-fetch (the #409
+ * flaky-render investigation).
+ */
+private val HISTORY_SAMPLE_SERIES: Map<String, List<HistoryPoint>> =
+  DemoData.history(HISTORY_SAMPLE_CARD.historyEntityIds(), hours = 24, nowMs = DEMO_CLOCK_MS)
+
 @Preview(
   name = "card history",
   showBackground = false,
@@ -350,6 +362,7 @@ fun Screen_CardHistory() = PhoneHost {
     snapshot = DemoData.snapshot(),
     onBack = {},
     onAddToHomeScreen = {},
+    initialHistory = HISTORY_SAMPLE_SERIES,
   )
 }
 
@@ -368,6 +381,7 @@ fun Screen_CardHistory_ThemeStyle(@PreviewParameter(ThemeStyleProvider::class) s
       snapshot = DemoData.snapshot(),
       onBack = {},
       onAddToHomeScreen = {},
+      initialHistory = HISTORY_SAMPLE_SERIES,
     )
   }
 

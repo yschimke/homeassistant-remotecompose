@@ -291,9 +291,9 @@ private fun ArcCanvas(
     if (target != null) {
       LiveValues.namedFloat(data.entityId, "target_fraction", target.coerceIn(0f, 1f))
     } else null
-  val animatedTargetFraction = rawTargetFraction?.let {
-    animateRemoteFloat(it, DialAnimationSeconds)
-  }
+  val animatedTargetFraction =
+    if (rawTargetFraction != null) animateRemoteFloat(rawTargetFraction, DialAnimationSeconds)
+    else null
   val animatedMarkerAngle = animatedTargetFraction?.let { 135f.rf + it * 270f.rf }
 
   RemoteCanvas(modifier = RemoteModifier.fillMaxSize()) {

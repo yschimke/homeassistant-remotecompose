@@ -244,6 +244,22 @@ private fun WithImageStrategy(strategy: PictureImageStrategy?, content: @Composa
   }
 }
 
+/**
+ * Locals every matrix cell installs **inside** its `CachedCardPreview` capture composition. Outer
+ * CompositionLocals don't cross the `captureSingleRemoteDocument` boundary, so the matrix-level
+ * [FixedHaClock] (provided above `CardPreviewMatrix`'s content) never reaches the captured cards.
+ * Re-providing it here freezes time-based content and — through [ProvideCardRegistry]'s `isFrozen`
+ * bridge — drops the cards' startup value tweens, which otherwise leave the per-cell capture
+ * landing mid-animation so the PNG drifts between runs (the #409 / #412 flaky-render
+ * investigation).
+ */
+@Composable
+private fun MatrixCaptureLocals(content: @Composable () -> Unit) {
+  CompositionLocalProvider(LocalHaClock provides FixedHaClock(PreviewNow)) {
+    ProvideCardRegistry(defaultRegistry()) { ProvideHaTheme(HaTheme.Dark, content = content) }
+  }
+}
+
 @Composable
 private fun WrapModeCell(
   card: CardConfig,
@@ -264,12 +280,10 @@ private fun WrapModeCell(
         card = card,
         snapshot = snapshot,
       ) {
-        ProvideCardRegistry(defaultRegistry()) {
-          ProvideHaTheme(HaTheme.Dark) {
-            ProvideCardSizeMode(CardSizeMode.Wrap) {
-              WithImageStrategy(imageStrategy) {
-                RenderChild(card, snapshot, RemoteModifier.rcFillMaxWidth())
-              }
+        MatrixCaptureLocals {
+          ProvideCardSizeMode(CardSizeMode.Wrap) {
+            WithImageStrategy(imageStrategy) {
+              RenderChild(card, snapshot, RemoteModifier.rcFillMaxWidth())
             }
           }
         }
@@ -308,18 +322,16 @@ private fun FixedModeCell(
           card = card,
           snapshot = snapshot,
         ) {
-          ProvideCardRegistry(defaultRegistry()) {
-            ProvideHaTheme(HaTheme.Dark) {
-              ProvideCardSizeMode(CardSizeMode.Fixed) {
-                // Same full-canvas surface the launcher
-                // widget wraps the card in, so the preview
-                // fills the cell instead of leaving blank
-                // space below short content.
-                ProvideCardChrome(enabled = false) {
-                  RemoteHaWidgetSurface {
-                    WithImageStrategy(imageStrategy) {
-                      RenderChild(card, snapshot, RemoteModifier.rcFillMaxWidth())
-                    }
+          MatrixCaptureLocals {
+            ProvideCardSizeMode(CardSizeMode.Fixed) {
+              // Same full-canvas surface the launcher
+              // widget wraps the card in, so the preview
+              // fills the cell instead of leaving blank
+              // space below short content.
+              ProvideCardChrome(enabled = false) {
+                RemoteHaWidgetSurface {
+                  WithImageStrategy(imageStrategy) {
+                    RenderChild(card, snapshot, RemoteModifier.rcFillMaxWidth())
                   }
                 }
               }
@@ -370,22 +382,20 @@ private fun WatchFaceCell(
             card = card,
             snapshot = snapshot,
           ) {
-            ProvideCardRegistry(defaultRegistry()) {
-              ProvideHaTheme(HaTheme.Dark) {
-                ProvideCardSizeMode(CardSizeMode.Fixed) {
-                  ProvideCardChrome(enabled = false) {
-                    // Mirror the real Glance Wear slot
-                    // surface, which disables FlowLayout
-                    // (its capture profile rejects op
-                    // 240); cards then take their
-                    // non-wrapping compact path here too,
-                    // so the matrix wear cells show what
-                    // the watch actually draws.
-                    ProvideFlowLayoutSupport(enabled = false) {
-                      RemoteHaWidgetSurface {
-                        WithImageStrategy(imageStrategy) {
-                          RenderChild(card, snapshot, RemoteModifier.rcFillMaxWidth())
-                        }
+            MatrixCaptureLocals {
+              ProvideCardSizeMode(CardSizeMode.Fixed) {
+                ProvideCardChrome(enabled = false) {
+                  // Mirror the real Glance Wear slot
+                  // surface, which disables FlowLayout
+                  // (its capture profile rejects op
+                  // 240); cards then take their
+                  // non-wrapping compact path here too,
+                  // so the matrix wear cells show what
+                  // the watch actually draws.
+                  ProvideFlowLayoutSupport(enabled = false) {
+                    RemoteHaWidgetSurface {
+                      WithImageStrategy(imageStrategy) {
+                        RenderChild(card, snapshot, RemoteModifier.rcFillMaxWidth())
                       }
                     }
                   }
