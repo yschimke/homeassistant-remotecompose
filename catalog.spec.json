@@ -1,0 +1,84 @@
+{
+  "$comment": "Design-catalog spec for the Terrazzo / Home Assistant RemoteCompose design system. Code-led: it declares which @Preview composables (by function name) make up the published sticker sheet, their grouping, and captions. Consumed by @design-parity/catalog-export (via compose-ai-tools' scripts/design-artifacts/generate-design-catalog.mjs) over a `compose-preview bundle pack --module :previews` render to produce the importable design-artifacts/homeassistant-remotecompose bundle the public preview server serves at /homeassistant-remotecompose/. Each `preview` MUST equal the exact @Preview function name in :previews (ee.schimke.ha.previews). Cards render through the RemoteContentPreview host but are annotated with the standard @Preview, so they rasterise headless via Robolectric.",
+  "system": "homeassistant-remotecompose",
+  "title": "Terrazzo · Home Assistant RemoteCompose",
+  "library": [
+    "androidx.compose.material3:material3",
+    "androidx.compose.remote:remote-player-compose (RemoteCompose)",
+    "ee.schimke.ha:rc-components (Terrazzo themes)"
+  ],
+  "module": "previews",
+  "modes": ["light", "dark"],
+  "breakpoints": [{ "size": "compact", "widthDp": 360 }],
+  "groups": [
+    {
+      "name": "Themes",
+      "components": [
+        {
+          "componentId": "Theme/Material3-Light",
+          "preview": "Theme_Material3_Light",
+          "caption": "Material 3 defaults — colours, type and the surface-elevation strip (light)."
+        },
+        { "componentId": "Theme/Material3-Dark", "preview": "Theme_Material3_Dark", "caption": "Material 3 defaults (dark)." },
+        {
+          "componentId": "Theme/Home-Light",
+          "preview": "Theme_Home_Light",
+          "caption": "Home palette — HA blue, Roboto Flex + Inter (light)."
+        },
+        { "componentId": "Theme/Home-Dark", "preview": "Theme_Home_Dark", "caption": "Home palette (dark)." },
+        {
+          "componentId": "Theme/Mushroom-Light",
+          "preview": "Theme_Mushroom_Light",
+          "caption": "Mushroom palette — warm salmon, Figtree (light)."
+        },
+        { "componentId": "Theme/Mushroom-Dark", "preview": "Theme_Mushroom_Dark", "caption": "Mushroom palette (dark)." },
+        {
+          "componentId": "Theme/Minimalist-Light",
+          "preview": "Theme_Minimalist_Light",
+          "caption": "Minimalist palette — neutral slate, IBM Plex Sans (light)."
+        },
+        { "componentId": "Theme/Minimalist-Dark", "preview": "Theme_Minimalist_Dark", "caption": "Minimalist palette (dark)." },
+        {
+          "componentId": "Theme/Kiosk-Light",
+          "preview": "Theme_Kiosk_Light",
+          "caption": "Kiosk palette — high-contrast teal, Atkinson Hyperlegible (light)."
+        },
+        { "componentId": "Theme/Kiosk-Dark", "preview": "Theme_Kiosk_Dark", "caption": "Kiosk palette (dark)." }
+      ]
+    },
+    {
+      "name": "Cards",
+      "components": [
+        { "componentId": "Card/Button-Light", "preview": "Button_Light", "caption": "Button card — action states (light)." },
+        { "componentId": "Card/Button-Dark", "preview": "Button_Dark", "caption": "Button card (dark)." },
+        { "componentId": "Card/Entity-Light", "preview": "Entity_Light", "caption": "Entity card — a single entity row (light)." },
+        { "componentId": "Card/Entity-Dark", "preview": "Entity_Dark", "caption": "Entity card (dark)." },
+        { "componentId": "Card/Entities-Light", "preview": "Entities_Light", "caption": "Entities card — a multi-entity list (light)." },
+        { "componentId": "Card/Entities-Dark", "preview": "Entities_Dark", "caption": "Entities card (dark)." },
+        { "componentId": "Card/Glance-Light", "preview": "Glance_Light", "caption": "Glance card — an icon grid (light)." },
+        { "componentId": "Card/Glance-Dark", "preview": "Glance_Dark", "caption": "Glance card (dark)." },
+        { "componentId": "Card/Tile-Light", "preview": "Tile_Light", "caption": "Tile card — the primary HA card (light)." },
+        { "componentId": "Card/Tile-Dark", "preview": "Tile_Dark", "caption": "Tile card (dark)." }
+      ]
+    },
+    {
+      "name": "Specialised cards",
+      "components": [
+        { "componentId": "Card/Shutter-Light", "preview": "Shutter_Light", "caption": "Enhanced shutter card (light)." },
+        { "componentId": "Card/Shutter-Dark", "preview": "Shutter_Dark", "caption": "Enhanced shutter card (dark)." },
+        {
+          "componentId": "Card/Garage-Animation",
+          "preview": "Garage_Animation_Light",
+          "caption": "Garage door — the open/close animation strip (0–100%)."
+        },
+        {
+          "componentId": "Card/Garage-State",
+          "preview": "Garage_State_Light",
+          "caption": "Garage door — closed / opening / open / closing / unavailable."
+        },
+        { "componentId": "Dashboard/Light", "preview": "Dashboard_Light", "caption": "A full mixed-card dashboard stack (light)." },
+        { "componentId": "Dashboard/Dark", "preview": "Dashboard_Dark", "caption": "A full mixed-card dashboard stack (dark)." }
+      ]
+    }
+  ]
+}
