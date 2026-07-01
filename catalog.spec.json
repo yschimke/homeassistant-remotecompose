@@ -49,6 +49,8 @@
     {
       "name": "Cards",
       "components": [
+        { "componentId": "Card/Button-Light", "preview": "Button_On_Light", "caption": "Button card — a light entity, on (light)." },
+        { "componentId": "Card/Button-Dark", "preview": "Button_On_Dark", "caption": "Button card — a light entity, on (dark)." },
         { "componentId": "Card/Entity-Light", "preview": "Entity_Light", "caption": "Entity card — a single entity row (light)." },
         { "componentId": "Card/Entity-Dark", "preview": "Entity_Dark", "caption": "Entity card (dark)." },
         { "componentId": "Card/Entities-Light", "preview": "Entities_Light", "caption": "Entities card — a multi-entity list (light)." },
