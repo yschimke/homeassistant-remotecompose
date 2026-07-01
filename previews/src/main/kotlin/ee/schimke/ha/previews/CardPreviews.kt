@@ -113,6 +113,28 @@ fun Button_Dark(
 private fun buttonCard() =
   card("""{"type":"button","entity":"light.kitchen","name":"Kitchen","show_name":true}""")
 
+// Non-parameterized button previews for the PUBLISHED design catalog. Button_Light/Dark above fan
+// out over on/off/unavailable via @PreviewParameter, which renders one PNG per state but emits NO
+// compose-semantics.json — and the fail-closed catalog exporter drops any component without a
+// captured semantics tree. These render a single fixed "on" state (the provider's first value) so
+// the daemon captures semantics, keeping the button card in the sticker sheet. See
+// homeassistant-remotecompose#418.
+private val KitchenLightOn: HaSnapshot = KitchenLightStatesProvider().values.first().second
+
+@Preview(name = "button on (light)", showBackground = false, widthDp = 187, heightDp = 91)
+@Composable
+fun Button_On_Light() =
+  CardHost(HaTheme.Light) {
+    RenderChild(buttonCard(), KitchenLightOn, RemoteModifier.fillMaxWidth())
+  }
+
+@Preview(name = "button on (dark)", showBackground = false, widthDp = 187, heightDp = 91)
+@Composable
+fun Button_On_Dark() =
+  CardHost(HaTheme.Dark) {
+    RenderChild(buttonCard(), KitchenLightOn, RemoteModifier.fillMaxWidth())
+  }
+
 // ——— entity ———
 
 // Our converter emits a simple row that's visibly smaller than HA's
