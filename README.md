@@ -133,6 +133,8 @@ Auto-generated from `main`. Browse inline or compare against PR branches.
 | `Button_Light` | <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/main/renders/previews/Button_Light_button_light_off.png" width="150" /> |
 | `Button_Light` | <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/main/renders/previews/Button_Light_button_light_on.png" width="150" /> |
 | `Button_Light` | <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/main/renders/previews/Button_Light_button_light_unavailable.png" width="150" /> |
+| `Button_On_Dark` | <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/main/renders/previews/Button_On_Dark_button_on_dark.png" width="150" /> |
+| `Button_On_Light` | <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/main/renders/previews/Button_On_Light_button_on_light.png" width="150" /> |
 | `Calendar_Dark` | <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/main/renders/previews/Calendar_Dark_calendar_dark.png" width="150" /> |
 | `Calendar_Light` | <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/main/renders/previews/Calendar_Light_calendar_light.png" width="150" /> |
 | `Clock_Dark` | <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/main/renders/previews/Clock_Dark_clock_dark.png" width="150" /> |
