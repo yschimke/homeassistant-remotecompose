@@ -129,6 +129,11 @@ fun CardHistoryScreen(
   onBack: () -> Unit,
   onAddToHomeScreen: () -> Unit,
   contentPadding: PaddingValues = PaddingValues(0.dp),
+  // Pre-fetched history to seed the first composition. Production leaves this null and the section
+  // fetches asynchronously (showing a spinner meanwhile); deterministic screenshot previews pass a
+  // synchronously-computed series so the render shows the settled chart on the first frame rather
+  // than racing the async fetch and capturing the spinner (the #409 flaky-render investigation).
+  initialHistory: Map<String, List<HistoryPoint>>? = null,
 ) {
   val entityIds = remember(card) { card.historyEntityIds() }
   var hours by remember { mutableIntStateOf(24) }
@@ -171,6 +176,7 @@ fun CardHistoryScreen(
           snapshot = snapshot,
           hours = hours,
           onHoursChange = { hours = it },
+          initialHistory = initialHistory,
         )
       }
 
@@ -494,6 +500,7 @@ private fun HistorySection(
   snapshot: HaSnapshot,
   hours: Int,
   onHoursChange: (Int) -> Unit,
+  initialHistory: Map<String, List<HistoryPoint>>? = null,
 ) {
   Text("History", style = MaterialTheme.typography.titleMedium)
 
@@ -508,9 +515,16 @@ private fun HistorySection(
   }
 
   // produceState keyed by (entityIds, hours) re-runs the fetch whenever
-  // the user picks a new range; null means "still loading".
+  // the user picks a new range; null means "still loading". Seeded with
+  // [initialHistory] so a preview renders the settled chart on the first
+  // frame rather than racing the async fetch and capturing the spinner.
   val history by
-    produceState<Map<String, List<HistoryPoint>>?>(initialValue = null, session, entityIds, hours) {
+    produceState<Map<String, List<HistoryPoint>>?>(
+      initialValue = initialHistory,
+      session,
+      entityIds,
+      hours,
+    ) {
       value = null
       value = runCatching { session.fetchHistory(entityIds, hours) }.getOrDefault(emptyMap())
     }
