@@ -359,7 +359,7 @@ fun Screen_CardHistory() = PhoneHost {
   CardHistoryScreen(
     session = demoSession(),
     card = HISTORY_SAMPLE_CARD,
-    snapshot = DemoData.snapshot(),
+    snapshot = DemoData.snapshot(DEMO_CLOCK_MS),
     onBack = {},
     onAddToHomeScreen = {},
     initialHistory = HISTORY_SAMPLE_SERIES,
@@ -378,7 +378,7 @@ fun Screen_CardHistory_ThemeStyle(@PreviewParameter(ThemeStyleProvider::class) s
     CardHistoryScreen(
       session = demoSession(),
       card = HISTORY_SAMPLE_CARD,
-      snapshot = DemoData.snapshot(),
+      snapshot = DemoData.snapshot(DEMO_CLOCK_MS),
       onBack = {},
       onAddToHomeScreen = {},
       initialHistory = HISTORY_SAMPLE_SERIES,
