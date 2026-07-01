@@ -49,8 +49,6 @@
     {
       "name": "Cards",
       "components": [
-        { "componentId": "Card/Button-Light", "preview": "Button_Light", "caption": "Button card — action states (light)." },
-        { "componentId": "Card/Button-Dark", "preview": "Button_Dark", "caption": "Button card (dark)." },
         { "componentId": "Card/Entity-Light", "preview": "Entity_Light", "caption": "Entity card — a single entity row (light)." },
         { "componentId": "Card/Entity-Dark", "preview": "Entity_Dark", "caption": "Entity card (dark)." },
         { "componentId": "Card/Entities-Light", "preview": "Entities_Light", "caption": "Entities card — a multi-entity list (light)." },
@@ -66,16 +64,8 @@
       "components": [
         { "componentId": "Card/Shutter-Light", "preview": "Shutter_Light", "caption": "Enhanced shutter card (light)." },
         { "componentId": "Card/Shutter-Dark", "preview": "Shutter_Dark", "caption": "Enhanced shutter card (dark)." },
-        {
-          "componentId": "Card/Garage-Animation",
-          "preview": "Garage_Animation_Light",
-          "caption": "Garage door — the open/close animation strip (0–100%)."
-        },
-        {
-          "componentId": "Card/Garage-State",
-          "preview": "Garage_State_Light",
-          "caption": "Garage door — closed / opening / open / closing / unavailable."
-        },
+        { "componentId": "Card/Garage-Light", "preview": "Garage_TwoEntities_Light", "caption": "Garage door card — cover + light (light)." },
+        { "componentId": "Card/Garage-Dark", "preview": "Garage_TwoEntities_Dark", "caption": "Garage door card — cover + light (dark)." },
         { "componentId": "Dashboard/Light", "preview": "Dashboard_Light", "caption": "A full mixed-card dashboard stack (light)." },
         { "componentId": "Dashboard/Dark", "preview": "Dashboard_Dark", "caption": "A full mixed-card dashboard stack (dark)." }
       ]
