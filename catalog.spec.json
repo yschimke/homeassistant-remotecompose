@@ -57,8 +57,8 @@
         { "componentId": "Card/Entities-Dark", "preview": "Entities_Dark", "caption": "Entities card (dark)." },
         { "componentId": "Card/Glance-Light", "preview": "Glance_Light", "caption": "Glance card — an icon grid (light)." },
         { "componentId": "Card/Glance-Dark", "preview": "Glance_Dark", "caption": "Glance card (dark)." },
-        { "componentId": "Card/Tile-Light", "preview": "Tile_Light", "caption": "Tile card — the primary HA card (light)." },
-        { "componentId": "Card/Tile-Dark", "preview": "Tile_Dark", "caption": "Tile card (dark)." }
+        { "componentId": "Card/Tile-Light", "preview": "Tile_LightOn", "caption": "Tile card — the primary HA card, a light entity on (light)." },
+        { "componentId": "Card/Tile-Dark", "preview": "Tile_LightOn_Dark", "caption": "Tile card — a light entity on (dark)." }
       ]
     },
     {
