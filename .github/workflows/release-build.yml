@@ -56,7 +56,7 @@ jobs:
       HAS_GOOGLE_SERVICES: ${{ secrets.GOOGLE_SERVICES_JSON != '' }}
       PUBLISH_WEAR: ${{ inputs.publish_wear || false }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v6.0.3
         with:
           ref: ${{ github.ref_type == 'tag' && github.ref_name || inputs.tag }}
       - uses: ./.github/actions/setup
@@ -171,7 +171,7 @@ jobs:
 
       - name: Attach assets to GitHub release
         if: github.event_name == 'push' || github.event_name == 'workflow_call'
-        uses: softprops/action-gh-release@v3
+        uses: softprops/action-gh-release@v3.0.1
         with:
           tag_name: ${{ env.TAG_NAME }}
           # The AAB only exists when SIGNING_KEYSTORE is configured;
@@ -184,7 +184,7 @@ jobs:
 
       - name: Upload workflow artifact
         if: github.event_name == 'workflow_dispatch'
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@v7.0.1
         with:
           name: release-${{ steps.stage.outputs.version }}
           path: _release/
