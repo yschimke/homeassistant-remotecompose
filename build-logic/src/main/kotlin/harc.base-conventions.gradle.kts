@@ -89,11 +89,26 @@ run {
 // `-integration` jars) transitively; their classes overlap with the
 // unified `org.hamcrest:hamcrest:2.2` that newer test deps resolve to,
 // tripping a duplicate-class check at android-test build time.
+//
+// Align `androidx.concurrent:*` on 1.2.0. AGP resolves the androidTest
+// runtime classpath consistently with the app's main runtime classpath, so
+// main's resolved `concurrent-futures` version is injected as a `strictly`
+// constraint on `debugAndroidTestRuntimeClasspath`. Main resolves it to
+// 1.1.0, but that same test classpath pulls `androidx.test.ext:junit:1.3.0`,
+// which needs 1.2.0 — the strict-1.1.0 vs 1.2.0 pair is unresolvable and
+// fails the lint-model / android-test tasks. Forcing 1.2.0 (a compatible
+// minor bump) makes both classpaths agree.
 configurations.all {
   resolutionStrategy.eachDependency {
     if (requested.group == "org.hamcrest") {
       useTarget("org.hamcrest:hamcrest:3.0")
       because("Unify hamcrest split 1.3 jars with the 2.x unified jar")
+    }
+    if (requested.group == "androidx.concurrent") {
+      useVersion("1.2.0")
+      because(
+        "Align concurrent-futures across the main + androidTest classpaths (consistent resolution)"
+      )
     }
   }
 }

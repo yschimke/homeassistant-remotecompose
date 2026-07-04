@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.components.HA_ACTION_NAME
+import ee.schimke.ha.rc.components.enableRemoteImageUrls
 import java.io.ByteArrayInputStream
 
 /**
@@ -37,10 +38,14 @@ data class CardDocument(val bytes: ByteArray, val widthPx: Int, val heightPx: In
   override fun hashCode(): Int = (bytes.contentHashCode() * 31 + widthPx) * 31 + heightPx
 
   /** Deserialize into a [CoreDocument] ready for playback. */
-  fun decode(): CoreDocument =
-    CoreDocument().apply {
+  fun decode(): CoreDocument {
+    // alpha14 rejects URL/file image ops at parse time unless opted in — see
+    // ee.schimke.ha.rc.components.enableRemoteImageUrls.
+    enableRemoteImageUrls()
+    return CoreDocument().apply {
       initFromBuffer(RemoteComposeBuffer.fromInputStream(ByteArrayInputStream(bytes)))
     }
+  }
 }
 
 /**
@@ -123,6 +128,9 @@ fun CardPlayer(
   modifier: Modifier = Modifier,
   bitmapLoader: BitmapLoader = BitmapLoader.UNSUPPORTED,
 ) {
+  // alpha14 rejects URL/file image ops at parse time unless opted in — see
+  // ee.schimke.ha.rc.components.enableRemoteImageUrls.
+  enableRemoteImageUrls()
   val converter = registry.get(card.type) ?: return
   val doc =
     rememberRemoteDocument(

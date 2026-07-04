@@ -22,6 +22,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.viewinterop.AndroidView
+import ee.schimke.ha.rc.components.enableRemoteImageUrls
 import java.io.ByteArrayInputStream
 import kotlin.math.min
 
@@ -134,10 +135,14 @@ fun WrapAdaptiveRemoteDocumentPlayer(
   }
 }
 
-private fun decode(bytes: ByteArray): CoreDocument =
-  CoreDocument().apply {
+private fun decode(bytes: ByteArray): CoreDocument {
+  // alpha14 rejects URL/file image ops at parse time unless opted in — see
+  // ee.schimke.ha.rc.components.enableRemoteImageUrls.
+  enableRemoteImageUrls()
+  return CoreDocument().apply {
     initFromBuffer(RemoteComposeBuffer.fromInputStream(ByteArrayInputStream(bytes)))
   }
+}
 
 /**
  * Two-phase warmup:

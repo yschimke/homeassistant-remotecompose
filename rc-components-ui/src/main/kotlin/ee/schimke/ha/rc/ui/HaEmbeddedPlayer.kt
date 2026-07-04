@@ -13,6 +13,7 @@ import androidx.compose.remote.player.core.platform.BitmapLoader
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
+import ee.schimke.ha.rc.components.enableRemoteImageUrls
 
 /**
  * Tier-2 embedding host — RemotePreview, but with a [BitmapLoader] knob.
@@ -39,6 +40,9 @@ fun HaEmbeddedPlayer(
   bitmapLoader: BitmapLoader = BitmapLoader.UNSUPPORTED,
   content: @Composable @RemoteComposable () -> Unit,
 ) {
+  // alpha14 rejects URL/file image ops at parse time unless opted in — see
+  // ee.schimke.ha.rc.components.enableRemoteImageUrls.
+  enableRemoteImageUrls()
   BoxWithConstraints(modifier) {
     val density = LocalDensity.current
     val widthPx = with(density) { maxWidth.roundToPx() }
