@@ -173,7 +173,7 @@ horologist-datalayer-phone = { module = "com.google.android.horologist:horologis
 # documentation in `wear/src/main/proto/wear_sync.proto`.
 kotlinx-serialization-protobuf = { module = "org.jetbrains.kotlinx:kotlinx-serialization-protobuf", version.ref = "kotlinx-serialization" }
 androidx-lifecycle-runtime-ktx = { module = "androidx.lifecycle:lifecycle-runtime-ktx", version = "2.10.0" }
-androidx-lifecycle-runtime-compose = { module = "androidx.lifecycle:lifecycle-runtime-compose", version = "2.10.0" }
+androidx-lifecycle-runtime-compose = { module = "androidx.lifecycle:lifecycle-runtime-compose", version = "2.11.0" }
 androidx-lifecycle-process = { module = "androidx.lifecycle:lifecycle-process", version = "2.10.0" }
 
 # Test
