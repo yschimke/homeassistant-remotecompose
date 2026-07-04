@@ -58,7 +58,46 @@
         { "componentId": "Card/Glance-Light", "preview": "Glance_Light", "caption": "Glance card — an icon grid (light)." },
         { "componentId": "Card/Glance-Dark", "preview": "Glance_Dark", "caption": "Glance card (dark)." },
         { "componentId": "Card/Tile-Light", "preview": "Tile_LightOn", "caption": "Tile card — the primary HA card, a light entity on (light)." },
-        { "componentId": "Card/Tile-Dark", "preview": "Tile_LightOn_Dark", "caption": "Tile card — a light entity on (dark)." }
+        { "componentId": "Card/Tile-Dark", "preview": "Tile_LightOn_Dark", "caption": "Tile card — a light entity on (dark)." },
+        { "componentId": "Card/Light-Light", "preview": "LightCard_Light", "caption": "Light card — brightness + colour controls (light)." },
+        { "componentId": "Card/Light-Dark", "preview": "LightCard_Dark", "caption": "Light card (dark)." },
+        { "componentId": "Card/Thermostat-Light", "preview": "Thermostat_Light", "caption": "Thermostat card — climate setpoint dial (light)." },
+        { "componentId": "Card/Thermostat-Dark", "preview": "Thermostat_Dark", "caption": "Thermostat card (dark)." },
+        { "componentId": "Card/Gauge-Light", "preview": "Gauge_Light", "caption": "Gauge card — a bounded numeric reading (light)." },
+        { "componentId": "Card/Gauge-Dark", "preview": "Gauge_Dark", "caption": "Gauge card (dark)." },
+        { "componentId": "Card/Weather-Light", "preview": "WeatherForecast_Light", "caption": "Weather forecast card (light)." },
+        { "componentId": "Card/Weather-Dark", "preview": "WeatherForecast_Dark", "caption": "Weather forecast card (dark)." },
+        { "componentId": "Card/Media-Light", "preview": "MediaControl_Light", "caption": "Media control card — now-playing + transport (light)." },
+        { "componentId": "Card/Media-Dark", "preview": "MediaControl_Dark", "caption": "Media control card (dark)." },
+        { "componentId": "Card/Alarm-Light", "preview": "AlarmPanel_Light", "caption": "Alarm panel card — keypad + arm states (light)." },
+        { "componentId": "Card/Alarm-Dark", "preview": "AlarmPanel_Dark", "caption": "Alarm panel card (dark)." },
+        { "componentId": "Card/Todo-Light", "preview": "TodoList_Light", "caption": "To-do list card (light)." },
+        { "componentId": "Card/Todo-Dark", "preview": "TodoList_Dark", "caption": "To-do list card (dark)." },
+        { "componentId": "Card/Calendar-Light", "preview": "Calendar_Light", "caption": "Calendar card (light)." },
+        { "componentId": "Card/Calendar-Dark", "preview": "Calendar_Dark", "caption": "Calendar card (dark)." },
+        { "componentId": "Card/Area-Light", "preview": "Area_Light", "caption": "Area card — a room summary tile (light)." },
+        { "componentId": "Card/Area-Dark", "preview": "Area_Dark", "caption": "Area card (dark)." },
+        { "componentId": "Card/Sensor-Light", "preview": "Sensor_Light", "caption": "Sensor card — a single value read-out (light)." },
+        { "componentId": "Card/Sensor-Dark", "preview": "Sensor_Dark", "caption": "Sensor card (dark)." },
+        { "componentId": "Card/Statistic-Light", "preview": "Statistic_Light", "caption": "Statistic card — an aggregated value (light)." },
+        { "componentId": "Card/Statistic-Dark", "preview": "Statistic_Dark", "caption": "Statistic card (dark)." },
+        { "componentId": "Card/Markdown-Light", "preview": "Markdown_Light", "caption": "Markdown card — rich text content (light)." },
+        { "componentId": "Card/Markdown-Dark", "preview": "Markdown_Dark", "caption": "Markdown card (dark)." },
+        { "componentId": "Card/Clock-Light", "preview": "Clock_Light", "caption": "Clock card (light)." },
+        { "componentId": "Card/Clock-Dark", "preview": "Clock_Dark", "caption": "Clock card (dark)." }
+      ]
+    },
+    {
+      "name": "Layout",
+      "components": [
+        { "componentId": "Layout/VerticalStack-Light", "preview": "VerticalStack_Light", "caption": "Vertical stack — cards stacked in a column (light)." },
+        { "componentId": "Layout/VerticalStack-Dark", "preview": "VerticalStack_Dark", "caption": "Vertical stack (dark)." },
+        { "componentId": "Layout/HorizontalStack-Light", "preview": "HorizontalStack_Light", "caption": "Horizontal stack — cards side by side (light)." },
+        { "componentId": "Layout/HorizontalStack-Dark", "preview": "HorizontalStack_Dark", "caption": "Horizontal stack (dark)." },
+        { "componentId": "Layout/Grid-Light", "preview": "Grid_Light", "caption": "Grid — cards in a fixed-column grid (light)." },
+        { "componentId": "Layout/Grid-Dark", "preview": "Grid_Dark", "caption": "Grid (dark)." },
+        { "componentId": "Layout/Heading-Light", "preview": "Heading_Light", "caption": "Heading — a section title row (light)." },
+        { "componentId": "Layout/Heading-Dark", "preview": "Heading_Dark", "caption": "Heading (dark)." }
       ]
     },
     {
@@ -70,6 +109,32 @@
         { "componentId": "Card/Garage-Dark", "preview": "Garage_TwoEntities_Dark", "caption": "Garage door card — cover + light (dark)." },
         { "componentId": "Dashboard/Light", "preview": "Dashboard_Light", "caption": "A full mixed-card dashboard stack (light)." },
         { "componentId": "Dashboard/Dark", "preview": "Dashboard_Dark", "caption": "A full mixed-card dashboard stack (dark)." }
+      ]
+    },
+    {
+      "name": "Dashboards",
+      "components": [
+        { "componentId": "Dashboard/3dPrinting-Mobile", "preview": "Dashboard3dPrintingMobile", "caption": "3D-printing dashboard (mobile)." },
+        { "componentId": "Dashboard/3dPrinting-Tablet", "preview": "Dashboard3dPrintingTablet", "caption": "3D-printing dashboard (tablet)." },
+        { "componentId": "Dashboard/Climate-Mobile", "preview": "DashboardClimateMobile", "caption": "Climate dashboard (mobile)." },
+        { "componentId": "Dashboard/Climate-Tablet", "preview": "DashboardClimateTablet", "caption": "Climate dashboard (tablet)." },
+        { "componentId": "Dashboard/Energy-Mobile", "preview": "DashboardEnergyMobile", "caption": "Energy dashboard (mobile)." },
+        { "componentId": "Dashboard/Energy-Tablet", "preview": "DashboardEnergyTablet", "caption": "Energy dashboard (tablet)." },
+        { "componentId": "Dashboard/Github-Mobile", "preview": "DashboardGithubMobile", "caption": "GitHub dashboard (mobile)." },
+        { "componentId": "Dashboard/Github-Tablet", "preview": "DashboardGithubTablet", "caption": "GitHub dashboard (tablet)." },
+        { "componentId": "Dashboard/Meshcore-Mobile", "preview": "DashboardMeshcoreMobile", "caption": "MeshCore dashboard (mobile)." },
+        { "componentId": "Dashboard/Meshcore-Tablet", "preview": "DashboardMeshcoreTablet", "caption": "MeshCore dashboard (tablet)." },
+        { "componentId": "Dashboard/Networks-Mobile", "preview": "DashboardNetworksMobile", "caption": "Networks dashboard (mobile)." },
+        { "componentId": "Dashboard/Networks-Tablet", "preview": "DashboardNetworksTablet", "caption": "Networks dashboard (tablet)." },
+        { "componentId": "Dashboard/Security-Mobile", "preview": "DashboardSecurityMobile", "caption": "Security dashboard (mobile)." },
+        { "componentId": "Dashboard/Security-Tablet", "preview": "DashboardSecurityTablet", "caption": "Security dashboard (tablet)." }
+      ]
+    },
+    {
+      "name": "Brand",
+      "components": [
+        { "componentId": "Brand/AppIcon-Light", "preview": "AppIcon_Light", "caption": "Adaptive app icon (light)." },
+        { "componentId": "Brand/AppIcon-Dark", "preview": "AppIcon_Dark", "caption": "Adaptive app icon (dark)." }
       ]
     }
   ]
