@@ -53,7 +53,7 @@ jobs:
       # (via --init-script), so the CLI carries its own matching plugin and a
       # newer CLI is safe — we install `latest` because the applied
       # compose-preview-plugin (0.14.0) predates `bundle pack --with-semantics`.
-      - uses: yschimke/compose-ai-tools/.github/actions/install@v0.16.8
+      - uses: yschimke/compose-ai-tools/.github/actions/install@v0.16.15
         with:
           version: latest
 
