@@ -112,25 +112,6 @@
       ]
     },
     {
-      "name": "Dashboards",
-      "components": [
-        { "componentId": "Dashboard/3dPrinting-Mobile", "preview": "Dashboard3dPrintingMobile", "caption": "3D-printing dashboard (mobile)." },
-        { "componentId": "Dashboard/3dPrinting-Tablet", "preview": "Dashboard3dPrintingTablet", "caption": "3D-printing dashboard (tablet)." },
-        { "componentId": "Dashboard/Climate-Mobile", "preview": "DashboardClimateMobile", "caption": "Climate dashboard (mobile)." },
-        { "componentId": "Dashboard/Climate-Tablet", "preview": "DashboardClimateTablet", "caption": "Climate dashboard (tablet)." },
-        { "componentId": "Dashboard/Energy-Mobile", "preview": "DashboardEnergyMobile", "caption": "Energy dashboard (mobile)." },
-        { "componentId": "Dashboard/Energy-Tablet", "preview": "DashboardEnergyTablet", "caption": "Energy dashboard (tablet)." },
-        { "componentId": "Dashboard/Github-Mobile", "preview": "DashboardGithubMobile", "caption": "GitHub dashboard (mobile)." },
-        { "componentId": "Dashboard/Github-Tablet", "preview": "DashboardGithubTablet", "caption": "GitHub dashboard (tablet)." },
-        { "componentId": "Dashboard/Meshcore-Mobile", "preview": "DashboardMeshcoreMobile", "caption": "MeshCore dashboard (mobile)." },
-        { "componentId": "Dashboard/Meshcore-Tablet", "preview": "DashboardMeshcoreTablet", "caption": "MeshCore dashboard (tablet)." },
-        { "componentId": "Dashboard/Networks-Mobile", "preview": "DashboardNetworksMobile", "caption": "Networks dashboard (mobile)." },
-        { "componentId": "Dashboard/Networks-Tablet", "preview": "DashboardNetworksTablet", "caption": "Networks dashboard (tablet)." },
-        { "componentId": "Dashboard/Security-Mobile", "preview": "DashboardSecurityMobile", "caption": "Security dashboard (mobile)." },
-        { "componentId": "Dashboard/Security-Tablet", "preview": "DashboardSecurityTablet", "caption": "Security dashboard (tablet)." }
-      ]
-    },
-    {
       "name": "Brand",
       "components": [
         { "componentId": "Brand/AppIcon-Light", "preview": "AppIcon_Light", "caption": "Adaptive app icon (light)." },
