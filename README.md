@@ -293,9 +293,9 @@ Auto-generated from `main`. Browse inline or compare against PR branches.
 | `Tile_LightOn` | <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/main/renders/previews/Tile_LightOn_tile_light_on.png" width="150" /> |
 | `Tile_TemperatureSensor_Dark` | <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/main/renders/previews/Tile_TemperatureSensor_Dark_tile_sensor_temperature_dark.png" width="150" /> |
 | `Tile_TemperatureSensor` | <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/main/renders/previews/Tile_TemperatureSensor_tile_sensor_temperature.png" width="150" /> |
-| `ToggleByProgress_Mid` | <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/main/renders/previews/5.png" width="150" /> |
-| `ToggleByProgress_Off` | <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/main/renders/previews/ToggleByProgress_Off_toggle_progress_0.0.png" width="150" /> |
-| `ToggleByProgress_On` | <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/main/renders/previews/ToggleByProgress_On_toggle_progress_1.0.png" width="150" /> |
+| `ToggleByProgress_Mid` | <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/main/renders/previews/ToggleByProgress_Mid_toggle_progress_0_5.png" width="150" /> |
+| `ToggleByProgress_Off` | <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/main/renders/previews/ToggleByProgress_Off_toggle_progress_0_0.png" width="150" /> |
+| `ToggleByProgress_On` | <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/main/renders/previews/ToggleByProgress_On_toggle_progress_1_0.png" width="150" /> |
 | `ToggleInitial_Off` | <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/main/renders/previews/ToggleInitial_Off_toggle_initial_off.png" width="150" /> |
 | `ToggleInitial_On_Dark` | <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/main/renders/previews/ToggleInitial_On_Dark_toggle_initial_on_dark.png" width="150" /> |
 | `ToggleInitial_On` | <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/main/renders/previews/ToggleInitial_On_toggle_initial_on.png" width="150" /> |
