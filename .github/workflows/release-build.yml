@@ -56,7 +56,7 @@ jobs:
       HAS_GOOGLE_SERVICES: ${{ secrets.GOOGLE_SERVICES_JSON != '' }}
       PUBLISH_WEAR: ${{ inputs.publish_wear || false }}
     steps:
-      - uses: actions/checkout@v6.0.3
+      - uses: actions/checkout@v7.0.0
         with:
           ref: ${{ github.ref_type == 'tag' && github.ref_name || inputs.tag }}
       - uses: ./.github/actions/setup
