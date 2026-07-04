@@ -19,7 +19,7 @@ remote-material3 = "1.0.0-alpha04"
 
 # AndroidX Glance Wear (alpha — runtime feature gated on Wear OS 7+ / API 37
 # inside the library; we use it for the per-slot wear widgets).
-glance-wear = "1.0.0-alpha10"
+glance-wear = "1.0.0-alpha13"
 
 # Android
 android-minSdk = "29"
@@ -108,8 +108,8 @@ androidx-datastore-preferences = { module = "androidx.datastore:datastore-prefer
 # settings) and the phone-side mirror that publishes to the data layer.
 androidx-datastore = { module = "androidx.datastore:datastore", version = "1.2.1" }
 androidx-work-runtime = { module = "androidx.work:work-runtime-ktx", version = "2.11.2" }
-androidx-navigation3-runtime = { module = "androidx.navigation3:navigation3-runtime", version = "1.2.0-alpha04" }
-androidx-navigation3-ui = { module = "androidx.navigation3:navigation3-ui", version = "1.2.0-alpha04" }
+androidx-navigation3-runtime = { module = "androidx.navigation3:navigation3-runtime", version = "1.2.0-alpha05" }
+androidx-navigation3-ui = { module = "androidx.navigation3:navigation3-ui", version = "1.2.0-alpha05" }
 androidx-material3-adaptive-navigation-suite = { module = "androidx.compose.material3:material3-adaptive-navigation-suite", version = "1.4.0" }
 appauth = { module = "net.openid:appauth", version = "0.11.1" }
 compose-ui-text-google-fonts = { module = "androidx.compose.ui:ui-text-google-fonts" }
@@ -117,7 +117,7 @@ compose-ui-test-junit4 = { module = "androidx.compose.ui:ui-test-junit4" }
 compose-ui-test-manifest = { module = "androidx.compose.ui:ui-test-manifest" }
 androidx-test-ext-junit = { module = "androidx.test.ext:junit", version = "1.3.0" }
 androidx-test-runner = { module = "androidx.test:runner", version = "1.7.0" }
-androidx-test-uiautomator = { module = "androidx.test.uiautomator:uiautomator", version = "2.3.0" }
+androidx-test-uiautomator = { module = "androidx.test.uiautomator:uiautomator", version = "2.4.0" }
 # materialkolor: derive a full Material 3 ColorScheme from a single seed
 # colour. Each Terrazzo palette = seed + PaletteStyle. Non-composable
 # `dynamicColorScheme(...)` is what the widget provider calls at
@@ -172,9 +172,9 @@ horologist-datalayer-phone = { module = "com.google.android.horologist:horologis
 # bytes a protoc / Wire output would produce. Schema lives as
 # documentation in `wear/src/main/proto/wear_sync.proto`.
 kotlinx-serialization-protobuf = { module = "org.jetbrains.kotlinx:kotlinx-serialization-protobuf", version.ref = "kotlinx-serialization" }
-androidx-lifecycle-runtime-ktx = { module = "androidx.lifecycle:lifecycle-runtime-ktx", version = "2.10.0" }
-androidx-lifecycle-runtime-compose = { module = "androidx.lifecycle:lifecycle-runtime-compose", version = "2.10.0" }
-androidx-lifecycle-process = { module = "androidx.lifecycle:lifecycle-process", version = "2.10.0" }
+androidx-lifecycle-runtime-ktx = { module = "androidx.lifecycle:lifecycle-runtime-ktx", version = "2.11.0" }
+androidx-lifecycle-runtime-compose = { module = "androidx.lifecycle:lifecycle-runtime-compose", version = "2.11.0" }
+androidx-lifecycle-process = { module = "androidx.lifecycle:lifecycle-process", version = "2.11.0" }
 
 # Test
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
