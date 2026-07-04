@@ -39,7 +39,7 @@ jobs:
       # Widened here (workflow default is read-only) for the branch force-push.
       contents: write
     steps:
-      - uses: actions/checkout@v6.0.3
+      - uses: actions/checkout@v7.0.0
         with:
           persist-credentials: false
 
@@ -60,7 +60,7 @@ jobs:
       # The export driver + its render helpers live in compose-ai-tools; check it
       # out (public repo) so we can run scripts/design-artifacts/. Pin CAT_REF to a
       # release tag for full reproducibility once the path-URL changes have shipped.
-      - uses: actions/checkout@v6.0.3
+      - uses: actions/checkout@v7.0.0
         with:
           repository: yschimke/compose-ai-tools
           ref: main
@@ -69,7 +69,7 @@ jobs:
 
       - uses: actions/setup-node@v6.4.0
         with:
-          node-version: 22.23.1
+          node-version: 24.17.0
       - name: Install export engine (pinned npm packages)
         working-directory: compose-ai-tools/scripts/design-artifacts
         run: npm ci
