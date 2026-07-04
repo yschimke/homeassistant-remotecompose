@@ -38,8 +38,10 @@ jobs:
           script: |
             const { owner, repo } = context.repo;
             const skipLabels = new Set(['no-automerge', 'autorelease: pending']);
+            // Only PRs targeting main — the CI gates this relies on are
+            // filtered to pull_request against main.
             const prs = await github.paginate(github.rest.pulls.list, {
-              owner, repo, state: 'open', per_page: 100,
+              owner, repo, state: 'open', base: 'main', per_page: 100,
             });
             let merged = 0;
             for (const stub of prs) {
@@ -57,8 +59,11 @@ jobs:
                 continue;
               }
               try {
+                // sha guard: reject the merge if the head moved after the
+                // mergeable_state check (race with a new push).
                 await github.rest.pulls.merge({
                   owner, repo, pull_number: pr.number, merge_method: 'squash',
+                  sha: pr.head.sha,
                 });
                 core.notice(`Merged #${pr.number}: ${pr.title}`);
                 merged++;
@@ -67,14 +72,16 @@ jobs:
               }
             }
             if (merged > 0) {
-              // GITHUB_TOKEN merges don't trigger push workflows; refresh the
-              // compose-preview baselines explicitly.
-              try {
-                await github.rest.actions.createWorkflowDispatch({
-                  owner, repo, workflow_id: 'compose-preview.yml', ref: 'main',
-                });
-                core.info('Dispatched compose-preview.yml for new baselines');
-              } catch (e) {
-                core.warning(`compose-preview dispatch failed: ${e.message}`);
+              // GITHUB_TOKEN merges don't trigger push workflows; explicitly
+              // refresh the render baselines and the release-please PR.
+              for (const wf of ['compose-preview.yml', 'release-please.yml']) {
+                try {
+                  await github.rest.actions.createWorkflowDispatch({
+                    owner, repo, workflow_id: wf, ref: 'main',
+                  });
+                  core.info(`Dispatched ${wf}`);
+                } catch (e) {
+                  core.warning(`${wf} dispatch failed: ${e.message}`);
+                }
               }
             }
