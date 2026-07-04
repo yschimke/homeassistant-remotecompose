@@ -1,59 +1,18 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": [
-    "config:recommended",
-    ":dependencyDashboard",
-    ":semanticCommits"
-  ],
-  "labels": ["dependencies"],
-  "schedule": ["before 6am on monday"],
-  "timezone": "Europe/London",
-  "prConcurrentLimit": 5,
-  "prHourlyLimit": 0,
-  "rangeStrategy": "pin",
+  "extends": ["github>yschimke/renovate-config"],
   "packageRules": [
     {
-      "matchPackageNames": ["/^io\\.ktor:/"],
-      "groupName": "ktor"
-    },
-    {
-      "matchPackageNames": ["/^org\\.jetbrains\\.kotlinx:/"],
-      "groupName": "kotlinx"
-    },
-    {
+      "description": "Remote Compose renderer coords are pinned in lockstep with the compose-ai-tools renderer; keep them in their own group so a bump is a deliberate review, separate from the androidx-compose / androidx-wear trains.",
+      "groupName": "remote-compose",
       "matchPackageNames": [
-        "/^androidx\\.compose($|\\.)/",
-        "/^androidx\\.activity:activity-compose/"
-      ],
-      "groupName": "androidx-compose"
+        "/^androidx\\.compose\\.remote($|[.:])/",
+        "/^androidx\\.wear\\.compose\\.remote($|[.:])/"
+      ]
     },
     {
-      "matchPackageNames": ["/^androidx\\.wear($|\\.)/", "/^androidx\\.tv\\./"],
-      "groupName": "androidx-wear-tv"
-    },
-    {
-      "matchPackageNames": ["/^com\\.google\\.android\\.horologist:/"],
-      "groupName": "horologist"
-    },
-    {
-      "matchPackageNames": [
-        "/^androidx\\.compose\\.remote:/",
-        "/^androidx\\.wear\\.compose\\.remote:/"
-      ],
-      "groupName": "remote-compose"
-    },
-    {
-      "matchManagers": ["github-actions"],
-      "groupName": "github-actions"
-    },
-    {
-      "matchPackageNames": ["org.jetbrains.kotlinx:kotlinx-datetime"],
-      "description": "Avoid the -0.6.x-compat binaries; track mainline versions only.",
-      "allowedVersions": "!/-compat$/"
-    },
-    {
-      "matchPackageNames": ["junit:junit"],
       "description": "Stay on JUnit 4; don't auto-bump to 5.x/6.x (Jupiter is a different API).",
+      "matchPackageNames": ["junit:junit"],
       "allowedVersions": "/^4\\./",
       "enabled": false
     }
