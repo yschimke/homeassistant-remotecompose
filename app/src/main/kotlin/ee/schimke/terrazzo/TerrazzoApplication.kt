@@ -8,6 +8,7 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import dev.zacsweers.metro.createGraphFactory
+import ee.schimke.ha.rc.components.enableRemoteImageUrls
 import ee.schimke.ha.rc.enableRemoteComposeWrapContent
 import ee.schimke.terrazzo.core.di.TerrazzoGraph
 import ee.schimke.terrazzo.core.monitor.CardMonitor
@@ -57,6 +58,10 @@ class TerrazzoApplication : Application() {
     // dashboard slots wrap to each card's intrinsic content height
     // instead of pinning per-card via naturalHeightDp.
     enableRemoteComposeWrapContent()
+    // alpha14 gates URL/file image ops behind Limits.ENABLE_IMAGE_URLS
+    // (off by default → BitmapData.read throws at parse time). The app
+    // renders entity pictures / media thumbnails everywhere, so opt in.
+    enableRemoteImageUrls()
     if (graph.cardMonitor.isEnabled) {
       registerNotificationChannels()
     }

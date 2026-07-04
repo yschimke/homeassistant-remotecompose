@@ -4,8 +4,8 @@ package ee.schimke.ha.rc.components
 
 import androidx.compose.remote.core.operations.NamedVariable
 import androidx.compose.remote.creation.RemoteComposeWriter
-import androidx.compose.remote.creation.compose.state.MutableRemoteBitmap
-import androidx.compose.remote.creation.compose.state.RemoteBitmap
+import androidx.compose.remote.creation.compose.state.MutableRemoteImageBitmap
+import androidx.compose.remote.creation.compose.state.RemoteImageBitmap
 import androidx.compose.remote.creation.compose.state.RemoteNamedCacheKey
 import androidx.compose.remote.creation.compose.state.RemoteState
 import androidx.compose.remote.creation.compose.state.rememberNamedState
@@ -35,8 +35,8 @@ import androidx.compose.ui.graphics.asAndroidBitmap
  * [addNamedBitmapUrlSized].
  *
  * `@Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER")` lets us reach upstream's `internal`
- * symbols ([rememberNamedState], [MutableRemoteBitmap]'s constructor, [RemoteNamedCacheKey]) the
- * same way `@Suppress("RestrictedApi")` reaches the `@RestrictTo(LIBRARY_GROUP)` ones. Both are
+ * symbols ([rememberNamedState], [MutableRemoteImageBitmap]'s constructor, [RemoteNamedCacheKey])
+ * the same way `@Suppress("RestrictedApi")` reaches the `@RestrictTo(LIBRARY_GROUP)` ones. Both are
  * needed to keep the encoded byte format identical to upstream's, so a future alpha fix is a clean
  * drop-in.
  */
@@ -52,10 +52,10 @@ fun rememberLocalNamedRemoteBitmap(
   name: String,
   domain: RemoteState.Domain = RemoteState.Domain.User,
   value: () -> ImageBitmap,
-): RemoteBitmap =
+): RemoteImageBitmap =
   rememberNamedState(name, domain) {
     val bitmap = value()
-    MutableRemoteBitmap(/* constantValueOrNull= */ null, RemoteNamedCacheKey(domain, name)) {
+    MutableRemoteImageBitmap(/* constantValueOrNull= */ null, RemoteNamedCacheKey(domain, name)) {
       creationState ->
       creationState.document.addNamedBitmap(domain.prefixed(name), bitmap.asAndroidBitmap())
     }
@@ -79,9 +79,9 @@ fun rememberLocalNamedRemoteBitmap(
   width: Int,
   height: Int,
   domain: RemoteState.Domain = RemoteState.Domain.User,
-): RemoteBitmap =
+): RemoteImageBitmap =
   rememberNamedState(name, domain) {
-    MutableRemoteBitmap(/* constantValueOrNull= */ null, RemoteNamedCacheKey(domain, name)) {
+    MutableRemoteImageBitmap(/* constantValueOrNull= */ null, RemoteNamedCacheKey(domain, name)) {
       creationState ->
       creationState.document.addNamedBitmapUrlSized(domain.prefixed(name), url, width, height)
     }
