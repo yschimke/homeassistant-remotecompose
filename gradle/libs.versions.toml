@@ -63,7 +63,7 @@ play-services-wearable = "20.0.1"
 
 # Firebase Crashlytics (opt-in — only resolved when a google-services.json
 # key is configured; see app/build.gradle.kts `crashlyticsEnabled`).
-firebase-bom = "34.14.0"
+firebase-bom = "34.15.0"
 
 [libraries]
 # RemoteCompose authoring / playback
