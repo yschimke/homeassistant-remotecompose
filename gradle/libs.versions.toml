@@ -108,7 +108,7 @@ androidx-datastore-preferences = { module = "androidx.datastore:datastore-prefer
 # settings) and the phone-side mirror that publishes to the data layer.
 androidx-datastore = { module = "androidx.datastore:datastore", version = "1.2.1" }
 androidx-work-runtime = { module = "androidx.work:work-runtime-ktx", version = "2.11.2" }
-androidx-navigation3-runtime = { module = "androidx.navigation3:navigation3-runtime", version = "1.2.0-alpha04" }
+androidx-navigation3-runtime = { module = "androidx.navigation3:navigation3-runtime", version = "1.2.0-alpha05" }
 androidx-navigation3-ui = { module = "androidx.navigation3:navigation3-ui", version = "1.2.0-alpha04" }
 androidx-material3-adaptive-navigation-suite = { module = "androidx.compose.material3:material3-adaptive-navigation-suite", version = "1.4.0" }
 appauth = { module = "net.openid:appauth", version = "0.11.1" }
