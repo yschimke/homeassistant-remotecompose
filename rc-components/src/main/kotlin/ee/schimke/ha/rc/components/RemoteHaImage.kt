@@ -7,8 +7,8 @@ import androidx.compose.remote.creation.compose.layout.RemoteImage
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.state.RemoteState
 import androidx.compose.remote.creation.compose.state.RemoteString
-import androidx.compose.remote.creation.compose.state.rememberMutableRemoteBitmap
-import androidx.compose.remote.creation.compose.state.rememberNamedRemoteBitmap
+import androidx.compose.remote.creation.compose.state.rememberMutableRemoteImageBitmap
+import androidx.compose.remote.creation.compose.state.rememberNamedRemoteImageBitmap
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.layout.ContentScale
@@ -47,7 +47,7 @@ fun RemoteHaImageInline(
   modifier: RemoteModifier = RemoteModifier,
   contentScale: ContentScale = ContentScale.Fit,
 ) {
-  val rb = rememberMutableRemoteBitmap(bitmap)
+  val rb = rememberMutableRemoteImageBitmap(bitmap)
   RemoteImage(
     remoteBitmap = rb,
     contentDescription = contentDescription,
@@ -70,7 +70,7 @@ fun RemoteHaImageNamed(
   contentScale: ContentScale = ContentScale.Fit,
   domain: RemoteState.Domain = RemoteState.Domain.User,
 ) {
-  val rb = rememberNamedRemoteBitmap(name = name, domain = domain, value = { bitmap })
+  val rb = rememberNamedRemoteImageBitmap(name = name, domain = domain, value = { bitmap })
   RemoteImage(
     remoteBitmap = rb,
     contentDescription = contentDescription,
@@ -97,7 +97,7 @@ fun RemoteHaImageUrl(
   name: String = url,
   domain: RemoteState.Domain = RemoteState.Domain.User,
 ) {
-  val rb = rememberNamedRemoteBitmap(name = name, url = url, domain = domain)
+  val rb = rememberNamedRemoteImageBitmap(name = name, url = url, domain = domain)
   RemoteImage(
     remoteBitmap = rb,
     contentDescription = contentDescription,
