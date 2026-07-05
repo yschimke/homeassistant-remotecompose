@@ -19,7 +19,10 @@ jobs:
           HEAD_REF: ${{ github.event.pull_request.head.ref }}
         run: |
           set -euo pipefail
-          if [[ "$HEAD_REF" =~ ^(claude|copilot|cursor|devin|codex|aider|jules|gemini)/ ]]; then
+          # Lowercase before matching so "Claude/foo" / "COPILOT/bar" can't
+          # slip past the prefix rejection via capitalisation.
+          head_ref_lc="${HEAD_REF,,}"
+          if [[ "$head_ref_lc" =~ ^(claude|copilot|cursor|devin|codex|aider|jules|gemini)/ ]]; then
             echo "::error::Branch '$HEAD_REF' uses an AI agent prefix. Rename to 'agent/...' before opening the PR."
             exit 1
           fi
@@ -63,15 +66,15 @@ jobs:
           fi
 
           # Author / committer identity of each commit must not be an AI agent —
-          # an @anthropic.com / @openai.com email, or an agent *name* (Claude,
-          # Codex, …) set literally as the identity. The name match is anchored
-          # to the whole field so a human like "Claude Martin" / "Alice
-          # Copilotson" passes, and GitHub App bots ("claude[bot]") are exempt:
-          # they land on branches by design and never reach the squash-authored
-          # main. tolower() (not gawk IGNORECASE) keeps it case-insensitive on
-          # mawk, the default awk on ubuntu-latest.
-          AGENT_NAME='(Claude|Codex|ChatGPT|Copilot|Gemini)'
-          AGENT_EMAIL='@(anthropic|openai)[.]com'
+          # an agent email domain, or an agent *name* set literally as the
+          # identity. Both sets stay in sync with the branch-prefix list (above)
+          # and the co-author `patterns` (below). The name match is anchored to
+          # the whole field, so humans like "Claude Martin" / "Devin Jones" and
+          # GitHub App bots ("claude[bot]") pass — bots land on branches by
+          # design and never reach the squash-authored main. tolower() (not gawk
+          # IGNORECASE) keeps it case-insensitive on mawk, ubuntu-latest's awk.
+          AGENT_NAME='(claude|codex|chatgpt|copilot|gemini|cursor|devin|aider|jules)'
+          AGENT_EMAIL='@(anthropic[.]com|openai[.]com|cursor[.](sh|com)|devin[.]ai|sourcegraph[.]com|continue[.]dev|factory[.]ai)'
           git log \
             --format='%H%x09author%x09%an%x09%ae%x0a%H%x09committer%x09%cn%x09%ce' \
             "$BASE_SHA..$HEAD_SHA" > /tmp/idents
@@ -82,7 +85,7 @@ jobs:
           ' /tmp/idents || true)"
           if [ -n "$ident_hits" ]; then
             echo
-            echo "::error::Commit author/committer identity is an AI agent (@anthropic.com/@openai.com email or an agent name)."
+            echo "::error::Commit author/committer identity is an AI agent (an agent email domain or an agent name)."
             printf '%s\n' "$ident_hits" >&2
             exit 1
           fi
