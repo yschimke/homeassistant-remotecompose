@@ -692,7 +692,7 @@
     "functionName": "CardPreviewMatrix_Button",
     "module": "previews",
     "renderBasename": "CardPreviewMatrix_Button_matrix_button.png",
-    "sha256": "fff05601b02d1afc24c3ce5c16eaef5ac4d2ca2d0b3f6d0f88c7545968f6f9c9",
+    "sha256": "61b16c3841f07ac776d5b04940503b8c4399ce461ff21c0a72d1bdab14bf8229",
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/CardPreviewMatrix.kt"
   },
   "previews/ee.schimke.ha.previews.CardPreviewMatrixKt.CardPreviewMatrix_Calendar_matrix \u2014 calendar": {
@@ -716,7 +716,7 @@
     "functionName": "CardPreviewMatrix_Entity",
     "module": "previews",
     "renderBasename": "CardPreviewMatrix_Entity_matrix_entity.png",
-    "sha256": "25e287e33bf88787745eb621cbd220f3d89031bd74d80dd48a1e57a39dce6584",
+    "sha256": "95d77571ee282d986314347bc4991a75f690056f65ad2790acc06578021a7dc6",
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/CardPreviewMatrix.kt"
   },
   "previews/ee.schimke.ha.previews.CardPreviewMatrixKt.CardPreviewMatrix_Gauge_matrix \u2014 gauge": {
@@ -724,7 +724,7 @@
     "functionName": "CardPreviewMatrix_Gauge",
     "module": "previews",
     "renderBasename": "CardPreviewMatrix_Gauge_matrix_gauge.png",
-    "sha256": "cc76e76f1b0846f3f914bb8d3df4f9e945fe1ad2cee71343cb1d1c7f9e441280",
+    "sha256": "72a47e935f33112ee77fbe166dd94bd60e738f7c8b2dce875ee669747da60090",
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/CardPreviewMatrix.kt"
   },
   "previews/ee.schimke.ha.previews.CardPreviewMatrixKt.CardPreviewMatrix_HistoryGraph_matrix \u2014 history-graph": {
@@ -748,7 +748,7 @@
     "functionName": "CardPreviewMatrix_Light",
     "module": "previews",
     "renderBasename": "CardPreviewMatrix_Light_matrix_light.png",
-    "sha256": "27948e59bb2dbfb66d7ae7f118ec413f37b3135d9d8ed5b6798c41abc6d6bcda",
+    "sha256": "93dad53eff4d347a1f937058476f676e74d473241de80513445d728d4c0ee0ec",
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/CardPreviewMatrix.kt"
   },
   "previews/ee.schimke.ha.previews.CardPreviewMatrixKt.CardPreviewMatrix_Logbook_matrix \u2014 logbook": {
@@ -820,7 +820,7 @@
     "functionName": "CardPreviewMatrix_TodoList",
     "module": "previews",
     "renderBasename": "CardPreviewMatrix_TodoList_matrix_todo_list.png",
-    "sha256": "fd2578bce47fe415096f87c696ae134732b64702cac7516132b20646371ff365",
+    "sha256": "23176ece29f357d79f21b48b8bc0b7522687a5c37d664009ea8c72002d912ff4",
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/CardPreviewMatrix.kt"
   },
   "previews/ee.schimke.ha.previews.CardPreviewMatrixKt.CardPreviewMatrix_WeatherForecast_matrix \u2014 weather-forecast": {
@@ -1596,7 +1596,7 @@
     "functionName": "DashboardClimateTablet",
     "module": "previews",
     "renderBasename": "DashboardClimateTablet_dashboard_climate_tablet.png",
-    "sha256": "3c5679c3330da33946eae802b02c260b88cec3cda8042e9720c2cae430335675",
+    "sha256": "6b1b6261a79d8ec52a18372af09c1dc95c6c10f8aa39d16e625d9bb3f91cbb4b",
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/DashboardPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.DashboardPreviewsKt.DashboardEnergyMobile_dashboard energy \u2014 mobile": {
@@ -1620,7 +1620,7 @@
     "functionName": "DashboardGithubMobile",
     "module": "previews",
     "renderBasename": "DashboardGithubMobile_dashboard_github_mobile.png",
-    "sha256": "b33f01bcc45c715b571c78627784122bd9619ec2e065ddbddb270692543c4f21",
+    "sha256": "9cf9e24d016e19cdaff732967cfb6eee7beebca0e592eeb08577a910ef1aff3b",
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/DashboardPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.DashboardPreviewsKt.DashboardGithubTablet_dashboard github \u2014 tablet": {
@@ -1628,7 +1628,7 @@
     "functionName": "DashboardGithubTablet",
     "module": "previews",
     "renderBasename": "DashboardGithubTablet_dashboard_github_tablet.png",
-    "sha256": "75f5b852b6f26af7d9d2ca97485400d5708586cd3e4313ec04c19167a502def6",
+    "sha256": "985fb0105883c5f2a0f2920154c4c0ada588605634f218047aec4672aa52dbb7",
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/DashboardPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.DashboardPreviewsKt.DashboardMeshcoreMobile_dashboard meshcore \u2014 mobile": {
@@ -1652,7 +1652,7 @@
     "functionName": "DashboardNetworksMobile",
     "module": "previews",
     "renderBasename": "DashboardNetworksMobile_dashboard_networks_mobile.png",
-    "sha256": "fc710e8512c0d2cd684d437621124dde09ebb4b1c52c86d638e9ffc3018c25b4",
+    "sha256": "38ab82a30c6a026014869b3f56e37365dce76e39d143bb0cb7ccd41ba05d8157",
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/DashboardPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.DashboardPreviewsKt.DashboardNetworksTablet_dashboard networks \u2014 tablet": {
@@ -1660,7 +1660,7 @@
     "functionName": "DashboardNetworksTablet",
     "module": "previews",
     "renderBasename": "DashboardNetworksTablet_dashboard_networks_tablet.png",
-    "sha256": "8899f2db25f00b5b91b729f1ff08edb04bdca4e28da4b452f87b7f04ec180044",
+    "sha256": "2f808a59fe2cd43dfba8b5ab4662797759b84400c8ff731680292b5343cdc697",
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/DashboardPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.DashboardPreviewsKt.DashboardSecurityMobile_dashboard security \u2014 mobile": {
@@ -2076,7 +2076,7 @@
     "functionName": "Sizing_ConstraintMatrix_PaintMeasure",
     "module": "previews",
     "renderBasename": "Sizing_ConstraintMatrix_PaintMeasure_sizing_width_height_matrix_paint_measure_profile.png",
-    "sha256": "371d204c7a17b792683d5dbe28aa8a5f9317b182081601ff9de27b5db0c696e8",
+    "sha256": "f44af34a759b6534179c01e0d7c9a336ab21c0d2bdde619dc1c877db35403f80",
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/SizingExperimentPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.SizingExperimentPreviewsKt.Sizing_ConstraintMatrix_Wrap_sizing \u2014 width \u00d7 height matrix \u00b7 wrap profile": {
@@ -2084,7 +2084,7 @@
     "functionName": "Sizing_ConstraintMatrix_Wrap",
     "module": "previews",
     "renderBasename": "Sizing_ConstraintMatrix_Wrap_sizing_width_height_matrix_wrap_profile.png",
-    "sha256": "e8d36c74c0488b24c5a5021ec1bf920e70494cfe681a7c02da2a9899da8d617d",
+    "sha256": "a30f2dc7ea2e10ecf1850beec710fbeade5867a6a29ee3c487d05325faa3b805",
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/SizingExperimentPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.SizingExperimentPreviewsKt.Sizing_FixedSlot_PaintMeasure_sizing \u2014 fixed slot, paint-measure profile": {
@@ -2092,7 +2092,7 @@
     "functionName": "Sizing_FixedSlot_PaintMeasure",
     "module": "previews",
     "renderBasename": "Sizing_FixedSlot_PaintMeasure_sizing_fixed_slot_paint_measure_profile.png",
-    "sha256": "f35e3db92c754b34e53747007b1cf6b30c90028e7c67a18201a296d78acb4556",
+    "sha256": "3e731ebbe2e8e15e6d51c05ca174370d8515111b16d0fc18baaf0e1a3e02d639",
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/SizingExperimentPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.SizingExperimentPreviewsKt.Sizing_FixedSlot_Wrap_sizing \u2014 fixed slot, wrap profile": {
@@ -2100,7 +2100,7 @@
     "functionName": "Sizing_FixedSlot_Wrap",
     "module": "previews",
     "renderBasename": "Sizing_FixedSlot_Wrap_sizing_fixed_slot_wrap_profile.png",
-    "sha256": "42f4d8daabaa52ddd9f00096ff57e2d00598456e5b94561da680ba7320f85f29",
+    "sha256": "39f7eefc5a6780dc16784791a93c5a074eb89d4c5ba438e40102a24e2a2b3afc",
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/SizingExperimentPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.SizingExperimentPreviewsKt.Sizing_SlackSlot_PaintMeasure_sizing \u2014 slack slot, paint-measure profile": {
@@ -2108,7 +2108,7 @@
     "functionName": "Sizing_SlackSlot_PaintMeasure",
     "module": "previews",
     "renderBasename": "Sizing_SlackSlot_PaintMeasure_sizing_slack_slot_paint_measure_profile.png",
-    "sha256": "c6c88a4f8b313faed776e929e0529bfd9877c0cbb53e3653db59fdb9e722eac7",
+    "sha256": "8ca5143023950b42050d2998c40b84c4c58209c7992f40bf2bb77cbca2a4d74a",
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/SizingExperimentPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.SizingExperimentPreviewsKt.Sizing_SlackSlot_Wrap_sizing \u2014 slack slot, wrap profile": {
@@ -2116,7 +2116,7 @@
     "functionName": "Sizing_SlackSlot_Wrap",
     "module": "previews",
     "renderBasename": "Sizing_SlackSlot_Wrap_sizing_slack_slot_wrap_profile.png",
-    "sha256": "31af4c014fa4dabdaf4b252d43f353f1167e549bb4a832db3d2167bb33616420",
+    "sha256": "8539d79a3eacfed6f74dd22aed2d6f9668f33761742aba46d88d2f631403d94f",
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/SizingExperimentPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.SizingExperimentPreviewsKt.Sizing_TightSlot_PaintMeasure_sizing \u2014 tight slot, paint-measure profile": {
@@ -2124,7 +2124,7 @@
     "functionName": "Sizing_TightSlot_PaintMeasure",
     "module": "previews",
     "renderBasename": "Sizing_TightSlot_PaintMeasure_sizing_tight_slot_paint_measure_profile.png",
-    "sha256": "2bebb6e2877c49fd6e25a904c6159eeeb0a52928c110e090a8a28b8c6e0b47d8",
+    "sha256": "5c476868c984c875982f0786e95bfd1802e79682e78f8d68dafc698e9e3d1248",
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/SizingExperimentPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.SizingExperimentPreviewsKt.Sizing_TightSlot_Wrap_sizing \u2014 tight slot, wrap profile": {
@@ -2132,7 +2132,7 @@
     "functionName": "Sizing_TightSlot_Wrap",
     "module": "previews",
     "renderBasename": "Sizing_TightSlot_Wrap_sizing_tight_slot_wrap_profile.png",
-    "sha256": "933a29e05fcd9daf6c5db7208bbe29efff193732911d188a1febc2eadf736af8",
+    "sha256": "624954f955d4afa554050c6e7f85bac7d23ebd0c970b5f0669f88f598f463056",
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/SizingExperimentPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.SizingExperimentPreviewsKt.Sizing_WidthPinnedHeightAdaptive_sizing \u2014 width pinned, height adaptive": {
@@ -2140,7 +2140,7 @@
     "functionName": "Sizing_WidthPinnedHeightAdaptive",
     "module": "previews",
     "renderBasename": "Sizing_WidthPinnedHeightAdaptive_sizing_width_pinned_height_adaptive.png",
-    "sha256": "32d7fc9dafb60ccd742567b19b4e14b5466599c6cbd508eca5e23049771dc4e7",
+    "sha256": "4d5d6924eb330657aad903b0bb7fdfa5f840dd0eaa437d0fd336093582a9e54e",
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/SizingExperimentPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.ThemePreviewsKt.Theme_Home_Dark_theme_ Home (dark)": {
@@ -2404,7 +2404,7 @@
     "functionName": "WearAlarmPanelLarge",
     "module": "wear",
     "renderBasename": "WearAlarmPanelLarge_wear_alarm_panel_large.png",
-    "sha256": "5a35d72e4bd87fbe5c1af8fa3a20958c73bb0d21c748f9bec5cce1ce364f9e08",
+    "sha256": "d86d4dc73b4885f5d532fbc54273e00f3eeca4278d777068049dd33ce3cc692b",
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/wear/widget/CardSlotWidgetPreviews.kt"
   },
   "wear/ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearAlarmPanelSmall_wear \u00b7 alarm-panel (small)": {
@@ -2412,7 +2412,7 @@
     "functionName": "WearAlarmPanelSmall",
     "module": "wear",
     "renderBasename": "WearAlarmPanelSmall_wear_alarm_panel_small.png",
-    "sha256": "fd94626cbc8bb9d6e41e7bad3601d65b4764b75256f1d86bbcc9df1de7a6fa2e",
+    "sha256": "dac38a1069d41f3b8ba336cb5e748208334b19a4cef3b2ff7b49f9f91857e60b",
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/wear/widget/CardSlotWidgetPreviews.kt"
   },
   "wear/ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearAreaLarge_wear \u00b7 area (large)": {
@@ -2420,7 +2420,7 @@
     "functionName": "WearAreaLarge",
     "module": "wear",
     "renderBasename": "WearAreaLarge_wear_area_large.png",
-    "sha256": "5c7fdaee060cef99166bbe5b2561f3adb4813d964ad3149fabed2abb4dd7e8ad",
+    "sha256": "36c722f17703db99c7627a30ebd90b10f5c1ef099fef832ef5daba17bf7f4aa5",
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/wear/widget/CardSlotWidgetPreviews.kt"
   },
   "wear/ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearAreaSmall_wear \u00b7 area (small)": {
@@ -2428,7 +2428,7 @@
     "functionName": "WearAreaSmall",
     "module": "wear",
     "renderBasename": "WearAreaSmall_wear_area_small.png",
-    "sha256": "61a6e9159a1a9e067b274b37005be50a7a164b4200d0e28ee146e69a064b43b4",
+    "sha256": "26cc423a4d3ac91563db0f4850c9bdba5ad8d379d3f4566e2485672e33ec3300",
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/wear/widget/CardSlotWidgetPreviews.kt"
   },
   "wear/ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearBambuAmsLarge_wear \u00b7 bambu ams (large)": {
@@ -2436,7 +2436,7 @@
     "functionName": "WearBambuAmsLarge",
     "module": "wear",
     "renderBasename": "WearBambuAmsLarge_wear_bambu_ams_large.png",
-    "sha256": "1693c7a5e01c3a91d5ea3d13dd304a088447183924443dfefc5c14043d89e336",
+    "sha256": "a6bda3d170a0321372943164b7e2cd0105ac83abdbcf098328f0bde6841bd96e",
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/wear/widget/CardSlotWidgetPreviews.kt"
   },
   "wear/ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearBambuAmsSmall_wear \u00b7 bambu ams (small)": {
@@ -2444,7 +2444,7 @@
     "functionName": "WearBambuAmsSmall",
     "module": "wear",
     "renderBasename": "WearBambuAmsSmall_wear_bambu_ams_small.png",
-    "sha256": "29479a3c7bf402eba31dfbaa775fd2ae8a914d30891c6f12472663ec03ff98d9",
+    "sha256": "409f2bfbd56c3ce6833ce92cf844b0d2d27d32b2beeab94a25d79537cc5272d5",
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/wear/widget/CardSlotWidgetPreviews.kt"
   },
   "wear/ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearBambuPrintControlLarge_wear \u00b7 bambu print-control (large)": {
@@ -2452,7 +2452,7 @@
     "functionName": "WearBambuPrintControlLarge",
     "module": "wear",
     "renderBasename": "WearBambuPrintControlLarge_wear_bambu_print_control_large.png",
-    "sha256": "95cf52e5b3b139fbb54254a74df7f7ebca0adc847f4736dd625f3d36958544b4",
+    "sha256": "2a0d6a1e8e53db9b7a8d78ad90115fb27f9d2e3e8b18190c69c5e4ef5df9e98d",
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/wear/widget/CardSlotWidgetPreviews.kt"
   },
   "wear/ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearBambuPrintControlSmall_wear \u00b7 bambu print-control (small)": {
@@ -2460,7 +2460,7 @@
     "functionName": "WearBambuPrintControlSmall",
     "module": "wear",
     "renderBasename": "WearBambuPrintControlSmall_wear_bambu_print_control_small.png",
-    "sha256": "d98de366ec9953f6634f15b73356d0386984e339ea2001eea3bc9adfe831e67f",
+    "sha256": "886e43d733458084099d14c68b35b21bfdb248dd19e913ae96fee5bf57191a16",
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/wear/widget/CardSlotWidgetPreviews.kt"
   },
   "wear/ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearBambuPrintStatusLarge_wear \u00b7 bambu print-status (large)": {
@@ -2468,7 +2468,7 @@
     "functionName": "WearBambuPrintStatusLarge",
     "module": "wear",
     "renderBasename": "WearBambuPrintStatusLarge_wear_bambu_print_status_large.png",
-    "sha256": "18e7099412d0491d902b6bff7b59d011ce7a59b1d644468243f187af9bde50f9",
+    "sha256": "de534be80837c7d46203b27de2a30e60374730984ec8497d8154421998b929db",
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/wear/widget/CardSlotWidgetPreviews.kt"
   },
   "wear/ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearBambuPrintStatusSmall_wear \u00b7 bambu print-status (small)": {
@@ -2476,7 +2476,7 @@
     "functionName": "WearBambuPrintStatusSmall",
     "module": "wear",
     "renderBasename": "WearBambuPrintStatusSmall_wear_bambu_print_status_small.png",
-    "sha256": "6b36cdc5eed7860a4e3d988967493be180ad13e02960a5adfed1a53d706e00aa",
+    "sha256": "fc3eda39368b84c35e7c737b14726c61219e09d46223747c7bd01b735d253ace",
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/wear/widget/CardSlotWidgetPreviews.kt"
   },
   "wear/ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearBambuSpoolLarge_wear \u00b7 bambu spool (large)": {
@@ -2484,7 +2484,7 @@
     "functionName": "WearBambuSpoolLarge",
     "module": "wear",
     "renderBasename": "WearBambuSpoolLarge_wear_bambu_spool_large.png",
-    "sha256": "5aa1d12bf60dc4ffd54413da60b5915541cda5016c8dedcc96ef987ba319150c",
+    "sha256": "c68473dea6ae7beff8d07f7dc80e62cf6ebbe3c720d59351d65c0d0056f8e99c",
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/wear/widget/CardSlotWidgetPreviews.kt"
   },
   "wear/ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearBambuSpoolSmall_wear \u00b7 bambu spool (small)": {
@@ -2492,7 +2492,7 @@
     "functionName": "WearBambuSpoolSmall",
     "module": "wear",
     "renderBasename": "WearBambuSpoolSmall_wear_bambu_spool_small.png",
-    "sha256": "4f256eb30d8e5e005263c6b4c93ed47b8e34de7be11899a82b8eb8d29d2eefc2",
+    "sha256": "b85c4745c0acfaf27b141b8c6408612c722e06aa3c0426712b32ae7ce6b7da14",
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/wear/widget/CardSlotWidgetPreviews.kt"
   },
   "wear/ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearButtonLarge_wear \u00b7 button (large)": {
@@ -2500,7 +2500,7 @@
     "functionName": "WearButtonLarge",
     "module": "wear",
     "renderBasename": "WearButtonLarge_wear_button_large.png",
-    "sha256": "6f7f357e7818f58ccdc0027fb52bac71f5e5c1c51464e942143c31b13e252c33",
+    "sha256": "9ee045d020770b65fd5fdd7256e4faaed235572e6b100184d8be7c799fa80f6b",
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/wear/widget/CardSlotWidgetPreviews.kt"
   },
   "wear/ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearButtonSmall_wear \u00b7 button (small)": {
@@ -2508,7 +2508,7 @@
     "functionName": "WearButtonSmall",
     "module": "wear",
     "renderBasename": "WearButtonSmall_wear_button_small.png",
-    "sha256": "cb432a27c8899835ec47e388104f65822fba9109067c2c6b08eb4dd4fa414a59",
+    "sha256": "ec1f6e6b32002da438e5e38a5c2250d37fa2a57a14d315f675d2ffc64de982c7",
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/wear/widget/CardSlotWidgetPreviews.kt"
   },
   "wear/ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearCalendarSmall_wear \u00b7 calendar (small)": {
@@ -2516,7 +2516,7 @@
     "functionName": "WearCalendarSmall",
     "module": "wear",
     "renderBasename": "WearCalendarSmall_wear_calendar_small.png",
-    "sha256": "e31b1cdf2fd06b1006f3e1efb9f3216419f68d167883b07c0ad6136046b7296e",
+    "sha256": "bac6090ed39e69035e52337a0e5b70ff2a574dac3a32f8625209d3ff9f58cc7f",
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/wear/widget/CardSlotWidgetPreviews.kt"
   },
   "wear/ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearEntitiesLarge_wear \u00b7 entities (large)": {
@@ -2524,7 +2524,7 @@
     "functionName": "WearEntitiesLarge",
     "module": "wear",
     "renderBasename": "WearEntitiesLarge_wear_entities_large.png",
-    "sha256": "e45aa1b10bbeced663f233392b4f95ddd6dedf4307cbe957da168c7dbb66bc06",
+    "sha256": "bf73d95662b3015d458d4a5eba6a379701a08ba22ea2add8d56999037ace6f79",
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/wear/widget/CardSlotWidgetPreviews.kt"
   },
   "wear/ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearEntitiesSmall_wear \u00b7 entities (small)": {
@@ -2532,7 +2532,7 @@
     "functionName": "WearEntitiesSmall",
     "module": "wear",
     "renderBasename": "WearEntitiesSmall_wear_entities_small.png",
-    "sha256": "16d918701b7c7de2f4665863e4427aa35cc733b3ca18efed8789f5732b1f68c9",
+    "sha256": "62b2e8f218319b8b15a49e399942e5bc1b3e48491e3792a27ae978ccafb96692",
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/wear/widget/CardSlotWidgetPreviews.kt"
   },
   "wear/ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearEntityFilterLarge_wear \u00b7 entity-filter (large)": {
@@ -2540,7 +2540,7 @@
     "functionName": "WearEntityFilterLarge",
     "module": "wear",
     "renderBasename": "WearEntityFilterLarge_wear_entity_filter_large.png",
-    "sha256": "e38a41c44033b41524ab9c1ddea2ac13fcfb1a82a02ba60f1c419b97286653fa",
+    "sha256": "d7e1b6e478a5f358c082035f9f0cac6587d1468ed221930c46dc2497db806772",
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/wear/widget/CardSlotWidgetPreviews.kt"
   },
   "wear/ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearEntityFilterSmall_wear \u00b7 entity-filter (small)": {
@@ -2548,7 +2548,7 @@
     "functionName": "WearEntityFilterSmall",
     "module": "wear",
     "renderBasename": "WearEntityFilterSmall_wear_entity_filter_small.png",
-    "sha256": "fe8beb6d89df9a99097aa17e2b9cd12b9c7add73011ff9630b398f1569f0bf39",
+    "sha256": "73913b7b7540531fc9550a33884a64496ff75c57c99aacb788ad1f66aaf78a75",
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/wear/widget/CardSlotWidgetPreviews.kt"
   },
   "wear/ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearEntityLarge_wear \u00b7 entity (large)": {
@@ -2556,7 +2556,7 @@
     "functionName": "WearEntityLarge",
     "module": "wear",
     "renderBasename": "WearEntityLarge_wear_entity_large.png",
-    "sha256": "695f84ee0f0268c6f7a5cbb5cb495e7a88f486856e7e23c7a8db38e2c0af37c7",
+    "sha256": "8553e75ad5af59e4e9cdd49c10dc8235fd093227f16fb5643faeba98dee8cc96",
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/wear/widget/CardSlotWidgetPreviews.kt"
   },
   "wear/ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearEntitySmall_wear \u00b7 entity (small)": {
@@ -2564,7 +2564,7 @@
     "functionName": "WearEntitySmall",
     "module": "wear",
     "renderBasename": "WearEntitySmall_wear_entity_small.png",
-    "sha256": "99bad12ef337a44aa1b9dd4c2f0c49ebd1a990a35a51d0688c1242f0f646ed98",
+    "sha256": "6a22367fbfcdf4b1438470ac64fea6d5770001e60b9d41906b3b86885f58f132",
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/wear/widget/CardSlotWidgetPreviews.kt"
   },
   "wear/ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearGaugeLarge_wear \u00b7 gauge (large)": {
@@ -2572,7 +2572,7 @@
     "functionName": "WearGaugeLarge",
     "module": "wear",
     "renderBasename": "WearGaugeLarge_wear_gauge_large.png",
-    "sha256": "d6a459f7008b01894b53005dd6051203da213d9843db0af3b60b44a36beb0bc6",
+    "sha256": "1eb7b9933212c98a635e250b54a861d65c2a8c4b818436744b84cd02f0ff3777",
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/wear/widget/CardSlotWidgetPreviews.kt"
   },
   "wear/ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearGaugeSmall_wear \u00b7 gauge (small)": {
@@ -2580,7 +2580,7 @@
     "functionName": "WearGaugeSmall",
     "module": "wear",
     "renderBasename": "WearGaugeSmall_wear_gauge_small.png",
-    "sha256": "187969cb6c29746c44718f9b3c5a76247baad62c37def9702a536f1a0a8fd834",
+    "sha256": "834fbba100e0411a5f935ffab8abdb199bd1a6caeef6fe49a2ef99fe53867236",
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/wear/widget/CardSlotWidgetPreviews.kt"
   },
   "wear/ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearGlanceLarge_wear \u00b7 glance (large)": {
@@ -2588,7 +2588,7 @@
     "functionName": "WearGlanceLarge",
     "module": "wear",
     "renderBasename": "WearGlanceLarge_wear_glance_large.png",
-    "sha256": "d3b264c67b773a1987af5ecad77aa3250062e53d4e9e4e94c7a7d3d7c8c94c60",
+    "sha256": "33aa36963fa3cbd72aae2e9aa17d080efee5bf0d2a173fb148d04cd1c79bdd86",
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/wear/widget/CardSlotWidgetPreviews.kt"
   },
   "wear/ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearGlanceSmall_wear \u00b7 glance (small)": {
@@ -2596,7 +2596,7 @@
     "functionName": "WearGlanceSmall",
     "module": "wear",
     "renderBasename": "WearGlanceSmall_wear_glance_small.png",
-    "sha256": "2c14148cb1884b153709d1984755372ffd32626e0384ae03f0b72280763d675d",
+    "sha256": "5b22b6d45256209549e7088100809ed169459e20cdf2a684123b0ef543b0a951",
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/wear/widget/CardSlotWidgetPreviews.kt"
   },
   "wear/ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearGridLarge_wear \u00b7 grid (large)": {
@@ -2604,7 +2604,7 @@
     "functionName": "WearGridLarge",
     "module": "wear",
     "renderBasename": "WearGridLarge_wear_grid_large.png",
-    "sha256": "6f7f357e7818f58ccdc0027fb52bac71f5e5c1c51464e942143c31b13e252c33",
+    "sha256": "9ee045d020770b65fd5fdd7256e4faaed235572e6b100184d8be7c799fa80f6b",
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/wear/widget/CardSlotWidgetPreviews.kt"
   },
   "wear/ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearGridSmall_wear \u00b7 grid (small)": {
@@ -2612,7 +2612,7 @@
     "functionName": "WearGridSmall",
     "module": "wear",
     "renderBasename": "WearGridSmall_wear_grid_small.png",
-    "sha256": "cb432a27c8899835ec47e388104f65822fba9109067c2c6b08eb4dd4fa414a59",
+    "sha256": "ec1f6e6b32002da438e5e38a5c2250d37fa2a57a14d315f675d2ffc64de982c7",
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/wear/widget/CardSlotWidgetPreviews.kt"
   },
   "wear/ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearHeadingSmall_wear \u00b7 heading (small)": {
@@ -2620,7 +2620,7 @@
     "functionName": "WearHeadingSmall",
     "module": "wear",
     "renderBasename": "WearHeadingSmall_wear_heading_small.png",
-    "sha256": "2eb5a8528df214c94788928ccd13f8c9d70bd0c27f3664fc9d5b4d92fea0a57c",
+    "sha256": "67888b56785a4db223818b77b799b371989dea6ec6da8c5c164b9c51fe342c51",
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/wear/widget/CardSlotWidgetPreviews.kt"
   },
   "wear/ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearHistoryGraphSmall_wear \u00b7 history-graph (small)": {
@@ -2628,7 +2628,7 @@
     "functionName": "WearHistoryGraphSmall",
     "module": "wear",
     "renderBasename": "WearHistoryGraphSmall_wear_history_graph_small.png",
-    "sha256": "6682fa1512f9d1106ed3a603fc8fdf95ae52a9e83d74b5ce8e6e660b65456a2a",
+    "sha256": "dd7bd28f8c31a46c56dc356020f6616f683e0613392c8a712b3a4177a1cfd104",
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/wear/widget/CardSlotWidgetPreviews.kt"
   },
   "wear/ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearHorizontalStackLarge_wear \u00b7 horizontal-stack (large)": {
@@ -2636,7 +2636,7 @@
     "functionName": "WearHorizontalStackLarge",
     "module": "wear",
     "renderBasename": "WearHorizontalStackLarge_wear_horizontal_stack_large.png",
-    "sha256": "6f7f357e7818f58ccdc0027fb52bac71f5e5c1c51464e942143c31b13e252c33",
+    "sha256": "9ee045d020770b65fd5fdd7256e4faaed235572e6b100184d8be7c799fa80f6b",
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/wear/widget/CardSlotWidgetPreviews.kt"
   },
   "wear/ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearHorizontalStackSmall_wear \u00b7 horizontal-stack (small)": {
@@ -2644,7 +2644,7 @@
     "functionName": "WearHorizontalStackSmall",
     "module": "wear",
     "renderBasename": "WearHorizontalStackSmall_wear_horizontal_stack_small.png",
-    "sha256": "cb432a27c8899835ec47e388104f65822fba9109067c2c6b08eb4dd4fa414a59",
+    "sha256": "ec1f6e6b32002da438e5e38a5c2250d37fa2a57a14d315f675d2ffc64de982c7",
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/wear/widget/CardSlotWidgetPreviews.kt"
   },
   "wear/ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearHumidifierLarge_wear \u00b7 humidifier (large)": {
@@ -2652,7 +2652,7 @@
     "functionName": "WearHumidifierLarge",
     "module": "wear",
     "renderBasename": "WearHumidifierLarge_wear_humidifier_large.png",
-    "sha256": "cc3e86a67a410dfc44d68db2c471f68934ade7d3695e4527cff8d988ba0b5b44",
+    "sha256": "32c9ba969770b814206f54a59d5d088712c41bc954ec3c4884620ebbe4c03396",
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/wear/widget/CardSlotWidgetPreviews.kt"
   },
   "wear/ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearHumidifierSmall_wear \u00b7 humidifier (small)": {
@@ -2660,7 +2660,7 @@
     "functionName": "WearHumidifierSmall",
     "module": "wear",
     "renderBasename": "WearHumidifierSmall_wear_humidifier_small.png",
-    "sha256": "7520549c484b69ab8174babf42804de9b6e92af9db792a1522c1c09de4fa95ad",
+    "sha256": "b8926ae879cbd52e5067683434b347d4af6e2749ce99d2d5ccd60e49cf7d082e",
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/wear/widget/CardSlotWidgetPreviews.kt"
   },
   "wear/ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearLightLarge_wear \u00b7 light (large)": {
@@ -2668,7 +2668,7 @@
     "functionName": "WearLightLarge",
     "module": "wear",
     "renderBasename": "WearLightLarge_wear_light_large.png",
-    "sha256": "d6521bd37e9aed111acc09de504c8add4497bbfe76d37813d22e8931c4381068",
+    "sha256": "93af2224da168c414eb4f8f810c63d3ea0ecbba55ae6af850c6dd99a8f2c6791",
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/wear/widget/CardSlotWidgetPreviews.kt"
   },
   "wear/ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearLightSmall_wear \u00b7 light (small)": {
@@ -2676,7 +2676,7 @@
     "functionName": "WearLightSmall",
     "module": "wear",
     "renderBasename": "WearLightSmall_wear_light_small.png",
-    "sha256": "46d4d6f31db5b6dfdd1d458813fdaf281474a3d6c5eb3a2c3c53c8bcdb74d1fd",
+    "sha256": "a14324ec3ef45f1430b6bb1d1507503c9544aa09c0d0cc389f62d92f15a76b48",
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/wear/widget/CardSlotWidgetPreviews.kt"
   },
   "wear/ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearLogbookSmall_wear \u00b7 logbook (small)": {
@@ -2684,7 +2684,7 @@
     "functionName": "WearLogbookSmall",
     "module": "wear",
     "renderBasename": "WearLogbookSmall_wear_logbook_small.png",
-    "sha256": "69a916cf371afd716ada052734a05b55971bbbe65dcd1621b59dac1c1464fc09",
+    "sha256": "ffa7ccf8cd94fe269c555c1a900b908a6abd82f430b5c873763d2ea27c0362e0",
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/wear/widget/CardSlotWidgetPreviews.kt"
   },
   "wear/ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearMarkdownSmall_wear \u00b7 markdown (small)": {
@@ -2692,7 +2692,7 @@
     "functionName": "WearMarkdownSmall",
     "module": "wear",
     "renderBasename": "WearMarkdownSmall_wear_markdown_small.png",
-    "sha256": "e791cc514811a60eba35f9faeaae1e953409b88fa5977ebe27ae2448fe45402d",
+    "sha256": "89310b15c5f15cd4d7943801273937ae428fe94b92f763873fbe5455ec8a4c79",
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/wear/widget/CardSlotWidgetPreviews.kt"
   },
   "wear/ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearMediaControlLarge_wear \u00b7 media-control (large)": {
@@ -2700,7 +2700,7 @@
     "functionName": "WearMediaControlLarge",
     "module": "wear",
     "renderBasename": "WearMediaControlLarge_wear_media_control_large.png",
-    "sha256": "6e2811399979c49c3e1d3247450946032b57c1dcf345fed51c36cc4fe30bbedf",
+    "sha256": "9b9524d9368f0f1ccef6ec95f86740f9210beb04d34da7d4f02837dee0887ae8",
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/wear/widget/CardSlotWidgetPreviews.kt"
   },
   "wear/ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearMediaControlSmall_wear \u00b7 media-control (small)": {
@@ -2708,7 +2708,7 @@
     "functionName": "WearMediaControlSmall",
     "module": "wear",
     "renderBasename": "WearMediaControlSmall_wear_media_control_small.png",
-    "sha256": "5d6c6cec4440b3d2757ca6d00a49c26584b90806b7bf8049623086118a9b7c01",
+    "sha256": "1adc8cb4e8a1d5b03b1bc1598c3daf502506952290629aa7d2185c5b5dd10692",
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/wear/widget/CardSlotWidgetPreviews.kt"
   },
   "wear/ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearPictureElementsLarge_wear \u00b7 picture-elements (large)": {
@@ -2716,7 +2716,7 @@
     "functionName": "WearPictureElementsLarge",
     "module": "wear",
     "renderBasename": "WearPictureElementsLarge_wear_picture_elements_large.png",
-    "sha256": "ee12da72751179996bbf39850067852152123d3d87e8ca083ec05b892d1533ac",
+    "sha256": "075e3e25427e632b57864ce20da7c55fa733299fd45cbe3a85aad731236d5d48",
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/wear/widget/CardSlotWidgetPreviews.kt"
   },
   "wear/ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearPictureElementsSmall_wear \u00b7 picture-elements (small)": {
@@ -2724,7 +2724,7 @@
     "functionName": "WearPictureElementsSmall",
     "module": "wear",
     "renderBasename": "WearPictureElementsSmall_wear_picture_elements_small.png",
-    "sha256": "ac29b5e2919ffa299be319bd347e6ec6eb34a306fe3ff056fd6d48a271e8e55c",
+    "sha256": "5ffa67325db649ed0bb952de3d1a5edfc336fb576a86350a271d2299948585d7",
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/wear/widget/CardSlotWidgetPreviews.kt"
   },
   "wear/ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearPictureEntityLarge_wear \u00b7 picture-entity (large)": {
@@ -2732,7 +2732,7 @@
     "functionName": "WearPictureEntityLarge",
     "module": "wear",
     "renderBasename": "WearPictureEntityLarge_wear_picture_entity_large.png",
-    "sha256": "a9095732b380243abf22a9874a04450dd81480ba6a2941903ea05698d3a0095b",
+    "sha256": "30f5820fa01a838acdf2dbd9be50b3133a77e5ad9f5b29edf95231027e2c84aa",
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/wear/widget/CardSlotWidgetPreviews.kt"
   },
   "wear/ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearPictureEntitySmall_wear \u00b7 picture-entity (small)": {
@@ -2740,7 +2740,7 @@
     "functionName": "WearPictureEntitySmall",
     "module": "wear",
     "renderBasename": "WearPictureEntitySmall_wear_picture_entity_small.png",
-    "sha256": "280a5f80041a6a7cd6652f58b361a342935a8e7204998300cf4c590667002dc5",
+    "sha256": "ee0e734da3a1406aa1ddf033659b302cf65808c81a05e07f0695ecc8f1eb6b7c",
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/wear/widget/CardSlotWidgetPreviews.kt"
   },
   "wear/ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearPictureGlanceLarge_wear \u00b7 picture-glance (large)": {
@@ -2748,7 +2748,7 @@
     "functionName": "WearPictureGlanceLarge",
     "module": "wear",
     "renderBasename": "WearPictureGlanceLarge_wear_picture_glance_large.png",
-    "sha256": "9305a0a75b200bacc144c2561453a607c7551f387608aefb0bf8d2e1b709ffe0",
+    "sha256": "272fe1e6520c296babdb9f85b47daad2a57672a00aebd7097808833be8daa89b",
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/wear/widget/CardSlotWidgetPreviews.kt"
   },
   "wear/ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearPictureGlanceSmall_wear \u00b7 picture-glance (small)": {
@@ -2756,7 +2756,7 @@
     "functionName": "WearPictureGlanceSmall",
     "module": "wear",
     "renderBasename": "WearPictureGlanceSmall_wear_picture_glance_small.png",
-    "sha256": "8081c632ea8a21d02c14361bcc82a473c46a72aa2f369e92465a247f9b60beb5",
+    "sha256": "d13d4b7b7856b6850b3106806cf5741ddbaee5cd7311b36bc9409db760f1c7a4",
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/wear/widget/CardSlotWidgetPreviews.kt"
   },
   "wear/ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearPictureLarge_wear \u00b7 picture (large)": {
@@ -2764,7 +2764,7 @@
     "functionName": "WearPictureLarge",
     "module": "wear",
     "renderBasename": "WearPictureLarge_wear_picture_large.png",
-    "sha256": "5b4b2b98daacc584de38d3b4e9a54eae311536e3e6ced7805f87b784f01eb0a4",
+    "sha256": "e1c4d15277e016c7a235e31f9c4d49e84e74a8d1b90382a2855db1780e58bebd",
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/wear/widget/CardSlotWidgetPreviews.kt"
   },
   "wear/ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearPictureSmall_wear \u00b7 picture (small)": {
@@ -2772,7 +2772,7 @@
     "functionName": "WearPictureSmall",
     "module": "wear",
     "renderBasename": "WearPictureSmall_wear_picture_small.png",
-    "sha256": "514eba116f8feb7e1246c482417113a03f528823f7698a91e089c989b628a1ab",
+    "sha256": "c37307d64bc90c18d0f9ae76cf341f0a7d7f67171785e4ac4d887ecfc28c1421",
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/wear/widget/CardSlotWidgetPreviews.kt"
   },
   "wear/ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearSensorLarge_wear \u00b7 sensor (large)": {
@@ -2780,7 +2780,7 @@
     "functionName": "WearSensorLarge",
     "module": "wear",
     "renderBasename": "WearSensorLarge_wear_sensor_large.png",
-    "sha256": "ce7b6be89b1127902683c132bc4dcafedec562720bd8a85603843bad92f2e1d1",
+    "sha256": "a181c6263095e740ceda19f9d680da977eeec215d5b4246ac765517533a1f1cb",
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/wear/widget/CardSlotWidgetPreviews.kt"
   },
   "wear/ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearSensorSmall_wear \u00b7 sensor (small)": {
@@ -2788,7 +2788,7 @@
     "functionName": "WearSensorSmall",
     "module": "wear",
     "renderBasename": "WearSensorSmall_wear_sensor_small.png",
-    "sha256": "d4b27391e8e44f75e3a7c72697fd9354a4f8c358a17be0cc550601b47990a19c",
+    "sha256": "fde22e2d0130e1a82cbfb2f22e9ad1ed8442d4bdcfc0699b22be116972330b14",
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/wear/widget/CardSlotWidgetPreviews.kt"
   },
   "wear/ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearStatisticLarge_wear \u00b7 statistic (large)": {
@@ -2796,7 +2796,7 @@
     "functionName": "WearStatisticLarge",
     "module": "wear",
     "renderBasename": "WearStatisticLarge_wear_statistic_large.png",
-    "sha256": "b8d45805b0929f031510f1595bff1238b9032d1162e8ead9f1bf08442e0ce796",
+    "sha256": "b76dbdd0d738d07ad1b401224600839533aa1efe24775c8bffe65b66907ca2a1",
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/wear/widget/CardSlotWidgetPreviews.kt"
   },
   "wear/ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearStatisticSmall_wear \u00b7 statistic (small)": {
@@ -2804,7 +2804,7 @@
     "functionName": "WearStatisticSmall",
     "module": "wear",
     "renderBasename": "WearStatisticSmall_wear_statistic_small.png",
-    "sha256": "a9b2721f3af7e9ff56800a9767c09da05fb5d89a6704aa50661bbf0b5f5f521a",
+    "sha256": "3b0b71ff7b21bb3834b0c9658a414e4c3df09905ce77e083da88e1e1dbf392d3",
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/wear/widget/CardSlotWidgetPreviews.kt"
   },
   "wear/ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearStatisticsGraphSmall_wear \u00b7 statistics-graph (small)": {
@@ -2812,7 +2812,7 @@
     "functionName": "WearStatisticsGraphSmall",
     "module": "wear",
     "renderBasename": "WearStatisticsGraphSmall_wear_statistics_graph_small.png",
-    "sha256": "53563604a8295e9694929be4ec201ab867dbf7cd40b44470f4b8fe7001c1f9d4",
+    "sha256": "721c50d32bbe53abdf257b35552543bb846b9f9195de08968e99d9d6b88dd5ac",
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/wear/widget/CardSlotWidgetPreviews.kt"
   },
   "wear/ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearThermostatLarge_wear \u00b7 thermostat (large)": {
@@ -2820,7 +2820,7 @@
     "functionName": "WearThermostatLarge",
     "module": "wear",
     "renderBasename": "WearThermostatLarge_wear_thermostat_large.png",
-    "sha256": "4ba62e6b108d81658052021e43a00ec9efbfd1ec5bf85fa5dc42293e7426764b",
+    "sha256": "e0e861907727bfdbe44dc7404382c8426c2a987aef6c8f588349690e1a0e6f2c",
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/wear/widget/CardSlotWidgetPreviews.kt"
   },
   "wear/ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearThermostatSmall_wear \u00b7 thermostat (small)": {
@@ -2828,7 +2828,7 @@
     "functionName": "WearThermostatSmall",
     "module": "wear",
     "renderBasename": "WearThermostatSmall_wear_thermostat_small.png",
-    "sha256": "63e55320f0114460e888bcf92ed0a6ff7cf23749f71ea34694f83ebb1da228b6",
+    "sha256": "a3dfafa1bf7438494aa994c58e27fcf116eccc5cdee416c34b9977a8b58b5bc5",
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/wear/widget/CardSlotWidgetPreviews.kt"
   },
   "wear/ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearTileLarge_wear \u00b7 tile (large)": {
@@ -2836,7 +2836,7 @@
     "functionName": "WearTileLarge",
     "module": "wear",
     "renderBasename": "WearTileLarge_wear_tile_large.png",
-    "sha256": "695f84ee0f0268c6f7a5cbb5cb495e7a88f486856e7e23c7a8db38e2c0af37c7",
+    "sha256": "8553e75ad5af59e4e9cdd49c10dc8235fd093227f16fb5643faeba98dee8cc96",
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/wear/widget/CardSlotWidgetPreviews.kt"
   },
   "wear/ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearTileSmall_wear \u00b7 tile (small)": {
@@ -2844,7 +2844,7 @@
     "functionName": "WearTileSmall",
     "module": "wear",
     "renderBasename": "WearTileSmall_wear_tile_small.png",
-    "sha256": "99bad12ef337a44aa1b9dd4c2f0c49ebd1a990a35a51d0688c1242f0f646ed98",
+    "sha256": "6a22367fbfcdf4b1438470ac64fea6d5770001e60b9d41906b3b86885f58f132",
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/wear/widget/CardSlotWidgetPreviews.kt"
   },
   "wear/ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearTodoListSmall_wear \u00b7 todo-list (small)": {
@@ -2852,7 +2852,7 @@
     "functionName": "WearTodoListSmall",
     "module": "wear",
     "renderBasename": "WearTodoListSmall_wear_todo_list_small.png",
-    "sha256": "cd99c5655c1289c91cb6269698ef7d2e59c0e58b0bbe6afe9f81e8610f81798f",
+    "sha256": "3fccc27094aa3034b9918528836125f27f6ac081f2c6a19523988775b886b2ca",
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/wear/widget/CardSlotWidgetPreviews.kt"
   },
   "wear/ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearUnsupportedLarge_wear \u00b7 unsupported (large)": {
@@ -2860,7 +2860,7 @@
     "functionName": "WearUnsupportedLarge",
     "module": "wear",
     "renderBasename": "WearUnsupportedLarge_wear_unsupported_large.png",
-    "sha256": "12ade6aac0fa7ffb9fff971ace393d281f61aca7ef58a47ea76037d0406936f4",
+    "sha256": "d5de09a070cb8fc4a72b791804cbe9e664193efe7ff7713996462fbc4f92c8f6",
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/wear/widget/CardSlotWidgetPreviews.kt"
   },
   "wear/ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearUnsupportedSmall_wear \u00b7 unsupported (small)": {
@@ -2868,7 +2868,7 @@
     "functionName": "WearUnsupportedSmall",
     "module": "wear",
     "renderBasename": "WearUnsupportedSmall_wear_unsupported_small.png",
-    "sha256": "59cadfa7434e41a4b8c45a8781d8ecdddcb603010a5f7a016c79689ce505b7c4",
+    "sha256": "c4adc1ae98c63a2a265fc7dc2b4c6806fcf911160a8ee9db9e1218bb97689ae9",
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/wear/widget/CardSlotWidgetPreviews.kt"
   },
   "wear/ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearVerticalStackLarge_wear \u00b7 vertical-stack (large)": {
@@ -2876,7 +2876,7 @@
     "functionName": "WearVerticalStackLarge",
     "module": "wear",
     "renderBasename": "WearVerticalStackLarge_wear_vertical_stack_large.png",
-    "sha256": "06800fb7ff1895a0d761c26f214618ae88822e2e62a6213d002266fb7e2b4bae",
+    "sha256": "452d3d838bf439a924d6cc3b26649b598cfdbb738d5fc7fab100a2dd88b70192",
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/wear/widget/CardSlotWidgetPreviews.kt"
   },
   "wear/ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearVerticalStackSmall_wear \u00b7 vertical-stack (small)": {
@@ -2884,7 +2884,7 @@
     "functionName": "WearVerticalStackSmall",
     "module": "wear",
     "renderBasename": "WearVerticalStackSmall_wear_vertical_stack_small.png",
-    "sha256": "99bad12ef337a44aa1b9dd4c2f0c49ebd1a990a35a51d0688c1242f0f646ed98",
+    "sha256": "6a22367fbfcdf4b1438470ac64fea6d5770001e60b9d41906b3b86885f58f132",
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/wear/widget/CardSlotWidgetPreviews.kt"
   },
   "wear/ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearWeatherForecastSmall_wear \u00b7 weather-forecast (small)": {
@@ -2892,7 +2892,7 @@
     "functionName": "WearWeatherForecastSmall",
     "module": "wear",
     "renderBasename": "WearWeatherForecastSmall_wear_weather_forecast_small.png",
-    "sha256": "75cc7327d9358dba7d3d49d288d4528764e19cc9740892187ec52c744352d24b",
+    "sha256": "d7278af1992f4d33133210743f6460a740d8390e38af8ec3315713777a64e848",
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/wear/widget/CardSlotWidgetPreviews.kt"
   },
   "wear/ee.schimke.terrazzo.wear.widget.SlotWidgetPreviewsKt.SlotWidgetPreview_Empty_Slot widget \u2014 empty placeholder": {
@@ -2900,7 +2900,7 @@
     "functionName": "SlotWidgetPreview_Empty",
     "module": "wear",
     "renderBasename": "SlotWidgetPreview_Empty_Slot_widget_empty_placeholder.png",
-    "sha256": "12391daefd7e0a615e1bc9419ada9fc02222ba7ce59ffbd98b956190f65058fe",
+    "sha256": "1cfa89dd718b0ce4a9a3dc7e79ea8678d206de7987a33eb74e497528e0d35de8",
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/wear/widget/SlotWidgetPreviews.kt"
   },
   "wear/ee.schimke.terrazzo.wear.widget.SlotWidgetPreviewsKt.SlotWidgetPreview_EntitiesLarge_Slot widget \u2014 entities (large)": {
@@ -2908,7 +2908,7 @@
     "functionName": "SlotWidgetPreview_EntitiesLarge",
     "module": "wear",
     "renderBasename": "SlotWidgetPreview_EntitiesLarge_Slot_widget_entities_large.png",
-    "sha256": "aa95a090fee5cf0bf52fa92278648ce512fb17a7ae15fa8c71c9c9c71aa4cf83",
+    "sha256": "1861d8c853fa4b9bceaa36d311c7aee23f9f882c862f3c962a72c379e80b2bf2",
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/wear/widget/SlotWidgetPreviews.kt"
   },
   "wear/ee.schimke.terrazzo.wear.widget.SlotWidgetPreviewsKt.SlotWidgetPreview_TileSmall_Slot widget \u2014 tile (small)": {
@@ -2916,7 +2916,7 @@
     "functionName": "SlotWidgetPreview_TileSmall",
     "module": "wear",
     "renderBasename": "SlotWidgetPreview_TileSmall_Slot_widget_tile_small.png",
-    "sha256": "99bad12ef337a44aa1b9dd4c2f0c49ebd1a990a35a51d0688c1242f0f646ed98",
+    "sha256": "6a22367fbfcdf4b1438470ac64fea6d5770001e60b9d41906b3b86885f58f132",
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/wear/widget/SlotWidgetPreviews.kt"
   }
 }
