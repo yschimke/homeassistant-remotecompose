@@ -20,7 +20,7 @@ jobs:
       - uses: actions/checkout@v7.0.0
       - uses: gradle/actions/wrapper-validation@v6.2.0
       # Kotlin toolchain and Gradle daemon both run on JVM 21 (libs.versions.toml).
-      - uses: actions/setup-java@v5.4.0
+      - uses: actions/setup-java@v5.5.0
         with:
           distribution: temurin
           java-version: 21
@@ -34,7 +34,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7.0.0
       # Kotlin toolchain and Gradle daemon both run on JVM 21 (libs.versions.toml).
-      - uses: actions/setup-java@v5.4.0
+      - uses: actions/setup-java@v5.5.0
         with:
           distribution: temurin
           java-version: 21
@@ -47,7 +47,7 @@ jobs:
       # render before `./gradlew test`. (The `compose-preview` workflow
       # still publishes baselines / PR comments separately; this step is
       # local to the test job and doesn't push anything.)
-      - uses: yschimke/compose-ai-tools/.github/actions/install@v0.16.43
+      - uses: yschimke/compose-ai-tools/.github/actions/install@v0.16.44
         with:
           version: catalog
           catalog-key: compose-preview-plugin
@@ -79,7 +79,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7.0.0
       # Kotlin toolchain and Gradle daemon both run on JVM 21 (libs.versions.toml).
-      - uses: actions/setup-java@v5.4.0
+      - uses: actions/setup-java@v5.5.0
         with:
           distribution: temurin
           java-version: 21
@@ -116,7 +116,7 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
       # Kotlin toolchain and Gradle daemon both run on JVM 21 (libs.versions.toml).
-      - uses: actions/setup-java@v5.4.0
+      - uses: actions/setup-java@v5.5.0
         with:
           distribution: temurin
           java-version: 21
