@@ -716,7 +716,7 @@
     "functionName": "CardPreviewMatrix_Entity",
     "module": "previews",
     "renderBasename": "CardPreviewMatrix_Entity_matrix_entity.png",
-    "sha256": "25e287e33bf88787745eb621cbd220f3d89031bd74d80dd48a1e57a39dce6584",
+    "sha256": "cff068ef4c86312e60866cae50f109f96e51e7b9313e8e6982640a6553317dbf",
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/CardPreviewMatrix.kt"
   },
   "previews/ee.schimke.ha.previews.CardPreviewMatrixKt.CardPreviewMatrix_Gauge_matrix \u2014 gauge": {
@@ -1596,7 +1596,7 @@
     "functionName": "DashboardClimateTablet",
     "module": "previews",
     "renderBasename": "DashboardClimateTablet_dashboard_climate_tablet.png",
-    "sha256": "c14723387c406132f77628b19af2d4aabadf901f06c983f0544c1cde54215dcd",
+    "sha256": "c1f71a82e26d1c56f431ba01e66be048ad8592e0a65c4c53d4b20dca20d8b24f",
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/DashboardPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.DashboardPreviewsKt.DashboardEnergyMobile_dashboard energy \u2014 mobile": {
@@ -1652,7 +1652,7 @@
     "functionName": "DashboardNetworksMobile",
     "module": "previews",
     "renderBasename": "DashboardNetworksMobile_dashboard_networks_mobile.png",
-    "sha256": "3814c663b25f01d0fe395d4492d0cfb8dc9867699c4840380cb63e8c82480a36",
+    "sha256": "fc710e8512c0d2cd684d437621124dde09ebb4b1c52c86d638e9ffc3018c25b4",
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/DashboardPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.DashboardPreviewsKt.DashboardNetworksTablet_dashboard networks \u2014 tablet": {
@@ -1660,7 +1660,7 @@
     "functionName": "DashboardNetworksTablet",
     "module": "previews",
     "renderBasename": "DashboardNetworksTablet_dashboard_networks_tablet.png",
-    "sha256": "53356da5df61e2c96615927046c8db580fcb9f81559b0e36a1e673757a10e8b6",
+    "sha256": "8899f2db25f00b5b91b729f1ff08edb04bdca4e28da4b452f87b7f04ec180044",
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/DashboardPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.DashboardPreviewsKt.DashboardSecurityMobile_dashboard security \u2014 mobile": {
@@ -2084,7 +2084,7 @@
     "functionName": "Sizing_ConstraintMatrix_Wrap",
     "module": "previews",
     "renderBasename": "Sizing_ConstraintMatrix_Wrap_sizing_width_height_matrix_wrap_profile.png",
-    "sha256": "e5d79264a5ecb6494f424eeb962023e5a294467199d272755d094d0cddb99b5f",
+    "sha256": "619e73d363dbeee44fc4c1bdaa7cbe4d7a6ce99aa80b41e4d88be6f213c7195e",
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/SizingExperimentPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.SizingExperimentPreviewsKt.Sizing_FixedSlot_PaintMeasure_sizing \u2014 fixed slot, paint-measure profile": {
@@ -2092,7 +2092,7 @@
     "functionName": "Sizing_FixedSlot_PaintMeasure",
     "module": "previews",
     "renderBasename": "Sizing_FixedSlot_PaintMeasure_sizing_fixed_slot_paint_measure_profile.png",
-    "sha256": "1b26ebd8062d12828f7dc6d8dad5aeb6ad3de461aa1cae9712741f4cef326c82",
+    "sha256": "d46d658f57187a896acc013467cb856fc9dac8b6f7ce9ce3337292a6304e9ad7",
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/SizingExperimentPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.SizingExperimentPreviewsKt.Sizing_FixedSlot_Wrap_sizing \u2014 fixed slot, wrap profile": {
@@ -2100,7 +2100,7 @@
     "functionName": "Sizing_FixedSlot_Wrap",
     "module": "previews",
     "renderBasename": "Sizing_FixedSlot_Wrap_sizing_fixed_slot_wrap_profile.png",
-    "sha256": "8cc9402dd0eed575c9266e000345eb527e9947402cfd1022b258ebf81ad7d766",
+    "sha256": "2c8ece07ee5dff376a64e84f71010f767a2a1c6a19eb4d9bf6af600413defbae",
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/SizingExperimentPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.SizingExperimentPreviewsKt.Sizing_SlackSlot_PaintMeasure_sizing \u2014 slack slot, paint-measure profile": {
@@ -2108,7 +2108,7 @@
     "functionName": "Sizing_SlackSlot_PaintMeasure",
     "module": "previews",
     "renderBasename": "Sizing_SlackSlot_PaintMeasure_sizing_slack_slot_paint_measure_profile.png",
-    "sha256": "af991373edb15176b23656a1956bc9bfc48aff5c6acad5d2e2167d9d45695275",
+    "sha256": "3f87ecf874024a81c85c56374c83be7b6fe877bf13b41285aff19934b88f729d",
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/SizingExperimentPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.SizingExperimentPreviewsKt.Sizing_SlackSlot_Wrap_sizing \u2014 slack slot, wrap profile": {
@@ -2116,7 +2116,7 @@
     "functionName": "Sizing_SlackSlot_Wrap",
     "module": "previews",
     "renderBasename": "Sizing_SlackSlot_Wrap_sizing_slack_slot_wrap_profile.png",
-    "sha256": "a30e22e46473c25811ab7a31eb227d1cffc64201f9055aadddf9b388fce28ebe",
+    "sha256": "880de828ff7a16cf4a15b02e742494f358718944cfa33ac218cbc871b345852c",
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/SizingExperimentPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.SizingExperimentPreviewsKt.Sizing_TightSlot_PaintMeasure_sizing \u2014 tight slot, paint-measure profile": {
@@ -2124,7 +2124,7 @@
     "functionName": "Sizing_TightSlot_PaintMeasure",
     "module": "previews",
     "renderBasename": "Sizing_TightSlot_PaintMeasure_sizing_tight_slot_paint_measure_profile.png",
-    "sha256": "a4c5bbc589a3c1fc277e1e4d5b5921dde86e88d5b1cd4bc3b879b84dee6240f2",
+    "sha256": "4bfdba53f295f5a2e2f57c9f60007c2ed7241c9720755ddfa848ce57cf8a7634",
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/SizingExperimentPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.SizingExperimentPreviewsKt.Sizing_TightSlot_Wrap_sizing \u2014 tight slot, wrap profile": {
@@ -2132,7 +2132,7 @@
     "functionName": "Sizing_TightSlot_Wrap",
     "module": "previews",
     "renderBasename": "Sizing_TightSlot_Wrap_sizing_tight_slot_wrap_profile.png",
-    "sha256": "cfc6daa178fe104eb306a912a0e74301686ec714615e71f84a582733e0a55e3e",
+    "sha256": "324233a443c9f90eb161a113e9eaa70b5e3d4e3ec8474b952a9b68e2cb9a1aad",
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/SizingExperimentPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.SizingExperimentPreviewsKt.Sizing_WidthPinnedHeightAdaptive_sizing \u2014 width pinned, height adaptive": {
@@ -2140,7 +2140,7 @@
     "functionName": "Sizing_WidthPinnedHeightAdaptive",
     "module": "previews",
     "renderBasename": "Sizing_WidthPinnedHeightAdaptive_sizing_width_pinned_height_adaptive.png",
-    "sha256": "36841c160076688fb1abe9b1d4308e99ff9b2d47a5f0394d83d6e246ef3af0a4",
+    "sha256": "54beafbe207fef4fe9294426507c073045d0580e970714f62cb519e0ef19b27d",
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/SizingExperimentPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.ThemePreviewsKt.Theme_Home_Dark_theme_ Home (dark)": {
