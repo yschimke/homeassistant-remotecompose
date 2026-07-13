@@ -11,6 +11,13 @@ concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+# BuildFetch remote cache credentials (see settings.gradle.kts). The URL is a
+# repository variable (not secret); the token is a repository secret. Both are
+# empty on fork PRs, in which case the remote cache is skipped automatically.
+env:
+  BUILDFETCH_GRADLE_CACHE_URL: ${{ vars.BUILDFETCH_GRADLE_CACHE_URL }}
+  BUILDFETCH_GRADLE_TOKEN: ${{ secrets.BUILDFETCH_GRADLE_TOKEN }}
+
 jobs:
   build:
     name: Assemble (debug)
