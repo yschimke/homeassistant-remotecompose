@@ -122,7 +122,7 @@ androidx-test-uiautomator = { module = "androidx.test.uiautomator:uiautomator", 
 # colour. Each Terrazzo palette = seed + PaletteStyle. Non-composable
 # `dynamicColorScheme(...)` is what the widget provider calls at
 # capture time (we can't hold a Compose state across the widget boundary).
-materialkolor = { module = "com.materialkolor:material-kolor", version = "4.1.1" }
+materialkolor = { module = "com.materialkolor:material-kolor", version = "5.0.0" }
 
 # Ktor (HA WebSocket client)
 ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
