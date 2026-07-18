@@ -1,6 +1,6 @@
 [versions]
 # Toolchain
-kotlin = "2.4.0"
+kotlin = "2.4.10"
 agp = "9.3.0"
 java = "21"
 okhttp = "5.4.0"
