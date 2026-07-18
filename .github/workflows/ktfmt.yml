@@ -19,7 +19,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7.0.0
       # Kotlin toolchain and Gradle daemon both run on JVM 21 (libs.versions.toml).
-      - uses: actions/setup-java@v5.5.0
+      - uses: actions/setup-java@v5.6.0
         with:
           distribution: temurin
           java-version: 21
