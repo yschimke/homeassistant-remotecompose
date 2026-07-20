@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="893" height="369" viewBox="0 0 893 369" text-rendering="geometricPrecision" font-family="sans-serif">
+<g transform="translate(-26, -26)">
+  <g id="Root">
+    <g id="ReusableComposeNode">
+      <g id="ReusableComposeNode">
+        <text x="42" y="87.99" font-size="42" font-family="sans-serif" font-weight="500" letter-spacing="0.52" fill="#000000">Adaptive icon · light</text>
+      </g>
+      <g id="ReusableComposeNode">
+        <g id="ReusableComposeNode">
+          <g id="ReusableComposeNode">
+            <rect x="42" y="137" width="189" height="189" rx="94.5" ry="94.5" fill="#FAF6EC"/>
+            <g id="ReusableComposeNode">
+              <image href="brand-appicon-light.figma-raster/9.png" x="42" y="137" width="189" height="189"/>
+            </g>
+          </g>
+          <g id="ReusableComposeNode">
+            <text x="98" y="367.96" font-size="28.87" font-family="sans-serif" font-weight="500" letter-spacing="1.31" fill="#000000">circle</text>
+          </g>
+        </g>
+        <g id="ReusableComposeNode">
+          <g id="ReusableComposeNode">
+            <rect x="273" y="137" width="189" height="189" rx="63" ry="63" fill="#FAF6EC"/>
+            <g id="ReusableComposeNode">
+              <image href="brand-appicon-light.figma-raster/13.png" x="273" y="137" width="189" height="189"/>
+            </g>
+          </g>
+          <g id="ReusableComposeNode">
+            <text x="313" y="367.96" font-size="28.87" font-family="sans-serif" font-weight="500" letter-spacing="1.31" fill="#000000">squircle</text>
+          </g>
+        </g>
+        <g id="ReusableComposeNode">
+          <g id="ReusableComposeNode">
+            <rect x="504" y="137" width="189" height="189" rx="21" ry="21" fill="#FAF6EC"/>
+            <g id="ReusableComposeNode">
+              <image href="brand-appicon-light.figma-raster/17.png" x="504" y="137" width="189" height="189"/>
+            </g>
+          </g>
+          <g id="ReusableComposeNode">
+            <text x="542" y="367.96" font-size="28.87" font-family="sans-serif" font-weight="500" letter-spacing="1.31" fill="#000000">rounded</text>
+          </g>
+        </g>
+        <g id="ReusableComposeNode">
+          <g id="ReusableComposeNode">
+            <rect x="735" y="137" width="168" height="189" fill="#FAF6EC"/>
+            <g id="ReusableComposeNode">
+              <image href="brand-appicon-light.figma-raster/21.png" x="735" y="137" width="168" height="189"/>
+            </g>
+          </g>
+          <g id="ReusableComposeNode">
+            <text x="772" y="367.96" font-size="28.87" font-family="sans-serif" font-weight="500" letter-spacing="1.31" fill="#000000">square</text>
+          </g>
+        </g>
+      </g>
+    </g>
+  </g>
+</g>
+</svg>

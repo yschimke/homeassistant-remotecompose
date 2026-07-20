@@ -1,0 +1,1234 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Terrazzo · Home Assistant RemoteCompose — design catalog</title>
+<style>
+  :root { color-scheme: light dark; --bg:#0f0f10; --panel:#1b1b1d; --fg:#e8e8ea; --muted:#9b9ba1; --line:#2a2a2d; --accent:#7dd87d; }
+  * { box-sizing: border-box; }
+  body { margin:0; font:14px/1.5 system-ui, -apple-system, Segoe UI, Roboto, sans-serif; background:var(--bg); color:var(--fg); }
+  header.top { padding:24px clamp(16px,4vw,40px); border-bottom:1px solid var(--line); }
+  header.top h1 { margin:0 0 6px; font-size:22px; }
+  header.top .subtitle { color:var(--muted); font-size:13px; }
+  header.top code { background:var(--panel); padding:1px 6px; border-radius:5px; }
+  header.top .pagelink { color:var(--accent); text-decoration:none; font-size:13px; }
+  header.top .pagelink:hover { text-decoration:underline; }
+  .layout { display:grid; grid-template-columns:240px 1fr; align-items:start; }
+  nav.index { position:sticky; top:0; align-self:start; max-height:100vh; overflow:auto; padding:20px 12px; border-right:1px solid var(--line); }
+  nav.index .nav-head { display:flex; justify-content:space-between; font-weight:600; text-decoration:none; color:var(--fg); padding:6px 8px; border-radius:6px; }
+  nav.index .nav-head span { color:var(--muted); font-weight:400; }
+  nav.index .nav-head:hover { background:var(--panel); }
+  nav.index ul { list-style:none; margin:2px 0 14px; padding:0 0 0 8px; }
+  nav.index li a { display:block; color:var(--muted); text-decoration:none; padding:3px 8px; border-radius:5px; font-size:13px; }
+  nav.index li a:hover { color:var(--fg); background:var(--panel); }
+  main { padding:8px clamp(16px,4vw,40px) 64px; min-width:0; }
+  .group { padding-top:24px; }
+  .group h2 { font-size:16px; border-bottom:1px solid var(--line); padding-bottom:8px; position:sticky; top:0; background:var(--bg); }
+  .grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(180px,1fr)); gap:16px; }
+  .card { background:var(--panel); border:1px solid var(--line); border-radius:12px; overflow:hidden; }
+  /* Theme-aware checkerboard so a transparent component sticker reads on the backing that matches
+     its baked theme — a light-theme component (dark strokes/text) on a LIGHT check, a dark-theme (or
+     theme-less) one on the default dark check — instead of light-mode content washing out on a fixed
+     dark backing. --ck-a / --ck-b are the two check colours; [data-bg=light] swaps them. Full-screen
+     stickers carry their own round and just sit on top. Shared by the grid hero and zoom variants. */
+  .shot, .state-shot { --ck-a:#161617; --ck-b:#202022;
+    background-color:var(--ck-a);
+    background-image:
+      linear-gradient(45deg,var(--ck-b) 25%,transparent 25%),
+      linear-gradient(-45deg,var(--ck-b) 25%,transparent 25%),
+      linear-gradient(45deg,transparent 75%,var(--ck-b) 75%),
+      linear-gradient(-45deg,transparent 75%,var(--ck-b) 75%);
+    background-size:16px 16px; background-position:0 0,0 8px,8px -8px,-8px 0; }
+  .shot[data-bg="light"], .state-shot[data-bg="light"] { --ck-a:#e9e9ef; --ck-b:#ffffff; }
+  .shot { margin:0; display:grid; place-items:center; min-height:120px; padding:12px; }
+  .shot img { max-width:100%; max-height:240px; height:auto; display:block; }
+  a.shot { cursor:zoom-in; text-decoration:none; }
+  /* Framed mode (set by the crop script below): the hero is sized to the component's content bbox
+     — read from the figma-svg's translate + viewBox — and the PNG is absolutely-positioned so only
+     the component shows. A wear sticker rendered on a 454² device canvas is displayed cropped to
+     the component instead of floating in an empty frame; a no-op for close-cropped (phone) renders
+     where the bbox already fills the frame. */
+  .shot--framed { overflow:hidden; padding:0; min-height:0; position:relative; place-items:stretch;
+    margin:16px auto; border-radius:8px; }
+  .shot--framed img { position:absolute; max-width:none; max-height:none; }
+  .shot--missing { color:var(--muted); font-style:italic; }
+  .meta { padding:10px 12px 12px; border-top:1px solid var(--line); }
+  .meta h3 { margin:0; font-size:13px; font-weight:600; word-break:break-word; }
+  .meta h3 a.ctitle { color:inherit; text-decoration:none; }
+  .meta h3 a.ctitle:hover { text-decoration:underline; }
+  .meta .sub { color:var(--muted); font-size:12px; margin-top:2px; display:flex; flex-wrap:wrap; justify-content:space-between; gap:8px; }
+  .meta .sub .wf { color:#7dd87d; text-decoration:none; white-space:nowrap; }
+  .meta .sub .wf:hover { text-decoration:underline; }
+  .statechip { font-size:11px; padding:1px 7px; border-radius:999px; border:1px solid var(--line); color:var(--muted); text-decoration:none; white-space:nowrap; }
+  .statechip:hover { color:var(--fg); border-color:var(--muted); }
+  .greenlines { margin-top:8px; display:flex; flex-wrap:wrap; gap:4px; }
+  .chip { font-size:11px; padding:1px 7px; border-radius:999px; border:1px solid var(--accent); color:var(--accent); }
+  .chip--warn { border-color:#e0c060; color:#e0c060; }
+  .chip--error { border-color:#e08080; color:#e08080; }
+  /* Single-component zoom view — a pure-CSS :target overlay, one per component. */
+  .detail { display:none; }
+  .detail:target { display:flex; position:fixed; inset:0; z-index:50; align-items:center; justify-content:center; padding:clamp(12px,4vw,40px); }
+  .detail-scrim { position:absolute; inset:0; background:rgba(0,0,0,0.72); }
+  .detail-panel { position:relative; z-index:1; background:var(--panel); border:1px solid var(--line); border-radius:14px;
+    max-width:min(960px,94vw); max-height:88vh; overflow:auto; padding:20px 24px; }
+  .detail-panel h3 { margin:0 0 4px; font-size:15px; word-break:break-word; }
+  .detail-caption { color:var(--muted); font-size:13px; margin-bottom:14px; }
+  .detail-x { position:absolute; top:8px; right:14px; color:var(--muted); text-decoration:none; font-size:24px; line-height:1; }
+  .detail-x:hover { color:var(--fg); }
+  .detail-states { display:flex; flex-wrap:wrap; gap:18px; }
+  figure.state { margin:0; }
+  figure.state figcaption { font-size:12px; color:var(--muted); margin-bottom:6px; text-transform:capitalize; }
+  .state-shots { display:flex; flex-wrap:wrap; gap:10px; }
+  .state-shot { display:flex; flex-direction:column; align-items:center; gap:5px;
+    border:1px solid var(--line); border-radius:10px; padding:12px; }
+  .state-shot img { max-width:220px; max-height:220px; height:auto; display:block; }
+  .state-shot span { font-size:11px; color:var(--muted); text-transform:capitalize; }
+  @media (max-width:720px){ .layout{ grid-template-columns:1fr; } nav.index{ position:static; max-height:none; border-right:0; border-bottom:1px solid var(--line);} }
+</style>
+</head>
+<body>
+<header class="top">
+  <h1>Terrazzo · Home Assistant RemoteCompose</h1>
+  <div class="subtitle">system <code>homeassistant-remotecompose</code> · androidx.compose.material3:material3, androidx.compose.remote:remote-player-compose (RemoteCompose), ee.schimke.ha:rc-components (Terrazzo themes) · rendered by compose-preview 0.16.59 · 2026-07-20T09:29:38.957Z · 62 components</div>
+  <div class="subtitle"><a class="pagelink" href="compare.html">PNG vs SVG compare ↗</a></div>
+</header>
+<div class="layout">
+  <nav class="index"><section class="nav-group">
+      <a class="nav-head" href="#g-themes">Themes <span>10</span></a>
+      <ul><li><a href="#c-theme-material3-light">Theme/Material3-Light</a></li><li><a href="#c-theme-material3-dark">Theme/Material3-Dark</a></li><li><a href="#c-theme-home-light">Theme/Home-Light</a></li><li><a href="#c-theme-home-dark">Theme/Home-Dark</a></li><li><a href="#c-theme-mushroom-light">Theme/Mushroom-Light</a></li><li><a href="#c-theme-mushroom-dark">Theme/Mushroom-Dark</a></li><li><a href="#c-theme-minimalist-light">Theme/Minimalist-Light</a></li><li><a href="#c-theme-minimalist-dark">Theme/Minimalist-Dark</a></li><li><a href="#c-theme-kiosk-light">Theme/Kiosk-Light</a></li><li><a href="#c-theme-kiosk-dark">Theme/Kiosk-Dark</a></li></ul>
+    </section><section class="nav-group">
+      <a class="nav-head" href="#g-cards">Cards <span>36</span></a>
+      <ul><li><a href="#c-card-button-light">Card/Button-Light</a></li><li><a href="#c-card-button-dark">Card/Button-Dark</a></li><li><a href="#c-card-entity-light">Card/Entity-Light</a></li><li><a href="#c-card-entity-dark">Card/Entity-Dark</a></li><li><a href="#c-card-entities-light">Card/Entities-Light</a></li><li><a href="#c-card-entities-dark">Card/Entities-Dark</a></li><li><a href="#c-card-glance-light">Card/Glance-Light</a></li><li><a href="#c-card-glance-dark">Card/Glance-Dark</a></li><li><a href="#c-card-tile-light">Card/Tile-Light</a></li><li><a href="#c-card-tile-dark">Card/Tile-Dark</a></li><li><a href="#c-card-light-light">Card/Light-Light</a></li><li><a href="#c-card-light-dark">Card/Light-Dark</a></li><li><a href="#c-card-thermostat-light">Card/Thermostat-Light</a></li><li><a href="#c-card-thermostat-dark">Card/Thermostat-Dark</a></li><li><a href="#c-card-gauge-light">Card/Gauge-Light</a></li><li><a href="#c-card-gauge-dark">Card/Gauge-Dark</a></li><li><a href="#c-card-weather-light">Card/Weather-Light</a></li><li><a href="#c-card-weather-dark">Card/Weather-Dark</a></li><li><a href="#c-card-media-light">Card/Media-Light</a></li><li><a href="#c-card-media-dark">Card/Media-Dark</a></li><li><a href="#c-card-alarm-light">Card/Alarm-Light</a></li><li><a href="#c-card-alarm-dark">Card/Alarm-Dark</a></li><li><a href="#c-card-todo-light">Card/Todo-Light</a></li><li><a href="#c-card-todo-dark">Card/Todo-Dark</a></li><li><a href="#c-card-calendar-light">Card/Calendar-Light</a></li><li><a href="#c-card-calendar-dark">Card/Calendar-Dark</a></li><li><a href="#c-card-area-light">Card/Area-Light</a></li><li><a href="#c-card-area-dark">Card/Area-Dark</a></li><li><a href="#c-card-sensor-light">Card/Sensor-Light</a></li><li><a href="#c-card-sensor-dark">Card/Sensor-Dark</a></li><li><a href="#c-card-statistic-light">Card/Statistic-Light</a></li><li><a href="#c-card-statistic-dark">Card/Statistic-Dark</a></li><li><a href="#c-card-markdown-light">Card/Markdown-Light</a></li><li><a href="#c-card-markdown-dark">Card/Markdown-Dark</a></li><li><a href="#c-card-clock-light">Card/Clock-Light</a></li><li><a href="#c-card-clock-dark">Card/Clock-Dark</a></li></ul>
+    </section><section class="nav-group">
+      <a class="nav-head" href="#g-layout">Layout <span>8</span></a>
+      <ul><li><a href="#c-layout-verticalstack-light">Layout/VerticalStack-Light</a></li><li><a href="#c-layout-verticalstack-dark">Layout/VerticalStack-Dark</a></li><li><a href="#c-layout-horizontalstack-light">Layout/HorizontalStack-Light</a></li><li><a href="#c-layout-horizontalstack-dark">Layout/HorizontalStack-Dark</a></li><li><a href="#c-layout-grid-light">Layout/Grid-Light</a></li><li><a href="#c-layout-grid-dark">Layout/Grid-Dark</a></li><li><a href="#c-layout-heading-light">Layout/Heading-Light</a></li><li><a href="#c-layout-heading-dark">Layout/Heading-Dark</a></li></ul>
+    </section><section class="nav-group">
+      <a class="nav-head" href="#g-specialised-cards">Specialised cards <span>6</span></a>
+      <ul><li><a href="#c-card-shutter-light">Card/Shutter-Light</a></li><li><a href="#c-card-shutter-dark">Card/Shutter-Dark</a></li><li><a href="#c-card-garage-light">Card/Garage-Light</a></li><li><a href="#c-card-garage-dark">Card/Garage-Dark</a></li><li><a href="#c-dashboard-light">Dashboard/Light</a></li><li><a href="#c-dashboard-dark">Dashboard/Dark</a></li></ul>
+    </section><section class="nav-group">
+      <a class="nav-head" href="#g-brand">Brand <span>2</span></a>
+      <ul><li><a href="#c-brand-appicon-light">Brand/AppIcon-Light</a></li><li><a href="#c-brand-appicon-dark">Brand/AppIcon-Dark</a></li></ul>
+    </section></nav>
+  <main><section class="group" id="g-themes">
+      <h2>Themes</h2>
+      <div class="grid"><article class="card" id="c-theme-material3-light">
+  <a class="shot" data-bg="light" href="#d-theme-material3-light" aria-label="Zoom Theme/Material3-Light"><img loading="lazy" src="images/theme-material3-light/ideal__default__light__compact.png" alt="Theme/Material3-Light" /></a>
+  <div class="meta">
+    <h3><a class="ctitle" href="#d-theme-material3-light">Theme/Material3-Light</a></h3>
+    <div class="sub">945×1260<a class="wf" href="wireframes/theme-material3-light.svg" target="_blank" rel="noopener">wireframe ↗</a><a class="wf" href="figma/theme-material3-light.svg" target="_blank" rel="noopener">figma svg ↗</a></div>
+    
+  </div>
+</article>
+<article class="card" id="c-theme-material3-dark">
+  <a class="shot" href="#d-theme-material3-dark" aria-label="Zoom Theme/Material3-Dark"><img loading="lazy" src="images/theme-material3-dark/ideal__default__dark__compact.png" alt="Theme/Material3-Dark" /></a>
+  <div class="meta">
+    <h3><a class="ctitle" href="#d-theme-material3-dark">Theme/Material3-Dark</a></h3>
+    <div class="sub">945×1260<a class="wf" href="wireframes/theme-material3-dark.svg" target="_blank" rel="noopener">wireframe ↗</a><a class="wf" href="figma/theme-material3-dark.svg" target="_blank" rel="noopener">figma svg ↗</a></div>
+    
+  </div>
+</article>
+<article class="card" id="c-theme-home-light">
+  <a class="shot" data-bg="light" href="#d-theme-home-light" aria-label="Zoom Theme/Home-Light"><img loading="lazy" src="images/theme-home-light/ideal__default__light__compact.png" alt="Theme/Home-Light" /></a>
+  <div class="meta">
+    <h3><a class="ctitle" href="#d-theme-home-light">Theme/Home-Light</a></h3>
+    <div class="sub">945×1260<a class="wf" href="wireframes/theme-home-light.svg" target="_blank" rel="noopener">wireframe ↗</a><a class="wf" href="figma/theme-home-light.svg" target="_blank" rel="noopener">figma svg ↗</a></div>
+    
+  </div>
+</article>
+<article class="card" id="c-theme-home-dark">
+  <a class="shot" href="#d-theme-home-dark" aria-label="Zoom Theme/Home-Dark"><img loading="lazy" src="images/theme-home-dark/ideal__default__dark__compact.png" alt="Theme/Home-Dark" /></a>
+  <div class="meta">
+    <h3><a class="ctitle" href="#d-theme-home-dark">Theme/Home-Dark</a></h3>
+    <div class="sub">945×1260<a class="wf" href="wireframes/theme-home-dark.svg" target="_blank" rel="noopener">wireframe ↗</a><a class="wf" href="figma/theme-home-dark.svg" target="_blank" rel="noopener">figma svg ↗</a></div>
+    
+  </div>
+</article>
+<article class="card" id="c-theme-mushroom-light">
+  <a class="shot" data-bg="light" href="#d-theme-mushroom-light" aria-label="Zoom Theme/Mushroom-Light"><img loading="lazy" src="images/theme-mushroom-light/ideal__default__light__compact.png" alt="Theme/Mushroom-Light" /></a>
+  <div class="meta">
+    <h3><a class="ctitle" href="#d-theme-mushroom-light">Theme/Mushroom-Light</a></h3>
+    <div class="sub">945×1260<a class="wf" href="wireframes/theme-mushroom-light.svg" target="_blank" rel="noopener">wireframe ↗</a><a class="wf" href="figma/theme-mushroom-light.svg" target="_blank" rel="noopener">figma svg ↗</a></div>
+    
+  </div>
+</article>
+<article class="card" id="c-theme-mushroom-dark">
+  <a class="shot" href="#d-theme-mushroom-dark" aria-label="Zoom Theme/Mushroom-Dark"><img loading="lazy" src="images/theme-mushroom-dark/ideal__default__dark__compact.png" alt="Theme/Mushroom-Dark" /></a>
+  <div class="meta">
+    <h3><a class="ctitle" href="#d-theme-mushroom-dark">Theme/Mushroom-Dark</a></h3>
+    <div class="sub">945×1260<a class="wf" href="wireframes/theme-mushroom-dark.svg" target="_blank" rel="noopener">wireframe ↗</a><a class="wf" href="figma/theme-mushroom-dark.svg" target="_blank" rel="noopener">figma svg ↗</a></div>
+    
+  </div>
+</article>
+<article class="card" id="c-theme-minimalist-light">
+  <a class="shot" data-bg="light" href="#d-theme-minimalist-light" aria-label="Zoom Theme/Minimalist-Light"><img loading="lazy" src="images/theme-minimalist-light/ideal__default__light__compact.png" alt="Theme/Minimalist-Light" /></a>
+  <div class="meta">
+    <h3><a class="ctitle" href="#d-theme-minimalist-light">Theme/Minimalist-Light</a></h3>
+    <div class="sub">945×1260<a class="wf" href="wireframes/theme-minimalist-light.svg" target="_blank" rel="noopener">wireframe ↗</a><a class="wf" href="figma/theme-minimalist-light.svg" target="_blank" rel="noopener">figma svg ↗</a></div>
+    
+  </div>
+</article>
+<article class="card" id="c-theme-minimalist-dark">
+  <a class="shot" href="#d-theme-minimalist-dark" aria-label="Zoom Theme/Minimalist-Dark"><img loading="lazy" src="images/theme-minimalist-dark/ideal__default__dark__compact.png" alt="Theme/Minimalist-Dark" /></a>
+  <div class="meta">
+    <h3><a class="ctitle" href="#d-theme-minimalist-dark">Theme/Minimalist-Dark</a></h3>
+    <div class="sub">945×1260<a class="wf" href="wireframes/theme-minimalist-dark.svg" target="_blank" rel="noopener">wireframe ↗</a><a class="wf" href="figma/theme-minimalist-dark.svg" target="_blank" rel="noopener">figma svg ↗</a></div>
+    
+  </div>
+</article>
+<article class="card" id="c-theme-kiosk-light">
+  <a class="shot" data-bg="light" href="#d-theme-kiosk-light" aria-label="Zoom Theme/Kiosk-Light"><img loading="lazy" src="images/theme-kiosk-light/ideal__default__light__compact.png" alt="Theme/Kiosk-Light" /></a>
+  <div class="meta">
+    <h3><a class="ctitle" href="#d-theme-kiosk-light">Theme/Kiosk-Light</a></h3>
+    <div class="sub">945×1260<a class="wf" href="wireframes/theme-kiosk-light.svg" target="_blank" rel="noopener">wireframe ↗</a><a class="wf" href="figma/theme-kiosk-light.svg" target="_blank" rel="noopener">figma svg ↗</a></div>
+    
+  </div>
+</article>
+<article class="card" id="c-theme-kiosk-dark">
+  <a class="shot" href="#d-theme-kiosk-dark" aria-label="Zoom Theme/Kiosk-Dark"><img loading="lazy" src="images/theme-kiosk-dark/ideal__default__dark__compact.png" alt="Theme/Kiosk-Dark" /></a>
+  <div class="meta">
+    <h3><a class="ctitle" href="#d-theme-kiosk-dark">Theme/Kiosk-Dark</a></h3>
+    <div class="sub">945×1260<a class="wf" href="wireframes/theme-kiosk-dark.svg" target="_blank" rel="noopener">wireframe ↗</a><a class="wf" href="figma/theme-kiosk-dark.svg" target="_blank" rel="noopener">figma svg ↗</a></div>
+    
+  </div>
+</article></div>
+    </section>
+<section class="group" id="g-cards">
+      <h2>Cards</h2>
+      <div class="grid"><article class="card" id="c-card-button-light">
+  <a class="shot" data-bg="light" href="#d-card-button-light" aria-label="Zoom Card/Button-Light"><img loading="lazy" src="images/card-button-light/ideal__default__light__compact.png" alt="Card/Button-Light" /></a>
+  <div class="meta">
+    <h3><a class="ctitle" href="#d-card-button-light">Card/Button-Light</a></h3>
+    <div class="sub">490×238<a class="wf" href="wireframes/card-button-light.svg" target="_blank" rel="noopener">wireframe ↗</a><a class="wf" href="figma/card-button-light.svg" target="_blank" rel="noopener">figma svg ↗</a></div>
+    
+  </div>
+</article>
+<article class="card" id="c-card-button-dark">
+  <a class="shot" href="#d-card-button-dark" aria-label="Zoom Card/Button-Dark"><img loading="lazy" src="images/card-button-dark/ideal__default__dark__compact.png" alt="Card/Button-Dark" /></a>
+  <div class="meta">
+    <h3><a class="ctitle" href="#d-card-button-dark">Card/Button-Dark</a></h3>
+    <div class="sub">490×238<a class="wf" href="wireframes/card-button-dark.svg" target="_blank" rel="noopener">wireframe ↗</a><a class="wf" href="figma/card-button-dark.svg" target="_blank" rel="noopener">figma svg ↗</a></div>
+    
+  </div>
+</article>
+<article class="card" id="c-card-entity-light">
+  <a class="shot" data-bg="light" href="#d-card-entity-light" aria-label="Zoom Card/Entity-Light"><img loading="lazy" src="images/card-entity-light/ideal__default__light__compact.png" alt="Card/Entity-Light" /></a>
+  <div class="meta">
+    <h3><a class="ctitle" href="#d-card-entity-light">Card/Entity-Light</a></h3>
+    <div class="sub">490×238<a class="wf" href="wireframes/card-entity-light.svg" target="_blank" rel="noopener">wireframe ↗</a><a class="wf" href="figma/card-entity-light.svg" target="_blank" rel="noopener">figma svg ↗</a></div>
+    
+  </div>
+</article>
+<article class="card" id="c-card-entity-dark">
+  <a class="shot" href="#d-card-entity-dark" aria-label="Zoom Card/Entity-Dark"><img loading="lazy" src="images/card-entity-dark/ideal__default__dark__compact.png" alt="Card/Entity-Dark" /></a>
+  <div class="meta">
+    <h3><a class="ctitle" href="#d-card-entity-dark">Card/Entity-Dark</a></h3>
+    <div class="sub">490×238<a class="wf" href="wireframes/card-entity-dark.svg" target="_blank" rel="noopener">wireframe ↗</a><a class="wf" href="figma/card-entity-dark.svg" target="_blank" rel="noopener">figma svg ↗</a></div>
+    
+  </div>
+</article>
+<article class="card" id="c-card-entities-light">
+  <a class="shot" data-bg="light" href="#d-card-entities-light" aria-label="Zoom Card/Entities-Light"><img loading="lazy" src="images/card-entities-light/ideal__default__light__compact.png" alt="Card/Entities-Light" /></a>
+  <div class="meta">
+    <h3><a class="ctitle" href="#d-card-entities-light">Card/Entities-Light</a></h3>
+    <div class="sub">1000×443<a class="wf" href="wireframes/card-entities-light.svg" target="_blank" rel="noopener">wireframe ↗</a><a class="wf" href="figma/card-entities-light.svg" target="_blank" rel="noopener">figma svg ↗</a></div>
+    
+  </div>
+</article>
+<article class="card" id="c-card-entities-dark">
+  <a class="shot" href="#d-card-entities-dark" aria-label="Zoom Card/Entities-Dark"><img loading="lazy" src="images/card-entities-dark/ideal__default__dark__compact.png" alt="Card/Entities-Dark" /></a>
+  <div class="meta">
+    <h3><a class="ctitle" href="#d-card-entities-dark">Card/Entities-Dark</a></h3>
+    <div class="sub">1000×443<a class="wf" href="wireframes/card-entities-dark.svg" target="_blank" rel="noopener">wireframe ↗</a><a class="wf" href="figma/card-entities-dark.svg" target="_blank" rel="noopener">figma svg ↗</a></div>
+    
+  </div>
+</article>
+<article class="card" id="c-card-glance-light">
+  <a class="shot" data-bg="light" href="#d-card-glance-light" aria-label="Zoom Card/Glance-Light"><img loading="lazy" src="images/card-glance-light/ideal__default__light__compact.png" alt="Card/Glance-Light" /></a>
+  <div class="meta">
+    <h3><a class="ctitle" href="#d-card-glance-light">Card/Glance-Light</a></h3>
+    <div class="sub">1000×391<a class="wf" href="wireframes/card-glance-light.svg" target="_blank" rel="noopener">wireframe ↗</a><a class="wf" href="figma/card-glance-light.svg" target="_blank" rel="noopener">figma svg ↗</a></div>
+    
+  </div>
+</article>
+<article class="card" id="c-card-glance-dark">
+  <a class="shot" href="#d-card-glance-dark" aria-label="Zoom Card/Glance-Dark"><img loading="lazy" src="images/card-glance-dark/ideal__default__dark__compact.png" alt="Card/Glance-Dark" /></a>
+  <div class="meta">
+    <h3><a class="ctitle" href="#d-card-glance-dark">Card/Glance-Dark</a></h3>
+    <div class="sub">1000×391<a class="wf" href="wireframes/card-glance-dark.svg" target="_blank" rel="noopener">wireframe ↗</a><a class="wf" href="figma/card-glance-dark.svg" target="_blank" rel="noopener">figma svg ↗</a></div>
+    
+  </div>
+</article>
+<article class="card" id="c-card-tile-light">
+  <a class="shot" href="#d-card-tile-light" aria-label="Zoom Card/Tile-Light"><img loading="lazy" src="images/card-tile-light/ideal__default__compact.png" alt="Card/Tile-Light" /></a>
+  <div class="meta">
+    <h3><a class="ctitle" href="#d-card-tile-light">Card/Tile-Light</a></h3>
+    <div class="sub">490×112<a class="wf" href="wireframes/card-tile-light.svg" target="_blank" rel="noopener">wireframe ↗</a><a class="wf" href="figma/card-tile-light.svg" target="_blank" rel="noopener">figma svg ↗</a></div>
+    
+  </div>
+</article>
+<article class="card" id="c-card-tile-dark">
+  <a class="shot" href="#d-card-tile-dark" aria-label="Zoom Card/Tile-Dark"><img loading="lazy" src="images/card-tile-dark/ideal__default__dark__compact.png" alt="Card/Tile-Dark" /></a>
+  <div class="meta">
+    <h3><a class="ctitle" href="#d-card-tile-dark">Card/Tile-Dark</a></h3>
+    <div class="sub">490×112<a class="wf" href="wireframes/card-tile-dark.svg" target="_blank" rel="noopener">wireframe ↗</a><a class="wf" href="figma/card-tile-dark.svg" target="_blank" rel="noopener">figma svg ↗</a></div>
+    
+  </div>
+</article>
+<article class="card" id="c-card-light-light">
+  <a class="shot" data-bg="light" href="#d-card-light-light" aria-label="Zoom Card/Light-Light"><img loading="lazy" src="images/card-light-light/ideal__default__light__compact.png" alt="Card/Light-Light" /></a>
+  <div class="meta">
+    <h3><a class="ctitle" href="#d-card-light-light">Card/Light-Light</a></h3>
+    <div class="sub">630×656<a class="wf" href="wireframes/card-light-light.svg" target="_blank" rel="noopener">wireframe ↗</a><a class="wf" href="figma/card-light-light.svg" target="_blank" rel="noopener">figma svg ↗</a></div>
+    
+  </div>
+</article>
+<article class="card" id="c-card-light-dark">
+  <a class="shot" href="#d-card-light-dark" aria-label="Zoom Card/Light-Dark"><img loading="lazy" src="images/card-light-dark/ideal__default__dark__compact.png" alt="Card/Light-Dark" /></a>
+  <div class="meta">
+    <h3><a class="ctitle" href="#d-card-light-dark">Card/Light-Dark</a></h3>
+    <div class="sub">630×656<a class="wf" href="wireframes/card-light-dark.svg" target="_blank" rel="noopener">wireframe ↗</a><a class="wf" href="figma/card-light-dark.svg" target="_blank" rel="noopener">figma svg ↗</a></div>
+    
+  </div>
+</article>
+<article class="card" id="c-card-thermostat-light">
+  <a class="shot" data-bg="light" href="#d-card-thermostat-light" aria-label="Zoom Card/Thermostat-Light"><img loading="lazy" src="images/card-thermostat-light/ideal__default__light__compact.png" alt="Card/Thermostat-Light" /></a>
+  <div class="meta">
+    <h3><a class="ctitle" href="#d-card-thermostat-light">Card/Thermostat-Light</a></h3>
+    <div class="sub">630×761<a class="wf" href="wireframes/card-thermostat-light.svg" target="_blank" rel="noopener">wireframe ↗</a><a class="wf" href="figma/card-thermostat-light.svg" target="_blank" rel="noopener">figma svg ↗</a></div>
+    
+  </div>
+</article>
+<article class="card" id="c-card-thermostat-dark">
+  <a class="shot" href="#d-card-thermostat-dark" aria-label="Zoom Card/Thermostat-Dark"><img loading="lazy" src="images/card-thermostat-dark/ideal__default__dark__compact.png" alt="Card/Thermostat-Dark" /></a>
+  <div class="meta">
+    <h3><a class="ctitle" href="#d-card-thermostat-dark">Card/Thermostat-Dark</a></h3>
+    <div class="sub">630×761<a class="wf" href="wireframes/card-thermostat-dark.svg" target="_blank" rel="noopener">wireframe ↗</a><a class="wf" href="figma/card-thermostat-dark.svg" target="_blank" rel="noopener">figma svg ↗</a></div>
+    
+  </div>
+</article>
+<article class="card" id="c-card-gauge-light">
+  <a class="shot" data-bg="light" href="#d-card-gauge-light" aria-label="Zoom Card/Gauge-Light"><img loading="lazy" src="images/card-gauge-light/ideal__default__light__compact.png" alt="Card/Gauge-Light" /></a>
+  <div class="meta">
+    <h3><a class="ctitle" href="#d-card-gauge-light">Card/Gauge-Light</a></h3>
+    <div class="sub">490×393<a class="wf" href="wireframes/card-gauge-light.svg" target="_blank" rel="noopener">wireframe ↗</a><a class="wf" href="figma/card-gauge-light.svg" target="_blank" rel="noopener">figma svg ↗</a></div>
+    
+  </div>
+</article>
+<article class="card" id="c-card-gauge-dark">
+  <a class="shot" href="#d-card-gauge-dark" aria-label="Zoom Card/Gauge-Dark"><img loading="lazy" src="images/card-gauge-dark/ideal__default__dark__compact.png" alt="Card/Gauge-Dark" /></a>
+  <div class="meta">
+    <h3><a class="ctitle" href="#d-card-gauge-dark">Card/Gauge-Dark</a></h3>
+    <div class="sub">490×393<a class="wf" href="wireframes/card-gauge-dark.svg" target="_blank" rel="noopener">wireframe ↗</a><a class="wf" href="figma/card-gauge-dark.svg" target="_blank" rel="noopener">figma svg ↗</a></div>
+    
+  </div>
+</article>
+<article class="card" id="c-card-weather-light">
+  <a class="shot" data-bg="light" href="#d-card-weather-light" aria-label="Zoom Card/Weather-Light"><img loading="lazy" src="images/card-weather-light/ideal__default__light__compact.png" alt="Card/Weather-Light" /></a>
+  <div class="meta">
+    <h3><a class="ctitle" href="#d-card-weather-light">Card/Weather-Light</a></h3>
+    <div class="sub">1000×588<a class="wf" href="wireframes/card-weather-light.svg" target="_blank" rel="noopener">wireframe ↗</a><a class="wf" href="figma/card-weather-light.svg" target="_blank" rel="noopener">figma svg ↗</a></div>
+    
+  </div>
+</article>
+<article class="card" id="c-card-weather-dark">
+  <a class="shot" href="#d-card-weather-dark" aria-label="Zoom Card/Weather-Dark"><img loading="lazy" src="images/card-weather-dark/ideal__default__dark__compact.png" alt="Card/Weather-Dark" /></a>
+  <div class="meta">
+    <h3><a class="ctitle" href="#d-card-weather-dark">Card/Weather-Dark</a></h3>
+    <div class="sub">1000×588<a class="wf" href="wireframes/card-weather-dark.svg" target="_blank" rel="noopener">wireframe ↗</a><a class="wf" href="figma/card-weather-dark.svg" target="_blank" rel="noopener">figma svg ↗</a></div>
+    
+  </div>
+</article>
+<article class="card" id="c-card-media-light">
+  <a class="shot" data-bg="light" href="#d-card-media-light" aria-label="Zoom Card/Media-Light"><img loading="lazy" src="images/card-media-light/ideal__default__light__compact.png" alt="Card/Media-Light" /></a>
+  <div class="meta">
+    <h3><a class="ctitle" href="#d-card-media-light">Card/Media-Light</a></h3>
+    <div class="sub">1000×441<a class="wf" href="wireframes/card-media-light.svg" target="_blank" rel="noopener">wireframe ↗</a><a class="wf" href="figma/card-media-light.svg" target="_blank" rel="noopener">figma svg ↗</a></div>
+    
+  </div>
+</article>
+<article class="card" id="c-card-media-dark">
+  <a class="shot" href="#d-card-media-dark" aria-label="Zoom Card/Media-Dark"><img loading="lazy" src="images/card-media-dark/ideal__default__dark__compact.png" alt="Card/Media-Dark" /></a>
+  <div class="meta">
+    <h3><a class="ctitle" href="#d-card-media-dark">Card/Media-Dark</a></h3>
+    <div class="sub">1000×441<a class="wf" href="wireframes/card-media-dark.svg" target="_blank" rel="noopener">wireframe ↗</a><a class="wf" href="figma/card-media-dark.svg" target="_blank" rel="noopener">figma svg ↗</a></div>
+    
+  </div>
+</article>
+<article class="card" id="c-card-alarm-light">
+  <a class="shot" data-bg="light" href="#d-card-alarm-light" aria-label="Zoom Card/Alarm-Light"><img loading="lazy" src="images/card-alarm-light/ideal__default__light__compact.png" alt="Card/Alarm-Light" /></a>
+  <div class="meta">
+    <h3><a class="ctitle" href="#d-card-alarm-light">Card/Alarm-Light</a></h3>
+    <div class="sub">840×997<a class="wf" href="wireframes/card-alarm-light.svg" target="_blank" rel="noopener">wireframe ↗</a><a class="wf" href="figma/card-alarm-light.svg" target="_blank" rel="noopener">figma svg ↗</a></div>
+    
+  </div>
+</article>
+<article class="card" id="c-card-alarm-dark">
+  <a class="shot" href="#d-card-alarm-dark" aria-label="Zoom Card/Alarm-Dark"><img loading="lazy" src="images/card-alarm-dark/ideal__default__dark__compact.png" alt="Card/Alarm-Dark" /></a>
+  <div class="meta">
+    <h3><a class="ctitle" href="#d-card-alarm-dark">Card/Alarm-Dark</a></h3>
+    <div class="sub">840×997<a class="wf" href="wireframes/card-alarm-dark.svg" target="_blank" rel="noopener">wireframe ↗</a><a class="wf" href="figma/card-alarm-dark.svg" target="_blank" rel="noopener">figma svg ↗</a></div>
+    
+  </div>
+</article>
+<article class="card" id="c-card-todo-light">
+  <a class="shot" data-bg="light" href="#d-card-todo-light" aria-label="Zoom Card/Todo-Light"><img loading="lazy" src="images/card-todo-light/ideal__default__light__compact.png" alt="Card/Todo-Light" /></a>
+  <div class="meta">
+    <h3><a class="ctitle" href="#d-card-todo-light">Card/Todo-Light</a></h3>
+    <div class="sub">840×577<a class="wf" href="wireframes/card-todo-light.svg" target="_blank" rel="noopener">wireframe ↗</a><a class="wf" href="figma/card-todo-light.svg" target="_blank" rel="noopener">figma svg ↗</a></div>
+    
+  </div>
+</article>
+<article class="card" id="c-card-todo-dark">
+  <a class="shot" href="#d-card-todo-dark" aria-label="Zoom Card/Todo-Dark"><img loading="lazy" src="images/card-todo-dark/ideal__default__dark__compact.png" alt="Card/Todo-Dark" /></a>
+  <div class="meta">
+    <h3><a class="ctitle" href="#d-card-todo-dark">Card/Todo-Dark</a></h3>
+    <div class="sub">840×577<a class="wf" href="wireframes/card-todo-dark.svg" target="_blank" rel="noopener">wireframe ↗</a><a class="wf" href="figma/card-todo-dark.svg" target="_blank" rel="noopener">figma svg ↗</a></div>
+    
+  </div>
+</article>
+<article class="card" id="c-card-calendar-light">
+  <a class="shot" data-bg="light" href="#d-card-calendar-light" aria-label="Zoom Card/Calendar-Light"><img loading="lazy" src="images/card-calendar-light/ideal__default__light__compact.png" alt="Card/Calendar-Light" /></a>
+  <div class="meta">
+    <h3><a class="ctitle" href="#d-card-calendar-light">Card/Calendar-Light</a></h3>
+    <div class="sub">1000×577<a class="wf" href="wireframes/card-calendar-light.svg" target="_blank" rel="noopener">wireframe ↗</a><a class="wf" href="figma/card-calendar-light.svg" target="_blank" rel="noopener">figma svg ↗</a></div>
+    
+  </div>
+</article>
+<article class="card" id="c-card-calendar-dark">
+  <a class="shot" href="#d-card-calendar-dark" aria-label="Zoom Card/Calendar-Dark"><img loading="lazy" src="images/card-calendar-dark/ideal__default__dark__compact.png" alt="Card/Calendar-Dark" /></a>
+  <div class="meta">
+    <h3><a class="ctitle" href="#d-card-calendar-dark">Card/Calendar-Dark</a></h3>
+    <div class="sub">1000×577<a class="wf" href="wireframes/card-calendar-dark.svg" target="_blank" rel="noopener">wireframe ↗</a><a class="wf" href="figma/card-calendar-dark.svg" target="_blank" rel="noopener">figma svg ↗</a></div>
+    
+  </div>
+</article>
+<article class="card" id="c-card-area-light">
+  <a class="shot" data-bg="light" href="#d-card-area-light" aria-label="Zoom Card/Area-Light"><img loading="lazy" src="images/card-area-light/ideal__default__light__compact.png" alt="Card/Area-Light" /></a>
+  <div class="meta">
+    <h3><a class="ctitle" href="#d-card-area-light">Card/Area-Light</a></h3>
+    <div class="sub">735×367<a class="wf" href="wireframes/card-area-light.svg" target="_blank" rel="noopener">wireframe ↗</a><a class="wf" href="figma/card-area-light.svg" target="_blank" rel="noopener">figma svg ↗</a></div>
+    
+  </div>
+</article>
+<article class="card" id="c-card-area-dark">
+  <a class="shot" href="#d-card-area-dark" aria-label="Zoom Card/Area-Dark"><img loading="lazy" src="images/card-area-dark/ideal__default__dark__compact.png" alt="Card/Area-Dark" /></a>
+  <div class="meta">
+    <h3><a class="ctitle" href="#d-card-area-dark">Card/Area-Dark</a></h3>
+    <div class="sub">735×367<a class="wf" href="wireframes/card-area-dark.svg" target="_blank" rel="noopener">wireframe ↗</a><a class="wf" href="figma/card-area-dark.svg" target="_blank" rel="noopener">figma svg ↗</a></div>
+    
+  </div>
+</article>
+<article class="card" id="c-card-sensor-light">
+  <a class="shot" data-bg="light" href="#d-card-sensor-light" aria-label="Zoom Card/Sensor-Light"><img loading="lazy" src="images/card-sensor-light/ideal__default__light__compact.png" alt="Card/Sensor-Light" /></a>
+  <div class="meta">
+    <h3><a class="ctitle" href="#d-card-sensor-light">Card/Sensor-Light</a></h3>
+    <div class="sub">840×341<a class="wf" href="wireframes/card-sensor-light.svg" target="_blank" rel="noopener">wireframe ↗</a><a class="wf" href="figma/card-sensor-light.svg" target="_blank" rel="noopener">figma svg ↗</a></div>
+    
+  </div>
+</article>
+<article class="card" id="c-card-sensor-dark">
+  <a class="shot" href="#d-card-sensor-dark" aria-label="Zoom Card/Sensor-Dark"><img loading="lazy" src="images/card-sensor-dark/ideal__default__dark__compact.png" alt="Card/Sensor-Dark" /></a>
+  <div class="meta">
+    <h3><a class="ctitle" href="#d-card-sensor-dark">Card/Sensor-Dark</a></h3>
+    <div class="sub">840×341<a class="wf" href="wireframes/card-sensor-dark.svg" target="_blank" rel="noopener">wireframe ↗</a><a class="wf" href="figma/card-sensor-dark.svg" target="_blank" rel="noopener">figma svg ↗</a></div>
+    
+  </div>
+</article>
+<article class="card" id="c-card-statistic-light">
+  <a class="shot" data-bg="light" href="#d-card-statistic-light" aria-label="Zoom Card/Statistic-Light"><img loading="lazy" src="images/card-statistic-light/ideal__default__light__compact.png" alt="Card/Statistic-Light" /></a>
+  <div class="meta">
+    <h3><a class="ctitle" href="#d-card-statistic-light">Card/Statistic-Light</a></h3>
+    <div class="sub">630×288<a class="wf" href="wireframes/card-statistic-light.svg" target="_blank" rel="noopener">wireframe ↗</a><a class="wf" href="figma/card-statistic-light.svg" target="_blank" rel="noopener">figma svg ↗</a></div>
+    
+  </div>
+</article>
+<article class="card" id="c-card-statistic-dark">
+  <a class="shot" href="#d-card-statistic-dark" aria-label="Zoom Card/Statistic-Dark"><img loading="lazy" src="images/card-statistic-dark/ideal__default__dark__compact.png" alt="Card/Statistic-Dark" /></a>
+  <div class="meta">
+    <h3><a class="ctitle" href="#d-card-statistic-dark">Card/Statistic-Dark</a></h3>
+    <div class="sub">630×288<a class="wf" href="wireframes/card-statistic-dark.svg" target="_blank" rel="noopener">wireframe ↗</a><a class="wf" href="figma/card-statistic-dark.svg" target="_blank" rel="noopener">figma svg ↗</a></div>
+    
+  </div>
+</article>
+<article class="card" id="c-card-markdown-light">
+  <a class="shot" data-bg="light" href="#d-card-markdown-light" aria-label="Zoom Card/Markdown-Light"><img loading="lazy" src="images/card-markdown-light/ideal__default__light__compact.png" alt="Card/Markdown-Light" /></a>
+  <div class="meta">
+    <h3><a class="ctitle" href="#d-card-markdown-light">Card/Markdown-Light</a></h3>
+    <div class="sub">1000×278<a class="wf" href="wireframes/card-markdown-light.svg" target="_blank" rel="noopener">wireframe ↗</a><a class="wf" href="figma/card-markdown-light.svg" target="_blank" rel="noopener">figma svg ↗</a></div>
+    
+  </div>
+</article>
+<article class="card" id="c-card-markdown-dark">
+  <a class="shot" href="#d-card-markdown-dark" aria-label="Zoom Card/Markdown-Dark"><img loading="lazy" src="images/card-markdown-dark/ideal__default__dark__compact.png" alt="Card/Markdown-Dark" /></a>
+  <div class="meta">
+    <h3><a class="ctitle" href="#d-card-markdown-dark">Card/Markdown-Dark</a></h3>
+    <div class="sub">1000×278<a class="wf" href="wireframes/card-markdown-dark.svg" target="_blank" rel="noopener">wireframe ↗</a><a class="wf" href="figma/card-markdown-dark.svg" target="_blank" rel="noopener">figma svg ↗</a></div>
+    
+  </div>
+</article>
+<article class="card" id="c-card-clock-light">
+  <a class="shot" data-bg="light" href="#d-card-clock-light" aria-label="Zoom Card/Clock-Light"><img loading="lazy" src="images/card-clock-light/ideal__default__light__compact.png" alt="Card/Clock-Light" /></a>
+  <div class="meta">
+    <h3><a class="ctitle" href="#d-card-clock-light">Card/Clock-Light</a></h3>
+    <div class="sub">525×262<a class="wf" href="wireframes/card-clock-light.svg" target="_blank" rel="noopener">wireframe ↗</a><a class="wf" href="figma/card-clock-light.svg" target="_blank" rel="noopener">figma svg ↗</a></div>
+    
+  </div>
+</article>
+<article class="card" id="c-card-clock-dark">
+  <a class="shot" href="#d-card-clock-dark" aria-label="Zoom Card/Clock-Dark"><img loading="lazy" src="images/card-clock-dark/ideal__default__dark__compact.png" alt="Card/Clock-Dark" /></a>
+  <div class="meta">
+    <h3><a class="ctitle" href="#d-card-clock-dark">Card/Clock-Dark</a></h3>
+    <div class="sub">525×262<a class="wf" href="wireframes/card-clock-dark.svg" target="_blank" rel="noopener">wireframe ↗</a><a class="wf" href="figma/card-clock-dark.svg" target="_blank" rel="noopener">figma svg ↗</a></div>
+    
+  </div>
+</article></div>
+    </section>
+<section class="group" id="g-layout">
+      <h2>Layout</h2>
+      <div class="grid"><article class="card" id="c-layout-verticalstack-light">
+  <a class="shot" data-bg="light" href="#d-layout-verticalstack-light" aria-label="Zoom Layout/VerticalStack-Light"><img loading="lazy" src="images/layout-verticalstack-light/ideal__default__light__compact.png" alt="Layout/VerticalStack-Light" /></a>
+  <div class="meta">
+    <h3><a class="ctitle" href="#d-layout-verticalstack-light">Layout/VerticalStack-Light</a></h3>
+    <div class="sub">609×262<a class="wf" href="wireframes/layout-verticalstack-light.svg" target="_blank" rel="noopener">wireframe ↗</a><a class="wf" href="figma/layout-verticalstack-light.svg" target="_blank" rel="noopener">figma svg ↗</a></div>
+    
+  </div>
+</article>
+<article class="card" id="c-layout-verticalstack-dark">
+  <a class="shot" href="#d-layout-verticalstack-dark" aria-label="Zoom Layout/VerticalStack-Dark"><img loading="lazy" src="images/layout-verticalstack-dark/ideal__default__dark__compact.png" alt="Layout/VerticalStack-Dark" /></a>
+  <div class="meta">
+    <h3><a class="ctitle" href="#d-layout-verticalstack-dark">Layout/VerticalStack-Dark</a></h3>
+    <div class="sub">609×262<a class="wf" href="wireframes/layout-verticalstack-dark.svg" target="_blank" rel="noopener">wireframe ↗</a><a class="wf" href="figma/layout-verticalstack-dark.svg" target="_blank" rel="noopener">figma svg ↗</a></div>
+    
+  </div>
+</article>
+<article class="card" id="c-layout-horizontalstack-light">
+  <a class="shot" data-bg="light" href="#d-layout-horizontalstack-light" aria-label="Zoom Layout/HorizontalStack-Light"><img loading="lazy" src="images/layout-horizontalstack-light/ideal__default__light__compact.png" alt="Layout/HorizontalStack-Light" /></a>
+  <div class="meta">
+    <h3><a class="ctitle" href="#d-layout-horizontalstack-light">Layout/HorizontalStack-Light</a></h3>
+    <div class="sub">399×244<a class="wf" href="wireframes/layout-horizontalstack-light.svg" target="_blank" rel="noopener">wireframe ↗</a><a class="wf" href="figma/layout-horizontalstack-light.svg" target="_blank" rel="noopener">figma svg ↗</a></div>
+    
+  </div>
+</article>
+<article class="card" id="c-layout-horizontalstack-dark">
+  <a class="shot" href="#d-layout-horizontalstack-dark" aria-label="Zoom Layout/HorizontalStack-Dark"><img loading="lazy" src="images/layout-horizontalstack-dark/ideal__default__dark__compact.png" alt="Layout/HorizontalStack-Dark" /></a>
+  <div class="meta">
+    <h3><a class="ctitle" href="#d-layout-horizontalstack-dark">Layout/HorizontalStack-Dark</a></h3>
+    <div class="sub">399×244<a class="wf" href="wireframes/layout-horizontalstack-dark.svg" target="_blank" rel="noopener">wireframe ↗</a><a class="wf" href="figma/layout-horizontalstack-dark.svg" target="_blank" rel="noopener">figma svg ↗</a></div>
+    
+  </div>
+</article>
+<article class="card" id="c-layout-grid-light">
+  <a class="shot" data-bg="light" href="#d-layout-grid-light" aria-label="Zoom Layout/Grid-Light"><img loading="lazy" src="images/layout-grid-light/ideal__default__light__compact.png" alt="Layout/Grid-Light" /></a>
+  <div class="meta">
+    <h3><a class="ctitle" href="#d-layout-grid-light">Layout/Grid-Light</a></h3>
+    <div class="sub">819×246<a class="wf" href="wireframes/layout-grid-light.svg" target="_blank" rel="noopener">wireframe ↗</a><a class="wf" href="figma/layout-grid-light.svg" target="_blank" rel="noopener">figma svg ↗</a></div>
+    
+  </div>
+</article>
+<article class="card" id="c-layout-grid-dark">
+  <a class="shot" href="#d-layout-grid-dark" aria-label="Zoom Layout/Grid-Dark"><img loading="lazy" src="images/layout-grid-dark/ideal__default__dark__compact.png" alt="Layout/Grid-Dark" /></a>
+  <div class="meta">
+    <h3><a class="ctitle" href="#d-layout-grid-dark">Layout/Grid-Dark</a></h3>
+    <div class="sub">819×246<a class="wf" href="wireframes/layout-grid-dark.svg" target="_blank" rel="noopener">wireframe ↗</a><a class="wf" href="figma/layout-grid-dark.svg" target="_blank" rel="noopener">figma svg ↗</a></div>
+    
+  </div>
+</article>
+<article class="card" id="c-layout-heading-light">
+  <a class="shot" data-bg="light" href="#d-layout-heading-light" aria-label="Zoom Layout/Heading-Light"><img loading="lazy" src="images/layout-heading-light/ideal__default__light__compact.png" alt="Layout/Heading-Light" /></a>
+  <div class="meta">
+    <h3><a class="ctitle" href="#d-layout-heading-light">Layout/Heading-Light</a></h3>
+    <div class="sub">283×47<a class="wf" href="wireframes/layout-heading-light.svg" target="_blank" rel="noopener">wireframe ↗</a><a class="wf" href="figma/layout-heading-light.svg" target="_blank" rel="noopener">figma svg ↗</a></div>
+    
+  </div>
+</article>
+<article class="card" id="c-layout-heading-dark">
+  <a class="shot" href="#d-layout-heading-dark" aria-label="Zoom Layout/Heading-Dark"><img loading="lazy" src="images/layout-heading-dark/ideal__default__dark__compact.png" alt="Layout/Heading-Dark" /></a>
+  <div class="meta">
+    <h3><a class="ctitle" href="#d-layout-heading-dark">Layout/Heading-Dark</a></h3>
+    <div class="sub">283×47<a class="wf" href="wireframes/layout-heading-dark.svg" target="_blank" rel="noopener">wireframe ↗</a><a class="wf" href="figma/layout-heading-dark.svg" target="_blank" rel="noopener">figma svg ↗</a></div>
+    
+  </div>
+</article></div>
+    </section>
+<section class="group" id="g-specialised-cards">
+      <h2>Specialised cards</h2>
+      <div class="grid"><article class="card" id="c-card-shutter-light">
+  <a class="shot" data-bg="light" href="#d-card-shutter-light" aria-label="Zoom Card/Shutter-Light"><img loading="lazy" src="images/card-shutter-light/ideal__default__light__compact.png" alt="Card/Shutter-Light" /></a>
+  <div class="meta">
+    <h3><a class="ctitle" href="#d-card-shutter-light">Card/Shutter-Light</a></h3>
+    <div class="sub">735×787<a class="wf" href="wireframes/card-shutter-light.svg" target="_blank" rel="noopener">wireframe ↗</a><a class="wf" href="figma/card-shutter-light.svg" target="_blank" rel="noopener">figma svg ↗</a></div>
+    
+  </div>
+</article>
+<article class="card" id="c-card-shutter-dark">
+  <a class="shot" href="#d-card-shutter-dark" aria-label="Zoom Card/Shutter-Dark"><img loading="lazy" src="images/card-shutter-dark/ideal__default__dark__compact.png" alt="Card/Shutter-Dark" /></a>
+  <div class="meta">
+    <h3><a class="ctitle" href="#d-card-shutter-dark">Card/Shutter-Dark</a></h3>
+    <div class="sub">735×787<a class="wf" href="wireframes/card-shutter-dark.svg" target="_blank" rel="noopener">wireframe ↗</a><a class="wf" href="figma/card-shutter-dark.svg" target="_blank" rel="noopener">figma svg ↗</a></div>
+    
+  </div>
+</article>
+<article class="card" id="c-card-garage-light">
+  <a class="shot" data-bg="light" href="#d-card-garage-light" aria-label="Zoom Card/Garage-Light"><img loading="lazy" src="images/card-garage-light/ideal__default__light__compact.png" alt="Card/Garage-Light" /></a>
+  <div class="meta">
+    <h3><a class="ctitle" href="#d-card-garage-light">Card/Garage-Light</a></h3>
+    <div class="sub">735×892<a class="wf" href="wireframes/card-garage-light.svg" target="_blank" rel="noopener">wireframe ↗</a><a class="wf" href="figma/card-garage-light.svg" target="_blank" rel="noopener">figma svg ↗</a></div>
+    
+  </div>
+</article>
+<article class="card" id="c-card-garage-dark">
+  <a class="shot" href="#d-card-garage-dark" aria-label="Zoom Card/Garage-Dark"><img loading="lazy" src="images/card-garage-dark/ideal__default__dark__compact.png" alt="Card/Garage-Dark" /></a>
+  <div class="meta">
+    <h3><a class="ctitle" href="#d-card-garage-dark">Card/Garage-Dark</a></h3>
+    <div class="sub">735×892<a class="wf" href="wireframes/card-garage-dark.svg" target="_blank" rel="noopener">wireframe ↗</a><a class="wf" href="figma/card-garage-dark.svg" target="_blank" rel="noopener">figma svg ↗</a></div>
+    
+  </div>
+</article>
+<article class="card" id="c-dashboard-light">
+  <a class="shot" data-bg="light" href="#d-dashboard-light" aria-label="Zoom Dashboard/Light"><img loading="lazy" src="images/dashboard-light/ideal__default__light__compact.png" alt="Dashboard/Light" /></a>
+  <div class="meta">
+    <h3><a class="ctitle" href="#d-dashboard-light">Dashboard/Light</a></h3>
+    <div class="sub">1000×1078<a class="wf" href="wireframes/dashboard-light.svg" target="_blank" rel="noopener">wireframe ↗</a><a class="wf" href="figma/dashboard-light.svg" target="_blank" rel="noopener">figma svg ↗</a></div>
+    
+  </div>
+</article>
+<article class="card" id="c-dashboard-dark">
+  <a class="shot" href="#d-dashboard-dark" aria-label="Zoom Dashboard/Dark"><img loading="lazy" src="images/dashboard-dark/ideal__default__dark__compact.png" alt="Dashboard/Dark" /></a>
+  <div class="meta">
+    <h3><a class="ctitle" href="#d-dashboard-dark">Dashboard/Dark</a></h3>
+    <div class="sub">1000×1078<a class="wf" href="wireframes/dashboard-dark.svg" target="_blank" rel="noopener">wireframe ↗</a><a class="wf" href="figma/dashboard-dark.svg" target="_blank" rel="noopener">figma svg ↗</a></div>
+    
+  </div>
+</article></div>
+    </section>
+<section class="group" id="g-brand">
+      <h2>Brand</h2>
+      <div class="grid"><article class="card" id="c-brand-appicon-light">
+  <a class="shot" data-bg="light" href="#d-brand-appicon-light" aria-label="Zoom Brand/AppIcon-Light"><img loading="lazy" src="images/brand-appicon-light/ideal__default__light__compact.png" alt="Brand/AppIcon-Light" /></a>
+  <div class="meta">
+    <h3><a class="ctitle" href="#d-brand-appicon-light">Brand/AppIcon-Light</a></h3>
+    <div class="sub">945×525<a class="wf" href="wireframes/brand-appicon-light.svg" target="_blank" rel="noopener">wireframe ↗</a><a class="wf" href="figma/brand-appicon-light.svg" target="_blank" rel="noopener">figma svg ↗</a></div>
+    
+  </div>
+</article>
+<article class="card" id="c-brand-appicon-dark">
+  <a class="shot" href="#d-brand-appicon-dark" aria-label="Zoom Brand/AppIcon-Dark"><img loading="lazy" src="images/brand-appicon-dark/ideal__default__dark__compact.png" alt="Brand/AppIcon-Dark" /></a>
+  <div class="meta">
+    <h3><a class="ctitle" href="#d-brand-appicon-dark">Brand/AppIcon-Dark</a></h3>
+    <div class="sub">945×525<a class="wf" href="wireframes/brand-appicon-dark.svg" target="_blank" rel="noopener">wireframe ↗</a><a class="wf" href="figma/brand-appicon-dark.svg" target="_blank" rel="noopener">figma svg ↗</a></div>
+    
+  </div>
+</article></div>
+    </section></main>
+</div>
+<div class="detail" id="d-theme-material3-light" role="dialog" aria-label="Theme/Material3-Light">
+  <a class="detail-scrim" href="#c-theme-material3-light" aria-label="Close"></a>
+  <div class="detail-panel">
+    <a class="detail-x" href="#c-theme-material3-light" aria-label="Close">×</a>
+    <h3>Theme/Material3-Light</h3>
+    <div class="detail-caption">Material 3 defaults — colours, type and the surface-elevation strip (light).</div>
+    <div class="detail-states"><figure class="state"><figcaption>default</figcaption><div class="state-shots"><div class="state-shot" data-bg="light"><img loading="lazy" src="images/theme-material3-light/ideal__default__light__compact.png" alt="Theme/Material3-Light default" /><span>light</span></div></div></figure></div>
+  </div>
+</div>
+<div class="detail" id="d-theme-material3-dark" role="dialog" aria-label="Theme/Material3-Dark">
+  <a class="detail-scrim" href="#c-theme-material3-dark" aria-label="Close"></a>
+  <div class="detail-panel">
+    <a class="detail-x" href="#c-theme-material3-dark" aria-label="Close">×</a>
+    <h3>Theme/Material3-Dark</h3>
+    <div class="detail-caption">Material 3 defaults (dark).</div>
+    <div class="detail-states"><figure class="state"><figcaption>default</figcaption><div class="state-shots"><div class="state-shot"><img loading="lazy" src="images/theme-material3-dark/ideal__default__dark__compact.png" alt="Theme/Material3-Dark default" /><span>dark</span></div></div></figure></div>
+  </div>
+</div>
+<div class="detail" id="d-theme-home-light" role="dialog" aria-label="Theme/Home-Light">
+  <a class="detail-scrim" href="#c-theme-home-light" aria-label="Close"></a>
+  <div class="detail-panel">
+    <a class="detail-x" href="#c-theme-home-light" aria-label="Close">×</a>
+    <h3>Theme/Home-Light</h3>
+    <div class="detail-caption">Home palette — HA blue, Roboto Flex + Inter (light).</div>
+    <div class="detail-states"><figure class="state"><figcaption>default</figcaption><div class="state-shots"><div class="state-shot" data-bg="light"><img loading="lazy" src="images/theme-home-light/ideal__default__light__compact.png" alt="Theme/Home-Light default" /><span>light</span></div></div></figure></div>
+  </div>
+</div>
+<div class="detail" id="d-theme-home-dark" role="dialog" aria-label="Theme/Home-Dark">
+  <a class="detail-scrim" href="#c-theme-home-dark" aria-label="Close"></a>
+  <div class="detail-panel">
+    <a class="detail-x" href="#c-theme-home-dark" aria-label="Close">×</a>
+    <h3>Theme/Home-Dark</h3>
+    <div class="detail-caption">Home palette (dark).</div>
+    <div class="detail-states"><figure class="state"><figcaption>default</figcaption><div class="state-shots"><div class="state-shot"><img loading="lazy" src="images/theme-home-dark/ideal__default__dark__compact.png" alt="Theme/Home-Dark default" /><span>dark</span></div></div></figure></div>
+  </div>
+</div>
+<div class="detail" id="d-theme-mushroom-light" role="dialog" aria-label="Theme/Mushroom-Light">
+  <a class="detail-scrim" href="#c-theme-mushroom-light" aria-label="Close"></a>
+  <div class="detail-panel">
+    <a class="detail-x" href="#c-theme-mushroom-light" aria-label="Close">×</a>
+    <h3>Theme/Mushroom-Light</h3>
+    <div class="detail-caption">Mushroom palette — warm salmon, Figtree (light).</div>
+    <div class="detail-states"><figure class="state"><figcaption>default</figcaption><div class="state-shots"><div class="state-shot" data-bg="light"><img loading="lazy" src="images/theme-mushroom-light/ideal__default__light__compact.png" alt="Theme/Mushroom-Light default" /><span>light</span></div></div></figure></div>
+  </div>
+</div>
+<div class="detail" id="d-theme-mushroom-dark" role="dialog" aria-label="Theme/Mushroom-Dark">
+  <a class="detail-scrim" href="#c-theme-mushroom-dark" aria-label="Close"></a>
+  <div class="detail-panel">
+    <a class="detail-x" href="#c-theme-mushroom-dark" aria-label="Close">×</a>
+    <h3>Theme/Mushroom-Dark</h3>
+    <div class="detail-caption">Mushroom palette (dark).</div>
+    <div class="detail-states"><figure class="state"><figcaption>default</figcaption><div class="state-shots"><div class="state-shot"><img loading="lazy" src="images/theme-mushroom-dark/ideal__default__dark__compact.png" alt="Theme/Mushroom-Dark default" /><span>dark</span></div></div></figure></div>
+  </div>
+</div>
+<div class="detail" id="d-theme-minimalist-light" role="dialog" aria-label="Theme/Minimalist-Light">
+  <a class="detail-scrim" href="#c-theme-minimalist-light" aria-label="Close"></a>
+  <div class="detail-panel">
+    <a class="detail-x" href="#c-theme-minimalist-light" aria-label="Close">×</a>
+    <h3>Theme/Minimalist-Light</h3>
+    <div class="detail-caption">Minimalist palette — neutral slate, IBM Plex Sans (light).</div>
+    <div class="detail-states"><figure class="state"><figcaption>default</figcaption><div class="state-shots"><div class="state-shot" data-bg="light"><img loading="lazy" src="images/theme-minimalist-light/ideal__default__light__compact.png" alt="Theme/Minimalist-Light default" /><span>light</span></div></div></figure></div>
+  </div>
+</div>
+<div class="detail" id="d-theme-minimalist-dark" role="dialog" aria-label="Theme/Minimalist-Dark">
+  <a class="detail-scrim" href="#c-theme-minimalist-dark" aria-label="Close"></a>
+  <div class="detail-panel">
+    <a class="detail-x" href="#c-theme-minimalist-dark" aria-label="Close">×</a>
+    <h3>Theme/Minimalist-Dark</h3>
+    <div class="detail-caption">Minimalist palette (dark).</div>
+    <div class="detail-states"><figure class="state"><figcaption>default</figcaption><div class="state-shots"><div class="state-shot"><img loading="lazy" src="images/theme-minimalist-dark/ideal__default__dark__compact.png" alt="Theme/Minimalist-Dark default" /><span>dark</span></div></div></figure></div>
+  </div>
+</div>
+<div class="detail" id="d-theme-kiosk-light" role="dialog" aria-label="Theme/Kiosk-Light">
+  <a class="detail-scrim" href="#c-theme-kiosk-light" aria-label="Close"></a>
+  <div class="detail-panel">
+    <a class="detail-x" href="#c-theme-kiosk-light" aria-label="Close">×</a>
+    <h3>Theme/Kiosk-Light</h3>
+    <div class="detail-caption">Kiosk palette — high-contrast teal, Atkinson Hyperlegible (light).</div>
+    <div class="detail-states"><figure class="state"><figcaption>default</figcaption><div class="state-shots"><div class="state-shot" data-bg="light"><img loading="lazy" src="images/theme-kiosk-light/ideal__default__light__compact.png" alt="Theme/Kiosk-Light default" /><span>light</span></div></div></figure></div>
+  </div>
+</div>
+<div class="detail" id="d-theme-kiosk-dark" role="dialog" aria-label="Theme/Kiosk-Dark">
+  <a class="detail-scrim" href="#c-theme-kiosk-dark" aria-label="Close"></a>
+  <div class="detail-panel">
+    <a class="detail-x" href="#c-theme-kiosk-dark" aria-label="Close">×</a>
+    <h3>Theme/Kiosk-Dark</h3>
+    <div class="detail-caption">Kiosk palette (dark).</div>
+    <div class="detail-states"><figure class="state"><figcaption>default</figcaption><div class="state-shots"><div class="state-shot"><img loading="lazy" src="images/theme-kiosk-dark/ideal__default__dark__compact.png" alt="Theme/Kiosk-Dark default" /><span>dark</span></div></div></figure></div>
+  </div>
+</div>
+<div class="detail" id="d-card-button-light" role="dialog" aria-label="Card/Button-Light">
+  <a class="detail-scrim" href="#c-card-button-light" aria-label="Close"></a>
+  <div class="detail-panel">
+    <a class="detail-x" href="#c-card-button-light" aria-label="Close">×</a>
+    <h3>Card/Button-Light</h3>
+    <div class="detail-caption">Button card — a light entity, on (light).</div>
+    <div class="detail-states"><figure class="state"><figcaption>default</figcaption><div class="state-shots"><div class="state-shot" data-bg="light"><img loading="lazy" src="images/card-button-light/ideal__default__light__compact.png" alt="Card/Button-Light default" /><span>light</span></div></div></figure></div>
+  </div>
+</div>
+<div class="detail" id="d-card-button-dark" role="dialog" aria-label="Card/Button-Dark">
+  <a class="detail-scrim" href="#c-card-button-dark" aria-label="Close"></a>
+  <div class="detail-panel">
+    <a class="detail-x" href="#c-card-button-dark" aria-label="Close">×</a>
+    <h3>Card/Button-Dark</h3>
+    <div class="detail-caption">Button card — a light entity, on (dark).</div>
+    <div class="detail-states"><figure class="state"><figcaption>default</figcaption><div class="state-shots"><div class="state-shot"><img loading="lazy" src="images/card-button-dark/ideal__default__dark__compact.png" alt="Card/Button-Dark default" /><span>dark</span></div></div></figure></div>
+  </div>
+</div>
+<div class="detail" id="d-card-entity-light" role="dialog" aria-label="Card/Entity-Light">
+  <a class="detail-scrim" href="#c-card-entity-light" aria-label="Close"></a>
+  <div class="detail-panel">
+    <a class="detail-x" href="#c-card-entity-light" aria-label="Close">×</a>
+    <h3>Card/Entity-Light</h3>
+    <div class="detail-caption">Entity card — a single entity row (light).</div>
+    <div class="detail-states"><figure class="state"><figcaption>default</figcaption><div class="state-shots"><div class="state-shot" data-bg="light"><img loading="lazy" src="images/card-entity-light/ideal__default__light__compact.png" alt="Card/Entity-Light default" /><span>light</span></div></div></figure></div>
+  </div>
+</div>
+<div class="detail" id="d-card-entity-dark" role="dialog" aria-label="Card/Entity-Dark">
+  <a class="detail-scrim" href="#c-card-entity-dark" aria-label="Close"></a>
+  <div class="detail-panel">
+    <a class="detail-x" href="#c-card-entity-dark" aria-label="Close">×</a>
+    <h3>Card/Entity-Dark</h3>
+    <div class="detail-caption">Entity card (dark).</div>
+    <div class="detail-states"><figure class="state"><figcaption>default</figcaption><div class="state-shots"><div class="state-shot"><img loading="lazy" src="images/card-entity-dark/ideal__default__dark__compact.png" alt="Card/Entity-Dark default" /><span>dark</span></div></div></figure></div>
+  </div>
+</div>
+<div class="detail" id="d-card-entities-light" role="dialog" aria-label="Card/Entities-Light">
+  <a class="detail-scrim" href="#c-card-entities-light" aria-label="Close"></a>
+  <div class="detail-panel">
+    <a class="detail-x" href="#c-card-entities-light" aria-label="Close">×</a>
+    <h3>Card/Entities-Light</h3>
+    <div class="detail-caption">Entities card — a multi-entity list (light).</div>
+    <div class="detail-states"><figure class="state"><figcaption>default</figcaption><div class="state-shots"><div class="state-shot" data-bg="light"><img loading="lazy" src="images/card-entities-light/ideal__default__light__compact.png" alt="Card/Entities-Light default" /><span>light</span></div></div></figure></div>
+  </div>
+</div>
+<div class="detail" id="d-card-entities-dark" role="dialog" aria-label="Card/Entities-Dark">
+  <a class="detail-scrim" href="#c-card-entities-dark" aria-label="Close"></a>
+  <div class="detail-panel">
+    <a class="detail-x" href="#c-card-entities-dark" aria-label="Close">×</a>
+    <h3>Card/Entities-Dark</h3>
+    <div class="detail-caption">Entities card (dark).</div>
+    <div class="detail-states"><figure class="state"><figcaption>default</figcaption><div class="state-shots"><div class="state-shot"><img loading="lazy" src="images/card-entities-dark/ideal__default__dark__compact.png" alt="Card/Entities-Dark default" /><span>dark</span></div></div></figure></div>
+  </div>
+</div>
+<div class="detail" id="d-card-glance-light" role="dialog" aria-label="Card/Glance-Light">
+  <a class="detail-scrim" href="#c-card-glance-light" aria-label="Close"></a>
+  <div class="detail-panel">
+    <a class="detail-x" href="#c-card-glance-light" aria-label="Close">×</a>
+    <h3>Card/Glance-Light</h3>
+    <div class="detail-caption">Glance card — an icon grid (light).</div>
+    <div class="detail-states"><figure class="state"><figcaption>default</figcaption><div class="state-shots"><div class="state-shot" data-bg="light"><img loading="lazy" src="images/card-glance-light/ideal__default__light__compact.png" alt="Card/Glance-Light default" /><span>light</span></div></div></figure></div>
+  </div>
+</div>
+<div class="detail" id="d-card-glance-dark" role="dialog" aria-label="Card/Glance-Dark">
+  <a class="detail-scrim" href="#c-card-glance-dark" aria-label="Close"></a>
+  <div class="detail-panel">
+    <a class="detail-x" href="#c-card-glance-dark" aria-label="Close">×</a>
+    <h3>Card/Glance-Dark</h3>
+    <div class="detail-caption">Glance card (dark).</div>
+    <div class="detail-states"><figure class="state"><figcaption>default</figcaption><div class="state-shots"><div class="state-shot"><img loading="lazy" src="images/card-glance-dark/ideal__default__dark__compact.png" alt="Card/Glance-Dark default" /><span>dark</span></div></div></figure></div>
+  </div>
+</div>
+<div class="detail" id="d-card-tile-light" role="dialog" aria-label="Card/Tile-Light">
+  <a class="detail-scrim" href="#c-card-tile-light" aria-label="Close"></a>
+  <div class="detail-panel">
+    <a class="detail-x" href="#c-card-tile-light" aria-label="Close">×</a>
+    <h3>Card/Tile-Light</h3>
+    <div class="detail-caption">Tile card — the primary HA card, a light entity on (light).</div>
+    <div class="detail-states"><figure class="state"><figcaption>default</figcaption><div class="state-shots"><div class="state-shot"><img loading="lazy" src="images/card-tile-light/ideal__default__compact.png" alt="Card/Tile-Light default" /><span>compact</span></div></div></figure></div>
+  </div>
+</div>
+<div class="detail" id="d-card-tile-dark" role="dialog" aria-label="Card/Tile-Dark">
+  <a class="detail-scrim" href="#c-card-tile-dark" aria-label="Close"></a>
+  <div class="detail-panel">
+    <a class="detail-x" href="#c-card-tile-dark" aria-label="Close">×</a>
+    <h3>Card/Tile-Dark</h3>
+    <div class="detail-caption">Tile card — a light entity on (dark).</div>
+    <div class="detail-states"><figure class="state"><figcaption>default</figcaption><div class="state-shots"><div class="state-shot"><img loading="lazy" src="images/card-tile-dark/ideal__default__dark__compact.png" alt="Card/Tile-Dark default" /><span>dark</span></div></div></figure></div>
+  </div>
+</div>
+<div class="detail" id="d-card-light-light" role="dialog" aria-label="Card/Light-Light">
+  <a class="detail-scrim" href="#c-card-light-light" aria-label="Close"></a>
+  <div class="detail-panel">
+    <a class="detail-x" href="#c-card-light-light" aria-label="Close">×</a>
+    <h3>Card/Light-Light</h3>
+    <div class="detail-caption">Light card — brightness + colour controls (light).</div>
+    <div class="detail-states"><figure class="state"><figcaption>default</figcaption><div class="state-shots"><div class="state-shot" data-bg="light"><img loading="lazy" src="images/card-light-light/ideal__default__light__compact.png" alt="Card/Light-Light default" /><span>light</span></div></div></figure></div>
+  </div>
+</div>
+<div class="detail" id="d-card-light-dark" role="dialog" aria-label="Card/Light-Dark">
+  <a class="detail-scrim" href="#c-card-light-dark" aria-label="Close"></a>
+  <div class="detail-panel">
+    <a class="detail-x" href="#c-card-light-dark" aria-label="Close">×</a>
+    <h3>Card/Light-Dark</h3>
+    <div class="detail-caption">Light card (dark).</div>
+    <div class="detail-states"><figure class="state"><figcaption>default</figcaption><div class="state-shots"><div class="state-shot"><img loading="lazy" src="images/card-light-dark/ideal__default__dark__compact.png" alt="Card/Light-Dark default" /><span>dark</span></div></div></figure></div>
+  </div>
+</div>
+<div class="detail" id="d-card-thermostat-light" role="dialog" aria-label="Card/Thermostat-Light">
+  <a class="detail-scrim" href="#c-card-thermostat-light" aria-label="Close"></a>
+  <div class="detail-panel">
+    <a class="detail-x" href="#c-card-thermostat-light" aria-label="Close">×</a>
+    <h3>Card/Thermostat-Light</h3>
+    <div class="detail-caption">Thermostat card — climate setpoint dial (light).</div>
+    <div class="detail-states"><figure class="state"><figcaption>default</figcaption><div class="state-shots"><div class="state-shot" data-bg="light"><img loading="lazy" src="images/card-thermostat-light/ideal__default__light__compact.png" alt="Card/Thermostat-Light default" /><span>light</span></div></div></figure></div>
+  </div>
+</div>
+<div class="detail" id="d-card-thermostat-dark" role="dialog" aria-label="Card/Thermostat-Dark">
+  <a class="detail-scrim" href="#c-card-thermostat-dark" aria-label="Close"></a>
+  <div class="detail-panel">
+    <a class="detail-x" href="#c-card-thermostat-dark" aria-label="Close">×</a>
+    <h3>Card/Thermostat-Dark</h3>
+    <div class="detail-caption">Thermostat card (dark).</div>
+    <div class="detail-states"><figure class="state"><figcaption>default</figcaption><div class="state-shots"><div class="state-shot"><img loading="lazy" src="images/card-thermostat-dark/ideal__default__dark__compact.png" alt="Card/Thermostat-Dark default" /><span>dark</span></div></div></figure></div>
+  </div>
+</div>
+<div class="detail" id="d-card-gauge-light" role="dialog" aria-label="Card/Gauge-Light">
+  <a class="detail-scrim" href="#c-card-gauge-light" aria-label="Close"></a>
+  <div class="detail-panel">
+    <a class="detail-x" href="#c-card-gauge-light" aria-label="Close">×</a>
+    <h3>Card/Gauge-Light</h3>
+    <div class="detail-caption">Gauge card — a bounded numeric reading (light).</div>
+    <div class="detail-states"><figure class="state"><figcaption>default</figcaption><div class="state-shots"><div class="state-shot" data-bg="light"><img loading="lazy" src="images/card-gauge-light/ideal__default__light__compact.png" alt="Card/Gauge-Light default" /><span>light</span></div></div></figure></div>
+  </div>
+</div>
+<div class="detail" id="d-card-gauge-dark" role="dialog" aria-label="Card/Gauge-Dark">
+  <a class="detail-scrim" href="#c-card-gauge-dark" aria-label="Close"></a>
+  <div class="detail-panel">
+    <a class="detail-x" href="#c-card-gauge-dark" aria-label="Close">×</a>
+    <h3>Card/Gauge-Dark</h3>
+    <div class="detail-caption">Gauge card (dark).</div>
+    <div class="detail-states"><figure class="state"><figcaption>default</figcaption><div class="state-shots"><div class="state-shot"><img loading="lazy" src="images/card-gauge-dark/ideal__default__dark__compact.png" alt="Card/Gauge-Dark default" /><span>dark</span></div></div></figure></div>
+  </div>
+</div>
+<div class="detail" id="d-card-weather-light" role="dialog" aria-label="Card/Weather-Light">
+  <a class="detail-scrim" href="#c-card-weather-light" aria-label="Close"></a>
+  <div class="detail-panel">
+    <a class="detail-x" href="#c-card-weather-light" aria-label="Close">×</a>
+    <h3>Card/Weather-Light</h3>
+    <div class="detail-caption">Weather forecast card (light).</div>
+    <div class="detail-states"><figure class="state"><figcaption>default</figcaption><div class="state-shots"><div class="state-shot" data-bg="light"><img loading="lazy" src="images/card-weather-light/ideal__default__light__compact.png" alt="Card/Weather-Light default" /><span>light</span></div></div></figure></div>
+  </div>
+</div>
+<div class="detail" id="d-card-weather-dark" role="dialog" aria-label="Card/Weather-Dark">
+  <a class="detail-scrim" href="#c-card-weather-dark" aria-label="Close"></a>
+  <div class="detail-panel">
+    <a class="detail-x" href="#c-card-weather-dark" aria-label="Close">×</a>
+    <h3>Card/Weather-Dark</h3>
+    <div class="detail-caption">Weather forecast card (dark).</div>
+    <div class="detail-states"><figure class="state"><figcaption>default</figcaption><div class="state-shots"><div class="state-shot"><img loading="lazy" src="images/card-weather-dark/ideal__default__dark__compact.png" alt="Card/Weather-Dark default" /><span>dark</span></div></div></figure></div>
+  </div>
+</div>
+<div class="detail" id="d-card-media-light" role="dialog" aria-label="Card/Media-Light">
+  <a class="detail-scrim" href="#c-card-media-light" aria-label="Close"></a>
+  <div class="detail-panel">
+    <a class="detail-x" href="#c-card-media-light" aria-label="Close">×</a>
+    <h3>Card/Media-Light</h3>
+    <div class="detail-caption">Media control card — now-playing + transport (light).</div>
+    <div class="detail-states"><figure class="state"><figcaption>default</figcaption><div class="state-shots"><div class="state-shot" data-bg="light"><img loading="lazy" src="images/card-media-light/ideal__default__light__compact.png" alt="Card/Media-Light default" /><span>light</span></div></div></figure></div>
+  </div>
+</div>
+<div class="detail" id="d-card-media-dark" role="dialog" aria-label="Card/Media-Dark">
+  <a class="detail-scrim" href="#c-card-media-dark" aria-label="Close"></a>
+  <div class="detail-panel">
+    <a class="detail-x" href="#c-card-media-dark" aria-label="Close">×</a>
+    <h3>Card/Media-Dark</h3>
+    <div class="detail-caption">Media control card (dark).</div>
+    <div class="detail-states"><figure class="state"><figcaption>default</figcaption><div class="state-shots"><div class="state-shot"><img loading="lazy" src="images/card-media-dark/ideal__default__dark__compact.png" alt="Card/Media-Dark default" /><span>dark</span></div></div></figure></div>
+  </div>
+</div>
+<div class="detail" id="d-card-alarm-light" role="dialog" aria-label="Card/Alarm-Light">
+  <a class="detail-scrim" href="#c-card-alarm-light" aria-label="Close"></a>
+  <div class="detail-panel">
+    <a class="detail-x" href="#c-card-alarm-light" aria-label="Close">×</a>
+    <h3>Card/Alarm-Light</h3>
+    <div class="detail-caption">Alarm panel card — keypad + arm states (light).</div>
+    <div class="detail-states"><figure class="state"><figcaption>default</figcaption><div class="state-shots"><div class="state-shot" data-bg="light"><img loading="lazy" src="images/card-alarm-light/ideal__default__light__compact.png" alt="Card/Alarm-Light default" /><span>light</span></div></div></figure></div>
+  </div>
+</div>
+<div class="detail" id="d-card-alarm-dark" role="dialog" aria-label="Card/Alarm-Dark">
+  <a class="detail-scrim" href="#c-card-alarm-dark" aria-label="Close"></a>
+  <div class="detail-panel">
+    <a class="detail-x" href="#c-card-alarm-dark" aria-label="Close">×</a>
+    <h3>Card/Alarm-Dark</h3>
+    <div class="detail-caption">Alarm panel card (dark).</div>
+    <div class="detail-states"><figure class="state"><figcaption>default</figcaption><div class="state-shots"><div class="state-shot"><img loading="lazy" src="images/card-alarm-dark/ideal__default__dark__compact.png" alt="Card/Alarm-Dark default" /><span>dark</span></div></div></figure></div>
+  </div>
+</div>
+<div class="detail" id="d-card-todo-light" role="dialog" aria-label="Card/Todo-Light">
+  <a class="detail-scrim" href="#c-card-todo-light" aria-label="Close"></a>
+  <div class="detail-panel">
+    <a class="detail-x" href="#c-card-todo-light" aria-label="Close">×</a>
+    <h3>Card/Todo-Light</h3>
+    <div class="detail-caption">To-do list card (light).</div>
+    <div class="detail-states"><figure class="state"><figcaption>default</figcaption><div class="state-shots"><div class="state-shot" data-bg="light"><img loading="lazy" src="images/card-todo-light/ideal__default__light__compact.png" alt="Card/Todo-Light default" /><span>light</span></div></div></figure></div>
+  </div>
+</div>
+<div class="detail" id="d-card-todo-dark" role="dialog" aria-label="Card/Todo-Dark">
+  <a class="detail-scrim" href="#c-card-todo-dark" aria-label="Close"></a>
+  <div class="detail-panel">
+    <a class="detail-x" href="#c-card-todo-dark" aria-label="Close">×</a>
+    <h3>Card/Todo-Dark</h3>
+    <div class="detail-caption">To-do list card (dark).</div>
+    <div class="detail-states"><figure class="state"><figcaption>default</figcaption><div class="state-shots"><div class="state-shot"><img loading="lazy" src="images/card-todo-dark/ideal__default__dark__compact.png" alt="Card/Todo-Dark default" /><span>dark</span></div></div></figure></div>
+  </div>
+</div>
+<div class="detail" id="d-card-calendar-light" role="dialog" aria-label="Card/Calendar-Light">
+  <a class="detail-scrim" href="#c-card-calendar-light" aria-label="Close"></a>
+  <div class="detail-panel">
+    <a class="detail-x" href="#c-card-calendar-light" aria-label="Close">×</a>
+    <h3>Card/Calendar-Light</h3>
+    <div class="detail-caption">Calendar card (light).</div>
+    <div class="detail-states"><figure class="state"><figcaption>default</figcaption><div class="state-shots"><div class="state-shot" data-bg="light"><img loading="lazy" src="images/card-calendar-light/ideal__default__light__compact.png" alt="Card/Calendar-Light default" /><span>light</span></div></div></figure></div>
+  </div>
+</div>
+<div class="detail" id="d-card-calendar-dark" role="dialog" aria-label="Card/Calendar-Dark">
+  <a class="detail-scrim" href="#c-card-calendar-dark" aria-label="Close"></a>
+  <div class="detail-panel">
+    <a class="detail-x" href="#c-card-calendar-dark" aria-label="Close">×</a>
+    <h3>Card/Calendar-Dark</h3>
+    <div class="detail-caption">Calendar card (dark).</div>
+    <div class="detail-states"><figure class="state"><figcaption>default</figcaption><div class="state-shots"><div class="state-shot"><img loading="lazy" src="images/card-calendar-dark/ideal__default__dark__compact.png" alt="Card/Calendar-Dark default" /><span>dark</span></div></div></figure></div>
+  </div>
+</div>
+<div class="detail" id="d-card-area-light" role="dialog" aria-label="Card/Area-Light">
+  <a class="detail-scrim" href="#c-card-area-light" aria-label="Close"></a>
+  <div class="detail-panel">
+    <a class="detail-x" href="#c-card-area-light" aria-label="Close">×</a>
+    <h3>Card/Area-Light</h3>
+    <div class="detail-caption">Area card — a room summary tile (light).</div>
+    <div class="detail-states"><figure class="state"><figcaption>default</figcaption><div class="state-shots"><div class="state-shot" data-bg="light"><img loading="lazy" src="images/card-area-light/ideal__default__light__compact.png" alt="Card/Area-Light default" /><span>light</span></div></div></figure></div>
+  </div>
+</div>
+<div class="detail" id="d-card-area-dark" role="dialog" aria-label="Card/Area-Dark">
+  <a class="detail-scrim" href="#c-card-area-dark" aria-label="Close"></a>
+  <div class="detail-panel">
+    <a class="detail-x" href="#c-card-area-dark" aria-label="Close">×</a>
+    <h3>Card/Area-Dark</h3>
+    <div class="detail-caption">Area card (dark).</div>
+    <div class="detail-states"><figure class="state"><figcaption>default</figcaption><div class="state-shots"><div class="state-shot"><img loading="lazy" src="images/card-area-dark/ideal__default__dark__compact.png" alt="Card/Area-Dark default" /><span>dark</span></div></div></figure></div>
+  </div>
+</div>
+<div class="detail" id="d-card-sensor-light" role="dialog" aria-label="Card/Sensor-Light">
+  <a class="detail-scrim" href="#c-card-sensor-light" aria-label="Close"></a>
+  <div class="detail-panel">
+    <a class="detail-x" href="#c-card-sensor-light" aria-label="Close">×</a>
+    <h3>Card/Sensor-Light</h3>
+    <div class="detail-caption">Sensor card — a single value read-out (light).</div>
+    <div class="detail-states"><figure class="state"><figcaption>default</figcaption><div class="state-shots"><div class="state-shot" data-bg="light"><img loading="lazy" src="images/card-sensor-light/ideal__default__light__compact.png" alt="Card/Sensor-Light default" /><span>light</span></div></div></figure></div>
+  </div>
+</div>
+<div class="detail" id="d-card-sensor-dark" role="dialog" aria-label="Card/Sensor-Dark">
+  <a class="detail-scrim" href="#c-card-sensor-dark" aria-label="Close"></a>
+  <div class="detail-panel">
+    <a class="detail-x" href="#c-card-sensor-dark" aria-label="Close">×</a>
+    <h3>Card/Sensor-Dark</h3>
+    <div class="detail-caption">Sensor card (dark).</div>
+    <div class="detail-states"><figure class="state"><figcaption>default</figcaption><div class="state-shots"><div class="state-shot"><img loading="lazy" src="images/card-sensor-dark/ideal__default__dark__compact.png" alt="Card/Sensor-Dark default" /><span>dark</span></div></div></figure></div>
+  </div>
+</div>
+<div class="detail" id="d-card-statistic-light" role="dialog" aria-label="Card/Statistic-Light">
+  <a class="detail-scrim" href="#c-card-statistic-light" aria-label="Close"></a>
+  <div class="detail-panel">
+    <a class="detail-x" href="#c-card-statistic-light" aria-label="Close">×</a>
+    <h3>Card/Statistic-Light</h3>
+    <div class="detail-caption">Statistic card — an aggregated value (light).</div>
+    <div class="detail-states"><figure class="state"><figcaption>default</figcaption><div class="state-shots"><div class="state-shot" data-bg="light"><img loading="lazy" src="images/card-statistic-light/ideal__default__light__compact.png" alt="Card/Statistic-Light default" /><span>light</span></div></div></figure></div>
+  </div>
+</div>
+<div class="detail" id="d-card-statistic-dark" role="dialog" aria-label="Card/Statistic-Dark">
+  <a class="detail-scrim" href="#c-card-statistic-dark" aria-label="Close"></a>
+  <div class="detail-panel">
+    <a class="detail-x" href="#c-card-statistic-dark" aria-label="Close">×</a>
+    <h3>Card/Statistic-Dark</h3>
+    <div class="detail-caption">Statistic card (dark).</div>
+    <div class="detail-states"><figure class="state"><figcaption>default</figcaption><div class="state-shots"><div class="state-shot"><img loading="lazy" src="images/card-statistic-dark/ideal__default__dark__compact.png" alt="Card/Statistic-Dark default" /><span>dark</span></div></div></figure></div>
+  </div>
+</div>
+<div class="detail" id="d-card-markdown-light" role="dialog" aria-label="Card/Markdown-Light">
+  <a class="detail-scrim" href="#c-card-markdown-light" aria-label="Close"></a>
+  <div class="detail-panel">
+    <a class="detail-x" href="#c-card-markdown-light" aria-label="Close">×</a>
+    <h3>Card/Markdown-Light</h3>
+    <div class="detail-caption">Markdown card — rich text content (light).</div>
+    <div class="detail-states"><figure class="state"><figcaption>default</figcaption><div class="state-shots"><div class="state-shot" data-bg="light"><img loading="lazy" src="images/card-markdown-light/ideal__default__light__compact.png" alt="Card/Markdown-Light default" /><span>light</span></div></div></figure></div>
+  </div>
+</div>
+<div class="detail" id="d-card-markdown-dark" role="dialog" aria-label="Card/Markdown-Dark">
+  <a class="detail-scrim" href="#c-card-markdown-dark" aria-label="Close"></a>
+  <div class="detail-panel">
+    <a class="detail-x" href="#c-card-markdown-dark" aria-label="Close">×</a>
+    <h3>Card/Markdown-Dark</h3>
+    <div class="detail-caption">Markdown card (dark).</div>
+    <div class="detail-states"><figure class="state"><figcaption>default</figcaption><div class="state-shots"><div class="state-shot"><img loading="lazy" src="images/card-markdown-dark/ideal__default__dark__compact.png" alt="Card/Markdown-Dark default" /><span>dark</span></div></div></figure></div>
+  </div>
+</div>
+<div class="detail" id="d-card-clock-light" role="dialog" aria-label="Card/Clock-Light">
+  <a class="detail-scrim" href="#c-card-clock-light" aria-label="Close"></a>
+  <div class="detail-panel">
+    <a class="detail-x" href="#c-card-clock-light" aria-label="Close">×</a>
+    <h3>Card/Clock-Light</h3>
+    <div class="detail-caption">Clock card (light).</div>
+    <div class="detail-states"><figure class="state"><figcaption>default</figcaption><div class="state-shots"><div class="state-shot" data-bg="light"><img loading="lazy" src="images/card-clock-light/ideal__default__light__compact.png" alt="Card/Clock-Light default" /><span>light</span></div></div></figure></div>
+  </div>
+</div>
+<div class="detail" id="d-card-clock-dark" role="dialog" aria-label="Card/Clock-Dark">
+  <a class="detail-scrim" href="#c-card-clock-dark" aria-label="Close"></a>
+  <div class="detail-panel">
+    <a class="detail-x" href="#c-card-clock-dark" aria-label="Close">×</a>
+    <h3>Card/Clock-Dark</h3>
+    <div class="detail-caption">Clock card (dark).</div>
+    <div class="detail-states"><figure class="state"><figcaption>default</figcaption><div class="state-shots"><div class="state-shot"><img loading="lazy" src="images/card-clock-dark/ideal__default__dark__compact.png" alt="Card/Clock-Dark default" /><span>dark</span></div></div></figure></div>
+  </div>
+</div>
+<div class="detail" id="d-layout-verticalstack-light" role="dialog" aria-label="Layout/VerticalStack-Light">
+  <a class="detail-scrim" href="#c-layout-verticalstack-light" aria-label="Close"></a>
+  <div class="detail-panel">
+    <a class="detail-x" href="#c-layout-verticalstack-light" aria-label="Close">×</a>
+    <h3>Layout/VerticalStack-Light</h3>
+    <div class="detail-caption">Vertical stack — cards stacked in a column (light).</div>
+    <div class="detail-states"><figure class="state"><figcaption>default</figcaption><div class="state-shots"><div class="state-shot" data-bg="light"><img loading="lazy" src="images/layout-verticalstack-light/ideal__default__light__compact.png" alt="Layout/VerticalStack-Light default" /><span>light</span></div></div></figure></div>
+  </div>
+</div>
+<div class="detail" id="d-layout-verticalstack-dark" role="dialog" aria-label="Layout/VerticalStack-Dark">
+  <a class="detail-scrim" href="#c-layout-verticalstack-dark" aria-label="Close"></a>
+  <div class="detail-panel">
+    <a class="detail-x" href="#c-layout-verticalstack-dark" aria-label="Close">×</a>
+    <h3>Layout/VerticalStack-Dark</h3>
+    <div class="detail-caption">Vertical stack (dark).</div>
+    <div class="detail-states"><figure class="state"><figcaption>default</figcaption><div class="state-shots"><div class="state-shot"><img loading="lazy" src="images/layout-verticalstack-dark/ideal__default__dark__compact.png" alt="Layout/VerticalStack-Dark default" /><span>dark</span></div></div></figure></div>
+  </div>
+</div>
+<div class="detail" id="d-layout-horizontalstack-light" role="dialog" aria-label="Layout/HorizontalStack-Light">
+  <a class="detail-scrim" href="#c-layout-horizontalstack-light" aria-label="Close"></a>
+  <div class="detail-panel">
+    <a class="detail-x" href="#c-layout-horizontalstack-light" aria-label="Close">×</a>
+    <h3>Layout/HorizontalStack-Light</h3>
+    <div class="detail-caption">Horizontal stack — cards side by side (light).</div>
+    <div class="detail-states"><figure class="state"><figcaption>default</figcaption><div class="state-shots"><div class="state-shot" data-bg="light"><img loading="lazy" src="images/layout-horizontalstack-light/ideal__default__light__compact.png" alt="Layout/HorizontalStack-Light default" /><span>light</span></div></div></figure></div>
+  </div>
+</div>
+<div class="detail" id="d-layout-horizontalstack-dark" role="dialog" aria-label="Layout/HorizontalStack-Dark">
+  <a class="detail-scrim" href="#c-layout-horizontalstack-dark" aria-label="Close"></a>
+  <div class="detail-panel">
+    <a class="detail-x" href="#c-layout-horizontalstack-dark" aria-label="Close">×</a>
+    <h3>Layout/HorizontalStack-Dark</h3>
+    <div class="detail-caption">Horizontal stack (dark).</div>
+    <div class="detail-states"><figure class="state"><figcaption>default</figcaption><div class="state-shots"><div class="state-shot"><img loading="lazy" src="images/layout-horizontalstack-dark/ideal__default__dark__compact.png" alt="Layout/HorizontalStack-Dark default" /><span>dark</span></div></div></figure></div>
+  </div>
+</div>
+<div class="detail" id="d-layout-grid-light" role="dialog" aria-label="Layout/Grid-Light">
+  <a class="detail-scrim" href="#c-layout-grid-light" aria-label="Close"></a>
+  <div class="detail-panel">
+    <a class="detail-x" href="#c-layout-grid-light" aria-label="Close">×</a>
+    <h3>Layout/Grid-Light</h3>
+    <div class="detail-caption">Grid — cards in a fixed-column grid (light).</div>
+    <div class="detail-states"><figure class="state"><figcaption>default</figcaption><div class="state-shots"><div class="state-shot" data-bg="light"><img loading="lazy" src="images/layout-grid-light/ideal__default__light__compact.png" alt="Layout/Grid-Light default" /><span>light</span></div></div></figure></div>
+  </div>
+</div>
+<div class="detail" id="d-layout-grid-dark" role="dialog" aria-label="Layout/Grid-Dark">
+  <a class="detail-scrim" href="#c-layout-grid-dark" aria-label="Close"></a>
+  <div class="detail-panel">
+    <a class="detail-x" href="#c-layout-grid-dark" aria-label="Close">×</a>
+    <h3>Layout/Grid-Dark</h3>
+    <div class="detail-caption">Grid (dark).</div>
+    <div class="detail-states"><figure class="state"><figcaption>default</figcaption><div class="state-shots"><div class="state-shot"><img loading="lazy" src="images/layout-grid-dark/ideal__default__dark__compact.png" alt="Layout/Grid-Dark default" /><span>dark</span></div></div></figure></div>
+  </div>
+</div>
+<div class="detail" id="d-layout-heading-light" role="dialog" aria-label="Layout/Heading-Light">
+  <a class="detail-scrim" href="#c-layout-heading-light" aria-label="Close"></a>
+  <div class="detail-panel">
+    <a class="detail-x" href="#c-layout-heading-light" aria-label="Close">×</a>
+    <h3>Layout/Heading-Light</h3>
+    <div class="detail-caption">Heading — a section title row (light).</div>
+    <div class="detail-states"><figure class="state"><figcaption>default</figcaption><div class="state-shots"><div class="state-shot" data-bg="light"><img loading="lazy" src="images/layout-heading-light/ideal__default__light__compact.png" alt="Layout/Heading-Light default" /><span>light</span></div></div></figure></div>
+  </div>
+</div>
+<div class="detail" id="d-layout-heading-dark" role="dialog" aria-label="Layout/Heading-Dark">
+  <a class="detail-scrim" href="#c-layout-heading-dark" aria-label="Close"></a>
+  <div class="detail-panel">
+    <a class="detail-x" href="#c-layout-heading-dark" aria-label="Close">×</a>
+    <h3>Layout/Heading-Dark</h3>
+    <div class="detail-caption">Heading (dark).</div>
+    <div class="detail-states"><figure class="state"><figcaption>default</figcaption><div class="state-shots"><div class="state-shot"><img loading="lazy" src="images/layout-heading-dark/ideal__default__dark__compact.png" alt="Layout/Heading-Dark default" /><span>dark</span></div></div></figure></div>
+  </div>
+</div>
+<div class="detail" id="d-card-shutter-light" role="dialog" aria-label="Card/Shutter-Light">
+  <a class="detail-scrim" href="#c-card-shutter-light" aria-label="Close"></a>
+  <div class="detail-panel">
+    <a class="detail-x" href="#c-card-shutter-light" aria-label="Close">×</a>
+    <h3>Card/Shutter-Light</h3>
+    <div class="detail-caption">Enhanced shutter card (light).</div>
+    <div class="detail-states"><figure class="state"><figcaption>default</figcaption><div class="state-shots"><div class="state-shot" data-bg="light"><img loading="lazy" src="images/card-shutter-light/ideal__default__light__compact.png" alt="Card/Shutter-Light default" /><span>light</span></div></div></figure></div>
+  </div>
+</div>
+<div class="detail" id="d-card-shutter-dark" role="dialog" aria-label="Card/Shutter-Dark">
+  <a class="detail-scrim" href="#c-card-shutter-dark" aria-label="Close"></a>
+  <div class="detail-panel">
+    <a class="detail-x" href="#c-card-shutter-dark" aria-label="Close">×</a>
+    <h3>Card/Shutter-Dark</h3>
+    <div class="detail-caption">Enhanced shutter card (dark).</div>
+    <div class="detail-states"><figure class="state"><figcaption>default</figcaption><div class="state-shots"><div class="state-shot"><img loading="lazy" src="images/card-shutter-dark/ideal__default__dark__compact.png" alt="Card/Shutter-Dark default" /><span>dark</span></div></div></figure></div>
+  </div>
+</div>
+<div class="detail" id="d-card-garage-light" role="dialog" aria-label="Card/Garage-Light">
+  <a class="detail-scrim" href="#c-card-garage-light" aria-label="Close"></a>
+  <div class="detail-panel">
+    <a class="detail-x" href="#c-card-garage-light" aria-label="Close">×</a>
+    <h3>Card/Garage-Light</h3>
+    <div class="detail-caption">Garage door card — cover + light (light).</div>
+    <div class="detail-states"><figure class="state"><figcaption>default</figcaption><div class="state-shots"><div class="state-shot" data-bg="light"><img loading="lazy" src="images/card-garage-light/ideal__default__light__compact.png" alt="Card/Garage-Light default" /><span>light</span></div></div></figure></div>
+  </div>
+</div>
+<div class="detail" id="d-card-garage-dark" role="dialog" aria-label="Card/Garage-Dark">
+  <a class="detail-scrim" href="#c-card-garage-dark" aria-label="Close"></a>
+  <div class="detail-panel">
+    <a class="detail-x" href="#c-card-garage-dark" aria-label="Close">×</a>
+    <h3>Card/Garage-Dark</h3>
+    <div class="detail-caption">Garage door card — cover + light (dark).</div>
+    <div class="detail-states"><figure class="state"><figcaption>default</figcaption><div class="state-shots"><div class="state-shot"><img loading="lazy" src="images/card-garage-dark/ideal__default__dark__compact.png" alt="Card/Garage-Dark default" /><span>dark</span></div></div></figure></div>
+  </div>
+</div>
+<div class="detail" id="d-dashboard-light" role="dialog" aria-label="Dashboard/Light">
+  <a class="detail-scrim" href="#c-dashboard-light" aria-label="Close"></a>
+  <div class="detail-panel">
+    <a class="detail-x" href="#c-dashboard-light" aria-label="Close">×</a>
+    <h3>Dashboard/Light</h3>
+    <div class="detail-caption">A full mixed-card dashboard stack (light).</div>
+    <div class="detail-states"><figure class="state"><figcaption>default</figcaption><div class="state-shots"><div class="state-shot" data-bg="light"><img loading="lazy" src="images/dashboard-light/ideal__default__light__compact.png" alt="Dashboard/Light default" /><span>light</span></div></div></figure></div>
+  </div>
+</div>
+<div class="detail" id="d-dashboard-dark" role="dialog" aria-label="Dashboard/Dark">
+  <a class="detail-scrim" href="#c-dashboard-dark" aria-label="Close"></a>
+  <div class="detail-panel">
+    <a class="detail-x" href="#c-dashboard-dark" aria-label="Close">×</a>
+    <h3>Dashboard/Dark</h3>
+    <div class="detail-caption">A full mixed-card dashboard stack (dark).</div>
+    <div class="detail-states"><figure class="state"><figcaption>default</figcaption><div class="state-shots"><div class="state-shot"><img loading="lazy" src="images/dashboard-dark/ideal__default__dark__compact.png" alt="Dashboard/Dark default" /><span>dark</span></div></div></figure></div>
+  </div>
+</div>
+<div class="detail" id="d-brand-appicon-light" role="dialog" aria-label="Brand/AppIcon-Light">
+  <a class="detail-scrim" href="#c-brand-appicon-light" aria-label="Close"></a>
+  <div class="detail-panel">
+    <a class="detail-x" href="#c-brand-appicon-light" aria-label="Close">×</a>
+    <h3>Brand/AppIcon-Light</h3>
+    <div class="detail-caption">Adaptive app icon (light).</div>
+    <div class="detail-states"><figure class="state"><figcaption>default</figcaption><div class="state-shots"><div class="state-shot" data-bg="light"><img loading="lazy" src="images/brand-appicon-light/ideal__default__light__compact.png" alt="Brand/AppIcon-Light default" /><span>light</span></div></div></figure></div>
+  </div>
+</div>
+<div class="detail" id="d-brand-appicon-dark" role="dialog" aria-label="Brand/AppIcon-Dark">
+  <a class="detail-scrim" href="#c-brand-appicon-dark" aria-label="Close"></a>
+  <div class="detail-panel">
+    <a class="detail-x" href="#c-brand-appicon-dark" aria-label="Close">×</a>
+    <h3>Brand/AppIcon-Dark</h3>
+    <div class="detail-caption">Adaptive app icon (dark).</div>
+    <div class="detail-states"><figure class="state"><figcaption>default</figcaption><div class="state-shots"><div class="state-shot"><img loading="lazy" src="images/brand-appicon-dark/ideal__default__dark__compact.png" alt="Brand/AppIcon-Dark default" /><span>dark</span></div></div></figure></div>
+  </div>
+</div>
+<script>
+// Crop each component's hero (and its zoom-view default capture) to the component's content bbox,
+// read from its figma-svg's root translate + viewBox. A wear sticker rendered on a 454² device
+// canvas then displays cropped to the component instead of floating in an empty frame. A no-op for
+// close-cropped renders (the bbox already fills the frame) and for components with no figma-svg.
+(function () {
+  function parseBox(svgText) {
+    var t = /translate\(\s*(-?\d+)\s*,\s*(-?\d+)\s*\)/.exec(svgText);
+    var v = /viewBox="0 0 (\d+(?:\.\d+)?) (\d+(?:\.\d+)?)"/.exec(svgText);
+    if (!v) return null;
+    return { tx: t ? +t[1] : 0, ty: t ? +t[2] : 0, vw: +v[1], vh: +v[2] };
+  }
+  function frame(shot, box) {
+    var img = shot.querySelector("img");
+    if (!img) return;
+    function apply() {
+      var rw = img.naturalWidth || img.width, rh = img.naturalHeight || img.height;
+      if (!(rw > 0 && rh > 0)) return;
+      if (box.vw >= rw * 0.9 && box.vh >= rh * 0.9) return; // already close-cropped
+      var cap = 240, scale = Math.min(1, cap / Math.max(box.vw, box.vh));
+      var dw = Math.max(1, Math.round(box.vw * scale)), dh = Math.max(1, Math.round(box.vh * scale));
+      shot.classList.add("shot--framed");
+      shot.style.width = dw + "px";
+      shot.style.height = dh + "px";
+      img.style.width = Math.round(rw * scale) + "px";
+      img.style.height = Math.round(rh * scale) + "px";
+      // (tx,ty) is negative for a centred component, so tx*scale shifts the render to bring the
+      // component's top-left to the clip origin.
+      img.style.left = Math.round(box.tx * scale) + "px";
+      img.style.top = Math.round(box.ty * scale) + "px";
+    }
+    if (img.complete) apply();
+    else img.addEventListener("load", apply);
+  }
+  document.querySelectorAll(".card").forEach(function (card) {
+    var link = card.querySelector('a.wf[href^="figma/"]');
+    if (!link) return;
+    var hero = card.querySelector("a.shot");
+    if (!hero) return;
+    fetch(link.getAttribute("href"))
+      .then(function (r) { return r.ok ? r.text() : null; })
+      .then(function (txt) {
+        if (!txt) return;
+        var box = parseBox(txt);
+        if (box) frame(hero, box);
+      })
+      .catch(function () {});
+  });
+})();
+</script>
+</body>
+</html>

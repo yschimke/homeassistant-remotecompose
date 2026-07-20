@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 945 525" width="945" height="525" role="img" aria-label="Brand/AppIcon-Dark layout wireframe">
+  <title>Brand/AppIcon-Dark — layout wireframe (slots + tokens)</title>
+  <rect width="945" height="525" fill="#ffffff"/>
+  <g>
+    <rect x="0" y="0" width="945" height="525" fill="none" fill-opacity="0" stroke="#5B6470" stroke-width="1" stroke-opacity="0.5"/>
+  </g>
+  <g>
+    <rect x="0" y="0" width="945" height="525" fill="none" fill-opacity="0" stroke="#2E7D6B" stroke-width="1" stroke-opacity="0.5"/>
+  </g>
+  <g>
+    <rect x="0" y="0" width="945" height="421" fill="none" fill-opacity="0" stroke="#8E6BA8" stroke-width="1" stroke-opacity="0.5"/>
+  </g>
+  <g>
+    <rect x="42" y="42" width="861" height="337" fill="none" fill-opacity="0" stroke="#B0813B" stroke-width="1" stroke-opacity="0.5"/>
+  </g>
+  <g>
+    <rect x="42" y="42" width="385" height="63" fill="none" fill-opacity="0" stroke="#3B72A8" stroke-width="1" stroke-opacity="0.5"/>
+  </g>
+  <g>
+    <rect x="42" y="137" width="861" height="242" fill="none" fill-opacity="0" stroke="#3B72A8" stroke-width="1" stroke-opacity="0.5"/>
+  </g>
+  <g>
+    <rect x="42" y="137" width="189" height="242" fill="none" fill-opacity="0" stroke="#A85B6B" stroke-width="1" stroke-opacity="0.5"/>
+  </g>
+  <g>
+    <path d="M136.5,137 H136.5 A94.5,94.5 0 0 1 231,231.5 V231.5 A94.5,94.5 0 0 1 136.5,326 H136.5 A94.5,94.5 0 0 1 42,231.5 V231.5 A94.5,94.5 0 0 1 136.5,137 Z" fill="#FAF6EC" fill-opacity="1" stroke="#4F8A4A" stroke-width="1.5" stroke-opacity="1"/>
+    <text x="45" y="149" font-family="system-ui, sans-serif" font-size="9" fill="#4F8A4A">#FFFAF6EC</text>
+  </g>
+  <g>
+    <rect x="42" y="137" width="189" height="189" fill="none" fill-opacity="0" stroke="#7A7A33" stroke-width="1" stroke-opacity="0.5"/>
+  </g>
+  <g>
+    <rect x="98" y="337" width="77" height="42" fill="none" fill-opacity="0" stroke="#4F8A4A" stroke-width="1" stroke-opacity="0.5"/>
+  </g>
+  <g>
+    <rect x="273" y="137" width="189" height="242" fill="none" fill-opacity="0" stroke="#A85B6B" stroke-width="1" stroke-opacity="0.5"/>
+  </g>
+  <g>
+    <path d="M336,137 H399 A63,63 0 0 1 462,200 V263 A63,63 0 0 1 399,326 H336 A63,63 0 0 1 273,263 V200 A63,63 0 0 1 336,137 Z" fill="#FAF6EC" fill-opacity="1" stroke="#4F8A4A" stroke-width="1.5" stroke-opacity="1"/>
+    <text x="276" y="149" font-family="system-ui, sans-serif" font-size="9" fill="#4F8A4A">#FFFAF6EC</text>
+  </g>
+  <g>
+    <rect x="273" y="137" width="189" height="189" fill="none" fill-opacity="0" stroke="#7A7A33" stroke-width="1" stroke-opacity="0.5"/>
+  </g>
+  <g>
+    <rect x="313" y="337" width="110" height="42" fill="none" fill-opacity="0" stroke="#4F8A4A" stroke-width="1" stroke-opacity="0.5"/>
+  </g>
+  <g>
+    <rect x="504" y="137" width="189" height="242" fill="none" fill-opacity="0" stroke="#A85B6B" stroke-width="1" stroke-opacity="0.5"/>
+  </g>
+  <g>
+    <path d="M525,137 H672 A21,21 0 0 1 693,158 V305 A21,21 0 0 1 672,326 H525 A21,21 0 0 1 504,305 V158 A21,21 0 0 1 525,137 Z" fill="#FAF6EC" fill-opacity="1" stroke="#4F8A4A" stroke-width="1.5" stroke-opacity="1"/>
+    <text x="507" y="149" font-family="system-ui, sans-serif" font-size="9" fill="#4F8A4A">#FFFAF6EC</text>
+  </g>
+  <g>
+    <rect x="504" y="137" width="189" height="189" fill="none" fill-opacity="0" stroke="#7A7A33" stroke-width="1" stroke-opacity="0.5"/>
+  </g>
+  <g>
+    <rect x="542" y="337" width="114" height="42" fill="none" fill-opacity="0" stroke="#4F8A4A" stroke-width="1" stroke-opacity="0.5"/>
+  </g>
+  <g>
+    <rect x="735" y="137" width="168" height="242" fill="none" fill-opacity="0" stroke="#A85B6B" stroke-width="1" stroke-opacity="0.5"/>
+  </g>
+  <g>
+    <path d="M735,137 H903 A0,0 0 0 1 903,137 V326 A0,0 0 0 1 903,326 H735 A0,0 0 0 1 735,326 V137 A0,0 0 0 1 735,137 Z" fill="#FAF6EC" fill-opacity="1" stroke="#4F8A4A" stroke-width="1.5" stroke-opacity="1"/>
+    <text x="738" y="149" font-family="system-ui, sans-serif" font-size="9" fill="#4F8A4A">#FFFAF6EC</text>
+  </g>
+  <g>
+    <rect x="735" y="137" width="168" height="189" fill="none" fill-opacity="0" stroke="#7A7A33" stroke-width="1" stroke-opacity="0.5"/>
+  </g>
+  <g>
+    <rect x="772" y="337" width="94" height="42" fill="none" fill-opacity="0" stroke="#4F8A4A" stroke-width="1" stroke-opacity="0.5"/>
+  </g>
+</svg>

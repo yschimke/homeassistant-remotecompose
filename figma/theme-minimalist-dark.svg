@@ -1,0 +1,110 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="977" height="969" viewBox="0 0 977 969" text-rendering="geometricPrecision" font-family="sans-serif">
+<g transform="translate(16, 16)">
+  <g id="Root">
+    <g id="ReusableComposeNode">
+      <rect x="0" y="0" width="945" height="937" fill="#131315"/>
+      <g id="ReusableComposeNode">
+        <g id="ReusableComposeNode">
+          <g id="ReusableComposeNode">
+            <text x="42" y="98.67" font-size="57.75" font-family="sans-serif" font-weight="400" fill="#C0C7D5">Minimalist</text>
+          </g>
+          <g id="ReusableComposeNode">
+            <text x="42" y="147.86" font-size="31.5" font-family="sans-serif" font-weight="500" letter-spacing="1.31" fill="#C8C6C7">Dark · neutral slate · IBM Plex Sans</text>
+          </g>
+        </g>
+        <g id="ReusableComposeNode">
+          <g id="ReusableComposeNode">
+            <rect x="42" y="190" width="126" height="95" rx="15.75" ry="15.75" fill="#C0C7D5"/>
+            <g id="ReusableComposeNode">
+              <text x="53" y="231.96" font-size="28.87" font-family="sans-serif" font-weight="500" letter-spacing="1.31" fill="#2A313C">P</text>
+            </g>
+          </g>
+          <g id="ReusableComposeNode">
+            <rect x="184" y="190" width="126" height="95" rx="15.75" ry="15.75" fill="#404753"/>
+            <g id="ReusableComposeNode">
+              <text x="195" y="231.96" font-size="28.87" font-family="sans-serif" font-weight="500" letter-spacing="1.31" fill="#DCE3F2">PC</text>
+            </g>
+          </g>
+          <g id="ReusableComposeNode">
+            <rect x="326" y="190" width="126" height="95" rx="15.75" ry="15.75" fill="#C3C6CF"/>
+            <g id="ReusableComposeNode">
+              <text x="337" y="231.96" font-size="28.87" font-family="sans-serif" font-weight="500" letter-spacing="1.31" fill="#2D3138">S</text>
+            </g>
+          </g>
+          <g id="ReusableComposeNode">
+            <rect x="468" y="190" width="126" height="95" rx="15.75" ry="15.75" fill="#BCC7DC"/>
+            <g id="ReusableComposeNode">
+              <text x="479" y="231.96" font-size="28.87" font-family="sans-serif" font-weight="500" letter-spacing="1.31" fill="#273141">T</text>
+            </g>
+          </g>
+          <g id="ReusableComposeNode">
+            <rect x="610" y="190" width="126" height="95" rx="15.75" ry="15.75" fill="#474648"/>
+            <g id="ReusableComposeNode">
+              <text x="621" y="231.96" font-size="28.87" font-family="sans-serif" font-weight="500" letter-spacing="1.31" fill="#C8C6C7">Sv</text>
+            </g>
+          </g>
+          <g id="ReusableComposeNode">
+            <rect x="752" y="190" width="126" height="95" rx="15.75" ry="15.75" fill="#929092"/>
+            <g id="ReusableComposeNode">
+              <text x="763" y="231.96" font-size="28.87" font-family="sans-serif" font-weight="500" letter-spacing="1.31" fill="#E4E2E3">O</text>
+            </g>
+          </g>
+        </g>
+        <g id="ReusableComposeNode">
+          <g id="ReusableComposeNode">
+            <rect x="42" y="317" width="135" height="84" rx="15.75" ry="15.75" fill="#131315"/>
+            <g id="ReusableComposeNode">
+              <text x="53" y="352.96" font-size="28.87" font-family="sans-serif" font-weight="500" letter-spacing="1.31" fill="#E4E2E3">surface</text>
+            </g>
+          </g>
+          <g id="ReusableComposeNode">
+            <rect x="188" y="317" width="135" height="84" rx="15.75" ry="15.75" fill="#0E0E0F"/>
+            <g id="ReusableComposeNode">
+              <text x="199" y="352.96" font-size="28.87" font-family="sans-serif" font-weight="500" letter-spacing="1.31" fill="#E4E2E3">Lo-</text>
+            </g>
+          </g>
+          <g id="ReusableComposeNode">
+            <rect x="334" y="317" width="134" height="84" rx="15.75" ry="15.75" fill="#1B1B1D"/>
+            <g id="ReusableComposeNode">
+              <text x="345" y="352.96" font-size="28.87" font-family="sans-serif" font-weight="500" letter-spacing="1.31" fill="#E4E2E3">Lo</text>
+            </g>
+          </g>
+          <g id="ReusableComposeNode">
+            <rect x="480" y="318" width="132" height="82" rx="14.75" ry="14.75" fill="#1F1F21" stroke="#929092" stroke-width="2.62"/>
+            <g id="ReusableComposeNode">
+              <text x="490" y="352.96" font-size="28.87" font-family="sans-serif" font-weight="500" letter-spacing="1.31" fill="#E4E2E3">Cn</text>
+            </g>
+          </g>
+          <g id="ReusableComposeNode">
+            <rect x="625" y="318" width="132" height="82" rx="14.75" ry="14.75" fill="#2A2A2B" stroke="#929092" stroke-width="2.62"/>
+            <g id="ReusableComposeNode">
+              <text x="635" y="352.96" font-size="28.87" font-family="sans-serif" font-weight="500" letter-spacing="1.31" fill="#E4E2E3">Hi</text>
+            </g>
+          </g>
+          <g id="ReusableComposeNode">
+            <rect x="769" y="317" width="134" height="84" rx="15.75" ry="15.75" fill="#353536"/>
+            <g id="ReusableComposeNode">
+              <text x="780" y="352.96" font-size="28.87" font-family="sans-serif" font-weight="500" letter-spacing="1.31" fill="#E4E2E3">Hi+</text>
+            </g>
+          </g>
+        </g>
+        <g id="ReusableComposeNode">
+          <rect x="42" y="433" width="861" height="462" rx="52.5" ry="52.5" fill="#131315"/>
+          <g id="ReusableComposeNode">
+            <rect x="63" y="454" width="819" height="147" rx="31.5" ry="31.5" fill="#131315"/>
+            <g id="ComposeNode">
+              <image href="theme-minimalist-dark.figma-raster/807.png" x="63" y="454" width="819" height="147"/>
+            </g>
+          </g>
+          <g id="ReusableComposeNode">
+            <rect x="63" y="622" width="819" height="252" rx="31.5" ry="31.5" fill="#131315"/>
+            <g id="ComposeNode">
+              <image href="theme-minimalist-dark.figma-raster/811.png" x="63" y="622" width="819" height="252"/>
+            </g>
+          </g>
+        </g>
+      </g>
+    </g>
+  </g>
+</g>
+</svg>

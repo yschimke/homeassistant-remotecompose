@@ -1,0 +1,4624 @@
+{
+  "schema": "design-parity-catalog/v1",
+  "system": "homeassistant-remotecompose",
+  "title": "Terrazzo · Home Assistant RemoteCompose",
+  "components": [
+    {
+      "componentId": "Theme/Material3-Light",
+      "images": [
+        {
+          "variant": "ideal",
+          "path": "images/theme-material3-light/ideal__default__light__compact.png",
+          "state": "default",
+          "width": 945,
+          "height": 1260,
+          "theme": "light",
+          "size": "compact",
+          "livePreview": "https://preview.coo.ee/homeassistant-remotecompose/p/theme-material3-light__ideal__default__light__compact",
+          "previewId": "ee.schimke.ha.previews.ThemePreviewsKt.Theme_Material3_Light_theme_ Material3 (light)"
+        }
+      ],
+      "greenlines": [],
+      "redlines": [
+        {
+          "bounds": {
+            "x": 42,
+            "y": 190,
+            "width": 126,
+            "height": 95
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 53,
+            "y": 201,
+            "width": 19,
+            "height": 42
+          },
+          "label": "P",
+          "padding": {
+            "start": 4,
+            "top": 4,
+            "end": 4,
+            "bottom": 4
+          }
+        },
+        {
+          "bounds": {
+            "x": 184,
+            "y": 190,
+            "width": 126,
+            "height": 95
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 195,
+            "y": 201,
+            "width": 39,
+            "height": 42
+          },
+          "label": "PC",
+          "padding": {
+            "start": 4,
+            "top": 4,
+            "end": 4,
+            "bottom": 4
+          }
+        },
+        {
+          "bounds": {
+            "x": 326,
+            "y": 190,
+            "width": 126,
+            "height": 95
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 337,
+            "y": 201,
+            "width": 18,
+            "height": 42
+          },
+          "label": "S",
+          "padding": {
+            "start": 4,
+            "top": 4,
+            "end": 4,
+            "bottom": 4
+          }
+        },
+        {
+          "bounds": {
+            "x": 468,
+            "y": 190,
+            "width": 126,
+            "height": 95
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 479,
+            "y": 201,
+            "width": 18,
+            "height": 42
+          },
+          "label": "T",
+          "padding": {
+            "start": 4,
+            "top": 4,
+            "end": 4,
+            "bottom": 4
+          }
+        },
+        {
+          "bounds": {
+            "x": 610,
+            "y": 190,
+            "width": 126,
+            "height": 95
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 621,
+            "y": 201,
+            "width": 34,
+            "height": 42
+          },
+          "label": "Sv",
+          "padding": {
+            "start": 4,
+            "top": 4,
+            "end": 4,
+            "bottom": 4
+          }
+        },
+        {
+          "bounds": {
+            "x": 752,
+            "y": 190,
+            "width": 126,
+            "height": 95
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 763,
+            "y": 201,
+            "width": 20,
+            "height": 42
+          },
+          "label": "O",
+          "padding": {
+            "start": 4,
+            "top": 4,
+            "end": 4,
+            "bottom": 4
+          }
+        },
+        {
+          "bounds": {
+            "x": 42,
+            "y": 317,
+            "width": 135,
+            "height": 84
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 53,
+            "y": 322,
+            "width": 104,
+            "height": 42
+          },
+          "label": "surface",
+          "padding": {
+            "start": 4,
+            "top": 2,
+            "end": 4,
+            "bottom": 2
+          }
+        },
+        {
+          "bounds": {
+            "x": 188,
+            "y": 317,
+            "width": 135,
+            "height": 84
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 199,
+            "y": 322,
+            "width": 44,
+            "height": 42
+          },
+          "label": "Lo-",
+          "padding": {
+            "start": 4,
+            "top": 2,
+            "end": 4,
+            "bottom": 2
+          }
+        },
+        {
+          "bounds": {
+            "x": 334,
+            "y": 317,
+            "width": 134,
+            "height": 84
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 345,
+            "y": 322,
+            "width": 34,
+            "height": 42
+          },
+          "label": "Lo",
+          "padding": {
+            "start": 4,
+            "top": 2,
+            "end": 4,
+            "bottom": 2
+          }
+        },
+        {
+          "bounds": {
+            "x": 479,
+            "y": 317,
+            "width": 134,
+            "height": 84
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 490,
+            "y": 322,
+            "width": 37,
+            "height": 42
+          },
+          "label": "Cn",
+          "padding": {
+            "start": 4,
+            "top": 2,
+            "end": 4,
+            "bottom": 2
+          }
+        },
+        {
+          "bounds": {
+            "x": 624,
+            "y": 317,
+            "width": 134,
+            "height": 84
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 635,
+            "y": 322,
+            "width": 30,
+            "height": 42
+          },
+          "label": "Hi",
+          "padding": {
+            "start": 4,
+            "top": 2,
+            "end": 4,
+            "bottom": 2
+          }
+        },
+        {
+          "bounds": {
+            "x": 769,
+            "y": 317,
+            "width": 134,
+            "height": 84
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 780,
+            "y": 322,
+            "width": 47,
+            "height": 42
+          },
+          "label": "Hi+",
+          "padding": {
+            "start": 4,
+            "top": 2,
+            "end": 4,
+            "bottom": 2
+          }
+        },
+        {
+          "bounds": {
+            "x": 63,
+            "y": 454,
+            "width": 819,
+            "height": 420
+          },
+          "padding": {
+            "start": 8,
+            "top": 8,
+            "end": 8,
+            "bottom": 8
+          },
+          "gap": 8,
+          "cornerRadius": 20
+        },
+        {
+          "bounds": {
+            "x": 63,
+            "y": 454,
+            "width": 819,
+            "height": 147
+          },
+          "cornerRadius": 12
+        },
+        {
+          "bounds": {
+            "x": 63,
+            "y": 622,
+            "width": 819,
+            "height": 252
+          },
+          "cornerRadius": 12
+        }
+      ],
+      "group": "Themes",
+      "caption": "Material 3 defaults — colours, type and the surface-elevation strip (light).",
+      "wireframe": "wireframes/theme-material3-light.svg"
+    },
+    {
+      "componentId": "Theme/Material3-Dark",
+      "images": [
+        {
+          "variant": "ideal",
+          "path": "images/theme-material3-dark/ideal__default__dark__compact.png",
+          "state": "default",
+          "width": 945,
+          "height": 1260,
+          "theme": "dark",
+          "size": "compact",
+          "livePreview": "https://preview.coo.ee/homeassistant-remotecompose/p/theme-material3-dark__ideal__default__dark__compact",
+          "previewId": "ee.schimke.ha.previews.ThemePreviewsKt.Theme_Material3_Dark_theme_ Material3 (dark)"
+        }
+      ],
+      "greenlines": [],
+      "redlines": [
+        {
+          "bounds": {
+            "x": 42,
+            "y": 190,
+            "width": 126,
+            "height": 95
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 53,
+            "y": 201,
+            "width": 19,
+            "height": 42
+          },
+          "label": "P",
+          "padding": {
+            "start": 4,
+            "top": 4,
+            "end": 4,
+            "bottom": 4
+          }
+        },
+        {
+          "bounds": {
+            "x": 184,
+            "y": 190,
+            "width": 126,
+            "height": 95
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 195,
+            "y": 201,
+            "width": 39,
+            "height": 42
+          },
+          "label": "PC",
+          "padding": {
+            "start": 4,
+            "top": 4,
+            "end": 4,
+            "bottom": 4
+          }
+        },
+        {
+          "bounds": {
+            "x": 326,
+            "y": 190,
+            "width": 126,
+            "height": 95
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 337,
+            "y": 201,
+            "width": 18,
+            "height": 42
+          },
+          "label": "S",
+          "padding": {
+            "start": 4,
+            "top": 4,
+            "end": 4,
+            "bottom": 4
+          }
+        },
+        {
+          "bounds": {
+            "x": 468,
+            "y": 190,
+            "width": 126,
+            "height": 95
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 479,
+            "y": 201,
+            "width": 18,
+            "height": 42
+          },
+          "label": "T",
+          "padding": {
+            "start": 4,
+            "top": 4,
+            "end": 4,
+            "bottom": 4
+          }
+        },
+        {
+          "bounds": {
+            "x": 610,
+            "y": 190,
+            "width": 126,
+            "height": 95
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 621,
+            "y": 201,
+            "width": 34,
+            "height": 42
+          },
+          "label": "Sv",
+          "padding": {
+            "start": 4,
+            "top": 4,
+            "end": 4,
+            "bottom": 4
+          }
+        },
+        {
+          "bounds": {
+            "x": 752,
+            "y": 190,
+            "width": 126,
+            "height": 95
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 763,
+            "y": 201,
+            "width": 20,
+            "height": 42
+          },
+          "label": "O",
+          "padding": {
+            "start": 4,
+            "top": 4,
+            "end": 4,
+            "bottom": 4
+          }
+        },
+        {
+          "bounds": {
+            "x": 42,
+            "y": 317,
+            "width": 135,
+            "height": 84
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 53,
+            "y": 322,
+            "width": 104,
+            "height": 42
+          },
+          "label": "surface",
+          "padding": {
+            "start": 4,
+            "top": 2,
+            "end": 4,
+            "bottom": 2
+          }
+        },
+        {
+          "bounds": {
+            "x": 188,
+            "y": 317,
+            "width": 135,
+            "height": 84
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 199,
+            "y": 322,
+            "width": 44,
+            "height": 42
+          },
+          "label": "Lo-",
+          "padding": {
+            "start": 4,
+            "top": 2,
+            "end": 4,
+            "bottom": 2
+          }
+        },
+        {
+          "bounds": {
+            "x": 334,
+            "y": 317,
+            "width": 134,
+            "height": 84
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 345,
+            "y": 322,
+            "width": 34,
+            "height": 42
+          },
+          "label": "Lo",
+          "padding": {
+            "start": 4,
+            "top": 2,
+            "end": 4,
+            "bottom": 2
+          }
+        },
+        {
+          "bounds": {
+            "x": 479,
+            "y": 317,
+            "width": 134,
+            "height": 84
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 490,
+            "y": 322,
+            "width": 37,
+            "height": 42
+          },
+          "label": "Cn",
+          "padding": {
+            "start": 4,
+            "top": 2,
+            "end": 4,
+            "bottom": 2
+          }
+        },
+        {
+          "bounds": {
+            "x": 624,
+            "y": 317,
+            "width": 134,
+            "height": 84
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 635,
+            "y": 322,
+            "width": 30,
+            "height": 42
+          },
+          "label": "Hi",
+          "padding": {
+            "start": 4,
+            "top": 2,
+            "end": 4,
+            "bottom": 2
+          }
+        },
+        {
+          "bounds": {
+            "x": 769,
+            "y": 317,
+            "width": 134,
+            "height": 84
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 780,
+            "y": 322,
+            "width": 47,
+            "height": 42
+          },
+          "label": "Hi+",
+          "padding": {
+            "start": 4,
+            "top": 2,
+            "end": 4,
+            "bottom": 2
+          }
+        },
+        {
+          "bounds": {
+            "x": 63,
+            "y": 454,
+            "width": 819,
+            "height": 420
+          },
+          "padding": {
+            "start": 8,
+            "top": 8,
+            "end": 8,
+            "bottom": 8
+          },
+          "gap": 8,
+          "cornerRadius": 20
+        },
+        {
+          "bounds": {
+            "x": 63,
+            "y": 454,
+            "width": 819,
+            "height": 147
+          },
+          "cornerRadius": 12
+        },
+        {
+          "bounds": {
+            "x": 63,
+            "y": 622,
+            "width": 819,
+            "height": 252
+          },
+          "cornerRadius": 12
+        }
+      ],
+      "group": "Themes",
+      "caption": "Material 3 defaults (dark).",
+      "wireframe": "wireframes/theme-material3-dark.svg"
+    },
+    {
+      "componentId": "Theme/Home-Light",
+      "images": [
+        {
+          "variant": "ideal",
+          "path": "images/theme-home-light/ideal__default__light__compact.png",
+          "state": "default",
+          "width": 945,
+          "height": 1260,
+          "theme": "light",
+          "size": "compact",
+          "livePreview": "https://preview.coo.ee/homeassistant-remotecompose/p/theme-home-light__ideal__default__light__compact",
+          "previewId": "ee.schimke.ha.previews.ThemePreviewsKt.Theme_Home_Light_theme_ Home (light)"
+        }
+      ],
+      "greenlines": [],
+      "redlines": [
+        {
+          "bounds": {
+            "x": 42,
+            "y": 190,
+            "width": 126,
+            "height": 95
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 53,
+            "y": 201,
+            "width": 19,
+            "height": 42
+          },
+          "label": "P",
+          "padding": {
+            "start": 4,
+            "top": 4,
+            "end": 4,
+            "bottom": 4
+          }
+        },
+        {
+          "bounds": {
+            "x": 184,
+            "y": 190,
+            "width": 126,
+            "height": 95
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 195,
+            "y": 201,
+            "width": 39,
+            "height": 42
+          },
+          "label": "PC",
+          "padding": {
+            "start": 4,
+            "top": 4,
+            "end": 4,
+            "bottom": 4
+          }
+        },
+        {
+          "bounds": {
+            "x": 326,
+            "y": 190,
+            "width": 126,
+            "height": 95
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 337,
+            "y": 201,
+            "width": 18,
+            "height": 42
+          },
+          "label": "S",
+          "padding": {
+            "start": 4,
+            "top": 4,
+            "end": 4,
+            "bottom": 4
+          }
+        },
+        {
+          "bounds": {
+            "x": 468,
+            "y": 190,
+            "width": 126,
+            "height": 95
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 479,
+            "y": 201,
+            "width": 18,
+            "height": 42
+          },
+          "label": "T",
+          "padding": {
+            "start": 4,
+            "top": 4,
+            "end": 4,
+            "bottom": 4
+          }
+        },
+        {
+          "bounds": {
+            "x": 610,
+            "y": 190,
+            "width": 126,
+            "height": 95
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 621,
+            "y": 201,
+            "width": 34,
+            "height": 42
+          },
+          "label": "Sv",
+          "padding": {
+            "start": 4,
+            "top": 4,
+            "end": 4,
+            "bottom": 4
+          }
+        },
+        {
+          "bounds": {
+            "x": 752,
+            "y": 190,
+            "width": 126,
+            "height": 95
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 763,
+            "y": 201,
+            "width": 20,
+            "height": 42
+          },
+          "label": "O",
+          "padding": {
+            "start": 4,
+            "top": 4,
+            "end": 4,
+            "bottom": 4
+          }
+        },
+        {
+          "bounds": {
+            "x": 42,
+            "y": 317,
+            "width": 135,
+            "height": 84
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 53,
+            "y": 322,
+            "width": 104,
+            "height": 42
+          },
+          "label": "surface",
+          "padding": {
+            "start": 4,
+            "top": 2,
+            "end": 4,
+            "bottom": 2
+          }
+        },
+        {
+          "bounds": {
+            "x": 188,
+            "y": 317,
+            "width": 135,
+            "height": 84
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 199,
+            "y": 322,
+            "width": 44,
+            "height": 42
+          },
+          "label": "Lo-",
+          "padding": {
+            "start": 4,
+            "top": 2,
+            "end": 4,
+            "bottom": 2
+          }
+        },
+        {
+          "bounds": {
+            "x": 334,
+            "y": 317,
+            "width": 134,
+            "height": 84
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 345,
+            "y": 322,
+            "width": 34,
+            "height": 42
+          },
+          "label": "Lo",
+          "padding": {
+            "start": 4,
+            "top": 2,
+            "end": 4,
+            "bottom": 2
+          }
+        },
+        {
+          "bounds": {
+            "x": 479,
+            "y": 317,
+            "width": 134,
+            "height": 84
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 490,
+            "y": 322,
+            "width": 37,
+            "height": 42
+          },
+          "label": "Cn",
+          "padding": {
+            "start": 4,
+            "top": 2,
+            "end": 4,
+            "bottom": 2
+          }
+        },
+        {
+          "bounds": {
+            "x": 624,
+            "y": 317,
+            "width": 134,
+            "height": 84
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 635,
+            "y": 322,
+            "width": 30,
+            "height": 42
+          },
+          "label": "Hi",
+          "padding": {
+            "start": 4,
+            "top": 2,
+            "end": 4,
+            "bottom": 2
+          }
+        },
+        {
+          "bounds": {
+            "x": 769,
+            "y": 317,
+            "width": 134,
+            "height": 84
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 780,
+            "y": 322,
+            "width": 47,
+            "height": 42
+          },
+          "label": "Hi+",
+          "padding": {
+            "start": 4,
+            "top": 2,
+            "end": 4,
+            "bottom": 2
+          }
+        },
+        {
+          "bounds": {
+            "x": 63,
+            "y": 454,
+            "width": 819,
+            "height": 420
+          },
+          "padding": {
+            "start": 8,
+            "top": 8,
+            "end": 8,
+            "bottom": 8
+          },
+          "gap": 8,
+          "cornerRadius": 20
+        },
+        {
+          "bounds": {
+            "x": 63,
+            "y": 454,
+            "width": 819,
+            "height": 147
+          },
+          "cornerRadius": 12
+        },
+        {
+          "bounds": {
+            "x": 63,
+            "y": 622,
+            "width": 819,
+            "height": 252
+          },
+          "cornerRadius": 12
+        }
+      ],
+      "group": "Themes",
+      "caption": "Home palette — HA blue, Roboto Flex + Inter (light).",
+      "wireframe": "wireframes/theme-home-light.svg"
+    },
+    {
+      "componentId": "Theme/Home-Dark",
+      "images": [
+        {
+          "variant": "ideal",
+          "path": "images/theme-home-dark/ideal__default__dark__compact.png",
+          "state": "default",
+          "width": 945,
+          "height": 1260,
+          "theme": "dark",
+          "size": "compact",
+          "livePreview": "https://preview.coo.ee/homeassistant-remotecompose/p/theme-home-dark__ideal__default__dark__compact",
+          "previewId": "ee.schimke.ha.previews.ThemePreviewsKt.Theme_Home_Dark_theme_ Home (dark)"
+        }
+      ],
+      "greenlines": [],
+      "redlines": [
+        {
+          "bounds": {
+            "x": 42,
+            "y": 190,
+            "width": 126,
+            "height": 95
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 53,
+            "y": 201,
+            "width": 19,
+            "height": 42
+          },
+          "label": "P",
+          "padding": {
+            "start": 4,
+            "top": 4,
+            "end": 4,
+            "bottom": 4
+          }
+        },
+        {
+          "bounds": {
+            "x": 184,
+            "y": 190,
+            "width": 126,
+            "height": 95
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 195,
+            "y": 201,
+            "width": 39,
+            "height": 42
+          },
+          "label": "PC",
+          "padding": {
+            "start": 4,
+            "top": 4,
+            "end": 4,
+            "bottom": 4
+          }
+        },
+        {
+          "bounds": {
+            "x": 326,
+            "y": 190,
+            "width": 126,
+            "height": 95
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 337,
+            "y": 201,
+            "width": 18,
+            "height": 42
+          },
+          "label": "S",
+          "padding": {
+            "start": 4,
+            "top": 4,
+            "end": 4,
+            "bottom": 4
+          }
+        },
+        {
+          "bounds": {
+            "x": 468,
+            "y": 190,
+            "width": 126,
+            "height": 95
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 479,
+            "y": 201,
+            "width": 18,
+            "height": 42
+          },
+          "label": "T",
+          "padding": {
+            "start": 4,
+            "top": 4,
+            "end": 4,
+            "bottom": 4
+          }
+        },
+        {
+          "bounds": {
+            "x": 610,
+            "y": 190,
+            "width": 126,
+            "height": 95
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 621,
+            "y": 201,
+            "width": 34,
+            "height": 42
+          },
+          "label": "Sv",
+          "padding": {
+            "start": 4,
+            "top": 4,
+            "end": 4,
+            "bottom": 4
+          }
+        },
+        {
+          "bounds": {
+            "x": 752,
+            "y": 190,
+            "width": 126,
+            "height": 95
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 763,
+            "y": 201,
+            "width": 20,
+            "height": 42
+          },
+          "label": "O",
+          "padding": {
+            "start": 4,
+            "top": 4,
+            "end": 4,
+            "bottom": 4
+          }
+        },
+        {
+          "bounds": {
+            "x": 42,
+            "y": 317,
+            "width": 135,
+            "height": 84
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 53,
+            "y": 322,
+            "width": 104,
+            "height": 42
+          },
+          "label": "surface",
+          "padding": {
+            "start": 4,
+            "top": 2,
+            "end": 4,
+            "bottom": 2
+          }
+        },
+        {
+          "bounds": {
+            "x": 188,
+            "y": 317,
+            "width": 135,
+            "height": 84
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 199,
+            "y": 322,
+            "width": 44,
+            "height": 42
+          },
+          "label": "Lo-",
+          "padding": {
+            "start": 4,
+            "top": 2,
+            "end": 4,
+            "bottom": 2
+          }
+        },
+        {
+          "bounds": {
+            "x": 334,
+            "y": 317,
+            "width": 134,
+            "height": 84
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 345,
+            "y": 322,
+            "width": 34,
+            "height": 42
+          },
+          "label": "Lo",
+          "padding": {
+            "start": 4,
+            "top": 2,
+            "end": 4,
+            "bottom": 2
+          }
+        },
+        {
+          "bounds": {
+            "x": 479,
+            "y": 317,
+            "width": 134,
+            "height": 84
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 490,
+            "y": 322,
+            "width": 37,
+            "height": 42
+          },
+          "label": "Cn",
+          "padding": {
+            "start": 4,
+            "top": 2,
+            "end": 4,
+            "bottom": 2
+          }
+        },
+        {
+          "bounds": {
+            "x": 624,
+            "y": 317,
+            "width": 134,
+            "height": 84
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 635,
+            "y": 322,
+            "width": 30,
+            "height": 42
+          },
+          "label": "Hi",
+          "padding": {
+            "start": 4,
+            "top": 2,
+            "end": 4,
+            "bottom": 2
+          }
+        },
+        {
+          "bounds": {
+            "x": 769,
+            "y": 317,
+            "width": 134,
+            "height": 84
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 780,
+            "y": 322,
+            "width": 47,
+            "height": 42
+          },
+          "label": "Hi+",
+          "padding": {
+            "start": 4,
+            "top": 2,
+            "end": 4,
+            "bottom": 2
+          }
+        },
+        {
+          "bounds": {
+            "x": 63,
+            "y": 454,
+            "width": 819,
+            "height": 420
+          },
+          "padding": {
+            "start": 8,
+            "top": 8,
+            "end": 8,
+            "bottom": 8
+          },
+          "gap": 8,
+          "cornerRadius": 20
+        },
+        {
+          "bounds": {
+            "x": 63,
+            "y": 454,
+            "width": 819,
+            "height": 147
+          },
+          "cornerRadius": 12
+        },
+        {
+          "bounds": {
+            "x": 63,
+            "y": 622,
+            "width": 819,
+            "height": 252
+          },
+          "cornerRadius": 12
+        }
+      ],
+      "group": "Themes",
+      "caption": "Home palette (dark).",
+      "wireframe": "wireframes/theme-home-dark.svg"
+    },
+    {
+      "componentId": "Theme/Mushroom-Light",
+      "images": [
+        {
+          "variant": "ideal",
+          "path": "images/theme-mushroom-light/ideal__default__light__compact.png",
+          "state": "default",
+          "width": 945,
+          "height": 1260,
+          "theme": "light",
+          "size": "compact",
+          "livePreview": "https://preview.coo.ee/homeassistant-remotecompose/p/theme-mushroom-light__ideal__default__light__compact",
+          "previewId": "ee.schimke.ha.previews.ThemePreviewsKt.Theme_Mushroom_Light_theme_ Mushroom (light)"
+        }
+      ],
+      "greenlines": [],
+      "redlines": [
+        {
+          "bounds": {
+            "x": 42,
+            "y": 190,
+            "width": 126,
+            "height": 95
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 53,
+            "y": 201,
+            "width": 19,
+            "height": 42
+          },
+          "label": "P",
+          "padding": {
+            "start": 4,
+            "top": 4,
+            "end": 4,
+            "bottom": 4
+          }
+        },
+        {
+          "bounds": {
+            "x": 184,
+            "y": 190,
+            "width": 126,
+            "height": 95
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 195,
+            "y": 201,
+            "width": 39,
+            "height": 42
+          },
+          "label": "PC",
+          "padding": {
+            "start": 4,
+            "top": 4,
+            "end": 4,
+            "bottom": 4
+          }
+        },
+        {
+          "bounds": {
+            "x": 326,
+            "y": 190,
+            "width": 126,
+            "height": 95
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 337,
+            "y": 201,
+            "width": 18,
+            "height": 42
+          },
+          "label": "S",
+          "padding": {
+            "start": 4,
+            "top": 4,
+            "end": 4,
+            "bottom": 4
+          }
+        },
+        {
+          "bounds": {
+            "x": 468,
+            "y": 190,
+            "width": 126,
+            "height": 95
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 479,
+            "y": 201,
+            "width": 18,
+            "height": 42
+          },
+          "label": "T",
+          "padding": {
+            "start": 4,
+            "top": 4,
+            "end": 4,
+            "bottom": 4
+          }
+        },
+        {
+          "bounds": {
+            "x": 610,
+            "y": 190,
+            "width": 126,
+            "height": 95
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 621,
+            "y": 201,
+            "width": 34,
+            "height": 42
+          },
+          "label": "Sv",
+          "padding": {
+            "start": 4,
+            "top": 4,
+            "end": 4,
+            "bottom": 4
+          }
+        },
+        {
+          "bounds": {
+            "x": 752,
+            "y": 190,
+            "width": 126,
+            "height": 95
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 763,
+            "y": 201,
+            "width": 20,
+            "height": 42
+          },
+          "label": "O",
+          "padding": {
+            "start": 4,
+            "top": 4,
+            "end": 4,
+            "bottom": 4
+          }
+        },
+        {
+          "bounds": {
+            "x": 42,
+            "y": 317,
+            "width": 135,
+            "height": 84
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 53,
+            "y": 322,
+            "width": 104,
+            "height": 42
+          },
+          "label": "surface",
+          "padding": {
+            "start": 4,
+            "top": 2,
+            "end": 4,
+            "bottom": 2
+          }
+        },
+        {
+          "bounds": {
+            "x": 188,
+            "y": 317,
+            "width": 135,
+            "height": 84
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 199,
+            "y": 322,
+            "width": 44,
+            "height": 42
+          },
+          "label": "Lo-",
+          "padding": {
+            "start": 4,
+            "top": 2,
+            "end": 4,
+            "bottom": 2
+          }
+        },
+        {
+          "bounds": {
+            "x": 334,
+            "y": 317,
+            "width": 134,
+            "height": 84
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 345,
+            "y": 322,
+            "width": 34,
+            "height": 42
+          },
+          "label": "Lo",
+          "padding": {
+            "start": 4,
+            "top": 2,
+            "end": 4,
+            "bottom": 2
+          }
+        },
+        {
+          "bounds": {
+            "x": 479,
+            "y": 317,
+            "width": 134,
+            "height": 84
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 490,
+            "y": 322,
+            "width": 37,
+            "height": 42
+          },
+          "label": "Cn",
+          "padding": {
+            "start": 4,
+            "top": 2,
+            "end": 4,
+            "bottom": 2
+          }
+        },
+        {
+          "bounds": {
+            "x": 624,
+            "y": 317,
+            "width": 134,
+            "height": 84
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 635,
+            "y": 322,
+            "width": 30,
+            "height": 42
+          },
+          "label": "Hi",
+          "padding": {
+            "start": 4,
+            "top": 2,
+            "end": 4,
+            "bottom": 2
+          }
+        },
+        {
+          "bounds": {
+            "x": 769,
+            "y": 317,
+            "width": 134,
+            "height": 84
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 780,
+            "y": 322,
+            "width": 47,
+            "height": 42
+          },
+          "label": "Hi+",
+          "padding": {
+            "start": 4,
+            "top": 2,
+            "end": 4,
+            "bottom": 2
+          }
+        },
+        {
+          "bounds": {
+            "x": 63,
+            "y": 454,
+            "width": 819,
+            "height": 420
+          },
+          "padding": {
+            "start": 8,
+            "top": 8,
+            "end": 8,
+            "bottom": 8
+          },
+          "gap": 8,
+          "cornerRadius": 20
+        },
+        {
+          "bounds": {
+            "x": 63,
+            "y": 454,
+            "width": 819,
+            "height": 147
+          },
+          "cornerRadius": 12
+        },
+        {
+          "bounds": {
+            "x": 63,
+            "y": 622,
+            "width": 819,
+            "height": 252
+          },
+          "cornerRadius": 12
+        }
+      ],
+      "group": "Themes",
+      "caption": "Mushroom palette — warm salmon, Figtree (light).",
+      "wireframe": "wireframes/theme-mushroom-light.svg"
+    },
+    {
+      "componentId": "Theme/Mushroom-Dark",
+      "images": [
+        {
+          "variant": "ideal",
+          "path": "images/theme-mushroom-dark/ideal__default__dark__compact.png",
+          "state": "default",
+          "width": 945,
+          "height": 1260,
+          "theme": "dark",
+          "size": "compact",
+          "livePreview": "https://preview.coo.ee/homeassistant-remotecompose/p/theme-mushroom-dark__ideal__default__dark__compact",
+          "previewId": "ee.schimke.ha.previews.ThemePreviewsKt.Theme_Mushroom_Dark_theme_ Mushroom (dark)"
+        }
+      ],
+      "greenlines": [],
+      "redlines": [
+        {
+          "bounds": {
+            "x": 42,
+            "y": 190,
+            "width": 126,
+            "height": 95
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 53,
+            "y": 201,
+            "width": 19,
+            "height": 42
+          },
+          "label": "P",
+          "padding": {
+            "start": 4,
+            "top": 4,
+            "end": 4,
+            "bottom": 4
+          }
+        },
+        {
+          "bounds": {
+            "x": 184,
+            "y": 190,
+            "width": 126,
+            "height": 95
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 195,
+            "y": 201,
+            "width": 39,
+            "height": 42
+          },
+          "label": "PC",
+          "padding": {
+            "start": 4,
+            "top": 4,
+            "end": 4,
+            "bottom": 4
+          }
+        },
+        {
+          "bounds": {
+            "x": 326,
+            "y": 190,
+            "width": 126,
+            "height": 95
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 337,
+            "y": 201,
+            "width": 18,
+            "height": 42
+          },
+          "label": "S",
+          "padding": {
+            "start": 4,
+            "top": 4,
+            "end": 4,
+            "bottom": 4
+          }
+        },
+        {
+          "bounds": {
+            "x": 468,
+            "y": 190,
+            "width": 126,
+            "height": 95
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 479,
+            "y": 201,
+            "width": 18,
+            "height": 42
+          },
+          "label": "T",
+          "padding": {
+            "start": 4,
+            "top": 4,
+            "end": 4,
+            "bottom": 4
+          }
+        },
+        {
+          "bounds": {
+            "x": 610,
+            "y": 190,
+            "width": 126,
+            "height": 95
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 621,
+            "y": 201,
+            "width": 34,
+            "height": 42
+          },
+          "label": "Sv",
+          "padding": {
+            "start": 4,
+            "top": 4,
+            "end": 4,
+            "bottom": 4
+          }
+        },
+        {
+          "bounds": {
+            "x": 752,
+            "y": 190,
+            "width": 126,
+            "height": 95
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 763,
+            "y": 201,
+            "width": 20,
+            "height": 42
+          },
+          "label": "O",
+          "padding": {
+            "start": 4,
+            "top": 4,
+            "end": 4,
+            "bottom": 4
+          }
+        },
+        {
+          "bounds": {
+            "x": 42,
+            "y": 317,
+            "width": 135,
+            "height": 84
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 53,
+            "y": 322,
+            "width": 104,
+            "height": 42
+          },
+          "label": "surface",
+          "padding": {
+            "start": 4,
+            "top": 2,
+            "end": 4,
+            "bottom": 2
+          }
+        },
+        {
+          "bounds": {
+            "x": 188,
+            "y": 317,
+            "width": 135,
+            "height": 84
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 199,
+            "y": 322,
+            "width": 44,
+            "height": 42
+          },
+          "label": "Lo-",
+          "padding": {
+            "start": 4,
+            "top": 2,
+            "end": 4,
+            "bottom": 2
+          }
+        },
+        {
+          "bounds": {
+            "x": 334,
+            "y": 317,
+            "width": 134,
+            "height": 84
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 345,
+            "y": 322,
+            "width": 34,
+            "height": 42
+          },
+          "label": "Lo",
+          "padding": {
+            "start": 4,
+            "top": 2,
+            "end": 4,
+            "bottom": 2
+          }
+        },
+        {
+          "bounds": {
+            "x": 479,
+            "y": 317,
+            "width": 134,
+            "height": 84
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 490,
+            "y": 322,
+            "width": 37,
+            "height": 42
+          },
+          "label": "Cn",
+          "padding": {
+            "start": 4,
+            "top": 2,
+            "end": 4,
+            "bottom": 2
+          }
+        },
+        {
+          "bounds": {
+            "x": 624,
+            "y": 317,
+            "width": 134,
+            "height": 84
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 635,
+            "y": 322,
+            "width": 30,
+            "height": 42
+          },
+          "label": "Hi",
+          "padding": {
+            "start": 4,
+            "top": 2,
+            "end": 4,
+            "bottom": 2
+          }
+        },
+        {
+          "bounds": {
+            "x": 769,
+            "y": 317,
+            "width": 134,
+            "height": 84
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 780,
+            "y": 322,
+            "width": 47,
+            "height": 42
+          },
+          "label": "Hi+",
+          "padding": {
+            "start": 4,
+            "top": 2,
+            "end": 4,
+            "bottom": 2
+          }
+        },
+        {
+          "bounds": {
+            "x": 63,
+            "y": 454,
+            "width": 819,
+            "height": 420
+          },
+          "padding": {
+            "start": 8,
+            "top": 8,
+            "end": 8,
+            "bottom": 8
+          },
+          "gap": 8,
+          "cornerRadius": 20
+        },
+        {
+          "bounds": {
+            "x": 63,
+            "y": 454,
+            "width": 819,
+            "height": 147
+          },
+          "cornerRadius": 12
+        },
+        {
+          "bounds": {
+            "x": 63,
+            "y": 622,
+            "width": 819,
+            "height": 252
+          },
+          "cornerRadius": 12
+        }
+      ],
+      "group": "Themes",
+      "caption": "Mushroom palette (dark).",
+      "wireframe": "wireframes/theme-mushroom-dark.svg"
+    },
+    {
+      "componentId": "Theme/Minimalist-Light",
+      "images": [
+        {
+          "variant": "ideal",
+          "path": "images/theme-minimalist-light/ideal__default__light__compact.png",
+          "state": "default",
+          "width": 945,
+          "height": 1260,
+          "theme": "light",
+          "size": "compact",
+          "livePreview": "https://preview.coo.ee/homeassistant-remotecompose/p/theme-minimalist-light__ideal__default__light__compact",
+          "previewId": "ee.schimke.ha.previews.ThemePreviewsKt.Theme_Minimalist_Light_theme_ Minimalist (light)"
+        }
+      ],
+      "greenlines": [],
+      "redlines": [
+        {
+          "bounds": {
+            "x": 42,
+            "y": 190,
+            "width": 126,
+            "height": 95
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 53,
+            "y": 201,
+            "width": 19,
+            "height": 42
+          },
+          "label": "P",
+          "padding": {
+            "start": 4,
+            "top": 4,
+            "end": 4,
+            "bottom": 4
+          }
+        },
+        {
+          "bounds": {
+            "x": 184,
+            "y": 190,
+            "width": 126,
+            "height": 95
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 195,
+            "y": 201,
+            "width": 39,
+            "height": 42
+          },
+          "label": "PC",
+          "padding": {
+            "start": 4,
+            "top": 4,
+            "end": 4,
+            "bottom": 4
+          }
+        },
+        {
+          "bounds": {
+            "x": 326,
+            "y": 190,
+            "width": 126,
+            "height": 95
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 337,
+            "y": 201,
+            "width": 18,
+            "height": 42
+          },
+          "label": "S",
+          "padding": {
+            "start": 4,
+            "top": 4,
+            "end": 4,
+            "bottom": 4
+          }
+        },
+        {
+          "bounds": {
+            "x": 468,
+            "y": 190,
+            "width": 126,
+            "height": 95
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 479,
+            "y": 201,
+            "width": 18,
+            "height": 42
+          },
+          "label": "T",
+          "padding": {
+            "start": 4,
+            "top": 4,
+            "end": 4,
+            "bottom": 4
+          }
+        },
+        {
+          "bounds": {
+            "x": 610,
+            "y": 190,
+            "width": 126,
+            "height": 95
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 621,
+            "y": 201,
+            "width": 34,
+            "height": 42
+          },
+          "label": "Sv",
+          "padding": {
+            "start": 4,
+            "top": 4,
+            "end": 4,
+            "bottom": 4
+          }
+        },
+        {
+          "bounds": {
+            "x": 752,
+            "y": 190,
+            "width": 126,
+            "height": 95
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 763,
+            "y": 201,
+            "width": 20,
+            "height": 42
+          },
+          "label": "O",
+          "padding": {
+            "start": 4,
+            "top": 4,
+            "end": 4,
+            "bottom": 4
+          }
+        },
+        {
+          "bounds": {
+            "x": 42,
+            "y": 317,
+            "width": 135,
+            "height": 84
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 53,
+            "y": 322,
+            "width": 104,
+            "height": 42
+          },
+          "label": "surface",
+          "padding": {
+            "start": 4,
+            "top": 2,
+            "end": 4,
+            "bottom": 2
+          }
+        },
+        {
+          "bounds": {
+            "x": 188,
+            "y": 317,
+            "width": 135,
+            "height": 84
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 199,
+            "y": 322,
+            "width": 44,
+            "height": 42
+          },
+          "label": "Lo-",
+          "padding": {
+            "start": 4,
+            "top": 2,
+            "end": 4,
+            "bottom": 2
+          }
+        },
+        {
+          "bounds": {
+            "x": 334,
+            "y": 317,
+            "width": 134,
+            "height": 84
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 345,
+            "y": 322,
+            "width": 34,
+            "height": 42
+          },
+          "label": "Lo",
+          "padding": {
+            "start": 4,
+            "top": 2,
+            "end": 4,
+            "bottom": 2
+          }
+        },
+        {
+          "bounds": {
+            "x": 479,
+            "y": 317,
+            "width": 134,
+            "height": 84
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 490,
+            "y": 322,
+            "width": 37,
+            "height": 42
+          },
+          "label": "Cn",
+          "padding": {
+            "start": 4,
+            "top": 2,
+            "end": 4,
+            "bottom": 2
+          }
+        },
+        {
+          "bounds": {
+            "x": 624,
+            "y": 317,
+            "width": 134,
+            "height": 84
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 635,
+            "y": 322,
+            "width": 30,
+            "height": 42
+          },
+          "label": "Hi",
+          "padding": {
+            "start": 4,
+            "top": 2,
+            "end": 4,
+            "bottom": 2
+          }
+        },
+        {
+          "bounds": {
+            "x": 769,
+            "y": 317,
+            "width": 134,
+            "height": 84
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 780,
+            "y": 322,
+            "width": 47,
+            "height": 42
+          },
+          "label": "Hi+",
+          "padding": {
+            "start": 4,
+            "top": 2,
+            "end": 4,
+            "bottom": 2
+          }
+        },
+        {
+          "bounds": {
+            "x": 63,
+            "y": 454,
+            "width": 819,
+            "height": 420
+          },
+          "padding": {
+            "start": 8,
+            "top": 8,
+            "end": 8,
+            "bottom": 8
+          },
+          "gap": 8,
+          "cornerRadius": 20
+        },
+        {
+          "bounds": {
+            "x": 63,
+            "y": 454,
+            "width": 819,
+            "height": 147
+          },
+          "cornerRadius": 12
+        },
+        {
+          "bounds": {
+            "x": 63,
+            "y": 622,
+            "width": 819,
+            "height": 252
+          },
+          "cornerRadius": 12
+        }
+      ],
+      "group": "Themes",
+      "caption": "Minimalist palette — neutral slate, IBM Plex Sans (light).",
+      "wireframe": "wireframes/theme-minimalist-light.svg"
+    },
+    {
+      "componentId": "Theme/Minimalist-Dark",
+      "images": [
+        {
+          "variant": "ideal",
+          "path": "images/theme-minimalist-dark/ideal__default__dark__compact.png",
+          "state": "default",
+          "width": 945,
+          "height": 1260,
+          "theme": "dark",
+          "size": "compact",
+          "livePreview": "https://preview.coo.ee/homeassistant-remotecompose/p/theme-minimalist-dark__ideal__default__dark__compact",
+          "previewId": "ee.schimke.ha.previews.ThemePreviewsKt.Theme_Minimalist_Dark_theme_ Minimalist (dark)"
+        }
+      ],
+      "greenlines": [],
+      "redlines": [
+        {
+          "bounds": {
+            "x": 42,
+            "y": 190,
+            "width": 126,
+            "height": 95
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 53,
+            "y": 201,
+            "width": 19,
+            "height": 42
+          },
+          "label": "P",
+          "padding": {
+            "start": 4,
+            "top": 4,
+            "end": 4,
+            "bottom": 4
+          }
+        },
+        {
+          "bounds": {
+            "x": 184,
+            "y": 190,
+            "width": 126,
+            "height": 95
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 195,
+            "y": 201,
+            "width": 39,
+            "height": 42
+          },
+          "label": "PC",
+          "padding": {
+            "start": 4,
+            "top": 4,
+            "end": 4,
+            "bottom": 4
+          }
+        },
+        {
+          "bounds": {
+            "x": 326,
+            "y": 190,
+            "width": 126,
+            "height": 95
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 337,
+            "y": 201,
+            "width": 18,
+            "height": 42
+          },
+          "label": "S",
+          "padding": {
+            "start": 4,
+            "top": 4,
+            "end": 4,
+            "bottom": 4
+          }
+        },
+        {
+          "bounds": {
+            "x": 468,
+            "y": 190,
+            "width": 126,
+            "height": 95
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 479,
+            "y": 201,
+            "width": 18,
+            "height": 42
+          },
+          "label": "T",
+          "padding": {
+            "start": 4,
+            "top": 4,
+            "end": 4,
+            "bottom": 4
+          }
+        },
+        {
+          "bounds": {
+            "x": 610,
+            "y": 190,
+            "width": 126,
+            "height": 95
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 621,
+            "y": 201,
+            "width": 34,
+            "height": 42
+          },
+          "label": "Sv",
+          "padding": {
+            "start": 4,
+            "top": 4,
+            "end": 4,
+            "bottom": 4
+          }
+        },
+        {
+          "bounds": {
+            "x": 752,
+            "y": 190,
+            "width": 126,
+            "height": 95
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 763,
+            "y": 201,
+            "width": 20,
+            "height": 42
+          },
+          "label": "O",
+          "padding": {
+            "start": 4,
+            "top": 4,
+            "end": 4,
+            "bottom": 4
+          }
+        },
+        {
+          "bounds": {
+            "x": 42,
+            "y": 317,
+            "width": 135,
+            "height": 84
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 53,
+            "y": 322,
+            "width": 104,
+            "height": 42
+          },
+          "label": "surface",
+          "padding": {
+            "start": 4,
+            "top": 2,
+            "end": 4,
+            "bottom": 2
+          }
+        },
+        {
+          "bounds": {
+            "x": 188,
+            "y": 317,
+            "width": 135,
+            "height": 84
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 199,
+            "y": 322,
+            "width": 44,
+            "height": 42
+          },
+          "label": "Lo-",
+          "padding": {
+            "start": 4,
+            "top": 2,
+            "end": 4,
+            "bottom": 2
+          }
+        },
+        {
+          "bounds": {
+            "x": 334,
+            "y": 317,
+            "width": 134,
+            "height": 84
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 345,
+            "y": 322,
+            "width": 34,
+            "height": 42
+          },
+          "label": "Lo",
+          "padding": {
+            "start": 4,
+            "top": 2,
+            "end": 4,
+            "bottom": 2
+          }
+        },
+        {
+          "bounds": {
+            "x": 479,
+            "y": 317,
+            "width": 134,
+            "height": 84
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 490,
+            "y": 322,
+            "width": 37,
+            "height": 42
+          },
+          "label": "Cn",
+          "padding": {
+            "start": 4,
+            "top": 2,
+            "end": 4,
+            "bottom": 2
+          }
+        },
+        {
+          "bounds": {
+            "x": 624,
+            "y": 317,
+            "width": 134,
+            "height": 84
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 635,
+            "y": 322,
+            "width": 30,
+            "height": 42
+          },
+          "label": "Hi",
+          "padding": {
+            "start": 4,
+            "top": 2,
+            "end": 4,
+            "bottom": 2
+          }
+        },
+        {
+          "bounds": {
+            "x": 769,
+            "y": 317,
+            "width": 134,
+            "height": 84
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 780,
+            "y": 322,
+            "width": 47,
+            "height": 42
+          },
+          "label": "Hi+",
+          "padding": {
+            "start": 4,
+            "top": 2,
+            "end": 4,
+            "bottom": 2
+          }
+        },
+        {
+          "bounds": {
+            "x": 63,
+            "y": 454,
+            "width": 819,
+            "height": 420
+          },
+          "padding": {
+            "start": 8,
+            "top": 8,
+            "end": 8,
+            "bottom": 8
+          },
+          "gap": 8,
+          "cornerRadius": 20
+        },
+        {
+          "bounds": {
+            "x": 63,
+            "y": 454,
+            "width": 819,
+            "height": 147
+          },
+          "cornerRadius": 12
+        },
+        {
+          "bounds": {
+            "x": 63,
+            "y": 622,
+            "width": 819,
+            "height": 252
+          },
+          "cornerRadius": 12
+        }
+      ],
+      "group": "Themes",
+      "caption": "Minimalist palette (dark).",
+      "wireframe": "wireframes/theme-minimalist-dark.svg"
+    },
+    {
+      "componentId": "Theme/Kiosk-Light",
+      "images": [
+        {
+          "variant": "ideal",
+          "path": "images/theme-kiosk-light/ideal__default__light__compact.png",
+          "state": "default",
+          "width": 945,
+          "height": 1260,
+          "theme": "light",
+          "size": "compact",
+          "livePreview": "https://preview.coo.ee/homeassistant-remotecompose/p/theme-kiosk-light__ideal__default__light__compact",
+          "previewId": "ee.schimke.ha.previews.ThemePreviewsKt.Theme_Kiosk_Light_theme_ Kiosk (light)"
+        }
+      ],
+      "greenlines": [],
+      "redlines": [
+        {
+          "bounds": {
+            "x": 42,
+            "y": 190,
+            "width": 126,
+            "height": 95
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 53,
+            "y": 201,
+            "width": 19,
+            "height": 42
+          },
+          "label": "P",
+          "padding": {
+            "start": 4,
+            "top": 4,
+            "end": 4,
+            "bottom": 4
+          }
+        },
+        {
+          "bounds": {
+            "x": 184,
+            "y": 190,
+            "width": 126,
+            "height": 95
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 195,
+            "y": 201,
+            "width": 39,
+            "height": 42
+          },
+          "label": "PC",
+          "padding": {
+            "start": 4,
+            "top": 4,
+            "end": 4,
+            "bottom": 4
+          }
+        },
+        {
+          "bounds": {
+            "x": 326,
+            "y": 190,
+            "width": 126,
+            "height": 95
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 337,
+            "y": 201,
+            "width": 18,
+            "height": 42
+          },
+          "label": "S",
+          "padding": {
+            "start": 4,
+            "top": 4,
+            "end": 4,
+            "bottom": 4
+          }
+        },
+        {
+          "bounds": {
+            "x": 468,
+            "y": 190,
+            "width": 126,
+            "height": 95
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 479,
+            "y": 201,
+            "width": 18,
+            "height": 42
+          },
+          "label": "T",
+          "padding": {
+            "start": 4,
+            "top": 4,
+            "end": 4,
+            "bottom": 4
+          }
+        },
+        {
+          "bounds": {
+            "x": 610,
+            "y": 190,
+            "width": 126,
+            "height": 95
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 621,
+            "y": 201,
+            "width": 34,
+            "height": 42
+          },
+          "label": "Sv",
+          "padding": {
+            "start": 4,
+            "top": 4,
+            "end": 4,
+            "bottom": 4
+          }
+        },
+        {
+          "bounds": {
+            "x": 752,
+            "y": 190,
+            "width": 126,
+            "height": 95
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 763,
+            "y": 201,
+            "width": 20,
+            "height": 42
+          },
+          "label": "O",
+          "padding": {
+            "start": 4,
+            "top": 4,
+            "end": 4,
+            "bottom": 4
+          }
+        },
+        {
+          "bounds": {
+            "x": 42,
+            "y": 317,
+            "width": 135,
+            "height": 84
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 53,
+            "y": 322,
+            "width": 104,
+            "height": 42
+          },
+          "label": "surface",
+          "padding": {
+            "start": 4,
+            "top": 2,
+            "end": 4,
+            "bottom": 2
+          }
+        },
+        {
+          "bounds": {
+            "x": 188,
+            "y": 317,
+            "width": 135,
+            "height": 84
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 199,
+            "y": 322,
+            "width": 44,
+            "height": 42
+          },
+          "label": "Lo-",
+          "padding": {
+            "start": 4,
+            "top": 2,
+            "end": 4,
+            "bottom": 2
+          }
+        },
+        {
+          "bounds": {
+            "x": 334,
+            "y": 317,
+            "width": 134,
+            "height": 84
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 345,
+            "y": 322,
+            "width": 34,
+            "height": 42
+          },
+          "label": "Lo",
+          "padding": {
+            "start": 4,
+            "top": 2,
+            "end": 4,
+            "bottom": 2
+          }
+        },
+        {
+          "bounds": {
+            "x": 479,
+            "y": 317,
+            "width": 134,
+            "height": 84
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 490,
+            "y": 322,
+            "width": 37,
+            "height": 42
+          },
+          "label": "Cn",
+          "padding": {
+            "start": 4,
+            "top": 2,
+            "end": 4,
+            "bottom": 2
+          }
+        },
+        {
+          "bounds": {
+            "x": 624,
+            "y": 317,
+            "width": 134,
+            "height": 84
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 635,
+            "y": 322,
+            "width": 30,
+            "height": 42
+          },
+          "label": "Hi",
+          "padding": {
+            "start": 4,
+            "top": 2,
+            "end": 4,
+            "bottom": 2
+          }
+        },
+        {
+          "bounds": {
+            "x": 769,
+            "y": 317,
+            "width": 134,
+            "height": 84
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 780,
+            "y": 322,
+            "width": 47,
+            "height": 42
+          },
+          "label": "Hi+",
+          "padding": {
+            "start": 4,
+            "top": 2,
+            "end": 4,
+            "bottom": 2
+          }
+        },
+        {
+          "bounds": {
+            "x": 63,
+            "y": 454,
+            "width": 819,
+            "height": 420
+          },
+          "padding": {
+            "start": 8,
+            "top": 8,
+            "end": 8,
+            "bottom": 8
+          },
+          "gap": 8,
+          "cornerRadius": 20
+        },
+        {
+          "bounds": {
+            "x": 63,
+            "y": 454,
+            "width": 819,
+            "height": 147
+          },
+          "cornerRadius": 12
+        },
+        {
+          "bounds": {
+            "x": 63,
+            "y": 622,
+            "width": 819,
+            "height": 252
+          },
+          "cornerRadius": 12
+        }
+      ],
+      "group": "Themes",
+      "caption": "Kiosk palette — high-contrast teal, Atkinson Hyperlegible (light).",
+      "wireframe": "wireframes/theme-kiosk-light.svg"
+    },
+    {
+      "componentId": "Theme/Kiosk-Dark",
+      "images": [
+        {
+          "variant": "ideal",
+          "path": "images/theme-kiosk-dark/ideal__default__dark__compact.png",
+          "state": "default",
+          "width": 945,
+          "height": 1260,
+          "theme": "dark",
+          "size": "compact",
+          "livePreview": "https://preview.coo.ee/homeassistant-remotecompose/p/theme-kiosk-dark__ideal__default__dark__compact",
+          "previewId": "ee.schimke.ha.previews.ThemePreviewsKt.Theme_Kiosk_Dark_theme_ Kiosk (dark)"
+        }
+      ],
+      "greenlines": [],
+      "redlines": [
+        {
+          "bounds": {
+            "x": 42,
+            "y": 190,
+            "width": 126,
+            "height": 95
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 53,
+            "y": 201,
+            "width": 19,
+            "height": 42
+          },
+          "label": "P",
+          "padding": {
+            "start": 4,
+            "top": 4,
+            "end": 4,
+            "bottom": 4
+          }
+        },
+        {
+          "bounds": {
+            "x": 184,
+            "y": 190,
+            "width": 126,
+            "height": 95
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 195,
+            "y": 201,
+            "width": 39,
+            "height": 42
+          },
+          "label": "PC",
+          "padding": {
+            "start": 4,
+            "top": 4,
+            "end": 4,
+            "bottom": 4
+          }
+        },
+        {
+          "bounds": {
+            "x": 326,
+            "y": 190,
+            "width": 126,
+            "height": 95
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 337,
+            "y": 201,
+            "width": 18,
+            "height": 42
+          },
+          "label": "S",
+          "padding": {
+            "start": 4,
+            "top": 4,
+            "end": 4,
+            "bottom": 4
+          }
+        },
+        {
+          "bounds": {
+            "x": 468,
+            "y": 190,
+            "width": 126,
+            "height": 95
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 479,
+            "y": 201,
+            "width": 18,
+            "height": 42
+          },
+          "label": "T",
+          "padding": {
+            "start": 4,
+            "top": 4,
+            "end": 4,
+            "bottom": 4
+          }
+        },
+        {
+          "bounds": {
+            "x": 610,
+            "y": 190,
+            "width": 126,
+            "height": 95
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 621,
+            "y": 201,
+            "width": 34,
+            "height": 42
+          },
+          "label": "Sv",
+          "padding": {
+            "start": 4,
+            "top": 4,
+            "end": 4,
+            "bottom": 4
+          }
+        },
+        {
+          "bounds": {
+            "x": 752,
+            "y": 190,
+            "width": 126,
+            "height": 95
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 763,
+            "y": 201,
+            "width": 20,
+            "height": 42
+          },
+          "label": "O",
+          "padding": {
+            "start": 4,
+            "top": 4,
+            "end": 4,
+            "bottom": 4
+          }
+        },
+        {
+          "bounds": {
+            "x": 42,
+            "y": 317,
+            "width": 135,
+            "height": 84
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 53,
+            "y": 322,
+            "width": 104,
+            "height": 42
+          },
+          "label": "surface",
+          "padding": {
+            "start": 4,
+            "top": 2,
+            "end": 4,
+            "bottom": 2
+          }
+        },
+        {
+          "bounds": {
+            "x": 188,
+            "y": 317,
+            "width": 135,
+            "height": 84
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 199,
+            "y": 322,
+            "width": 44,
+            "height": 42
+          },
+          "label": "Lo-",
+          "padding": {
+            "start": 4,
+            "top": 2,
+            "end": 4,
+            "bottom": 2
+          }
+        },
+        {
+          "bounds": {
+            "x": 334,
+            "y": 317,
+            "width": 134,
+            "height": 84
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 345,
+            "y": 322,
+            "width": 34,
+            "height": 42
+          },
+          "label": "Lo",
+          "padding": {
+            "start": 4,
+            "top": 2,
+            "end": 4,
+            "bottom": 2
+          }
+        },
+        {
+          "bounds": {
+            "x": 479,
+            "y": 317,
+            "width": 134,
+            "height": 84
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 490,
+            "y": 322,
+            "width": 37,
+            "height": 42
+          },
+          "label": "Cn",
+          "padding": {
+            "start": 4,
+            "top": 2,
+            "end": 4,
+            "bottom": 2
+          }
+        },
+        {
+          "bounds": {
+            "x": 624,
+            "y": 317,
+            "width": 134,
+            "height": 84
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 635,
+            "y": 322,
+            "width": 30,
+            "height": 42
+          },
+          "label": "Hi",
+          "padding": {
+            "start": 4,
+            "top": 2,
+            "end": 4,
+            "bottom": 2
+          }
+        },
+        {
+          "bounds": {
+            "x": 769,
+            "y": 317,
+            "width": 134,
+            "height": 84
+          },
+          "cornerRadius": 6
+        },
+        {
+          "bounds": {
+            "x": 780,
+            "y": 322,
+            "width": 47,
+            "height": 42
+          },
+          "label": "Hi+",
+          "padding": {
+            "start": 4,
+            "top": 2,
+            "end": 4,
+            "bottom": 2
+          }
+        },
+        {
+          "bounds": {
+            "x": 63,
+            "y": 454,
+            "width": 819,
+            "height": 420
+          },
+          "padding": {
+            "start": 8,
+            "top": 8,
+            "end": 8,
+            "bottom": 8
+          },
+          "gap": 8,
+          "cornerRadius": 20
+        },
+        {
+          "bounds": {
+            "x": 63,
+            "y": 454,
+            "width": 819,
+            "height": 147
+          },
+          "cornerRadius": 12
+        },
+        {
+          "bounds": {
+            "x": 63,
+            "y": 622,
+            "width": 819,
+            "height": 252
+          },
+          "cornerRadius": 12
+        }
+      ],
+      "group": "Themes",
+      "caption": "Kiosk palette (dark).",
+      "wireframe": "wireframes/theme-kiosk-dark.svg"
+    },
+    {
+      "componentId": "Card/Button-Light",
+      "images": [
+        {
+          "variant": "ideal",
+          "path": "images/card-button-light/ideal__default__light__compact.png",
+          "state": "default",
+          "width": 490,
+          "height": 238,
+          "theme": "light",
+          "size": "compact",
+          "livePreview": "https://preview.coo.ee/homeassistant-remotecompose/p/card-button-light__ideal__default__light__compact",
+          "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Button_On_Light_button on (light)"
+        }
+      ],
+      "greenlines": [],
+      "redlines": [],
+      "group": "Cards",
+      "caption": "Button card — a light entity, on (light).",
+      "wireframe": "wireframes/card-button-light.svg"
+    },
+    {
+      "componentId": "Card/Button-Dark",
+      "images": [
+        {
+          "variant": "ideal",
+          "path": "images/card-button-dark/ideal__default__dark__compact.png",
+          "state": "default",
+          "width": 490,
+          "height": 238,
+          "theme": "dark",
+          "size": "compact",
+          "livePreview": "https://preview.coo.ee/homeassistant-remotecompose/p/card-button-dark__ideal__default__dark__compact",
+          "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Button_On_Dark_button on (dark)"
+        }
+      ],
+      "greenlines": [],
+      "redlines": [],
+      "group": "Cards",
+      "caption": "Button card — a light entity, on (dark).",
+      "wireframe": "wireframes/card-button-dark.svg"
+    },
+    {
+      "componentId": "Card/Entity-Light",
+      "images": [
+        {
+          "variant": "ideal",
+          "path": "images/card-entity-light/ideal__default__light__compact.png",
+          "state": "default",
+          "width": 490,
+          "height": 238,
+          "theme": "light",
+          "size": "compact",
+          "livePreview": "https://preview.coo.ee/homeassistant-remotecompose/p/card-entity-light__ideal__default__light__compact",
+          "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Entity_Light_entity (light)"
+        }
+      ],
+      "greenlines": [],
+      "redlines": [],
+      "group": "Cards",
+      "caption": "Entity card — a single entity row (light).",
+      "wireframe": "wireframes/card-entity-light.svg"
+    },
+    {
+      "componentId": "Card/Entity-Dark",
+      "images": [
+        {
+          "variant": "ideal",
+          "path": "images/card-entity-dark/ideal__default__dark__compact.png",
+          "state": "default",
+          "width": 490,
+          "height": 238,
+          "theme": "dark",
+          "size": "compact",
+          "livePreview": "https://preview.coo.ee/homeassistant-remotecompose/p/card-entity-dark__ideal__default__dark__compact",
+          "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Entity_Dark_entity (dark)"
+        }
+      ],
+      "greenlines": [],
+      "redlines": [],
+      "group": "Cards",
+      "caption": "Entity card (dark).",
+      "wireframe": "wireframes/card-entity-dark.svg"
+    },
+    {
+      "componentId": "Card/Entities-Light",
+      "images": [
+        {
+          "variant": "ideal",
+          "path": "images/card-entities-light/ideal__default__light__compact.png",
+          "state": "default",
+          "width": 1000,
+          "height": 443,
+          "theme": "light",
+          "size": "compact",
+          "livePreview": "https://preview.coo.ee/homeassistant-remotecompose/p/card-entities-light__ideal__default__light__compact",
+          "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Entities_Light_entities (light)"
+        }
+      ],
+      "greenlines": [],
+      "redlines": [],
+      "group": "Cards",
+      "caption": "Entities card — a multi-entity list (light).",
+      "wireframe": "wireframes/card-entities-light.svg"
+    },
+    {
+      "componentId": "Card/Entities-Dark",
+      "images": [
+        {
+          "variant": "ideal",
+          "path": "images/card-entities-dark/ideal__default__dark__compact.png",
+          "state": "default",
+          "width": 1000,
+          "height": 443,
+          "theme": "dark",
+          "size": "compact",
+          "livePreview": "https://preview.coo.ee/homeassistant-remotecompose/p/card-entities-dark__ideal__default__dark__compact",
+          "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Entities_Dark_entities (dark)"
+        }
+      ],
+      "greenlines": [],
+      "redlines": [],
+      "group": "Cards",
+      "caption": "Entities card (dark).",
+      "wireframe": "wireframes/card-entities-dark.svg"
+    },
+    {
+      "componentId": "Card/Glance-Light",
+      "images": [
+        {
+          "variant": "ideal",
+          "path": "images/card-glance-light/ideal__default__light__compact.png",
+          "state": "default",
+          "width": 1000,
+          "height": 391,
+          "theme": "light",
+          "size": "compact",
+          "livePreview": "https://preview.coo.ee/homeassistant-remotecompose/p/card-glance-light__ideal__default__light__compact",
+          "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Glance_Light_glance (light)"
+        }
+      ],
+      "greenlines": [],
+      "redlines": [],
+      "group": "Cards",
+      "caption": "Glance card — an icon grid (light).",
+      "wireframe": "wireframes/card-glance-light.svg"
+    },
+    {
+      "componentId": "Card/Glance-Dark",
+      "images": [
+        {
+          "variant": "ideal",
+          "path": "images/card-glance-dark/ideal__default__dark__compact.png",
+          "state": "default",
+          "width": 1000,
+          "height": 391,
+          "theme": "dark",
+          "size": "compact",
+          "livePreview": "https://preview.coo.ee/homeassistant-remotecompose/p/card-glance-dark__ideal__default__dark__compact",
+          "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Glance_Dark_glance (dark)"
+        }
+      ],
+      "greenlines": [],
+      "redlines": [],
+      "group": "Cards",
+      "caption": "Glance card (dark).",
+      "wireframe": "wireframes/card-glance-dark.svg"
+    },
+    {
+      "componentId": "Card/Tile-Light",
+      "images": [
+        {
+          "variant": "ideal",
+          "path": "images/card-tile-light/ideal__default__compact.png",
+          "state": "default",
+          "width": 490,
+          "height": 112,
+          "size": "compact",
+          "livePreview": "https://preview.coo.ee/homeassistant-remotecompose/p/card-tile-light__ideal__default__compact",
+          "previewId": "ee.schimke.ha.previews.TileCardPreviewsKt.Tile_LightOn_tile — light on"
+        }
+      ],
+      "greenlines": [],
+      "redlines": [],
+      "group": "Cards",
+      "caption": "Tile card — the primary HA card, a light entity on (light).",
+      "wireframe": "wireframes/card-tile-light.svg"
+    },
+    {
+      "componentId": "Card/Tile-Dark",
+      "images": [
+        {
+          "variant": "ideal",
+          "path": "images/card-tile-dark/ideal__default__dark__compact.png",
+          "state": "default",
+          "width": 490,
+          "height": 112,
+          "theme": "dark",
+          "size": "compact",
+          "livePreview": "https://preview.coo.ee/homeassistant-remotecompose/p/card-tile-dark__ideal__default__dark__compact",
+          "previewId": "ee.schimke.ha.previews.TileCardPreviewsKt.Tile_LightOn_Dark_tile — light on (dark)"
+        }
+      ],
+      "greenlines": [],
+      "redlines": [],
+      "group": "Cards",
+      "caption": "Tile card — a light entity on (dark).",
+      "wireframe": "wireframes/card-tile-dark.svg"
+    },
+    {
+      "componentId": "Card/Light-Light",
+      "images": [
+        {
+          "variant": "ideal",
+          "path": "images/card-light-light/ideal__default__light__compact.png",
+          "state": "default",
+          "width": 630,
+          "height": 656,
+          "theme": "light",
+          "size": "compact",
+          "livePreview": "https://preview.coo.ee/homeassistant-remotecompose/p/card-light-light__ideal__default__light__compact",
+          "previewId": "ee.schimke.ha.previews.CardPreviewsKt.LightCard_Light_light card (light)"
+        }
+      ],
+      "greenlines": [],
+      "redlines": [],
+      "group": "Cards",
+      "caption": "Light card — brightness + colour controls (light).",
+      "wireframe": "wireframes/card-light-light.svg"
+    },
+    {
+      "componentId": "Card/Light-Dark",
+      "images": [
+        {
+          "variant": "ideal",
+          "path": "images/card-light-dark/ideal__default__dark__compact.png",
+          "state": "default",
+          "width": 630,
+          "height": 656,
+          "theme": "dark",
+          "size": "compact",
+          "livePreview": "https://preview.coo.ee/homeassistant-remotecompose/p/card-light-dark__ideal__default__dark__compact",
+          "previewId": "ee.schimke.ha.previews.CardPreviewsKt.LightCard_Dark_light card (dark)"
+        }
+      ],
+      "greenlines": [],
+      "redlines": [],
+      "group": "Cards",
+      "caption": "Light card (dark).",
+      "wireframe": "wireframes/card-light-dark.svg"
+    },
+    {
+      "componentId": "Card/Thermostat-Light",
+      "images": [
+        {
+          "variant": "ideal",
+          "path": "images/card-thermostat-light/ideal__default__light__compact.png",
+          "state": "default",
+          "width": 630,
+          "height": 761,
+          "theme": "light",
+          "size": "compact",
+          "livePreview": "https://preview.coo.ee/homeassistant-remotecompose/p/card-thermostat-light__ideal__default__light__compact",
+          "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Thermostat_Light_thermostat (light)"
+        }
+      ],
+      "greenlines": [],
+      "redlines": [],
+      "group": "Cards",
+      "caption": "Thermostat card — climate setpoint dial (light).",
+      "wireframe": "wireframes/card-thermostat-light.svg"
+    },
+    {
+      "componentId": "Card/Thermostat-Dark",
+      "images": [
+        {
+          "variant": "ideal",
+          "path": "images/card-thermostat-dark/ideal__default__dark__compact.png",
+          "state": "default",
+          "width": 630,
+          "height": 761,
+          "theme": "dark",
+          "size": "compact",
+          "livePreview": "https://preview.coo.ee/homeassistant-remotecompose/p/card-thermostat-dark__ideal__default__dark__compact",
+          "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Thermostat_Dark_thermostat (dark)"
+        }
+      ],
+      "greenlines": [],
+      "redlines": [],
+      "group": "Cards",
+      "caption": "Thermostat card (dark).",
+      "wireframe": "wireframes/card-thermostat-dark.svg"
+    },
+    {
+      "componentId": "Card/Gauge-Light",
+      "images": [
+        {
+          "variant": "ideal",
+          "path": "images/card-gauge-light/ideal__default__light__compact.png",
+          "state": "default",
+          "width": 490,
+          "height": 393,
+          "theme": "light",
+          "size": "compact",
+          "livePreview": "https://preview.coo.ee/homeassistant-remotecompose/p/card-gauge-light__ideal__default__light__compact",
+          "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Gauge_Light_gauge (light)"
+        }
+      ],
+      "greenlines": [],
+      "redlines": [],
+      "group": "Cards",
+      "caption": "Gauge card — a bounded numeric reading (light).",
+      "wireframe": "wireframes/card-gauge-light.svg"
+    },
+    {
+      "componentId": "Card/Gauge-Dark",
+      "images": [
+        {
+          "variant": "ideal",
+          "path": "images/card-gauge-dark/ideal__default__dark__compact.png",
+          "state": "default",
+          "width": 490,
+          "height": 393,
+          "theme": "dark",
+          "size": "compact",
+          "livePreview": "https://preview.coo.ee/homeassistant-remotecompose/p/card-gauge-dark__ideal__default__dark__compact",
+          "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Gauge_Dark_gauge (dark)"
+        }
+      ],
+      "greenlines": [],
+      "redlines": [],
+      "group": "Cards",
+      "caption": "Gauge card (dark).",
+      "wireframe": "wireframes/card-gauge-dark.svg"
+    },
+    {
+      "componentId": "Card/Weather-Light",
+      "images": [
+        {
+          "variant": "ideal",
+          "path": "images/card-weather-light/ideal__default__light__compact.png",
+          "state": "default",
+          "width": 1000,
+          "height": 588,
+          "theme": "light",
+          "size": "compact",
+          "livePreview": "https://preview.coo.ee/homeassistant-remotecompose/p/card-weather-light__ideal__default__light__compact",
+          "previewId": "ee.schimke.ha.previews.CardPreviewsKt.WeatherForecast_Light_weather-forecast (light)"
+        }
+      ],
+      "greenlines": [],
+      "redlines": [],
+      "group": "Cards",
+      "caption": "Weather forecast card (light).",
+      "wireframe": "wireframes/card-weather-light.svg"
+    },
+    {
+      "componentId": "Card/Weather-Dark",
+      "images": [
+        {
+          "variant": "ideal",
+          "path": "images/card-weather-dark/ideal__default__dark__compact.png",
+          "state": "default",
+          "width": 1000,
+          "height": 588,
+          "theme": "dark",
+          "size": "compact",
+          "livePreview": "https://preview.coo.ee/homeassistant-remotecompose/p/card-weather-dark__ideal__default__dark__compact",
+          "previewId": "ee.schimke.ha.previews.CardPreviewsKt.WeatherForecast_Dark_weather-forecast (dark)"
+        }
+      ],
+      "greenlines": [],
+      "redlines": [],
+      "group": "Cards",
+      "caption": "Weather forecast card (dark).",
+      "wireframe": "wireframes/card-weather-dark.svg"
+    },
+    {
+      "componentId": "Card/Media-Light",
+      "images": [
+        {
+          "variant": "ideal",
+          "path": "images/card-media-light/ideal__default__light__compact.png",
+          "state": "default",
+          "width": 1000,
+          "height": 441,
+          "theme": "light",
+          "size": "compact",
+          "livePreview": "https://preview.coo.ee/homeassistant-remotecompose/p/card-media-light__ideal__default__light__compact",
+          "previewId": "ee.schimke.ha.previews.CardPreviewsKt.MediaControl_Light_media-control (light)"
+        }
+      ],
+      "greenlines": [],
+      "redlines": [],
+      "group": "Cards",
+      "caption": "Media control card — now-playing + transport (light).",
+      "wireframe": "wireframes/card-media-light.svg"
+    },
+    {
+      "componentId": "Card/Media-Dark",
+      "images": [
+        {
+          "variant": "ideal",
+          "path": "images/card-media-dark/ideal__default__dark__compact.png",
+          "state": "default",
+          "width": 1000,
+          "height": 441,
+          "theme": "dark",
+          "size": "compact",
+          "livePreview": "https://preview.coo.ee/homeassistant-remotecompose/p/card-media-dark__ideal__default__dark__compact",
+          "previewId": "ee.schimke.ha.previews.CardPreviewsKt.MediaControl_Dark_media-control (dark)"
+        }
+      ],
+      "greenlines": [],
+      "redlines": [],
+      "group": "Cards",
+      "caption": "Media control card (dark).",
+      "wireframe": "wireframes/card-media-dark.svg"
+    },
+    {
+      "componentId": "Card/Alarm-Light",
+      "images": [
+        {
+          "variant": "ideal",
+          "path": "images/card-alarm-light/ideal__default__light__compact.png",
+          "state": "default",
+          "width": 840,
+          "height": 997,
+          "theme": "light",
+          "size": "compact",
+          "livePreview": "https://preview.coo.ee/homeassistant-remotecompose/p/card-alarm-light__ideal__default__light__compact",
+          "previewId": "ee.schimke.ha.previews.CardPreviewsKt.AlarmPanel_Light_alarm-panel (light)"
+        }
+      ],
+      "greenlines": [],
+      "redlines": [],
+      "group": "Cards",
+      "caption": "Alarm panel card — keypad + arm states (light).",
+      "wireframe": "wireframes/card-alarm-light.svg"
+    },
+    {
+      "componentId": "Card/Alarm-Dark",
+      "images": [
+        {
+          "variant": "ideal",
+          "path": "images/card-alarm-dark/ideal__default__dark__compact.png",
+          "state": "default",
+          "width": 840,
+          "height": 997,
+          "theme": "dark",
+          "size": "compact",
+          "livePreview": "https://preview.coo.ee/homeassistant-remotecompose/p/card-alarm-dark__ideal__default__dark__compact",
+          "previewId": "ee.schimke.ha.previews.CardPreviewsKt.AlarmPanel_Dark_alarm-panel (dark)"
+        }
+      ],
+      "greenlines": [],
+      "redlines": [],
+      "group": "Cards",
+      "caption": "Alarm panel card (dark).",
+      "wireframe": "wireframes/card-alarm-dark.svg"
+    },
+    {
+      "componentId": "Card/Todo-Light",
+      "images": [
+        {
+          "variant": "ideal",
+          "path": "images/card-todo-light/ideal__default__light__compact.png",
+          "state": "default",
+          "width": 840,
+          "height": 577,
+          "theme": "light",
+          "size": "compact",
+          "livePreview": "https://preview.coo.ee/homeassistant-remotecompose/p/card-todo-light__ideal__default__light__compact",
+          "previewId": "ee.schimke.ha.previews.CardPreviewsKt.TodoList_Light_todo-list (light)"
+        }
+      ],
+      "greenlines": [],
+      "redlines": [],
+      "group": "Cards",
+      "caption": "To-do list card (light).",
+      "wireframe": "wireframes/card-todo-light.svg"
+    },
+    {
+      "componentId": "Card/Todo-Dark",
+      "images": [
+        {
+          "variant": "ideal",
+          "path": "images/card-todo-dark/ideal__default__dark__compact.png",
+          "state": "default",
+          "width": 840,
+          "height": 577,
+          "theme": "dark",
+          "size": "compact",
+          "livePreview": "https://preview.coo.ee/homeassistant-remotecompose/p/card-todo-dark__ideal__default__dark__compact",
+          "previewId": "ee.schimke.ha.previews.CardPreviewsKt.TodoList_Dark_todo-list (dark)"
+        }
+      ],
+      "greenlines": [],
+      "redlines": [],
+      "group": "Cards",
+      "caption": "To-do list card (dark).",
+      "wireframe": "wireframes/card-todo-dark.svg"
+    },
+    {
+      "componentId": "Card/Calendar-Light",
+      "images": [
+        {
+          "variant": "ideal",
+          "path": "images/card-calendar-light/ideal__default__light__compact.png",
+          "state": "default",
+          "width": 1000,
+          "height": 577,
+          "theme": "light",
+          "size": "compact",
+          "livePreview": "https://preview.coo.ee/homeassistant-remotecompose/p/card-calendar-light__ideal__default__light__compact",
+          "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Calendar_Light_calendar (light)"
+        }
+      ],
+      "greenlines": [],
+      "redlines": [],
+      "group": "Cards",
+      "caption": "Calendar card (light).",
+      "wireframe": "wireframes/card-calendar-light.svg"
+    },
+    {
+      "componentId": "Card/Calendar-Dark",
+      "images": [
+        {
+          "variant": "ideal",
+          "path": "images/card-calendar-dark/ideal__default__dark__compact.png",
+          "state": "default",
+          "width": 1000,
+          "height": 577,
+          "theme": "dark",
+          "size": "compact",
+          "livePreview": "https://preview.coo.ee/homeassistant-remotecompose/p/card-calendar-dark__ideal__default__dark__compact",
+          "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Calendar_Dark_calendar (dark)"
+        }
+      ],
+      "greenlines": [],
+      "redlines": [],
+      "group": "Cards",
+      "caption": "Calendar card (dark).",
+      "wireframe": "wireframes/card-calendar-dark.svg"
+    },
+    {
+      "componentId": "Card/Area-Light",
+      "images": [
+        {
+          "variant": "ideal",
+          "path": "images/card-area-light/ideal__default__light__compact.png",
+          "state": "default",
+          "width": 735,
+          "height": 367,
+          "theme": "light",
+          "size": "compact",
+          "livePreview": "https://preview.coo.ee/homeassistant-remotecompose/p/card-area-light__ideal__default__light__compact",
+          "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Area_Light_area (light)"
+        }
+      ],
+      "greenlines": [],
+      "redlines": [],
+      "group": "Cards",
+      "caption": "Area card — a room summary tile (light).",
+      "wireframe": "wireframes/card-area-light.svg"
+    },
+    {
+      "componentId": "Card/Area-Dark",
+      "images": [
+        {
+          "variant": "ideal",
+          "path": "images/card-area-dark/ideal__default__dark__compact.png",
+          "state": "default",
+          "width": 735,
+          "height": 367,
+          "theme": "dark",
+          "size": "compact",
+          "livePreview": "https://preview.coo.ee/homeassistant-remotecompose/p/card-area-dark__ideal__default__dark__compact",
+          "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Area_Dark_area (dark)"
+        }
+      ],
+      "greenlines": [],
+      "redlines": [],
+      "group": "Cards",
+      "caption": "Area card (dark).",
+      "wireframe": "wireframes/card-area-dark.svg"
+    },
+    {
+      "componentId": "Card/Sensor-Light",
+      "images": [
+        {
+          "variant": "ideal",
+          "path": "images/card-sensor-light/ideal__default__light__compact.png",
+          "state": "default",
+          "width": 840,
+          "height": 341,
+          "theme": "light",
+          "size": "compact",
+          "livePreview": "https://preview.coo.ee/homeassistant-remotecompose/p/card-sensor-light__ideal__default__light__compact",
+          "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Sensor_Light_sensor (light)"
+        }
+      ],
+      "greenlines": [],
+      "redlines": [],
+      "group": "Cards",
+      "caption": "Sensor card — a single value read-out (light).",
+      "wireframe": "wireframes/card-sensor-light.svg"
+    },
+    {
+      "componentId": "Card/Sensor-Dark",
+      "images": [
+        {
+          "variant": "ideal",
+          "path": "images/card-sensor-dark/ideal__default__dark__compact.png",
+          "state": "default",
+          "width": 840,
+          "height": 341,
+          "theme": "dark",
+          "size": "compact",
+          "livePreview": "https://preview.coo.ee/homeassistant-remotecompose/p/card-sensor-dark__ideal__default__dark__compact",
+          "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Sensor_Dark_sensor (dark)"
+        }
+      ],
+      "greenlines": [],
+      "redlines": [],
+      "group": "Cards",
+      "caption": "Sensor card (dark).",
+      "wireframe": "wireframes/card-sensor-dark.svg"
+    },
+    {
+      "componentId": "Card/Statistic-Light",
+      "images": [
+        {
+          "variant": "ideal",
+          "path": "images/card-statistic-light/ideal__default__light__compact.png",
+          "state": "default",
+          "width": 630,
+          "height": 288,
+          "theme": "light",
+          "size": "compact",
+          "livePreview": "https://preview.coo.ee/homeassistant-remotecompose/p/card-statistic-light__ideal__default__light__compact",
+          "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Statistic_Light_statistic (light)"
+        }
+      ],
+      "greenlines": [],
+      "redlines": [],
+      "group": "Cards",
+      "caption": "Statistic card — an aggregated value (light).",
+      "wireframe": "wireframes/card-statistic-light.svg"
+    },
+    {
+      "componentId": "Card/Statistic-Dark",
+      "images": [
+        {
+          "variant": "ideal",
+          "path": "images/card-statistic-dark/ideal__default__dark__compact.png",
+          "state": "default",
+          "width": 630,
+          "height": 288,
+          "theme": "dark",
+          "size": "compact",
+          "livePreview": "https://preview.coo.ee/homeassistant-remotecompose/p/card-statistic-dark__ideal__default__dark__compact",
+          "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Statistic_Dark_statistic (dark)"
+        }
+      ],
+      "greenlines": [],
+      "redlines": [],
+      "group": "Cards",
+      "caption": "Statistic card (dark).",
+      "wireframe": "wireframes/card-statistic-dark.svg"
+    },
+    {
+      "componentId": "Card/Markdown-Light",
+      "images": [
+        {
+          "variant": "ideal",
+          "path": "images/card-markdown-light/ideal__default__light__compact.png",
+          "state": "default",
+          "width": 1000,
+          "height": 278,
+          "theme": "light",
+          "size": "compact",
+          "livePreview": "https://preview.coo.ee/homeassistant-remotecompose/p/card-markdown-light__ideal__default__light__compact",
+          "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Markdown_Light_markdown (light)"
+        }
+      ],
+      "greenlines": [],
+      "redlines": [],
+      "group": "Cards",
+      "caption": "Markdown card — rich text content (light).",
+      "wireframe": "wireframes/card-markdown-light.svg"
+    },
+    {
+      "componentId": "Card/Markdown-Dark",
+      "images": [
+        {
+          "variant": "ideal",
+          "path": "images/card-markdown-dark/ideal__default__dark__compact.png",
+          "state": "default",
+          "width": 1000,
+          "height": 278,
+          "theme": "dark",
+          "size": "compact",
+          "livePreview": "https://preview.coo.ee/homeassistant-remotecompose/p/card-markdown-dark__ideal__default__dark__compact",
+          "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Markdown_Dark_markdown (dark)"
+        }
+      ],
+      "greenlines": [],
+      "redlines": [],
+      "group": "Cards",
+      "caption": "Markdown card (dark).",
+      "wireframe": "wireframes/card-markdown-dark.svg"
+    },
+    {
+      "componentId": "Card/Clock-Light",
+      "images": [
+        {
+          "variant": "ideal",
+          "path": "images/card-clock-light/ideal__default__light__compact.png",
+          "state": "default",
+          "width": 525,
+          "height": 262,
+          "theme": "light",
+          "size": "compact",
+          "livePreview": "https://preview.coo.ee/homeassistant-remotecompose/p/card-clock-light__ideal__default__light__compact",
+          "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Clock_Light_clock (light)"
+        }
+      ],
+      "greenlines": [],
+      "redlines": [],
+      "group": "Cards",
+      "caption": "Clock card (light).",
+      "wireframe": "wireframes/card-clock-light.svg"
+    },
+    {
+      "componentId": "Card/Clock-Dark",
+      "images": [
+        {
+          "variant": "ideal",
+          "path": "images/card-clock-dark/ideal__default__dark__compact.png",
+          "state": "default",
+          "width": 525,
+          "height": 262,
+          "theme": "dark",
+          "size": "compact",
+          "livePreview": "https://preview.coo.ee/homeassistant-remotecompose/p/card-clock-dark__ideal__default__dark__compact",
+          "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Clock_Dark_clock (dark)"
+        }
+      ],
+      "greenlines": [],
+      "redlines": [],
+      "group": "Cards",
+      "caption": "Clock card (dark).",
+      "wireframe": "wireframes/card-clock-dark.svg"
+    },
+    {
+      "componentId": "Layout/VerticalStack-Light",
+      "images": [
+        {
+          "variant": "ideal",
+          "path": "images/layout-verticalstack-light/ideal__default__light__compact.png",
+          "state": "default",
+          "width": 609,
+          "height": 262,
+          "theme": "light",
+          "size": "compact",
+          "livePreview": "https://preview.coo.ee/homeassistant-remotecompose/p/layout-verticalstack-light__ideal__default__light__compact",
+          "previewId": "ee.schimke.ha.previews.CardPreviewsKt.VerticalStack_Light_vertical-stack (light)"
+        }
+      ],
+      "greenlines": [],
+      "redlines": [],
+      "group": "Layout",
+      "caption": "Vertical stack — cards stacked in a column (light).",
+      "wireframe": "wireframes/layout-verticalstack-light.svg"
+    },
+    {
+      "componentId": "Layout/VerticalStack-Dark",
+      "images": [
+        {
+          "variant": "ideal",
+          "path": "images/layout-verticalstack-dark/ideal__default__dark__compact.png",
+          "state": "default",
+          "width": 609,
+          "height": 262,
+          "theme": "dark",
+          "size": "compact",
+          "livePreview": "https://preview.coo.ee/homeassistant-remotecompose/p/layout-verticalstack-dark__ideal__default__dark__compact",
+          "previewId": "ee.schimke.ha.previews.CardPreviewsKt.VerticalStack_Dark_vertical-stack (dark)"
+        }
+      ],
+      "greenlines": [],
+      "redlines": [],
+      "group": "Layout",
+      "caption": "Vertical stack (dark).",
+      "wireframe": "wireframes/layout-verticalstack-dark.svg"
+    },
+    {
+      "componentId": "Layout/HorizontalStack-Light",
+      "images": [
+        {
+          "variant": "ideal",
+          "path": "images/layout-horizontalstack-light/ideal__default__light__compact.png",
+          "state": "default",
+          "width": 399,
+          "height": 244,
+          "theme": "light",
+          "size": "compact",
+          "livePreview": "https://preview.coo.ee/homeassistant-remotecompose/p/layout-horizontalstack-light__ideal__default__light__compact",
+          "previewId": "ee.schimke.ha.previews.CardPreviewsKt.HorizontalStack_Light_horizontal-stack (light)"
+        }
+      ],
+      "greenlines": [],
+      "redlines": [],
+      "group": "Layout",
+      "caption": "Horizontal stack — cards side by side (light).",
+      "wireframe": "wireframes/layout-horizontalstack-light.svg"
+    },
+    {
+      "componentId": "Layout/HorizontalStack-Dark",
+      "images": [
+        {
+          "variant": "ideal",
+          "path": "images/layout-horizontalstack-dark/ideal__default__dark__compact.png",
+          "state": "default",
+          "width": 399,
+          "height": 244,
+          "theme": "dark",
+          "size": "compact",
+          "livePreview": "https://preview.coo.ee/homeassistant-remotecompose/p/layout-horizontalstack-dark__ideal__default__dark__compact",
+          "previewId": "ee.schimke.ha.previews.CardPreviewsKt.HorizontalStack_Dark_horizontal-stack (dark)"
+        }
+      ],
+      "greenlines": [],
+      "redlines": [],
+      "group": "Layout",
+      "caption": "Horizontal stack (dark).",
+      "wireframe": "wireframes/layout-horizontalstack-dark.svg"
+    },
+    {
+      "componentId": "Layout/Grid-Light",
+      "images": [
+        {
+          "variant": "ideal",
+          "path": "images/layout-grid-light/ideal__default__light__compact.png",
+          "state": "default",
+          "width": 819,
+          "height": 246,
+          "theme": "light",
+          "size": "compact",
+          "livePreview": "https://preview.coo.ee/homeassistant-remotecompose/p/layout-grid-light__ideal__default__light__compact",
+          "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Grid_Light_grid (light)"
+        }
+      ],
+      "greenlines": [],
+      "redlines": [],
+      "group": "Layout",
+      "caption": "Grid — cards in a fixed-column grid (light).",
+      "wireframe": "wireframes/layout-grid-light.svg"
+    },
+    {
+      "componentId": "Layout/Grid-Dark",
+      "images": [
+        {
+          "variant": "ideal",
+          "path": "images/layout-grid-dark/ideal__default__dark__compact.png",
+          "state": "default",
+          "width": 819,
+          "height": 246,
+          "theme": "dark",
+          "size": "compact",
+          "livePreview": "https://preview.coo.ee/homeassistant-remotecompose/p/layout-grid-dark__ideal__default__dark__compact",
+          "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Grid_Dark_grid (dark)"
+        }
+      ],
+      "greenlines": [],
+      "redlines": [],
+      "group": "Layout",
+      "caption": "Grid (dark).",
+      "wireframe": "wireframes/layout-grid-dark.svg"
+    },
+    {
+      "componentId": "Layout/Heading-Light",
+      "images": [
+        {
+          "variant": "ideal",
+          "path": "images/layout-heading-light/ideal__default__light__compact.png",
+          "state": "default",
+          "width": 283,
+          "height": 47,
+          "theme": "light",
+          "size": "compact",
+          "livePreview": "https://preview.coo.ee/homeassistant-remotecompose/p/layout-heading-light__ideal__default__light__compact",
+          "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Heading_Light_heading (light)"
+        }
+      ],
+      "greenlines": [],
+      "redlines": [],
+      "group": "Layout",
+      "caption": "Heading — a section title row (light).",
+      "wireframe": "wireframes/layout-heading-light.svg"
+    },
+    {
+      "componentId": "Layout/Heading-Dark",
+      "images": [
+        {
+          "variant": "ideal",
+          "path": "images/layout-heading-dark/ideal__default__dark__compact.png",
+          "state": "default",
+          "width": 283,
+          "height": 47,
+          "theme": "dark",
+          "size": "compact",
+          "livePreview": "https://preview.coo.ee/homeassistant-remotecompose/p/layout-heading-dark__ideal__default__dark__compact",
+          "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Heading_Dark_heading (dark)"
+        }
+      ],
+      "greenlines": [],
+      "redlines": [],
+      "group": "Layout",
+      "caption": "Heading (dark).",
+      "wireframe": "wireframes/layout-heading-dark.svg"
+    },
+    {
+      "componentId": "Card/Shutter-Light",
+      "images": [
+        {
+          "variant": "ideal",
+          "path": "images/card-shutter-light/ideal__default__light__compact.png",
+          "state": "default",
+          "width": 735,
+          "height": 787,
+          "theme": "light",
+          "size": "compact",
+          "livePreview": "https://preview.coo.ee/homeassistant-remotecompose/p/card-shutter-light__ideal__default__light__compact",
+          "previewId": "ee.schimke.ha.previews.ShutterCardPreviewsKt.Shutter_Light_shutter (light)"
+        }
+      ],
+      "greenlines": [],
+      "redlines": [],
+      "group": "Specialised cards",
+      "caption": "Enhanced shutter card (light).",
+      "wireframe": "wireframes/card-shutter-light.svg"
+    },
+    {
+      "componentId": "Card/Shutter-Dark",
+      "images": [
+        {
+          "variant": "ideal",
+          "path": "images/card-shutter-dark/ideal__default__dark__compact.png",
+          "state": "default",
+          "width": 735,
+          "height": 787,
+          "theme": "dark",
+          "size": "compact",
+          "livePreview": "https://preview.coo.ee/homeassistant-remotecompose/p/card-shutter-dark__ideal__default__dark__compact",
+          "previewId": "ee.schimke.ha.previews.ShutterCardPreviewsKt.Shutter_Dark_shutter (dark)"
+        }
+      ],
+      "greenlines": [],
+      "redlines": [],
+      "group": "Specialised cards",
+      "caption": "Enhanced shutter card (dark).",
+      "wireframe": "wireframes/card-shutter-dark.svg"
+    },
+    {
+      "componentId": "Card/Garage-Light",
+      "images": [
+        {
+          "variant": "ideal",
+          "path": "images/card-garage-light/ideal__default__light__compact.png",
+          "state": "default",
+          "width": 735,
+          "height": 892,
+          "theme": "light",
+          "size": "compact",
+          "livePreview": "https://preview.coo.ee/homeassistant-remotecompose/p/card-garage-light__ideal__default__light__compact",
+          "previewId": "ee.schimke.ha.previews.GarageShutterCardPreviewsKt.Garage_TwoEntities_Light_garage two-entities (light)"
+        }
+      ],
+      "greenlines": [],
+      "redlines": [],
+      "group": "Specialised cards",
+      "caption": "Garage door card — cover + light (light).",
+      "wireframe": "wireframes/card-garage-light.svg"
+    },
+    {
+      "componentId": "Card/Garage-Dark",
+      "images": [
+        {
+          "variant": "ideal",
+          "path": "images/card-garage-dark/ideal__default__dark__compact.png",
+          "state": "default",
+          "width": 735,
+          "height": 892,
+          "theme": "dark",
+          "size": "compact",
+          "livePreview": "https://preview.coo.ee/homeassistant-remotecompose/p/card-garage-dark__ideal__default__dark__compact",
+          "previewId": "ee.schimke.ha.previews.GarageShutterCardPreviewsKt.Garage_TwoEntities_Dark_garage two-entities (dark)"
+        }
+      ],
+      "greenlines": [],
+      "redlines": [],
+      "group": "Specialised cards",
+      "caption": "Garage door card — cover + light (dark).",
+      "wireframe": "wireframes/card-garage-dark.svg"
+    },
+    {
+      "componentId": "Dashboard/Light",
+      "images": [
+        {
+          "variant": "ideal",
+          "path": "images/dashboard-light/ideal__default__light__compact.png",
+          "state": "default",
+          "width": 1000,
+          "height": 1078,
+          "theme": "light",
+          "size": "compact",
+          "livePreview": "https://preview.coo.ee/homeassistant-remotecompose/p/dashboard-light__ideal__default__light__compact",
+          "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Dashboard_Light_dashboard (light)"
+        }
+      ],
+      "greenlines": [],
+      "redlines": [],
+      "group": "Specialised cards",
+      "caption": "A full mixed-card dashboard stack (light).",
+      "wireframe": "wireframes/dashboard-light.svg"
+    },
+    {
+      "componentId": "Dashboard/Dark",
+      "images": [
+        {
+          "variant": "ideal",
+          "path": "images/dashboard-dark/ideal__default__dark__compact.png",
+          "state": "default",
+          "width": 1000,
+          "height": 1078,
+          "theme": "dark",
+          "size": "compact",
+          "livePreview": "https://preview.coo.ee/homeassistant-remotecompose/p/dashboard-dark__ideal__default__dark__compact",
+          "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Dashboard_Dark_dashboard (dark)"
+        }
+      ],
+      "greenlines": [],
+      "redlines": [],
+      "group": "Specialised cards",
+      "caption": "A full mixed-card dashboard stack (dark).",
+      "wireframe": "wireframes/dashboard-dark.svg"
+    },
+    {
+      "componentId": "Brand/AppIcon-Light",
+      "images": [
+        {
+          "variant": "ideal",
+          "path": "images/brand-appicon-light/ideal__default__light__compact.png",
+          "state": "default",
+          "width": 945,
+          "height": 525,
+          "theme": "light",
+          "size": "compact",
+          "livePreview": "https://preview.coo.ee/homeassistant-remotecompose/p/brand-appicon-light__ideal__default__light__compact",
+          "previewId": "ee.schimke.ha.previews.AppIconPreviewsKt.AppIcon_Light_app-icon (light)"
+        }
+      ],
+      "greenlines": [],
+      "redlines": [
+        {
+          "bounds": {
+            "x": 42,
+            "y": 137,
+            "width": 189,
+            "height": 189
+          },
+          "cornerRadius": 36
+        },
+        {
+          "bounds": {
+            "x": 273,
+            "y": 137,
+            "width": 189,
+            "height": 189
+          },
+          "cornerRadius": 24
+        },
+        {
+          "bounds": {
+            "x": 504,
+            "y": 137,
+            "width": 189,
+            "height": 189
+          },
+          "cornerRadius": 8
+        },
+        {
+          "bounds": {
+            "x": 735,
+            "y": 137,
+            "width": 168,
+            "height": 189
+          },
+          "cornerRadius": 0
+        }
+      ],
+      "group": "Brand",
+      "caption": "Adaptive app icon (light).",
+      "wireframe": "wireframes/brand-appicon-light.svg"
+    },
+    {
+      "componentId": "Brand/AppIcon-Dark",
+      "images": [
+        {
+          "variant": "ideal",
+          "path": "images/brand-appicon-dark/ideal__default__dark__compact.png",
+          "state": "default",
+          "width": 945,
+          "height": 525,
+          "theme": "dark",
+          "size": "compact",
+          "livePreview": "https://preview.coo.ee/homeassistant-remotecompose/p/brand-appicon-dark__ideal__default__dark__compact",
+          "previewId": "ee.schimke.ha.previews.AppIconPreviewsKt.AppIcon_Dark_app-icon (dark)"
+        }
+      ],
+      "greenlines": [],
+      "redlines": [
+        {
+          "bounds": {
+            "x": 42,
+            "y": 137,
+            "width": 189,
+            "height": 189
+          },
+          "cornerRadius": 36
+        },
+        {
+          "bounds": {
+            "x": 273,
+            "y": 137,
+            "width": 189,
+            "height": 189
+          },
+          "cornerRadius": 24
+        },
+        {
+          "bounds": {
+            "x": 504,
+            "y": 137,
+            "width": 189,
+            "height": 189
+          },
+          "cornerRadius": 8
+        },
+        {
+          "bounds": {
+            "x": 735,
+            "y": 137,
+            "width": 168,
+            "height": 189
+          },
+          "cornerRadius": 0
+        }
+      ],
+      "group": "Brand",
+      "caption": "Adaptive app icon (dark).",
+      "wireframe": "wireframes/brand-appicon-dark.svg"
+    }
+  ],
+  "library": [
+    "androidx.compose.material3:material3",
+    "androidx.compose.remote:remote-player-compose (RemoteCompose)",
+    "ee.schimke.ha:rc-components (Terrazzo themes)"
+  ],
+  "renderer": "compose-preview 0.16.59",
+  "generatedAt": "2026-07-20T09:29:38.957Z",
+  "source": {
+    "repo": "yschimke/homeassistant-remotecompose",
+    "ref": "main",
+    "module": ":previews"
+  }
+}
