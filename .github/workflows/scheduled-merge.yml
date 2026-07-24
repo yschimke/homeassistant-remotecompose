@@ -11,7 +11,10 @@ name: Scheduled Merge
 #     cutting a release stays a deliberate human action
 #
 # GITHUB_TOKEN merges don't fire push-to-main workflows, so after merging
-# this dispatches compose-preview.yml to refresh the render baselines.
+# this dispatches compose-preview.yml to refresh the render baselines. When
+# the merged batch included a compose-ai-tools bump (its renderer/CLI drives
+# the catalog output), it also dispatches design-artifacts.yml so the
+# published catalog delivery branches are regenerated against the new release.
 
 on:
   schedule:
@@ -44,6 +47,7 @@ jobs:
               owner, repo, state: 'open', base: 'main', per_page: 100,
             });
             let merged = 0;
+            let bumpedComposeAiTools = false;
             for (const stub of prs) {
               if (stub.draft) continue;
               if (stub.labels.some((l) => skipLabels.has(l.name))) {
@@ -67,14 +71,25 @@ jobs:
                 });
                 core.notice(`Merged #${pr.number}: ${pr.title}`);
                 merged++;
+                // A compose-ai-tools bump changes the renderer/CLI that
+                // produces the design catalogs, so flag it to regenerate the
+                // published delivery branches below. Renovate groups these
+                // under the `compose-ai-tools` branch/title.
+                if (`${pr.head.ref} ${pr.title}`.toLowerCase().includes('compose-ai-tools')) {
+                  bumpedComposeAiTools = true;
+                }
               } catch (e) {
                 core.warning(`#${pr.number}: merge failed — ${e.message}`);
               }
             }
             if (merged > 0) {
               // GITHUB_TOKEN merges don't trigger push workflows; explicitly
-              // refresh the render baselines and the release-please PR.
-              for (const wf of ['compose-preview.yml', 'release-please.yml']) {
+              // refresh the render baselines and the release-please PR. When a
+              // compose-ai-tools bump landed, also regenerate the design
+              // catalog delivery branches against the new release.
+              const workflows = ['compose-preview.yml', 'release-please.yml'];
+              if (bumpedComposeAiTools) workflows.push('design-artifacts.yml');
+              for (const wf of workflows) {
                 try {
                   await github.rest.actions.createWorkflowDispatch({
                     owner, repo, workflow_id: wf, ref: 'main',
