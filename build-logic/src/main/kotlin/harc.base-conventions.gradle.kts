@@ -18,6 +18,17 @@ pluginManager.apply("com.ncorti.ktfmt.gradle")
 
 extensions.configure<KtfmtExtension> { googleStyle() }
 
+// Emit Java 17 bytecode (class-file v61) from every module's Kotlin compile so
+// the JDK-17 preview render daemon (Robolectric, preview.coo.ee) can load the
+// classes; v65 (JDK 21) bytecode throws UnsupportedClassVersionError there. The
+// build toolchain stays on JDK 21 (jvmToolchain via libs.versions.java) — only
+// the emitted target drops. Applied centrally here because every subproject
+// already applies this convention plugin; tapmoc modules additionally align the
+// same target through `tapmoc { java(17) }`.
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+  compilerOptions { jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17) }
+}
+
 // ktfmt-gradle 0.26 wires its Android source-set tasks through the legacy
 // AGP `BaseExtension` / `AndroidSourceSet` API, which AGP 9 removed. The
 // failure is swallowed inside a `runCatching`, so `com.android.*` modules end
