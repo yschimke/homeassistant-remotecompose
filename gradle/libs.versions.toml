@@ -3,6 +3,13 @@
 kotlin = "2.4.10"
 agp = "9.3.0"
 java = "21"
+# Emitted bytecode / language level. Kept below `java` (the build toolchain) so
+# the JDK-17 preview render daemon (Robolectric, preview.coo.ee) can load the
+# compiled classes; v65 (JDK 21) bytecode throws UnsupportedClassVersionError
+# there. Drives every module's Kotlin jvmTarget (via the base-conventions plugin)
+# and Android compileOptions source/target, which must agree for Kotlin/Java JVM
+# target validation.
+javaTarget = "17"
 okhttp = "5.4.0"
 play-publisher = "4.0.0"
 

@@ -16,8 +16,8 @@ android {
   }
   buildFeatures { compose = true }
   compileOptions {
-    sourceCompatibility = JavaVersion.toVersion(libs.versions.java.get())
-    targetCompatibility = JavaVersion.toVersion(libs.versions.java.get())
+    sourceCompatibility = JavaVersion.toVersion(libs.versions.javaTarget.get())
+    targetCompatibility = JavaVersion.toVersion(libs.versions.javaTarget.get())
   }
   kotlin { jvmToolchain(libs.versions.java.get().toInt()) }
 }
