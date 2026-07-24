@@ -1,5 +1,46 @@
 # Changelog
 
+## [0.1.38](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.37...v0.1.38) (2026-07-24)
+
+
+### Features
+
+* **catalog:** broaden the design catalog to cards, layouts, dashboards + brand ([#421](https://github.com/yschimke/homeassistant-remotecompose/issues/421)) ([2e62e72](https://github.com/yschimke/homeassistant-remotecompose/commit/2e62e721b294f784110ba85f48c6de263c3e22a9))
+* **previews:** non-parameterized button preview for the design catalog ([#420](https://github.com/yschimke/homeassistant-remotecompose/issues/420)) ([0f01c04](https://github.com/yschimke/homeassistant-remotecompose/commit/0f01c0404cf6d726c48ab5d74060679e38a55fe5))
+* publish Terrazzo / HA-RemoteCompose design system report ([#416](https://github.com/yschimke/homeassistant-remotecompose/issues/416)) ([fcaa1fb](https://github.com/yschimke/homeassistant-remotecompose/commit/fcaa1fbeccee641959c70aeeda2b991ee85afbba))
+
+
+### Bug Fixes
+
+* **build:** resolve google-services.json by rootDir, not CWD-relative path ([#406](https://github.com/yschimke/homeassistant-remotecompose/issues/406)) ([5cc8bfd](https://github.com/yschimke/homeassistant-remotecompose/commit/5cc8bfd29cbf84446e2d631845fc982eb856ee8a))
+* correct review-comment tool name and handle missing follow-up label ([#453](https://github.com/yschimke/homeassistant-remotecompose/issues/453)) ([2af1f88](https://github.com/yschimke/homeassistant-remotecompose/commit/2af1f882d836ca893b5c13ecc563afbd00a752e5))
+* **deps:** update androidx ([#447](https://github.com/yschimke/homeassistant-remotecompose/issues/447)) ([ca9394e](https://github.com/yschimke/homeassistant-remotecompose/commit/ca9394eedb02c2898a78fbfe143936e94476e4ad))
+* **deps:** update coil to v3.5.0 ([#433](https://github.com/yschimke/homeassistant-remotecompose/issues/433)) ([c5c4824](https://github.com/yschimke/homeassistant-remotecompose/commit/c5c4824f91a51e3212024f4777555023967d66d0))
+* **deps:** update dependency androidx.compose:compose-bom to v2026.06.01 ([#448](https://github.com/yschimke/homeassistant-remotecompose/issues/448)) ([9624ed1](https://github.com/yschimke/homeassistant-remotecompose/commit/9624ed15f4aa6ebfde4a698cce852d0df1927be8))
+* **deps:** update dependency androidx.navigation3:navigation3-runtime to v1.2.0-alpha04 ([#409](https://github.com/yschimke/homeassistant-remotecompose/issues/409)) ([befd1f0](https://github.com/yschimke/homeassistant-remotecompose/commit/befd1f0f5402e7296fcb9a032e08d26a4172d252))
+* **deps:** update dependency androidx.navigation3:navigation3-ui to v1.2.0-alpha04 ([#410](https://github.com/yschimke/homeassistant-remotecompose/issues/410)) ([8c302c6](https://github.com/yschimke/homeassistant-remotecompose/commit/8c302c69b87895d5427a0323691cc0bb2edb2622))
+* **deps:** update dependency ch.qos.logback:logback-classic to v1.5.37 ([#412](https://github.com/yschimke/homeassistant-remotecompose/issues/412)) ([e105faf](https://github.com/yschimke/homeassistant-remotecompose/commit/e105faf0a60dd25a45f92e93695a99c27fd24e07))
+* **deps:** update dependency ch.qos.logback:logback-classic to v1.5.38 ([#470](https://github.com/yschimke/homeassistant-remotecompose/issues/470)) ([7bb7b5f](https://github.com/yschimke/homeassistant-remotecompose/commit/7bb7b5f18acc472c600c616957624eb36598db81))
+* **deps:** update dependency com.google.firebase:firebase-bom to v34.15.0 ([#439](https://github.com/yschimke/homeassistant-remotecompose/issues/439)) ([0d96914](https://github.com/yschimke/homeassistant-remotecompose/commit/0d96914db910cd69e03ce411b6021745a0814cf9))
+* **deps:** update dependency com.google.firebase:firebase-bom to v34.16.0 ([#484](https://github.com/yschimke/homeassistant-remotecompose/issues/484)) ([bb508e3](https://github.com/yschimke/homeassistant-remotecompose/commit/bb508e37e92593f512542df8104cbd839bbf67a2))
+* **deps:** update dependency com.google.gms:google-services to v4.5.0 ([#440](https://github.com/yschimke/homeassistant-remotecompose/issues/440)) ([8642e92](https://github.com/yschimke/homeassistant-remotecompose/commit/8642e92f4689ad81e07bb88361794e1d75d26b49))
+* **deps:** update dependency com.materialkolor:material-kolor to v5 ([#486](https://github.com/yschimke/homeassistant-remotecompose/issues/486)) ([cf2cf30](https://github.com/yschimke/homeassistant-remotecompose/commit/cf2cf3042daa13ae210a26be5a9bb74dbd610ef0))
+* **deps:** update dependency ee.schimke.composeai:preview-annotations to v0.16.15 ([#441](https://github.com/yschimke/homeassistant-remotecompose/issues/441)) ([bc74d08](https://github.com/yschimke/homeassistant-remotecompose/commit/bc74d083f9d40ecb352f48b135f98eeb2cbb60f6))
+* **deps:** update dependency ee.schimke.composeai:preview-annotations to v0.16.24 ([#460](https://github.com/yschimke/homeassistant-remotecompose/issues/460)) ([6792fa9](https://github.com/yschimke/homeassistant-remotecompose/commit/6792fa903b85cbfdd95bef8fc35df71f0c955369))
+* **deps:** update dependency ee.schimke.composeai:preview-annotations to v0.16.44 ([#471](https://github.com/yschimke/homeassistant-remotecompose/issues/471)) ([7c76db1](https://github.com/yschimke/homeassistant-remotecompose/commit/7c76db1b5cb047a0988c91cfeb8ac575fc76544f))
+* **deps:** update dependency org.jetbrains:markdown to v0.7.5 ([#425](https://github.com/yschimke/homeassistant-remotecompose/issues/425)) ([7a3957b](https://github.com/yschimke/homeassistant-remotecompose/commit/7a3957b15275cb2c6fe3d1e20b172d2f8a894d55))
+* **deps:** update dependency org.jetbrains:markdown to v0.7.7 ([#473](https://github.com/yschimke/homeassistant-remotecompose/issues/473)) ([251b717](https://github.com/yschimke/homeassistant-remotecompose/commit/251b717706f49c49bb86de7efa39810b2481c7bc))
+* **deps:** update kotlin to v2.4.0 ([#432](https://github.com/yschimke/homeassistant-remotecompose/issues/432)) ([0c8a353](https://github.com/yschimke/homeassistant-remotecompose/commit/0c8a353628c41e621052cdee20b8437a1b65e5b8))
+* **deps:** update kotlin to v2.4.10 ([#480](https://github.com/yschimke/homeassistant-remotecompose/issues/480)) ([08527cf](https://github.com/yschimke/homeassistant-remotecompose/commit/08527cf28e28bc2e5efdd1fbe524448bf8d3c40b))
+* **deps:** update ktor to v3.5.1 ([#427](https://github.com/yschimke/homeassistant-remotecompose/issues/427)) ([c56c381](https://github.com/yschimke/homeassistant-remotecompose/commit/c56c3816e334b3c9cc524c14a2ffe456db36d415))
+* **deps:** update mockserver to v7 ([#445](https://github.com/yschimke/homeassistant-remotecompose/issues/445)) ([f652f06](https://github.com/yschimke/homeassistant-remotecompose/commit/f652f06ea3b4e5ddc7134e457887399114c48a92))
+* **deps:** update mockserver to v7.4.0 ([#461](https://github.com/yschimke/homeassistant-remotecompose/issues/461)) ([34f9a49](https://github.com/yschimke/homeassistant-remotecompose/commit/34f9a4972b39444df5a2d41748ded6fae776ead1))
+* **deps:** update okhttp monorepo to v5.4.0 ([#443](https://github.com/yschimke/homeassistant-remotecompose/issues/443)) ([67c2453](https://github.com/yschimke/homeassistant-remotecompose/commit/67c2453d57a147b0ca9e525c2f2d8dd1f33eebb2))
+* **deps:** update remote-compose to 1.0.0-alpha14 ([#455](https://github.com/yschimke/homeassistant-remotecompose/issues/455)) ([cbb1c26](https://github.com/yschimke/homeassistant-remotecompose/commit/cbb1c26b6daa69f3d4e391d737d4dbc908148320))
+* **deps:** update remote-compose to v1.0.0-alpha15 ([#481](https://github.com/yschimke/homeassistant-remotecompose/issues/481)) ([c9f8229](https://github.com/yschimke/homeassistant-remotecompose/commit/c9f822916102a647c2fe0488b541480d63567b50))
+* **previews:** stop flaky card-history and animated-card screenshots ([#419](https://github.com/yschimke/homeassistant-remotecompose/issues/419)) ([6462ba1](https://github.com/yschimke/homeassistant-remotecompose/commit/6462ba19453dacb22934bfc49697b8dcdbe547b8))
+* use semantics-capturing previews in the HA design catalog ([#417](https://github.com/yschimke/homeassistant-remotecompose/issues/417)) ([fd80a2b](https://github.com/yschimke/homeassistant-remotecompose/commit/fd80a2bc149ee7cf68995e04e0ce8b5ea9b62eb0))
+
 ## [0.1.37](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.36...v0.1.37) (2026-06-03)
 
 
