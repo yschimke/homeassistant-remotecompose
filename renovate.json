@@ -15,6 +15,15 @@
       "matchPackageNames": ["junit:junit"],
       "allowedVersions": "/^4\\./",
       "enabled": false
+    },
+    {
+      "description": "compose-ai-tools ships the preview CLI, the ee.schimke.composeai Gradle plugin (tracked via the compose-preview-plugin catalog key), and the reusable CI composite actions as a single release. Track it aggressively so CI always runs the latest renderer: group the pinned action refs and the Gradle plugin marker into ONE PR so the CLI catalog pin never skews apart from the action code ref, and skip the weekly window. Deliberately NOT Renovate-automerged: scheduled-merge.yml owns the merge so its post-merge design-artifacts.yml dispatch fires and regenerates the catalog against the new renderer. Renovate/native automerge would merge the PR directly, bypass that dispatch (design-artifacts.yml has no push trigger), and leave the published catalog on the old renderer until the next weekly run. scheduled-merge still auto-merges this PR once it's green.",
+      "matchPackageNames": [
+        "yschimke/compose-ai-tools",
+        "/^ee\\.schimke\\.composeai($|[.:])/"
+      ],
+      "groupName": "compose-ai-tools",
+      "schedule": ["at any time"]
     }
   ]
 }
