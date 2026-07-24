@@ -19,7 +19,7 @@ remote-material3 = "1.0.0-alpha07"
 
 # AndroidX Glance Wear (alpha — runtime feature gated on Wear OS 7+ / API 37
 # inside the library; we use it for the per-slot wear widgets).
-glance-wear = "1.0.0-alpha13"
+glance-wear = "1.0.0-alpha14"
 
 # Android
 android-minSdk = "29"
@@ -108,8 +108,8 @@ androidx-datastore-preferences = { module = "androidx.datastore:datastore-prefer
 # settings) and the phone-side mirror that publishes to the data layer.
 androidx-datastore = { module = "androidx.datastore:datastore", version = "1.2.1" }
 androidx-work-runtime = { module = "androidx.work:work-runtime-ktx", version = "2.11.2" }
-androidx-navigation3-runtime = { module = "androidx.navigation3:navigation3-runtime", version = "1.2.0-alpha05" }
-androidx-navigation3-ui = { module = "androidx.navigation3:navigation3-ui", version = "1.2.0-alpha05" }
+androidx-navigation3-runtime = { module = "androidx.navigation3:navigation3-runtime", version = "1.2.0-alpha06" }
+androidx-navigation3-ui = { module = "androidx.navigation3:navigation3-ui", version = "1.2.0-alpha06" }
 androidx-material3-adaptive-navigation-suite = { module = "androidx.compose.material3:material3-adaptive-navigation-suite", version = "1.4.0" }
 appauth = { module = "net.openid:appauth", version = "0.11.1" }
 compose-ui-text-google-fonts = { module = "androidx.compose.ui:ui-text-google-fonts" }
