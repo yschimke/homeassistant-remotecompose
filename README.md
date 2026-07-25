@@ -1,6 +1,6 @@
 # Accessibility Report
 
-_Auto-generated from `compose-preview/a11y/pr`. 286 preview(s) across 4 module(s) · 1102 error(s) · 17 warning(s) · 32 info._
+_Auto-generated from `compose-preview/a11y/pr`. 286 preview(s) across 4 module(s) · 635 error(s) · 17 warning(s) · 32 info._
 
 Browse inline; image URLs are pinned to the commit SHA on the baseline branch so links keep resolving after merge.
 
@@ -445,16 +445,9 @@ _No findings._
 | 1 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
 | 2 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
 | 3 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 4 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 5 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 6 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 7 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 30dp. Consider making the height of this touch target 48dp or larger. |
-| 8 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 30dp. Consider making the height of this touch target 48dp or larger. |
-| 9 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 30dp. Consider making the height of this touch target 48dp or larger. |
-| 10 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 30dp. Consider making the height of this touch target 48dp or larger. |
-| 11 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 30dp. Consider making the height of this touch target 48dp or larger. |
-| 12 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 30dp. Consider making the height of this touch target 48dp or larger. |
-| 13 | INFO | DuplicateSpeakableTextCheck | android.widget.TextView | This non-clickable item's speakable text: "Terrazzo slot" is identical to that of 1 other item(s). |
+| 4 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 30dp. Consider making the height of this touch target 48dp or larger. |
+| 5 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 30dp. Consider making the height of this touch target 48dp or larger. |
+| 6 | INFO | DuplicateSpeakableTextCheck | android.widget.TextView | This non-clickable item's speakable text: "Terrazzo slot" is identical to that of 1 other item(s). |
 
 ### `CardPreviewMatrix_Button`
 
@@ -465,11 +458,8 @@ _No findings._
 | 1 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
 | 2 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
 | 3 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 4 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 5 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 6 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 7 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Kitchen" | This item's height is 46dp. Consider making the height of this touch target 48dp or larger. |
-| 8 | INFO | DuplicateSpeakableTextCheck | android.widget.TextView | This non-clickable item's speakable text: "Terrazzo slot" is identical to that of 1 other item(s). |
+| 4 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Kitchen" | This item's height is 46dp. Consider making the height of this touch target 48dp or larger. |
+| 5 | INFO | DuplicateSpeakableTextCheck | android.widget.TextView | This non-clickable item's speakable text: "Terrazzo slot" is identical to that of 1 other item(s). |
 
 ### `CardPreviewMatrix_Calendar`
 
@@ -480,10 +470,7 @@ _No findings._
 | 1 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
 | 2 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
 | 3 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 4 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 5 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 6 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 7 | INFO | DuplicateSpeakableTextCheck | android.widget.TextView | This non-clickable item's speakable text: "Terrazzo slot" is identical to that of 1 other item(s). |
+| 4 | INFO | DuplicateSpeakableTextCheck | android.widget.TextView | This non-clickable item's speakable text: "Terrazzo slot" is identical to that of 1 other item(s). |
 
 ### `CardPreviewMatrix_Entities`
 
@@ -494,23 +481,16 @@ _No findings._
 | 1 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
 | 2 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
 | 3 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 4 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 5 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 6 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 7 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Living Room" | This item's height is 32dp. Consider making the height of this touch target 48dp or larger. |
-| 8 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Office lamp" | This item's height is 34dp. Consider making the height of this touch target 48dp or larger. |
-| 9 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Coffee maker" | This item's height is 34dp. Consider making the height of this touch target 48dp or larger. |
-| 10 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Front door" | This item's height is 34dp. Consider making the height of this touch target 48dp or larger. |
-| 11 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Living Room" | This item's size is 34dp x 2dp. Consider making this touch target 48dp wide and 48dp high or larger. |
-| 12 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Office lamp" | This item's size is 28dp x 2dp. Consider making this touch target 48dp wide and 48dp high or larger. |
-| 13 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Coffee maker" | This item's size is 28dp x 2dp. Consider making this touch target 48dp wide and 48dp high or larger. |
-| 14 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Living Room" | This item's height is 41dp. Consider making the height of this touch target 48dp or larger. |
-| 15 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Office lamp" | This item's height is 41dp. Consider making the height of this touch target 48dp or larger. |
-| 16 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Living Room" | This item's height is 32dp. Consider making the height of this touch target 48dp or larger. |
-| 17 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Office lamp" | This item's height is 34dp. Consider making the height of this touch target 48dp or larger. |
-| 18 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Coffee maker" | This item's height is 34dp. Consider making the height of this touch target 48dp or larger. |
-| 19 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Front door" | This item's height is 26dp. Consider making the height of this touch target 48dp or larger. |
-| 20 | INFO | DuplicateSpeakableTextCheck | android.widget.TextView | This non-clickable item's speakable text: "Terrazzo slot" is identical to that of 1 other item(s). |
+| 4 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Living Room" | This item's height is 32dp. Consider making the height of this touch target 48dp or larger. |
+| 5 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Office lamp" | This item's height is 34dp. Consider making the height of this touch target 48dp or larger. |
+| 6 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Coffee maker" | This item's height is 34dp. Consider making the height of this touch target 48dp or larger. |
+| 7 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Front door" | This item's height is 34dp. Consider making the height of this touch target 48dp or larger. |
+| 8 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Living Room" | This item's size is 34dp x 2dp. Consider making this touch target 48dp wide and 48dp high or larger. |
+| 9 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Office lamp" | This item's size is 28dp x 2dp. Consider making this touch target 48dp wide and 48dp high or larger. |
+| 10 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Coffee maker" | This item's size is 28dp x 2dp. Consider making this touch target 48dp wide and 48dp high or larger. |
+| 11 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Living Room" | This item's height is 41dp. Consider making the height of this touch target 48dp or larger. |
+| 12 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Office lamp" | This item's height is 41dp. Consider making the height of this touch target 48dp or larger. |
+| 13 | INFO | DuplicateSpeakableTextCheck | android.widget.TextView | This non-clickable item's speakable text: "Terrazzo slot" is identical to that of 1 other item(s). |
 
 ### `CardPreviewMatrix_Entity`
 
@@ -521,12 +501,9 @@ _No findings._
 | 1 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
 | 2 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
 | 3 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 4 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 5 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 6 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 7 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Front door" | This item's height is 34dp. Consider making the height of this touch target 48dp or larger. |
-| 8 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Front door" | This item's height is 46dp. Consider making the height of this touch target 48dp or larger. |
-| 9 | INFO | DuplicateSpeakableTextCheck | android.widget.TextView | This non-clickable item's speakable text: "Terrazzo slot" is identical to that of 1 other item(s). |
+| 4 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Front door" | This item's height is 34dp. Consider making the height of this touch target 48dp or larger. |
+| 5 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Front door" | This item's height is 46dp. Consider making the height of this touch target 48dp or larger. |
+| 6 | INFO | DuplicateSpeakableTextCheck | android.widget.TextView | This non-clickable item's speakable text: "Terrazzo slot" is identical to that of 1 other item(s). |
 
 ### `CardPreviewMatrix_Gauge`
 
@@ -537,11 +514,8 @@ _No findings._
 | 1 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
 | 2 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
 | 3 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 4 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 5 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 6 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 7 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 46dp. Consider making the height of this touch target 48dp or larger. |
-| 8 | INFO | DuplicateSpeakableTextCheck | android.widget.TextView | This non-clickable item's speakable text: "Terrazzo slot" is identical to that of 1 other item(s). |
+| 4 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 46dp. Consider making the height of this touch target 48dp or larger. |
+| 5 | INFO | DuplicateSpeakableTextCheck | android.widget.TextView | This non-clickable item's speakable text: "Terrazzo slot" is identical to that of 1 other item(s). |
 
 ### `CardPreviewMatrix_HistoryGraph`
 
@@ -552,10 +526,7 @@ _No findings._
 | 1 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
 | 2 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
 | 3 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 4 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 5 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 6 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 7 | INFO | DuplicateSpeakableTextCheck | android.widget.TextView | This non-clickable item's speakable text: "Terrazzo slot" is identical to that of 1 other item(s). |
+| 4 | INFO | DuplicateSpeakableTextCheck | android.widget.TextView | This non-clickable item's speakable text: "Terrazzo slot" is identical to that of 1 other item(s). |
 
 ### `CardPreviewMatrix_Humidifier`
 
@@ -566,14 +537,9 @@ _No findings._
 | 1 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
 | 2 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
 | 3 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 4 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 5 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 6 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 7 | ERROR | TouchTargetSizeCheck | android.view.View  desc="stepper" | This item's size is 36dp x 36dp. Consider making this touch target 48dp wide and 48dp high or larger. |
-| 8 | ERROR | TouchTargetSizeCheck | android.view.View  desc="stepper" | This item's size is 36dp x 36dp. Consider making this touch target 48dp wide and 48dp high or larger. |
-| 9 | ERROR | TouchTargetSizeCheck | android.view.View  desc="stepper" | This item's size is 36dp x 36dp. Consider making this touch target 48dp wide and 48dp high or larger. |
-| 10 | ERROR | TouchTargetSizeCheck | android.view.View  desc="stepper" | This item's size is 36dp x 36dp. Consider making this touch target 48dp wide and 48dp high or larger. |
-| 11 | INFO | DuplicateSpeakableTextCheck | android.widget.TextView | This non-clickable item's speakable text: "Terrazzo slot" is identical to that of 1 other item(s). |
+| 4 | ERROR | TouchTargetSizeCheck | android.view.View  desc="stepper" | This item's size is 36dp x 36dp. Consider making this touch target 48dp wide and 48dp high or larger. |
+| 5 | ERROR | TouchTargetSizeCheck | android.view.View  desc="stepper" | This item's size is 36dp x 36dp. Consider making this touch target 48dp wide and 48dp high or larger. |
+| 6 | INFO | DuplicateSpeakableTextCheck | android.widget.TextView | This non-clickable item's speakable text: "Terrazzo slot" is identical to that of 1 other item(s). |
 
 ### `CardPreviewMatrix_Light`
 
@@ -584,11 +550,8 @@ _No findings._
 | 1 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
 | 2 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
 | 3 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 4 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 5 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 6 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 7 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 46dp. Consider making the height of this touch target 48dp or larger. |
-| 8 | INFO | DuplicateSpeakableTextCheck | android.widget.TextView | This non-clickable item's speakable text: "Terrazzo slot" is identical to that of 1 other item(s). |
+| 4 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 46dp. Consider making the height of this touch target 48dp or larger. |
+| 5 | INFO | DuplicateSpeakableTextCheck | android.widget.TextView | This non-clickable item's speakable text: "Terrazzo slot" is identical to that of 1 other item(s). |
 
 ### `CardPreviewMatrix_Logbook`
 
@@ -599,10 +562,7 @@ _No findings._
 | 1 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
 | 2 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
 | 3 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 4 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 5 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 6 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 7 | INFO | DuplicateSpeakableTextCheck | android.widget.TextView | This non-clickable item's speakable text: "Terrazzo slot" is identical to that of 1 other item(s). |
+| 4 | INFO | DuplicateSpeakableTextCheck | android.widget.TextView | This non-clickable item's speakable text: "Terrazzo slot" is identical to that of 1 other item(s). |
 
 ### `CardPreviewMatrix_Markdown`
 
@@ -613,10 +573,7 @@ _No findings._
 | 1 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
 | 2 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
 | 3 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 4 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 5 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 6 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 7 | INFO | DuplicateSpeakableTextCheck | android.widget.TextView | This non-clickable item's speakable text: "Terrazzo slot" is identical to that of 1 other item(s). |
+| 4 | INFO | DuplicateSpeakableTextCheck | android.widget.TextView | This non-clickable item's speakable text: "Terrazzo slot" is identical to that of 1 other item(s). |
 
 ### `CardPreviewMatrix_MediaControl`
 
@@ -627,19 +584,10 @@ _No findings._
 | 1 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
 | 2 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
 | 3 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 4 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 5 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 6 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 7 | ERROR | TouchTargetSizeCheck | android.view.View  desc="transport" | This item's size is 32dp x 32dp. Consider making this touch target 48dp wide and 48dp high or larger. |
-| 8 | ERROR | TouchTargetSizeCheck | android.view.View  desc="transport" | This item's size is 40dp x 40dp. Consider making this touch target 48dp wide and 48dp high or larger. |
-| 9 | ERROR | TouchTargetSizeCheck | android.view.View  desc="transport" | This item's size is 32dp x 32dp. Consider making this touch target 48dp wide and 48dp high or larger. |
-| 10 | ERROR | TouchTargetSizeCheck | android.view.View  desc="transport" | This item's size is 32dp x 32dp. Consider making this touch target 48dp wide and 48dp high or larger. |
-| 11 | ERROR | TouchTargetSizeCheck | android.view.View  desc="transport" | This item's size is 40dp x 40dp. Consider making this touch target 48dp wide and 48dp high or larger. |
-| 12 | ERROR | TouchTargetSizeCheck | android.view.View  desc="transport" | This item's size is 32dp x 32dp. Consider making this touch target 48dp wide and 48dp high or larger. |
-| 13 | ERROR | TouchTargetSizeCheck | android.view.View  desc="transport" | This item's size is 32dp x 32dp. Consider making this touch target 48dp wide and 48dp high or larger. |
-| 14 | ERROR | TouchTargetSizeCheck | android.view.View  desc="transport" | This item's size is 40dp x 40dp. Consider making this touch target 48dp wide and 48dp high or larger. |
-| 15 | ERROR | TouchTargetSizeCheck | android.view.View  desc="transport" | This item's size is 32dp x 32dp. Consider making this touch target 48dp wide and 48dp high or larger. |
-| 16 | INFO | DuplicateSpeakableTextCheck | android.widget.TextView | This non-clickable item's speakable text: "Terrazzo slot" is identical to that of 1 other item(s). |
+| 4 | ERROR | TouchTargetSizeCheck | android.view.View  desc="transport" | This item's size is 32dp x 32dp. Consider making this touch target 48dp wide and 48dp high or larger. |
+| 5 | ERROR | TouchTargetSizeCheck | android.view.View  desc="transport" | This item's size is 40dp x 40dp. Consider making this touch target 48dp wide and 48dp high or larger. |
+| 6 | ERROR | TouchTargetSizeCheck | android.view.View  desc="transport" | This item's size is 32dp x 32dp. Consider making this touch target 48dp wide and 48dp high or larger. |
+| 7 | INFO | DuplicateSpeakableTextCheck | android.widget.TextView | This non-clickable item's speakable text: "Terrazzo slot" is identical to that of 1 other item(s). |
 
 ### `CardPreviewMatrix_PictureEntity`
 
@@ -650,11 +598,8 @@ _No findings._
 | 1 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
 | 2 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
 | 3 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 4 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 5 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 6 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 7 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 46dp. Consider making the height of this touch target 48dp or larger. |
-| 8 | INFO | DuplicateSpeakableTextCheck | android.widget.TextView | This non-clickable item's speakable text: "Terrazzo slot" is identical to that of 1 other item(s). |
+| 4 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 46dp. Consider making the height of this touch target 48dp or larger. |
+| 5 | INFO | DuplicateSpeakableTextCheck | android.widget.TextView | This non-clickable item's speakable text: "Terrazzo slot" is identical to that of 1 other item(s). |
 
 ### `CardPreviewMatrix_Sensor`
 
@@ -665,10 +610,7 @@ _No findings._
 | 1 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
 | 2 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
 | 3 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 4 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 5 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 6 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 7 | INFO | DuplicateSpeakableTextCheck | android.widget.TextView | This non-clickable item's speakable text: "Terrazzo slot" is identical to that of 1 other item(s). |
+| 4 | INFO | DuplicateSpeakableTextCheck | android.widget.TextView | This non-clickable item's speakable text: "Terrazzo slot" is identical to that of 1 other item(s). |
 
 ### `CardPreviewMatrix_Statistic`
 
@@ -679,10 +621,7 @@ _No findings._
 | 1 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
 | 2 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
 | 3 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 4 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 5 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 6 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 7 | INFO | DuplicateSpeakableTextCheck | android.widget.TextView | This non-clickable item's speakable text: "Terrazzo slot" is identical to that of 1 other item(s). |
+| 4 | INFO | DuplicateSpeakableTextCheck | android.widget.TextView | This non-clickable item's speakable text: "Terrazzo slot" is identical to that of 1 other item(s). |
 
 ### `CardPreviewMatrix_Thermostat`
 
@@ -693,14 +632,9 @@ _No findings._
 | 1 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
 | 2 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
 | 3 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 4 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 5 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 6 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 7 | ERROR | TouchTargetSizeCheck | android.view.View  desc="stepper" | This item's size is 36dp x 36dp. Consider making this touch target 48dp wide and 48dp high or larger. |
-| 8 | ERROR | TouchTargetSizeCheck | android.view.View  desc="stepper" | This item's size is 36dp x 36dp. Consider making this touch target 48dp wide and 48dp high or larger. |
-| 9 | ERROR | TouchTargetSizeCheck | android.view.View  desc="stepper" | This item's size is 36dp x 36dp. Consider making this touch target 48dp wide and 48dp high or larger. |
-| 10 | ERROR | TouchTargetSizeCheck | android.view.View  desc="stepper" | This item's size is 36dp x 36dp. Consider making this touch target 48dp wide and 48dp high or larger. |
-| 11 | INFO | DuplicateSpeakableTextCheck | android.widget.TextView | This non-clickable item's speakable text: "Terrazzo slot" is identical to that of 1 other item(s). |
+| 4 | ERROR | TouchTargetSizeCheck | android.view.View  desc="stepper" | This item's size is 36dp x 36dp. Consider making this touch target 48dp wide and 48dp high or larger. |
+| 5 | ERROR | TouchTargetSizeCheck | android.view.View  desc="stepper" | This item's size is 36dp x 36dp. Consider making this touch target 48dp wide and 48dp high or larger. |
+| 6 | INFO | DuplicateSpeakableTextCheck | android.widget.TextView | This non-clickable item's speakable text: "Terrazzo slot" is identical to that of 1 other item(s). |
 
 ### `CardPreviewMatrix_Tile`
 
@@ -711,15 +645,10 @@ _No findings._
 | 1 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
 | 2 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
 | 3 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 4 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 5 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 6 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 7 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Living Room" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 8 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Living Room" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 9 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Living Room" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 10 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Living Room" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 11 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Living Room" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 12 | INFO | DuplicateSpeakableTextCheck | android.widget.TextView | This non-clickable item's speakable text: "Terrazzo slot" is identical to that of 1 other item(s). |
+| 4 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Living Room" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 5 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Living Room" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 6 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Living Room" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 7 | INFO | DuplicateSpeakableTextCheck | android.widget.TextView | This non-clickable item's speakable text: "Terrazzo slot" is identical to that of 1 other item(s). |
 
 ### `CardPreviewMatrix_TodoList`
 
@@ -730,19 +659,10 @@ _No findings._
 | 1 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
 | 2 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
 | 3 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 4 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 5 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 6 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 7 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Salt" | This item's height is 26dp. Consider making the height of this touch target 48dp or larger. |
-| 8 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Butter" | This item's height is 26dp. Consider making the height of this touch target 48dp or larger. |
-| 9 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Milk" | This item's height is 26dp. Consider making the height of this touch target 48dp or larger. |
-| 10 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Salt" | This item's height is 26dp. Consider making the height of this touch target 48dp or larger. |
-| 11 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Butter" | This item's height is 26dp. Consider making the height of this touch target 48dp or larger. |
-| 12 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Milk" | This item's height is 19dp. Consider making the height of this touch target 48dp or larger. |
-| 13 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Salt" | This item's height is 26dp. Consider making the height of this touch target 48dp or larger. |
-| 14 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Butter" | This item's height is 26dp. Consider making the height of this touch target 48dp or larger. |
-| 15 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Milk" | This item's height is 26dp. Consider making the height of this touch target 48dp or larger. |
-| 16 | INFO | DuplicateSpeakableTextCheck | android.widget.TextView | This non-clickable item's speakable text: "Terrazzo slot" is identical to that of 1 other item(s). |
+| 4 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Salt" | This item's height is 26dp. Consider making the height of this touch target 48dp or larger. |
+| 5 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Butter" | This item's height is 26dp. Consider making the height of this touch target 48dp or larger. |
+| 6 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Milk" | This item's height is 26dp. Consider making the height of this touch target 48dp or larger. |
+| 7 | INFO | DuplicateSpeakableTextCheck | android.widget.TextView | This non-clickable item's speakable text: "Terrazzo slot" is identical to that of 1 other item(s). |
 
 ### `CardPreviewMatrix_WeatherForecast`
 
@@ -753,10 +673,7 @@ _No findings._
 | 1 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
 | 2 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
 | 3 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 4 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 5 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 6 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 7 | INFO | DuplicateSpeakableTextCheck | android.widget.TextView | This non-clickable item's speakable text: "Terrazzo slot" is identical to that of 1 other item(s). |
+| 4 | INFO | DuplicateSpeakableTextCheck | android.widget.TextView | This non-clickable item's speakable text: "Terrazzo slot" is identical to that of 1 other item(s). |
 
 ### `Clock_Dark`
 
@@ -815,29 +732,6 @@ _No findings._
 |--:|---|---|---|---|
 | 1 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
 | 2 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 3 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 4 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 5 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 6 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 7 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 8 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 9 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 10 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 11 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 12 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Status" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 13 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Stage" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 14 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Progress" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 15 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Nozzle" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 16 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Bed" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 17 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Remaining" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 18 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 15dp. Consider making the height of this touch target 48dp or larger. |
-| 19 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Status" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 20 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Stage" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 21 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Progress" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 22 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Nozzle" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 23 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Bed" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 24 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Remaining" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 25 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 15dp. Consider making the height of this touch target 48dp or larger. |
 
 ### `Dashboard3dPrintingTablet`
 
@@ -849,37 +743,6 @@ _No findings._
 | 2 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
 | 3 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
 | 4 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 5 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 6 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 7 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 8 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 9 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 10 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 11 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 12 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 13 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 14 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 15 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 16 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Status" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 17 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Stage" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 18 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Progress" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 19 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Nozzle" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 20 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Bed" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 21 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Remaining" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 22 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 15dp. Consider making the height of this touch target 48dp or larger. |
-| 23 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Status" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 24 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Stage" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 25 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Progress" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 26 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Nozzle" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 27 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Bed" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 28 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Remaining" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 29 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 15dp. Consider making the height of this touch target 48dp or larger. |
-| 30 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Progress" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 31 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Current layer" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 32 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Total layers" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 33 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Remaining" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 34 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Started" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 35 | ERROR | TouchTargetSizeCheck | android.view.View  desc="ETA" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
 
 ### `DashboardClimateMobile`
 
@@ -889,29 +752,6 @@ _No findings._
 |--:|---|---|---|---|
 | 1 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
 | 2 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 3 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 4 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 5 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 6 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 7 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 8 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 9 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 10 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 11 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 12 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Temp" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 13 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Feels like" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 14 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Humidity" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 15 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Wind" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 16 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Pressure" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 17 | ERROR | TouchTargetSizeCheck | android.view.View  desc="UV index" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 18 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Cloud cover" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 19 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Rain" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 20 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Upstairs temp" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 21 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Upstairs humidity" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 22 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Downstairs temp" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 23 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Downstairs humidity" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 24 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Kitchen temp" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 25 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Kitchen humidity" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
 
 ### `DashboardClimateTablet`
 
@@ -923,33 +763,6 @@ _No findings._
 | 2 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
 | 3 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
 | 4 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 5 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 6 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 7 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 8 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 9 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 10 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 11 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 12 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 13 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 14 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Temp" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 15 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Feels like" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 16 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Humidity" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 17 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Wind" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 18 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Pressure" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 19 | ERROR | TouchTargetSizeCheck | android.view.View  desc="UV index" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 20 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Cloud cover" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 21 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Rain" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 22 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Upstairs temp" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 23 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Upstairs humidity" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 24 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Downstairs temp" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 25 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Downstairs humidity" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 26 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Kitchen temp" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 27 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Kitchen humidity" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 28 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Sun" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 29 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Dew point" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 30 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Visibility" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 31 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Wind bearing" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
 
 ### `DashboardEnergyMobile`
 
@@ -959,38 +772,7 @@ _No findings._
 |--:|---|---|---|---|
 | 1 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
 | 2 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 3 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 4 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 5 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 6 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 7 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 8 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 9 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 10 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 11 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 12 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 13 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 14 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Solar production" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 15 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Cloud cover" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 16 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Import rate" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 17 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Export rate" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 18 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Gas rate" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 19 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Elec. standing" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 20 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Gas standing" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 21 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Elec. next rate" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 22 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Export next rate" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 23 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Gas next rate" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 24 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Imported" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 25 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Import cost" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 26 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Exported" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 27 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Export income" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 28 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Gas (kWh)" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 29 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Gas (m³)" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 30 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Gas cost" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 31 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Solar lifetime" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 32 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Octoplus points" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 33 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Wheel spins (elec)" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 34 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Wheel spins (gas)" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 3 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Solar production" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
 
 ### `DashboardEnergyTablet`
 
@@ -1000,38 +782,7 @@ _No findings._
 |--:|---|---|---|---|
 | 1 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
 | 2 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 3 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 4 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 5 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 6 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 7 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 8 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 9 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 10 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 11 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 12 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 13 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 14 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Solar production" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 15 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Cloud cover" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 16 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Import rate" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 17 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Export rate" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 18 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Gas rate" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 19 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Elec. standing" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 20 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Gas standing" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 21 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Elec. next rate" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 22 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Export next rate" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 23 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Gas next rate" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 24 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Imported" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 25 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Import cost" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 26 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Exported" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 27 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Export income" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 28 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Gas (kWh)" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 29 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Gas (m³)" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 30 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Gas cost" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 31 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Solar lifetime" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 32 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Octoplus points" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 33 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Wheel spins (elec)" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 34 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Wheel spins (gas)" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 3 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Solar production" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
 
 ### `DashboardGithubMobile`
 
@@ -1041,57 +792,6 @@ _No findings._
 |--:|---|---|---|---|
 | 1 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
 | 2 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 3 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 4 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 5 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 6 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 7 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 8 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 9 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 10 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 11 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 12 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 13 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 14 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 15 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 16 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 17 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 18 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 18dp. Consider making the height of this touch target 48dp or larger. |
-| 19 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 18dp. Consider making the height of this touch target 48dp or larger. |
-| 20 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 18dp. Consider making the height of this touch target 48dp or larger. |
-| 21 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 18dp. Consider making the height of this touch target 48dp or larger. |
-| 22 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 18dp. Consider making the height of this touch target 48dp or larger. |
-| 23 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Stars" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 24 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Open issues" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 25 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Open PRs" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 26 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Latest PR" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 27 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Latest issue" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 28 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Latest release" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 29 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Latest tag" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 30 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 18dp. Consider making the height of this touch target 48dp or larger. |
-| 31 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 18dp. Consider making the height of this touch target 48dp or larger. |
-| 32 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 18dp. Consider making the height of this touch target 48dp or larger. |
-| 33 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 18dp. Consider making the height of this touch target 48dp or larger. |
-| 34 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 18dp. Consider making the height of this touch target 48dp or larger. |
-| 35 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 18dp. Consider making the height of this touch target 48dp or larger. |
-| 36 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 18dp. Consider making the height of this touch target 48dp or larger. |
-| 37 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Stars" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 38 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Open issues" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 39 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Open PRs" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 40 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Latest PR" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 41 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Latest issue" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 42 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Latest release" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 43 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Latest tag" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 44 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 18dp. Consider making the height of this touch target 48dp or larger. |
-| 45 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 18dp. Consider making the height of this touch target 48dp or larger. |
-| 46 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 18dp. Consider making the height of this touch target 48dp or larger. |
-| 47 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 18dp. Consider making the height of this touch target 48dp or larger. |
-| 48 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 18dp. Consider making the height of this touch target 48dp or larger. |
-| 49 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 18dp. Consider making the height of this touch target 48dp or larger. |
-| 50 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Stars" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 51 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Open issues" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 52 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Open PRs" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 53 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Latest PR" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
 
 ### `DashboardGithubTablet`
 
@@ -1104,81 +804,11 @@ _No findings._
 | 3 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
 | 4 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
 | 5 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 6 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 7 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 8 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 9 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 10 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 11 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 12 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 13 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 14 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 15 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 16 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 17 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 18 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 19 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 20 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 21 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 22 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 23 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 24 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 25 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 26 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 27 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 18dp. Consider making the height of this touch target 48dp or larger. |
-| 28 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 18dp. Consider making the height of this touch target 48dp or larger. |
-| 29 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 18dp. Consider making the height of this touch target 48dp or larger. |
-| 30 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 18dp. Consider making the height of this touch target 48dp or larger. |
-| 31 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 18dp. Consider making the height of this touch target 48dp or larger. |
-| 32 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 18dp. Consider making the height of this touch target 48dp or larger. |
-| 33 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 18dp. Consider making the height of this touch target 48dp or larger. |
-| 34 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Stars" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 35 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Open issues" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 36 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Open PRs" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 37 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Latest PR" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 38 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Latest issue" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 39 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Latest release" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 40 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Latest tag" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 41 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 18dp. Consider making the height of this touch target 48dp or larger. |
-| 42 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 18dp. Consider making the height of this touch target 48dp or larger. |
-| 43 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 18dp. Consider making the height of this touch target 48dp or larger. |
-| 44 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 18dp. Consider making the height of this touch target 48dp or larger. |
-| 45 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 18dp. Consider making the height of this touch target 48dp or larger. |
-| 46 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 18dp. Consider making the height of this touch target 48dp or larger. |
-| 47 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Stars" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 48 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Open issues" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 49 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Open PRs" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 50 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Latest PR" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 51 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Latest issue" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 52 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Latest release" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 53 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Latest tag" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 54 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 18dp. Consider making the height of this touch target 48dp or larger. |
-| 55 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 18dp. Consider making the height of this touch target 48dp or larger. |
-| 56 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 18dp. Consider making the height of this touch target 48dp or larger. |
-| 57 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 18dp. Consider making the height of this touch target 48dp or larger. |
-| 58 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 18dp. Consider making the height of this touch target 48dp or larger. |
-| 59 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Stars" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 60 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Open issues" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 61 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Open PRs" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 62 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Latest PR" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 63 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Latest issue" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 64 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Latest release" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 65 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Latest tag" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 66 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 18dp. Consider making the height of this touch target 48dp or larger. |
-| 67 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 18dp. Consider making the height of this touch target 48dp or larger. |
-| 68 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 18dp. Consider making the height of this touch target 48dp or larger. |
-| 69 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 18dp. Consider making the height of this touch target 48dp or larger. |
-| 70 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 18dp. Consider making the height of this touch target 48dp or larger. |
-| 71 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 18dp. Consider making the height of this touch target 48dp or larger. |
-| 72 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Stars" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 73 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Open issues" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 74 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Open PRs" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 75 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Latest PR" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 76 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Latest issue" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 77 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Latest release" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 78 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Latest tag" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 79 | ERROR | TouchTargetSizeCheck | android.view.View  desc="square/okhttp" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 80 | ERROR | TouchTargetSizeCheck | android.view.View  desc="google/horologist" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 6 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 18dp. Consider making the height of this touch target 48dp or larger. |
+| 7 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 18dp. Consider making the height of this touch target 48dp or larger. |
+| 8 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 18dp. Consider making the height of this touch target 48dp or larger. |
+| 9 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 18dp. Consider making the height of this touch target 48dp or larger. |
+| 10 | ERROR | TouchTargetSizeCheck | android.view.View | This item's height is 18dp. Consider making the height of this touch target 48dp or larger. |
 
 ### `DashboardMeshcoreMobile`
 
@@ -1188,32 +818,8 @@ _No findings._
 |--:|---|---|---|---|
 | 1 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
 | 2 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 3 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 4 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 5 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 6 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 7 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 8 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 9 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 10 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 11 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 12 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 13 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 14 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 15 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Status" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 16 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Nodes seen" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 17 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Path length" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 18 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Req OK" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 19 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Req fail" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 20 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Battery %" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 21 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Battery V" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 22 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Ch1 voltage" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 23 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Uptime" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 24 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Recipient type" | This item's height is 32dp. Consider making the height of this touch target 48dp or larger. |
-| 25 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Channel" | This item's height is 32dp. Consider making the height of this touch target 48dp or larger. |
-| 26 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Contact / Room" | This item's height is 32dp. Consider making the height of this touch target 48dp or larger. |
-| 27 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Message" | This item's height is 32dp. Consider making the height of this touch target 48dp or larger. |
-| 28 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Last delivery" | This item's height is 32dp. Consider making the height of this touch target 48dp or larger. |
+| 3 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Status" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 4 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Nodes seen" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
 
 ### `DashboardMeshcoreTablet`
 
@@ -1223,30 +829,8 @@ _No findings._
 |--:|---|---|---|---|
 | 1 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
 | 2 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 3 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 4 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 5 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 6 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 7 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 8 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 9 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 10 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 11 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 12 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 13 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 14 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Status" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 15 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Nodes seen" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 16 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Path length" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 17 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Req OK" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 18 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Req fail" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 19 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Battery %" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 20 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Battery V" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 21 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Ch1 voltage" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 22 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Uptime" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 23 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Recipient type" | This item's height is 32dp. Consider making the height of this touch target 48dp or larger. |
-| 24 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Channel" | This item's height is 32dp. Consider making the height of this touch target 48dp or larger. |
-| 25 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Contact / Room" | This item's height is 32dp. Consider making the height of this touch target 48dp or larger. |
-| 26 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Message" | This item's height is 32dp. Consider making the height of this touch target 48dp or larger. |
+| 3 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Status" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 4 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Nodes seen" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
 
 ### `DashboardNetworksMobile`
 
@@ -1256,18 +840,8 @@ _No findings._
 |--:|---|---|---|---|
 | 1 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
 | 2 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 3 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 4 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 5 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 6 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 7 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 8 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 9 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 10 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 11 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Home download" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 12 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Garage download" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 13 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Garage link" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 14 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Controller update" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 3 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Home download" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 4 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Garage download" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
 
 ### `DashboardNetworksTablet`
 
@@ -1277,18 +851,8 @@ _No findings._
 |--:|---|---|---|---|
 | 1 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
 | 2 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 3 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 4 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 5 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 6 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 7 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 8 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 9 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 10 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 11 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Home download" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 12 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Garage download" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 13 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Garage link" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 14 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Controller update" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 3 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Home download" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 4 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Garage download" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
 
 ### `DashboardSecurityMobile`
 
@@ -1298,21 +862,8 @@ _No findings._
 |--:|---|---|---|---|
 | 1 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
 | 2 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 3 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 4 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 5 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 6 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 7 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 8 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 9 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 10 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 11 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Open" | This item's size is 32dp x 32dp. Consider making this touch target 48dp wide and 48dp high or larger. |
-| 12 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Stop" | This item's size is 32dp x 32dp. Consider making this touch target 48dp wide and 48dp high or larger. |
-| 13 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Close" | This item's size is 32dp x 32dp. Consider making this touch target 48dp wide and 48dp high or larger. |
-| 14 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Vent" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 15 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Half open" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 16 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Impulse" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 17 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Back door (last event)" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 3 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Open" | This item's size is 32dp x 32dp. Consider making this touch target 48dp wide and 48dp high or larger. |
+| 4 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Stop" | This item's size is 32dp x 32dp. Consider making this touch target 48dp wide and 48dp high or larger. |
 
 ### `DashboardSecurityTablet`
 
@@ -1322,21 +873,8 @@ _No findings._
 |--:|---|---|---|---|
 | 1 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
 | 2 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 3 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 4 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 5 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 6 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 7 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 8 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 9 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 10 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 11 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Open" | This item's size is 32dp x 32dp. Consider making this touch target 48dp wide and 48dp high or larger. |
-| 12 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Stop" | This item's size is 32dp x 32dp. Consider making this touch target 48dp wide and 48dp high or larger. |
-| 13 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Close" | This item's size is 32dp x 32dp. Consider making this touch target 48dp wide and 48dp high or larger. |
-| 14 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Vent" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 15 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Half open" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 16 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Impulse" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 17 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Back door (last event)" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+| 3 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Open" | This item's size is 32dp x 32dp. Consider making this touch target 48dp wide and 48dp high or larger. |
+| 4 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Stop" | This item's size is 32dp x 32dp. Consider making this touch target 48dp wide and 48dp high or larger. |
 
 ### `Dashboard_Dark`
 
@@ -2119,10 +1657,7 @@ _No findings._
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
 | 1 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 2 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 3 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Living Room" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 4 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Living Room" | This item's height is 32dp. Consider making the height of this touch target 48dp or larger. |
-| 5 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Kitchen" | This item's height is 34dp. Consider making the height of this touch target 48dp or larger. |
+| 2 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Living Room" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
 
 ### `Statistic_Dark`
 
@@ -2352,7 +1887,7 @@ _No findings._
 
 ### `ToggleByProgress_Mid`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/pr/renders/previews/5.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/pr/renders/previews/ToggleByProgress_Mid_toggle_progress_0_5.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -2360,7 +1895,7 @@ _No findings._
 
 ### `ToggleByProgress_Off`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/pr/renders/previews/ToggleByProgress_Off_toggle_progress_0.0.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/pr/renders/previews/ToggleByProgress_Off_toggle_progress_0_0.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -2368,7 +1903,7 @@ _No findings._
 
 ### `ToggleByProgress_On`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/pr/renders/previews/ToggleByProgress_On_toggle_progress_1.0.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/pr/renders/previews/ToggleByProgress_On_toggle_progress_1_0.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
@@ -2477,7 +2012,6 @@ _No findings._
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
 | 1 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 2 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
 
 ### `WrapContentHeightReproAlpha010`
 
@@ -2526,7 +2060,7 @@ _No findings._
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
 | 1 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 2 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Kitchen" | This item's width is 15dp. Consider making the width of this touch target 48dp or larger. |
+| 2 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Kitchen" | This item's width is 41dp. Consider making the width of this touch target 48dp or larger. |
 
 ### `SlotWidgetPreview_TileSmall`
 
@@ -2559,8 +2093,8 @@ _No findings._
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
 | 1 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 2 | ERROR | TouchTargetSizeCheck | android.view.View  desc="action" | This item's width is 40dp. Consider making the width of this touch target 48dp or larger. |
-| 3 | ERROR | TouchTargetSizeCheck | android.view.View  desc="action" | This item's width is 37dp. Consider making the width of this touch target 48dp or larger. |
+| 2 | ERROR | TouchTargetSizeCheck | android.view.View  desc="action" | This item's size is 40dp x 40dp. Consider making this touch target 48dp wide and 48dp high or larger. |
+| 3 | ERROR | TouchTargetSizeCheck | android.view.View  desc="action" | This item's size is 40dp x 40dp. Consider making this touch target 48dp wide and 48dp high or larger. |
 
 ### `WearAreaSmall`
 
@@ -2679,7 +2213,7 @@ _No findings._
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
 | 1 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 2 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Kitchen" | This item's width is 15dp. Consider making the width of this touch target 48dp or larger. |
+| 2 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Kitchen" | This item's width is 41dp. Consider making the width of this touch target 48dp or larger. |
 
 ### `WearEntitiesSmall`
 
@@ -2697,8 +2231,7 @@ _No findings._
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
 | 1 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 2 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Kitchen" | This item's width is 39dp. Consider making the width of this touch target 48dp or larger. |
-| 3 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Coffee maker" | This item's width is 42dp. Consider making the width of this touch target 48dp or larger. |
+| 2 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Kitchen" | This item's width is 41dp. Consider making the width of this touch target 48dp or larger. |
 
 ### `WearEntityFilterSmall`
 
@@ -2707,7 +2240,7 @@ _No findings._
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
 | 1 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 2 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Kitchen" | This item's size is 39dp x 16dp. Consider making this touch target 48dp wide and 48dp high or larger. |
+| 2 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Kitchen" | This item's size is 41dp x 17dp. Consider making this touch target 48dp wide and 48dp high or larger. |
 
 ### `WearEntityLarge`
 
@@ -2748,7 +2281,7 @@ _No findings._
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
 | 1 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 2 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Kitchen" | This item's width is 15dp. Consider making the width of this touch target 48dp or larger. |
+| 2 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Kitchen" | This item's width is 41dp. Consider making the width of this touch target 48dp or larger. |
 
 ### `WearGlanceSmall`
 
@@ -2757,7 +2290,7 @@ _No findings._
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
 | 1 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 2 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Kitchen" | This item's size is 39dp x 40dp. Consider making this touch target 48dp wide and 48dp high or larger. |
+| 2 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Kitchen" | This item's size is 41dp x 40dp. Consider making this touch target 48dp wide and 48dp high or larger. |
 
 ### `WearGridLarge`
 
