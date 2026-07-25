@@ -110,18 +110,40 @@ configurations.all {
         "Align concurrent-futures across the main + androidTest classpaths (consistent resolution)"
       )
     }
-    // Align every `org.bouncycastle:*` coord on one version. The compose-preview a11y render pulls
-    // both `bcprov-jdk18on:1.79` and `:1.84` (via different transitive paths) onto one render
-    // classpath. BC 1.84's post-quantum `compositekem.KeyFactorySpi.<clinit>` references
-    // `IANAObjectIdentifiers.id_MLKEM768_RSA2048_SHA3_256` — a field that only exists from 1.81 on —
-    // but the older `IANAObjectIdentifiers` (1.79) can win on the mixed classpath, so its static
-    // init throws `NoSuchFieldError` and every a11y preview fails. Forcing the whole family to 1.84
-    // (the higher of the two) makes provider and asn1 classes agree.
-    if (requested.group == "org.bouncycastle") {
-      useVersion("1.84")
-      because(
-        "Align bcprov/bcutil/bcpkix on the compose-preview render classpath; mixed 1.79/1.84 jars throw NoSuchFieldError from compositekem.KeyFactorySpi"
-      )
+  }
+}
+
+/**
+ * Aligns the whole `org.bouncycastle:*` family — `bcprov` / `bcutil` / `bcpkix` / `bcmail` /
+ * `bctls` — on one version.
+ *
+ * BouncyCastle publishes those as separate module coordinates with no Gradle platform or BOM, so
+ * nothing tells Gradle they're one release train. It will happily resolve `bcprov-jdk18on` to 1.85
+ * (Robolectric's floor, reached through the compose-preview renderer) while leaving `bcutil` /
+ * `bcpkix` at 1.84 (this repo's own `mockserver` test dependency). Mixed provider and asn1 classes
+ * are how `compositekem.KeyFactorySpi.<clinit>` ends up referencing an `IANAObjectIdentifiers`
+ * field the other jar's version doesn't define — `NoSuchFieldError`, and every a11y preview fails
+ * (#495).
+ *
+ * This replaces the `useVersion("1.84")` force that #495 landed. Two reasons a virtual platform is
+ * the better shape:
+ * - The force had become a **downgrade** — Robolectric wants 1.85 — and every upstream BC bump
+ *   meant editing this file again, with nothing failing loudly when it went stale.
+ * - `belongsTo` states the actual fact (these modules are one unit) and lets Gradle's normal
+ *   conflict resolution pick the highest version any member asks for, so the family stays coherent
+ *   with no hardcoded number to maintain.
+ *
+ * The *other* half of #495 — the same module arriving at two versions because the render classpath
+ * concatenated several independently-resolved graphs — is fixed upstream in compose-ai-tools#2739
+ * (shipped in 0.17.21), so this rule only has to keep the family internally consistent.
+ */
+abstract class BouncyCastleAlignmentRule : ComponentMetadataRule {
+  override fun execute(context: ComponentMetadataContext) {
+    val id = context.details.id
+    if (id.group == "org.bouncycastle") {
+      context.details.belongsTo("org.bouncycastle:bouncycastle-virtual-platform:${id.version}")
     }
   }
 }
+
+dependencies { components.all(BouncyCastleAlignmentRule::class.java) }
