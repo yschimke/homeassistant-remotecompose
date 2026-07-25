@@ -110,5 +110,18 @@ configurations.all {
         "Align concurrent-futures across the main + androidTest classpaths (consistent resolution)"
       )
     }
+    // Align every `org.bouncycastle:*` coord on one version. The compose-preview a11y render pulls
+    // both `bcprov-jdk18on:1.79` and `:1.84` (via different transitive paths) onto one render
+    // classpath. BC 1.84's post-quantum `compositekem.KeyFactorySpi.<clinit>` references
+    // `IANAObjectIdentifiers.id_MLKEM768_RSA2048_SHA3_256` — a field that only exists from 1.81 on —
+    // but the older `IANAObjectIdentifiers` (1.79) can win on the mixed classpath, so its static
+    // init throws `NoSuchFieldError` and every a11y preview fails. Forcing the whole family to 1.84
+    // (the higher of the two) makes provider and asn1 classes agree.
+    if (requested.group == "org.bouncycastle") {
+      useVersion("1.84")
+      because(
+        "Align bcprov/bcutil/bcpkix on the compose-preview render classpath; mixed 1.79/1.84 jars throw NoSuchFieldError from compositekem.KeyFactorySpi"
+      )
+    }
   }
 }
