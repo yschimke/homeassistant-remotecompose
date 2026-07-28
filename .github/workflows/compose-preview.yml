@@ -47,3 +47,24 @@ jobs:
         with:
           cli-version: catalog
           catalog-key: compose-preview-plugin
+          # One known preview cannot render, and it is one nobody wrote:
+          # `activity__MainActivity`. The plugin synthesises a preview per
+          # `<activity>` in the merged manifest (the launcher activity's render
+          # is meant to be the app's hero image), and the renderer deliberately
+          # pins a stub `android.app.Application` so previews don't run
+          # app-lifecycle init. `MainActivity.onCreate` reads its DI graph via
+          # `application as TerrazzoApplication`, so under the stub it throws
+          # ClassCastException and produces no PNG — which under the action's
+          # default `fail` policy has gated this workflow red since the
+          # 0.17.19 -> 0.17.20 plugin bump.
+          #
+          # `warn` keeps the render reported (the id and its stack trace still
+          # land in the log and the composePreviewRender-reports artifact) but
+          # stops one tool-generated hero image from failing the run. The
+          # documented alternative, `composePreview.useConsumerApplication`,
+          # would run TerrazzoApplication.onCreate in every render sandbox —
+          # it installs crash logging, starts wear sync, and flips the
+          # process-global `enableRemoteComposeWrapContent()` /
+          # `enableRemoteImageUrls()` switches, which would change how the
+          # module's other previews rasterise. Not worth it for one image.
+          missing-renders: warn
