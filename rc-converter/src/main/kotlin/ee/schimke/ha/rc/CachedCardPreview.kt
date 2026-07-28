@@ -13,6 +13,7 @@ import androidx.compose.remote.player.core.platform.BitmapLoader
 import androidx.compose.remote.player.core.state.StateUpdater
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -142,9 +143,11 @@ fun CachedCardPreview(
           .also { cache.put(effectiveCacheKey, it) }
     }
 
-  // Hand the encoded document to an observer once per (document, observer) — during composition, so
-  // a render harness collecting it still has its per-preview window open.
-  remember(cardDocument, onDocument) { onDocument?.invoke(cardDocument.bytes) }
+  // Hand the encoded document to an observer once the composition succeeds. `SideEffect` rather
+  // than `remember`: publishing from a `remember` block is the `RememberReturnType` lint error,
+  // because an abandoned or retried composition would have published anyway. A render harness
+  // collecting this still has its per-preview window open in the apply phase.
+  SideEffect { onDocument?.invoke(cardDocument.bytes) }
 
   val dispatcher = LocalHaActionDispatcher.current
 

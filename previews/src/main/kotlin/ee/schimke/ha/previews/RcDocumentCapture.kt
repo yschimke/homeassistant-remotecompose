@@ -7,6 +7,7 @@ import androidx.compose.remote.creation.compose.layout.RemoteComposable
 import androidx.compose.remote.creation.profile.Profile
 import androidx.compose.remote.tooling.preview.RemoteContentPreview
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -68,23 +69,32 @@ private fun CaptureRemoteDocument(
 ) {
   val context = LocalContext.current
   val previewId = IrSidecarChannel.currentPreviewId()
-  // `remember` keyed on the content so the encode happens once per preview composition rather than
-  // on every recomposition — the same memoisation upstream's own capture path uses.
   val density = context.resources.displayMetrics.density
-  remember(previewId, profile, content) {
-    if (previewId != null) {
-      runCatching {
-          runBlocking {
-            val bytes =
-              captureSingleRemoteDocument(context = context, profile = profile, content = content)
-                .bytes
-            // Idempotent, never-throws; leaves the bytes alone if it can't stamp.
-            stampGenerationDensity(bytes, density)
+  // `remember` keyed on the content so the encode happens once per preview composition rather than
+  // on every recomposition — the same memoisation upstream's own capture path uses. It *computes*
+  // the bytes and nothing more; the offer is a side effect, so it belongs in `SideEffect` (a
+  // `remember` block that only mutates state outside the composition is the `RememberReturnType`
+  // lint error, and rightly so — a composition that is abandoned or retried would otherwise still
+  // have published).
+  val captured: ByteArray? =
+    remember(previewId, profile, content) {
+      if (previewId == null) null
+      else
+        runCatching {
+            runBlocking {
+              val bytes =
+                captureSingleRemoteDocument(context = context, profile = profile, content = content)
+                  .bytes
+              // Idempotent, never-throws; leaves the bytes alone if it can't stamp.
+              stampGenerationDensity(bytes, density)
+            }
           }
-        }
-        .onSuccess(::offerRemoteDocument)
+          .getOrNull()
     }
-  }
+  // Publishes once the composition succeeds, still inside the render's preview-id window (the
+  // harness drains the channel only after the render completes). Re-offering on a recomposition is
+  // harmless: the channel keys by preview id, so it replaces an identical entry.
+  SideEffect { captured?.let(::offerRemoteDocument) }
 }
 
 // Remote Compose modern-header wire constants (big-endian). The header op is:
@@ -161,8 +171,8 @@ internal fun stampGenerationDensity(bytes: ByteArray, density: Float): ByteArray
  * would scale dp-sized content wrongly in the browser while its neighbours rendered correctly — a
  * difference invisible in the baked PNG and only measurable on the parity page.
  *
- * Returns a stable lambda so `CachedCardPreview` can key its `remember` on it and notify once per
- * document rather than once per recomposition. A no-op outside a harness render.
+ * Returns a lambda that is stable across recompositions for a given density, so it doesn't
+ * invalidate the caller's effects. A no-op outside a harness render.
  */
 @Composable
 internal fun rememberRemoteDocumentSink(): (ByteArray) -> Unit {
