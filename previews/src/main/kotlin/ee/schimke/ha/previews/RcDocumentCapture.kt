@@ -70,17 +70,85 @@ private fun CaptureRemoteDocument(
   val previewId = IrSidecarChannel.currentPreviewId()
   // `remember` keyed on the content so the encode happens once per preview composition rather than
   // on every recomposition — the same memoisation upstream's own capture path uses.
+  val density = context.resources.displayMetrics.density
   remember(previewId, profile, content) {
     if (previewId != null) {
       runCatching {
           runBlocking {
-            captureSingleRemoteDocument(context = context, profile = profile, content = content)
-              .bytes
+            val bytes =
+              captureSingleRemoteDocument(context = context, profile = profile, content = content)
+                .bytes
+            // Idempotent, never-throws; leaves the bytes alone if it can't stamp.
+            stampGenerationDensity(bytes, density)
           }
         }
         .onSuccess { offerRemoteDocument(it) }
     }
   }
+}
+
+// Remote Compose modern-header wire constants (big-endian). The header op is:
+//   [op:1][major|MAGIC:4][minor:4][patch:4][propCount:4][ (tag:2)(len:2)(payload:len) ... ]
+// where tag = (dataType shl 10) or key, dataType FLOAT = 1, key 7 = DOC_DENSITY_AT_GENERATION.
+private const val RC_HEADER_MAGIC = 0x048C0000
+private const val RC_PROP_DENSITY_AT_GENERATION = 7
+private const val RC_DATATYPE_FLOAT = 1
+
+/**
+ * Insert `DOC_DENSITY_AT_GENERATION = density` into a captured RemoteDocument's header.
+ *
+ * The writer records the document's size in px and its density *behavior*, but not the density
+ * *value*, so a player has nothing to scale dp-typed size modifiers by and draws them too small.
+ * Every player that reads the property gets it right; one that doesn't is unaffected, since this
+ * only appends to the header's property table. The renderer's own PNG is untouched either way — the
+ * stamp lands on the sidecar bytes, after the document has been captured.
+ *
+ * Returns [bytes] unchanged when the density is unusable, the header isn't the modern
+ * property-table format, or the property is already present (so it is idempotent). Byte surgery on
+ * the header only; mirrors `stampGenerationDensity` in compose-ai-tools' Remote Compose connector,
+ * which does this for the `@PreviewWrapper` capture path.
+ */
+internal fun stampGenerationDensity(bytes: ByteArray, density: Float): ByteArray {
+  if (!density.isFinite() || density <= 0f) return bytes
+  if (bytes.size < 17) return bytes
+  fun beInt(o: Int): Int =
+    ((bytes[o].toInt() and 0xFF) shl 24) or
+      ((bytes[o + 1].toInt() and 0xFF) shl 16) or
+      ((bytes[o + 2].toInt() and 0xFF) shl 8) or
+      (bytes[o + 3].toInt() and 0xFF)
+  fun beShort(o: Int): Int = ((bytes[o].toInt() and 0xFF) shl 8) or (bytes[o + 1].toInt() and 0xFF)
+
+  if ((beInt(1) and 0xFFFF0000.toInt()) != RC_HEADER_MAGIC) return bytes
+  val propCount = beInt(13)
+  if (propCount < 0) return bytes
+  // Walk the existing property table; bail (leave unchanged) if density is already recorded or the
+  // table is malformed.
+  var off = 17
+  repeat(propCount) {
+    if (off + 4 > bytes.size) return bytes
+    if ((beShort(off) and 0x3FF) == RC_PROP_DENSITY_AT_GENERATION) return bytes
+    off += 4 + beShort(off + 2)
+  }
+
+  val tag = (RC_DATATYPE_FLOAT shl 10) or RC_PROP_DENSITY_AT_GENERATION
+  val densBits = java.lang.Float.floatToIntBits(density)
+  val out = ByteArray(bytes.size + 8)
+  System.arraycopy(bytes, 0, out, 0, 17)
+  val newCount = propCount + 1
+  out[13] = (newCount ushr 24).toByte()
+  out[14] = (newCount ushr 16).toByte()
+  out[15] = (newCount ushr 8).toByte()
+  out[16] = newCount.toByte()
+  out[17] = (tag ushr 8).toByte()
+  out[18] = tag.toByte()
+  out[19] = 0
+  out[20] = 4
+  out[21] = (densBits ushr 24).toByte()
+  out[22] = (densBits ushr 16).toByte()
+  out[23] = (densBits ushr 8).toByte()
+  out[24] = densBits.toByte()
+  System.arraycopy(bytes, 17, out, 25, bytes.size - 17)
+  return out
 }
 
 /**
