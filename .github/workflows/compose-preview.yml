@@ -67,4 +67,16 @@ jobs:
           # process-global `enableRemoteComposeWrapContent()` /
           # `enableRemoteImageUrls()` switches, which would change how the
           # module's other previews rasterise. Not worth it for one image.
+          #
+          # `warn` alone would also swallow a real regression, so it is paired
+          # with the narrower gate in the step below — the policy is "a
+          # synthetic activity render may fail", not "any render may fail".
           missing-renders: warn
+
+      # Restores the gate `missing-renders: warn` gives up, narrowed to what is
+      # actually unfixable here: a preview nobody wrote. Any AUTHORED preview
+      # that fails to render still fails the run. Runs on failure too, so a red
+      # render is diagnosed rather than masked by an earlier step's exit.
+      - name: Fail on authored preview render errors
+        if: always()
+        run: bash .github/scripts/check-render-errors.sh .
