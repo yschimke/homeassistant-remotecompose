@@ -79,6 +79,16 @@ remote-player-view = { module = "androidx.compose.remote:remote-player-view", ve
 remote-tooling-preview = { module = "androidx.compose.remote:remote-tooling-preview", version.ref = "remote-compose" }
 remote-material3 = { module = "androidx.wear.compose.remote:remote-material3", version.ref = "remote-material3" }
 
+# compose-preview render-harness seam. `IrSidecarChannel` is the process-static
+# hand-off the renderer drains after each preview composition into the
+# `renders/<stem>.rc` sidecar that `bundle pack` packs as `ir/<id>.rc` — the
+# Remote Compose data tier the public preview server plays in-browser. Pure JVM
+# (raw `ByteArray`s, no alpha `compose-remote` types), so `:previews` can offer
+# documents captured against its own `remote-compose` version without the
+# renderer and the app agreeing on that version. Versioned with the rest of the
+# compose-ai-tools release train.
+composeai-data-render-core = { module = "ee.schimke.composeai:data-render-core", version.ref = "compose-preview-plugin" }
+
 # Compose
 compose-bom = { module = "androidx.compose:compose-bom", version.ref = "compose-bom" }
 compose-ui = { module = "androidx.compose.ui:ui" }

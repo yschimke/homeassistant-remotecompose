@@ -157,7 +157,13 @@ private fun ThemeShowcase(style: ThemeStyle, darkTheme: Boolean) {
           SurfaceBand("Hi+", colors.surfaceContainerHighest, colors.onSurface)
         }
 
-        // Two HA cards stacked inside a section-group surface
+        // Two HA cards stacked inside a section-group surface —
+        // two RemoteCompose documents in one preview, so these
+        // hosts stay on plain `RemoteContentPreview` and publish no
+        // `.rc` sidecar (only one document per preview can be
+        // carried; see RcDocumentCapture.kt).
+        //
+        // (Layering:)
         // (`sectionBackground`), itself sitting on the dashboard
         // layer (`dashboardBackground`). For Material3 / Mushroom
         // / Kiosk the three layers read as three distinct tints;

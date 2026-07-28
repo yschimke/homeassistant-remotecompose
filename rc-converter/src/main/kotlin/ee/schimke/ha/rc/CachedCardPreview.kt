@@ -13,6 +13,7 @@ import androidx.compose.remote.player.core.platform.BitmapLoader
 import androidx.compose.remote.player.core.state.StateUpdater
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -46,6 +47,12 @@ import kotlinx.coroutines.runBlocking
  * 3. On every [snapshot] change, computes the bindings via [cardSnapshotBindings] and writes only
  *    those that actually changed since the last push (`<id>.state`, `<id>.is_on`).
  *
+ * [onDocument] observes the encoded bytes once per document (on a cache hit too, since the caller
+ * cares about the document, not about who encoded it). It exists for the preview module, which
+ * hands them to the compose-preview render harness so the published catalog carries the Remote
+ * Compose data tier next to the baked PNG — see `:previews`' `RcDocumentCapture.kt`. Null (the
+ * default) for every in-app caller: no observer, no behaviour change.
+ *
  * Sizing model: the captured document is authored with the wrap-friendly measure path
  * (FEATURE_PAINT_MEASURE = 0, baked by `androidXExperimentalWrap`). Playback goes through
  * [WrapAdaptiveRemoteDocumentPlayer], which warms up the `RemoteComposePlayer`'s paint context with
@@ -67,6 +74,7 @@ fun CachedCardPreview(
   snapshot: HaSnapshot? = null,
   liveBindings: Boolean = true,
   bitmapLoader: BitmapLoader = BitmapLoader.UNSUPPORTED,
+  onDocument: ((ByteArray) -> Unit)? = null,
   content: @RemoteComposable @Composable () -> Unit,
 ) {
   // Flip the player into wrap-content mode — idempotent assignment.
@@ -134,6 +142,12 @@ fun CachedCardPreview(
           }
           .also { cache.put(effectiveCacheKey, it) }
     }
+
+  // Hand the encoded document to an observer once the composition succeeds. `SideEffect` rather
+  // than `remember`: publishing from a `remember` block is the `RememberReturnType` lint error,
+  // because an abandoned or retried composition would have published anyway. A render harness
+  // collecting this still has its per-preview window open in the apply phase.
+  SideEffect { onDocument?.invoke(cardDocument.bytes) }
 
   val dispatcher = LocalHaActionDispatcher.current
 
