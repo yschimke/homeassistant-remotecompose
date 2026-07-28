@@ -53,6 +53,7 @@ import androidx.compose.ui.unit.dp
 import androidx.glance.wear.GlanceWearWidget
 import androidx.glance.wear.core.WearWidgetParams
 import ee.schimke.ha.rc.components.R
+import ee.schimke.terrazzo.wear.widget.WearWidgetIrSidecar
 import kotlinx.coroutines.runBlocking
 
 /**
@@ -76,10 +77,16 @@ public fun WearWidgetPreviewSnapshot(
   val context = LocalContext.current
   val document =
     remember(widget, params, context) {
-      runBlocking {
+      val rcDocument = runBlocking {
         val widgetData = widget.provideWidgetData(context, params)
         widgetData.captureRawContent(context, params).rcDocument
       }
+      // The encoded document IS the widget's value, so don't let it stop at the raster: offer it to
+      // the compose-preview render harness, which writes it as the `renders/<stem>.rc` sidecar and
+      // packs it as this preview's IR. Reflective + best-effort, so this is a no-op in the shipped
+      // app and in the IDE preview pane. See [WearWidgetIrSidecar].
+      WearWidgetIrSidecar.offer(rcDocument)
+      rcDocument
     }
 
   Box(
