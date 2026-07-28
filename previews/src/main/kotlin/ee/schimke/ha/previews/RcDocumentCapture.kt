@@ -82,7 +82,7 @@ private fun CaptureRemoteDocument(
             stampGenerationDensity(bytes, density)
           }
         }
-        .onSuccess { offerRemoteDocument(it) }
+        .onSuccess(::offerRemoteDocument)
     }
   }
 }
@@ -152,13 +152,31 @@ internal fun stampGenerationDensity(bytes: ByteArray, density: Float): ByteArray
 }
 
 /**
- * Offer already-encoded document [bytes] as the current preview's `.rc` sidecar.
- *
- * For hosts that capture the document themselves rather than through
+ * A sink for hosts that capture the document themselves rather than through
  * [CapturingRemoteContentPreview] — `CachedCardPreview`'s `onDocument` hook, which hands over the
- * bytes it already cached, so those previews get a sidecar with no second encode at all. A no-op
- * outside a harness render.
+ * bytes it already cached, so those previews get a sidecar with no second encode at all.
+ *
+ * Stamps the density before offering, exactly as [CaptureRemoteDocument] does. Routing every
+ * producer through one sink is what keeps that from drifting: a sidecar that skipped the stamp
+ * would scale dp-sized content wrongly in the browser while its neighbours rendered correctly — a
+ * difference invisible in the baked PNG and only measurable on the parity page.
+ *
+ * Returns a stable lambda so `CachedCardPreview` can key its `remember` on it and notify once per
+ * document rather than once per recomposition. A no-op outside a harness render.
  */
-internal fun offerRemoteDocument(bytes: ByteArray) {
+@Composable
+internal fun rememberRemoteDocumentSink(): (ByteArray) -> Unit {
+  val density = LocalContext.current.resources.displayMetrics.density
+  return remember(density) {
+    { bytes -> offerRemoteDocument(stampGenerationDensity(bytes, density)) }
+  }
+}
+
+/**
+ * Offer already-encoded, already-stamped document [bytes] as the current preview's `.rc` sidecar.
+ * Prefer [rememberRemoteDocumentSink], which applies the density stamp for you. A no-op outside a
+ * harness render.
+ */
+private fun offerRemoteDocument(bytes: ByteArray) {
   IrSidecarChannel.offer(IrSidecarChannel.FORMAT_REMOTECOMPOSE, bytes)
 }
