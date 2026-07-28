@@ -5,7 +5,6 @@ package ee.schimke.ha.previews
 import androidx.compose.remote.creation.compose.state.RemoteBoolean
 import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rf
-import androidx.compose.remote.tooling.preview.RemoteContentPreview
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
@@ -30,7 +29,9 @@ private val PreviewInactiveAccent = Color(0xFFB0B0B0)
 
 @Composable
 private fun SwitchHost(theme: HaTheme, content: @Composable () -> Unit) {
-  RemoteContentPreview(profile = androidXExperimental) { ProvideHaTheme(theme) { content() } }
+  CapturingRemoteContentPreview(profile = androidXExperimental) {
+    ProvideHaTheme(theme) { content() }
+  }
 }
 
 // ——— progress-driven (deterministic) ———

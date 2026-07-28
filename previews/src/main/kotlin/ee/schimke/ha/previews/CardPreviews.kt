@@ -83,7 +83,9 @@ private val PreviewNow: ZonedDateTime = ZonedDateTime.of(2026, 5, 5, 10, 8, 0, 0
 
 @Composable
 internal fun CardHost(theme: HaTheme, content: @Composable () -> Unit) {
-  RemoteContentPreview(profile = androidXExperimental) {
+  // Capturing host: one card = one RemoteCompose document, so the preview publishes a `.rc` sidecar
+  // alongside its PNG. See RcDocumentCapture.kt.
+  CapturingRemoteContentPreview(profile = androidXExperimental) {
     CompositionLocalProvider(LocalHaClock provides FixedHaClock(PreviewNow)) {
       ProvideCardRegistry(defaultRegistry()) { ProvideHaTheme(theme) { content() } }
     }
@@ -356,6 +358,10 @@ private fun DashboardHost(theme: HaTheme) {
 /**
  * Bounded box hosting a single RemoteCompose document. Each slot has a fixed height —
  * `RemoteDocPreview` sizes the doc to its container, so callers must pin the container size.
+ *
+ * Deliberately NOT the capturing host: the dashboard preview stacks several of these, and the IR
+ * channel keeps only the last offer per preview, so capturing here would publish a `.rc` sidecar
+ * holding just the bottom slot. The dashboard stickers stay PNG-only. See RcDocumentCapture.kt.
  */
 @Composable
 private fun PlayerSlot(

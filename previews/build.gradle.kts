@@ -37,6 +37,10 @@ dependencies {
   implementation(libs.remote.player.view)
   implementation(libs.remote.tooling.preview)
 
+  // Render-harness seam for the `.rc` IR sidecar — see `RcDocumentCapture.kt`.
+  // Only the preview module needs it; nothing shipped in the app depends on it.
+  implementation(libs.composeai.data.render.core)
+
   // Coil + fake engine — previews that exercise `CoilBitmapLoader`
   // resolve named bitmaps through `FakeImageLoaderEngine` instead of
   // hitting the network, so renders are offline / deterministic.

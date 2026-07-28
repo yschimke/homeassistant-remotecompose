@@ -160,6 +160,8 @@ fun PictureEntity_WidgetMode_Light() {
       modifier = Modifier.uiFillMaxWidth(),
       card = pictureSampleCard,
       snapshot = pictureSampleSnapshotWithImage,
+      // Single-document preview — publish its `.rc` alongside the PNG (RcDocumentCapture.kt).
+      onDocument = ::offerRemoteDocument,
     ) {
       // The provider must live INSIDE the capture sub-composition;
       // CompositionLocals from the outer tree don't propagate into
@@ -194,6 +196,7 @@ fun PictureEntity_IconFallback_Light() {
       modifier = Modifier.uiFillMaxWidth(),
       card = pictureSampleCardNoEntity,
       snapshot = pictureSampleSnapshotNoImage,
+      onDocument = ::offerRemoteDocument,
     ) {
       ProvideCardRegistry(defaultRegistry()) {
         ProvideHaTheme(HaTheme.Light) {
@@ -228,6 +231,7 @@ private fun AppModeHost(theme: HaTheme) {
       card = pictureSampleCard,
       snapshot = pictureSampleSnapshotWithImage,
       bitmapLoader = bitmapLoader,
+      onDocument = ::offerRemoteDocument,
     ) {
       // App mode uses the default `PictureImageStrategy.Url` so no
       // provider is needed here.

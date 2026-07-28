@@ -2,13 +2,24 @@ name: Design Artifacts
 
 # Render the Terrazzo / HA-RemoteCompose design catalog (:previews @Preview
 # sticker sheet) and publish its importable bundle (catalog.json + DTCG tokens +
-# Figma variables + PNGs) to a clean `design-artifacts/homeassistant-remotecompose`
-# branch. The public preview server (preview.coo.ee) fetches that branch and
-# serves it at /homeassistant-remotecompose/.
+# Figma variables + PNGs + the per-preview `.rc` documents) to a clean
+# `design-artifacts/homeassistant-remotecompose` branch. The public preview
+# server (preview.coo.ee) fetches that branch and serves it at
+# /homeassistant-remotecompose/.
 #
-# Pipeline mirrors compose-ai-tools' own design-artifacts job:
-#   compose-preview bundle pack  →  @design-parity/catalog-export driver
-#   (from a compose-ai-tools checkout)  →  force-push out/ to the branch.
+# The pipeline itself lives in compose-ai-tools as a reusable workflow — the
+# same one its own `remote-m3` catalog calls — so this file only supplies the
+# catalog's parameters. It replaces the ~110-line copy of the job we used to
+# carry; see yschimke/compose-ai-tools/.github/workflows/design-artifacts-reusable.yml.
+#
+# Live tier: `publish-live-bundle` carries the executable render bundle onto the
+# delivery branch and records it in catalog.json, and `split-per-preview` +
+# `split-mode: full` publish one addressable bundle per preview that keeps its
+# re-render classpath. Without those the served catalog degrades to
+# `catalog-baked-only` — "this catalog serves baked PNG snapshots only" — and the
+# viewer's device / theme / knob controls can't re-render. Remote Compose is an
+# Android (Robolectric) render, so the live lane runs on the serve host's Android
+# daemon, exactly as remote-m3's does.
 
 on:
   # Weekly, so the published sticker sheet tracks the catalog as it evolves.
@@ -33,82 +44,26 @@ jobs:
     name: homeassistant-remotecompose
     # Don't run on forks — the publish step pushes a branch into this repo.
     if: ${{ github.repository == 'yschimke/homeassistant-remotecompose' }}
-    runs-on: ubuntu-latest
-    timeout-minutes: 45
     permissions:
       # Widened here (workflow default is read-only) for the branch force-push.
       contents: write
-    steps:
-      - uses: actions/checkout@v7.0.0
-        with:
-          persist-credentials: false
-
-      # JDK 21 + Gradle. The Android SDK is preinstalled on ubuntu-latest, which
-      # is what the :previews Robolectric render needs (same as compose-preview.yml).
-      - uses: ./.github/actions/setup
-        with:
-          cache-read-only: 'true'
-
-      # Install the compose-preview CLI. `:previews` has the plugin AUTO-injected
-      # (via --init-script), so the CLI carries its own matching plugin and a
-      # newer CLI is safe — we install `latest` because the applied
-      # compose-preview-plugin (0.14.0) predates `bundle pack --with-semantics`.
-      - uses: yschimke/compose-ai-tools/.github/actions/install@v0.17.19
-        with:
-          version: latest
-
-      # The export driver + its render helpers live in compose-ai-tools; check it
-      # out (public repo) so we can run scripts/design-artifacts/. Pin CAT_REF to a
-      # release tag for full reproducibility once the path-URL changes have shipped.
-      - uses: actions/checkout@v7.0.0
-        with:
-          repository: yschimke/compose-ai-tools
-          ref: main
-          path: compose-ai-tools
-          persist-credentials: false
-
-      - uses: actions/setup-node@v6.5.0
-        with:
-          node-version: 24.18.0
-      - name: Install export engine (pinned npm packages)
-        working-directory: compose-ai-tools/scripts/design-artifacts
-        run: npm ci
-
-      # Render the catalog module into a portable bundle with semantics (a11y
-      # greenlines + layout tree → tokens/wireframes in the exported catalog).
-      - name: Render catalog bundle
-        run: |
-          set -euo pipefail
-          compose-preview bundle pack --module :previews --with-semantics \
-            -o "$GITHUB_WORKSPACE/homeassistant-remotecompose-bundle.png"
-
-      # Join the render to catalog.spec.json and write the importable bundle.
-      - name: Generate importable catalog
-        run: |
-          set -euo pipefail
-          node compose-ai-tools/scripts/design-artifacts/generate-design-catalog.mjs \
-            --spec catalog.spec.json \
-            --renders "$GITHUB_WORKSPACE/homeassistant-remotecompose-bundle.png" \
-            --out "$GITHUB_WORKSPACE/out" \
-            --renderer "$(compose-preview --version | head -1)" \
-            --source-repo "${GITHUB_REPOSITORY}" \
-            --source-ref main \
-            --source-module :previews \
-            ${{ (github.event_name == 'workflow_dispatch' && inputs.allow_incomplete) && '--allow-incomplete' || '' }}
-
-      - name: Publish to design-artifacts/homeassistant-remotecompose
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          set -euo pipefail
-          cd "$GITHUB_WORKSPACE/out"
-          git init -q
-          git checkout -q -b design-artifacts/homeassistant-remotecompose
-          # Generated delivery branch — attributed to the repo owner, not a bot.
-          git config user.name 'Yuri Schimke'
-          git config user.email 'yuri@schimke.ee'
-          git add -A
-          git commit -q -m "chore(design-artifacts): regenerate homeassistant-remotecompose catalog ($(date -u +%F))"
-          git push --force \
-            "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" \
-            "HEAD:refs/heads/design-artifacts/homeassistant-remotecompose"
+    uses: yschimke/compose-ai-tools/.github/workflows/design-artifacts-reusable.yml@main
+    with:
+      system: homeassistant-remotecompose
+      spec: catalog.spec.json
+      module: ':previews'
+      # `:previews` has the plugin AUTO-injected (via --init-script), so the CLI
+      # carries its own matching plugin and a newer CLI is safe — `latest`
+      # because the pinned compose-preview-plugin predates some of the flags
+      # this pipeline uses.
+      cli-version: latest
+      # Carry the executable bundle + per-preview bundles so the served catalog
+      # gets a live lane instead of the baked-only degradation banner.
+      publish-live-bundle: true
+      split-per-preview: true
+      split-mode: full
+      allow-incomplete: ${{ github.event_name == 'workflow_dispatch' && inputs.allow_incomplete || false }}
+      # Generated delivery branch — attributed to the repo owner, not a bot.
+      commit-user-name: 'Yuri Schimke'
+      commit-user-email: 'yuri@schimke.ee'
+      timeout-minutes: 45
