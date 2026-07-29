@@ -6636,6 +6636,13 @@
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
+        },
+        {
+          "boundsInScreen": "27,211,427,298",
+          "level": "ERROR",
+          "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
+          "type": "TouchTargetSizeCheck",
+          "viewDescription": "android.view.View  desc=\"Living Room\""
         }
       ],
       "functionName": "SlotWidgetPreview_TileSmall",
@@ -7748,6 +7755,13 @@
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
+        },
+        {
+          "boundsInScreen": "27,211,427,298",
+          "level": "ERROR",
+          "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
+          "type": "TouchTargetSizeCheck",
+          "viewDescription": "android.view.View  desc=\"Living Room\""
         }
       ],
       "functionName": "WearTileLarge",
@@ -7766,6 +7780,13 @@
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
+        },
+        {
+          "boundsInScreen": "27,211,427,298",
+          "level": "ERROR",
+          "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
+          "type": "TouchTargetSizeCheck",
+          "viewDescription": "android.view.View  desc=\"Living Room\""
         }
       ],
       "functionName": "WearTileSmall",
@@ -7868,6 +7889,13 @@
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
+        },
+        {
+          "boundsInScreen": "27,211,427,298",
+          "level": "ERROR",
+          "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
+          "type": "TouchTargetSizeCheck",
+          "viewDescription": "android.view.View  desc=\"Living Room\""
         }
       ],
       "functionName": "WearVerticalStackLarge",
@@ -7886,6 +7914,13 @@
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
+        },
+        {
+          "boundsInScreen": "27,211,427,298",
+          "level": "ERROR",
+          "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
+          "type": "TouchTargetSizeCheck",
+          "viewDescription": "android.view.View  desc=\"Living Room\""
         }
       ],
       "functionName": "WearVerticalStackSmall",

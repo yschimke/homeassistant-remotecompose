@@ -1,6 +1,6 @@
 # Accessibility Report
 
-_Auto-generated from `compose-preview/a11y/main`. 287 preview(s) across 4 module(s) · 636 error(s) · 17 warning(s) · 32 info._
+_Auto-generated from `compose-preview/a11y/main`. 287 preview(s) across 4 module(s) · 641 error(s) · 17 warning(s) · 32 info._
 
 Browse inline; image URLs are pinned to the commit SHA on the baseline branch so links keep resolving after merge.
 
@@ -2072,6 +2072,7 @@ _No findings._
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
 | 1 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
+| 2 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Living Room" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
 
 ### `WearAlarmPanelLarge`
 
@@ -2554,6 +2555,7 @@ _No findings._
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
 | 1 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
+| 2 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Living Room" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
 
 ### `WearTileSmall`
 
@@ -2562,6 +2564,7 @@ _No findings._
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
 | 1 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
+| 2 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Living Room" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
 
 ### `WearTodoListSmall`
 
@@ -2612,6 +2615,7 @@ _No findings._
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
 | 1 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
+| 2 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Living Room" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
 
 ### `WearVerticalStackSmall`
 
@@ -2620,6 +2624,7 @@ _No findings._
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
 | 1 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
+| 2 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Living Room" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
 
 ### `WearWeatherForecastSmall`
 
