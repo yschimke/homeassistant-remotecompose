@@ -54,14 +54,19 @@ fun WearMarkdownSmall() = wearCardPreview(markdownFixture(), ContainerType.Small
 /**
  * Clock card normally binds `RemoteTimeDefaults.defaultTimeString` so the player ticks the time
  * without a re-encode — at preview capture that resolves to wall-clock time and the PNG drifts each
- * minute. Inject a [previewNow] and surface it via [LocalHaClock] as a [FixedHaClock] so
- * [ClockCardConverter] takes its static-label path; the default matches the frozen "now" used by
- * the other preview entry points.
+ * minute. Surface [WearPreviewNow] via [LocalHaClock] as a [FixedHaClock] so [ClockCardConverter]
+ * takes its static-label path, matching the frozen "now" the other preview entry points use.
+ *
+ * Takes no parameter, deliberately. A `@Preview` composable has to be callable with no arguments: a
+ * default parameter compiles to a `$default`-mask signature, so the renderer's
+ * `getDeclaredComposableMethod` lookup fails with `NoSuchMethodException` and the preview produces
+ * no PNG at all. To preview a different clock, call [wearCardPreview] from your own composable
+ * rather than adding a parameter here.
  */
 @Preview(name = "wear · clock (small)")
 @Composable
-fun WearClockSmall(previewNow: ZonedDateTime = WearPreviewNow) {
-  CompositionLocalProvider(LocalHaClock provides FixedHaClock(previewNow)) {
+fun WearClockSmall() {
+  CompositionLocalProvider(LocalHaClock provides FixedHaClock(WearPreviewNow)) {
     wearCardPreview(clockFixture(), ContainerType.Small)
   }
 }
