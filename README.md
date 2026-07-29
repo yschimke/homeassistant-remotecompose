@@ -1,8 +1,11 @@
 # Accessibility Report
 
-_Auto-generated from `compose-preview/a11y/pr`. 286 preview(s) across 4 module(s) · 635 error(s) · 17 warning(s) · 32 info._
+_Auto-generated from `compose-preview/a11y/pr`. 287 preview(s) across 4 module(s) · 636 error(s) · 17 warning(s) · 32 info._
 
 Browse inline; image URLs are pinned to the commit SHA on the baseline branch so links keep resolving after merge.
+
+> [!WARNING]
+> ATF data unavailable for this run — the daemon did not return accessibility findings. The renders below are **not** accessibility-checked.
 
 ## app
 
@@ -2187,6 +2190,14 @@ _No findings._
 ### `WearCalendarSmall`
 
 <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/pr/renders/wear/WearCalendarSmall_wear_calendar_small.a11y.png" width="400" />
+
+| # | Level | Rule | Element | Message |
+|--:|---|---|---|---|
+| 1 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
+
+### `WearClockSmall`
+
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/pr/renders/wear/WearClockSmall_wear_clock_small.a11y.png" width="400" />
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|

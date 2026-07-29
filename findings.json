@@ -6929,6 +6929,24 @@
       "variant": ""
     },
     {
+      "annotatedBasename": "WearClockSmall_wear_clock_small.a11y.png",
+      "cleanBasename": "WearClockSmall_wear_clock_small.png",
+      "findings": [
+        {
+          "boundsInScreen": "11,179,443,331",
+          "level": "ERROR",
+          "message": "This item may not have a label readable by screen readers.",
+          "type": "SpeakableTextPresentCheck",
+          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
+        }
+      ],
+      "functionName": "WearClockSmall",
+      "module": "wear",
+      "previewId": "ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearClockSmall_wear \u00b7 clock (small)",
+      "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/wear/widget/CardSlotWidgetPreviews.kt",
+      "variant": ""
+    },
+    {
       "annotatedBasename": "WearDashboardPreview_Wear_dashboard.a11y.png",
       "cleanBasename": "WearDashboardPreview_Wear_dashboard.png",
       "findings": [
@@ -7894,5 +7912,6 @@
       "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/wear/widget/CardSlotWidgetPreviews.kt",
       "variant": ""
     }
-  ]
+  ],
+  "status": "atf-unavailable"
 }
