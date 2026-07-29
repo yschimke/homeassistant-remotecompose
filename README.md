@@ -2,6 +2,17 @@
 
 Auto-generated from `main`. Browse inline or compare against PR branches.
 
+> [!WARNING]
+> 1 preview(s) failed to render in the latest update (1 with no prior baseline to retain). See **Render Failures** below.
+
+## Render Failures
+
+The render task completed but no PNG was produced for these previews. Entries with a prior baseline keep their previous image; the rest are absent from the gallery until a successful render lands.
+
+| Preview | Module | Function | Source | Baseline |
+|---------|--------|----------|--------|----------|
+| `app/activity__MainActivity` | app | `MainActivity` | `—` | none |
+
 ## app
 
 | Preview | Image |
@@ -67,6 +78,12 @@ Auto-generated from `main`. Browse inline or compare against PR branches.
 | `Screen_Widgets_ThemeStyle` | <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/main/renders/app/Screen_Widgets_ThemeStyle_widgets_theme_TerrazzoMinimalist.png" width="150" /> |
 | `Screen_Widgets_ThemeStyle` | <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/main/renders/app/Screen_Widgets_ThemeStyle_widgets_theme_TerrazzoMushroom.png" width="150" /> |
 | `Screen_Widgets` | <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/main/renders/app/Screen_Widgets_widgets.png" width="150" /> |
+
+## demo-app
+
+| Preview | Image |
+|---------|-------|
+| `MainActivity` | <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/main/renders/demo-app/activity__MainActivity.png" width="150" /> |
 
 ## previews
 
@@ -306,6 +323,7 @@ Auto-generated from `main`. Browse inline or compare against PR branches.
 
 | Preview | Image |
 |---------|-------|
+| `TvMainActivity` | <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/main/renders/tv/activity__TvMainActivity.png" width="150" /> |
 | `TvKioskPreview_Demo` | <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/main/renders/tv/TvKioskPreview_Demo_TV_kiosk_demo.png" width="150" /> |
 | `TvKioskPreview_HomePalette` | <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/main/renders/tv/TvKioskPreview_HomePalette_TV_kiosk_Home_palette.png" width="150" /> |
 | `TvKioskPreview_Live` | <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/main/renders/tv/TvKioskPreview_Live_TV_kiosk_live.png" width="150" /> |
@@ -314,6 +332,7 @@ Auto-generated from `main`. Browse inline or compare against PR branches.
 
 | Preview | Image |
 |---------|-------|
+| `WearMainActivity` | <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/main/renders/wear/activity__WearMainActivity.png" width="150" /> |
 | `WearDashboardPreview` | <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/main/renders/wear/WearDashboardPreview_Wear_dashboard.png" width="150" /> |
 | `WearDashboardsPreview` | <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/main/renders/wear/WearDashboardsPreview_Wear_dashboards.png" width="150" /> |
 | `WearSectionPreview` | <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/main/renders/wear/WearSectionPreview_Wear_section.png" width="150" /> |
@@ -336,6 +355,7 @@ Auto-generated from `main`. Browse inline or compare against PR branches.
 | `WearButtonLarge` | <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/main/renders/wear/WearButtonLarge_wear_button_large.png" width="150" /> |
 | `WearButtonSmall` | <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/main/renders/wear/WearButtonSmall_wear_button_small.png" width="150" /> |
 | `WearCalendarSmall` | <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/main/renders/wear/WearCalendarSmall_wear_calendar_small.png" width="150" /> |
+| `WearClockSmall` | <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/main/renders/wear/WearClockSmall_wear_clock_small.png" width="150" /> |
 | `WearEntitiesLarge` | <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/main/renders/wear/WearEntitiesLarge_wear_entities_large.png" width="150" /> |
 | `WearEntitiesSmall` | <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/main/renders/wear/WearEntitiesSmall_wear_entities_small.png" width="150" /> |
 | `WearEntityFilterLarge` | <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/main/renders/wear/WearEntityFilterLarge_wear_entity_filter_large.png" width="150" /> |

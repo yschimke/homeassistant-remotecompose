@@ -487,6 +487,14 @@
     "sha256": "82889f8aa2860e3ad033ea4607f3b1f07dcb630c01e35377b2844738a445b037",
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/previews/ScreenPreviews.kt"
   },
+  "demo-app/activity__MainActivity": {
+    "captureLabel": "",
+    "functionName": "MainActivity",
+    "module": "demo-app",
+    "renderBasename": "activity__MainActivity.png",
+    "sha256": "0282cbf3cd57c2ed3a293d304c01c1384186017b56e98c833864883844646176",
+    "sourceFile": null
+  },
   "previews/ee.schimke.ha.previews.AnimationPreviewsKt.Gauge_Animation_Dark_gauge-anim (dark)": {
     "captureLabel": "",
     "functionName": "Gauge_Animation_Dark",
@@ -2076,7 +2084,7 @@
     "functionName": "Sizing_ConstraintMatrix_PaintMeasure",
     "module": "previews",
     "renderBasename": "Sizing_ConstraintMatrix_PaintMeasure_sizing_width_height_matrix_paint_measure_profile.png",
-    "sha256": "8d5b35c55bab18dadf2fc646ee9376a10fb11f4d4f657572638b4934509f97d5",
+    "sha256": "0c910b52e7a22f023a879e8617c81c8cfe2c6a1abd9b77739ca2ee95682f011d",
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/SizingExperimentPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.SizingExperimentPreviewsKt.Sizing_ConstraintMatrix_Wrap_sizing \u2014 width \u00d7 height matrix \u00b7 wrap profile": {
@@ -2092,7 +2100,7 @@
     "functionName": "Sizing_FixedSlot_PaintMeasure",
     "module": "previews",
     "renderBasename": "Sizing_FixedSlot_PaintMeasure_sizing_fixed_slot_paint_measure_profile.png",
-    "sha256": "066b7432116f45a68f6067ec0f8b6fbe832597f1e13dc4b678e78e9f35ba7729",
+    "sha256": "91cee01527a452a914d2e6c7a301e754e6b66bb75b24902f1db04d4ca98a2f26",
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/SizingExperimentPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.SizingExperimentPreviewsKt.Sizing_FixedSlot_Wrap_sizing \u2014 fixed slot, wrap profile": {
@@ -2100,7 +2108,7 @@
     "functionName": "Sizing_FixedSlot_Wrap",
     "module": "previews",
     "renderBasename": "Sizing_FixedSlot_Wrap_sizing_fixed_slot_wrap_profile.png",
-    "sha256": "47f72d93ade8802ed47922f52e8fe8e81ebae0fd9e7f941e2f941a90717ca52b",
+    "sha256": "f2e6beaa6511bdcad1c4261c0f52c8fb87f21c89ce8b217e8ba73bc7eac38bd9",
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/SizingExperimentPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.SizingExperimentPreviewsKt.Sizing_SlackSlot_PaintMeasure_sizing \u2014 slack slot, paint-measure profile": {
@@ -2108,7 +2116,7 @@
     "functionName": "Sizing_SlackSlot_PaintMeasure",
     "module": "previews",
     "renderBasename": "Sizing_SlackSlot_PaintMeasure_sizing_slack_slot_paint_measure_profile.png",
-    "sha256": "0586d2e956afb9c0235d864b393cb12e8c2a30a474a3c3d7855bbbbf2d457b8e",
+    "sha256": "3a43c1aea1665d7d9059be057a5a6bfea0eed33bc5953549affe46f5c7533a03",
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/SizingExperimentPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.SizingExperimentPreviewsKt.Sizing_SlackSlot_Wrap_sizing \u2014 slack slot, wrap profile": {
@@ -2116,7 +2124,7 @@
     "functionName": "Sizing_SlackSlot_Wrap",
     "module": "previews",
     "renderBasename": "Sizing_SlackSlot_Wrap_sizing_slack_slot_wrap_profile.png",
-    "sha256": "0e9c148516343c96214bf170b617491e9d9d0acdfe9102e966c0188216fbe657",
+    "sha256": "93eda4fdc27921652d0bc408fdcb0776a76c73521f23c9f6007582ea481252d9",
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/SizingExperimentPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.SizingExperimentPreviewsKt.Sizing_TightSlot_PaintMeasure_sizing \u2014 tight slot, paint-measure profile": {
@@ -2124,7 +2132,7 @@
     "functionName": "Sizing_TightSlot_PaintMeasure",
     "module": "previews",
     "renderBasename": "Sizing_TightSlot_PaintMeasure_sizing_tight_slot_paint_measure_profile.png",
-    "sha256": "e6695cca38710ba821acbf1e1fbb7a873736f15cea36dd5e03b6599c4d672822",
+    "sha256": "0b84baa4aaa96eb0e9048c1cf5840b751a884f11822105489464756aed5dd538",
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/SizingExperimentPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.SizingExperimentPreviewsKt.Sizing_TightSlot_Wrap_sizing \u2014 tight slot, wrap profile": {
@@ -2132,7 +2140,7 @@
     "functionName": "Sizing_TightSlot_Wrap",
     "module": "previews",
     "renderBasename": "Sizing_TightSlot_Wrap_sizing_tight_slot_wrap_profile.png",
-    "sha256": "3b2114116c23068807646a918c077be8c6fb7647b93057a661f9bd18faee2860",
+    "sha256": "8637207d170e95abe7f81dbc94a6485fb803dfe8f2a532a774cd1dd3fc14cc81",
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/SizingExperimentPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.SizingExperimentPreviewsKt.Sizing_WidthPinnedHeightAdaptive_sizing \u2014 width pinned, height adaptive": {
@@ -2319,6 +2327,14 @@
     "sha256": "5c4bcc823e41de22e6fd995ff7af41114ff5c09944152fdabadb6678dc84e60b",
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/WrapContentHeightRepro.kt"
   },
+  "tv/activity__TvMainActivity": {
+    "captureLabel": "",
+    "functionName": "TvMainActivity",
+    "module": "tv",
+    "renderBasename": "activity__TvMainActivity.png",
+    "sha256": "47afb72686b3d3ea85572b0656c2a75f62b98bbeecb836779b386bb395b6440f",
+    "sourceFile": null
+  },
   "tv/ee.schimke.terrazzo.tv.ui.TvPreviewsKt.TvKioskPreview_Demo_TV_ kiosk (demo)": {
     "captureLabel": "",
     "functionName": "TvKioskPreview_Demo",
@@ -2342,6 +2358,14 @@
     "renderBasename": "TvKioskPreview_Live_TV_kiosk_live.png",
     "sha256": "55010cb336dc34983a72477903aa6b72db4c0d89dbd07668132f9cf3acbcbffa",
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/tv/ui/TvPreviews.kt"
+  },
+  "wear/activity__WearMainActivity": {
+    "captureLabel": "",
+    "functionName": "WearMainActivity",
+    "module": "wear",
+    "renderBasename": "activity__WearMainActivity.png",
+    "sha256": "5dabf8d37c3c4e1ae3036711cc27334a0bff0ec8a704fb4089b82d3d36117eb1",
+    "sourceFile": null
   },
   "wear/ee.schimke.terrazzo.wear.ui.WearPreviewsKt.WearDashboardPreview_Wear_ dashboard": {
     "captureLabel": "",
@@ -2517,6 +2541,14 @@
     "module": "wear",
     "renderBasename": "WearCalendarSmall_wear_calendar_small.png",
     "sha256": "bac6090ed39e69035e52337a0e5b70ff2a574dac3a32f8625209d3ff9f58cc7f",
+    "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/wear/widget/CardSlotWidgetPreviews.kt"
+  },
+  "wear/ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearClockSmall_wear \u00b7 clock (small)": {
+    "captureLabel": "",
+    "functionName": "WearClockSmall",
+    "module": "wear",
+    "renderBasename": "WearClockSmall_wear_clock_small.png",
+    "sha256": "e70f703333ad223b70debe220be6758bbaa40211401e63a9aba3f2def78b6188",
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/wear/widget/CardSlotWidgetPreviews.kt"
   },
   "wear/ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearEntitiesLarge_wear \u00b7 entities (large)": {
