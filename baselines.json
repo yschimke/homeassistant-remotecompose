@@ -80,7 +80,7 @@
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/previews/ScreenPreviews.kt"
   },
   "app/ee.schimke.terrazzo.previews.ScreenPreviewsKt.Screen_CardHistory_ThemeStyle_card history \u00b7 theme": {
-    "captureLabel": "",
+    "captureLabel": "Material3",
     "functionName": "Screen_CardHistory_ThemeStyle",
     "module": "app",
     "renderBasename": "Screen_CardHistory_ThemeStyle_card_history_theme_Material3.png",
@@ -88,7 +88,7 @@
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/previews/ScreenPreviews.kt"
   },
   "app/ee.schimke.terrazzo.previews.ScreenPreviewsKt.Screen_CardHistory_ThemeStyle_card history \u00b7 theme#1": {
-    "captureLabel": "",
+    "captureLabel": "TerrazzoHome",
     "functionName": "Screen_CardHistory_ThemeStyle",
     "module": "app",
     "renderBasename": "Screen_CardHistory_ThemeStyle_card_history_theme_TerrazzoHome.png",
@@ -96,7 +96,7 @@
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/previews/ScreenPreviews.kt"
   },
   "app/ee.schimke.terrazzo.previews.ScreenPreviewsKt.Screen_CardHistory_ThemeStyle_card history \u00b7 theme#2": {
-    "captureLabel": "",
+    "captureLabel": "TerrazzoKiosk",
     "functionName": "Screen_CardHistory_ThemeStyle",
     "module": "app",
     "renderBasename": "Screen_CardHistory_ThemeStyle_card_history_theme_TerrazzoKiosk.png",
@@ -104,7 +104,7 @@
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/previews/ScreenPreviews.kt"
   },
   "app/ee.schimke.terrazzo.previews.ScreenPreviewsKt.Screen_CardHistory_ThemeStyle_card history \u00b7 theme#3": {
-    "captureLabel": "",
+    "captureLabel": "TerrazzoMinimalist",
     "functionName": "Screen_CardHistory_ThemeStyle",
     "module": "app",
     "renderBasename": "Screen_CardHistory_ThemeStyle_card_history_theme_TerrazzoMinimalist.png",
@@ -112,7 +112,7 @@
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/previews/ScreenPreviews.kt"
   },
   "app/ee.schimke.terrazzo.previews.ScreenPreviewsKt.Screen_CardHistory_ThemeStyle_card history \u00b7 theme#4": {
-    "captureLabel": "",
+    "captureLabel": "TerrazzoMushroom",
     "functionName": "Screen_CardHistory_ThemeStyle",
     "module": "app",
     "renderBasename": "Screen_CardHistory_ThemeStyle_card_history_theme_TerrazzoMushroom.png",
@@ -128,7 +128,7 @@
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/previews/ScreenPreviews.kt"
   },
   "app/ee.schimke.terrazzo.previews.ScreenPreviewsKt.Screen_DashboardPicker_ThemeStyle_dashboard picker \u00b7 theme": {
-    "captureLabel": "",
+    "captureLabel": "Material3",
     "functionName": "Screen_DashboardPicker_ThemeStyle",
     "module": "app",
     "renderBasename": "Screen_DashboardPicker_ThemeStyle_dashboard_picker_theme_Material3.png",
@@ -136,7 +136,7 @@
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/previews/ScreenPreviews.kt"
   },
   "app/ee.schimke.terrazzo.previews.ScreenPreviewsKt.Screen_DashboardPicker_ThemeStyle_dashboard picker \u00b7 theme#1": {
-    "captureLabel": "",
+    "captureLabel": "TerrazzoHome",
     "functionName": "Screen_DashboardPicker_ThemeStyle",
     "module": "app",
     "renderBasename": "Screen_DashboardPicker_ThemeStyle_dashboard_picker_theme_TerrazzoHome.png",
@@ -144,7 +144,7 @@
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/previews/ScreenPreviews.kt"
   },
   "app/ee.schimke.terrazzo.previews.ScreenPreviewsKt.Screen_DashboardPicker_ThemeStyle_dashboard picker \u00b7 theme#2": {
-    "captureLabel": "",
+    "captureLabel": "TerrazzoKiosk",
     "functionName": "Screen_DashboardPicker_ThemeStyle",
     "module": "app",
     "renderBasename": "Screen_DashboardPicker_ThemeStyle_dashboard_picker_theme_TerrazzoKiosk.png",
@@ -152,7 +152,7 @@
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/previews/ScreenPreviews.kt"
   },
   "app/ee.schimke.terrazzo.previews.ScreenPreviewsKt.Screen_DashboardPicker_ThemeStyle_dashboard picker \u00b7 theme#3": {
-    "captureLabel": "",
+    "captureLabel": "TerrazzoMinimalist",
     "functionName": "Screen_DashboardPicker_ThemeStyle",
     "module": "app",
     "renderBasename": "Screen_DashboardPicker_ThemeStyle_dashboard_picker_theme_TerrazzoMinimalist.png",
@@ -160,7 +160,7 @@
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/previews/ScreenPreviews.kt"
   },
   "app/ee.schimke.terrazzo.previews.ScreenPreviewsKt.Screen_DashboardPicker_ThemeStyle_dashboard picker \u00b7 theme#4": {
-    "captureLabel": "",
+    "captureLabel": "TerrazzoMushroom",
     "functionName": "Screen_DashboardPicker_ThemeStyle",
     "module": "app",
     "renderBasename": "Screen_DashboardPicker_ThemeStyle_dashboard_picker_theme_TerrazzoMushroom.png",
@@ -192,7 +192,7 @@
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/previews/ScreenPreviews.kt"
   },
   "app/ee.schimke.terrazzo.previews.ScreenPreviewsKt.Screen_DashboardSelection_ThemeStyle_dashboard selection \u00b7 theme": {
-    "captureLabel": "",
+    "captureLabel": "Material3",
     "functionName": "Screen_DashboardSelection_ThemeStyle",
     "module": "app",
     "renderBasename": "Screen_DashboardSelection_ThemeStyle_dashboard_selection_theme_Material3.png",
@@ -200,7 +200,7 @@
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/previews/ScreenPreviews.kt"
   },
   "app/ee.schimke.terrazzo.previews.ScreenPreviewsKt.Screen_DashboardSelection_ThemeStyle_dashboard selection \u00b7 theme#1": {
-    "captureLabel": "",
+    "captureLabel": "TerrazzoHome",
     "functionName": "Screen_DashboardSelection_ThemeStyle",
     "module": "app",
     "renderBasename": "Screen_DashboardSelection_ThemeStyle_dashboard_selection_theme_TerrazzoHome.png",
@@ -208,7 +208,7 @@
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/previews/ScreenPreviews.kt"
   },
   "app/ee.schimke.terrazzo.previews.ScreenPreviewsKt.Screen_DashboardSelection_ThemeStyle_dashboard selection \u00b7 theme#2": {
-    "captureLabel": "",
+    "captureLabel": "TerrazzoKiosk",
     "functionName": "Screen_DashboardSelection_ThemeStyle",
     "module": "app",
     "renderBasename": "Screen_DashboardSelection_ThemeStyle_dashboard_selection_theme_TerrazzoKiosk.png",
@@ -216,7 +216,7 @@
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/previews/ScreenPreviews.kt"
   },
   "app/ee.schimke.terrazzo.previews.ScreenPreviewsKt.Screen_DashboardSelection_ThemeStyle_dashboard selection \u00b7 theme#3": {
-    "captureLabel": "",
+    "captureLabel": "TerrazzoMinimalist",
     "functionName": "Screen_DashboardSelection_ThemeStyle",
     "module": "app",
     "renderBasename": "Screen_DashboardSelection_ThemeStyle_dashboard_selection_theme_TerrazzoMinimalist.png",
@@ -224,7 +224,7 @@
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/previews/ScreenPreviews.kt"
   },
   "app/ee.schimke.terrazzo.previews.ScreenPreviewsKt.Screen_DashboardSelection_ThemeStyle_dashboard selection \u00b7 theme#4": {
-    "captureLabel": "",
+    "captureLabel": "TerrazzoMushroom",
     "functionName": "Screen_DashboardSelection_ThemeStyle",
     "module": "app",
     "renderBasename": "Screen_DashboardSelection_ThemeStyle_dashboard_selection_theme_TerrazzoMushroom.png",
@@ -240,7 +240,7 @@
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/previews/ScreenPreviews.kt"
   },
   "app/ee.schimke.terrazzo.previews.ScreenPreviewsKt.Screen_DashboardView_ThemeStyle_dashboard \u00b7 theme": {
-    "captureLabel": "",
+    "captureLabel": "Material3",
     "functionName": "Screen_DashboardView_ThemeStyle",
     "module": "app",
     "renderBasename": "Screen_DashboardView_ThemeStyle_dashboard_theme_Material3.png",
@@ -248,7 +248,7 @@
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/previews/ScreenPreviews.kt"
   },
   "app/ee.schimke.terrazzo.previews.ScreenPreviewsKt.Screen_DashboardView_ThemeStyle_dashboard \u00b7 theme#1": {
-    "captureLabel": "",
+    "captureLabel": "TerrazzoHome",
     "functionName": "Screen_DashboardView_ThemeStyle",
     "module": "app",
     "renderBasename": "Screen_DashboardView_ThemeStyle_dashboard_theme_TerrazzoHome.png",
@@ -256,7 +256,7 @@
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/previews/ScreenPreviews.kt"
   },
   "app/ee.schimke.terrazzo.previews.ScreenPreviewsKt.Screen_DashboardView_ThemeStyle_dashboard \u00b7 theme#2": {
-    "captureLabel": "",
+    "captureLabel": "TerrazzoKiosk",
     "functionName": "Screen_DashboardView_ThemeStyle",
     "module": "app",
     "renderBasename": "Screen_DashboardView_ThemeStyle_dashboard_theme_TerrazzoKiosk.png",
@@ -264,7 +264,7 @@
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/previews/ScreenPreviews.kt"
   },
   "app/ee.schimke.terrazzo.previews.ScreenPreviewsKt.Screen_DashboardView_ThemeStyle_dashboard \u00b7 theme#3": {
-    "captureLabel": "",
+    "captureLabel": "TerrazzoMinimalist",
     "functionName": "Screen_DashboardView_ThemeStyle",
     "module": "app",
     "renderBasename": "Screen_DashboardView_ThemeStyle_dashboard_theme_TerrazzoMinimalist.png",
@@ -272,7 +272,7 @@
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/previews/ScreenPreviews.kt"
   },
   "app/ee.schimke.terrazzo.previews.ScreenPreviewsKt.Screen_DashboardView_ThemeStyle_dashboard \u00b7 theme#4": {
-    "captureLabel": "",
+    "captureLabel": "TerrazzoMushroom",
     "functionName": "Screen_DashboardView_ThemeStyle",
     "module": "app",
     "renderBasename": "Screen_DashboardView_ThemeStyle_dashboard_theme_TerrazzoMushroom.png",
@@ -288,7 +288,7 @@
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/previews/ScreenPreviews.kt"
   },
   "app/ee.schimke.terrazzo.previews.ScreenPreviewsKt.Screen_Discovery_ThemeStyle_discovery \u00b7 theme": {
-    "captureLabel": "",
+    "captureLabel": "Material3",
     "functionName": "Screen_Discovery_ThemeStyle",
     "module": "app",
     "renderBasename": "Screen_Discovery_ThemeStyle_discovery_theme_Material3.png",
@@ -296,7 +296,7 @@
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/previews/ScreenPreviews.kt"
   },
   "app/ee.schimke.terrazzo.previews.ScreenPreviewsKt.Screen_Discovery_ThemeStyle_discovery \u00b7 theme#1": {
-    "captureLabel": "",
+    "captureLabel": "TerrazzoHome",
     "functionName": "Screen_Discovery_ThemeStyle",
     "module": "app",
     "renderBasename": "Screen_Discovery_ThemeStyle_discovery_theme_TerrazzoHome.png",
@@ -304,7 +304,7 @@
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/previews/ScreenPreviews.kt"
   },
   "app/ee.schimke.terrazzo.previews.ScreenPreviewsKt.Screen_Discovery_ThemeStyle_discovery \u00b7 theme#2": {
-    "captureLabel": "",
+    "captureLabel": "TerrazzoKiosk",
     "functionName": "Screen_Discovery_ThemeStyle",
     "module": "app",
     "renderBasename": "Screen_Discovery_ThemeStyle_discovery_theme_TerrazzoKiosk.png",
@@ -312,7 +312,7 @@
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/previews/ScreenPreviews.kt"
   },
   "app/ee.schimke.terrazzo.previews.ScreenPreviewsKt.Screen_Discovery_ThemeStyle_discovery \u00b7 theme#3": {
-    "captureLabel": "",
+    "captureLabel": "TerrazzoMinimalist",
     "functionName": "Screen_Discovery_ThemeStyle",
     "module": "app",
     "renderBasename": "Screen_Discovery_ThemeStyle_discovery_theme_TerrazzoMinimalist.png",
@@ -320,7 +320,7 @@
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/previews/ScreenPreviews.kt"
   },
   "app/ee.schimke.terrazzo.previews.ScreenPreviewsKt.Screen_Discovery_ThemeStyle_discovery \u00b7 theme#4": {
-    "captureLabel": "",
+    "captureLabel": "TerrazzoMushroom",
     "functionName": "Screen_Discovery_ThemeStyle",
     "module": "app",
     "renderBasename": "Screen_Discovery_ThemeStyle_discovery_theme_TerrazzoMushroom.png",
@@ -376,7 +376,7 @@
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/previews/ScreenPreviews.kt"
   },
   "app/ee.schimke.terrazzo.previews.ScreenPreviewsKt.Screen_Settings_ThemeStyle_settings \u00b7 theme": {
-    "captureLabel": "",
+    "captureLabel": "Material3",
     "functionName": "Screen_Settings_ThemeStyle",
     "module": "app",
     "renderBasename": "Screen_Settings_ThemeStyle_settings_theme_Material3.png",
@@ -384,7 +384,7 @@
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/previews/ScreenPreviews.kt"
   },
   "app/ee.schimke.terrazzo.previews.ScreenPreviewsKt.Screen_Settings_ThemeStyle_settings \u00b7 theme#1": {
-    "captureLabel": "",
+    "captureLabel": "TerrazzoHome",
     "functionName": "Screen_Settings_ThemeStyle",
     "module": "app",
     "renderBasename": "Screen_Settings_ThemeStyle_settings_theme_TerrazzoHome.png",
@@ -392,7 +392,7 @@
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/previews/ScreenPreviews.kt"
   },
   "app/ee.schimke.terrazzo.previews.ScreenPreviewsKt.Screen_Settings_ThemeStyle_settings \u00b7 theme#2": {
-    "captureLabel": "",
+    "captureLabel": "TerrazzoKiosk",
     "functionName": "Screen_Settings_ThemeStyle",
     "module": "app",
     "renderBasename": "Screen_Settings_ThemeStyle_settings_theme_TerrazzoKiosk.png",
@@ -400,7 +400,7 @@
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/previews/ScreenPreviews.kt"
   },
   "app/ee.schimke.terrazzo.previews.ScreenPreviewsKt.Screen_Settings_ThemeStyle_settings \u00b7 theme#3": {
-    "captureLabel": "",
+    "captureLabel": "TerrazzoMinimalist",
     "functionName": "Screen_Settings_ThemeStyle",
     "module": "app",
     "renderBasename": "Screen_Settings_ThemeStyle_settings_theme_TerrazzoMinimalist.png",
@@ -408,7 +408,7 @@
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/previews/ScreenPreviews.kt"
   },
   "app/ee.schimke.terrazzo.previews.ScreenPreviewsKt.Screen_Settings_ThemeStyle_settings \u00b7 theme#4": {
-    "captureLabel": "",
+    "captureLabel": "TerrazzoMushroom",
     "functionName": "Screen_Settings_ThemeStyle",
     "module": "app",
     "renderBasename": "Screen_Settings_ThemeStyle_settings_theme_TerrazzoMushroom.png",
@@ -440,7 +440,7 @@
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/previews/ScreenPreviews.kt"
   },
   "app/ee.schimke.terrazzo.previews.ScreenPreviewsKt.Screen_Widgets_ThemeStyle_widgets \u00b7 theme": {
-    "captureLabel": "",
+    "captureLabel": "Material3",
     "functionName": "Screen_Widgets_ThemeStyle",
     "module": "app",
     "renderBasename": "Screen_Widgets_ThemeStyle_widgets_theme_Material3.png",
@@ -448,7 +448,7 @@
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/previews/ScreenPreviews.kt"
   },
   "app/ee.schimke.terrazzo.previews.ScreenPreviewsKt.Screen_Widgets_ThemeStyle_widgets \u00b7 theme#1": {
-    "captureLabel": "",
+    "captureLabel": "TerrazzoHome",
     "functionName": "Screen_Widgets_ThemeStyle",
     "module": "app",
     "renderBasename": "Screen_Widgets_ThemeStyle_widgets_theme_TerrazzoHome.png",
@@ -456,7 +456,7 @@
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/previews/ScreenPreviews.kt"
   },
   "app/ee.schimke.terrazzo.previews.ScreenPreviewsKt.Screen_Widgets_ThemeStyle_widgets \u00b7 theme#2": {
-    "captureLabel": "",
+    "captureLabel": "TerrazzoKiosk",
     "functionName": "Screen_Widgets_ThemeStyle",
     "module": "app",
     "renderBasename": "Screen_Widgets_ThemeStyle_widgets_theme_TerrazzoKiosk.png",
@@ -464,7 +464,7 @@
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/previews/ScreenPreviews.kt"
   },
   "app/ee.schimke.terrazzo.previews.ScreenPreviewsKt.Screen_Widgets_ThemeStyle_widgets \u00b7 theme#3": {
-    "captureLabel": "",
+    "captureLabel": "TerrazzoMinimalist",
     "functionName": "Screen_Widgets_ThemeStyle",
     "module": "app",
     "renderBasename": "Screen_Widgets_ThemeStyle_widgets_theme_TerrazzoMinimalist.png",
@@ -472,7 +472,7 @@
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/previews/ScreenPreviews.kt"
   },
   "app/ee.schimke.terrazzo.previews.ScreenPreviewsKt.Screen_Widgets_ThemeStyle_widgets \u00b7 theme#4": {
-    "captureLabel": "",
+    "captureLabel": "TerrazzoMushroom",
     "functionName": "Screen_Widgets_ThemeStyle",
     "module": "app",
     "renderBasename": "Screen_Widgets_ThemeStyle_widgets_theme_TerrazzoMushroom.png",
@@ -496,7 +496,7 @@
     "sourceFile": null
   },
   "previews/ee.schimke.ha.previews.AnimationPreviewsKt.Gauge_Animation_Dark_gauge-anim (dark)": {
-    "captureLabel": "",
+    "captureLabel": "0pct",
     "functionName": "Gauge_Animation_Dark",
     "module": "previews",
     "renderBasename": "Gauge_Animation_Dark_gauge_anim_dark_0pct.png",
@@ -504,7 +504,7 @@
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/AnimationPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.AnimationPreviewsKt.Gauge_Animation_Dark_gauge-anim (dark)#1": {
-    "captureLabel": "",
+    "captureLabel": "100pct",
     "functionName": "Gauge_Animation_Dark",
     "module": "previews",
     "renderBasename": "Gauge_Animation_Dark_gauge_anim_dark_100pct.png",
@@ -512,7 +512,7 @@
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/AnimationPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.AnimationPreviewsKt.Gauge_Animation_Dark_gauge-anim (dark)#2": {
-    "captureLabel": "",
+    "captureLabel": "25pct",
     "functionName": "Gauge_Animation_Dark",
     "module": "previews",
     "renderBasename": "Gauge_Animation_Dark_gauge_anim_dark_25pct.png",
@@ -520,7 +520,7 @@
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/AnimationPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.AnimationPreviewsKt.Gauge_Animation_Dark_gauge-anim (dark)#3": {
-    "captureLabel": "",
+    "captureLabel": "50pct",
     "functionName": "Gauge_Animation_Dark",
     "module": "previews",
     "renderBasename": "Gauge_Animation_Dark_gauge_anim_dark_50pct.png",
@@ -528,7 +528,7 @@
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/AnimationPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.AnimationPreviewsKt.Gauge_Animation_Dark_gauge-anim (dark)#4": {
-    "captureLabel": "",
+    "captureLabel": "75pct",
     "functionName": "Gauge_Animation_Dark",
     "module": "previews",
     "renderBasename": "Gauge_Animation_Dark_gauge_anim_dark_75pct.png",
@@ -536,7 +536,7 @@
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/AnimationPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.AnimationPreviewsKt.Gauge_Animation_Light_gauge-anim (light)": {
-    "captureLabel": "",
+    "captureLabel": "0pct",
     "functionName": "Gauge_Animation_Light",
     "module": "previews",
     "renderBasename": "Gauge_Animation_Light_gauge_anim_light_0pct.png",
@@ -544,7 +544,7 @@
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/AnimationPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.AnimationPreviewsKt.Gauge_Animation_Light_gauge-anim (light)#1": {
-    "captureLabel": "",
+    "captureLabel": "100pct",
     "functionName": "Gauge_Animation_Light",
     "module": "previews",
     "renderBasename": "Gauge_Animation_Light_gauge_anim_light_100pct.png",
@@ -552,7 +552,7 @@
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/AnimationPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.AnimationPreviewsKt.Gauge_Animation_Light_gauge-anim (light)#2": {
-    "captureLabel": "",
+    "captureLabel": "25pct",
     "functionName": "Gauge_Animation_Light",
     "module": "previews",
     "renderBasename": "Gauge_Animation_Light_gauge_anim_light_25pct.png",
@@ -560,7 +560,7 @@
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/AnimationPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.AnimationPreviewsKt.Gauge_Animation_Light_gauge-anim (light)#3": {
-    "captureLabel": "",
+    "captureLabel": "50pct",
     "functionName": "Gauge_Animation_Light",
     "module": "previews",
     "renderBasename": "Gauge_Animation_Light_gauge_anim_light_50pct.png",
@@ -568,7 +568,7 @@
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/AnimationPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.AnimationPreviewsKt.Gauge_Animation_Light_gauge-anim (light)#4": {
-    "captureLabel": "",
+    "captureLabel": "75pct",
     "functionName": "Gauge_Animation_Light",
     "module": "previews",
     "renderBasename": "Gauge_Animation_Light_gauge_anim_light_75pct.png",
@@ -592,7 +592,7 @@
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/AnimationPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.AnimationPreviewsKt.Toggle_Animation_Dark_toggle-anim (dark)": {
-    "captureLabel": "",
+    "captureLabel": "0pct",
     "functionName": "Toggle_Animation_Dark",
     "module": "previews",
     "renderBasename": "Toggle_Animation_Dark_toggle_anim_dark_0pct.png",
@@ -600,7 +600,7 @@
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/AnimationPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.AnimationPreviewsKt.Toggle_Animation_Dark_toggle-anim (dark)#1": {
-    "captureLabel": "",
+    "captureLabel": "100pct",
     "functionName": "Toggle_Animation_Dark",
     "module": "previews",
     "renderBasename": "Toggle_Animation_Dark_toggle_anim_dark_100pct.png",
@@ -608,7 +608,7 @@
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/AnimationPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.AnimationPreviewsKt.Toggle_Animation_Dark_toggle-anim (dark)#2": {
-    "captureLabel": "",
+    "captureLabel": "25pct",
     "functionName": "Toggle_Animation_Dark",
     "module": "previews",
     "renderBasename": "Toggle_Animation_Dark_toggle_anim_dark_25pct.png",
@@ -616,7 +616,7 @@
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/AnimationPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.AnimationPreviewsKt.Toggle_Animation_Dark_toggle-anim (dark)#3": {
-    "captureLabel": "",
+    "captureLabel": "50pct",
     "functionName": "Toggle_Animation_Dark",
     "module": "previews",
     "renderBasename": "Toggle_Animation_Dark_toggle_anim_dark_50pct.png",
@@ -624,7 +624,7 @@
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/AnimationPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.AnimationPreviewsKt.Toggle_Animation_Dark_toggle-anim (dark)#4": {
-    "captureLabel": "",
+    "captureLabel": "75pct",
     "functionName": "Toggle_Animation_Dark",
     "module": "previews",
     "renderBasename": "Toggle_Animation_Dark_toggle_anim_dark_75pct.png",
@@ -632,7 +632,7 @@
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/AnimationPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.AnimationPreviewsKt.Toggle_Animation_Light_toggle-anim (light)": {
-    "captureLabel": "",
+    "captureLabel": "0pct",
     "functionName": "Toggle_Animation_Light",
     "module": "previews",
     "renderBasename": "Toggle_Animation_Light_toggle_anim_light_0pct.png",
@@ -640,7 +640,7 @@
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/AnimationPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.AnimationPreviewsKt.Toggle_Animation_Light_toggle-anim (light)#1": {
-    "captureLabel": "",
+    "captureLabel": "100pct",
     "functionName": "Toggle_Animation_Light",
     "module": "previews",
     "renderBasename": "Toggle_Animation_Light_toggle_anim_light_100pct.png",
@@ -648,7 +648,7 @@
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/AnimationPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.AnimationPreviewsKt.Toggle_Animation_Light_toggle-anim (light)#2": {
-    "captureLabel": "",
+    "captureLabel": "25pct",
     "functionName": "Toggle_Animation_Light",
     "module": "previews",
     "renderBasename": "Toggle_Animation_Light_toggle_anim_light_25pct.png",
@@ -656,7 +656,7 @@
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/AnimationPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.AnimationPreviewsKt.Toggle_Animation_Light_toggle-anim (light)#3": {
-    "captureLabel": "",
+    "captureLabel": "50pct",
     "functionName": "Toggle_Animation_Light",
     "module": "previews",
     "renderBasename": "Toggle_Animation_Light_toggle_anim_light_50pct.png",
@@ -664,7 +664,7 @@
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/AnimationPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.AnimationPreviewsKt.Toggle_Animation_Light_toggle-anim (light)#4": {
-    "captureLabel": "",
+    "captureLabel": "75pct",
     "functionName": "Toggle_Animation_Light",
     "module": "previews",
     "renderBasename": "Toggle_Animation_Light_toggle_anim_light_75pct.png",
@@ -936,7 +936,7 @@
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.CardPreviewsKt.Button_Dark_button (dark)": {
-    "captureLabel": "",
+    "captureLabel": "off",
     "functionName": "Button_Dark",
     "module": "previews",
     "renderBasename": "Button_Dark_button_dark_off.png",
@@ -944,7 +944,7 @@
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.CardPreviewsKt.Button_Dark_button (dark)#1": {
-    "captureLabel": "",
+    "captureLabel": "on",
     "functionName": "Button_Dark",
     "module": "previews",
     "renderBasename": "Button_Dark_button_dark_on.png",
@@ -952,7 +952,7 @@
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.CardPreviewsKt.Button_Dark_button (dark)#2": {
-    "captureLabel": "",
+    "captureLabel": "unavailable",
     "functionName": "Button_Dark",
     "module": "previews",
     "renderBasename": "Button_Dark_button_dark_unavailable.png",
@@ -960,7 +960,7 @@
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.CardPreviewsKt.Button_Light_button (light)": {
-    "captureLabel": "",
+    "captureLabel": "off",
     "functionName": "Button_Light",
     "module": "previews",
     "renderBasename": "Button_Light_button_light_off.png",
@@ -968,7 +968,7 @@
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.CardPreviewsKt.Button_Light_button (light)#1": {
-    "captureLabel": "",
+    "captureLabel": "on",
     "functionName": "Button_Light",
     "module": "previews",
     "renderBasename": "Button_Light_button_light_on.png",
@@ -976,7 +976,7 @@
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.CardPreviewsKt.Button_Light_button (light)#2": {
-    "captureLabel": "",
+    "captureLabel": "unavailable",
     "functionName": "Button_Light",
     "module": "previews",
     "renderBasename": "Button_Light_button_light_unavailable.png",
@@ -1432,7 +1432,7 @@
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.CardPreviewsKt.Tile_Cover_States_tile cover (light)": {
-    "captureLabel": "",
+    "captureLabel": "closed",
     "functionName": "Tile_Cover_States",
     "module": "previews",
     "renderBasename": "Tile_Cover_States_tile_cover_light_closed.png",
@@ -1440,7 +1440,7 @@
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.CardPreviewsKt.Tile_Cover_States_tile cover (light)#1": {
-    "captureLabel": "",
+    "captureLabel": "open",
     "functionName": "Tile_Cover_States",
     "module": "previews",
     "renderBasename": "Tile_Cover_States_tile_cover_light_open.png",
@@ -1448,7 +1448,7 @@
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.CardPreviewsKt.Tile_Cover_States_tile cover (light)#2": {
-    "captureLabel": "",
+    "captureLabel": "opening",
     "functionName": "Tile_Cover_States",
     "module": "previews",
     "renderBasename": "Tile_Cover_States_tile_cover_light_opening.png",
@@ -1456,7 +1456,7 @@
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.CardPreviewsKt.Tile_Light_States_tile light (light)": {
-    "captureLabel": "",
+    "captureLabel": "off",
     "functionName": "Tile_Light_States",
     "module": "previews",
     "renderBasename": "Tile_Light_States_tile_light_light_off.png",
@@ -1464,7 +1464,7 @@
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.CardPreviewsKt.Tile_Light_States_tile light (light)#1": {
-    "captureLabel": "",
+    "captureLabel": "on",
     "functionName": "Tile_Light_States",
     "module": "previews",
     "renderBasename": "Tile_Light_States_tile_light_light_on.png",
@@ -1472,7 +1472,7 @@
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.CardPreviewsKt.Tile_Light_States_tile light (light)#2": {
-    "captureLabel": "",
+    "captureLabel": "unavailable",
     "functionName": "Tile_Light_States",
     "module": "previews",
     "renderBasename": "Tile_Light_States_tile_light_light_unavailable.png",
@@ -1480,7 +1480,7 @@
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.CardPreviewsKt.Tile_Lock_States_tile lock (light)": {
-    "captureLabel": "",
+    "captureLabel": "locked",
     "functionName": "Tile_Lock_States",
     "module": "previews",
     "renderBasename": "Tile_Lock_States_tile_lock_light_locked.png",
@@ -1488,7 +1488,7 @@
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.CardPreviewsKt.Tile_Lock_States_tile lock (light)#1": {
-    "captureLabel": "",
+    "captureLabel": "locking",
     "functionName": "Tile_Lock_States",
     "module": "previews",
     "renderBasename": "Tile_Lock_States_tile_lock_light_locking.png",
@@ -1496,7 +1496,7 @@
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.CardPreviewsKt.Tile_Lock_States_tile lock (light)#2": {
-    "captureLabel": "",
+    "captureLabel": "unlocked",
     "functionName": "Tile_Lock_States",
     "module": "previews",
     "renderBasename": "Tile_Lock_States_tile_lock_light_unlocked.png",
@@ -1688,7 +1688,7 @@
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/DashboardPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.GarageShutterCardPreviewsKt.Garage_Animation_Dark_garage-anim (dark)": {
-    "captureLabel": "",
+    "captureLabel": "closed",
     "functionName": "Garage_Animation_Dark",
     "module": "previews",
     "renderBasename": "Garage_Animation_Dark_garage_anim_dark_closed.png",
@@ -1696,7 +1696,7 @@
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/GarageShutterCardPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.GarageShutterCardPreviewsKt.Garage_Animation_Dark_garage-anim (dark)#1": {
-    "captureLabel": "",
+    "captureLabel": "open",
     "functionName": "Garage_Animation_Dark",
     "module": "previews",
     "renderBasename": "Garage_Animation_Dark_garage_anim_dark_open.png",
@@ -1704,7 +1704,7 @@
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/GarageShutterCardPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.GarageShutterCardPreviewsKt.Garage_Animation_Dark_garage-anim (dark)#2": {
-    "captureLabel": "",
+    "captureLabel": "opening 25",
     "functionName": "Garage_Animation_Dark",
     "module": "previews",
     "renderBasename": "Garage_Animation_Dark_garage_anim_dark_opening_25.png",
@@ -1712,7 +1712,7 @@
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/GarageShutterCardPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.GarageShutterCardPreviewsKt.Garage_Animation_Dark_garage-anim (dark)#3": {
-    "captureLabel": "",
+    "captureLabel": "opening 50",
     "functionName": "Garage_Animation_Dark",
     "module": "previews",
     "renderBasename": "Garage_Animation_Dark_garage_anim_dark_opening_50.png",
@@ -1720,7 +1720,7 @@
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/GarageShutterCardPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.GarageShutterCardPreviewsKt.Garage_Animation_Dark_garage-anim (dark)#4": {
-    "captureLabel": "",
+    "captureLabel": "opening 75",
     "functionName": "Garage_Animation_Dark",
     "module": "previews",
     "renderBasename": "Garage_Animation_Dark_garage_anim_dark_opening_75.png",
@@ -1728,7 +1728,7 @@
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/GarageShutterCardPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.GarageShutterCardPreviewsKt.Garage_Animation_Light_garage-anim (light)": {
-    "captureLabel": "",
+    "captureLabel": "closed",
     "functionName": "Garage_Animation_Light",
     "module": "previews",
     "renderBasename": "Garage_Animation_Light_garage_anim_light_closed.png",
@@ -1736,7 +1736,7 @@
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/GarageShutterCardPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.GarageShutterCardPreviewsKt.Garage_Animation_Light_garage-anim (light)#1": {
-    "captureLabel": "",
+    "captureLabel": "open",
     "functionName": "Garage_Animation_Light",
     "module": "previews",
     "renderBasename": "Garage_Animation_Light_garage_anim_light_open.png",
@@ -1744,7 +1744,7 @@
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/GarageShutterCardPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.GarageShutterCardPreviewsKt.Garage_Animation_Light_garage-anim (light)#2": {
-    "captureLabel": "",
+    "captureLabel": "opening 25",
     "functionName": "Garage_Animation_Light",
     "module": "previews",
     "renderBasename": "Garage_Animation_Light_garage_anim_light_opening_25.png",
@@ -1752,7 +1752,7 @@
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/GarageShutterCardPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.GarageShutterCardPreviewsKt.Garage_Animation_Light_garage-anim (light)#3": {
-    "captureLabel": "",
+    "captureLabel": "opening 50",
     "functionName": "Garage_Animation_Light",
     "module": "previews",
     "renderBasename": "Garage_Animation_Light_garage_anim_light_opening_50.png",
@@ -1760,7 +1760,7 @@
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/GarageShutterCardPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.GarageShutterCardPreviewsKt.Garage_Animation_Light_garage-anim (light)#4": {
-    "captureLabel": "",
+    "captureLabel": "opening 75",
     "functionName": "Garage_Animation_Light",
     "module": "previews",
     "renderBasename": "Garage_Animation_Light_garage_anim_light_opening_75.png",
@@ -1768,7 +1768,7 @@
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/GarageShutterCardPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.GarageShutterCardPreviewsKt.Garage_State_Dark_garage-state (dark)": {
-    "captureLabel": "",
+    "captureLabel": "closed",
     "functionName": "Garage_State_Dark",
     "module": "previews",
     "renderBasename": "Garage_State_Dark_garage_state_dark_closed.png",
@@ -1776,7 +1776,7 @@
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/GarageShutterCardPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.GarageShutterCardPreviewsKt.Garage_State_Dark_garage-state (dark)#1": {
-    "captureLabel": "",
+    "captureLabel": "closing",
     "functionName": "Garage_State_Dark",
     "module": "previews",
     "renderBasename": "Garage_State_Dark_garage_state_dark_closing.png",
@@ -1784,7 +1784,7 @@
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/GarageShutterCardPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.GarageShutterCardPreviewsKt.Garage_State_Dark_garage-state (dark)#2": {
-    "captureLabel": "",
+    "captureLabel": "open",
     "functionName": "Garage_State_Dark",
     "module": "previews",
     "renderBasename": "Garage_State_Dark_garage_state_dark_open.png",
@@ -1792,7 +1792,7 @@
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/GarageShutterCardPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.GarageShutterCardPreviewsKt.Garage_State_Dark_garage-state (dark)#3": {
-    "captureLabel": "",
+    "captureLabel": "opening",
     "functionName": "Garage_State_Dark",
     "module": "previews",
     "renderBasename": "Garage_State_Dark_garage_state_dark_opening.png",
@@ -1800,7 +1800,7 @@
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/GarageShutterCardPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.GarageShutterCardPreviewsKt.Garage_State_Dark_garage-state (dark)#4": {
-    "captureLabel": "",
+    "captureLabel": "unavailable",
     "functionName": "Garage_State_Dark",
     "module": "previews",
     "renderBasename": "Garage_State_Dark_garage_state_dark_unavailable.png",
@@ -1808,7 +1808,7 @@
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/GarageShutterCardPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.GarageShutterCardPreviewsKt.Garage_State_Light_garage-state (light)": {
-    "captureLabel": "",
+    "captureLabel": "closed",
     "functionName": "Garage_State_Light",
     "module": "previews",
     "renderBasename": "Garage_State_Light_garage_state_light_closed.png",
@@ -1816,7 +1816,7 @@
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/GarageShutterCardPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.GarageShutterCardPreviewsKt.Garage_State_Light_garage-state (light)#1": {
-    "captureLabel": "",
+    "captureLabel": "closing",
     "functionName": "Garage_State_Light",
     "module": "previews",
     "renderBasename": "Garage_State_Light_garage_state_light_closing.png",
@@ -1824,7 +1824,7 @@
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/GarageShutterCardPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.GarageShutterCardPreviewsKt.Garage_State_Light_garage-state (light)#2": {
-    "captureLabel": "",
+    "captureLabel": "open",
     "functionName": "Garage_State_Light",
     "module": "previews",
     "renderBasename": "Garage_State_Light_garage_state_light_open.png",
@@ -1832,7 +1832,7 @@
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/GarageShutterCardPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.GarageShutterCardPreviewsKt.Garage_State_Light_garage-state (light)#3": {
-    "captureLabel": "",
+    "captureLabel": "opening",
     "functionName": "Garage_State_Light",
     "module": "previews",
     "renderBasename": "Garage_State_Light_garage_state_light_opening.png",
@@ -1840,7 +1840,7 @@
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/GarageShutterCardPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.GarageShutterCardPreviewsKt.Garage_State_Light_garage-state (light)#4": {
-    "captureLabel": "",
+    "captureLabel": "unavailable",
     "functionName": "Garage_State_Light",
     "module": "previews",
     "renderBasename": "Garage_State_Light_garage_state_light_unavailable.png",
@@ -2084,7 +2084,7 @@
     "functionName": "Sizing_ConstraintMatrix_PaintMeasure",
     "module": "previews",
     "renderBasename": "Sizing_ConstraintMatrix_PaintMeasure_sizing_width_height_matrix_paint_measure_profile.png",
-    "sha256": "0c910b52e7a22f023a879e8617c81c8cfe2c6a1abd9b77739ca2ee95682f011d",
+    "sha256": "07dbb404cada726094321a2dbe4686a6f70600d6835460056b1fd8f10f2fd9cf",
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/SizingExperimentPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.SizingExperimentPreviewsKt.Sizing_ConstraintMatrix_Wrap_sizing \u2014 width \u00d7 height matrix \u00b7 wrap profile": {
@@ -2092,7 +2092,7 @@
     "functionName": "Sizing_ConstraintMatrix_Wrap",
     "module": "previews",
     "renderBasename": "Sizing_ConstraintMatrix_Wrap_sizing_width_height_matrix_wrap_profile.png",
-    "sha256": "ff1f07a36c093efa24ea5f5cfc2507a8d61871d22030d4711152656e6a7be915",
+    "sha256": "0a8cd43c4efafeebf569d9576ea0f979844928a97dfb87b04570398d107ea74e",
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/SizingExperimentPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.SizingExperimentPreviewsKt.Sizing_FixedSlot_PaintMeasure_sizing \u2014 fixed slot, paint-measure profile": {
@@ -2100,7 +2100,7 @@
     "functionName": "Sizing_FixedSlot_PaintMeasure",
     "module": "previews",
     "renderBasename": "Sizing_FixedSlot_PaintMeasure_sizing_fixed_slot_paint_measure_profile.png",
-    "sha256": "91cee01527a452a914d2e6c7a301e754e6b66bb75b24902f1db04d4ca98a2f26",
+    "sha256": "6000db5c252531f2d3dd4f488fe154beadecc40f7b9e77ce974657258e49a5b8",
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/SizingExperimentPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.SizingExperimentPreviewsKt.Sizing_FixedSlot_Wrap_sizing \u2014 fixed slot, wrap profile": {
@@ -2108,7 +2108,7 @@
     "functionName": "Sizing_FixedSlot_Wrap",
     "module": "previews",
     "renderBasename": "Sizing_FixedSlot_Wrap_sizing_fixed_slot_wrap_profile.png",
-    "sha256": "f2e6beaa6511bdcad1c4261c0f52c8fb87f21c89ce8b217e8ba73bc7eac38bd9",
+    "sha256": "a8754c0fa35dfd2199a365e523901d5adb1a12f66db5999d600e2021e35d7d32",
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/SizingExperimentPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.SizingExperimentPreviewsKt.Sizing_SlackSlot_PaintMeasure_sizing \u2014 slack slot, paint-measure profile": {
@@ -2116,7 +2116,7 @@
     "functionName": "Sizing_SlackSlot_PaintMeasure",
     "module": "previews",
     "renderBasename": "Sizing_SlackSlot_PaintMeasure_sizing_slack_slot_paint_measure_profile.png",
-    "sha256": "3a43c1aea1665d7d9059be057a5a6bfea0eed33bc5953549affe46f5c7533a03",
+    "sha256": "af991373edb15176b23656a1956bc9bfc48aff5c6acad5d2e2167d9d45695275",
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/SizingExperimentPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.SizingExperimentPreviewsKt.Sizing_SlackSlot_Wrap_sizing \u2014 slack slot, wrap profile": {
@@ -2124,7 +2124,7 @@
     "functionName": "Sizing_SlackSlot_Wrap",
     "module": "previews",
     "renderBasename": "Sizing_SlackSlot_Wrap_sizing_slack_slot_wrap_profile.png",
-    "sha256": "93eda4fdc27921652d0bc408fdcb0776a76c73521f23c9f6007582ea481252d9",
+    "sha256": "4b95f37ecf8c838e3a9f51c1b2fcbcaeb120db532575521b2f997ab7032866d2",
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/SizingExperimentPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.SizingExperimentPreviewsKt.Sizing_TightSlot_PaintMeasure_sizing \u2014 tight slot, paint-measure profile": {
@@ -2132,7 +2132,7 @@
     "functionName": "Sizing_TightSlot_PaintMeasure",
     "module": "previews",
     "renderBasename": "Sizing_TightSlot_PaintMeasure_sizing_tight_slot_paint_measure_profile.png",
-    "sha256": "0b84baa4aaa96eb0e9048c1cf5840b751a884f11822105489464756aed5dd538",
+    "sha256": "5176aac13624877a1aa4f8c0fdd547002116ba5f59413e236f3550de6074de7c",
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/SizingExperimentPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.SizingExperimentPreviewsKt.Sizing_TightSlot_Wrap_sizing \u2014 tight slot, wrap profile": {
@@ -2140,7 +2140,7 @@
     "functionName": "Sizing_TightSlot_Wrap",
     "module": "previews",
     "renderBasename": "Sizing_TightSlot_Wrap_sizing_tight_slot_wrap_profile.png",
-    "sha256": "8637207d170e95abe7f81dbc94a6485fb803dfe8f2a532a774cd1dd3fc14cc81",
+    "sha256": "8f8762bee0bff6c6cf68aa2e3ef3c3214d45495f5080eaf9d24a2c78e3e38269",
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/SizingExperimentPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.SizingExperimentPreviewsKt.Sizing_WidthPinnedHeightAdaptive_sizing \u2014 width pinned, height adaptive": {
@@ -2548,7 +2548,7 @@
     "functionName": "WearClockSmall",
     "module": "wear",
     "renderBasename": "WearClockSmall_wear_clock_small.png",
-    "sha256": "e70f703333ad223b70debe220be6758bbaa40211401e63a9aba3f2def78b6188",
+    "sha256": "774cd4a7f5076d85e4fcafbc72c01a4f8587a5525841ae227d7b89134e4b7b85",
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/wear/widget/CardSlotWidgetPreviews.kt"
   },
   "wear/ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearEntitiesLarge_wear \u00b7 entities (large)": {
