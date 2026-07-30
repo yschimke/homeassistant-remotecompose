@@ -6627,9 +6627,24 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "",
-      "cleanBasename": "",
-      "findings": [],
+      "annotatedBasename": "SlotWidgetPreview_TileSmall_Slot_widget_tile_small.a11y.png",
+      "cleanBasename": "SlotWidgetPreview_TileSmall_Slot_widget_tile_small.png",
+      "findings": [
+        {
+          "boundsInScreen": "11,179,443,331",
+          "level": "ERROR",
+          "message": "This item may not have a label readable by screen readers.",
+          "type": "SpeakableTextPresentCheck",
+          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
+        },
+        {
+          "boundsInScreen": "27,211,427,298",
+          "level": "ERROR",
+          "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
+          "type": "TouchTargetSizeCheck",
+          "viewDescription": "android.view.View  desc=\"Living Room\""
+        }
+      ],
       "functionName": "SlotWidgetPreview_TileSmall",
       "module": "wear",
       "previewId": "ee.schimke.terrazzo.wear.widget.SlotWidgetPreviewsKt.SlotWidgetPreview_TileSmall_Slot widget \u2014 tile (small)",
@@ -6637,9 +6652,17 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "",
-      "cleanBasename": "",
-      "findings": [],
+      "annotatedBasename": "WearAlarmPanelLarge_wear_alarm_panel_large.a11y.png",
+      "cleanBasename": "WearAlarmPanelLarge_wear_alarm_panel_large.png",
+      "findings": [
+        {
+          "boundsInScreen": "11,127,443,383",
+          "level": "ERROR",
+          "message": "This item may not have a label readable by screen readers.",
+          "type": "SpeakableTextPresentCheck",
+          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
+        }
+      ],
       "functionName": "WearAlarmPanelLarge",
       "module": "wear",
       "previewId": "ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearAlarmPanelLarge_wear \u00b7 alarm-panel (large)",
@@ -6647,9 +6670,17 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "",
-      "cleanBasename": "",
-      "findings": [],
+      "annotatedBasename": "WearAlarmPanelSmall_wear_alarm_panel_small.a11y.png",
+      "cleanBasename": "WearAlarmPanelSmall_wear_alarm_panel_small.png",
+      "findings": [
+        {
+          "boundsInScreen": "11,179,443,331",
+          "level": "ERROR",
+          "message": "This item may not have a label readable by screen readers.",
+          "type": "SpeakableTextPresentCheck",
+          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
+        }
+      ],
       "functionName": "WearAlarmPanelSmall",
       "module": "wear",
       "previewId": "ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearAlarmPanelSmall_wear \u00b7 alarm-panel (small)",
@@ -6851,9 +6882,17 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "",
-      "cleanBasename": "",
-      "findings": [],
+      "annotatedBasename": "WearButtonLarge_wear_button_large.a11y.png",
+      "cleanBasename": "WearButtonLarge_wear_button_large.png",
+      "findings": [
+        {
+          "boundsInScreen": "11,127,443,383",
+          "level": "ERROR",
+          "message": "This item may not have a label readable by screen readers.",
+          "type": "SpeakableTextPresentCheck",
+          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
+        }
+      ],
       "functionName": "WearButtonLarge",
       "module": "wear",
       "previewId": "ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearButtonLarge_wear \u00b7 button (large)",
@@ -6861,9 +6900,17 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "",
-      "cleanBasename": "",
-      "findings": [],
+      "annotatedBasename": "WearButtonSmall_wear_button_small.a11y.png",
+      "cleanBasename": "WearButtonSmall_wear_button_small.png",
+      "findings": [
+        {
+          "boundsInScreen": "11,179,443,331",
+          "level": "ERROR",
+          "message": "This item may not have a label readable by screen readers.",
+          "type": "SpeakableTextPresentCheck",
+          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
+        }
+      ],
       "functionName": "WearButtonSmall",
       "module": "wear",
       "previewId": "ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearButtonSmall_wear \u00b7 button (small)",
@@ -6871,9 +6918,17 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "",
-      "cleanBasename": "",
-      "findings": [],
+      "annotatedBasename": "WearCalendarSmall_wear_calendar_small.a11y.png",
+      "cleanBasename": "WearCalendarSmall_wear_calendar_small.png",
+      "findings": [
+        {
+          "boundsInScreen": "11,179,443,331",
+          "level": "ERROR",
+          "message": "This item may not have a label readable by screen readers.",
+          "type": "SpeakableTextPresentCheck",
+          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
+        }
+      ],
       "functionName": "WearCalendarSmall",
       "module": "wear",
       "previewId": "ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearCalendarSmall_wear \u00b7 calendar (small)",
@@ -7027,9 +7082,17 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "",
-      "cleanBasename": "",
-      "findings": [],
+      "annotatedBasename": "WearEntityLarge_wear_entity_large.a11y.png",
+      "cleanBasename": "WearEntityLarge_wear_entity_large.png",
+      "findings": [
+        {
+          "boundsInScreen": "11,127,443,383",
+          "level": "ERROR",
+          "message": "This item may not have a label readable by screen readers.",
+          "type": "SpeakableTextPresentCheck",
+          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
+        }
+      ],
       "functionName": "WearEntityLarge",
       "module": "wear",
       "previewId": "ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearEntityLarge_wear \u00b7 entity (large)",
@@ -7037,9 +7100,17 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "",
-      "cleanBasename": "",
-      "findings": [],
+      "annotatedBasename": "WearEntitySmall_wear_entity_small.a11y.png",
+      "cleanBasename": "WearEntitySmall_wear_entity_small.png",
+      "findings": [
+        {
+          "boundsInScreen": "11,179,443,331",
+          "level": "ERROR",
+          "message": "This item may not have a label readable by screen readers.",
+          "type": "SpeakableTextPresentCheck",
+          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
+        }
+      ],
       "functionName": "WearEntitySmall",
       "module": "wear",
       "previewId": "ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearEntitySmall_wear \u00b7 entity (small)",
@@ -7047,9 +7118,17 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "",
-      "cleanBasename": "",
-      "findings": [],
+      "annotatedBasename": "WearGaugeLarge_wear_gauge_large.a11y.png",
+      "cleanBasename": "WearGaugeLarge_wear_gauge_large.png",
+      "findings": [
+        {
+          "boundsInScreen": "11,127,443,383",
+          "level": "ERROR",
+          "message": "This item may not have a label readable by screen readers.",
+          "type": "SpeakableTextPresentCheck",
+          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
+        }
+      ],
       "functionName": "WearGaugeLarge",
       "module": "wear",
       "previewId": "ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearGaugeLarge_wear \u00b7 gauge (large)",
@@ -7057,9 +7136,17 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "",
-      "cleanBasename": "",
-      "findings": [],
+      "annotatedBasename": "WearGaugeSmall_wear_gauge_small.a11y.png",
+      "cleanBasename": "WearGaugeSmall_wear_gauge_small.png",
+      "findings": [
+        {
+          "boundsInScreen": "11,179,443,331",
+          "level": "ERROR",
+          "message": "This item may not have a label readable by screen readers.",
+          "type": "SpeakableTextPresentCheck",
+          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
+        }
+      ],
       "functionName": "WearGaugeSmall",
       "module": "wear",
       "previewId": "ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearGaugeSmall_wear \u00b7 gauge (small)",
@@ -7117,9 +7204,17 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "",
-      "cleanBasename": "",
-      "findings": [],
+      "annotatedBasename": "WearGridLarge_wear_grid_large.a11y.png",
+      "cleanBasename": "WearGridLarge_wear_grid_large.png",
+      "findings": [
+        {
+          "boundsInScreen": "11,127,443,383",
+          "level": "ERROR",
+          "message": "This item may not have a label readable by screen readers.",
+          "type": "SpeakableTextPresentCheck",
+          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
+        }
+      ],
       "functionName": "WearGridLarge",
       "module": "wear",
       "previewId": "ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearGridLarge_wear \u00b7 grid (large)",
@@ -7127,9 +7222,17 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "",
-      "cleanBasename": "",
-      "findings": [],
+      "annotatedBasename": "WearGridSmall_wear_grid_small.a11y.png",
+      "cleanBasename": "WearGridSmall_wear_grid_small.png",
+      "findings": [
+        {
+          "boundsInScreen": "11,179,443,331",
+          "level": "ERROR",
+          "message": "This item may not have a label readable by screen readers.",
+          "type": "SpeakableTextPresentCheck",
+          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
+        }
+      ],
       "functionName": "WearGridSmall",
       "module": "wear",
       "previewId": "ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearGridSmall_wear \u00b7 grid (small)",
@@ -7155,9 +7258,17 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "",
-      "cleanBasename": "",
-      "findings": [],
+      "annotatedBasename": "WearHistoryGraphSmall_wear_history_graph_small.a11y.png",
+      "cleanBasename": "WearHistoryGraphSmall_wear_history_graph_small.png",
+      "findings": [
+        {
+          "boundsInScreen": "11,179,443,331",
+          "level": "ERROR",
+          "message": "This item may not have a label readable by screen readers.",
+          "type": "SpeakableTextPresentCheck",
+          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
+        }
+      ],
       "functionName": "WearHistoryGraphSmall",
       "module": "wear",
       "previewId": "ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearHistoryGraphSmall_wear \u00b7 history-graph (small)",
@@ -7165,9 +7276,17 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "",
-      "cleanBasename": "",
-      "findings": [],
+      "annotatedBasename": "WearHorizontalStackLarge_wear_horizontal_stack_large.a11y.png",
+      "cleanBasename": "WearHorizontalStackLarge_wear_horizontal_stack_large.png",
+      "findings": [
+        {
+          "boundsInScreen": "11,127,443,383",
+          "level": "ERROR",
+          "message": "This item may not have a label readable by screen readers.",
+          "type": "SpeakableTextPresentCheck",
+          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
+        }
+      ],
       "functionName": "WearHorizontalStackLarge",
       "module": "wear",
       "previewId": "ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearHorizontalStackLarge_wear \u00b7 horizontal-stack (large)",
@@ -7175,9 +7294,17 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "",
-      "cleanBasename": "",
-      "findings": [],
+      "annotatedBasename": "WearHorizontalStackSmall_wear_horizontal_stack_small.a11y.png",
+      "cleanBasename": "WearHorizontalStackSmall_wear_horizontal_stack_small.png",
+      "findings": [
+        {
+          "boundsInScreen": "11,179,443,331",
+          "level": "ERROR",
+          "message": "This item may not have a label readable by screen readers.",
+          "type": "SpeakableTextPresentCheck",
+          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
+        }
+      ],
       "functionName": "WearHorizontalStackSmall",
       "module": "wear",
       "previewId": "ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearHorizontalStackSmall_wear \u00b7 horizontal-stack (small)",
@@ -7185,9 +7312,17 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "",
-      "cleanBasename": "",
-      "findings": [],
+      "annotatedBasename": "WearHumidifierLarge_wear_humidifier_large.a11y.png",
+      "cleanBasename": "WearHumidifierLarge_wear_humidifier_large.png",
+      "findings": [
+        {
+          "boundsInScreen": "11,127,443,383",
+          "level": "ERROR",
+          "message": "This item may not have a label readable by screen readers.",
+          "type": "SpeakableTextPresentCheck",
+          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
+        }
+      ],
       "functionName": "WearHumidifierLarge",
       "module": "wear",
       "previewId": "ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearHumidifierLarge_wear \u00b7 humidifier (large)",
@@ -7195,9 +7330,17 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "",
-      "cleanBasename": "",
-      "findings": [],
+      "annotatedBasename": "WearHumidifierSmall_wear_humidifier_small.a11y.png",
+      "cleanBasename": "WearHumidifierSmall_wear_humidifier_small.png",
+      "findings": [
+        {
+          "boundsInScreen": "11,179,443,331",
+          "level": "ERROR",
+          "message": "This item may not have a label readable by screen readers.",
+          "type": "SpeakableTextPresentCheck",
+          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
+        }
+      ],
       "functionName": "WearHumidifierSmall",
       "module": "wear",
       "previewId": "ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearHumidifierSmall_wear \u00b7 humidifier (small)",
@@ -7205,9 +7348,17 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "",
-      "cleanBasename": "",
-      "findings": [],
+      "annotatedBasename": "WearLightLarge_wear_light_large.a11y.png",
+      "cleanBasename": "WearLightLarge_wear_light_large.png",
+      "findings": [
+        {
+          "boundsInScreen": "11,127,443,383",
+          "level": "ERROR",
+          "message": "This item may not have a label readable by screen readers.",
+          "type": "SpeakableTextPresentCheck",
+          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
+        }
+      ],
       "functionName": "WearLightLarge",
       "module": "wear",
       "previewId": "ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearLightLarge_wear \u00b7 light (large)",
@@ -7215,9 +7366,17 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "",
-      "cleanBasename": "",
-      "findings": [],
+      "annotatedBasename": "WearLightSmall_wear_light_small.a11y.png",
+      "cleanBasename": "WearLightSmall_wear_light_small.png",
+      "findings": [
+        {
+          "boundsInScreen": "11,179,443,331",
+          "level": "ERROR",
+          "message": "This item may not have a label readable by screen readers.",
+          "type": "SpeakableTextPresentCheck",
+          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
+        }
+      ],
       "functionName": "WearLightSmall",
       "module": "wear",
       "previewId": "ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearLightSmall_wear \u00b7 light (small)",
@@ -7225,9 +7384,17 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "",
-      "cleanBasename": "",
-      "findings": [],
+      "annotatedBasename": "WearLogbookSmall_wear_logbook_small.a11y.png",
+      "cleanBasename": "WearLogbookSmall_wear_logbook_small.png",
+      "findings": [
+        {
+          "boundsInScreen": "11,179,443,331",
+          "level": "ERROR",
+          "message": "This item may not have a label readable by screen readers.",
+          "type": "SpeakableTextPresentCheck",
+          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
+        }
+      ],
       "functionName": "WearLogbookSmall",
       "module": "wear",
       "previewId": "ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearLogbookSmall_wear \u00b7 logbook (small)",
@@ -7235,9 +7402,17 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "",
-      "cleanBasename": "",
-      "findings": [],
+      "annotatedBasename": "WearMarkdownSmall_wear_markdown_small.a11y.png",
+      "cleanBasename": "WearMarkdownSmall_wear_markdown_small.png",
+      "findings": [
+        {
+          "boundsInScreen": "11,179,443,331",
+          "level": "ERROR",
+          "message": "This item may not have a label readable by screen readers.",
+          "type": "SpeakableTextPresentCheck",
+          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
+        }
+      ],
       "functionName": "WearMarkdownSmall",
       "module": "wear",
       "previewId": "ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearMarkdownSmall_wear \u00b7 markdown (small)",
@@ -7245,9 +7420,17 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "",
-      "cleanBasename": "",
-      "findings": [],
+      "annotatedBasename": "WearMediaControlLarge_wear_media_control_large.a11y.png",
+      "cleanBasename": "WearMediaControlLarge_wear_media_control_large.png",
+      "findings": [
+        {
+          "boundsInScreen": "11,127,443,383",
+          "level": "ERROR",
+          "message": "This item may not have a label readable by screen readers.",
+          "type": "SpeakableTextPresentCheck",
+          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
+        }
+      ],
       "functionName": "WearMediaControlLarge",
       "module": "wear",
       "previewId": "ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearMediaControlLarge_wear \u00b7 media-control (large)",
@@ -7255,9 +7438,17 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "",
-      "cleanBasename": "",
-      "findings": [],
+      "annotatedBasename": "WearMediaControlSmall_wear_media_control_small.a11y.png",
+      "cleanBasename": "WearMediaControlSmall_wear_media_control_small.png",
+      "findings": [
+        {
+          "boundsInScreen": "11,179,443,331",
+          "level": "ERROR",
+          "message": "This item may not have a label readable by screen readers.",
+          "type": "SpeakableTextPresentCheck",
+          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
+        }
+      ],
       "functionName": "WearMediaControlSmall",
       "module": "wear",
       "previewId": "ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearMediaControlSmall_wear \u00b7 media-control (small)",
@@ -7301,9 +7492,17 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "",
-      "cleanBasename": "",
-      "findings": [],
+      "annotatedBasename": "WearPictureEntityLarge_wear_picture_entity_large.a11y.png",
+      "cleanBasename": "WearPictureEntityLarge_wear_picture_entity_large.png",
+      "findings": [
+        {
+          "boundsInScreen": "11,127,443,383",
+          "level": "ERROR",
+          "message": "This item may not have a label readable by screen readers.",
+          "type": "SpeakableTextPresentCheck",
+          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
+        }
+      ],
       "functionName": "WearPictureEntityLarge",
       "module": "wear",
       "previewId": "ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearPictureEntityLarge_wear \u00b7 picture-entity (large)",
@@ -7311,9 +7510,17 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "",
-      "cleanBasename": "",
-      "findings": [],
+      "annotatedBasename": "WearPictureEntitySmall_wear_picture_entity_small.a11y.png",
+      "cleanBasename": "WearPictureEntitySmall_wear_picture_entity_small.png",
+      "findings": [
+        {
+          "boundsInScreen": "11,179,443,331",
+          "level": "ERROR",
+          "message": "This item may not have a label readable by screen readers.",
+          "type": "SpeakableTextPresentCheck",
+          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
+        }
+      ],
       "functionName": "WearPictureEntitySmall",
       "module": "wear",
       "previewId": "ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearPictureEntitySmall_wear \u00b7 picture-entity (small)",
@@ -7403,9 +7610,17 @@
       "variant": "wearos_small_round"
     },
     {
-      "annotatedBasename": "",
-      "cleanBasename": "",
-      "findings": [],
+      "annotatedBasename": "WearSensorLarge_wear_sensor_large.a11y.png",
+      "cleanBasename": "WearSensorLarge_wear_sensor_large.png",
+      "findings": [
+        {
+          "boundsInScreen": "11,127,443,383",
+          "level": "ERROR",
+          "message": "This item may not have a label readable by screen readers.",
+          "type": "SpeakableTextPresentCheck",
+          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
+        }
+      ],
       "functionName": "WearSensorLarge",
       "module": "wear",
       "previewId": "ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearSensorLarge_wear \u00b7 sensor (large)",
@@ -7413,9 +7628,17 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "",
-      "cleanBasename": "",
-      "findings": [],
+      "annotatedBasename": "WearSensorSmall_wear_sensor_small.a11y.png",
+      "cleanBasename": "WearSensorSmall_wear_sensor_small.png",
+      "findings": [
+        {
+          "boundsInScreen": "11,179,443,331",
+          "level": "ERROR",
+          "message": "This item may not have a label readable by screen readers.",
+          "type": "SpeakableTextPresentCheck",
+          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
+        }
+      ],
       "functionName": "WearSensorSmall",
       "module": "wear",
       "previewId": "ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearSensorSmall_wear \u00b7 sensor (small)",
@@ -7433,9 +7656,17 @@
       "variant": "wearos_small_round"
     },
     {
-      "annotatedBasename": "",
-      "cleanBasename": "",
-      "findings": [],
+      "annotatedBasename": "WearStatisticLarge_wear_statistic_large.a11y.png",
+      "cleanBasename": "WearStatisticLarge_wear_statistic_large.png",
+      "findings": [
+        {
+          "boundsInScreen": "11,127,443,383",
+          "level": "ERROR",
+          "message": "This item may not have a label readable by screen readers.",
+          "type": "SpeakableTextPresentCheck",
+          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
+        }
+      ],
       "functionName": "WearStatisticLarge",
       "module": "wear",
       "previewId": "ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearStatisticLarge_wear \u00b7 statistic (large)",
@@ -7443,9 +7674,17 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "",
-      "cleanBasename": "",
-      "findings": [],
+      "annotatedBasename": "WearStatisticSmall_wear_statistic_small.a11y.png",
+      "cleanBasename": "WearStatisticSmall_wear_statistic_small.png",
+      "findings": [
+        {
+          "boundsInScreen": "11,179,443,331",
+          "level": "ERROR",
+          "message": "This item may not have a label readable by screen readers.",
+          "type": "SpeakableTextPresentCheck",
+          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
+        }
+      ],
       "functionName": "WearStatisticSmall",
       "module": "wear",
       "previewId": "ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearStatisticSmall_wear \u00b7 statistic (small)",
@@ -7471,9 +7710,17 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "",
-      "cleanBasename": "",
-      "findings": [],
+      "annotatedBasename": "WearThermostatLarge_wear_thermostat_large.a11y.png",
+      "cleanBasename": "WearThermostatLarge_wear_thermostat_large.png",
+      "findings": [
+        {
+          "boundsInScreen": "11,127,443,383",
+          "level": "ERROR",
+          "message": "This item may not have a label readable by screen readers.",
+          "type": "SpeakableTextPresentCheck",
+          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
+        }
+      ],
       "functionName": "WearThermostatLarge",
       "module": "wear",
       "previewId": "ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearThermostatLarge_wear \u00b7 thermostat (large)",
@@ -7481,9 +7728,17 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "",
-      "cleanBasename": "",
-      "findings": [],
+      "annotatedBasename": "WearThermostatSmall_wear_thermostat_small.a11y.png",
+      "cleanBasename": "WearThermostatSmall_wear_thermostat_small.png",
+      "findings": [
+        {
+          "boundsInScreen": "11,179,443,331",
+          "level": "ERROR",
+          "message": "This item may not have a label readable by screen readers.",
+          "type": "SpeakableTextPresentCheck",
+          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
+        }
+      ],
       "functionName": "WearThermostatSmall",
       "module": "wear",
       "previewId": "ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearThermostatSmall_wear \u00b7 thermostat (small)",
@@ -7491,9 +7746,24 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "",
-      "cleanBasename": "",
-      "findings": [],
+      "annotatedBasename": "WearTileLarge_wear_tile_large.a11y.png",
+      "cleanBasename": "WearTileLarge_wear_tile_large.png",
+      "findings": [
+        {
+          "boundsInScreen": "11,127,443,383",
+          "level": "ERROR",
+          "message": "This item may not have a label readable by screen readers.",
+          "type": "SpeakableTextPresentCheck",
+          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
+        },
+        {
+          "boundsInScreen": "27,211,427,298",
+          "level": "ERROR",
+          "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
+          "type": "TouchTargetSizeCheck",
+          "viewDescription": "android.view.View  desc=\"Living Room\""
+        }
+      ],
       "functionName": "WearTileLarge",
       "module": "wear",
       "previewId": "ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearTileLarge_wear \u00b7 tile (large)",
@@ -7501,9 +7771,24 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "",
-      "cleanBasename": "",
-      "findings": [],
+      "annotatedBasename": "WearTileSmall_wear_tile_small.a11y.png",
+      "cleanBasename": "WearTileSmall_wear_tile_small.png",
+      "findings": [
+        {
+          "boundsInScreen": "11,179,443,331",
+          "level": "ERROR",
+          "message": "This item may not have a label readable by screen readers.",
+          "type": "SpeakableTextPresentCheck",
+          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
+        },
+        {
+          "boundsInScreen": "27,211,427,298",
+          "level": "ERROR",
+          "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
+          "type": "TouchTargetSizeCheck",
+          "viewDescription": "android.view.View  desc=\"Living Room\""
+        }
+      ],
       "functionName": "WearTileSmall",
       "module": "wear",
       "previewId": "ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearTileSmall_wear \u00b7 tile (small)",
@@ -7511,9 +7796,17 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "",
-      "cleanBasename": "",
-      "findings": [],
+      "annotatedBasename": "WearTodoListSmall_wear_todo_list_small.a11y.png",
+      "cleanBasename": "WearTodoListSmall_wear_todo_list_small.png",
+      "findings": [
+        {
+          "boundsInScreen": "11,179,443,331",
+          "level": "ERROR",
+          "message": "This item may not have a label readable by screen readers.",
+          "type": "SpeakableTextPresentCheck",
+          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
+        }
+      ],
       "functionName": "WearTodoListSmall",
       "module": "wear",
       "previewId": "ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearTodoListSmall_wear \u00b7 todo-list (small)",
@@ -7587,9 +7880,24 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "",
-      "cleanBasename": "",
-      "findings": [],
+      "annotatedBasename": "WearVerticalStackLarge_wear_vertical_stack_large.a11y.png",
+      "cleanBasename": "WearVerticalStackLarge_wear_vertical_stack_large.png",
+      "findings": [
+        {
+          "boundsInScreen": "11,127,443,383",
+          "level": "ERROR",
+          "message": "This item may not have a label readable by screen readers.",
+          "type": "SpeakableTextPresentCheck",
+          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
+        },
+        {
+          "boundsInScreen": "27,211,427,298",
+          "level": "ERROR",
+          "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
+          "type": "TouchTargetSizeCheck",
+          "viewDescription": "android.view.View  desc=\"Living Room\""
+        }
+      ],
       "functionName": "WearVerticalStackLarge",
       "module": "wear",
       "previewId": "ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearVerticalStackLarge_wear \u00b7 vertical-stack (large)",
@@ -7597,9 +7905,24 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "",
-      "cleanBasename": "",
-      "findings": [],
+      "annotatedBasename": "WearVerticalStackSmall_wear_vertical_stack_small.a11y.png",
+      "cleanBasename": "WearVerticalStackSmall_wear_vertical_stack_small.png",
+      "findings": [
+        {
+          "boundsInScreen": "11,179,443,331",
+          "level": "ERROR",
+          "message": "This item may not have a label readable by screen readers.",
+          "type": "SpeakableTextPresentCheck",
+          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
+        },
+        {
+          "boundsInScreen": "27,211,427,298",
+          "level": "ERROR",
+          "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
+          "type": "TouchTargetSizeCheck",
+          "viewDescription": "android.view.View  desc=\"Living Room\""
+        }
+      ],
       "functionName": "WearVerticalStackSmall",
       "module": "wear",
       "previewId": "ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearVerticalStackSmall_wear \u00b7 vertical-stack (small)",
@@ -7607,9 +7930,17 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "",
-      "cleanBasename": "",
-      "findings": [],
+      "annotatedBasename": "WearWeatherForecastSmall_wear_weather_forecast_small.a11y.png",
+      "cleanBasename": "WearWeatherForecastSmall_wear_weather_forecast_small.png",
+      "findings": [
+        {
+          "boundsInScreen": "11,179,443,331",
+          "level": "ERROR",
+          "message": "This item may not have a label readable by screen readers.",
+          "type": "SpeakableTextPresentCheck",
+          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
+        }
+      ],
       "functionName": "WearWeatherForecastSmall",
       "module": "wear",
       "previewId": "ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearWeatherForecastSmall_wear \u00b7 weather-forecast (small)",
