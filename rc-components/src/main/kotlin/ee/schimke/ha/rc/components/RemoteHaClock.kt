@@ -141,7 +141,7 @@ private fun liveClockTimeString(
     } else {
       // 12-hour clock: 0→12, 1..11→same, 12→12, 13..23→1..11.
       val mod12 = hour24.rem(12f)
-      mod12.eq(0f.rf).select(12f.rf, mod12).toRemoteString(oneDigit)
+      mod12.isEqualTo(0f.rf).select(12f.rf, mod12).toRemoteString(oneDigit)
     }
 
   var text: RemoteString = hourText + ":" + minute.toRemoteString(twoDigits)
@@ -149,7 +149,7 @@ private fun liveClockTimeString(
     text = text + ":" + sec.toRemoteString(twoDigits)
   }
   if (!use24Hour) {
-    text = text + " " + hour24.lt(12f.rf).select("AM".rs, "PM".rs)
+    text = text + " " + hour24.isLessThan(12f.rf).select("AM".rs, "PM".rs)
   }
   return text
 }

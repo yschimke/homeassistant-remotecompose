@@ -25,6 +25,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.rc.CachedCardPreview
+import ee.schimke.ha.rc.FixedHaClock
+import ee.schimke.ha.rc.LocalHaClock
 import ee.schimke.ha.rc.LocalRcDebugBorders
 import ee.schimke.ha.rc.ProvideCardRegistry
 import ee.schimke.ha.rc.RenderChild
@@ -34,6 +36,7 @@ import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.components.HaTheme
 import ee.schimke.ha.rc.components.ProvideHaTheme
 import ee.schimke.ha.rc.enableRemoteComposeWrapContent
+import java.time.Instant
 
 /**
  * Experiments that visualise how a RemoteCompose card document sizes itself inside its host slot.
@@ -311,9 +314,11 @@ private fun ExperimentRow(
         profile = profile,
         modifier = slotModifier.border(1.dp, Color(0xFFD32F2F)),
       ) {
-        ProvideCardRegistry(registry) {
-          ProvideHaTheme(HaTheme.Light) {
-            RenderChild(card, snapshot, RemoteModifier.rcFillMaxWidth())
+        CompositionLocalProvider(LocalHaClock provides SizingPreviewClock) {
+          ProvideCardRegistry(registry) {
+            ProvideHaTheme(HaTheme.Light) {
+              RenderChild(card, snapshot, RemoteModifier.rcFillMaxWidth())
+            }
           }
         }
       }
@@ -382,9 +387,11 @@ private fun WidthOnlyDemo() {
                 profile = androidXExperimentalWrap,
                 modifier = Modifier.width(180.dp).border(1.dp, Color(0xFFD32F2F)),
               ) {
-                ProvideCardRegistry(registry) {
-                  ProvideHaTheme(HaTheme.Light) {
-                    RenderChild(cardConfig, Fixtures.mixed, RemoteModifier.rcFillMaxWidth())
+                CompositionLocalProvider(LocalHaClock provides SizingPreviewClock) {
+                  ProvideCardRegistry(registry) {
+                    ProvideHaTheme(HaTheme.Light) {
+                      RenderChild(cardConfig, Fixtures.mixed, RemoteModifier.rcFillMaxWidth())
+                    }
                   }
                 }
               }
@@ -528,9 +535,11 @@ private fun ConstraintRow(
         profile = profile,
         modifier = slotMod.border(1.dp, Color(0xFFD32F2F)),
       ) {
-        ProvideCardRegistry(registry) {
-          ProvideHaTheme(HaTheme.Light) {
-            RenderChild(card, snapshot, RemoteModifier.rcFillMaxWidth())
+        CompositionLocalProvider(LocalHaClock provides SizingPreviewClock) {
+          ProvideCardRegistry(registry) {
+            ProvideHaTheme(HaTheme.Light) {
+              RenderChild(card, snapshot, RemoteModifier.rcFillMaxWidth())
+            }
           }
         }
       }
@@ -544,6 +553,8 @@ private data class ConstraintCacheKey(
   val profile: Profile,
   val variant: Variant,
 )
+
+private val SizingPreviewClock = FixedHaClock(Instant.parse("2026-05-05T10:08:00Z"))
 
 private fun experimentCards(): List<Triple<String, CardConfig, CardKind>> =
   listOf(

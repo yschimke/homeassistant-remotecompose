@@ -95,7 +95,7 @@ fun RemoteSizeBreakpoint(
     // The named expression that backs `componentWidth()` is only
     // written into the captured document if it's referenced by a
     // visible node. Reading it transitively via
-    // `width.ge(...)` → RemoteBoolean → state-layout predicate
+    // `width.isGreaterThanOrEqualTo(...)` → RemoteBoolean → state-layout predicate
     // does NOT trigger materialization in alpha010 — the runtime
     // resolves the unregistered name to 0, the predicate is false
     // for every cell, and every breakpoint collapses to tier 0.
@@ -153,7 +153,7 @@ private fun BreakpointTier(
   }
   val highestIndex = thresholdsDp.size - 1
   val highestThresholdPx = thresholdsDp[highestIndex].rdp.toPx()
-  val isAtOrAbove = dimension.ge(highestThresholdPx)
+  val isAtOrAbove = dimension.isGreaterThanOrEqualTo(highestThresholdPx)
   RemoteStateLayout(isAtOrAbove, modifier = modifier) { atOrAbove ->
     if (atOrAbove) {
       RemoteBox(modifier = RemoteModifier.immediateSwap()) { content(baseTier + thresholdsDp.size) }
