@@ -25,6 +25,27 @@ on:
   # Weekly, so the published sticker sheet tracks the catalog as it evolves.
   schedule:
     - cron: '0 6 * * 1' # Mondays 06:00 UTC
+  # Republish as soon as something that changes the rendered output lands on
+  # main, instead of serving stale artifacts until Monday. The paths are the
+  # render's inputs: the Gradle version catalog (it carries the
+  # compose-preview-plugin pin — a compose-ai-tools release changes the
+  # renderer itself — and every other dependency the catalog renders against),
+  # the compose-ai-tools action pin in compose-preview.yml (bumped in the same
+  # grouped Renovate PR), the spec that decides what's in the sheet, and this
+  # file itself.
+  #
+  # This fires for merges made with an app token — Renovate automerges its own
+  # compose-ai-tools PRs (see renovate.json) and those DO raise `push`. It does
+  # NOT fire for GITHUB_TOKEN merges, which is why scheduled-merge.yml still
+  # dispatches this workflow explicitly after the PRs it merges.
+  push:
+    branches:
+      - main
+    paths:
+      - 'gradle/libs.versions.toml'
+      - 'catalog.spec.json'
+      - '.github/workflows/design-artifacts.yml'
+      - '.github/workflows/compose-preview.yml'
   workflow_dispatch:
     inputs:
       allow_incomplete:
