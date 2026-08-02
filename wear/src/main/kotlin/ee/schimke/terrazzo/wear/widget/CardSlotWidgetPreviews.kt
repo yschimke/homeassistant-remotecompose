@@ -3,13 +3,8 @@
 package ee.schimke.terrazzo.wear.widget
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.tooling.preview.Preview
 import ee.schimke.ha.model.HaSnapshot
-import ee.schimke.ha.rc.FixedHaClock
-import ee.schimke.ha.rc.LocalHaClock
-import java.time.ZoneOffset
-import java.time.ZonedDateTime
 
 /**
  * One @Preview entry per card template, grouped by data tier (see
@@ -54,8 +49,8 @@ fun WearMarkdownSmall() = wearCardPreview(markdownFixture(), ContainerType.Small
 /**
  * Clock card normally binds `RemoteTimeDefaults.defaultTimeString` so the player ticks the time
  * without a re-encode — at preview capture that resolves to wall-clock time and the PNG drifts each
- * minute. Surface [WearPreviewNow] via [LocalHaClock] as a [FixedHaClock] so [ClockCardConverter]
- * takes its static-label path, matching the frozen "now" the other preview entry points use.
+ * minute. [PreviewSlotWidget] installs a fixed clock inside the nested Wear document capture so
+ * [ClockCardConverter] takes its static-label path and startup value tweens are disabled.
  *
  * Takes no parameter, deliberately. A `@Preview` composable has to be callable with no arguments: a
  * default parameter compiles to a `$default`-mask signature, so the renderer's
@@ -65,14 +60,7 @@ fun WearMarkdownSmall() = wearCardPreview(markdownFixture(), ContainerType.Small
  */
 @Preview(name = "wear · clock (small)")
 @Composable
-fun WearClockSmall() {
-  CompositionLocalProvider(LocalHaClock provides FixedHaClock(WearPreviewNow)) {
-    wearCardPreview(clockFixture(), ContainerType.Small)
-  }
-}
-
-private val WearPreviewNow: ZonedDateTime =
-  ZonedDateTime.of(2026, 5, 5, 10, 8, 0, 0, ZoneOffset.UTC)
+fun WearClockSmall() = wearCardPreview(clockFixture(), ContainerType.Small)
 
 @Preview(name = "wear · weather-forecast (small)")
 @Composable

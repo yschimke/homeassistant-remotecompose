@@ -50,13 +50,14 @@ import kotlinx.serialization.json.jsonPrimitive
  * * **icon only** — [RemoteHaButtonIcon], the tinted-chip identity tier for cells too small for the
  *   label (`1×1` launcher, Wear S).
  *
- * The gate is a **single** boolean off a single float expression `min(w, h · minW/minH).ge(minW)`,
- * which is true only when the cell is both wide enough (`w ≥ minW`) and tall enough (`h ≥ minH`).
- * Encoding the 2-D test as one `min` expression (rather than `w.ge(..) .and(h.ge(..))`) sidesteps
- * the alpha010 quirk where `RemoteBoolean .and()` and nested width/height state-layouts collapse to
- * `false` at playback (#224, see `GaugeCardConverter`). It lets the narrow-tall `1×1` cell and the
- * wide-short Wear S chip *both* fall to the icon-only tier while the wide-and-tall `2×1` / `3×2` /
- * Wear L cells keep the name — something no single width-only or height-only gate can do.
+ * The gate is a **single** boolean off a single float expression `min(w, h ·
+ * minW/minH).isGreaterThanOrEqualTo(minW)`, which is true only when the cell is both wide enough
+ * (`w ≥ minW`) and tall enough (`h ≥ minH`). Encoding the 2-D test as one `min` expression (rather
+ * than `w.isGreaterThanOrEqualTo(..) .and(h.isGreaterThanOrEqualTo(..))`) sidesteps the alpha010
+ * quirk where `RemoteBoolean .and()` and nested width/height state-layouts collapse to `false` at
+ * playback (#224, see `GaugeCardConverter`). It lets the narrow-tall `1×1` cell and the wide-short
+ * Wear S chip *both* fall to the icon-only tier while the wide-and-tall `2×1` / `3×2` / Wear L
+ * cells keep the name — something no single width-only or height-only gate can do.
  */
 class ButtonCardConverter : CardConverter {
   override val cardType: String = CardTypes.BUTTON
@@ -84,7 +85,7 @@ class ButtonCardConverter : CardConverter {
       RemoteFloat.createNamedRemoteFloatExpression(gateName, RemoteState.Domain.User) {
         componentWidth().min(componentHeight() * ratio.rf)
       }
-    val hasRoomForName = gate.ge(MinIconNameWidthDp.rdp.toPx())
+    val hasRoomForName = gate.isGreaterThanOrEqualTo(MinIconNameWidthDp.rdp.toPx())
 
     RemoteBox(modifier = modifier.fillMaxSize()) {
       // Materialise the gate expression in the document — the

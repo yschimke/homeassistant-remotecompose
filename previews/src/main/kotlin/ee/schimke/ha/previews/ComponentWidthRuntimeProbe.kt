@@ -81,7 +81,7 @@ private fun InlineCell(widthDp: Int, heightDp: Int) {
       ) {
         componentWidth()
       }
-    val isLarge = width.ge(315f.rf) // 120 dp at 2.625 density
+    val isLarge = width.isGreaterThanOrEqualTo(315f.rf) // 120 dp at 2.625 density
     // No modifier on the state-layout (matches v4 setup). Width
     // string drawn alongside as a sibling so the named expression
     // is materialized in the document.

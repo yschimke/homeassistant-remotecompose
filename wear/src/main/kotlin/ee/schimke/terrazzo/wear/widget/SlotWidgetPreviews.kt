@@ -9,6 +9,7 @@ import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.glance.wear.GlanceWearWidget
 import androidx.glance.wear.WearWidgetBrush
@@ -22,6 +23,8 @@ import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.CardSizeMode
+import ee.schimke.ha.rc.FixedHaClock
+import ee.schimke.ha.rc.LocalHaClock
 import ee.schimke.ha.rc.ProvideCardRegistry
 import ee.schimke.ha.rc.ProvideCardSizeMode
 import ee.schimke.ha.rc.RenderChild
@@ -33,6 +36,7 @@ import ee.schimke.ha.rc.components.ProvideFlowLayoutSupport
 import ee.schimke.ha.rc.components.ProvideHaTheme
 import ee.schimke.ha.rc.components.ThemeStyle
 import ee.schimke.ha.rc.components.haThemeFor
+import java.time.Instant
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -65,22 +69,24 @@ internal class PreviewSlotWidget(
     return WearWidgetDocument(
       background = WearWidgetBrush.Companion,
       content = {
-        ProvideCardRegistry(registry) {
-          ProvideHaTheme(theme) {
-            ProvideCardSizeMode(CardSizeMode.Fixed) {
-              // Match the runtime SlotWidget: the wear
-              // container already paints the shape + brush, so
-              // skip the per-card chrome to avoid doubling up;
-              // and tell HA card components to use the
-              // non-wrapping fallback for `RemoteFlowRow`
-              // since Glance Wear's capture profile rejects
-              // FlowLayout (op 240).
-              ProvideCardChrome(enabled = false) {
-                ProvideFlowLayoutSupport(enabled = false) {
-                  if (card != null) {
-                    RenderChild(card, snapshot, RemoteModifier.fillMaxWidth())
-                  } else {
-                    PreviewEmptyPlaceholder(slotIndex, theme)
+        CompositionLocalProvider(LocalHaClock provides WearWidgetPreviewClock) {
+          ProvideCardRegistry(registry) {
+            ProvideHaTheme(theme) {
+              ProvideCardSizeMode(CardSizeMode.Fixed) {
+                // Match the runtime SlotWidget: the wear
+                // container already paints the shape + brush, so
+                // skip the per-card chrome to avoid doubling up;
+                // and tell HA card components to use the
+                // non-wrapping fallback for `RemoteFlowRow`
+                // since Glance Wear's capture profile rejects
+                // FlowLayout (op 240).
+                ProvideCardChrome(enabled = false) {
+                  ProvideFlowLayoutSupport(enabled = false) {
+                    if (card != null) {
+                      RenderChild(card, snapshot, RemoteModifier.fillMaxWidth())
+                    } else {
+                      PreviewEmptyPlaceholder(slotIndex, theme)
+                    }
                   }
                 }
               }
@@ -91,6 +97,8 @@ internal class PreviewSlotWidget(
     )
   }
 }
+
+private val WearWidgetPreviewClock = FixedHaClock(Instant.parse("2026-05-05T10:08:00Z"))
 
 @Composable
 private fun PreviewEmptyPlaceholder(slotIndex: Int, theme: HaTheme) {
