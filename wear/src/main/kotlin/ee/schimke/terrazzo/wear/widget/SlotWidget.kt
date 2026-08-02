@@ -10,6 +10,7 @@ import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.runtime.Composable
+import androidx.glance.wear.AssociateWithGlanceWearWidget
 import androidx.glance.wear.GlanceWearWidget
 import androidx.glance.wear.GlanceWearWidgetService
 import androidx.glance.wear.WearWidgetBrush
@@ -201,42 +202,52 @@ class Slot4LargeWidget : SlotWidget(slotIndex = 4)
  * (`@xml/wear_slot_widget_provider_small` vs `@xml/wear_slot_widget_provider_large`) so the picker
  * filters each service to one container type.
  */
+@AssociateWithGlanceWearWidget(Slot0SmallWidget::class)
 class Slot0SmallWidgetService : GlanceWearWidgetService() {
   override val widget: GlanceWearWidget = Slot0SmallWidget()
 }
 
+@AssociateWithGlanceWearWidget(Slot0LargeWidget::class)
 class Slot0LargeWidgetService : GlanceWearWidgetService() {
   override val widget: GlanceWearWidget = Slot0LargeWidget()
 }
 
+@AssociateWithGlanceWearWidget(Slot1SmallWidget::class)
 class Slot1SmallWidgetService : GlanceWearWidgetService() {
   override val widget: GlanceWearWidget = Slot1SmallWidget()
 }
 
+@AssociateWithGlanceWearWidget(Slot1LargeWidget::class)
 class Slot1LargeWidgetService : GlanceWearWidgetService() {
   override val widget: GlanceWearWidget = Slot1LargeWidget()
 }
 
+@AssociateWithGlanceWearWidget(Slot2SmallWidget::class)
 class Slot2SmallWidgetService : GlanceWearWidgetService() {
   override val widget: GlanceWearWidget = Slot2SmallWidget()
 }
 
+@AssociateWithGlanceWearWidget(Slot2LargeWidget::class)
 class Slot2LargeWidgetService : GlanceWearWidgetService() {
   override val widget: GlanceWearWidget = Slot2LargeWidget()
 }
 
+@AssociateWithGlanceWearWidget(Slot3SmallWidget::class)
 class Slot3SmallWidgetService : GlanceWearWidgetService() {
   override val widget: GlanceWearWidget = Slot3SmallWidget()
 }
 
+@AssociateWithGlanceWearWidget(Slot3LargeWidget::class)
 class Slot3LargeWidgetService : GlanceWearWidgetService() {
   override val widget: GlanceWearWidget = Slot3LargeWidget()
 }
 
+@AssociateWithGlanceWearWidget(Slot4SmallWidget::class)
 class Slot4SmallWidgetService : GlanceWearWidgetService() {
   override val widget: GlanceWearWidget = Slot4SmallWidget()
 }
 
+@AssociateWithGlanceWearWidget(Slot4LargeWidget::class)
 class Slot4LargeWidgetService : GlanceWearWidgetService() {
   override val widget: GlanceWearWidget = Slot4LargeWidget()
 }
