@@ -27,7 +27,7 @@ on:
     - cron: '0 6 * * 1' # Mondays 06:00 UTC
   # Republish as soon as something that changes the rendered output lands on
   # main, instead of serving stale artifacts until Monday. The paths are the
-  # render's inputs: the Gradle version catalog (it carries the
+  # render's inputs: the Gradle dependency manifests (they carry the
   # compose-preview-plugin pin — a compose-ai-tools release changes the
   # renderer itself — and every other dependency the catalog renders against),
   # the compose-ai-tools action pin in compose-preview.yml (bumped in the same
@@ -42,7 +42,19 @@ on:
     branches:
       - main
     paths:
+      # Dependency manifests. The version catalog holds most pins, but
+      # Renovate's gradle manager also rewrites coords declared inline in a
+      # module build file, and its gradle-wrapper manager rewrites
+      # gradle-wrapper.properties. Globbed rather than enumerating the modules
+      # `:previews` actually pulls in: that list goes stale the moment a module
+      # is added, and the failure mode of missing one is a silently stale
+      # delivery branch, which is the exact bug this trigger exists to fix. An
+      # over-trigger just costs one spare render.
       - 'gradle/libs.versions.toml'
+      - 'gradle/wrapper/gradle-wrapper.properties'
+      - 'settings.gradle.kts'
+      - 'build.gradle.kts'
+      - '**/build.gradle.kts'
       - 'catalog.spec.json'
       - '.github/workflows/design-artifacts.yml'
       - '.github/workflows/compose-preview.yml'
