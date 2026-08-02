@@ -12,9 +12,16 @@ name: Scheduled Merge
 #
 # GITHUB_TOKEN merges don't fire push-to-main workflows, so after merging
 # this dispatches compose-preview.yml to refresh the render baselines. When
-# the merged batch included a compose-ai-tools bump (its renderer/CLI drives
-# the catalog output), it also dispatches design-artifacts.yml so the
-# published catalog delivery branches are regenerated against the new release.
+# the merged batch included a dependency bump, it also dispatches
+# design-artifacts.yml so the published catalog delivery branches are
+# regenerated: a compose-ai-tools release moves the renderer itself, and any
+# other dependency moves what that renderer draws.
+#
+# This dispatch only covers the merges made HERE. Renovate automerges its own
+# compose-ai-tools PRs, and those never reach this job — they're handled by
+# design-artifacts.yml's own `push` trigger, which a Renovate (app token)
+# merge does raise. Keep the two in sync: the path filter there and the
+# dependency test here should agree on what warrants a republish.
 
 on:
   schedule:
@@ -47,7 +54,7 @@ jobs:
               owner, repo, state: 'open', base: 'main', per_page: 100,
             });
             let merged = 0;
-            let bumpedComposeAiTools = false;
+            let bumpedDependency = false;
             for (const stub of prs) {
               if (stub.draft) continue;
               if (stub.labels.some((l) => skipLabels.has(l.name))) {
@@ -71,12 +78,20 @@ jobs:
                 });
                 core.notice(`Merged #${pr.number}: ${pr.title}`);
                 merged++;
-                // A compose-ai-tools bump changes the renderer/CLI that
-                // produces the design catalogs, so flag it to regenerate the
-                // published delivery branches below. Renovate groups these
-                // under the `compose-ai-tools` branch/title.
-                if (`${pr.head.ref} ${pr.title}`.toLowerCase().includes('compose-ai-tools')) {
-                  bumpedComposeAiTools = true;
+                // Any dependency bump can change the published catalog, so
+                // flag it to regenerate the delivery branches below: a
+                // compose-ai-tools bump moves the renderer/CLI itself, and
+                // every other dependency moves what that renderer draws.
+                // Renovate labels its PRs `dependencies` and titles them
+                // `<type>(deps): …` — match either, so a hand-relabelled or
+                // hand-retitled bump still counts.
+                const isDependencyBump =
+                  (pr.labels || []).some((l) => l.name === 'dependencies') ||
+                  /\(deps[^)]*\)/i.test(pr.title) ||
+                  `${pr.head.ref} ${pr.title}`.toLowerCase().includes('compose-ai-tools');
+                if (isDependencyBump) {
+                  core.info(`#${pr.number}: dependency bump — will regenerate design artifacts`);
+                  bumpedDependency = true;
                 }
               } catch (e) {
                 core.warning(`#${pr.number}: merge failed — ${e.message}`);
@@ -85,10 +100,10 @@ jobs:
             if (merged > 0) {
               // GITHUB_TOKEN merges don't trigger push workflows; explicitly
               // refresh the render baselines and the release-please PR. When a
-              // compose-ai-tools bump landed, also regenerate the design
-              // catalog delivery branches against the new release.
+              // dependency bump landed, also regenerate the design catalog
+              // delivery branches against the new versions.
               const workflows = ['compose-preview.yml', 'release-please.yml'];
-              if (bumpedComposeAiTools) workflows.push('design-artifacts.yml');
+              if (bumpedDependency) workflows.push('design-artifacts.yml');
               for (const wf of workflows) {
                 try {
                   await github.rest.actions.createWorkflowDispatch({

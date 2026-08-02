@@ -17,13 +17,15 @@
       "enabled": false
     },
     {
-      "description": "compose-ai-tools ships the preview CLI, the ee.schimke.composeai Gradle plugin (tracked via the compose-preview-plugin catalog key), and the reusable CI composite actions as a single release. Track it aggressively so CI always runs the latest renderer: group the pinned action refs and the Gradle plugin marker into ONE PR so the CLI catalog pin never skews apart from the action code ref, and skip the weekly window. Deliberately NOT Renovate-automerged: scheduled-merge.yml owns the merge so its post-merge design-artifacts.yml dispatch fires and regenerates the catalog against the new renderer. Renovate/native automerge would merge the PR directly, bypass that dispatch (design-artifacts.yml has no push trigger), and leave the published catalog on the old renderer until the next weekly run. scheduled-merge still auto-merges this PR once it's green.",
+      "description": "compose-ai-tools ships the preview CLI, the ee.schimke.composeai Gradle plugin (tracked via the compose-preview-plugin catalog key), and the reusable CI composite actions as a single release. Track it aggressively so CI always runs the latest renderer: group the pinned action refs and the Gradle plugin marker into ONE PR so the CLI catalog pin never skews apart from the action code ref, skip the weekly window, and automerge as soon as CI is green — the release moves several times a day and the pin is only useful if it keeps up. Regenerating the published catalog against the new renderer no longer depends on WHO merges: design-artifacts.yml has a push trigger on main covering the pins this PR touches, so a Renovate merge (app token — raises `push`) republishes on its own, and scheduled-merge.yml still dispatches design-artifacts.yml explicitly for the merges it makes itself (GITHUB_TOKEN merges raise no `push` event).",
       "matchPackageNames": [
         "yschimke/compose-ai-tools",
         "/^ee\\.schimke\\.composeai($|[.:])/"
       ],
       "groupName": "compose-ai-tools",
-      "schedule": ["at any time"]
+      "schedule": ["at any time"],
+      "automerge": true,
+      "automergeSchedule": ["at any time"]
     }
   ]
 }
