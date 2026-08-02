@@ -1,6 +1,6 @@
 # Accessibility Report
 
-_Auto-generated from `compose-preview/a11y/pr`. 287 preview(s) across 4 module(s) · 682 error(s) · 19 warning(s) · 33 info._
+_Auto-generated from `compose-preview/a11y/pr`. 287 preview(s) across 4 module(s) · 641 error(s) · 17 warning(s) · 32 info._
 
 Browse inline; image URLs are pinned to the commit SHA on the baseline branch so links keep resolving after merge.
 
@@ -103,10 +103,7 @@ _No findings._
 | 6 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Open" | This item's size is 32dp x 32dp. Consider making this touch target 48dp wide and 48dp high or larger. |
 | 7 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Stop" | This item's size is 32dp x 32dp. Consider making this touch target 48dp wide and 48dp high or larger. |
 | 8 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Close" | This item's size is 32dp x 32dp. Consider making this touch target 48dp wide and 48dp high or larger. |
-| 9 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Vent" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 10 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Half open" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 11 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Impulse" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 12 | INFO | DuplicateSpeakableTextCheck | android.view.View | This non-clickable item's speakable text: "dashboard-card:grid" is identical to that of 2 other item(s). |
+| 9 | INFO | DuplicateSpeakableTextCheck | android.view.View | This non-clickable item's speakable text: "dashboard-card:grid" is identical to that of 2 other item(s). |
 
 ### `Screen_CardHistory`
 
@@ -119,12 +116,7 @@ _No findings._
 
 ### `Screen_CardHistory_ThemeStyle`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/pr/renders/app/ee.schimke.terrazzo.previews.ScreenPreviewsKt.Screen_CardHistory_ThemeStyle_card history · theme.a11y.png" width="400" />
-
-| # | Level | Rule | Element | Message |
-|--:|---|---|---|---|
-| 1 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 2 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Downstairs Temperature" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
+_No findings._
 
 ### `Screen_DashboardPicker`
 
@@ -133,8 +125,6 @@ _No findings._
 _No findings._
 
 ### `Screen_DashboardPicker_ThemeStyle`
-
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/pr/renders/app/ee.schimke.terrazzo.previews.ScreenPreviewsKt.Screen_DashboardPicker_ThemeStyle_dashboard picker · theme.a11y.png" width="400" />
 
 _No findings._
 
@@ -157,11 +147,7 @@ _No findings._
 
 ### `Screen_DashboardSelection_ThemeStyle`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/pr/renders/app/ee.schimke.terrazzo.previews.ScreenPreviewsKt.Screen_DashboardSelection_ThemeStyle_dashboard selection · theme.a11y.png" width="400" />
-
-| # | Level | Rule | Element | Message |
-|--:|---|---|---|---|
-| 1 | WARNING | DuplicateSpeakableTextCheck | android.widget.CheckBox | This clickable item's speakable text: "checked" is identical to that of 3 other item(s). |
+_No findings._
 
 ### `Screen_DashboardView`
 
@@ -196,22 +182,7 @@ _No findings._
 
 ### `Screen_DashboardView_ThemeStyle`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/pr/renders/app/ee.schimke.terrazzo.previews.ScreenPreviewsKt.Screen_DashboardView_ThemeStyle_dashboard · theme.a11y.png" width="400" />
-
-| # | Level | Rule | Element | Message |
-|--:|---|---|---|---|
-| 1 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 2 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 3 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 4 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 5 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 6 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Open" | This item's size is 32dp x 32dp. Consider making this touch target 48dp wide and 48dp high or larger. |
-| 7 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Stop" | This item's size is 32dp x 32dp. Consider making this touch target 48dp wide and 48dp high or larger. |
-| 8 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Close" | This item's size is 32dp x 32dp. Consider making this touch target 48dp wide and 48dp high or larger. |
-| 9 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Vent" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 10 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Half open" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 11 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Impulse" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 12 | INFO | DuplicateSpeakableTextCheck | android.view.View | This non-clickable item's speakable text: "dashboard-card:grid" is identical to that of 2 other item(s). |
+_No findings._
 
 ### `Screen_Discovery`
 
@@ -220,8 +191,6 @@ _No findings._
 _No findings._
 
 ### `Screen_Discovery_ThemeStyle`
-
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/pr/renders/app/ee.schimke.terrazzo.previews.ScreenPreviewsKt.Screen_Discovery_ThemeStyle_discovery · theme.a11y.png" width="400" />
 
 _No findings._
 
@@ -279,11 +248,7 @@ _No findings._
 
 ### `Screen_Settings_ThemeStyle`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/pr/renders/app/ee.schimke.terrazzo.previews.ScreenPreviewsKt.Screen_Settings_ThemeStyle_settings · theme.a11y.png" width="400" />
-
-| # | Level | Rule | Element | Message |
-|--:|---|---|---|---|
-| 1 | WARNING | DuplicateSpeakableTextCheck | android.widget.RadioButton | This clickable item's speakable text: "Not selected" is identical to that of 3 other item(s). |
+_No findings._
 
 ### `Screen_SyncDiagnostics`
 
@@ -311,8 +276,6 @@ _No findings._
 _No findings._
 
 ### `Screen_Widgets_ThemeStyle`
-
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/pr/renders/app/ee.schimke.terrazzo.previews.ScreenPreviewsKt.Screen_Widgets_ThemeStyle_widgets · theme.a11y.png" width="400" />
 
 _No findings._
 
@@ -438,19 +401,11 @@ _No findings._
 
 ### `Button_Dark`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/pr/renders/previews/ee.schimke.ha.previews.CardPreviewsKt.Button_Dark_button (dark).a11y.png" width="400" />
-
-| # | Level | Rule | Element | Message |
-|--:|---|---|---|---|
-| 1 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
+_No findings._
 
 ### `Button_Light`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/pr/renders/previews/ee.schimke.ha.previews.CardPreviewsKt.Button_Light_button (light).a11y.png" width="400" />
-
-| # | Level | Rule | Element | Message |
-|--:|---|---|---|---|
-| 1 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
+_No findings._
 
 ### `Button_On_Dark`
 
@@ -1025,47 +980,19 @@ _No findings._
 
 ### `Garage_Animation_Dark`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/pr/renders/previews/ee.schimke.ha.previews.GarageShutterCardPreviewsKt.Garage_Animation_Dark_garage-anim (dark).a11y.png" width="400" />
-
-| # | Level | Rule | Element | Message |
-|--:|---|---|---|---|
-| 1 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 2 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Open" | This item's size is 32dp x 32dp. Consider making this touch target 48dp wide and 48dp high or larger. |
-| 3 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Stop" | This item's size is 32dp x 32dp. Consider making this touch target 48dp wide and 48dp high or larger. |
-| 4 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Close" | This item's size is 32dp x 32dp. Consider making this touch target 48dp wide and 48dp high or larger. |
+_No findings._
 
 ### `Garage_Animation_Light`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/pr/renders/previews/ee.schimke.ha.previews.GarageShutterCardPreviewsKt.Garage_Animation_Light_garage-anim (light).a11y.png" width="400" />
-
-| # | Level | Rule | Element | Message |
-|--:|---|---|---|---|
-| 1 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 2 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Open" | This item's size is 32dp x 32dp. Consider making this touch target 48dp wide and 48dp high or larger. |
-| 3 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Stop" | This item's size is 32dp x 32dp. Consider making this touch target 48dp wide and 48dp high or larger. |
-| 4 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Close" | This item's size is 32dp x 32dp. Consider making this touch target 48dp wide and 48dp high or larger. |
+_No findings._
 
 ### `Garage_State_Dark`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/pr/renders/previews/ee.schimke.ha.previews.GarageShutterCardPreviewsKt.Garage_State_Dark_garage-state (dark).a11y.png" width="400" />
-
-| # | Level | Rule | Element | Message |
-|--:|---|---|---|---|
-| 1 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 2 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Open" | This item's size is 32dp x 32dp. Consider making this touch target 48dp wide and 48dp high or larger. |
-| 3 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Stop" | This item's size is 32dp x 32dp. Consider making this touch target 48dp wide and 48dp high or larger. |
-| 4 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Close" | This item's size is 32dp x 32dp. Consider making this touch target 48dp wide and 48dp high or larger. |
+_No findings._
 
 ### `Garage_State_Light`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/pr/renders/previews/ee.schimke.ha.previews.GarageShutterCardPreviewsKt.Garage_State_Light_garage-state (light).a11y.png" width="400" />
-
-| # | Level | Rule | Element | Message |
-|--:|---|---|---|---|
-| 1 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
-| 2 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Open" | This item's size is 32dp x 32dp. Consider making this touch target 48dp wide and 48dp high or larger. |
-| 3 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Stop" | This item's size is 32dp x 32dp. Consider making this touch target 48dp wide and 48dp high or larger. |
-| 4 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Close" | This item's size is 32dp x 32dp. Consider making this touch target 48dp wide and 48dp high or larger. |
+_No findings._
 
 ### `Garage_TwoEntities_Dark`
 
@@ -1097,19 +1024,11 @@ _No findings._
 
 ### `Gauge_Animation_Dark`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/pr/renders/previews/ee.schimke.ha.previews.AnimationPreviewsKt.Gauge_Animation_Dark_gauge-anim (dark).a11y.png" width="400" />
-
-| # | Level | Rule | Element | Message |
-|--:|---|---|---|---|
-| 1 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
+_No findings._
 
 ### `Gauge_Animation_Light`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/pr/renders/previews/ee.schimke.ha.previews.AnimationPreviewsKt.Gauge_Animation_Light_gauge-anim (light).a11y.png" width="400" />
-
-| # | Level | Rule | Element | Message |
-|--:|---|---|---|---|
-| 1 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
+_No findings._
 
 ### `Gauge_Dark`
 
@@ -1542,7 +1461,7 @@ _No findings._
 | 4 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Close" | This item's size is 32dp x 32dp. Consider making this touch target 48dp wide and 48dp high or larger. |
 | 5 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Open" | This item's size is 32dp x 32dp. Consider making this touch target 48dp wide and 48dp high or larger. |
 | 6 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Stop" | This item's size is 32dp x 32dp. Consider making this touch target 48dp wide and 48dp high or larger. |
-| 7 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Close" | This item's size is 32dp x 13dp. Consider making this touch target 48dp wide and 32dp high or larger. |
+| 7 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Close" | This item's size is 32dp x 11dp. Consider making this touch target 48dp wide and 32dp high or larger. |
 
 ### `Shutter_Light`
 
@@ -1556,7 +1475,7 @@ _No findings._
 | 4 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Close" | This item's size is 32dp x 32dp. Consider making this touch target 48dp wide and 48dp high or larger. |
 | 5 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Open" | This item's size is 32dp x 32dp. Consider making this touch target 48dp wide and 48dp high or larger. |
 | 6 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Stop" | This item's size is 32dp x 32dp. Consider making this touch target 48dp wide and 48dp high or larger. |
-| 7 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Close" | This item's size is 32dp x 13dp. Consider making this touch target 48dp wide and 32dp high or larger. |
+| 7 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Close" | This item's size is 32dp x 11dp. Consider making this touch target 48dp wide and 32dp high or larger. |
 
 ### `Sizing_ConstraintMatrix_PaintMeasure`
 
@@ -1589,7 +1508,7 @@ _No findings._
 | 23 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Living Room" | This item's height is 32dp. Consider making the height of this touch target 48dp or larger. |
 | 24 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Kitchen" | This item's height is 6dp. Consider making the height of this touch target 48dp or larger. |
 | 25 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Kitchen" | This item's width is 39dp. Consider making the width of this touch target 48dp or larger. |
-| 26 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Front door" | This item's height is 13dp. Consider making the height of this touch target 48dp or larger. |
+| 26 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Front door" | This item's height is 11dp. Consider making the height of this touch target 48dp or larger. |
 | 27 | INFO | DuplicateSpeakableTextCheck | android.widget.TextView | This non-clickable item's speakable text: "· w=380 × h=80 (clip) (host=380×80dp)" is identical to that of 1 other item(s). |
 
 ### `Sizing_ConstraintMatrix_Wrap`
@@ -1623,7 +1542,7 @@ _No findings._
 | 23 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Living Room" | This item's height is 32dp. Consider making the height of this touch target 48dp or larger. |
 | 24 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Kitchen" | This item's height is 6dp. Consider making the height of this touch target 48dp or larger. |
 | 25 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Kitchen" | This item's width is 39dp. Consider making the width of this touch target 48dp or larger. |
-| 26 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Front door" | This item's height is 13dp. Consider making the height of this touch target 48dp or larger. |
+| 26 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Front door" | This item's height is 11dp. Consider making the height of this touch target 48dp or larger. |
 | 27 | INFO | DuplicateSpeakableTextCheck | android.widget.TextView | This non-clickable item's speakable text: "· w=380 × h=80 (clip) (host=380×80dp)" is identical to that of 1 other item(s). |
 
 ### `Sizing_FixedSlot_PaintMeasure`
@@ -1897,11 +1816,7 @@ _No findings._
 
 ### `Tile_Cover_States`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/pr/renders/previews/ee.schimke.ha.previews.CardPreviewsKt.Tile_Cover_States_tile cover (light).a11y.png" width="400" />
-
-| # | Level | Rule | Element | Message |
-|--:|---|---|---|---|
-| 1 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
+_No findings._
 
 ### `Tile_LightOn`
 
@@ -1921,19 +1836,11 @@ _No findings._
 
 ### `Tile_Light_States`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/pr/renders/previews/ee.schimke.ha.previews.CardPreviewsKt.Tile_Light_States_tile light (light).a11y.png" width="400" />
-
-| # | Level | Rule | Element | Message |
-|--:|---|---|---|---|
-| 1 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
+_No findings._
 
 ### `Tile_Lock_States`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/pr/renders/previews/ee.schimke.ha.previews.CardPreviewsKt.Tile_Lock_States_tile lock (light).a11y.png" width="400" />
-
-| # | Level | Rule | Element | Message |
-|--:|---|---|---|---|
-| 1 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
+_No findings._
 
 ### `Tile_Responsive_Dark`
 
@@ -2047,19 +1954,11 @@ _No findings._
 
 ### `Toggle_Animation_Dark`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/pr/renders/previews/ee.schimke.ha.previews.AnimationPreviewsKt.Toggle_Animation_Dark_toggle-anim (dark).a11y.png" width="400" />
-
-| # | Level | Rule | Element | Message |
-|--:|---|---|---|---|
-| 1 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
+_No findings._
 
 ### `Toggle_Animation_Light`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/pr/renders/previews/ee.schimke.ha.previews.AnimationPreviewsKt.Toggle_Animation_Light_toggle-anim (light).a11y.png" width="400" />
-
-| # | Level | Rule | Element | Message |
-|--:|---|---|---|---|
-| 1 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
+_No findings._
 
 ### `Unsupported_Dark`
 
