@@ -85,11 +85,10 @@ jobs:
       system: homeassistant-remotecompose
       spec: catalog.spec.json
       module: ':previews'
-      # `:previews` has the plugin AUTO-injected (via --init-script), so the CLI
-      # carries its own matching plugin and a newer CLI is safe — `latest`
-      # because the pinned compose-preview-plugin predates some of the flags
-      # this pipeline uses.
-      cli-version: latest
+      # `:previews` has the plugin AUTO-injected (via --init-script), so keep the
+      # CLI synchronized with the catalog plugin. Pinning avoids silently
+      # picking up renderer regressions before this catalog validates them.
+      cli-version: 0.19.20
       # Carry the executable bundle + per-preview bundles so the served catalog
       # gets a live lane instead of the baked-only degradation banner.
       publish-live-bundle: true
