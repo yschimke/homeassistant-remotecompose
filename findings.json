@@ -2556,24 +2556,9 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "Dashboard3dPrintingMobile_dashboard_3d_printing_mobile.a11y.png",
+      "annotatedBasename": "",
       "cleanBasename": "Dashboard3dPrintingMobile_dashboard_3d_printing_mobile.png",
-      "findings": [
-        {
-          "boundsInScreen": "32,264,1046,4360",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "32,4381,1046,4725",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        }
-      ],
+      "findings": [],
       "functionName": "Dashboard3dPrintingMobile",
       "module": "previews",
       "previewId": "ee.schimke.ha.previews.DashboardPreviewsKt.Dashboard3dPrintingMobile_dashboard 3d-printing \u2014 mobile",
