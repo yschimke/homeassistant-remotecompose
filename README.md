@@ -1,6 +1,6 @@
 # Accessibility Report
 
-_Auto-generated from `compose-preview/a11y/main`. 287 preview(s) across 4 module(s) · 682 error(s) · 19 warning(s) · 33 info._
+_Auto-generated from `compose-preview/a11y/main`. 287 preview(s) across 4 module(s) · 679 error(s) · 19 warning(s) · 33 info._
 
 Browse inline; image URLs are pinned to the commit SHA on the baseline branch so links keep resolving after merge.
 
@@ -103,10 +103,7 @@ _No findings._
 | 6 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Open" | This item's size is 32dp x 32dp. Consider making this touch target 48dp wide and 48dp high or larger. |
 | 7 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Stop" | This item's size is 32dp x 32dp. Consider making this touch target 48dp wide and 48dp high or larger. |
 | 8 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Close" | This item's size is 32dp x 32dp. Consider making this touch target 48dp wide and 48dp high or larger. |
-| 9 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Vent" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 10 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Half open" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 11 | ERROR | TouchTargetSizeCheck | android.view.View  desc="Impulse" | This item's height is 44dp. Consider making the height of this touch target 48dp or larger. |
-| 12 | INFO | DuplicateSpeakableTextCheck | android.view.View | This non-clickable item's speakable text: "dashboard-card:grid" is identical to that of 2 other item(s). |
+| 9 | INFO | DuplicateSpeakableTextCheck | android.view.View | This non-clickable item's speakable text: "dashboard-card:grid" is identical to that of 2 other item(s). |
 
 ### `Screen_CardHistory`
 
