@@ -1,0 +1,7024 @@
+{
+  "schema": "compose-preview-annotations/v1",
+  "previews": {
+    "theme-material3-light__ideal__default__light__compact": [
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 42,
+          "y": 190,
+          "width": 126,
+          "height": 95
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 53,
+          "y": 201,
+          "width": 19,
+          "height": 42
+        },
+        "label": "pad 4dp",
+        "role": "P",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "4",
+          "padding.end": "4",
+          "padding.bottom": "4"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 184,
+          "y": 190,
+          "width": 126,
+          "height": 95
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 195,
+          "y": 201,
+          "width": 39,
+          "height": 42
+        },
+        "label": "pad 4dp",
+        "role": "PC",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "4",
+          "padding.end": "4",
+          "padding.bottom": "4"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 326,
+          "y": 190,
+          "width": 126,
+          "height": 95
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 337,
+          "y": 201,
+          "width": 18,
+          "height": 42
+        },
+        "label": "pad 4dp",
+        "role": "S",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "4",
+          "padding.end": "4",
+          "padding.bottom": "4"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 468,
+          "y": 190,
+          "width": 126,
+          "height": 95
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 479,
+          "y": 201,
+          "width": 18,
+          "height": 42
+        },
+        "label": "pad 4dp",
+        "role": "T",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "4",
+          "padding.end": "4",
+          "padding.bottom": "4"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 610,
+          "y": 190,
+          "width": 126,
+          "height": 95
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 621,
+          "y": 201,
+          "width": 34,
+          "height": 42
+        },
+        "label": "pad 4dp",
+        "role": "Sv",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "4",
+          "padding.end": "4",
+          "padding.bottom": "4"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 752,
+          "y": 190,
+          "width": 126,
+          "height": 95
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 763,
+          "y": 201,
+          "width": 20,
+          "height": 42
+        },
+        "label": "pad 4dp",
+        "role": "O",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "4",
+          "padding.end": "4",
+          "padding.bottom": "4"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 42,
+          "y": 317,
+          "width": 135,
+          "height": 84
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 53,
+          "y": 322,
+          "width": 104,
+          "height": 42
+        },
+        "label": "pad 2dp/4dp",
+        "role": "surface",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "2",
+          "padding.end": "4",
+          "padding.bottom": "2"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 188,
+          "y": 317,
+          "width": 135,
+          "height": 84
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 199,
+          "y": 322,
+          "width": 44,
+          "height": 42
+        },
+        "label": "pad 2dp/4dp",
+        "role": "Lo-",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "2",
+          "padding.end": "4",
+          "padding.bottom": "2"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 334,
+          "y": 317,
+          "width": 134,
+          "height": 84
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 345,
+          "y": 322,
+          "width": 34,
+          "height": 42
+        },
+        "label": "pad 2dp/4dp",
+        "role": "Lo",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "2",
+          "padding.end": "4",
+          "padding.bottom": "2"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 479,
+          "y": 317,
+          "width": 134,
+          "height": 84
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 490,
+          "y": 322,
+          "width": 37,
+          "height": 42
+        },
+        "label": "pad 2dp/4dp",
+        "role": "Cn",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "2",
+          "padding.end": "4",
+          "padding.bottom": "2"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 624,
+          "y": 317,
+          "width": 134,
+          "height": 84
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 635,
+          "y": 322,
+          "width": 30,
+          "height": 42
+        },
+        "label": "pad 2dp/4dp",
+        "role": "Hi",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "2",
+          "padding.end": "4",
+          "padding.bottom": "2"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 769,
+          "y": 317,
+          "width": 134,
+          "height": 84
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 780,
+          "y": 322,
+          "width": 47,
+          "height": 42
+        },
+        "label": "pad 2dp/4dp",
+        "role": "Hi+",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "2",
+          "padding.end": "4",
+          "padding.bottom": "2"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 63,
+          "y": 454,
+          "width": 819,
+          "height": 420
+        },
+        "label": "pad 8dp · gap 8dp · r 20dp",
+        "detail": {
+          "padding.start": "8",
+          "padding.top": "8",
+          "padding.end": "8",
+          "padding.bottom": "8",
+          "gap": "8",
+          "cornerRadius": "20"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 63,
+          "y": 454,
+          "width": 819,
+          "height": 147
+        },
+        "label": "r 12dp",
+        "detail": {
+          "cornerRadius": "12"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 63,
+          "y": 622,
+          "width": 819,
+          "height": 252
+        },
+        "label": "r 12dp",
+        "detail": {
+          "cornerRadius": "12"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 42,
+          "y": 42,
+          "width": 254,
+          "height": 74
+        },
+        "label": "text 22sp/28",
+        "role": "Material 3",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "22",
+          "lineHeight": "28",
+          "fontWeight": "400",
+          "fontFamily": "sans-serif"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 42,
+          "y": 116,
+          "width": 230,
+          "height": 42
+        },
+        "label": "text 12sp/16",
+        "role": "Light · defaults",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "12",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "sans-serif"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 53,
+          "y": 201,
+          "width": 19,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "P",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "sans-serif"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 195,
+          "y": 201,
+          "width": 39,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "PC",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "sans-serif"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 337,
+          "y": 201,
+          "width": 18,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "S",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "sans-serif"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 479,
+          "y": 201,
+          "width": 18,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "T",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "sans-serif"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 621,
+          "y": 201,
+          "width": 34,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "Sv",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "sans-serif"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 763,
+          "y": 201,
+          "width": 20,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "O",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "sans-serif"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 53,
+          "y": 322,
+          "width": 104,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "surface",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "sans-serif"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 199,
+          "y": 322,
+          "width": 44,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "Lo-",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "sans-serif"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 345,
+          "y": 322,
+          "width": 34,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "Lo",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "sans-serif"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 490,
+          "y": 322,
+          "width": 37,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "Cn",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "sans-serif"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 635,
+          "y": 322,
+          "width": 30,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "Hi",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "sans-serif"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 780,
+          "y": 322,
+          "width": 47,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "Hi+",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "sans-serif"
+        }
+      }
+    ],
+    "theme-material3-dark__ideal__default__dark__compact": [
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 42,
+          "y": 190,
+          "width": 126,
+          "height": 95
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 53,
+          "y": 201,
+          "width": 19,
+          "height": 42
+        },
+        "label": "pad 4dp",
+        "role": "P",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "4",
+          "padding.end": "4",
+          "padding.bottom": "4"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 184,
+          "y": 190,
+          "width": 126,
+          "height": 95
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 195,
+          "y": 201,
+          "width": 39,
+          "height": 42
+        },
+        "label": "pad 4dp",
+        "role": "PC",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "4",
+          "padding.end": "4",
+          "padding.bottom": "4"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 326,
+          "y": 190,
+          "width": 126,
+          "height": 95
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 337,
+          "y": 201,
+          "width": 18,
+          "height": 42
+        },
+        "label": "pad 4dp",
+        "role": "S",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "4",
+          "padding.end": "4",
+          "padding.bottom": "4"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 468,
+          "y": 190,
+          "width": 126,
+          "height": 95
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 479,
+          "y": 201,
+          "width": 18,
+          "height": 42
+        },
+        "label": "pad 4dp",
+        "role": "T",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "4",
+          "padding.end": "4",
+          "padding.bottom": "4"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 610,
+          "y": 190,
+          "width": 126,
+          "height": 95
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 621,
+          "y": 201,
+          "width": 34,
+          "height": 42
+        },
+        "label": "pad 4dp",
+        "role": "Sv",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "4",
+          "padding.end": "4",
+          "padding.bottom": "4"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 752,
+          "y": 190,
+          "width": 126,
+          "height": 95
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 763,
+          "y": 201,
+          "width": 20,
+          "height": 42
+        },
+        "label": "pad 4dp",
+        "role": "O",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "4",
+          "padding.end": "4",
+          "padding.bottom": "4"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 42,
+          "y": 317,
+          "width": 135,
+          "height": 84
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 53,
+          "y": 322,
+          "width": 104,
+          "height": 42
+        },
+        "label": "pad 2dp/4dp",
+        "role": "surface",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "2",
+          "padding.end": "4",
+          "padding.bottom": "2"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 188,
+          "y": 317,
+          "width": 135,
+          "height": 84
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 199,
+          "y": 322,
+          "width": 44,
+          "height": 42
+        },
+        "label": "pad 2dp/4dp",
+        "role": "Lo-",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "2",
+          "padding.end": "4",
+          "padding.bottom": "2"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 334,
+          "y": 317,
+          "width": 134,
+          "height": 84
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 345,
+          "y": 322,
+          "width": 34,
+          "height": 42
+        },
+        "label": "pad 2dp/4dp",
+        "role": "Lo",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "2",
+          "padding.end": "4",
+          "padding.bottom": "2"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 479,
+          "y": 317,
+          "width": 134,
+          "height": 84
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 490,
+          "y": 322,
+          "width": 37,
+          "height": 42
+        },
+        "label": "pad 2dp/4dp",
+        "role": "Cn",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "2",
+          "padding.end": "4",
+          "padding.bottom": "2"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 624,
+          "y": 317,
+          "width": 134,
+          "height": 84
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 635,
+          "y": 322,
+          "width": 30,
+          "height": 42
+        },
+        "label": "pad 2dp/4dp",
+        "role": "Hi",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "2",
+          "padding.end": "4",
+          "padding.bottom": "2"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 769,
+          "y": 317,
+          "width": 134,
+          "height": 84
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 780,
+          "y": 322,
+          "width": 47,
+          "height": 42
+        },
+        "label": "pad 2dp/4dp",
+        "role": "Hi+",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "2",
+          "padding.end": "4",
+          "padding.bottom": "2"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 63,
+          "y": 454,
+          "width": 819,
+          "height": 420
+        },
+        "label": "pad 8dp · gap 8dp · r 20dp",
+        "detail": {
+          "padding.start": "8",
+          "padding.top": "8",
+          "padding.end": "8",
+          "padding.bottom": "8",
+          "gap": "8",
+          "cornerRadius": "20"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 63,
+          "y": 454,
+          "width": 819,
+          "height": 147
+        },
+        "label": "r 12dp",
+        "detail": {
+          "cornerRadius": "12"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 63,
+          "y": 622,
+          "width": 819,
+          "height": 252
+        },
+        "label": "r 12dp",
+        "detail": {
+          "cornerRadius": "12"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 42,
+          "y": 42,
+          "width": 254,
+          "height": 74
+        },
+        "label": "text 22sp/28",
+        "role": "Material 3",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "22",
+          "lineHeight": "28",
+          "fontWeight": "400",
+          "fontFamily": "sans-serif"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 42,
+          "y": 116,
+          "width": 223,
+          "height": 42
+        },
+        "label": "text 12sp/16",
+        "role": "Dark · defaults",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "12",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "sans-serif"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 53,
+          "y": 201,
+          "width": 19,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "P",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "sans-serif"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 195,
+          "y": 201,
+          "width": 39,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "PC",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "sans-serif"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 337,
+          "y": 201,
+          "width": 18,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "S",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "sans-serif"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 479,
+          "y": 201,
+          "width": 18,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "T",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "sans-serif"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 621,
+          "y": 201,
+          "width": 34,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "Sv",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "sans-serif"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 763,
+          "y": 201,
+          "width": 20,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "O",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "sans-serif"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 53,
+          "y": 322,
+          "width": 104,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "surface",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "sans-serif"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 199,
+          "y": 322,
+          "width": 44,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "Lo-",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "sans-serif"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 345,
+          "y": 322,
+          "width": 34,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "Lo",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "sans-serif"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 490,
+          "y": 322,
+          "width": 37,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "Cn",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "sans-serif"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 635,
+          "y": 322,
+          "width": 30,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "Hi",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "sans-serif"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 780,
+          "y": 322,
+          "width": 47,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "Hi+",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "sans-serif"
+        }
+      }
+    ],
+    "theme-home-light__ideal__default__light__compact": [
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 42,
+          "y": 190,
+          "width": 126,
+          "height": 95
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 53,
+          "y": 201,
+          "width": 19,
+          "height": 42
+        },
+        "label": "pad 4dp",
+        "role": "P",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "4",
+          "padding.end": "4",
+          "padding.bottom": "4"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 184,
+          "y": 190,
+          "width": 126,
+          "height": 95
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 195,
+          "y": 201,
+          "width": 42,
+          "height": 42
+        },
+        "label": "pad 4dp",
+        "role": "PC",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "4",
+          "padding.end": "4",
+          "padding.bottom": "4"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 326,
+          "y": 190,
+          "width": 126,
+          "height": 95
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 337,
+          "y": 201,
+          "width": 19,
+          "height": 42
+        },
+        "label": "pad 4dp",
+        "role": "S",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "4",
+          "padding.end": "4",
+          "padding.bottom": "4"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 468,
+          "y": 190,
+          "width": 126,
+          "height": 95
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 479,
+          "y": 201,
+          "width": 19,
+          "height": 42
+        },
+        "label": "pad 4dp",
+        "role": "T",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "4",
+          "padding.end": "4",
+          "padding.bottom": "4"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 610,
+          "y": 190,
+          "width": 126,
+          "height": 95
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 621,
+          "y": 201,
+          "width": 37,
+          "height": 42
+        },
+        "label": "pad 4dp",
+        "role": "Sv",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "4",
+          "padding.end": "4",
+          "padding.bottom": "4"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 752,
+          "y": 190,
+          "width": 126,
+          "height": 95
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 763,
+          "y": 201,
+          "width": 22,
+          "height": 42
+        },
+        "label": "pad 4dp",
+        "role": "O",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "4",
+          "padding.end": "4",
+          "padding.bottom": "4"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 42,
+          "y": 317,
+          "width": 135,
+          "height": 84
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 53,
+          "y": 322,
+          "width": 111,
+          "height": 42
+        },
+        "label": "pad 2dp/4dp",
+        "role": "surface",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "2",
+          "padding.end": "4",
+          "padding.bottom": "2"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 188,
+          "y": 317,
+          "width": 135,
+          "height": 84
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 199,
+          "y": 322,
+          "width": 50,
+          "height": 42
+        },
+        "label": "pad 2dp/4dp",
+        "role": "Lo-",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "2",
+          "padding.end": "4",
+          "padding.bottom": "2"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 334,
+          "y": 317,
+          "width": 134,
+          "height": 84
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 345,
+          "y": 322,
+          "width": 36,
+          "height": 42
+        },
+        "label": "pad 2dp/4dp",
+        "role": "Lo",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "2",
+          "padding.end": "4",
+          "padding.bottom": "2"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 479,
+          "y": 317,
+          "width": 134,
+          "height": 84
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 490,
+          "y": 322,
+          "width": 41,
+          "height": 42
+        },
+        "label": "pad 2dp/4dp",
+        "role": "Cn",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "2",
+          "padding.end": "4",
+          "padding.bottom": "2"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 624,
+          "y": 317,
+          "width": 134,
+          "height": 84
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 635,
+          "y": 322,
+          "width": 31,
+          "height": 42
+        },
+        "label": "pad 2dp/4dp",
+        "role": "Hi",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "2",
+          "padding.end": "4",
+          "padding.bottom": "2"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 769,
+          "y": 317,
+          "width": 134,
+          "height": 84
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 780,
+          "y": 322,
+          "width": 51,
+          "height": 42
+        },
+        "label": "pad 2dp/4dp",
+        "role": "Hi+",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "2",
+          "padding.end": "4",
+          "padding.bottom": "2"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 63,
+          "y": 454,
+          "width": 819,
+          "height": 420
+        },
+        "label": "pad 8dp · gap 8dp · r 20dp",
+        "detail": {
+          "padding.start": "8",
+          "padding.top": "8",
+          "padding.end": "8",
+          "padding.bottom": "8",
+          "gap": "8",
+          "cornerRadius": "20"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 63,
+          "y": 454,
+          "width": 819,
+          "height": 147
+        },
+        "label": "r 12dp",
+        "detail": {
+          "cornerRadius": "12"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 63,
+          "y": 622,
+          "width": 819,
+          "height": 252
+        },
+        "label": "r 12dp",
+        "detail": {
+          "cornerRadius": "12"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 42,
+          "y": 42,
+          "width": 152,
+          "height": 74
+        },
+        "label": "text 22sp/28",
+        "role": "Home",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "22",
+          "lineHeight": "28",
+          "fontWeight": "400",
+          "fontFamily": "Roboto Flex"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 42,
+          "y": 116,
+          "width": 569,
+          "height": 42
+        },
+        "label": "text 12sp/16",
+        "role": "Light · HA blue · Roboto Flex + Inter",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "12",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "Inter"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 53,
+          "y": 201,
+          "width": 19,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "P",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "Inter"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 195,
+          "y": 201,
+          "width": 42,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "PC",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "Inter"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 337,
+          "y": 201,
+          "width": 19,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "S",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "Inter"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 479,
+          "y": 201,
+          "width": 19,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "T",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "Inter"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 621,
+          "y": 201,
+          "width": 37,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "Sv",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "Inter"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 763,
+          "y": 201,
+          "width": 22,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "O",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "Inter"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 53,
+          "y": 322,
+          "width": 111,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "surface",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "Inter"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 199,
+          "y": 322,
+          "width": 50,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "Lo-",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "Inter"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 345,
+          "y": 322,
+          "width": 36,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "Lo",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "Inter"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 490,
+          "y": 322,
+          "width": 41,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "Cn",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "Inter"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 635,
+          "y": 322,
+          "width": 31,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "Hi",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "Inter"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 780,
+          "y": 322,
+          "width": 51,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "Hi+",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "Inter"
+        }
+      }
+    ],
+    "theme-home-dark__ideal__default__dark__compact": [
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 42,
+          "y": 190,
+          "width": 126,
+          "height": 95
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 53,
+          "y": 201,
+          "width": 19,
+          "height": 42
+        },
+        "label": "pad 4dp",
+        "role": "P",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "4",
+          "padding.end": "4",
+          "padding.bottom": "4"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 184,
+          "y": 190,
+          "width": 126,
+          "height": 95
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 195,
+          "y": 201,
+          "width": 42,
+          "height": 42
+        },
+        "label": "pad 4dp",
+        "role": "PC",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "4",
+          "padding.end": "4",
+          "padding.bottom": "4"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 326,
+          "y": 190,
+          "width": 126,
+          "height": 95
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 337,
+          "y": 201,
+          "width": 19,
+          "height": 42
+        },
+        "label": "pad 4dp",
+        "role": "S",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "4",
+          "padding.end": "4",
+          "padding.bottom": "4"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 468,
+          "y": 190,
+          "width": 126,
+          "height": 95
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 479,
+          "y": 201,
+          "width": 19,
+          "height": 42
+        },
+        "label": "pad 4dp",
+        "role": "T",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "4",
+          "padding.end": "4",
+          "padding.bottom": "4"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 610,
+          "y": 190,
+          "width": 126,
+          "height": 95
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 621,
+          "y": 201,
+          "width": 37,
+          "height": 42
+        },
+        "label": "pad 4dp",
+        "role": "Sv",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "4",
+          "padding.end": "4",
+          "padding.bottom": "4"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 752,
+          "y": 190,
+          "width": 126,
+          "height": 95
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 763,
+          "y": 201,
+          "width": 22,
+          "height": 42
+        },
+        "label": "pad 4dp",
+        "role": "O",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "4",
+          "padding.end": "4",
+          "padding.bottom": "4"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 42,
+          "y": 317,
+          "width": 135,
+          "height": 84
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 53,
+          "y": 322,
+          "width": 111,
+          "height": 42
+        },
+        "label": "pad 2dp/4dp",
+        "role": "surface",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "2",
+          "padding.end": "4",
+          "padding.bottom": "2"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 188,
+          "y": 317,
+          "width": 135,
+          "height": 84
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 199,
+          "y": 322,
+          "width": 50,
+          "height": 42
+        },
+        "label": "pad 2dp/4dp",
+        "role": "Lo-",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "2",
+          "padding.end": "4",
+          "padding.bottom": "2"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 334,
+          "y": 317,
+          "width": 134,
+          "height": 84
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 345,
+          "y": 322,
+          "width": 36,
+          "height": 42
+        },
+        "label": "pad 2dp/4dp",
+        "role": "Lo",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "2",
+          "padding.end": "4",
+          "padding.bottom": "2"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 479,
+          "y": 317,
+          "width": 134,
+          "height": 84
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 490,
+          "y": 322,
+          "width": 41,
+          "height": 42
+        },
+        "label": "pad 2dp/4dp",
+        "role": "Cn",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "2",
+          "padding.end": "4",
+          "padding.bottom": "2"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 624,
+          "y": 317,
+          "width": 134,
+          "height": 84
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 635,
+          "y": 322,
+          "width": 31,
+          "height": 42
+        },
+        "label": "pad 2dp/4dp",
+        "role": "Hi",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "2",
+          "padding.end": "4",
+          "padding.bottom": "2"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 769,
+          "y": 317,
+          "width": 134,
+          "height": 84
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 780,
+          "y": 322,
+          "width": 51,
+          "height": 42
+        },
+        "label": "pad 2dp/4dp",
+        "role": "Hi+",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "2",
+          "padding.end": "4",
+          "padding.bottom": "2"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 63,
+          "y": 454,
+          "width": 819,
+          "height": 420
+        },
+        "label": "pad 8dp · gap 8dp · r 20dp",
+        "detail": {
+          "padding.start": "8",
+          "padding.top": "8",
+          "padding.end": "8",
+          "padding.bottom": "8",
+          "gap": "8",
+          "cornerRadius": "20"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 63,
+          "y": 454,
+          "width": 819,
+          "height": 147
+        },
+        "label": "r 12dp",
+        "detail": {
+          "cornerRadius": "12"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 63,
+          "y": 622,
+          "width": 819,
+          "height": 252
+        },
+        "label": "r 12dp",
+        "detail": {
+          "cornerRadius": "12"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 42,
+          "y": 42,
+          "width": 152,
+          "height": 74
+        },
+        "label": "text 22sp/28",
+        "role": "Home",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "22",
+          "lineHeight": "28",
+          "fontWeight": "400",
+          "fontFamily": "Roboto Flex"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 42,
+          "y": 116,
+          "width": 563,
+          "height": 42
+        },
+        "label": "text 12sp/16",
+        "role": "Dark · HA blue · Roboto Flex + Inter",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "12",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "Inter"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 53,
+          "y": 201,
+          "width": 19,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "P",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "Inter"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 195,
+          "y": 201,
+          "width": 42,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "PC",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "Inter"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 337,
+          "y": 201,
+          "width": 19,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "S",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "Inter"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 479,
+          "y": 201,
+          "width": 19,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "T",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "Inter"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 621,
+          "y": 201,
+          "width": 37,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "Sv",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "Inter"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 763,
+          "y": 201,
+          "width": 22,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "O",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "Inter"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 53,
+          "y": 322,
+          "width": 111,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "surface",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "Inter"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 199,
+          "y": 322,
+          "width": 50,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "Lo-",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "Inter"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 345,
+          "y": 322,
+          "width": 36,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "Lo",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "Inter"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 490,
+          "y": 322,
+          "width": 41,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "Cn",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "Inter"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 635,
+          "y": 322,
+          "width": 31,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "Hi",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "Inter"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 780,
+          "y": 322,
+          "width": 51,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "Hi+",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "Inter"
+        }
+      }
+    ],
+    "theme-mushroom-light__ideal__default__light__compact": [
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 42,
+          "y": 190,
+          "width": 126,
+          "height": 95
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 53,
+          "y": 201,
+          "width": 17,
+          "height": 42
+        },
+        "label": "pad 4dp",
+        "role": "P",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "4",
+          "padding.end": "4",
+          "padding.bottom": "4"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 184,
+          "y": 190,
+          "width": 126,
+          "height": 95
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 195,
+          "y": 201,
+          "width": 39,
+          "height": 42
+        },
+        "label": "pad 4dp",
+        "role": "PC",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "4",
+          "padding.end": "4",
+          "padding.bottom": "4"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 326,
+          "y": 190,
+          "width": 126,
+          "height": 95
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 337,
+          "y": 201,
+          "width": 18,
+          "height": 42
+        },
+        "label": "pad 4dp",
+        "role": "S",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "4",
+          "padding.end": "4",
+          "padding.bottom": "4"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 468,
+          "y": 190,
+          "width": 126,
+          "height": 95
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 479,
+          "y": 201,
+          "width": 17,
+          "height": 42
+        },
+        "label": "pad 4dp",
+        "role": "T",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "4",
+          "padding.end": "4",
+          "padding.bottom": "4"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 610,
+          "y": 190,
+          "width": 126,
+          "height": 95
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 621,
+          "y": 201,
+          "width": 35,
+          "height": 42
+        },
+        "label": "pad 4dp",
+        "role": "Sv",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "4",
+          "padding.end": "4",
+          "padding.bottom": "4"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 752,
+          "y": 190,
+          "width": 126,
+          "height": 95
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 763,
+          "y": 201,
+          "width": 23,
+          "height": 42
+        },
+        "label": "pad 4dp",
+        "role": "O",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "4",
+          "padding.end": "4",
+          "padding.bottom": "4"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 42,
+          "y": 317,
+          "width": 135,
+          "height": 84
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 53,
+          "y": 322,
+          "width": 103,
+          "height": 42
+        },
+        "label": "pad 2dp/4dp",
+        "role": "surface",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "2",
+          "padding.end": "4",
+          "padding.bottom": "2"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 188,
+          "y": 317,
+          "width": 135,
+          "height": 84
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 199,
+          "y": 322,
+          "width": 47,
+          "height": 42
+        },
+        "label": "pad 2dp/4dp",
+        "role": "Lo-",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "2",
+          "padding.end": "4",
+          "padding.bottom": "2"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 334,
+          "y": 317,
+          "width": 134,
+          "height": 84
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 345,
+          "y": 322,
+          "width": 34,
+          "height": 42
+        },
+        "label": "pad 2dp/4dp",
+        "role": "Lo",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "2",
+          "padding.end": "4",
+          "padding.bottom": "2"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 479,
+          "y": 317,
+          "width": 134,
+          "height": 84
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 490,
+          "y": 322,
+          "width": 39,
+          "height": 42
+        },
+        "label": "pad 2dp/4dp",
+        "role": "Cn",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "2",
+          "padding.end": "4",
+          "padding.bottom": "2"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 624,
+          "y": 317,
+          "width": 134,
+          "height": 84
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 635,
+          "y": 322,
+          "width": 31,
+          "height": 42
+        },
+        "label": "pad 2dp/4dp",
+        "role": "Hi",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "2",
+          "padding.end": "4",
+          "padding.bottom": "2"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 769,
+          "y": 317,
+          "width": 134,
+          "height": 84
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 780,
+          "y": 322,
+          "width": 50,
+          "height": 42
+        },
+        "label": "pad 2dp/4dp",
+        "role": "Hi+",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "2",
+          "padding.end": "4",
+          "padding.bottom": "2"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 63,
+          "y": 454,
+          "width": 819,
+          "height": 420
+        },
+        "label": "pad 8dp · gap 8dp · r 20dp",
+        "detail": {
+          "padding.start": "8",
+          "padding.top": "8",
+          "padding.end": "8",
+          "padding.bottom": "8",
+          "gap": "8",
+          "cornerRadius": "20"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 63,
+          "y": 454,
+          "width": 819,
+          "height": 147
+        },
+        "label": "r 12dp",
+        "detail": {
+          "cornerRadius": "12"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 63,
+          "y": 622,
+          "width": 819,
+          "height": 252
+        },
+        "label": "r 12dp",
+        "detail": {
+          "cornerRadius": "12"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 42,
+          "y": 42,
+          "width": 273,
+          "height": 74
+        },
+        "label": "text 22sp/28",
+        "role": "Mushroom",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "22",
+          "lineHeight": "28",
+          "fontWeight": "400",
+          "fontFamily": "Figtree"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 42,
+          "y": 116,
+          "width": 440,
+          "height": 42
+        },
+        "label": "text 12sp/16",
+        "role": "Light · warm salmon · Figtree",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "12",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "Figtree"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 53,
+          "y": 201,
+          "width": 17,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "P",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "Figtree"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 195,
+          "y": 201,
+          "width": 39,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "PC",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "Figtree"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 337,
+          "y": 201,
+          "width": 18,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "S",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "Figtree"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 479,
+          "y": 201,
+          "width": 17,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "T",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "Figtree"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 621,
+          "y": 201,
+          "width": 35,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "Sv",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "Figtree"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 763,
+          "y": 201,
+          "width": 23,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "O",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "Figtree"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 53,
+          "y": 322,
+          "width": 103,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "surface",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "Figtree"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 199,
+          "y": 322,
+          "width": 47,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "Lo-",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "Figtree"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 345,
+          "y": 322,
+          "width": 34,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "Lo",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "Figtree"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 490,
+          "y": 322,
+          "width": 39,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "Cn",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "Figtree"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 635,
+          "y": 322,
+          "width": 31,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "Hi",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "Figtree"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 780,
+          "y": 322,
+          "width": 50,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "Hi+",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "Figtree"
+        }
+      }
+    ],
+    "theme-mushroom-dark__ideal__default__dark__compact": [
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 42,
+          "y": 190,
+          "width": 126,
+          "height": 95
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 53,
+          "y": 201,
+          "width": 17,
+          "height": 42
+        },
+        "label": "pad 4dp",
+        "role": "P",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "4",
+          "padding.end": "4",
+          "padding.bottom": "4"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 184,
+          "y": 190,
+          "width": 126,
+          "height": 95
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 195,
+          "y": 201,
+          "width": 39,
+          "height": 42
+        },
+        "label": "pad 4dp",
+        "role": "PC",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "4",
+          "padding.end": "4",
+          "padding.bottom": "4"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 326,
+          "y": 190,
+          "width": 126,
+          "height": 95
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 337,
+          "y": 201,
+          "width": 18,
+          "height": 42
+        },
+        "label": "pad 4dp",
+        "role": "S",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "4",
+          "padding.end": "4",
+          "padding.bottom": "4"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 468,
+          "y": 190,
+          "width": 126,
+          "height": 95
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 479,
+          "y": 201,
+          "width": 17,
+          "height": 42
+        },
+        "label": "pad 4dp",
+        "role": "T",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "4",
+          "padding.end": "4",
+          "padding.bottom": "4"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 610,
+          "y": 190,
+          "width": 126,
+          "height": 95
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 621,
+          "y": 201,
+          "width": 35,
+          "height": 42
+        },
+        "label": "pad 4dp",
+        "role": "Sv",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "4",
+          "padding.end": "4",
+          "padding.bottom": "4"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 752,
+          "y": 190,
+          "width": 126,
+          "height": 95
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 763,
+          "y": 201,
+          "width": 23,
+          "height": 42
+        },
+        "label": "pad 4dp",
+        "role": "O",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "4",
+          "padding.end": "4",
+          "padding.bottom": "4"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 42,
+          "y": 317,
+          "width": 135,
+          "height": 84
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 53,
+          "y": 322,
+          "width": 103,
+          "height": 42
+        },
+        "label": "pad 2dp/4dp",
+        "role": "surface",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "2",
+          "padding.end": "4",
+          "padding.bottom": "2"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 188,
+          "y": 317,
+          "width": 135,
+          "height": 84
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 199,
+          "y": 322,
+          "width": 47,
+          "height": 42
+        },
+        "label": "pad 2dp/4dp",
+        "role": "Lo-",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "2",
+          "padding.end": "4",
+          "padding.bottom": "2"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 334,
+          "y": 317,
+          "width": 134,
+          "height": 84
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 345,
+          "y": 322,
+          "width": 34,
+          "height": 42
+        },
+        "label": "pad 2dp/4dp",
+        "role": "Lo",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "2",
+          "padding.end": "4",
+          "padding.bottom": "2"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 479,
+          "y": 317,
+          "width": 134,
+          "height": 84
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 490,
+          "y": 322,
+          "width": 39,
+          "height": 42
+        },
+        "label": "pad 2dp/4dp",
+        "role": "Cn",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "2",
+          "padding.end": "4",
+          "padding.bottom": "2"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 624,
+          "y": 317,
+          "width": 134,
+          "height": 84
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 635,
+          "y": 322,
+          "width": 31,
+          "height": 42
+        },
+        "label": "pad 2dp/4dp",
+        "role": "Hi",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "2",
+          "padding.end": "4",
+          "padding.bottom": "2"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 769,
+          "y": 317,
+          "width": 134,
+          "height": 84
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 780,
+          "y": 322,
+          "width": 50,
+          "height": 42
+        },
+        "label": "pad 2dp/4dp",
+        "role": "Hi+",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "2",
+          "padding.end": "4",
+          "padding.bottom": "2"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 63,
+          "y": 454,
+          "width": 819,
+          "height": 420
+        },
+        "label": "pad 8dp · gap 8dp · r 20dp",
+        "detail": {
+          "padding.start": "8",
+          "padding.top": "8",
+          "padding.end": "8",
+          "padding.bottom": "8",
+          "gap": "8",
+          "cornerRadius": "20"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 63,
+          "y": 454,
+          "width": 819,
+          "height": 147
+        },
+        "label": "r 12dp",
+        "detail": {
+          "cornerRadius": "12"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 63,
+          "y": 622,
+          "width": 819,
+          "height": 252
+        },
+        "label": "r 12dp",
+        "detail": {
+          "cornerRadius": "12"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 42,
+          "y": 42,
+          "width": 273,
+          "height": 74
+        },
+        "label": "text 22sp/28",
+        "role": "Mushroom",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "22",
+          "lineHeight": "28",
+          "fontWeight": "400",
+          "fontFamily": "Figtree"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 42,
+          "y": 116,
+          "width": 433,
+          "height": 42
+        },
+        "label": "text 12sp/16",
+        "role": "Dark · warm salmon · Figtree",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "12",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "Figtree"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 53,
+          "y": 201,
+          "width": 17,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "P",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "Figtree"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 195,
+          "y": 201,
+          "width": 39,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "PC",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "Figtree"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 337,
+          "y": 201,
+          "width": 18,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "S",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "Figtree"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 479,
+          "y": 201,
+          "width": 17,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "T",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "Figtree"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 621,
+          "y": 201,
+          "width": 35,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "Sv",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "Figtree"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 763,
+          "y": 201,
+          "width": 23,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "O",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "Figtree"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 53,
+          "y": 322,
+          "width": 103,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "surface",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "Figtree"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 199,
+          "y": 322,
+          "width": 47,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "Lo-",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "Figtree"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 345,
+          "y": 322,
+          "width": 34,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "Lo",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "Figtree"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 490,
+          "y": 322,
+          "width": 39,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "Cn",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "Figtree"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 635,
+          "y": 322,
+          "width": 31,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "Hi",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "Figtree"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 780,
+          "y": 322,
+          "width": 50,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "Hi+",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "Figtree"
+        }
+      }
+    ],
+    "theme-minimalist-light__ideal__default__light__compact": [
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 42,
+          "y": 191,
+          "width": 126,
+          "height": 95
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 53,
+          "y": 202,
+          "width": 19,
+          "height": 42
+        },
+        "label": "pad 4dp",
+        "role": "P",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "4",
+          "padding.end": "4",
+          "padding.bottom": "4"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 184,
+          "y": 191,
+          "width": 126,
+          "height": 95
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 195,
+          "y": 202,
+          "width": 39,
+          "height": 42
+        },
+        "label": "pad 4dp",
+        "role": "PC",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "4",
+          "padding.end": "4",
+          "padding.bottom": "4"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 326,
+          "y": 191,
+          "width": 126,
+          "height": 95
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 337,
+          "y": 202,
+          "width": 18,
+          "height": 42
+        },
+        "label": "pad 4dp",
+        "role": "S",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "4",
+          "padding.end": "4",
+          "padding.bottom": "4"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 468,
+          "y": 191,
+          "width": 126,
+          "height": 95
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 479,
+          "y": 202,
+          "width": 17,
+          "height": 42
+        },
+        "label": "pad 4dp",
+        "role": "T",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "4",
+          "padding.end": "4",
+          "padding.bottom": "4"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 610,
+          "y": 191,
+          "width": 126,
+          "height": 95
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 621,
+          "y": 202,
+          "width": 34,
+          "height": 42
+        },
+        "label": "pad 4dp",
+        "role": "Sv",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "4",
+          "padding.end": "4",
+          "padding.bottom": "4"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 752,
+          "y": 191,
+          "width": 126,
+          "height": 95
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 763,
+          "y": 202,
+          "width": 21,
+          "height": 42
+        },
+        "label": "pad 4dp",
+        "role": "O",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "4",
+          "padding.end": "4",
+          "padding.bottom": "4"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 42,
+          "y": 318,
+          "width": 135,
+          "height": 84
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 53,
+          "y": 323,
+          "width": 105,
+          "height": 42
+        },
+        "label": "pad 2dp/4dp",
+        "role": "surface",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "2",
+          "padding.end": "4",
+          "padding.bottom": "2"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 188,
+          "y": 318,
+          "width": 135,
+          "height": 84
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 199,
+          "y": 323,
+          "width": 45,
+          "height": 42
+        },
+        "label": "pad 2dp/4dp",
+        "role": "Lo-",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "2",
+          "padding.end": "4",
+          "padding.bottom": "2"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 334,
+          "y": 318,
+          "width": 134,
+          "height": 84
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 345,
+          "y": 323,
+          "width": 32,
+          "height": 42
+        },
+        "label": "pad 2dp/4dp",
+        "role": "Lo",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "2",
+          "padding.end": "4",
+          "padding.bottom": "2"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 479,
+          "y": 318,
+          "width": 134,
+          "height": 84
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 490,
+          "y": 323,
+          "width": 37,
+          "height": 42
+        },
+        "label": "pad 2dp/4dp",
+        "role": "Cn",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "2",
+          "padding.end": "4",
+          "padding.bottom": "2"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 624,
+          "y": 318,
+          "width": 134,
+          "height": 84
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 635,
+          "y": 323,
+          "width": 30,
+          "height": 42
+        },
+        "label": "pad 2dp/4dp",
+        "role": "Hi",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "2",
+          "padding.end": "4",
+          "padding.bottom": "2"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 769,
+          "y": 318,
+          "width": 134,
+          "height": 84
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 780,
+          "y": 323,
+          "width": 48,
+          "height": 42
+        },
+        "label": "pad 2dp/4dp",
+        "role": "Hi+",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "2",
+          "padding.end": "4",
+          "padding.bottom": "2"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 63,
+          "y": 455,
+          "width": 819,
+          "height": 420
+        },
+        "label": "pad 8dp · gap 8dp · r 20dp",
+        "detail": {
+          "padding.start": "8",
+          "padding.top": "8",
+          "padding.end": "8",
+          "padding.bottom": "8",
+          "gap": "8",
+          "cornerRadius": "20"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 63,
+          "y": 455,
+          "width": 819,
+          "height": 147
+        },
+        "label": "r 12dp",
+        "detail": {
+          "cornerRadius": "12"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 63,
+          "y": 623,
+          "width": 819,
+          "height": 252
+        },
+        "label": "r 12dp",
+        "detail": {
+          "cornerRadius": "12"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 42,
+          "y": 42,
+          "width": 264,
+          "height": 75
+        },
+        "label": "text 22sp/28",
+        "role": "Minimalist",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "22",
+          "lineHeight": "28",
+          "fontWeight": "400",
+          "fontFamily": "IBM Plex Sans"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 42,
+          "y": 117,
+          "width": 547,
+          "height": 42
+        },
+        "label": "text 12sp/16",
+        "role": "Light · neutral slate · IBM Plex Sans",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "12",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "IBM Plex Sans"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 53,
+          "y": 202,
+          "width": 19,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "P",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "IBM Plex Sans"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 195,
+          "y": 202,
+          "width": 39,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "PC",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "IBM Plex Sans"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 337,
+          "y": 202,
+          "width": 18,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "S",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "IBM Plex Sans"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 479,
+          "y": 202,
+          "width": 17,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "T",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "IBM Plex Sans"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 621,
+          "y": 202,
+          "width": 34,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "Sv",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "IBM Plex Sans"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 763,
+          "y": 202,
+          "width": 21,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "O",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "IBM Plex Sans"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 53,
+          "y": 323,
+          "width": 105,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "surface",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "IBM Plex Sans"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 199,
+          "y": 323,
+          "width": 45,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "Lo-",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "IBM Plex Sans"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 345,
+          "y": 323,
+          "width": 32,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "Lo",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "IBM Plex Sans"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 490,
+          "y": 323,
+          "width": 37,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "Cn",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "IBM Plex Sans"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 635,
+          "y": 323,
+          "width": 30,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "Hi",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "IBM Plex Sans"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 780,
+          "y": 323,
+          "width": 48,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "Hi+",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "IBM Plex Sans"
+        }
+      }
+    ],
+    "theme-minimalist-dark__ideal__default__dark__compact": [
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 42,
+          "y": 191,
+          "width": 126,
+          "height": 95
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 53,
+          "y": 202,
+          "width": 19,
+          "height": 42
+        },
+        "label": "pad 4dp",
+        "role": "P",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "4",
+          "padding.end": "4",
+          "padding.bottom": "4"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 184,
+          "y": 191,
+          "width": 126,
+          "height": 95
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 195,
+          "y": 202,
+          "width": 39,
+          "height": 42
+        },
+        "label": "pad 4dp",
+        "role": "PC",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "4",
+          "padding.end": "4",
+          "padding.bottom": "4"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 326,
+          "y": 191,
+          "width": 126,
+          "height": 95
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 337,
+          "y": 202,
+          "width": 18,
+          "height": 42
+        },
+        "label": "pad 4dp",
+        "role": "S",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "4",
+          "padding.end": "4",
+          "padding.bottom": "4"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 468,
+          "y": 191,
+          "width": 126,
+          "height": 95
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 479,
+          "y": 202,
+          "width": 17,
+          "height": 42
+        },
+        "label": "pad 4dp",
+        "role": "T",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "4",
+          "padding.end": "4",
+          "padding.bottom": "4"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 610,
+          "y": 191,
+          "width": 126,
+          "height": 95
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 621,
+          "y": 202,
+          "width": 34,
+          "height": 42
+        },
+        "label": "pad 4dp",
+        "role": "Sv",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "4",
+          "padding.end": "4",
+          "padding.bottom": "4"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 752,
+          "y": 191,
+          "width": 126,
+          "height": 95
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 763,
+          "y": 202,
+          "width": 21,
+          "height": 42
+        },
+        "label": "pad 4dp",
+        "role": "O",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "4",
+          "padding.end": "4",
+          "padding.bottom": "4"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 42,
+          "y": 318,
+          "width": 135,
+          "height": 84
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 53,
+          "y": 323,
+          "width": 105,
+          "height": 42
+        },
+        "label": "pad 2dp/4dp",
+        "role": "surface",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "2",
+          "padding.end": "4",
+          "padding.bottom": "2"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 188,
+          "y": 318,
+          "width": 135,
+          "height": 84
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 199,
+          "y": 323,
+          "width": 45,
+          "height": 42
+        },
+        "label": "pad 2dp/4dp",
+        "role": "Lo-",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "2",
+          "padding.end": "4",
+          "padding.bottom": "2"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 334,
+          "y": 318,
+          "width": 134,
+          "height": 84
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 345,
+          "y": 323,
+          "width": 32,
+          "height": 42
+        },
+        "label": "pad 2dp/4dp",
+        "role": "Lo",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "2",
+          "padding.end": "4",
+          "padding.bottom": "2"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 479,
+          "y": 318,
+          "width": 134,
+          "height": 84
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 490,
+          "y": 323,
+          "width": 37,
+          "height": 42
+        },
+        "label": "pad 2dp/4dp",
+        "role": "Cn",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "2",
+          "padding.end": "4",
+          "padding.bottom": "2"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 624,
+          "y": 318,
+          "width": 134,
+          "height": 84
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 635,
+          "y": 323,
+          "width": 30,
+          "height": 42
+        },
+        "label": "pad 2dp/4dp",
+        "role": "Hi",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "2",
+          "padding.end": "4",
+          "padding.bottom": "2"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 769,
+          "y": 318,
+          "width": 134,
+          "height": 84
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 780,
+          "y": 323,
+          "width": 48,
+          "height": 42
+        },
+        "label": "pad 2dp/4dp",
+        "role": "Hi+",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "2",
+          "padding.end": "4",
+          "padding.bottom": "2"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 63,
+          "y": 455,
+          "width": 819,
+          "height": 420
+        },
+        "label": "pad 8dp · gap 8dp · r 20dp",
+        "detail": {
+          "padding.start": "8",
+          "padding.top": "8",
+          "padding.end": "8",
+          "padding.bottom": "8",
+          "gap": "8",
+          "cornerRadius": "20"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 63,
+          "y": 455,
+          "width": 819,
+          "height": 147
+        },
+        "label": "r 12dp",
+        "detail": {
+          "cornerRadius": "12"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 63,
+          "y": 623,
+          "width": 819,
+          "height": 252
+        },
+        "label": "r 12dp",
+        "detail": {
+          "cornerRadius": "12"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 42,
+          "y": 42,
+          "width": 264,
+          "height": 75
+        },
+        "label": "text 22sp/28",
+        "role": "Minimalist",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "22",
+          "lineHeight": "28",
+          "fontWeight": "400",
+          "fontFamily": "IBM Plex Sans"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 42,
+          "y": 117,
+          "width": 543,
+          "height": 42
+        },
+        "label": "text 12sp/16",
+        "role": "Dark · neutral slate · IBM Plex Sans",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "12",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "IBM Plex Sans"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 53,
+          "y": 202,
+          "width": 19,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "P",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "IBM Plex Sans"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 195,
+          "y": 202,
+          "width": 39,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "PC",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "IBM Plex Sans"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 337,
+          "y": 202,
+          "width": 18,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "S",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "IBM Plex Sans"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 479,
+          "y": 202,
+          "width": 17,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "T",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "IBM Plex Sans"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 621,
+          "y": 202,
+          "width": 34,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "Sv",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "IBM Plex Sans"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 763,
+          "y": 202,
+          "width": 21,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "O",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "IBM Plex Sans"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 53,
+          "y": 323,
+          "width": 105,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "surface",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "IBM Plex Sans"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 199,
+          "y": 323,
+          "width": 45,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "Lo-",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "IBM Plex Sans"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 345,
+          "y": 323,
+          "width": 32,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "Lo",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "IBM Plex Sans"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 490,
+          "y": 323,
+          "width": 37,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "Cn",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "IBM Plex Sans"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 635,
+          "y": 323,
+          "width": 30,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "Hi",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "IBM Plex Sans"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 780,
+          "y": 323,
+          "width": 48,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "Hi+",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "IBM Plex Sans"
+        }
+      }
+    ],
+    "theme-kiosk-light__ideal__default__light__compact": [
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 42,
+          "y": 190,
+          "width": 126,
+          "height": 95
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 53,
+          "y": 201,
+          "width": 19,
+          "height": 42
+        },
+        "label": "pad 4dp",
+        "role": "P",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "4",
+          "padding.end": "4",
+          "padding.bottom": "4"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 184,
+          "y": 190,
+          "width": 126,
+          "height": 95
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 195,
+          "y": 201,
+          "width": 39,
+          "height": 42
+        },
+        "label": "pad 4dp",
+        "role": "PC",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "4",
+          "padding.end": "4",
+          "padding.bottom": "4"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 326,
+          "y": 190,
+          "width": 126,
+          "height": 95
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 337,
+          "y": 201,
+          "width": 18,
+          "height": 42
+        },
+        "label": "pad 4dp",
+        "role": "S",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "4",
+          "padding.end": "4",
+          "padding.bottom": "4"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 468,
+          "y": 190,
+          "width": 126,
+          "height": 95
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 479,
+          "y": 201,
+          "width": 18,
+          "height": 42
+        },
+        "label": "pad 4dp",
+        "role": "T",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "4",
+          "padding.end": "4",
+          "padding.bottom": "4"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 610,
+          "y": 190,
+          "width": 126,
+          "height": 95
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 621,
+          "y": 201,
+          "width": 34,
+          "height": 42
+        },
+        "label": "pad 4dp",
+        "role": "Sv",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "4",
+          "padding.end": "4",
+          "padding.bottom": "4"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 752,
+          "y": 190,
+          "width": 126,
+          "height": 95
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 763,
+          "y": 201,
+          "width": 20,
+          "height": 42
+        },
+        "label": "pad 4dp",
+        "role": "O",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "4",
+          "padding.end": "4",
+          "padding.bottom": "4"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 42,
+          "y": 317,
+          "width": 135,
+          "height": 84
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 53,
+          "y": 322,
+          "width": 104,
+          "height": 42
+        },
+        "label": "pad 2dp/4dp",
+        "role": "surface",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "2",
+          "padding.end": "4",
+          "padding.bottom": "2"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 188,
+          "y": 317,
+          "width": 135,
+          "height": 84
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 199,
+          "y": 322,
+          "width": 44,
+          "height": 42
+        },
+        "label": "pad 2dp/4dp",
+        "role": "Lo-",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "2",
+          "padding.end": "4",
+          "padding.bottom": "2"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 334,
+          "y": 317,
+          "width": 134,
+          "height": 84
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 345,
+          "y": 322,
+          "width": 34,
+          "height": 42
+        },
+        "label": "pad 2dp/4dp",
+        "role": "Lo",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "2",
+          "padding.end": "4",
+          "padding.bottom": "2"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 479,
+          "y": 317,
+          "width": 134,
+          "height": 84
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 490,
+          "y": 322,
+          "width": 37,
+          "height": 42
+        },
+        "label": "pad 2dp/4dp",
+        "role": "Cn",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "2",
+          "padding.end": "4",
+          "padding.bottom": "2"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 624,
+          "y": 317,
+          "width": 134,
+          "height": 84
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 635,
+          "y": 322,
+          "width": 30,
+          "height": 42
+        },
+        "label": "pad 2dp/4dp",
+        "role": "Hi",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "2",
+          "padding.end": "4",
+          "padding.bottom": "2"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 769,
+          "y": 317,
+          "width": 134,
+          "height": 84
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 780,
+          "y": 322,
+          "width": 47,
+          "height": 42
+        },
+        "label": "pad 2dp/4dp",
+        "role": "Hi+",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "2",
+          "padding.end": "4",
+          "padding.bottom": "2"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 63,
+          "y": 454,
+          "width": 819,
+          "height": 420
+        },
+        "label": "pad 8dp · gap 8dp · r 20dp",
+        "detail": {
+          "padding.start": "8",
+          "padding.top": "8",
+          "padding.end": "8",
+          "padding.bottom": "8",
+          "gap": "8",
+          "cornerRadius": "20"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 63,
+          "y": 454,
+          "width": 819,
+          "height": 147
+        },
+        "label": "r 12dp",
+        "detail": {
+          "cornerRadius": "12"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 63,
+          "y": 622,
+          "width": 819,
+          "height": 252
+        },
+        "label": "r 12dp",
+        "detail": {
+          "cornerRadius": "12"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 42,
+          "y": 42,
+          "width": 138,
+          "height": 74
+        },
+        "label": "text 22sp/28",
+        "role": "Kiosk",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "22",
+          "lineHeight": "28",
+          "fontWeight": "400",
+          "fontFamily": "Atkinson Hyperlegible"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 42,
+          "y": 116,
+          "width": 524,
+          "height": 42
+        },
+        "label": "text 12sp/16",
+        "role": "Light · teal · Atkinson Hyperlegible",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "12",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "Atkinson Hyperlegible"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 53,
+          "y": 201,
+          "width": 19,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "P",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "Atkinson Hyperlegible"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 195,
+          "y": 201,
+          "width": 39,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "PC",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "Atkinson Hyperlegible"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 337,
+          "y": 201,
+          "width": 18,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "S",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "Atkinson Hyperlegible"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 479,
+          "y": 201,
+          "width": 18,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "T",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "Atkinson Hyperlegible"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 621,
+          "y": 201,
+          "width": 34,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "Sv",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "Atkinson Hyperlegible"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 763,
+          "y": 201,
+          "width": 20,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "O",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "Atkinson Hyperlegible"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 53,
+          "y": 322,
+          "width": 104,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "surface",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "Atkinson Hyperlegible"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 199,
+          "y": 322,
+          "width": 44,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "Lo-",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "Atkinson Hyperlegible"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 345,
+          "y": 322,
+          "width": 34,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "Lo",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "Atkinson Hyperlegible"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 490,
+          "y": 322,
+          "width": 37,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "Cn",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "Atkinson Hyperlegible"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 635,
+          "y": 322,
+          "width": 30,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "Hi",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "Atkinson Hyperlegible"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 780,
+          "y": 322,
+          "width": 47,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "Hi+",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "Atkinson Hyperlegible"
+        }
+      }
+    ],
+    "theme-kiosk-dark__ideal__default__dark__compact": [
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 42,
+          "y": 190,
+          "width": 126,
+          "height": 95
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 53,
+          "y": 201,
+          "width": 19,
+          "height": 42
+        },
+        "label": "pad 4dp",
+        "role": "P",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "4",
+          "padding.end": "4",
+          "padding.bottom": "4"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 184,
+          "y": 190,
+          "width": 126,
+          "height": 95
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 195,
+          "y": 201,
+          "width": 39,
+          "height": 42
+        },
+        "label": "pad 4dp",
+        "role": "PC",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "4",
+          "padding.end": "4",
+          "padding.bottom": "4"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 326,
+          "y": 190,
+          "width": 126,
+          "height": 95
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 337,
+          "y": 201,
+          "width": 18,
+          "height": 42
+        },
+        "label": "pad 4dp",
+        "role": "S",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "4",
+          "padding.end": "4",
+          "padding.bottom": "4"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 468,
+          "y": 190,
+          "width": 126,
+          "height": 95
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 479,
+          "y": 201,
+          "width": 18,
+          "height": 42
+        },
+        "label": "pad 4dp",
+        "role": "T",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "4",
+          "padding.end": "4",
+          "padding.bottom": "4"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 610,
+          "y": 190,
+          "width": 126,
+          "height": 95
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 621,
+          "y": 201,
+          "width": 34,
+          "height": 42
+        },
+        "label": "pad 4dp",
+        "role": "Sv",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "4",
+          "padding.end": "4",
+          "padding.bottom": "4"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 752,
+          "y": 190,
+          "width": 126,
+          "height": 95
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 763,
+          "y": 201,
+          "width": 20,
+          "height": 42
+        },
+        "label": "pad 4dp",
+        "role": "O",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "4",
+          "padding.end": "4",
+          "padding.bottom": "4"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 42,
+          "y": 317,
+          "width": 135,
+          "height": 84
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 53,
+          "y": 322,
+          "width": 104,
+          "height": 42
+        },
+        "label": "pad 2dp/4dp",
+        "role": "surface",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "2",
+          "padding.end": "4",
+          "padding.bottom": "2"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 188,
+          "y": 317,
+          "width": 135,
+          "height": 84
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 199,
+          "y": 322,
+          "width": 44,
+          "height": 42
+        },
+        "label": "pad 2dp/4dp",
+        "role": "Lo-",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "2",
+          "padding.end": "4",
+          "padding.bottom": "2"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 334,
+          "y": 317,
+          "width": 134,
+          "height": 84
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 345,
+          "y": 322,
+          "width": 34,
+          "height": 42
+        },
+        "label": "pad 2dp/4dp",
+        "role": "Lo",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "2",
+          "padding.end": "4",
+          "padding.bottom": "2"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 479,
+          "y": 317,
+          "width": 134,
+          "height": 84
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 490,
+          "y": 322,
+          "width": 37,
+          "height": 42
+        },
+        "label": "pad 2dp/4dp",
+        "role": "Cn",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "2",
+          "padding.end": "4",
+          "padding.bottom": "2"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 624,
+          "y": 317,
+          "width": 134,
+          "height": 84
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 635,
+          "y": 322,
+          "width": 30,
+          "height": 42
+        },
+        "label": "pad 2dp/4dp",
+        "role": "Hi",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "2",
+          "padding.end": "4",
+          "padding.bottom": "2"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 769,
+          "y": 317,
+          "width": 134,
+          "height": 84
+        },
+        "label": "r 6dp",
+        "detail": {
+          "cornerRadius": "6"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 780,
+          "y": 322,
+          "width": 47,
+          "height": 42
+        },
+        "label": "pad 2dp/4dp",
+        "role": "Hi+",
+        "detail": {
+          "padding.start": "4",
+          "padding.top": "2",
+          "padding.end": "4",
+          "padding.bottom": "2"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 63,
+          "y": 454,
+          "width": 819,
+          "height": 420
+        },
+        "label": "pad 8dp · gap 8dp · r 20dp",
+        "detail": {
+          "padding.start": "8",
+          "padding.top": "8",
+          "padding.end": "8",
+          "padding.bottom": "8",
+          "gap": "8",
+          "cornerRadius": "20"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 63,
+          "y": 454,
+          "width": 819,
+          "height": 147
+        },
+        "label": "r 12dp",
+        "detail": {
+          "cornerRadius": "12"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 63,
+          "y": 622,
+          "width": 819,
+          "height": 252
+        },
+        "label": "r 12dp",
+        "detail": {
+          "cornerRadius": "12"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 42,
+          "y": 42,
+          "width": 138,
+          "height": 74
+        },
+        "label": "text 22sp/28",
+        "role": "Kiosk",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "22",
+          "lineHeight": "28",
+          "fontWeight": "400",
+          "fontFamily": "Atkinson Hyperlegible"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 42,
+          "y": 116,
+          "width": 517,
+          "height": 42
+        },
+        "label": "text 12sp/16",
+        "role": "Dark · teal · Atkinson Hyperlegible",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "12",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "Atkinson Hyperlegible"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 53,
+          "y": 201,
+          "width": 19,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "P",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "Atkinson Hyperlegible"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 195,
+          "y": 201,
+          "width": 39,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "PC",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "Atkinson Hyperlegible"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 337,
+          "y": 201,
+          "width": 18,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "S",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "Atkinson Hyperlegible"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 479,
+          "y": 201,
+          "width": 18,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "T",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "Atkinson Hyperlegible"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 621,
+          "y": 201,
+          "width": 34,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "Sv",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "Atkinson Hyperlegible"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 763,
+          "y": 201,
+          "width": 20,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "O",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "Atkinson Hyperlegible"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 53,
+          "y": 322,
+          "width": 104,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "surface",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "Atkinson Hyperlegible"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 199,
+          "y": 322,
+          "width": 44,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "Lo-",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "Atkinson Hyperlegible"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 345,
+          "y": 322,
+          "width": 34,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "Lo",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "Atkinson Hyperlegible"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 490,
+          "y": 322,
+          "width": 37,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "Cn",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "Atkinson Hyperlegible"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 635,
+          "y": 322,
+          "width": 30,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "Hi",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "Atkinson Hyperlegible"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 780,
+          "y": 322,
+          "width": 47,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "Hi+",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "Atkinson Hyperlegible"
+        }
+      }
+    ],
+    "brand-appicon-light__ideal__default__light__compact": [
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 42,
+          "y": 137,
+          "width": 189,
+          "height": 189
+        },
+        "label": "r 36dp",
+        "detail": {
+          "cornerRadius": "36"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 273,
+          "y": 137,
+          "width": 189,
+          "height": 189
+        },
+        "label": "r 24dp",
+        "detail": {
+          "cornerRadius": "24"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 504,
+          "y": 137,
+          "width": 189,
+          "height": 189
+        },
+        "label": "r 8dp",
+        "detail": {
+          "cornerRadius": "8"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 735,
+          "y": 137,
+          "width": 168,
+          "height": 189
+        },
+        "label": "r 0dp",
+        "detail": {
+          "cornerRadius": "0"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 42,
+          "y": 42,
+          "width": 385,
+          "height": 63
+        },
+        "label": "text 16sp/24",
+        "role": "Adaptive icon · light",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "16",
+          "lineHeight": "24",
+          "fontWeight": "500",
+          "fontFamily": "sans-serif"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 98,
+          "y": 337,
+          "width": 77,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "circle",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "sans-serif"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 313,
+          "y": 337,
+          "width": 110,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "squircle",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "sans-serif"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 542,
+          "y": 337,
+          "width": 114,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "rounded",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "sans-serif"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 772,
+          "y": 337,
+          "width": 94,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "square",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "sans-serif"
+        }
+      }
+    ],
+    "brand-appicon-dark__ideal__default__dark__compact": [
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 42,
+          "y": 137,
+          "width": 189,
+          "height": 189
+        },
+        "label": "r 36dp",
+        "detail": {
+          "cornerRadius": "36"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 273,
+          "y": 137,
+          "width": 189,
+          "height": 189
+        },
+        "label": "r 24dp",
+        "detail": {
+          "cornerRadius": "24"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 504,
+          "y": 137,
+          "width": 189,
+          "height": 189
+        },
+        "label": "r 8dp",
+        "detail": {
+          "cornerRadius": "8"
+        }
+      },
+      {
+        "kind": "layout",
+        "bounds": {
+          "x": 735,
+          "y": 137,
+          "width": 168,
+          "height": 189
+        },
+        "label": "r 0dp",
+        "detail": {
+          "cornerRadius": "0"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 42,
+          "y": 42,
+          "width": 385,
+          "height": 63
+        },
+        "label": "text 16sp/24",
+        "role": "Adaptive icon · dark",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "16",
+          "lineHeight": "24",
+          "fontWeight": "500",
+          "fontFamily": "sans-serif"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 98,
+          "y": 337,
+          "width": 77,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "circle",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "sans-serif"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 313,
+          "y": 337,
+          "width": 110,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "squircle",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "sans-serif"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 542,
+          "y": 337,
+          "width": 114,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "rounded",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "sans-serif"
+        }
+      },
+      {
+        "kind": "typography",
+        "bounds": {
+          "x": 772,
+          "y": 337,
+          "width": 94,
+          "height": 42
+        },
+        "label": "text 11sp/16",
+        "role": "square",
+        "detail": {
+          "token": "text",
+          "unit": "sp",
+          "fontSize": "11",
+          "lineHeight": "16",
+          "fontWeight": "500",
+          "fontFamily": "sans-serif"
+        }
+      }
+    ]
+  },
+  "references": {}
+}

@@ -1,0 +1,2024 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>homeassistant-remotecompose — PNG vs Remote Compose (JS player)</title>
+<style>
+  :root { color-scheme: light dark; --bg:#fff; --fg:#111; --muted:#666; --line:#e2e2e2; --card:#fafafa; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#0e0e0e; --fg:#eee; --muted:#9a9a9a; --line:#2a2a2a; --card:#161616; }
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; font:14px/1.4 system-ui, sans-serif; color:var(--fg); background:var(--bg); }
+  header { padding:16px 20px; border-bottom:1px solid var(--line); position:sticky; top:0; background:var(--bg); z-index:2; }
+  h1 { margin:0 0 4px; font-size:18px; }
+  .summary { color:var(--muted); }
+  .note { display:block; margin-top:4px; color:var(--muted); font-size:12px; }
+  .lede { padding:12px 20px; color:var(--muted); max-width:70ch; }
+  .wrap { overflow-x:auto; padding:0 20px 40px; }
+  table.grid { border-collapse:collapse; width:100%; min-width:720px; }
+  thead th { text-align:left; font-size:12px; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); padding:12px 8px; border-bottom:1px solid var(--line); position:sticky; top:64px; background:var(--bg); }
+  tbody tr { border-bottom:1px solid var(--line); }
+  th.meta { text-align:left; vertical-align:top; padding:12px 8px; width:200px; }
+  .name { font-weight:600; word-break:break-word; }
+  .group { color:var(--muted); font-size:12px; margin-top:2px; }
+  .scoreline { margin-top:8px; display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+  .scorelabel { color:var(--muted); font-size:11px; text-transform:uppercase; letter-spacing:.04em; min-width:56px; }
+  .score { display:inline-block; padding:2px 8px; border-radius:999px; font-variant-numeric:tabular-nums; font-weight:600; }
+  .score.good { background:#1a7f37; color:#fff; }
+  .score.ok   { background:#9a6700; color:#fff; }
+  .score.bad  { background:#b32424; color:#fff; }
+  .score.na   { background:#555; color:#fff; }
+  .px { display:inline-block; color:var(--muted); font-size:12px; font-variant-numeric:tabular-nums; }
+  .dims { display:inline-block; margin-top:8px; color:var(--muted); font-size:12px; }
+  .blanknote { margin-top:6px; color:var(--muted); font-size:11px; line-height:1.3; }
+  td { padding:12px 8px; vertical-align:top; }
+  figure.cell { margin:0; }
+  figcaption { font-size:11px; color:var(--muted); margin-bottom:4px; }
+  .cell img { display:block; max-width:280px; width:100%; height:auto; border:1px solid var(--line); border-radius:6px; background:
+    repeating-conic-gradient(#0000 0% 25%, color-mix(in srgb, var(--fg) 6%, transparent) 0% 50%) 50% / 20px 20px; }
+  .cell.diff img { background:#000; }
+  .difffold { margin-top:6px; }
+  .difffold > summary { cursor:pointer; color:var(--muted); font-size:11px; list-style:revert; }
+  .difffold[open] > summary { margin-bottom:4px; }
+  .difffold img { background:#000; max-width:280px; width:100%; height:auto; border:1px solid var(--line); border-radius:6px; }
+  .missing { width:120px; height:80px; display:grid; place-items:center; color:var(--muted); border:1px dashed var(--line); border-radius:6px; }
+  tr.unsupported .score { background:#555; }
+  .empty { padding:24px 20px; color:var(--muted); }
+  code { background:var(--card); padding:1px 5px; border-radius:4px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>homeassistant-remotecompose — PNG vs Remote Compose <span style="font-weight:400;color:var(--muted)">(JS player)</span></h1>
+  <div class="summary"><strong>JS player:</strong> 120 scored · mean mismatch <strong>8.85%</strong> · <strong>2</strong> unscored (blank reference)</div>
+  <span class="note">122 Remote Compose preview(s) · pixelmatch threshold 0.1 · theme light</span>
+</header>
+<p class="lede">Each preview's baked <strong>PNG</strong> (the offline Robolectric/Skiko render) next to the
+same <code>ir/*.rc</code> document as each player renders it, with a per-pixel diff after each.
+The <strong>JS player</strong> is the vendored TypeScript <code>RC.RcdPlayer</code> on a <code>&lt;canvas&gt;</code>.
+Mismatch % is the fraction of pixels each diff flags; rows sort worst-match-first. A preview whose baked PNG is <strong>fully transparent</strong> is shown but not scored:
+with nothing in the reference, a player that draws nothing would score a perfect 0% — so those rows
+read <code>no reference</code> and stay out of the means.</p>
+<div class="wrap">
+<table class="grid">
+  <thead><tr><th>preview</th><th>baked PNG</th><th>RC · JS player</th><th>pixel diff</th></tr></thead>
+  <tbody>
+<tr class="row rendered" data-pct="81.23809523809524" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">PictureEntity_AppMode_Light_picture-entity_app-mode__light_</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score bad">81.24%</span>
+      <span class="px">322,434 px</span>
+      
+    </div>
+    <span class="dims">945×420</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.PictureEntityStrategyPreviewsKt.PictureEntity_AppMode_Light_picture-entity_app-mode__light_.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.PictureEntityStrategyPreviewsKt.PictureEntity_AppMode_Light_picture-entity_app-mode__light_.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.PictureEntityStrategyPreviewsKt.PictureEntity_AppMode_Light_picture-entity_app-mode__light_.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="80.05165028974552" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">PictureEntity_AppMode_Dark_picture-entity_app-mode__dark_</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score bad">80.05%</span>
+      <span class="px">317,725 px</span>
+      
+    </div>
+    <span class="dims">945×420</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.PictureEntityStrategyPreviewsKt.PictureEntity_AppMode_Dark_picture-entity_app-mode__dark_.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.PictureEntityStrategyPreviewsKt.PictureEntity_AppMode_Dark_picture-entity_app-mode__dark_.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.PictureEntityStrategyPreviewsKt.PictureEntity_AppMode_Dark_picture-entity_app-mode__dark_.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="28.485534227110662" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">Clock_Seconds_clock__seconds_</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score bad">28.49%</span>
+      <span class="px">43,302 px</span>
+      
+    </div>
+    <span class="dims">578×263</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.CardPreviewsKt.Clock_Seconds_clock__seconds_.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.CardPreviewsKt.Clock_Seconds_clock__seconds_.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.CardPreviewsKt.Clock_Seconds_clock__seconds_.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="27.858906525573193" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">PictureEntity_IconFallback_Light_picture-entity_icon-fallback__light_</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score bad">27.86%</span>
+      <span class="px">110,572 px</span>
+      
+    </div>
+    <span class="dims">945×420</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.PictureEntityStrategyPreviewsKt.PictureEntity_IconFallback_Light_picture-entity_icon-fallback__light_.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.PictureEntityStrategyPreviewsKt.PictureEntity_IconFallback_Light_picture-entity_icon-fallback__light_.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.PictureEntityStrategyPreviewsKt.PictureEntity_IconFallback_Light_picture-entity_icon-fallback__light_.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="27.778940636083494" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">PictureEntity_Light_picture-entity__light_</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score bad">27.78%</span>
+      <span class="px">95,554 px</span>
+      
+    </div>
+    <span class="dims">819×420</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.CardPreviewsKt.PictureEntity_Light_picture-entity__light_.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.CardPreviewsKt.PictureEntity_Light_picture-entity__light_.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.CardPreviewsKt.PictureEntity_Light_picture-entity__light_.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="27.492862499506625" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">Clock_Zone_clock__zone_</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score bad">27.49%</span>
+      <span class="px">41,793 px</span>
+      
+    </div>
+    <span class="dims">578×263</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.CardPreviewsKt.Clock_Zone_clock__zone_.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.CardPreviewsKt.Clock_Zone_clock__zone_.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.CardPreviewsKt.Clock_Zone_clock__zone_.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="26.58875516018373" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">PictureEntity_Dark_picture-entity__dark_</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score bad">26.59%</span>
+      <span class="px">91,460 px</span>
+      
+    </div>
+    <span class="dims">819×420</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.CardPreviewsKt.PictureEntity_Dark_picture-entity__dark_.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.CardPreviewsKt.PictureEntity_Dark_picture-entity__dark_.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.CardPreviewsKt.PictureEntity_Dark_picture-entity__dark_.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="26.5297845373891" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">Clock_Light_clock__light_</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score bad">26.53%</span>
+      <span class="px">36,631 px</span>
+      
+    </div>
+    <span class="dims">525×263</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.CardPreviewsKt.Clock_Light_clock__light_.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.CardPreviewsKt.Clock_Light_clock__light_.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.CardPreviewsKt.Clock_Light_clock__light_.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="26.497917798298026" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">Clock_Dark_clock__dark_</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score bad">26.50%</span>
+      <span class="px">36,587 px</span>
+      
+    </div>
+    <span class="dims">525×263</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.CardPreviewsKt.Clock_Dark_clock__dark_.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.CardPreviewsKt.Clock_Dark_clock__dark_.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.CardPreviewsKt.Clock_Dark_clock__dark_.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="26.32908163265306" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">WeatherForecast_Light_weather-forecast__light_</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score bad">26.33%</span>
+      <span class="px">154,815 px</span>
+      
+    </div>
+    <span class="dims">1000×588</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.CardPreviewsKt.WeatherForecast_Light_weather-forecast__light_.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.CardPreviewsKt.WeatherForecast_Light_weather-forecast__light_.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.CardPreviewsKt.WeatherForecast_Light_weather-forecast__light_.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="21.781183061459878" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">Statistic_Light_statistic__light_</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score bad">21.78%</span>
+      <span class="px">39,657 px</span>
+      
+    </div>
+    <span class="dims">630×289</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.CardPreviewsKt.Statistic_Light_statistic__light_.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.CardPreviewsKt.Statistic_Light_statistic__light_.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.CardPreviewsKt.Statistic_Light_statistic__light_.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="21.763607403745812" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">Statistic_Dark_statistic__dark_</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score bad">21.76%</span>
+      <span class="px">39,625 px</span>
+      
+    </div>
+    <span class="dims">630×289</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.CardPreviewsKt.Statistic_Dark_statistic__dark_.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.CardPreviewsKt.Statistic_Dark_statistic__dark_.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.CardPreviewsKt.Statistic_Dark_statistic__dark_.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="15.97433728144388" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">HistoryGraphNoData_Light_history-graph_no-data__light_</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score bad">15.97%</span>
+      <span class="px">79,303 px</span>
+      
+    </div>
+    <span class="dims">788×630</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.CardPreviewsKt.HistoryGraphNoData_Light_history-graph_no-data__light_.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.CardPreviewsKt.HistoryGraphNoData_Light_history-graph_no-data__light_.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.CardPreviewsKt.HistoryGraphNoData_Light_history-graph_no-data__light_.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="15.859116912416404" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">HistoryGraphNoData_Dark_history-graph_no-data__dark_</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score bad">15.86%</span>
+      <span class="px">78,731 px</span>
+      
+    </div>
+    <span class="dims">788×630</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.CardPreviewsKt.HistoryGraphNoData_Dark_history-graph_no-data__dark_.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.CardPreviewsKt.HistoryGraphNoData_Dark_history-graph_no-data__dark_.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.CardPreviewsKt.HistoryGraphNoData_Dark_history-graph_no-data__dark_.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="15.682993197278911" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">WeatherForecast_Dark_weather-forecast__dark_</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score bad">15.68%</span>
+      <span class="px">92,216 px</span>
+      
+    </div>
+    <span class="dims">1000×588</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.CardPreviewsKt.WeatherForecast_Dark_weather-forecast__dark_.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.CardPreviewsKt.WeatherForecast_Dark_weather-forecast__dark_.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.CardPreviewsKt.WeatherForecast_Dark_weather-forecast__dark_.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="15.517595307917889" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">BambuAms_Light_bambu_ams__light_</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score bad">15.52%</span>
+      <span class="px">52,915 px</span>
+      
+    </div>
+    <span class="dims">1000×341</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.CardPreviewsKt.BambuAms_Light_bambu_ams__light_.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.CardPreviewsKt.BambuAms_Light_bambu_ams__light_.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.CardPreviewsKt.BambuAms_Light_bambu_ams__light_.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="15.437010630848558" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">Markdown_Responsive_Light_markdown_responsive_narrow</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score bad">15.44%</span>
+      <span class="px">38,800 px</span>
+      
+    </div>
+    <span class="dims">683×368</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.ResponsiveCardPreviewsKt.Markdown_Responsive_Light_markdown_responsive_narrow.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.ResponsiveCardPreviewsKt.Markdown_Responsive_Light_markdown_responsive_narrow.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.ResponsiveCardPreviewsKt.Markdown_Responsive_Light_markdown_responsive_narrow.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="15.358070411696806" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">Unsupported_Light_unsupported__light_</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score bad">15.36%</span>
+      <span class="px">12,773 px</span>
+      
+    </div>
+    <span class="dims">368×226</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.CardPreviewsKt.Unsupported_Light_unsupported__light_.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.CardPreviewsKt.Unsupported_Light_unsupported__light_.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.CardPreviewsKt.Unsupported_Light_unsupported__light_.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="15.328010773374375" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">Unsupported_Dark_unsupported__dark_</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score bad">15.33%</span>
+      <span class="px">12,748 px</span>
+      
+    </div>
+    <span class="dims">368×226</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.CardPreviewsKt.Unsupported_Dark_unsupported__dark_.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.CardPreviewsKt.Unsupported_Dark_unsupported__dark_.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.CardPreviewsKt.Unsupported_Dark_unsupported__dark_.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="14.875953079178885" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">BambuAms_Dark_bambu_ams__dark_</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score bad">14.88%</span>
+      <span class="px">50,727 px</span>
+      
+    </div>
+    <span class="dims">1000×341</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.CardPreviewsKt.BambuAms_Dark_bambu_ams__dark_.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.CardPreviewsKt.BambuAms_Dark_bambu_ams__dark_.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.CardPreviewsKt.BambuAms_Dark_bambu_ams__dark_.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="14.21204118201627" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">VerticalStack_Dark_vertical-stack__dark_</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score bad">14.21%</span>
+      <span class="px">22,763 px</span>
+      
+    </div>
+    <span class="dims">609×263</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.CardPreviewsKt.VerticalStack_Dark_vertical-stack__dark_.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.CardPreviewsKt.VerticalStack_Dark_vertical-stack__dark_.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.CardPreviewsKt.VerticalStack_Dark_vertical-stack__dark_.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="14.211684782608696" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">Markdown_Responsive_Light_markdown_responsive_standard</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score bad">14.21%</span>
+      <span class="px">52,299 px</span>
+      
+    </div>
+    <span class="dims">1000×368</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.ResponsiveCardPreviewsKt.Markdown_Responsive_Light_markdown_responsive_standard.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.ResponsiveCardPreviewsKt.Markdown_Responsive_Light_markdown_responsive_standard.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.ResponsiveCardPreviewsKt.Markdown_Responsive_Light_markdown_responsive_standard.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="14.049086266209644" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">VerticalStack_Light_vertical-stack__light_</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score bad">14.05%</span>
+      <span class="px">22,502 px</span>
+      
+    </div>
+    <span class="dims">609×263</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.CardPreviewsKt.VerticalStack_Light_vertical-stack__light_.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.CardPreviewsKt.VerticalStack_Light_vertical-stack__light_.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.CardPreviewsKt.VerticalStack_Light_vertical-stack__light_.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="13.362283737024221" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">Calendar_Light_calendar__light_</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score bad">13.36%</span>
+      <span class="px">77,234 px</span>
+      
+    </div>
+    <span class="dims">1000×578</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.CardPreviewsKt.Calendar_Light_calendar__light_.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.CardPreviewsKt.Calendar_Light_calendar__light_.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.CardPreviewsKt.Calendar_Light_calendar__light_.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="13.333044982698961" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">Calendar_Dark_calendar__dark_</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score bad">13.33%</span>
+      <span class="px">77,065 px</span>
+      
+    </div>
+    <span class="dims">1000×578</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.CardPreviewsKt.Calendar_Dark_calendar__dark_.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.CardPreviewsKt.Calendar_Dark_calendar__dark_.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.CardPreviewsKt.Calendar_Dark_calendar__dark_.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="12.287723785166241" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">EntityFilter_Light_entity-filter__light_</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score bad">12.29%</span>
+      <span class="px">48,045 px</span>
+      
+    </div>
+    <span class="dims">1000×391</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.CardPreviewsKt.EntityFilter_Light_entity-filter__light_.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.CardPreviewsKt.EntityFilter_Light_entity-filter__light_.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.CardPreviewsKt.EntityFilter_Light_entity-filter__light_.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="12.276726342710997" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">EntityFilter_Dark_entity-filter__dark_</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score bad">12.28%</span>
+      <span class="px">48,002 px</span>
+      
+    </div>
+    <span class="dims">1000×391</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.CardPreviewsKt.EntityFilter_Dark_entity-filter__dark_.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.CardPreviewsKt.EntityFilter_Dark_entity-filter__dark_.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.CardPreviewsKt.EntityFilter_Dark_entity-filter__dark_.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="12.139466479328208" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">Glance_Responsive_Dark_glance_responsive_narrow</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score bad">12.14%</span>
+      <span class="px">36,979 px</span>
+      
+    </div>
+    <span class="dims">683×446</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.ResponsiveCardPreviewsKt.Glance_Responsive_Dark_glance_responsive_narrow.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.ResponsiveCardPreviewsKt.Glance_Responsive_Dark_glance_responsive_narrow.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.ResponsiveCardPreviewsKt.Glance_Responsive_Dark_glance_responsive_narrow.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="11.994373401534526" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">Glance_Light_glance__light_</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score bad">11.99%</span>
+      <span class="px">46,898 px</span>
+      
+    </div>
+    <span class="dims">1000×391</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.CardPreviewsKt.Glance_Light_glance__light_.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.CardPreviewsKt.Glance_Light_glance__light_.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.CardPreviewsKt.Glance_Light_glance__light_.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="11.974936061381074" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">Glance_Dark_glance__dark_</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score bad">11.97%</span>
+      <span class="px">46,822 px</span>
+      
+    </div>
+    <span class="dims">1000×391</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.CardPreviewsKt.Glance_Dark_glance__dark_.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.CardPreviewsKt.Glance_Dark_glance__dark_.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.CardPreviewsKt.Glance_Dark_glance__dark_.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="11.282330190959632" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">Tile_Responsive_Dark_tile_responsive_narrow</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score bad">11.28%</span>
+      <span class="px">5,601 px</span>
+      
+    </div>
+    <span class="dims">394×126</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.ResponsiveCardPreviewsKt.Tile_Responsive_Dark_tile_responsive_narrow.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.ResponsiveCardPreviewsKt.Tile_Responsive_Dark_tile_responsive_narrow.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.ResponsiveCardPreviewsKt.Tile_Responsive_Dark_tile_responsive_narrow.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="11.044843049327355" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">Glance_Responsive_Dark_glance_responsive_standard</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score bad">11.04%</span>
+      <span class="px">49,260 px</span>
+      
+    </div>
+    <span class="dims">1000×446</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.ResponsiveCardPreviewsKt.Glance_Responsive_Dark_glance_responsive_standard.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.ResponsiveCardPreviewsKt.Glance_Responsive_Dark_glance_responsive_standard.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.ResponsiveCardPreviewsKt.Glance_Responsive_Dark_glance_responsive_standard.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="10.621342902401965" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">Tile_Responsive_Dark_tile_responsive_standard</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score bad">10.62%</span>
+      <span class="px">6,571 px</span>
+      
+    </div>
+    <span class="dims">491×126</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.ResponsiveCardPreviewsKt.Tile_Responsive_Dark_tile_responsive_standard.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.ResponsiveCardPreviewsKt.Tile_Responsive_Dark_tile_responsive_standard.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.ResponsiveCardPreviewsKt.Tile_Responsive_Dark_tile_responsive_standard.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="10.385080788668233" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">Glance_Responsive_Dark_glance_responsive_wide</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score bad">10.39%</span>
+      <span class="px">58,360 px</span>
+      
+    </div>
+    <span class="dims">1260×446</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.ResponsiveCardPreviewsKt.Glance_Responsive_Dark_glance_responsive_wide.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.ResponsiveCardPreviewsKt.Glance_Responsive_Dark_glance_responsive_wide.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.ResponsiveCardPreviewsKt.Glance_Responsive_Dark_glance_responsive_wide.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="9.981979695431471" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">Logbook_Light_logbook__light_</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score ok">9.98%</span>
+      <span class="px">39,329 px</span>
+      
+    </div>
+    <span class="dims">1000×394</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.CardPreviewsKt.Logbook_Light_logbook__light_.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.CardPreviewsKt.Logbook_Light_logbook__light_.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.CardPreviewsKt.Logbook_Light_logbook__light_.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="9.96751269035533" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">Logbook_Dark_logbook__dark_</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score ok">9.97%</span>
+      <span class="px">39,272 px</span>
+      
+    </div>
+    <span class="dims">1000×394</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.CardPreviewsKt.Logbook_Dark_logbook__dark_.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.CardPreviewsKt.Logbook_Dark_logbook__dark_.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.CardPreviewsKt.Logbook_Dark_logbook__dark_.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="9.866601594273629" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">Tile_Responsive_Dark_tile_responsive_wide</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score ok">9.87%</span>
+      <span class="px">8,491 px</span>
+      
+    </div>
+    <span class="dims">683×126</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.ResponsiveCardPreviewsKt.Tile_Responsive_Dark_tile_responsive_wide.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.ResponsiveCardPreviewsKt.Tile_Responsive_Dark_tile_responsive_wide.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.ResponsiveCardPreviewsKt.Tile_Responsive_Dark_tile_responsive_wide.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="9.193807112088388" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">Tile_TemperatureSensor_tile___sensor_temperature</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score ok">9.19%</span>
+      <span class="px">5,101 px</span>
+      
+    </div>
+    <span class="dims">491×113</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.TileCardPreviewsKt.Tile_TemperatureSensor_tile___sensor_temperature.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.TileCardPreviewsKt.Tile_TemperatureSensor_tile___sensor_temperature.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.TileCardPreviewsKt.Tile_TemperatureSensor_tile___sensor_temperature.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="8.97391993944091" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">Tile_TemperatureSensor_Dark_tile___sensor_temperature__dark_</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score ok">8.97%</span>
+      <span class="px">4,979 px</span>
+      
+    </div>
+    <span class="dims">491×113</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.TileCardPreviewsKt.Tile_TemperatureSensor_Dark_tile___sensor_temperature__dark_.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.TileCardPreviewsKt.Tile_TemperatureSensor_Dark_tile___sensor_temperature__dark_.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.TileCardPreviewsKt.Tile_TemperatureSensor_Dark_tile___sensor_temperature__dark_.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="8.637420718816067" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">HistoryGraph_Light_history-graph__light_</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score ok">8.64%</span>
+      <span class="px">40,855 px</span>
+      
+    </div>
+    <span class="dims">1000×473</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.CardPreviewsKt.HistoryGraph_Light_history-graph__light_.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.CardPreviewsKt.HistoryGraph_Light_history-graph__light_.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.CardPreviewsKt.HistoryGraph_Light_history-graph__light_.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="8.618711656441718" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">BambuPrintControl_Light_bambu_print-control__light_</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score ok">8.62%</span>
+      <span class="px">28,097 px</span>
+      
+    </div>
+    <span class="dims">1000×326</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.CardPreviewsKt.BambuPrintControl_Light_bambu_print-control__light_.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.CardPreviewsKt.BambuPrintControl_Light_bambu_print-control__light_.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.CardPreviewsKt.BambuPrintControl_Light_bambu_print-control__light_.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="8.546402877697842" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">Markdown_Light_markdown__light_</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score ok">8.55%</span>
+      <span class="px">23,759 px</span>
+      
+    </div>
+    <span class="dims">1000×278</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.CardPreviewsKt.Markdown_Light_markdown__light_.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.CardPreviewsKt.Markdown_Light_markdown__light_.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.CardPreviewsKt.Markdown_Light_markdown__light_.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="8.533453237410072" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">Markdown_Dark_markdown__dark_</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score ok">8.53%</span>
+      <span class="px">23,723 px</span>
+      
+    </div>
+    <span class="dims">1000×278</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.CardPreviewsKt.Markdown_Dark_markdown__dark_.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.CardPreviewsKt.Markdown_Dark_markdown__dark_.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.CardPreviewsKt.Markdown_Dark_markdown__dark_.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="8.38680981595092" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">BambuPrintControl_Dark_bambu_print-control__dark_</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score ok">8.39%</span>
+      <span class="px">27,341 px</span>
+      
+    </div>
+    <span class="dims">1000×326</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.CardPreviewsKt.BambuPrintControl_Dark_bambu_print-control__dark_.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.CardPreviewsKt.BambuPrintControl_Dark_bambu_print-control__dark_.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.CardPreviewsKt.BambuPrintControl_Dark_bambu_print-control__dark_.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="8.25877378435518" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">HistoryGraph_Dark_history-graph__dark_</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score ok">8.26%</span>
+      <span class="px">39,064 px</span>
+      
+    </div>
+    <span class="dims">1000×473</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.CardPreviewsKt.HistoryGraph_Dark_history-graph__dark_.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.CardPreviewsKt.HistoryGraph_Dark_history-graph__dark_.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.CardPreviewsKt.HistoryGraph_Dark_history-graph__dark_.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="7.829784087548063" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">Area_Light_area__light_</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score ok">7.83%</span>
+      <span class="px">21,178 px</span>
+      
+    </div>
+    <span class="dims">735×368</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.CardPreviewsKt.Area_Light_area__light_.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.CardPreviewsKt.Area_Light_area__light_.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.CardPreviewsKt.Area_Light_area__light_.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="7.743619047619047" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">StatisticsGraph_Light_statistics-graph__light_</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score ok">7.74%</span>
+      <span class="px">40,654 px</span>
+      
+    </div>
+    <span class="dims">1000×525</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.CardPreviewsKt.StatisticsGraph_Light_statistics-graph__light_.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.CardPreviewsKt.StatisticsGraph_Light_statistics-graph__light_.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.CardPreviewsKt.StatisticsGraph_Light_statistics-graph__light_.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="7.62089896891899" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">Entities_Responsive_Light_entities_responsive_narrow</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score ok">7.62%</span>
+      <span class="px">24,620 px</span>
+      
+    </div>
+    <span class="dims">683×473</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.ResponsiveCardPreviewsKt.Entities_Responsive_Light_entities_responsive_narrow.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.ResponsiveCardPreviewsKt.Entities_Responsive_Light_entities_responsive_narrow.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.ResponsiveCardPreviewsKt.Entities_Responsive_Light_entities_responsive_narrow.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="7.582786754119341" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">Garage_TwoEntities_Light_garage_two-entities__light_</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score ok">7.58%</span>
+      <span class="px">49,770 px</span>
+      
+    </div>
+    <span class="dims">735×893</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.GarageShutterCardPreviewsKt.Garage_TwoEntities_Light_garage_two-entities__light_.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.GarageShutterCardPreviewsKt.Garage_TwoEntities_Light_garage_two-entities__light_.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.GarageShutterCardPreviewsKt.Garage_TwoEntities_Light_garage_two-entities__light_.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="7.523238095238095" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">StatisticsGraph_Dark_statistics-graph__dark_</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score ok">7.52%</span>
+      <span class="px">39,497 px</span>
+      
+    </div>
+    <span class="dims">1000×525</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.CardPreviewsKt.StatisticsGraph_Dark_statistics-graph__dark_.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.CardPreviewsKt.StatisticsGraph_Dark_statistics-graph__dark_.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.CardPreviewsKt.StatisticsGraph_Dark_statistics-graph__dark_.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="7.368253968253968" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">BambuPrintStatus_Light_bambu_print-status__light_</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score ok">7.37%</span>
+      <span class="px">32,494 px</span>
+      
+    </div>
+    <span class="dims">1000×441</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.CardPreviewsKt.BambuPrintStatus_Light_bambu_print-status__light_.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.CardPreviewsKt.BambuPrintStatus_Light_bambu_print-status__light_.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.CardPreviewsKt.BambuPrintStatus_Light_bambu_print-status__light_.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="7.211254066844129" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">Area_Dark_area__dark_</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score ok">7.21%</span>
+      <span class="px">19,505 px</span>
+      
+    </div>
+    <span class="dims">735×368</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.CardPreviewsKt.Area_Dark_area__dark_.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.CardPreviewsKt.Area_Dark_area__dark_.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.CardPreviewsKt.Area_Dark_area__dark_.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="7.00352222107117" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">Shutter_Light_shutter__light_</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score ok">7.00%</span>
+      <span class="px">40,563 px</span>
+      
+    </div>
+    <span class="dims">735×788</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.ShutterCardPreviewsKt.Shutter_Light_shutter__light_.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.ShutterCardPreviewsKt.Shutter_Light_shutter__light_.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.ShutterCardPreviewsKt.Shutter_Light_shutter__light_.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="6.949886621315192" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">BambuPrintStatus_Dark_bambu_print-status__dark_</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score ok">6.95%</span>
+      <span class="px">30,649 px</span>
+      
+    </div>
+    <span class="dims">1000×441</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.CardPreviewsKt.BambuPrintStatus_Dark_bambu_print-status__dark_.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.CardPreviewsKt.BambuPrintStatus_Dark_bambu_print-status__dark_.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.CardPreviewsKt.BambuPrintStatus_Dark_bambu_print-status__dark_.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="6.688583509513742" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">Entities_Responsive_Light_entities_responsive_standard</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score ok">6.69%</span>
+      <span class="px">31,637 px</span>
+      
+    </div>
+    <span class="dims">1000×473</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.ResponsiveCardPreviewsKt.Entities_Responsive_Light_entities_responsive_standard.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.ResponsiveCardPreviewsKt.Entities_Responsive_Light_entities_responsive_standard.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.ResponsiveCardPreviewsKt.Entities_Responsive_Light_entities_responsive_standard.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="6.3889591234723975" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">Garage_Animation_Light_garage-anim__light_</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score ok">6.39%</span>
+      <span class="px">15,161 px</span>
+      
+    </div>
+    <span class="dims">525×452</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.GarageShutterCardPreviewsKt.Garage_Animation_Light_garage-anim__light_.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.GarageShutterCardPreviewsKt.Garage_Animation_Light_garage-anim__light_.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.GarageShutterCardPreviewsKt.Garage_Animation_Light_garage-anim__light_.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="6.3889591234723975" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">Garage_State_Light_garage-state__light_</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score ok">6.39%</span>
+      <span class="px">15,161 px</span>
+      
+    </div>
+    <span class="dims">525×452</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.GarageShutterCardPreviewsKt.Garage_State_Light_garage-state__light_.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.GarageShutterCardPreviewsKt.Garage_State_Light_garage-state__light_.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.GarageShutterCardPreviewsKt.Garage_State_Light_garage-state__light_.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="6.370294784580499" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">MediaControl_Light_media-control__light_</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score ok">6.37%</span>
+      <span class="px">28,093 px</span>
+      
+    </div>
+    <span class="dims">1000×441</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.CardPreviewsKt.MediaControl_Light_media-control__light_.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.CardPreviewsKt.MediaControl_Light_media-control__light_.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.CardPreviewsKt.MediaControl_Light_media-control__light_.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="6.286831448121771" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">Sensor_Light_sensor__light_</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score ok">6.29%</span>
+      <span class="px">18,008 px</span>
+      
+    </div>
+    <span class="dims">840×341</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.CardPreviewsKt.Sensor_Light_sensor__light_.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.CardPreviewsKt.Sensor_Light_sensor__light_.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.CardPreviewsKt.Sensor_Light_sensor__light_.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="6.2770562770562774" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">Sensor_Dark_sensor__dark_</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score ok">6.28%</span>
+      <span class="px">17,980 px</span>
+      
+    </div>
+    <span class="dims">840×341</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.CardPreviewsKt.Sensor_Dark_sensor__dark_.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.CardPreviewsKt.Sensor_Dark_sensor__dark_.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.CardPreviewsKt.Sensor_Dark_sensor__dark_.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="6.2673469387755105" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">MediaControl_Dark_media-control__dark_</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score ok">6.27%</span>
+      <span class="px">27,639 px</span>
+      
+    </div>
+    <span class="dims">1000×441</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.CardPreviewsKt.MediaControl_Dark_media-control__dark_.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.CardPreviewsKt.MediaControl_Dark_media-control__dark_.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.CardPreviewsKt.MediaControl_Dark_media-control__dark_.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="5.988621997471555" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">Garage_Animation_Dark_garage-anim__dark_</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score ok">5.99%</span>
+      <span class="px">14,211 px</span>
+      
+    </div>
+    <span class="dims">525×452</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.GarageShutterCardPreviewsKt.Garage_Animation_Dark_garage-anim__dark_.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.GarageShutterCardPreviewsKt.Garage_Animation_Dark_garage-anim__dark_.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.GarageShutterCardPreviewsKt.Garage_Animation_Dark_garage-anim__dark_.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="5.988621997471555" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">Garage_State_Dark_garage-state__dark_</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score ok">5.99%</span>
+      <span class="px">14,211 px</span>
+      
+    </div>
+    <span class="dims">525×452</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.GarageShutterCardPreviewsKt.Garage_State_Dark_garage-state__dark_.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.GarageShutterCardPreviewsKt.Garage_State_Dark_garage-state__dark_.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.GarageShutterCardPreviewsKt.Garage_State_Dark_garage-state__dark_.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="5.962616195174335" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">Entities_Responsive_Light_entities_responsive_wide</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score ok">5.96%</span>
+      <span class="px">35,536 px</span>
+      
+    </div>
+    <span class="dims">1260×473</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.ResponsiveCardPreviewsKt.Entities_Responsive_Light_entities_responsive_wide.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.ResponsiveCardPreviewsKt.Entities_Responsive_Light_entities_responsive_wide.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.ResponsiveCardPreviewsKt.Entities_Responsive_Light_entities_responsive_wide.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="5.537095017178204" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">Garage_TwoEntities_Dark_garage_two-entities__dark_</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score ok">5.54%</span>
+      <span class="px">36,343 px</span>
+      
+    </div>
+    <span class="dims">735×893</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.GarageShutterCardPreviewsKt.Garage_TwoEntities_Dark_garage_two-entities__dark_.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.GarageShutterCardPreviewsKt.Garage_TwoEntities_Dark_garage_two-entities__dark_.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.GarageShutterCardPreviewsKt.Garage_TwoEntities_Dark_garage_two-entities__dark_.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="5.409869830285055" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">TodoList_Light_todo-list__light_</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score ok">5.41%</span>
+      <span class="px">26,266 px</span>
+      
+    </div>
+    <span class="dims">840×578</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.CardPreviewsKt.TodoList_Light_todo-list__light_.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.CardPreviewsKt.TodoList_Light_todo-list__light_.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.CardPreviewsKt.TodoList_Light_todo-list__light_.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="5.314414414414414" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">Entities_Light_entities__light_</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score ok">5.31%</span>
+      <span class="px">23,596 px</span>
+      
+    </div>
+    <span class="dims">1000×444</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.CardPreviewsKt.Entities_Light_entities__light_.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.CardPreviewsKt.Entities_Light_entities__light_.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.CardPreviewsKt.Entities_Light_entities__light_.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="5.206170703575548" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">TodoList_Dark_todo-list__dark_</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score ok">5.21%</span>
+      <span class="px">25,277 px</span>
+      
+    </div>
+    <span class="dims">840×578</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.CardPreviewsKt.TodoList_Dark_todo-list__dark_.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.CardPreviewsKt.TodoList_Dark_todo-list__dark_.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.CardPreviewsKt.TodoList_Dark_todo-list__dark_.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="4.860135135135135" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">Entities_Dark_entities__dark_</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score ok">4.86%</span>
+      <span class="px">21,579 px</span>
+      
+    </div>
+    <span class="dims">1000×444</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.CardPreviewsKt.Entities_Dark_entities__dark_.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.CardPreviewsKt.Entities_Dark_entities__dark_.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.CardPreviewsKt.Entities_Dark_entities__dark_.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="4.839320152118667" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">Tile_Lock_States_tile_lock__light_</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score ok">4.84%</span>
+      <span class="px">2,685 px</span>
+      
+    </div>
+    <span class="dims">491×113</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.CardPreviewsKt.Tile_Lock_States_tile_lock__light_.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.CardPreviewsKt.Tile_Lock_States_tile_lock__light_.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.CardPreviewsKt.Tile_Lock_States_tile_lock__light_.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="3.953979387346121" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">AlarmPanel_Light_alarm-panel__light_</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score ok">3.95%</span>
+      <span class="px">33,147 px</span>
+      
+    </div>
+    <span class="dims">840×998</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.CardPreviewsKt.AlarmPanel_Light_alarm-panel__light_.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.CardPreviewsKt.AlarmPanel_Light_alarm-panel__light_.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.CardPreviewsKt.AlarmPanel_Light_alarm-panel__light_.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="3.94384006107453" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">AlarmPanel_Dark_alarm-panel__dark_</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score ok">3.94%</span>
+      <span class="px">33,062 px</span>
+      
+    </div>
+    <span class="dims">840×998</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.CardPreviewsKt.AlarmPanel_Dark_alarm-panel__dark_.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.CardPreviewsKt.AlarmPanel_Dark_alarm-panel__dark_.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.CardPreviewsKt.AlarmPanel_Dark_alarm-panel__dark_.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="3.828861493836113" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">Shutter_Dark_shutter__dark_</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score ok">3.83%</span>
+      <span class="px">22,176 px</span>
+      
+    </div>
+    <span class="dims">735×788</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.ShutterCardPreviewsKt.Shutter_Dark_shutter__dark_.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.ShutterCardPreviewsKt.Shutter_Dark_shutter__dark_.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.ShutterCardPreviewsKt.Shutter_Dark_shutter__dark_.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="3.8021141649048626" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">PictureElements_Light_picture-elements__light_</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score ok">3.80%</span>
+      <span class="px">17,984 px</span>
+      
+    </div>
+    <span class="dims">1000×473</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.CardPreviewsKt.PictureElements_Light_picture-elements__light_.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.CardPreviewsKt.PictureElements_Light_picture-elements__light_.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.CardPreviewsKt.PictureElements_Light_picture-elements__light_.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="3.3347851335656213" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">LightCard_Light_light_card__light_</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score ok">3.33%</span>
+      <span class="px">13,782 px</span>
+      
+    </div>
+    <span class="dims">630×656</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.CardPreviewsKt.LightCard_Light_light_card__light_.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.CardPreviewsKt.LightCard_Light_light_card__light_.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.CardPreviewsKt.LightCard_Light_light_card__light_.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="3.318747688894367" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">HorizontalStack_Light_horizontal-stack__light_</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score ok">3.32%</span>
+      <span class="px">3,231 px</span>
+      
+    </div>
+    <span class="dims">399×244</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.CardPreviewsKt.HorizontalStack_Light_horizontal-stack__light_.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.CardPreviewsKt.HorizontalStack_Light_horizontal-stack__light_.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.CardPreviewsKt.HorizontalStack_Light_horizontal-stack__light_.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="3.278481697096408" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">Tile_Cover_States_tile_cover__light_</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score ok">3.28%</span>
+      <span class="px">1,819 px</span>
+      
+    </div>
+    <span class="dims">491×113</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.CardPreviewsKt.Tile_Cover_States_tile_cover__light_.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.CardPreviewsKt.Tile_Cover_States_tile_cover__light_.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.CardPreviewsKt.Tile_Cover_States_tile_cover__light_.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="3.260617025799212" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">Grid_Light_grid__light_</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score ok">3.26%</span>
+      <span class="px">6,596 px</span>
+      
+    </div>
+    <span class="dims">819×247</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.CardPreviewsKt.Grid_Light_grid__light_.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.CardPreviewsKt.Grid_Light_grid__light_.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.CardPreviewsKt.Grid_Light_grid__light_.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="3.232466411931468" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">HorizontalStack_Dark_horizontal-stack__dark_</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score ok">3.23%</span>
+      <span class="px">3,147 px</span>
+      
+    </div>
+    <span class="dims">399×244</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.CardPreviewsKt.HorizontalStack_Dark_horizontal-stack__dark_.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.CardPreviewsKt.HorizontalStack_Dark_horizontal-stack__dark_.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.CardPreviewsKt.HorizontalStack_Dark_horizontal-stack__dark_.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="3.183006826731523" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">Grid_Dark_grid__dark_</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score ok">3.18%</span>
+      <span class="px">6,439 px</span>
+      
+    </div>
+    <span class="dims">819×247</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.CardPreviewsKt.Grid_Dark_grid__dark_.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.CardPreviewsKt.Grid_Dark_grid__dark_.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.CardPreviewsKt.Grid_Dark_grid__dark_.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="2.982708633168554" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">Thermostat_Light_thermostat__light_</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score ok">2.98%</span>
+      <span class="px">14,300 px</span>
+      
+    </div>
+    <span class="dims">630×761</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.CardPreviewsKt.Thermostat_Light_thermostat__light_.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.CardPreviewsKt.Thermostat_Light_thermostat__light_.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.CardPreviewsKt.Thermostat_Light_thermostat__light_.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="2.8508854264439023" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">Humidifier_Light_humidifier__light_</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score ok">2.85%</span>
+      <span class="px">13,668 px</span>
+      
+    </div>
+    <span class="dims">630×761</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.CardPreviewsKt.Humidifier_Light_humidifier__light_.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.CardPreviewsKt.Humidifier_Light_humidifier__light_.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.CardPreviewsKt.Humidifier_Light_humidifier__light_.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="2.730110336817654" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">LightCard_Dark_light_card__dark_</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score ok">2.73%</span>
+      <span class="px">11,283 px</span>
+      
+    </div>
+    <span class="dims">630×656</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.CardPreviewsKt.LightCard_Dark_light_card__dark_.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.CardPreviewsKt.LightCard_Dark_light_card__dark_.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.CardPreviewsKt.LightCard_Dark_light_card__dark_.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="2.7107402267361174" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">Tile_LightOn_Dark_tile___light_on__dark_</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score ok">2.71%</span>
+      <span class="px">1,504 px</span>
+      
+    </div>
+    <span class="dims">491×113</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.TileCardPreviewsKt.Tile_LightOn_Dark_tile___light_on__dark_.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.TileCardPreviewsKt.Tile_LightOn_Dark_tile___light_on__dark_.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.TileCardPreviewsKt.Tile_LightOn_Dark_tile___light_on__dark_.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="2.3268388515401113" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">Tile_Light_States_tile_light__light_</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score ok">2.33%</span>
+      <span class="px">1,291 px</span>
+      
+    </div>
+    <span class="dims">491×113</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.CardPreviewsKt.Tile_Light_States_tile_light__light_.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.CardPreviewsKt.Tile_Light_States_tile_light__light_.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.CardPreviewsKt.Tile_Light_States_tile_light__light_.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="2.3023561156657397" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">Gauge_Light_gauge__light_</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score ok">2.30%</span>
+      <span class="px">4,454 px</span>
+      
+    </div>
+    <span class="dims">491×394</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.CardPreviewsKt.Gauge_Light_gauge__light_.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.CardPreviewsKt.Gauge_Light_gauge__light_.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.CardPreviewsKt.Gauge_Light_gauge__light_.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="2.290845378887429" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">Thermostat_Dark_thermostat__dark_</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score ok">2.29%</span>
+      <span class="px">10,983 px</span>
+      
+    </div>
+    <span class="dims">630×761</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.CardPreviewsKt.Thermostat_Dark_thermostat__dark_.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.CardPreviewsKt.Thermostat_Dark_thermostat__dark_.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.CardPreviewsKt.Thermostat_Dark_thermostat__dark_.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="2.2767857142857144" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">Picture_Light_picture__light_</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score ok">2.28%</span>
+      <span class="px">7,038 px</span>
+      
+    </div>
+    <span class="dims">840×368</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.CardPreviewsKt.Picture_Light_picture__light_.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.CardPreviewsKt.Picture_Light_picture__light_.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.CardPreviewsKt.Picture_Light_picture__light_.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="2.251139988825406" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">Tile_LightOn_tile___light_on</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score ok">2.25%</span>
+      <span class="px">1,249 px</span>
+      
+    </div>
+    <span class="dims">491×113</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.TileCardPreviewsKt.Tile_LightOn_tile___light_on.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.TileCardPreviewsKt.Tile_LightOn_tile___light_on.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.TileCardPreviewsKt.Tile_LightOn_tile___light_on.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="1.9746296277151156" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">Gauge_Animation_Light_gauge-anim__light_</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score good">1.97%</span>
+      <span class="px">3,820 px</span>
+      
+    </div>
+    <span class="dims">491×394</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.AnimationPreviewsKt.Gauge_Animation_Light_gauge-anim__light_.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.AnimationPreviewsKt.Gauge_Animation_Light_gauge-anim__light_.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.AnimationPreviewsKt.Gauge_Animation_Light_gauge-anim__light_.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="1.9231170348121729" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">Humidifier_Dark_humidifier__dark_</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score good">1.92%</span>
+      <span class="px">9,220 px</span>
+      
+    </div>
+    <span class="dims">630×761</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.CardPreviewsKt.Humidifier_Dark_humidifier__dark_.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.CardPreviewsKt.Humidifier_Dark_humidifier__dark_.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.CardPreviewsKt.Humidifier_Dark_humidifier__dark_.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="1.8072562358276645" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">PictureGlance_Light_picture-glance__light_</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score good">1.81%</span>
+      <span class="px">7,970 px</span>
+      
+    </div>
+    <span class="dims">1000×441</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.CardPreviewsKt.PictureGlance_Light_picture-glance__light_.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.CardPreviewsKt.PictureGlance_Light_picture-glance__light_.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.CardPreviewsKt.PictureGlance_Light_picture-glance__light_.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="1.7978434149720346" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">Gauge_Dark_gauge__dark_</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score good">1.80%</span>
+      <span class="px">3,478 px</span>
+      
+    </div>
+    <span class="dims">491×394</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.CardPreviewsKt.Gauge_Dark_gauge__dark_.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.CardPreviewsKt.Gauge_Dark_gauge__dark_.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.CardPreviewsKt.Gauge_Dark_gauge__dark_.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="1.7054421768707484" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">PictureGlance_Dark_picture-glance__dark_</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score good">1.71%</span>
+      <span class="px">7,521 px</span>
+      
+    </div>
+    <span class="dims">1000×441</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.CardPreviewsKt.PictureGlance_Dark_picture-glance__dark_.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.CardPreviewsKt.PictureGlance_Dark_picture-glance__dark_.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.CardPreviewsKt.PictureGlance_Dark_picture-glance__dark_.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="1.6832980972515856" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">PictureElements_Dark_picture-elements__dark_</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score good">1.68%</span>
+      <span class="px">7,962 px</span>
+      
+    </div>
+    <span class="dims">1000×473</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.CardPreviewsKt.PictureElements_Dark_picture-elements__dark_.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.CardPreviewsKt.PictureElements_Dark_picture-elements__dark_.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.CardPreviewsKt.PictureElements_Dark_picture-elements__dark_.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="1.5926850676188122" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">Button_Light_button__light_</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score good">1.59%</span>
+      <span class="px">1,869 px</span>
+      
+    </div>
+    <span class="dims">491×239</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.CardPreviewsKt.Button_Light_button__light_.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.CardPreviewsKt.Button_Light_button__light_.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.CardPreviewsKt.Button_Light_button__light_.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="1.5926850676188122" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">Button_On_Light_button_on__light_</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score good">1.59%</span>
+      <span class="px">1,869 px</span>
+      
+    </div>
+    <span class="dims">491×239</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.CardPreviewsKt.Button_On_Light_button_on__light_.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.CardPreviewsKt.Button_On_Light_button_on__light_.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.CardPreviewsKt.Button_On_Light_button_on__light_.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="1.5361552028218695" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">PictureEntity_WidgetMode_Light_picture-entity_widget-mode__light_</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score good">1.54%</span>
+      <span class="px">6,097 px</span>
+      
+    </div>
+    <span class="dims">945×420</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.PictureEntityStrategyPreviewsKt.PictureEntity_WidgetMode_Light_picture-entity_widget-mode__light_.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.PictureEntityStrategyPreviewsKt.PictureEntity_WidgetMode_Light_picture-entity_widget-mode__light_.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.PictureEntityStrategyPreviewsKt.PictureEntity_WidgetMode_Light_picture-entity_widget-mode__light_.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="1.5270688288779624" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">Entity_Dark_entity__dark_</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score good">1.53%</span>
+      <span class="px">1,792 px</span>
+      
+    </div>
+    <span class="dims">491×239</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.CardPreviewsKt.Entity_Dark_entity__dark_.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.CardPreviewsKt.Entity_Dark_entity__dark_.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.CardPreviewsKt.Entity_Dark_entity__dark_.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="1.5202515573204713" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">Entity_Light_entity__light_</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score good">1.52%</span>
+      <span class="px">1,784 px</span>
+      
+    </div>
+    <span class="dims">491×239</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.CardPreviewsKt.Entity_Light_entity__light_.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.CardPreviewsKt.Entity_Light_entity__light_.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.CardPreviewsKt.Entity_Light_entity__light_.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="1.4696000082707" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">Gauge_Animation_Dark_gauge-anim__dark_</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score good">1.47%</span>
+      <span class="px">2,843 px</span>
+      
+    </div>
+    <span class="dims">491×394</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.AnimationPreviewsKt.Gauge_Animation_Dark_gauge-anim__dark_.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.AnimationPreviewsKt.Gauge_Animation_Dark_gauge-anim__dark_.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.AnimationPreviewsKt.Gauge_Animation_Dark_gauge-anim__dark_.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="1.3101708074534162" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">Picture_Dark_picture__dark_</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score good">1.31%</span>
+      <span class="px">4,050 px</span>
+      
+    </div>
+    <span class="dims">840×368</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.CardPreviewsKt.Picture_Dark_picture__dark_.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.CardPreviewsKt.Picture_Dark_picture__dark_.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.CardPreviewsKt.Picture_Dark_picture__dark_.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="0.932261885486881" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">Button_Dark_button__dark_</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score good">0.93%</span>
+      <span class="px">1,094 px</span>
+      
+    </div>
+    <span class="dims">491×239</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.CardPreviewsKt.Button_Dark_button__dark_.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.CardPreviewsKt.Button_Dark_button__dark_.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.CardPreviewsKt.Button_Dark_button__dark_.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="0.932261885486881" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">Button_On_Dark_button_on__dark_</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score good">0.93%</span>
+      <span class="px">1,094 px</span>
+      
+    </div>
+    <span class="dims">491×239</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.CardPreviewsKt.Button_On_Dark_button_on__dark_.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.CardPreviewsKt.Button_On_Dark_button_on__dark_.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.CardPreviewsKt.Button_On_Dark_button_on__dark_.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="0.8988095238095238" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">BambuSpool_Light_bambu_spool__light_</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score good">0.90%</span>
+      <span class="px">2,265 px</span>
+      
+    </div>
+    <span class="dims">1000×252</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.CardPreviewsKt.BambuSpool_Light_bambu_spool__light_.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.CardPreviewsKt.BambuSpool_Light_bambu_spool__light_.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.CardPreviewsKt.BambuSpool_Light_bambu_spool__light_.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="0.8698412698412699" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">BambuSpool_Dark_bambu_spool__dark_</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score good">0.87%</span>
+      <span class="px">2,192 px</span>
+      
+    </div>
+    <span class="dims">1000×252</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.CardPreviewsKt.BambuSpool_Dark_bambu_spool__dark_.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.CardPreviewsKt.BambuSpool_Dark_bambu_spool__dark_.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.CardPreviewsKt.BambuSpool_Dark_bambu_spool__dark_.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="0" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">Toggle_Animated_Dark_toggle-animated__dark_</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score good">0.00%</span>
+      <span class="px">0 px</span>
+      
+    </div>
+    <span class="dims">105×63</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.AnimationPreviewsKt.Toggle_Animated_Dark_toggle-animated__dark_.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.AnimationPreviewsKt.Toggle_Animated_Dark_toggle-animated__dark_.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.AnimationPreviewsKt.Toggle_Animated_Dark_toggle-animated__dark_.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="0" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">Toggle_Animated_Light_toggle-animated__light_</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score good">0.00%</span>
+      <span class="px">0 px</span>
+      
+    </div>
+    <span class="dims">105×63</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.AnimationPreviewsKt.Toggle_Animated_Light_toggle-animated__light_.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.AnimationPreviewsKt.Toggle_Animated_Light_toggle-animated__light_.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.AnimationPreviewsKt.Toggle_Animated_Light_toggle-animated__light_.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="0" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">Toggle_Animation_Dark_toggle-anim__dark_</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score good">0.00%</span>
+      <span class="px">0 px</span>
+      
+    </div>
+    <span class="dims">105×63</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.AnimationPreviewsKt.Toggle_Animation_Dark_toggle-anim__dark_.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.AnimationPreviewsKt.Toggle_Animation_Dark_toggle-anim__dark_.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.AnimationPreviewsKt.Toggle_Animation_Dark_toggle-anim__dark_.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="0" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">Toggle_Animation_Light_toggle-anim__light_</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score good">0.00%</span>
+      <span class="px">0 px</span>
+      
+    </div>
+    <span class="dims">105×63</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.AnimationPreviewsKt.Toggle_Animation_Light_toggle-anim__light_.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.AnimationPreviewsKt.Toggle_Animation_Light_toggle-anim__light_.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.AnimationPreviewsKt.Toggle_Animation_Light_toggle-anim__light_.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="0" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">ImageInline_Dark_image-inline__dark_</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score good">0.00%</span>
+      <span class="px">0 px</span>
+      
+    </div>
+    <span class="dims">525×252</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.ImagePreviewsKt.ImageInline_Dark_image-inline__dark_.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.ImagePreviewsKt.ImageInline_Dark_image-inline__dark_.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.ImagePreviewsKt.ImageInline_Dark_image-inline__dark_.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="0" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">ImageInline_Light_image-inline__light_</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score good">0.00%</span>
+      <span class="px">0 px</span>
+      
+    </div>
+    <span class="dims">525×252</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.ImagePreviewsKt.ImageInline_Light_image-inline__light_.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.ImagePreviewsKt.ImageInline_Light_image-inline__light_.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.ImagePreviewsKt.ImageInline_Light_image-inline__light_.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="0" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">ImageNamed_Dark_image-named__dark_</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score good">0.00%</span>
+      <span class="px">0 px</span>
+      
+    </div>
+    <span class="dims">525×252</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.ImagePreviewsKt.ImageNamed_Dark_image-named__dark_.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.ImagePreviewsKt.ImageNamed_Dark_image-named__dark_.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.ImagePreviewsKt.ImageNamed_Dark_image-named__dark_.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="0" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">ImageNamed_Light_image-named__light_</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score good">0.00%</span>
+      <span class="px">0 px</span>
+      
+    </div>
+    <span class="dims">525×252</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.ImagePreviewsKt.ImageNamed_Light_image-named__light_.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.ImagePreviewsKt.ImageNamed_Light_image-named__light_.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.ImagePreviewsKt.ImageNamed_Light_image-named__light_.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="0" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">5</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score good">0.00%</span>
+      <span class="px">0 px</span>
+      
+    </div>
+    <span class="dims">105×63</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.ToggleSwitchPreviewsKt.ToggleByProgress_Mid_toggle_progress_0.5.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.ToggleSwitchPreviewsKt.ToggleByProgress_Mid_toggle_progress_0.5.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.ToggleSwitchPreviewsKt.ToggleByProgress_Mid_toggle_progress_0.5.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="0" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">0</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score good">0.00%</span>
+      <span class="px">0 px</span>
+      
+    </div>
+    <span class="dims">105×63</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.ToggleSwitchPreviewsKt.ToggleByProgress_Off_toggle_progress_0.0.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.ToggleSwitchPreviewsKt.ToggleByProgress_Off_toggle_progress_0.0.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.ToggleSwitchPreviewsKt.ToggleByProgress_Off_toggle_progress_0.0.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="0" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">0</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score good">0.00%</span>
+      <span class="px">0 px</span>
+      
+    </div>
+    <span class="dims">105×63</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.ToggleSwitchPreviewsKt.ToggleByProgress_On_toggle_progress_1.0.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.ToggleSwitchPreviewsKt.ToggleByProgress_On_toggle_progress_1.0.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.ToggleSwitchPreviewsKt.ToggleByProgress_On_toggle_progress_1.0.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="0" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">ToggleInitial_Off_toggle_initial_off</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score good">0.00%</span>
+      <span class="px">0 px</span>
+      
+    </div>
+    <span class="dims">105×63</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.ToggleSwitchPreviewsKt.ToggleInitial_Off_toggle_initial_off.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.ToggleSwitchPreviewsKt.ToggleInitial_Off_toggle_initial_off.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.ToggleSwitchPreviewsKt.ToggleInitial_Off_toggle_initial_off.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="0" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">ToggleInitial_On_Dark_toggle_initial_on__dark_</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score good">0.00%</span>
+      <span class="px">0 px</span>
+      
+    </div>
+    <span class="dims">105×63</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.ToggleSwitchPreviewsKt.ToggleInitial_On_Dark_toggle_initial_on__dark_.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.ToggleSwitchPreviewsKt.ToggleInitial_On_Dark_toggle_initial_on__dark_.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.ToggleSwitchPreviewsKt.ToggleInitial_On_Dark_toggle_initial_on__dark_.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered" data-pct="0" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">ToggleInitial_On_toggle_initial_on</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score good">0.00%</span>
+      <span class="px">0 px</span>
+      
+    </div>
+    <span class="dims">105×63</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.ToggleSwitchPreviewsKt.ToggleInitial_On_toggle_initial_on.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.ToggleSwitchPreviewsKt.ToggleInitial_On_toggle_initial_on.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.ToggleSwitchPreviewsKt.ToggleInitial_On_toggle_initial_on.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered blank-reference" data-pct="" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">Heading_Dark_heading__dark_</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score na">no reference</span>
+      
+      
+    </div><div class="blanknote">baked PNG is fully transparent — nothing to compare against</div>
+    <span class="dims">284×47</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.CardPreviewsKt.Heading_Dark_heading__dark_.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.CardPreviewsKt.Heading_Dark_heading__dark_.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.CardPreviewsKt.Heading_Dark_heading__dark_.png" alt="pixel diff"></figure></td>
+</tr>
+<tr class="row rendered blank-reference" data-pct="" data-embedded-pct="" data-embedded-jvm-pct="" data-cmp-wasm-pct="">
+  <th class="meta">
+    <div class="name">Heading_Light_heading__light_</div>
+    
+    <div class="scoreline">
+      <span class="scorelabel">js</span>
+      <span class="score na">no reference</span>
+      
+      
+    </div><div class="blanknote">baked PNG is fully transparent — nothing to compare against</div>
+    <span class="dims">284×47</span>
+  </th>
+  <td><figure class="cell "><figcaption>baked PNG</figcaption><img loading="lazy" src="rc-baked/ee.schimke.ha.previews.CardPreviewsKt.Heading_Light_heading__light_.png" alt="baked PNG"></figure></td>
+  <td><figure class="cell rc"><figcaption>RC · JS player</figcaption><img loading="lazy" src="rc/ee.schimke.ha.previews.CardPreviewsKt.Heading_Light_heading__light_.png" alt="RC · JS player"></figure></td>
+  <td><figure class="cell diff"><figcaption>pixel diff</figcaption><img loading="lazy" src="rc-diff/ee.schimke.ha.previews.CardPreviewsKt.Heading_Light_heading__light_.png" alt="pixel diff"></figure></td>
+</tr>
+  </tbody>
+</table>
+</div>
+</body>
+</html>
