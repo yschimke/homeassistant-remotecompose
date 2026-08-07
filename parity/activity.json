@@ -1,0 +1,491 @@
+{
+  "schema": "compose-preview-activity/v1",
+  "generatedAt": "2026-08-07T23:03:01.471Z",
+  "windowDays": 30,
+  "code": {
+    "repo": "yschimke/homeassistant-remotecompose",
+    "ref": "main",
+    "events": [
+      {
+        "sha": "5871e804411f041149fade56f503c90f185d01b4",
+        "subject": "chore(deps): update compose-ai-tools to 0.19.45 (#541)",
+        "at": "2026-08-07T23:50:11+01:00",
+        "author": "Yuri Schimke",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "bbf31d151f27734dda50c563f2f893648d47a3d3",
+        "subject": "chore(deps): update compose-ai-tools to 0.19.38 (#539)",
+        "at": "2026-08-05T23:55:43+01:00",
+        "author": "Yuri Schimke",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "14b49756303d0ac8f85c8a684085f5bfe4134cc0",
+        "subject": "fix(deps): update compose-ai-tools to v0.19.34 (#538)",
+        "at": "2026-08-05T00:04:17Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "a7caca6193e555866fa8ee3d14e2670b6313aafa",
+        "subject": "fix(deps): update compose-ai-tools to v0.19.31 (#537)",
+        "at": "2026-08-04T17:50:37Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "bdadb72991e7d1015c47e07eb0d1e36a2bac0e27",
+        "subject": "fix(deps): update compose-ai-tools (#536)",
+        "at": "2026-08-04T15:55:29Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "8522ebe48007ead12074e26eeacdc56bf0acf51d",
+        "subject": "fix(deps): update compose-ai-tools (#535)",
+        "at": "2026-08-04T13:17:44Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "7d5ac8bdc5408cdb2a9f209c7fa533927fdae118",
+        "subject": "fix(deps): update compose-ai-tools (#534)",
+        "at": "2026-08-04T11:24:30Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "1c124d47f6c4770727697c87ecbd5b06803af2c2",
+        "subject": "fix(deps): update compose-ai-tools to v0.19.26 (#533)",
+        "at": "2026-08-04T08:38:47Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "c4bda6cc341a640137b703179fa209713b030a33",
+        "subject": "fix(design-artifacts): resolve the render CLI from the catalog pin (#532)",
+        "at": "2026-08-03T22:49:11+01:00",
+        "author": "Yuri Schimke",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "53efb10ddf56070d6490d23419deee1ab80cccc7",
+        "subject": "fix(deps): update compose-ai-tools to v0.19.25 (#531)",
+        "at": "2026-08-03T22:30:50+01:00",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "7fcd9472bbcafcbdc80eec7a03c95d68966a1a17",
+        "subject": "fix(deps): update compose-ai-tools to v0.19.24 (#530)",
+        "at": "2026-08-03T21:08:52Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "e5ea7c9500d2f115e0e4f66165b779d9d44f9e21",
+        "subject": "fix(deps): update compose-ai-tools (#529)",
+        "at": "2026-08-03T20:43:57Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "808d3fa9857ae28e56cefa9cff84bfa85b264fb8",
+        "subject": "fix(deps): update compose-ai-tools to v0.19.21 (#528)",
+        "at": "2026-08-03T12:26:14Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "5c1c0f8c0df87ca10b1b241de52870bdb059c2a7",
+        "subject": "fix(previews): update compose-preview to 0.19.20 (#527)",
+        "at": "2026-08-03T06:07:57+01:00",
+        "author": "Yuri Schimke",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "3c67fb6dc7aae4117ebc02ef05a3f99f09af1e8c",
+        "subject": "fix(deps): update compose-ai-tools to v0.19.20 (#525)",
+        "at": "2026-08-03T01:06:48Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "695e856918ba327b36c1c2633dccb2baca4603c2",
+        "subject": "chore(deps): update gradle/actions action to v6.3.0 (#526)",
+        "at": "2026-08-03T00:15:33Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "4d09da96398b371c45cc326d82902b3db5572767",
+        "subject": "fix(deps): update compose-ai-tools to v0.19.19 (#524)",
+        "at": "2026-08-02T23:06:12Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "5ca2a70dbd3d095642d3afe9981d7653d8700822",
+        "subject": "fix(previews): roll back compose-preview 0.19.19 (#523)",
+        "at": "2026-08-02T23:24:50+01:00",
+        "author": "Yuri Schimke",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "d4e4a5935f7ccf92aaf97b3c6777d80949d856e2",
+        "subject": "fix(deps): update androidx (#479)",
+        "at": "2026-08-02T21:07:30Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "20c974359124faad96fa0c03a6ffe4fb9ae64f1e",
+        "subject": "fix(wear): associate Glance widget services (#522)",
+        "at": "2026-08-02T21:59:31+01:00",
+        "author": "Yuri Schimke",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "adb9df3cc54776213f10796e6ce2ccc22fd681ea",
+        "subject": "chore(deps): update agp to v9.3.1 (#514)",
+        "at": "2026-08-02T18:21:53+01:00",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "716fad7fa292d664f397e5e151220578cf852a92",
+        "subject": "chore(deps): update github-actions (#515)",
+        "at": "2026-08-02T18:21:46+01:00",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "2b21dc0e586364e3bb686b4be94949b483cefe9d",
+        "subject": "fix(deps): update dependency org.jetbrains:markdown to v0.7.8 (#516)",
+        "at": "2026-08-02T18:21:39+01:00",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "39811ef0f8901d730001efd412917f8ab70b5a80",
+        "subject": "fix(deps): update ktor to v3.5.2 (#517)",
+        "at": "2026-08-02T18:21:34+01:00",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "573434e6062b448136005d9467eb951132c28275",
+        "subject": "chore(deps): update dependency dev.zacsweers.metro to v1.4.0 (#518)",
+        "at": "2026-08-02T18:21:26+01:00",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "816ca9500f2a198c0c02a666a329160286d9d993",
+        "subject": "fix(deps): update dependency ch.qos.logback:logback-classic to v1.6.1 (#519)",
+        "at": "2026-08-02T18:21:15+01:00",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "11aa01780d978ee779df60f70b7b5d07705ba5f9",
+        "subject": "fix(deps): update dependency com.google.firebase:firebase-bom to v34.17.0 (#520)",
+        "at": "2026-08-02T18:21:06+01:00",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "0dc98c928791d359bdfd721349b7bab7aa4fbaed",
+        "subject": "fix(deps): update mockserver to v7.5.0 (#521)",
+        "at": "2026-08-02T18:20:59+01:00",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "94eda312748589af3fbf370df9a0dba6ab2e0b3c",
+        "subject": "fix(previews): stabilize remote document captures (#512)",
+        "at": "2026-08-02T17:43:35+01:00",
+        "author": "Yuri Schimke",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "9a7d8885dcf670afe127d4f68b5b9a6a3d99c738",
+        "subject": "fix(deps): update compose-ai-tools to v0.19.19 (#513)",
+        "at": "2026-08-02T15:38:24Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "9b2ee5a4446c08d630bc63b0c73b0b9c53a4e929",
+        "subject": "fix(deps): update compose-ai-tools to v0.19.18 (#511)",
+        "at": "2026-08-02T08:54:38Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "28bf54ed0a1286796e0a16ff346d62acc500891e",
+        "subject": "ci: automerge compose-ai-tools and republish catalogs on dependency merges (#510)",
+        "at": "2026-08-02T09:21:38+01:00",
+        "author": "Yuri Schimke",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "0aabb0ce47d5322b5df81f60144f23938b69e96a",
+        "subject": "fix(deps): update dependency ee.schimke.composeai:preview-annotations to v0.19.8 (#508)",
+        "at": "2026-07-30T12:45:04Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "c7e9dfbe25683395cab8dc7ab0050c69ff5aab54",
+        "subject": "chore(deps): update compose-ai-tools to v0.19.8 (#507)",
+        "at": "2026-07-30T10:39:25Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "b928aec56b22ffb08ec0ab3251be49207ab57a62",
+        "subject": "fix(deps): update compose-ai-tools to v0.19.7 (#506)",
+        "at": "2026-07-29T23:30:25Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "6afcef2dbb686b3f346d9b1c0332a44cc5b69965",
+        "subject": "fix(deps): update compose-ai-tools to v0.19.6 (#505)",
+        "at": "2026-07-29T12:58:43+01:00",
+        "author": "Yuri Schimke",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "798eebf849435ff312670bf99b59adc538c93c39",
+        "subject": "fix(deps): update compose-ai-tools to v0.19.4 (#492)",
+        "at": "2026-07-29T04:17:51Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "fda3d92105dad40080deff7889f747e76bfeb76a",
+        "subject": "fix(ci): unbreak the Compose Preview workflow on main (#504)",
+        "at": "2026-07-29T01:57:08+01:00",
+        "author": "Yuri Schimke",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "1da15aba23b54588d9a2d673d57d8122b620d2be",
+        "subject": "feat(previews): publish a live bundle and Remote Compose docs for the design catalog (#503)",
+        "at": "2026-07-29T00:30:41+01:00",
+        "author": "Yuri Schimke",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "ff0aefc5124f236aa4ab91b2b068f1f596e20787",
+        "subject": "feat(wear): emit the slot widget's RemoteCompose document as the preview's .rc IR (#502)",
+        "at": "2026-07-28T23:14:52+01:00",
+        "author": "Yuri Schimke",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "575893310225560f9a0e4dd1e0bdd35c210c81e4",
+        "subject": "chore(deps): update actions/setup-node action to v7 (#485)",
+        "at": "2026-07-28T21:48:57Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "7c1e72c811a9c221d351f9e6b25caeb0c41345c6",
+        "subject": "ci: reject agent authorship on every branch, not just PRs (#501)",
+        "at": "2026-07-25T18:45:17+01:00",
+        "author": "Yuri Schimke",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "412ed51483d94545e72acd5c069d1c65de8c4df7",
+        "subject": "fix(build): align BouncyCastle by virtual platform instead of pinning 1.84 (#500)",
+        "at": "2026-07-25T14:56:48+01:00",
+        "author": "Yuri Schimke",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "d3b34a8a0dbf791c09a2d77ad072c969deafcf30",
+        "subject": "build(deps): bump compose-preview plugin 0.17.19 → 0.17.20 (#498)",
+        "at": "2026-07-25T12:56:23+01:00",
+        "author": "Yuri Schimke",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "05adbe5f60cd1a75ed3d90f571dce36ac8f2737b",
+        "subject": "chore(deps): bump compose-preview to 0.17.19 (#497)",
+        "at": "2026-07-25T11:46:01+01:00",
+        "author": "Yuri Schimke",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "01cdfc4fcb9d8760c4e4e6abf8bde3ed31f9dd50",
+        "subject": "build(deps): bump compose-preview-plugin to 0.17.16 (#496)",
+        "at": "2026-07-25T09:52:54+01:00",
+        "author": "Yuri Schimke",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "70a08d6ad74bb647fd6112294fe2fa50431546f8",
+        "subject": "chore(deps): bump compose-preview plugin 0.17.15 → 0.17.16 (#494)",
+        "at": "2026-07-25T09:34:59+01:00",
+        "author": "Yuri Schimke",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "ff67f9b80738ea6832a9d87ce19d3befb5876609",
+        "subject": "fix(preview): align BouncyCastle on the compose-preview render classpath (#495)",
+        "at": "2026-07-25T09:33:13+01:00",
+        "author": "Yuri Schimke",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "15e9979de484ecf711ec84ba22c187ee27b99d65",
+        "subject": "ci: align compose-ai-tools action refs to v0.17.15 (#493)",
+        "at": "2026-07-24T18:22:47+01:00",
+        "author": "Yuri Schimke",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "a65e5dd643a17bae5d5062da85703a9bdffca9a5",
+        "subject": "ci: automerge compose-ai-tools bumps and regenerate catalogs on bump (#489)",
+        "at": "2026-07-24T12:00:36+01:00",
+        "author": "Yuri Schimke",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "67f30dcdb4f23892e811db8452af1811bd677b18",
+        "subject": "chore(deps): bump compose-preview plugin 0.16.54 → 0.17.15 (#487)",
+        "at": "2026-07-24T10:30:44+01:00",
+        "author": "Yuri Schimke",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "08527cf28e28bc2e5efdd1fbe524448bf8d3c40b",
+        "subject": "fix(deps): update kotlin to v2.4.10 (#480)",
+        "at": "2026-07-18T15:04:46Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "59971d53a3e998c7cb248846bb4d420896e34b27",
+        "subject": "chore(deps): update agp to v9.3.0 (#482)",
+        "at": "2026-07-18T13:58:55Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "cf2cf3042daa13ae210a26be5a9bb74dbd610ef0",
+        "subject": "fix(deps): update dependency com.materialkolor:material-kolor to v5 (#486)",
+        "at": "2026-07-18T13:24:57+01:00",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "83a7ebd978a9630412740aa17fb07a9a01d85d67",
+        "subject": "chore(deps): update dependency dev.zacsweers.metro to v1.3.2 (#478)",
+        "at": "2026-07-18T13:24:41+01:00",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "c9f822916102a647c2fe0488b541480d63567b50",
+        "subject": "fix(deps): update remote-compose to v1.0.0-alpha15 (#481)",
+        "at": "2026-07-18T13:24:32+01:00",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "08b6fbd8921a996498d55fb47da4f9cdfbecf15c",
+        "subject": "chore(deps): update github-actions (#483)",
+        "at": "2026-07-18T11:11:14Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "bb508e37e92593f512542df8104cbd839bbf67a2",
+        "subject": "fix(deps): update dependency com.google.firebase:firebase-bom to v34.16.0 (#484)",
+        "at": "2026-07-18T11:11:12Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "b83144a36db72b42e34ea01dc56c18e093a60664",
+        "subject": "build(deps): bump compose-ai-tools to 0.16.54 (#477)",
+        "at": "2026-07-18T09:55:20Z",
+        "author": "Yuri Schimke",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "6c4c749745cbe2d49de96565287d5c9f41d66c24",
+        "subject": "build(deps): bump compose-ai-tools to 0.16.54 (#476)",
+        "at": "2026-07-18T09:16:10Z",
+        "author": "Yuri Schimke",
+        "previewIds": [],
+        "components": []
+      }
+    ]
+  }
+}
