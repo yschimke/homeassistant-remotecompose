@@ -1,11 +1,19 @@
 {
   "schema": "compose-preview-activity/v1",
-  "generatedAt": "2026-08-07T23:03:01.471Z",
+  "generatedAt": "2026-08-08T00:31:33.128Z",
   "windowDays": 30,
   "code": {
     "repo": "yschimke/homeassistant-remotecompose",
     "ref": "main",
     "events": [
+      {
+        "sha": "b687eb10dd5eda7ebca0dd6a5a9af9f5f33ee34c",
+        "subject": "chore(deps): update compose-ai-tools to 0.19.46 (#542)",
+        "at": "2026-08-08T01:19:53+01:00",
+        "author": "Yuri Schimke",
+        "previewIds": [],
+        "components": []
+      },
       {
         "sha": "5871e804411f041149fade56f503c90f185d01b4",
         "subject": "chore(deps): update compose-ai-tools to 0.19.45 (#541)",
@@ -474,14 +482,6 @@
         "sha": "b83144a36db72b42e34ea01dc56c18e093a60664",
         "subject": "build(deps): bump compose-ai-tools to 0.16.54 (#477)",
         "at": "2026-07-18T09:55:20Z",
-        "author": "Yuri Schimke",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "6c4c749745cbe2d49de96565287d5c9f41d66c24",
-        "subject": "build(deps): bump compose-ai-tools to 0.16.54 (#476)",
-        "at": "2026-07-18T09:16:10Z",
         "author": "Yuri Schimke",
         "previewIds": [],
         "components": []

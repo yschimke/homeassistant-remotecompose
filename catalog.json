@@ -4676,8 +4676,8 @@
     "androidx.compose.remote:remote-player-compose (RemoteCompose)",
     "ee.schimke.ha:rc-components (Terrazzo themes)"
   ],
-  "renderer": "compose-preview 0.19.45",
-  "generatedAt": "2026-08-07T23:02:20.999Z",
+  "renderer": "compose-preview 0.19.46",
+  "generatedAt": "2026-08-08T00:30:50.500Z",
   "liveBundle": {
     "path": "bundle/",
     "file": "bundle.png"
