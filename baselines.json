@@ -700,7 +700,7 @@
     "functionName": "CardPreviewMatrix_Button",
     "module": "previews",
     "renderBasename": "CardPreviewMatrix_Button_matrix_button.png",
-    "sha256": "705d6dd92653eda2158065d614be88b8b1a3f51d0b4e9f1e0399e27483f9a4c8",
+    "sha256": "1173dee85639e86b28aa5c0ce1dcadb198915a768a871861004e7961441c3ed9",
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/CardPreviewMatrix.kt"
   },
   "previews/ee.schimke.ha.previews.CardPreviewMatrixKt.CardPreviewMatrix_Calendar_matrix \u2014 calendar": {
