@@ -1,6 +1,6 @@
 {
     "formatVersion": "compose-preview-history/v1",
-    "generatedFrom": "0415d2d9e0b557ff4cd40aedaca4ebd65df64c2d",
+    "generatedFrom": "13f62bdec0c70185b03b5c627f4ddda7933df009",
     "previews": {
         "app/ee.schimke.terrazzo.previews.CardDebugPreviewsKt.CardFlashPreview_Card flash on data change": {
             "path": "renders/app/CardFlashPreview_Card_flash_on_data_change.gif",
@@ -4391,17 +4391,19 @@
             "path": "renders/previews/CardPreviewMatrix_Button_matrix_button.png",
             "versions": [
                 {
+                    "blob": "86cb2cbb4374942904728fd5e3bd65fd61cf2f10",
+                    "commit": "13f62bdec0c70185b03b5c627f4ddda7933df009",
+                    "date": "2026-08-08T19:25:26Z",
+                    "sourceSha": "dd40f26f",
+                    "sinceCommit": "91ebd7ba6a3374469af3ec8fc79a7f598f425e42",
+                    "commits": 2,
+                    "occurrences": 2
+                },
+                {
                     "blob": "ff78a42ebf9b23521c2bd960d28769aaff3e5532",
                     "commit": "0415d2d9e0b557ff4cd40aedaca4ebd65df64c2d",
                     "date": "2026-08-08T14:24:48Z",
                     "sourceSha": "1e081e46",
-                    "commits": 1
-                },
-                {
-                    "blob": "86cb2cbb4374942904728fd5e3bd65fd61cf2f10",
-                    "commit": "91ebd7ba6a3374469af3ec8fc79a7f598f425e42",
-                    "date": "2026-08-08T13:38:15Z",
-                    "sourceSha": "d2d96af5",
                     "commits": 1
                 },
                 {
@@ -4828,9 +4830,9 @@
                     "commits": 1
                 }
             ],
-            "observations": 75,
+            "observations": 76,
             "unstable": true,
-            "flapCount": 14
+            "flapCount": 15
         },
         "previews/ee.schimke.ha.previews.CardPreviewMatrixKt.CardPreviewMatrix_Calendar_matrix — calendar": {
             "path": "renders/previews/CardPreviewMatrix_Calendar_matrix_calendar.png",
