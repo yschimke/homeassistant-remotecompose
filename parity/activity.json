@@ -1,11 +1,19 @@
 {
   "schema": "compose-preview-activity/v1",
-  "generatedAt": "2026-08-08T13:35:03.495Z",
+  "generatedAt": "2026-08-08T14:20:47.582Z",
   "windowDays": 30,
   "code": {
     "repo": "yschimke/homeassistant-remotecompose",
     "ref": "main",
     "events": [
+      {
+        "sha": "1e081e4678bf775855970c7782ce22490b8383c4",
+        "subject": "fix(deps): update compose-ai-tools to v0.19.48 (#543)",
+        "at": "2026-08-08T14:09:19Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
       {
         "sha": "d2d96af5db4b3bdb415bd8e1740406c6c81f91d1",
         "subject": "fix(deps): update compose-ai-tools (#540)",
@@ -474,14 +482,6 @@
         "sha": "08b6fbd8921a996498d55fb47da4f9cdfbecf15c",
         "subject": "chore(deps): update github-actions (#483)",
         "at": "2026-07-18T11:11:14Z",
-        "author": "renovate[bot]",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "bb508e37e92593f512542df8104cbd839bbf67a2",
-        "subject": "fix(deps): update dependency com.google.firebase:firebase-bom to v34.16.0 (#484)",
-        "at": "2026-07-18T11:11:12Z",
         "author": "renovate[bot]",
         "previewIds": [],
         "components": []
