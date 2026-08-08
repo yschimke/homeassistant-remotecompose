@@ -45,7 +45,7 @@ indriya = "2.2.4"
 # of the plugin marker. The preview-baselines / preview-comment GitHub
 # Actions read this key (`catalog-key: compose-preview-plugin`) to pin
 # the CLI release they install on the runner.
-compose-preview-plugin = "0.19.48"
+compose-preview-plugin = "0.19.49"
 tapmoc = "0.4.2"
 
 # Image loading (BitmapLoader / RemoteCompose named-bitmap resolution)
@@ -88,6 +88,9 @@ remote-material3 = { module = "androidx.wear.compose.remote:remote-material3", v
 # renderer and the app agreeing on that version. Versioned with the rest of the
 # compose-ai-tools release train.
 composeai-data-render-core = { module = "ee.schimke.composeai:data-render-core", version.ref = "compose-preview-plugin" }
+# Debug-only: @AnimatedPreview drives the compose-preview GIF capture. Shares the
+# version ref above so the annotations can't drift from the renderer that reads them.
+composeai-preview-annotations = { module = "ee.schimke.composeai:preview-annotations", version.ref = "compose-preview-plugin" }
 
 # Compose
 compose-bom = { module = "androidx.compose:compose-bom", version.ref = "compose-bom" }
