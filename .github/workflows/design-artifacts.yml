@@ -105,4 +105,15 @@ jobs:
       # Generated delivery branch — attributed to the repo owner, not a bot.
       commit-user-name: 'Yuri Schimke'
       commit-user-email: 'yuri@schimke.ee'
-      timeout-minutes: 45
+      # 45 covered the render plus a two-lane rc-compare page (baked PNG + the vendored TypeScript
+      # RcdPlayer), which is all this catalog got while the embedded lanes were opt-in and this file
+      # never opted in — hence /homeassistant-remotecompose/compare showing one player where
+      # /remote-m3/compare showed four. Those lanes now default to true upstream, and because this
+      # catalog does ship ir/*.rc they will run: two extra Gradle builds out of the compose-ai-tools
+      # checkout (:third-party-rc-embedded-player under Robolectric, :third-party-rc-embedded-player-jvm
+      # under xvfb). They start cold here — unlike compose-ai-tools' own catalogs this job passes no
+      # BuildFetch read-only token, so nothing is pulled from the remote cache. Headroom, not a
+      # measurement: the lanes are individually tolerant (a failed harness drops its column and the
+      # render still publishes), but a job-level timeout is not, and losing the whole catalog to a
+      # slow first run is the one failure this change could cause.
+      timeout-minutes: 90
