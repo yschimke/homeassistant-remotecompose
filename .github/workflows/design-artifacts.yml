@@ -102,6 +102,21 @@ jobs:
       split-per-preview: true
       split-mode: full
       allow-incomplete: ${{ github.event_name == 'workflow_dispatch' && inputs.allow_incomplete || false }}
+      # The CMP/Wasm player lane — the fifth column, and the one that made
+      # /remote-m3/compare a five-player page while this catalog had one. Unlike the embedded and
+      # cmp-jvm lanes (default-on upstream, and tolerant: a dead harness drops its column and the
+      # render still publishes) this one is a GATE. When it is on, `:rc-player-wasm:wasmPlayerDist`
+      # must build and every ir/*.rc must render inside the first-frame budgets — 10s cold, 5s warm
+      # — or the step fails and NOTHING publishes. A failure leaves the delivery branch on its last
+      # good commit, so the served catalog goes stale rather than broken, and the run goes red.
+      #
+      # Deliberately entered with no `rc-cmp-wasm-allowlist`. The allowlist takes dated, reasoned
+      # per-document exceptions, and inventing entries before knowing which of this catalog's
+      # documents the Wasm player actually struggles with would just pre-authorise failures nobody
+      # has seen. The lane uploads its renders, diffs and error logs as evidence *before* the gate
+      # stops publication, so the first red run names the documents; add the allowlist then, with
+      # real ids and expiry dates.
+      rc-cmp-wasm-lane: true
       # Generated delivery branch — attributed to the repo owner, not a bot.
       commit-user-name: 'Yuri Schimke'
       commit-user-email: 'yuri@schimke.ee'
@@ -115,5 +130,9 @@ jobs:
       # BuildFetch read-only token, so nothing is pulled from the remote cache. Headroom, not a
       # measurement: the lanes are individually tolerant (a failed harness drops its column and the
       # render still publishes), but a job-level timeout is not, and losing the whole catalog to a
-      # slow first run is the one failure this change could cause.
-      timeout-minutes: 90
+      # slow first run is the one failure this change could cause. Raised again for the CMP/Wasm
+      # lane above, which adds a third cold Gradle build (:rc-player-wasm:wasmPlayerDist, a
+      # Kotlin/Wasm compile) plus a Chromium render of every ir/*.rc. Still headroom rather than a
+      # measurement — the first run that exercises all three lanes is the one that produces a real
+      # number, and this should come back down to fit it once it has.
+      timeout-minutes: 120
