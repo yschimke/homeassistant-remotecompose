@@ -110,13 +110,19 @@ jobs:
       # — or the step fails and NOTHING publishes. A failure leaves the delivery branch on its last
       # good commit, so the served catalog goes stale rather than broken, and the run goes red.
       #
-      # Deliberately entered with no `rc-cmp-wasm-allowlist`. The allowlist takes dated, reasoned
-      # per-document exceptions, and inventing entries before knowing which of this catalog's
-      # documents the Wasm player actually struggles with would just pre-authorise failures nobody
-      # has seen. The lane uploads its renders, diffs and error logs as evidence *before* the gate
-      # stops publication, so the first red run names the documents; add the allowlist then, with
-      # real ids and expiry dates.
+      # Entered with no allowlist on purpose, and run #60 is what that bought: the lane named its
+      # four failures before the gate stopped publication, so the exceptions below are written
+      # against observed ids rather than guesses. Two causes, not four —
+      # `AlarmPanel_{Dark,Light}` need LAYOUT_STATE (opcode 217), which
+      # `rc-operations.manifest` already lists as unsupported, and
+      # `PictureEntity_AppMode_{Dark,Light}` carry a URL-encoded bitmap the CMP player declines
+      # without an image host. Both are gaps the player documents about itself; each entry carries
+      # its own expiry so it has to be re-argued rather than inherited.
+      #
+      # The gate is otherwise comfortable: 118/122 rendered, cold first frame 919 ms against a
+      # 10s budget and warm 890 ms against 5s, so the budgets are nowhere near binding.
       rc-cmp-wasm-lane: true
+      rc-cmp-wasm-allowlist: rc-cmp-wasm-allowlist.json
       # Generated delivery branch — attributed to the repo owner, not a bot.
       commit-user-name: 'Yuri Schimke'
       commit-user-email: 'yuri@schimke.ee'
