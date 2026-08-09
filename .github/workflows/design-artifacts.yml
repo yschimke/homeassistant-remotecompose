@@ -56,6 +56,11 @@ on:
       - 'build.gradle.kts'
       - '**/build.gradle.kts'
       - 'catalog.spec.json'
+      # Same class as catalog.spec.json: config that changes what the run publishes. An
+      # allowlist edit is usually a *removal* — an exception dropped because the player
+      # gained the operation — and that is precisely the change that has to be re-run to
+      # find out whether the gate now passes without it.
+      - 'rc-cmp-wasm-allowlist.json'
       - '.github/workflows/design-artifacts.yml'
       - '.github/workflows/compose-preview.yml'
   workflow_dispatch:
