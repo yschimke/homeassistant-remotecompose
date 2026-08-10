@@ -1,6 +1,6 @@
 {
     "formatVersion": "compose-preview-history/v1",
-    "generatedFrom": "4f83a6a1bdada4dc09416dc6bdec9f226a51fdfe",
+    "generatedFrom": "3cafa33cc3dae9cf0ae408523773a0b5c8c25aad",
     "previews": {
         "app/ee.schimke.terrazzo.previews.CardDebugPreviewsKt.CardFlashPreview_Card flash on data change": {
             "path": "renders/app/CardFlashPreview_Card_flash_on_data_change.gif",
@@ -4391,6 +4391,15 @@
             "path": "renders/previews/CardPreviewMatrix_Button_matrix_button.png",
             "versions": [
                 {
+                    "blob": "34eb0777b2883dcc60805e4dbe734a78983eecf4",
+                    "commit": "3cafa33cc3dae9cf0ae408523773a0b5c8c25aad",
+                    "date": "2026-08-10T02:37:49Z",
+                    "sourceSha": "cfc103bf",
+                    "sinceCommit": "043e9e6b7d71fa116a6901f998a9061627bf5c29",
+                    "commits": 2,
+                    "occurrences": 2
+                },
+                {
                     "blob": "8ca1f57e18d777595b2644db5e9920c8f40670e8",
                     "commit": "4f83a6a1bdada4dc09416dc6bdec9f226a51fdfe",
                     "date": "2026-08-10T02:13:36Z",
@@ -4420,13 +4429,6 @@
                     "commit": "e66f0295136a281ab9fe6631d433a32f19d5c062",
                     "date": "2026-08-09T11:27:48Z",
                     "sourceSha": "85c75fa1",
-                    "commits": 1
-                },
-                {
-                    "blob": "34eb0777b2883dcc60805e4dbe734a78983eecf4",
-                    "commit": "043e9e6b7d71fa116a6901f998a9061627bf5c29",
-                    "date": "2026-08-09T09:57:40Z",
-                    "sourceSha": "bb7d6e53",
                     "commits": 1
                 },
                 {
@@ -4853,9 +4855,9 @@
                     "commits": 1
                 }
             ],
-            "observations": 82,
+            "observations": 83,
             "unstable": true,
-            "flapCount": 18
+            "flapCount": 19
         },
         "previews/ee.schimke.ha.previews.CardPreviewMatrixKt.CardPreviewMatrix_Calendar_matrix — calendar": {
             "path": "renders/previews/CardPreviewMatrix_Calendar_matrix_calendar.png",
