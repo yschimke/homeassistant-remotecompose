@@ -30,6 +30,7 @@ import androidx.compose.remote.creation.compose.modifier.padding as rcPadding
 import androidx.compose.remote.creation.compose.shapes.RemoteRoundedCornerShape
 import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
+import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.remote.creation.platform.AndroidxRcPlatformServices
 import androidx.compose.remote.creation.profile.Profile
 import androidx.compose.remote.player.compose.ExperimentalRemotePlayerApi
@@ -208,7 +209,7 @@ private fun FixedPlayer(modifier: Modifier) {
                 .rcBorder(1.rdp, Color(0xFF1565C0).rc, RemoteRoundedCornerShape(0.rdp))
           ) {
             RemoteColumn(modifier = RemoteModifier.rcFillMaxWidth().rcPadding(4.rdp)) {
-              RemoteText(text = "Hello", modifier = RemoteModifier.rcFillMaxWidth())
+              RemoteText(text = "Hello".rs, modifier = RemoteModifier.rcFillMaxWidth())
             }
           }
         }
@@ -231,7 +232,7 @@ private fun ReproPlayer(modifier: Modifier) {
                 .rcBorder(1.rdp, Color(0xFF1565C0).rc, RemoteRoundedCornerShape(0.rdp))
           ) {
             RemoteColumn(modifier = RemoteModifier.rcFillMaxWidth().rcPadding(4.rdp)) {
-              RemoteText(text = "Hello", modifier = RemoteModifier.rcFillMaxWidth())
+              RemoteText(text = "Hello".rs, modifier = RemoteModifier.rcFillMaxWidth())
             }
           }
         }

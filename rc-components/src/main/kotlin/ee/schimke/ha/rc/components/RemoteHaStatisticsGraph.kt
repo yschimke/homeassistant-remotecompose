@@ -69,7 +69,7 @@ fun RemoteHaStatisticsGraph(
     RemoteColumn(verticalArrangement = RemoteArrangement.spacedBy(6.rdp)) {
       if (data.title != null) {
         RemoteText(
-          text = data.title,
+          text = data.title.rs,
           color = theme.primaryText.rc,
           fontSize = 15.rsp,
           fontWeight = FontWeight.Medium,
@@ -79,7 +79,7 @@ fun RemoteHaStatisticsGraph(
         )
       }
       RemoteText(
-        text = data.rangeLabel,
+        text = data.rangeLabel.rs,
         color = theme.secondaryText.rc,
         fontSize = 11.rsp,
         style = RemoteTextStyle.Default,
@@ -109,7 +109,7 @@ private fun BarRow(row: HaHistoryGraphRow, theme: HaTheme) {
     horizontalArrangement = RemoteArrangement.SpaceBetween,
   ) {
     RemoteText(
-      text = row.name,
+      text = row.name.rs,
       color = theme.primaryText.rc,
       fontSize = 12.rsp,
       fontWeight = FontWeight.Medium,
@@ -157,7 +157,7 @@ private fun Legend(row: HaHistoryGraphRow, theme: HaTheme) {
             .padding(horizontal = 5.rdp)
       ) {}
       RemoteText(
-        text = row.name,
+        text = row.name.rs,
         color = theme.primaryText.rc,
         fontSize = 11.rsp,
         style = RemoteTextStyle.Default,

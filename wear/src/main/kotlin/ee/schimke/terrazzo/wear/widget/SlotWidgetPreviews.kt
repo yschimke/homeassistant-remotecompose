@@ -8,6 +8,7 @@ import androidx.compose.remote.creation.compose.layout.RemoteText
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.creation.compose.state.rc
+import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.tooling.preview.Preview
@@ -103,7 +104,7 @@ private val WearWidgetPreviewClock = FixedHaClock(Instant.parse("2026-05-05T10:0
 @Composable
 private fun PreviewEmptyPlaceholder(slotIndex: Int, theme: HaTheme) {
   RemoteBox(modifier = RemoteModifier.fillMaxWidth()) {
-    RemoteText(text = "Slot ${slotIndex + 1}", color = theme.primaryText.rc)
+    RemoteText(text = "Slot ${slotIndex + 1}".rs, color = theme.primaryText.rc)
   }
 }
 

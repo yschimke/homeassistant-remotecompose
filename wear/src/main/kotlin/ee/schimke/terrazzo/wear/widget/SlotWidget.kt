@@ -9,6 +9,7 @@ import androidx.compose.remote.creation.compose.layout.RemoteText
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.creation.compose.state.rc
+import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.runtime.Composable
 import androidx.glance.wear.AssociateWithGlanceWearWidget
 import androidx.glance.wear.GlanceWearWidget
@@ -133,7 +134,7 @@ abstract class SlotWidget(internal val slotIndex: Int) : GlanceWearWidget() {
 @Composable
 private fun EmptySlotPlaceholder(slotIndex: Int, theme: HaTheme) {
   RemoteBox(modifier = RemoteModifier.fillMaxWidth()) {
-    RemoteText(text = "Slot ${slotIndex + 1}", color = theme.primaryText.rc)
+    RemoteText(text = "Slot ${slotIndex + 1}".rs, color = theme.primaryText.rc)
   }
 }
 
