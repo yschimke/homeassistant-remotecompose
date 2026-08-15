@@ -83,8 +83,10 @@ class WearOfflineStore(context: Context) {
   }
 }
 
-private fun File.readBytesOrNull(): ByteArray? =
-  runCatching { if (exists()) readBytes() else null }.getOrNull()
+private fun File.readBytesOrNull(): ByteArray? = runCatching {
+  if (exists()) readBytes() else null
+}
+  .getOrNull()
 
 private fun File.atomicWriteBytes(bytes: ByteArray) {
   runCatching {

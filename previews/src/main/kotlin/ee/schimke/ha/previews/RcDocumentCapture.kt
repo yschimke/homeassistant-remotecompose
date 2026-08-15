@@ -81,14 +81,14 @@ private fun CaptureRemoteDocument(
       if (previewId == null) null
       else
         runCatching {
-            runBlocking {
-              val bytes =
-                captureSingleRemoteDocument(context = context, profile = profile, content = content)
-                  .bytes
-              // Idempotent, never-throws; leaves the bytes alone if it can't stamp.
-              stampGenerationDensity(bytes, density)
-            }
+          runBlocking {
+            val bytes =
+              captureSingleRemoteDocument(context = context, profile = profile, content = content)
+                .bytes
+            // Idempotent, never-throws; leaves the bytes alone if it can't stamp.
+            stampGenerationDensity(bytes, density)
           }
+        }
           .getOrNull()
     }
   // Publishes once the composition succeeds, still inside the render's preview-id window (the

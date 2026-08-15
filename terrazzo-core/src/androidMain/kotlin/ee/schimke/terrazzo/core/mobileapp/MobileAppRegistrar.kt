@@ -97,9 +97,9 @@ class MobileAppRegistrar(
 
   private fun appVersion(): String =
     runCatching {
-        @Suppress("DEPRECATION")
-        context.packageManager.getPackageInfo(context.packageName, 0).versionName
-      }
+      @Suppress("DEPRECATION")
+      context.packageManager.getPackageInfo(context.packageName, 0).versionName
+    }
       .getOrNull() ?: "0"
 
   private fun deviceName(): String {

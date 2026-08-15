@@ -68,18 +68,18 @@ class CardEntitiesTest {
     assertEquals(
       "Boiler",
       card {
-          put("type", "tile")
-          put("title", "Boiler")
-          put("entity", "sensor.boiler")
-        }
+        put("type", "tile")
+        put("title", "Boiler")
+        put("entity", "sensor.boiler")
+      }
         .historyTitle(),
     )
     assertEquals(
       "sensor.boiler",
       card {
-          put("type", "tile")
-          put("entity", "sensor.boiler")
-        }
+        put("type", "tile")
+        put("entity", "sensor.boiler")
+      }
         .historyTitle(),
     )
     assertEquals("markdown", card { put("type", "markdown") }.historyTitle())

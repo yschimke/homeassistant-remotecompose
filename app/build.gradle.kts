@@ -3,15 +3,14 @@ import com.github.triplet.gradle.androidpublisher.ReleaseStatus
 val appVersionName = "0.1.37" // x-release-please-version
 
 // Pack MAJOR.MINOR.PATCH into a monotonic int. Caps at major < 22.
-val appVersionCode: Int =
-  run {
-      val parts = appVersionName.split(".", "-").mapNotNull { it.toIntOrNull() }
-      val major = parts.getOrNull(0) ?: 0
-      val minor = parts.getOrNull(1) ?: 0
-      val patch = parts.getOrNull(2) ?: 0
-      major * 10_000 + minor * 100 + patch
-    }
-    .coerceAtLeast(1)
+val appVersionCode: Int = run {
+  val parts = appVersionName.split(".", "-").mapNotNull { it.toIntOrNull() }
+  val major = parts.getOrNull(0) ?: 0
+  val minor = parts.getOrNull(1) ?: 0
+  val patch = parts.getOrNull(2) ?: 0
+  major * 10_000 + minor * 100 + patch
+}
+  .coerceAtLeast(1)
 
 plugins {
   id("harc.base-conventions")

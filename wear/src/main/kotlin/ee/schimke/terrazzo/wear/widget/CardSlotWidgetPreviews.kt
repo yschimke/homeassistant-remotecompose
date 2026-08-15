@@ -508,7 +508,8 @@ private fun statisticsGraphFixture() =
 private fun todoListFixture() =
   CardFixture(
     json = """{"type":"todo-list","entity":"todo.shopping","title":"Shopping"}""",
-    snapshot = snapshotOf(entityState(id = "todo.shopping", state = "2", friendlyName = "Shopping")),
+    snapshot =
+      snapshotOf(entityState(id = "todo.shopping", state = "2", friendlyName = "Shopping")),
   )
 
 private fun calendarFixture() =

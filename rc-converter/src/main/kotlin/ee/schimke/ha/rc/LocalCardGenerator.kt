@@ -35,19 +35,18 @@ class LocalCardGenerator(private val context: Context, private val registry: Car
     snapshot: HaSnapshot,
     size: CardSize,
     profile: ClientProfile,
-  ): CardBytes? =
-    runCatching {
-        val doc =
-          captureCardDocument(
-            context = context,
-            widthPx = size.widthPx,
-            heightPx = size.heightPx,
-            densityDpi = size.densityDpi,
-            registry = registry,
-            card = card,
-            snapshot = snapshot,
-          )
-        CardBytes(bytes = doc.bytes, widthPx = doc.widthPx, heightPx = doc.heightPx)
-      }
-      .getOrNull()
+  ): CardBytes? = runCatching {
+    val doc =
+      captureCardDocument(
+        context = context,
+        widthPx = size.widthPx,
+        heightPx = size.heightPx,
+        densityDpi = size.densityDpi,
+        registry = registry,
+        card = card,
+        snapshot = snapshot,
+      )
+    CardBytes(bytes = doc.bytes, widthPx = doc.widthPx, heightPx = doc.heightPx)
+  }
+    .getOrNull()
 }

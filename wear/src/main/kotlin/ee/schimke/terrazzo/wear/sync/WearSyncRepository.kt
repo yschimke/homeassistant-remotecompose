@@ -144,13 +144,13 @@ class WearSyncRepository(context: Context, private val scope: CoroutineScope) {
    */
   suspend fun sendLease(foreground: Boolean) {
     runCatching {
-        val nodes = nodeClient.connectedNodes.await()
-        val frame = WearLease(sentAtMs = System.currentTimeMillis(), foreground = foreground)
-        val bytes = encodeProto(frame)
-        for (node in nodes) {
-          messageClient.sendMessage(node.id, WearSyncPaths.LEASE_MESSAGE, bytes).await()
-        }
+      val nodes = nodeClient.connectedNodes.await()
+      val frame = WearLease(sentAtMs = System.currentTimeMillis(), foreground = foreground)
+      val bytes = encodeProto(frame)
+      for (node in nodes) {
+        messageClient.sendMessage(node.id, WearSyncPaths.LEASE_MESSAGE, bytes).await()
       }
+    }
       .onFailure { Log.w(TAG, "sendLease failed", it) }
   }
 

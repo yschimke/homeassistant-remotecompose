@@ -147,10 +147,11 @@ private fun EmptySlotPlaceholder(slotIndex: Int, theme: RemoteHaTheme) {
 
 private val cardJson = Json { ignoreUnknownKeys = true }
 
-private fun String.toCardConfigOrNull(): CardConfig? =
-  runCatching { cardJson.decodeFromString(CardConfig.serializer(), this) }
-    .onFailure { Log.w("SlotWidget", "card decode failed", it) }
-    .getOrNull()
+private fun String.toCardConfigOrNull(): CardConfig? = runCatching {
+  cardJson.decodeFromString(CardConfig.serializer(), this)
+}
+  .onFailure { Log.w("SlotWidget", "card decode failed", it) }
+  .getOrNull()
 
 /**
  * Project the proto [LiveValues] snapshot into the [HaSnapshot] shape card converters expect. Only

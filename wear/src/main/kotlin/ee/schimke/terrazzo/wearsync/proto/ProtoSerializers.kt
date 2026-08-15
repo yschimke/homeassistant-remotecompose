@@ -41,5 +41,7 @@ inline fun <reified T> encodeProto(value: T): ByteArray =
 
 /** Decode proto bytes back into [T]. Returns null on corruption. */
 @OptIn(ExperimentalSerializationApi::class)
-inline fun <reified T> decodeProto(bytes: ByteArray): T? =
-  runCatching { ProtoBuf.decodeFromByteArray(serializer<T>(), bytes) }.getOrNull()
+inline fun <reified T> decodeProto(bytes: ByteArray): T? = runCatching {
+  ProtoBuf.decodeFromByteArray(serializer<T>(), bytes)
+}
+  .getOrNull()

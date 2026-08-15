@@ -92,39 +92,38 @@ class WidgetPreviewActivity : Activity() {
     val sampleBitmap = sampleBitmap(SAMPLE_BITMAP_PX).asImageBitmap()
     val strategy = PictureImageStrategy.Inline { sampleBitmap }
 
-    val docBytes =
-      runCatching {
-          runBlocking {
-              captureSingleRemoteDocument(
-                context = this@WidgetPreviewActivity,
-                creationDisplayInfo = RemoteCreationDisplayInfo(widthPx, heightPx, densityDpi),
-                profile = widgetsProfile,
-              ) {
-                // The Inline strategy provider must live inside the
-                // capture sub-composition — outer-tree CompositionLocals
-                // don't propagate through `captureSingleRemoteDocument`.
-                CompositionLocalProvider(LocalPictureImageStrategy provides strategy) {
-                  ProvideCardRegistry(registry) {
-                    ProvideSystemHaTheme {
-                      ProvideCardSizeMode(CardSizeMode.Fixed) {
-                        // Same full-canvas surface the launcher widget uses,
-                        // so the preview shows the background filling the tile
-                        // rather than wrapping to the card content.
-                        ProvideCardChrome(enabled = false) {
-                          RemoteHaWidgetSurface {
-                            RenderChild(SAMPLE_CARD, SAMPLE_SNAPSHOT, RemoteModifier.fillMaxWidth())
-                          }
-                        }
-                      }
+    val docBytes = runCatching {
+      runBlocking {
+        captureSingleRemoteDocument(
+          context = this@WidgetPreviewActivity,
+          creationDisplayInfo = RemoteCreationDisplayInfo(widthPx, heightPx, densityDpi),
+          profile = widgetsProfile,
+        ) {
+          // The Inline strategy provider must live inside the
+          // capture sub-composition — outer-tree CompositionLocals
+          // don't propagate through `captureSingleRemoteDocument`.
+          CompositionLocalProvider(LocalPictureImageStrategy provides strategy) {
+            ProvideCardRegistry(registry) {
+              ProvideSystemHaTheme {
+                ProvideCardSizeMode(CardSizeMode.Fixed) {
+                  // Same full-canvas surface the launcher widget uses,
+                  // so the preview shows the background filling the tile
+                  // rather than wrapping to the card content.
+                  ProvideCardChrome(enabled = false) {
+                    RemoteHaWidgetSurface {
+                      RenderChild(SAMPLE_CARD, SAMPLE_SNAPSHOT, RemoteModifier.fillMaxWidth())
                     }
                   }
                 }
               }
             }
-            .bytes
+          }
         }
-        .onFailure { Log.e(TAG, "widget capture failed", it) }
-        .getOrNull()
+      }
+        .bytes
+    }
+      .onFailure { Log.e(TAG, "widget capture failed", it) }
+      .getOrNull()
 
     if (docBytes == null) {
       setContentView(

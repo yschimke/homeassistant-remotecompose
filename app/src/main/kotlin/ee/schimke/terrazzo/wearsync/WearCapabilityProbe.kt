@@ -34,37 +34,36 @@ class WearCapabilityProbe(context: Context) {
    * Re-subscribes to the capability listener on each collector. Most consumers should hand this to
    * [stateIn] via [stateFlow].
    */
-  val supportsWearWidgets: Flow<Boolean> =
-    callbackFlow {
-        val listener = CapabilityClient.OnCapabilityChangedListener { info ->
-          trySend(info.nodes.isNotEmpty())
-        }
-        runCatching {
-            capabilityClient.addListener(listener, CAPABILITY).addOnFailureListener { error ->
-              // Devices without the Wearable component fail here
-              // with ApiException(API_NOT_CONNECTED). Silently
-              // emit false so the rest of the UI hides wear-only
-              // affordances instead of waiting forever.
-              Log.i(TAG, "capability listener unavailable: ${error.message}")
-              trySend(false)
-            }
-          }
-          .onFailure {
-            Log.i(TAG, "capability listener unavailable: ${it.message}")
-            trySend(false)
-          }
-        // Seed with the current state — addListener doesn't replay.
-        runCatching {
-            capabilityClient
-              .getCapability(CAPABILITY, CapabilityClient.FILTER_REACHABLE)
-              .addOnSuccessListener { info: CapabilityInfo -> trySend(info.nodes.isNotEmpty()) }
-              .addOnFailureListener { trySend(false) }
-          }
-          .onFailure { trySend(false) }
-        awaitClose { runCatching { capabilityClient.removeListener(listener) } }
+  val supportsWearWidgets: Flow<Boolean> = callbackFlow {
+    val listener = CapabilityClient.OnCapabilityChangedListener { info ->
+      trySend(info.nodes.isNotEmpty())
+    }
+    runCatching {
+      capabilityClient.addListener(listener, CAPABILITY).addOnFailureListener { error ->
+        // Devices without the Wearable component fail here
+        // with ApiException(API_NOT_CONNECTED). Silently
+        // emit false so the rest of the UI hides wear-only
+        // affordances instead of waiting forever.
+        Log.i(TAG, "capability listener unavailable: ${error.message}")
+        trySend(false)
       }
-      .map { it }
-      .distinctUntilChanged()
+    }
+      .onFailure {
+        Log.i(TAG, "capability listener unavailable: ${it.message}")
+        trySend(false)
+      }
+    // Seed with the current state — addListener doesn't replay.
+    runCatching {
+      capabilityClient
+        .getCapability(CAPABILITY, CapabilityClient.FILTER_REACHABLE)
+        .addOnSuccessListener { info: CapabilityInfo -> trySend(info.nodes.isNotEmpty()) }
+        .addOnFailureListener { trySend(false) }
+    }
+      .onFailure { trySend(false) }
+    awaitClose { runCatching { capabilityClient.removeListener(listener) } }
+  }
+    .map { it }
+    .distinctUntilChanged()
 
   /**
    * Hot [StateFlow] form of [supportsWearWidgets]. Pass an app-scoped [CoroutineScope] so the probe

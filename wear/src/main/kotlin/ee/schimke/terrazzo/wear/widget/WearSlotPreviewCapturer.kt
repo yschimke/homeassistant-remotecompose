@@ -108,22 +108,21 @@ class WearSlotPreviewCapturer(
     title: String,
     state: String,
   ) {
-    val bitmap: ImageBitmap? =
-      runCatching {
-          renderer.renderComposableToBitmap(canvasSize = size) { CaptureSurrogate(title, state) }
-        }
-        .getOrNull()
+    val bitmap: ImageBitmap? = runCatching {
+      renderer.renderComposableToBitmap(canvasSize = size) { CaptureSurrogate(title, state) }
+    }
+      .getOrNull()
     if (bitmap == null) {
       Log.w(TAG, "renderComposableToBitmap returned null for slot=$slotIndex size=$sizeLabel")
       return
     }
     val file = File(outputDir, "slot-$slotIndex-$sizeLabel.png")
     runCatching {
-        FileOutputStream(file).use { out ->
-          bitmap.asAndroidBitmap().compress(android.graphics.Bitmap.CompressFormat.PNG, 100, out)
-        }
-        Log.i(TAG, "Captured slot $slotIndex ($sizeLabel) → ${file.absolutePath}")
+      FileOutputStream(file).use { out ->
+        bitmap.asAndroidBitmap().compress(android.graphics.Bitmap.CompressFormat.PNG, 100, out)
       }
+      Log.i(TAG, "Captured slot $slotIndex ($sizeLabel) → ${file.absolutePath}")
+    }
       .onFailure { Log.w(TAG, "Failed to write $file", it) }
   }
 

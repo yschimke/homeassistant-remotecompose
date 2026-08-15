@@ -95,18 +95,19 @@ class RemoteUrlStore(private val context: Context) {
 
     fun normalize(baseUrl: String): String = baseUrl.trim().removeSuffix("/")
 
-    fun uriHost(url: String): String? =
-      runCatching { URI(normalize(url)).host?.lowercase() }.getOrNull()
+    fun uriHost(url: String): String? = runCatching {
+      URI(normalize(url)).host?.lowercase()
+    }
+      .getOrNull()
 
-    fun parseTarget(url: String): ExternalTarget? =
-      runCatching {
-          val u = URI(url.trim())
-          val scheme = u.scheme?.lowercase() ?: return@runCatching null
-          val host = u.host?.lowercase() ?: return@runCatching null
-          val port = if (u.port == -1) defaultPort(scheme) else u.port
-          ExternalTarget(scheme, host, port)
-        }
-        .getOrNull()
+    fun parseTarget(url: String): ExternalTarget? = runCatching {
+      val u = URI(url.trim())
+      val scheme = u.scheme?.lowercase() ?: return@runCatching null
+      val host = u.host?.lowercase() ?: return@runCatching null
+      val port = if (u.port == -1) defaultPort(scheme) else u.port
+      ExternalTarget(scheme, host, port)
+    }
+      .getOrNull()
 
     fun defaultPort(scheme: String): Int =
       when (scheme) {

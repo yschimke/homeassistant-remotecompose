@@ -134,30 +134,27 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
     val widgetActions =
       WidgetActionRegistry(snapshot.states.mapValues { (_, entity) -> formatState(entity) })
 
-    val captured =
-      runCatching {
-          runBlocking {
-            captureSingleRemoteDocument(
-              context = context,
-              creationDisplayInfo = RemoteCreationDisplayInfo(widthPx, heightPx, densityDpi),
-              profile = widgetsProfile,
-            ) {
-              ProvideCardRegistry(registry) {
-                ProvideSystemHaTheme {
-                  ProvideCardSizeMode(CardSizeMode.Fixed) {
-                    // The widget surface paints the themed
-                    // card background across the whole
-                    // capture canvas, so the launcher cell is
-                    // fully covered even when the card's
-                    // content is shorter than the slot.
-                    // Suppress the inner card's own chrome so
-                    // it doesn't draw a second frame inside.
-                    ProvideCardChrome(enabled = false) {
-                      ProvideWidgetActionRegistry(widgetActions) {
-                        RemoteHaWidgetSurface {
-                          RenderChild(entry.card, snapshot, RemoteModifier.fillMaxWidth())
-                        }
-                      }
+    val captured = runCatching {
+      runBlocking {
+        captureSingleRemoteDocument(
+          context = context,
+          creationDisplayInfo = RemoteCreationDisplayInfo(widthPx, heightPx, densityDpi),
+          profile = widgetsProfile,
+        ) {
+          ProvideCardRegistry(registry) {
+            ProvideSystemHaTheme {
+              ProvideCardSizeMode(CardSizeMode.Fixed) {
+                // The widget surface paints the themed
+                // card background across the whole
+                // capture canvas, so the launcher cell is
+                // fully covered even when the card's
+                // content is shorter than the slot.
+                // Suppress the inner card's own chrome so
+                // it doesn't draw a second frame inside.
+                ProvideCardChrome(enabled = false) {
+                  ProvideWidgetActionRegistry(widgetActions) {
+                    RemoteHaWidgetSurface {
+                      RenderChild(entry.card, snapshot, RemoteModifier.fillMaxWidth())
                     }
                   }
                 }
@@ -165,12 +162,14 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
             }
           }
         }
-        .getOrElse {
-          // The widgets profile rejects ops outside the launcher's vocabulary —
-          // log and skip rather than crashing the host process.
-          Log.w(TAG, "widgets-profile capture failed for id=$widgetId type=${entry.card.type}", it)
-          return
-        }
+      }
+    }
+      .getOrElse {
+        // The widgets profile rejects ops outside the launcher's vocabulary —
+        // log and skip rather than crashing the host process.
+        Log.w(TAG, "widgets-profile capture failed for id=$widgetId type=${entry.card.type}", it)
+        return
+      }
 
     val instructions = RemoteViews.DrawInstructions.Builder(listOf(captured.bytes)).build()
     val remoteViews = RemoteViews(instructions)

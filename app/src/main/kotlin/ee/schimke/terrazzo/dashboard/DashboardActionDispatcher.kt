@@ -216,13 +216,13 @@ private class DashboardActionDispatcher(
   ) {
     scope.launch {
       runCatching {
-          session.callService(
-            domain = domain,
-            service = service,
-            entityId = entityId,
-            serviceData = serviceData,
-          )
-        }
+        session.callService(
+          domain = domain,
+          service = service,
+          entityId = entityId,
+          serviceData = serviceData,
+        )
+      }
         .onFailure { e -> Log.w(TAG, "call_service $domain.$service failed for $entityId", e) }
     }
   }
