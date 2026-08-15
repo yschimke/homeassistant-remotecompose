@@ -4,22 +4,26 @@ kotlin = "2.4.10"
 agp = "9.3.1"
 java = "21"
 okhttp = "5.4.0"
-play-publisher = "4.0.0"
+play-publisher = "4.1.1"
 
 # Metro (DI) — requires Kotlin 2.2.20+.
-metro = "1.4.0"
+metro = "1.4.2"
 
 # Compose
 compose-bom = "2026.06.01"
 compose-compiler = "1.5.15"
 
 # RemoteCompose (alpha — APIs change per release)
-remote-compose = "1.0.0-alpha16"
-remote-material3 = "1.0.0-alpha08"
+# These three move in lockstep: `remote-material3:1.0.0-alpha09` and
+# `glance-wear:1.0.0-alpha16` both declare `remote-creation*` 1.0.0-alpha17 in
+# their POMs, and a skewed pair has historically produced runtime
+# NoClassDefFoundErrors inside the wear components.
+remote-compose = "1.0.0-alpha17"
+remote-material3 = "1.0.0-alpha09"
 
 # AndroidX Glance Wear (alpha — runtime feature gated on Wear OS 7+ / API 37
 # inside the library; we use it for the per-slot wear widgets).
-glance-wear = "1.0.0-alpha15"
+glance-wear = "1.0.0-alpha16"
 
 # Android
 android-minSdk = "29"
@@ -31,7 +35,7 @@ ktor = "3.5.2"
 kotlinx-serialization = "1.11.0"
 kotlinx-coroutines = "1.11.0"
 kotlinx-datetime = "0.8.0"
-logback = "1.6.1"
+logback = "1.6.3"
 junit = "4.13.2"
 mockserver = "7.5.0"
 indriya = "2.2.4"
@@ -45,7 +49,7 @@ indriya = "2.2.4"
 # of the plugin marker. The preview-baselines / preview-comment GitHub
 # Actions read this key (`catalog-key: compose-preview-plugin`) to pin
 # the CLI release they install on the runner.
-compose-preview-plugin = "0.19.19"
+compose-preview-plugin = "0.19.61"
 tapmoc = "0.4.2"
 
 # Image loading (BitmapLoader / RemoteCompose named-bitmap resolution)
@@ -88,6 +92,9 @@ remote-material3 = { module = "androidx.wear.compose.remote:remote-material3", v
 # renderer and the app agreeing on that version. Versioned with the rest of the
 # compose-ai-tools release train.
 composeai-data-render-core = { module = "ee.schimke.composeai:data-render-core", version.ref = "compose-preview-plugin" }
+# Debug-only: @AnimatedPreview drives the compose-preview GIF capture. Shares the
+# version ref above so the annotations can't drift from the renderer that reads them.
+composeai-preview-annotations = { module = "ee.schimke.composeai:preview-annotations", version.ref = "compose-preview-plugin" }
 
 # Compose
 compose-bom = { module = "androidx.compose:compose-bom", version.ref = "compose-bom" }

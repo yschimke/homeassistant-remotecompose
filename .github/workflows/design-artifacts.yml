@@ -56,6 +56,11 @@ on:
       - 'build.gradle.kts'
       - '**/build.gradle.kts'
       - 'catalog.spec.json'
+      # Same class as catalog.spec.json: config that changes what the run publishes. An
+      # allowlist edit is usually a *removal* — an exception dropped because the player
+      # gained the operation — and that is precisely the change that has to be re-run to
+      # find out whether the gate now passes without it.
+      - 'rc-cmp-wasm-allowlist.json'
       - '.github/workflows/design-artifacts.yml'
       - '.github/workflows/compose-preview.yml'
   workflow_dispatch:
@@ -85,18 +90,60 @@ jobs:
       system: homeassistant-remotecompose
       spec: catalog.spec.json
       module: ':previews'
-      # `:previews` has the plugin AUTO-injected (via --init-script), so the CLI
-      # carries its own matching plugin and a newer CLI is safe — `latest`
-      # because the pinned compose-preview-plugin predates some of the flags
-      # this pipeline uses.
-      cli-version: latest
+      # `:previews` has the plugin AUTO-injected (via --init-script), so keep the
+      # CLI synchronized with the catalog plugin. Resolved FROM the catalog rather
+      # than hardcoded here: a literal version is still a pin, but a second one,
+      # and Renovate only bumps the catalog key — so the two drift apart on every
+      # release (this sat at 0.19.20 while the catalog was already on 0.19.24,
+      # rendering the published catalog with a renderer the repo had moved off).
+      # `catalog` keeps the "don't silently pick up renderer regressions" property
+      # while making compose-preview-plugin the single source of truth, exactly as
+      # ci.yml and compose-preview.yml already do.
+      cli-version: catalog
+      catalog-key: compose-preview-plugin
       # Carry the executable bundle + per-preview bundles so the served catalog
       # gets a live lane instead of the baked-only degradation banner.
       publish-live-bundle: true
       split-per-preview: true
       split-mode: full
       allow-incomplete: ${{ github.event_name == 'workflow_dispatch' && inputs.allow_incomplete || false }}
+      # The CMP/Wasm player lane — the fifth column, and the one that made
+      # /remote-m3/compare a five-player page while this catalog had one. Unlike the embedded and
+      # cmp-jvm lanes (default-on upstream, and tolerant: a dead harness drops its column and the
+      # render still publishes) this one is a GATE. When it is on, `:rc-player-wasm:wasmPlayerDist`
+      # must build and every ir/*.rc must render inside the first-frame budgets — 10s cold, 5s warm
+      # — or the step fails and NOTHING publishes. A failure leaves the delivery branch on its last
+      # good commit, so the served catalog goes stale rather than broken, and the run goes red.
+      #
+      # Entered with no allowlist on purpose, and run #60 is what that bought: the lane named its
+      # four failures before the gate stopped publication, so the exceptions below are written
+      # against observed ids rather than guesses. Two causes, not four —
+      # `AlarmPanel_{Dark,Light}` need LAYOUT_STATE (opcode 217), which
+      # `rc-operations.manifest` already lists as unsupported, and
+      # `PictureEntity_AppMode_{Dark,Light}` carry a URL-encoded bitmap the CMP player declines
+      # without an image host. Both are gaps the player documents about itself; each entry carries
+      # its own expiry so it has to be re-argued rather than inherited.
+      #
+      # The gate is otherwise comfortable: 118/122 rendered, cold first frame 919 ms against a
+      # 10s budget and warm 890 ms against 5s, so the budgets are nowhere near binding.
+      rc-cmp-wasm-lane: true
+      rc-cmp-wasm-allowlist: rc-cmp-wasm-allowlist.json
       # Generated delivery branch — attributed to the repo owner, not a bot.
       commit-user-name: 'Yuri Schimke'
       commit-user-email: 'yuri@schimke.ee'
-      timeout-minutes: 45
+      # 45 covered the render plus a two-lane rc-compare page (baked PNG + the vendored TypeScript
+      # RcdPlayer), which is all this catalog got while the embedded lanes were opt-in and this file
+      # never opted in — hence /homeassistant-remotecompose/compare showing one player where
+      # /remote-m3/compare showed four. Those lanes now default to true upstream, and because this
+      # catalog does ship ir/*.rc they will run: two extra Gradle builds out of the compose-ai-tools
+      # checkout (:third-party-rc-embedded-player under Robolectric, :third-party-rc-embedded-player-jvm
+      # under xvfb). They start cold here — unlike compose-ai-tools' own catalogs this job passes no
+      # BuildFetch read-only token, so nothing is pulled from the remote cache. Headroom, not a
+      # measurement: the lanes are individually tolerant (a failed harness drops its column and the
+      # render still publishes), but a job-level timeout is not, and losing the whole catalog to a
+      # slow first run is the one failure this change could cause. Raised again for the CMP/Wasm
+      # lane above, which adds a third cold Gradle build (:rc-player-wasm:wasmPlayerDist, a
+      # Kotlin/Wasm compile) plus a Chromium render of every ir/*.rc. Still headroom rather than a
+      # measurement — the first run that exercises all three lanes is the one that produces a real
+      # number, and this should come back down to fit it once it has.
+      timeout-minutes: 120

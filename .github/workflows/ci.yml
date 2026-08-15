@@ -18,13 +18,13 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v7.0.1
-      - uses: gradle/actions/wrapper-validation@v6.2.0
+      - uses: gradle/actions/wrapper-validation@v6.3.0
       # Kotlin toolchain and Gradle daemon both run on JVM 21 (libs.versions.toml).
       - uses: actions/setup-java@v5.7.0
         with:
           distribution: temurin
           java-version: 21
-      - uses: gradle/actions/setup-gradle@v6.2.0
+      - uses: gradle/actions/setup-gradle@v6.3.0
       - run: ./gradlew assembleDebug --stacktrace
 
   test:
@@ -38,7 +38,7 @@ jobs:
         with:
           distribution: temurin
           java-version: 21
-      - uses: gradle/actions/setup-gradle@v6.2.0
+      - uses: gradle/actions/setup-gradle@v6.3.0
       # `:integration:test`'s pixel-diff suites require rendered PNGs
       # under `previews/build/compose-previews/renders/`. The
       # compose-preview Gradle plugin isn't applied to any module — its
@@ -47,7 +47,7 @@ jobs:
       # render before `./gradlew test`. (The `compose-preview` workflow
       # still publishes baselines / PR comments separately; this step is
       # local to the test job and doesn't push anything.)
-      - uses: yschimke/compose-ai-tools/.github/actions/install@v0.19.19
+      - uses: yschimke/compose-ai-tools/.github/actions/install@v0.19.61
         with:
           version: catalog
           catalog-key: compose-preview-plugin
@@ -83,7 +83,7 @@ jobs:
         with:
           distribution: temurin
           java-version: 21
-      - uses: gradle/actions/setup-gradle@v6.2.0
+      - uses: gradle/actions/setup-gradle@v6.3.0
       # `lint` fans out across every Android module. Debug variant is
       # enough for CI; release-only rules (e.g. ObsoleteSdkInt on
       # targetSdk) surface the same findings.
@@ -120,7 +120,7 @@ jobs:
         with:
           distribution: temurin
           java-version: 21
-      - uses: gradle/actions/setup-gradle@v6.2.0
+      - uses: gradle/actions/setup-gradle@v6.3.0
 
       - name: AVD cache
         uses: actions/cache@v6.1.0
