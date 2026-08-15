@@ -7,13 +7,12 @@ import androidx.compose.remote.creation.compose.modifier.background
 import androidx.compose.remote.creation.compose.modifier.border
 import androidx.compose.remote.creation.compose.modifier.clip
 import androidx.compose.remote.creation.compose.shapes.RemoteRoundedCornerShape
-import androidx.compose.remote.creation.compose.state.rc
+import androidx.compose.remote.creation.compose.state.RemoteColor
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.staticCompositionLocalOf
-import androidx.compose.ui.graphics.Color
 
 /**
  * Whether HA card components should draw their own outer chrome — the rounded-corner clip, themed
@@ -42,14 +41,12 @@ fun ProvideCardChrome(enabled: Boolean, content: @Composable () -> Unit) {
 @Composable
 @ReadOnlyComposable
 fun cardChrome(
-  background: Color,
-  border: Color,
+  background: RemoteColor,
+  border: RemoteColor,
   cornerRadiusDp: Int = 12,
   borderWidthDp: Int = 1,
 ): RemoteModifier {
   if (!LocalCardChromeEnabled.current) return RemoteModifier
   val shape = RemoteRoundedCornerShape(cornerRadiusDp.rdp)
-  return RemoteModifier.clip(shape)
-    .background(background.rc)
-    .border(borderWidthDp.rdp, border.rc, shape)
+  return RemoteModifier.clip(shape).background(background).border(borderWidthDp.rdp, border, shape)
 }

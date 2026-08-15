@@ -107,7 +107,7 @@ fun RemoteHaMediaControl(
 }
 
 @Composable
-private fun TitleBlock(data: HaMediaControlData, theme: HaTheme) {
+private fun TitleBlock(data: HaMediaControlData, theme: RemoteHaTheme) {
   RemoteText(
     text = data.playerName.rs,
     color = data.accent.rc,
@@ -119,7 +119,7 @@ private fun TitleBlock(data: HaMediaControlData, theme: HaTheme) {
   )
   RemoteText(
     text = LiveValues.attribute(data.entityId, "media_title", data.title),
-    color = theme.primaryText.rc,
+    color = theme.primaryText,
     fontSize = 16.rsp,
     fontWeight = FontWeight.Medium,
     style = RemoteTextStyle.Default,
@@ -129,7 +129,7 @@ private fun TitleBlock(data: HaMediaControlData, theme: HaTheme) {
   if (data.artist != null) {
     RemoteText(
       text = LiveValues.attribute(data.entityId, "media_artist", data.artist),
-      color = theme.secondaryText.rc,
+      color = theme.secondaryText,
       fontSize = 12.rsp,
       style = RemoteTextStyle.Default,
       maxLines = 1,
@@ -157,7 +157,7 @@ private fun TransportRow(data: HaMediaControlData) {
 }
 
 @Composable
-private fun SeekBlock(data: HaMediaControlData, theme: HaTheme) {
+private fun SeekBlock(data: HaMediaControlData, theme: RemoteHaTheme) {
   ProgressBar(data.positionFraction, data.accent, theme)
   if (data.positionLabel != null && data.durationLabel != null) {
     RemoteRow(
@@ -166,13 +166,13 @@ private fun SeekBlock(data: HaMediaControlData, theme: HaTheme) {
     ) {
       RemoteText(
         text = LiveValues.attribute(data.entityId, "media_position_label", data.positionLabel),
-        color = theme.secondaryText.rc,
+        color = theme.secondaryText,
         fontSize = 11.rsp,
         style = RemoteTextStyle.Default,
       )
       RemoteText(
         text = LiveValues.attribute(data.entityId, "media_duration_label", data.durationLabel),
-        color = theme.secondaryText.rc,
+        color = theme.secondaryText,
         fontSize = 11.rsp,
         style = RemoteTextStyle.Default,
       )
@@ -219,7 +219,7 @@ fun RemoteHaMediaControlWide(data: HaMediaControlData, modifier: RemoteModifier 
     ) {
       RemoteText(
         text = LiveValues.attribute(data.entityId, "media_title", data.title),
-        color = theme.primaryText.rc,
+        color = theme.primaryText,
         fontSize = 14.rsp,
         fontWeight = FontWeight.Medium,
         style = RemoteTextStyle.Default,
@@ -228,7 +228,7 @@ fun RemoteHaMediaControlWide(data: HaMediaControlData, modifier: RemoteModifier 
       )
       RemoteText(
         text = data.playerName.rs,
-        color = theme.secondaryText.rc,
+        color = theme.secondaryText,
         fontSize = 11.rsp,
         style = RemoteTextStyle.Default,
         maxLines = 1,
@@ -275,7 +275,7 @@ private fun TransportButton(
 private fun ProgressBar(
   fraction: Float,
   accent: androidx.compose.ui.graphics.Color,
-  theme: HaTheme,
+  theme: RemoteHaTheme,
 ) {
   val f = fraction.coerceIn(0f, 1f)
   RemoteBox(
@@ -284,7 +284,7 @@ private fun ProgressBar(
         .height(3.rdp)
         .padding(top = 4.rdp)
         .clip(RemoteRoundedCornerShape(1.rdp))
-        .background(theme.divider.rc)
+        .background(theme.divider)
   ) {
     RemoteBox(modifier = RemoteModifier.fillMaxWidth(f).height(3.rdp).background(accent.rc))
   }

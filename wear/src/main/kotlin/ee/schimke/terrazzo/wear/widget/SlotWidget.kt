@@ -8,7 +8,6 @@ import androidx.compose.remote.creation.compose.layout.RemoteBox
 import androidx.compose.remote.creation.compose.layout.RemoteText
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
-import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.runtime.Composable
 import androidx.glance.wear.AssociateWithGlanceWearWidget
@@ -18,6 +17,8 @@ import androidx.glance.wear.WearWidgetBrush
 import androidx.glance.wear.WearWidgetData
 import androidx.glance.wear.WearWidgetDocument
 import androidx.glance.wear.core.WearWidgetParams
+import androidx.wear.compose.remote.material3.RemoteColorScheme
+import androidx.wear.compose.remote.material3.RemoteMaterialTheme
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HaSnapshot
@@ -27,14 +28,14 @@ import ee.schimke.ha.rc.ProvideCardSizeMode
 import ee.schimke.ha.rc.RenderChild
 import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.cards.shutter.withEnhancedShutter
-import ee.schimke.ha.rc.components.HaTheme
 import ee.schimke.ha.rc.components.ProvideCardChrome
 import ee.schimke.ha.rc.components.ProvideFlowLayoutSupport
-import ee.schimke.ha.rc.components.ProvideHaTheme
+import ee.schimke.ha.rc.components.RemoteHaTheme
 import ee.schimke.ha.rc.components.ThemeStyle
-import ee.schimke.ha.rc.components.haThemeFor
+import ee.schimke.ha.rc.components.asHaTheme
 import ee.schimke.terrazzo.wear.data.WearPrefs
 import ee.schimke.terrazzo.wear.sync.WearOfflineStore
+import ee.schimke.terrazzo.wear.ui.terrazzoWearColorScheme
 import ee.schimke.terrazzo.wearsync.proto.EntityValue
 import ee.schimke.terrazzo.wearsync.proto.LiveValues
 import kotlinx.coroutines.flow.first
@@ -58,8 +59,9 @@ import kotlinx.serialization.json.JsonPrimitive
  * 4. Render via the rc-converter registry inside the [WearWidgetDocument] content lambda; Glance
  *    Wear captures the composition to RemoteCompose bytes for the watch's RC runtime.
  *
- * Wear is dark-only, so the theme is always resolved with `darkTheme = true`. The user's selected
- * [ThemeStyle] (read from [WearPrefs]) still drives hue and font family.
+ * Wear colors come from Remote Material 3's named `WearM3.*` state, so the widget host can update
+ * them without recapturing the document. The user's selected [ThemeStyle] (read from [WearPrefs])
+ * supplies fallback colors for runtimes that do not inject those names.
  *
  * Limitations: cards that need history / statistics / forecasts won't have that data — only the
  * latest entity state flows over the data layer today. Cards that lean on ops outside the Glance
@@ -89,14 +91,19 @@ abstract class SlotWidget(internal val slotIndex: Int) : GlanceWearWidget() {
     val snapshot = store.readValues().toSnapshot()
 
     val style = WearPrefs(app).themeStyle.first()
-    val theme = haThemeFor(style, darkTheme = true)
     val registry = defaultRegistry().withEnhancedShutter()
+    val wearColors = RemoteColorScheme(terrazzoWearColorScheme(style))
+    // Keep Remote Material's WearM3.* named states, but define the two HA-specific semantic slots:
+    // tertiary is link text and secondary is the unknown-state accent.
+    val updatedColors =
+      wearColors.copy(tertiary = wearColors.primary, secondary = wearColors.onSurfaceVariant)
 
     return WearWidgetDocument(
       background = WearWidgetBrush.Companion,
       content = {
         ProvideCardRegistry(registry) {
-          ProvideHaTheme(theme) {
+          RemoteMaterialTheme(colorScheme = updatedColors) {
+            val theme = RemoteMaterialTheme.colorScheme.asHaTheme()
             ProvideCardSizeMode(CardSizeMode.Fixed) {
               // The Glance Wear container already supplies its
               // own shape + brush via WearWidgetBrush, so
@@ -132,9 +139,9 @@ abstract class SlotWidget(internal val slotIndex: Int) : GlanceWearWidget() {
  * the matching `PinnedCard` hasn't synced yet.
  */
 @Composable
-private fun EmptySlotPlaceholder(slotIndex: Int, theme: HaTheme) {
+private fun EmptySlotPlaceholder(slotIndex: Int, theme: RemoteHaTheme) {
   RemoteBox(modifier = RemoteModifier.fillMaxWidth()) {
-    RemoteText(text = "Slot ${slotIndex + 1}".rs, color = theme.primaryText.rc)
+    RemoteText(text = "Slot ${slotIndex + 1}".rs, color = theme.primaryText)
   }
 }
 

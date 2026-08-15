@@ -85,7 +85,7 @@ fun RemoteHaArcDial(data: HaArcDialData, modifier: RemoteModifier = RemoteModifi
     ) {
       RemoteText(
         text = data.name.rs,
-        color = theme.primaryText.rc,
+        color = theme.primaryText,
         fontSize = 14.rsp,
         fontWeight = FontWeight.Medium,
         style = RemoteTextStyle.Default,
@@ -151,7 +151,7 @@ fun RemoteHaArcDialWide(data: HaArcDialData, modifier: RemoteModifier = RemoteMo
       ModeChip(data.modeChip, data.accent)
       RemoteText(
         text = LiveValues.attribute(data.entityId, data.centerLabelAttribute, data.centerLabel),
-        color = theme.primaryText.rc,
+        color = theme.primaryText,
         fontSize = 18.rsp,
         fontWeight = FontWeight.SemiBold,
         style = RemoteTextStyle.Default,
@@ -178,7 +178,7 @@ fun RemoteHaArcDialWide(data: HaArcDialData, modifier: RemoteModifier = RemoteMo
 }
 
 @Composable
-private fun DialBody(data: HaArcDialData, theme: HaTheme) {
+private fun DialBody(data: HaArcDialData, theme: RemoteHaTheme) {
   RemoteBox(modifier = RemoteModifier.size(180.rdp), contentAlignment = RemoteAlignment.Center) {
     ArcCanvas(
       data = data,
@@ -203,7 +203,7 @@ private fun DialBody(data: HaArcDialData, theme: HaTheme) {
       ModeChip(data.modeChip, data.accent)
       RemoteText(
         text = LiveValues.attribute(data.entityId, data.centerLabelAttribute, data.centerLabel),
-        color = theme.primaryText.rc,
+        color = theme.primaryText,
         fontSize = 26.rsp,
         fontWeight = FontWeight.SemiBold,
         style = RemoteTextStyle.Default,
@@ -275,7 +275,7 @@ private fun ChipText(text: RemoteString, accent: Color) {
 @Composable
 private fun ArcCanvas(
   data: HaArcDialData,
-  theme: HaTheme,
+  theme: RemoteHaTheme,
   trackStrokePx: Float,
   fillStrokePx: Float,
   markerStrokePx: Float,
@@ -316,9 +316,9 @@ private fun ArcCanvas(
           style = AndroidPaint.Style.STROKE
           strokeWidth = trackStrokePx
           strokeCap = AndroidPaint.Cap.ROUND
-          color = theme.divider.toArgb()
         }
         .asRemotePaint()
+        .apply { color = theme.divider }
     drawArc(track, 135f.rf, 270f.rf, false, topLeft, arcSize)
 
     val fill =
@@ -341,9 +341,9 @@ private fun ArcCanvas(
             style = AndroidPaint.Style.STROKE
             strokeWidth = markerStrokePx
             strokeCap = AndroidPaint.Cap.ROUND
-            color = theme.primaryText.toArgb()
           }
           .asRemotePaint()
+          .apply { color = theme.primaryText }
       drawArc(marker, animatedMarkerAngle, 0.1f.rf, false, topLeft, arcSize)
     }
   }
@@ -356,7 +356,7 @@ private fun Steppers(
   accent: Color,
   incrementAction: HaAction,
   decrementAction: HaAction,
-  theme: HaTheme,
+  theme: RemoteHaTheme,
 ) {
   RemoteRow(
     modifier = RemoteModifier.fillMaxWidth().padding(top = 6.rdp),
@@ -372,7 +372,7 @@ private fun StepperButton(
   icon: androidx.compose.ui.graphics.vector.ImageVector,
   action: HaAction,
   accent: Color,
-  theme: HaTheme,
+  theme: RemoteHaTheme,
 ) {
   val click = action.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
   RemoteBox(
@@ -380,7 +380,7 @@ private fun StepperButton(
       RemoteModifier.then(click)
         .size(36.rdp)
         .clip(RemoteCircleShape)
-        .border(1.rdp, theme.divider.rc, RemoteCircleShape),
+        .border(1.rdp, theme.divider, RemoteCircleShape),
     contentAlignment = RemoteAlignment.Center,
   ) {
     RemoteIcon(

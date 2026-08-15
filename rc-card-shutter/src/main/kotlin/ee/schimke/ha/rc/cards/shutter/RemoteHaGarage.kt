@@ -25,20 +25,19 @@ import androidx.compose.remote.creation.compose.modifier.size
 import androidx.compose.remote.creation.compose.modifier.width
 import androidx.compose.remote.creation.compose.shapes.RemoteCircleShape
 import androidx.compose.remote.creation.compose.shapes.RemoteRoundedCornerShape
+import androidx.compose.remote.creation.compose.state.RemoteColor
 import androidx.compose.remote.creation.compose.state.RemoteString
-import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.remote.creation.compose.state.rsp
 import androidx.compose.remote.creation.compose.text.RemoteTextStyle
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.wear.compose.remote.material3.RemoteIcon
 import ee.schimke.ha.rc.components.HaAction
-import ee.schimke.ha.rc.components.LocalHaTheme
 import ee.schimke.ha.rc.components.cardChrome
+import ee.schimke.ha.rc.components.currentRemoteHaTheme
 import ee.schimke.ha.rc.components.toRemoteAction
 
 /**
@@ -85,7 +84,7 @@ enum class GarageMotion {
 @Composable
 @RemoteComposable
 fun RemoteHaGarage(data: HaGarageCardData, modifier: RemoteModifier = RemoteModifier) {
-  val theme = LocalHaTheme.current
+  val theme = currentRemoteHaTheme()
   RemoteBox(
     modifier =
       modifier
@@ -97,7 +96,7 @@ fun RemoteHaGarage(data: HaGarageCardData, modifier: RemoteModifier = RemoteModi
       if (data.title != null) {
         RemoteText(
           text = data.title,
-          color = theme.primaryText.rc,
+          color = theme.primaryText,
           fontSize = 15.rsp,
           fontWeight = FontWeight.Medium,
           style = RemoteTextStyle.Default,
@@ -113,12 +112,12 @@ fun RemoteHaGarage(data: HaGarageCardData, modifier: RemoteModifier = RemoteModi
 @Composable
 @RemoteComposable
 private fun GarageEntry(entry: HaGarageEntryData) {
-  val theme = LocalHaTheme.current
+  val theme = currentRemoteHaTheme()
   RemoteColumn(verticalArrangement = RemoteArrangement.spacedBy(4.rdp)) {
     if (entry.showNameOnTop) {
       RemoteText(
         text = entry.name,
-        color = theme.primaryText.rc,
+        color = theme.primaryText,
         fontSize = 13.rsp,
         fontWeight = FontWeight.Medium,
         style = RemoteTextStyle.Default,
@@ -135,7 +134,7 @@ private fun GarageEntry(entry: HaGarageEntryData) {
     }
     RemoteText(
       text = entry.stateLabel,
-      color = theme.secondaryText.rc,
+      color = theme.secondaryText,
       fontSize = 11.rsp,
       style = RemoteTextStyle.Default,
       maxLines = 1,
@@ -157,20 +156,7 @@ private fun GarageEntry(entry: HaGarageEntryData) {
 @Composable
 @RemoteComposable
 private fun GarageDoorVisualisation(closedFraction: Float, motion: GarageMotion) {
-  val theme = LocalHaTheme.current
-  // Frame: outer wall / concrete colour. Slightly warmer than the
-  // window shutter frame so a side-by-side card lineup (window +
-  // garage) reads as different fixtures, not the same one twice.
-  val frame = if (theme.isDark) Color(0xFF3A3530) else Color(0xFFD9D2C5)
-  // Interior backdrop visible below the door when it's raised into
-  // the ceiling track.
-  val sky = if (theme.isDark) Color(0xFF0F1B24) else Color(0xFFD8ECF6)
-  // Door panel base. Slightly desaturated white-ish for residential.
-  val door = if (theme.isDark) Color(0xFFB7B2A8) else Color(0xFFF1EDE3)
-  // Panel divisions — horizontal lines splitting the door into 4
-  // sections, the key visual cue that this is a sectional garage
-  // door rather than a roller blind.
-  val groove = if (theme.isDark) Color(0xFF6E6A5E) else Color(0xFFB8B0A0)
+  val theme = currentRemoteHaTheme()
 
   val frameWidthDp = 120
   val frameHeightDp = 72
@@ -186,14 +172,16 @@ private fun GarageDoorVisualisation(closedFraction: Float, motion: GarageMotion)
       RemoteModifier.width(frameWidthDp.rdp)
         .height(frameHeightDp.rdp)
         .clip(RemoteRoundedCornerShape(6.rdp))
-        .background(sky.rc)
-        .border(borderDp.rdp, frame.rc, RemoteRoundedCornerShape(6.rdp)),
+        .background(theme.sectionBackground)
+        .border(borderDp.rdp, theme.divider, RemoteRoundedCornerShape(6.rdp)),
     contentAlignment = RemoteAlignment.TopCenter,
   ) {
     if (doorHeightDp > 0) {
       RemoteBox(
         modifier =
-          RemoteModifier.width(innerWidthDp.rdp).height(doorHeightDp.rdp).background(door.rc),
+          RemoteModifier.width(innerWidthDp.rdp)
+            .height(doorHeightDp.rdp)
+            .background(theme.secondaryText),
         contentAlignment = RemoteAlignment.Center,
       ) {
         // Panel grooves: 3 horizontal lines split a fully-
@@ -204,7 +192,7 @@ private fun GarageDoorVisualisation(closedFraction: Float, motion: GarageMotion)
           DoorPanelGrooves(
             innerWidthDp = innerWidthDp,
             doorHeightDp = doorHeightDp,
-            groove = groove,
+            groove = theme.divider,
           )
         }
         MotionArrow(motion = motion)
@@ -220,16 +208,14 @@ private fun GarageDoorVisualisation(closedFraction: Float, motion: GarageMotion)
  */
 @Composable
 @RemoteComposable
-private fun DoorPanelGrooves(innerWidthDp: Int, doorHeightDp: Int, groove: Color) {
+private fun DoorPanelGrooves(innerWidthDp: Int, doorHeightDp: Int, groove: RemoteColor) {
   RemoteColumn(
     modifier = RemoteModifier.width(innerWidthDp.rdp).height(doorHeightDp.rdp),
     verticalArrangement = RemoteArrangement.SpaceEvenly,
   ) {
     // Top spacer (no groove) + 3 grooves + bottom spacer = 4 panels.
     repeat(3) {
-      RemoteBox(
-        modifier = RemoteModifier.width(innerWidthDp.rdp).height(1.rdp).background(groove.rc)
-      )
+      RemoteBox(modifier = RemoteModifier.width(innerWidthDp.rdp).height(1.rdp).background(groove))
     }
   }
 }
@@ -238,7 +224,7 @@ private fun DoorPanelGrooves(innerWidthDp: Int, doorHeightDp: Int, groove: Color
 @RemoteComposable
 private fun MotionArrow(motion: GarageMotion) {
   if (motion == GarageMotion.Idle) return
-  val theme = LocalHaTheme.current
+  val theme = currentRemoteHaTheme()
   val icon =
     when (motion) {
       GarageMotion.Opening -> Icons.Outlined.ArrowUpward
@@ -252,7 +238,7 @@ private fun MotionArrow(motion: GarageMotion) {
     imageVector = icon,
     contentDescription = motion.name.rs,
     modifier = RemoteModifier.size(20.rdp),
-    tint = theme.primaryText.rc,
+    tint = theme.primaryText,
   )
 }
 
@@ -276,21 +262,18 @@ private fun GarageButton(
   description: String,
   action: HaAction,
 ) {
-  val theme = LocalHaTheme.current
+  val theme = currentRemoteHaTheme()
   val clickable = action.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
   RemoteBox(
     modifier =
-      RemoteModifier.size(32.rdp)
-        .clip(RemoteCircleShape)
-        .background(theme.divider.rc)
-        .then(clickable),
+      RemoteModifier.size(32.rdp).clip(RemoteCircleShape).background(theme.divider).then(clickable),
     contentAlignment = RemoteAlignment.Center,
   ) {
     RemoteIcon(
       imageVector = icon,
       contentDescription = description.rs,
       modifier = RemoteModifier.size(18.rdp),
-      tint = theme.primaryText.rc,
+      tint = theme.primaryText,
     )
   }
 }

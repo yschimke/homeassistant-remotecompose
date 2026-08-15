@@ -145,7 +145,7 @@ fun RemoteHaAlarmPanelWide(data: HaAlarmPanelData, modifier: RemoteModifier = Re
         ) {
           RemoteText(
             text = data.title.rs,
-            color = theme.primaryText.rc,
+            color = theme.primaryText,
             fontSize = 14.rsp,
             fontWeight = FontWeight.Medium,
             style = RemoteTextStyle.Default,
@@ -172,7 +172,7 @@ private fun StatusRow(
   data: HaAlarmPanelData,
   statusByKey: Map<Int, HaAlarmStatus>,
   initialStatus: HaAlarmStatus,
-  theme: HaTheme,
+  theme: RemoteHaTheme,
 ) {
   val keys = data.statuses.map { it.stateKey }.toIntArray()
   val stateInt = LiveValues.intState(data.entityId, data.initialStateInt)
@@ -186,7 +186,7 @@ private fun StatusRow(
       RemoteColumn {
         RemoteText(
           text = data.title.rs,
-          color = theme.primaryText.rc,
+          color = theme.primaryText,
           fontSize = 16.rsp,
           fontWeight = FontWeight.Medium,
           style = RemoteTextStyle.Default,
@@ -220,7 +220,7 @@ private fun StatusRow(
 }
 
 @Composable
-private fun ActionPill(action: HaAlarmAction, theme: HaTheme) {
+private fun ActionPill(action: HaAlarmAction, theme: RemoteHaTheme) {
   val click =
     action.tapAction.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
   val accent = action.accent.rc
@@ -248,7 +248,7 @@ private fun ActionPill(action: HaAlarmAction, theme: HaTheme) {
 private fun Keypad(
   entityId: String?,
   accent: androidx.compose.ui.graphics.Color,
-  theme: HaTheme,
+  theme: RemoteHaTheme,
   modifier: RemoteModifier = RemoteModifier,
   fill: Boolean = false,
 ) {
@@ -277,7 +277,7 @@ private fun KeypadKey(
   label: String,
   key: String,
   accent: androidx.compose.ui.graphics.Color,
-  theme: HaTheme,
+  theme: RemoteHaTheme,
 ) {
   val click =
     entityId

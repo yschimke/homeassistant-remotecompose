@@ -70,7 +70,7 @@ fun RemoteHaEntityRow(data: HaEntityRowData, modifier: RemoteModifier = RemoteMo
       RemoteBox(modifier = RemoteModifier.padding(start = 12.rdp)) {
         RemoteText(
           text = data.name.rs,
-          color = theme.primaryText.rc,
+          color = theme.primaryText,
           fontSize = 13.rsp,
           style = RemoteTextStyle.Default,
           maxLines = 1,
@@ -88,7 +88,7 @@ fun RemoteHaEntityRow(data: HaEntityRowData, modifier: RemoteModifier = RemoteMo
     } else {
       RemoteText(
         text = data.state,
-        color = theme.secondaryText.rc,
+        color = theme.secondaryText,
         fontSize = 13.rsp,
         style = RemoteTextStyle.Default,
         maxLines = 1,

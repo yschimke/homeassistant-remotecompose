@@ -62,20 +62,18 @@ fun RemoteHaPicture(
       imageVector = data.placeholderIcon,
       contentDescription = (data.name ?: "image").rs,
       modifier = RemoteModifier.size(48.rdp),
-      tint = theme.placeholderAccent.rc,
+      tint = theme.placeholderAccent,
     )
     if (data.name != null) {
       RemoteBox(
         modifier =
           RemoteModifier.fillMaxWidth()
-            .background(
-              theme.cardBackground.rc.copy(alpha = theme.cardBackground.rc.alpha * 0.85f.rf)
-            )
+            .background(theme.cardBackground.copy(alpha = theme.cardBackground.alpha * 0.85f.rf))
             .padding(horizontal = 12.rdp, vertical = 6.rdp)
       ) {
         RemoteText(
           text = data.name.rs,
-          color = theme.primaryText.rc,
+          color = theme.primaryText,
           fontSize = 13.rsp,
           fontWeight = FontWeight.Medium,
           style = RemoteTextStyle.Default,
@@ -89,14 +87,12 @@ fun RemoteHaPicture(
         modifier =
           RemoteModifier.padding(8.rdp)
             .clip(RemoteRoundedCornerShape(4.rdp))
-            .background(
-              theme.cardBackground.rc.copy(alpha = theme.cardBackground.rc.alpha * 0.7f.rf)
-            )
+            .background(theme.cardBackground.copy(alpha = theme.cardBackground.alpha * 0.7f.rf))
             .padding(horizontal = 6.rdp, vertical = 2.rdp)
       ) {
         RemoteText(
           text = data.captionUrl.rs,
-          color = theme.secondaryText.rc,
+          color = theme.secondaryText,
           fontSize = 9.rsp,
           style = RemoteTextStyle.Default,
           maxLines = 1,
@@ -118,20 +114,20 @@ fun RemoteHaPictureGlance(data: HaPictureGlanceData, modifier: RemoteModifier = 
   RemoteBox(modifier = modifier.fillMaxWidth().then(cardChrome(theme.divider, theme.divider))) {
     RemoteColumn {
       RemoteBox(
-        modifier = RemoteModifier.fillMaxWidth().height(120.rdp).background(theme.divider.rc),
+        modifier = RemoteModifier.fillMaxWidth().height(120.rdp).background(theme.divider),
         contentAlignment = RemoteAlignment.Center,
       ) {
         RemoteIcon(
           imageVector = data.placeholderIcon,
           contentDescription = (data.title ?: "image").rs,
           modifier = RemoteModifier.size(40.rdp),
-          tint = theme.placeholderAccent.rc,
+          tint = theme.placeholderAccent,
         )
       }
       RemoteRow(
         modifier =
           RemoteModifier.fillMaxWidth()
-            .background(theme.cardBackground.rc)
+            .background(theme.cardBackground)
             .padding(horizontal = 10.rdp, vertical = 8.rdp),
         horizontalArrangement = RemoteArrangement.spacedBy(8.rdp),
         verticalAlignment = RemoteAlignment.CenterVertically,
@@ -139,7 +135,7 @@ fun RemoteHaPictureGlance(data: HaPictureGlanceData, modifier: RemoteModifier = 
         if (data.title != null) {
           RemoteText(
             text = data.title.rs,
-            color = theme.primaryText.rc,
+            color = theme.primaryText,
             fontSize = 13.rsp,
             fontWeight = FontWeight.Medium,
             style = RemoteTextStyle.Default,
@@ -154,12 +150,12 @@ fun RemoteHaPictureGlance(data: HaPictureGlanceData, modifier: RemoteModifier = 
 }
 
 @Composable
-private fun Cell(cell: HaPictureGlanceCell, theme: HaTheme) {
+private fun Cell(cell: HaPictureGlanceCell, theme: RemoteHaTheme) {
   val click =
     cell.tapAction.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
   val accent = cell.accent.rc
   val activeBg: RemoteColor = accent.copy(alpha = accent.alpha * 0.18f.rf)
-  val inactiveBg: RemoteColor = theme.divider.rc.copy(alpha = theme.divider.rc.alpha * 0.5f.rf)
+  val inactiveBg: RemoteColor = theme.divider.copy(alpha = theme.divider.alpha * 0.5f.rf)
 
   // Live `<entityId>.is_on` so the host can flip the cell styling
   // without a re-encode; falls back to the authoring-time seed when
@@ -168,8 +164,8 @@ private fun Cell(cell: HaPictureGlanceCell, theme: HaTheme) {
   val bg: RemoteColor =
     isActive?.select(activeBg, inactiveBg) ?: if (cell.initiallyActive) activeBg else inactiveBg
   val tint: RemoteColor =
-    isActive?.select(accent, theme.secondaryText.rc)
-      ?: if (cell.initiallyActive) accent else theme.secondaryText.rc
+    isActive?.select(accent, theme.secondaryText)
+      ?: if (cell.initiallyActive) accent else theme.secondaryText
 
   RemoteBox(
     modifier = RemoteModifier.then(click).size(32.rdp).clip(RemoteCircleShape).background(bg),
@@ -221,7 +217,7 @@ fun RemoteHaPictureElements(
         imageVector = data.placeholderIcon,
         contentDescription = "elements".rs,
         modifier = RemoteModifier.size(40.rdp),
-        tint = theme.placeholderAccent.rc,
+        tint = theme.placeholderAccent,
       )
     }
     positioned.forEach { element ->
@@ -239,9 +235,7 @@ fun RemoteHaPictureElements(
         modifier =
           RemoteModifier.padding(top = (PICTURE_ELEMENTS_CANVAS_H_DP - 44).rdp)
             .fillMaxWidth()
-            .background(
-              theme.cardBackground.rc.copy(alpha = theme.cardBackground.rc.alpha * 0.85f.rf)
-            )
+            .background(theme.cardBackground.copy(alpha = theme.cardBackground.alpha * 0.85f.rf))
             .padding(horizontal = 10.rdp, vertical = 8.rdp),
         horizontalArrangement = RemoteArrangement.spacedBy(8.rdp, RemoteAlignment.Start),
         verticalAlignment = RemoteAlignment.CenterVertically,
@@ -255,7 +249,7 @@ fun RemoteHaPictureElements(
 @Composable
 private fun Element(
   element: HaPictureElement,
-  theme: HaTheme,
+  theme: RemoteHaTheme,
   modifier: RemoteModifier = RemoteModifier,
 ) {
   when (element) {
@@ -264,7 +258,7 @@ private fun Element(
         element.tapAction.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
       val accent = element.accent.rc
       val activeBg: RemoteColor = accent.copy(alpha = accent.alpha * 0.18f.rf)
-      val inactiveBg: RemoteColor = theme.divider.rc.copy(alpha = theme.divider.rc.alpha * 0.5f.rf)
+      val inactiveBg: RemoteColor = theme.divider.copy(alpha = theme.divider.alpha * 0.5f.rf)
 
       // Live `<entityId>.is_on` so the host can flip the element
       // styling without a re-encode.
@@ -273,8 +267,8 @@ private fun Element(
         isActive?.select(activeBg, inactiveBg)
           ?: if (element.initiallyActive) activeBg else inactiveBg
       val tint: RemoteColor =
-        isActive?.select(accent, theme.secondaryText.rc)
-          ?: if (element.initiallyActive) accent else theme.secondaryText.rc
+        isActive?.select(accent, theme.secondaryText)
+          ?: if (element.initiallyActive) accent else theme.secondaryText
 
       RemoteBox(
         modifier = modifier.then(click).size(28.rdp).clip(RemoteCircleShape).background(bg),
@@ -291,7 +285,7 @@ private fun Element(
     is HaPictureElement.StateLabel -> {
       RemoteText(
         text = element.text,
-        color = theme.primaryText.rc,
+        color = theme.primaryText,
         fontSize = 12.rsp,
         style = RemoteTextStyle.Default,
         maxLines = 1,

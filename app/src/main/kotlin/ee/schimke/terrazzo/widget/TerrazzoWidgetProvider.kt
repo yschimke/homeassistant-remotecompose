@@ -22,13 +22,9 @@ import ee.schimke.ha.rc.cardHeightDp
 import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.cards.shutter.withEnhancedShutter
 import ee.schimke.ha.rc.components.ProvideCardChrome
-import ee.schimke.ha.rc.components.ProvideHaTheme
+import ee.schimke.ha.rc.components.ProvideSystemHaTheme
 import ee.schimke.ha.rc.components.RemoteHaWidgetSurface
-import ee.schimke.ha.rc.components.ThemeStyle
-import ee.schimke.ha.rc.components.haThemeFor
 import ee.schimke.ha.rc.widgetsProfile
-import ee.schimke.terrazzo.core.prefs.DarkModePref
-import ee.schimke.terrazzo.core.prefs.ThemePref
 import ee.schimke.terrazzo.core.session.DemoData
 import ee.schimke.terrazzo.terrazzoGraph
 import kotlinx.coroutines.runBlocking
@@ -43,7 +39,8 @@ import kotlinx.coroutines.runBlocking
  * 1. Framework or our own broadcast triggers [onUpdate].
  * 2. For each pinned widget id, look up the [WidgetStore.Entry] and headlessly capture the card via
  *    [captureSingleRemoteDocument] with `profile = widgetsProfile`. The composition is wrapped with
- *    [ProvideCardRegistry] + [ProvideHaTheme] so converters resolve the user's theme.
+ *    [ProvideCardRegistry] + [ProvideSystemHaTheme] so the launcher resolves Android's system
+ *    colors at playback.
  * 3. Wrap the bytes in `RemoteViews.DrawInstructions` and publish via
  *    `AppWidgetManager.updateAppWidget(widgetId, …)`.
  *
@@ -117,8 +114,6 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
       return
     }
     val snapshot = if (DemoData.isDemo(entry.baseUrl)) DemoData.snapshot() else EMPTY_SNAPSHOT
-    val (style, dark) = loadThemeChoice(context)
-    val haTheme = haThemeFor(style, dark)
     val registry = defaultRegistry().withEnhancedShutter()
 
     val targetSizeDp =
@@ -140,7 +135,7 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
               profile = widgetsProfile,
             ) {
               ProvideCardRegistry(registry) {
-                ProvideHaTheme(haTheme) {
+                ProvideSystemHaTheme {
                   ProvideCardSizeMode(CardSizeMode.Fixed) {
                     // The widget surface paints the themed
                     // card background across the whole
@@ -170,32 +165,6 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
     val instructions = RemoteViews.DrawInstructions.Builder(listOf(captured.bytes)).build()
     appWidgetManager.updateAppWidget(widgetId, RemoteViews(instructions))
   }
-
-  private fun loadThemeChoice(context: Context): Pair<ThemeStyle, Boolean> = runBlocking {
-    val prefs = context.terrazzoGraph().preferencesStore
-    val style = prefs.themeStyleNow().toStyle()
-    val dark =
-      when (prefs.darkModeNow()) {
-        DarkModePref.Follow -> {
-          val ui =
-            context.resources.configuration.uiMode and
-              android.content.res.Configuration.UI_MODE_NIGHT_MASK
-          ui == android.content.res.Configuration.UI_MODE_NIGHT_YES
-        }
-        DarkModePref.Light -> false
-        DarkModePref.Dark -> true
-      }
-    style to dark
-  }
-
-  private fun ThemePref.toStyle(): ThemeStyle =
-    when (this) {
-      ThemePref.Material3 -> ThemeStyle.Material3
-      ThemePref.TerrazzoHome -> ThemeStyle.TerrazzoHome
-      ThemePref.TerrazzoMushroom -> ThemeStyle.TerrazzoMushroom
-      ThemePref.TerrazzoMinimalist -> ThemeStyle.TerrazzoMinimalist
-      ThemePref.TerrazzoKiosk -> ThemeStyle.TerrazzoKiosk
-    }
 
   private companion object {
     val EMPTY_SNAPSHOT = HaSnapshot()

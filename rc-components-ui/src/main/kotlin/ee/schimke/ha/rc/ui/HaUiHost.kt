@@ -6,9 +6,10 @@ import androidx.compose.remote.creation.compose.layout.RemoteComposable
 import androidx.compose.remote.tooling.preview.RemoteContentPreview
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import ee.schimke.ha.rc.components.HaTheme
-import ee.schimke.ha.rc.components.LocalHaTheme
 import ee.schimke.ha.rc.components.ProvideHaTheme
+import ee.schimke.ha.rc.components.ProvideRemoteHaTheme
+import ee.schimke.ha.rc.components.RemoteHaTheme
+import ee.schimke.ha.rc.components.currentRemoteHaTheme
 
 /**
  * Tier-2 embedding host: wraps [content] (a Tier-1 `@RemoteComposable` call) in a [RemotePreview]
@@ -17,9 +18,9 @@ import ee.schimke.ha.rc.components.ProvideHaTheme
  * 1. Picks the wrap-friendly experimental profile so the player's measured size flows from the
  *    surrounding Compose constraints (matching how `DashboardViewScreen` / `WidgetInstallSheet`
  *    embed cards in production).
- * 2. Re-provides [LocalHaTheme] inside the capture scope so theme look-up works exactly as it does
- *    for top-level Tier-1 callers — Tier-2 callers can still wrap in [ProvideHaTheme] from outside;
- *    the inner provide is a passthrough when no override is set.
+ * 2. Re-provides the current Remote Material color scheme inside the capture scope so theme look-up
+ *    works exactly as it does for top-level Tier-1 callers — Tier-2 callers can still wrap in
+ *    [ProvideHaTheme] from outside.
  *
  * Action callbacks: the embedded RemoteCompose document delivers `HostAction`s at playback time.
  * `RemoteContentPreview` doesn't expose the named-action stream, so apps that want HA service
@@ -29,10 +30,10 @@ import ee.schimke.ha.rc.components.ProvideHaTheme
 @Composable
 internal fun HaUiHost(
   modifier: Modifier = Modifier,
-  theme: HaTheme = LocalHaTheme.current,
+  theme: RemoteHaTheme = currentRemoteHaTheme(),
   content: @Composable @RemoteComposable () -> Unit,
 ) {
   RemoteContentPreview(modifier = modifier, profile = haUiEmbedProfile) {
-    ProvideHaTheme(theme) { content() }
+    ProvideRemoteHaTheme(theme) { content() }
   }
 }

@@ -16,7 +16,6 @@ import androidx.compose.remote.creation.compose.state.RemoteBoolean
 import androidx.compose.remote.creation.compose.state.RemoteFloat
 import androidx.compose.remote.creation.compose.state.RemoteString
 import androidx.compose.remote.creation.compose.state.floor
-import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rf
 import androidx.compose.remote.creation.compose.state.rs
@@ -59,7 +58,7 @@ fun RemoteHaClock(data: HaClockData, modifier: RemoteModifier = RemoteModifier) 
       if (data.title != null) {
         RemoteText(
           text = data.title.rs,
-          color = theme.secondaryText.rc,
+          color = theme.secondaryText,
           fontSize = 12.rsp,
           style = RemoteTextStyle.Default,
           maxLines = 1,
@@ -82,7 +81,7 @@ fun RemoteHaClock(data: HaClockData, modifier: RemoteModifier = RemoteModifier) 
           }
       RemoteText(
         text = timeText,
-        color = theme.primaryText.rc,
+        color = theme.primaryText,
         fontSize = timeSize.rsp,
         fontWeight = FontWeight.Light,
         style = RemoteTextStyle.Default,
@@ -91,7 +90,7 @@ fun RemoteHaClock(data: HaClockData, modifier: RemoteModifier = RemoteModifier) 
       if (data.secondaryLabel != null) {
         RemoteText(
           text = data.secondaryLabel.rs,
-          color = theme.secondaryText.rc,
+          color = theme.secondaryText,
           fontSize = 12.rsp,
           style = RemoteTextStyle.Default,
           maxLines = 1,

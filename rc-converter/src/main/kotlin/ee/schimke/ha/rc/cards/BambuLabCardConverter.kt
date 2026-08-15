@@ -27,8 +27,8 @@ import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.CardConverter
 import ee.schimke.ha.rc.cardDataSignature
 import ee.schimke.ha.rc.components.LiveValues
-import ee.schimke.ha.rc.components.LocalHaTheme
 import ee.schimke.ha.rc.components.cardChrome
+import ee.schimke.ha.rc.components.currentRemoteHaTheme
 import ee.schimke.ha.rc.formatState
 import ee.schimke.ha.rc.formatValueWithUnit
 import kotlinx.serialization.json.jsonPrimitive
@@ -71,7 +71,7 @@ open class BambuLabCardConverter(
 
   @Composable
   override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
-    val theme = LocalHaTheme.current
+    val theme = currentRemoteHaTheme()
     val entityId =
       card.raw["printer"]?.jsonPrimitive?.content ?: card.raw["entity"]?.jsonPrimitive?.content
     val entity = entityId?.let { snapshot.states[it] }
@@ -91,13 +91,13 @@ open class BambuLabCardConverter(
       RemoteColumn(verticalArrangement = RemoteArrangement.spacedBy(4.rdp)) {
         RemoteText(
           text = "Bambu Lab".rs,
-          color = theme.secondaryText.rc,
+          color = theme.secondaryText,
           fontSize = 11.rsp,
           style = RemoteTextStyle.Default,
         )
         RemoteText(
           text = variantLabel.rs,
-          color = theme.primaryText.rc,
+          color = theme.primaryText,
           fontSize = 15.rsp,
           fontWeight = FontWeight.Medium,
           style = RemoteTextStyle.Default,
@@ -109,13 +109,13 @@ open class BambuLabCardConverter(
         ) {
           RemoteText(
             text = name.rs,
-            color = theme.primaryText.rc,
+            color = theme.primaryText,
             fontSize = 13.rsp,
             style = RemoteTextStyle.Default,
           )
           RemoteText(
             text = LiveValues.state(entity?.entityId, state),
-            color = theme.secondaryText.rc,
+            color = theme.secondaryText,
             fontSize = 13.rsp,
             style = RemoteTextStyle.Default,
           )

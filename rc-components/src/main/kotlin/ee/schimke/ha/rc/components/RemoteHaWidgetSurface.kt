@@ -9,7 +9,6 @@ import androidx.compose.remote.creation.compose.modifier.border
 import androidx.compose.remote.creation.compose.modifier.clip
 import androidx.compose.remote.creation.compose.modifier.fillMaxSize
 import androidx.compose.remote.creation.compose.shapes.RemoteRoundedCornerShape
-import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.runtime.Composable
 
@@ -22,9 +21,9 @@ import androidx.compose.runtime.Composable
  * grown to fill its slot.
  *
  * This composable instead fills the **entire capture canvas** with the themed card surface (rounded
- * clip + [HaTheme.cardBackground] + hairline [HaTheme.divider] border) and renders [content] on
- * top, top-start aligned. The background therefore always matches the full current widget size
- * regardless of how much the inner card draws.
+ * clip + [RemoteHaTheme.cardBackground] + hairline [RemoteHaTheme.divider] border) and renders
+ * [content] on top, top-start aligned. The background therefore always matches the full current
+ * widget size regardless of how much the inner card draws.
  *
  * Pair with `ProvideCardChrome(enabled = false)` at the capture root so the inner card skips its
  * own content-sized frame and doesn't double up inside this one — mirroring how the Wear slot
@@ -45,8 +44,8 @@ fun RemoteHaWidgetSurface(
       modifier
         .fillMaxSize()
         .clip(shape)
-        .background(theme.cardBackground.rc)
-        .border(borderWidthDp.rdp, theme.divider.rc, shape)
+        .background(theme.cardBackground)
+        .border(borderWidthDp.rdp, theme.divider, shape)
   ) {
     content()
   }

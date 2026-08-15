@@ -48,7 +48,7 @@ fun RemoteHaArea(data: HaAreaCardData, modifier: RemoteModifier = RemoteModifier
     RemoteColumn(verticalArrangement = RemoteArrangement.spacedBy(8.rdp)) {
       RemoteText(
         text = data.name.rs,
-        color = theme.primaryText.rc,
+        color = theme.primaryText,
         fontSize = 16.rsp,
         fontWeight = FontWeight.Medium,
         style = RemoteTextStyle.Default,
@@ -77,18 +77,18 @@ fun RemoteHaArea(data: HaAreaCardData, modifier: RemoteModifier = RemoteModifier
 }
 
 @Composable
-private fun Stat(stat: HaAreaStat, theme: HaTheme) {
+private fun Stat(stat: HaAreaStat, theme: RemoteHaTheme) {
   RemoteRow(verticalAlignment = RemoteAlignment.CenterVertically) {
     RemoteIcon(
       imageVector = stat.icon,
       contentDescription = stat.label,
       modifier = RemoteModifier.size(16.rdp),
-      tint = theme.secondaryText.rc,
+      tint = theme.secondaryText,
     )
     RemoteBox(modifier = RemoteModifier.padding(start = 6.rdp)) {
       RemoteText(
         text = stat.label,
-        color = theme.secondaryText.rc,
+        color = theme.secondaryText,
         fontSize = 12.rsp,
         style = RemoteTextStyle.Default,
         maxLines = 1,
@@ -98,14 +98,14 @@ private fun Stat(stat: HaAreaStat, theme: HaTheme) {
 }
 
 @Composable
-private fun ActionChip(action: HaAreaAction, theme: HaTheme) {
+private fun ActionChip(action: HaAreaAction, theme: RemoteHaTheme) {
   val click =
     action.tapAction.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
   val accent = action.accent.rc
   val activeBg: RemoteColor = accent.copy(alpha = accent.alpha * 0.18f.rf)
-  val inactiveBg: RemoteColor = theme.divider.rc.copy(alpha = theme.divider.rc.alpha * 0.4f.rf)
+  val inactiveBg: RemoteColor = theme.divider.copy(alpha = theme.divider.alpha * 0.4f.rf)
   val activeTint: RemoteColor = accent
-  val inactiveTint: RemoteColor = theme.secondaryText.rc
+  val inactiveTint: RemoteColor = theme.secondaryText
 
   // Live `<entityId>.is_on` binding so the host can flip the chip's
   // active styling without a re-encode. Falls back to the seed value

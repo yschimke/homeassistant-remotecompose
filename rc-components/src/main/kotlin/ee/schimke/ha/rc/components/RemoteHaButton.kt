@@ -16,7 +16,6 @@ import androidx.compose.remote.creation.compose.modifier.size
 import androidx.compose.remote.creation.compose.shapes.RemoteCircleShape
 import androidx.compose.remote.creation.compose.state.RemoteColor
 import androidx.compose.remote.creation.compose.state.RemoteString
-import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rf
 import androidx.compose.remote.creation.compose.state.rs
@@ -181,7 +180,7 @@ private fun ButtonBody(
         RemoteBox(modifier = RemoteModifier.padding(top = namePadDp.rdp)) {
           RemoteText(
             text = data.name.rs,
-            color = theme.primaryText.rc,
+            color = theme.primaryText,
             fontSize = nameSizeSp.rsp,
             fontWeight = FontWeight.Medium,
             style = RemoteTextStyle.Default,

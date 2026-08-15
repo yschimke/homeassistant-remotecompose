@@ -18,7 +18,6 @@ import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.modifier.size
 import androidx.compose.remote.creation.compose.shapes.RemoteRoundedCornerShape
-import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.remote.creation.compose.state.rsp
@@ -95,7 +94,7 @@ fun RemoteHaWeatherForecast(
 }
 
 @Composable
-private fun CurrentRow(data: HaWeatherForecastData, theme: HaTheme) {
+private fun CurrentRow(data: HaWeatherForecastData, theme: RemoteHaTheme) {
   RemoteRow(
     modifier = RemoteModifier.fillMaxWidth(),
     verticalAlignment = RemoteAlignment.CenterVertically,
@@ -106,12 +105,12 @@ private fun CurrentRow(data: HaWeatherForecastData, theme: HaTheme) {
         imageVector = data.icon,
         contentDescription = data.condition,
         modifier = RemoteModifier.size(36.rdp),
-        tint = theme.primaryText.rc,
+        tint = theme.primaryText,
       )
       RemoteColumn(modifier = RemoteModifier.padding(start = 10.rdp)) {
         RemoteText(
           text = data.condition,
-          color = theme.primaryText.rc,
+          color = theme.primaryText,
           fontSize = 16.rsp,
           fontWeight = FontWeight.Medium,
           style = RemoteTextStyle.Default,
@@ -121,7 +120,7 @@ private fun CurrentRow(data: HaWeatherForecastData, theme: HaTheme) {
         if (data.supportingLine != null) {
           RemoteText(
             text = data.supportingLine.rs,
-            color = theme.secondaryText.rc,
+            color = theme.secondaryText,
             fontSize = 12.rsp,
             style = RemoteTextStyle.Default,
             maxLines = 1,
@@ -130,7 +129,7 @@ private fun CurrentRow(data: HaWeatherForecastData, theme: HaTheme) {
         } else {
           RemoteText(
             text = data.name.rs,
-            color = theme.secondaryText.rc,
+            color = theme.secondaryText,
             fontSize = 12.rsp,
             style = RemoteTextStyle.Default,
             maxLines = 1,
@@ -142,7 +141,7 @@ private fun CurrentRow(data: HaWeatherForecastData, theme: HaTheme) {
     RemoteColumn(horizontalAlignment = RemoteAlignment.End) {
       RemoteText(
         text = LiveValues.attribute(data.entityId, "temperature_label", data.temperature),
-        color = theme.primaryText.rc,
+        color = theme.primaryText,
         fontSize = 28.rsp,
         fontWeight = FontWeight.Light,
         style = RemoteTextStyle.Default,
@@ -152,7 +151,7 @@ private fun CurrentRow(data: HaWeatherForecastData, theme: HaTheme) {
       if (data.highLow != null) {
         RemoteText(
           text = data.highLow.rs,
-          color = theme.secondaryText.rc,
+          color = theme.secondaryText,
           fontSize = 13.rsp,
           style = RemoteTextStyle.Default,
           maxLines = 1,
@@ -169,7 +168,7 @@ private fun CurrentRow(data: HaWeatherForecastData, theme: HaTheme) {
  * rows read as one coherent block.
  */
 @Composable
-private fun ExtraInfoRow(extras: List<HaWeatherExtra>, theme: HaTheme) {
+private fun ExtraInfoRow(extras: List<HaWeatherExtra>, theme: RemoteHaTheme) {
   RemoteRow(
     modifier = RemoteModifier.fillMaxWidth(),
     horizontalArrangement = RemoteArrangement.spacedBy(8.rdp),
@@ -180,7 +179,7 @@ private fun ExtraInfoRow(extras: List<HaWeatherExtra>, theme: HaTheme) {
         modifier =
           RemoteModifier.weight(1f)
             .clip(RemoteRoundedCornerShape(10.rdp))
-            .background(theme.divider.rc)
+            .background(theme.divider)
             .padding(horizontal = 4.rdp, vertical = 8.rdp),
         horizontalAlignment = RemoteAlignment.CenterHorizontally,
         verticalArrangement = RemoteArrangement.spacedBy(3.rdp),
@@ -189,11 +188,11 @@ private fun ExtraInfoRow(extras: List<HaWeatherExtra>, theme: HaTheme) {
           imageVector = extra.icon,
           contentDescription = extra.label.rs,
           modifier = RemoteModifier.size(16.rdp),
-          tint = theme.secondaryText.rc,
+          tint = theme.secondaryText,
         )
         RemoteText(
           text = extra.value.rs,
-          color = theme.primaryText.rc,
+          color = theme.primaryText,
           fontSize = 13.rsp,
           fontWeight = FontWeight.Medium,
           style = RemoteTextStyle.Default,
@@ -202,7 +201,7 @@ private fun ExtraInfoRow(extras: List<HaWeatherExtra>, theme: HaTheme) {
         )
         RemoteText(
           text = extra.label.rs,
-          color = theme.secondaryText.rc,
+          color = theme.secondaryText,
           fontSize = 10.rsp,
           style = RemoteTextStyle.Default,
           maxLines = 1,
@@ -237,7 +236,7 @@ fun RemoteHaWeatherForecastWide(
       imageVector = data.icon,
       contentDescription = data.condition,
       modifier = RemoteModifier.size(28.rdp),
-      tint = theme.primaryText.rc,
+      tint = theme.primaryText,
     )
     RemoteColumn(
       modifier = RemoteModifier.weight(1f),
@@ -245,7 +244,7 @@ fun RemoteHaWeatherForecastWide(
     ) {
       RemoteText(
         text = data.condition,
-        color = theme.primaryText.rc,
+        color = theme.primaryText,
         fontSize = 13.rsp,
         fontWeight = FontWeight.Medium,
         style = RemoteTextStyle.Default,
@@ -254,7 +253,7 @@ fun RemoteHaWeatherForecastWide(
       )
       RemoteText(
         text = (data.supportingLine ?: data.name).rs,
-        color = theme.secondaryText.rc,
+        color = theme.secondaryText,
         fontSize = 11.rsp,
         style = RemoteTextStyle.Default,
         maxLines = 1,
@@ -263,7 +262,7 @@ fun RemoteHaWeatherForecastWide(
     }
     RemoteText(
       text = LiveValues.attribute(data.entityId, "temperature_label", data.temperature),
-      color = theme.primaryText.rc,
+      color = theme.primaryText,
       fontSize = 20.rsp,
       fontWeight = FontWeight.Light,
       style = RemoteTextStyle.Default,
@@ -276,7 +275,7 @@ fun RemoteHaWeatherForecastWide(
 @Composable
 private fun ForecastStrip(
   days: List<HaWeatherDay>,
-  theme: HaTheme,
+  theme: RemoteHaTheme,
   modifier: RemoteModifier = RemoteModifier,
   fill: Boolean = false,
 ) {
@@ -295,7 +294,7 @@ private fun ForecastStrip(
       ) {
         RemoteText(
           text = day.label.rs,
-          color = theme.secondaryText.rc,
+          color = theme.secondaryText,
           fontSize = if (fill) 13.rsp else 11.rsp,
           style = RemoteTextStyle.Default,
           maxLines = 1,
@@ -304,11 +303,11 @@ private fun ForecastStrip(
           imageVector = day.icon,
           contentDescription = day.label.rs,
           modifier = RemoteModifier.size(if (fill) 32.rdp else 20.rdp),
-          tint = theme.primaryText.rc,
+          tint = theme.primaryText,
         )
         RemoteText(
           text = day.high.rs,
-          color = theme.primaryText.rc,
+          color = theme.primaryText,
           fontSize = if (fill) 15.rsp else 12.rsp,
           fontWeight = FontWeight.Medium,
           style = RemoteTextStyle.Default,
@@ -316,7 +315,7 @@ private fun ForecastStrip(
         )
         RemoteText(
           text = day.low.rs,
-          color = theme.secondaryText.rc,
+          color = theme.secondaryText,
           fontSize = if (fill) 13.rsp else 11.rsp,
           style = RemoteTextStyle.Default,
           maxLines = 1,

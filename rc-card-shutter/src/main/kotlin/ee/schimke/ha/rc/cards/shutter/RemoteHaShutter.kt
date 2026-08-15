@@ -26,19 +26,17 @@ import androidx.compose.remote.creation.compose.modifier.width
 import androidx.compose.remote.creation.compose.shapes.RemoteCircleShape
 import androidx.compose.remote.creation.compose.shapes.RemoteRoundedCornerShape
 import androidx.compose.remote.creation.compose.state.RemoteString
-import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.remote.creation.compose.state.rsp
 import androidx.compose.remote.creation.compose.text.RemoteTextStyle
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.wear.compose.remote.material3.RemoteIcon
 import ee.schimke.ha.rc.components.HaAction
-import ee.schimke.ha.rc.components.LocalHaTheme
 import ee.schimke.ha.rc.components.cardChrome
+import ee.schimke.ha.rc.components.currentRemoteHaTheme
 import ee.schimke.ha.rc.components.toRemoteAction
 
 /**
@@ -67,7 +65,7 @@ data class HaShutterEntryData(
 @Composable
 @RemoteComposable
 fun RemoteHaShutter(data: HaShutterCardData, modifier: RemoteModifier = RemoteModifier) {
-  val theme = LocalHaTheme.current
+  val theme = currentRemoteHaTheme()
   RemoteBox(
     modifier =
       modifier
@@ -79,7 +77,7 @@ fun RemoteHaShutter(data: HaShutterCardData, modifier: RemoteModifier = RemoteMo
       if (data.title != null) {
         RemoteText(
           text = data.title,
-          color = theme.primaryText.rc,
+          color = theme.primaryText,
           fontSize = 15.rsp,
           fontWeight = FontWeight.Medium,
           style = RemoteTextStyle.Default,
@@ -95,12 +93,12 @@ fun RemoteHaShutter(data: HaShutterCardData, modifier: RemoteModifier = RemoteMo
 @Composable
 @RemoteComposable
 private fun ShutterEntry(entry: HaShutterEntryData) {
-  val theme = LocalHaTheme.current
+  val theme = currentRemoteHaTheme()
   RemoteColumn(verticalArrangement = RemoteArrangement.spacedBy(4.rdp)) {
     if (entry.showNameOnTop) {
       RemoteText(
         text = entry.name,
-        color = theme.primaryText.rc,
+        color = theme.primaryText,
         fontSize = 13.rsp,
         fontWeight = FontWeight.Medium,
         style = RemoteTextStyle.Default,
@@ -117,7 +115,7 @@ private fun ShutterEntry(entry: HaShutterEntryData) {
     }
     RemoteText(
       text = entry.stateLabel,
-      color = theme.secondaryText.rc,
+      color = theme.secondaryText,
       fontSize = 11.rsp,
       style = RemoteTextStyle.Default,
       maxLines = 1,
@@ -133,10 +131,7 @@ private fun ShutterEntry(entry: HaShutterEntryData) {
 @Composable
 @RemoteComposable
 private fun ShutterVisualisation(closedFraction: Float) {
-  val theme = LocalHaTheme.current
-  val frame = if (theme.isDark) Color(0xFF2A2A2A) else Color(0xFFEFEFEF)
-  val panel = if (theme.isDark) Color(0xFF8B7A5A) else Color(0xFFB28C4C)
-  val pane = if (theme.isDark) Color(0xFF1A2A33) else Color(0xFFCBE6F5)
+  val theme = currentRemoteHaTheme()
 
   val frameWidthDp = 96
   val frameHeightDp = 80
@@ -148,13 +143,15 @@ private fun ShutterVisualisation(closedFraction: Float) {
       RemoteModifier.width(frameWidthDp.rdp)
         .height(frameHeightDp.rdp)
         .clip(RemoteRoundedCornerShape(6.rdp))
-        .background(pane.rc)
-        .border(2.rdp, frame.rc, RemoteRoundedCornerShape(6.rdp))
+        .background(theme.sectionBackground)
+        .border(2.rdp, theme.divider, RemoteRoundedCornerShape(6.rdp))
   ) {
     if (panelHeightDp > 0) {
       RemoteBox(
         modifier =
-          RemoteModifier.width(frameWidthDp.rdp).height(panelHeightDp.rdp).background(panel.rc)
+          RemoteModifier.width(frameWidthDp.rdp)
+            .height(panelHeightDp.rdp)
+            .background(theme.placeholderAccent)
       )
     }
   }
@@ -180,21 +177,18 @@ private fun ShutterButton(
   description: String,
   action: HaAction,
 ) {
-  val theme = LocalHaTheme.current
+  val theme = currentRemoteHaTheme()
   val clickable = action.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
   RemoteBox(
     modifier =
-      RemoteModifier.size(32.rdp)
-        .clip(RemoteCircleShape)
-        .background(theme.divider.rc)
-        .then(clickable),
+      RemoteModifier.size(32.rdp).clip(RemoteCircleShape).background(theme.divider).then(clickable),
     contentAlignment = RemoteAlignment.Center,
   ) {
     RemoteIcon(
       imageVector = icon,
       contentDescription = description.rs,
       modifier = RemoteModifier.size(18.rdp),
-      tint = theme.primaryText.rc,
+      tint = theme.primaryText,
     )
   }
 }

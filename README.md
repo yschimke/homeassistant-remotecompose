@@ -151,8 +151,9 @@ Auth is a long-lived access token (HA Profile → Security → create token).
   hand-written converter. Start with the HACS top-10 (Mushroom, button-card,
   mini-graph-card, ApexCharts).
 - Strategy-based dashboards need client-side resolution; not implemented.
-- Theming: HA uses CSS custom properties via `--ha-<name>`. Map the active
-  theme into a `RemoteMaterialTheme`-equivalent token bag.
+- Theming: HA uses CSS custom properties via `--ha-<name>`. Remote components read
+  `RemoteMaterialTheme.colorScheme`; the current HA-role projection covers shared card chrome,
+  while richer HA-specific CSS role mapping remains future work.
 - Hosting: this library is agnostic about where it runs. A HA-side deployment
   (serves `.rc` bytes over HTTP) and an Android-side deployment (fetches
   config + renders locally) are both viable; keep the converter pure so

@@ -39,7 +39,7 @@ fun RemoteHaStatisticCard(data: HaStatisticCardData, modifier: RemoteModifier = 
     RemoteColumn(verticalArrangement = RemoteArrangement.spacedBy(4.rdp)) {
       RemoteText(
         text = data.name.rs,
-        color = theme.secondaryText.rc,
+        color = theme.secondaryText,
         fontSize = 12.rsp,
         fontWeight = FontWeight.Medium,
         style = RemoteTextStyle.Default,
@@ -49,7 +49,7 @@ fun RemoteHaStatisticCard(data: HaStatisticCardData, modifier: RemoteModifier = 
       RemoteRow(verticalAlignment = RemoteAlignment.Bottom) {
         RemoteText(
           text = data.valueLabel,
-          color = theme.primaryText.rc,
+          color = theme.primaryText,
           fontSize = 32.rsp,
           fontWeight = FontWeight.SemiBold,
           style = RemoteTextStyle.Default,
@@ -59,7 +59,7 @@ fun RemoteHaStatisticCard(data: HaStatisticCardData, modifier: RemoteModifier = 
           RemoteBox(modifier = RemoteModifier.padding(start = 4.rdp, bottom = 4.rdp)) {
             RemoteText(
               text = data.unit.rs,
-              color = theme.secondaryText.rc,
+              color = theme.secondaryText,
               fontSize = 14.rsp,
               style = RemoteTextStyle.Default,
               maxLines = 1,
