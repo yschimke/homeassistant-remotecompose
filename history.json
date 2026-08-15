@@ -1,6 +1,6 @@
 {
     "formatVersion": "compose-preview-history/v1",
-    "generatedFrom": "ce3d49776a9af1c983956f6043fd0f5b918eb0fb",
+    "generatedFrom": "2f93516d2c85316289fbdfac5c2981be3ba35926",
     "previews": {
         "app/ee.schimke.terrazzo.previews.CardDebugPreviewsKt.CardFlashPreview_Card flash on data change": {
             "path": "renders/app/CardFlashPreview_Card_flash_on_data_change-44b71c2b.gif",
@@ -1311,17 +1311,19 @@
             "path": "renders/previews/CardPreviewMatrix_Button_matrix_button-51cae881.png",
             "versions": [
                 {
+                    "blob": "8ca1f57e18d777595b2644db5e9920c8f40670e8",
+                    "commit": "2f93516d2c85316289fbdfac5c2981be3ba35926",
+                    "date": "2026-08-15T23:33:27Z",
+                    "sourceSha": "0d6a944c",
+                    "sinceCommit": "337de11c7a33abbfd669fd1497e2945825e4e2ac",
+                    "commits": 3,
+                    "occurrences": 3
+                },
+                {
                     "blob": "34eb0777b2883dcc60805e4dbe734a78983eecf4",
                     "commit": "ce3d49776a9af1c983956f6043fd0f5b918eb0fb",
                     "date": "2026-08-15T23:04:26Z",
                     "sourceSha": "53008f4d",
-                    "commits": 1
-                },
-                {
-                    "blob": "8ca1f57e18d777595b2644db5e9920c8f40670e8",
-                    "commit": "5cfb68406fb208bfb331fd7a4db51b38ed221421",
-                    "date": "2026-08-15T22:32:00Z",
-                    "sourceSha": "e40d5a96",
                     "commits": 1
                 },
                 {
@@ -1330,18 +1332,11 @@
                     "date": "2026-08-15T22:07:16Z",
                     "sourceSha": "89c4d46e",
                     "commits": 1
-                },
-                {
-                    "blob": "8ca1f57e18d777595b2644db5e9920c8f40670e8",
-                    "commit": "337de11c7a33abbfd669fd1497e2945825e4e2ac",
-                    "date": "2026-08-15T21:53:51Z",
-                    "sourceSha": "ea0e91bd",
-                    "commits": 1
                 }
             ],
-            "observations": 4,
-            "unstable": false,
-            "flapCount": 1
+            "observations": 5,
+            "unstable": true,
+            "flapCount": 2
         },
         "previews/ee.schimke.ha.previews.CardPreviewMatrixKt.CardPreviewMatrix_Calendar_matrix — calendar": {
             "path": "renders/previews/CardPreviewMatrix_Calendar_matrix_calendar-dc5ce4f9.png",
