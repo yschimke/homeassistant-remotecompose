@@ -1,6 +1,6 @@
 {
     "formatVersion": "compose-preview-history/v1",
-    "generatedFrom": "2911ceb74890f3bbe9eda8fb7fa9fb58da086309",
+    "generatedFrom": "314a2d8436c78bff24a70257e4bb18e24a9a0bfc",
     "previews": {
         "app/ee.schimke.terrazzo.previews.CardDebugPreviewsKt.CardFlashPreview_Card flash on data change": {
             "path": "renders/app/CardFlashPreview_Card_flash_on_data_change.gif",
@@ -71,6 +71,13 @@
         "app/ee.schimke.terrazzo.previews.ScreenPreviewsKt.Play_Phone_01_HomeLight_play · phone · home (light)": {
             "path": "renders/app/Play_Phone_01_HomeLight_play_phone_home_light.png",
             "versions": [
+                {
+                    "blob": "7a61e1b91e64a1b807b85b239ae2c6874869f8ac",
+                    "commit": "314a2d8436c78bff24a70257e4bb18e24a9a0bfc",
+                    "date": "2026-08-15T20:36:21Z",
+                    "sourceSha": "3fcc846d",
+                    "commits": 1
+                },
                 {
                     "blob": "ea4612061006efade81ca787dd4c39b8c9196e6c",
                     "commit": "86a6dc6c8472e231220d0f0d168fc75ce083f1df",
@@ -170,13 +177,20 @@
                     "commits": 1
                 }
             ],
-            "observations": 14,
+            "observations": 15,
             "unstable": false,
             "flapCount": 0
         },
         "app/ee.schimke.terrazzo.previews.ScreenPreviewsKt.Play_Phone_02_HomeDark_play · phone · home (dark)": {
             "path": "renders/app/Play_Phone_02_HomeDark_play_phone_home_dark.png",
             "versions": [
+                {
+                    "blob": "9e78b62d09564924977fe0d8630f5e6629e999a0",
+                    "commit": "314a2d8436c78bff24a70257e4bb18e24a9a0bfc",
+                    "date": "2026-08-15T20:36:21Z",
+                    "sourceSha": "3fcc846d",
+                    "commits": 1
+                },
                 {
                     "blob": "0fb33c3abbc9fbc7ebcf08c2a20278c7c478bb51",
                     "commit": "86a6dc6c8472e231220d0f0d168fc75ce083f1df",
@@ -276,7 +290,7 @@
                     "commits": 1
                 }
             ],
-            "observations": 14,
+            "observations": 15,
             "unstable": false,
             "flapCount": 1
         },
@@ -370,6 +384,13 @@
         "app/ee.schimke.terrazzo.previews.ScreenPreviewsKt.Play_Tablet10_01_Home_play · 10-inch · home": {
             "path": "renders/app/Play_Tablet10_01_Home_play_10_inch_home.png",
             "versions": [
+                {
+                    "blob": "5d9a1371204ed80d86d1a3774fe833c9a0061b3a",
+                    "commit": "314a2d8436c78bff24a70257e4bb18e24a9a0bfc",
+                    "date": "2026-08-15T20:36:21Z",
+                    "sourceSha": "3fcc846d",
+                    "commits": 1
+                },
                 {
                     "blob": "1919dad57a6d75042cefbcbe01aa06a9225ff242",
                     "commit": "86a6dc6c8472e231220d0f0d168fc75ce083f1df",
@@ -679,13 +700,20 @@
                     "commits": 1
                 }
             ],
-            "observations": 50,
+            "observations": 51,
             "unstable": true,
             "flapCount": 8
         },
         "app/ee.schimke.terrazzo.previews.ScreenPreviewsKt.Play_Tablet7_01_Home_play · 7-inch · home": {
             "path": "renders/app/Play_Tablet7_01_Home_play_7_inch_home.png",
             "versions": [
+                {
+                    "blob": "c0de7c6d9479fca8228b4540156dd6d43751f236",
+                    "commit": "314a2d8436c78bff24a70257e4bb18e24a9a0bfc",
+                    "date": "2026-08-15T20:36:21Z",
+                    "sourceSha": "3fcc846d",
+                    "commits": 1
+                },
                 {
                     "blob": "7b4534adb5c73b39b6503576df08c0ef3f9c53b2",
                     "commit": "86a6dc6c8472e231220d0f0d168fc75ce083f1df",
@@ -708,7 +736,7 @@
                     "commits": 1
                 }
             ],
-            "observations": 3,
+            "observations": 4,
             "unstable": false,
             "flapCount": 0
         },
@@ -2350,6 +2378,13 @@
             "path": "renders/app/Screen_DashboardView_PhoneLandscapeMedium_dashboard_view_phone_landscape_medium.png",
             "versions": [
                 {
+                    "blob": "cfec600352898d96153c327f08bcad9de34aab90",
+                    "commit": "314a2d8436c78bff24a70257e4bb18e24a9a0bfc",
+                    "date": "2026-08-15T20:36:21Z",
+                    "sourceSha": "3fcc846d",
+                    "commits": 1
+                },
+                {
                     "blob": "82d20b21b0f80a45ecb100c269a38b359ce0231c",
                     "commit": "7be5c50746ed780419f02e70ab1e5305dc990e25",
                     "date": "2026-08-02T09:11:18Z",
@@ -2392,13 +2427,20 @@
                     "commits": 1
                 }
             ],
-            "observations": 6,
+            "observations": 7,
             "unstable": false,
             "flapCount": 0
         },
         "app/ee.schimke.terrazzo.previews.ScreenPreviewsKt.Screen_DashboardView_ThemeStyle_dashboard · theme": {
             "path": "renders/app/Screen_DashboardView_ThemeStyle_dashboard_theme_Material3.png",
             "versions": [
+                {
+                    "blob": "8ca4c9414b7be2a98f65d0df7330280365485286",
+                    "commit": "314a2d8436c78bff24a70257e4bb18e24a9a0bfc",
+                    "date": "2026-08-15T20:36:21Z",
+                    "sourceSha": "3fcc846d",
+                    "commits": 1
+                },
                 {
                     "blob": "56aeb002b8de19fe72873a69a00b3c3fe72ae6f2",
                     "commit": "7be5c50746ed780419f02e70ab1e5305dc990e25",
@@ -2512,13 +2554,20 @@
                     "commits": 1
                 }
             ],
-            "observations": 16,
+            "observations": 17,
             "unstable": false,
             "flapCount": 1
         },
         "app/ee.schimke.terrazzo.previews.ScreenPreviewsKt.Screen_DashboardView_ThemeStyle_dashboard · theme#1": {
             "path": "renders/app/Screen_DashboardView_ThemeStyle_dashboard_theme_TerrazzoHome.png",
             "versions": [
+                {
+                    "blob": "eac47e3681d41b638a5ef8454a528c77f19ecb85",
+                    "commit": "314a2d8436c78bff24a70257e4bb18e24a9a0bfc",
+                    "date": "2026-08-15T20:36:21Z",
+                    "sourceSha": "3fcc846d",
+                    "commits": 1
+                },
                 {
                     "blob": "2ee677c0c58fca08a906783860ae6e8fc95b1706",
                     "commit": "7be5c50746ed780419f02e70ab1e5305dc990e25",
@@ -2632,13 +2681,20 @@
                     "commits": 1
                 }
             ],
-            "observations": 16,
+            "observations": 17,
             "unstable": false,
             "flapCount": 1
         },
         "app/ee.schimke.terrazzo.previews.ScreenPreviewsKt.Screen_DashboardView_ThemeStyle_dashboard · theme#2": {
             "path": "renders/app/Screen_DashboardView_ThemeStyle_dashboard_theme_TerrazzoKiosk.png",
             "versions": [
+                {
+                    "blob": "6bbd8ec48e51ebfc48834caa7c96a52e923b0238",
+                    "commit": "314a2d8436c78bff24a70257e4bb18e24a9a0bfc",
+                    "date": "2026-08-15T20:36:21Z",
+                    "sourceSha": "3fcc846d",
+                    "commits": 1
+                },
                 {
                     "blob": "76aa6b47ac15accdd0a481c375e91852382a7eaa",
                     "commit": "7be5c50746ed780419f02e70ab1e5305dc990e25",
@@ -2745,13 +2801,20 @@
                     "commits": 1
                 }
             ],
-            "observations": 15,
+            "observations": 16,
             "unstable": false,
             "flapCount": 1
         },
         "app/ee.schimke.terrazzo.previews.ScreenPreviewsKt.Screen_DashboardView_ThemeStyle_dashboard · theme#3": {
             "path": "renders/app/Screen_DashboardView_ThemeStyle_dashboard_theme_TerrazzoMinimalist.png",
             "versions": [
+                {
+                    "blob": "b35165e6b63f7e0d930b4570b618b9b5d5245d91",
+                    "commit": "314a2d8436c78bff24a70257e4bb18e24a9a0bfc",
+                    "date": "2026-08-15T20:36:21Z",
+                    "sourceSha": "3fcc846d",
+                    "commits": 1
+                },
                 {
                     "blob": "70c94914bf7e4b134a9c8ae30d210c78164bcc99",
                     "commit": "7be5c50746ed780419f02e70ab1e5305dc990e25",
@@ -2858,13 +2921,20 @@
                     "commits": 1
                 }
             ],
-            "observations": 15,
+            "observations": 16,
             "unstable": false,
             "flapCount": 1
         },
         "app/ee.schimke.terrazzo.previews.ScreenPreviewsKt.Screen_DashboardView_ThemeStyle_dashboard · theme#4": {
             "path": "renders/app/Screen_DashboardView_ThemeStyle_dashboard_theme_TerrazzoMushroom.png",
             "versions": [
+                {
+                    "blob": "0af11a6d39a460b983722926fcbbe20b0f071c32",
+                    "commit": "314a2d8436c78bff24a70257e4bb18e24a9a0bfc",
+                    "date": "2026-08-15T20:36:21Z",
+                    "sourceSha": "3fcc846d",
+                    "commits": 1
+                },
                 {
                     "blob": "08150752f9091f5988d4ebcc9576c15a1ee954b7",
                     "commit": "7be5c50746ed780419f02e70ab1e5305dc990e25",
@@ -2971,13 +3041,20 @@
                     "commits": 1
                 }
             ],
-            "observations": 15,
+            "observations": 16,
             "unstable": false,
             "flapCount": 1
         },
         "app/ee.schimke.terrazzo.previews.ScreenPreviewsKt.Screen_DashboardView_dashboard view": {
             "path": "renders/app/Screen_DashboardView_dashboard_view.png",
             "versions": [
+                {
+                    "blob": "eac47e3681d41b638a5ef8454a528c77f19ecb85",
+                    "commit": "314a2d8436c78bff24a70257e4bb18e24a9a0bfc",
+                    "date": "2026-08-15T20:36:21Z",
+                    "sourceSha": "3fcc846d",
+                    "commits": 1
+                },
                 {
                     "blob": "2ee677c0c58fca08a906783860ae6e8fc95b1706",
                     "commit": "7be5c50746ed780419f02e70ab1e5305dc990e25",
@@ -3091,7 +3168,7 @@
                     "commits": 1
                 }
             ],
-            "observations": 16,
+            "observations": 17,
             "unstable": false,
             "flapCount": 1
         },
@@ -4391,6 +4468,13 @@
             "path": "renders/previews/CardPreviewMatrix_Button_matrix_button.png",
             "versions": [
                 {
+                    "blob": "8cdf839e81e13c66bd7972bd96baa167fdeaca09",
+                    "commit": "314a2d8436c78bff24a70257e4bb18e24a9a0bfc",
+                    "date": "2026-08-15T20:36:21Z",
+                    "sourceSha": "3fcc846d",
+                    "commits": 1
+                },
+                {
                     "blob": "8ca1f57e18d777595b2644db5e9920c8f40670e8",
                     "commit": "2911ceb74890f3bbe9eda8fb7fa9fb58da086309",
                     "date": "2026-08-15T18:08:05Z",
@@ -4855,7 +4939,7 @@
                     "commits": 1
                 }
             ],
-            "observations": 86,
+            "observations": 87,
             "unstable": true,
             "flapCount": 22
         },
@@ -12233,6 +12317,13 @@
             "path": "renders/previews/DashboardSecurityMobile_dashboard_security_mobile.png",
             "versions": [
                 {
+                    "blob": "3c701926cc9f13ec7a8437729118c26202286816",
+                    "commit": "314a2d8436c78bff24a70257e4bb18e24a9a0bfc",
+                    "date": "2026-08-15T20:36:21Z",
+                    "sourceSha": "3fcc846d",
+                    "commits": 1
+                },
+                {
                     "blob": "e1d623e276a36c158c2bf1c2b6dd046c34ea9324",
                     "commit": "7be5c50746ed780419f02e70ab1e5305dc990e25",
                     "date": "2026-08-02T09:11:18Z",
@@ -12268,13 +12359,20 @@
                     "commits": 1
                 }
             ],
-            "observations": 5,
+            "observations": 6,
             "unstable": false,
             "flapCount": 0
         },
         "previews/ee.schimke.ha.previews.DashboardPreviewsKt.DashboardSecurityTablet_dashboard security — tablet": {
             "path": "renders/previews/DashboardSecurityTablet_dashboard_security_tablet.png",
             "versions": [
+                {
+                    "blob": "7f97a4c4c13c2339d8a720e0c1fb125a0a6a67b7",
+                    "commit": "314a2d8436c78bff24a70257e4bb18e24a9a0bfc",
+                    "date": "2026-08-15T20:36:21Z",
+                    "sourceSha": "3fcc846d",
+                    "commits": 1
+                },
                 {
                     "blob": "3775dc7e60f7fcea3b05e4345754b1c4bb561458",
                     "commit": "69234c7dd55d7032be8704a4fd808daaf55e250c",
@@ -12304,13 +12402,20 @@
                     "commits": 1
                 }
             ],
-            "observations": 4,
+            "observations": 5,
             "unstable": false,
             "flapCount": 0
         },
         "previews/ee.schimke.ha.previews.GarageShutterCardPreviewsKt.Garage_Animation_Dark_garage-anim (dark)": {
             "path": "renders/previews/Garage_Animation_Dark_garage_anim_dark_closed.png",
             "versions": [
+                {
+                    "blob": "932b0cbf0476c0bbc4a85635f07d17048898c862",
+                    "commit": "314a2d8436c78bff24a70257e4bb18e24a9a0bfc",
+                    "date": "2026-08-15T20:36:21Z",
+                    "sourceSha": "3fcc846d",
+                    "commits": 1
+                },
                 {
                     "blob": "019075d37fb253395435ad6997a37366e3de3961",
                     "commit": "7be5c50746ed780419f02e70ab1e5305dc990e25",
@@ -12333,13 +12438,20 @@
                     "commits": 1
                 }
             ],
-            "observations": 3,
+            "observations": 4,
             "unstable": false,
             "flapCount": 0
         },
         "previews/ee.schimke.ha.previews.GarageShutterCardPreviewsKt.Garage_Animation_Dark_garage-anim (dark)#1": {
             "path": "renders/previews/Garage_Animation_Dark_garage_anim_dark_open.png",
             "versions": [
+                {
+                    "blob": "3ad675ca05166bb81b388f015153480c80d258df",
+                    "commit": "314a2d8436c78bff24a70257e4bb18e24a9a0bfc",
+                    "date": "2026-08-15T20:36:21Z",
+                    "sourceSha": "3fcc846d",
+                    "commits": 1
+                },
                 {
                     "blob": "4679baef4ef8adfb4faae79c8453c028493d3d81",
                     "commit": "7be5c50746ed780419f02e70ab1e5305dc990e25",
@@ -12362,13 +12474,20 @@
                     "commits": 1
                 }
             ],
-            "observations": 3,
+            "observations": 4,
             "unstable": false,
             "flapCount": 0
         },
         "previews/ee.schimke.ha.previews.GarageShutterCardPreviewsKt.Garage_Animation_Dark_garage-anim (dark)#2": {
             "path": "renders/previews/Garage_Animation_Dark_garage_anim_dark_opening_25.png",
             "versions": [
+                {
+                    "blob": "426537c48fbd3b60085d5d9b2b9b0aec41cae4ea",
+                    "commit": "314a2d8436c78bff24a70257e4bb18e24a9a0bfc",
+                    "date": "2026-08-15T20:36:21Z",
+                    "sourceSha": "3fcc846d",
+                    "commits": 1
+                },
                 {
                     "blob": "feb2e62b3a110da916922237449b331fd5a02975",
                     "commit": "7be5c50746ed780419f02e70ab1e5305dc990e25",
@@ -12391,13 +12510,20 @@
                     "commits": 1
                 }
             ],
-            "observations": 3,
+            "observations": 4,
             "unstable": false,
             "flapCount": 0
         },
         "previews/ee.schimke.ha.previews.GarageShutterCardPreviewsKt.Garage_Animation_Dark_garage-anim (dark)#3": {
             "path": "renders/previews/Garage_Animation_Dark_garage_anim_dark_opening_50.png",
             "versions": [
+                {
+                    "blob": "34bd0367f6e5a358941b5f30b148d0cc47c4b542",
+                    "commit": "314a2d8436c78bff24a70257e4bb18e24a9a0bfc",
+                    "date": "2026-08-15T20:36:21Z",
+                    "sourceSha": "3fcc846d",
+                    "commits": 1
+                },
                 {
                     "blob": "7fdc3c8589c022c19b3613fdfb7bf105e4f35df3",
                     "commit": "7be5c50746ed780419f02e70ab1e5305dc990e25",
@@ -12420,13 +12546,20 @@
                     "commits": 1
                 }
             ],
-            "observations": 3,
+            "observations": 4,
             "unstable": false,
             "flapCount": 0
         },
         "previews/ee.schimke.ha.previews.GarageShutterCardPreviewsKt.Garage_Animation_Dark_garage-anim (dark)#4": {
             "path": "renders/previews/Garage_Animation_Dark_garage_anim_dark_opening_75.png",
             "versions": [
+                {
+                    "blob": "df9380587c24b53dc0506127992e8983d4a83165",
+                    "commit": "314a2d8436c78bff24a70257e4bb18e24a9a0bfc",
+                    "date": "2026-08-15T20:36:21Z",
+                    "sourceSha": "3fcc846d",
+                    "commits": 1
+                },
                 {
                     "blob": "2c743a4bb4d2961293ac3594e514d6e446973ec7",
                     "commit": "7be5c50746ed780419f02e70ab1e5305dc990e25",
@@ -12449,13 +12582,20 @@
                     "commits": 1
                 }
             ],
-            "observations": 3,
+            "observations": 4,
             "unstable": false,
             "flapCount": 0
         },
         "previews/ee.schimke.ha.previews.GarageShutterCardPreviewsKt.Garage_Animation_Light_garage-anim (light)": {
             "path": "renders/previews/Garage_Animation_Light_garage_anim_light_closed.png",
             "versions": [
+                {
+                    "blob": "e2af24f1658f170f2c3cedb7295c802c734f00d4",
+                    "commit": "314a2d8436c78bff24a70257e4bb18e24a9a0bfc",
+                    "date": "2026-08-15T20:36:21Z",
+                    "sourceSha": "3fcc846d",
+                    "commits": 1
+                },
                 {
                     "blob": "6ce15e2601e6ef71f655d8859f9ddae12d01e25d",
                     "commit": "7be5c50746ed780419f02e70ab1e5305dc990e25",
@@ -12478,13 +12618,20 @@
                     "commits": 1
                 }
             ],
-            "observations": 3,
+            "observations": 4,
             "unstable": false,
             "flapCount": 0
         },
         "previews/ee.schimke.ha.previews.GarageShutterCardPreviewsKt.Garage_Animation_Light_garage-anim (light)#1": {
             "path": "renders/previews/Garage_Animation_Light_garage_anim_light_open.png",
             "versions": [
+                {
+                    "blob": "7231f37411287016e3afb80a73c360a880790dbd",
+                    "commit": "314a2d8436c78bff24a70257e4bb18e24a9a0bfc",
+                    "date": "2026-08-15T20:36:21Z",
+                    "sourceSha": "3fcc846d",
+                    "commits": 1
+                },
                 {
                     "blob": "382e7949804c4bbef6c8903b674a1efddbae4309",
                     "commit": "7be5c50746ed780419f02e70ab1e5305dc990e25",
@@ -12507,13 +12654,20 @@
                     "commits": 1
                 }
             ],
-            "observations": 3,
+            "observations": 4,
             "unstable": false,
             "flapCount": 0
         },
         "previews/ee.schimke.ha.previews.GarageShutterCardPreviewsKt.Garage_Animation_Light_garage-anim (light)#2": {
             "path": "renders/previews/Garage_Animation_Light_garage_anim_light_opening_25.png",
             "versions": [
+                {
+                    "blob": "6ec99155b1a3f14e7ef1cc8125a1b4bd1421e7f0",
+                    "commit": "314a2d8436c78bff24a70257e4bb18e24a9a0bfc",
+                    "date": "2026-08-15T20:36:21Z",
+                    "sourceSha": "3fcc846d",
+                    "commits": 1
+                },
                 {
                     "blob": "bdff892f37438db04ef60c4d439272f673fa8414",
                     "commit": "7be5c50746ed780419f02e70ab1e5305dc990e25",
@@ -12536,13 +12690,20 @@
                     "commits": 1
                 }
             ],
-            "observations": 3,
+            "observations": 4,
             "unstable": false,
             "flapCount": 0
         },
         "previews/ee.schimke.ha.previews.GarageShutterCardPreviewsKt.Garage_Animation_Light_garage-anim (light)#3": {
             "path": "renders/previews/Garage_Animation_Light_garage_anim_light_opening_50.png",
             "versions": [
+                {
+                    "blob": "47fc180d7877430cddc57d25e4283d46efe2bf78",
+                    "commit": "314a2d8436c78bff24a70257e4bb18e24a9a0bfc",
+                    "date": "2026-08-15T20:36:21Z",
+                    "sourceSha": "3fcc846d",
+                    "commits": 1
+                },
                 {
                     "blob": "afeee4248f5f2ce8d7b5f5ef0d0837c223b19b09",
                     "commit": "7be5c50746ed780419f02e70ab1e5305dc990e25",
@@ -12565,13 +12726,20 @@
                     "commits": 1
                 }
             ],
-            "observations": 3,
+            "observations": 4,
             "unstable": false,
             "flapCount": 0
         },
         "previews/ee.schimke.ha.previews.GarageShutterCardPreviewsKt.Garage_Animation_Light_garage-anim (light)#4": {
             "path": "renders/previews/Garage_Animation_Light_garage_anim_light_opening_75.png",
             "versions": [
+                {
+                    "blob": "2618bb633f5397352cfee078fd54d69d007b28de",
+                    "commit": "314a2d8436c78bff24a70257e4bb18e24a9a0bfc",
+                    "date": "2026-08-15T20:36:21Z",
+                    "sourceSha": "3fcc846d",
+                    "commits": 1
+                },
                 {
                     "blob": "3d4ac4e6abf45f3f982c7d0b3f95ff8553601237",
                     "commit": "7be5c50746ed780419f02e70ab1e5305dc990e25",
@@ -12594,13 +12762,20 @@
                     "commits": 1
                 }
             ],
-            "observations": 3,
+            "observations": 4,
             "unstable": false,
             "flapCount": 0
         },
         "previews/ee.schimke.ha.previews.GarageShutterCardPreviewsKt.Garage_State_Dark_garage-state (dark)": {
             "path": "renders/previews/Garage_State_Dark_garage_state_dark_closed.png",
             "versions": [
+                {
+                    "blob": "932b0cbf0476c0bbc4a85635f07d17048898c862",
+                    "commit": "314a2d8436c78bff24a70257e4bb18e24a9a0bfc",
+                    "date": "2026-08-15T20:36:21Z",
+                    "sourceSha": "3fcc846d",
+                    "commits": 1
+                },
                 {
                     "blob": "019075d37fb253395435ad6997a37366e3de3961",
                     "commit": "7be5c50746ed780419f02e70ab1e5305dc990e25",
@@ -12623,13 +12798,20 @@
                     "commits": 1
                 }
             ],
-            "observations": 3,
+            "observations": 4,
             "unstable": false,
             "flapCount": 0
         },
         "previews/ee.schimke.ha.previews.GarageShutterCardPreviewsKt.Garage_State_Dark_garage-state (dark)#1": {
             "path": "renders/previews/Garage_State_Dark_garage_state_dark_closing.png",
             "versions": [
+                {
+                    "blob": "9e6d072b3cd11af72857e589c754296b9f9b5427",
+                    "commit": "314a2d8436c78bff24a70257e4bb18e24a9a0bfc",
+                    "date": "2026-08-15T20:36:21Z",
+                    "sourceSha": "3fcc846d",
+                    "commits": 1
+                },
                 {
                     "blob": "827cadddfdad23abf9f39192eaaa7403ee14b267",
                     "commit": "7be5c50746ed780419f02e70ab1e5305dc990e25",
@@ -12652,13 +12834,20 @@
                     "commits": 1
                 }
             ],
-            "observations": 3,
+            "observations": 4,
             "unstable": false,
             "flapCount": 0
         },
         "previews/ee.schimke.ha.previews.GarageShutterCardPreviewsKt.Garage_State_Dark_garage-state (dark)#2": {
             "path": "renders/previews/Garage_State_Dark_garage_state_dark_open.png",
             "versions": [
+                {
+                    "blob": "3ad675ca05166bb81b388f015153480c80d258df",
+                    "commit": "314a2d8436c78bff24a70257e4bb18e24a9a0bfc",
+                    "date": "2026-08-15T20:36:21Z",
+                    "sourceSha": "3fcc846d",
+                    "commits": 1
+                },
                 {
                     "blob": "4679baef4ef8adfb4faae79c8453c028493d3d81",
                     "commit": "7be5c50746ed780419f02e70ab1e5305dc990e25",
@@ -12681,13 +12870,20 @@
                     "commits": 1
                 }
             ],
-            "observations": 3,
+            "observations": 4,
             "unstable": false,
             "flapCount": 0
         },
         "previews/ee.schimke.ha.previews.GarageShutterCardPreviewsKt.Garage_State_Dark_garage-state (dark)#3": {
             "path": "renders/previews/Garage_State_Dark_garage_state_dark_opening.png",
             "versions": [
+                {
+                    "blob": "a632e5e46eb13ffc702a7426fc1753e5298360ca",
+                    "commit": "314a2d8436c78bff24a70257e4bb18e24a9a0bfc",
+                    "date": "2026-08-15T20:36:21Z",
+                    "sourceSha": "3fcc846d",
+                    "commits": 1
+                },
                 {
                     "blob": "72bc09f8e78e4341fa87b3bec90ddeba0bc06521",
                     "commit": "7be5c50746ed780419f02e70ab1e5305dc990e25",
@@ -12710,13 +12906,20 @@
                     "commits": 1
                 }
             ],
-            "observations": 3,
+            "observations": 4,
             "unstable": false,
             "flapCount": 0
         },
         "previews/ee.schimke.ha.previews.GarageShutterCardPreviewsKt.Garage_State_Dark_garage-state (dark)#4": {
             "path": "renders/previews/Garage_State_Dark_garage_state_dark_unavailable.png",
             "versions": [
+                {
+                    "blob": "14ba845b75105e806c9f85f807316262419a07f4",
+                    "commit": "314a2d8436c78bff24a70257e4bb18e24a9a0bfc",
+                    "date": "2026-08-15T20:36:21Z",
+                    "sourceSha": "3fcc846d",
+                    "commits": 1
+                },
                 {
                     "blob": "c930cbde574d4785871c9b75e43ba9e6370afd65",
                     "commit": "7be5c50746ed780419f02e70ab1e5305dc990e25",
@@ -12739,13 +12942,20 @@
                     "commits": 1
                 }
             ],
-            "observations": 3,
+            "observations": 4,
             "unstable": false,
             "flapCount": 0
         },
         "previews/ee.schimke.ha.previews.GarageShutterCardPreviewsKt.Garage_State_Light_garage-state (light)": {
             "path": "renders/previews/Garage_State_Light_garage_state_light_closed.png",
             "versions": [
+                {
+                    "blob": "e2af24f1658f170f2c3cedb7295c802c734f00d4",
+                    "commit": "314a2d8436c78bff24a70257e4bb18e24a9a0bfc",
+                    "date": "2026-08-15T20:36:21Z",
+                    "sourceSha": "3fcc846d",
+                    "commits": 1
+                },
                 {
                     "blob": "6ce15e2601e6ef71f655d8859f9ddae12d01e25d",
                     "commit": "7be5c50746ed780419f02e70ab1e5305dc990e25",
@@ -12768,13 +12978,20 @@
                     "commits": 1
                 }
             ],
-            "observations": 3,
+            "observations": 4,
             "unstable": false,
             "flapCount": 0
         },
         "previews/ee.schimke.ha.previews.GarageShutterCardPreviewsKt.Garage_State_Light_garage-state (light)#1": {
             "path": "renders/previews/Garage_State_Light_garage_state_light_closing.png",
             "versions": [
+                {
+                    "blob": "46dc580f3871a97cd451b099808e192f09c7b5a1",
+                    "commit": "314a2d8436c78bff24a70257e4bb18e24a9a0bfc",
+                    "date": "2026-08-15T20:36:21Z",
+                    "sourceSha": "3fcc846d",
+                    "commits": 1
+                },
                 {
                     "blob": "ebe593d8f9bdc244b8f658076916310ae2a9dcb2",
                     "commit": "7be5c50746ed780419f02e70ab1e5305dc990e25",
@@ -12797,13 +13014,20 @@
                     "commits": 1
                 }
             ],
-            "observations": 3,
+            "observations": 4,
             "unstable": false,
             "flapCount": 0
         },
         "previews/ee.schimke.ha.previews.GarageShutterCardPreviewsKt.Garage_State_Light_garage-state (light)#2": {
             "path": "renders/previews/Garage_State_Light_garage_state_light_open.png",
             "versions": [
+                {
+                    "blob": "7231f37411287016e3afb80a73c360a880790dbd",
+                    "commit": "314a2d8436c78bff24a70257e4bb18e24a9a0bfc",
+                    "date": "2026-08-15T20:36:21Z",
+                    "sourceSha": "3fcc846d",
+                    "commits": 1
+                },
                 {
                     "blob": "382e7949804c4bbef6c8903b674a1efddbae4309",
                     "commit": "7be5c50746ed780419f02e70ab1e5305dc990e25",
@@ -12826,13 +13050,20 @@
                     "commits": 1
                 }
             ],
-            "observations": 3,
+            "observations": 4,
             "unstable": false,
             "flapCount": 0
         },
         "previews/ee.schimke.ha.previews.GarageShutterCardPreviewsKt.Garage_State_Light_garage-state (light)#3": {
             "path": "renders/previews/Garage_State_Light_garage_state_light_opening.png",
             "versions": [
+                {
+                    "blob": "fdb3777636a25d2d7d41b1a4380b26258f2e16d3",
+                    "commit": "314a2d8436c78bff24a70257e4bb18e24a9a0bfc",
+                    "date": "2026-08-15T20:36:21Z",
+                    "sourceSha": "3fcc846d",
+                    "commits": 1
+                },
                 {
                     "blob": "550e8b250eb06bf18011591132b43d2b52f1d88f",
                     "commit": "7be5c50746ed780419f02e70ab1e5305dc990e25",
@@ -12855,13 +13086,20 @@
                     "commits": 1
                 }
             ],
-            "observations": 3,
+            "observations": 4,
             "unstable": false,
             "flapCount": 0
         },
         "previews/ee.schimke.ha.previews.GarageShutterCardPreviewsKt.Garage_State_Light_garage-state (light)#4": {
             "path": "renders/previews/Garage_State_Light_garage_state_light_unavailable.png",
             "versions": [
+                {
+                    "blob": "0a6fc26f32371fd5182ee6e4df3ecbfbf8451c5d",
+                    "commit": "314a2d8436c78bff24a70257e4bb18e24a9a0bfc",
+                    "date": "2026-08-15T20:36:21Z",
+                    "sourceSha": "3fcc846d",
+                    "commits": 1
+                },
                 {
                     "blob": "503270bef220d1967dfd1cc542daa9ebb5ae60d8",
                     "commit": "7be5c50746ed780419f02e70ab1e5305dc990e25",
@@ -12884,13 +13122,20 @@
                     "commits": 1
                 }
             ],
-            "observations": 3,
+            "observations": 4,
             "unstable": false,
             "flapCount": 0
         },
         "previews/ee.schimke.ha.previews.GarageShutterCardPreviewsKt.Garage_TwoEntities_Dark_garage two-entities (dark)": {
             "path": "renders/previews/Garage_TwoEntities_Dark_garage_two_entities_dark.png",
             "versions": [
+                {
+                    "blob": "dfead5676716328135e0edf93e834e6be4f3a770",
+                    "commit": "314a2d8436c78bff24a70257e4bb18e24a9a0bfc",
+                    "date": "2026-08-15T20:36:21Z",
+                    "sourceSha": "3fcc846d",
+                    "commits": 1
+                },
                 {
                     "blob": "5b5c1d7f8ce6c35c0fb5e84b467395cd5c83474b",
                     "commit": "7be5c50746ed780419f02e70ab1e5305dc990e25",
@@ -12913,13 +13158,20 @@
                     "commits": 1
                 }
             ],
-            "observations": 3,
+            "observations": 4,
             "unstable": false,
             "flapCount": 0
         },
         "previews/ee.schimke.ha.previews.GarageShutterCardPreviewsKt.Garage_TwoEntities_Light_garage two-entities (light)": {
             "path": "renders/previews/Garage_TwoEntities_Light_garage_two_entities_light.png",
             "versions": [
+                {
+                    "blob": "c57b0c7a6067540461b20a564bd36bfdef566e25",
+                    "commit": "314a2d8436c78bff24a70257e4bb18e24a9a0bfc",
+                    "date": "2026-08-15T20:36:21Z",
+                    "sourceSha": "3fcc846d",
+                    "commits": 1
+                },
                 {
                     "blob": "6e9d6731dc545530acdceeea2b1c9235ae3935c4",
                     "commit": "7be5c50746ed780419f02e70ab1e5305dc990e25",
@@ -12942,7 +13194,7 @@
                     "commits": 1
                 }
             ],
-            "observations": 3,
+            "observations": 4,
             "unstable": false,
             "flapCount": 0
         },
@@ -13514,6 +13766,13 @@
             "path": "renders/previews/Shutter_Dark_shutter_dark.png",
             "versions": [
                 {
+                    "blob": "a3b8270dd1183a7996827ad994b11cdb1be0900f",
+                    "commit": "314a2d8436c78bff24a70257e4bb18e24a9a0bfc",
+                    "date": "2026-08-15T20:36:21Z",
+                    "sourceSha": "3fcc846d",
+                    "commits": 1
+                },
+                {
                     "blob": "882002ae0085290362e45efa6cc3a38a6847bb45",
                     "commit": "7be5c50746ed780419f02e70ab1e5305dc990e25",
                     "date": "2026-08-02T09:11:18Z",
@@ -13535,13 +13794,20 @@
                     "commits": 1
                 }
             ],
-            "observations": 3,
+            "observations": 4,
             "unstable": false,
             "flapCount": 0
         },
         "previews/ee.schimke.ha.previews.ShutterCardPreviewsKt.Shutter_Light_shutter (light)": {
             "path": "renders/previews/Shutter_Light_shutter_light.png",
             "versions": [
+                {
+                    "blob": "f50ddc94405ed4f230f0c523abe4a46fed072537",
+                    "commit": "314a2d8436c78bff24a70257e4bb18e24a9a0bfc",
+                    "date": "2026-08-15T20:36:21Z",
+                    "sourceSha": "3fcc846d",
+                    "commits": 1
+                },
                 {
                     "blob": "10146370b601f920d3e5d6e187dd1b173dfa9171",
                     "commit": "7be5c50746ed780419f02e70ab1e5305dc990e25",
@@ -13564,7 +13830,7 @@
                     "commits": 1
                 }
             ],
-            "observations": 3,
+            "observations": 4,
             "unstable": false,
             "flapCount": 0
         },
