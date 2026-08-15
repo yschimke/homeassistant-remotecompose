@@ -117,12 +117,14 @@ internal enum class RcPreviewPlayer {
  *    is absent in the app and the IDE, and reading it through its own classloader is what
  *    guarantees we observe the same process-static state the daemon seeded rather than a second
  *    copy of it.
- * 2. The `ha.rc.player` system property, for a harness that sets one on the render JVM.
- * 3. The `HA_RC_PLAYER` environment variable. This is the one that reaches `./gradlew
- *    :previews:renderAllPreviews`: that task renders in a forked JVM whose system properties the
- *    compose-preview plugin curates (a `-D` on the Gradle command line does **not** arrive) while
- *    the environment is inherited. `HA_RC_PLAYER=java ./gradlew :previews:renderAllPreviews` is how
- *    the view lane gets re-rendered for a visual diff.
+ * 2. The `ha.rc.player` system property. `-PhaRcPlayer=java` sets it: `previews/build.gradle.kts`
+ *    forwards that Gradle property onto the render task, which is how the view lane gets
+ *    re-rendered for a visual diff. A bare `-Dha.rc.player=` on the Gradle command line does
+ *    **not** work — the compose-preview plugin curates the render fork's system properties.
+ * 3. The `HA_RC_PLAYER` environment variable, for a shell that exports one into the render JVM.
+ *    Only reliable against a cold Gradle daemon: the render fork inherits the *daemon's*
+ *    environment, not the invoking shell's, so against a warm daemon this silently does nothing —
+ *    which reads exactly like the flag being ignored. Prefer `-PhaRcPlayer=`.
  * 4. The default.
  *
  * Falls back to [RcPreviewPlayer.VIEW] whenever the embedded player is missing at runtime, so a

@@ -66,10 +66,14 @@ Selection, most specific first:
    what the preview server's `?rcPlayer=java` / `?rcPlayer=cmp-android` chips
    set. Read reflectively, so `:previews` neither compiles nor links against the
    connector and always observes the state the daemon actually seeded.
-2. `-Dha.rc.player=<java|cmp-android>`, for a harness that sets one.
-3. `HA_RC_PLAYER=<java|cmp-android>`, which is what reaches
-   `compose-preview render` — that renders in a forked JVM whose system
-   properties the plugin curates but whose environment is inherited.
+2. The `ha.rc.player` system property, which `-PhaRcPlayer=` sets:
+   `previews/build.gradle.kts` forwards that Gradle property onto the render
+   task. A bare `-Dha.rc.player=` does **not** reach the render — the
+   compose-preview plugin curates the fork's system properties.
+3. `HA_RC_PLAYER=<java|cmp-android>` in the environment. Only reliable against a
+   cold Gradle daemon: the render fork inherits the *daemon's* environment, not
+   the invoking shell's, so against a warm daemon it silently does nothing and
+   the render quietly stays on the default. Prefer `-PhaRcPlayer=`.
 4. The default: the Compose-native player.
 
 If the embedded player isn't on the runtime classpath the host falls back to the
@@ -78,9 +82,13 @@ view player, so the app and the IDE preview pane keep working without it.
 To render both lanes for a visual diff:
 
 ```bash
-compose-preview render --module previews                     # Compose-native (default)
-HA_RC_PLAYER=java compose-preview render --module previews    # view player
+compose-preview render --module previews                          # Compose-native (default)
+compose-preview render --module previews -PhaRcPlayer=java        # view player
 ```
+
+If the two lanes come out byte-identical, the override did not take — check that
+the property actually reached the render rather than concluding the players
+agree.
 
 ## What this does not change
 

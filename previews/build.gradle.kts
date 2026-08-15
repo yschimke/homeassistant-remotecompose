@@ -16,6 +16,19 @@ android {
   kotlin { jvmToolchain(libs.versions.java.get().toInt()) }
 }
 
+// Route `-PhaRcPlayer=<java|cmp-android>` into the compose-preview render fork, which is how the
+// view lane gets re-rendered for a visual diff against the default (see `RcPreviewHost.kt`).
+//
+// It has to be set on the task. The render runs as a Gradle `Test` task in a forked JVM whose
+// system properties the compose-preview plugin curates — a `-D` on the command line never arrives
+// — and whose environment is inherited from the **Gradle daemon**, not from the shell that typed
+// the command. So `HA_RC_PLAYER=java compose-preview render` silently does nothing against a
+// daemon that was already warm, which reads exactly like the flag being ignored. This path works
+// from a cold or warm daemon alike.
+tasks.withType<Test>().configureEach {
+  providers.gradleProperty("haRcPlayer").orNull?.let { systemProperty("ha.rc.player", it) }
+}
+
 dependencies {
   implementation(project(":ha-model"))
   implementation(project(":rc-converter"))
