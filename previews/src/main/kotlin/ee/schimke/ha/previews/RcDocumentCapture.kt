@@ -5,7 +5,6 @@ package ee.schimke.ha.previews
 import androidx.compose.remote.creation.compose.capture.captureSingleRemoteDocument
 import androidx.compose.remote.creation.compose.layout.RemoteComposable
 import androidx.compose.remote.creation.profile.Profile
-import androidx.compose.remote.tooling.preview.RemoteContentPreview
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.remember
@@ -25,13 +24,16 @@ import kotlinx.coroutines.runBlocking
  * player, and what the design-artifacts PNG↔Remote-Compose parity page diffs against the baked
  * image.
  *
- * Nothing offers into that channel by default. Upstream's in-body `RemoteContentPreview` captures a
- * document internally but never hands the bytes out — only the annotation-driven
+ * Nothing offers into that channel by default. The hosts that draw a preview's document capture one
+ * internally but never hand the bytes out — only the annotation-driven
  * `@PreviewWrapper(RemotePreviewWrapper::class)` path (which the compose-ai-tools Remote Compose
- * connector substitutes) produces a sidecar, and our previews don't use it: they need
- * `RemoteContentPreview`'s content-sized measure path, where the player's size flows from the
+ * connector substitutes) produces a sidecar, and our previews don't use it: they need the
+ * content-sized measure path [HaRemoteContentPreview] keeps, where the player's size flows from the
  * surrounding Compose constraints. So the capture is done here instead, alongside the unchanged
  * draw.
+ *
+ * Which player draws is [HaRemoteContentPreview]'s business, not this one's: the sidecar carries
+ * the document, and the document is the same bytes whichever player interprets it.
  *
  * **What counts as an "appropriate" preview.** Exactly one document per preview. The channel keeps
  * only the last offer for a preview id, so a preview that hosts several documents (the dashboard
@@ -46,13 +48,13 @@ internal fun CapturingRemoteContentPreview(
   content: @Composable @RemoteComposable () -> Unit,
 ) {
   CaptureRemoteDocument(profile, content)
-  RemoteContentPreview(modifier = modifier, profile = profile, content = content)
+  HaRemoteContentPreview(modifier = modifier, profile = profile, content = content)
 }
 
 /**
  * Encode [content] under [profile] once and offer the bytes as this preview's `.rc` sidecar.
  *
- * Draws nothing — [CapturingRemoteContentPreview] pairs it with the real [RemoteContentPreview]
+ * Draws nothing — [CapturingRemoteContentPreview] pairs it with the real [HaRemoteContentPreview]
  * draw, so the rendered pixels are byte-for-byte what they were before the capture existed. The
  * cost is a second encode of the same content, which is why it is skipped outside a harness render
  * (the IDE preview pane, a unit test, the app itself): with no current preview id there is nowhere

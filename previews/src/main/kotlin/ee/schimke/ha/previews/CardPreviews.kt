@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.remote.creation.compose.layout.RemoteComposable
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
-import androidx.compose.remote.tooling.preview.RemoteContentPreview
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
@@ -370,7 +369,7 @@ private fun PlayerSlot(
   content: @Composable @RemoteComposable () -> Unit,
 ) {
   Box(modifier = Modifier.uiFillMaxWidth().height(heightDp.dp)) {
-    RemoteContentPreview(profile = androidXExperimental) {
+    HaRemoteContentPreview(profile = androidXExperimental) {
       CompositionLocalProvider(LocalHaClock provides FixedHaClock(PreviewNow)) {
         ProvideCardRegistry(defaultRegistry()) { ProvideHaTheme(theme) { content() } }
       }

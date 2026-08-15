@@ -41,6 +41,11 @@ dependencies {
   // Only the preview module needs it; nothing shipped in the app depends on it.
   implementation(libs.composeai.data.render.core)
 
+  // The Compose-native Remote Compose player previews draw with by default —
+  // see `RcPreviewHost.kt`. Preview-only, like the line above: the app keeps
+  // playing documents through `remote-player-view` via `rc-components-ui`.
+  implementation(libs.composeai.rc.embedded.player)
+
   // Coil + fake engine — previews that exercise `CoilBitmapLoader`
   // resolve named bitmaps through `FakeImageLoaderEngine` instead of
   // hitting the network, so renders are offline / deterministic.

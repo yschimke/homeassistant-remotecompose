@@ -19,7 +19,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
-import androidx.compose.remote.tooling.preview.RemoteContentPreview
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -159,7 +158,7 @@ private fun ThemeShowcase(style: ThemeStyle, darkTheme: Boolean) {
 
         // Two HA cards stacked inside a section-group surface —
         // two RemoteCompose documents in one preview, so these
-        // hosts stay on plain `RemoteContentPreview` and publish no
+        // hosts stay on the non-capturing `HaRemoteContentPreview` and publish no
         // `.rc` sidecar (only one document per preview can be
         // carried; see RcDocumentCapture.kt).
         //
@@ -185,7 +184,7 @@ private fun ThemeShowcase(style: ThemeStyle, darkTheme: Boolean) {
                 .clip(RoundedCornerShape(12.dp))
                 .background(haTheme.cardBackground)
           ) {
-            RemoteContentPreview(profile = androidXExperimental) {
+            HaRemoteContentPreview(profile = androidXExperimental) {
               ProvideCardRegistry(defaultRegistry()) {
                 ProvideHaTheme(haTheme) {
                   RenderChild(
@@ -204,7 +203,7 @@ private fun ThemeShowcase(style: ThemeStyle, darkTheme: Boolean) {
                 .clip(RoundedCornerShape(12.dp))
                 .background(haTheme.cardBackground)
           ) {
-            RemoteContentPreview(profile = androidXExperimental) {
+            HaRemoteContentPreview(profile = androidXExperimental) {
               ProvideCardRegistry(defaultRegistry()) {
                 ProvideHaTheme(haTheme) {
                   RenderChild(

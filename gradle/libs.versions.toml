@@ -95,6 +95,14 @@ composeai-data-render-core = { module = "ee.schimke.composeai:data-render-core",
 # Debug-only: @AnimatedPreview drives the compose-preview GIF capture. Shares the
 # version ref above so the annotations can't drift from the renderer that reads them.
 composeai-preview-annotations = { module = "ee.schimke.composeai:preview-annotations", version.ref = "compose-preview-plugin" }
+# The Compose-native Remote Compose player `:previews` draws documents with by
+# default — see `RcPreviewHost.kt`. A vendored snapshot of AndroidX's embedded
+# `RcPlayer`, which upstream ships only as integration-test sources under
+# `compose/remote/integration-tests/player-compose-embedded`, so there is no
+# `androidx.compose.remote:*` coordinate for it. Shares the release-train version
+# ref: the renderer that reads the composition and the player that produces it
+# must not drift apart.
+composeai-rc-embedded-player = { module = "ee.schimke.composeai:third-party-rc-embedded-player", version.ref = "compose-preview-plugin" }
 
 # Compose
 compose-bom = { module = "androidx.compose:compose-bom", version.ref = "compose-bom" }
