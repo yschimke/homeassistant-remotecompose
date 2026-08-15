@@ -1,6 +1,6 @@
 {
     "formatVersion": "compose-preview-history/v1",
-    "generatedFrom": "0305088c52df83d2b10cd2f6b21141dab4c6d8e0",
+    "generatedFrom": "5cfb68406fb208bfb331fd7a4db51b38ed221421",
     "previews": {
         "app/ee.schimke.terrazzo.previews.CardDebugPreviewsKt.CardFlashPreview_Card flash on data change": {
             "path": "renders/app/CardFlashPreview_Card_flash_on_data_change-44b71c2b.gif",
@@ -1311,6 +1311,13 @@
             "path": "renders/previews/CardPreviewMatrix_Button_matrix_button-51cae881.png",
             "versions": [
                 {
+                    "blob": "8ca1f57e18d777595b2644db5e9920c8f40670e8",
+                    "commit": "5cfb68406fb208bfb331fd7a4db51b38ed221421",
+                    "date": "2026-08-15T22:32:00Z",
+                    "sourceSha": "e40d5a96",
+                    "commits": 1
+                },
+                {
                     "blob": "aef568b6225a92161ff550fdd50110f26ff589fe",
                     "commit": "0305088c52df83d2b10cd2f6b21141dab4c6d8e0",
                     "date": "2026-08-15T22:07:16Z",
@@ -1325,9 +1332,9 @@
                     "commits": 1
                 }
             ],
-            "observations": 2,
+            "observations": 3,
             "unstable": false,
-            "flapCount": 0
+            "flapCount": 1
         },
         "previews/ee.schimke.ha.previews.CardPreviewMatrixKt.CardPreviewMatrix_Calendar_matrix — calendar": {
             "path": "renders/previews/CardPreviewMatrix_Calendar_matrix_calendar-dc5ce4f9.png",
