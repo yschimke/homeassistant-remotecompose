@@ -102,7 +102,9 @@ compose-ui = { module = "androidx.compose.ui:ui" }
 compose-ui-tooling = { module = "androidx.compose.ui:ui-tooling" }
 compose-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview" }
 compose-foundation = { module = "androidx.compose.foundation:foundation" }
-compose-material3 = { module = "androidx.compose.material3:material3" }
+# MaterialKolor currently raises Material 3 above the stable BOM mapping. Keep
+# that alpha aligned with Foundation 1.12's CustomStyle ABI.
+compose-material3 = { module = "androidx.compose.material3:material3", version = "1.5.0-alpha25" }
 compose-material-icons-extended = { module = "androidx.compose.material:material-icons-extended" }
 activity-compose = { module = "androidx.activity:activity-compose", version = "1.13.0" }
 

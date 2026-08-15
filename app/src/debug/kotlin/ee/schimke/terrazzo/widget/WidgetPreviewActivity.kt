@@ -3,6 +3,7 @@
 package ee.schimke.terrazzo.widget
 
 import android.app.Activity
+import android.content.res.Configuration
 import android.graphics.Bitmap
 import android.graphics.Canvas as AndroidCanvas
 import android.graphics.Color as AndroidColor
@@ -31,11 +32,13 @@ import ee.schimke.ha.rc.ProvideCardSizeMode
 import ee.schimke.ha.rc.RenderChild
 import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.cards.shutter.withEnhancedShutter
+import ee.schimke.ha.rc.components.HaTheme
 import ee.schimke.ha.rc.components.LocalPictureImageStrategy
 import ee.schimke.ha.rc.components.PictureImageStrategy
 import ee.schimke.ha.rc.components.ProvideCardChrome
 import ee.schimke.ha.rc.components.ProvideSystemHaTheme
 import ee.schimke.ha.rc.components.RemoteHaWidgetSurface
+import ee.schimke.ha.rc.systemThemedWidgetsProfile
 import ee.schimke.ha.rc.widgetsProfile
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
@@ -91,6 +94,8 @@ class WidgetPreviewActivity : Activity() {
     val registry = defaultRegistry().withEnhancedShutter()
     val sampleBitmap = sampleBitmap(SAMPLE_BITMAP_PX).asImageBitmap()
     val strategy = PictureImageStrategy.Inline { sampleBitmap }
+    val captureProfile =
+      if (Build.VERSION.SDK_INT >= 37) systemThemedWidgetsProfile else widgetsProfile
 
     val docBytes =
       runCatching {
@@ -98,14 +103,25 @@ class WidgetPreviewActivity : Activity() {
               captureSingleRemoteDocument(
                 context = this@WidgetPreviewActivity,
                 creationDisplayInfo = RemoteCreationDisplayInfo(widthPx, heightPx, densityDpi),
-                profile = widgetsProfile,
+                profile = captureProfile,
               ) {
                 // The Inline strategy provider must live inside the
                 // capture sub-composition — outer-tree CompositionLocals
                 // don't propagate through `captureSingleRemoteDocument`.
                 CompositionLocalProvider(LocalPictureImageStrategy provides strategy) {
                   ProvideCardRegistry(registry) {
-                    ProvideSystemHaTheme {
+                    ProvideSystemHaTheme(
+                      profile = captureProfile,
+                      fallbackTheme =
+                        if (
+                          resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK ==
+                            Configuration.UI_MODE_NIGHT_YES
+                        ) {
+                          HaTheme.Dark
+                        } else {
+                          HaTheme.Light
+                        },
+                    ) {
                       ProvideCardSizeMode(CardSizeMode.Fixed) {
                         // Same full-canvas surface the launcher widget uses,
                         // so the preview shows the background filling the tile

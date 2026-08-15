@@ -24,12 +24,14 @@ import ee.schimke.ha.rc.RenderChild
 import ee.schimke.ha.rc.cardHeightDp
 import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.cards.shutter.withEnhancedShutter
+import ee.schimke.ha.rc.components.HaTheme
 import ee.schimke.ha.rc.components.ProvideCardChrome
 import ee.schimke.ha.rc.components.ProvideSystemHaTheme
 import ee.schimke.ha.rc.components.ProvideWidgetActionRegistry
 import ee.schimke.ha.rc.components.RemoteHaWidgetSurface
 import ee.schimke.ha.rc.components.WidgetActionRegistry
 import ee.schimke.ha.rc.formatState
+import ee.schimke.ha.rc.systemThemedWidgetsProfile
 import ee.schimke.ha.rc.widgetsProfile
 import ee.schimke.terrazzo.core.session.DemoData
 import ee.schimke.terrazzo.terrazzoGraph
@@ -45,8 +47,8 @@ import kotlinx.coroutines.runBlocking
  * 1. Framework or our own broadcast triggers [onUpdate].
  * 2. For each pinned widget id, look up the [WidgetStore.Entry] and headlessly capture the card via
  *    [captureSingleRemoteDocument] with `profile = widgetsProfile`. The composition is wrapped with
- *    [ProvideCardRegistry] + [ProvideSystemHaTheme] so the launcher resolves Android's system
- *    colors at playback.
+ *    [ProvideCardRegistry] + [ProvideSystemHaTheme] so API 37+ launchers resolve Android's system
+ *    colors at playback; older hosts receive the matching concrete light/dark fallback.
  * 3. Wrap the bytes in `RemoteViews.DrawInstructions` and publish via
  *    `AppWidgetManager.updateAppWidget(widgetId, …)`.
  *
@@ -133,6 +135,12 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
     val densityDpi = context.resources.configuration.densityDpi
     val widgetActions =
       WidgetActionRegistry(snapshot.states.mapValues { (_, entity) -> formatState(entity) })
+    val captureProfile =
+      if (Build.VERSION.SDK_INT >= SYSTEM_THEME_MIN_HOST_API) {
+        systemThemedWidgetsProfile
+      } else {
+        widgetsProfile
+      }
 
     val captured =
       runCatching {
@@ -140,10 +148,22 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
             captureSingleRemoteDocument(
               context = context,
               creationDisplayInfo = RemoteCreationDisplayInfo(widthPx, heightPx, densityDpi),
-              profile = widgetsProfile,
+              profile = captureProfile,
             ) {
               ProvideCardRegistry(registry) {
-                ProvideSystemHaTheme {
+                ProvideSystemHaTheme(
+                  profile = captureProfile,
+                  fallbackTheme =
+                    if (
+                      context.resources.configuration.uiMode and
+                        android.content.res.Configuration.UI_MODE_NIGHT_MASK ==
+                        android.content.res.Configuration.UI_MODE_NIGHT_YES
+                    ) {
+                      HaTheme.Dark
+                    } else {
+                      HaTheme.Light
+                    },
+                ) {
                   ProvideCardSizeMode(CardSizeMode.Fixed) {
                     // The widget surface paints the themed
                     // card background across the whole
@@ -215,6 +235,9 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
   }
 
   private companion object {
+    // ColorTheme (wire op 196) is not understood by Android 16's platform
+    // Remote Compose player. API 37 adds the host-side implementation.
+    const val SYSTEM_THEME_MIN_HOST_API = 37
     val EMPTY_SNAPSHOT = HaSnapshot()
     const val TAG = "TerrazzoWidgetProvider"
   }

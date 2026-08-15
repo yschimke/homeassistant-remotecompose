@@ -1,10 +1,12 @@
-@file:Suppress("RestrictedApi")
+@file:Suppress("RestrictedApi", "RestrictedApiAndroidX")
 
 package ee.schimke.ha.rc.components
 
+import androidx.compose.remote.core.Operations
 import androidx.compose.remote.creation.Rc
 import androidx.compose.remote.creation.compose.state.RemoteColor
 import androidx.compose.remote.creation.compose.state.rc
+import androidx.compose.remote.creation.profile.Profile
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
@@ -337,8 +339,16 @@ fun ProvideRemoteHaTheme(theme: RemoteHaTheme, content: @Composable () -> Unit) 
 }
 
 @Composable
-fun ProvideSystemHaTheme(content: @Composable () -> Unit) {
-  ProvideRemoteHaTheme(SystemRemoteHaTheme, content)
+fun ProvideSystemHaTheme(
+  profile: Profile,
+  fallbackTheme: HaTheme,
+  content: @Composable () -> Unit,
+) {
+  if (Operations.COLOR_THEME in profile.supportedOperations) {
+    ProvideRemoteHaTheme(SystemRemoteHaTheme, content)
+  } else {
+    ProvideHaTheme(fallbackTheme, content)
+  }
 }
 
 @Composable fun currentRemoteHaTheme(): RemoteHaTheme = RemoteMaterialTheme.colorScheme.asHaTheme()
