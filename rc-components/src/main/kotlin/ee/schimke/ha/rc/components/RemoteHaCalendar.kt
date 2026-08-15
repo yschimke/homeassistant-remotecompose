@@ -50,7 +50,7 @@ fun RemoteHaCalendar(data: HaCalendarData, modifier: RemoteModifier = RemoteModi
       ) {
         RemoteText(
           text = data.title.rs,
-          color = theme.primaryText.rc,
+          color = theme.primaryText,
           fontSize = 16.rsp,
           fontWeight = FontWeight.Medium,
           style = RemoteTextStyle.Default,
@@ -59,7 +59,7 @@ fun RemoteHaCalendar(data: HaCalendarData, modifier: RemoteModifier = RemoteModi
         )
         RemoteText(
           text = data.rangeLabel.rs,
-          color = theme.secondaryText.rc,
+          color = theme.secondaryText,
           fontSize = 11.rsp,
           style = RemoteTextStyle.Default,
           maxLines = 1,
@@ -68,7 +68,7 @@ fun RemoteHaCalendar(data: HaCalendarData, modifier: RemoteModifier = RemoteModi
       if (data.events.isEmpty()) {
         RemoteText(
           text = "No upcoming events".rs,
-          color = theme.secondaryText.rc,
+          color = theme.secondaryText,
           fontSize = 12.rsp,
           style = RemoteTextStyle.Default,
         )
@@ -105,7 +105,7 @@ fun RemoteHaCalendarIdentity(data: HaCalendarData, modifier: RemoteModifier = Re
     ) {
       RemoteText(
         text = data.title.rs,
-        color = theme.secondaryText.rc,
+        color = theme.secondaryText,
         fontSize = 11.rsp,
         style = RemoteTextStyle.Default,
         maxLines = 1,
@@ -118,7 +118,7 @@ fun RemoteHaCalendarIdentity(data: HaCalendarData, modifier: RemoteModifier = Re
           )
           RemoteText(
             text = next.whenLabel.rs,
-            color = theme.secondaryText.rc,
+            color = theme.secondaryText,
             fontSize = 12.rsp,
             style = RemoteTextStyle.Default,
             maxLines = 1,
@@ -127,7 +127,7 @@ fun RemoteHaCalendarIdentity(data: HaCalendarData, modifier: RemoteModifier = Re
         }
         RemoteText(
           text = next.summary.rs,
-          color = theme.primaryText.rc,
+          color = theme.primaryText,
           fontSize = 17.rsp,
           fontWeight = FontWeight.SemiBold,
           style = RemoteTextStyle.Default,
@@ -137,7 +137,7 @@ fun RemoteHaCalendarIdentity(data: HaCalendarData, modifier: RemoteModifier = Re
       } else {
         RemoteText(
           text = "No upcoming events".rs,
-          color = theme.secondaryText.rc,
+          color = theme.secondaryText,
           fontSize = 13.rsp,
           style = RemoteTextStyle.Default,
         )
@@ -147,7 +147,7 @@ fun RemoteHaCalendarIdentity(data: HaCalendarData, modifier: RemoteModifier = Re
 }
 
 @Composable
-private fun Event(event: HaCalendarEvent, theme: HaTheme) {
+private fun Event(event: HaCalendarEvent, theme: RemoteHaTheme) {
   RemoteRow(
     modifier = RemoteModifier.fillMaxWidth().padding(vertical = 2.rdp),
     verticalAlignment = RemoteAlignment.CenterVertically,
@@ -158,13 +158,13 @@ private fun Event(event: HaCalendarEvent, theme: HaTheme) {
     RemoteColumn(modifier = RemoteModifier.padding(start = 10.rdp)) {
       RemoteText(
         text = event.whenLabel.rs,
-        color = theme.secondaryText.rc,
+        color = theme.secondaryText,
         fontSize = 11.rsp,
         style = RemoteTextStyle.Default,
       )
       RemoteText(
         text = event.summary.rs,
-        color = theme.primaryText.rc,
+        color = theme.primaryText,
         fontSize = 13.rsp,
         fontWeight = FontWeight.Medium,
         style = RemoteTextStyle.Default,

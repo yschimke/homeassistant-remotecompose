@@ -48,7 +48,7 @@ fun RemoteHaBambuPrintControl(
     RemoteColumn(verticalArrangement = RemoteArrangement.spacedBy(8.rdp)) {
       RemoteText(
         text = data.printerName.rs,
-        color = theme.secondaryText.rc,
+        color = theme.secondaryText,
         fontSize = 11.rsp,
         style = RemoteTextStyle.Default,
       )
@@ -64,7 +64,7 @@ fun RemoteHaBambuPrintControl(
 }
 
 @Composable
-private fun Button(button: HaBambuControlButton, theme: HaTheme) {
+private fun Button(button: HaBambuControlButton, theme: RemoteHaTheme) {
   val click =
     button.tapAction.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
   RemoteColumn(
@@ -89,7 +89,7 @@ private fun Button(button: HaBambuControlButton, theme: HaTheme) {
     RemoteBox(modifier = RemoteModifier.padding(top = 6.rdp)) {
       RemoteText(
         text = button.label.rs,
-        color = theme.primaryText.rc,
+        color = theme.primaryText,
         fontSize = 12.rsp,
         fontWeight = FontWeight.Medium,
         style = RemoteTextStyle.Default,

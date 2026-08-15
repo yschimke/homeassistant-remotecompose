@@ -19,7 +19,6 @@ import androidx.compose.remote.creation.compose.modifier.height
 import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.modifier.size
 import androidx.compose.remote.creation.compose.state.asRemotePaint
-import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rf
 import androidx.compose.remote.creation.compose.state.rs
@@ -64,7 +63,7 @@ fun RemoteHaBambuPrintStatus(
     RemoteColumn(verticalArrangement = RemoteArrangement.spacedBy(8.rdp)) {
       RemoteText(
         text = data.printerName.rs,
-        color = theme.secondaryText.rc,
+        color = theme.secondaryText,
         fontSize = 11.rsp,
         style = RemoteTextStyle.Default,
         maxLines = 1,
@@ -82,7 +81,7 @@ fun RemoteHaBambuPrintStatus(
           RemoteText(
             text =
               LiveValues.attribute(data.progressEntityId, "progress_label", data.progressLabel),
-            color = theme.primaryText.rc,
+            color = theme.primaryText,
             fontSize = 22.rsp,
             fontWeight = FontWeight.SemiBold,
             style = RemoteTextStyle.Default,
@@ -90,7 +89,7 @@ fun RemoteHaBambuPrintStatus(
           )
           RemoteText(
             text = LiveValues.attribute(data.stageEntityId, "stage_label", data.stage),
-            color = theme.secondaryText.rc,
+            color = theme.secondaryText,
             fontSize = 13.rsp,
             style = RemoteTextStyle.Default,
             maxLines = 1,
@@ -101,7 +100,7 @@ fun RemoteHaBambuPrintStatus(
       data.layerLine?.let {
         RemoteText(
           text = LiveValues.attribute(data.layerEntityId, "layer_line", it),
-          color = theme.secondaryText.rc,
+          color = theme.secondaryText,
           fontSize = 12.rsp,
           style = RemoteTextStyle.Default,
           maxLines = 1,
@@ -110,7 +109,7 @@ fun RemoteHaBambuPrintStatus(
       data.remainingLine?.let {
         RemoteText(
           text = LiveValues.attribute(data.remainingEntityId, "remaining_line", it),
-          color = theme.secondaryText.rc,
+          color = theme.secondaryText,
           fontSize = 12.rsp,
           style = RemoteTextStyle.Default,
           maxLines = 1,
@@ -124,7 +123,7 @@ fun RemoteHaBambuPrintStatus(
           data.nozzleLine?.let {
             RemoteText(
               text = LiveValues.attribute(data.nozzleEntityId, "nozzle_line", it),
-              color = theme.secondaryText.rc,
+              color = theme.secondaryText,
               fontSize = 12.rsp,
               style = RemoteTextStyle.Default,
               maxLines = 1,
@@ -133,7 +132,7 @@ fun RemoteHaBambuPrintStatus(
           data.bedLine?.let {
             RemoteText(
               text = LiveValues.attribute(data.bedEntityId, "bed_line", it),
-              color = theme.secondaryText.rc,
+              color = theme.secondaryText,
               fontSize = 12.rsp,
               style = RemoteTextStyle.Default,
               maxLines = 1,
@@ -146,7 +145,7 @@ fun RemoteHaBambuPrintStatus(
 }
 
 @Composable
-private fun ProgressRing(fraction: Float, accent: Color, theme: HaTheme) {
+private fun ProgressRing(fraction: Float, accent: Color, theme: RemoteHaTheme) {
   val sweep = (fraction.coerceIn(0f, 1f) * 360f)
   RemoteBox(modifier = RemoteModifier.size(64.rdp)) {
     RemoteCanvas(modifier = RemoteModifier.size(64.rdp)) {
@@ -164,9 +163,9 @@ private fun ProgressRing(fraction: Float, accent: Color, theme: HaTheme) {
             style = AndroidPaint.Style.STROKE
             strokeWidth = 8f
             strokeCap = AndroidPaint.Cap.ROUND
-            color = theme.divider.toArgb()
           }
           .asRemotePaint()
+          .apply { color = theme.divider }
       drawArc(track, 0f.rf, 360f.rf, false, topLeft, arcSize)
 
       if (sweep > 0.5f) {

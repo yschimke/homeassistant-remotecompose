@@ -22,9 +22,9 @@ The design system is a **two-axis toggle**:
    surfaces that support both. Wear is dark-only; TV (Kiosk) is dark-only.
 
 The picker lives in the mobile Settings screen and persists via
-`PreferencesStore`. Every other surface reads the same preference —
-switching theme on the phone re-captures pinned widgets, and the Wear /
-TV apps pick up the new tokens the next time they're launched.
+`PreferencesStore`. Embedded mobile, Wear fallbacks, and TV read that
+preference. Launcher widgets deliberately follow the launcher's Android
+system colors instead of the app palette.
 
 ## 2. Architecture
 
@@ -34,8 +34,8 @@ rc-components (Android library, shared tokens)
   ├── TerrazzoFonts.kt      — GoogleFont provider + FontFamily per family
   ├── TerrazzoTheme.kt      — terrazzoColorScheme (seed → scheme via
   │                            materialkolor) + terrazzoTypographyFor
-  └── HaTheme.kt            — HA-card palette + haThemeFor(style, dark)
-                               ^ used by RemoteCompose widgets
+  └── HaTheme.kt            — HA roles projected through RemoteColorScheme
+                               ^ embedded, Wear, and launcher providers
 
 app (mobile)
   ├── ui/TerrazzoTheme.kt   — wires MaterialTheme + LocalThemeStyle/IsDark
@@ -52,14 +52,13 @@ terrazzo-core
   └── prefs/PreferencesStore.kt — ThemePref + DarkModePref with flow reads
 ```
 
-**The RemoteCompose document bakes colours at capture-time.** When the
-user changes theme, the dashboard view re-keys its `RemotePreview` on
-`(style, dark)` so the document re-captures; the widget provider is
-re-broadcast with `ACTION_APPWIDGET_UPDATE` so each pinned widget
-regenerates its `.rc` document under the new palette. `ColorTheme` in
-alpha08 of RemoteCompose doesn't expose a public DSL, so we don't try
-to ship a single multi-theme document — regeneration is the simpler
-correct answer.
+Remote card components read `RemoteMaterialTheme.colorScheme`, projected
+onto the smaller `RemoteHaTheme` vocabulary at the component boundary.
+Providers install an updated `RemoteColorScheme`: embedded
+dashboard/previews project a concrete `HaTheme`, Wear widgets retain
+Remote Material 3's named `WearM3.*` state, and launcher widgets encode
+Android light/dark system resource pairs with `addThemedColor`. The
+latter two can change host theme without recapturing the document.
 
 ## 3. The four Terrazzo palettes
 
@@ -159,20 +158,23 @@ explicitly covers embedded and kiosk use.
 
 ## 5. Colour roles (Material 3)
 
-Every palette is built from the same seven roles. The HA-card palette
+Every palette is built from the same semantic roles. The HA-card palette
 ([`HaTheme`](../rc-components/src/main/kotlin/ee/schimke/ha/rc/components/HaTheme.kt))
 is derived from these via `haThemeFor(style, dark)` — a renaming from
 M3 roles onto the HA vocabulary:
 
 | M3 role | HA card role | Used for |
 |---|---|---|
-| `surface` | `cardBackground` | Tile card body |
+| `surfaceContainerHigh` | `cardBackground` | Tile card body |
 | `background` | `dashboardBackground` | Dashboard grid backdrop |
+| `surfaceContainer` | `sectionBackground` | Nested card sections |
 | `onSurface` | `primaryText` | Card title, entity name |
 | `onSurfaceVariant` | `secondaryText` | State value, speaker names |
-| `outline` | `divider` | Card stroke, list separators |
-| `secondary` | `placeholderAccent` | Shimmer accent |
-| `secondaryContainer` | `placeholderBackground` | Shimmer backdrop |
+| `tertiary` | `linkText` | Links and interactive text |
+| `outlineVariant` | `divider` | Card stroke, list separators |
+| `primary` | `placeholderAccent` | Shimmer accent |
+| `primaryContainer` | `placeholderBackground` | Shimmer backdrop |
+| `secondary` | `unknownAccent` | Unknown-state accent |
 
 ### Guidelines
 
@@ -213,6 +215,9 @@ M3 roles onto the HA vocabulary:
   `ColorScheme`, then projects it onto the Wear `ColorScheme` via
   `copy(...)` — `surfaceContainer` family, `primaryDim`, `outline`,
   etc.
+- Wear widgets additionally wrap card capture in `RemoteMaterialTheme`.
+  Card roles therefore encode named `WearM3.*` colors; the selected
+  Terrazzo palette is the fallback when a host does not inject them.
 - The stub is a minimal `AppScaffold` + `ScreenScaffold` with the
   active palette name — a canvas for the real Wear app to land on.
 - **No dark-mode knob** on Wear: the system UI doesn't support a
@@ -229,17 +234,14 @@ M3 roles onto the HA vocabulary:
 - **Light mode is out of scope for TV.** Home control UIs on a TV
   almost always run in dim rooms; a light surface is retina-bleach.
 
-### 6.4 Widget (Glance-via-RemoteCompose)
+### 6.4 Launcher widget (RemoteViews-via-RemoteCompose)
 
-- `TerrazzoWidgetProvider.Content` does a one-shot blocking read of
-  `PreferencesStore` at capture time, derives `HaTheme` via
-  `haThemeFor(style, dark)`, wraps the `RenderChild` in
-  `ProvideHaTheme(haTheme)`.
-- Each `updateAppWidget` call produces a **new `.rc` document** with
-  the captured colours — that's the regen-on-theme-change contract.
-- Every `ACTION_APPWIDGET_UPDATE` broadcast re-runs the Content
-  function. The `refreshAllNow()` helper on `WidgetRefreshScheduler`
-  makes that the obvious hook to call from Settings.
+- `TerrazzoWidgetProvider` wraps card capture in `ProvideSystemHaTheme`.
+- Each HA card role becomes an Android system color pair (light and
+  dark resource indices plus concrete fallbacks) in the `.rc` document.
+- `RemoteViews.DrawInstructions` lets the launcher resolve wallpaper
+  colors and night mode at playback, including on a cold start, without
+  reading app preferences or recapturing only for a theme change.
 
 ## 7. Motion
 

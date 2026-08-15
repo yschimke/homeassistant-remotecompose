@@ -18,7 +18,6 @@ import androidx.compose.remote.creation.compose.modifier.fillMaxSize
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.modifier.size
-import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.remote.creation.compose.state.rsp
@@ -47,7 +46,7 @@ fun RemoteHaTodoList(data: HaTodoListData, modifier: RemoteModifier = RemoteModi
     RemoteColumn(verticalArrangement = RemoteArrangement.spacedBy(8.rdp)) {
       RemoteText(
         text = data.title.rs,
-        color = theme.primaryText.rc,
+        color = theme.primaryText,
         fontSize = 16.rsp,
         fontWeight = FontWeight.Medium,
         style = RemoteTextStyle.Default,
@@ -67,7 +66,7 @@ fun RemoteHaTodoList(data: HaTodoListData, modifier: RemoteModifier = RemoteModi
       if (data.activeItems.isEmpty() && data.completedItems.isEmpty()) {
         RemoteText(
           text = "No items".rs,
-          color = theme.secondaryText.rc,
+          color = theme.secondaryText,
           fontSize = 12.rsp,
           style = RemoteTextStyle.Default,
         )
@@ -101,7 +100,7 @@ fun RemoteHaTodoListIdentity(data: HaTodoListData, modifier: RemoteModifier = Re
     ) {
       RemoteText(
         text = data.title.rs,
-        color = theme.secondaryText.rc,
+        color = theme.secondaryText,
         fontSize = 12.rsp,
         style = RemoteTextStyle.Default,
         maxLines = 1,
@@ -109,7 +108,7 @@ fun RemoteHaTodoListIdentity(data: HaTodoListData, modifier: RemoteModifier = Re
       )
       RemoteText(
         text = (if (remaining == 0) "All done" else "$remaining left").rs,
-        color = theme.primaryText.rc,
+        color = theme.primaryText,
         fontSize = 24.rsp,
         fontWeight = FontWeight.SemiBold,
         style = RemoteTextStyle.Default,
@@ -121,10 +120,10 @@ fun RemoteHaTodoListIdentity(data: HaTodoListData, modifier: RemoteModifier = Re
 }
 
 @Composable
-private fun Section(label: String, theme: HaTheme) {
+private fun Section(label: String, theme: RemoteHaTheme) {
   RemoteText(
     text = label.rs,
-    color = theme.secondaryText.rc,
+    color = theme.secondaryText,
     fontSize = 11.rsp,
     fontWeight = FontWeight.Medium,
     style = RemoteTextStyle.Default,
@@ -132,7 +131,7 @@ private fun Section(label: String, theme: HaTheme) {
 }
 
 @Composable
-private fun Row(item: HaTodoItem, completed: Boolean, theme: HaTheme) {
+private fun Row(item: HaTodoItem, completed: Boolean, theme: RemoteHaTheme) {
   val click =
     item.tapAction.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
   RemoteRow(
@@ -143,12 +142,12 @@ private fun Row(item: HaTodoItem, completed: Boolean, theme: HaTheme) {
       imageVector = if (completed) Icons.Filled.CheckBox else Icons.Outlined.CheckBoxOutlineBlank,
       contentDescription = item.summary.rs,
       modifier = RemoteModifier.size(18.rdp),
-      tint = if (completed) theme.placeholderAccent.rc else theme.secondaryText.rc,
+      tint = if (completed) theme.placeholderAccent else theme.secondaryText,
     )
     RemoteBox(modifier = RemoteModifier.padding(start = 10.rdp)) {
       RemoteText(
         text = item.summary.rs,
-        color = if (completed) theme.secondaryText.rc else theme.primaryText.rc,
+        color = if (completed) theme.secondaryText else theme.primaryText,
         fontSize = 13.rsp,
         style = RemoteTextStyle.Default,
         maxLines = 1,

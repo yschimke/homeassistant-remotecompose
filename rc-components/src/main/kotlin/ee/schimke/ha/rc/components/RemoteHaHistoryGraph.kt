@@ -19,7 +19,6 @@ import androidx.compose.remote.creation.compose.modifier.height
 import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.state.RemoteFloat
 import androidx.compose.remote.creation.compose.state.asRemotePaint
-import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rf
 import androidx.compose.remote.creation.compose.state.rs
@@ -62,7 +61,7 @@ fun RemoteHaHistoryGraph(data: HaHistoryGraphData, modifier: RemoteModifier = Re
       if (data.title != null) {
         RemoteText(
           text = data.title.rs,
-          color = theme.primaryText.rc,
+          color = theme.primaryText,
           fontSize = 15.rsp,
           fontWeight = FontWeight.Medium,
           style = RemoteTextStyle.Default,
@@ -72,14 +71,14 @@ fun RemoteHaHistoryGraph(data: HaHistoryGraphData, modifier: RemoteModifier = Re
       }
       RemoteText(
         text = data.rangeLabel.rs,
-        color = theme.secondaryText.rc,
+        color = theme.secondaryText,
         fontSize = 11.rsp,
         style = RemoteTextStyle.Default,
       )
       if (data.rows.isEmpty()) {
         RemoteText(
           text = "No entities".rs,
-          color = theme.secondaryText.rc,
+          color = theme.secondaryText,
           fontSize = 13.rsp,
           style = RemoteTextStyle.Default,
         )
@@ -119,7 +118,7 @@ fun RemoteHaHistoryGraphIdentity(
     ) {
       RemoteText(
         text = (row?.name ?: data.title ?: "History").rs,
-        color = theme.secondaryText.rc,
+        color = theme.secondaryText,
         fontSize = 11.rsp,
         style = RemoteTextStyle.Default,
         maxLines = 1,
@@ -128,7 +127,7 @@ fun RemoteHaHistoryGraphIdentity(
       if (row != null) {
         RemoteText(
           text = row.summary,
-          color = theme.primaryText.rc,
+          color = theme.primaryText,
           fontSize = 22.rsp,
           fontWeight = FontWeight.SemiBold,
           style = RemoteTextStyle.Default,
@@ -141,7 +140,7 @@ fun RemoteHaHistoryGraphIdentity(
       } else {
         RemoteText(
           text = "No data".rs,
-          color = theme.secondaryText.rc,
+          color = theme.secondaryText,
           fontSize = 13.rsp,
           style = RemoteTextStyle.Default,
         )
@@ -151,7 +150,7 @@ fun RemoteHaHistoryGraphIdentity(
 }
 
 @Composable
-private fun Row(row: HaHistoryGraphRow, theme: HaTheme) {
+private fun Row(row: HaHistoryGraphRow, theme: RemoteHaTheme) {
   RemoteRow(
     modifier = RemoteModifier.fillMaxWidth(),
     verticalAlignment = RemoteAlignment.CenterVertically,
@@ -159,7 +158,7 @@ private fun Row(row: HaHistoryGraphRow, theme: HaTheme) {
   ) {
     RemoteText(
       text = row.name.rs,
-      color = theme.primaryText.rc,
+      color = theme.primaryText,
       fontSize = 12.rsp,
       fontWeight = FontWeight.Medium,
       style = RemoteTextStyle.Default,
@@ -169,7 +168,7 @@ private fun Row(row: HaHistoryGraphRow, theme: HaTheme) {
     )
     RemoteText(
       text = row.summary,
-      color = theme.secondaryText.rc,
+      color = theme.secondaryText,
       fontSize = 11.rsp,
       style = RemoteTextStyle.Default,
       maxLines = 1,
@@ -180,7 +179,7 @@ private fun Row(row: HaHistoryGraphRow, theme: HaTheme) {
   } else {
     RemoteText(
       text = "No samples".rs,
-      color = theme.secondaryText.rc,
+      color = theme.secondaryText,
       fontSize = 11.rsp,
       style = RemoteTextStyle.Default,
     )
@@ -188,7 +187,7 @@ private fun Row(row: HaHistoryGraphRow, theme: HaTheme) {
 }
 
 @Composable
-private fun Sparkline(entityId: String?, points: List<Float>, accent: Color, theme: HaTheme) {
+private fun Sparkline(entityId: String?, points: List<Float>, accent: Color, theme: RemoteHaTheme) {
   val minP = points.min()
   val maxP = points.max()
   val span = (maxP - minP).takeIf { it > 0f } ?: 1f
@@ -217,9 +216,9 @@ private fun Sparkline(entityId: String?, points: List<Float>, accent: Color, the
           isAntiAlias = true
           style = AndroidPaint.Style.STROKE
           strokeWidth = 1f
-          color = theme.divider.toArgb()
         }
         .asRemotePaint()
+        .apply { color = theme.divider }
     drawLine(baseline, RemoteOffset(padX, padY + drawH), RemoteOffset(padX + drawW, padY + drawH))
 
     val stroke =

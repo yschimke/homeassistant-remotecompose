@@ -23,7 +23,6 @@ import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.modifier.width
 import androidx.compose.remote.creation.compose.state.RemoteFloat
 import androidx.compose.remote.creation.compose.state.asRemotePaint
-import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rf
 import androidx.compose.remote.creation.compose.state.rs
@@ -111,9 +110,9 @@ fun RemoteHaGauge(data: HaGaugeData, modifier: RemoteModifier = RemoteModifier) 
               style = AndroidPaint.Style.STROKE
               strokeWidth = 10f
               strokeCap = AndroidPaint.Cap.ROUND
-              color = theme.divider.toArgb()
             }
             .asRemotePaint()
+            .apply { color = theme.divider }
         drawArc(track, 180f.rf, 180f.rf, false, topLeft, arcSize)
 
         val value =
@@ -131,7 +130,7 @@ fun RemoteHaGauge(data: HaGaugeData, modifier: RemoteModifier = RemoteModifier) 
 
       RemoteText(
         text = data.valueText,
-        color = theme.primaryText.rc,
+        color = theme.primaryText,
         fontSize = 22.rsp,
         fontWeight = FontWeight.SemiBold,
         style = RemoteTextStyle.Default,
@@ -140,7 +139,7 @@ fun RemoteHaGauge(data: HaGaugeData, modifier: RemoteModifier = RemoteModifier) 
       )
       RemoteText(
         text = data.name.rs,
-        color = theme.secondaryText.rc,
+        color = theme.secondaryText,
         fontSize = 13.rsp,
         style = RemoteTextStyle.Default,
         maxLines = 1,
@@ -149,7 +148,7 @@ fun RemoteHaGauge(data: HaGaugeData, modifier: RemoteModifier = RemoteModifier) 
       if (data.unit != null) {
         RemoteText(
           text = "${formatRange(data.min)} – ${formatRange(data.max)} ${data.unit}".rs,
-          color = theme.secondaryText.rc,
+          color = theme.secondaryText,
           fontSize = 11.rsp,
           style = RemoteTextStyle.Default,
           maxLines = 1,
@@ -209,9 +208,9 @@ fun RemoteHaGaugeStacked(data: HaGaugeData, modifier: RemoteModifier = RemoteMod
             style = AndroidPaint.Style.STROKE
             strokeWidth = 8f
             strokeCap = AndroidPaint.Cap.ROUND
-            color = theme.divider.toArgb()
           }
           .asRemotePaint()
+          .apply { color = theme.divider }
       drawArc(track, 180f.rf, 180f.rf, false, topLeft, arcSize)
 
       val value =
@@ -233,7 +232,7 @@ fun RemoteHaGaugeStacked(data: HaGaugeData, modifier: RemoteModifier = RemoteMod
     ) {
       RemoteText(
         text = data.valueText,
-        color = theme.primaryText.rc,
+        color = theme.primaryText,
         fontSize = 18.rsp,
         fontWeight = FontWeight.SemiBold,
         style = RemoteTextStyle.Default,
@@ -242,7 +241,7 @@ fun RemoteHaGaugeStacked(data: HaGaugeData, modifier: RemoteModifier = RemoteMod
       )
       RemoteText(
         text = data.name.rs,
-        color = theme.secondaryText.rc,
+        color = theme.secondaryText,
         fontSize = 12.rsp,
         style = RemoteTextStyle.Default,
         maxLines = 1,
@@ -251,7 +250,7 @@ fun RemoteHaGaugeStacked(data: HaGaugeData, modifier: RemoteModifier = RemoteMod
       if (data.unit != null) {
         RemoteText(
           text = "${formatRange(data.min)} – ${formatRange(data.max)} ${data.unit}".rs,
-          color = theme.secondaryText.rc,
+          color = theme.secondaryText,
           fontSize = 10.rsp,
           style = RemoteTextStyle.Default,
           maxLines = 1,
@@ -309,9 +308,9 @@ fun RemoteHaGaugeWide(data: HaGaugeData, modifier: RemoteModifier = RemoteModifi
             style = AndroidPaint.Style.STROKE
             strokeWidth = 6f
             strokeCap = AndroidPaint.Cap.ROUND
-            color = theme.divider.toArgb()
           }
           .asRemotePaint()
+          .apply { color = theme.divider }
       drawArc(track, 180f.rf, 180f.rf, false, topLeft, arcSize)
 
       val value =
@@ -333,7 +332,7 @@ fun RemoteHaGaugeWide(data: HaGaugeData, modifier: RemoteModifier = RemoteModifi
     ) {
       RemoteText(
         text = data.valueText,
-        color = theme.primaryText.rc,
+        color = theme.primaryText,
         fontSize = 16.rsp,
         fontWeight = FontWeight.SemiBold,
         style = RemoteTextStyle.Default,
@@ -342,7 +341,7 @@ fun RemoteHaGaugeWide(data: HaGaugeData, modifier: RemoteModifier = RemoteModifi
       )
       RemoteText(
         text = data.name.rs,
-        color = theme.secondaryText.rc,
+        color = theme.secondaryText,
         fontSize = 11.rsp,
         style = RemoteTextStyle.Default,
         maxLines = 1,

@@ -18,7 +18,6 @@ import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.creation.compose.modifier.height
 import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.modifier.size
-import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rf
 import androidx.compose.remote.creation.compose.state.rs
@@ -148,14 +147,12 @@ fun RemoteHaPictureEntity(
           RemoteBox(
             modifier =
               RemoteModifier.padding(8.rdp)
-                .background(
-                  theme.cardBackground.rc.copy(alpha = theme.cardBackground.rc.alpha * 0.8f.rf)
-                )
+                .background(theme.cardBackground.copy(alpha = theme.cardBackground.alpha * 0.8f.rf))
                 .padding(horizontal = 6.rdp, vertical = 2.rdp)
           ) {
             RemoteText(
               text = data.frameStamp.rs,
-              color = theme.secondaryText.rc,
+              color = theme.secondaryText,
               fontSize = 10.rsp,
               style = RemoteTextStyle.Default,
               maxLines = 1,
@@ -164,7 +161,7 @@ fun RemoteHaPictureEntity(
         }
       }
       if (showStrip) {
-        val barBg = theme.cardBackground.rc
+        val barBg = theme.cardBackground
         RemoteRow(
           modifier =
             RemoteModifier.fillMaxWidth()
@@ -175,7 +172,7 @@ fun RemoteHaPictureEntity(
         ) {
           RemoteText(
             text = (if (data.showName) data.name else "").rs,
-            color = theme.primaryText.rc,
+            color = theme.primaryText,
             fontSize = 13.rsp,
             fontWeight = FontWeight.Medium,
             style = RemoteTextStyle.Default,
@@ -185,7 +182,7 @@ fun RemoteHaPictureEntity(
           if (data.showState) {
             RemoteText(
               text = data.state,
-              color = theme.secondaryText.rc,
+              color = theme.secondaryText,
               fontSize = 12.rsp,
               style = RemoteTextStyle.Default,
               maxLines = 1,

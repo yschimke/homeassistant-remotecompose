@@ -19,7 +19,6 @@ import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.creation.compose.modifier.height
 import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.modifier.width
-import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.remote.creation.compose.state.rsp
@@ -51,7 +50,7 @@ fun RemoteHaMarkdown(data: HaMarkdownData, modifier: RemoteModifier = RemoteModi
       if (data.title != null) {
         RemoteText(
           text = data.title.rs,
-          color = theme.primaryText.rc,
+          color = theme.primaryText,
           fontSize = adaptiveTitleSizeSp(data.title).rsp,
           fontWeight = FontWeight.Medium,
           style = RemoteTextStyle.Default,
@@ -91,7 +90,7 @@ fun RemoteHaMarkdown(data: HaMarkdownData, modifier: RemoteModifier = RemoteModi
                 RemoteModifier.padding(vertical = 4.rdp)
                   .fillMaxWidth()
                   .height(1.rdp)
-                  .background(theme.divider.rc)
+                  .background(theme.divider)
             )
           }
           MarkdownBlock.Kind.Paragraph ->
@@ -133,7 +132,7 @@ fun RemoteHaMarkdownIdentity(data: HaMarkdownData, modifier: RemoteModifier = Re
       if (data.title != null) {
         RemoteText(
           text = data.title.rs,
-          color = theme.primaryText.rc,
+          color = theme.primaryText,
           fontSize = 16.rsp,
           fontWeight = FontWeight.SemiBold,
           style = RemoteTextStyle.Default,
@@ -144,7 +143,7 @@ fun RemoteHaMarkdownIdentity(data: HaMarkdownData, modifier: RemoteModifier = Re
       if (firstLine != null) {
         RemoteText(
           text = firstLine.boundText ?: firstLine.text.rs,
-          color = theme.secondaryText.rc,
+          color = theme.secondaryText,
           fontSize = 13.rsp,
           style = RemoteTextStyle.Default,
           maxLines = if (data.title != null) 2 else 3,
@@ -164,12 +163,12 @@ fun RemoteHaMarkdownIdentity(data: HaMarkdownData, modifier: RemoteModifier = Re
 @RemoteComposable
 private fun MarkdownLine(
   block: MarkdownBlock,
-  theme: HaTheme,
+  theme: RemoteHaTheme,
   fontSize: Int,
   fontWeight: FontWeight,
   bullet: Boolean = false,
 ) {
-  val primary = theme.primaryText.rc
+  val primary = theme.primaryText
   if (!block.hasInlineMarkup) {
     val text = block.boundText ?: block.text.rs
     RemoteText(
@@ -182,7 +181,7 @@ private fun MarkdownLine(
     return
   }
 
-  val link = theme.linkText.rc
+  val link = theme.linkText
   val content: @Composable () -> Unit = {
     if (bullet) {
       RemoteText(

@@ -19,7 +19,6 @@ import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.modifier.size
 import androidx.compose.remote.creation.compose.shapes.RemoteCircleShape
 import androidx.compose.remote.creation.compose.state.RemoteColor
-import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rf
 import androidx.compose.remote.creation.compose.state.rs
@@ -90,7 +89,7 @@ fun RemoteHaTile(data: HaTileData, modifier: RemoteModifier = RemoteModifier) {
       RemoteColumn(modifier = RemoteModifier.padding(start = 10.rdp)) {
         RemoteText(
           text = data.name.rs,
-          color = theme.primaryText.rc,
+          color = theme.primaryText,
           fontSize = 13.rsp,
           fontWeight = FontWeight.Medium,
           style = RemoteTextStyle.Default,
@@ -99,7 +98,7 @@ fun RemoteHaTile(data: HaTileData, modifier: RemoteModifier = RemoteModifier) {
         )
         RemoteText(
           text = data.state,
-          color = theme.secondaryText.rc,
+          color = theme.secondaryText,
           fontSize = 11.rsp,
           style = RemoteTextStyle.Default,
           maxLines = 1,
@@ -166,7 +165,7 @@ fun RemoteHaIconChip(data: HaTileData, modifier: RemoteModifier = RemoteModifier
     RemoteBox(modifier = RemoteModifier.padding(top = 6.rdp)) {
       RemoteText(
         text = data.state,
-        color = theme.secondaryText.rc,
+        color = theme.secondaryText,
         fontSize = 11.rsp,
         style = RemoteTextStyle.Default,
         maxLines = 1,

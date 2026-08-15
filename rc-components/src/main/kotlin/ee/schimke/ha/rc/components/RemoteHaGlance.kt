@@ -18,7 +18,6 @@ import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.modifier.size
 import androidx.compose.remote.creation.compose.state.RemoteColor
-import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.remote.creation.compose.state.rsp
@@ -69,7 +68,7 @@ fun RemoteHaGlance(
       if (data.title != null) {
         RemoteText(
           text = data.title.rs,
-          color = theme.primaryText.rc,
+          color = theme.primaryText,
           fontSize = adaptiveTitleSizeSp(data.title).rsp,
           fontWeight = FontWeight.Medium,
           style = RemoteTextStyle.Default,
@@ -152,7 +151,7 @@ fun RemoteHaGlanceCell(data: HaGlanceCellData, modifier: RemoteModifier = Remote
   ) {
     RemoteText(
       text = data.name.rs,
-      color = theme.primaryText.rc,
+      color = theme.primaryText,
       fontSize = 12.rsp,
       style = RemoteTextStyle.Default,
     )
@@ -166,7 +165,7 @@ fun RemoteHaGlanceCell(data: HaGlanceCellData, modifier: RemoteModifier = Remote
     }
     RemoteText(
       text = data.state,
-      color = theme.secondaryText.rc,
+      color = theme.secondaryText,
       fontSize = 11.rsp,
       style = RemoteTextStyle.Default,
     )

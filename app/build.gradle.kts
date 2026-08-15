@@ -221,6 +221,7 @@ dependencies {
   androidTestImplementation(libs.androidx.test.runner)
   androidTestImplementation(platform(libs.compose.bom))
   androidTestImplementation(libs.compose.ui.test.junit4)
+  androidTestImplementation(libs.remote.creation)
   // uiautomator drives the long-press install flow via the actual
   // Android input pipeline — Compose UI tests can't reliably exercise
   // the Initial-pass pointer-input path that pre-empts the RC player.

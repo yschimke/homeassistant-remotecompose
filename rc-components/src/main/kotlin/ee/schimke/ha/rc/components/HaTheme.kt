@@ -1,19 +1,18 @@
 package ee.schimke.ha.rc.components
 
+import androidx.compose.remote.creation.Rc
+import androidx.compose.remote.creation.compose.capture.RemoteComposeCreationState
+import androidx.compose.remote.creation.compose.state.RemoteColor
+import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.ReadOnlyComposable
-import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
+import androidx.wear.compose.remote.material3.RemoteColorScheme
+import androidx.wear.compose.remote.material3.RemoteMaterialTheme
 
 /**
- * Rendered-theme palette for Home Assistant cards. A [HaTheme] is a concrete snapshot of colours;
- * composables read it through [LocalHaTheme] and emit plain [Color]s into the `.rc` document at
- * capture time.
- *
- * A theme switch **regenerates** the document — the colours are baked at capture. This is
- * deliberate (see project_rendering_strategy in memory); alpha08 does not expose a stable
- * `ColorTheme` DSL that would let a single document carry both palettes.
+ * Concrete fallback palette for Home Assistant cards. Normal in-app rendering uses these colors
+ * directly, while remote hosts project them to [RemoteHaTheme].
  */
 data class HaTheme(
   val cardBackground: Color,
@@ -77,6 +76,198 @@ data class HaTheme(
 }
 
 /**
+ * Colors consumed by Remote Compose card components.
+ *
+ * Unlike [HaTheme], these roles can be runtime values. Wear widgets use the named `WearM3.*` values
+ * installed by Remote Material 3, launcher widgets use Android system theme resources, and
+ * embedded/preview callers can still project a concrete [HaTheme].
+ */
+data class RemoteHaTheme(
+  val cardBackground: RemoteColor,
+  val dashboardBackground: RemoteColor,
+  val sectionBackground: RemoteColor,
+  val primaryText: RemoteColor,
+  val secondaryText: RemoteColor,
+  val linkText: RemoteColor,
+  val divider: RemoteColor,
+  val placeholderAccent: RemoteColor,
+  val placeholderBackground: RemoteColor,
+  val unknownAccent: RemoteColor,
+)
+
+private fun HaTheme.asRemote(): RemoteHaTheme =
+  RemoteHaTheme(
+    cardBackground = cardBackground.rc,
+    dashboardBackground = dashboardBackground.rc,
+    sectionBackground = sectionBackground.rc,
+    primaryText = primaryText.rc,
+    secondaryText = secondaryText.rc,
+    linkText = linkText.rc,
+    divider = divider.rc,
+    placeholderAccent = placeholderAccent.rc,
+    placeholderBackground = placeholderBackground.rc,
+    unknownAccent = unknownAccent.rc,
+  )
+
+/**
+ * Map Remote Material 3 roles onto the smaller palette used by HA cards.
+ *
+ * `tertiary` and `secondary` intentionally carry HA-specific roles that otherwise have no distinct
+ * slot in the Wear scheme: link text and unknown-state accent respectively.
+ */
+fun RemoteColorScheme.asHaTheme(): RemoteHaTheme =
+  RemoteHaTheme(
+    cardBackground = surfaceContainerHigh,
+    dashboardBackground = background,
+    sectionBackground = surfaceContainer,
+    primaryText = onSurface,
+    secondaryText = onSurfaceVariant,
+    linkText = tertiary,
+    divider = outlineVariant,
+    placeholderAccent = primary,
+    placeholderBackground = primaryContainer,
+    unknownAccent = secondary,
+  )
+
+internal fun RemoteHaTheme.asColorScheme(): RemoteColorScheme =
+  RemoteColorScheme()
+    .copy(
+      surfaceContainerHigh = cardBackground,
+      background = dashboardBackground,
+      surfaceContainer = sectionBackground,
+      onSurface = primaryText,
+      onSurfaceVariant = secondaryText,
+      tertiary = linkText,
+      outlineVariant = divider,
+      primary = placeholderAccent,
+      primaryContainer = placeholderBackground,
+      secondary = unknownAccent,
+    )
+
+private class SystemThemedRemoteColor(
+  val role: String,
+  val lightResource: Short,
+  val darkResource: Short,
+  val lightFallback: Int,
+  val darkFallback: Int,
+) : RemoteColor(lightFallback) {
+  override fun writeToDocument(creationState: RemoteComposeCreationState): Int =
+    creationState.document
+      .addThemedColor(
+        Rc.AndroidColors.GROUP,
+        lightResource,
+        darkResource,
+        lightFallback,
+        darkFallback,
+      )
+      .toInt()
+
+  override fun toDebugString(): String = "SystemTheme.$role"
+}
+
+private fun systemThemeColor(
+  role: String,
+  lightResource: Short,
+  darkResource: Short,
+  lightFallback: Color,
+  darkFallback: Color,
+): RemoteColor {
+  val lightArgb = lightFallback.toArgb()
+  val darkArgb = darkFallback.toArgb()
+  return SystemThemedRemoteColor(role, lightResource, darkResource, lightArgb, darkArgb)
+}
+
+/**
+ * Launcher palette resolved by the RemoteViews host from Android's current system theme.
+ *
+ * Each role carries light/dark resource ids plus concrete fallbacks, so one cold-start document
+ * follows both wallpaper colors and night mode without a recapture.
+ */
+val SystemRemoteHaTheme: RemoteHaTheme =
+  RemoteHaTheme(
+    cardBackground =
+      systemThemeColor(
+        "cardBackground",
+        Rc.AndroidColors.SYSTEM_SURFACE_CONTAINER_HIGH_LIGHT,
+        Rc.AndroidColors.SYSTEM_SURFACE_CONTAINER_HIGH_DARK,
+        HaTheme.Light.cardBackground,
+        HaTheme.Dark.cardBackground,
+      ),
+    dashboardBackground =
+      systemThemeColor(
+        "dashboardBackground",
+        Rc.AndroidColors.SYSTEM_BACKGROUND_LIGHT,
+        Rc.AndroidColors.SYSTEM_BACKGROUND_DARK,
+        HaTheme.Light.dashboardBackground,
+        HaTheme.Dark.dashboardBackground,
+      ),
+    sectionBackground =
+      systemThemeColor(
+        "sectionBackground",
+        Rc.AndroidColors.SYSTEM_SURFACE_CONTAINER_LIGHT,
+        Rc.AndroidColors.SYSTEM_SURFACE_CONTAINER_DARK,
+        HaTheme.Light.sectionBackground,
+        HaTheme.Dark.sectionBackground,
+      ),
+    primaryText =
+      systemThemeColor(
+        "primaryText",
+        Rc.AndroidColors.SYSTEM_ON_SURFACE_LIGHT,
+        Rc.AndroidColors.SYSTEM_ON_SURFACE_DARK,
+        HaTheme.Light.primaryText,
+        HaTheme.Dark.primaryText,
+      ),
+    secondaryText =
+      systemThemeColor(
+        "secondaryText",
+        Rc.AndroidColors.SYSTEM_ON_SURFACE_VARIANT_LIGHT,
+        Rc.AndroidColors.SYSTEM_ON_SURFACE_VARIANT_DARK,
+        HaTheme.Light.secondaryText,
+        HaTheme.Dark.secondaryText,
+      ),
+    linkText =
+      systemThemeColor(
+        "linkText",
+        Rc.AndroidColors.SYSTEM_PRIMARY_LIGHT,
+        Rc.AndroidColors.SYSTEM_PRIMARY_DARK,
+        HaTheme.Light.linkText,
+        HaTheme.Dark.linkText,
+      ),
+    divider =
+      systemThemeColor(
+        "divider",
+        Rc.AndroidColors.SYSTEM_OUTLINE_VARIANT_LIGHT,
+        Rc.AndroidColors.SYSTEM_OUTLINE_VARIANT_DARK,
+        HaTheme.Light.divider,
+        HaTheme.Dark.divider,
+      ),
+    placeholderAccent =
+      systemThemeColor(
+        "placeholderAccent",
+        Rc.AndroidColors.SYSTEM_PRIMARY_LIGHT,
+        Rc.AndroidColors.SYSTEM_PRIMARY_DARK,
+        HaTheme.Light.placeholderAccent,
+        HaTheme.Dark.placeholderAccent,
+      ),
+    placeholderBackground =
+      systemThemeColor(
+        "placeholderBackground",
+        Rc.AndroidColors.SYSTEM_PRIMARY_CONTAINER_LIGHT,
+        Rc.AndroidColors.SYSTEM_PRIMARY_CONTAINER_DARK,
+        HaTheme.Light.placeholderBackground,
+        HaTheme.Dark.placeholderBackground,
+      ),
+    unknownAccent =
+      systemThemeColor(
+        "unknownAccent",
+        Rc.AndroidColors.SYSTEM_ON_SURFACE_VARIANT_LIGHT,
+        Rc.AndroidColors.SYSTEM_ON_SURFACE_VARIANT_DARK,
+        HaTheme.Light.unknownAccent,
+        HaTheme.Dark.unknownAccent,
+      ),
+  )
+
+/**
  * Derive an [HaTheme] for a given [style] and [darkTheme] flag.
  *
  * The mapping branches by palette identity:
@@ -131,11 +322,21 @@ fun haThemeFor(style: ThemeStyle, darkTheme: Boolean): HaTheme {
   }
 }
 
-val LocalHaTheme = staticCompositionLocalOf { HaTheme.Light }
-
 @Composable
 fun ProvideHaTheme(theme: HaTheme, content: @Composable () -> Unit) {
-  CompositionLocalProvider(LocalHaTheme provides theme, content = content)
+  ProvideRemoteHaTheme(theme.asRemote(), content)
 }
 
-@Composable @ReadOnlyComposable internal fun haTheme(): HaTheme = LocalHaTheme.current
+@Composable
+fun ProvideRemoteHaTheme(theme: RemoteHaTheme, content: @Composable () -> Unit) {
+  RemoteMaterialTheme(colorScheme = theme.asColorScheme(), content = content)
+}
+
+@Composable
+fun ProvideSystemHaTheme(content: @Composable () -> Unit) {
+  ProvideRemoteHaTheme(SystemRemoteHaTheme, content)
+}
+
+@Composable fun currentRemoteHaTheme(): RemoteHaTheme = RemoteMaterialTheme.colorScheme.asHaTheme()
+
+@Composable internal fun haTheme(): RemoteHaTheme = currentRemoteHaTheme()

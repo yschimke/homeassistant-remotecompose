@@ -70,7 +70,7 @@ fun RemoteHaStatisticsGraph(
       if (data.title != null) {
         RemoteText(
           text = data.title,
-          color = theme.primaryText.rc,
+          color = theme.primaryText,
           fontSize = 15.rsp,
           fontWeight = FontWeight.Medium,
           style = RemoteTextStyle.Default,
@@ -80,14 +80,14 @@ fun RemoteHaStatisticsGraph(
       }
       RemoteText(
         text = data.rangeLabel,
-        color = theme.secondaryText.rc,
+        color = theme.secondaryText,
         fontSize = 11.rsp,
         style = RemoteTextStyle.Default,
       )
       if (data.rows.isEmpty()) {
         RemoteText(
           text = "No entities".rs,
-          color = theme.secondaryText.rc,
+          color = theme.secondaryText,
           fontSize = 13.rsp,
           style = RemoteTextStyle.Default,
         )
@@ -102,7 +102,7 @@ fun RemoteHaStatisticsGraph(
 }
 
 @Composable
-private fun BarRow(row: HaHistoryGraphRow, theme: HaTheme) {
+private fun BarRow(row: HaHistoryGraphRow, theme: RemoteHaTheme) {
   RemoteRow(
     modifier = RemoteModifier.fillMaxWidth(),
     verticalAlignment = RemoteAlignment.CenterVertically,
@@ -110,7 +110,7 @@ private fun BarRow(row: HaHistoryGraphRow, theme: HaTheme) {
   ) {
     RemoteText(
       text = row.name,
-      color = theme.primaryText.rc,
+      color = theme.primaryText,
       fontSize = 12.rsp,
       fontWeight = FontWeight.Medium,
       style = RemoteTextStyle.Default,
@@ -120,7 +120,7 @@ private fun BarRow(row: HaHistoryGraphRow, theme: HaTheme) {
     )
     RemoteText(
       text = row.summary,
-      color = theme.secondaryText.rc,
+      color = theme.secondaryText,
       fontSize = 11.rsp,
       style = RemoteTextStyle.Default,
       maxLines = 1,
@@ -129,7 +129,7 @@ private fun BarRow(row: HaHistoryGraphRow, theme: HaTheme) {
   if (row.points.isEmpty()) {
     RemoteText(
       text = "No samples".rs,
-      color = theme.secondaryText.rc,
+      color = theme.secondaryText,
       fontSize = 11.rsp,
       style = RemoteTextStyle.Default,
     )
@@ -139,7 +139,7 @@ private fun BarRow(row: HaHistoryGraphRow, theme: HaTheme) {
 }
 
 @Composable
-private fun Legend(row: HaHistoryGraphRow, theme: HaTheme) {
+private fun Legend(row: HaHistoryGraphRow, theme: RemoteHaTheme) {
   RemoteRow(
     modifier = RemoteModifier.fillMaxWidth(),
     verticalAlignment = RemoteAlignment.CenterVertically,
@@ -158,7 +158,7 @@ private fun Legend(row: HaHistoryGraphRow, theme: HaTheme) {
       ) {}
       RemoteText(
         text = row.name,
-        color = theme.primaryText.rc,
+        color = theme.primaryText,
         fontSize = 11.rsp,
         style = RemoteTextStyle.Default,
         maxLines = 1,
@@ -168,7 +168,7 @@ private fun Legend(row: HaHistoryGraphRow, theme: HaTheme) {
     }
     RemoteText(
       text = row.summary,
-      color = theme.secondaryText.rc,
+      color = theme.secondaryText,
       fontSize = 11.rsp,
       style = RemoteTextStyle.Default,
       maxLines = 1,
@@ -177,7 +177,7 @@ private fun Legend(row: HaHistoryGraphRow, theme: HaTheme) {
 }
 
 @Composable
-private fun Bars(points: List<Float>, accent: Color, theme: HaTheme) {
+private fun Bars(points: List<Float>, accent: Color, theme: RemoteHaTheme) {
   val minP = points.min()
   val maxP = points.max()
   // Anchor bars to zero when all values are non-negative; otherwise
@@ -200,9 +200,9 @@ private fun Bars(points: List<Float>, accent: Color, theme: HaTheme) {
           isAntiAlias = true
           style = AndroidPaint.Style.STROKE
           strokeWidth = 1f
-          color = theme.divider.toArgb()
         }
         .asRemotePaint()
+        .apply { color = theme.divider }
     drawLine(baseline, RemoteOffset(padX, padY + drawH), RemoteOffset(padX + drawW, padY + drawH))
 
     val fill =
@@ -227,7 +227,7 @@ private fun Bars(points: List<Float>, accent: Color, theme: HaTheme) {
 }
 
 @Composable
-private fun StackedBars(rows: List<HaHistoryGraphRow>, theme: HaTheme) {
+private fun StackedBars(rows: List<HaHistoryGraphRow>, theme: RemoteHaTheme) {
   val n = rows.maxOf { it.points.size }
   val totals = FloatArray(n)
   for (i in 0 until n) {
@@ -250,9 +250,9 @@ private fun StackedBars(rows: List<HaHistoryGraphRow>, theme: HaTheme) {
           isAntiAlias = true
           style = AndroidPaint.Style.STROKE
           strokeWidth = 1f
-          color = theme.divider.toArgb()
         }
         .asRemotePaint()
+        .apply { color = theme.divider }
     drawLine(baseline, RemoteOffset(padX, padY + drawH), RemoteOffset(padX + drawW, padY + drawH))
 
     val slot = drawW / n.toFloat().rf

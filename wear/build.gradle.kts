@@ -29,6 +29,7 @@ android {
     targetSdk = libs.versions.android.targetSdk.get().toInt()
     versionCode = wearVersionCode
     versionName = wearVersionName
+    testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
   buildFeatures { compose = true }
   compileOptions {
@@ -88,6 +89,7 @@ dependencies {
   // implementation, drop the vendored copies (and re-evaluate keeping
   // this dep — it only ships RemoteDocPreview today).
   implementation(libs.remote.tooling.preview)
+  implementation(libs.remote.material3)
 
   // Proto DataStore + Horologist data layer for sync with phone.
   // Schema is documented in `src/main/proto/wear_sync.proto`; we
@@ -105,4 +107,14 @@ dependencies {
 
   implementation(libs.kotlinx.coroutines.core)
   implementation(libs.kotlinx.serialization.json)
+
+  androidTestImplementation(libs.androidx.test.ext.junit)
+  androidTestImplementation(libs.androidx.test.runner)
+  androidTestImplementation(platform(libs.compose.bom))
+  androidTestImplementation(libs.compose.ui.test.junit4)
+  androidTestImplementation(libs.remote.core)
+  androidTestImplementation(libs.remote.creation.core)
+  androidTestImplementation(libs.remote.creation)
+  androidTestImplementation(libs.remote.player.compose)
+  debugImplementation(libs.compose.ui.test.manifest)
 }

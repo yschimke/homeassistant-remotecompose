@@ -15,7 +15,6 @@ import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.modifier.size
 import androidx.compose.remote.creation.compose.shapes.RemoteCircleShape
-import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.remote.creation.compose.state.rsp
@@ -28,8 +27,8 @@ import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.CardConverter
 import ee.schimke.ha.rc.cardDataSignature
 import ee.schimke.ha.rc.cardEntityIds
-import ee.schimke.ha.rc.components.LocalHaTheme
 import ee.schimke.ha.rc.components.cardChrome
+import ee.schimke.ha.rc.components.currentRemoteHaTheme
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -61,7 +60,7 @@ class MapCardConverter : CardConverter {
 
   @Composable
   override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
-    val theme = LocalHaTheme.current
+    val theme = currentRemoteHaTheme()
     val title = card.raw["title"]?.jsonPrimitive?.content
     val entities = entityIds(card)
 
@@ -76,7 +75,7 @@ class MapCardConverter : CardConverter {
         if (title != null) {
           RemoteText(
             text = title.rs,
-            color = theme.primaryText.rc,
+            color = theme.primaryText,
             fontSize = 15.rsp,
             fontWeight = FontWeight.Medium,
             style = RemoteTextStyle.Default,
@@ -85,7 +84,7 @@ class MapCardConverter : CardConverter {
         if (entities.isEmpty()) {
           RemoteText(
             text = "No entities".rs,
-            color = theme.secondaryText.rc,
+            color = theme.secondaryText,
             fontSize = 13.rsp,
             style = RemoteTextStyle.Default,
           )
@@ -98,7 +97,7 @@ class MapCardConverter : CardConverter {
 
   @Composable
   private fun EntityRow(entityId: String, snapshot: HaSnapshot) {
-    val theme = LocalHaTheme.current
+    val theme = currentRemoteHaTheme()
     val state = snapshot.states[entityId]
     val name = state?.attributes?.get("friendly_name")?.jsonPrimitive?.content ?: entityId
     val lat = state?.attributes?.get("latitude")?.jsonPrimitive?.content
@@ -111,17 +110,17 @@ class MapCardConverter : CardConverter {
     ) {
       RemoteBox(
         modifier =
-          RemoteModifier.size(8.rdp).clip(RemoteCircleShape).background(theme.placeholderAccent.rc)
+          RemoteModifier.size(8.rdp).clip(RemoteCircleShape).background(theme.placeholderAccent)
       )
       RemoteText(
         text = name.rs,
-        color = theme.primaryText.rc,
+        color = theme.primaryText,
         fontSize = 13.rsp,
         style = RemoteTextStyle.Default,
       )
       RemoteText(
         text = coords.rs,
-        color = theme.secondaryText.rc,
+        color = theme.secondaryText,
         fontSize = 12.rsp,
         style = RemoteTextStyle.Default,
       )

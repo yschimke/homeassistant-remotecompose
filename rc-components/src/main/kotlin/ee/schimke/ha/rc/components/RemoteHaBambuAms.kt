@@ -53,7 +53,7 @@ fun RemoteHaBambuAms(data: HaBambuAmsData, modifier: RemoteModifier = RemoteModi
     RemoteColumn(verticalArrangement = RemoteArrangement.spacedBy(8.rdp)) {
       RemoteText(
         text = data.title.rs,
-        color = theme.primaryText.rc,
+        color = theme.primaryText,
         fontSize = 14.rsp,
         fontWeight = FontWeight.Medium,
         style = RemoteTextStyle.Default,
@@ -86,13 +86,13 @@ fun RemoteHaBambuSpool(data: HaBambuSpoolDetail, modifier: RemoteModifier = Remo
       RemoteColumn(modifier = RemoteModifier.padding(start = 14.rdp)) {
         RemoteText(
           text = data.slot.slotLabel.rs,
-          color = theme.secondaryText.rc,
+          color = theme.secondaryText,
           fontSize = 11.rsp,
           style = RemoteTextStyle.Default,
         )
         RemoteText(
           text = data.slot.material,
-          color = theme.primaryText.rc,
+          color = theme.primaryText,
           fontSize = 16.rsp,
           fontWeight = FontWeight.Medium,
           style = RemoteTextStyle.Default,
@@ -106,7 +106,7 @@ fun RemoteHaBambuSpool(data: HaBambuSpoolDetail, modifier: RemoteModifier = Remo
               "remain_label",
               data.slot.remainPercent?.let { "$it %" } ?: "—",
             ),
-          color = theme.secondaryText.rc,
+          color = theme.secondaryText,
           fontSize = 13.rsp,
           style = RemoteTextStyle.Default,
         )
@@ -116,13 +116,13 @@ fun RemoteHaBambuSpool(data: HaBambuSpoolDetail, modifier: RemoteModifier = Remo
 }
 
 @Composable
-private fun SpoolSlot(slot: HaBambuSpoolSlot, theme: HaTheme, big: Boolean) {
+private fun SpoolSlot(slot: HaBambuSpoolSlot, theme: RemoteHaTheme, big: Boolean) {
   RemoteColumn(horizontalAlignment = RemoteAlignment.CenterHorizontally) {
     SpoolSwatch(slot, big = big, theme = theme)
     RemoteBox(modifier = RemoteModifier.padding(top = 6.rdp)) {
       RemoteText(
         text = slot.material,
-        color = theme.primaryText.rc,
+        color = theme.primaryText,
         fontSize = 11.rsp,
         fontWeight = FontWeight.Medium,
         style = RemoteTextStyle.Default,
@@ -137,7 +137,7 @@ private fun SpoolSlot(slot: HaBambuSpoolSlot, theme: HaTheme, big: Boolean) {
           "remain_label",
           slot.remainPercent?.let { "$it %" } ?: "—",
         ),
-      color = theme.secondaryText.rc,
+      color = theme.secondaryText,
       fontSize = 11.rsp,
       style = RemoteTextStyle.Default,
     )
@@ -145,18 +145,18 @@ private fun SpoolSlot(slot: HaBambuSpoolSlot, theme: HaTheme, big: Boolean) {
 }
 
 @Composable
-private fun SpoolSwatch(slot: HaBambuSpoolSlot, big: Boolean, theme: HaTheme) {
+private fun SpoolSwatch(slot: HaBambuSpoolSlot, big: Boolean, theme: RemoteHaTheme) {
   val outerSize = if (big) 56.rdp else 36.rdp
   val innerSize = if (big) 44.rdp else 28.rdp
-  val outline = if (slot.active) slot.color else theme.divider
+  val outline = if (slot.active) slot.color.rc else theme.divider
   RemoteBox(
     modifier =
       RemoteModifier.size(outerSize)
         .clip(RemoteRoundedCornerShape(if (big) 16.rdp else 10.rdp))
-        .background(theme.cardBackground.rc)
+        .background(theme.cardBackground)
         .border(
           if (slot.active) 2.rdp else 1.rdp,
-          outline.rc,
+          outline,
           RemoteRoundedCornerShape(if (big) 16.rdp else 10.rdp),
         ),
     contentAlignment = RemoteAlignment.Center,

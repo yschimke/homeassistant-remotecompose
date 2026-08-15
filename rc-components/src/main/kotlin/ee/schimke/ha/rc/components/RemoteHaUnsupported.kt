@@ -12,7 +12,6 @@ import androidx.compose.remote.creation.compose.layout.RemoteText
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.modifier.size
-import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.remote.creation.compose.state.rsp
@@ -41,12 +40,12 @@ fun RemoteHaUnsupported(data: HaUnsupportedData, modifier: RemoteModifier = Remo
         imageVector = Icons.Filled.Widgets,
         contentDescription = "Unsupported card".rs,
         modifier = RemoteModifier.size(24.rdp),
-        tint = theme.placeholderAccent.rc,
+        tint = theme.placeholderAccent,
       )
       RemoteBox(modifier = RemoteModifier.padding(top = 8.rdp)) {
         RemoteText(
           text = "Not yet supported".rs,
-          color = theme.primaryText.rc,
+          color = theme.primaryText,
           fontSize = 14.rsp,
           fontWeight = FontWeight.Medium,
           style = RemoteTextStyle.Default,
@@ -54,7 +53,7 @@ fun RemoteHaUnsupported(data: HaUnsupportedData, modifier: RemoteModifier = Remo
       }
       RemoteText(
         text = data.cardType.rs,
-        color = theme.secondaryText.rc,
+        color = theme.secondaryText,
         fontSize = 12.rsp,
         style = RemoteTextStyle.Default,
       )
