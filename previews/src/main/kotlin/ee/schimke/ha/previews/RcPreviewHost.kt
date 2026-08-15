@@ -31,18 +31,28 @@ import kotlinx.coroutines.runBlocking
  * (compose-ai-tools#2937). Semantics-derived products (accessibility trees, the wireframe) see the
  * same single opaque node.
  *
- * [RcPreviewPlayer.EMBEDDED] — the default — plays the same document through the Compose-native
- * player instead, which walks the document's component tree and emits real Compose layout nodes,
- * `Text` included. The exported SVG then carries editable `<text>` and the card's own shape, and
- * the semantics tree describes the card rather than a black box.
+ * [RcPreviewPlayer.EMBEDDED] plays the same document through the Compose-native player instead,
+ * which walks the document's component tree and emits real Compose layout nodes, `Text` included.
+ * The exported SVG then carries editable `<text>` and the card's own shape, and the semantics tree
+ * describes the card rather than a black box.
+ *
+ * **It is not the default yet, and the reason is measured, not theoretical.** An A/B of the two
+ * lanes over the whole preview set (171 of 229 renders differ; evidence in
+ * `docs/previews/before-after/rc-player-*.png`) found the Compose-native lane dropping non-text
+ * content the view player draws: the tinted badge circle behind an "on"-state icon disappears
+ * (button, tile, glance, grid, horizontal-stack) and the grid card renders three of its four tiles.
+ * Text-only cards are at parity. That is the same class of gap compose-ai-tools#2937 measured on
+ * the reference catalog, still present for these cards, so defaulting to it would trade a flat SVG
+ * for wrong pixels. The default stays [RcPreviewPlayer.VIEW] until the player draws these cards
+ * correctly; flipping it is a one-line change here plus a re-render.
  *
  * **The document is unchanged either way.** Both lanes play the identical captured bytes; the
- * choice is only who interprets them. So the `.rc` sidecar ([CapturingRemoteContentPreview]) and
- * everything downstream of it — the browser JS lane, the parity page — are unaffected by it.
+ * choice is only who interprets them — the A/B confirmed all 164 `.rc` sidecars byte-identical
+ * across lanes. So the sidecar ([CapturingRemoteContentPreview]) and everything downstream of it —
+ * the browser JS lane, the parity page — are unaffected by which lane runs.
  *
- * The view lane stays reachable: the render harness selects it with `?rcPlayer=java`, and it is
- * also the automatic fallback when the embedded player isn't on the runtime classpath (the app, the
- * IDE preview pane), so nothing that consumes this module needs the extra artifact to keep working.
+ * The Compose-native lane is reachable on demand: the render harness selects it with
+ * `?rcPlayer=cmp-android`, which is how to get an SVG with live text out of a preview today.
  */
 @Composable
 internal fun HaRemoteContentPreview(
@@ -103,12 +113,15 @@ private fun EmbeddedRemoteContentPreview(
 internal enum class RcPreviewPlayer {
   /** `remote-player-view`'s Android `View`, bridged in through `AndroidView`. */
   VIEW,
-  /** The Compose-native player, which emits real Compose nodes. The default. */
+  /**
+   * The Compose-native player, which emits real Compose nodes. Opt-in — see
+   * [HaRemoteContentPreview] for the measured regressions keeping it out of the default.
+   */
   EMBEDDED,
 }
 
 /**
- * The player this render asked for, defaulting to [RcPreviewPlayer.EMBEDDED].
+ * The player this render asked for, defaulting to [RcPreviewPlayer.VIEW].
  *
  * Four inputs, most specific first:
  * 1. The compose-ai-tools daemon's `renderNow.overrides.remoteCompose.player` — what the preview
@@ -117,18 +130,19 @@ internal enum class RcPreviewPlayer {
  *    is absent in the app and the IDE, and reading it through its own classloader is what
  *    guarantees we observe the same process-static state the daemon seeded rather than a second
  *    copy of it.
- * 2. The `ha.rc.player` system property. `-PhaRcPlayer=java` sets it: `previews/build.gradle.kts`
- *    forwards that Gradle property onto the render task, which is how the view lane gets
- *    re-rendered for a visual diff. A bare `-Dha.rc.player=` on the Gradle command line does
- *    **not** work — the compose-preview plugin curates the render fork's system properties.
+ * 2. The `ha.rc.player` system property, which the `haRcPlayer` Gradle property sets:
+ *    `previews/build.gradle.kts` forwards it onto the render task. Verified to arrive when set in
+ *    `gradle.properties`; a bare `-Dha.rc.player=` does **not** work (the compose-preview plugin
+ *    curates the render fork's system properties) and neither does the CLI's `--gradle-arg`, which
+ *    is silently ignored.
  * 3. The `HA_RC_PLAYER` environment variable, for a shell that exports one into the render JVM.
  *    Only reliable against a cold Gradle daemon: the render fork inherits the *daemon's*
  *    environment, not the invoking shell's, so against a warm daemon this silently does nothing —
  *    which reads exactly like the flag being ignored. Prefer `-PhaRcPlayer=`.
  * 4. The default.
  *
- * Falls back to [RcPreviewPlayer.VIEW] whenever the embedded player is missing at runtime, so a
- * consumer without that artifact still draws.
+ * Also forced to [RcPreviewPlayer.VIEW] whenever the embedded player is missing at runtime, so a
+ * consumer without that artifact still draws — an explicit `cmp-android` request included.
  */
 private fun rcPreviewPlayer(): RcPreviewPlayer {
   if (!embeddedPlayerAvailable) return RcPreviewPlayer.VIEW
@@ -141,7 +155,7 @@ private fun rcPreviewPlayer(): RcPreviewPlayer {
   parsePlayer(System.getenv(PLAYER_ENV))?.let {
     return it
   }
-  return RcPreviewPlayer.EMBEDDED
+  return RcPreviewPlayer.VIEW
 }
 
 /** The `-Dha.rc.player=` escape hatch; accepts either spelling of each lane. */

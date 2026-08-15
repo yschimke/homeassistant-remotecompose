@@ -17,7 +17,7 @@ previews it decides far more than the pixels.
 Both play the **same bytes**. The captured document is identical; only the
 interpreter differs.
 
-## Why previews default to the Compose-native player
+## Why the Compose-native player matters
 
 A preview here is not just a PNG. The compose-ai-tools render harness derives a
 stack of data products from the *composition* — the layout-inspector tree, the
@@ -51,6 +51,37 @@ semantics tree describes the card instead of a black box.
 
 [2937]: https://github.com/yschimke/compose-ai-tools/issues/2937
 
+## Why it is not the default (yet)
+
+Because it draws these cards wrong. An A/B over the whole preview set — 171 of
+229 renders differ — found the Compose-native lane dropping non-text content the
+view player gets right.
+
+The tinted badge circle behind an "on"-state icon disappears. Note that the blue
+sensor badge survives and the amber light-on badge does not, so this is a
+specific paint path, not a blanket loss of icon backgrounds:
+
+![button card, view vs Compose-native](../previews/before-after/rc-player-button.png)
+
+The grid card renders three of its four tiles, and loses two badges on the way:
+
+![grid card, view vs Compose-native](../previews/before-after/rc-player-grid.png)
+
+![horizontal stack, view vs Compose-native](../previews/before-after/rc-player-horizontal-stack.png)
+
+Text-only cards are at parity:
+
+![clock card, view vs Compose-native](../previews/before-after/rc-player-clock.png)
+
+This is the same class of gap [#2937][2937] measured on the reference catalog
+(text survives, drawn content does not), still present for these cards. Trading a
+flat-but-correct SVG for a vector one with missing content is not an improvement,
+so the default stays on the view player. Flipping it is a one-line change in
+`RcPreviewHost.kt` plus a re-render, once the player draws these correctly.
+
+All 164 `.rc` sidecars were byte-identical across both lanes, which is the
+control: the document is the same, only the interpreter differs.
+
 ## Where the choice lives
 
 [`previews/…/RcPreviewHost.kt`](../../previews/src/main/kotlin/ee/schimke/ha/previews/RcPreviewHost.kt).
@@ -65,30 +96,40 @@ Selection, most specific first:
 1. `renderNow.overrides.remoteCompose.player` from the compose-ai-tools daemon —
    what the preview server's `?rcPlayer=java` / `?rcPlayer=cmp-android` chips
    set. Read reflectively, so `:previews` neither compiles nor links against the
-   connector and always observes the state the daemon actually seeded.
-2. The `ha.rc.player` system property, which `-PhaRcPlayer=` sets:
-   `previews/build.gradle.kts` forwards that Gradle property onto the render
-   task. A bare `-Dha.rc.player=` does **not** reach the render — the
-   compose-preview plugin curates the fork's system properties.
-3. `HA_RC_PLAYER=<java|cmp-android>` in the environment. Only reliable against a
-   cold Gradle daemon: the render fork inherits the *daemon's* environment, not
-   the invoking shell's, so against a warm daemon it silently does nothing and
-   the render quietly stays on the default. Prefer `-PhaRcPlayer=`.
-4. The default: the Compose-native player.
+   connector and always observes the state the daemon actually seeded. **This is
+   the way to get a live-text SVG out of a preview today.**
+2. The `ha.rc.player` system property, which the `haRcPlayer` Gradle property
+   sets — `previews/build.gradle.kts` forwards it onto the render task.
+3. `HA_RC_PLAYER=<java|cmp-android>` in the environment.
+4. The default: the view player.
 
-If the embedded player isn't on the runtime classpath the host falls back to the
-view player, so the app and the IDE preview pane keep working without it.
+If the embedded player isn't on the runtime classpath the host uses the view
+player regardless, so the app and the IDE preview pane keep working without it.
 
-To render both lanes for a visual diff:
+To render the Compose-native lane for a visual diff, put it in
+`gradle.properties`:
 
-```bash
-compose-preview render --module previews                          # Compose-native (default)
-compose-preview render --module previews -PhaRcPlayer=java        # view player
+```properties
+haRcPlayer=cmp-android
 ```
 
-If the two lanes come out byte-identical, the override did not take — check that
-the property actually reached the render rather than concluding the players
-agree.
+then `compose-preview render --module previews`.
+
+**Getting this override to arrive is fiddly and fails silently.** Three ways
+that look right and do not work:
+
+| attempt | why it fails |
+|---|---|
+| `-Dha.rc.player=…` on the Gradle command line | the compose-preview plugin curates the render fork's system properties |
+| `--gradle-arg -PhaRcPlayer=…` | not a CLI flag; ignored without error |
+| `HA_RC_PLAYER=… compose-preview render` | the render fork inherits the *Gradle daemon's* environment, not the shell's, so it misses a warm daemon |
+
+Each exits 0 and renders happily on the default lane. **If two lanes come out
+byte-identical, assume the override did not arrive** — the players are not that
+similar. Verify by printing `System.getProperty("ha.rc.player")` from
+`rcPreviewPlayer()` and reading it back out of
+`previews/build/test-results/composePreviewRender/TEST-*.xml`; the render fork's
+stderr does not reach the CLI's stdout.
 
 ## What this does not change
 
