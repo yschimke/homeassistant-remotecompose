@@ -25,8 +25,7 @@ The current prototype makes metadata forwarding directly observable by:
 - collecting `actionId -> payload` during widget capture; and
 - attaching one explicit mutable broadcast PendingIntent per id;
 - mirroring the capture-time payload in a separate static extra as a compatibility fallback; and
-- logging `remotecompose_metadata`, the fallback payload, and whether they match in
-  `WidgetActionReceiver`.
+- logging whether metadata was forwarded and whether it matches the static fallback.
 
 `metadataForwarded=true` in logcat proves that the launcher supplied the dynamic metadata extra.
 The receiver prefers that value and only falls back to the mirrored payload when the platform omits
@@ -48,8 +47,9 @@ Received widgetId=12 actionId=123 metadataForwarded=true actionMatchesFallback=t
 ```
 
 `metadataForwarded=false` means the action arrived successfully, but that platform build did not
-add the RemoteCompose metadata to the fill-in Intent. The separately logged fallback keeps the
-prototype functional in that case.
+add the RemoteCompose metadata to the fill-in Intent. The static fallback keeps fixed actions
+functional. A dynamically accumulated `AlarmPin` has an intentionally empty fallback which the
+receiver rejects, because the completed PIN exists only in interaction-time metadata.
 
 The metadata envelope carries four fields:
 
@@ -73,6 +73,7 @@ two document-local `MutableRemoteInt`s for the PIN and digit count. A
 digits and backspace use AndroidX `ValueChangeAction`s only; the final digit uses a
 `CombinedAction` to emit one dynamic `AlarmPin(entityId, pin)` host action and reset the buffer.
 Formatting the integer to `code_length` digits preserves leading zeroes in the metadata payload.
+The receiver decodes that payload without writing the PIN to logcat or the persistent Logs screen.
 
 Normal in-app playback and launcher widgets without a known length continue to emit individual
 `AlarmKey`s. `AlarmKeypadCoordinator` supplies the idle-timeout heuristic for that path.

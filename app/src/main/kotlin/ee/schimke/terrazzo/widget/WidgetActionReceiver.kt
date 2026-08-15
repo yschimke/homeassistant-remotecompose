@@ -40,18 +40,21 @@ class WidgetActionReceiver : BroadcastReceiver() {
         "documentTime=${decodedMetadata?.documentTime} " +
         "receivedAt=$receivedAt",
     )
-    Log.d(TAG, "remotecompose_metadata=$remoteComposeMetadata fallbackPayload=$fallbackPayload")
-
     // Prefer the value resolved by RemoteCompose at interaction time. The mirrored payload keeps
-    // actions working on platform versions whose RemoteViews bridge drops the metadata callback.
-    val payload = decodedMetadata?.actionPayload ?: fallbackPayload
-    val action = decodeHaAction(payload)
+    // fixed actions working on platform versions whose RemoteViews bridge drops the metadata
+    // callback. Dynamic PINs deliberately fail closed because their capture-time fallback cannot
+    // contain the digits entered later in the player.
+    val action = decodeDeliveredWidgetAction(remoteComposeMetadata, fallbackPayload)
     if (action == null) {
-      Log.w(TAG, "Widget action had no decodable payload; metadataForwarded=$metadataWasForwarded")
+      Log.w(
+        TAG,
+        "Widget action had no complete decodable payload; " +
+          "metadataForwarded=$metadataWasForwarded",
+      )
       return
     }
 
-    Log.i(TAG, "Decoded widget action=$action")
+    Log.i(TAG, "Decoded widget actionType=${action.javaClass.simpleName}")
     recordAction(context, action)
   }
 
@@ -65,7 +68,7 @@ class WidgetActionReceiver : BroadcastReceiver() {
         is HaAction.Navigate -> "Widget navigate ${action.path}" to null
         is HaAction.Url -> "Widget URL ${action.url}" to null
         is HaAction.AlarmKey -> "Widget alarm key ${action.key}" to action.entityId
-        is HaAction.AlarmPin -> "Widget alarm PIN ${action.pin}" to action.entityId
+        is HaAction.AlarmPin -> "Widget alarm PIN submitted" to action.entityId
         is HaAction.AlarmIntent -> "Widget alarm ${action.service}" to action.entityId
         HaAction.None -> return
       }
@@ -84,4 +87,14 @@ class WidgetActionReceiver : BroadcastReceiver() {
     private const val APP_WIDGET_ID_MISSING = -1
     private const val TAG = "WidgetActionReceiver"
   }
+}
+
+/** Decode a delivered action, rejecting capture-time PIN placeholders that contain no digits. */
+internal fun decodeDeliveredWidgetAction(
+  remoteComposeMetadata: String?,
+  fallbackPayload: String?,
+): HaAction? {
+  val payload = decodeWidgetActionMetadata(remoteComposeMetadata)?.actionPayload ?: fallbackPayload
+  val action = decodeHaAction(payload) ?: return null
+  return action.takeUnless { it is HaAction.AlarmPin && it.pin.isEmpty() }
 }

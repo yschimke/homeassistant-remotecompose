@@ -260,6 +260,8 @@ fun HaAction.toRemoteAction(): Action? {
 internal fun widgetAlarmPinAction(entityId: String, pin: RemoteString): Action? {
   val registry = LocalWidgetActionRegistry.current ?: return null
   val placeholder = "__REMOTE_PIN__"
+  // The actual PIN exists only in dynamic metadata. The empty static payload is a recognizable
+  // placeholder that WidgetActionReceiver rejects rather than treating as a usable alarm code.
   val fallbackAction = HaAction.AlarmPin(entityId, "")
   val template =
     json.encodeToString(HaAction.serializer(), HaAction.AlarmPin(entityId, placeholder))

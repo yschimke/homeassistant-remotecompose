@@ -2,6 +2,7 @@ package ee.schimke.ha.rc
 
 import ee.schimke.ha.rc.components.HaAction
 import ee.schimke.ha.rc.components.toNamedRemoteAction
+import ee.schimke.terrazzo.widget.decodeDeliveredWidgetAction
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
@@ -26,6 +27,24 @@ class HaActionDispatcherTest {
     val payload = Json.encodeToString(HaAction.serializer(), original)
 
     assertEquals(original, decodeHaAction(payload))
+  }
+
+  @Test
+  fun deliveredWidgetAction_rejectsEmptyAlarmPinFallback() {
+    val fallback =
+      Json.encodeToString(HaAction.serializer(), HaAction.AlarmPin("alarm_control_panel.house", ""))
+
+    assertNull(
+      decodeDeliveredWidgetAction(remoteComposeMetadata = null, fallbackPayload = fallback)
+    )
+  }
+
+  @Test
+  fun deliveredWidgetAction_acceptsCompleteAlarmPinMetadata() {
+    val action = HaAction.AlarmPin("alarm_control_panel.house", "0123")
+    val metadata = Json.encodeToString(HaAction.serializer(), action)
+
+    assertEquals(action, decodeDeliveredWidgetAction(metadata, fallbackPayload = null))
   }
 
   @Test

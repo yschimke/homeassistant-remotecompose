@@ -105,9 +105,10 @@ private class DashboardActionDispatcher(
       // AlarmKeypadCoordinator; logging here means an alarm-panel
       // action escaped the coordinator (most likely a bug).
       is HaAction.AlarmKey,
-      is HaAction.AlarmPin,
       is HaAction.AlarmIntent,
       HaAction.None -> Log.i(TAG, "Action not yet wired: $action")
+      is HaAction.AlarmPin ->
+        Log.i(TAG, "Alarm PIN action escaped coordinator for ${action.entityId}")
     }
   }
 
@@ -120,7 +121,7 @@ private class DashboardActionDispatcher(
         is HaAction.MoreInfo -> "More info" to action.entityId
         is HaAction.Navigate -> "Navigate to ${action.path}" to null
         is HaAction.AlarmKey -> "Alarm key ${action.key}" to action.entityId
-        is HaAction.AlarmPin -> "Alarm PIN ${action.pin}" to action.entityId
+        is HaAction.AlarmPin -> "Alarm PIN submitted" to action.entityId
         is HaAction.AlarmIntent -> "Alarm ${action.service}" to action.entityId
         HaAction.None -> return
       }
