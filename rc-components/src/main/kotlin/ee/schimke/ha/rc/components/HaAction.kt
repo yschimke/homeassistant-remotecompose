@@ -1,4 +1,4 @@
-@file:Suppress("INVISIBLE_MEMBER", "INVISIBLE_REFERENCE")
+@file:Suppress("RestrictedApi", "INVISIBLE_MEMBER", "INVISIBLE_REFERENCE")
 
 package ee.schimke.ha.rc.components
 
