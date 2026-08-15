@@ -15,6 +15,7 @@ import java.io.ByteArrayInputStream
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
+import kotlin.test.assertNull
 import kotlin.test.assertSame
 import kotlin.test.assertTrue
 
@@ -77,5 +78,34 @@ class SystemRemoteHaThemeTest {
       requireNotNull(document.namedColors).any { it?.endsWith("WearM3.surfaceContainer") == true },
       "Expected WearM3.surfaceContainer in ${document.namedColors.contentToString()}",
     )
+  }
+
+  /**
+   * The regression the original implementation shipped, and the cheapest possible guard against it.
+   *
+   * `BackgroundModifier` branches on `hasConstantValue`: a colour that carries one is written as
+   * literal red/green/blue by `SolidBackgroundModifier` and its id provider is never asked for. So
+   * a themed colour built as `RemoteColor(lightFallback)` with an overridden `writeToDocument` —
+   * which is how this started — emits **no** `ColorTheme` operation through any composable path,
+   * while rendering correctly, because the constant it falls back to is the light fallback.
+   *
+   * The other tests in this file call `writeToDocument` directly, so they pass either way. This one
+   * asserts the property the modifier actually reads.
+   */
+  @Test
+  fun systemThemeColors_carryNoConstantValue_soTheIdPathIsTaken() {
+    val scheme = SystemRemoteHaTheme.asColorScheme()
+    for ((role, color) in
+      listOf(
+        "surfaceContainerHigh" to scheme.surfaceContainerHigh,
+        "onSurface" to scheme.onSurface,
+        "primary" to scheme.primary,
+      )) {
+      assertNull(
+        color.constantValueOrNull,
+        "$role carries a constant value, so BackgroundModifier will bake it and skip the " +
+          "ColorTheme operation",
+      )
+    }
   }
 }
