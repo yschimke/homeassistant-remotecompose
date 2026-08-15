@@ -61,16 +61,15 @@ class AddonClient(
    * Probes `/healthz` with a short timeout. Used by the runtime to decide whether to install
    * [AddonCardGenerator] in the chain at session-open time.
    */
-  suspend fun health(timeoutMs: Long = PROBE_TIMEOUT_MS): Boolean =
-    runCatching {
-        val resp =
-          http.get(url("/healthz")) {
-            authHeader()
-            timeout { requestTimeoutMillis = timeoutMs }
-          }
-        resp.status.isSuccess()
+  suspend fun health(timeoutMs: Long = PROBE_TIMEOUT_MS): Boolean = runCatching {
+    val resp =
+      http.get(url("/healthz")) {
+        authHeader()
+        timeout { requestTimeoutMillis = timeoutMs }
       }
-      .getOrElse { false }
+    resp.status.isSuccess()
+  }
+    .getOrElse { false }
 
   /** Wraps the add-on's `/v1/dashboards` listing. */
   suspend fun listDashboards(): JsonArray {
@@ -98,27 +97,27 @@ class AddonClient(
    */
   suspend fun fetchCardBytes(card: CardKey, size: CardSize, profile: ClientProfile): CardBytes? =
     runCatching {
-        val resp: HttpResponse =
-          http.get(url("/v1/cards/${card.toCacheKey()}.rc")) {
-            authHeader()
-            parameter("w", size.widthPx)
-            parameter("h", size.heightPx)
-            parameter("density", size.densityDpi)
-            parameter("profile", profile.wire)
-          }
-        when {
-          resp.status.isSuccess() ->
-            CardBytes(bytes = resp.bodyAsBytes(), widthPx = size.widthPx, heightPx = size.heightPx)
-          // 501 (M3 not implemented yet), 404 (server doesn't have a
-          // converter for this card), 503 (HA bridge not ready) — all
-          // collapse into "no, fall through".
-          resp.status == HttpStatusCode.NotImplemented -> null
-          resp.status == HttpStatusCode.NotFound -> null
-          resp.status == HttpStatusCode.ServiceUnavailable -> null
-          else -> null
+      val resp: HttpResponse =
+        http.get(url("/v1/cards/${card.toCacheKey()}.rc")) {
+          authHeader()
+          parameter("w", size.widthPx)
+          parameter("h", size.heightPx)
+          parameter("density", size.densityDpi)
+          parameter("profile", profile.wire)
         }
+      when {
+        resp.status.isSuccess() ->
+          CardBytes(bytes = resp.bodyAsBytes(), widthPx = size.widthPx, heightPx = size.heightPx)
+        // 501 (M3 not implemented yet), 404 (server doesn't have a
+        // converter for this card), 503 (HA bridge not ready) — all
+        // collapse into "no, fall through".
+        resp.status == HttpStatusCode.NotImplemented -> null
+        resp.status == HttpStatusCode.NotFound -> null
+        resp.status == HttpStatusCode.ServiceUnavailable -> null
+        else -> null
       }
-      .getOrElse { null }
+    }
+    .getOrElse { null }
 
   fun close() {
     http.close()

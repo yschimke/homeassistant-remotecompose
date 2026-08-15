@@ -97,49 +97,48 @@ fun CachedCardPreview(
     remember(effectiveCacheKey) {
       cache.get(effectiveCacheKey)
         ?: runBlocking {
-            val captureContent: @RemoteComposable @Composable () -> Unit =
-              if (debugBorders) {
-                { DebugRcBorderWrapper { content() } }
-              } else {
-                content
-              }
-            // A constrained capture [profile] (e.g. `widgetsProfile`,
-            // the launcher's stricter op set) can reject a card whose
-            // ops fall outside its vocabulary by throwing mid-capture.
-            // This capture runs synchronously inside composition via
-            // `runBlocking`, so an uncaught throw would take down the
-            // whole host screen (the card-history preview captures every
-            // card with the widgets profile — see CardHistoryScreen).
-            // Degrade to an empty document instead: the card renders
-            // blank, matching how the launcher shows a widget it can't
-            // paint, rather than crashing the screen hosting the preview.
-            val captured =
-              runCatching {
-                  captureSingleRemoteDocument(
-                    context = context,
-                    profile = profile,
-                    content = captureContent,
-                  )
-                }
-                .recoverCatching {
-                  // First fall back to a blank document under the
-                  // requested profile — matches a launcher slot the
-                  // profile can't paint.
-                  captureSingleRemoteDocument(context = context, profile = profile) {}
-                }
-                .getOrElse {
-                  // The constrained profile rejected even an empty
-                  // capture (a blank document has no root ops to admit).
-                  // Capture the blank under the unconstrained AndroidX
-                  // profile, which never rejects, so the host screen
-                  // still composes instead of crashing a second time.
-                  captureSingleRemoteDocument(
-                    context = context,
-                    profile = RcPlatformProfiles.ANDROIDX,
-                  ) {}
-                }
-            CardDocument(bytes = captured.bytes, widthPx = 0, heightPx = 0)
+          val captureContent: @RemoteComposable @Composable () -> Unit =
+            if (debugBorders) {
+              { DebugRcBorderWrapper { content() } }
+            } else {
+              content
+            }
+          // A constrained capture [profile] (e.g. `widgetsProfile`,
+          // the launcher's stricter op set) can reject a card whose
+          // ops fall outside its vocabulary by throwing mid-capture.
+          // This capture runs synchronously inside composition via
+          // `runBlocking`, so an uncaught throw would take down the
+          // whole host screen (the card-history preview captures every
+          // card with the widgets profile — see CardHistoryScreen).
+          // Degrade to an empty document instead: the card renders
+          // blank, matching how the launcher shows a widget it can't
+          // paint, rather than crashing the screen hosting the preview.
+          val captured = runCatching {
+            captureSingleRemoteDocument(
+              context = context,
+              profile = profile,
+              content = captureContent,
+            )
           }
+            .recoverCatching {
+              // First fall back to a blank document under the
+              // requested profile — matches a launcher slot the
+              // profile can't paint.
+              captureSingleRemoteDocument(context = context, profile = profile) {}
+            }
+            .getOrElse {
+              // The constrained profile rejected even an empty
+              // capture (a blank document has no root ops to admit).
+              // Capture the blank under the unconstrained AndroidX
+              // profile, which never rejects, so the host screen
+              // still composes instead of crashing a second time.
+              captureSingleRemoteDocument(
+                context = context,
+                profile = RcPlatformProfiles.ANDROIDX,
+              ) {}
+            }
+          CardDocument(bytes = captured.bytes, widthPx = 0, heightPx = 0)
+        }
           .also { cache.put(effectiveCacheKey, it) }
     }
 

@@ -56,12 +56,11 @@ open class OfflineCacheStorage(rootDir: File) {
    * The instance the user was last connected to. Used by `MainActivity` to decide whether to
    * auto-resume on cold start versus showing the discovery / login screens.
    */
-  fun lastInstance(): String? =
-    runCatching {
-        if (!instanceFile.exists()) return@runCatching null
-        json.decodeFromString(InstancePointer.serializer(), instanceFile.readText()).baseUrl
-      }
-      .getOrNull()
+  fun lastInstance(): String? = runCatching {
+    if (!instanceFile.exists()) return@runCatching null
+    json.decodeFromString(InstancePointer.serializer(), instanceFile.readText()).baseUrl
+  }
+    .getOrNull()
 
   fun setLastInstance(baseUrl: String) {
     val payload = json.encodeToString(InstancePointer.serializer(), InstancePointer(baseUrl))
@@ -107,10 +106,10 @@ open class OfflineCacheStorage(rootDir: File) {
 
   private fun <T> readJson(file: File, serializer: kotlinx.serialization.KSerializer<T>): T? =
     runCatching {
-        if (!file.exists()) return@runCatching null
-        json.decodeFromString(serializer, file.readText())
-      }
-      .getOrNull()
+      if (!file.exists()) return@runCatching null
+      json.decodeFromString(serializer, file.readText())
+    }
+    .getOrNull()
 
   private fun <T> writeJson(
     file: File,

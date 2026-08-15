@@ -143,10 +143,10 @@ class MobileWearSyncManager(
     // failure (no Wearable component on this device) flips us into
     // the disabled state instead of silently never delivering leases.
     runCatching {
-        messageClient.addListener(leaseListener).addOnFailureListener {
-          handleFailure("addListener", it)
-        }
+      messageClient.addListener(leaseListener).addOnFailureListener {
+        handleFailure("addListener", it)
       }
+    }
       .onFailure { handleFailure("addListener", it) }
 
     // Demo-mode flag → /wear/settings (and base url annotation).
@@ -233,20 +233,20 @@ class MobileWearSyncManager(
     // session.connect() lazily via the dashboard list.
     session.connectionStatus.first { it == SessionConnectionStatus.Connected }
     runCatching {
-        val summaries = session.listDashboards()
-        for (summary in summaries) {
-          val (dashboard, snapshot) = session.loadDashboard(summary.urlPath)
-          val cards = dashboard.views.flatMap { it.cards }
-          val data =
-            DashboardData(
-              urlPath = summary.urlPath ?: "",
-              title = dashboard.title ?: summary.title,
-              cards = cards.map { it.toSummary(snapshot.states) },
-              updatedAtMs = System.currentTimeMillis(),
-            )
-          writeDataItem(WearSyncPaths.dashboardPath(summary.urlPath), encodeProto(data))
-        }
+      val summaries = session.listDashboards()
+      for (summary in summaries) {
+        val (dashboard, snapshot) = session.loadDashboard(summary.urlPath)
+        val cards = dashboard.views.flatMap { it.cards }
+        val data =
+          DashboardData(
+            urlPath = summary.urlPath ?: "",
+            title = dashboard.title ?: summary.title,
+            cards = cards.map { it.toSummary(snapshot.states) },
+            updatedAtMs = System.currentTimeMillis(),
+          )
+        writeDataItem(WearSyncPaths.dashboardPath(summary.urlPath), encodeProto(data))
       }
+    }
       .onFailure {
         if (it is CancellationException) throw it
         handleFailure("publishDashboards", it)
@@ -269,10 +269,11 @@ class MobileWearSyncManager(
       // so a transient API_NOT_CONNECTED disconnect pauses the
       // pump and resumes once the recovery probe re-flips the flag.
       wearableAvailableState.first { it }
-      val snapshot =
-        runCatching { session.loadDashboard(null).second }
-          .onFailure { if (it is CancellationException) throw it }
-          .getOrNull()
+      val snapshot = runCatching {
+        session.loadDashboard(null).second
+      }
+        .onFailure { if (it is CancellationException) throw it }
+        .getOrNull()
       if (snapshot != null) {
         val current = snapshot.states.mapValues { (_, state) -> state.toEntityValue() }
         val streaming = hasPinned || isLeaseFresh(leaseState.value)
@@ -298,13 +299,13 @@ class MobileWearSyncManager(
     if (deltas.isEmpty()) return
     val frame = StreamUpdate(deltas = deltas, capturedAtMs = System.currentTimeMillis())
     runCatching {
-        val nodes = nodeClient.connectedNodes.await()
-        val bytes = encodeProto(frame)
-        for (node in nodes) {
-          messageClient.sendMessage(node.id, WearSyncPaths.STREAM_MESSAGE, bytes).await()
-        }
-        statsStore.recordMessageSent(System.currentTimeMillis())
+      val nodes = nodeClient.connectedNodes.await()
+      val bytes = encodeProto(frame)
+      for (node in nodes) {
+        messageClient.sendMessage(node.id, WearSyncPaths.STREAM_MESSAGE, bytes).await()
       }
+      statsStore.recordMessageSent(System.currentTimeMillis())
+    }
       .onFailure {
         if (it is CancellationException) throw it
         handleFailure("pushStream", it)
@@ -315,14 +316,14 @@ class MobileWearSyncManager(
   private suspend fun writeDataItem(path: String, bytes: ByteArray) {
     if (!wearableAvailableState.value) return
     runCatching {
-        val request =
-          PutDataMapRequest.create(path).apply {
-            dataMap.putByteArray(KEY_PROTO, bytes)
-            dataMap.putLong(KEY_TS, System.currentTimeMillis())
-          }
-        dataClient.putDataItem(request.asPutDataRequest().setUrgent()).await()
-        statsStore.recordWrite(System.currentTimeMillis())
-      }
+      val request =
+        PutDataMapRequest.create(path).apply {
+          dataMap.putByteArray(KEY_PROTO, bytes)
+          dataMap.putLong(KEY_TS, System.currentTimeMillis())
+        }
+      dataClient.putDataItem(request.asPutDataRequest().setUrgent()).await()
+      statsStore.recordWrite(System.currentTimeMillis())
+    }
       .onFailure {
         if (it is CancellationException) throw it
         handleFailure("writeDataItem $path", it)

@@ -142,42 +142,39 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
         widgetsProfile
       }
 
-    val captured =
-      runCatching {
-          runBlocking {
-            captureSingleRemoteDocument(
-              context = context,
-              creationDisplayInfo = RemoteCreationDisplayInfo(widthPx, heightPx, densityDpi),
+    val captured = runCatching {
+      runBlocking {
+        captureSingleRemoteDocument(
+          context = context,
+          creationDisplayInfo = RemoteCreationDisplayInfo(widthPx, heightPx, densityDpi),
+          profile = captureProfile,
+        ) {
+          ProvideCardRegistry(registry) {
+            ProvideSystemHaTheme(
               profile = captureProfile,
-            ) {
-              ProvideCardRegistry(registry) {
-                ProvideSystemHaTheme(
-                  profile = captureProfile,
-                  fallbackTheme =
-                    if (
-                      context.resources.configuration.uiMode and
-                        android.content.res.Configuration.UI_MODE_NIGHT_MASK ==
-                        android.content.res.Configuration.UI_MODE_NIGHT_YES
-                    ) {
-                      HaTheme.Dark
-                    } else {
-                      HaTheme.Light
-                    },
+              fallbackTheme =
+                if (
+                  context.resources.configuration.uiMode and
+                    android.content.res.Configuration.UI_MODE_NIGHT_MASK ==
+                    android.content.res.Configuration.UI_MODE_NIGHT_YES
                 ) {
-                  ProvideCardSizeMode(CardSizeMode.Fixed) {
-                    // The widget surface paints the themed
-                    // card background across the whole
-                    // capture canvas, so the launcher cell is
-                    // fully covered even when the card's
-                    // content is shorter than the slot.
-                    // Suppress the inner card's own chrome so
-                    // it doesn't draw a second frame inside.
-                    ProvideCardChrome(enabled = false) {
-                      ProvideWidgetActionRegistry(widgetActions) {
-                        RemoteHaWidgetSurface {
-                          RenderChild(entry.card, snapshot, RemoteModifier.fillMaxWidth())
-                        }
-                      }
+                  HaTheme.Dark
+                } else {
+                  HaTheme.Light
+                },
+            ) {
+              ProvideCardSizeMode(CardSizeMode.Fixed) {
+                // The widget surface paints the themed
+                // card background across the whole
+                // capture canvas, so the launcher cell is
+                // fully covered even when the card's
+                // content is shorter than the slot.
+                // Suppress the inner card's own chrome so
+                // it doesn't draw a second frame inside.
+                ProvideCardChrome(enabled = false) {
+                  ProvideWidgetActionRegistry(widgetActions) {
+                    RemoteHaWidgetSurface {
+                      RenderChild(entry.card, snapshot, RemoteModifier.fillMaxWidth())
                     }
                   }
                 }
@@ -185,12 +182,14 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
             }
           }
         }
-        .getOrElse {
-          // The widgets profile rejects ops outside the launcher's vocabulary —
-          // log and skip rather than crashing the host process.
-          Log.w(TAG, "widgets-profile capture failed for id=$widgetId type=${entry.card.type}", it)
-          return
-        }
+      }
+    }
+      .getOrElse {
+        // The widgets profile rejects ops outside the launcher's vocabulary —
+        // log and skip rather than crashing the host process.
+        Log.w(TAG, "widgets-profile capture failed for id=$widgetId type=${entry.card.type}", it)
+        return
+      }
 
     val instructions = RemoteViews.DrawInstructions.Builder(listOf(captured.bytes)).build()
     val remoteViews = RemoteViews(instructions)

@@ -65,11 +65,11 @@ private val PREVIEW_WALLPAPER_SEED = Color(0xFFB58392)
 private fun readWallpaperSeed(context: Context): Color? {
   if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O_MR1) return null
   return runCatching {
-      WallpaperManager.getInstance(context)
-        .getWallpaperColors(WallpaperManager.FLAG_SYSTEM)
-        ?.primaryColor
-        ?.toArgb()
-        ?.let(::Color)
-    }
+    WallpaperManager.getInstance(context)
+      .getWallpaperColors(WallpaperManager.FLAG_SYSTEM)
+      ?.primaryColor
+      ?.toArgb()
+      ?.let(::Color)
+  }
     .getOrNull()
 }

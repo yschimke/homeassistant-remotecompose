@@ -59,9 +59,9 @@ fun rememberDashboardListState(session: HaSession): State<DashboardListState> {
     }
   LaunchedEffect(session) {
     runCatching {
-        session.connect()
-        session.listDashboards()
-      }
+      session.connect()
+      session.listDashboards()
+    }
       .onSuccess { list -> state.value = DashboardListState.Ready(list.ifNotEmptyOrHomeFallback()) }
       .onFailure {
         // Only flip to Error if we have nothing to show. A cached

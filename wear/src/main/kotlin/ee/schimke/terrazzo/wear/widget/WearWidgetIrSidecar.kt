@@ -30,11 +30,11 @@ internal object WearWidgetIrSidecar {
   /** Resolved once per process: the channel's `offer` method, or null when it isn't on the path. */
   private val offerMethod by lazy {
     runCatching {
-        val cls = Class.forName(CHANNEL_CLASS)
-        // `offer(format: String, bytes: ByteArray, resourcesBytes: ByteArray?)` — the full arity,
-        // since Kotlin default arguments aren't visible as overloads through reflection.
-        cls.getMethod("offer", String::class.java, ByteArray::class.java, ByteArray::class.java)
-      }
+      val cls = Class.forName(CHANNEL_CLASS)
+      // `offer(format: String, bytes: ByteArray, resourcesBytes: ByteArray?)` — the full arity,
+      // since Kotlin default arguments aren't visible as overloads through reflection.
+      cls.getMethod("offer", String::class.java, ByteArray::class.java, ByteArray::class.java)
+    }
       .getOrNull()
   }
 

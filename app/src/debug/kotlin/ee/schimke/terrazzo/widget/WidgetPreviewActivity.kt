@@ -97,50 +97,49 @@ class WidgetPreviewActivity : Activity() {
     val captureProfile =
       if (Build.VERSION.SDK_INT >= 37) systemThemedWidgetsProfile else widgetsProfile
 
-    val docBytes =
-      runCatching {
-          runBlocking {
-              captureSingleRemoteDocument(
-                context = this@WidgetPreviewActivity,
-                creationDisplayInfo = RemoteCreationDisplayInfo(widthPx, heightPx, densityDpi),
+    val docBytes = runCatching {
+      runBlocking {
+        captureSingleRemoteDocument(
+          context = this@WidgetPreviewActivity,
+          creationDisplayInfo = RemoteCreationDisplayInfo(widthPx, heightPx, densityDpi),
+          profile = captureProfile,
+        ) {
+          // The Inline strategy provider must live inside the
+          // capture sub-composition — outer-tree CompositionLocals
+          // don't propagate through `captureSingleRemoteDocument`.
+          CompositionLocalProvider(LocalPictureImageStrategy provides strategy) {
+            ProvideCardRegistry(registry) {
+              ProvideSystemHaTheme(
                 profile = captureProfile,
+                fallbackTheme =
+                  if (
+                    resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK ==
+                      Configuration.UI_MODE_NIGHT_YES
+                  ) {
+                    HaTheme.Dark
+                  } else {
+                    HaTheme.Light
+                  },
               ) {
-                // The Inline strategy provider must live inside the
-                // capture sub-composition — outer-tree CompositionLocals
-                // don't propagate through `captureSingleRemoteDocument`.
-                CompositionLocalProvider(LocalPictureImageStrategy provides strategy) {
-                  ProvideCardRegistry(registry) {
-                    ProvideSystemHaTheme(
-                      profile = captureProfile,
-                      fallbackTheme =
-                        if (
-                          resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK ==
-                            Configuration.UI_MODE_NIGHT_YES
-                        ) {
-                          HaTheme.Dark
-                        } else {
-                          HaTheme.Light
-                        },
-                    ) {
-                      ProvideCardSizeMode(CardSizeMode.Fixed) {
-                        // Same full-canvas surface the launcher widget uses,
-                        // so the preview shows the background filling the tile
-                        // rather than wrapping to the card content.
-                        ProvideCardChrome(enabled = false) {
-                          RemoteHaWidgetSurface {
-                            RenderChild(SAMPLE_CARD, SAMPLE_SNAPSHOT, RemoteModifier.fillMaxWidth())
-                          }
-                        }
-                      }
+                ProvideCardSizeMode(CardSizeMode.Fixed) {
+                  // Same full-canvas surface the launcher widget uses,
+                  // so the preview shows the background filling the tile
+                  // rather than wrapping to the card content.
+                  ProvideCardChrome(enabled = false) {
+                    RemoteHaWidgetSurface {
+                      RenderChild(SAMPLE_CARD, SAMPLE_SNAPSHOT, RemoteModifier.fillMaxWidth())
                     }
                   }
                 }
               }
             }
-            .bytes
+          }
         }
-        .onFailure { Log.e(TAG, "widget capture failed", it) }
-        .getOrNull()
+      }
+        .bytes
+    }
+      .onFailure { Log.e(TAG, "widget capture failed", it) }
+      .getOrNull()
 
     if (docBytes == null) {
       setContentView(

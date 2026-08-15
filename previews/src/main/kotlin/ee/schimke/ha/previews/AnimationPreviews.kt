@@ -145,7 +145,11 @@ private fun gaugeFrameSnapshot(value: Int): HaSnapshot =
     state(
       "sensor.gauge_demo",
       value.toString(),
-      mapOf("friendly_name" to "Battery", "unit_of_measurement" to "%", "device_class" to "battery"),
+      mapOf(
+        "friendly_name" to "Battery",
+        "unit_of_measurement" to "%",
+        "device_class" to "battery",
+      ),
     )
   )
 

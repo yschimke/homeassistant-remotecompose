@@ -54,9 +54,9 @@ fun ManagePinnedScreen(onBack: () -> Unit) {
   val items: List<PinRowItem> =
     remember(cards, sections) {
       buildList {
-          cards.forEach { add(PinRowItem.Card(it)) }
-          sections.forEach { add(PinRowItem.Section(it)) }
-        }
+        cards.forEach { add(PinRowItem.Card(it)) }
+        sections.forEach { add(PinRowItem.Section(it)) }
+      }
         .sortedBy { it.orderIndex }
     }
 

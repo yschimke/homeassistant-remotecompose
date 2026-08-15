@@ -2,15 +2,14 @@ val wearVersionName = "0.1.37" // x-release-please-version
 
 // Keep Wear version tied to release-please while reserving a unique code
 // lane for the shared package id (`ee.schimke.harc`).
-val wearVersionCode: Int =
-  run {
-      val parts = wearVersionName.split(".", "-").mapNotNull { it.toIntOrNull() }
-      val major = parts.getOrNull(0) ?: 0
-      val minor = parts.getOrNull(1) ?: 0
-      val patch = parts.getOrNull(2) ?: 0
-      (major * 10_000 + minor * 100 + patch) * 10 + 2
-    }
-    .coerceAtLeast(2)
+val wearVersionCode: Int = run {
+  val parts = wearVersionName.split(".", "-").mapNotNull { it.toIntOrNull() }
+  val major = parts.getOrNull(0) ?: 0
+  val minor = parts.getOrNull(1) ?: 0
+  val patch = parts.getOrNull(2) ?: 0
+  (major * 10_000 + minor * 100 + patch) * 10 + 2
+}
+  .coerceAtLeast(2)
 
 plugins {
   id("harc.base-conventions")

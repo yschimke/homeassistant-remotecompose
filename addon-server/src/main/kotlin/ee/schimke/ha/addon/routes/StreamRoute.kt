@@ -81,9 +81,9 @@ fun Routing.streamRoute(bridge: HaSupervisorBridge) {
             send(
               Frame.Text(
                 buildJsonObject {
-                    put("type", "lovelace_updated")
-                    if (event.urlPath != null) put("url_path", event.urlPath)
-                  }
+                  put("type", "lovelace_updated")
+                  if (event.urlPath != null) put("url_path", event.urlPath)
+                }
                   .toString()
               )
             )
