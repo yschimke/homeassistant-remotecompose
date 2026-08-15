@@ -50,8 +50,19 @@ class AlarmKeypadCoordinator(
   override fun dispatch(action: HaAction) {
     when (action) {
       is HaAction.AlarmKey -> scope.launch { handleKey(action) }
+      is HaAction.AlarmPin -> scope.launch { handlePin(action) }
       is HaAction.AlarmIntent -> scope.launch { handleIntent(action) }
       else -> downstream.dispatch(action)
+    }
+  }
+
+  private suspend fun handlePin(action: HaAction.AlarmPin) {
+    mutex.withLock {
+      val st = states.getOrPut(action.entityId) { State() }
+      st.code.clear()
+      st.code.append(action.pin.filter(Char::isDigit))
+      st.flushJob?.cancel()
+      if (st.intent != null) flushLocked(action.entityId)
     }
   }
 

@@ -407,9 +407,9 @@ data class HaStatisticsGraphData(
  * key on the wire (`AlarmStateInt.*` in `ha-model`); the converter is responsible for supplying
  * every key the host might ever push, including the catch-all `Unknown` index.
  *
- * Keypad presses fire one [HaAction.AlarmKey] per button; the dashboard's `AlarmKeypadCoordinator`
- * buffers the digits and combines them with each [HaAlarmAction.tapAction] (typically
- * [HaAction.AlarmIntent]) once it judges an attempt complete.
+ * [codeLength] enables launcher-widget documents to keep a PIN in Remote Compose mutable state and
+ * emit one [HaAction.AlarmPin] when that many digits have been entered. A null length retains the
+ * host-buffered [HaAction.AlarmKey] path so the dashboard can use its idle-timeout heuristic.
  */
 data class HaAlarmPanelData(
   val entityId: String?,
@@ -418,6 +418,7 @@ data class HaAlarmPanelData(
   val statuses: List<HaAlarmStatus>,
   val actions: List<HaAlarmAction>,
   val showKeypad: Boolean,
+  val codeLength: Int? = null,
 ) {
   init {
     require(statuses.isNotEmpty()) { "HaAlarmPanelData.statuses must not be empty" }

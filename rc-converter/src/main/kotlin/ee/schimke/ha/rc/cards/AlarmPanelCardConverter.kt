@@ -96,6 +96,7 @@ class AlarmPanelCardConverter : CardConverter {
         actions = actions,
         showKeypad =
           card.raw["show_keypad"]?.jsonPrimitive?.content?.toBooleanStrictOrNull() ?: true,
+        codeLength = codeLength,
       )
 
     // Single-gate Wide↔Full ladder, mirroring the arc-dial family
