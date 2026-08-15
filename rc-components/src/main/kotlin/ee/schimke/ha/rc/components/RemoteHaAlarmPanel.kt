@@ -2,6 +2,8 @@
 
 package ee.schimke.ha.rc.components
 
+import androidx.compose.remote.creation.compose.action.combinedAction
+import androidx.compose.remote.creation.compose.action.valueChange
 import androidx.compose.remote.creation.compose.layout.RemoteAlignment
 import androidx.compose.remote.creation.compose.layout.RemoteArrangement
 import androidx.compose.remote.creation.compose.layout.RemoteBox
@@ -24,7 +26,9 @@ import androidx.compose.remote.creation.compose.shapes.RemoteCircleShape
 import androidx.compose.remote.creation.compose.shapes.RemoteRoundedCornerShape
 import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
+import androidx.compose.remote.creation.compose.state.rememberMutableRemoteInt
 import androidx.compose.remote.creation.compose.state.rf
+import androidx.compose.remote.creation.compose.state.ri
 import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.remote.creation.compose.state.rsp
 import androidx.compose.remote.creation.compose.text.RemoteTextStyle
@@ -32,13 +36,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.wear.compose.remote.material3.RemoteIcon
+import java.text.DecimalFormat
 
 /**
  * `alarm-panel` card — title, status badge, ARM action buttons, and the numeric keypad (matches
- * HA's reference). Each keypad key fires its own [HaAction.AlarmKey] host action; the host's
- * `AlarmKeypadCoordinator` accumulates the keys and submits a combined
- * `alarm_control_panel.alarm_*` call once the user finishes an attempt. The .rc document carries no
- * in-band buffer.
+ * HA's reference). Launcher widgets with a known code length accumulate digits in document-local
+ * mutable state and emit one [HaAction.AlarmPin] at completion. Other players and unknown-length
+ * codes retain the host-buffered [HaAction.AlarmKey] path.
  */
 @Composable
 @RemoteComposable
@@ -86,6 +90,7 @@ fun RemoteHaAlarmPanel(
       if (data.showKeypad) {
         Keypad(
           data.entityId,
+          data.codeLength,
           keypadAccent,
           theme,
           modifier = if (fillHeight) RemoteModifier.weight(1f).fillMaxHeight() else RemoteModifier,
@@ -247,10 +252,50 @@ private fun ActionPill(action: HaAlarmAction, theme: RemoteHaTheme) {
 @Composable
 private fun Keypad(
   entityId: String?,
+  codeLength: Int?,
   accent: androidx.compose.ui.graphics.Color,
   theme: RemoteHaTheme,
   modifier: RemoteModifier = RemoteModifier,
   fill: Boolean = false,
+) {
+  // Int expressions are supported by AndroidX ValueChangeAction; dynamic string mutation is not.
+  // Keep this bounded so decimal accumulation cannot overflow. Unknown/long codes use the existing
+  // per-key host coordinator, which also supplies the idle-timeout behavior.
+  val localLength = codeLength?.takeIf { isWidgetActionCapture() && it in 1..9 }
+  val pin = rememberMutableRemoteInt(0)
+  val digitCount = rememberMutableRemoteInt(0)
+
+  if (localLength != null && entityId != null) {
+    RemoteStateLayout(digitCount, *IntArray(localLength) { it }) { count ->
+      KeypadContent(
+        entityId = entityId,
+        accent = accent,
+        theme = theme,
+        modifier = modifier,
+        fill = fill,
+        pin = pin,
+        digitCount = digitCount,
+        enteredDigits = count,
+        codeLength = localLength,
+      )
+    }
+  } else {
+    KeypadContent(entityId, accent, theme, modifier, fill)
+  }
+}
+
+@Composable
+@RemoteComposable
+private fun KeypadContent(
+  entityId: String?,
+  accent: androidx.compose.ui.graphics.Color,
+  theme: RemoteHaTheme,
+  modifier: RemoteModifier = RemoteModifier,
+  fill: Boolean = false,
+  pin: androidx.compose.remote.creation.compose.state.MutableRemoteInt? = null,
+  digitCount: androidx.compose.remote.creation.compose.state.MutableRemoteInt? = null,
+  enteredDigits: Int = 0,
+  codeLength: Int? = null,
 ) {
   RemoteColumn(
     modifier = modifier.fillMaxWidth().padding(top = 6.rdp),
@@ -260,13 +305,25 @@ private fun Keypad(
   ) {
     listOf(listOf("1", "2", "3"), listOf("4", "5", "6"), listOf("7", "8", "9")).forEach { row ->
       RemoteRow(horizontalArrangement = RemoteArrangement.spacedBy(8.rdp)) {
-        row.forEach { KeypadKey(entityId, it, it, accent, theme) }
+        row.forEach {
+          KeypadKey(entityId, it, it, accent, theme, pin, digitCount, enteredDigits, codeLength)
+        }
       }
     }
     RemoteRow(horizontalArrangement = RemoteArrangement.spacedBy(8.rdp)) {
       RemoteBox(modifier = RemoteModifier.size(48.rdp))
-      KeypadKey(entityId, "0", "0", accent, theme)
-      KeypadKey(entityId, "⌫", "backspace", accent, theme)
+      KeypadKey(entityId, "0", "0", accent, theme, pin, digitCount, enteredDigits, codeLength)
+      KeypadKey(
+        entityId,
+        "⌫",
+        "backspace",
+        accent,
+        theme,
+        pin,
+        digitCount,
+        enteredDigits,
+        codeLength,
+      )
     }
   }
 }
@@ -278,11 +335,45 @@ private fun KeypadKey(
   key: String,
   accent: androidx.compose.ui.graphics.Color,
   theme: RemoteHaTheme,
+  pin: androidx.compose.remote.creation.compose.state.MutableRemoteInt? = null,
+  digitCount: androidx.compose.remote.creation.compose.state.MutableRemoteInt? = null,
+  enteredDigits: Int = 0,
+  codeLength: Int? = null,
 ) {
-  val click =
-    entityId
-      ?.let { HaAction.AlarmKey(it, key).toRemoteAction() }
-      ?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
+  val localAction =
+    if (entityId != null && pin != null && digitCount != null && codeLength != null) {
+      when {
+        key == "backspace" && enteredDigits > 0 ->
+          combinedAction(
+            valueChange(pin, pin / 10),
+            valueChange(digitCount, (enteredDigits - 1).ri),
+          )
+        key == "backspace" -> combinedAction(valueChange(pin, 0.ri), valueChange(digitCount, 0.ri))
+        key.length == 1 && key[0].isDigit() -> {
+          val completedPin = pin * 10 + key.toInt()
+          if (enteredDigits == codeLength - 1) {
+            val submit =
+              widgetAlarmPinAction(
+                entityId,
+                completedPin.toRemoteString(DecimalFormat("0".repeat(codeLength))),
+              )
+            submit?.let {
+              combinedAction(it, valueChange(pin, 0.ri), valueChange(digitCount, 0.ri))
+            }
+          } else {
+            combinedAction(
+              valueChange(pin, completedPin),
+              valueChange(digitCount, (enteredDigits + 1).ri),
+            )
+          }
+        }
+        else -> null
+      }
+    } else {
+      null
+    }
+  val action = localAction ?: entityId?.let { HaAction.AlarmKey(it, key).toRemoteAction() }
+  val click = action?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
   RemoteBox(
     modifier =
       RemoteModifier.then(click)

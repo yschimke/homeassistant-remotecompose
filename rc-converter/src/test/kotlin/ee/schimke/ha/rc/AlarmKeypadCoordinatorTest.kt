@@ -72,6 +72,17 @@ class AlarmKeypadCoordinatorTest {
   }
 
   @Test
+  fun accumulatedPin_flushesAsOneActionAndPreservesLeadingZero() = runTest {
+    val (coord, sink) = newCoordinator(this)
+
+    coord.dispatch(HaAction.AlarmIntent(entity, "arm_home", codeLength = 4))
+    coord.dispatch(HaAction.AlarmPin(entity, "0123"))
+    advanceUntilIdle()
+
+    assertEquals(listOf(expectedCall("arm_home", "0123")), sink.captured)
+  }
+
+  @Test
   fun unknownLength_flushesAfterIdleTimeout() = runTest {
     val (coord, sink) = newCoordinator(this, timeoutMs = 1000L)
 

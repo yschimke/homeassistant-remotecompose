@@ -118,5 +118,10 @@
                 <action android:name="ee.schimke.terrazzo.WIDGET_PIN_CONFIRMED" />
             </intent-filter>
         </receiver>
+
+        <!-- Explicit PendingIntent endpoint for RemoteCompose launcher-widget host actions. -->
+        <receiver
+            android:name=".widget.WidgetActionReceiver"
+            android:exported="false" />
     </application>
 </manifest>

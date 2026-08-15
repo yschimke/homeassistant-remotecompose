@@ -36,8 +36,9 @@ import androidx.compose.remote.creation.profile.Profile
  * Baking the bit requires the writer's `HTag` varargs constructor (the flag lands in the same
  * single `HEADER` op that carries DOC_WIDTH / DOC_HEIGHT / DOC_PROFILES), which means dropping the
  * `writerCallback` — same tradeoff [androidXExperimentalWrap] already takes: it only tracks
- * PendingIntent-style side effects baked by the writer, and these cards issue none (widget taps go
- * through named actions dispatched at playback, not writer-baked intents).
+ * PendingIntent-style side effects baked by AndroidX's `pendingIntentAction`. Launcher widget taps
+ * instead use numeric host actions: the app collects their ids during capture, then attaches the
+ * corresponding PendingIntents to `RemoteViews` after the bytes are encoded.
  */
 val widgetsProfile: Profile =
   Profile(

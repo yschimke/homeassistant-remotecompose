@@ -1,7 +1,7 @@
 package ee.schimke.ha.rc
 
 import ee.schimke.ha.rc.components.HaAction
-import ee.schimke.ha.rc.components.toRemoteAction
+import ee.schimke.ha.rc.components.toNamedRemoteAction
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
@@ -11,10 +11,18 @@ class HaActionDispatcherTest {
 
   @Test
   fun decodeHaAction_round_trips_url() {
-    // Round-trip via the same JSON encoder `toRemoteAction()` uses
+    // Round-trip via the same JSON encoder `toNamedRemoteAction()` uses
     // so we exercise the on-the-wire shape, not just an arbitrary
     // serializer call.
     val original = HaAction.Url("https://example.com/x")
+    val payload = Json.encodeToString(HaAction.serializer(), original)
+
+    assertEquals(original, decodeHaAction(payload))
+  }
+
+  @Test
+  fun decodeHaAction_roundTripsAccumulatedAlarmPin() {
+    val original = HaAction.AlarmPin("alarm_control_panel.house", "0123")
     val payload = Json.encodeToString(HaAction.serializer(), original)
 
     assertEquals(original, decodeHaAction(payload))
@@ -32,14 +40,14 @@ class HaActionDispatcherTest {
   }
 
   @Test
-  fun toRemoteAction_payload_is_decodable() {
-    // Wired check: anything emitted by `toRemoteAction` must be
+  fun toNamedRemoteAction_payload_is_decodable() {
+    // Wired check: anything emitted by `toNamedRemoteAction` must be
     // re-readable by the playback side, otherwise dashboards
     // fire actions the dispatcher silently drops.
     val callService =
       HaAction.CallService(domain = "cover", service = "open_cover", entityId = "cover.x")
-    val remote = callService.toRemoteAction()
-    // toRemoteAction packs the JSON in the HostAction's `value`
+    val remote = callService.toNamedRemoteAction()
+    // toNamedRemoteAction packs the JSON in the HostAction's `value`
     // field; we serialize the same way to assert the contract.
     val payload = Json.encodeToString(HaAction.serializer(), callService)
 

@@ -2,9 +2,12 @@
 
 package ee.schimke.terrazzo.widget
 
+import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
 import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import android.os.Build
 import android.util.Log
 import android.widget.RemoteViews
@@ -23,7 +26,10 @@ import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.cards.shutter.withEnhancedShutter
 import ee.schimke.ha.rc.components.ProvideCardChrome
 import ee.schimke.ha.rc.components.ProvideSystemHaTheme
+import ee.schimke.ha.rc.components.ProvideWidgetActionRegistry
 import ee.schimke.ha.rc.components.RemoteHaWidgetSurface
+import ee.schimke.ha.rc.components.WidgetActionRegistry
+import ee.schimke.ha.rc.formatState
 import ee.schimke.ha.rc.widgetsProfile
 import ee.schimke.terrazzo.core.session.DemoData
 import ee.schimke.terrazzo.terrazzoGraph
@@ -125,6 +131,8 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
     val widthPx = WidgetSizing.dpToPx(context, targetSizeDp.widthDp)
     val heightPx = WidgetSizing.dpToPx(context, targetSizeDp.heightDp)
     val densityDpi = context.resources.configuration.densityDpi
+    val widgetActions =
+      WidgetActionRegistry(snapshot.states.mapValues { (_, entity) -> formatState(entity) })
 
     val captured =
       runCatching {
@@ -145,8 +153,10 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
                     // Suppress the inner card's own chrome so
                     // it doesn't draw a second frame inside.
                     ProvideCardChrome(enabled = false) {
-                      RemoteHaWidgetSurface {
-                        RenderChild(entry.card, snapshot, RemoteModifier.fillMaxWidth())
+                      ProvideWidgetActionRegistry(widgetActions) {
+                        RemoteHaWidgetSurface {
+                          RenderChild(entry.card, snapshot, RemoteModifier.fillMaxWidth())
+                        }
                       }
                     }
                   }
@@ -163,7 +173,45 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
         }
 
     val instructions = RemoteViews.DrawInstructions.Builder(listOf(captured.bytes)).build()
-    appWidgetManager.updateAppWidget(widgetId, RemoteViews(instructions))
+    val remoteViews = RemoteViews(instructions)
+    widgetActions.entries.forEach { (actionId, payload) ->
+      // The RC document emits HostActionMetadata(actionId, payload). Android's launcher-widget
+      // bridge adds that payload to the PendingIntent's fill-in Intent as
+      // "remotecompose_metadata". Keep a static copy too: it lets the receiver log whether the
+      // platform forwarded metadata and remains a fallback on platform builds that omit it.
+      remoteViews.setOnClickPendingIntent(
+        actionId,
+        widgetActionPendingIntent(context, widgetId, actionId, payload),
+      )
+    }
+    appWidgetManager.updateAppWidget(widgetId, remoteViews)
+  }
+
+  private fun widgetActionPendingIntent(
+    context: Context,
+    widgetId: Int,
+    actionId: Int,
+    payload: String,
+  ): PendingIntent {
+    val intent =
+      Intent(context, WidgetActionReceiver::class.java).apply {
+        action = WidgetActionReceiver.ACTION_WIDGET_ACTION
+        // Intent extras don't participate in PendingIntent identity. A unique data URI prevents
+        // one action's FLAG_UPDATE_CURRENT payload from replacing a sibling action on the card.
+        data = Uri.parse("terrazzo://widget-action/$widgetId/$actionId")
+        putExtra(WidgetActionReceiver.EXTRA_WIDGET_ID, widgetId)
+        putExtra(WidgetActionReceiver.EXTRA_ACTION_ID, actionId)
+        putExtra(WidgetActionReceiver.EXTRA_ACTION_PAYLOAD, payload)
+      }
+    return PendingIntent.getBroadcast(
+      context,
+      actionId,
+      intent,
+      // RemoteViews supplies RemoteCompose metadata through a fill-in Intent. Android ignores
+      // fill-in fields for immutable PendingIntents, so this explicit, non-exported receiver token
+      // must be mutable for the metadata experiment.
+      PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE,
+    )
   }
 
   private companion object {
