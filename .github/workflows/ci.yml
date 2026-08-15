@@ -152,7 +152,9 @@ jobs:
           force-avd-creation: false
           emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           disable-animations: true
-          script: ./gradlew connectedDebugAndroidTest --stacktrace
+          # The Wear app requires the com.google.android.wearable shared library and cannot be
+          # installed on this default phone image. Its connected tests need a Wear OS system image.
+          script: ./gradlew connectedDebugAndroidTest -x :wear:connectedDebugAndroidTest --stacktrace
 
       - name: Upload instrumented test reports
         if: always()

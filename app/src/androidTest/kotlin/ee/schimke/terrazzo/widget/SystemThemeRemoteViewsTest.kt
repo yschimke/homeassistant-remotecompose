@@ -17,6 +17,7 @@ import androidx.compose.remote.creation.modifiers.RecordingModifier
 import androidx.compose.remote.creation.profile.RcPlatformProfiles
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.filters.SdkSuppress
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Test
@@ -26,6 +27,7 @@ import org.junit.runner.RunWith
 class SystemThemeRemoteViewsTest {
 
   @Test
+  @SdkSuppress(minSdkVersion = 37)
   fun colorTheme_coldStart_lightTheme_resolvesSystemColors() {
     val rcDoc = RemoteComposeWriter.obtain(100, 100, RcPlatformProfiles.ANDROIDX)
     val fallbackColor = 0xFFFF00FF.toInt()

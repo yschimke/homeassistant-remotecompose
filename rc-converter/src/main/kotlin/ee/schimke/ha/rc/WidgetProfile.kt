@@ -2,6 +2,7 @@
 
 package ee.schimke.ha.rc
 
+import androidx.compose.remote.core.Operations
 import androidx.compose.remote.core.RcProfiles
 import androidx.compose.remote.core.operations.Header
 import androidx.compose.remote.creation.RemoteComposeWriter
@@ -40,11 +41,18 @@ import androidx.compose.remote.creation.profile.Profile
  * instead use numeric host actions: the app collects their ids during capture, then attaches the
  * corresponding PendingIntents to `RemoteViews` after the bytes are encoded.
  */
-val widgetsProfile: Profile =
+private const val WIDGETS_API_LEVEL = 7
+private const val WIDGETS_OPERATIONS = RcProfiles.PROFILE_WIDGETS or RcProfiles.PROFILE_EXPERIMENTAL
+
+private val widgetOperations =
+  requireNotNull(Operations.getOperations(WIDGETS_API_LEVEL, WIDGETS_OPERATIONS)).keySet().toSet()
+
+private fun createWidgetsProfile(supportsColorTheme: Boolean): Profile =
   Profile(
-    7,
-    RcProfiles.PROFILE_WIDGETS or RcProfiles.PROFILE_EXPERIMENTAL,
+    WIDGETS_API_LEVEL,
+    WIDGETS_OPERATIONS,
     AndroidxRcPlatformServices(),
+    { if (supportsColorTheme) widgetOperations else widgetOperations - Operations.COLOR_THEME },
   ) { creationDisplayInfo, profile, _ ->
     RemoteComposeWriterAndroid(
       profile,
@@ -55,3 +63,9 @@ val widgetsProfile: Profile =
       RemoteComposeWriter.hTag(Header.FEATURE_PAINT_MEASURE, 0),
     )
   }
+
+/** Android 15/16 widget host profile; excludes ColorTheme (wire op 196). */
+val widgetsProfile: Profile = createWidgetsProfile(supportsColorTheme = false)
+
+/** API 37+ widget host profile, including host-resolved ColorTheme values. */
+val systemThemedWidgetsProfile: Profile = createWidgetsProfile(supportsColorTheme = true)
