@@ -75,44 +75,16 @@ digits and backspace use AndroidX `ValueChangeAction`s only; the final digit use
 Formatting the integer to `code_length` digits preserves leading zeroes in the metadata payload.
 
 Normal in-app playback and launcher widgets without a known length continue to emit individual
-`AlarmKey`s. `AlarmKeypadCoordinator` supplies the idle-timeout heuristic for that path. AndroidX
-Remote Compose has no delayed-action primitive with reliable background timing, so an
-unknown-length PIN cannot remain entirely in the document and also submit after an idle timeout.
+`AlarmKey`s. `AlarmKeypadCoordinator` supplies the idle-timeout heuristic for that path.
 
 Other interactive controls dispatch immediately: tiles and toggles, thermostat/light/humidifier
 steppers, shutter controls, media controls, to-do rows, links, and picture elements. For these, the
 serialized action contains the requested operation/value while `documentValue` captures the
 formatted entity state the document held when its metadata was last evaluated.
 
-## Can an action run without a user tap?
-
-Not through `Modifier.clickable`: those actions are evaluated only for a touch interaction.
-
-RemoteCompose also has `RunAction`, which executes child actions during paint. In principle, a
-time/value expression can cause repaints and a `RunAction` can then reach the same numeric callback.
-That is not a reliable or safe background scheduler:
-
-- paint cadence belongs to the launcher and can pause when the widget is off-screen;
-- a dirty/time-driven document can repaint repeatedly, so an unguarded action can fire more than
-  once;
-- RemoteCompose state has no durable exactly-once delivery contract across host recreation; and
-- activity/service starts still remain subject to Android background-execution policy.
-
-Use Android scheduling for autonomous work instead. App-widget `updatePeriodMillis` has a 30-minute
-minimum; use WorkManager/JobScheduler for other deferrable work, or an HA push/WebSocket owner with
-an appropriate foreground lifecycle for near-real-time events. Update the widget after the work;
-do not use rendering as the clock or event bus.
-
-User taps are different: a widget interaction is recognized as direct user intent, so a broadcast
-PendingIntent is an appropriate endpoint. Keep `BroadcastReceiver.onReceive` short and enqueue a
-job for network work. Opening an activity from an autonomous/repaint-triggered callback is subject
-to background-activity-launch restrictions and should generally become a notification instead.
-
 ## Platform references
 
 - [RemoteViews draw-instruction action bridge](https://android.googlesource.com/platform/frameworks/base/+/master/core/java/android/widget/RemoteViews.java#5813)
 - [RemoteViews PendingIntent APIs](https://android.googlesource.com/platform/frameworks/base/+/master/core/java/android/widget/RemoteViews.java#6752)
 - [RemoteCompose wire format: numeric host action + metadata](https://android.googlesource.com/platform/frameworks/support/+/0ecddc8152eda57b806c09d55477d0c715d132fe/compose/remote/Documentation/RemoteComposeWireFormat.md.html)
-- [Android widget update guidance](https://developer.android.com/develop/ui/views/appwidgets/advanced)
 - [Broadcast receiver background-work guidance](https://developer.android.com/develop/background-work/background-tasks/broadcasts)
-- [Background activity launch restrictions](https://developer.android.com/guide/components/activities/secure-bal)

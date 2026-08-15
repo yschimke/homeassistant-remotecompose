@@ -220,7 +220,7 @@ fun ProvideWidgetActionRegistry(registry: WidgetActionRegistry, content: @Compos
 /**
  * Wrap an [HaAction] as a RemoteCompose [Action] ready to be plugged into
  * `Modifier.clickable(action)`. Returns null for [HaAction.None] so callers can treat "no action"
- * as "no click handler".
+ * as "no interaction handler".
  */
 @OptIn(ExperimentalStdlibApi::class)
 @Suppress("RestrictedApi")
