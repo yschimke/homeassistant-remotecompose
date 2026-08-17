@@ -1,6 +1,6 @@
 {
     "formatVersion": "compose-preview-history/v1",
-    "generatedFrom": "2a5bed09016aa114bbd2a3cfd30eb41ffb7aa7ef",
+    "generatedFrom": "7114135ecdd02adbedef8f4924d75acbfa0c6894",
     "previews": {
         "app/ee.schimke.terrazzo.previews.CardDebugPreviewsKt.CardFlashPreview_Card flash on data change": {
             "path": "renders/app/CardFlashPreview_Card_flash_on_data_change-44b71c2b.gif",
@@ -4754,6 +4754,13 @@
             "path": "renders/wear/WearButtonLarge_wear_button_large-da875d6b.png",
             "versions": [
                 {
+                    "blob": "3300c32ff558be63edcd89eadb488df783180f29",
+                    "commit": "7114135ecdd02adbedef8f4924d75acbfa0c6894",
+                    "date": "2026-08-17T13:27:27Z",
+                    "sourceSha": "d0605593",
+                    "commits": 1
+                },
+                {
                     "blob": "a367d576b99f0447b6c577b53df498923fcea6b6",
                     "commit": "2a5bed09016aa114bbd2a3cfd30eb41ffb7aa7ef",
                     "date": "2026-08-17T13:04:38Z",
@@ -4817,7 +4824,7 @@
                     "commits": 1
                 }
             ],
-            "observations": 9,
+            "observations": 10,
             "unstable": false,
             "flapCount": 0
         },
@@ -5048,6 +5055,13 @@
             "path": "renders/wear/WearGridLarge_wear_grid_large-a4219119.png",
             "versions": [
                 {
+                    "blob": "23d1e15e502fd5ec4433856a47cff70bd2f6739c",
+                    "commit": "7114135ecdd02adbedef8f4924d75acbfa0c6894",
+                    "date": "2026-08-17T13:27:27Z",
+                    "sourceSha": "d0605593",
+                    "commits": 1
+                },
+                {
                     "blob": "bd499812e59032d123adf0dbb36f0b7a7223395c",
                     "commit": "2a5bed09016aa114bbd2a3cfd30eb41ffb7aa7ef",
                     "date": "2026-08-17T13:04:38Z",
@@ -5104,9 +5118,9 @@
                     "commits": 1
                 }
             ],
-            "observations": 8,
+            "observations": 9,
             "unstable": false,
-            "flapCount": 0
+            "flapCount": 1
         },
         "wear/ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearGridSmall_wear · grid (small)": {
             "path": "renders/wear/WearGridSmall_wear_grid_small-c39038ff.png",
@@ -5163,6 +5177,13 @@
         "wear/ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearHorizontalStackLarge_wear · horizontal-stack (large)": {
             "path": "renders/wear/WearHorizontalStackLarge_wear_horizontal_stack_large-74235db5.png",
             "versions": [
+                {
+                    "blob": "d69ede11429378e5b40ea3c1fe8b627367be721e",
+                    "commit": "7114135ecdd02adbedef8f4924d75acbfa0c6894",
+                    "date": "2026-08-17T13:27:27Z",
+                    "sourceSha": "d0605593",
+                    "commits": 1
+                },
                 {
                     "blob": "31309c86582a77ad5aa21e2e73acaf39cea54f21",
                     "commit": "2a5bed09016aa114bbd2a3cfd30eb41ffb7aa7ef",
@@ -5227,7 +5248,7 @@
                     "commits": 1
                 }
             ],
-            "observations": 9,
+            "observations": 10,
             "unstable": false,
             "flapCount": 0
         },
