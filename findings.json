@@ -4750,28 +4750,28 @@
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "225,336,309,420",
+          "boundsInScreen": "226,336,310,420",
           "level": "ERROR",
           "message": "This item's size is 32dp x 32dp. Consider making this touch target 48dp wide and 48dp high or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Lamp\""
         },
         {
-          "boundsInScreen": "330,336,414,420",
+          "boundsInScreen": "331,336,415,420",
           "level": "ERROR",
           "message": "This item's size is 32dp x 32dp. Consider making this touch target 48dp wide and 48dp high or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Kitchen\""
         },
         {
-          "boundsInScreen": "435,336,519,420",
+          "boundsInScreen": "436,336,520,420",
           "level": "ERROR",
           "message": "This item's size is 32dp x 32dp. Consider making this touch target 48dp wide and 48dp high or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Blinds\""
         },
         {
-          "boundsInScreen": "540,336,624,420",
+          "boundsInScreen": "541,336,625,420",
           "level": "ERROR",
           "message": "This item's size is 32dp x 32dp. Consider making this touch target 48dp wide and 48dp high or larger.",
           "type": "TouchTargetSizeCheck",
@@ -4797,28 +4797,28 @@
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "225,336,309,420",
+          "boundsInScreen": "226,336,310,420",
           "level": "ERROR",
           "message": "This item's size is 32dp x 32dp. Consider making this touch target 48dp wide and 48dp high or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Lamp\""
         },
         {
-          "boundsInScreen": "330,336,414,420",
+          "boundsInScreen": "331,336,415,420",
           "level": "ERROR",
           "message": "This item's size is 32dp x 32dp. Consider making this touch target 48dp wide and 48dp high or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Kitchen\""
         },
         {
-          "boundsInScreen": "435,336,519,420",
+          "boundsInScreen": "436,336,520,420",
           "level": "ERROR",
           "message": "This item's size is 32dp x 32dp. Consider making this touch target 48dp wide and 48dp high or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Blinds\""
         },
         {
-          "boundsInScreen": "540,336,624,420",
+          "boundsInScreen": "541,336,625,420",
           "level": "ERROR",
           "message": "This item's size is 32dp x 32dp. Consider making this touch target 48dp wide and 48dp high or larger.",
           "type": "TouchTargetSizeCheck",
