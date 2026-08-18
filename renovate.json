@@ -3,12 +3,14 @@
   "extends": ["github>yschimke/renovate-config"],
   "packageRules": [
     {
-      "description": "Remote Compose renderer coords are pinned in lockstep with the compose-ai-tools renderer; keep them in their own group so a bump is a deliberate review, separate from the androidx-compose / androidx-wear trains.",
+      "description": "Remote Compose, its Wear widget layer and Glance Wear resolve from an androidx-main snapshot (`1.0.0-SNAPSHOT`, pinned by build id in settings.gradle.kts), not from Google Maven releases. Renovate can't track a build id in a repository URL, and left enabled it would 'upgrade' the snapshot back onto a stale alpha — so keep the group for grepability but disabled; bumping the snapshot means editing `androidxSnapshotBuildId`.",
       "groupName": "remote-compose",
       "matchPackageNames": [
         "/^androidx\\.compose\\.remote($|[.:])/",
-        "/^androidx\\.wear\\.compose\\.remote($|[.:])/"
-      ]
+        "/^androidx\\.wear\\.compose\\.remote($|[.:])/",
+        "/^androidx\\.glance\\.wear($|[.:])/"
+      ],
+      "enabled": false
     },
     {
       "description": "Stay on JUnit 4; don't auto-bump to 5.x/6.x (Jupiter is a different API).",

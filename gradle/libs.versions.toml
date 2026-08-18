@@ -13,17 +13,20 @@ metro = "1.4.2"
 compose-bom = "2026.08.00"
 compose-compiler = "1.5.15"
 
-# RemoteCompose (alpha — APIs change per release)
-# These three move in lockstep: `remote-material3:1.0.0-alpha09` and
-# `glance-wear:1.0.0-alpha16` both declare `remote-creation*` 1.0.0-alpha17 in
-# their POMs, and a skewed pair has historically produced runtime
-# NoClassDefFoundErrors inside the wear components.
-remote-compose = "1.0.0-alpha17"
-remote-material3 = "1.0.0-alpha09"
+# RemoteCompose + the Wear widget stack that sits on it (APIs change per build).
+# These three move in lockstep — `remote-material3` and `glance-wear` both
+# declare `remote-creation*` in their POMs, and a skewed set has historically
+# produced runtime NoClassDefFoundErrors inside the wear components. They are
+# resolved from an androidx-main post-submit snapshot rather than Google Maven,
+# so one build id (pinned in `settings.gradle.kts` as `androidxSnapshotBuildId`)
+# keeps all three consistent by construction. Bump the build id there, not the
+# versions here.
+remote-compose = "1.0.0-SNAPSHOT"
+remote-material3 = "1.0.0-SNAPSHOT"
 
-# AndroidX Glance Wear (alpha — runtime feature gated on Wear OS 7+ / API 37
-# inside the library; we use it for the per-slot wear widgets).
-glance-wear = "1.0.0-alpha16"
+# AndroidX Glance Wear (runtime feature gated on Wear OS 7+ / API 37 inside the
+# library; we use it for the per-slot wear widgets). Snapshot — see above.
+glance-wear = "1.0.0-SNAPSHOT"
 
 # Android
 android-minSdk = "29"
