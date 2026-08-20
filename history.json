@@ -1,10 +1,17 @@
 {
     "formatVersion": "compose-preview-history/v1",
-    "generatedFrom": "d15c987eefe3a9542e4104a45f2eae175921eab4",
+    "generatedFrom": "98ff7b6978529861c389db841a38d7c708a399c9",
     "previews": {
         "app/ee.schimke.terrazzo.previews.CardDebugPreviewsKt.CardFlashPreview_Card flash on data change": {
             "path": "renders/app/CardFlashPreview_Card_flash_on_data_change-44b71c2b.gif",
             "versions": [
+                {
+                    "blob": "124fd1bc74739f545b29de2c9ce03d41251d3897",
+                    "commit": "98ff7b6978529861c389db841a38d7c708a399c9",
+                    "date": "2026-08-20T19:09:04Z",
+                    "sourceSha": "48d0eded",
+                    "commits": 1
+                },
                 {
                     "blob": "e29f3007ec53c61642c6b0f0ab77b926f91f9e41",
                     "commit": "337de11c7a33abbfd669fd1497e2945825e4e2ac",
@@ -13,7 +20,7 @@
                     "commits": 1
                 }
             ],
-            "observations": 1,
+            "observations": 2,
             "unstable": false,
             "flapCount": 0
         },
@@ -36,6 +43,13 @@
             "path": "renders/app/ResizeWidgetPreview_Resize_widget_preview-0d70e6c5.gif",
             "versions": [
                 {
+                    "blob": "86d733ec7acc1521925a7039a1fffb36259220b8",
+                    "commit": "98ff7b6978529861c389db841a38d7c708a399c9",
+                    "date": "2026-08-20T19:09:04Z",
+                    "sourceSha": "48d0eded",
+                    "commits": 1
+                },
+                {
                     "blob": "94db97f482b15de56f70e7fdb125a6b2a7f4ac53",
                     "commit": "337de11c7a33abbfd669fd1497e2945825e4e2ac",
                     "date": "2026-08-15T21:53:51Z",
@@ -43,7 +57,7 @@
                     "commits": 1
                 }
             ],
-            "observations": 1,
+            "observations": 2,
             "unstable": false,
             "flapCount": 0
         },
@@ -5160,6 +5174,13 @@
             "path": "renders/wear/WearButtonLarge_wear_button_large-da875d6b.png",
             "versions": [
                 {
+                    "blob": "ce79efdc313653158368fddf36f83d3e45d4643f",
+                    "commit": "98ff7b6978529861c389db841a38d7c708a399c9",
+                    "date": "2026-08-20T19:09:04Z",
+                    "sourceSha": "48d0eded",
+                    "commits": 1
+                },
+                {
                     "blob": "b0c7bc6c861946c9684f55a319e92bafc534848e",
                     "commit": "d15c987eefe3a9542e4104a45f2eae175921eab4",
                     "date": "2026-08-20T13:42:22Z",
@@ -5293,7 +5314,7 @@
                     "commits": 1
                 }
             ],
-            "observations": 19,
+            "observations": 20,
             "unstable": false,
             "flapCount": 0
         },
@@ -5524,6 +5545,13 @@
             "path": "renders/wear/WearGridLarge_wear_grid_large-a4219119.png",
             "versions": [
                 {
+                    "blob": "1b02f0bea48fe8f6b68d755c65659ec5f0120521",
+                    "commit": "98ff7b6978529861c389db841a38d7c708a399c9",
+                    "date": "2026-08-20T19:09:04Z",
+                    "sourceSha": "48d0eded",
+                    "commits": 1
+                },
+                {
                     "blob": "23d1e15e502fd5ec4433856a47cff70bd2f6739c",
                     "commit": "d15c987eefe3a9542e4104a45f2eae175921eab4",
                     "date": "2026-08-20T13:42:22Z",
@@ -5638,7 +5666,7 @@
                     "commits": 1
                 }
             ],
-            "observations": 18,
+            "observations": 19,
             "unstable": true,
             "flapCount": 2
         },
@@ -5697,6 +5725,13 @@
         "wear/ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearHorizontalStackLarge_wear · horizontal-stack (large)": {
             "path": "renders/wear/WearHorizontalStackLarge_wear_horizontal_stack_large-74235db5.png",
             "versions": [
+                {
+                    "blob": "9725b9dab47037d9ba42d1dde06db9a4c88c8702",
+                    "commit": "98ff7b6978529861c389db841a38d7c708a399c9",
+                    "date": "2026-08-20T19:09:04Z",
+                    "sourceSha": "48d0eded",
+                    "commits": 1
+                },
                 {
                     "blob": "4809973410edcead973b08c1695b3d8bb548fd6c",
                     "commit": "d15c987eefe3a9542e4104a45f2eae175921eab4",
@@ -5831,7 +5866,7 @@
                     "commits": 1
                 }
             ],
-            "observations": 19,
+            "observations": 20,
             "unstable": false,
             "flapCount": 1
         },
