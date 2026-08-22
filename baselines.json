@@ -2524,7 +2524,7 @@
     "functionName": "WearButtonLarge",
     "module": "wear",
     "renderBasename": "WearButtonLarge_wear_button_large-da875d6b.png",
-    "sha256": "ce28c84aa745fcb98310f1bd4f30e0b7faa0405d815b5aab5469da7b92c5e6dd",
+    "sha256": "276ccca71c98bfc5f23d22d74303f27365775fe5bfcb232b37db573fb620e748",
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/wear/widget/CardSlotWidgetPreviews.kt"
   },
   "wear/ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearButtonSmall_wear \u00b7 button (small)": {
@@ -2636,7 +2636,7 @@
     "functionName": "WearGridLarge",
     "module": "wear",
     "renderBasename": "WearGridLarge_wear_grid_large-a4219119.png",
-    "sha256": "49a6cc69094e79d7fbee14259e88eb8fa94da852f54a3936161c6da3e84c9776",
+    "sha256": "9748f142392ced92fe4d1aa3fcbfbde87759d37681fc296cc0afed6e2a22bf99",
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/wear/widget/CardSlotWidgetPreviews.kt"
   },
   "wear/ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearGridSmall_wear \u00b7 grid (small)": {
@@ -2668,7 +2668,7 @@
     "functionName": "WearHorizontalStackLarge",
     "module": "wear",
     "renderBasename": "WearHorizontalStackLarge_wear_horizontal_stack_large-74235db5.png",
-    "sha256": "febf7bc7d16a2c83daf939b3a666826aefadd340553e12660ba0566b2d9a25b3",
+    "sha256": "6ae62fdfceedec5fd03fff274b01cc92d5440e03fe17c60f0358432c64e1abe6",
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/wear/widget/CardSlotWidgetPreviews.kt"
   },
   "wear/ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearHorizontalStackSmall_wear \u00b7 horizontal-stack (small)": {
