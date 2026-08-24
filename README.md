@@ -780,7 +780,7 @@ _No findings._
 
 ### `Dashboard3dPrintingTablet`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/pr/renders/previews/Dashboard3dPrintingTablet_dashboard_3d_printing_tablet-d15705fe.a11y.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/pr/renders/previews/Dashboard3dPrintingTablet_dashboard_3d_printing_tablet-d15705fe.png" width="400" />
 
 _No findings._
 
