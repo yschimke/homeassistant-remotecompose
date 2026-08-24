@@ -40,7 +40,7 @@ kotlinx-coroutines = "1.11.0"
 kotlinx-datetime = "0.8.0"
 logback = "1.6.3"
 junit = "4.13.2"
-mockserver = "7.5.0"
+mockserver = "7.6.0"
 indriya = "2.2.4"
 
 # Preview tooling — pinned compose-ai-tools release. The CLI and the
