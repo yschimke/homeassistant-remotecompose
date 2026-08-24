@@ -1,6 +1,6 @@
 {
     "formatVersion": "compose-preview-history/v1",
-    "generatedFrom": "7a8518cba64383066537ed39d24dfb40fcf46e0a",
+    "generatedFrom": "e5dae9c7a76bc6b2b6051c6c36f54118c37d4c96",
     "previews": {
         "app/ee.schimke.terrazzo.previews.CardDebugPreviewsKt.CardFlashPreview_Card flash on data change": {
             "path": "renders/app/CardFlashPreview_Card_flash_on_data_change-44b71c2b.gif",
@@ -5174,6 +5174,13 @@
             "path": "renders/wear/WearButtonLarge_wear_button_large-da875d6b.png",
             "versions": [
                 {
+                    "blob": "cd8aa4ae9bd5ee06265a7e33f67f020869e22314",
+                    "commit": "e5dae9c7a76bc6b2b6051c6c36f54118c37d4c96",
+                    "date": "2026-08-24T04:21:00Z",
+                    "sourceSha": "56ade1ee",
+                    "commits": 1
+                },
+                {
                     "blob": "fb9cfdc602cfb6e14152f804f932cc828cdd92bf",
                     "commit": "7a8518cba64383066537ed39d24dfb40fcf46e0a",
                     "date": "2026-08-24T03:34:31Z",
@@ -5369,7 +5376,7 @@
                     "commits": 1
                 }
             ],
-            "observations": 30,
+            "observations": 31,
             "unstable": true,
             "flapCount": 3
         },
@@ -5600,6 +5607,13 @@
             "path": "renders/wear/WearGridLarge_wear_grid_large-a4219119.png",
             "versions": [
                 {
+                    "blob": "8d8e70e17596111baa726befbdefdaa5f23bbfc1",
+                    "commit": "e5dae9c7a76bc6b2b6051c6c36f54118c37d4c96",
+                    "date": "2026-08-24T04:21:00Z",
+                    "sourceSha": "56ade1ee",
+                    "commits": 1
+                },
+                {
                     "blob": "642fa5d2a5573d86efe15379fa7c2a7b1fb61c45",
                     "commit": "7a8518cba64383066537ed39d24dfb40fcf46e0a",
                     "date": "2026-08-24T03:34:31Z",
@@ -5772,7 +5786,7 @@
                     "commits": 1
                 }
             ],
-            "observations": 29,
+            "observations": 30,
             "unstable": true,
             "flapCount": 5
         },
@@ -5831,6 +5845,13 @@
         "wear/ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearHorizontalStackLarge_wear · horizontal-stack (large)": {
             "path": "renders/wear/WearHorizontalStackLarge_wear_horizontal_stack_large-74235db5.png",
             "versions": [
+                {
+                    "blob": "a9108d8e1c14ec39b8554d531420bd22ba34bbd6",
+                    "commit": "e5dae9c7a76bc6b2b6051c6c36f54118c37d4c96",
+                    "date": "2026-08-24T04:21:00Z",
+                    "sourceSha": "56ade1ee",
+                    "commits": 1
+                },
                 {
                     "blob": "8d8e70e17596111baa726befbdefdaa5f23bbfc1",
                     "commit": "7a8518cba64383066537ed39d24dfb40fcf46e0a",
@@ -6022,7 +6043,7 @@
                     "commits": 1
                 }
             ],
-            "observations": 30,
+            "observations": 31,
             "unstable": true,
             "flapCount": 4
         },
