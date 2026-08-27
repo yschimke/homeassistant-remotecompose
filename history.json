@@ -1,6 +1,6 @@
 {
     "formatVersion": "compose-preview-history/v1",
-    "generatedFrom": "075bd040dda25aaaf661357f97e1014e91a65d4a",
+    "generatedFrom": "3218a9792a54e3e2fbe6b29140b69f13afbfa1e3",
     "previews": {
         "app/ee.schimke.terrazzo.previews.CardDebugPreviewsKt.CardFlashPreview_Card flash on data change": {
             "path": "renders/app/CardFlashPreview_Card_flash_on_data_change-44b71c2b.gif",
@@ -5174,6 +5174,13 @@
             "path": "renders/wear/WearButtonLarge_wear_button_large-da875d6b.png",
             "versions": [
                 {
+                    "blob": "1b632f54cecb97e0ed23e545e38e6b10a53beee0",
+                    "commit": "3218a9792a54e3e2fbe6b29140b69f13afbfa1e3",
+                    "date": "2026-08-27T11:49:35Z",
+                    "sourceSha": "509b13c8",
+                    "commits": 1
+                },
+                {
                     "blob": "63f7b37003f8e68533de183f06436161101a7141",
                     "commit": "075bd040dda25aaaf661357f97e1014e91a65d4a",
                     "date": "2026-08-24T05:52:53Z",
@@ -5383,7 +5390,7 @@
                     "commits": 1
                 }
             ],
-            "observations": 32,
+            "observations": 33,
             "unstable": true,
             "flapCount": 3
         },
@@ -5614,6 +5621,15 @@
             "path": "renders/wear/WearGridLarge_wear_grid_large-a4219119.png",
             "versions": [
                 {
+                    "blob": "23d1e15e502fd5ec4433856a47cff70bd2f6739c",
+                    "commit": "3218a9792a54e3e2fbe6b29140b69f13afbfa1e3",
+                    "date": "2026-08-27T11:49:35Z",
+                    "sourceSha": "509b13c8",
+                    "sinceCommit": "c9649cfd8fdeb3b825ab654ddd76a8513483ece9",
+                    "commits": 6,
+                    "occurrences": 6
+                },
+                {
                     "blob": "34bbcee49cb8da0216f53f258cf79eaa30151621",
                     "commit": "075bd040dda25aaaf661357f97e1014e91a65d4a",
                     "date": "2026-08-24T05:52:53Z",
@@ -5656,15 +5672,6 @@
                     "sinceCommit": "0bad0f80024d0437df2d58e1f55a1e953a705bc7",
                     "commits": 2,
                     "occurrences": 2
-                },
-                {
-                    "blob": "23d1e15e502fd5ec4433856a47cff70bd2f6739c",
-                    "commit": "f3794e3833c0444ef1a59e86e077ffd8806e9cb8",
-                    "date": "2026-08-22T18:52:37Z",
-                    "sourceSha": "5ef93ef3",
-                    "sinceCommit": "c9649cfd8fdeb3b825ab654ddd76a8513483ece9",
-                    "commits": 5,
-                    "occurrences": 5
                 },
                 {
                     "blob": "b0c7bc6c861946c9684f55a319e92bafc534848e",
@@ -5800,9 +5807,9 @@
                     "commits": 1
                 }
             ],
-            "observations": 31,
+            "observations": 32,
             "unstable": true,
-            "flapCount": 5
+            "flapCount": 6
         },
         "wear/ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearGridSmall_wear · grid (small)": {
             "path": "renders/wear/WearGridSmall_wear_grid_small-c39038ff.png",
@@ -5859,6 +5866,13 @@
         "wear/ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearHorizontalStackLarge_wear · horizontal-stack (large)": {
             "path": "renders/wear/WearHorizontalStackLarge_wear_horizontal_stack_large-74235db5.png",
             "versions": [
+                {
+                    "blob": "2dadd2685323bd5d3ea2ecb9ddab9611709674a1",
+                    "commit": "3218a9792a54e3e2fbe6b29140b69f13afbfa1e3",
+                    "date": "2026-08-27T11:49:35Z",
+                    "sourceSha": "509b13c8",
+                    "commits": 1
+                },
                 {
                     "blob": "58f1c65188e4df2cb2024690e9448f1e9adaf55e",
                     "commit": "075bd040dda25aaaf661357f97e1014e91a65d4a",
@@ -6059,7 +6073,7 @@
                     "commits": 1
                 }
             ],
-            "observations": 32,
+            "observations": 33,
             "unstable": true,
             "flapCount": 5
         },
