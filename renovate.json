@@ -3,14 +3,14 @@
   "extends": ["github>yschimke/renovate-config"],
   "packageRules": [
     {
-      "description": "Remote Compose, its Wear widget layer and Glance Wear resolve from an androidx-main snapshot (`1.0.0-SNAPSHOT`, pinned by build id in settings.gradle.kts), not from Google Maven releases. Renovate can't track a build id in a repository URL, and left enabled it would 'upgrade' the snapshot back onto a stale alpha — so keep the group for grepability but disabled; bumping the snapshot means editing `androidxSnapshotBuildId`.",
+      "description": "Remote Compose, its Wear widget layer and Glance Wear resolve from Google Maven releases (the androidx.dev snapshot repository is gone). The three groups must move together — `remote-material3` and `glance-wear` both declare `androidx.compose.remote:remote-creation*` in their POMs, and a skewed set has produced runtime NoClassDefFoundErrors in the wear components — so group them into ONE PR. Alphas only: these artifacts have no stable line yet, and each alpha changes API, so the PR needs a real build, not an automerge.",
       "groupName": "remote-compose",
       "matchPackageNames": [
         "/^androidx\\.compose\\.remote($|[.:])/",
         "/^androidx\\.wear\\.compose\\.remote($|[.:])/",
         "/^androidx\\.glance\\.wear($|[.:])/"
       ],
-      "enabled": false
+      "automerge": false
     },
     {
       "description": "Stay on JUnit 4; don't auto-bump to 5.x/6.x (Jupiter is a different API).",
