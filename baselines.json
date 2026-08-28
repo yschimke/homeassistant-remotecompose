@@ -4,7 +4,7 @@
     "functionName": "CardFlashPreview",
     "module": "app",
     "renderBasename": "CardFlashPreview_Card_flash_on_data_change-44b71c2b.gif",
-    "sha256": "717b6d49a736f489a8b8685acdd10be04c83f58abb3a21c142dabd171a747b83",
+    "sha256": "9f346f7453d464cbca124d145c9a4460116d891ffcfc0acb45a45237ecfc1c1f",
     "sourceFile": "src/debug/kotlin/ee/schimke/terrazzo/previews/CardDebugPreviews.kt"
   },
   "app/ee.schimke.terrazzo.previews.CardDebugPreviewsKt.DataGridOverlayPreview_Data grid overlay": {
@@ -20,7 +20,7 @@
     "functionName": "ResizeWidgetPreview",
     "module": "app",
     "renderBasename": "ResizeWidgetPreview_Resize_widget_preview-0d70e6c5.gif",
-    "sha256": "d3a95fe758a3219ca31d61141852ddbd8e8726c0d89664f2add9d73e1bb04be5",
+    "sha256": "123c1dfce85b3abe1eab27c8e244dcd0a2a07e4761621b6488128e74e1786221",
     "sourceFile": "src/debug/kotlin/ee/schimke/terrazzo/previews/CardDebugPreviews.kt"
   },
   "app/ee.schimke.terrazzo.previews.ScreenPreviewsKt.Play_Phone_01_HomeLight_play \u00b7 phone \u00b7 home (light)": {
@@ -2524,7 +2524,7 @@
     "functionName": "WearButtonLarge",
     "module": "wear",
     "renderBasename": "WearButtonLarge_wear_button_large-da875d6b.png",
-    "sha256": "dc80d7d0232a562ff061a23829816a8a0993ce7c60abe615cfcd46e298f71e44",
+    "sha256": "4a58639e9584b2097902b2ae989720a39cdfe42271259889373313a9fc809ba2",
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/wear/widget/CardSlotWidgetPreviews.kt"
   },
   "wear/ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearButtonSmall_wear \u00b7 button (small)": {
@@ -2636,7 +2636,7 @@
     "functionName": "WearGridLarge",
     "module": "wear",
     "renderBasename": "WearGridLarge_wear_grid_large-a4219119.png",
-    "sha256": "d9cd5567f24130c0d804b410c3cb67f890eaa5e3f67e5607e395d7aa75cfa0e2",
+    "sha256": "4371c6c9ba7a04f3f96ca8c0ac91dbfebdd3415fe27226e33e43185cfc950eb1",
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/wear/widget/CardSlotWidgetPreviews.kt"
   },
   "wear/ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearGridSmall_wear \u00b7 grid (small)": {
@@ -2668,7 +2668,7 @@
     "functionName": "WearHorizontalStackLarge",
     "module": "wear",
     "renderBasename": "WearHorizontalStackLarge_wear_horizontal_stack_large-74235db5.png",
-    "sha256": "a6db2048f8326c44ab7805f6a0d978e744c27b271acb6b1b4d9f0aba525de044",
+    "sha256": "4371c6c9ba7a04f3f96ca8c0ac91dbfebdd3415fe27226e33e43185cfc950eb1",
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/wear/widget/CardSlotWidgetPreviews.kt"
   },
   "wear/ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearHorizontalStackSmall_wear \u00b7 horizontal-stack (small)": {
