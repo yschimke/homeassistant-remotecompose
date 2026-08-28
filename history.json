@@ -1,6 +1,6 @@
 {
     "formatVersion": "compose-preview-history/v1",
-    "generatedFrom": "5352817bebe01bd20287973e2b2113f2afaa2acd",
+    "generatedFrom": "3fd152aae2042fc3e73510b54133e6ec36586414",
     "previews": {
         "app/ee.schimke.terrazzo.previews.CardDebugPreviewsKt.CardFlashPreview_Card flash on data change": {
             "path": "renders/app/CardFlashPreview_Card_flash_on_data_change-44b71c2b.gif",
@@ -4933,6 +4933,13 @@
             "path": "renders/wear/WearSectionPreview_Wear_section-712f72f1.png",
             "versions": [
                 {
+                    "blob": "9e86aa2da21b6d0e4723fe19dad659bf72a172a2",
+                    "commit": "3fd152aae2042fc3e73510b54133e6ec36586414",
+                    "date": "2026-08-28T18:01:16Z",
+                    "sourceSha": "fce07c6b",
+                    "commits": 1
+                },
+                {
                     "blob": "d9fc3697671536ebeeaf5d8ce4170c6d690f8c82",
                     "commit": "337de11c7a33abbfd669fd1497e2945825e4e2ac",
                     "date": "2026-08-15T21:53:51Z",
@@ -4940,7 +4947,7 @@
                     "commits": 1
                 }
             ],
-            "observations": 1,
+            "observations": 2,
             "unstable": false,
             "flapCount": 0
         },
@@ -4978,6 +4985,13 @@
             "path": "renders/wear/WearTopLevelPreview_Empty_Wear_top_level_empty-fa5d471f.png",
             "versions": [
                 {
+                    "blob": "032b8bb54f3a2a517f4b0d8eda888fb57c572e23",
+                    "commit": "3fd152aae2042fc3e73510b54133e6ec36586414",
+                    "date": "2026-08-28T18:01:16Z",
+                    "sourceSha": "fce07c6b",
+                    "commits": 1
+                },
+                {
                     "blob": "9379addf87efb00d18ed8a9f1f38dbc970062377",
                     "commit": "337de11c7a33abbfd669fd1497e2945825e4e2ac",
                     "date": "2026-08-15T21:53:51Z",
@@ -4985,7 +4999,7 @@
                     "commits": 1
                 }
             ],
-            "observations": 1,
+            "observations": 2,
             "unstable": false,
             "flapCount": 0
         },
@@ -5187,6 +5201,13 @@
         "wear/ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearButtonLarge_wear · button (large)": {
             "path": "renders/wear/WearButtonLarge_wear_button_large-da875d6b.png",
             "versions": [
+                {
+                    "blob": "1b02f0bea48fe8f6b68d755c65659ec5f0120521",
+                    "commit": "3fd152aae2042fc3e73510b54133e6ec36586414",
+                    "date": "2026-08-28T18:01:16Z",
+                    "sourceSha": "fce07c6b",
+                    "commits": 1
+                },
                 {
                     "blob": "3300c32ff558be63edcd89eadb488df783180f29",
                     "commit": "5352817bebe01bd20287973e2b2113f2afaa2acd",
@@ -5408,7 +5429,7 @@
                     "commits": 1
                 }
             ],
-            "observations": 35,
+            "observations": 36,
             "unstable": true,
             "flapCount": 5
         },
@@ -5639,6 +5660,13 @@
             "path": "renders/wear/WearGridLarge_wear_grid_large-a4219119.png",
             "versions": [
                 {
+                    "blob": "ae1ab18ee6e5e826428d1b07e46f228f9cce98ff",
+                    "commit": "3fd152aae2042fc3e73510b54133e6ec36586414",
+                    "date": "2026-08-28T18:01:16Z",
+                    "sourceSha": "fce07c6b",
+                    "commits": 1
+                },
+                {
                     "blob": "e0c6c2f15870311508ee94c8c7627acd411ee8e8",
                     "commit": "5352817bebe01bd20287973e2b2113f2afaa2acd",
                     "date": "2026-08-28T05:50:51Z",
@@ -5839,7 +5867,7 @@
                     "commits": 1
                 }
             ],
-            "observations": 34,
+            "observations": 35,
             "unstable": true,
             "flapCount": 6
         },
