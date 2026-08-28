@@ -2388,7 +2388,7 @@
     "functionName": "WearSectionPreview",
     "module": "wear",
     "renderBasename": "WearSectionPreview_Wear_section-712f72f1.png",
-    "sha256": "f88f2f71f6176193a773a56cd20b7de344838ca24ce1504a4101aa35c8e3e81e",
+    "sha256": "43dcd2b32213484d8909f025fa75d27a273956d2518f4219d7db44a260fa25b5",
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/wear/ui/WearPreviews.kt"
   },
   "wear/ee.schimke.terrazzo.wear.ui.WearPreviewsKt.WearSettingsPreview_Wear_ settings": {
@@ -2412,7 +2412,7 @@
     "functionName": "WearTopLevelPreview_Empty",
     "module": "wear",
     "renderBasename": "WearTopLevelPreview_Empty_Wear_top_level_empty-fa5d471f.png",
-    "sha256": "03f9b91d19b59eb958f03aa33d536f8ca2d9b7189f3e0ca8ac4c66c170d72a47",
+    "sha256": "c19a3bd914daecb2885bfcc19c0f13ba2cb29bc44b1ad6b04c9eea0106807fbc",
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/wear/ui/WearPreviews.kt"
   },
   "wear/ee.schimke.terrazzo.wear.ui.WearPreviewsKt.WearTopLevelPreview_Live_Wear_ top-level (live)": {
@@ -2524,7 +2524,7 @@
     "functionName": "WearButtonLarge",
     "module": "wear",
     "renderBasename": "WearButtonLarge_wear_button_large-da875d6b.png",
-    "sha256": "febf7bc7d16a2c83daf939b3a666826aefadd340553e12660ba0566b2d9a25b3",
+    "sha256": "592a1defbf6dec3f09dfe818ead23b5c8476ae1c796cc6e05fa3e772af99e174",
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/wear/widget/CardSlotWidgetPreviews.kt"
   },
   "wear/ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearButtonSmall_wear \u00b7 button (small)": {
@@ -2636,7 +2636,7 @@
     "functionName": "WearGridLarge",
     "module": "wear",
     "renderBasename": "WearGridLarge_wear_grid_large-a4219119.png",
-    "sha256": "bbec973b33c94cde22a33a0b11f44002e69ed6820af40d0a040a11510f027881",
+    "sha256": "d30f4a3c1c23cbf025f259b73b201a3627e0c9124c242e839a51c8bd3a745252",
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/wear/widget/CardSlotWidgetPreviews.kt"
   },
   "wear/ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearGridSmall_wear \u00b7 grid (small)": {
