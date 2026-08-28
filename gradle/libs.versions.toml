@@ -1,7 +1,7 @@
 [versions]
 # Toolchain
 kotlin = "2.4.10"
-agp = "9.3.1"
+agp = "9.3.2"
 java = "21"
 okhttp = "5.5.0"
 play-publisher = "4.1.1"
