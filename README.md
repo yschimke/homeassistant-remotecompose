@@ -1,6 +1,6 @@
 # Accessibility Report
 
-_Auto-generated from `compose-preview/a11y/main`. 287 preview(s) across 4 module(s) · 675 error(s) · 19 warning(s) · 33 info._
+_Auto-generated from `compose-preview/a11y/main`. 287 preview(s) across 4 module(s) · 679 error(s) · 19 warning(s) · 33 info._
 
 Browse inline; image URLs are pinned to the commit SHA on the baseline branch so links keep resolving after merge.
 
@@ -780,9 +780,14 @@ _No findings._
 
 ### `Dashboard3dPrintingTablet`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/Dashboard3dPrintingTablet_dashboard_3d_printing_tablet-d15705fe.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/main/renders/previews/Dashboard3dPrintingTablet_dashboard_3d_printing_tablet-d15705fe.a11y.png" width="400" />
 
-_No findings._
+| # | Level | Rule | Element | Message |
+|--:|---|---|---|---|
+| 1 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
+| 2 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
+| 3 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
+| 4 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
 
 ### `DashboardClimateMobile`
 
