@@ -24,86 +24,58 @@
       "cleanBasename": "Play_Phone_01_HomeLight_play_phone_home_light-27629862.png",
       "findings": [
         {
-          "boundsInScreen": "40,144,782,471",
+          "boundsInScreen": "40,144,782,515",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "40,495,782,879",
+          "boundsInScreen": "40,539,782,1003",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "40,903,782,1164",
+          "boundsInScreen": "40,1027,782,1375",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "40,1188,782,1272",
+          "boundsInScreen": "40,1399,782,1462",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "40,1296,782,1462",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "280,202,344,266",
+          "boundsInScreen": "295,220,359,284",
           "level": "ERROR",
           "message": "This item's size is 32dp x 32dp. Consider making this touch target 48dp wide and 48dp high or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Open\""
         },
         {
-          "boundsInScreen": "280,278,344,342",
+          "boundsInScreen": "295,300,359,364",
           "level": "ERROR",
           "message": "This item's size is 32dp x 32dp. Consider making this touch target 48dp wide and 48dp high or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Stop\""
         },
         {
-          "boundsInScreen": "280,354,344,418",
+          "boundsInScreen": "295,380,359,444",
           "level": "ERROR",
           "message": "This item's size is 32dp x 32dp. Consider making this touch target 48dp wide and 48dp high or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Close\""
         },
         {
-          "boundsInScreen": "40,903,782,990",
-          "level": "ERROR",
-          "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Vent\""
-        },
-        {
-          "boundsInScreen": "40,990,782,1077",
-          "level": "ERROR",
-          "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Half open\""
-        },
-        {
-          "boundsInScreen": "40,1077,782,1164",
-          "level": "ERROR",
-          "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Impulse\""
-        },
-        {
-          "boundsInScreen": "40,495,782,879",
+          "boundsInScreen": "40,539,782,1003",
           "level": "INFO",
-          "message": "This non-clickable item's speakable text: \"dashboard-card:grid\" is identical to that of 2 other item(s).",
+          "message": "This non-clickable item's speakable text: \"dashboard-card:grid\" is identical to that of 1 other item(s).",
           "type": "DuplicateSpeakableTextCheck",
           "viewDescription": "android.view.View"
         }
@@ -249,63 +221,63 @@
       "cleanBasename": "Play_Tablet10_01_Home_play_10_inch_home-7ca1827e.png",
       "findings": [
         {
-          "boundsInScreen": "33,101,1087,370",
+          "boundsInScreen": "33,101,1087,414",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "33,387,1087,735",
+          "boundsInScreen": "33,431,1087,895",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "33,752,1087,1013",
+          "boundsInScreen": "33,912,1087,1260",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "33,1030,1087,1114",
+          "boundsInScreen": "33,1277,1087,1387",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "33,1131,1087,1792",
+          "boundsInScreen": "33,1404,1087,1792",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "215,159,260,203",
+          "boundsInScreen": "230,177,275,222",
           "level": "ERROR",
-          "message": "This item's size is 32dp x 31dp. Consider making this touch target 48dp wide and 48dp high or larger.",
+          "message": "This item's size is 32dp x 32dp. Consider making this touch target 48dp wide and 48dp high or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Open\""
         },
         {
-          "boundsInScreen": "215,215,260,260",
+          "boundsInScreen": "230,238,275,283",
           "level": "ERROR",
           "message": "This item's size is 32dp x 32dp. Consider making this touch target 48dp wide and 48dp high or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Stop\""
         },
         {
-          "boundsInScreen": "215,272,260,317",
+          "boundsInScreen": "230,298,275,343",
           "level": "ERROR",
           "message": "This item's size is 32dp x 32dp. Consider making this touch target 48dp wide and 48dp high or larger.",
           "type": "TouchTargetSizeCheck",
           "viewDescription": "android.view.View  desc=\"Close\""
         },
         {
-          "boundsInScreen": "33,387,1087,735",
+          "boundsInScreen": "33,431,1087,895",
           "level": "INFO",
           "message": "This non-clickable item's speakable text: \"dashboard-card:grid\" is identical to that of 2 other item(s).",
           "type": "DuplicateSpeakableTextCheck",
@@ -2612,7 +2584,22 @@
     {
       "annotatedBasename": "Dashboard3dPrintingMobile_dashboard_3d_printing_mobile-2701c9cf.a11y.png",
       "cleanBasename": "Dashboard3dPrintingMobile_dashboard_3d_printing_mobile-2701c9cf.png",
-      "findings": [],
+      "findings": [
+        {
+          "boundsInScreen": "32,264,1046,4360",
+          "level": "ERROR",
+          "message": "This item may not have a label readable by screen readers.",
+          "type": "SpeakableTextPresentCheck",
+          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
+        },
+        {
+          "boundsInScreen": "32,4381,1046,4725",
+          "level": "ERROR",
+          "message": "This item may not have a label readable by screen readers.",
+          "type": "SpeakableTextPresentCheck",
+          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
+        }
+      ],
       "functionName": "Dashboard3dPrintingMobile",
       "module": "previews",
       "previewId": "ee.schimke.ha.previews.DashboardPreviewsKt.Dashboard3dPrintingMobile_dashboard 3d-printing \u2014 mobile",
