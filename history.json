@@ -1,0 +1,958 @@
+{
+    "formatVersion": "compose-preview-history/v1",
+    "generatedFrom": "ae58b4150be2f45b567d69a45dd9e35fbe80965d",
+    "previews": {
+        "brand-appicon-dark__ideal__default__dark__compact": {
+            "path": "images/brand-appicon-dark/ideal__default__dark__compact.png",
+            "versions": [
+                {
+                    "blob": "15f069a5eee4f988a0b902a89eb3fdef1ef145df",
+                    "commit": "112e7d2a0038afc21af34298b2ef2ea5efb395c8",
+                    "date": "2026-08-05T23:08:56Z",
+                    "commits": 1
+                }
+            ],
+            "observations": 1,
+            "unstable": false,
+            "flapCount": 0
+        },
+        "brand-appicon-light__ideal__default__light__compact": {
+            "path": "images/brand-appicon-light/ideal__default__light__compact.png",
+            "versions": [
+                {
+                    "blob": "a20c6997fa6326098aa9918be5da01c86857c3e5",
+                    "commit": "112e7d2a0038afc21af34298b2ef2ea5efb395c8",
+                    "date": "2026-08-05T23:08:56Z",
+                    "commits": 1
+                }
+            ],
+            "observations": 1,
+            "unstable": false,
+            "flapCount": 0
+        },
+        "card-alarm-dark__ideal__default__dark__compact": {
+            "path": "images/card-alarm-dark/ideal__default__dark__compact.png",
+            "versions": [
+                {
+                    "blob": "8e472e11ad5e29c5251b6cd2af32f9b8c78ce184",
+                    "commit": "112e7d2a0038afc21af34298b2ef2ea5efb395c8",
+                    "date": "2026-08-05T23:08:56Z",
+                    "commits": 1
+                }
+            ],
+            "observations": 1,
+            "unstable": false,
+            "flapCount": 0
+        },
+        "card-alarm-light__ideal__default__light__compact": {
+            "path": "images/card-alarm-light/ideal__default__light__compact.png",
+            "versions": [
+                {
+                    "blob": "1e3f90606cf9ea60d3cad269b471be598c274126",
+                    "commit": "112e7d2a0038afc21af34298b2ef2ea5efb395c8",
+                    "date": "2026-08-05T23:08:56Z",
+                    "commits": 1
+                }
+            ],
+            "observations": 1,
+            "unstable": false,
+            "flapCount": 0
+        },
+        "card-area-dark__ideal__default__dark__compact": {
+            "path": "images/card-area-dark/ideal__default__dark__compact.png",
+            "versions": [
+                {
+                    "blob": "ddea0791885c85cf78be30609e4180ac9b038343",
+                    "commit": "112e7d2a0038afc21af34298b2ef2ea5efb395c8",
+                    "date": "2026-08-05T23:08:56Z",
+                    "commits": 1
+                }
+            ],
+            "observations": 1,
+            "unstable": false,
+            "flapCount": 0
+        },
+        "card-area-light__ideal__default__light__compact": {
+            "path": "images/card-area-light/ideal__default__light__compact.png",
+            "versions": [
+                {
+                    "blob": "7b2cf00f62e80a33a44fb636fd340653e3fcbbdf",
+                    "commit": "112e7d2a0038afc21af34298b2ef2ea5efb395c8",
+                    "date": "2026-08-05T23:08:56Z",
+                    "commits": 1
+                }
+            ],
+            "observations": 1,
+            "unstable": false,
+            "flapCount": 0
+        },
+        "card-button-dark__ideal__default__dark__compact": {
+            "path": "images/card-button-dark/ideal__default__dark__compact.png",
+            "versions": [
+                {
+                    "blob": "9c6425b554f3697929da4f462396da49b35ef3cb",
+                    "commit": "112e7d2a0038afc21af34298b2ef2ea5efb395c8",
+                    "date": "2026-08-05T23:08:56Z",
+                    "commits": 1
+                }
+            ],
+            "observations": 1,
+            "unstable": false,
+            "flapCount": 0
+        },
+        "card-button-light__ideal__default__light__compact": {
+            "path": "images/card-button-light/ideal__default__light__compact.png",
+            "versions": [
+                {
+                    "blob": "748702165703ac8e77bc41ada90239a1cb8bf0fe",
+                    "commit": "112e7d2a0038afc21af34298b2ef2ea5efb395c8",
+                    "date": "2026-08-05T23:08:56Z",
+                    "commits": 1
+                }
+            ],
+            "observations": 1,
+            "unstable": false,
+            "flapCount": 0
+        },
+        "card-calendar-dark__ideal__default__dark__compact": {
+            "path": "images/card-calendar-dark/ideal__default__dark__compact.png",
+            "versions": [
+                {
+                    "blob": "06925c06bfab7bf930603a2055c7693c6e75013e",
+                    "commit": "112e7d2a0038afc21af34298b2ef2ea5efb395c8",
+                    "date": "2026-08-05T23:08:56Z",
+                    "commits": 1
+                }
+            ],
+            "observations": 1,
+            "unstable": false,
+            "flapCount": 0
+        },
+        "card-calendar-light__ideal__default__light__compact": {
+            "path": "images/card-calendar-light/ideal__default__light__compact.png",
+            "versions": [
+                {
+                    "blob": "fb9e87972df8e3b7d29d44d689311673448d080e",
+                    "commit": "112e7d2a0038afc21af34298b2ef2ea5efb395c8",
+                    "date": "2026-08-05T23:08:56Z",
+                    "commits": 1
+                }
+            ],
+            "observations": 1,
+            "unstable": false,
+            "flapCount": 0
+        },
+        "card-clock-dark__ideal__default__dark__compact": {
+            "path": "images/card-clock-dark/ideal__default__dark__compact.png",
+            "versions": [
+                {
+                    "blob": "1b4b62222d480c7bf18dd2735444b95dfea1e52b",
+                    "commit": "112e7d2a0038afc21af34298b2ef2ea5efb395c8",
+                    "date": "2026-08-05T23:08:56Z",
+                    "commits": 1
+                }
+            ],
+            "observations": 1,
+            "unstable": false,
+            "flapCount": 0
+        },
+        "card-clock-light__ideal__default__light__compact": {
+            "path": "images/card-clock-light/ideal__default__light__compact.png",
+            "versions": [
+                {
+                    "blob": "a622bbeaa439aa63414f42d29b8f56bae500cd2f",
+                    "commit": "112e7d2a0038afc21af34298b2ef2ea5efb395c8",
+                    "date": "2026-08-05T23:08:56Z",
+                    "commits": 1
+                }
+            ],
+            "observations": 1,
+            "unstable": false,
+            "flapCount": 0
+        },
+        "card-entities-dark__ideal__default__dark__compact": {
+            "path": "images/card-entities-dark/ideal__default__dark__compact.png",
+            "versions": [
+                {
+                    "blob": "079cabc30dfb7476474899dadd684422bb7c542d",
+                    "commit": "112e7d2a0038afc21af34298b2ef2ea5efb395c8",
+                    "date": "2026-08-05T23:08:56Z",
+                    "commits": 1
+                }
+            ],
+            "observations": 1,
+            "unstable": false,
+            "flapCount": 0
+        },
+        "card-entities-light__ideal__default__light__compact": {
+            "path": "images/card-entities-light/ideal__default__light__compact.png",
+            "versions": [
+                {
+                    "blob": "e1808d0bb809123b3daf5126e84463cd058470e5",
+                    "commit": "112e7d2a0038afc21af34298b2ef2ea5efb395c8",
+                    "date": "2026-08-05T23:08:56Z",
+                    "commits": 1
+                }
+            ],
+            "observations": 1,
+            "unstable": false,
+            "flapCount": 0
+        },
+        "card-entity-dark__ideal__default__dark__compact": {
+            "path": "images/card-entity-dark/ideal__default__dark__compact.png",
+            "versions": [
+                {
+                    "blob": "bf82ccbdfc20dc4bf44bb3e52ade112e19e55899",
+                    "commit": "112e7d2a0038afc21af34298b2ef2ea5efb395c8",
+                    "date": "2026-08-05T23:08:56Z",
+                    "commits": 1
+                }
+            ],
+            "observations": 1,
+            "unstable": false,
+            "flapCount": 0
+        },
+        "card-entity-light__ideal__default__light__compact": {
+            "path": "images/card-entity-light/ideal__default__light__compact.png",
+            "versions": [
+                {
+                    "blob": "db4820c4d6570c352ee8fd19572b7b4c3fee7949",
+                    "commit": "112e7d2a0038afc21af34298b2ef2ea5efb395c8",
+                    "date": "2026-08-05T23:08:56Z",
+                    "commits": 1
+                }
+            ],
+            "observations": 1,
+            "unstable": false,
+            "flapCount": 0
+        },
+        "card-garage-dark__ideal__default__dark__compact": {
+            "path": "images/card-garage-dark/ideal__default__dark__compact.png",
+            "versions": [
+                {
+                    "blob": "dfead5676716328135e0edf93e834e6be4f3a770",
+                    "commit": "d9568ea7584302134fc63b7c1682fefbf9aeb3a1",
+                    "date": "2026-08-15T20:48:42Z",
+                    "sourceSha": "3fcc846d",
+                    "commits": 1
+                },
+                {
+                    "blob": "5b5c1d7f8ce6c35c0fb5e84b467395cd5c83474b",
+                    "commit": "112e7d2a0038afc21af34298b2ef2ea5efb395c8",
+                    "date": "2026-08-05T23:08:56Z",
+                    "commits": 1
+                }
+            ],
+            "observations": 2,
+            "unstable": false,
+            "flapCount": 0
+        },
+        "card-garage-light__ideal__default__light__compact": {
+            "path": "images/card-garage-light/ideal__default__light__compact.png",
+            "versions": [
+                {
+                    "blob": "c57b0c7a6067540461b20a564bd36bfdef566e25",
+                    "commit": "d9568ea7584302134fc63b7c1682fefbf9aeb3a1",
+                    "date": "2026-08-15T20:48:42Z",
+                    "sourceSha": "3fcc846d",
+                    "commits": 1
+                },
+                {
+                    "blob": "6e9d6731dc545530acdceeea2b1c9235ae3935c4",
+                    "commit": "112e7d2a0038afc21af34298b2ef2ea5efb395c8",
+                    "date": "2026-08-05T23:08:56Z",
+                    "commits": 1
+                }
+            ],
+            "observations": 2,
+            "unstable": false,
+            "flapCount": 0
+        },
+        "card-gauge-dark__ideal__default__dark__compact": {
+            "path": "images/card-gauge-dark/ideal__default__dark__compact.png",
+            "versions": [
+                {
+                    "blob": "32591881baf777eb3d757cf666048a28e19f0a24",
+                    "commit": "ae58b4150be2f45b567d69a45dd9e35fbe80965d",
+                    "date": "2026-08-18T21:52:21Z",
+                    "sourceSha": "e2efa68d",
+                    "commits": 1
+                },
+                {
+                    "blob": "17472c856985123c78cb7fa814602262ce4da85a",
+                    "commit": "112e7d2a0038afc21af34298b2ef2ea5efb395c8",
+                    "date": "2026-08-05T23:08:56Z",
+                    "commits": 1
+                }
+            ],
+            "observations": 2,
+            "unstable": false,
+            "flapCount": 0
+        },
+        "card-gauge-light__ideal__default__light__compact": {
+            "path": "images/card-gauge-light/ideal__default__light__compact.png",
+            "versions": [
+                {
+                    "blob": "6115ff77473dc513b0ab906977f1c0d8e70b66e4",
+                    "commit": "ae58b4150be2f45b567d69a45dd9e35fbe80965d",
+                    "date": "2026-08-18T21:52:21Z",
+                    "sourceSha": "e2efa68d",
+                    "commits": 1
+                },
+                {
+                    "blob": "39c9767b631861bf33422f9d46a0c91a4c6f9b04",
+                    "commit": "112e7d2a0038afc21af34298b2ef2ea5efb395c8",
+                    "date": "2026-08-05T23:08:56Z",
+                    "commits": 1
+                }
+            ],
+            "observations": 2,
+            "unstable": false,
+            "flapCount": 0
+        },
+        "card-glance-dark__ideal__default__dark__compact": {
+            "path": "images/card-glance-dark/ideal__default__dark__compact.png",
+            "versions": [
+                {
+                    "blob": "152a4d3557fcb6853d3bb7df6868ab08b9423362",
+                    "commit": "112e7d2a0038afc21af34298b2ef2ea5efb395c8",
+                    "date": "2026-08-05T23:08:56Z",
+                    "commits": 1
+                }
+            ],
+            "observations": 1,
+            "unstable": false,
+            "flapCount": 0
+        },
+        "card-glance-light__ideal__default__light__compact": {
+            "path": "images/card-glance-light/ideal__default__light__compact.png",
+            "versions": [
+                {
+                    "blob": "c8d13866b5ccbf2fd96bedb805c08872ecdacd31",
+                    "commit": "112e7d2a0038afc21af34298b2ef2ea5efb395c8",
+                    "date": "2026-08-05T23:08:56Z",
+                    "commits": 1
+                }
+            ],
+            "observations": 1,
+            "unstable": false,
+            "flapCount": 0
+        },
+        "card-light-dark__ideal__default__dark__compact": {
+            "path": "images/card-light-dark/ideal__default__dark__compact.png",
+            "versions": [
+                {
+                    "blob": "ecc0f2df78275fa0ce90364a947a6dfd84290a0c",
+                    "commit": "112e7d2a0038afc21af34298b2ef2ea5efb395c8",
+                    "date": "2026-08-05T23:08:56Z",
+                    "commits": 1
+                }
+            ],
+            "observations": 1,
+            "unstable": false,
+            "flapCount": 0
+        },
+        "card-light-light__ideal__default__light__compact": {
+            "path": "images/card-light-light/ideal__default__light__compact.png",
+            "versions": [
+                {
+                    "blob": "2f868087bd258ca9549bfc8a7d361ebd866fb909",
+                    "commit": "112e7d2a0038afc21af34298b2ef2ea5efb395c8",
+                    "date": "2026-08-05T23:08:56Z",
+                    "commits": 1
+                }
+            ],
+            "observations": 1,
+            "unstable": false,
+            "flapCount": 0
+        },
+        "card-markdown-dark__ideal__default__dark__compact": {
+            "path": "images/card-markdown-dark/ideal__default__dark__compact.png",
+            "versions": [
+                {
+                    "blob": "a8c5f8b57c0c51ae93b126dcfdf07cef39c1e664",
+                    "commit": "112e7d2a0038afc21af34298b2ef2ea5efb395c8",
+                    "date": "2026-08-05T23:08:56Z",
+                    "commits": 1
+                }
+            ],
+            "observations": 1,
+            "unstable": false,
+            "flapCount": 0
+        },
+        "card-markdown-light__ideal__default__light__compact": {
+            "path": "images/card-markdown-light/ideal__default__light__compact.png",
+            "versions": [
+                {
+                    "blob": "e91769da0ad81212ee3c5db399ee39a083dd7066",
+                    "commit": "112e7d2a0038afc21af34298b2ef2ea5efb395c8",
+                    "date": "2026-08-05T23:08:56Z",
+                    "commits": 1
+                }
+            ],
+            "observations": 1,
+            "unstable": false,
+            "flapCount": 0
+        },
+        "card-media-dark__ideal__default__dark__compact": {
+            "path": "images/card-media-dark/ideal__default__dark__compact.png",
+            "versions": [
+                {
+                    "blob": "b5cf35ad1d11158daf90ad6aea76a96780ca42d8",
+                    "commit": "112e7d2a0038afc21af34298b2ef2ea5efb395c8",
+                    "date": "2026-08-05T23:08:56Z",
+                    "commits": 1
+                }
+            ],
+            "observations": 1,
+            "unstable": false,
+            "flapCount": 0
+        },
+        "card-media-light__ideal__default__light__compact": {
+            "path": "images/card-media-light/ideal__default__light__compact.png",
+            "versions": [
+                {
+                    "blob": "1def885a96e17e441ab02f2f384b940ed8426c64",
+                    "commit": "112e7d2a0038afc21af34298b2ef2ea5efb395c8",
+                    "date": "2026-08-05T23:08:56Z",
+                    "commits": 1
+                }
+            ],
+            "observations": 1,
+            "unstable": false,
+            "flapCount": 0
+        },
+        "card-sensor-dark__ideal__default__dark__compact": {
+            "path": "images/card-sensor-dark/ideal__default__dark__compact.png",
+            "versions": [
+                {
+                    "blob": "037a0aae1a122eb948172f410eb585c3842049d4",
+                    "commit": "112e7d2a0038afc21af34298b2ef2ea5efb395c8",
+                    "date": "2026-08-05T23:08:56Z",
+                    "commits": 1
+                }
+            ],
+            "observations": 1,
+            "unstable": false,
+            "flapCount": 0
+        },
+        "card-sensor-light__ideal__default__light__compact": {
+            "path": "images/card-sensor-light/ideal__default__light__compact.png",
+            "versions": [
+                {
+                    "blob": "d0038dc71648ac04625f5aba08d354bfa2f73ada",
+                    "commit": "112e7d2a0038afc21af34298b2ef2ea5efb395c8",
+                    "date": "2026-08-05T23:08:56Z",
+                    "commits": 1
+                }
+            ],
+            "observations": 1,
+            "unstable": false,
+            "flapCount": 0
+        },
+        "card-shutter-dark__ideal__default__dark__compact": {
+            "path": "images/card-shutter-dark/ideal__default__dark__compact.png",
+            "versions": [
+                {
+                    "blob": "a3b8270dd1183a7996827ad994b11cdb1be0900f",
+                    "commit": "d9568ea7584302134fc63b7c1682fefbf9aeb3a1",
+                    "date": "2026-08-15T20:48:42Z",
+                    "sourceSha": "3fcc846d",
+                    "commits": 1
+                },
+                {
+                    "blob": "882002ae0085290362e45efa6cc3a38a6847bb45",
+                    "commit": "112e7d2a0038afc21af34298b2ef2ea5efb395c8",
+                    "date": "2026-08-05T23:08:56Z",
+                    "commits": 1
+                }
+            ],
+            "observations": 2,
+            "unstable": false,
+            "flapCount": 0
+        },
+        "card-shutter-light__ideal__default__light__compact": {
+            "path": "images/card-shutter-light/ideal__default__light__compact.png",
+            "versions": [
+                {
+                    "blob": "f50ddc94405ed4f230f0c523abe4a46fed072537",
+                    "commit": "d9568ea7584302134fc63b7c1682fefbf9aeb3a1",
+                    "date": "2026-08-15T20:48:42Z",
+                    "sourceSha": "3fcc846d",
+                    "commits": 1
+                },
+                {
+                    "blob": "10146370b601f920d3e5d6e187dd1b173dfa9171",
+                    "commit": "112e7d2a0038afc21af34298b2ef2ea5efb395c8",
+                    "date": "2026-08-05T23:08:56Z",
+                    "commits": 1
+                }
+            ],
+            "observations": 2,
+            "unstable": false,
+            "flapCount": 0
+        },
+        "card-statistic-dark__ideal__default__dark__compact": {
+            "path": "images/card-statistic-dark/ideal__default__dark__compact.png",
+            "versions": [
+                {
+                    "blob": "64253375c2c258da202a08f390c67404fe1ea715",
+                    "commit": "112e7d2a0038afc21af34298b2ef2ea5efb395c8",
+                    "date": "2026-08-05T23:08:56Z",
+                    "commits": 1
+                }
+            ],
+            "observations": 1,
+            "unstable": false,
+            "flapCount": 0
+        },
+        "card-statistic-light__ideal__default__light__compact": {
+            "path": "images/card-statistic-light/ideal__default__light__compact.png",
+            "versions": [
+                {
+                    "blob": "0b672d113b8268e1be70f2c904f399af35257746",
+                    "commit": "112e7d2a0038afc21af34298b2ef2ea5efb395c8",
+                    "date": "2026-08-05T23:08:56Z",
+                    "commits": 1
+                }
+            ],
+            "observations": 1,
+            "unstable": false,
+            "flapCount": 0
+        },
+        "card-thermostat-dark__ideal__default__dark__compact": {
+            "path": "images/card-thermostat-dark/ideal__default__dark__compact.png",
+            "versions": [
+                {
+                    "blob": "a92bf36f680f74a3c39a5e935900ed4f460ebe05",
+                    "commit": "112e7d2a0038afc21af34298b2ef2ea5efb395c8",
+                    "date": "2026-08-05T23:08:56Z",
+                    "commits": 1
+                }
+            ],
+            "observations": 1,
+            "unstable": false,
+            "flapCount": 0
+        },
+        "card-thermostat-light__ideal__default__light__compact": {
+            "path": "images/card-thermostat-light/ideal__default__light__compact.png",
+            "versions": [
+                {
+                    "blob": "7e0172aa1f8753904d96da0f76b265533ebac29d",
+                    "commit": "112e7d2a0038afc21af34298b2ef2ea5efb395c8",
+                    "date": "2026-08-05T23:08:56Z",
+                    "commits": 1
+                }
+            ],
+            "observations": 1,
+            "unstable": false,
+            "flapCount": 0
+        },
+        "card-tile-dark__ideal__default__dark__compact": {
+            "path": "images/card-tile-dark/ideal__default__dark__compact.png",
+            "versions": [
+                {
+                    "blob": "f20a3b6d30b22eb55565d2abda0fa3399cfef2bd",
+                    "commit": "112e7d2a0038afc21af34298b2ef2ea5efb395c8",
+                    "date": "2026-08-05T23:08:56Z",
+                    "commits": 1
+                }
+            ],
+            "observations": 1,
+            "unstable": false,
+            "flapCount": 0
+        },
+        "card-tile-light__ideal__default__compact": {
+            "path": "images/card-tile-light/ideal__default__compact.png",
+            "versions": [
+                {
+                    "blob": "36b72b732c1752804348415dfb81e5ccaf11b05d",
+                    "commit": "112e7d2a0038afc21af34298b2ef2ea5efb395c8",
+                    "date": "2026-08-05T23:08:56Z",
+                    "commits": 1
+                }
+            ],
+            "observations": 1,
+            "unstable": false,
+            "flapCount": 0
+        },
+        "card-todo-dark__ideal__default__dark__compact": {
+            "path": "images/card-todo-dark/ideal__default__dark__compact.png",
+            "versions": [
+                {
+                    "blob": "e90c8364549033dd06fc4a2dbe099162a868ba21",
+                    "commit": "112e7d2a0038afc21af34298b2ef2ea5efb395c8",
+                    "date": "2026-08-05T23:08:56Z",
+                    "commits": 1
+                }
+            ],
+            "observations": 1,
+            "unstable": false,
+            "flapCount": 0
+        },
+        "card-todo-light__ideal__default__light__compact": {
+            "path": "images/card-todo-light/ideal__default__light__compact.png",
+            "versions": [
+                {
+                    "blob": "49ae16c707c2925be0dd21474ccb5a9bec9d0375",
+                    "commit": "112e7d2a0038afc21af34298b2ef2ea5efb395c8",
+                    "date": "2026-08-05T23:08:56Z",
+                    "commits": 1
+                }
+            ],
+            "observations": 1,
+            "unstable": false,
+            "flapCount": 0
+        },
+        "card-weather-dark__ideal__default__dark__compact": {
+            "path": "images/card-weather-dark/ideal__default__dark__compact.png",
+            "versions": [
+                {
+                    "blob": "406cc7e722126c7bf4753f07f524ffa72dfff65e",
+                    "commit": "ae58b4150be2f45b567d69a45dd9e35fbe80965d",
+                    "date": "2026-08-18T21:52:21Z",
+                    "sourceSha": "e2efa68d",
+                    "commits": 1
+                },
+                {
+                    "blob": "91f8324974fef4dbc1e6d0f2f4bbcc45deddf588",
+                    "commit": "112e7d2a0038afc21af34298b2ef2ea5efb395c8",
+                    "date": "2026-08-05T23:08:56Z",
+                    "commits": 1
+                }
+            ],
+            "observations": 2,
+            "unstable": false,
+            "flapCount": 0
+        },
+        "card-weather-light__ideal__default__light__compact": {
+            "path": "images/card-weather-light/ideal__default__light__compact.png",
+            "versions": [
+                {
+                    "blob": "f864bee23c27ec8212335b03fd50cf68ce2672d2",
+                    "commit": "ae58b4150be2f45b567d69a45dd9e35fbe80965d",
+                    "date": "2026-08-18T21:52:21Z",
+                    "sourceSha": "e2efa68d",
+                    "commits": 1
+                },
+                {
+                    "blob": "0a376b336f36b9b0fc54b97a73bd1aca5a1ed02e",
+                    "commit": "112e7d2a0038afc21af34298b2ef2ea5efb395c8",
+                    "date": "2026-08-05T23:08:56Z",
+                    "commits": 1
+                }
+            ],
+            "observations": 2,
+            "unstable": false,
+            "flapCount": 0
+        },
+        "dashboard-dark__ideal__default__dark__compact": {
+            "path": "images/dashboard-dark/ideal__default__dark__compact.png",
+            "versions": [
+                {
+                    "blob": "5ad78a39896b3cec90367b4bcb4efe93517df163",
+                    "commit": "112e7d2a0038afc21af34298b2ef2ea5efb395c8",
+                    "date": "2026-08-05T23:08:56Z",
+                    "commits": 1
+                }
+            ],
+            "observations": 1,
+            "unstable": false,
+            "flapCount": 0
+        },
+        "dashboard-light__ideal__default__light__compact": {
+            "path": "images/dashboard-light/ideal__default__light__compact.png",
+            "versions": [
+                {
+                    "blob": "ba0a1dfc2ae772a1b0475269c01efa480702b509",
+                    "commit": "112e7d2a0038afc21af34298b2ef2ea5efb395c8",
+                    "date": "2026-08-05T23:08:56Z",
+                    "commits": 1
+                }
+            ],
+            "observations": 1,
+            "unstable": false,
+            "flapCount": 0
+        },
+        "layout-grid-dark__ideal__default__dark__compact": {
+            "path": "images/layout-grid-dark/ideal__default__dark__compact.png",
+            "versions": [
+                {
+                    "blob": "2e5aaf9b71ab6dd6af0b8176e02198060e31fc47",
+                    "commit": "ae58b4150be2f45b567d69a45dd9e35fbe80965d",
+                    "date": "2026-08-18T21:52:21Z",
+                    "sourceSha": "e2efa68d",
+                    "commits": 1
+                },
+                {
+                    "blob": "d1150b153faaaa61961b975cea8b526207743680",
+                    "commit": "112e7d2a0038afc21af34298b2ef2ea5efb395c8",
+                    "date": "2026-08-05T23:08:56Z",
+                    "commits": 1
+                }
+            ],
+            "observations": 2,
+            "unstable": false,
+            "flapCount": 0
+        },
+        "layout-grid-light__ideal__default__light__compact": {
+            "path": "images/layout-grid-light/ideal__default__light__compact.png",
+            "versions": [
+                {
+                    "blob": "e93c571f5cafee1a17c943f3d32526927ffa2420",
+                    "commit": "ae58b4150be2f45b567d69a45dd9e35fbe80965d",
+                    "date": "2026-08-18T21:52:21Z",
+                    "sourceSha": "e2efa68d",
+                    "commits": 1
+                },
+                {
+                    "blob": "3b1c77ad0b9c25d96436579aca78107466787922",
+                    "commit": "112e7d2a0038afc21af34298b2ef2ea5efb395c8",
+                    "date": "2026-08-05T23:08:56Z",
+                    "commits": 1
+                }
+            ],
+            "observations": 2,
+            "unstable": false,
+            "flapCount": 0
+        },
+        "layout-heading-dark__ideal__default__dark__compact": {
+            "path": "images/layout-heading-dark/ideal__default__dark__compact.png",
+            "versions": [
+                {
+                    "blob": "4930f5b9fcd72c7aa51aaa24eff5a24870fb263c",
+                    "commit": "112e7d2a0038afc21af34298b2ef2ea5efb395c8",
+                    "date": "2026-08-05T23:08:56Z",
+                    "commits": 1
+                }
+            ],
+            "observations": 1,
+            "unstable": false,
+            "flapCount": 0
+        },
+        "layout-heading-light__ideal__default__light__compact": {
+            "path": "images/layout-heading-light/ideal__default__light__compact.png",
+            "versions": [
+                {
+                    "blob": "4930f5b9fcd72c7aa51aaa24eff5a24870fb263c",
+                    "commit": "112e7d2a0038afc21af34298b2ef2ea5efb395c8",
+                    "date": "2026-08-05T23:08:56Z",
+                    "commits": 1
+                }
+            ],
+            "observations": 1,
+            "unstable": false,
+            "flapCount": 0
+        },
+        "layout-horizontalstack-dark__ideal__default__dark__compact": {
+            "path": "images/layout-horizontalstack-dark/ideal__default__dark__compact.png",
+            "versions": [
+                {
+                    "blob": "7ca3f60eb598dec62dbff112607a0626d05418cc",
+                    "commit": "ae58b4150be2f45b567d69a45dd9e35fbe80965d",
+                    "date": "2026-08-18T21:52:21Z",
+                    "sourceSha": "e2efa68d",
+                    "commits": 1
+                },
+                {
+                    "blob": "e6d6b0a4237b519e50340028cc0620e152399489",
+                    "commit": "112e7d2a0038afc21af34298b2ef2ea5efb395c8",
+                    "date": "2026-08-05T23:08:56Z",
+                    "commits": 1
+                }
+            ],
+            "observations": 2,
+            "unstable": false,
+            "flapCount": 0
+        },
+        "layout-horizontalstack-light__ideal__default__light__compact": {
+            "path": "images/layout-horizontalstack-light/ideal__default__light__compact.png",
+            "versions": [
+                {
+                    "blob": "05e6673293a417bff6ea0deff6235cceb60ec92b",
+                    "commit": "ae58b4150be2f45b567d69a45dd9e35fbe80965d",
+                    "date": "2026-08-18T21:52:21Z",
+                    "sourceSha": "e2efa68d",
+                    "commits": 1
+                },
+                {
+                    "blob": "33d465a6e48fb7707fb619c5f802dc7a2edf487c",
+                    "commit": "112e7d2a0038afc21af34298b2ef2ea5efb395c8",
+                    "date": "2026-08-05T23:08:56Z",
+                    "commits": 1
+                }
+            ],
+            "observations": 2,
+            "unstable": false,
+            "flapCount": 0
+        },
+        "layout-verticalstack-dark__ideal__default__dark__compact": {
+            "path": "images/layout-verticalstack-dark/ideal__default__dark__compact.png",
+            "versions": [
+                {
+                    "blob": "5956bfa3b03ed3ca8cdc836c2479a3575e0d5cf1",
+                    "commit": "112e7d2a0038afc21af34298b2ef2ea5efb395c8",
+                    "date": "2026-08-05T23:08:56Z",
+                    "commits": 1
+                }
+            ],
+            "observations": 1,
+            "unstable": false,
+            "flapCount": 0
+        },
+        "layout-verticalstack-light__ideal__default__light__compact": {
+            "path": "images/layout-verticalstack-light/ideal__default__light__compact.png",
+            "versions": [
+                {
+                    "blob": "97261b256df02771cdd0f072b09a3d4babd72230",
+                    "commit": "112e7d2a0038afc21af34298b2ef2ea5efb395c8",
+                    "date": "2026-08-05T23:08:56Z",
+                    "commits": 1
+                }
+            ],
+            "observations": 1,
+            "unstable": false,
+            "flapCount": 0
+        },
+        "theme-home-dark__ideal__default__dark__compact": {
+            "path": "images/theme-home-dark/ideal__default__dark__compact.png",
+            "versions": [
+                {
+                    "blob": "562d7386c3aa729564a37ea6690d839c306c19f1",
+                    "commit": "112e7d2a0038afc21af34298b2ef2ea5efb395c8",
+                    "date": "2026-08-05T23:08:56Z",
+                    "commits": 1
+                }
+            ],
+            "observations": 1,
+            "unstable": false,
+            "flapCount": 0
+        },
+        "theme-home-light__ideal__default__light__compact": {
+            "path": "images/theme-home-light/ideal__default__light__compact.png",
+            "versions": [
+                {
+                    "blob": "64688018dee9ec7223f16683964703a32aa358ba",
+                    "commit": "112e7d2a0038afc21af34298b2ef2ea5efb395c8",
+                    "date": "2026-08-05T23:08:56Z",
+                    "commits": 1
+                }
+            ],
+            "observations": 1,
+            "unstable": false,
+            "flapCount": 0
+        },
+        "theme-kiosk-dark__ideal__default__dark__compact": {
+            "path": "images/theme-kiosk-dark/ideal__default__dark__compact.png",
+            "versions": [
+                {
+                    "blob": "986fed5b4a3200b60505fcc27aae4e27149d8b6c",
+                    "commit": "112e7d2a0038afc21af34298b2ef2ea5efb395c8",
+                    "date": "2026-08-05T23:08:56Z",
+                    "commits": 1
+                }
+            ],
+            "observations": 1,
+            "unstable": false,
+            "flapCount": 0
+        },
+        "theme-kiosk-light__ideal__default__light__compact": {
+            "path": "images/theme-kiosk-light/ideal__default__light__compact.png",
+            "versions": [
+                {
+                    "blob": "def5cf1235327134abcc8b16b643b1c3a67878b9",
+                    "commit": "112e7d2a0038afc21af34298b2ef2ea5efb395c8",
+                    "date": "2026-08-05T23:08:56Z",
+                    "commits": 1
+                }
+            ],
+            "observations": 1,
+            "unstable": false,
+            "flapCount": 0
+        },
+        "theme-material3-dark__ideal__default__dark__compact": {
+            "path": "images/theme-material3-dark/ideal__default__dark__compact.png",
+            "versions": [
+                {
+                    "blob": "99dd9efdbb324026939ee90633eb4dc2efd024ea",
+                    "commit": "112e7d2a0038afc21af34298b2ef2ea5efb395c8",
+                    "date": "2026-08-05T23:08:56Z",
+                    "commits": 1
+                }
+            ],
+            "observations": 1,
+            "unstable": false,
+            "flapCount": 0
+        },
+        "theme-material3-light__ideal__default__light__compact": {
+            "path": "images/theme-material3-light/ideal__default__light__compact.png",
+            "versions": [
+                {
+                    "blob": "0eff4e93d37f262f844af29000e2c15f5da77a99",
+                    "commit": "112e7d2a0038afc21af34298b2ef2ea5efb395c8",
+                    "date": "2026-08-05T23:08:56Z",
+                    "commits": 1
+                }
+            ],
+            "observations": 1,
+            "unstable": false,
+            "flapCount": 0
+        },
+        "theme-minimalist-dark__ideal__default__dark__compact": {
+            "path": "images/theme-minimalist-dark/ideal__default__dark__compact.png",
+            "versions": [
+                {
+                    "blob": "b28a86231f75af7f269991819092044e395a425b",
+                    "commit": "112e7d2a0038afc21af34298b2ef2ea5efb395c8",
+                    "date": "2026-08-05T23:08:56Z",
+                    "commits": 1
+                }
+            ],
+            "observations": 1,
+            "unstable": false,
+            "flapCount": 0
+        },
+        "theme-minimalist-light__ideal__default__light__compact": {
+            "path": "images/theme-minimalist-light/ideal__default__light__compact.png",
+            "versions": [
+                {
+                    "blob": "c644b1826f09660db6661ba6237d272664322421",
+                    "commit": "112e7d2a0038afc21af34298b2ef2ea5efb395c8",
+                    "date": "2026-08-05T23:08:56Z",
+                    "commits": 1
+                }
+            ],
+            "observations": 1,
+            "unstable": false,
+            "flapCount": 0
+        },
+        "theme-mushroom-dark__ideal__default__dark__compact": {
+            "path": "images/theme-mushroom-dark/ideal__default__dark__compact.png",
+            "versions": [
+                {
+                    "blob": "c4e3f10514b62cd15f262f4ec598343a990caac8",
+                    "commit": "112e7d2a0038afc21af34298b2ef2ea5efb395c8",
+                    "date": "2026-08-05T23:08:56Z",
+                    "commits": 1
+                }
+            ],
+            "observations": 1,
+            "unstable": false,
+            "flapCount": 0
+        },
+        "theme-mushroom-light__ideal__default__light__compact": {
+            "path": "images/theme-mushroom-light/ideal__default__light__compact.png",
+            "versions": [
+                {
+                    "blob": "b441f3ffb502d0660bf701a124e179271c2a6187",
+                    "commit": "112e7d2a0038afc21af34298b2ef2ea5efb395c8",
+                    "date": "2026-08-05T23:08:56Z",
+                    "commits": 1
+                }
+            ],
+            "observations": 1,
+            "unstable": false,
+            "flapCount": 0
+        }
+    }
+}

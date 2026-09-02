@@ -1,0 +1,491 @@
+{
+  "schema": "compose-preview-activity/v1",
+  "generatedAt": "2026-08-31T13:46:40.629Z",
+  "windowDays": 30,
+  "code": {
+    "repo": "yschimke/homeassistant-remotecompose",
+    "ref": "main",
+    "events": [
+      {
+        "sha": "e220e2b070487837c3fbbae8733e11a7e6b8d6e1",
+        "subject": "fix(deps): update androidx to v1.2.0-beta01 (#620)",
+        "at": "2026-08-31T13:30:18Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "2db9e537d476dd830af436947dfd385e962e6aa7",
+        "subject": "fix(deps): update dependency androidx.compose.material3:material3 to v1.5.0-alpha27 (#621)",
+        "at": "2026-08-31T07:33:04Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "1a56384e607a4e67ec8165ede121bd22ce4e712f",
+        "subject": "fix(deps): update dependency com.materialkolor:material-kolor to v5.0.1 (#622)",
+        "at": "2026-08-31T07:33:01Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "a9862decf45cf8829e030a768487c71409ce7bd6",
+        "subject": "chore(deps): update github-actions (#619)",
+        "at": "2026-08-31T04:33:11Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "5ea1fbfe20ebc8aa3d5c95df60e78ebe69bdabae",
+        "subject": "fix(deps): update compose-ai-tools (#617)",
+        "at": "2026-08-29T14:12:16Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "e81a1e482c84265d08054e86558ad1da39cca4c7",
+        "subject": "fix(deps): update compose-ai-tools to v1.46.2 (#616)",
+        "at": "2026-08-29T01:30:19Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "cb5bf77e547a496bf5ba408811b8efc60b89839e",
+        "subject": "fix(deps): update compose-ai-tools (#615)",
+        "at": "2026-08-28T18:13:59Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "fce07c6b3a537c4c151c37a18203271a0a8cfdd7",
+        "subject": "fix(deps): update compose-ai-tools to v1.43.0 (#614)",
+        "at": "2026-08-28T17:38:44Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "aabb9eee2f0f5cb381d11e8e0cc5e82f7c1b2f7f",
+        "subject": "chore(deps): update agp to v9.3.2 (#610)",
+        "at": "2026-08-28T05:31:01Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "0a1fc367d9aa6cb6c1f9f39aeb24775ec7eda577",
+        "subject": "fix(deps): update compose-ai-tools to v1.39.0 (#612)",
+        "at": "2026-08-28T05:01:54Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "509b13c867b680cc9cdb2cdaab951482f07ab27d",
+        "subject": "build: resolve Remote Compose from Google Maven releases, not androidx.dev (#613)",
+        "at": "2026-08-27T14:29:31+03:00",
+        "author": "Yuri Schimke",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "de05970058deee4aaeb5a61e6a1f10751acb013b",
+        "subject": "chore(deps): update yschimke/compose-ai-tools action to v1.33.0 (#611)",
+        "at": "2026-08-24T05:38:39Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "56ade1eea14547062c6dd6f5ab1f820e3667fd4f",
+        "subject": "fix(deps): update dependency org.jetbrains:markdown to v0.7.9 (#607)",
+        "at": "2026-08-24T03:58:12Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "79548e7657cee7298365ff8c5b4404c1a9ea04c2",
+        "subject": "chore(deps): update eclipse-temurin docker tag to v25.0.4_7-jdk-jammy (#604)",
+        "at": "2026-08-24T03:17:10Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "3131a945549163d2c2fd7f6498cb9b8755aaf9d7",
+        "subject": "fix(deps): update dependency com.google.firebase:firebase-bom to v34.18.0 (#608)",
+        "at": "2026-08-24T02:45:55Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "89987eea81457c367950f11a65b1db11b6abfc23",
+        "subject": "fix(deps): update mockserver to v7.6.0 (#609)",
+        "at": "2026-08-24T02:45:52Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "857a32b24145a09cdd44cf8015157dd01a268a48",
+        "subject": "chore(deps): update anthropics/claude-code-action action to v1.0.201 (#603)",
+        "at": "2026-08-24T01:51:58Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "ec039930f3dc745b4556dafd0efb8f783371f869",
+        "subject": "fix(deps): update dependency com.google.firebase:firebase-crashlytics-gradle to v3.0.8 (#606)",
+        "at": "2026-08-24T01:21:51Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "5ef93ef395912e1e07d7cf1dc9f494b576e8e989",
+        "subject": "fix(deps): update compose-ai-tools to v1.32.0 (#602)",
+        "at": "2026-08-22T18:31:54Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "d18bc0f90328172fbe47ae310966d8e55328d61c",
+        "subject": "fix(deps): update compose-ai-tools to v1.31.0 (#601)",
+        "at": "2026-08-22T14:22:04Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "68fd30e32bf0cc27356f9c0d733ef72eb3b56e7e",
+        "subject": "fix(deps): update compose-ai-tools to v1.30.0 (#600)",
+        "at": "2026-08-22T11:21:40Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "eb98628bc72e8dc831ba7fe5b30f402dd82efc07",
+        "subject": "fix(deps): update compose-ai-tools to v1.29.0 (#599)",
+        "at": "2026-08-21T22:52:03Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "1a2303fc1e657b1c39ba70b59185589d2ec3c7d9",
+        "subject": "fix(deps): update compose-ai-tools to v1.28.0 (#598)",
+        "at": "2026-08-21T12:50:09Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "c85a63d9b764de24e1e92343a09ebc23e2cf95b5",
+        "subject": "fix(deps): update compose-ai-tools to v1.27.0 (#597)",
+        "at": "2026-08-21T06:49:40Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "25b9a418b188062a73ed51c4860c9f5c54b204d7",
+        "subject": "chore(deps): update yschimke/compose-ai-tools action to v1.27.0 (#596)",
+        "at": "2026-08-20T23:32:37Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "48d0eded995a80c736720ce8ab16d93670004762",
+        "subject": "chore(deps): update compose-ai-tools to v1.26.0 (#595)",
+        "at": "2026-08-20T18:52:46Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "bac2e97178f88e5f4e5aa90a2213a56940dd977d",
+        "subject": "fix(deps): update compose-ai-tools to v1.25.0 (#594)",
+        "at": "2026-08-20T13:22:08Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "13836abc09121acbbe5541c573b046f8ae67d474",
+        "subject": "chore(deps): update yschimke/compose-ai-tools action to v1.25.0 (#593)",
+        "at": "2026-08-20T12:51:39Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "3bd622e70a05774620ea08da9ee5191b6b56f315",
+        "subject": "fix(deps): update compose-ai-tools to v1.24.0 (#592)",
+        "at": "2026-08-20T11:54:56Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "4dd6a26bbb095b04f5535dd4b35e2c01103b4a8c",
+        "subject": "fix(deps): update compose-ai-tools to v1.23.0 (#590)",
+        "at": "2026-08-20T11:28:09Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "9d872b02210d185f6b3fec8013cc4f893ccc61e5",
+        "subject": "chore(deps): compose-ai-tools 1.21.0, and pool the split classpath (#591)",
+        "at": "2026-08-19T22:01:08+01:00",
+        "author": "Yuri Schimke",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "c38d7b075bc3a38aa8cea734a27cc8d3963e1f16",
+        "subject": "fix(deps): update compose-ai-tools to v1.15.0 (#589)",
+        "at": "2026-08-18T21:53:54Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "e2efa68d664aecbc8d586519b2d0ebd3c1ec8a14",
+        "subject": "build(deps): resolve Remote Compose + Glance Wear from androidx.dev snapshots (#588)",
+        "at": "2026-08-18T22:26:16+01:00",
+        "author": "Yuri Schimke",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "b51a0b087c5a3c61a4d8f7b7fa8bb0d65610d204",
+        "subject": "fix(deps): update compose-ai-tools to v1.14.1 (#587)",
+        "at": "2026-08-18T02:36:27Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "9bd2f6fceaaafca663af2a0bc3139615036e4be4",
+        "subject": "fix(deps): update compose-ai-tools to v1.14.0 (#586)",
+        "at": "2026-08-17T22:51:53Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "c6ffb0eacd9ccb7b0af5a78deeab48c5f0570786",
+        "subject": "fix(deps): update compose-ai-tools to v1.13.0 (#585)",
+        "at": "2026-08-17T21:53:18Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "d0605593157771a6fe6822e6ef9424f1990bf08f",
+        "subject": "fix(deps): update compose-ai-tools to v1.12.0 (#584)",
+        "at": "2026-08-17T13:09:05Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "e368c965c95d5d8f38b22db22360ff7883cf4e42",
+        "subject": "fix(deps): update compose-ai-tools (#581)",
+        "at": "2026-08-17T12:46:10Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "275cb7f761d940e6cb8cf9705099a27efc692752",
+        "subject": "fix(deps): update dependency androidx.compose.material3:material3 to v1.5.0-alpha26 (#582)",
+        "at": "2026-08-16T23:44:47Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "03b497556277349be87b59b20ba1a33b8562c54c",
+        "subject": "fix(deps): update okhttp to v5.5.0 (#583)",
+        "at": "2026-08-16T23:44:44Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "bcc9d13069481577db6f40bd009bb8ba99055664",
+        "subject": "chore(deps): update yschimke/compose-ai-tools action to v1.10.0 (#580)",
+        "at": "2026-08-16T22:47:03Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "69cebded8441fc92098dc05c2ff6f74b07d99b35",
+        "subject": "fix(deps): update compose-ai-tools to v1.10.0 (#579)",
+        "at": "2026-08-16T22:22:12Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "15ea22c3c8413b96cbd53cd90a741aebfea1f265",
+        "subject": "fix(deps): update compose-ai-tools to 1.9.0 (#578)",
+        "at": "2026-08-16T19:45:49+01:00",
+        "author": "Yuri Schimke",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "d2fc4ecdc1a2fec4f415e08f9d1f4e986665b400",
+        "subject": "fix(deps): update compose-ai-tools to v1.9.0 (#577)",
+        "at": "2026-08-16T18:30:34Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "e163fd7e9e451bad7ebca0d7d80c0c04675707d9",
+        "subject": "fix(deps): update compose-ai-tools to 1.8.0 (#576)",
+        "at": "2026-08-16T12:11:29+01:00",
+        "author": "Yuri Schimke",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "72c6d941f244d3d712c6029ba54d6de3147adc12",
+        "subject": "fix(deps): update compose-ai-tools to v1.8.0 (#575)",
+        "at": "2026-08-15T23:45:08Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "dd9ac9ac7dce920244b14dc9a44f62196d432d91",
+        "subject": "fix(deps): update ktfmt.gradle to v0.27.0 (#554)",
+        "at": "2026-08-16T00:18:01+01:00",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "0d6a944cef5033ffaa03323f1d1b0a4f3d9319d3",
+        "subject": "chore(deps): update yschimke/compose-ai-tools action to v1.8.0 (#574)",
+        "at": "2026-08-16T00:12:30+01:00",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "53008f4d5865dd18276f199a8ba576d282c17bd0",
+        "subject": "fix(deps): update dependency androidx.compose:compose-bom to v2026.08.00 (#569)",
+        "at": "2026-08-15T22:48:20Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "e40d5a969b443cdac2fe8cd2c54eea72082d0102",
+        "subject": "fix(rc-components): build themed colours without a constant so ColorTheme is written (#573)",
+        "at": "2026-08-15T23:16:31+01:00",
+        "author": "Yuri Schimke",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "89c4d46e87825fb517598311250fc0d6279be117",
+        "subject": "feat: add Remote Compose launcher widget actions (#572)",
+        "at": "2026-08-15T22:46:27+01:00",
+        "author": "Yuri Schimke",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "ea0e91bdf1200ec6f88ad90ade89d0811e656d87",
+        "subject": "fix(deps): update compose-ai-tools to v1 (#570)",
+        "at": "2026-08-15T22:36:23+01:00",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "3fcc846d83941acff85589ea0e3afa71f2adc442",
+        "subject": "feat: support host-resolved remote material themes (#571)",
+        "at": "2026-08-15T21:19:28+01:00",
+        "author": "Yuri Schimke",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "57bbe2e7ce55a6a0ca4aa938a00a8e2e29e7ec3c",
+        "subject": "chore(deps): update anthropics/claude-code-action action to v1.0.193 (#565)",
+        "at": "2026-08-15T17:47:20Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "419111c52a26ae58f6a013de0ecfac6e503235e9",
+        "subject": "chore(deps): update dependency dev.zacsweers.metro to v1.4.2 (#566)",
+        "at": "2026-08-15T17:47:17Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "db9935769483f12d6a0cc4c8420993bd2e61df52",
+        "subject": "fix(deps): update dependency ch.qos.logback:logback-classic to v1.6.3 (#567)",
+        "at": "2026-08-15T17:21:32Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "5b4c3453e926e95384d7120bf5f5c5e236249cd4",
+        "subject": "chore(deps): update dependency com.github.triplet.play to v4.1.1 (#568)",
+        "at": "2026-08-15T17:21:29Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "a084d3b30318461d8cf34671d59b91eb126349fe",
+        "subject": "build(deps): update Remote Compose alphas to the alpha17 triple (#563)",
+        "at": "2026-08-13T16:59:44+01:00",
+        "author": "Yuri Schimke",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "3066aa0c233d2126517cc4488ca5048343439c60",
+        "subject": "fix(deps): update compose-ai-tools to v0.19.61 (#562)",
+        "at": "2026-08-12T00:07:53Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "0d98ff6e45b70c155566df4f426899e43aa561fa",
+        "subject": "chore(deps): update yschimke/compose-ai-tools action to v0.19.61 (#561)",
+        "at": "2026-08-11T23:40:48Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      }
+    ]
+  }
+}
