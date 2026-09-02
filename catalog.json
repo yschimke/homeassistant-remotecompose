@@ -351,7 +351,17 @@
       "sourceModule": ":previews",
       "bodyLine": 60,
       "sourceDirectory": "previews",
-      "sourceFunction": "Theme_Material3_Light"
+      "sourceFunction": "Theme_Material3_Light",
+      "parameters": [
+        {
+          "name": "style",
+          "type": "ThemeStyle"
+        },
+        {
+          "name": "darkTheme",
+          "type": "Boolean"
+        }
+      ]
     },
     {
       "componentId": "Theme/Material3-Dark",
@@ -701,7 +711,17 @@
       "sourceModule": ":previews",
       "bodyLine": 64,
       "sourceDirectory": "previews",
-      "sourceFunction": "Theme_Material3_Dark"
+      "sourceFunction": "Theme_Material3_Dark",
+      "parameters": [
+        {
+          "name": "style",
+          "type": "ThemeStyle"
+        },
+        {
+          "name": "darkTheme",
+          "type": "Boolean"
+        }
+      ]
     },
     {
       "componentId": "Theme/Home-Light",
@@ -1051,7 +1071,17 @@
       "sourceModule": ":previews",
       "bodyLine": 70,
       "sourceDirectory": "previews",
-      "sourceFunction": "Theme_Home_Light"
+      "sourceFunction": "Theme_Home_Light",
+      "parameters": [
+        {
+          "name": "style",
+          "type": "ThemeStyle"
+        },
+        {
+          "name": "darkTheme",
+          "type": "Boolean"
+        }
+      ]
     },
     {
       "componentId": "Theme/Home-Dark",
@@ -1401,7 +1431,17 @@
       "sourceModule": ":previews",
       "bodyLine": 74,
       "sourceDirectory": "previews",
-      "sourceFunction": "Theme_Home_Dark"
+      "sourceFunction": "Theme_Home_Dark",
+      "parameters": [
+        {
+          "name": "style",
+          "type": "ThemeStyle"
+        },
+        {
+          "name": "darkTheme",
+          "type": "Boolean"
+        }
+      ]
     },
     {
       "componentId": "Theme/Mushroom-Light",
@@ -1751,7 +1791,17 @@
       "sourceModule": ":previews",
       "bodyLine": 80,
       "sourceDirectory": "previews",
-      "sourceFunction": "Theme_Mushroom_Light"
+      "sourceFunction": "Theme_Mushroom_Light",
+      "parameters": [
+        {
+          "name": "style",
+          "type": "ThemeStyle"
+        },
+        {
+          "name": "darkTheme",
+          "type": "Boolean"
+        }
+      ]
     },
     {
       "componentId": "Theme/Mushroom-Dark",
@@ -2101,7 +2151,17 @@
       "sourceModule": ":previews",
       "bodyLine": 84,
       "sourceDirectory": "previews",
-      "sourceFunction": "Theme_Mushroom_Dark"
+      "sourceFunction": "Theme_Mushroom_Dark",
+      "parameters": [
+        {
+          "name": "style",
+          "type": "ThemeStyle"
+        },
+        {
+          "name": "darkTheme",
+          "type": "Boolean"
+        }
+      ]
     },
     {
       "componentId": "Theme/Minimalist-Light",
@@ -2451,7 +2511,17 @@
       "sourceModule": ":previews",
       "bodyLine": 90,
       "sourceDirectory": "previews",
-      "sourceFunction": "Theme_Minimalist_Light"
+      "sourceFunction": "Theme_Minimalist_Light",
+      "parameters": [
+        {
+          "name": "style",
+          "type": "ThemeStyle"
+        },
+        {
+          "name": "darkTheme",
+          "type": "Boolean"
+        }
+      ]
     },
     {
       "componentId": "Theme/Minimalist-Dark",
@@ -2801,7 +2871,17 @@
       "sourceModule": ":previews",
       "bodyLine": 94,
       "sourceDirectory": "previews",
-      "sourceFunction": "Theme_Minimalist_Dark"
+      "sourceFunction": "Theme_Minimalist_Dark",
+      "parameters": [
+        {
+          "name": "style",
+          "type": "ThemeStyle"
+        },
+        {
+          "name": "darkTheme",
+          "type": "Boolean"
+        }
+      ]
     },
     {
       "componentId": "Theme/Kiosk-Light",
@@ -3151,7 +3231,17 @@
       "sourceModule": ":previews",
       "bodyLine": 100,
       "sourceDirectory": "previews",
-      "sourceFunction": "Theme_Kiosk_Light"
+      "sourceFunction": "Theme_Kiosk_Light",
+      "parameters": [
+        {
+          "name": "style",
+          "type": "ThemeStyle"
+        },
+        {
+          "name": "darkTheme",
+          "type": "Boolean"
+        }
+      ]
     },
     {
       "componentId": "Theme/Kiosk-Dark",
@@ -3501,7 +3591,17 @@
       "sourceModule": ":previews",
       "bodyLine": 104,
       "sourceDirectory": "previews",
-      "sourceFunction": "Theme_Kiosk_Dark"
+      "sourceFunction": "Theme_Kiosk_Dark",
+      "parameters": [
+        {
+          "name": "style",
+          "type": "ThemeStyle"
+        },
+        {
+          "name": "darkTheme",
+          "type": "Boolean"
+        }
+      ]
     },
     {
       "componentId": "Card/Button-Light",
@@ -3528,7 +3628,18 @@
       "sourceModule": ":previews",
       "bodyLine": 128,
       "sourceDirectory": "previews",
-      "sourceFunction": "Button_On_Light"
+      "sourceFunction": "Button_On_Light",
+      "parameters": [
+        {
+          "name": "theme",
+          "type": "HaTheme"
+        },
+        {
+          "name": "content",
+          "type": "() -> Unit",
+          "composableSlot": true
+        }
+      ]
     },
     {
       "componentId": "Card/Button-Dark",
@@ -3555,7 +3666,18 @@
       "sourceModule": ":previews",
       "bodyLine": 135,
       "sourceDirectory": "previews",
-      "sourceFunction": "Button_On_Dark"
+      "sourceFunction": "Button_On_Dark",
+      "parameters": [
+        {
+          "name": "theme",
+          "type": "HaTheme"
+        },
+        {
+          "name": "content",
+          "type": "() -> Unit",
+          "composableSlot": true
+        }
+      ]
     },
     {
       "componentId": "Card/Entity-Light",
@@ -3582,7 +3704,18 @@
       "sourceModule": ":previews",
       "bodyLine": 148,
       "sourceDirectory": "previews",
-      "sourceFunction": "Entity_Light"
+      "sourceFunction": "Entity_Light",
+      "parameters": [
+        {
+          "name": "theme",
+          "type": "HaTheme"
+        },
+        {
+          "name": "content",
+          "type": "() -> Unit",
+          "composableSlot": true
+        }
+      ]
     },
     {
       "componentId": "Card/Entity-Dark",
@@ -3609,7 +3742,18 @@
       "sourceModule": ":previews",
       "bodyLine": 152,
       "sourceDirectory": "previews",
-      "sourceFunction": "Entity_Dark"
+      "sourceFunction": "Entity_Dark",
+      "parameters": [
+        {
+          "name": "theme",
+          "type": "HaTheme"
+        },
+        {
+          "name": "content",
+          "type": "() -> Unit",
+          "composableSlot": true
+        }
+      ]
     },
     {
       "componentId": "Card/Entities-Light",
@@ -3636,7 +3780,18 @@
       "sourceModule": ":previews",
       "bodyLine": 160,
       "sourceDirectory": "previews",
-      "sourceFunction": "Entities_Light"
+      "sourceFunction": "Entities_Light",
+      "parameters": [
+        {
+          "name": "theme",
+          "type": "HaTheme"
+        },
+        {
+          "name": "content",
+          "type": "() -> Unit",
+          "composableSlot": true
+        }
+      ]
     },
     {
       "componentId": "Card/Entities-Dark",
@@ -3663,7 +3818,18 @@
       "sourceModule": ":previews",
       "bodyLine": 164,
       "sourceDirectory": "previews",
-      "sourceFunction": "Entities_Dark"
+      "sourceFunction": "Entities_Dark",
+      "parameters": [
+        {
+          "name": "theme",
+          "type": "HaTheme"
+        },
+        {
+          "name": "content",
+          "type": "() -> Unit",
+          "composableSlot": true
+        }
+      ]
     },
     {
       "componentId": "Card/Glance-Light",
@@ -3690,7 +3856,18 @@
       "sourceModule": ":previews",
       "bodyLine": 180,
       "sourceDirectory": "previews",
-      "sourceFunction": "Glance_Light"
+      "sourceFunction": "Glance_Light",
+      "parameters": [
+        {
+          "name": "theme",
+          "type": "HaTheme"
+        },
+        {
+          "name": "content",
+          "type": "() -> Unit",
+          "composableSlot": true
+        }
+      ]
     },
     {
       "componentId": "Card/Glance-Dark",
@@ -3717,7 +3894,18 @@
       "sourceModule": ":previews",
       "bodyLine": 184,
       "sourceDirectory": "previews",
-      "sourceFunction": "Glance_Dark"
+      "sourceFunction": "Glance_Dark",
+      "parameters": [
+        {
+          "name": "theme",
+          "type": "HaTheme"
+        },
+        {
+          "name": "content",
+          "type": "() -> Unit",
+          "composableSlot": true
+        }
+      ]
     },
     {
       "componentId": "Card/Tile-Light",
@@ -3743,7 +3931,18 @@
       "sourceModule": ":previews",
       "bodyLine": 68,
       "sourceDirectory": "previews",
-      "sourceFunction": "Tile_LightOn"
+      "sourceFunction": "Tile_LightOn",
+      "parameters": [
+        {
+          "name": "theme",
+          "type": "HaTheme"
+        },
+        {
+          "name": "content",
+          "type": "() -> Unit",
+          "composableSlot": true
+        }
+      ]
     },
     {
       "componentId": "Card/Tile-Dark",
@@ -3770,7 +3969,18 @@
       "sourceModule": ":previews",
       "bodyLine": 83,
       "sourceDirectory": "previews",
-      "sourceFunction": "Tile_LightOn_Dark"
+      "sourceFunction": "Tile_LightOn_Dark",
+      "parameters": [
+        {
+          "name": "theme",
+          "type": "HaTheme"
+        },
+        {
+          "name": "content",
+          "type": "() -> Unit",
+          "composableSlot": true
+        }
+      ]
     },
     {
       "componentId": "Card/Light-Light",
@@ -3797,7 +4007,18 @@
       "sourceModule": ":previews",
       "bodyLine": 667,
       "sourceDirectory": "previews",
-      "sourceFunction": "LightCard_Light"
+      "sourceFunction": "LightCard_Light",
+      "parameters": [
+        {
+          "name": "theme",
+          "type": "HaTheme"
+        },
+        {
+          "name": "content",
+          "type": "() -> Unit",
+          "composableSlot": true
+        }
+      ]
     },
     {
       "componentId": "Card/Light-Dark",
@@ -3824,7 +4045,18 @@
       "sourceModule": ":previews",
       "bodyLine": 674,
       "sourceDirectory": "previews",
-      "sourceFunction": "LightCard_Dark"
+      "sourceFunction": "LightCard_Dark",
+      "parameters": [
+        {
+          "name": "theme",
+          "type": "HaTheme"
+        },
+        {
+          "name": "content",
+          "type": "() -> Unit",
+          "composableSlot": true
+        }
+      ]
     },
     {
       "componentId": "Card/Thermostat-Light",
@@ -3851,7 +4083,18 @@
       "sourceModule": ":previews",
       "bodyLine": 635,
       "sourceDirectory": "previews",
-      "sourceFunction": "Thermostat_Light"
+      "sourceFunction": "Thermostat_Light",
+      "parameters": [
+        {
+          "name": "theme",
+          "type": "HaTheme"
+        },
+        {
+          "name": "content",
+          "type": "() -> Unit",
+          "composableSlot": true
+        }
+      ]
     },
     {
       "componentId": "Card/Thermostat-Dark",
@@ -3878,7 +4121,18 @@
       "sourceModule": ":previews",
       "bodyLine": 642,
       "sourceDirectory": "previews",
-      "sourceFunction": "Thermostat_Dark"
+      "sourceFunction": "Thermostat_Dark",
+      "parameters": [
+        {
+          "name": "theme",
+          "type": "HaTheme"
+        },
+        {
+          "name": "content",
+          "type": "() -> Unit",
+          "composableSlot": true
+        }
+      ]
     },
     {
       "componentId": "Card/Gauge-Light",
@@ -3905,7 +4159,18 @@
       "sourceModule": ":previews",
       "bodyLine": 397,
       "sourceDirectory": "previews",
-      "sourceFunction": "Gauge_Light"
+      "sourceFunction": "Gauge_Light",
+      "parameters": [
+        {
+          "name": "theme",
+          "type": "HaTheme"
+        },
+        {
+          "name": "content",
+          "type": "() -> Unit",
+          "composableSlot": true
+        }
+      ]
     },
     {
       "componentId": "Card/Gauge-Dark",
@@ -3932,7 +4197,18 @@
       "sourceModule": ":previews",
       "bodyLine": 404,
       "sourceDirectory": "previews",
-      "sourceFunction": "Gauge_Dark"
+      "sourceFunction": "Gauge_Dark",
+      "parameters": [
+        {
+          "name": "theme",
+          "type": "HaTheme"
+        },
+        {
+          "name": "content",
+          "type": "() -> Unit",
+          "composableSlot": true
+        }
+      ]
     },
     {
       "componentId": "Card/Weather-Light",
@@ -3959,7 +4235,18 @@
       "sourceModule": ":previews",
       "bodyLine": 447,
       "sourceDirectory": "previews",
-      "sourceFunction": "WeatherForecast_Light"
+      "sourceFunction": "WeatherForecast_Light",
+      "parameters": [
+        {
+          "name": "theme",
+          "type": "HaTheme"
+        },
+        {
+          "name": "content",
+          "type": "() -> Unit",
+          "composableSlot": true
+        }
+      ]
     },
     {
       "componentId": "Card/Weather-Dark",
@@ -3986,7 +4273,18 @@
       "sourceModule": ":previews",
       "bodyLine": 454,
       "sourceDirectory": "previews",
-      "sourceFunction": "WeatherForecast_Dark"
+      "sourceFunction": "WeatherForecast_Dark",
+      "parameters": [
+        {
+          "name": "theme",
+          "type": "HaTheme"
+        },
+        {
+          "name": "content",
+          "type": "() -> Unit",
+          "composableSlot": true
+        }
+      ]
     },
     {
       "componentId": "Card/Media-Light",
@@ -4013,7 +4311,18 @@
       "sourceModule": ":previews",
       "bodyLine": 775,
       "sourceDirectory": "previews",
-      "sourceFunction": "MediaControl_Light"
+      "sourceFunction": "MediaControl_Light",
+      "parameters": [
+        {
+          "name": "theme",
+          "type": "HaTheme"
+        },
+        {
+          "name": "content",
+          "type": "() -> Unit",
+          "composableSlot": true
+        }
+      ]
     },
     {
       "componentId": "Card/Media-Dark",
@@ -4040,7 +4349,18 @@
       "sourceModule": ":previews",
       "bodyLine": 782,
       "sourceDirectory": "previews",
-      "sourceFunction": "MediaControl_Dark"
+      "sourceFunction": "MediaControl_Dark",
+      "parameters": [
+        {
+          "name": "theme",
+          "type": "HaTheme"
+        },
+        {
+          "name": "content",
+          "type": "() -> Unit",
+          "composableSlot": true
+        }
+      ]
     },
     {
       "componentId": "Card/Alarm-Light",
@@ -4067,7 +4387,18 @@
       "sourceModule": ":previews",
       "bodyLine": 753,
       "sourceDirectory": "previews",
-      "sourceFunction": "AlarmPanel_Light"
+      "sourceFunction": "AlarmPanel_Light",
+      "parameters": [
+        {
+          "name": "theme",
+          "type": "HaTheme"
+        },
+        {
+          "name": "content",
+          "type": "() -> Unit",
+          "composableSlot": true
+        }
+      ]
     },
     {
       "componentId": "Card/Alarm-Dark",
@@ -4094,7 +4425,18 @@
       "sourceModule": ":previews",
       "bodyLine": 760,
       "sourceDirectory": "previews",
-      "sourceFunction": "AlarmPanel_Dark"
+      "sourceFunction": "AlarmPanel_Dark",
+      "parameters": [
+        {
+          "name": "theme",
+          "type": "HaTheme"
+        },
+        {
+          "name": "content",
+          "type": "() -> Unit",
+          "composableSlot": true
+        }
+      ]
     },
     {
       "componentId": "Card/Todo-Light",
@@ -4121,7 +4463,18 @@
       "sourceModule": ":previews",
       "bodyLine": 794,
       "sourceDirectory": "previews",
-      "sourceFunction": "TodoList_Light"
+      "sourceFunction": "TodoList_Light",
+      "parameters": [
+        {
+          "name": "theme",
+          "type": "HaTheme"
+        },
+        {
+          "name": "content",
+          "type": "() -> Unit",
+          "composableSlot": true
+        }
+      ]
     },
     {
       "componentId": "Card/Todo-Dark",
@@ -4148,7 +4501,18 @@
       "sourceModule": ":previews",
       "bodyLine": 801,
       "sourceDirectory": "previews",
-      "sourceFunction": "TodoList_Dark"
+      "sourceFunction": "TodoList_Dark",
+      "parameters": [
+        {
+          "name": "theme",
+          "type": "HaTheme"
+        },
+        {
+          "name": "content",
+          "type": "() -> Unit",
+          "composableSlot": true
+        }
+      ]
     },
     {
       "componentId": "Card/Calendar-Light",
@@ -4175,7 +4539,18 @@
       "sourceModule": ":previews",
       "bodyLine": 813,
       "sourceDirectory": "previews",
-      "sourceFunction": "Calendar_Light"
+      "sourceFunction": "Calendar_Light",
+      "parameters": [
+        {
+          "name": "theme",
+          "type": "HaTheme"
+        },
+        {
+          "name": "content",
+          "type": "() -> Unit",
+          "composableSlot": true
+        }
+      ]
     },
     {
       "componentId": "Card/Calendar-Dark",
@@ -4202,7 +4577,18 @@
       "sourceModule": ":previews",
       "bodyLine": 820,
       "sourceDirectory": "previews",
-      "sourceFunction": "Calendar_Dark"
+      "sourceFunction": "Calendar_Dark",
+      "parameters": [
+        {
+          "name": "theme",
+          "type": "HaTheme"
+        },
+        {
+          "name": "content",
+          "type": "() -> Unit",
+          "composableSlot": true
+        }
+      ]
     },
     {
       "componentId": "Card/Area-Light",
@@ -4229,7 +4615,18 @@
       "sourceModule": ":previews",
       "bodyLine": 835,
       "sourceDirectory": "previews",
-      "sourceFunction": "Area_Light"
+      "sourceFunction": "Area_Light",
+      "parameters": [
+        {
+          "name": "theme",
+          "type": "HaTheme"
+        },
+        {
+          "name": "content",
+          "type": "() -> Unit",
+          "composableSlot": true
+        }
+      ]
     },
     {
       "componentId": "Card/Area-Dark",
@@ -4256,7 +4653,18 @@
       "sourceModule": ":previews",
       "bodyLine": 842,
       "sourceDirectory": "previews",
-      "sourceFunction": "Area_Dark"
+      "sourceFunction": "Area_Dark",
+      "parameters": [
+        {
+          "name": "theme",
+          "type": "HaTheme"
+        },
+        {
+          "name": "content",
+          "type": "() -> Unit",
+          "composableSlot": true
+        }
+      ]
     },
     {
       "componentId": "Card/Sensor-Light",
@@ -4283,7 +4691,18 @@
       "sourceModule": ":previews",
       "bodyLine": 959,
       "sourceDirectory": "previews",
-      "sourceFunction": "Sensor_Light"
+      "sourceFunction": "Sensor_Light",
+      "parameters": [
+        {
+          "name": "theme",
+          "type": "HaTheme"
+        },
+        {
+          "name": "content",
+          "type": "() -> Unit",
+          "composableSlot": true
+        }
+      ]
     },
     {
       "componentId": "Card/Sensor-Dark",
@@ -4310,7 +4729,18 @@
       "sourceModule": ":previews",
       "bodyLine": 966,
       "sourceDirectory": "previews",
-      "sourceFunction": "Sensor_Dark"
+      "sourceFunction": "Sensor_Dark",
+      "parameters": [
+        {
+          "name": "theme",
+          "type": "HaTheme"
+        },
+        {
+          "name": "content",
+          "type": "() -> Unit",
+          "composableSlot": true
+        }
+      ]
     },
     {
       "componentId": "Card/Statistic-Light",
@@ -4337,7 +4767,18 @@
       "sourceModule": ":previews",
       "bodyLine": 940,
       "sourceDirectory": "previews",
-      "sourceFunction": "Statistic_Light"
+      "sourceFunction": "Statistic_Light",
+      "parameters": [
+        {
+          "name": "theme",
+          "type": "HaTheme"
+        },
+        {
+          "name": "content",
+          "type": "() -> Unit",
+          "composableSlot": true
+        }
+      ]
     },
     {
       "componentId": "Card/Statistic-Dark",
@@ -4364,7 +4805,18 @@
       "sourceModule": ":previews",
       "bodyLine": 947,
       "sourceDirectory": "previews",
-      "sourceFunction": "Statistic_Dark"
+      "sourceFunction": "Statistic_Dark",
+      "parameters": [
+        {
+          "name": "theme",
+          "type": "HaTheme"
+        },
+        {
+          "name": "content",
+          "type": "() -> Unit",
+          "composableSlot": true
+        }
+      ]
     },
     {
       "componentId": "Card/Markdown-Light",
@@ -4391,7 +4843,18 @@
       "sourceModule": ":previews",
       "bodyLine": 213,
       "sourceDirectory": "previews",
-      "sourceFunction": "Markdown_Light"
+      "sourceFunction": "Markdown_Light",
+      "parameters": [
+        {
+          "name": "theme",
+          "type": "HaTheme"
+        },
+        {
+          "name": "content",
+          "type": "() -> Unit",
+          "composableSlot": true
+        }
+      ]
     },
     {
       "componentId": "Card/Markdown-Dark",
@@ -4418,7 +4881,18 @@
       "sourceModule": ":previews",
       "bodyLine": 217,
       "sourceDirectory": "previews",
-      "sourceFunction": "Markdown_Dark"
+      "sourceFunction": "Markdown_Dark",
+      "parameters": [
+        {
+          "name": "theme",
+          "type": "HaTheme"
+        },
+        {
+          "name": "content",
+          "type": "() -> Unit",
+          "composableSlot": true
+        }
+      ]
     },
     {
       "componentId": "Card/Clock-Light",
@@ -4445,7 +4919,18 @@
       "sourceModule": ":previews",
       "bodyLine": 691,
       "sourceDirectory": "previews",
-      "sourceFunction": "Clock_Light"
+      "sourceFunction": "Clock_Light",
+      "parameters": [
+        {
+          "name": "theme",
+          "type": "HaTheme"
+        },
+        {
+          "name": "content",
+          "type": "() -> Unit",
+          "composableSlot": true
+        }
+      ]
     },
     {
       "componentId": "Card/Clock-Dark",
@@ -4472,7 +4957,18 @@
       "sourceModule": ":previews",
       "bodyLine": 698,
       "sourceDirectory": "previews",
-      "sourceFunction": "Clock_Dark"
+      "sourceFunction": "Clock_Dark",
+      "parameters": [
+        {
+          "name": "theme",
+          "type": "HaTheme"
+        },
+        {
+          "name": "content",
+          "type": "() -> Unit",
+          "composableSlot": true
+        }
+      ]
     },
     {
       "componentId": "Layout/VerticalStack-Light",
@@ -4499,7 +4995,18 @@
       "sourceModule": ":previews",
       "bodyLine": 226,
       "sourceDirectory": "previews",
-      "sourceFunction": "VerticalStack_Light"
+      "sourceFunction": "VerticalStack_Light",
+      "parameters": [
+        {
+          "name": "theme",
+          "type": "HaTheme"
+        },
+        {
+          "name": "content",
+          "type": "() -> Unit",
+          "composableSlot": true
+        }
+      ]
     },
     {
       "componentId": "Layout/VerticalStack-Dark",
@@ -4526,7 +5033,18 @@
       "sourceModule": ":previews",
       "bodyLine": 231,
       "sourceDirectory": "previews",
-      "sourceFunction": "VerticalStack_Dark"
+      "sourceFunction": "VerticalStack_Dark",
+      "parameters": [
+        {
+          "name": "theme",
+          "type": "HaTheme"
+        },
+        {
+          "name": "content",
+          "type": "() -> Unit",
+          "composableSlot": true
+        }
+      ]
     },
     {
       "componentId": "Layout/HorizontalStack-Light",
@@ -4553,7 +5071,18 @@
       "sourceModule": ":previews",
       "bodyLine": 247,
       "sourceDirectory": "previews",
-      "sourceFunction": "HorizontalStack_Light"
+      "sourceFunction": "HorizontalStack_Light",
+      "parameters": [
+        {
+          "name": "theme",
+          "type": "HaTheme"
+        },
+        {
+          "name": "content",
+          "type": "() -> Unit",
+          "composableSlot": true
+        }
+      ]
     },
     {
       "componentId": "Layout/HorizontalStack-Dark",
@@ -4580,7 +5109,18 @@
       "sourceModule": ":previews",
       "bodyLine": 252,
       "sourceDirectory": "previews",
-      "sourceFunction": "HorizontalStack_Dark"
+      "sourceFunction": "HorizontalStack_Dark",
+      "parameters": [
+        {
+          "name": "theme",
+          "type": "HaTheme"
+        },
+        {
+          "name": "content",
+          "type": "() -> Unit",
+          "composableSlot": true
+        }
+      ]
     },
     {
       "componentId": "Layout/Grid-Light",
@@ -4607,7 +5147,18 @@
       "sourceModule": ":previews",
       "bodyLine": 269,
       "sourceDirectory": "previews",
-      "sourceFunction": "Grid_Light"
+      "sourceFunction": "Grid_Light",
+      "parameters": [
+        {
+          "name": "theme",
+          "type": "HaTheme"
+        },
+        {
+          "name": "content",
+          "type": "() -> Unit",
+          "composableSlot": true
+        }
+      ]
     },
     {
       "componentId": "Layout/Grid-Dark",
@@ -4634,7 +5185,18 @@
       "sourceModule": ":previews",
       "bodyLine": 273,
       "sourceDirectory": "previews",
-      "sourceFunction": "Grid_Dark"
+      "sourceFunction": "Grid_Dark",
+      "parameters": [
+        {
+          "name": "theme",
+          "type": "HaTheme"
+        },
+        {
+          "name": "content",
+          "type": "() -> Unit",
+          "composableSlot": true
+        }
+      ]
     },
     {
       "componentId": "Layout/Heading-Light",
@@ -4661,7 +5223,18 @@
       "sourceModule": ":previews",
       "bodyLine": 201,
       "sourceDirectory": "previews",
-      "sourceFunction": "Heading_Light"
+      "sourceFunction": "Heading_Light",
+      "parameters": [
+        {
+          "name": "theme",
+          "type": "HaTheme"
+        },
+        {
+          "name": "content",
+          "type": "() -> Unit",
+          "composableSlot": true
+        }
+      ]
     },
     {
       "componentId": "Layout/Heading-Dark",
@@ -4688,7 +5261,18 @@
       "sourceModule": ":previews",
       "bodyLine": 205,
       "sourceDirectory": "previews",
-      "sourceFunction": "Heading_Dark"
+      "sourceFunction": "Heading_Dark",
+      "parameters": [
+        {
+          "name": "theme",
+          "type": "HaTheme"
+        },
+        {
+          "name": "content",
+          "type": "() -> Unit",
+          "composableSlot": true
+        }
+      ]
     },
     {
       "componentId": "Card/Shutter-Light",
@@ -4715,7 +5299,18 @@
       "sourceModule": ":previews",
       "bodyLine": 46,
       "sourceDirectory": "previews",
-      "sourceFunction": "Shutter_Light"
+      "sourceFunction": "Shutter_Light",
+      "parameters": [
+        {
+          "name": "theme",
+          "type": "HaTheme"
+        },
+        {
+          "name": "content",
+          "type": "() -> Unit",
+          "composableSlot": true
+        }
+      ]
     },
     {
       "componentId": "Card/Shutter-Dark",
@@ -4742,7 +5337,18 @@
       "sourceModule": ":previews",
       "bodyLine": 55,
       "sourceDirectory": "previews",
-      "sourceFunction": "Shutter_Dark"
+      "sourceFunction": "Shutter_Dark",
+      "parameters": [
+        {
+          "name": "theme",
+          "type": "HaTheme"
+        },
+        {
+          "name": "content",
+          "type": "() -> Unit",
+          "composableSlot": true
+        }
+      ]
     },
     {
       "componentId": "Card/Garage-Light",
@@ -4769,7 +5375,18 @@
       "sourceModule": ":previews",
       "bodyLine": 110,
       "sourceDirectory": "previews",
-      "sourceFunction": "Garage_TwoEntities_Light"
+      "sourceFunction": "Garage_TwoEntities_Light",
+      "parameters": [
+        {
+          "name": "theme",
+          "type": "HaTheme"
+        },
+        {
+          "name": "content",
+          "type": "() -> Unit",
+          "composableSlot": true
+        }
+      ]
     },
     {
       "componentId": "Card/Garage-Dark",
@@ -4796,7 +5413,18 @@
       "sourceModule": ":previews",
       "bodyLine": 115,
       "sourceDirectory": "previews",
-      "sourceFunction": "Garage_TwoEntities_Dark"
+      "sourceFunction": "Garage_TwoEntities_Dark",
+      "parameters": [
+        {
+          "name": "theme",
+          "type": "HaTheme"
+        },
+        {
+          "name": "content",
+          "type": "() -> Unit",
+          "composableSlot": true
+        }
+      ]
     },
     {
       "componentId": "Dashboard/Light",
@@ -4823,7 +5451,13 @@
       "sourceModule": ":previews",
       "bodyLine": 299,
       "sourceDirectory": "previews",
-      "sourceFunction": "Dashboard_Light"
+      "sourceFunction": "Dashboard_Light",
+      "parameters": [
+        {
+          "name": "theme",
+          "type": "HaTheme"
+        }
+      ]
     },
     {
       "componentId": "Dashboard/Dark",
@@ -4850,7 +5484,13 @@
       "sourceModule": ":previews",
       "bodyLine": 303,
       "sourceDirectory": "previews",
-      "sourceFunction": "Dashboard_Dark"
+      "sourceFunction": "Dashboard_Dark",
+      "parameters": [
+        {
+          "name": "theme",
+          "type": "HaTheme"
+        }
+      ]
     },
     {
       "componentId": "Brand/AppIcon-Light",
@@ -4918,7 +5558,13 @@
       "sourceModule": ":previews",
       "bodyLine": 36,
       "sourceDirectory": "previews",
-      "sourceFunction": "AppIcon_Light"
+      "sourceFunction": "AppIcon_Light",
+      "parameters": [
+        {
+          "name": "darkTheme",
+          "type": "Boolean"
+        }
+      ]
     },
     {
       "componentId": "Brand/AppIcon-Dark",
@@ -4987,7 +5633,13 @@
       "sourceModule": ":previews",
       "bodyLine": 47,
       "sourceDirectory": "previews",
-      "sourceFunction": "AppIcon_Dark"
+      "sourceFunction": "AppIcon_Dark",
+      "parameters": [
+        {
+          "name": "darkTheme",
+          "type": "Boolean"
+        }
+      ]
     }
   ],
   "library": [
@@ -4996,7 +5648,7 @@
     "ee.schimke.ha:rc-components (Terrazzo themes)"
   ],
   "renderer": "compose-preview 1.47.0",
-  "generatedAt": "2026-08-31T13:46:00.346Z",
+  "generatedAt": "2026-09-02T11:51:48.361Z",
   "liveBundle": {
     "path": "bundle/",
     "file": "bundle.png"

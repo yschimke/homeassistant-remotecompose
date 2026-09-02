@@ -1,11 +1,19 @@
 {
   "schema": "compose-preview-activity/v1",
-  "generatedAt": "2026-08-31T13:46:40.629Z",
+  "generatedAt": "2026-09-02T11:51:53.253Z",
   "windowDays": 30,
   "code": {
     "repo": "yschimke/homeassistant-remotecompose",
     "ref": "main",
     "events": [
+      {
+        "sha": "1db2d6c24ec2c397f76d4fa5ff5b8812f348d076",
+        "subject": "ci: stop publishing per-preview bundles for the catalog (#623)",
+        "at": "2026-09-02T09:04:28+01:00",
+        "author": "Yuri Schimke",
+        "previewIds": [],
+        "components": []
+      },
       {
         "sha": "e220e2b070487837c3fbbae8733e11a7e6b8d6e1",
         "subject": "fix(deps): update androidx to v1.2.0-beta01 (#620)",
@@ -474,14 +482,6 @@
         "sha": "3066aa0c233d2126517cc4488ca5048343439c60",
         "subject": "fix(deps): update compose-ai-tools to v0.19.61 (#562)",
         "at": "2026-08-12T00:07:53Z",
-        "author": "renovate[bot]",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "0d98ff6e45b70c155566df4f426899e43aa561fa",
-        "subject": "chore(deps): update yschimke/compose-ai-tools action to v0.19.61 (#561)",
-        "at": "2026-08-11T23:40:48Z",
         "author": "renovate[bot]",
         "previewIds": [],
         "components": []
