@@ -13,14 +13,14 @@ name: Design Artifacts
 # carry; see yschimke/compose-ai-tools/.github/workflows/design-artifacts-reusable.yml.
 #
 # Live tier: `publish-live-bundle` carries the executable render bundle onto the
-# delivery branch and records it in catalog.json, and `split-per-preview` +
-# `split-mode: full-shared-classpath` publish one addressable bundle per preview
-# that keeps its re-render classpath (pooled once under `bundle/res` rather than
-# copied into each bundle). Without those the served catalog degrades to
-# `catalog-baked-only` — "this catalog serves baked PNG snapshots only" — and the
-# viewer's device / theme / knob controls can't re-render. Remote Compose is an
-# Android (Robolectric) render, so the live lane runs on the serve host's Android
-# daemon, exactly as remote-m3's does.
+# delivery branch and records it in catalog.json. Without it the served catalog
+# degrades to `catalog-baked-only` — "this catalog serves baked PNG snapshots
+# only" — and the viewer's device / theme / knob controls can't re-render. Remote
+# Compose is an Android (Robolectric) render, so the live lane runs on the serve
+# host's Android daemon, exactly as remote-m3's does. The per-preview split is
+# deliberately OFF: that module-level bundle is what the trusted serve host
+# hydrates, and splitting multiplied the delivery branch by the preview count on
+# every publish.
 
 on:
   # Weekly, so the published sticker sheet tracks the catalog as it evolves.
@@ -105,14 +105,20 @@ jobs:
       # Carry the executable bundle + per-preview bundles so the served catalog
       # gets a live lane instead of the baked-only degradation banner.
       publish-live-bundle: true
-      split-per-preview: true
-      # Shared classpath rather than a self-contained bundle per preview:
-      # `classes/app.jar` is published once into `bundle/res` and each split manifest
-      # carries a hash-verified `externalClasspath`, so the live re-render lane is
-      # intact while the delivery branch stops carrying the same jar N times (a
-      # `full` split grows with the preview count on every publish — see
-      # yschimke/compose-ai-tools#4211).
-      split-mode: full-shared-classpath
+      # Pure editable SVGs are a daemon data product too. Keep them transient through
+      # catalog generation and per-preview cover cropping, then produce and cache them
+      # only when requested; raster-backed hybrid SVGs stay static so their crop
+      # references remain self-contained. This also avoids rewriting coordinate-derived
+      # SVG files when an otherwise identical render is packed in a different order.
+      defer-figma-svg: true
+      # No per-preview split. Pooling the classpath (`split-mode: full-shared-classpath`)
+      # stopped the delivery branch carrying the same app.jar N times
+      # (yschimke/compose-ai-tools#4211), but the split itself still writes an addressable
+      # copy of every preview under bundle/previews on each publish, and a catalog change
+      # rewrites all of them. The module bundle above is what the serve host hydrates, so
+      # the live lane survives without it. `split-mode` is dropped with the split — it only
+      # has meaning when `split-per-preview` is set. Ported from yschimke/meshcore-mobile#461.
+      split-per-preview: false
       allow-incomplete: ${{ github.event_name == 'workflow_dispatch' && inputs.allow_incomplete || false }}
       # The CMP/Wasm player lane — the fifth column, and the one that made
       # /remote-m3/compare a five-player page while this catalog had one. Unlike the embedded and
