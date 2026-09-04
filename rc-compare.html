@@ -20,6 +20,9 @@
   .toolbar select { font:inherit; padding:3px 6px; border:1px solid var(--line); border-radius:6px; background:var(--card); color:var(--fg); }
   .refstatus { color:var(--muted); font-size:12px; }
   .lede { padding:12px 20px; color:var(--muted); max-width:70ch; }
+  /* The players this run did not include, set right under the lede that describes the ones it did. */
+  .lede.absent { padding-top:0; }
+  .lede.absent strong { color:var(--fg); white-space:nowrap; }
   .wrap { overflow-x:auto; padding:0 20px 40px; }
   table.grid { border-collapse:collapse; width:100%; min-width:720px; }
   /* Not sticky: the .wrap overflow-x makes it the scrollport these cells would stick to, and it
@@ -92,6 +95,7 @@ players directly. Rows sort worst-match-first on the worst-scoring player using 
 <strong>fully transparent</strong> is shown but not scored against it: with nothing in the reference, a
 player that draws nothing would score a perfect 0% — so those rows read <code>no reference</code> and
 stay out of the means.</p>
+<p class="lede absent">Not in this run: <strong>AndroidX Embedded · vendored Android</strong>, <strong>AndroidX Embedded · androidx.dev</strong>, <strong>RC · cmp-jvm player</strong>. A player earns a column only where the run recorded a verdict for it, so these are absent rather than empty — the publishing workflow opts each lane in per catalog.</p>
 <div class="wrap">
 <table class="grid">
   <thead><tr><th>preview</th><th>AndroidX Embedded · baked</th><th>RC · JS player</th><th>RC · cmp-wasm player</th></tr></thead>

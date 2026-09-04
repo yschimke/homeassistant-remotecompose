@@ -1,11 +1,19 @@
 {
   "schema": "compose-preview-activity/v1",
-  "generatedAt": "2026-09-02T11:51:53.253Z",
+  "generatedAt": "2026-09-04T11:41:22.351Z",
   "windowDays": 30,
   "code": {
     "repo": "yschimke/homeassistant-remotecompose",
     "ref": "main",
     "events": [
+      {
+        "sha": "1480663da2fe9491a83d015008c84bdf2c6a38ef",
+        "subject": "fix(deps): version data-render-core on its own line, and take plugin 1.71.0 (#625)",
+        "at": "2026-09-04T12:26:59+01:00",
+        "author": "Yuri Schimke",
+        "previewIds": [],
+        "components": []
+      },
       {
         "sha": "1db2d6c24ec2c397f76d4fa5ff5b8812f348d076",
         "subject": "ci: stop publishing per-preview bundles for the catalog (#623)",
@@ -475,14 +483,6 @@
         "subject": "build(deps): update Remote Compose alphas to the alpha17 triple (#563)",
         "at": "2026-08-13T16:59:44+01:00",
         "author": "Yuri Schimke",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "3066aa0c233d2126517cc4488ca5048343439c60",
-        "subject": "fix(deps): update compose-ai-tools to v0.19.61 (#562)",
-        "at": "2026-08-12T00:07:53Z",
-        "author": "renovate[bot]",
         "previewIds": [],
         "components": []
       }
