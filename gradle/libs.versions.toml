@@ -53,7 +53,7 @@ indriya = "2.2.4"
 # of the plugin marker. The preview-baselines / preview-comment GitHub
 # Actions read this key (`catalog-key: compose-preview-plugin`) to pin
 # the CLI release they install on the runner.
-compose-preview-plugin = "1.71.0"
+compose-preview-plugin = "1.72.0"
 # The `ee.schimke.composeai:*-core` protocol artifacts are versioned on their
 # own 2.x line, NOT with the plugin. Tying `data-render-core` to
 # `compose-preview-plugin` is what pinned this repo at 1.47.0: that is the last
