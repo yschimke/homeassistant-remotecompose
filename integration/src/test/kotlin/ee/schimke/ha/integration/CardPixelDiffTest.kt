@@ -23,6 +23,9 @@ class CardPixelDiffTest(
 ) {
 
   companion object {
+    /** The renderer's 8-hex-character filename digest, in the two positions it can occupy. */
+    private val DIGEST = Regex("-[0-9a-f]{8}(?=[._])")
+
     @JvmStatic
     @Parameterized.Parameters(name = "{1} <= {2}%")
     fun cases(): Collection<Array<Any>> =
@@ -93,12 +96,32 @@ class CardPixelDiffTest(
   private fun locateRendered(previewName: String): File {
     val dir =
       File(System.getProperty("ha.rendered.dir") ?: "previews/build/compose-previews/renders")
-    val exact = dir.listFiles { f -> f.name.contains(previewName) && f.extension == "png" }
+    val exact = dir.listFiles { f ->
+      f.extension == "png" && f.name.withoutDigest().contains(previewName)
+    }
     require(!exact.isNullOrEmpty()) {
       "No rendered PNG matching '$previewName' under $dir — run scripts/render-previews.sh"
     }
     return exact.first()
   }
+
+  /**
+   * A rendered file is named `<readable>-<digest>.png`, and structural suffixes are appended
+   * *after* the digest — `Button_Light_button_light-aaf2af7d_on.png`. The table above keys on the
+   * readable name plus that suffix (`Button_Light_button_light_on`), so a literal `contains` misses
+   * once a digest is present: the two halves are no longer adjacent.
+   *
+   * Dropping the digest before matching restores the join without hard-coding it. The renderer's
+   * own guidance is that a preview's filename cannot be reconstructed from its id and should be
+   * read from `previews.json` (`captures[].renderOutput`); doing that here would mean threading the
+   * manifest through this table, so this keeps the table as the source of truth and makes the
+   * matcher digest-agnostic instead.
+   *
+   * The digest is 8 lowercase hex characters, and is only stripped where it is followed by a `.` or
+   * a `_` — the two positions the naming scheme puts it in — so a readable name that happens to end
+   * in something hex-like is left alone.
+   */
+  private fun String.withoutDigest(): String = replace(DIGEST, "")
 
   private fun referenceFile(rel: String): File {
     val dir = File(System.getProperty("ha.references.dir") ?: "references")
