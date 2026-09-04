@@ -28,6 +28,20 @@
       "schedule": ["at any time"],
       "automerge": true,
       "automergeSchedule": ["at any time"]
+    },
+    {
+      "description": "The contracts artifacts — the `*-core` data products, the `*-protocol` wire formats, `common-io` and the daemon transports — are released on their OWN 2.x line, independently of the 1.x plugin/CLI/actions release above, and are pinned here by the `composeai-contracts` catalog key. The rule above matches every `ee.schimke.composeai` coordinate, so without this one they get swept into the `compose-ai-tools` group PR, whose premise — 'these ship as a single release, move them together' — is simply false for them. Keeping them in their own PR means a contracts bump succeeds or fails on its own. #618 is why that matters: while `data-render-core` shared the plugin's version key, bumping the plugin dragged it to a 1.70.0 that was never published, and the resulting `Could not find ee.schimke.composeai:data-render-core:1.70.0` failed five checks at once and held the whole toolchain at 1.47.0 for weeks. #625 split the catalog key; this splits the Renovate group, so the two lines cannot be bundled back together by a matcher that predates the distinction.",
+      "matchPackageNames": [
+        "/^ee\\.schimke\\.composeai:.*-core$/",
+        "/^ee\\.schimke\\.composeai:.*-protocol$/",
+        "ee.schimke.composeai:common-io",
+        "ee.schimke.composeai:daemon-devices",
+        "ee.schimke.composeai:daemon-bta"
+      ],
+      "groupName": "composeai-contracts",
+      "schedule": ["at any time"],
+      "automerge": true,
+      "automergeSchedule": ["at any time"]
     }
   ]
 }
