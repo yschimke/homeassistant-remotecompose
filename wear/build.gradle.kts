@@ -88,6 +88,13 @@ dependencies {
   // implementation, drop the vendored copies (and re-evaluate keeping
   // this dep — it only ships RemoteDocPreview today).
   implementation(libs.remote.tooling.preview)
+  // The embedded (pure-Compose) Remote Compose player. Already present
+  // transitively at runtime under remote-tooling-preview; declared here so
+  // WearWidgetPreviewSnapshot can call ExperimentalRemoteDocumentPlayer
+  // directly instead of RemoteDocumentPreview, which wraps the View-based
+  // RemoteComposePlayer in an AndroidView.
+  implementation(libs.remote.player.compose)
+  implementation(libs.remote.player.core)
   implementation(libs.remote.material3)
 
   // Proto DataStore + Horologist data layer for sync with phone.

@@ -39,7 +39,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.remote.tooling.preview.RemoteDocumentPreview
+import androidx.compose.remote.player.compose.ExperimentalRemotePlayerApi
+import androidx.compose.remote.player.compose.RemoteComposePlayerFlags
+import androidx.compose.remote.player.compose.embedded.ExperimentalRemoteDocumentPlayer
+import androidx.compose.remote.player.core.RemoteDocument
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -68,12 +71,19 @@ import kotlinx.coroutines.runBlocking
  * @param modifier The [Modifier] applied to the inner widget surface.
  */
 @SuppressLint("RestrictedApi")
+@OptIn(ExperimentalRemotePlayerApi::class)
 @Composable
 public fun WearWidgetPreviewSnapshot(
   widget: GlanceWearWidget,
   params: WearWidgetParams,
   modifier: Modifier = Modifier,
 ) {
+  // The embedded player ships behind a flag; without it `RcPlayer` throws
+  // "Embedded player is disabled" and every preview fails to render. An idempotent
+  // static assignment, and this composable only ever runs from a @Preview, so the
+  // flag never flips in the shipped widget path.
+  RemoteComposePlayerFlags.isEmbeddedPlayerEnabled = true
+
   val context = LocalContext.current
   val document =
     remember(widget, params, context) {
@@ -93,8 +103,8 @@ public fun WearWidgetPreviewSnapshot(
     modifier = Modifier.size(227.dp).clip(CircleShape).background(Color.Black),
     contentAlignment = Alignment.Center,
   ) {
-    RemoteDocumentPreview(
-      document,
+    ExperimentalRemoteDocumentPlayer(
+      remember(document) { RemoteDocument(document) },
       modifier =
         modifier
           .offset(y = 14.dp)
