@@ -1,11 +1,19 @@
 {
   "schema": "compose-preview-activity/v1",
-  "generatedAt": "2026-09-04T16:25:51.208Z",
+  "generatedAt": "2026-09-04T23:24:28.266Z",
   "windowDays": 30,
   "code": {
     "repo": "yschimke/homeassistant-remotecompose",
     "ref": "main",
     "events": [
+      {
+        "sha": "42671528907dc6a82bc2bf67d2d61df2f0896a71",
+        "subject": "fix(deps): update compose-ai-tools (#631)",
+        "at": "2026-09-04T23:11:13Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
       {
         "sha": "a5a43e5b5fea00824cd6796b65a1676341c42b8e",
         "subject": "chore(deps): update gradle to v9.7.1 (#605)",
@@ -475,14 +483,6 @@
         "subject": "fix(deps): update compose-ai-tools to v1 (#570)",
         "at": "2026-08-15T22:36:23+01:00",
         "author": "renovate[bot]",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "3fcc846d83941acff85589ea0e3afa71f2adc442",
-        "subject": "feat: support host-resolved remote material themes (#571)",
-        "at": "2026-08-15T21:19:28+01:00",
-        "author": "Yuri Schimke",
         "previewIds": [],
         "components": []
       }
