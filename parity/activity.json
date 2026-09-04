@@ -1,11 +1,27 @@
 {
   "schema": "compose-preview-activity/v1",
-  "generatedAt": "2026-09-04T16:03:06.261Z",
+  "generatedAt": "2026-09-04T16:25:51.208Z",
   "windowDays": 30,
   "code": {
     "repo": "yschimke/homeassistant-remotecompose",
     "ref": "main",
     "events": [
+      {
+        "sha": "a5a43e5b5fea00824cd6796b65a1676341c42b8e",
+        "subject": "chore(deps): update gradle to v9.7.1 (#605)",
+        "at": "2026-09-04T16:49:46+01:00",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "88fdba91df8f556747a7b035ace7904435b0adc4",
+        "subject": "fix(deps): update compose-ai-tools to v1.72.0 (#618)",
+        "at": "2026-09-04T16:49:36+01:00",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
       {
         "sha": "e3fa605827a9dc4c93871a456467411861dae5f3",
         "subject": "fix(wear): render previews through the embedded player, not the View one (#627)",
@@ -467,22 +483,6 @@
         "subject": "feat: support host-resolved remote material themes (#571)",
         "at": "2026-08-15T21:19:28+01:00",
         "author": "Yuri Schimke",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "57bbe2e7ce55a6a0ca4aa938a00a8e2e29e7ec3c",
-        "subject": "chore(deps): update anthropics/claude-code-action action to v1.0.193 (#565)",
-        "at": "2026-08-15T17:47:20Z",
-        "author": "renovate[bot]",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "419111c52a26ae58f6a013de0ecfac6e503235e9",
-        "subject": "chore(deps): update dependency dev.zacsweers.metro to v1.4.2 (#566)",
-        "at": "2026-08-15T17:47:17Z",
-        "author": "renovate[bot]",
         "previewIds": [],
         "components": []
       }
