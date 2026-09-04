@@ -5648,7 +5648,7 @@
     "ee.schimke.ha:rc-components (Terrazzo themes)"
   ],
   "renderer": "compose-preview 1.71.0",
-  "generatedAt": "2026-09-04T11:41:17.604Z",
+  "generatedAt": "2026-09-04T16:03:01.382Z",
   "liveBundle": {
     "path": "bundle/",
     "file": "bundle.png"

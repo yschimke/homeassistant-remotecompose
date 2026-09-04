@@ -1,11 +1,35 @@
 {
   "schema": "compose-preview-activity/v1",
-  "generatedAt": "2026-09-04T11:41:22.351Z",
+  "generatedAt": "2026-09-04T16:03:06.261Z",
   "windowDays": 30,
   "code": {
     "repo": "yschimke/homeassistant-remotecompose",
     "ref": "main",
     "events": [
+      {
+        "sha": "e3fa605827a9dc4c93871a456467411861dae5f3",
+        "subject": "fix(wear): render previews through the embedded player, not the View one (#627)",
+        "at": "2026-09-04T16:49:17+01:00",
+        "author": "Yuri Schimke",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "0b73959aaecaba3b3f2bf8798857c537a840095b",
+        "subject": "fix(integration): match rendered PNGs around the filename digest (#628)",
+        "at": "2026-09-04T16:48:46+01:00",
+        "author": "Yuri Schimke",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "ca36149403b77ce51daad2cf4c3af79267a7b465",
+        "subject": "ci(renovate): track the contracts artifacts as their own group (#626)",
+        "at": "2026-09-04T13:02:47+01:00",
+        "author": "Yuri Schimke",
+        "previewIds": [],
+        "components": []
+      },
       {
         "sha": "1480663da2fe9491a83d015008c84bdf2c6a38ef",
         "subject": "fix(deps): version data-render-core on its own line, and take plugin 1.71.0 (#625)",
@@ -459,30 +483,6 @@
         "subject": "chore(deps): update dependency dev.zacsweers.metro to v1.4.2 (#566)",
         "at": "2026-08-15T17:47:17Z",
         "author": "renovate[bot]",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "db9935769483f12d6a0cc4c8420993bd2e61df52",
-        "subject": "fix(deps): update dependency ch.qos.logback:logback-classic to v1.6.3 (#567)",
-        "at": "2026-08-15T17:21:32Z",
-        "author": "renovate[bot]",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "5b4c3453e926e95384d7120bf5f5c5e236249cd4",
-        "subject": "chore(deps): update dependency com.github.triplet.play to v4.1.1 (#568)",
-        "at": "2026-08-15T17:21:29Z",
-        "author": "renovate[bot]",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "a084d3b30318461d8cf34671d59b91eb126349fe",
-        "subject": "build(deps): update Remote Compose alphas to the alpha17 triple (#563)",
-        "at": "2026-08-13T16:59:44+01:00",
-        "author": "Yuri Schimke",
         "previewIds": [],
         "components": []
       }
