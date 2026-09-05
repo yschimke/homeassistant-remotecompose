@@ -62,7 +62,7 @@ compose-preview-plugin = "1.82.0"
 # (`Could not find ee.schimke.composeai:data-render-core:1.70.0`) and could
 # never merge. compose-ai-tools declares the same artifact against its own
 # `composeai-contracts` key, which is what this mirrors.
-composeai-contracts = "2.7.0"
+composeai-contracts = "2.8.0"
 tapmoc = "0.4.2"
 
 # Image loading (BitmapLoader / RemoteCompose named-bitmap resolution)
