@@ -37,3 +37,22 @@
 - Keep PR titles in conventional-commits form
   (`feat:`, `fix:`, `chore:`, `build:`, `ci:`, `docs:`, …); enforced
   by `.github/workflows/pr-title.yml` and consumed by release-please.
+- **The published catalog is reachable over MCP.** `.mcp.json` at the
+  repository root registers the hosted catalog server
+  (`compose-preview-catalog`, `POST https://preview.coo.ee/mcp`) for any
+  agent that reads project-scoped MCP config. Default to
+  `homeassistant-remotecompose`, this repository's own catalog, when a tool
+  takes a `catalog` argument; the endpoint is the aggregate one
+  deliberately, so the reference design systems (`m3-catalog`,
+  `wear-m3-catalog`) stay reachable when you want to compare against them.
+  No credential is committed: the file passes `X-Compose-Preview-Token:
+  ${COMPOSE_PREVIEW_TOKEN:-}`, which sends an empty header — read exactly
+  like no header — unless the session exports a grant token. Reading a
+  catalog needs a short-lived grant; `initialize`, `ping`, `tools/list`,
+  `request_access` and `poll_access` do not
+  ([compose-preview-server#277](https://github.com/yschimke/compose-preview-server/pull/277)),
+  so an agent can ask for one in-band: `request_access`, show the human the
+  `approveUrl` and `userCode`, poll `poll_access` until `approved`, then
+  export the bearer as `COMPOSE_PREVIEW_TOKEN` and reconnect the server — an
+  MCP host cannot inject a header its config never declared. A box older
+  than that change answers `401` to every message, handshake included.
