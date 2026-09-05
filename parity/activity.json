@@ -1,11 +1,19 @@
 {
   "schema": "compose-preview-activity/v1",
-  "generatedAt": "2026-09-05T21:05:47.621Z",
+  "generatedAt": "2026-09-05T21:52:06.766Z",
   "windowDays": 30,
   "code": {
     "repo": "yschimke/homeassistant-remotecompose",
     "ref": "main",
     "events": [
+      {
+        "sha": "8a422d8d760b69ccb35224dbceb7e7b7ba920489",
+        "subject": "feat: front the catalog with the full dashboard stack (#642)",
+        "at": "2026-09-05T22:37:41+01:00",
+        "author": "Yuri Schimke",
+        "previewIds": [],
+        "components": []
+      },
       {
         "sha": "75d6e19f8e57baa16e7a313bbd50f52414a38b47",
         "subject": "fix(deps): update dependency ee.schimke.composeai:data-render-core to v2.8.0 (#641)",
@@ -475,14 +483,6 @@
         "subject": "fix(deps): update compose-ai-tools to v1.10.0 (#579)",
         "at": "2026-08-16T22:22:12Z",
         "author": "renovate[bot]",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "15ea22c3c8413b96cbd53cd90a741aebfea1f265",
-        "subject": "fix(deps): update compose-ai-tools to 1.9.0 (#578)",
-        "at": "2026-08-16T19:45:49+01:00",
-        "author": "Yuri Schimke",
         "previewIds": [],
         "components": []
       }
