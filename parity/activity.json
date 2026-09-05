@@ -1,11 +1,19 @@
 {
   "schema": "compose-preview-activity/v1",
-  "generatedAt": "2026-09-05T11:07:46.475Z",
+  "generatedAt": "2026-09-05T11:32:24.956Z",
   "windowDays": 30,
   "code": {
     "repo": "yschimke/homeassistant-remotecompose",
     "ref": "main",
     "events": [
+      {
+        "sha": "e2ea052a805e407cc66e63d93d27ee2a2955e108",
+        "subject": "fix(deps): update compose-ai-tools to v1.79.0 (#636)",
+        "at": "2026-09-05T11:17:07Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
       {
         "sha": "01e94bf1b14a04c09f67c82abdaddae48f87f6e9",
         "subject": "fix(deps): update compose-ai-tools (#634)",
@@ -474,14 +482,6 @@
         "sha": "0d6a944cef5033ffaa03323f1d1b0a4f3d9319d3",
         "subject": "chore(deps): update yschimke/compose-ai-tools action to v1.8.0 (#574)",
         "at": "2026-08-16T00:12:30+01:00",
-        "author": "renovate[bot]",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "53008f4d5865dd18276f199a8ba576d282c17bd0",
-        "subject": "fix(deps): update dependency androidx.compose:compose-bom to v2026.08.00 (#569)",
-        "at": "2026-08-15T22:48:20Z",
         "author": "renovate[bot]",
         "previewIds": [],
         "components": []
