@@ -1,11 +1,27 @@
 {
   "schema": "compose-preview-activity/v1",
-  "generatedAt": "2026-09-05T01:23:23.802Z",
+  "generatedAt": "2026-09-05T11:07:46.475Z",
   "windowDays": 30,
   "code": {
     "repo": "yschimke/homeassistant-remotecompose",
     "ref": "main",
     "events": [
+      {
+        "sha": "01e94bf1b14a04c09f67c82abdaddae48f87f6e9",
+        "subject": "fix(deps): update compose-ai-tools (#634)",
+        "at": "2026-09-05T10:50:37Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "9d10ac5d475dfd4745daa1ec2475944a8fd2aada",
+        "subject": "chore: register the hosted catalog MCP server for agents (#633)",
+        "at": "2026-09-05T08:58:02+01:00",
+        "author": "Yuri Schimke",
+        "previewIds": [],
+        "components": []
+      },
       {
         "sha": "c3f8cd391b7ce9e50c4e6bb69e83669c28dd7d16",
         "subject": "fix(deps): update compose-ai-tools to v1.74.0 (#632)",
@@ -467,22 +483,6 @@
         "subject": "fix(deps): update dependency androidx.compose:compose-bom to v2026.08.00 (#569)",
         "at": "2026-08-15T22:48:20Z",
         "author": "renovate[bot]",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "e40d5a969b443cdac2fe8cd2c54eea72082d0102",
-        "subject": "fix(rc-components): build themed colours without a constant so ColorTheme is written (#573)",
-        "at": "2026-08-15T23:16:31+01:00",
-        "author": "Yuri Schimke",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "89c4d46e87825fb517598311250fc0d6279be117",
-        "subject": "feat: add Remote Compose launcher widget actions (#572)",
-        "at": "2026-08-15T22:46:27+01:00",
-        "author": "Yuri Schimke",
         "previewIds": [],
         "components": []
       }
