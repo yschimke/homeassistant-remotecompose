@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "compose-preview-catalog": {
+      "type": "http",
+      "url": "https://preview.coo.ee/mcp",
+      "headers": {
+        "X-Compose-Preview-Token": "${COMPOSE_PREVIEW_TOKEN:-}"
+      }
+    }
+  }
+}
