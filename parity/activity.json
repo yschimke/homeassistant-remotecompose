@@ -1,11 +1,19 @@
 {
   "schema": "compose-preview-activity/v1",
-  "generatedAt": "2026-09-05T11:32:24.956Z",
+  "generatedAt": "2026-09-05T13:54:39.888Z",
   "windowDays": 30,
   "code": {
     "repo": "yschimke/homeassistant-remotecompose",
     "ref": "main",
     "events": [
+      {
+        "sha": "8208e5dd3d3ca314f660f29a0de9e928568850e4",
+        "subject": "fix(deps): update compose-ai-tools to v1.80.0 (#637)",
+        "at": "2026-09-05T13:42:39Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
       {
         "sha": "e2ea052a805e407cc66e63d93d27ee2a2955e108",
         "subject": "fix(deps): update compose-ai-tools to v1.79.0 (#636)",
@@ -474,14 +482,6 @@
         "sha": "dd9ac9ac7dce920244b14dc9a44f62196d432d91",
         "subject": "fix(deps): update ktfmt.gradle to v0.27.0 (#554)",
         "at": "2026-08-16T00:18:01+01:00",
-        "author": "renovate[bot]",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "0d6a944cef5033ffaa03323f1d1b0a4f3d9319d3",
-        "subject": "chore(deps): update yschimke/compose-ai-tools action to v1.8.0 (#574)",
-        "at": "2026-08-16T00:12:30+01:00",
         "author": "renovate[bot]",
         "previewIds": [],
         "components": []
