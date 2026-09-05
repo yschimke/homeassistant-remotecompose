@@ -10,6 +10,7 @@
   "module": "previews",
   "modes": ["light", "dark"],
   "breakpoints": [{ "size": "compact", "widthDp": 360 }],
+  "display": { "hero": "Dashboard/Light" },
   "groups": [
     {
       "name": "Themes",
