@@ -1,11 +1,19 @@
 {
   "schema": "compose-preview-activity/v1",
-  "generatedAt": "2026-09-04T23:24:28.266Z",
+  "generatedAt": "2026-09-05T01:23:23.802Z",
   "windowDays": 30,
   "code": {
     "repo": "yschimke/homeassistant-remotecompose",
     "ref": "main",
     "events": [
+      {
+        "sha": "c3f8cd391b7ce9e50c4e6bb69e83669c28dd7d16",
+        "subject": "fix(deps): update compose-ai-tools to v1.74.0 (#632)",
+        "at": "2026-09-05T01:07:37Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
       {
         "sha": "42671528907dc6a82bc2bf67d2d61df2f0896a71",
         "subject": "fix(deps): update compose-ai-tools (#631)",
@@ -475,14 +483,6 @@
         "subject": "feat: add Remote Compose launcher widget actions (#572)",
         "at": "2026-08-15T22:46:27+01:00",
         "author": "Yuri Schimke",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "ea0e91bdf1200ec6f88ad90ade89d0811e656d87",
-        "subject": "fix(deps): update compose-ai-tools to v1 (#570)",
-        "at": "2026-08-15T22:36:23+01:00",
-        "author": "renovate[bot]",
         "previewIds": [],
         "components": []
       }
