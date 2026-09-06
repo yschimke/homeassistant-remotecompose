@@ -1,11 +1,19 @@
 {
   "schema": "compose-preview-activity/v1",
-  "generatedAt": "2026-09-06T14:01:32.382Z",
+  "generatedAt": "2026-09-06T14:25:37.128Z",
   "windowDays": 30,
   "code": {
     "repo": "yschimke/homeassistant-remotecompose",
     "ref": "main",
     "events": [
+      {
+        "sha": "e2cb71538120938e29da665346e6addedea12ac7",
+        "subject": "fix(deps): update dependency ee.schimke.composeai:data-render-core to v2.9.0 (#646)",
+        "at": "2026-09-06T14:10:18Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
       {
         "sha": "c5e07f0487b3c9b6a39c48db42e8d15be136e8e9",
         "subject": "fix(deps): update compose-ai-tools to v1.85.0 (#645)",
@@ -474,14 +482,6 @@
         "sha": "e368c965c95d5d8f38b22db22360ff7883cf4e42",
         "subject": "fix(deps): update compose-ai-tools (#581)",
         "at": "2026-08-17T12:46:10Z",
-        "author": "renovate[bot]",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "275cb7f761d940e6cb8cf9705099a27efc692752",
-        "subject": "fix(deps): update dependency androidx.compose.material3:material3 to v1.5.0-alpha26 (#582)",
-        "at": "2026-08-16T23:44:47Z",
         "author": "renovate[bot]",
         "previewIds": [],
         "components": []
