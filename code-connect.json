@@ -7,7 +7,7 @@
     "ref": "main",
     "module": ":previews"
   },
-  "generatedAt": "2026-09-05T21:52:04.520Z",
+  "generatedAt": "2026-09-06T05:50:29.120Z",
   "mappings": [
     {
       "componentId": "Theme/Material3-Light",
@@ -31,7 +31,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         },
         {
           "name": "darkTheme",
@@ -42,7 +43,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         }
       ],
       "figmaSvg": "figma/theme-material3-light.svg"
@@ -69,7 +71,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         },
         {
           "name": "darkTheme",
@@ -80,7 +83,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         }
       ],
       "figmaSvg": "figma/theme-material3-dark.svg"
@@ -107,7 +111,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         },
         {
           "name": "darkTheme",
@@ -118,7 +123,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         }
       ],
       "figmaSvg": "figma/theme-home-light.svg"
@@ -145,7 +151,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         },
         {
           "name": "darkTheme",
@@ -156,7 +163,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         }
       ],
       "figmaSvg": "figma/theme-home-dark.svg"
@@ -183,7 +191,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         },
         {
           "name": "darkTheme",
@@ -194,7 +203,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         }
       ],
       "figmaSvg": "figma/theme-mushroom-light.svg"
@@ -221,7 +231,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         },
         {
           "name": "darkTheme",
@@ -232,7 +243,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         }
       ],
       "figmaSvg": "figma/theme-mushroom-dark.svg"
@@ -259,7 +271,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         },
         {
           "name": "darkTheme",
@@ -270,7 +283,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         }
       ],
       "figmaSvg": "figma/theme-minimalist-light.svg"
@@ -297,7 +311,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         },
         {
           "name": "darkTheme",
@@ -308,7 +323,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         }
       ],
       "figmaSvg": "figma/theme-minimalist-dark.svg"
@@ -335,7 +351,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         },
         {
           "name": "darkTheme",
@@ -346,7 +363,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         }
       ],
       "figmaSvg": "figma/theme-kiosk-light.svg"
@@ -373,7 +391,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         },
         {
           "name": "darkTheme",
@@ -384,7 +403,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         }
       ],
       "figmaSvg": "figma/theme-kiosk-dark.svg"
@@ -411,7 +431,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         },
         {
           "name": "content",
@@ -422,7 +443,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         }
       ],
       "figmaSvg": "figma/card-button-light.svg"
@@ -449,7 +471,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         },
         {
           "name": "content",
@@ -460,7 +483,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         }
       ],
       "figmaSvg": "figma/card-button-dark.svg"
@@ -487,7 +511,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         },
         {
           "name": "content",
@@ -498,7 +523,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         }
       ],
       "figmaSvg": "figma/card-entity-light.svg"
@@ -525,7 +551,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         },
         {
           "name": "content",
@@ -536,7 +563,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         }
       ],
       "figmaSvg": "figma/card-entity-dark.svg"
@@ -563,7 +591,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         },
         {
           "name": "content",
@@ -574,7 +603,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         }
       ],
       "figmaSvg": "figma/card-entities-light.svg"
@@ -601,7 +631,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         },
         {
           "name": "content",
@@ -612,7 +643,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         }
       ],
       "figmaSvg": "figma/card-entities-dark.svg"
@@ -639,7 +671,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         },
         {
           "name": "content",
@@ -650,7 +683,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         }
       ],
       "figmaSvg": "figma/card-glance-light.svg"
@@ -677,7 +711,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         },
         {
           "name": "content",
@@ -688,7 +723,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         }
       ],
       "figmaSvg": "figma/card-glance-dark.svg"
@@ -715,7 +751,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         },
         {
           "name": "content",
@@ -726,7 +763,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         }
       ],
       "figmaSvg": "figma/card-tile-light.svg"
@@ -753,7 +791,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         },
         {
           "name": "content",
@@ -764,7 +803,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         }
       ],
       "figmaSvg": "figma/card-tile-dark.svg"
@@ -791,7 +831,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         },
         {
           "name": "content",
@@ -802,7 +843,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         }
       ],
       "figmaSvg": "figma/card-light-light.svg"
@@ -829,7 +871,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         },
         {
           "name": "content",
@@ -840,7 +883,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         }
       ],
       "figmaSvg": "figma/card-light-dark.svg"
@@ -867,7 +911,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         },
         {
           "name": "content",
@@ -878,7 +923,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         }
       ],
       "figmaSvg": "figma/card-thermostat-light.svg"
@@ -905,7 +951,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         },
         {
           "name": "content",
@@ -916,7 +963,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         }
       ],
       "figmaSvg": "figma/card-thermostat-dark.svg"
@@ -943,7 +991,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         },
         {
           "name": "content",
@@ -954,7 +1003,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         }
       ],
       "figmaSvg": "figma/card-gauge-light.svg"
@@ -981,7 +1031,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         },
         {
           "name": "content",
@@ -992,7 +1043,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         }
       ],
       "figmaSvg": "figma/card-gauge-dark.svg"
@@ -1019,7 +1071,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         },
         {
           "name": "content",
@@ -1030,7 +1083,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         }
       ],
       "figmaSvg": "figma/card-weather-light.svg"
@@ -1057,7 +1111,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         },
         {
           "name": "content",
@@ -1068,7 +1123,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         }
       ],
       "figmaSvg": "figma/card-weather-dark.svg"
@@ -1095,7 +1151,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         },
         {
           "name": "content",
@@ -1106,7 +1163,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         }
       ],
       "figmaSvg": "figma/card-media-light.svg"
@@ -1133,7 +1191,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         },
         {
           "name": "content",
@@ -1144,7 +1203,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         }
       ],
       "figmaSvg": "figma/card-media-dark.svg"
@@ -1171,7 +1231,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         },
         {
           "name": "content",
@@ -1182,7 +1243,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         }
       ],
       "figmaSvg": "figma/card-alarm-light.svg"
@@ -1209,7 +1271,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         },
         {
           "name": "content",
@@ -1220,7 +1283,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         }
       ],
       "figmaSvg": "figma/card-alarm-dark.svg"
@@ -1247,7 +1311,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         },
         {
           "name": "content",
@@ -1258,7 +1323,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         }
       ],
       "figmaSvg": "figma/card-todo-light.svg"
@@ -1285,7 +1351,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         },
         {
           "name": "content",
@@ -1296,7 +1363,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         }
       ],
       "figmaSvg": "figma/card-todo-dark.svg"
@@ -1323,7 +1391,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         },
         {
           "name": "content",
@@ -1334,7 +1403,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         }
       ],
       "figmaSvg": "figma/card-calendar-light.svg"
@@ -1361,7 +1431,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         },
         {
           "name": "content",
@@ -1372,7 +1443,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         }
       ],
       "figmaSvg": "figma/card-calendar-dark.svg"
@@ -1399,7 +1471,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         },
         {
           "name": "content",
@@ -1410,7 +1483,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         }
       ],
       "figmaSvg": "figma/card-area-light.svg"
@@ -1437,7 +1511,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         },
         {
           "name": "content",
@@ -1448,7 +1523,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         }
       ],
       "figmaSvg": "figma/card-area-dark.svg"
@@ -1475,7 +1551,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         },
         {
           "name": "content",
@@ -1486,7 +1563,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         }
       ],
       "figmaSvg": "figma/card-sensor-light.svg"
@@ -1513,7 +1591,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         },
         {
           "name": "content",
@@ -1524,7 +1603,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         }
       ],
       "figmaSvg": "figma/card-sensor-dark.svg"
@@ -1551,7 +1631,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         },
         {
           "name": "content",
@@ -1562,7 +1643,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         }
       ],
       "figmaSvg": "figma/card-statistic-light.svg"
@@ -1589,7 +1671,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         },
         {
           "name": "content",
@@ -1600,7 +1683,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         }
       ],
       "figmaSvg": "figma/card-statistic-dark.svg"
@@ -1627,7 +1711,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         },
         {
           "name": "content",
@@ -1638,7 +1723,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         }
       ],
       "figmaSvg": "figma/card-markdown-light.svg"
@@ -1665,7 +1751,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         },
         {
           "name": "content",
@@ -1676,7 +1763,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         }
       ],
       "figmaSvg": "figma/card-markdown-dark.svg"
@@ -1703,7 +1791,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         },
         {
           "name": "content",
@@ -1714,7 +1803,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         }
       ],
       "figmaSvg": "figma/card-clock-light.svg"
@@ -1741,7 +1831,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         },
         {
           "name": "content",
@@ -1752,7 +1843,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         }
       ],
       "figmaSvg": "figma/card-clock-dark.svg"
@@ -1779,7 +1871,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         },
         {
           "name": "content",
@@ -1790,7 +1883,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         }
       ],
       "figmaSvg": "figma/layout-verticalstack-light.svg"
@@ -1817,7 +1911,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         },
         {
           "name": "content",
@@ -1828,7 +1923,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         }
       ],
       "figmaSvg": "figma/layout-verticalstack-dark.svg"
@@ -1855,7 +1951,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         },
         {
           "name": "content",
@@ -1866,7 +1963,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         }
       ],
       "figmaSvg": "figma/layout-horizontalstack-light.svg"
@@ -1893,7 +1991,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         },
         {
           "name": "content",
@@ -1904,7 +2003,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         }
       ],
       "figmaSvg": "figma/layout-horizontalstack-dark.svg"
@@ -1931,7 +2031,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         },
         {
           "name": "content",
@@ -1942,7 +2043,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         }
       ],
       "figmaSvg": "figma/layout-grid-light.svg"
@@ -1969,7 +2071,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         },
         {
           "name": "content",
@@ -1980,7 +2083,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         }
       ],
       "figmaSvg": "figma/layout-grid-dark.svg"
@@ -2007,7 +2111,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         },
         {
           "name": "content",
@@ -2018,7 +2123,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         }
       ],
       "figmaSvg": "figma/layout-heading-light.svg"
@@ -2045,7 +2151,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         },
         {
           "name": "content",
@@ -2056,7 +2163,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         }
       ],
       "figmaSvg": "figma/layout-heading-dark.svg"
@@ -2083,7 +2191,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         },
         {
           "name": "content",
@@ -2094,7 +2203,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         }
       ],
       "figmaSvg": "figma/card-shutter-light.svg"
@@ -2121,7 +2231,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         },
         {
           "name": "content",
@@ -2132,7 +2243,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         }
       ],
       "figmaSvg": "figma/card-shutter-dark.svg"
@@ -2159,7 +2271,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         },
         {
           "name": "content",
@@ -2170,7 +2283,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         }
       ],
       "figmaSvg": "figma/card-garage-light.svg"
@@ -2197,7 +2311,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         },
         {
           "name": "content",
@@ -2208,7 +2323,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         }
       ],
       "figmaSvg": "figma/card-garage-dark.svg"
@@ -2235,7 +2351,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         }
       ],
       "figmaSvg": "figma/dashboard-light.svg"
@@ -2262,7 +2379,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         }
       ],
       "figmaSvg": "figma/dashboard-dark.svg"
@@ -2289,7 +2407,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         }
       ],
       "figmaSvg": "figma/brand-appicon-light.svg"
@@ -2316,7 +2435,8 @@
           "composableSlotReceiver": null,
           "nullable": false,
           "noArgConstructible": false,
-          "noArgFactory": null
+          "noArgFactory": null,
+          "scopeDslReceiver": null
         }
       ],
       "figmaSvg": "figma/brand-appicon-dark.svg"

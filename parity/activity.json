@@ -1,11 +1,19 @@
 {
   "schema": "compose-preview-activity/v1",
-  "generatedAt": "2026-09-05T21:52:06.766Z",
+  "generatedAt": "2026-09-06T05:50:31.650Z",
   "windowDays": 30,
   "code": {
     "repo": "yschimke/homeassistant-remotecompose",
     "ref": "main",
     "events": [
+      {
+        "sha": "df411b80a6e28e004aa16213144c49565302b069",
+        "subject": "fix(deps): update compose-ai-tools to v1.83.0 (#643)",
+        "at": "2026-09-06T05:36:24Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
       {
         "sha": "8a422d8d760b69ccb35224dbceb7e7b7ba920489",
         "subject": "feat: front the catalog with the full dashboard stack (#642)",
@@ -474,14 +482,6 @@
         "sha": "bcc9d13069481577db6f40bd009bb8ba99055664",
         "subject": "chore(deps): update yschimke/compose-ai-tools action to v1.10.0 (#580)",
         "at": "2026-08-16T22:47:03Z",
-        "author": "renovate[bot]",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "69cebded8441fc92098dc05c2ff6f74b07d99b35",
-        "subject": "fix(deps): update compose-ai-tools to v1.10.0 (#579)",
-        "at": "2026-08-16T22:22:12Z",
         "author": "renovate[bot]",
         "previewIds": [],
         "components": []
