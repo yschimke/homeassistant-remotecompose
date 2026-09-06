@@ -1,11 +1,19 @@
 {
   "schema": "compose-preview-activity/v1",
-  "generatedAt": "2026-09-06T05:50:31.650Z",
+  "generatedAt": "2026-09-06T10:40:34.828Z",
   "windowDays": 30,
   "code": {
     "repo": "yschimke/homeassistant-remotecompose",
     "ref": "main",
     "events": [
+      {
+        "sha": "ce9f2e5065ea3489b925d73f53d2987b35d4c404",
+        "subject": "fix(deps): update compose-ai-tools to v1.84.0 (#644)",
+        "at": "2026-09-06T10:28:18Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
       {
         "sha": "df411b80a6e28e004aa16213144c49565302b069",
         "subject": "fix(deps): update compose-ai-tools to v1.83.0 (#643)",
@@ -474,14 +482,6 @@
         "sha": "03b497556277349be87b59b20ba1a33b8562c54c",
         "subject": "fix(deps): update okhttp to v5.5.0 (#583)",
         "at": "2026-08-16T23:44:44Z",
-        "author": "renovate[bot]",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "bcc9d13069481577db6f40bd009bb8ba99055664",
-        "subject": "chore(deps): update yschimke/compose-ai-tools action to v1.10.0 (#580)",
-        "at": "2026-08-16T22:47:03Z",
         "author": "renovate[bot]",
         "previewIds": [],
         "components": []
