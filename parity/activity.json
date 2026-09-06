@@ -1,11 +1,19 @@
 {
   "schema": "compose-preview-activity/v1",
-  "generatedAt": "2026-09-06T14:25:37.128Z",
+  "generatedAt": "2026-09-06T23:14:42.400Z",
   "windowDays": 30,
   "code": {
     "repo": "yschimke/homeassistant-remotecompose",
     "ref": "main",
     "events": [
+      {
+        "sha": "924fc78895b85601693c8dc7909b00b38ffc81f0",
+        "subject": "fix(deps): update dependency ee.schimke.composeai:data-render-core to v2.10.0 (#647)",
+        "at": "2026-09-06T22:59:31Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
       {
         "sha": "e2cb71538120938e29da665346e6addedea12ac7",
         "subject": "fix(deps): update dependency ee.schimke.composeai:data-render-core to v2.9.0 (#646)",
@@ -474,14 +482,6 @@
         "sha": "d0605593157771a6fe6822e6ef9424f1990bf08f",
         "subject": "fix(deps): update compose-ai-tools to v1.12.0 (#584)",
         "at": "2026-08-17T13:09:05Z",
-        "author": "renovate[bot]",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "e368c965c95d5d8f38b22db22360ff7883cf4e42",
-        "subject": "fix(deps): update compose-ai-tools (#581)",
-        "at": "2026-08-17T12:46:10Z",
         "author": "renovate[bot]",
         "previewIds": [],
         "components": []
