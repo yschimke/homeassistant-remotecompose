@@ -1,11 +1,19 @@
 {
   "schema": "compose-preview-activity/v1",
-  "generatedAt": "2026-09-06T10:40:34.828Z",
+  "generatedAt": "2026-09-06T14:01:32.382Z",
   "windowDays": 30,
   "code": {
     "repo": "yschimke/homeassistant-remotecompose",
     "ref": "main",
     "events": [
+      {
+        "sha": "c5e07f0487b3c9b6a39c48db42e8d15be136e8e9",
+        "subject": "fix(deps): update compose-ai-tools to v1.85.0 (#645)",
+        "at": "2026-09-06T13:46:23Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
       {
         "sha": "ce9f2e5065ea3489b925d73f53d2987b35d4c404",
         "subject": "fix(deps): update compose-ai-tools to v1.84.0 (#644)",
@@ -474,14 +482,6 @@
         "sha": "275cb7f761d940e6cb8cf9705099a27efc692752",
         "subject": "fix(deps): update dependency androidx.compose.material3:material3 to v1.5.0-alpha26 (#582)",
         "at": "2026-08-16T23:44:47Z",
-        "author": "renovate[bot]",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "03b497556277349be87b59b20ba1a33b8562c54c",
-        "subject": "fix(deps): update okhttp to v5.5.0 (#583)",
-        "at": "2026-08-16T23:44:44Z",
         "author": "renovate[bot]",
         "previewIds": [],
         "components": []

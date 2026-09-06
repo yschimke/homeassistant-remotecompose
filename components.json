@@ -1,0 +1,2046 @@
+{
+    "schemaVersion": 2,
+    "module": "previews",
+    "variant": "debug",
+    "components": [
+        {
+            "canonicalId": "previews/ee.schimke.ha.previews.AnimationPreviewsKt.GaugeFrameHost",
+            "componentIds": [],
+            "symbol": {
+                "jvmOwner": "ee.schimke.ha.previews.AnimationPreviewsKt",
+                "callable": "ee.schimke.ha.previews.GaugeFrameHost",
+                "name": "GaugeFrameHost",
+                "origin": "PROJECT",
+                "jvmName": "GaugeFrameHost",
+                "descriptor": "(Lee/schimke/ha/rc/components/HaTheme;Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;I)V",
+                "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/AnimationPreviews.kt",
+                "docs": "unavailable",
+                "receiver": null
+            },
+            "parameters": [
+                {
+                    "name": "theme",
+                    "type": "HaTheme",
+                    "typeFqn": "ee.schimke.ha.rc.components.HaTheme",
+                    "hasDefault": false,
+                    "composableSlot": false,
+                    "composableSlotReceiver": null,
+                    "nullable": false,
+                    "noArgConstructible": false,
+                    "noArgFactory": null,
+                    "scopeDslReceiver": null,
+                    "lambdaReturnTypeFqn": null
+                },
+                {
+                    "name": "content",
+                    "type": "() -> Unit",
+                    "typeFqn": "kotlin.Function0",
+                    "hasDefault": false,
+                    "composableSlot": true,
+                    "composableSlotReceiver": null,
+                    "nullable": false,
+                    "noArgConstructible": false,
+                    "noArgFactory": null,
+                    "scopeDslReceiver": null,
+                    "lambdaReturnTypeFqn": "kotlin.Unit"
+                }
+            ],
+            "slots": [
+                {
+                    "name": "content",
+                    "required": true,
+                    "receiverScope": null
+                }
+            ],
+            "bindings": [
+                {
+                    "previewId": "ee.schimke.ha.previews.AnimationPreviewsKt.Gauge_Animation_Dark_gauge-anim__dark_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.AnimationPreviewsKt.Gauge_Animation_Light_gauge-anim__light_",
+                    "componentId": null
+                }
+            ],
+            "code": {
+                "call": null,
+                "imports": [],
+                "refusedReason": "not public or internal, so a generated file cannot call it",
+                "requiredOptIns": [],
+                "androidxOptIns": []
+            },
+            "signatureKnown": true,
+            "callableFromAnotherFile": false,
+            "hasTypeParameters": false,
+            "hasContextReceivers": false,
+            "overloadsCollided": false,
+            "requiredOptIns": [],
+            "androidxOptIns": []
+        },
+        {
+            "canonicalId": "previews/ee.schimke.ha.previews.AppIconPreviewsKt.AppIconShowcase",
+            "componentIds": [],
+            "symbol": {
+                "jvmOwner": "ee.schimke.ha.previews.AppIconPreviewsKt",
+                "callable": "ee.schimke.ha.previews.AppIconShowcase",
+                "name": "AppIconShowcase",
+                "origin": "PROJECT",
+                "jvmName": "AppIconShowcase",
+                "descriptor": "(ZLandroidx/compose/runtime/Composer;I)V",
+                "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/AppIconPreviews.kt",
+                "docs": "unavailable",
+                "receiver": null
+            },
+            "parameters": [
+                {
+                    "name": "darkTheme",
+                    "type": "Boolean",
+                    "typeFqn": "kotlin.Boolean",
+                    "hasDefault": false,
+                    "composableSlot": false,
+                    "composableSlotReceiver": null,
+                    "nullable": false,
+                    "noArgConstructible": false,
+                    "noArgFactory": null,
+                    "scopeDslReceiver": null,
+                    "lambdaReturnTypeFqn": null
+                }
+            ],
+            "slots": [],
+            "bindings": [
+                {
+                    "previewId": "ee.schimke.ha.previews.AppIconPreviewsKt.AppIcon_Dark_app-icon__dark_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.AppIconPreviewsKt.AppIcon_Light_app-icon__light_",
+                    "componentId": null
+                }
+            ],
+            "code": {
+                "call": null,
+                "imports": [],
+                "refusedReason": "not public or internal, so a generated file cannot call it",
+                "requiredOptIns": [],
+                "androidxOptIns": []
+            },
+            "signatureKnown": true,
+            "callableFromAnotherFile": false,
+            "hasTypeParameters": false,
+            "hasContextReceivers": false,
+            "overloadsCollided": false,
+            "requiredOptIns": [],
+            "androidxOptIns": []
+        },
+        {
+            "canonicalId": "previews/ee.schimke.ha.previews.CardPreviewMatrixKt.CardPreviewMatrix",
+            "componentIds": [],
+            "symbol": {
+                "jvmOwner": "ee.schimke.ha.previews.CardPreviewMatrixKt",
+                "callable": "ee.schimke.ha.previews.CardPreviewMatrix",
+                "name": "CardPreviewMatrix",
+                "origin": "PROJECT",
+                "jvmName": "CardPreviewMatrix",
+                "descriptor": "(Lee/schimke/ha/model/CardConfig;Lee/schimke/ha/model/HaSnapshot;Lee/schimke/ha/previews/WidgetGridSize;ILjava/lang/String;Lee/schimke/ha/rc/components/PictureImageStrategy;Landroidx/compose/runtime/Composer;II)V",
+                "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/CardPreviewMatrix.kt",
+                "docs": "unavailable",
+                "receiver": null
+            },
+            "parameters": [
+                {
+                    "name": "card",
+                    "type": "CardConfig",
+                    "typeFqn": "ee.schimke.ha.model.CardConfig",
+                    "hasDefault": false,
+                    "composableSlot": false,
+                    "composableSlotReceiver": null,
+                    "nullable": false,
+                    "noArgConstructible": false,
+                    "noArgFactory": null,
+                    "scopeDslReceiver": null,
+                    "lambdaReturnTypeFqn": null
+                },
+                {
+                    "name": "snapshot",
+                    "type": "HaSnapshot",
+                    "typeFqn": "ee.schimke.ha.model.HaSnapshot",
+                    "hasDefault": false,
+                    "composableSlot": false,
+                    "composableSlotReceiver": null,
+                    "nullable": false,
+                    "noArgConstructible": false,
+                    "noArgFactory": null,
+                    "scopeDslReceiver": null,
+                    "lambdaReturnTypeFqn": null
+                },
+                {
+                    "name": "baseGridSize",
+                    "type": "WidgetGridSize",
+                    "typeFqn": "ee.schimke.ha.previews.WidgetGridSize",
+                    "hasDefault": false,
+                    "composableSlot": false,
+                    "composableSlotReceiver": null,
+                    "nullable": false,
+                    "noArgConstructible": false,
+                    "noArgFactory": null,
+                    "scopeDslReceiver": null,
+                    "lambdaReturnTypeFqn": null
+                },
+                {
+                    "name": "appWidthDp",
+                    "type": "Int",
+                    "typeFqn": "kotlin.Int",
+                    "hasDefault": true,
+                    "composableSlot": false,
+                    "composableSlotReceiver": null,
+                    "nullable": false,
+                    "noArgConstructible": false,
+                    "noArgFactory": null,
+                    "scopeDslReceiver": null,
+                    "lambdaReturnTypeFqn": null
+                },
+                {
+                    "name": "label",
+                    "type": "String?",
+                    "typeFqn": "kotlin.String",
+                    "hasDefault": true,
+                    "composableSlot": false,
+                    "composableSlotReceiver": null,
+                    "nullable": true,
+                    "noArgConstructible": false,
+                    "noArgFactory": null,
+                    "scopeDslReceiver": null,
+                    "lambdaReturnTypeFqn": null
+                },
+                {
+                    "name": "imageStrategy",
+                    "type": "PictureImageStrategy?",
+                    "typeFqn": "ee.schimke.ha.rc.components.PictureImageStrategy",
+                    "hasDefault": true,
+                    "composableSlot": false,
+                    "composableSlotReceiver": null,
+                    "nullable": true,
+                    "noArgConstructible": false,
+                    "noArgFactory": null,
+                    "scopeDslReceiver": null,
+                    "lambdaReturnTypeFqn": null
+                }
+            ],
+            "slots": [],
+            "bindings": [
+                {
+                    "previewId": "ee.schimke.ha.previews.CardPreviewMatrixKt.CardPreviewMatrix_AlarmPanel_matrix___alarm-panel",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.CardPreviewMatrixKt.CardPreviewMatrix_Button_matrix___button",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.CardPreviewMatrixKt.CardPreviewMatrix_Calendar_matrix___calendar",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.CardPreviewMatrixKt.CardPreviewMatrix_Entities_matrix___entities",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.CardPreviewMatrixKt.CardPreviewMatrix_Entity_matrix___entity",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.CardPreviewMatrixKt.CardPreviewMatrix_Gauge_matrix___gauge",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.CardPreviewMatrixKt.CardPreviewMatrix_HistoryGraph_matrix___history-graph",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.CardPreviewMatrixKt.CardPreviewMatrix_Humidifier_matrix___humidifier",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.CardPreviewMatrixKt.CardPreviewMatrix_Light_matrix___light",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.CardPreviewMatrixKt.CardPreviewMatrix_Logbook_matrix___logbook",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.CardPreviewMatrixKt.CardPreviewMatrix_Markdown_matrix___markdown",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.CardPreviewMatrixKt.CardPreviewMatrix_MediaControl_matrix___media-control",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.CardPreviewMatrixKt.CardPreviewMatrix_PictureEntity_matrix___picture-entity",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.CardPreviewMatrixKt.CardPreviewMatrix_Sensor_matrix___sensor",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.CardPreviewMatrixKt.CardPreviewMatrix_Statistic_matrix___statistic",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.CardPreviewMatrixKt.CardPreviewMatrix_Thermostat_matrix___thermostat",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.CardPreviewMatrixKt.CardPreviewMatrix_Tile_matrix___tile",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.CardPreviewMatrixKt.CardPreviewMatrix_TodoList_matrix___todo-list",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.CardPreviewMatrixKt.CardPreviewMatrix_WeatherForecast_matrix___weather-forecast",
+                    "componentId": null
+                }
+            ],
+            "code": {
+                "call": null,
+                "imports": [],
+                "refusedReason": "no placeholder can be written for required parameter `card: CardConfig`",
+                "requiredOptIns": [],
+                "androidxOptIns": []
+            },
+            "signatureKnown": true,
+            "callableFromAnotherFile": true,
+            "hasTypeParameters": false,
+            "hasContextReceivers": false,
+            "overloadsCollided": false,
+            "requiredOptIns": [],
+            "androidxOptIns": []
+        },
+        {
+            "canonicalId": "previews/ee.schimke.ha.previews.CardPreviewsKt.CardHost",
+            "componentIds": [],
+            "symbol": {
+                "jvmOwner": "ee.schimke.ha.previews.CardPreviewsKt",
+                "callable": "ee.schimke.ha.previews.CardHost",
+                "name": "CardHost",
+                "origin": "PROJECT",
+                "jvmName": "CardHost",
+                "descriptor": "(Lee/schimke/ha/rc/components/HaTheme;Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;I)V",
+                "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
+                "docs": "unavailable",
+                "receiver": null
+            },
+            "parameters": [
+                {
+                    "name": "theme",
+                    "type": "HaTheme",
+                    "typeFqn": "ee.schimke.ha.rc.components.HaTheme",
+                    "hasDefault": false,
+                    "composableSlot": false,
+                    "composableSlotReceiver": null,
+                    "nullable": false,
+                    "noArgConstructible": false,
+                    "noArgFactory": null,
+                    "scopeDslReceiver": null,
+                    "lambdaReturnTypeFqn": null
+                },
+                {
+                    "name": "content",
+                    "type": "() -> Unit",
+                    "typeFqn": "kotlin.Function0",
+                    "hasDefault": false,
+                    "composableSlot": true,
+                    "composableSlotReceiver": null,
+                    "nullable": false,
+                    "noArgConstructible": false,
+                    "noArgFactory": null,
+                    "scopeDslReceiver": null,
+                    "lambdaReturnTypeFqn": "kotlin.Unit"
+                }
+            ],
+            "slots": [
+                {
+                    "name": "content",
+                    "required": true,
+                    "receiverScope": null
+                }
+            ],
+            "bindings": [
+                {
+                    "previewId": "ee.schimke.ha.previews.CardPreviewsKt.AlarmPanel_Dark_alarm-panel__dark_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.CardPreviewsKt.AlarmPanel_Light_alarm-panel__light_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Area_Dark_area__dark_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Area_Light_area__light_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.CardPreviewsKt.BambuAms_Dark_bambu_ams__dark_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.CardPreviewsKt.BambuAms_Light_bambu_ams__light_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.CardPreviewsKt.BambuPrintControl_Dark_bambu_print-control__dark_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.CardPreviewsKt.BambuPrintControl_Light_bambu_print-control__light_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.CardPreviewsKt.BambuPrintStatus_Dark_bambu_print-status__dark_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.CardPreviewsKt.BambuPrintStatus_Light_bambu_print-status__light_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.CardPreviewsKt.BambuSpool_Dark_bambu_spool__dark_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.CardPreviewsKt.BambuSpool_Light_bambu_spool__light_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Button_Dark_button__dark_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Button_Light_button__light_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Button_On_Dark_button_on__dark_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Button_On_Light_button_on__light_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Calendar_Dark_calendar__dark_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Calendar_Light_calendar__light_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Clock_Dark_clock__dark_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Clock_Light_clock__light_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Clock_Seconds_clock__seconds_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Clock_Zone_clock__zone_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Entities_Dark_entities__dark_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Entities_Light_entities__light_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.CardPreviewsKt.EntityFilter_Dark_entity-filter__dark_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.CardPreviewsKt.EntityFilter_Light_entity-filter__light_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Entity_Dark_entity__dark_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Entity_Light_entity__light_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Gauge_Dark_gauge__dark_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Gauge_Light_gauge__light_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Glance_Dark_glance__dark_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Glance_Light_glance__light_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Grid_Dark_grid__dark_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Grid_Light_grid__light_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Heading_Dark_heading__dark_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Heading_Light_heading__light_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.CardPreviewsKt.HistoryGraphNoData_Dark_history-graph_no-data__dark_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.CardPreviewsKt.HistoryGraphNoData_Light_history-graph_no-data__light_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.CardPreviewsKt.HistoryGraph_Dark_history-graph__dark_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.CardPreviewsKt.HistoryGraph_Light_history-graph__light_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.CardPreviewsKt.HorizontalStack_Dark_horizontal-stack__dark_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.CardPreviewsKt.HorizontalStack_Light_horizontal-stack__light_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Humidifier_Dark_humidifier__dark_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Humidifier_Light_humidifier__light_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.CardPreviewsKt.LightCard_Dark_light_card__dark_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.CardPreviewsKt.LightCard_Light_light_card__light_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Logbook_Dark_logbook__dark_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Logbook_Light_logbook__light_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Markdown_Dark_markdown__dark_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Markdown_Light_markdown__light_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.CardPreviewsKt.MediaControl_Dark_media-control__dark_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.CardPreviewsKt.MediaControl_Light_media-control__light_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.CardPreviewsKt.PictureElements_Dark_picture-elements__dark_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.CardPreviewsKt.PictureElements_Light_picture-elements__light_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.CardPreviewsKt.PictureEntity_Dark_picture-entity__dark_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.CardPreviewsKt.PictureEntity_Light_picture-entity__light_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.CardPreviewsKt.PictureGlance_Dark_picture-glance__dark_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.CardPreviewsKt.PictureGlance_Light_picture-glance__light_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Picture_Dark_picture__dark_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Picture_Light_picture__light_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Sensor_Dark_sensor__dark_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Sensor_Light_sensor__light_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Statistic_Dark_statistic__dark_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Statistic_Light_statistic__light_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.CardPreviewsKt.StatisticsGraph_Dark_statistics-graph__dark_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.CardPreviewsKt.StatisticsGraph_Light_statistics-graph__light_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Thermostat_Dark_thermostat__dark_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Thermostat_Light_thermostat__light_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Tile_Cover_States_tile_cover__light_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Tile_Light_States_tile_light__light_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Tile_Lock_States_tile_lock__light_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.CardPreviewsKt.TodoList_Dark_todo-list__dark_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.CardPreviewsKt.TodoList_Light_todo-list__light_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Unsupported_Dark_unsupported__dark_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Unsupported_Light_unsupported__light_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.CardPreviewsKt.VerticalStack_Dark_vertical-stack__dark_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.CardPreviewsKt.VerticalStack_Light_vertical-stack__light_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.CardPreviewsKt.WeatherForecast_Dark_weather-forecast__dark_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.CardPreviewsKt.WeatherForecast_Light_weather-forecast__light_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.ResponsiveCardPreviewsKt.Entities_Responsive_Light_entities_responsive_narrow",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.ResponsiveCardPreviewsKt.Entities_Responsive_Light_entities_responsive_standard",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.ResponsiveCardPreviewsKt.Entities_Responsive_Light_entities_responsive_wide",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.ResponsiveCardPreviewsKt.Glance_Responsive_Dark_glance_responsive_narrow",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.ResponsiveCardPreviewsKt.Glance_Responsive_Dark_glance_responsive_standard",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.ResponsiveCardPreviewsKt.Glance_Responsive_Dark_glance_responsive_wide",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.ResponsiveCardPreviewsKt.Markdown_Responsive_Light_markdown_responsive_narrow",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.ResponsiveCardPreviewsKt.Markdown_Responsive_Light_markdown_responsive_standard",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.ResponsiveCardPreviewsKt.Tile_Responsive_Dark_tile_responsive_narrow",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.ResponsiveCardPreviewsKt.Tile_Responsive_Dark_tile_responsive_standard",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.ResponsiveCardPreviewsKt.Tile_Responsive_Dark_tile_responsive_wide",
+                    "componentId": null
+                }
+            ],
+            "code": {
+                "call": null,
+                "imports": [],
+                "refusedReason": "no placeholder can be written for required parameter `theme: HaTheme`",
+                "requiredOptIns": [],
+                "androidxOptIns": []
+            },
+            "signatureKnown": true,
+            "callableFromAnotherFile": true,
+            "hasTypeParameters": false,
+            "hasContextReceivers": false,
+            "overloadsCollided": false,
+            "requiredOptIns": [],
+            "androidxOptIns": []
+        },
+        {
+            "canonicalId": "previews/ee.schimke.ha.previews.CardPreviewsKt.DashboardHost",
+            "componentIds": [],
+            "symbol": {
+                "jvmOwner": "ee.schimke.ha.previews.CardPreviewsKt",
+                "callable": "ee.schimke.ha.previews.DashboardHost",
+                "name": "DashboardHost",
+                "origin": "PROJECT",
+                "jvmName": "DashboardHost",
+                "descriptor": "(Lee/schimke/ha/rc/components/HaTheme;Landroidx/compose/runtime/Composer;I)V",
+                "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
+                "docs": "unavailable",
+                "receiver": null
+            },
+            "parameters": [
+                {
+                    "name": "theme",
+                    "type": "HaTheme",
+                    "typeFqn": "ee.schimke.ha.rc.components.HaTheme",
+                    "hasDefault": false,
+                    "composableSlot": false,
+                    "composableSlotReceiver": null,
+                    "nullable": false,
+                    "noArgConstructible": false,
+                    "noArgFactory": null,
+                    "scopeDslReceiver": null,
+                    "lambdaReturnTypeFqn": null
+                }
+            ],
+            "slots": [],
+            "bindings": [
+                {
+                    "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Dashboard_Dark_dashboard__dark_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Dashboard_Light_dashboard__light_",
+                    "componentId": null
+                }
+            ],
+            "code": {
+                "call": null,
+                "imports": [],
+                "refusedReason": "not public or internal, so a generated file cannot call it",
+                "requiredOptIns": [],
+                "androidxOptIns": []
+            },
+            "signatureKnown": true,
+            "callableFromAnotherFile": false,
+            "hasTypeParameters": false,
+            "hasContextReceivers": false,
+            "overloadsCollided": false,
+            "requiredOptIns": [],
+            "androidxOptIns": []
+        },
+        {
+            "canonicalId": "previews/ee.schimke.ha.previews.DashboardPreviewsKt.DashboardPreview",
+            "componentIds": [],
+            "symbol": {
+                "jvmOwner": "ee.schimke.ha.previews.DashboardPreviewsKt",
+                "callable": "ee.schimke.ha.previews.DashboardPreview",
+                "name": "DashboardPreview",
+                "origin": "PROJECT",
+                "jvmName": "DashboardPreview",
+                "descriptor": "(Ljava/lang/String;Landroidx/compose/runtime/Composer;I)V",
+                "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/DashboardPreviews.kt",
+                "docs": "unavailable",
+                "receiver": null
+            },
+            "parameters": [
+                {
+                    "name": "name",
+                    "type": "String",
+                    "typeFqn": "kotlin.String",
+                    "hasDefault": false,
+                    "composableSlot": false,
+                    "composableSlotReceiver": null,
+                    "nullable": false,
+                    "noArgConstructible": false,
+                    "noArgFactory": null,
+                    "scopeDslReceiver": null,
+                    "lambdaReturnTypeFqn": null
+                }
+            ],
+            "slots": [],
+            "bindings": [
+                {
+                    "previewId": "ee.schimke.ha.previews.DashboardPreviewsKt.Dashboard3dPrintingMobile_dashboard_3d-printing___mobile",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.DashboardPreviewsKt.Dashboard3dPrintingTablet_dashboard_3d-printing___tablet",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.DashboardPreviewsKt.DashboardClimateMobile_dashboard_climate___mobile",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.DashboardPreviewsKt.DashboardClimateTablet_dashboard_climate___tablet",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.DashboardPreviewsKt.DashboardEnergyMobile_dashboard_energy___mobile",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.DashboardPreviewsKt.DashboardEnergyTablet_dashboard_energy___tablet",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.DashboardPreviewsKt.DashboardGithubMobile_dashboard_github___mobile",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.DashboardPreviewsKt.DashboardGithubTablet_dashboard_github___tablet",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.DashboardPreviewsKt.DashboardMeshcoreMobile_dashboard_meshcore___mobile",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.DashboardPreviewsKt.DashboardMeshcoreTablet_dashboard_meshcore___tablet",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.DashboardPreviewsKt.DashboardNetworksMobile_dashboard_networks___mobile",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.DashboardPreviewsKt.DashboardNetworksTablet_dashboard_networks___tablet",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.DashboardPreviewsKt.DashboardSecurityMobile_dashboard_security___mobile",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.DashboardPreviewsKt.DashboardSecurityTablet_dashboard_security___tablet",
+                    "componentId": null
+                }
+            ],
+            "code": {
+                "call": null,
+                "imports": [],
+                "refusedReason": "not public or internal, so a generated file cannot call it",
+                "requiredOptIns": [],
+                "androidxOptIns": []
+            },
+            "signatureKnown": true,
+            "callableFromAnotherFile": false,
+            "hasTypeParameters": false,
+            "hasContextReceivers": false,
+            "overloadsCollided": false,
+            "requiredOptIns": [],
+            "androidxOptIns": []
+        },
+        {
+            "canonicalId": "previews/ee.schimke.ha.previews.GarageShutterCardPreviewsKt.GarageHost",
+            "componentIds": [],
+            "symbol": {
+                "jvmOwner": "ee.schimke.ha.previews.GarageShutterCardPreviewsKt",
+                "callable": "ee.schimke.ha.previews.GarageHost",
+                "name": "GarageHost",
+                "origin": "PROJECT",
+                "jvmName": "GarageHost",
+                "descriptor": "(Lee/schimke/ha/rc/components/HaTheme;Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;I)V",
+                "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/GarageShutterCardPreviews.kt",
+                "docs": "unavailable",
+                "receiver": null
+            },
+            "parameters": [
+                {
+                    "name": "theme",
+                    "type": "HaTheme",
+                    "typeFqn": "ee.schimke.ha.rc.components.HaTheme",
+                    "hasDefault": false,
+                    "composableSlot": false,
+                    "composableSlotReceiver": null,
+                    "nullable": false,
+                    "noArgConstructible": false,
+                    "noArgFactory": null,
+                    "scopeDslReceiver": null,
+                    "lambdaReturnTypeFqn": null
+                },
+                {
+                    "name": "content",
+                    "type": "() -> Unit",
+                    "typeFqn": "kotlin.Function0",
+                    "hasDefault": false,
+                    "composableSlot": true,
+                    "composableSlotReceiver": null,
+                    "nullable": false,
+                    "noArgConstructible": false,
+                    "noArgFactory": null,
+                    "scopeDslReceiver": null,
+                    "lambdaReturnTypeFqn": "kotlin.Unit"
+                }
+            ],
+            "slots": [
+                {
+                    "name": "content",
+                    "required": true,
+                    "receiverScope": null
+                }
+            ],
+            "bindings": [
+                {
+                    "previewId": "ee.schimke.ha.previews.GarageShutterCardPreviewsKt.Garage_Animation_Dark_garage-anim__dark_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.GarageShutterCardPreviewsKt.Garage_Animation_Light_garage-anim__light_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.GarageShutterCardPreviewsKt.Garage_State_Dark_garage-state__dark_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.GarageShutterCardPreviewsKt.Garage_State_Light_garage-state__light_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.GarageShutterCardPreviewsKt.Garage_TwoEntities_Dark_garage_two-entities__dark_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.GarageShutterCardPreviewsKt.Garage_TwoEntities_Light_garage_two-entities__light_",
+                    "componentId": null
+                }
+            ],
+            "code": {
+                "call": null,
+                "imports": [],
+                "refusedReason": "not public or internal, so a generated file cannot call it",
+                "requiredOptIns": [],
+                "androidxOptIns": []
+            },
+            "signatureKnown": true,
+            "callableFromAnotherFile": false,
+            "hasTypeParameters": false,
+            "hasContextReceivers": false,
+            "overloadsCollided": false,
+            "requiredOptIns": [],
+            "androidxOptIns": []
+        },
+        {
+            "canonicalId": "previews/ee.schimke.ha.previews.ImagePreviewsKt.FakeCoilUrlHost",
+            "componentIds": [],
+            "symbol": {
+                "jvmOwner": "ee.schimke.ha.previews.ImagePreviewsKt",
+                "callable": "ee.schimke.ha.previews.FakeCoilUrlHost",
+                "name": "FakeCoilUrlHost",
+                "origin": "PROJECT",
+                "jvmName": "FakeCoilUrlHost",
+                "descriptor": "(Lee/schimke/ha/rc/components/HaTheme;Landroidx/compose/runtime/Composer;I)V",
+                "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/ImagePreviews.kt",
+                "docs": "unavailable",
+                "receiver": null
+            },
+            "parameters": [
+                {
+                    "name": "theme",
+                    "type": "HaTheme",
+                    "typeFqn": "ee.schimke.ha.rc.components.HaTheme",
+                    "hasDefault": false,
+                    "composableSlot": false,
+                    "composableSlotReceiver": null,
+                    "nullable": false,
+                    "noArgConstructible": false,
+                    "noArgFactory": null,
+                    "scopeDslReceiver": null,
+                    "lambdaReturnTypeFqn": null
+                }
+            ],
+            "slots": [],
+            "bindings": [
+                {
+                    "previewId": "ee.schimke.ha.previews.ImagePreviewsKt.ImageUrl_FakeCoil_Dark_image-url_fake-coil__dark_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.ImagePreviewsKt.ImageUrl_FakeCoil_Light_image-url_fake-coil__light_",
+                    "componentId": null
+                }
+            ],
+            "code": {
+                "call": null,
+                "imports": [],
+                "refusedReason": "not public or internal, so a generated file cannot call it",
+                "requiredOptIns": [],
+                "androidxOptIns": []
+            },
+            "signatureKnown": true,
+            "callableFromAnotherFile": false,
+            "hasTypeParameters": false,
+            "hasContextReceivers": false,
+            "overloadsCollided": false,
+            "requiredOptIns": [],
+            "androidxOptIns": []
+        },
+        {
+            "canonicalId": "previews/ee.schimke.ha.previews.ImagePreviewsKt.ImageHost",
+            "componentIds": [],
+            "symbol": {
+                "jvmOwner": "ee.schimke.ha.previews.ImagePreviewsKt",
+                "callable": "ee.schimke.ha.previews.ImageHost",
+                "name": "ImageHost",
+                "origin": "PROJECT",
+                "jvmName": "ImageHost",
+                "descriptor": "(Lee/schimke/ha/rc/components/HaTheme;Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;I)V",
+                "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/ImagePreviews.kt",
+                "docs": "unavailable",
+                "receiver": null
+            },
+            "parameters": [
+                {
+                    "name": "theme",
+                    "type": "HaTheme",
+                    "typeFqn": "ee.schimke.ha.rc.components.HaTheme",
+                    "hasDefault": false,
+                    "composableSlot": false,
+                    "composableSlotReceiver": null,
+                    "nullable": false,
+                    "noArgConstructible": false,
+                    "noArgFactory": null,
+                    "scopeDslReceiver": null,
+                    "lambdaReturnTypeFqn": null
+                },
+                {
+                    "name": "content",
+                    "type": "() -> Unit",
+                    "typeFqn": "kotlin.Function0",
+                    "hasDefault": false,
+                    "composableSlot": true,
+                    "composableSlotReceiver": null,
+                    "nullable": false,
+                    "noArgConstructible": false,
+                    "noArgFactory": null,
+                    "scopeDslReceiver": null,
+                    "lambdaReturnTypeFqn": "kotlin.Unit"
+                }
+            ],
+            "slots": [
+                {
+                    "name": "content",
+                    "required": true,
+                    "receiverScope": null
+                }
+            ],
+            "bindings": [
+                {
+                    "previewId": "ee.schimke.ha.previews.ImagePreviewsKt.ImageInline_Dark_image-inline__dark_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.ImagePreviewsKt.ImageInline_Light_image-inline__light_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.ImagePreviewsKt.ImageNamed_Dark_image-named__dark_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.ImagePreviewsKt.ImageNamed_Light_image-named__light_",
+                    "componentId": null
+                }
+            ],
+            "code": {
+                "call": null,
+                "imports": [],
+                "refusedReason": "not public or internal, so a generated file cannot call it",
+                "requiredOptIns": [],
+                "androidxOptIns": []
+            },
+            "signatureKnown": true,
+            "callableFromAnotherFile": false,
+            "hasTypeParameters": false,
+            "hasContextReceivers": false,
+            "overloadsCollided": false,
+            "requiredOptIns": [],
+            "androidxOptIns": []
+        },
+        {
+            "canonicalId": "previews/ee.schimke.ha.previews.ImagePreviewsKt.ProbeUrlHost",
+            "componentIds": [],
+            "symbol": {
+                "jvmOwner": "ee.schimke.ha.previews.ImagePreviewsKt",
+                "callable": "ee.schimke.ha.previews.ProbeUrlHost",
+                "name": "ProbeUrlHost",
+                "origin": "PROJECT",
+                "jvmName": "ProbeUrlHost",
+                "descriptor": "(Lee/schimke/ha/rc/components/HaTheme;Ljava/lang/String;Landroidx/compose/runtime/Composer;I)V",
+                "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/ImagePreviews.kt",
+                "docs": "unavailable",
+                "receiver": null
+            },
+            "parameters": [
+                {
+                    "name": "theme",
+                    "type": "HaTheme",
+                    "typeFqn": "ee.schimke.ha.rc.components.HaTheme",
+                    "hasDefault": false,
+                    "composableSlot": false,
+                    "composableSlotReceiver": null,
+                    "nullable": false,
+                    "noArgConstructible": false,
+                    "noArgFactory": null,
+                    "scopeDslReceiver": null,
+                    "lambdaReturnTypeFqn": null
+                },
+                {
+                    "name": "url",
+                    "type": "String",
+                    "typeFqn": "kotlin.String",
+                    "hasDefault": false,
+                    "composableSlot": false,
+                    "composableSlotReceiver": null,
+                    "nullable": false,
+                    "noArgConstructible": false,
+                    "noArgFactory": null,
+                    "scopeDslReceiver": null,
+                    "lambdaReturnTypeFqn": null
+                }
+            ],
+            "slots": [],
+            "bindings": [
+                {
+                    "previewId": "ee.schimke.ha.previews.ImagePreviewsKt.ImageUrl_Probe_Frame0_image-url_probe_frame_0",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.ImagePreviewsKt.ImageUrl_Probe_Frame1_image-url_probe_frame_1",
+                    "componentId": null
+                }
+            ],
+            "code": {
+                "call": null,
+                "imports": [],
+                "refusedReason": "not public or internal, so a generated file cannot call it",
+                "requiredOptIns": [],
+                "androidxOptIns": []
+            },
+            "signatureKnown": true,
+            "callableFromAnotherFile": false,
+            "hasTypeParameters": false,
+            "hasContextReceivers": false,
+            "overloadsCollided": false,
+            "requiredOptIns": [],
+            "androidxOptIns": []
+        },
+        {
+            "canonicalId": "previews/ee.schimke.ha.previews.PictureEntityStrategyPreviewsKt.AppModeHost",
+            "componentIds": [],
+            "symbol": {
+                "jvmOwner": "ee.schimke.ha.previews.PictureEntityStrategyPreviewsKt",
+                "callable": "ee.schimke.ha.previews.AppModeHost",
+                "name": "AppModeHost",
+                "origin": "PROJECT",
+                "jvmName": "AppModeHost",
+                "descriptor": "(Lee/schimke/ha/rc/components/HaTheme;Landroidx/compose/runtime/Composer;I)V",
+                "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/PictureEntityStrategyPreviews.kt",
+                "docs": "unavailable",
+                "receiver": null
+            },
+            "parameters": [
+                {
+                    "name": "theme",
+                    "type": "HaTheme",
+                    "typeFqn": "ee.schimke.ha.rc.components.HaTheme",
+                    "hasDefault": false,
+                    "composableSlot": false,
+                    "composableSlotReceiver": null,
+                    "nullable": false,
+                    "noArgConstructible": false,
+                    "noArgFactory": null,
+                    "scopeDslReceiver": null,
+                    "lambdaReturnTypeFqn": null
+                }
+            ],
+            "slots": [],
+            "bindings": [
+                {
+                    "previewId": "ee.schimke.ha.previews.PictureEntityStrategyPreviewsKt.PictureEntity_AppMode_Dark_picture-entity_app-mode__dark_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.PictureEntityStrategyPreviewsKt.PictureEntity_AppMode_Light_picture-entity_app-mode__light_",
+                    "componentId": null
+                }
+            ],
+            "code": {
+                "call": null,
+                "imports": [],
+                "refusedReason": "not public or internal, so a generated file cannot call it",
+                "requiredOptIns": [],
+                "androidxOptIns": []
+            },
+            "signatureKnown": true,
+            "callableFromAnotherFile": false,
+            "hasTypeParameters": false,
+            "hasContextReceivers": false,
+            "overloadsCollided": false,
+            "requiredOptIns": [],
+            "androidxOptIns": []
+        },
+        {
+            "canonicalId": "previews/ee.schimke.ha.previews.RcDocumentCaptureKt.CapturingRemoteContentPreview",
+            "componentIds": [],
+            "symbol": {
+                "jvmOwner": "ee.schimke.ha.previews.RcDocumentCaptureKt",
+                "callable": "ee.schimke.ha.previews.CapturingRemoteContentPreview",
+                "name": "CapturingRemoteContentPreview",
+                "origin": "PROJECT",
+                "jvmName": "CapturingRemoteContentPreview",
+                "descriptor": "(Landroidx/compose/remote/creation/profile/Profile;Landroidx/compose/ui/Modifier;Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;II)V",
+                "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/RcDocumentCapture.kt",
+                "docs": "unavailable",
+                "receiver": null
+            },
+            "parameters": [
+                {
+                    "name": "profile",
+                    "type": "Profile",
+                    "typeFqn": "androidx.compose.remote.creation.profile.Profile",
+                    "hasDefault": false,
+                    "composableSlot": false,
+                    "composableSlotReceiver": null,
+                    "nullable": false,
+                    "noArgConstructible": false,
+                    "noArgFactory": null,
+                    "scopeDslReceiver": null,
+                    "lambdaReturnTypeFqn": null
+                },
+                {
+                    "name": "modifier",
+                    "type": "Modifier",
+                    "typeFqn": "androidx.compose.ui.Modifier",
+                    "hasDefault": true,
+                    "composableSlot": false,
+                    "composableSlotReceiver": null,
+                    "nullable": false,
+                    "noArgConstructible": false,
+                    "noArgFactory": null,
+                    "scopeDslReceiver": null,
+                    "lambdaReturnTypeFqn": null
+                },
+                {
+                    "name": "content",
+                    "type": "() -> Unit",
+                    "typeFqn": "kotlin.Function0",
+                    "hasDefault": false,
+                    "composableSlot": true,
+                    "composableSlotReceiver": null,
+                    "nullable": false,
+                    "noArgConstructible": false,
+                    "noArgFactory": null,
+                    "scopeDslReceiver": null,
+                    "lambdaReturnTypeFqn": "kotlin.Unit"
+                }
+            ],
+            "slots": [
+                {
+                    "name": "content",
+                    "required": true,
+                    "receiverScope": null
+                }
+            ],
+            "bindings": [
+                {
+                    "previewId": "ee.schimke.ha.previews.AnimationPreviewsKt.Toggle_Animated_Dark_toggle-animated__dark_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.AnimationPreviewsKt.Toggle_Animated_Light_toggle-animated__light_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.AnimationPreviewsKt.Toggle_Animation_Dark_toggle-anim__dark_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.AnimationPreviewsKt.Toggle_Animation_Light_toggle-anim__light_",
+                    "componentId": null
+                }
+            ],
+            "code": {
+                "call": null,
+                "imports": [],
+                "refusedReason": "no placeholder can be written for required parameter `profile: Profile`",
+                "requiredOptIns": [],
+                "androidxOptIns": []
+            },
+            "signatureKnown": true,
+            "callableFromAnotherFile": true,
+            "hasTypeParameters": false,
+            "hasContextReceivers": false,
+            "overloadsCollided": false,
+            "requiredOptIns": [],
+            "androidxOptIns": []
+        },
+        {
+            "canonicalId": "previews/ee.schimke.ha.previews.RcDocumentCaptureKt.rememberRemoteDocumentSink",
+            "componentIds": [],
+            "symbol": {
+                "jvmOwner": "ee.schimke.ha.previews.RcDocumentCaptureKt",
+                "callable": "ee.schimke.ha.previews.rememberRemoteDocumentSink",
+                "name": "rememberRemoteDocumentSink",
+                "origin": "PROJECT",
+                "jvmName": "rememberRemoteDocumentSink",
+                "descriptor": "(Landroidx/compose/runtime/Composer;I)Lkotlin/jvm/functions/Function1;",
+                "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/RcDocumentCapture.kt",
+                "docs": "unavailable",
+                "receiver": null
+            },
+            "parameters": [],
+            "slots": [],
+            "bindings": [
+                {
+                    "previewId": "ee.schimke.ha.previews.PictureEntityStrategyPreviewsKt.PictureEntity_IconFallback_Light_picture-entity_icon-fallback__light_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.PictureEntityStrategyPreviewsKt.PictureEntity_WidgetMode_Light_picture-entity_widget-mode__light_",
+                    "componentId": null
+                }
+            ],
+            "code": {
+                "call": "rememberRemoteDocumentSink()",
+                "imports": [
+                    "ee.schimke.ha.previews.rememberRemoteDocumentSink"
+                ],
+                "refusedReason": null,
+                "requiredOptIns": [],
+                "androidxOptIns": []
+            },
+            "signatureKnown": true,
+            "callableFromAnotherFile": true,
+            "hasTypeParameters": false,
+            "hasContextReceivers": false,
+            "overloadsCollided": false,
+            "requiredOptIns": [],
+            "androidxOptIns": []
+        },
+        {
+            "canonicalId": "previews/ee.schimke.ha.previews.ShutterCardPreviewsKt.ShutterHost",
+            "componentIds": [],
+            "symbol": {
+                "jvmOwner": "ee.schimke.ha.previews.ShutterCardPreviewsKt",
+                "callable": "ee.schimke.ha.previews.ShutterHost",
+                "name": "ShutterHost",
+                "origin": "PROJECT",
+                "jvmName": "ShutterHost",
+                "descriptor": "(Lee/schimke/ha/rc/components/HaTheme;Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;I)V",
+                "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/ShutterCardPreviews.kt",
+                "docs": "unavailable",
+                "receiver": null
+            },
+            "parameters": [
+                {
+                    "name": "theme",
+                    "type": "HaTheme",
+                    "typeFqn": "ee.schimke.ha.rc.components.HaTheme",
+                    "hasDefault": false,
+                    "composableSlot": false,
+                    "composableSlotReceiver": null,
+                    "nullable": false,
+                    "noArgConstructible": false,
+                    "noArgFactory": null,
+                    "scopeDslReceiver": null,
+                    "lambdaReturnTypeFqn": null
+                },
+                {
+                    "name": "content",
+                    "type": "() -> Unit",
+                    "typeFqn": "kotlin.Function0",
+                    "hasDefault": false,
+                    "composableSlot": true,
+                    "composableSlotReceiver": null,
+                    "nullable": false,
+                    "noArgConstructible": false,
+                    "noArgFactory": null,
+                    "scopeDslReceiver": null,
+                    "lambdaReturnTypeFqn": "kotlin.Unit"
+                }
+            ],
+            "slots": [
+                {
+                    "name": "content",
+                    "required": true,
+                    "receiverScope": null
+                }
+            ],
+            "bindings": [
+                {
+                    "previewId": "ee.schimke.ha.previews.ShutterCardPreviewsKt.Shutter_Dark_shutter__dark_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.ShutterCardPreviewsKt.Shutter_Light_shutter__light_",
+                    "componentId": null
+                }
+            ],
+            "code": {
+                "call": null,
+                "imports": [],
+                "refusedReason": "not public or internal, so a generated file cannot call it",
+                "requiredOptIns": [],
+                "androidxOptIns": []
+            },
+            "signatureKnown": true,
+            "callableFromAnotherFile": false,
+            "hasTypeParameters": false,
+            "hasContextReceivers": false,
+            "overloadsCollided": false,
+            "requiredOptIns": [],
+            "androidxOptIns": []
+        },
+        {
+            "canonicalId": "previews/ee.schimke.ha.previews.SizingExperimentPreviewsKt.ConstraintMatrix",
+            "componentIds": [],
+            "symbol": {
+                "jvmOwner": "ee.schimke.ha.previews.SizingExperimentPreviewsKt",
+                "callable": "ee.schimke.ha.previews.ConstraintMatrix",
+                "name": "ConstraintMatrix",
+                "origin": "PROJECT",
+                "jvmName": "ConstraintMatrix",
+                "descriptor": "(Ljava/lang/String;Landroidx/compose/remote/creation/profile/Profile;Landroidx/compose/runtime/Composer;I)V",
+                "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/SizingExperimentPreviews.kt",
+                "docs": "unavailable",
+                "receiver": null
+            },
+            "parameters": [
+                {
+                    "name": "title",
+                    "type": "String",
+                    "typeFqn": "kotlin.String",
+                    "hasDefault": false,
+                    "composableSlot": false,
+                    "composableSlotReceiver": null,
+                    "nullable": false,
+                    "noArgConstructible": false,
+                    "noArgFactory": null,
+                    "scopeDslReceiver": null,
+                    "lambdaReturnTypeFqn": null
+                },
+                {
+                    "name": "profile",
+                    "type": "Profile",
+                    "typeFqn": "androidx.compose.remote.creation.profile.Profile",
+                    "hasDefault": false,
+                    "composableSlot": false,
+                    "composableSlotReceiver": null,
+                    "nullable": false,
+                    "noArgConstructible": false,
+                    "noArgFactory": null,
+                    "scopeDslReceiver": null,
+                    "lambdaReturnTypeFqn": null
+                }
+            ],
+            "slots": [],
+            "bindings": [
+                {
+                    "previewId": "ee.schimke.ha.previews.SizingExperimentPreviewsKt.Sizing_ConstraintMatrix_PaintMeasure_sizing___width___height_matrix___paint-measure_profile",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.SizingExperimentPreviewsKt.Sizing_ConstraintMatrix_Wrap_sizing___width___height_matrix___wrap_profile",
+                    "componentId": null
+                }
+            ],
+            "code": {
+                "call": null,
+                "imports": [],
+                "refusedReason": "not public or internal, so a generated file cannot call it",
+                "requiredOptIns": [],
+                "androidxOptIns": []
+            },
+            "signatureKnown": true,
+            "callableFromAnotherFile": false,
+            "hasTypeParameters": false,
+            "hasContextReceivers": false,
+            "overloadsCollided": false,
+            "requiredOptIns": [],
+            "androidxOptIns": []
+        },
+        {
+            "canonicalId": "previews/ee.schimke.ha.previews.SizingExperimentPreviewsKt.DebugStack",
+            "componentIds": [],
+            "symbol": {
+                "jvmOwner": "ee.schimke.ha.previews.SizingExperimentPreviewsKt",
+                "callable": "ee.schimke.ha.previews.DebugStack",
+                "name": "DebugStack",
+                "origin": "PROJECT",
+                "jvmName": "DebugStack",
+                "descriptor": "(Ljava/lang/String;Landroidx/compose/remote/creation/profile/Profile;Lee/schimke/ha/previews/SlotHeightStrategy;Landroidx/compose/runtime/Composer;I)V",
+                "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/SizingExperimentPreviews.kt",
+                "docs": "unavailable",
+                "receiver": null
+            },
+            "parameters": [
+                {
+                    "name": "title",
+                    "type": "String",
+                    "typeFqn": "kotlin.String",
+                    "hasDefault": false,
+                    "composableSlot": false,
+                    "composableSlotReceiver": null,
+                    "nullable": false,
+                    "noArgConstructible": false,
+                    "noArgFactory": null,
+                    "scopeDslReceiver": null,
+                    "lambdaReturnTypeFqn": null
+                },
+                {
+                    "name": "profile",
+                    "type": "Profile",
+                    "typeFqn": "androidx.compose.remote.creation.profile.Profile",
+                    "hasDefault": false,
+                    "composableSlot": false,
+                    "composableSlotReceiver": null,
+                    "nullable": false,
+                    "noArgConstructible": false,
+                    "noArgFactory": null,
+                    "scopeDslReceiver": null,
+                    "lambdaReturnTypeFqn": null
+                },
+                {
+                    "name": "slotHeightStrategy",
+                    "type": "SlotHeightStrategy",
+                    "typeFqn": "ee.schimke.ha.previews.SlotHeightStrategy",
+                    "hasDefault": false,
+                    "composableSlot": false,
+                    "composableSlotReceiver": null,
+                    "nullable": false,
+                    "noArgConstructible": false,
+                    "noArgFactory": null,
+                    "scopeDslReceiver": null,
+                    "lambdaReturnTypeFqn": null
+                }
+            ],
+            "slots": [],
+            "bindings": [
+                {
+                    "previewId": "ee.schimke.ha.previews.SizingExperimentPreviewsKt.Sizing_FixedSlot_PaintMeasure_sizing___fixed_slot__paint-measure_profile",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.SizingExperimentPreviewsKt.Sizing_FixedSlot_Wrap_sizing___fixed_slot__wrap_profile",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.SizingExperimentPreviewsKt.Sizing_SlackSlot_PaintMeasure_sizing___slack_slot__paint-measure_profile",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.SizingExperimentPreviewsKt.Sizing_SlackSlot_Wrap_sizing___slack_slot__wrap_profile",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.SizingExperimentPreviewsKt.Sizing_TightSlot_PaintMeasure_sizing___tight_slot__paint-measure_profile",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.SizingExperimentPreviewsKt.Sizing_TightSlot_Wrap_sizing___tight_slot__wrap_profile",
+                    "componentId": null
+                }
+            ],
+            "code": {
+                "call": null,
+                "imports": [],
+                "refusedReason": "not public or internal, so a generated file cannot call it",
+                "requiredOptIns": [],
+                "androidxOptIns": []
+            },
+            "signatureKnown": true,
+            "callableFromAnotherFile": false,
+            "hasTypeParameters": false,
+            "hasContextReceivers": false,
+            "overloadsCollided": false,
+            "requiredOptIns": [],
+            "androidxOptIns": []
+        },
+        {
+            "canonicalId": "previews/ee.schimke.ha.previews.SizingExperimentPreviewsKt.WidthOnlyDemo",
+            "componentIds": [],
+            "symbol": {
+                "jvmOwner": "ee.schimke.ha.previews.SizingExperimentPreviewsKt",
+                "callable": "ee.schimke.ha.previews.WidthOnlyDemo",
+                "name": "WidthOnlyDemo",
+                "origin": "PROJECT",
+                "jvmName": "WidthOnlyDemo",
+                "descriptor": "(Landroidx/compose/runtime/Composer;I)V",
+                "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/SizingExperimentPreviews.kt",
+                "docs": "unavailable",
+                "receiver": null
+            },
+            "parameters": [],
+            "slots": [],
+            "bindings": [
+                {
+                    "previewId": "ee.schimke.ha.previews.SizingExperimentPreviewsKt.Sizing_WidthPinnedHeightAdaptive_sizing___width_pinned__height_adaptive",
+                    "componentId": null
+                }
+            ],
+            "code": {
+                "call": null,
+                "imports": [],
+                "refusedReason": "not public or internal, so a generated file cannot call it",
+                "requiredOptIns": [],
+                "androidxOptIns": []
+            },
+            "signatureKnown": true,
+            "callableFromAnotherFile": false,
+            "hasTypeParameters": false,
+            "hasContextReceivers": false,
+            "overloadsCollided": false,
+            "requiredOptIns": [],
+            "androidxOptIns": []
+        },
+        {
+            "canonicalId": "previews/ee.schimke.ha.previews.ThemePreviewsKt.ThemeShowcase",
+            "componentIds": [],
+            "symbol": {
+                "jvmOwner": "ee.schimke.ha.previews.ThemePreviewsKt",
+                "callable": "ee.schimke.ha.previews.ThemeShowcase",
+                "name": "ThemeShowcase",
+                "origin": "PROJECT",
+                "jvmName": "ThemeShowcase",
+                "descriptor": "(Lee/schimke/ha/rc/components/ThemeStyle;ZLandroidx/compose/runtime/Composer;I)V",
+                "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/ThemePreviews.kt",
+                "docs": "unavailable",
+                "receiver": null
+            },
+            "parameters": [
+                {
+                    "name": "style",
+                    "type": "ThemeStyle",
+                    "typeFqn": "ee.schimke.ha.rc.components.ThemeStyle",
+                    "hasDefault": false,
+                    "composableSlot": false,
+                    "composableSlotReceiver": null,
+                    "nullable": false,
+                    "noArgConstructible": false,
+                    "noArgFactory": null,
+                    "scopeDslReceiver": null,
+                    "lambdaReturnTypeFqn": null
+                },
+                {
+                    "name": "darkTheme",
+                    "type": "Boolean",
+                    "typeFqn": "kotlin.Boolean",
+                    "hasDefault": false,
+                    "composableSlot": false,
+                    "composableSlotReceiver": null,
+                    "nullable": false,
+                    "noArgConstructible": false,
+                    "noArgFactory": null,
+                    "scopeDslReceiver": null,
+                    "lambdaReturnTypeFqn": null
+                }
+            ],
+            "slots": [],
+            "bindings": [
+                {
+                    "previewId": "ee.schimke.ha.previews.ThemePreviewsKt.Theme_Home_Dark_theme__Home__dark_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.ThemePreviewsKt.Theme_Home_Light_theme__Home__light_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.ThemePreviewsKt.Theme_Kiosk_Dark_theme__Kiosk__dark_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.ThemePreviewsKt.Theme_Kiosk_Light_theme__Kiosk__light_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.ThemePreviewsKt.Theme_Material3_Dark_theme__Material3__dark_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.ThemePreviewsKt.Theme_Material3_Light_theme__Material3__light_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.ThemePreviewsKt.Theme_Minimalist_Dark_theme__Minimalist__dark_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.ThemePreviewsKt.Theme_Minimalist_Light_theme__Minimalist__light_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.ThemePreviewsKt.Theme_Mushroom_Dark_theme__Mushroom__dark_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.ThemePreviewsKt.Theme_Mushroom_Light_theme__Mushroom__light_",
+                    "componentId": null
+                }
+            ],
+            "code": {
+                "call": null,
+                "imports": [],
+                "refusedReason": "not public or internal, so a generated file cannot call it",
+                "requiredOptIns": [],
+                "androidxOptIns": []
+            },
+            "signatureKnown": true,
+            "callableFromAnotherFile": false,
+            "hasTypeParameters": false,
+            "hasContextReceivers": false,
+            "overloadsCollided": false,
+            "requiredOptIns": [],
+            "androidxOptIns": []
+        },
+        {
+            "canonicalId": "previews/ee.schimke.ha.previews.TileCardPreviewsKt.TileHost",
+            "componentIds": [],
+            "symbol": {
+                "jvmOwner": "ee.schimke.ha.previews.TileCardPreviewsKt",
+                "callable": "ee.schimke.ha.previews.TileHost",
+                "name": "TileHost",
+                "origin": "PROJECT",
+                "jvmName": "TileHost",
+                "descriptor": "(Lee/schimke/ha/rc/components/HaTheme;Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;I)V",
+                "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/TileCardPreviews.kt",
+                "docs": "unavailable",
+                "receiver": null
+            },
+            "parameters": [
+                {
+                    "name": "theme",
+                    "type": "HaTheme",
+                    "typeFqn": "ee.schimke.ha.rc.components.HaTheme",
+                    "hasDefault": false,
+                    "composableSlot": false,
+                    "composableSlotReceiver": null,
+                    "nullable": false,
+                    "noArgConstructible": false,
+                    "noArgFactory": null,
+                    "scopeDslReceiver": null,
+                    "lambdaReturnTypeFqn": null
+                },
+                {
+                    "name": "content",
+                    "type": "() -> Unit",
+                    "typeFqn": "kotlin.Function0",
+                    "hasDefault": false,
+                    "composableSlot": true,
+                    "composableSlotReceiver": null,
+                    "nullable": false,
+                    "noArgConstructible": false,
+                    "noArgFactory": null,
+                    "scopeDslReceiver": null,
+                    "lambdaReturnTypeFqn": "kotlin.Unit"
+                }
+            ],
+            "slots": [
+                {
+                    "name": "content",
+                    "required": true,
+                    "receiverScope": null
+                }
+            ],
+            "bindings": [
+                {
+                    "previewId": "ee.schimke.ha.previews.TileCardPreviewsKt.Tile_LightOn_Dark_tile___light_on__dark_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.TileCardPreviewsKt.Tile_LightOn_tile___light_on",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.TileCardPreviewsKt.Tile_TemperatureSensor_Dark_tile___sensor_temperature__dark_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.TileCardPreviewsKt.Tile_TemperatureSensor_tile___sensor_temperature",
+                    "componentId": null
+                }
+            ],
+            "code": {
+                "call": null,
+                "imports": [],
+                "refusedReason": "not public or internal, so a generated file cannot call it",
+                "requiredOptIns": [],
+                "androidxOptIns": []
+            },
+            "signatureKnown": true,
+            "callableFromAnotherFile": false,
+            "hasTypeParameters": false,
+            "hasContextReceivers": false,
+            "overloadsCollided": false,
+            "requiredOptIns": [],
+            "androidxOptIns": []
+        },
+        {
+            "canonicalId": "previews/ee.schimke.ha.previews.ToggleSwitchPreviewsKt.SwitchHost",
+            "componentIds": [],
+            "symbol": {
+                "jvmOwner": "ee.schimke.ha.previews.ToggleSwitchPreviewsKt",
+                "callable": "ee.schimke.ha.previews.SwitchHost",
+                "name": "SwitchHost",
+                "origin": "PROJECT",
+                "jvmName": "SwitchHost",
+                "descriptor": "(Lee/schimke/ha/rc/components/HaTheme;Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;I)V",
+                "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/ToggleSwitchPreviews.kt",
+                "docs": "unavailable",
+                "receiver": null
+            },
+            "parameters": [
+                {
+                    "name": "theme",
+                    "type": "HaTheme",
+                    "typeFqn": "ee.schimke.ha.rc.components.HaTheme",
+                    "hasDefault": false,
+                    "composableSlot": false,
+                    "composableSlotReceiver": null,
+                    "nullable": false,
+                    "noArgConstructible": false,
+                    "noArgFactory": null,
+                    "scopeDslReceiver": null,
+                    "lambdaReturnTypeFqn": null
+                },
+                {
+                    "name": "content",
+                    "type": "() -> Unit",
+                    "typeFqn": "kotlin.Function0",
+                    "hasDefault": false,
+                    "composableSlot": true,
+                    "composableSlotReceiver": null,
+                    "nullable": false,
+                    "noArgConstructible": false,
+                    "noArgFactory": null,
+                    "scopeDslReceiver": null,
+                    "lambdaReturnTypeFqn": "kotlin.Unit"
+                }
+            ],
+            "slots": [
+                {
+                    "name": "content",
+                    "required": true,
+                    "receiverScope": null
+                }
+            ],
+            "bindings": [
+                {
+                    "previewId": "ee.schimke.ha.previews.ToggleSwitchPreviewsKt.ToggleByProgress_Mid_toggle_progress_0.5",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.ToggleSwitchPreviewsKt.ToggleByProgress_Off_toggle_progress_0.0",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.ToggleSwitchPreviewsKt.ToggleByProgress_On_toggle_progress_1.0",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.ToggleSwitchPreviewsKt.ToggleInitial_Off_toggle_initial_off",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.ToggleSwitchPreviewsKt.ToggleInitial_On_Dark_toggle_initial_on__dark_",
+                    "componentId": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.ToggleSwitchPreviewsKt.ToggleInitial_On_toggle_initial_on",
+                    "componentId": null
+                }
+            ],
+            "code": {
+                "call": null,
+                "imports": [],
+                "refusedReason": "not public or internal, so a generated file cannot call it",
+                "requiredOptIns": [],
+                "androidxOptIns": []
+            },
+            "signatureKnown": true,
+            "callableFromAnotherFile": false,
+            "hasTypeParameters": false,
+            "hasContextReceivers": false,
+            "overloadsCollided": false,
+            "requiredOptIns": [],
+            "androidxOptIns": []
+        },
+        {
+            "canonicalId": "previews/ee.schimke.ha.previews.WrapContentHeightReproKt.FixedPlayer",
+            "componentIds": [],
+            "symbol": {
+                "jvmOwner": "ee.schimke.ha.previews.WrapContentHeightReproKt",
+                "callable": "ee.schimke.ha.previews.FixedPlayer",
+                "name": "FixedPlayer",
+                "origin": "PROJECT",
+                "jvmName": "FixedPlayer",
+                "descriptor": "(Landroidx/compose/ui/Modifier;Landroidx/compose/runtime/Composer;I)V",
+                "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/WrapContentHeightRepro.kt",
+                "docs": "unavailable",
+                "receiver": null
+            },
+            "parameters": [
+                {
+                    "name": "modifier",
+                    "type": "Modifier",
+                    "typeFqn": "androidx.compose.ui.Modifier",
+                    "hasDefault": false,
+                    "composableSlot": false,
+                    "composableSlotReceiver": null,
+                    "nullable": false,
+                    "noArgConstructible": false,
+                    "noArgFactory": null,
+                    "scopeDslReceiver": null,
+                    "lambdaReturnTypeFqn": null
+                }
+            ],
+            "slots": [],
+            "bindings": [
+                {
+                    "previewId": "ee.schimke.ha.previews.WrapContentHeightReproKt.WrapContentHeightFixAlpha010_wrap-content_height_fix___WrapAdaptive_player",
+                    "componentId": null
+                }
+            ],
+            "code": {
+                "call": null,
+                "imports": [],
+                "refusedReason": "not public or internal, so a generated file cannot call it",
+                "requiredOptIns": [],
+                "androidxOptIns": []
+            },
+            "signatureKnown": true,
+            "callableFromAnotherFile": false,
+            "hasTypeParameters": false,
+            "hasContextReceivers": false,
+            "overloadsCollided": false,
+            "requiredOptIns": [],
+            "androidxOptIns": []
+        },
+        {
+            "canonicalId": "previews/ee.schimke.ha.previews.WrapContentHeightReproKt.ReproPlayer",
+            "componentIds": [],
+            "symbol": {
+                "jvmOwner": "ee.schimke.ha.previews.WrapContentHeightReproKt",
+                "callable": "ee.schimke.ha.previews.ReproPlayer",
+                "name": "ReproPlayer",
+                "origin": "PROJECT",
+                "jvmName": "ReproPlayer",
+                "descriptor": "(Landroidx/compose/ui/Modifier;Landroidx/compose/runtime/Composer;I)V",
+                "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/WrapContentHeightRepro.kt",
+                "docs": "unavailable",
+                "receiver": null
+            },
+            "parameters": [
+                {
+                    "name": "modifier",
+                    "type": "Modifier",
+                    "typeFqn": "androidx.compose.ui.Modifier",
+                    "hasDefault": false,
+                    "composableSlot": false,
+                    "composableSlotReceiver": null,
+                    "nullable": false,
+                    "noArgConstructible": false,
+                    "noArgFactory": null,
+                    "scopeDslReceiver": null,
+                    "lambdaReturnTypeFqn": null
+                }
+            ],
+            "slots": [],
+            "bindings": [
+                {
+                    "previewId": "ee.schimke.ha.previews.WrapContentHeightReproKt.WrapContentHeightReproAlpha010_wrap-content_height_repro___alpha010",
+                    "componentId": null
+                }
+            ],
+            "code": {
+                "call": null,
+                "imports": [],
+                "refusedReason": "not public or internal, so a generated file cannot call it",
+                "requiredOptIns": [],
+                "androidxOptIns": []
+            },
+            "signatureKnown": true,
+            "callableFromAnotherFile": false,
+            "hasTypeParameters": false,
+            "hasContextReceivers": false,
+            "overloadsCollided": false,
+            "requiredOptIns": [],
+            "androidxOptIns": []
+        }
+    ]
+}
