@@ -72,7 +72,7 @@ coil = "3.6.2"
 ktfmt-gradle = "0.27.0"
 
 # Markdown parsing (KMP, by JetBrains — used by IntelliJ)
-jetbrains-markdown = "0.7.9"
+jetbrains-markdown = "0.7.12"
 
 # Wear data layer + Proto DataStore + Horologist
 horologist = "0.8.3-alpha"
