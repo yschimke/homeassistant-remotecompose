@@ -66,7 +66,7 @@ composeai-contracts = "2.10.0"
 tapmoc = "0.4.2"
 
 # Image loading (BitmapLoader / RemoteCompose named-bitmap resolution)
-coil = "3.5.0"
+coil = "3.6.2"
 
 # Formatting
 ktfmt-gradle = "0.27.0"
