@@ -1,11 +1,19 @@
 {
   "schema": "compose-preview-activity/v1",
-  "generatedAt": "2026-09-07T01:08:17.877Z",
+  "generatedAt": "2026-09-07T01:32:30.379Z",
   "windowDays": 30,
   "code": {
     "repo": "yschimke/homeassistant-remotecompose",
     "ref": "main",
     "events": [
+      {
+        "sha": "d6d871da5bf3927dc51f846d8d12b621d1fc3632",
+        "subject": "fix(deps): update dependency org.jetbrains:markdown to v0.7.12 (#649)",
+        "at": "2026-09-07T01:16:44Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
       {
         "sha": "31d70a3f7be03a01b8cd3ce9076b1b72b824adb7",
         "subject": "chore(deps): update agp to v9.4.0 (#650)",
@@ -475,14 +483,6 @@
         "subject": "build(deps): resolve Remote Compose + Glance Wear from androidx.dev snapshots (#588)",
         "at": "2026-08-18T22:26:16+01:00",
         "author": "Yuri Schimke",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "b51a0b087c5a3c61a4d8f7b7fa8bb0d65610d204",
-        "subject": "fix(deps): update compose-ai-tools to v1.14.1 (#587)",
-        "at": "2026-08-18T02:36:27Z",
-        "author": "renovate[bot]",
         "previewIds": [],
         "components": []
       }
