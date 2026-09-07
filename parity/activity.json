@@ -1,11 +1,35 @@
 {
   "schema": "compose-preview-activity/v1",
-  "generatedAt": "2026-09-06T23:14:42.400Z",
+  "generatedAt": "2026-09-07T01:08:17.877Z",
   "windowDays": 30,
   "code": {
     "repo": "yschimke/homeassistant-remotecompose",
     "ref": "main",
     "events": [
+      {
+        "sha": "31d70a3f7be03a01b8cd3ce9076b1b72b824adb7",
+        "subject": "chore(deps): update agp to v9.4.0 (#650)",
+        "at": "2026-09-07T00:52:36Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "fc0769924918b7918e7d57c34e22d081a9239e14",
+        "subject": "fix(deps): update coil to v3.6.2 (#651)",
+        "at": "2026-09-07T00:52:33Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "77179fb2c3a9bae9dc441b4627bf1129b0fb24e8",
+        "subject": "chore(deps): update anthropics/claude-code-action action to v1.0.217 (#648)",
+        "at": "2026-09-06T23:23:27Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
       {
         "sha": "924fc78895b85601693c8dc7909b00b38ffc81f0",
         "subject": "fix(deps): update dependency ee.schimke.composeai:data-render-core to v2.10.0 (#647)",
@@ -458,30 +482,6 @@
         "sha": "b51a0b087c5a3c61a4d8f7b7fa8bb0d65610d204",
         "subject": "fix(deps): update compose-ai-tools to v1.14.1 (#587)",
         "at": "2026-08-18T02:36:27Z",
-        "author": "renovate[bot]",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "9bd2f6fceaaafca663af2a0bc3139615036e4be4",
-        "subject": "fix(deps): update compose-ai-tools to v1.14.0 (#586)",
-        "at": "2026-08-17T22:51:53Z",
-        "author": "renovate[bot]",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "c6ffb0eacd9ccb7b0af5a78deeab48c5f0570786",
-        "subject": "fix(deps): update compose-ai-tools to v1.13.0 (#585)",
-        "at": "2026-08-17T21:53:18Z",
-        "author": "renovate[bot]",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "d0605593157771a6fe6822e6ef9424f1990bf08f",
-        "subject": "fix(deps): update compose-ai-tools to v1.12.0 (#584)",
-        "at": "2026-08-17T13:09:05Z",
         "author": "renovate[bot]",
         "previewIds": [],
         "components": []
