@@ -1,11 +1,19 @@
 {
   "schema": "compose-preview-activity/v1",
-  "generatedAt": "2026-09-07T12:14:10.398Z",
+  "generatedAt": "2026-09-07T12:38:34.700Z",
   "windowDays": 30,
   "code": {
     "repo": "yschimke/homeassistant-remotecompose",
     "ref": "main",
     "events": [
+      {
+        "sha": "699cdc95c28cf3961e019363554a606c29d839b0",
+        "subject": "fix(deps): update dependency ee.schimke.composeai:data-render-core to v2.11.0 (#652)",
+        "at": "2026-09-07T12:23:18Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
       {
         "sha": "d6d871da5bf3927dc51f846d8d12b621d1fc3632",
         "subject": "fix(deps): update dependency org.jetbrains:markdown to v0.7.12 (#649)",
@@ -475,14 +483,6 @@
         "subject": "fix(deps): update compose-ai-tools to v1.15.0 (#589)",
         "at": "2026-08-18T21:53:54Z",
         "author": "renovate[bot]",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "e2efa68d664aecbc8d586519b2d0ebd3c1ec8a14",
-        "subject": "build(deps): resolve Remote Compose + Glance Wear from androidx.dev snapshots (#588)",
-        "at": "2026-08-18T22:26:16+01:00",
-        "author": "Yuri Schimke",
         "previewIds": [],
         "components": []
       }
