@@ -46,7 +46,7 @@ customising the live render are two ends of one workflow.
 | Library | `androidx.compose.material3:material3`<br>`androidx.compose.remote:remote-player-compose (RemoteCompose)`<br>`ee.schimke.ha:rc-components (Terrazzo themes)` |
 | Renderer | compose-preview 1.85.0 |
 | Schema | `design-parity-catalog/v1` |
-| Generated | 2026-09-11 |
+| Generated | 2026-09-12 |
 
 ## Components by group
 
