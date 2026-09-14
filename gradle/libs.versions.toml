@@ -22,12 +22,12 @@ compose-compiler = "1.5.15"
 # 1.0.0-alpha10 and `glance-wear` 1.0.0-alpha17 both declare
 # `androidx.compose.remote:remote-creation*:1.0.0-alpha18`, which is what keeps
 # this set consistent.
-remote-compose = "1.0.0-alpha18"
-remote-material3 = "1.0.0-alpha10"
+remote-compose = "1.0.0-alpha19"
+remote-material3 = "1.0.0-alpha11"
 
 # AndroidX Glance Wear (runtime feature gated on Wear OS 7+ / API 37 inside the
 # library; we use it for the per-slot wear widgets). Lockstep — see above.
-glance-wear = "1.0.0-alpha17"
+glance-wear = "1.0.0-alpha18"
 
 # Android
 android-minSdk = "29"
