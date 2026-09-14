@@ -10,7 +10,7 @@ play-publisher = "4.1.1"
 metro = "1.4.2"
 
 # Compose
-compose-bom = "2026.08.00"
+compose-bom = "2026.09.00"
 compose-compiler = "1.5.15"
 
 # RemoteCompose + the Wear widget stack that sits on it (APIs change per alpha).
@@ -117,7 +117,7 @@ compose-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview"
 compose-foundation = { module = "androidx.compose.foundation:foundation" }
 # MaterialKolor currently raises Material 3 above the stable BOM mapping. Keep
 # that alpha aligned with Foundation 1.12's CustomStyle ABI.
-compose-material3 = { module = "androidx.compose.material3:material3", version = "1.5.0-alpha27" }
+compose-material3 = { module = "androidx.compose.material3:material3", version = "1.5.0-alpha28" }
 compose-material-icons-extended = { module = "androidx.compose.material:material-icons-extended" }
 activity-compose = { module = "androidx.activity:activity-compose", version = "1.13.0" }
 
