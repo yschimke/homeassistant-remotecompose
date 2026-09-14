@@ -1,11 +1,19 @@
 {
   "schema": "compose-preview-activity/v1",
-  "generatedAt": "2026-09-14T09:59:13.786Z",
+  "generatedAt": "2026-09-14T10:21:44.156Z",
   "windowDays": 30,
   "code": {
     "repo": "yschimke/homeassistant-remotecompose",
     "ref": "main",
     "events": [
+      {
+        "sha": "0b1f1bedc887476ea51c6f1a09cea1a93122808e",
+        "subject": "fix(deps): update androidx to v1.2.0-rc01 (#660)",
+        "at": "2026-09-14T10:06:47Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
       {
         "sha": "8af054a8c6de1575545b651185aa61b1facc9a60",
         "subject": "fix(deps): update dependency com.google.firebase:firebase-bom to v34.19.0 (#664)",
@@ -474,14 +482,6 @@
         "sha": "68fd30e32bf0cc27356f9c0d733ef72eb3b56e7e",
         "subject": "fix(deps): update compose-ai-tools to v1.30.0 (#600)",
         "at": "2026-08-22T11:21:40Z",
-        "author": "renovate[bot]",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "eb98628bc72e8dc831ba7fe5b30f402dd82efc07",
-        "subject": "fix(deps): update compose-ai-tools to v1.29.0 (#599)",
-        "at": "2026-08-21T22:52:03Z",
         "author": "renovate[bot]",
         "previewIds": [],
         "components": []
