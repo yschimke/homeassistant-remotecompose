@@ -1,11 +1,19 @@
 {
   "schema": "compose-preview-activity/v1",
-  "generatedAt": "2026-09-14T04:14:49.636Z",
+  "generatedAt": "2026-09-14T04:38:59.577Z",
   "windowDays": 30,
   "code": {
     "repo": "yschimke/homeassistant-remotecompose",
     "ref": "main",
     "events": [
+      {
+        "sha": "f4d8ea8933a4da1c0e49bf4390bcadc2ebad8e96",
+        "subject": "chore(deps): update dependency dev.zacsweers.metro to v1.4.3 (#659)",
+        "at": "2026-09-14T04:23:13Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
       {
         "sha": "c1c15c0ab43ba3b17f25874c6b3aa2fc60a431e2",
         "subject": "fix(deps): update androidx-compose (#661)",
@@ -474,14 +482,6 @@
         "sha": "c85a63d9b764de24e1e92343a09ebc23e2cf95b5",
         "subject": "fix(deps): update compose-ai-tools to v1.27.0 (#597)",
         "at": "2026-08-21T06:49:40Z",
-        "author": "renovate[bot]",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "25b9a418b188062a73ed51c4860c9f5c54b204d7",
-        "subject": "chore(deps): update yschimke/compose-ai-tools action to v1.27.0 (#596)",
-        "at": "2026-08-20T23:32:37Z",
         "author": "renovate[bot]",
         "previewIds": [],
         "components": []
