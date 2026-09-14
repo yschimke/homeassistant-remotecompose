@@ -1,11 +1,27 @@
 {
   "schema": "compose-preview-activity/v1",
-  "generatedAt": "2026-09-14T04:38:59.577Z",
+  "generatedAt": "2026-09-14T09:59:13.786Z",
   "windowDays": 30,
   "code": {
     "repo": "yschimke/homeassistant-remotecompose",
     "ref": "main",
     "events": [
+      {
+        "sha": "8af054a8c6de1575545b651185aa61b1facc9a60",
+        "subject": "fix(deps): update dependency com.google.firebase:firebase-bom to v34.19.0 (#664)",
+        "at": "2026-09-14T09:46:20Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "7e5f3ba1acc7a2737a32597e20ae5567c5b32bef",
+        "subject": "chore(deps): update anthropics/claude-code-action action to v1.0.223 (#658)",
+        "at": "2026-09-14T04:47:26Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
       {
         "sha": "f4d8ea8933a4da1c0e49bf4390bcadc2ebad8e96",
         "subject": "chore(deps): update dependency dev.zacsweers.metro to v1.4.3 (#659)",
@@ -466,22 +482,6 @@
         "sha": "eb98628bc72e8dc831ba7fe5b30f402dd82efc07",
         "subject": "fix(deps): update compose-ai-tools to v1.29.0 (#599)",
         "at": "2026-08-21T22:52:03Z",
-        "author": "renovate[bot]",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "1a2303fc1e657b1c39ba70b59185589d2ec3c7d9",
-        "subject": "fix(deps): update compose-ai-tools to v1.28.0 (#598)",
-        "at": "2026-08-21T12:50:09Z",
-        "author": "renovate[bot]",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "c85a63d9b764de24e1e92343a09ebc23e2cf95b5",
-        "subject": "fix(deps): update compose-ai-tools to v1.27.0 (#597)",
-        "at": "2026-08-21T06:49:40Z",
         "author": "renovate[bot]",
         "previewIds": [],
         "components": []
