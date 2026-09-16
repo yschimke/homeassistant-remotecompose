@@ -1,11 +1,19 @@
 {
   "schema": "compose-preview-activity/v1",
-  "generatedAt": "2026-09-16T01:49:37.368Z",
+  "generatedAt": "2026-09-16T12:59:45.145Z",
   "windowDays": 30,
   "code": {
     "repo": "yschimke/homeassistant-remotecompose",
     "ref": "main",
     "events": [
+      {
+        "sha": "1856eac1fab750c048f20c82b1cb50258d70456d",
+        "subject": "fix(deps): update dependency ee.schimke.composeai:data-render-core to v2.20.0 (#667)",
+        "at": "2026-09-16T12:44:25Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
       {
         "sha": "eab81e894901349c86f5617bed250899c5c140e8",
         "subject": "fix(deps): update dependency ee.schimke.composeai:data-render-core to v2.19.0 (#666)",
@@ -474,14 +482,6 @@
         "sha": "857a32b24145a09cdd44cf8015157dd01a268a48",
         "subject": "chore(deps): update anthropics/claude-code-action action to v1.0.201 (#603)",
         "at": "2026-08-24T01:51:58Z",
-        "author": "renovate[bot]",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "ec039930f3dc745b4556dafd0efb8f783371f869",
-        "subject": "fix(deps): update dependency com.google.firebase:firebase-crashlytics-gradle to v3.0.8 (#606)",
-        "at": "2026-08-24T01:21:51Z",
         "author": "renovate[bot]",
         "previewIds": [],
         "components": []
