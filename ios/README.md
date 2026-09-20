@@ -5,6 +5,12 @@ Remote Compose card with the **pure Swift/UIKit player** from
 [`yschimke/rc-players`](https://github.com/yschimke/rc-players):
 `RcNativePlayerUIKit` 1.68.0.
 
+## Screenshots
+
+| Connect | Native-player dashboard |
+| --- | --- |
+| <img src="../docs/images/ios-connect.png" width="320" alt="Terrazzo connection screen"> | <img src="../docs/images/ios-dashboard-demo.png" width="320" alt="Terrazzo demo dashboard rendered by the native Swift player"> |
+
 ## Open and run
 
 1. Open `ios/Terrazzo.xcodeproj` on an Apple-silicon Mac.
