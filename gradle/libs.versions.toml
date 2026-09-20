@@ -83,6 +83,7 @@ play-services-wearable = "20.0.1"
 firebase-bom = "34.19.0"
 
 [libraries]
+ktor-client-darwin = { module = "io.ktor:ktor-client-darwin", version.ref = "ktor" }
 # RemoteCompose authoring / playback
 okhttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }
 okhttp-coroutines = { module = "com.squareup.okhttp3:okhttp-coroutines", version.ref = "okhttp" }

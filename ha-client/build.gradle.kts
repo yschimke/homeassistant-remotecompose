@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.plugin.mpp.apple.XCFramework
+
 plugins {
   id("harc.base-conventions")
   alias(libs.plugins.kotlin.multiplatform)
@@ -8,6 +10,8 @@ plugins {
 kotlin {
   jvmToolchain(libs.versions.java.get().toInt())
 
+  val terrazzoKit = XCFramework("TerrazzoKit")
+
   android {
     namespace = "ee.schimke.ha.client"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
@@ -15,10 +19,17 @@ kotlin {
     withHostTest {}
   }
   jvm()
+  listOf(iosArm64(), iosSimulatorArm64()).forEach { appleTarget ->
+    appleTarget.binaries.framework {
+      baseName = "TerrazzoKit"
+      export(project(":ha-model"))
+      terrazzoKit.add(this)
+    }
+  }
 
   sourceSets {
     commonMain.dependencies {
-      implementation(project(":ha-model"))
+      api(project(":ha-model"))
       implementation(libs.ktor.client.core)
       implementation(libs.ktor.client.websockets)
       implementation(libs.ktor.client.content.negotiation)
@@ -33,5 +44,6 @@ kotlin {
     }
     androidMain.dependencies { implementation(libs.ktor.client.okhttp) }
     jvmMain.dependencies { implementation(libs.ktor.client.cio) }
+    iosMain.dependencies { implementation(libs.ktor.client.darwin) }
   }
 }

@@ -1,0 +1,146 @@
+{
+  "schemaVersion": 1,
+  "profileId": "rc-native-uikit-core-v1",
+  "releaseVersion": "1.68.0",
+  "sourceRevision": "54c8dad41b4b8f38c9d06a57412d226688f0ab8c",
+  "maturity": "experimental",
+  "product": "RcNativePlayerUIKit",
+  "replacesCmpPlayer": false,
+  "platforms": [
+    {
+      "os": "iOS",
+      "minimumVersion": "13.0",
+      "deviceArchitectures": ["arm64"],
+      "simulatorArchitectures": ["arm64"]
+    }
+  ],
+  "runtime": {
+    "ui": "UIKit/CoreGraphics/CoreText",
+    "decoderBridge": "pure Swift",
+    "retainedSession": true,
+    "frameScheduling": ["static", "continuous"]
+  },
+  "nativeNodeKinds": [
+    "root",
+    "content",
+    "canvas",
+    "box",
+    "row",
+    "column",
+    "text",
+    "image",
+    "custom"
+  ],
+  "nativeDrawKinds": [
+    "text",
+    "save",
+    "restore",
+    "translate",
+    "scale",
+    "skew",
+    "rotate",
+    "clip-rect",
+    "clip-path",
+    "rect",
+    "oval",
+    "circle",
+    "line",
+    "round-rect",
+    "arc",
+    "sector",
+    "path",
+    "image",
+    "texture"
+  ],
+  "interaction": {
+    "hostNamedValues": ["float", "string", "color"],
+    "clickActions": ["single", "long", "double"],
+    "pointerActions": ["down", "up", "cancel"],
+    "semanticRoles": ["button"]
+  },
+  "verifiedFixtures": [
+    {
+      "id": "TitleCardRemote-640x480",
+      "coverage": ["modern-header", "layout", "native-text", "path", "named-action", "button", "swift-decode"]
+    },
+    {
+      "id": "editable-text",
+      "coverage": ["legacy-header", "custom-component", "text-return", "swift-decode"]
+    },
+    {
+      "id": "IndeterminateCircularProgress-400x400",
+      "coverage": ["canvas", "float-expressions", "continuous-time", "arc", "swift-decode"]
+    },
+    {
+      "id": "CircularProgressRemote-384x384",
+      "coverage": ["canvas", "scalar-math", "circle", "arc", "swift-decode"]
+    },
+    {
+      "id": "ArcProgressRemote-454x400",
+      "coverage": ["canvas", "integer-expressions", "color-expressions", "color-attributes", "arc", "swift-decode"]
+    },
+    {
+      "id": "ImageBackgroundRemoteButton-454x200",
+      "coverage": ["bitmap-data", "texture", "image-attributes", "derived-text", "integer-action", "swift-decode"]
+    },
+    {
+      "id": "host-density",
+      "coverage": ["deferred-density", "dynamic-text-size", "float-expressions", "swift-decode"]
+    }
+  ],
+  "defaultLimits": {
+    "wireDocumentBytes": 16777216,
+    "wireBlobBytes": 8388608,
+    "wireStringBytes": 4000,
+    "wireTableEntries": 1000,
+    "wirePaintWords": 1024,
+    "wirePathWords": 20000,
+    "wireCollectionEntries": 2000,
+    "wireImageDimension": 8192,
+    "wireOperations": 100000,
+    "containerNesting": 256,
+    "expansionDepth": 64,
+    "expandedNodes": 100000,
+    "nativeDocumentBytes": 16777216,
+    "nativeNodes": 20000,
+    "nativeNesting": 256,
+    "nativeDrawCommands": 50000,
+    "nativePathElements": 100000,
+    "nativeTextBytes": 16384,
+    "nativeCanvasDimension": 16384,
+    "nativeCoordinateMagnitude": 1000000,
+    "nativeFrameWork": 200000,
+    "nativeResourceBytes": 8388608,
+    "nativeTotalResourceBytes": 25165824,
+    "nativeResourceImageDimension": 4096,
+    "nativeDecodedPixels": 16777216,
+    "nativeDecodedImageBytes": 134217728,
+    "nativeResourceCount": 32
+  },
+  "compatibility": {
+    "policy": "No source or binary compatibility guarantee before the profile leaves experimental status.",
+    "unsupportedBehavior": "Compatible mode renders the supported subset with diagnostics; strict mode refuses it.",
+    "migration": "Use RcComposePlayerSwiftUI for documents outside this profile; the native product is an independent pure-Swift implementation and never replaces or redirects the CMP product."
+  },
+  "densityContract": {
+    "default": "density-1.0",
+    "androidCompatibilityMode": "RemoteComposeNativePlayerAndroidCompatibility.enabled",
+    "densityTypedGeometryReporting": "diagnostic"
+  },
+  "evidence": {
+    "fuzzCorpus": "scripts/check-native-swift-fuzz.sh",
+    "coreBenchmark": "scripts/measure-native-swift-core.sh",
+    "uikitBenchmark": "scripts/measure-native-uikit-simulator.sh",
+    "appkitBenchmark": "scripts/measure-native-appkit.sh",
+    "comparison": "scripts/check-native-uikit-comparison.sh",
+    "ciArtifact": "native-performance-evidence"
+  },
+  "distribution": {
+    "repositoryProduct": "RcNativePlayerUIKit",
+    "standaloneArchive": "RcNativePlayerUIKit.swiftpackage.zip",
+    "archiveChecksum": "RcNativePlayerUIKit.swiftpackage.zip.sha256",
+    "profileAsset": "RcNativePlayerUIKit.profile.json",
+    "profileChecksum": "RcNativePlayerUIKit.profile.json.sha256",
+    "buildWorkflow": ".github/workflows/release.yml"
+  }
+}
