@@ -1,11 +1,19 @@
 {
   "schema": "compose-preview-activity/v1",
-  "generatedAt": "2026-09-20T12:58:06.433Z",
+  "generatedAt": "2026-09-20T20:43:03.612Z",
   "windowDays": 30,
   "code": {
     "repo": "yschimke/homeassistant-remotecompose",
     "ref": "main",
     "events": [
+      {
+        "sha": "c86d9731ae2536236b37021dd291a13492e0caf8",
+        "subject": "fix(deps): update compose-ai-tools to v2 (#670)",
+        "at": "2026-09-20T20:27:48Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
       {
         "sha": "57eb8b3454e6f76d3a84da0e46f8225cb588ba39",
         "subject": "feat: add native iOS dashboard app (#668)",
@@ -474,14 +482,6 @@
         "sha": "3131a945549163d2c2fd7f6498cb9b8755aaf9d7",
         "subject": "fix(deps): update dependency com.google.firebase:firebase-bom to v34.18.0 (#608)",
         "at": "2026-08-24T02:45:55Z",
-        "author": "renovate[bot]",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "89987eea81457c367950f11a65b1db11b6abfc23",
-        "subject": "fix(deps): update mockserver to v7.6.0 (#609)",
-        "at": "2026-08-24T02:45:52Z",
         "author": "renovate[bot]",
         "previewIds": [],
         "components": []
