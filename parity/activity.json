@@ -1,11 +1,19 @@
 {
   "schema": "compose-preview-activity/v1",
-  "generatedAt": "2026-09-16T12:59:45.145Z",
+  "generatedAt": "2026-09-20T12:58:06.433Z",
   "windowDays": 30,
   "code": {
     "repo": "yschimke/homeassistant-remotecompose",
     "ref": "main",
     "events": [
+      {
+        "sha": "57eb8b3454e6f76d3a84da0e46f8225cb588ba39",
+        "subject": "feat: add native iOS dashboard app (#668)",
+        "at": "2026-09-20T13:43:08+01:00",
+        "author": "Yuri Schimke",
+        "previewIds": [],
+        "components": []
+      },
       {
         "sha": "1856eac1fab750c048f20c82b1cb50258d70456d",
         "subject": "fix(deps): update dependency ee.schimke.composeai:data-render-core to v2.20.0 (#667)",
@@ -474,14 +482,6 @@
         "sha": "89987eea81457c367950f11a65b1db11b6abfc23",
         "subject": "fix(deps): update mockserver to v7.6.0 (#609)",
         "at": "2026-08-24T02:45:52Z",
-        "author": "renovate[bot]",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "857a32b24145a09cdd44cf8015157dd01a268a48",
-        "subject": "chore(deps): update anthropics/claude-code-action action to v1.0.201 (#603)",
-        "at": "2026-08-24T01:51:58Z",
         "author": "renovate[bot]",
         "previewIds": [],
         "components": []
