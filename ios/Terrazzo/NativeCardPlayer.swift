@@ -76,6 +76,7 @@ struct NativeCardPlayer: UIViewRepresentable {
             switch value {
             case .string(let value): accepted = await view.setString(value, for: name)
             case .float(let value): accepted = await view.setFloat(value, for: name)
+            case .integer(let value): accepted = await view.setInteger(value, for: name)
             case .color(let value): accepted = await view.setColor(value, for: name)
             }
             acceptedAny = acceptedAny || accepted
