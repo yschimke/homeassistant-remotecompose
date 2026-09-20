@@ -1,11 +1,19 @@
 {
   "schema": "compose-preview-activity/v1",
-  "generatedAt": "2026-09-20T20:43:03.612Z",
+  "generatedAt": "2026-09-20T21:06:36.012Z",
   "windowDays": 30,
   "code": {
     "repo": "yschimke/homeassistant-remotecompose",
     "ref": "main",
     "events": [
+      {
+        "sha": "85cd4778b22484ca9383713d47315c1489b68ee5",
+        "subject": "fix(deps): update compose-ai-tools (#671)",
+        "at": "2026-09-20T20:51:06Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
       {
         "sha": "c86d9731ae2536236b37021dd291a13492e0caf8",
         "subject": "fix(deps): update compose-ai-tools to v2 (#670)",
@@ -474,14 +482,6 @@
         "sha": "79548e7657cee7298365ff8c5b4404c1a9ea04c2",
         "subject": "chore(deps): update eclipse-temurin docker tag to v25.0.4_7-jdk-jammy (#604)",
         "at": "2026-08-24T03:17:10Z",
-        "author": "renovate[bot]",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "3131a945549163d2c2fd7f6498cb9b8755aaf9d7",
-        "subject": "fix(deps): update dependency com.google.firebase:firebase-bom to v34.18.0 (#608)",
-        "at": "2026-08-24T02:45:55Z",
         "author": "renovate[bot]",
         "previewIds": [],
         "components": []

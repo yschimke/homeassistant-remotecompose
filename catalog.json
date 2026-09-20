@@ -5647,8 +5647,8 @@
     "androidx.compose.remote:remote-player-compose (RemoteCompose)",
     "ee.schimke.ha:rc-components (Terrazzo themes)"
   ],
-  "renderer": "compose-preview 2.0.0",
-  "generatedAt": "2026-09-20T20:42:58.914Z",
+  "renderer": "compose-preview 2.4.1",
+  "generatedAt": "2026-09-20T21:06:31.477Z",
   "display": {
     "hero": "Dashboard/Light"
   },

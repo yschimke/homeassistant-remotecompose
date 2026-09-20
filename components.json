@@ -55,11 +55,13 @@
             "bindings": [
                 {
                     "previewId": "ee.schimke.ha.previews.AnimationPreviewsKt.Gauge_Animation_Dark_gauge-anim__dark_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.AnimationPreviewsKt.Gauge_Animation_Light_gauge-anim__light_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 }
             ],
             "code": {
@@ -74,6 +76,7 @@
             "hasTypeParameters": false,
             "hasContextReceivers": false,
             "overloadsCollided": false,
+            "builder": null,
             "requiredOptIns": [],
             "androidxOptIns": []
         },
@@ -110,11 +113,13 @@
             "bindings": [
                 {
                     "previewId": "ee.schimke.ha.previews.AppIconPreviewsKt.AppIcon_Dark_app-icon__dark_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.AppIconPreviewsKt.AppIcon_Light_app-icon__light_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 }
             ],
             "code": {
@@ -129,6 +134,7 @@
             "hasTypeParameters": false,
             "hasContextReceivers": false,
             "overloadsCollided": false,
+            "builder": null,
             "requiredOptIns": [],
             "androidxOptIns": []
         },
@@ -230,79 +236,98 @@
             "bindings": [
                 {
                     "previewId": "ee.schimke.ha.previews.CardPreviewMatrixKt.CardPreviewMatrix_AlarmPanel_matrix___alarm-panel",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.CardPreviewMatrixKt.CardPreviewMatrix_Button_matrix___button",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.CardPreviewMatrixKt.CardPreviewMatrix_Calendar_matrix___calendar",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.CardPreviewMatrixKt.CardPreviewMatrix_Entities_matrix___entities",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.CardPreviewMatrixKt.CardPreviewMatrix_Entity_matrix___entity",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.CardPreviewMatrixKt.CardPreviewMatrix_Gauge_matrix___gauge",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.CardPreviewMatrixKt.CardPreviewMatrix_HistoryGraph_matrix___history-graph",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.CardPreviewMatrixKt.CardPreviewMatrix_Humidifier_matrix___humidifier",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.CardPreviewMatrixKt.CardPreviewMatrix_Light_matrix___light",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.CardPreviewMatrixKt.CardPreviewMatrix_Logbook_matrix___logbook",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.CardPreviewMatrixKt.CardPreviewMatrix_Markdown_matrix___markdown",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.CardPreviewMatrixKt.CardPreviewMatrix_MediaControl_matrix___media-control",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.CardPreviewMatrixKt.CardPreviewMatrix_PictureEntity_matrix___picture-entity",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.CardPreviewMatrixKt.CardPreviewMatrix_Sensor_matrix___sensor",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.CardPreviewMatrixKt.CardPreviewMatrix_Statistic_matrix___statistic",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.CardPreviewMatrixKt.CardPreviewMatrix_Thermostat_matrix___thermostat",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.CardPreviewMatrixKt.CardPreviewMatrix_Tile_matrix___tile",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.CardPreviewMatrixKt.CardPreviewMatrix_TodoList_matrix___todo-list",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.CardPreviewMatrixKt.CardPreviewMatrix_WeatherForecast_matrix___weather-forecast",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 }
             ],
             "code": {
@@ -317,6 +342,7 @@
             "hasTypeParameters": false,
             "hasContextReceivers": false,
             "overloadsCollided": false,
+            "builder": null,
             "requiredOptIns": [],
             "androidxOptIns": []
         },
@@ -372,363 +398,453 @@
             "bindings": [
                 {
                     "previewId": "ee.schimke.ha.previews.CardPreviewsKt.AlarmPanel_Dark_alarm-panel__dark_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.CardPreviewsKt.AlarmPanel_Light_alarm-panel__light_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Area_Dark_area__dark_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Area_Light_area__light_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.CardPreviewsKt.BambuAms_Dark_bambu_ams__dark_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.CardPreviewsKt.BambuAms_Light_bambu_ams__light_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.CardPreviewsKt.BambuPrintControl_Dark_bambu_print-control__dark_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.CardPreviewsKt.BambuPrintControl_Light_bambu_print-control__light_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.CardPreviewsKt.BambuPrintStatus_Dark_bambu_print-status__dark_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.CardPreviewsKt.BambuPrintStatus_Light_bambu_print-status__light_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.CardPreviewsKt.BambuSpool_Dark_bambu_spool__dark_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.CardPreviewsKt.BambuSpool_Light_bambu_spool__light_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Button_Dark_button__dark_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Button_Light_button__light_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Button_On_Dark_button_on__dark_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Button_On_Light_button_on__light_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Calendar_Dark_calendar__dark_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Calendar_Light_calendar__light_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Clock_Dark_clock__dark_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Clock_Light_clock__light_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Clock_Seconds_clock__seconds_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Clock_Zone_clock__zone_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Entities_Dark_entities__dark_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Entities_Light_entities__light_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.CardPreviewsKt.EntityFilter_Dark_entity-filter__dark_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.CardPreviewsKt.EntityFilter_Light_entity-filter__light_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Entity_Dark_entity__dark_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Entity_Light_entity__light_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Gauge_Dark_gauge__dark_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Gauge_Light_gauge__light_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Glance_Dark_glance__dark_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Glance_Light_glance__light_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Grid_Dark_grid__dark_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Grid_Light_grid__light_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Heading_Dark_heading__dark_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Heading_Light_heading__light_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.CardPreviewsKt.HistoryGraphNoData_Dark_history-graph_no-data__dark_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.CardPreviewsKt.HistoryGraphNoData_Light_history-graph_no-data__light_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.CardPreviewsKt.HistoryGraph_Dark_history-graph__dark_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.CardPreviewsKt.HistoryGraph_Light_history-graph__light_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.CardPreviewsKt.HorizontalStack_Dark_horizontal-stack__dark_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.CardPreviewsKt.HorizontalStack_Light_horizontal-stack__light_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Humidifier_Dark_humidifier__dark_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Humidifier_Light_humidifier__light_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.CardPreviewsKt.LightCard_Dark_light_card__dark_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.CardPreviewsKt.LightCard_Light_light_card__light_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Logbook_Dark_logbook__dark_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Logbook_Light_logbook__light_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Markdown_Dark_markdown__dark_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Markdown_Light_markdown__light_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.CardPreviewsKt.MediaControl_Dark_media-control__dark_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.CardPreviewsKt.MediaControl_Light_media-control__light_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.CardPreviewsKt.PictureElements_Dark_picture-elements__dark_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.CardPreviewsKt.PictureElements_Light_picture-elements__light_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.CardPreviewsKt.PictureEntity_Dark_picture-entity__dark_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.CardPreviewsKt.PictureEntity_Light_picture-entity__light_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.CardPreviewsKt.PictureGlance_Dark_picture-glance__dark_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.CardPreviewsKt.PictureGlance_Light_picture-glance__light_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Picture_Dark_picture__dark_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Picture_Light_picture__light_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Sensor_Dark_sensor__dark_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Sensor_Light_sensor__light_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Statistic_Dark_statistic__dark_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Statistic_Light_statistic__light_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.CardPreviewsKt.StatisticsGraph_Dark_statistics-graph__dark_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.CardPreviewsKt.StatisticsGraph_Light_statistics-graph__light_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Thermostat_Dark_thermostat__dark_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Thermostat_Light_thermostat__light_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Tile_Cover_States_tile_cover__light_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Tile_Light_States_tile_light__light_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Tile_Lock_States_tile_lock__light_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.CardPreviewsKt.TodoList_Dark_todo-list__dark_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.CardPreviewsKt.TodoList_Light_todo-list__light_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Unsupported_Dark_unsupported__dark_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Unsupported_Light_unsupported__light_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.CardPreviewsKt.VerticalStack_Dark_vertical-stack__dark_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.CardPreviewsKt.VerticalStack_Light_vertical-stack__light_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.CardPreviewsKt.WeatherForecast_Dark_weather-forecast__dark_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.CardPreviewsKt.WeatherForecast_Light_weather-forecast__light_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.ResponsiveCardPreviewsKt.Entities_Responsive_Light_entities_responsive_narrow",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.ResponsiveCardPreviewsKt.Entities_Responsive_Light_entities_responsive_standard",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.ResponsiveCardPreviewsKt.Entities_Responsive_Light_entities_responsive_wide",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.ResponsiveCardPreviewsKt.Glance_Responsive_Dark_glance_responsive_narrow",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.ResponsiveCardPreviewsKt.Glance_Responsive_Dark_glance_responsive_standard",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.ResponsiveCardPreviewsKt.Glance_Responsive_Dark_glance_responsive_wide",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.ResponsiveCardPreviewsKt.Markdown_Responsive_Light_markdown_responsive_narrow",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.ResponsiveCardPreviewsKt.Markdown_Responsive_Light_markdown_responsive_standard",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.ResponsiveCardPreviewsKt.Tile_Responsive_Dark_tile_responsive_narrow",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.ResponsiveCardPreviewsKt.Tile_Responsive_Dark_tile_responsive_standard",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.ResponsiveCardPreviewsKt.Tile_Responsive_Dark_tile_responsive_wide",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 }
             ],
             "code": {
@@ -743,6 +859,7 @@
             "hasTypeParameters": false,
             "hasContextReceivers": false,
             "overloadsCollided": false,
+            "builder": null,
             "requiredOptIns": [],
             "androidxOptIns": []
         },
@@ -779,11 +896,13 @@
             "bindings": [
                 {
                     "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Dashboard_Dark_dashboard__dark_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Dashboard_Light_dashboard__light_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 }
             ],
             "code": {
@@ -798,6 +917,7 @@
             "hasTypeParameters": false,
             "hasContextReceivers": false,
             "overloadsCollided": false,
+            "builder": null,
             "requiredOptIns": [],
             "androidxOptIns": []
         },
@@ -834,59 +954,73 @@
             "bindings": [
                 {
                     "previewId": "ee.schimke.ha.previews.DashboardPreviewsKt.Dashboard3dPrintingMobile_dashboard_3d-printing___mobile",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.DashboardPreviewsKt.Dashboard3dPrintingTablet_dashboard_3d-printing___tablet",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.DashboardPreviewsKt.DashboardClimateMobile_dashboard_climate___mobile",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.DashboardPreviewsKt.DashboardClimateTablet_dashboard_climate___tablet",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.DashboardPreviewsKt.DashboardEnergyMobile_dashboard_energy___mobile",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.DashboardPreviewsKt.DashboardEnergyTablet_dashboard_energy___tablet",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.DashboardPreviewsKt.DashboardGithubMobile_dashboard_github___mobile",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.DashboardPreviewsKt.DashboardGithubTablet_dashboard_github___tablet",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.DashboardPreviewsKt.DashboardMeshcoreMobile_dashboard_meshcore___mobile",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.DashboardPreviewsKt.DashboardMeshcoreTablet_dashboard_meshcore___tablet",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.DashboardPreviewsKt.DashboardNetworksMobile_dashboard_networks___mobile",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.DashboardPreviewsKt.DashboardNetworksTablet_dashboard_networks___tablet",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.DashboardPreviewsKt.DashboardSecurityMobile_dashboard_security___mobile",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.DashboardPreviewsKt.DashboardSecurityTablet_dashboard_security___tablet",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 }
             ],
             "code": {
@@ -901,6 +1035,7 @@
             "hasTypeParameters": false,
             "hasContextReceivers": false,
             "overloadsCollided": false,
+            "builder": null,
             "requiredOptIns": [],
             "androidxOptIns": []
         },
@@ -956,27 +1091,33 @@
             "bindings": [
                 {
                     "previewId": "ee.schimke.ha.previews.GarageShutterCardPreviewsKt.Garage_Animation_Dark_garage-anim__dark_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.GarageShutterCardPreviewsKt.Garage_Animation_Light_garage-anim__light_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.GarageShutterCardPreviewsKt.Garage_State_Dark_garage-state__dark_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.GarageShutterCardPreviewsKt.Garage_State_Light_garage-state__light_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.GarageShutterCardPreviewsKt.Garage_TwoEntities_Dark_garage_two-entities__dark_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.GarageShutterCardPreviewsKt.Garage_TwoEntities_Light_garage_two-entities__light_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 }
             ],
             "code": {
@@ -991,6 +1132,7 @@
             "hasTypeParameters": false,
             "hasContextReceivers": false,
             "overloadsCollided": false,
+            "builder": null,
             "requiredOptIns": [],
             "androidxOptIns": []
         },
@@ -1027,11 +1169,13 @@
             "bindings": [
                 {
                     "previewId": "ee.schimke.ha.previews.ImagePreviewsKt.ImageUrl_FakeCoil_Dark_image-url_fake-coil__dark_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.ImagePreviewsKt.ImageUrl_FakeCoil_Light_image-url_fake-coil__light_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 }
             ],
             "code": {
@@ -1046,6 +1190,7 @@
             "hasTypeParameters": false,
             "hasContextReceivers": false,
             "overloadsCollided": false,
+            "builder": null,
             "requiredOptIns": [],
             "androidxOptIns": []
         },
@@ -1101,19 +1246,23 @@
             "bindings": [
                 {
                     "previewId": "ee.schimke.ha.previews.ImagePreviewsKt.ImageInline_Dark_image-inline__dark_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.ImagePreviewsKt.ImageInline_Light_image-inline__light_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.ImagePreviewsKt.ImageNamed_Dark_image-named__dark_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.ImagePreviewsKt.ImageNamed_Light_image-named__light_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 }
             ],
             "code": {
@@ -1128,6 +1277,7 @@
             "hasTypeParameters": false,
             "hasContextReceivers": false,
             "overloadsCollided": false,
+            "builder": null,
             "requiredOptIns": [],
             "androidxOptIns": []
         },
@@ -1177,11 +1327,13 @@
             "bindings": [
                 {
                     "previewId": "ee.schimke.ha.previews.ImagePreviewsKt.ImageUrl_Probe_Frame0_image-url_probe_frame_0",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.ImagePreviewsKt.ImageUrl_Probe_Frame1_image-url_probe_frame_1",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 }
             ],
             "code": {
@@ -1196,6 +1348,7 @@
             "hasTypeParameters": false,
             "hasContextReceivers": false,
             "overloadsCollided": false,
+            "builder": null,
             "requiredOptIns": [],
             "androidxOptIns": []
         },
@@ -1232,11 +1385,13 @@
             "bindings": [
                 {
                     "previewId": "ee.schimke.ha.previews.PictureEntityStrategyPreviewsKt.PictureEntity_AppMode_Dark_picture-entity_app-mode__dark_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.PictureEntityStrategyPreviewsKt.PictureEntity_AppMode_Light_picture-entity_app-mode__light_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 }
             ],
             "code": {
@@ -1251,6 +1406,7 @@
             "hasTypeParameters": false,
             "hasContextReceivers": false,
             "overloadsCollided": false,
+            "builder": null,
             "requiredOptIns": [],
             "androidxOptIns": []
         },
@@ -1319,19 +1475,23 @@
             "bindings": [
                 {
                     "previewId": "ee.schimke.ha.previews.AnimationPreviewsKt.Toggle_Animated_Dark_toggle-animated__dark_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.AnimationPreviewsKt.Toggle_Animated_Light_toggle-animated__light_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.AnimationPreviewsKt.Toggle_Animation_Dark_toggle-anim__dark_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.AnimationPreviewsKt.Toggle_Animation_Light_toggle-anim__light_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 }
             ],
             "code": {
@@ -1346,6 +1506,7 @@
             "hasTypeParameters": false,
             "hasContextReceivers": false,
             "overloadsCollided": false,
+            "builder": null,
             "requiredOptIns": [],
             "androidxOptIns": []
         },
@@ -1368,11 +1529,13 @@
             "bindings": [
                 {
                     "previewId": "ee.schimke.ha.previews.PictureEntityStrategyPreviewsKt.PictureEntity_IconFallback_Light_picture-entity_icon-fallback__light_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.PictureEntityStrategyPreviewsKt.PictureEntity_WidgetMode_Light_picture-entity_widget-mode__light_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 }
             ],
             "code": {
@@ -1389,6 +1552,7 @@
             "hasTypeParameters": false,
             "hasContextReceivers": false,
             "overloadsCollided": false,
+            "builder": null,
             "requiredOptIns": [],
             "androidxOptIns": []
         },
@@ -1444,11 +1608,13 @@
             "bindings": [
                 {
                     "previewId": "ee.schimke.ha.previews.ShutterCardPreviewsKt.Shutter_Dark_shutter__dark_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.ShutterCardPreviewsKt.Shutter_Light_shutter__light_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 }
             ],
             "code": {
@@ -1463,6 +1629,7 @@
             "hasTypeParameters": false,
             "hasContextReceivers": false,
             "overloadsCollided": false,
+            "builder": null,
             "requiredOptIns": [],
             "androidxOptIns": []
         },
@@ -1512,11 +1679,13 @@
             "bindings": [
                 {
                     "previewId": "ee.schimke.ha.previews.SizingExperimentPreviewsKt.Sizing_ConstraintMatrix_PaintMeasure_sizing___width___height_matrix___paint-measure_profile",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.SizingExperimentPreviewsKt.Sizing_ConstraintMatrix_Wrap_sizing___width___height_matrix___wrap_profile",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 }
             ],
             "code": {
@@ -1531,6 +1700,7 @@
             "hasTypeParameters": false,
             "hasContextReceivers": false,
             "overloadsCollided": false,
+            "builder": null,
             "requiredOptIns": [],
             "androidxOptIns": []
         },
@@ -1593,27 +1763,33 @@
             "bindings": [
                 {
                     "previewId": "ee.schimke.ha.previews.SizingExperimentPreviewsKt.Sizing_FixedSlot_PaintMeasure_sizing___fixed_slot__paint-measure_profile",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.SizingExperimentPreviewsKt.Sizing_FixedSlot_Wrap_sizing___fixed_slot__wrap_profile",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.SizingExperimentPreviewsKt.Sizing_SlackSlot_PaintMeasure_sizing___slack_slot__paint-measure_profile",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.SizingExperimentPreviewsKt.Sizing_SlackSlot_Wrap_sizing___slack_slot__wrap_profile",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.SizingExperimentPreviewsKt.Sizing_TightSlot_PaintMeasure_sizing___tight_slot__paint-measure_profile",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.SizingExperimentPreviewsKt.Sizing_TightSlot_Wrap_sizing___tight_slot__wrap_profile",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 }
             ],
             "code": {
@@ -1628,6 +1804,7 @@
             "hasTypeParameters": false,
             "hasContextReceivers": false,
             "overloadsCollided": false,
+            "builder": null,
             "requiredOptIns": [],
             "androidxOptIns": []
         },
@@ -1650,7 +1827,8 @@
             "bindings": [
                 {
                     "previewId": "ee.schimke.ha.previews.SizingExperimentPreviewsKt.Sizing_WidthPinnedHeightAdaptive_sizing___width_pinned__height_adaptive",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 }
             ],
             "code": {
@@ -1665,6 +1843,7 @@
             "hasTypeParameters": false,
             "hasContextReceivers": false,
             "overloadsCollided": false,
+            "builder": null,
             "requiredOptIns": [],
             "androidxOptIns": []
         },
@@ -1714,43 +1893,53 @@
             "bindings": [
                 {
                     "previewId": "ee.schimke.ha.previews.ThemePreviewsKt.Theme_Home_Dark_theme__Home__dark_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.ThemePreviewsKt.Theme_Home_Light_theme__Home__light_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.ThemePreviewsKt.Theme_Kiosk_Dark_theme__Kiosk__dark_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.ThemePreviewsKt.Theme_Kiosk_Light_theme__Kiosk__light_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.ThemePreviewsKt.Theme_Material3_Dark_theme__Material3__dark_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.ThemePreviewsKt.Theme_Material3_Light_theme__Material3__light_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.ThemePreviewsKt.Theme_Minimalist_Dark_theme__Minimalist__dark_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.ThemePreviewsKt.Theme_Minimalist_Light_theme__Minimalist__light_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.ThemePreviewsKt.Theme_Mushroom_Dark_theme__Mushroom__dark_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.ThemePreviewsKt.Theme_Mushroom_Light_theme__Mushroom__light_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 }
             ],
             "code": {
@@ -1765,6 +1954,7 @@
             "hasTypeParameters": false,
             "hasContextReceivers": false,
             "overloadsCollided": false,
+            "builder": null,
             "requiredOptIns": [],
             "androidxOptIns": []
         },
@@ -1820,19 +2010,23 @@
             "bindings": [
                 {
                     "previewId": "ee.schimke.ha.previews.TileCardPreviewsKt.Tile_LightOn_Dark_tile___light_on__dark_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.TileCardPreviewsKt.Tile_LightOn_tile___light_on",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.TileCardPreviewsKt.Tile_TemperatureSensor_Dark_tile___sensor_temperature__dark_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.TileCardPreviewsKt.Tile_TemperatureSensor_tile___sensor_temperature",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 }
             ],
             "code": {
@@ -1847,6 +2041,7 @@
             "hasTypeParameters": false,
             "hasContextReceivers": false,
             "overloadsCollided": false,
+            "builder": null,
             "requiredOptIns": [],
             "androidxOptIns": []
         },
@@ -1902,27 +2097,33 @@
             "bindings": [
                 {
                     "previewId": "ee.schimke.ha.previews.ToggleSwitchPreviewsKt.ToggleByProgress_Mid_toggle_progress_0.5",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.ToggleSwitchPreviewsKt.ToggleByProgress_Off_toggle_progress_0.0",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.ToggleSwitchPreviewsKt.ToggleByProgress_On_toggle_progress_1.0",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.ToggleSwitchPreviewsKt.ToggleInitial_Off_toggle_initial_off",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.ToggleSwitchPreviewsKt.ToggleInitial_On_Dark_toggle_initial_on__dark_",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.ToggleSwitchPreviewsKt.ToggleInitial_On_toggle_initial_on",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 }
             ],
             "code": {
@@ -1937,6 +2138,7 @@
             "hasTypeParameters": false,
             "hasContextReceivers": false,
             "overloadsCollided": false,
+            "builder": null,
             "requiredOptIns": [],
             "androidxOptIns": []
         },
@@ -1973,7 +2175,8 @@
             "bindings": [
                 {
                     "previewId": "ee.schimke.ha.previews.WrapContentHeightReproKt.WrapContentHeightFixAlpha010_wrap-content_height_fix___WrapAdaptive_player",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 }
             ],
             "code": {
@@ -1988,6 +2191,7 @@
             "hasTypeParameters": false,
             "hasContextReceivers": false,
             "overloadsCollided": false,
+            "builder": null,
             "requiredOptIns": [],
             "androidxOptIns": []
         },
@@ -2024,7 +2228,8 @@
             "bindings": [
                 {
                     "previewId": "ee.schimke.ha.previews.WrapContentHeightReproKt.WrapContentHeightReproAlpha010_wrap-content_height_repro___alpha010",
-                    "componentId": null
+                    "componentId": null,
+                    "group": null
                 }
             ],
             "code": {
@@ -2039,8 +2244,10 @@
             "hasTypeParameters": false,
             "hasContextReceivers": false,
             "overloadsCollided": false,
+            "builder": null,
             "requiredOptIns": [],
             "androidxOptIns": []
         }
-    ]
+    ],
+    "builderOrphans": []
 }
