@@ -1,6 +1,6 @@
 # Accessibility Report
 
-_Auto-generated from `compose-preview/a11y/pr`. 287 preview(s) across 4 module(s) · 596 error(s) · 20 warning(s) · 43 info._
+_Auto-generated from `compose-preview/a11y/pr`. 287 preview(s) across 4 module(s) · 600 error(s) · 20 warning(s) · 54 info._
 
 Browse inline; image URLs are pinned to the commit SHA on the baseline branch so links keep resolving after merge.
 
@@ -776,9 +776,14 @@ _No findings._
 
 ### `Dashboard3dPrintingTablet`
 
-<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/pr/renders/previews/Dashboard3dPrintingTablet_dashboard_3d_printing_tablet-d15705fe.png" width="400" />
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/pr/renders/previews/Dashboard3dPrintingTablet_dashboard_3d_printing_tablet-d15705fe.a11y.png" width="400" />
 
-_No findings._
+| # | Level | Rule | Element | Message |
+|--:|---|---|---|---|
+| 1 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
+| 2 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
+| 3 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
+| 4 | ERROR | SpeakableTextPresentCheck | androidx.compose.remote.player.view.RemoteComposePlayer | This item may not have a label readable by screen readers. |
 
 ### `DashboardClimateMobile`
 
@@ -2252,7 +2257,9 @@ _No findings._
 
 <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/pr/renders/wear/WearCalendarSmall_wear_calendar_small-befff39c.a11y.png" width="400" />
 
-_No findings._
+| # | Level | Rule | Element | Message |
+|--:|---|---|---|---|
+| 1 | INFO | DuplicateSpeakableTextCheck | android.widget.TextView | This non-clickable item's speakable text: "No upcoming events" is identical to that of 1 other item(s). |
 
 ### `WearClockSmall`
 
@@ -2404,13 +2411,16 @@ _No findings._
 
 | # | Level | Rule | Element | Message |
 |--:|---|---|---|---|
-| 1 | INFO | DuplicateSpeakableTextCheck | android.widget.Button  desc="Front door" | This non-clickable item's speakable text: "Front door" is identical to that of 1 other item(s). |
+| 1 | INFO | DuplicateSpeakableTextCheck | android.widget.Button  desc="Front door" | This non-clickable item's speakable text: "Front door" is identical to that of 3 other item(s). |
 
 ### `WearMarkdownSmall`
 
 <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/pr/renders/wear/WearMarkdownSmall_wear_markdown_small-a6bdb89c.a11y.png" width="400" />
 
-_No findings._
+| # | Level | Rule | Element | Message |
+|--:|---|---|---|---|
+| 1 | INFO | DuplicateSpeakableTextCheck | android.widget.TextView | This non-clickable item's speakable text: "Welcome home." is identical to that of 1 other item(s). |
+| 2 | INFO | DuplicateSpeakableTextCheck | android.widget.TextView | This non-clickable item's speakable text: "Notes" is identical to that of 1 other item(s). |
 
 ### `WearMediaControlLarge`
 
@@ -2495,13 +2505,19 @@ _No findings._
 
 <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/pr/renders/wear/WearSensorLarge_wear_sensor_large-8173f01c.a11y.png" width="400" />
 
-_No findings._
+| # | Level | Rule | Element | Message |
+|--:|---|---|---|---|
+| 1 | INFO | DuplicateSpeakableTextCheck | android.widget.TextView | This non-clickable item's speakable text: "8.2 °C" is identical to that of 1 other item(s). |
+| 2 | INFO | DuplicateSpeakableTextCheck | android.widget.Button  desc="Outside" | This non-clickable item's speakable text: "Outside" is identical to that of 1 other item(s). |
 
 ### `WearSensorSmall`
 
 <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/pr/renders/wear/WearSensorSmall_wear_sensor_small-fc79a838.a11y.png" width="400" />
 
-_No findings._
+| # | Level | Rule | Element | Message |
+|--:|---|---|---|---|
+| 1 | INFO | DuplicateSpeakableTextCheck | android.widget.TextView | This non-clickable item's speakable text: "8.2 °C" is identical to that of 1 other item(s). |
+| 2 | INFO | DuplicateSpeakableTextCheck | android.widget.Button  desc="Outside" | This non-clickable item's speakable text: "Outside" is identical to that of 1 other item(s). |
 
 ### `WearSettingsPreview` · `wearos_small_round`
 
@@ -2513,13 +2529,19 @@ _No findings._
 
 <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/pr/renders/wear/WearStatisticLarge_wear_statistic_large-c9627bd9.a11y.png" width="400" />
 
-_No findings._
+| # | Level | Rule | Element | Message |
+|--:|---|---|---|---|
+| 1 | INFO | DuplicateSpeakableTextCheck | android.widget.Button  desc="House power" | This non-clickable item's speakable text: "House power" is identical to that of 1 other item(s). |
+| 2 | INFO | DuplicateSpeakableTextCheck | android.widget.TextView | This non-clickable item's speakable text: "412" is identical to that of 1 other item(s). |
 
 ### `WearStatisticSmall`
 
 <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/pr/renders/wear/WearStatisticSmall_wear_statistic_small-4ff71ac5.a11y.png" width="400" />
 
-_No findings._
+| # | Level | Rule | Element | Message |
+|--:|---|---|---|---|
+| 1 | INFO | DuplicateSpeakableTextCheck | android.widget.Button  desc="House power" | This non-clickable item's speakable text: "House power" is identical to that of 1 other item(s). |
+| 2 | INFO | DuplicateSpeakableTextCheck | android.widget.TextView | This non-clickable item's speakable text: "412" is identical to that of 1 other item(s). |
 
 ### `WearStatisticsGraphSmall`
 
