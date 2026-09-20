@@ -2,8 +2,8 @@
 
 Kotlin Multiplatform library that converts Home Assistant Lovelace dashboard
 cards into [RemoteCompose](https://developer.android.com/jetpack/androidx/releases/compose-remote)
-documents. Android target today; the shared data/client layers are structured
-as KMP so more targets are possible as RemoteCompose publishes more klibs.
+documents. Android and iOS app targets are included. The SwiftUI app under [`ios/`](ios/) uses the
+pure Swift/UIKit player from `yschimke/rc-players`; shared Kotlin data/client layers remain KMP.
 
 ## Rendered previews
 
@@ -64,13 +64,14 @@ Glance widgets, Wear launcher tiles, ESP32 devices, etc.).
 
 | Module | Target | Role |
 |--------|--------|------|
-| [`ha-model`](ha-model/) | KMP (Android + JVM) | Dashboard / view / section / card config + HA state snapshot types, kotlinx-serialization. |
-| [`ha-client`](ha-client/) | KMP (Android + JVM) | Ktor WebSocket client for `lovelace/config` + state fetch. |
+| [`ha-model`](ha-model/) | KMP (Android + JVM + iOS) | Dashboard / view / section / card config + HA state snapshot types, kotlinx-serialization. |
+| [`ha-client`](ha-client/) | KMP (Android + JVM + iOS) | Ktor WebSocket client, shared `CardGenerator` chain, and temporary recorded-card generator; exports `TerrazzoKit` for Apple hosts using Ktor Darwin. |
 | [`rc-components`](rc-components/) | Android | Tier-1 `RemoteHa*` composables — RemoteCompose-native cards (RemoteString / RemoteColor / actions). |
 | [`rc-components-ui`](rc-components-ui/) | Android | Tier-2 plain Compose-UI wrappers (`HaTile`, `HaButton`, …) embedding the Tier-1 composables via `RemotePreview`, so apps can drop them into a normal Compose tree without seeing RemoteCompose types. |
 | [`rc-converter`](rc-converter/) | Android | `CardConverter` strategy + one impl per card type. Emits RemoteCompose content. |
 | [`previews`](previews/) | Android | `@Preview` fixtures per card type, rendered by the `ee.schimke.composeai.preview` plugin for pixel-parity iteration. |
 | [`demo-app`](demo-app/) | Android | Sample app: fetch a real dashboard, render via `remote-player-compose`. |
+| [`ios`](ios/) | iOS / SwiftUI | Dashboard app using `RcNativePlayerUIKit`, with bundled demo cards, live named bindings, and offline caching. |
 
 ## Key library references
 

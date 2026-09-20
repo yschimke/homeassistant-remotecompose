@@ -17,3 +17,8 @@ google-services.json
 */google-services.json
 
 __pycache__/
+
+# Xcode user state and local build output.
+ios/DerivedData/
+ios/*.xcworkspace/xcuserdata/
+ios/**/*.xcodeproj/xcuserdata/

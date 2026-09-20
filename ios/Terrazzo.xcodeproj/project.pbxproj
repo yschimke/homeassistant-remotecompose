@@ -1,0 +1,183 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {};
+	objectVersion = 60;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		A00100000000000000000001 /* TerrazzoApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00100000000000000000001 /* TerrazzoApp.swift */; };
+		A00100000000000000000002 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00100000000000000000002 /* Models.swift */; };
+		A00100000000000000000003 /* DemoContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00100000000000000000003 /* DemoContent.swift */; };
+		A00100000000000000000004 /* CardCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00100000000000000000004 /* CardCache.swift */; };
+		A00100000000000000000005 /* RemoteComposeService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00100000000000000000005 /* RemoteComposeService.swift */; };
+		A00100000000000000000006 /* LiveBindingStream.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00100000000000000000006 /* LiveBindingStream.swift */; };
+		A00100000000000000000007 /* DashboardStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00100000000000000000007 /* DashboardStore.swift */; };
+		A00100000000000000000008 /* NativeCardPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00100000000000000000008 /* NativeCardPlayer.swift */; };
+		A00100000000000000000009 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B00100000000000000000009 /* RootView.swift */; };
+		A0010000000000000000000B /* CredentialStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0010000000000000000000B /* CredentialStore.swift */; };
+		A0010000000000000000000C /* CardDocumentGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0010000000000000000000C /* CardDocumentGenerator.swift */; };
+		A00100000000000000000011 /* demo-tile.rc in Resources */ = {isa = PBXBuildFile; fileRef = B00100000000000000000011 /* demo-tile.rc */; };
+		A00100000000000000000012 /* demo-entities.rc in Resources */ = {isa = PBXBuildFile; fileRef = B00100000000000000000012 /* demo-entities.rc */; };
+		A00100000000000000000013 /* demo-glance.rc in Resources */ = {isa = PBXBuildFile; fileRef = B00100000000000000000013 /* demo-glance.rc */; };
+		A00100000000000000000014 /* demo-gauge.rc in Resources */ = {isa = PBXBuildFile; fileRef = B00100000000000000000014 /* demo-gauge.rc */; };
+		A00100000000000000000015 /* demo-weather.rc in Resources */ = {isa = PBXBuildFile; fileRef = B00100000000000000000015 /* demo-weather.rc */; };
+		A00100000000000000000016 /* demo-markdown.rc in Resources */ = {isa = PBXBuildFile; fileRef = B00100000000000000000016 /* demo-markdown.rc */; };
+		A00100000000000000000020 /* RcNativePlayerUIKit in Frameworks */ = {isa = PBXBuildFile; productRef = F00100000000000000000002 /* RcNativePlayerUIKit */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		B00100000000000000000000 /* Terrazzo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Terrazzo.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		B00100000000000000000001 /* TerrazzoApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerrazzoApp.swift; sourceTree = "<group>"; };
+		B00100000000000000000002 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
+		B00100000000000000000003 /* DemoContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoContent.swift; sourceTree = "<group>"; };
+		B00100000000000000000004 /* CardCache.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardCache.swift; sourceTree = "<group>"; };
+		B00100000000000000000005 /* RemoteComposeService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteComposeService.swift; sourceTree = "<group>"; };
+		B00100000000000000000006 /* LiveBindingStream.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveBindingStream.swift; sourceTree = "<group>"; };
+		B00100000000000000000007 /* DashboardStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DashboardStore.swift; sourceTree = "<group>"; };
+		B00100000000000000000008 /* NativeCardPlayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeCardPlayer.swift; sourceTree = "<group>"; };
+		B00100000000000000000009 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
+		B0010000000000000000000A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		B0010000000000000000000B /* CredentialStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CredentialStore.swift; sourceTree = "<group>"; };
+		B0010000000000000000000C /* CardDocumentGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardDocumentGenerator.swift; sourceTree = "<group>"; };
+		B00100000000000000000011 /* demo-tile.rc */ = {isa = PBXFileReference; lastKnownFileType = file; path = "demo-tile.rc"; sourceTree = "<group>"; };
+		B00100000000000000000012 /* demo-entities.rc */ = {isa = PBXFileReference; lastKnownFileType = file; path = "demo-entities.rc"; sourceTree = "<group>"; };
+		B00100000000000000000013 /* demo-glance.rc */ = {isa = PBXFileReference; lastKnownFileType = file; path = "demo-glance.rc"; sourceTree = "<group>"; };
+		B00100000000000000000014 /* demo-gauge.rc */ = {isa = PBXFileReference; lastKnownFileType = file; path = "demo-gauge.rc"; sourceTree = "<group>"; };
+		B00100000000000000000015 /* demo-weather.rc */ = {isa = PBXFileReference; lastKnownFileType = file; path = "demo-weather.rc"; sourceTree = "<group>"; };
+		B00100000000000000000016 /* demo-markdown.rc */ = {isa = PBXFileReference; lastKnownFileType = file; path = "demo-markdown.rc"; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		C00100000000000000000001 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (A00100000000000000000020 /* RcNativePlayerUIKit in Frameworks */,);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		D00100000000000000000001 = {
+			isa = PBXGroup;
+			children = (D00100000000000000000002 /* Terrazzo */, D00100000000000000000004 /* Products */);
+			sourceTree = "<group>";
+		};
+		D00100000000000000000002 /* Terrazzo */ = {
+			isa = PBXGroup;
+			children = (
+				B00100000000000000000001 /* TerrazzoApp.swift */, B00100000000000000000002 /* Models.swift */,
+				B00100000000000000000003 /* DemoContent.swift */, B00100000000000000000004 /* CardCache.swift */,
+				B00100000000000000000005 /* RemoteComposeService.swift */, B00100000000000000000006 /* LiveBindingStream.swift */,
+				B00100000000000000000007 /* DashboardStore.swift */, B00100000000000000000008 /* NativeCardPlayer.swift */,
+				B00100000000000000000009 /* RootView.swift */, B0010000000000000000000B /* CredentialStore.swift */, B0010000000000000000000C /* CardDocumentGenerator.swift */, B0010000000000000000000A /* Info.plist */,
+				D00100000000000000000003 /* Resources */,
+			);
+			path = Terrazzo;
+			sourceTree = "<group>";
+		};
+		D00100000000000000000003 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				B00100000000000000000011 /* demo-tile.rc */, B00100000000000000000012 /* demo-entities.rc */,
+				B00100000000000000000013 /* demo-glance.rc */, B00100000000000000000014 /* demo-gauge.rc */,
+				B00100000000000000000015 /* demo-weather.rc */, B00100000000000000000016 /* demo-markdown.rc */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		D00100000000000000000004 /* Products */ = {
+			isa = PBXGroup;
+			children = (B00100000000000000000000 /* Terrazzo.app */,);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		E00100000000000000000001 /* Terrazzo */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = E00100000000000000000002 /* Build configuration list for PBXNativeTarget "Terrazzo" */;
+			buildPhases = (C00100000000000000000002 /* Sources */, C00100000000000000000001 /* Frameworks */, C00100000000000000000003 /* Resources */);
+			buildRules = ();
+			dependencies = ();
+			name = Terrazzo;
+			packageProductDependencies = (F00100000000000000000002 /* RcNativePlayerUIKit */,);
+			productName = Terrazzo;
+			productReference = B00100000000000000000000 /* Terrazzo.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		E00100000000000000000003 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {BuildIndependentTargetsInParallel = 1; LastSwiftUpdateCheck = 2660; LastUpgradeCheck = 2660; TargetAttributes = {E00100000000000000000001 = {CreatedOnToolsVersion = 26.0; };};};
+			buildConfigurationList = E00100000000000000000004 /* Build configuration list for PBXProject "Terrazzo" */;
+			compatibilityVersion = "Xcode 15.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (en, Base);
+			mainGroup = D00100000000000000000001;
+			packageReferences = (F00100000000000000000001 /* XCLocalSwiftPackageReference "RcNativePlayerUIKit" */,);
+			productRefGroup = D00100000000000000000004 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (E00100000000000000000001 /* Terrazzo */,);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		C00100000000000000000003 /* Resources */ = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (
+			A00100000000000000000011 /* demo-tile.rc in Resources */, A00100000000000000000012 /* demo-entities.rc in Resources */,
+			A00100000000000000000013 /* demo-glance.rc in Resources */, A00100000000000000000014 /* demo-gauge.rc in Resources */,
+			A00100000000000000000015 /* demo-weather.rc in Resources */, A00100000000000000000016 /* demo-markdown.rc in Resources */,
+		); runOnlyForDeploymentPostprocessing = 0; };
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		C00100000000000000000002 /* Sources */ = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (
+			A00100000000000000000001 /* TerrazzoApp.swift in Sources */, A00100000000000000000002 /* Models.swift in Sources */,
+			A00100000000000000000003 /* DemoContent.swift in Sources */, A00100000000000000000004 /* CardCache.swift in Sources */,
+			A00100000000000000000005 /* RemoteComposeService.swift in Sources */, A00100000000000000000006 /* LiveBindingStream.swift in Sources */,
+			A00100000000000000000007 /* DashboardStore.swift in Sources */, A00100000000000000000008 /* NativeCardPlayer.swift in Sources */,
+			A00100000000000000000009 /* RootView.swift in Sources */, A0010000000000000000000B /* CredentialStore.swift in Sources */, A0010000000000000000000C /* CardDocumentGenerator.swift in Sources */,
+		); runOnlyForDeploymentPostprocessing = 0; };
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		E00100000000000000000010 /* Debug */ = {isa = XCBuildConfiguration; buildSettings = {
+			ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES; CLANG_ENABLE_MODULES = YES; CODE_SIGN_STYLE = Automatic;
+			CURRENT_PROJECT_VERSION = 1; ENABLE_PREVIEWS = YES; GENERATE_INFOPLIST_FILE = NO; INFOPLIST_FILE = Terrazzo/Info.plist;
+			IPHONEOS_DEPLOYMENT_TARGET = 17.0; LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks"; MARKETING_VERSION = 0.1.0;
+			PRODUCT_BUNDLE_IDENTIFIER = ee.schimke.terrazzo.ios; PRODUCT_NAME = "$(TARGET_NAME)"; SDKROOT = iphoneos;
+			SUPPORTED_PLATFORMS = "iphoneos iphonesimulator"; SUPPORTS_MACCATALYST = NO; SWIFT_EMIT_LOC_STRINGS = YES; SWIFT_VERSION = 5.0;
+			TARGETED_DEVICE_FAMILY = "1,2";
+		}; name = Debug; };
+		E00100000000000000000011 /* Release */ = {isa = XCBuildConfiguration; buildSettings = {
+			ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES; CLANG_ENABLE_MODULES = YES; CODE_SIGN_STYLE = Automatic;
+			CURRENT_PROJECT_VERSION = 1; GENERATE_INFOPLIST_FILE = NO; INFOPLIST_FILE = Terrazzo/Info.plist;
+			IPHONEOS_DEPLOYMENT_TARGET = 17.0; LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks"; MARKETING_VERSION = 0.1.0;
+			PRODUCT_BUNDLE_IDENTIFIER = ee.schimke.terrazzo.ios; PRODUCT_NAME = "$(TARGET_NAME)"; SDKROOT = iphoneos;
+			SUPPORTED_PLATFORMS = "iphoneos iphonesimulator"; SUPPORTS_MACCATALYST = NO; SWIFT_COMPILATION_MODE = wholemodule; SWIFT_EMIT_LOC_STRINGS = YES;
+			SWIFT_OPTIMIZATION_LEVEL = "-O"; SWIFT_VERSION = 5.0; TARGETED_DEVICE_FAMILY = "1,2";
+		}; name = Release; };
+		E00100000000000000000012 /* Debug */ = {isa = XCBuildConfiguration; buildSettings = {ALWAYS_SEARCH_USER_PATHS = NO; CLANG_ENABLE_MODULES = YES; COPY_PHASE_STRIP = NO; DEBUG_INFORMATION_FORMAT = dwarf; ENABLE_TESTABILITY = YES; GCC_C_LANGUAGE_STANDARD = gnu17; IPHONEOS_DEPLOYMENT_TARGET = 17.0; ONLY_ACTIVE_ARCH = YES; SDKROOT = iphoneos; SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG; SWIFT_OPTIMIZATION_LEVEL = "-Onone";}; name = Debug; };
+		E00100000000000000000013 /* Release */ = {isa = XCBuildConfiguration; buildSettings = {ALWAYS_SEARCH_USER_PATHS = NO; CLANG_ENABLE_MODULES = YES; DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym"; ENABLE_NS_ASSERTIONS = NO; GCC_C_LANGUAGE_STANDARD = gnu17; IPHONEOS_DEPLOYMENT_TARGET = 17.0; SDKROOT = iphoneos; VALIDATE_PRODUCT = YES;}; name = Release; };
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		E00100000000000000000002 /* Build configuration list for PBXNativeTarget "Terrazzo" */ = {isa = XCConfigurationList; buildConfigurations = (E00100000000000000000010 /* Debug */, E00100000000000000000011 /* Release */); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+		E00100000000000000000004 /* Build configuration list for PBXProject "Terrazzo" */ = {isa = XCConfigurationList; buildConfigurations = (E00100000000000000000012 /* Debug */, E00100000000000000000013 /* Release */); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+/* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		F00100000000000000000001 /* XCLocalSwiftPackageReference "RcNativePlayerUIKit" */ = {isa = XCLocalSwiftPackageReference; relativePath = Packages/RcNativePlayerUIKit; };
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		F00100000000000000000002 /* RcNativePlayerUIKit */ = {isa = XCSwiftPackageProductDependency; package = F00100000000000000000001 /* XCLocalSwiftPackageReference "RcNativePlayerUIKit" */; productName = RcNativePlayerUIKit; };
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = E00100000000000000000003 /* Project object */;
+}

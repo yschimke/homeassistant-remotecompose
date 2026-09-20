@@ -42,8 +42,74 @@ concurrency:
 #   GOOGLE_SERVICES_JSON          base64 of app/google-services.json; presence
 #                                 enables Firebase Crashlytics in release builds
 jobs:
+  ios-assets:
+    name: Build Apple release assets
+    runs-on: macos-15
+    timeout-minutes: 60
+    env:
+      TAG_NAME: ${{ github.ref_type == 'tag' && github.ref_name || inputs.tag }}
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          ref: ${{ github.ref_type == 'tag' && github.ref_name || inputs.tag }}
+      - uses: actions/setup-java@v6.0.0
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: gradle/actions/setup-gradle@v6.3.0
+
+      - name: Build TerrazzoKit XCFramework
+        run: ./gradlew :ha-client:assembleTerrazzoKitReleaseXCFramework --stacktrace
+
+      - name: Build unsigned iOS archive and Simulator app
+        run: |
+          set -euo pipefail
+          version="${TAG_NAME#v}"
+          common=(
+            -project ios/Terrazzo.xcodeproj
+            -scheme Terrazzo
+            -configuration Release
+            CODE_SIGNING_ALLOWED=NO
+            MARKETING_VERSION="$version"
+            CURRENT_PROJECT_VERSION="$GITHUB_RUN_NUMBER"
+          )
+          xcodebuild archive \
+            "${common[@]}" \
+            -destination 'generic/platform=iOS' \
+            -archivePath "$RUNNER_TEMP/Terrazzo.xcarchive"
+          xcodebuild build \
+            "${common[@]}" \
+            -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath "$RUNNER_TEMP/TerrazzoDerivedData"
+
+      - name: Stage Apple release assets
+        run: |
+          set -euo pipefail
+          version="${TAG_NAME#v}"
+          mkdir -p _release-ios
+          ditto -c -k --sequesterRsrc --keepParent \
+            "$RUNNER_TEMP/Terrazzo.xcarchive" \
+            "_release-ios/terrazzo-ios-${version}-unsigned.xcarchive.zip"
+          ditto -c -k --sequesterRsrc --keepParent \
+            "$RUNNER_TEMP/TerrazzoDerivedData/Build/Products/Release-iphonesimulator/Terrazzo.app" \
+            "_release-ios/terrazzo-ios-simulator-${version}.app.zip"
+          ditto -c -k --sequesterRsrc --keepParent \
+            "ha-client/build/XCFrameworks/release/TerrazzoKit.xcframework" \
+            "_release-ios/TerrazzoKit-${version}.xcframework.zip"
+          shasum -a 256 _release-ios/* > _release-ios/SHA256SUMS-apple.txt
+          ls -lah _release-ios/
+
+      - name: Upload Apple release assets
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: apple-release-assets
+          path: _release-ios/
+          if-no-files-found: error
+
   release:
     name: Build & publish release
+    needs: ios-assets
     runs-on: ubuntu-latest
     timeout-minutes: 60
     permissions:
@@ -62,6 +128,12 @@ jobs:
       - uses: ./.github/actions/setup
         with:
           cache-read-only: 'true'
+
+      - name: Download Apple release assets
+        uses: actions/download-artifact@v8.0.1
+        with:
+          name: apple-release-assets
+          path: _release-ios
 
       # Must land at app/google-services.json (the path is hard-coded in the
       # build logic) and exist before the first Gradle call — `crashlyticsEnabled`
@@ -166,6 +238,7 @@ jobs:
           for f in wear/build/outputs/bundle/release/*.aab; do
             cp "$f" "_release/harc-wear-${version}.aab"
           done
+          cp _release-ios/* _release/
           ls -la _release/
           echo "version=${version}" >> "$GITHUB_OUTPUT"
 
@@ -174,13 +247,9 @@ jobs:
         uses: softprops/action-gh-release@v3.0.3
         with:
           tag_name: ${{ env.TAG_NAME }}
-          # The AAB only exists when SIGNING_KEYSTORE is configured;
-          # `fail_on_unmatched_files` would fail every pre-signing tag
-          # push otherwise. The unsigned APK glob is enough until the
-          # signing secret lands.
-          files: |
-            _release/*.apk
-            _release/*.aab
+          # The staged directory always contains the Apple assets; Android
+          # AABs are added when signing is configured.
+          files: _release/*
 
       - name: Upload workflow artifact
         if: github.event_name == 'workflow_dispatch'
