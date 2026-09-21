@@ -1,11 +1,19 @@
 {
   "schema": "compose-preview-activity/v1",
-  "generatedAt": "2026-09-21T04:52:46.101Z",
+  "generatedAt": "2026-09-21T05:16:08.938Z",
   "windowDays": 30,
   "code": {
     "repo": "yschimke/homeassistant-remotecompose",
     "ref": "main",
     "events": [
+      {
+        "sha": "7da445b9953e7eaa13017492586aa7a6deecd18f",
+        "subject": "fix(deps): update coil to v3.6.3 (#676)",
+        "at": "2026-09-21T05:00:11Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
       {
         "sha": "231cb9c6185e2b7c445f3d7908e9b318248d152c",
         "subject": "chore(deps): update agp to v9.4.1 (#673)",
@@ -474,14 +482,6 @@
         "sha": "de05970058deee4aaeb5a61e6a1f10751acb013b",
         "subject": "chore(deps): update yschimke/compose-ai-tools action to v1.33.0 (#611)",
         "at": "2026-08-24T05:38:39Z",
-        "author": "renovate[bot]",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "56ade1eea14547062c6dd6f5ab1f820e3667fd4f",
-        "subject": "fix(deps): update dependency org.jetbrains:markdown to v0.7.9 (#607)",
-        "at": "2026-08-24T03:58:12Z",
         "author": "renovate[bot]",
         "previewIds": [],
         "components": []
