@@ -1,11 +1,19 @@
 {
   "schema": "compose-preview-activity/v1",
-  "generatedAt": "2026-09-21T05:16:08.938Z",
+  "generatedAt": "2026-09-21T05:39:49.388Z",
   "windowDays": 30,
   "code": {
     "repo": "yschimke/homeassistant-remotecompose",
     "ref": "main",
     "events": [
+      {
+        "sha": "5fd8e4fff169e07ec7d0f4a54c4f904895b969a6",
+        "subject": "chore(deps): update dependency dev.zacsweers.metro to v1.4.4 (#674)",
+        "at": "2026-09-21T05:24:48Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
       {
         "sha": "7da445b9953e7eaa13017492586aa7a6deecd18f",
         "subject": "fix(deps): update coil to v3.6.3 (#676)",
@@ -475,14 +483,6 @@
         "subject": "build: resolve Remote Compose from Google Maven releases, not androidx.dev (#613)",
         "at": "2026-08-27T14:29:31+03:00",
         "author": "Yuri Schimke",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "de05970058deee4aaeb5a61e6a1f10751acb013b",
-        "subject": "chore(deps): update yschimke/compose-ai-tools action to v1.33.0 (#611)",
-        "at": "2026-08-24T05:38:39Z",
-        "author": "renovate[bot]",
         "previewIds": [],
         "components": []
       }
