@@ -1,11 +1,19 @@
 {
   "schema": "compose-preview-activity/v1",
-  "generatedAt": "2026-09-20T21:06:36.012Z",
+  "generatedAt": "2026-09-21T04:52:46.101Z",
   "windowDays": 30,
   "code": {
     "repo": "yschimke/homeassistant-remotecompose",
     "ref": "main",
     "events": [
+      {
+        "sha": "231cb9c6185e2b7c445f3d7908e9b318248d152c",
+        "subject": "chore(deps): update agp to v9.4.1 (#673)",
+        "at": "2026-09-21T04:40:28Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
       {
         "sha": "85cd4778b22484ca9383713d47315c1489b68ee5",
         "subject": "fix(deps): update compose-ai-tools (#671)",
@@ -474,14 +482,6 @@
         "sha": "56ade1eea14547062c6dd6f5ab1f820e3667fd4f",
         "subject": "fix(deps): update dependency org.jetbrains:markdown to v0.7.9 (#607)",
         "at": "2026-08-24T03:58:12Z",
-        "author": "renovate[bot]",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "79548e7657cee7298365ff8c5b4404c1a9ea04c2",
-        "subject": "chore(deps): update eclipse-temurin docker tag to v25.0.4_7-jdk-jammy (#604)",
-        "at": "2026-08-24T03:17:10Z",
         "author": "renovate[bot]",
         "previewIds": [],
         "components": []
