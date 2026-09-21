@@ -18,10 +18,10 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v7.0.1
-      - uses: actions/setup-java@v6.0.0
+      - uses: actions/setup-java@v6.0.1
         with:
           distribution: temurin
-          java-version: 21
+          java-version: 21.0.12+8.0.LTS
       - uses: gradle/actions/setup-gradle@v6.3.0
       - name: Link the Kotlin/Native client framework
         run: ./gradlew :ha-client:linkDebugFrameworkIosSimulatorArm64 --stacktrace
@@ -44,10 +44,10 @@ jobs:
       - uses: actions/checkout@v7.0.1
       - uses: gradle/actions/wrapper-validation@v6.3.0
       # Kotlin toolchain and Gradle daemon both run on JVM 21 (libs.versions.toml).
-      - uses: actions/setup-java@v6.0.0
+      - uses: actions/setup-java@v6.0.1
         with:
           distribution: temurin
-          java-version: 21
+          java-version: 21.0.12+8.0.LTS
       - uses: gradle/actions/setup-gradle@v6.3.0
       - run: ./gradlew assembleDebug --stacktrace
 
@@ -58,10 +58,10 @@ jobs:
     steps:
       - uses: actions/checkout@v7.0.1
       # Kotlin toolchain and Gradle daemon both run on JVM 21 (libs.versions.toml).
-      - uses: actions/setup-java@v6.0.0
+      - uses: actions/setup-java@v6.0.1
         with:
           distribution: temurin
-          java-version: 21
+          java-version: 21.0.12+8.0.LTS
       - uses: gradle/actions/setup-gradle@v6.3.0
       # `:integration:test`'s pixel-diff suites require rendered PNGs
       # under `previews/build/compose-previews/renders/`. The
@@ -103,10 +103,10 @@ jobs:
     steps:
       - uses: actions/checkout@v7.0.1
       # Kotlin toolchain and Gradle daemon both run on JVM 21 (libs.versions.toml).
-      - uses: actions/setup-java@v6.0.0
+      - uses: actions/setup-java@v6.0.1
         with:
           distribution: temurin
-          java-version: 21
+          java-version: 21.0.12+8.0.LTS
       - uses: gradle/actions/setup-gradle@v6.3.0
       # `lint` fans out across every Android module. Debug variant is
       # enough for CI; release-only rules (e.g. ObsoleteSdkInt on
@@ -140,10 +140,10 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
       # Kotlin toolchain and Gradle daemon both run on JVM 21 (libs.versions.toml).
-      - uses: actions/setup-java@v6.0.0
+      - uses: actions/setup-java@v6.0.1
         with:
           distribution: temurin
-          java-version: 21
+          java-version: 21.0.12+8.0.LTS
       - uses: gradle/actions/setup-gradle@v6.3.0
 
       - name: AVD cache
