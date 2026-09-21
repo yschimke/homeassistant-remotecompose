@@ -173,6 +173,11 @@
         accepted: session.setColor(argb, for: name), timeSeconds: timeSeconds)
     }
 
+    func setInteger(_ value: Int, for name: String, at timeSeconds: TimeInterval) throws -> Update {
+      return try update(
+        accepted: session.setInteger(value, for: name), timeSeconds: timeSeconds)
+    }
+
     func returnCustomFloat(
       _ value: Float, componentID: Int, propertyID: Int, at timeSeconds: TimeInterval
     ) throws -> Update {
