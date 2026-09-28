@@ -1,11 +1,19 @@
 {
   "schema": "compose-preview-activity/v1",
-  "generatedAt": "2026-09-28T02:31:57.156Z",
+  "generatedAt": "2026-09-28T02:56:11.578Z",
   "windowDays": 30,
   "code": {
     "repo": "yschimke/homeassistant-remotecompose",
     "ref": "main",
     "events": [
+      {
+        "sha": "5c132609195208ac5521098d46c000e58f19c4c0",
+        "subject": "fix(deps): update dependency androidx.compose.material3:material3 to v1.5.0-alpha29 (#684)",
+        "at": "2026-09-28T02:40:13Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
       {
         "sha": "8d6d5014e7705d4d7d0fd7951ebcc72ca24fca04",
         "subject": "chore(deps): update dependency dev.zacsweers.metro to v1.4.5 (#681)",
