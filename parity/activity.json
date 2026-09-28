@@ -1,11 +1,19 @@
 {
   "schema": "compose-preview-activity/v1",
-  "generatedAt": "2026-09-28T03:37:51.421Z",
+  "generatedAt": "2026-09-28T03:59:27.128Z",
   "windowDays": 30,
   "code": {
     "repo": "yschimke/homeassistant-remotecompose",
     "ref": "main",
     "events": [
+      {
+        "sha": "ee0071e5425edcdf871b5c997defe360321dea0c",
+        "subject": "fix(deps): update androidx-wear to v1.7.0 (#689)",
+        "at": "2026-09-28T03:46:30Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
       {
         "sha": "6b32adc9e88410f9de0c234093c454eb53813848",
         "subject": "fix(deps): update dependency org.jetbrains:markdown to v0.7.15 (#686)",
@@ -474,14 +482,6 @@
         "sha": "1a56384e607a4e67ec8165ede121bd22ce4e712f",
         "subject": "fix(deps): update dependency com.materialkolor:material-kolor to v5.0.1 (#622)",
         "at": "2026-08-31T07:33:01Z",
-        "author": "renovate[bot]",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "a9862decf45cf8829e030a768487c71409ce7bd6",
-        "subject": "chore(deps): update github-actions (#619)",
-        "at": "2026-08-31T04:33:11Z",
         "author": "renovate[bot]",
         "previewIds": [],
         "components": []
