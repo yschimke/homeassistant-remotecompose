@@ -1,11 +1,27 @@
 {
   "schema": "compose-preview-activity/v1",
-  "generatedAt": "2026-09-21T12:34:03.426Z",
+  "generatedAt": "2026-09-28T02:08:43.804Z",
   "windowDays": 30,
   "code": {
     "repo": "yschimke/homeassistant-remotecompose",
     "ref": "main",
     "events": [
+      {
+        "sha": "9304d226f8e69204623b996108777677851d2f76",
+        "subject": "chore(deps): update github-actions (#682)",
+        "at": "2026-09-28T01:53:37Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "f756836ac9b17306285f0517a46ce9685cb9ae9e",
+        "subject": "fix(deps): update androidx (#683)",
+        "at": "2026-09-28T01:53:34Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
       {
         "sha": "22d669c45f89dc27ac2ca7dcb07d107e094d8002",
         "subject": "chore(deps): update github-actions (#675)",
@@ -442,46 +458,6 @@
         "sha": "5ea1fbfe20ebc8aa3d5c95df60e78ebe69bdabae",
         "subject": "fix(deps): update compose-ai-tools (#617)",
         "at": "2026-08-29T14:12:16Z",
-        "author": "renovate[bot]",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "e81a1e482c84265d08054e86558ad1da39cca4c7",
-        "subject": "fix(deps): update compose-ai-tools to v1.46.2 (#616)",
-        "at": "2026-08-29T01:30:19Z",
-        "author": "renovate[bot]",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "cb5bf77e547a496bf5ba408811b8efc60b89839e",
-        "subject": "fix(deps): update compose-ai-tools (#615)",
-        "at": "2026-08-28T18:13:59Z",
-        "author": "renovate[bot]",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "fce07c6b3a537c4c151c37a18203271a0a8cfdd7",
-        "subject": "fix(deps): update compose-ai-tools to v1.43.0 (#614)",
-        "at": "2026-08-28T17:38:44Z",
-        "author": "renovate[bot]",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "aabb9eee2f0f5cb381d11e8e0cc5e82f7c1b2f7f",
-        "subject": "chore(deps): update agp to v9.3.2 (#610)",
-        "at": "2026-08-28T05:31:01Z",
-        "author": "renovate[bot]",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "0a1fc367d9aa6cb6c1f9f39aeb24775ec7eda577",
-        "subject": "fix(deps): update compose-ai-tools to v1.39.0 (#612)",
-        "at": "2026-08-28T05:01:54Z",
         "author": "renovate[bot]",
         "previewIds": [],
         "components": []
