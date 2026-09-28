@@ -1,11 +1,19 @@
 {
   "schema": "compose-preview-activity/v1",
-  "generatedAt": "2026-09-28T03:59:27.128Z",
+  "generatedAt": "2026-09-28T05:21:40.930Z",
   "windowDays": 30,
   "code": {
     "repo": "yschimke/homeassistant-remotecompose",
     "ref": "main",
     "events": [
+      {
+        "sha": "1f32a2fb03b7e24d20d3686fb9139583332087db",
+        "subject": "chore(deps): update gradle to v9.8.0 (#688)",
+        "at": "2026-09-28T05:11:08Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
       {
         "sha": "ee0071e5425edcdf871b5c997defe360321dea0c",
         "subject": "fix(deps): update androidx-wear to v1.7.0 (#689)",
@@ -474,14 +482,6 @@
         "sha": "2db9e537d476dd830af436947dfd385e962e6aa7",
         "subject": "fix(deps): update dependency androidx.compose.material3:material3 to v1.5.0-alpha27 (#621)",
         "at": "2026-08-31T07:33:04Z",
-        "author": "renovate[bot]",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "1a56384e607a4e67ec8165ede121bd22ce4e712f",
-        "subject": "fix(deps): update dependency com.materialkolor:material-kolor to v5.0.1 (#622)",
-        "at": "2026-08-31T07:33:01Z",
         "author": "renovate[bot]",
         "previewIds": [],
         "components": []
