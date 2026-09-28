@@ -1,11 +1,19 @@
 {
   "schema": "compose-preview-activity/v1",
-  "generatedAt": "2026-09-28T02:08:43.804Z",
+  "generatedAt": "2026-09-28T02:31:57.156Z",
   "windowDays": 30,
   "code": {
     "repo": "yschimke/homeassistant-remotecompose",
     "ref": "main",
     "events": [
+      {
+        "sha": "8d6d5014e7705d4d7d0fd7951ebcc72ca24fca04",
+        "subject": "chore(deps): update dependency dev.zacsweers.metro to v1.4.5 (#681)",
+        "at": "2026-09-28T02:16:38Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
       {
         "sha": "9304d226f8e69204623b996108777677851d2f76",
         "subject": "chore(deps): update github-actions (#682)",
