@@ -1,11 +1,19 @@
 {
   "schema": "compose-preview-activity/v1",
-  "generatedAt": "2026-09-28T05:21:40.930Z",
+  "generatedAt": "2026-09-28T08:36:17.923Z",
   "windowDays": 30,
   "code": {
     "repo": "yschimke/homeassistant-remotecompose",
     "ref": "main",
     "events": [
+      {
+        "sha": "7bc056e3f6ed5a20f9051788350fcd0d849334e1",
+        "subject": "fix(deps): update ktor to v3.6.0 (#690)",
+        "at": "2026-09-28T08:21:36Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
       {
         "sha": "1f32a2fb03b7e24d20d3686fb9139583332087db",
         "subject": "chore(deps): update gradle to v9.8.0 (#688)",
@@ -474,14 +482,6 @@
         "sha": "e220e2b070487837c3fbbae8733e11a7e6b8d6e1",
         "subject": "fix(deps): update androidx to v1.2.0-beta01 (#620)",
         "at": "2026-08-31T13:30:18Z",
-        "author": "renovate[bot]",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "2db9e537d476dd830af436947dfd385e962e6aa7",
-        "subject": "fix(deps): update dependency androidx.compose.material3:material3 to v1.5.0-alpha27 (#621)",
-        "at": "2026-08-31T07:33:04Z",
         "author": "renovate[bot]",
         "previewIds": [],
         "components": []
