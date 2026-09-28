@@ -1,11 +1,19 @@
 {
   "schema": "compose-preview-activity/v1",
-  "generatedAt": "2026-09-28T02:56:11.578Z",
+  "generatedAt": "2026-09-28T03:16:39.399Z",
   "windowDays": 30,
   "code": {
     "repo": "yschimke/homeassistant-remotecompose",
     "ref": "main",
     "events": [
+      {
+        "sha": "7db647efe6c55f0e6cbe709283aa44936c47ac3b",
+        "subject": "fix(deps): update dependency ch.qos.logback:logback-classic to v1.6.4 (#685)",
+        "at": "2026-09-28T03:04:45Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
       {
         "sha": "5c132609195208ac5521098d46c000e58f19c4c0",
         "subject": "fix(deps): update dependency androidx.compose.material3:material3 to v1.5.0-alpha29 (#684)",
