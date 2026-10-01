@@ -1,11 +1,19 @@
 {
   "schema": "compose-preview-activity/v1",
-  "generatedAt": "2026-09-28T13:33:21.371Z",
+  "generatedAt": "2026-10-01T07:07:24.872Z",
   "windowDays": 30,
   "code": {
     "repo": "yschimke/homeassistant-remotecompose",
     "ref": "main",
     "events": [
+      {
+        "sha": "0263845c9dad0b427aaa5e9576cbe6284ebbe8ef",
+        "subject": "fix(deps): update dependency ee.schimke.composeai:data-render-core to v3 (#691)",
+        "at": "2026-10-01T06:56:57Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
       {
         "sha": "7bc056e3f6ed5a20f9051788350fcd0d849334e1",
         "subject": "fix(deps): update ktor to v3.6.0 (#690)",
@@ -475,14 +483,6 @@
         "subject": "ci: stop publishing per-preview bundles for the catalog (#623)",
         "at": "2026-09-02T09:04:28+01:00",
         "author": "Yuri Schimke",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "e220e2b070487837c3fbbae8733e11a7e6b8d6e1",
-        "subject": "fix(deps): update androidx to v1.2.0-beta01 (#620)",
-        "at": "2026-08-31T13:30:18Z",
-        "author": "renovate[bot]",
         "previewIds": [],
         "components": []
       }
