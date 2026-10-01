@@ -1,11 +1,19 @@
 {
   "schema": "compose-preview-activity/v1",
-  "generatedAt": "2026-10-01T07:07:24.872Z",
+  "generatedAt": "2026-10-01T14:37:13.996Z",
   "windowDays": 30,
   "code": {
     "repo": "yschimke/homeassistant-remotecompose",
     "ref": "main",
     "events": [
+      {
+        "sha": "064a6dff2bb975e159982c4edf95a43982b1acdb",
+        "subject": "fix(deps): update dependency ee.schimke.composeai:data-render-core to v3.7.0 (#692)",
+        "at": "2026-10-01T14:22:04Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
       {
         "sha": "0263845c9dad0b427aaa5e9576cbe6284ebbe8ef",
         "subject": "fix(deps): update dependency ee.schimke.composeai:data-render-core to v3 (#691)",
@@ -474,14 +482,6 @@
         "sha": "1480663da2fe9491a83d015008c84bdf2c6a38ef",
         "subject": "fix(deps): version data-render-core on its own line, and take plugin 1.71.0 (#625)",
         "at": "2026-09-04T12:26:59+01:00",
-        "author": "Yuri Schimke",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "1db2d6c24ec2c397f76d4fa5ff5b8812f348d076",
-        "subject": "ci: stop publishing per-preview bundles for the catalog (#623)",
-        "at": "2026-09-02T09:04:28+01:00",
         "author": "Yuri Schimke",
         "previewIds": [],
         "components": []
