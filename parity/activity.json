@@ -1,11 +1,19 @@
 {
   "schema": "compose-preview-activity/v1",
-  "generatedAt": "2026-10-01T14:37:13.996Z",
+  "generatedAt": "2026-10-01T15:08:19.234Z",
   "windowDays": 30,
   "code": {
     "repo": "yschimke/homeassistant-remotecompose",
     "ref": "main",
     "events": [
+      {
+        "sha": "0daad80f6d4f0edd449e9524a95a37292328826e",
+        "subject": "fix(deps): update dependency ee.schimke.composeai:data-render-core to v3.15.0 (#693)",
+        "at": "2026-10-01T14:53:08Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
       {
         "sha": "064a6dff2bb975e159982c4edf95a43982b1acdb",
         "subject": "fix(deps): update dependency ee.schimke.composeai:data-render-core to v3.7.0 (#692)",
@@ -474,14 +482,6 @@
         "sha": "ca36149403b77ce51daad2cf4c3af79267a7b465",
         "subject": "ci(renovate): track the contracts artifacts as their own group (#626)",
         "at": "2026-09-04T13:02:47+01:00",
-        "author": "Yuri Schimke",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "1480663da2fe9491a83d015008c84bdf2c6a38ef",
-        "subject": "fix(deps): version data-render-core on its own line, and take plugin 1.71.0 (#625)",
-        "at": "2026-09-04T12:26:59+01:00",
         "author": "Yuri Schimke",
         "previewIds": [],
         "components": []
