@@ -54,12 +54,19 @@ struct DashboardCard: Codable, Identifiable, Equatable, Sendable {
 enum BindingValue: Equatable, Sendable {
   case string(String)
   case float(Float)
+  case integer(Int)
   case color(UInt32)
 
-  init?(json: Any) {
+  init?(name: String, json: Any) {
     switch json {
-    case let value as Bool: self = .float(value ? 1 : 0)
-    case let value as NSNumber: self = .float(value.floatValue)
+    case let value as NSNumber:
+      if CFGetTypeID(value) == CFBooleanGetTypeID() {
+        self = .integer(value.boolValue ? 1 : 0)
+      } else if name.hasSuffix(".state_int") {
+        self = .integer(value.intValue)
+      } else {
+        self = .float(value.floatValue)
+      }
     case let value as String: self = .string(value)
     default: return nil
     }
