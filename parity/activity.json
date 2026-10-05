@@ -1,6 +1,6 @@
 {
   "schema": "compose-preview-activity/v1",
-  "generatedAt": "2026-10-05T06:50:15.325Z",
+  "generatedAt": "2026-10-05T14:21:34.168Z",
   "windowDays": 30,
   "code": {
     "repo": "yschimke/homeassistant-remotecompose",
@@ -411,38 +411,6 @@
         "subject": "fix(deps): update compose-ai-tools to v1.81.0 (#638)",
         "at": "2026-09-05T18:50:21Z",
         "author": "renovate[bot]",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "8208e5dd3d3ca314f660f29a0de9e928568850e4",
-        "subject": "fix(deps): update compose-ai-tools to v1.80.0 (#637)",
-        "at": "2026-09-05T13:42:39Z",
-        "author": "renovate[bot]",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "e2ea052a805e407cc66e63d93d27ee2a2955e108",
-        "subject": "fix(deps): update compose-ai-tools to v1.79.0 (#636)",
-        "at": "2026-09-05T11:17:07Z",
-        "author": "renovate[bot]",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "01e94bf1b14a04c09f67c82abdaddae48f87f6e9",
-        "subject": "fix(deps): update compose-ai-tools (#634)",
-        "at": "2026-09-05T10:50:37Z",
-        "author": "renovate[bot]",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "9d10ac5d475dfd4745daa1ec2475944a8fd2aada",
-        "subject": "chore: register the hosted catalog MCP server for agents (#633)",
-        "at": "2026-09-05T08:58:02+01:00",
-        "author": "Yuri Schimke",
         "previewIds": [],
         "components": []
       }
