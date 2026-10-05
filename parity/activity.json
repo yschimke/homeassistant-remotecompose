@@ -1,11 +1,27 @@
 {
   "schema": "compose-preview-activity/v1",
-  "generatedAt": "2026-10-01T15:08:19.234Z",
+  "generatedAt": "2026-10-05T06:50:15.325Z",
   "windowDays": 30,
   "code": {
     "repo": "yschimke/homeassistant-remotecompose",
     "ref": "main",
     "events": [
+      {
+        "sha": "ed8d0c6946be839109c509aa7c926e8ed5022396",
+        "subject": "fix(deps): update dependency ch.qos.logback:logback-classic to v1.6.5 (#695)",
+        "at": "2026-10-05T06:36:29Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "e44644b279f6cf4eb39ce532f223acef9a51a772",
+        "subject": "chore(deps): update github-actions (#694)",
+        "at": "2026-10-05T05:59:27Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
       {
         "sha": "0daad80f6d4f0edd449e9524a95a37292328826e",
         "subject": "fix(deps): update dependency ee.schimke.composeai:data-render-core to v3.15.0 (#693)",
@@ -426,62 +442,6 @@
         "sha": "9d10ac5d475dfd4745daa1ec2475944a8fd2aada",
         "subject": "chore: register the hosted catalog MCP server for agents (#633)",
         "at": "2026-09-05T08:58:02+01:00",
-        "author": "Yuri Schimke",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "c3f8cd391b7ce9e50c4e6bb69e83669c28dd7d16",
-        "subject": "fix(deps): update compose-ai-tools to v1.74.0 (#632)",
-        "at": "2026-09-05T01:07:37Z",
-        "author": "renovate[bot]",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "42671528907dc6a82bc2bf67d2d61df2f0896a71",
-        "subject": "fix(deps): update compose-ai-tools (#631)",
-        "at": "2026-09-04T23:11:13Z",
-        "author": "renovate[bot]",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "a5a43e5b5fea00824cd6796b65a1676341c42b8e",
-        "subject": "chore(deps): update gradle to v9.7.1 (#605)",
-        "at": "2026-09-04T16:49:46+01:00",
-        "author": "renovate[bot]",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "88fdba91df8f556747a7b035ace7904435b0adc4",
-        "subject": "fix(deps): update compose-ai-tools to v1.72.0 (#618)",
-        "at": "2026-09-04T16:49:36+01:00",
-        "author": "renovate[bot]",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "e3fa605827a9dc4c93871a456467411861dae5f3",
-        "subject": "fix(wear): render previews through the embedded player, not the View one (#627)",
-        "at": "2026-09-04T16:49:17+01:00",
-        "author": "Yuri Schimke",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "0b73959aaecaba3b3f2bf8798857c537a840095b",
-        "subject": "fix(integration): match rendered PNGs around the filename digest (#628)",
-        "at": "2026-09-04T16:48:46+01:00",
-        "author": "Yuri Schimke",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "ca36149403b77ce51daad2cf4c3af79267a7b465",
-        "subject": "ci(renovate): track the contracts artifacts as their own group (#626)",
-        "at": "2026-09-04T13:02:47+01:00",
         "author": "Yuri Schimke",
         "previewIds": [],
         "components": []
