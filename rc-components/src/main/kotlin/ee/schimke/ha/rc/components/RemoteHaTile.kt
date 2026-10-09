@@ -2,6 +2,7 @@
 
 package ee.schimke.ha.rc.components
 
+import androidx.compose.remote.creation.compose.capture.toRemoteImageVector
 import androidx.compose.remote.creation.compose.layout.RemoteAlignment
 import androidx.compose.remote.creation.compose.layout.RemoteArrangement
 import androidx.compose.remote.creation.compose.layout.RemoteBox
@@ -72,7 +73,7 @@ fun RemoteHaTile(data: HaTileData, modifier: RemoteModifier = RemoteModifier) {
           contentAlignment = RemoteAlignment.Center,
         ) {
           RemoteIcon(
-            imageVector = data.icon,
+            imageVector = data.icon.toRemoteImageVector(),
             contentDescription = data.name.rs,
             modifier = RemoteModifier.size(20.rdp),
             tint = accent,
@@ -80,7 +81,7 @@ fun RemoteHaTile(data: HaTileData, modifier: RemoteModifier = RemoteModifier) {
         }
       } else {
         RemoteIcon(
-          imageVector = data.icon,
+          imageVector = data.icon.toRemoteImageVector(),
           contentDescription = data.name.rs,
           modifier = RemoteModifier.size(24.rdp),
           tint = accent,
@@ -157,7 +158,7 @@ fun RemoteHaIconChip(data: HaTileData, modifier: RemoteModifier = RemoteModifier
     horizontalAlignment = RemoteAlignment.CenterHorizontally,
   ) {
     RemoteIcon(
-      imageVector = data.icon,
+      imageVector = data.icon.toRemoteImageVector(),
       contentDescription = data.name.rs,
       modifier = RemoteModifier.size(32.rdp),
       tint = accent,

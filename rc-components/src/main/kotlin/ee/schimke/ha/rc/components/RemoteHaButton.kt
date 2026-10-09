@@ -2,6 +2,7 @@
 
 package ee.schimke.ha.rc.components
 
+import androidx.compose.remote.creation.compose.capture.toRemoteImageVector
 import androidx.compose.remote.creation.compose.layout.RemoteAlignment
 import androidx.compose.remote.creation.compose.layout.RemoteBox
 import androidx.compose.remote.creation.compose.layout.RemoteColumn
@@ -211,7 +212,7 @@ private fun ButtonIconChip(
     contentAlignment = RemoteAlignment.Center,
   ) {
     RemoteIcon(
-      imageVector = icon,
+      imageVector = icon.toRemoteImageVector(),
       contentDescription = contentDescription,
       modifier = RemoteModifier.size(iconDp.rdp),
       tint = accent,

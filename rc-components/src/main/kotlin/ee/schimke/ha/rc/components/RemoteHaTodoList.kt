@@ -5,6 +5,7 @@ package ee.schimke.ha.rc.components
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckBox
 import androidx.compose.material.icons.outlined.CheckBoxOutlineBlank
+import androidx.compose.remote.creation.compose.capture.toRemoteImageVector
 import androidx.compose.remote.creation.compose.layout.RemoteAlignment
 import androidx.compose.remote.creation.compose.layout.RemoteArrangement
 import androidx.compose.remote.creation.compose.layout.RemoteBox
@@ -139,7 +140,9 @@ private fun Row(item: HaTodoItem, completed: Boolean, theme: RemoteHaTheme) {
     verticalAlignment = RemoteAlignment.CenterVertically,
   ) {
     RemoteIcon(
-      imageVector = if (completed) Icons.Filled.CheckBox else Icons.Outlined.CheckBoxOutlineBlank,
+      imageVector =
+        (if (completed) Icons.Filled.CheckBox else Icons.Outlined.CheckBoxOutlineBlank)
+          .toRemoteImageVector(),
       contentDescription = item.summary.rs,
       modifier = RemoteModifier.size(18.rdp),
       tint = if (completed) theme.placeholderAccent else theme.secondaryText,

@@ -2,6 +2,7 @@
 
 package ee.schimke.ha.rc.components
 
+import androidx.compose.remote.creation.compose.capture.toRemoteImageVector
 import androidx.compose.remote.creation.compose.layout.RemoteAlignment
 import androidx.compose.remote.creation.compose.layout.RemoteArrangement
 import androidx.compose.remote.creation.compose.layout.RemoteBox
@@ -80,7 +81,7 @@ fun RemoteHaArea(data: HaAreaCardData, modifier: RemoteModifier = RemoteModifier
 private fun Stat(stat: HaAreaStat, theme: RemoteHaTheme) {
   RemoteRow(verticalAlignment = RemoteAlignment.CenterVertically) {
     RemoteIcon(
-      imageVector = stat.icon,
+      imageVector = stat.icon.toRemoteImageVector(),
       contentDescription = stat.label,
       modifier = RemoteModifier.size(16.rdp),
       tint = theme.secondaryText,
@@ -122,7 +123,7 @@ private fun ActionChip(action: HaAreaAction, theme: RemoteHaTheme) {
     contentAlignment = RemoteAlignment.Center,
   ) {
     RemoteIcon(
-      imageVector = action.icon,
+      imageVector = action.icon.toRemoteImageVector(),
       contentDescription = "action".rs,
       modifier = RemoteModifier.size(20.rdp),
       tint = tint,

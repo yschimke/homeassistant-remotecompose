@@ -6,6 +6,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ArrowDownward
 import androidx.compose.material.icons.outlined.ArrowUpward
 import androidx.compose.material.icons.outlined.Stop
+import androidx.compose.remote.creation.compose.capture.toRemoteImageVector
 import androidx.compose.remote.creation.compose.layout.RemoteAlignment
 import androidx.compose.remote.creation.compose.layout.RemoteArrangement
 import androidx.compose.remote.creation.compose.layout.RemoteBox
@@ -235,7 +236,7 @@ private fun MotionArrow(motion: GarageMotion) {
   // rather than picking up a state colour — the chevron is a
   // direction marker, not a "warning" or "active" badge.
   RemoteIcon(
-    imageVector = icon,
+    imageVector = icon.toRemoteImageVector(),
     contentDescription = motion.name.rs,
     modifier = RemoteModifier.size(20.rdp),
     tint = theme.primaryText,
@@ -270,7 +271,7 @@ private fun GarageButton(
     contentAlignment = RemoteAlignment.Center,
   ) {
     RemoteIcon(
-      imageVector = icon,
+      imageVector = icon.toRemoteImageVector(),
       contentDescription = description.rs,
       modifier = RemoteModifier.size(18.rdp),
       tint = theme.primaryText,

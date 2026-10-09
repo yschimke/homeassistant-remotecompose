@@ -2,6 +2,7 @@
 
 package ee.schimke.ha.rc.components
 
+import androidx.compose.remote.creation.compose.capture.toRemoteImageVector
 import androidx.compose.remote.creation.compose.layout.RemoteAlignment
 import androidx.compose.remote.creation.compose.layout.RemoteArrangement
 import androidx.compose.remote.creation.compose.layout.RemoteBox
@@ -157,7 +158,7 @@ fun RemoteHaGlanceCell(data: HaGlanceCellData, modifier: RemoteModifier = Remote
     )
     RemoteBox(modifier = RemoteModifier.padding(vertical = 4.rdp)) {
       RemoteIcon(
-        imageVector = data.icon,
+        imageVector = data.icon.toRemoteImageVector(),
         contentDescription = data.name.rs,
         modifier = RemoteModifier.size(28.rdp),
         tint = accent,

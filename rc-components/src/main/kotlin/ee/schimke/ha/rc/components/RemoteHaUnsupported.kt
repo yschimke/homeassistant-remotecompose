@@ -4,6 +4,7 @@ package ee.schimke.ha.rc.components
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Widgets
+import androidx.compose.remote.creation.compose.capture.toRemoteImageVector
 import androidx.compose.remote.creation.compose.layout.RemoteAlignment
 import androidx.compose.remote.creation.compose.layout.RemoteBox
 import androidx.compose.remote.creation.compose.layout.RemoteColumn
@@ -37,7 +38,7 @@ fun RemoteHaUnsupported(data: HaUnsupportedData, modifier: RemoteModifier = Remo
   ) {
     RemoteColumn {
       RemoteIcon(
-        imageVector = Icons.Filled.Widgets,
+        imageVector = Icons.Filled.Widgets.toRemoteImageVector(),
         contentDescription = "Unsupported card".rs,
         modifier = RemoteModifier.size(24.rdp),
         tint = theme.placeholderAccent,

@@ -2,6 +2,7 @@
 
 package ee.schimke.ha.rc.components
 
+import androidx.compose.remote.creation.compose.capture.toRemoteImageVector
 import androidx.compose.remote.creation.compose.layout.RemoteAlignment
 import androidx.compose.remote.creation.compose.layout.RemoteArrangement
 import androidx.compose.remote.creation.compose.layout.RemoteBox
@@ -102,7 +103,7 @@ private fun CurrentRow(data: HaWeatherForecastData, theme: RemoteHaTheme) {
   ) {
     RemoteRow(verticalAlignment = RemoteAlignment.CenterVertically) {
       RemoteIcon(
-        imageVector = data.icon,
+        imageVector = data.icon.toRemoteImageVector(),
         contentDescription = data.condition,
         modifier = RemoteModifier.size(36.rdp),
         tint = theme.primaryText,
@@ -185,7 +186,7 @@ private fun ExtraInfoRow(extras: List<HaWeatherExtra>, theme: RemoteHaTheme) {
         verticalArrangement = RemoteArrangement.spacedBy(3.rdp),
       ) {
         RemoteIcon(
-          imageVector = extra.icon,
+          imageVector = extra.icon.toRemoteImageVector(),
           contentDescription = extra.label.rs,
           modifier = RemoteModifier.size(16.rdp),
           tint = theme.secondaryText,
@@ -233,7 +234,7 @@ fun RemoteHaWeatherForecastWide(
     horizontalArrangement = RemoteArrangement.spacedBy(8.rdp),
   ) {
     RemoteIcon(
-      imageVector = data.icon,
+      imageVector = data.icon.toRemoteImageVector(),
       contentDescription = data.condition,
       modifier = RemoteModifier.size(28.rdp),
       tint = theme.primaryText,
@@ -300,7 +301,7 @@ private fun ForecastStrip(
           maxLines = 1,
         )
         RemoteIcon(
-          imageVector = day.icon,
+          imageVector = day.icon.toRemoteImageVector(),
           contentDescription = day.label.rs,
           modifier = RemoteModifier.size(if (fill) 32.rdp else 20.rdp),
           tint = theme.primaryText,

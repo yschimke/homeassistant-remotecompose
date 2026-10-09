@@ -8,8 +8,8 @@ import androidx.compose.remote.creation.compose.state.MutableRemoteImageBitmap
 import androidx.compose.remote.creation.compose.state.RemoteImageBitmap
 import androidx.compose.remote.creation.compose.state.RemoteNamedCacheKey
 import androidx.compose.remote.creation.compose.state.RemoteState
-import androidx.compose.remote.creation.compose.state.rememberNamedState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asAndroidBitmap
 
@@ -29,16 +29,16 @@ import androidx.compose.ui.graphics.asAndroidBitmap
  * The player allocates a 1×1 slot and the fetched image collapses to invisible — the gray
  * picture-entity tile in #264.
  *
- * The local helpers below mirror upstream's contract — same [rememberNamedState] caching, same
- * [RemoteNamedCacheKey], `domain.prefixed(name)` registration — but the URL form swaps
+ * The local helpers below mirror upstream's contract — same `remember(name, domain)` caching (what
+ * upstream's `createNamedRemoteImageBitmap` path uses since alpha21 dropped `rememberNamedState`),
+ * same [RemoteNamedCacheKey], `domain.prefixed(name)` registration — but the URL form swaps
  * `addNamedBitmapUrl(name, url)` for a direct call to `addBitmapUrl(url, width, height)` via
  * [addNamedBitmapUrlSized].
  *
  * `@Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER")` lets us reach upstream's `internal`
- * symbols ([rememberNamedState], [MutableRemoteImageBitmap]'s constructor, [RemoteNamedCacheKey])
- * the same way `@Suppress("RestrictedApi")` reaches the `@RestrictTo(LIBRARY_GROUP)` ones. Both are
- * needed to keep the encoded byte format identical to upstream's, so a future alpha fix is a clean
- * drop-in.
+ * symbols ([MutableRemoteImageBitmap]'s constructor, [RemoteNamedCacheKey]) the same way
+ * `@Suppress("RestrictedApi")` reaches the `@RestrictTo(LIBRARY_GROUP)` ones. Both are needed to
+ * keep the encoded byte format identical to upstream's, so a future alpha fix is a clean drop-in.
  */
 
 /**
@@ -53,7 +53,7 @@ fun rememberLocalNamedRemoteBitmap(
   domain: RemoteState.Domain = RemoteState.Domain.User,
   value: () -> ImageBitmap,
 ): RemoteImageBitmap =
-  rememberNamedState(name, domain) {
+  remember(name, domain) {
     val bitmap = value()
     MutableRemoteImageBitmap(/* constantValueOrNull= */ null, RemoteNamedCacheKey(domain, name)) {
       creationState ->
@@ -80,7 +80,7 @@ fun rememberLocalNamedRemoteBitmap(
   height: Int,
   domain: RemoteState.Domain = RemoteState.Domain.User,
 ): RemoteImageBitmap =
-  rememberNamedState(name, domain) {
+  remember(name, domain) {
     MutableRemoteImageBitmap(/* constantValueOrNull= */ null, RemoteNamedCacheKey(domain, name)) {
       creationState ->
       creationState.document.addNamedBitmapUrlSized(domain.prefixed(name), url, width, height)
