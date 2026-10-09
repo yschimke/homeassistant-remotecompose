@@ -2,6 +2,7 @@
 
 package ee.schimke.ha.rc.components
 
+import androidx.compose.remote.creation.compose.capture.toRemoteImageVector
 import androidx.compose.remote.creation.compose.layout.RemoteAlignment
 import androidx.compose.remote.creation.compose.layout.RemoteArrangement
 import androidx.compose.remote.creation.compose.layout.RemoteBox
@@ -104,7 +105,7 @@ fun RemoteHaLogbookIdentity(data: HaLogbookData, modifier: RemoteModifier = Remo
         verticalAlignment = RemoteAlignment.CenterVertically,
       ) {
         RemoteIcon(
-          imageVector = latest.icon,
+          imageVector = latest.icon.toRemoteImageVector(),
           contentDescription = latest.name.rs,
           modifier = RemoteModifier.size(22.rdp),
           tint = theme.secondaryText,
@@ -143,7 +144,7 @@ private fun Entry(entry: HaLogbookEntry, theme: RemoteHaTheme) {
     verticalAlignment = RemoteAlignment.CenterVertically,
   ) {
     RemoteIcon(
-      imageVector = entry.icon,
+      imageVector = entry.icon.toRemoteImageVector(),
       contentDescription = entry.name.rs,
       modifier = RemoteModifier.size(16.rdp),
       tint = theme.secondaryText,

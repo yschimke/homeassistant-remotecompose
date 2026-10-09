@@ -2,6 +2,7 @@
 
 package ee.schimke.ha.rc.components
 
+import androidx.compose.remote.creation.compose.capture.toRemoteImageVector
 import androidx.compose.remote.creation.compose.layout.RemoteAlignment
 import androidx.compose.remote.creation.compose.layout.RemoteArrangement
 import androidx.compose.remote.creation.compose.layout.RemoteBox
@@ -80,7 +81,7 @@ private fun Button(button: HaBambuControlButton, theme: RemoteHaTheme) {
       contentAlignment = RemoteAlignment.Center,
     ) {
       RemoteIcon(
-        imageVector = button.icon,
+        imageVector = button.icon.toRemoteImageVector(),
         contentDescription = button.label.rs,
         modifier = RemoteModifier.size(24.rdp),
         tint = accent,

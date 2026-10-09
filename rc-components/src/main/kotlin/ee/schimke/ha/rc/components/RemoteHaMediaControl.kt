@@ -8,6 +8,7 @@ import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.SkipNext
 import androidx.compose.material.icons.filled.SkipPrevious
+import androidx.compose.remote.creation.compose.capture.toRemoteImageVector
 import androidx.compose.remote.creation.compose.layout.RemoteAlignment
 import androidx.compose.remote.creation.compose.layout.RemoteArrangement
 import androidx.compose.remote.creation.compose.layout.RemoteBox
@@ -95,7 +96,7 @@ fun RemoteHaMediaControl(
           contentAlignment = RemoteAlignment.Center,
         ) {
           RemoteIcon(
-            imageVector = Icons.Filled.MusicNote,
+            imageVector = Icons.Filled.MusicNote.toRemoteImageVector(),
             contentDescription = data.title.rs,
             modifier = RemoteModifier.size(40.rdp),
             tint = data.accent.rc,
@@ -207,7 +208,7 @@ fun RemoteHaMediaControlWide(data: HaMediaControlData, modifier: RemoteModifier 
       contentAlignment = RemoteAlignment.Center,
     ) {
       RemoteIcon(
-        imageVector = Icons.Filled.MusicNote,
+        imageVector = Icons.Filled.MusicNote.toRemoteImageVector(),
         contentDescription = data.title.rs,
         modifier = RemoteModifier.size(22.rdp),
         tint = data.accent.rc,
@@ -240,7 +241,8 @@ fun RemoteHaMediaControlWide(data: HaMediaControlData, modifier: RemoteModifier 
     // the Full tier in alpha010, and a tiny chip is a glance target —
     // the tap opens the full card.
     RemoteIcon(
-      imageVector = if (data.isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow,
+      imageVector =
+        (if (data.isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow).toRemoteImageVector(),
       contentDescription = "play/pause".rs,
       modifier = RemoteModifier.size(22.rdp),
       tint = data.accent.rc,
@@ -263,7 +265,7 @@ private fun TransportButton(
     contentAlignment = RemoteAlignment.Center,
   ) {
     RemoteIcon(
-      imageVector = icon,
+      imageVector = icon.toRemoteImageVector(),
       contentDescription = "transport".rs,
       modifier = RemoteModifier.size(iconSize),
       tint = accent.rc,
