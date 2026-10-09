@@ -14,6 +14,7 @@ import androidx.compose.remote.creation.compose.state.EASE_OUT_BOUNCE
 import androidx.compose.remote.creation.compose.state.EASE_OUT_ELASTIC
 import androidx.compose.remote.creation.compose.state.RemoteFloat
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 
 /**
@@ -67,12 +68,15 @@ fun animateRemoteFloat(
   easing: Int = RcEasing.Standard,
 ): RemoteFloat {
   if (!LocalRemoteAnimationsEnabled.current) return input
-  return AnimatedRemoteFloat(
-    input,
-    // Pack only the duration + easing; pass NaN for wrap / offset so
-    // the packed array omits those slots (`packToFloatArray` skips NaN
-    // entries; passing 0f would inject zero values the player would
-    // try to apply as a wrap-around / phase offset).
-    FloatAnimation.packToFloatArray(durationSeconds, easing, null, Float.NaN, Float.NaN),
-  )
+  // `AnimatedRemoteFloat` is `@RememberInComposition` since remote-compose alpha21.
+  return remember(input, durationSeconds, easing) {
+    AnimatedRemoteFloat(
+      input,
+      // Pack only the duration + easing; pass NaN for wrap / offset so
+      // the packed array omits those slots (`packToFloatArray` skips NaN
+      // entries; passing 0f would inject zero values the player would
+      // try to apply as a wrap-around / phase offset).
+      FloatAnimation.packToFloatArray(durationSeconds, easing, null, Float.NaN, Float.NaN),
+    )
+  }
 }
