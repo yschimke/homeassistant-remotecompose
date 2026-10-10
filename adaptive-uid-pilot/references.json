@@ -238,9 +238,9 @@
     ]
   ],
   "publication": {
-    "system": "homeassistant-uid",
-    "title": "Home Assistant app design",
-    "sourceModule": "adaptive-uid-pilot",
+    "system": "homeassistant-remotecompose",
+    "title": "Home Assistant RemoteCompose",
+    "sourceModule": ":adaptive-uid-pilot",
     "components": [
       {
         "designId": "dashboards",
@@ -248,6 +248,7 @@
         "sourceFile": "src/main/kotlin/ee/schimke/adaptivepilot/DashboardBrowser.kt",
         "caption": "Adaptive stock Material 3 design proposal: phone and tablet, list and detail, light and dark."
       }
-    ]
+    ],
+    "sourceDirectory": "adaptive-uid-pilot"
   }
 }

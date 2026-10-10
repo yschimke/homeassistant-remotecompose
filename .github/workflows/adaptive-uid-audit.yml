@@ -4,7 +4,7 @@ name: Adaptive UID design audit
 # on the default branch before workflow_run can trigger it for PRs.
 on:
   workflow_run:
-    workflows: [Adaptive UID pilot]
+    workflows: [Adaptive UID pilot, Design Artifacts]
     types: [completed]
 
 permissions:
@@ -12,10 +12,9 @@ permissions:
   actions: read
 
 # Shared setup: https://github.com/yschimke/compose-ai-tools/pull/5787
-# Integration-test pin. Replace with the landed revision before merging this caller.
 jobs:
   audit:
-    uses: yschimke/compose-ai-tools/.github/workflows/uid-design-audit-reusable.yml@f7ef9df14d71a619864709bc38055ed2011af196
+    uses: yschimke/compose-ai-tools/.github/workflows/uid-design-audit-reusable.yml@da4612a1fe17b0b7e5cfa2a4f7fe9cfb685e7e07 # main
     with:
       enabled: true
       pilot-directory: adaptive-uid-pilot

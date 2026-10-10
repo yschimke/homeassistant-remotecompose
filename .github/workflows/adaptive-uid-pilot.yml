@@ -8,15 +8,8 @@ on:
       - 'build-logic/**'
       - '*.gradle.kts'
       - '.github/workflows/adaptive-uid-*.yml'
-  push:
-    branches: [main]
-    paths:
-      - 'adaptive-uid-pilot/**'
-      - 'gradle/**'
-      - 'build-logic/**'
-      - '*.gradle.kts'
-      - '.github/workflows/adaptive-uid-*.yml'
   workflow_dispatch:
+  workflow_call:
 
 permissions:
   contents: read
@@ -29,11 +22,9 @@ concurrency:
 # Integration-test pin. Replace with the landed revision before merging this caller.
 jobs:
   parity:
-    permissions:
-      contents: write
-    uses: yschimke/design-parity/.github/workflows/uid-parity-reusable.yml@99ca4f61c834ab22a4a39e9f9c46aeb08e4dee3e
+    uses: yschimke/design-parity/.github/workflows/uid-parity-reusable.yml@6ba2118ea00b504c243a904006700b0d9c482af3
     with:
-      publish-catalog: true
+      export-catalog: true
       pilot-directory: adaptive-uid-pilot
       artifact-prefix: adaptive-uid
       bundle-name: dashboards
