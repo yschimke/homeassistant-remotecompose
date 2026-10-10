@@ -1,6 +1,6 @@
 {
     "formatVersion": "compose-preview-history/v1",
-    "generatedFrom": "3874493373038a634368b186c28d5c0f2322a115",
+    "generatedFrom": "6be5522351f8223fada4e4b9de852bf5bc4d05ea",
     "previews": {
         "app/ee.schimke.terrazzo.previews.CardDebugPreviewsKt.CardFlashPreview_Card flash on data change": {
             "path": "renders/app/CardFlashPreview_Card_flash_on_data_change-44b71c2b.gif",
@@ -1603,6 +1603,13 @@
             "path": "renders/previews/CardPreviewMatrix_Entity_matrix_entity-9c406217.png",
             "versions": [
                 {
+                    "blob": "2c9ead758c0a3d2b5058e7ab078e7d3039619b1d",
+                    "commit": "6be5522351f8223fada4e4b9de852bf5bc4d05ea",
+                    "date": "2026-10-10T18:53:38Z",
+                    "sourceSha": "c162bae9",
+                    "commits": 1
+                },
+                {
                     "blob": "cc50ccacda2b4eb3f005f074640f0259260aa1bb",
                     "commit": "3874493373038a634368b186c28d5c0f2322a115",
                     "date": "2026-10-10T17:57:14Z",
@@ -1631,9 +1638,9 @@
                     "commits": 1
                 }
             ],
-            "observations": 4,
+            "observations": 5,
             "unstable": false,
-            "flapCount": 0
+            "flapCount": 1
         },
         "previews/ee.schimke.ha.previews.CardPreviewMatrixKt.CardPreviewMatrix_Gauge_matrix — gauge": {
             "path": "renders/previews/CardPreviewMatrix_Gauge_matrix_gauge-6aca601e.png",
@@ -1850,6 +1857,13 @@
             "path": "renders/previews/CardPreviewMatrix_Sensor_matrix_sensor-0a1072f1.png",
             "versions": [
                 {
+                    "blob": "6520e8f292b7840b524ea7fd8bad5513f1734ead",
+                    "commit": "6be5522351f8223fada4e4b9de852bf5bc4d05ea",
+                    "date": "2026-10-10T18:53:38Z",
+                    "sourceSha": "c162bae9",
+                    "commits": 1
+                },
+                {
                     "blob": "ed997f2f8d14f767b7bf20e11220704a6ec86dec",
                     "commit": "3874493373038a634368b186c28d5c0f2322a115",
                     "date": "2026-10-10T17:57:14Z",
@@ -1871,9 +1885,9 @@
                     "commits": 1
                 }
             ],
-            "observations": 3,
+            "observations": 4,
             "unstable": false,
-            "flapCount": 0
+            "flapCount": 1
         },
         "previews/ee.schimke.ha.previews.CardPreviewMatrixKt.CardPreviewMatrix_Statistic_matrix — statistic": {
             "path": "renders/previews/CardPreviewMatrix_Statistic_matrix_statistic-3c6a1a49.png",
@@ -4749,6 +4763,13 @@
             "path": "renders/previews/Sizing_WidthPinnedHeightAdaptive_sizing_width_pinned_height_adaptive-e082424e.png",
             "versions": [
                 {
+                    "blob": "3c9092fc8ba3541db2b653c26aa2f2f7f7e97c16",
+                    "commit": "6be5522351f8223fada4e4b9de852bf5bc4d05ea",
+                    "date": "2026-10-10T18:53:38Z",
+                    "sourceSha": "c162bae9",
+                    "commits": 1
+                },
+                {
                     "blob": "9bebdc3fc2363da9a6955d3a06ae39f1de3f50b6",
                     "commit": "3874493373038a634368b186c28d5c0f2322a115",
                     "date": "2026-10-10T17:57:14Z",
@@ -4770,7 +4791,7 @@
                     "commits": 1
                 }
             ],
-            "observations": 3,
+            "observations": 4,
             "unstable": false,
             "flapCount": 0
         },
