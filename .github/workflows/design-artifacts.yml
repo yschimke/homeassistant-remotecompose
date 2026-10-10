@@ -93,7 +93,7 @@ jobs:
     permissions:
       # Widened here (workflow default is read-only) for the branch force-push.
       contents: write
-    uses: yschimke/compose-ai-tools/.github/workflows/design-artifacts-reusable.yml@c348cb985f57213f44a698ec47e447c76a809280
+    uses: yschimke/compose-ai-tools/.github/workflows/design-artifacts-reusable.yml@8f5c801144a7f482b44afb8e9f3e34a4871b9d7e
     with:
       system: homeassistant-remotecompose
       ref: ${{ github.sha }}
