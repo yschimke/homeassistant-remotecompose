@@ -724,7 +724,7 @@
     "functionName": "CardPreviewMatrix_Entity",
     "module": "previews",
     "renderBasename": "CardPreviewMatrix_Entity_matrix_entity-9c406217.png",
-    "sha256": "512470855654fabbbb52c82ab7801a607d0678182c42637308907c3840e8dc29",
+    "sha256": "c3346ddf7e652223ded58f09dfc4eaca154acf2c7385e6c63041f1fb16ae1dde",
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/CardPreviewMatrix.kt"
   },
   "previews/ee.schimke.ha.previews.CardPreviewMatrixKt.CardPreviewMatrix_Gauge_matrix \u2014 gauge": {
@@ -796,7 +796,7 @@
     "functionName": "CardPreviewMatrix_Sensor",
     "module": "previews",
     "renderBasename": "CardPreviewMatrix_Sensor_matrix_sensor-0a1072f1.png",
-    "sha256": "957fc4cc77345fa18a7723a861a6c5aa2d6e77b5008c25e046a936717caf3b55",
+    "sha256": "a882196e8a6ad24bf9f41b972d07b78f7f5425eae9267ea3ddeb53de71f38e0f",
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/CardPreviewMatrix.kt"
   },
   "previews/ee.schimke.ha.previews.CardPreviewMatrixKt.CardPreviewMatrix_Statistic_matrix \u2014 statistic": {
@@ -2148,7 +2148,7 @@
     "functionName": "Sizing_WidthPinnedHeightAdaptive",
     "module": "previews",
     "renderBasename": "Sizing_WidthPinnedHeightAdaptive_sizing_width_pinned_height_adaptive-e082424e.png",
-    "sha256": "e0430c2a89f2693233051aed664162f3feb498e9813de5f5ff376936a30f0522",
+    "sha256": "557fc758164bb578c85e96f9c2103e37d46de0afd0f5f79bd401a4ff0e58de7b",
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/SizingExperimentPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.ThemePreviewsKt.Theme_Home_Dark_theme_ Home (dark)": {
