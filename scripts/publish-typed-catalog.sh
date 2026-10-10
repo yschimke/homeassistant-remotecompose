@@ -14,12 +14,12 @@ tools_sha=$(git -C "$tools_root" rev-parse HEAD)
 builder_sha=$(git -C "$builder_root" rev-parse HEAD)
 repo=${GITHUB_REPOSITORY:-$(gh repo view --json nameWithOwner --jq .nameWithOwner)}
 tag="typed-catalog-preview-${source_sha}"
-for dependency_sha in "$tools_sha" "$builder_sha"; do
-  if ! rg -Fq "ref: $dependency_sha" "$app_root/.github/workflows/typed-catalog.yml"; then
-    echo "Dependency revision differs from the validated source workflow" >&2
-    exit 1
-  fi
-done
+python3 - "$app_root/.github/workflows/typed-catalog.yml" "$tools_sha" "$builder_sha" <<'PYTHON'
+import pathlib, re, sys
+refs = set(re.findall(r'^\s*ref:\s*([a-f0-9]{40})\s*$', pathlib.Path(sys.argv[1]).read_text(), re.MULTILINE))
+if not set(sys.argv[2:]).issubset(refs):
+    sys.exit('Dependency revision differs from the validated source workflow')
+PYTHON
 release_target=(--target "$source_sha")
 if tag_sha=$(gh api "repos/$repo/git/ref/tags/$tag" --jq .object.sha 2>/dev/null); then
   if [[ "$tag_sha" != "$source_sha" ]]; then
