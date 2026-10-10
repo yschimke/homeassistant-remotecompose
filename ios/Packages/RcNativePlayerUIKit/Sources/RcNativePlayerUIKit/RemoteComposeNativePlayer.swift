@@ -128,6 +128,11 @@
     public func setColor(_ argb: UInt32, for name: String) async -> Bool {
       await playerView.setColor(argb, for: name)
     }
+
+    @discardableResult
+    public func setInteger(_ value: Int, for name: String) async -> Bool {
+      await playerView.setInteger(value, for: name)
+    }
   }
 
   public enum RemoteComposeNativePlayerBackground: Equatable, Sendable {
@@ -506,6 +511,13 @@
     public func setColor(_ argb: UInt32, for name: String) async -> Bool {
       await updateSession { session, time in
         try await session.setColor(argb, for: name, at: time)
+      }
+    }
+
+    @discardableResult
+    public func setInteger(_ value: Int, for name: String) async -> Bool {
+      await updateSession { session, time in
+        try await session.setInteger(value, for: name, at: time)
       }
     }
 
