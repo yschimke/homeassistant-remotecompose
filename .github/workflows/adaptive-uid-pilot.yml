@@ -26,10 +26,10 @@ concurrency:
   cancel-in-progress: true
 
 # Shared setup: https://github.com/yschimke/design-parity/pull/538
-# Integration-test pin. Replace with the landed revision before merging this caller.
+# Pin the landed reusable workflow revision.
 jobs:
   parity:
-    uses: yschimke/design-parity/.github/workflows/uid-parity-reusable.yml@60d3195ad29ed5d78813eb77ee557db93b9e6085
+    uses: yschimke/design-parity/.github/workflows/uid-parity-reusable.yml@6efe154d9219ff0de9baea220b56ea026b820f9a
     with:
       pilot-directory: adaptive-uid-pilot
       artifact-prefix: adaptive-uid

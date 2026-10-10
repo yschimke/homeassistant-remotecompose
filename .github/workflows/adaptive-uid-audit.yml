@@ -12,10 +12,10 @@ permissions:
   actions: read
 
 # Shared setup: https://github.com/yschimke/compose-ai-tools/pull/5783
-# Integration-test pin. Replace with the landed revision before merging this caller.
+# Pin the landed reusable workflow revision.
 jobs:
   audit:
-    uses: yschimke/compose-ai-tools/.github/workflows/uid-design-audit-reusable.yml@6d2bfe0ed52a5134b6413f7b4780e7bb932cf057
+    uses: yschimke/compose-ai-tools/.github/workflows/uid-design-audit-reusable.yml@eeb325c65524810a75c4a5e9049c8f10a5be0caf
     with:
       enabled: true
       pilot-directory: adaptive-uid-pilot

@@ -5,6 +5,7 @@ package ee.schimke.ha.rc
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.view.View
+import android.view.ViewGroup
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
@@ -169,8 +170,19 @@ private fun primeAndMeasure(view: RemoteComposePlayer, maxWPx: Int, maxHPx: Int)
   val warmupBmp = Bitmap.createBitmap(warmupW, warmupH, Bitmap.Config.ARGB_8888)
   view.draw(Canvas(warmupBmp))
   warmupBmp.recycle()
-  view.forceLayout()
+  forceLayoutTree(view)
   view.measure(widthSpec, heightSpec)
+}
+
+private fun forceLayoutTree(view: View) {
+  // RemoteComposePlayer is a FrameLayout. Clearing only its measurement cache leaves the inner
+  // RemoteComposeView free to reuse its pre-paint measurement for identical MeasureSpecs.
+  view.forceLayout()
+  if (view is ViewGroup) {
+    for (index in 0 until view.childCount) {
+      forceLayoutTree(view.getChildAt(index))
+    }
+  }
 }
 
 /**
