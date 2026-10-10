@@ -62,7 +62,7 @@ compose-preview-plugin = "2.35.1"
 # (`Could not find ee.schimke.composeai:data-render-core:1.70.0`) and could
 # never merge. compose-ai-tools declares the same artifact against its own
 # `composeai-contracts` key, which is what this mirrors.
-composeai-contracts = "3.15.0"
+composeai-contracts = "3.23.1"
 # `preview-annotations` (and the rest of the preview runtime) ships from
 # yschimke/compose-preview-daemon, not compose-ai-tools, on its own 3.x line.
 # That repository publishes only the modules a release changed, and each
