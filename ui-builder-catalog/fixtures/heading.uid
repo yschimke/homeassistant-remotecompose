@@ -39,7 +39,7 @@
     },
     "child": {
       "id": "child",
-      "componentId": "host/text",
+      "componentId": "m3/text",
       "properties": {
         "text": {
           "type": "string",

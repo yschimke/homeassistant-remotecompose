@@ -86,7 +86,7 @@ class ExternalAndroidCatalogEndToEndTest {
       val registry =
         appRegistry +
           canvasAdapterRegistry {
-            register("host/text") {
+            register("m3/text") {
               Text(
                 string("text"),
                 modifier = modifier,
@@ -105,7 +105,7 @@ class ExternalAndroidCatalogEndToEndTest {
               key(opened) {
                 CanvasDocumentHost(
                   document,
-                  ids.associateWith { it } + ("host/text" to "host/text"),
+                  ids.associateWith { it } + ("m3/text" to "m3/text"),
                   emptyMap(),
                   CanvasMode.Device,
                   LocalDensity.current,
