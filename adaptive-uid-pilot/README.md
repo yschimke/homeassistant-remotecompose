@@ -28,8 +28,13 @@ screen for interaction behavior. The UI Builder's default editing view unfolds p
 ./gradlew -PadaptiveUidPilot=true :adaptive-uid-pilot:test :adaptive-uid-pilot:renderPilot
 ```
 
+The `Adaptive UID pilot` CI job runs formatting, interaction tests and candidate rendering,
+and uploads the eight PNGs and test reports. Reference publishing remains the explicit local
+step below until the companion server workflow is released.
+
 Candidates go to `build/pilot/previews/`. They are **custom bundle IDs**, not discovery IDs.
-The pilot is excluded from default Gradle projects and the deployed app catalog; do not add
+The eight annotated IDE previews use separate discovery IDs and do not automatically acquire
+these custom references. The pilot is excluded from default Gradle projects and the deployed app catalog; do not add
 these IDs to the normal catalog spec without a discovery/publication adapter.
 
 Commit the UID and `references.json` before publishing references. With the companion
