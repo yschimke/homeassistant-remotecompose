@@ -46,13 +46,13 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: yschimke/compose-ai-tools
-          ref: 164fe6e8a23febe378a640e3a87b645fb1fed669
+          ref: 4ec97f2a5ba97a9db325be13f442054374cadc6e
           path: compose-ai-tools
           persist-credentials: false
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: yschimke/compose-ui-builder
-          ref: 893643722c453a32ada00376f3a462e5c5a92a7f
+          ref: f77cdd37dab838991d0ccb52cb71b241f85e6c97
           path: compose-ui-builder
           persist-credentials: false
       - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
