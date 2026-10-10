@@ -469,10 +469,6 @@
         "text": {
           "type": "string",
           "value": "Base URL"
-        },
-        "style": {
-          "type": "enum",
-          "value": "bodyLarge"
         }
       },
       "slots": {},

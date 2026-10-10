@@ -47,6 +47,12 @@ fun main(args: Array<String>) {
                   .jsonObject["unavailable"]
                   ?.jsonPrimitive
                   ?.content == "true",
+              emptySelection =
+                capture
+                  .getValue("candidateState")
+                  .jsonObject["emptySelection"]
+                  ?.jsonPrimitive
+                  ?.content == "true",
             )
         }
       try {
