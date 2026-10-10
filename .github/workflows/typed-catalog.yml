@@ -5,7 +5,9 @@ on:
     branches: [main]
     paths:
       - 'ui-builder-catalog/**'
+      - 'ui-builder-catalog-host/**'
       - 'scripts/validate-typed-catalog.sh'
+      - 'scripts/publish-typed-catalog.sh'
       - '.github/workflows/typed-catalog.yml'
       - '**/*.gradle.kts'
       - 'gradle/**'
@@ -15,13 +17,24 @@ on:
     branches: [main]
     paths:
       - 'ui-builder-catalog/**'
+      - 'ui-builder-catalog-host/**'
       - 'scripts/validate-typed-catalog.sh'
+      - 'scripts/publish-typed-catalog.sh'
       - '.github/workflows/typed-catalog.yml'
       - '**/*.gradle.kts'
       - 'gradle/**'
       - 'rc-components-ui/**'
       - 'rc-components/**'
   workflow_dispatch:
+    inputs:
+      publish:
+        description: Publish this validated generation as an experimental catalog prerelease
+        type: boolean
+        default: false
+      validated_run_id:
+        description: Optional successful catalog validation run to publish without rebuilding
+        type: string
+        default: ''
 
 permissions:
   contents: read
@@ -32,6 +45,7 @@ concurrency:
 
 jobs:
   catalog:
+    if: inputs.validated_run_id == ''
     runs-on: ubuntu-latest
     timeout-minutes: 45
     defaults:
@@ -46,13 +60,13 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: yschimke/compose-ai-tools
-          ref: 4ec97f2a5ba97a9db325be13f442054374cadc6e
+          ref: a1d116206a85f8a7c72f7175ca06283ca5fe8f61
           path: compose-ai-tools
           persist-credentials: false
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: yschimke/compose-ui-builder
-          ref: f77cdd37dab838991d0ccb52cb71b241f85e6c97
+          ref: 21ae10f037ce417507f93715fc316f72c88e3265
           path: compose-ui-builder
           persist-credentials: false
       - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
@@ -76,5 +90,61 @@ jobs:
             homeassistant-remotecompose/ui-builder-catalog/build/catalog
             homeassistant-remotecompose/ui-builder-catalog/build/renders
             homeassistant-remotecompose/ui-builder-catalog/build/test-results
+            homeassistant-remotecompose/ui-builder-catalog/build/distributions
+            homeassistant-remotecompose/ui-builder-catalog-host/build/renders
+            homeassistant-remotecompose/ui-builder-catalog-host/build/test-results
             compose-ui-builder/ui-builder-runtime/build/test-results/test
           if-no-files-found: warn
+
+  publish:
+    if: always() && github.event_name == 'workflow_dispatch' && inputs.publish && (needs.catalog.result == 'success' || inputs.validated_run_id != '')
+    needs: catalog
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - name: Resolve and verify the validated generation
+        id: validated
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VALIDATED_RUN_ID: ${{ inputs.validated_run_id || github.run_id }}
+        run: |
+          [[ "$VALIDATED_RUN_ID" =~ ^[0-9]+$ ]]
+          run=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$VALIDATED_RUN_ID")
+          jq -e '.path == ".github/workflows/typed-catalog.yml"' <<< "$run"
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$VALIDATED_RUN_ID/jobs?per_page=100" \
+            | jq -e 'any(.jobs[]; .name == "catalog" and .status == "completed" and .conclusion == "success")'
+          echo "source_sha=$(jq -r .head_sha <<< "$run")" >> "$GITHUB_OUTPUT"
+          echo "run_id=$VALIDATED_RUN_ID" >> "$GITHUB_OUTPUT"
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          path: publisher
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          path: homeassistant-remotecompose
+          ref: ${{ steps.validated.outputs.source_sha }}
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: yschimke/compose-ai-tools
+          ref: a1d116206a85f8a7c72f7175ca06283ca5fe8f61
+          path: compose-ai-tools
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: yschimke/compose-ui-builder
+          ref: 21ae10f037ce417507f93715fc316f72c88e3265
+          path: compose-ui-builder
+          persist-credentials: false
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: homeassistant-remotecompose-typed-catalog
+          path: ${{ github.workspace }}
+          run-id: ${{ steps.validated.outputs.run_id }}
+          github-token: ${{ github.token }}
+      - name: Publish the tested artifact without rebuilding it
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: publisher/scripts/publish-typed-catalog.sh "$GITHUB_WORKSPACE/compose-ai-tools" "$GITHUB_WORKSPACE/compose-ui-builder" "$GITHUB_WORKSPACE/homeassistant-remotecompose"

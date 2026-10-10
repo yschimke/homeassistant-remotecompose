@@ -39,9 +39,57 @@ and comparison renders as review artifacts; this module does not push a delivery
 
 These app libraries currently target Android/JVM, not Wasm. Records explicitly declare `nativeOnly`,
 so a browser editor must show its existing native placeholder until a compatible runtime is
-packaged. A general JVM/IDE loader is still separate work. The existing sticker-sheet catalog and
+packaged. The independent Android host below now proves executable delivery; a general IDE installation UI is still separate work. The existing sticker-sheet catalog and
 its live preview bundles are not replaced by this opt-in proof. General event capabilities and
 omitted-property default/export parity retain the limits documented in the authoring API.
 
 The committed `evidence/` images show the direct native call and the typed adapter from the parity
 test. Regenerate them from `build/renders` after component changes; CI uploads current renders.
+
+## Independent Android host and public publication
+
+The initial catalog can be packaged without converting the app components into desktop replicas:
+
+```sh
+./gradlew -PtypedAdapterCatalog=true -PlocalBuilds=tools \
+  -PlocalBuild.tools=../compose-ai-tools -PuiBuilderSource=../compose-ui-builder \
+  :ui-builder-catalog:unpackAndroidCatalogBundle
+```
+
+The ZIP contains the standard pair, a saved `heading.uid` design, and all three app library JARs and
+AARs. Its provider is registered using JVM service metadata. The host supplies matching Android
+Compose and Remote Compose engines; Android resources in the AARs remain available for packaging.
+The prototype heading/stack proof does not dynamically install arbitrary Android resources.
+
+`:ui-builder-catalog-host` has no dependency on Home Assistant modules. It checks app classes are
+absent from the host, loads them from the installed JARs, draws the real Remote Compose heading and
+visible stack child, changes the title, saves/reopens, and compares the reopened pixels. The scalar
+heading wrapper recaptures its Remote Compose document when the title changes, so edits appear
+immediately. The generic renderer is UI Builder's existing document host and registry interpreter.
+
+Publish after validation using the explicit manual workflow input:
+
+```sh
+gh workflow run typed-catalog.yml --ref YOUR_SOURCE_BRANCH -f publish=true
+```
+
+A separate job publishes the tested CI artifact as `typed-catalog-preview-FULL_SOURCE_SHA`, with
+standard catalog files, checksums and full app/tools/builder provenance. Existing generations are
+never replaced; ordinary PR runs remain read-only and production delivery remains unchanged.
+
+To retry publication after fixing the publisher, pass `-f validated_run_id=RUN_ID` to that manual
+workflow. It verifies that the original run's catalog job succeeded, checks out that run's exact
+source, checks the dependency pins, and downloads its existing artifact without rebuilding. A
+pre-existing preview tag must point directly at that source commit; publication verifies it and
+omits the commit-target field that can otherwise require GitHub workflow permissions.
+
+From the matching UI Builder checkout, fetch and verify the public artifact:
+
+```sh
+scripts/download-typed-catalog.sh yschimke/homeassistant-remotecompose FULL_SOURCE_SHA android /tmp/published-ha
+```
+
+Then run the independent host with `-PtypedCatalogAndroidBundle=/tmp/published-ha` and
+`:ui-builder-catalog-host:testDebugUnitTest`. Passing an external directory does not build or
+package app libraries. The install directory must be new; the downloader refuses a wrong source,
+runtime, checksum or JSON pair. Executable bundles require explicit trust in the publisher.
