@@ -40,8 +40,10 @@ import kotlinx.coroutines.launch
 fun DashboardBrowser(
   dark: Boolean = false,
   initialDetail: Boolean = false,
+  initialSelectedIndex: Int = 0,
   onOpen: (String) -> Unit = {},
 ) {
+  require(initialSelectedIndex in entries.indices)
   MaterialTheme(colorScheme = if (dark) darkColorScheme() else lightColorScheme()) {
     Scaffold { padding ->
       BoxWithConstraints(Modifier.fillMaxSize().padding(padding)) {
@@ -57,7 +59,7 @@ fun DashboardBrowser(
                 androidx.compose.material3.adaptive.layout.ThreePaneScaffoldDestinationItem(
                   if (initialDetail) ListDetailPaneScaffoldRole.Detail
                   else ListDetailPaneScaffoldRole.List,
-                  0,
+                  initialSelectedIndex,
                 )
               ),
           )

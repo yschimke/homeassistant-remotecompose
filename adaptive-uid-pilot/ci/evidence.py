@@ -54,7 +54,7 @@ def run(plan_path, root, stage=None):
         raise ValueError("Missing, duplicate or unexpected references")
     diff_dir = root / "diffs"
     diff_dir.mkdir(exist_ok=True)
-    results, rows = [], []
+    results, rows, pixels = [], [], {}
     for c in captures:
         pid = c["previewId"]
         ref = refs[pid]
@@ -66,6 +66,7 @@ def run(plan_path, root, stage=None):
         uid = read(root, ref["artifact"]["path"])
         if digest(ref_bytes) != ref["raster"]["sha256"] or digest(uid) != ref["source"]["attributes"]["documentSha256"]:
             raise ValueError(f"Reference hash mismatch: {pid}")
+        pixels[pid] = (candidate.tobytes(), reference.tobytes())
         delta = ImageChops.difference(reference, candidate)
         mask = ImageChops.lighter(ImageChops.lighter(delta.getchannel('R'), delta.getchannel('G')), ImageChops.lighter(delta.getchannel('B'), delta.getchannel('A'))).point(lambda v: 255 if v else 0)
         changed = mask.histogram()[255]
@@ -76,6 +77,13 @@ def run(plan_path, root, stage=None):
         results.append({"previewId": pid, "candidateSha256": digest(candidate_bytes), "referenceSha256": digest(ref_bytes), "referenceRevision": ref['source']['revision'], "changedPixels": changed, "totalPixels": extent[0] * extent[1], "diff": diff_path})
         imgs = ''.join(f'<figure><figcaption>{label}</figcaption><img src="{html.escape(path, quote=True)}"></figure>' for label, path in [('UID reference', ref_path), ('Exact pixel diff', diff_path), ('Compose actual', candidate_path)])
         rows.append(f'<h2>{html.escape(pid)} · {changed:,} changed pixels</h2><section>{imgs}</section>')
+    for theme in ('light', 'dark'):
+        tablet = [c['previewId'] for c in captures if c['widthDp'] == 840 and c['theme'] == theme]
+        if len(tablet) != 2:
+            raise ValueError('Expected tablet list/detail pair for each theme')
+        for index, label in enumerate(('Compose', 'UID')):
+            if pixels[tablet[0]][index] == pixels[tablet[1]][index]:
+                raise ValueError(f'{label} tablet states are duplicate images: {theme}')
     report = {"schema": "adaptive-uid-evidence/v1", "comparison": "exact RGBA pixels; no perceptual tolerance", "captures": results}
     (root / 'evidence.json').write_text(json.dumps(report, indent=2) + '\n')
     (root / 'index.html').write_text('<!doctype html><meta charset="utf-8"><title>Adaptive UID comparison</title><style>body{font:16px system-ui;margin:24px}section{display:flex;gap:12px}figure{margin:0;flex:1;min-width:0}img{width:100%}figcaption{margin-bottom:8px}</style><h1>UID reference → diff → Compose</h1><p>White means unchanged; pink marks changed pixels. Exact fidelity does not establish UX quality.</p>' + ''.join(rows))

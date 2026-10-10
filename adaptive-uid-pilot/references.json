@@ -113,6 +113,30 @@
             "type": "int",
             "value": 1
           }
+        },
+        "detail-title": {
+          "text": {
+            "type": "string",
+            "value": "Energy"
+          }
+        },
+        "detail-subtitle": {
+          "text": {
+            "type": "string",
+            "value": "Follow energy use across your home."
+          }
+        },
+        "detail-status": {
+          "text": {
+            "type": "string",
+            "value": "Today \u00b7 8.4 kWh"
+          }
+        },
+        "detail-body": {
+          "text": {
+            "type": "string",
+            "value": "Solar \u00b7 3.2 kWh\nGrid \u00b7 5.2 kWh\nBattery \u00b7 76%"
+          }
         }
       }
     },
@@ -150,6 +174,30 @@
           "activePaneIndex": {
             "type": "int",
             "value": 1
+          }
+        },
+        "detail-title": {
+          "text": {
+            "type": "string",
+            "value": "Energy"
+          }
+        },
+        "detail-subtitle": {
+          "text": {
+            "type": "string",
+            "value": "Follow energy use across your home."
+          }
+        },
+        "detail-status": {
+          "text": {
+            "type": "string",
+            "value": "Today \u00b7 8.4 kWh"
+          }
+        },
+        "detail-body": {
+          "text": {
+            "type": "string",
+            "value": "Solar \u00b7 3.2 kWh\nGrid \u00b7 5.2 kWh\nBattery \u00b7 76%"
           }
         }
       }

@@ -15,7 +15,8 @@ is tested with the selected entry's ID; previews leave it unconnected.
 - **840 × 720dp:** list and selected details side by side, with a 360dp list pane.
 - Selection survives resizing; interactive tests exercise the second entry, back, the action
   callback and the 839/840dp boundary. Back remains visible on tablets, as specified in the UID.
-- Both widths have list/detail states in light/dark: eight comparisons at 2px/dp.
+- Both widths have list/detail states in light/dark: eight comparisons at 2px/dp. Tablet list uses item 0; tablet detail uses item 1
+  (Energy), so both tablet states exercise distinct selected content.
   The largest image is 1680 × 1440px, below 1800px in either dimension.
 
 The `.uid` is an editable layout reference. Its buttons are layout specimens; use the Compose

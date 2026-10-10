@@ -5,6 +5,7 @@ on:
     paths:
       - 'adaptive-uid-pilot/**'
       - 'gradle/**'
+      - 'build-logic/**'
       - '*.gradle.kts'
       - '.github/workflows/adaptive-uid-*.yml'
   push:
@@ -12,6 +13,7 @@ on:
     paths:
       - 'adaptive-uid-pilot/**'
       - 'gradle/**'
+      - 'build-logic/**'
       - '*.gradle.kts'
       - '.github/workflows/adaptive-uid-*.yml'
   workflow_dispatch:
@@ -109,7 +111,7 @@ jobs:
         with:
           name: adaptive-uid-references
           path: adaptive-uid-pilot/build/pilot/references
-      - run: python adaptive-uid-pilot/ci/test_evidence.py
+      - run: python -m unittest discover -s adaptive-uid-pilot/ci -p 'test_*.py'
       - name: Produce pixel diffs and validate bundle
         run: |
           python adaptive-uid-pilot/ci/evidence.py --plan adaptive-uid-pilot/references.json --root adaptive-uid-pilot/build/pilot

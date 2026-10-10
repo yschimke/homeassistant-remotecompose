@@ -18,7 +18,13 @@ fun main(args: Array<String>) {
           val id =
             "dashboards-$width-${if (detail) "detail" else "list"}-${if (dark) "dark" else "light"}"
           val scene =
-            ImageComposeScene(width * 2, 1440, Density(2f)) { DashboardBrowser(dark, detail) }
+            ImageComposeScene(width * 2, 1440, Density(2f)) {
+              DashboardBrowser(
+                dark,
+                detail,
+                initialSelectedIndex = if (width == 840 && detail) 1 else 0,
+              )
+            }
           try {
             // Let layout and pane-expansion effects settle; capture at a fixed animation time.
             repeat(4) { scene.render(it * 1_000_000_000L).close() }
