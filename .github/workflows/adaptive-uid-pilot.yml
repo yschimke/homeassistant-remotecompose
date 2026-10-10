@@ -21,7 +21,7 @@ concurrency:
 # Shared UID capture, comparison and prepared catalog export (merged main commit).
 jobs:
   parity:
-    uses: yschimke/design-parity/.github/workflows/uid-parity-reusable.yml@9383dc22584ec32f04cd53dec692a201ca531f7c
+    uses: yschimke/design-parity/.github/workflows/uid-parity-reusable.yml@af2f6a34342d5cfa5db2c00cd66ba46ca6e375eb
     with:
       export-catalog: true
       pilot-directory: adaptive-uid-pilot
