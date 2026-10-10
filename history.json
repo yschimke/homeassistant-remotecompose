@@ -1,6 +1,6 @@
 {
     "formatVersion": "compose-preview-history/v1",
-    "generatedFrom": "c075fd09d958e03cefbf1d605ae4ee12123215a7",
+    "generatedFrom": "a0036b18d8c4d9382b7753fc3a69618e4bd12b30",
     "previews": {
         "app/ee.schimke.terrazzo.previews.CardDebugPreviewsKt.CardFlashPreview_Card flash on data change": {
             "path": "renders/app/CardFlashPreview_Card_flash_on_data_change-44b71c2b.gif",
@@ -1492,6 +1492,13 @@
             "path": "renders/previews/CardPreviewMatrix_AlarmPanel_matrix_alarm_panel-43d6a747.png",
             "versions": [
                 {
+                    "blob": "031c69f544bb56487501e4dc0863f6d3cd60a09a",
+                    "commit": "a0036b18d8c4d9382b7753fc3a69618e4bd12b30",
+                    "date": "2026-10-10T17:23:01Z",
+                    "sourceSha": "5923e55a",
+                    "commits": 1
+                },
+                {
                     "blob": "896401cae7374e2acbe2cfb74c93645ad6831d03",
                     "commit": "337de11c7a33abbfd669fd1497e2945825e4e2ac",
                     "date": "2026-08-15T21:53:51Z",
@@ -1499,13 +1506,20 @@
                     "commits": 1
                 }
             ],
-            "observations": 1,
+            "observations": 2,
             "unstable": false,
             "flapCount": 0
         },
         "previews/ee.schimke.ha.previews.CardPreviewMatrixKt.CardPreviewMatrix_Button_matrix — button": {
             "path": "renders/previews/CardPreviewMatrix_Button_matrix_button-51cae881.png",
             "versions": [
+                {
+                    "blob": "0b847b2e820ec0cea7a3c8c003783f2fd679a7cf",
+                    "commit": "a0036b18d8c4d9382b7753fc3a69618e4bd12b30",
+                    "date": "2026-10-10T17:23:01Z",
+                    "sourceSha": "5923e55a",
+                    "commits": 1
+                },
                 {
                     "blob": "8ca1f57e18d777595b2644db5e9920c8f40670e8",
                     "commit": "2f93516d2c85316289fbdfac5c2981be3ba35926",
@@ -1530,13 +1544,20 @@
                     "commits": 1
                 }
             ],
-            "observations": 5,
+            "observations": 6,
             "unstable": true,
             "flapCount": 2
         },
         "previews/ee.schimke.ha.previews.CardPreviewMatrixKt.CardPreviewMatrix_Calendar_matrix — calendar": {
             "path": "renders/previews/CardPreviewMatrix_Calendar_matrix_calendar-dc5ce4f9.png",
             "versions": [
+                {
+                    "blob": "bbb653a9c9184b1b2d43feaf375bd52bf1015b76",
+                    "commit": "a0036b18d8c4d9382b7753fc3a69618e4bd12b30",
+                    "date": "2026-10-10T17:23:01Z",
+                    "sourceSha": "5923e55a",
+                    "commits": 1
+                },
                 {
                     "blob": "261e72fdfe2d247b6b71072c040eb4412da9c694",
                     "commit": "547f9f6657214a4fc84bf78f5f474294362ea197",
@@ -1552,13 +1573,20 @@
                     "commits": 1
                 }
             ],
-            "observations": 2,
+            "observations": 3,
             "unstable": false,
             "flapCount": 0
         },
         "previews/ee.schimke.ha.previews.CardPreviewMatrixKt.CardPreviewMatrix_Entities_matrix — entities": {
             "path": "renders/previews/CardPreviewMatrix_Entities_matrix_entities-898c466b.png",
             "versions": [
+                {
+                    "blob": "73a54e9d8a196b07a08c5e75430af3e2a34ef0e5",
+                    "commit": "a0036b18d8c4d9382b7753fc3a69618e4bd12b30",
+                    "date": "2026-10-10T17:23:01Z",
+                    "sourceSha": "5923e55a",
+                    "commits": 1
+                },
                 {
                     "blob": "cd1c48d30456a6037c240584baa600c693acf047",
                     "commit": "337de11c7a33abbfd669fd1497e2945825e4e2ac",
@@ -1567,13 +1595,20 @@
                     "commits": 1
                 }
             ],
-            "observations": 1,
+            "observations": 2,
             "unstable": false,
             "flapCount": 0
         },
         "previews/ee.schimke.ha.previews.CardPreviewMatrixKt.CardPreviewMatrix_Entity_matrix — entity": {
             "path": "renders/previews/CardPreviewMatrix_Entity_matrix_entity-9c406217.png",
             "versions": [
+                {
+                    "blob": "2c9ead758c0a3d2b5058e7ab078e7d3039619b1d",
+                    "commit": "a0036b18d8c4d9382b7753fc3a69618e4bd12b30",
+                    "date": "2026-10-10T17:23:01Z",
+                    "sourceSha": "5923e55a",
+                    "commits": 1
+                },
                 {
                     "blob": "ae6526464c6a9cc7696ab5da802a4cd6a3741f57",
                     "commit": "2f886ec73235a3670a2ebacdb8f254174126d8a8",
@@ -1589,13 +1624,20 @@
                     "commits": 1
                 }
             ],
-            "observations": 2,
+            "observations": 3,
             "unstable": false,
             "flapCount": 0
         },
         "previews/ee.schimke.ha.previews.CardPreviewMatrixKt.CardPreviewMatrix_Gauge_matrix — gauge": {
             "path": "renders/previews/CardPreviewMatrix_Gauge_matrix_gauge-6aca601e.png",
             "versions": [
+                {
+                    "blob": "6877bf05d83162bd229e383728fef7af6bcb2a44",
+                    "commit": "a0036b18d8c4d9382b7753fc3a69618e4bd12b30",
+                    "date": "2026-10-10T17:23:01Z",
+                    "sourceSha": "5923e55a",
+                    "commits": 1
+                },
                 {
                     "blob": "abd53e1109986abdc820e0bcc973edb7bac87984",
                     "commit": "547f9f6657214a4fc84bf78f5f474294362ea197",
@@ -1611,13 +1653,20 @@
                     "commits": 1
                 }
             ],
-            "observations": 2,
+            "observations": 3,
             "unstable": false,
             "flapCount": 0
         },
         "previews/ee.schimke.ha.previews.CardPreviewMatrixKt.CardPreviewMatrix_HistoryGraph_matrix — history-graph": {
             "path": "renders/previews/CardPreviewMatrix_HistoryGraph_matrix_history_graph-89fb213c.png",
             "versions": [
+                {
+                    "blob": "dbebe5495e01f5e2fbb120a63898a8e06a983429",
+                    "commit": "a0036b18d8c4d9382b7753fc3a69618e4bd12b30",
+                    "date": "2026-10-10T17:23:01Z",
+                    "sourceSha": "5923e55a",
+                    "commits": 1
+                },
                 {
                     "blob": "e1520d5f3fc9dec2a4a7f2a210c9331e0f3060cb",
                     "commit": "337de11c7a33abbfd669fd1497e2945825e4e2ac",
@@ -1626,13 +1675,20 @@
                     "commits": 1
                 }
             ],
-            "observations": 1,
+            "observations": 2,
             "unstable": false,
             "flapCount": 0
         },
         "previews/ee.schimke.ha.previews.CardPreviewMatrixKt.CardPreviewMatrix_Humidifier_matrix — humidifier": {
             "path": "renders/previews/CardPreviewMatrix_Humidifier_matrix_humidifier-96bee44d.png",
             "versions": [
+                {
+                    "blob": "4b713a55219e4536ed741f7d7cc733d3f8effeb2",
+                    "commit": "a0036b18d8c4d9382b7753fc3a69618e4bd12b30",
+                    "date": "2026-10-10T17:23:01Z",
+                    "sourceSha": "5923e55a",
+                    "commits": 1
+                },
                 {
                     "blob": "05d14c82c12286d4aee7f99b2168df80bc1d61a2",
                     "commit": "547f9f6657214a4fc84bf78f5f474294362ea197",
@@ -1648,13 +1704,20 @@
                     "commits": 1
                 }
             ],
-            "observations": 2,
+            "observations": 3,
             "unstable": false,
             "flapCount": 0
         },
         "previews/ee.schimke.ha.previews.CardPreviewMatrixKt.CardPreviewMatrix_Light_matrix — light": {
             "path": "renders/previews/CardPreviewMatrix_Light_matrix_light-27b95ce0.png",
             "versions": [
+                {
+                    "blob": "b85053609b391728968324943610d0292981ce64",
+                    "commit": "a0036b18d8c4d9382b7753fc3a69618e4bd12b30",
+                    "date": "2026-10-10T17:23:01Z",
+                    "sourceSha": "5923e55a",
+                    "commits": 1
+                },
                 {
                     "blob": "60aad6c5d85ce184e432e220de8a6240437737e9",
                     "commit": "337de11c7a33abbfd669fd1497e2945825e4e2ac",
@@ -1663,13 +1726,20 @@
                     "commits": 1
                 }
             ],
-            "observations": 1,
+            "observations": 2,
             "unstable": false,
             "flapCount": 0
         },
         "previews/ee.schimke.ha.previews.CardPreviewMatrixKt.CardPreviewMatrix_Logbook_matrix — logbook": {
             "path": "renders/previews/CardPreviewMatrix_Logbook_matrix_logbook-1e109936.png",
             "versions": [
+                {
+                    "blob": "a966cdcccaca243c45e0081d044e2c6b49917d87",
+                    "commit": "a0036b18d8c4d9382b7753fc3a69618e4bd12b30",
+                    "date": "2026-10-10T17:23:01Z",
+                    "sourceSha": "5923e55a",
+                    "commits": 1
+                },
                 {
                     "blob": "eaef80655b9cb4ee338f4713b7539e8d42e4e8dc",
                     "commit": "547f9f6657214a4fc84bf78f5f474294362ea197",
@@ -1685,13 +1755,20 @@
                     "commits": 1
                 }
             ],
-            "observations": 2,
+            "observations": 3,
             "unstable": false,
             "flapCount": 0
         },
         "previews/ee.schimke.ha.previews.CardPreviewMatrixKt.CardPreviewMatrix_Markdown_matrix — markdown": {
             "path": "renders/previews/CardPreviewMatrix_Markdown_matrix_markdown-477bd199.png",
             "versions": [
+                {
+                    "blob": "3c9c8c0659a7c2e677798c802274298e007e2d9c",
+                    "commit": "a0036b18d8c4d9382b7753fc3a69618e4bd12b30",
+                    "date": "2026-10-10T17:23:01Z",
+                    "sourceSha": "5923e55a",
+                    "commits": 1
+                },
                 {
                     "blob": "1f7c5e258930399207653914ce87f49fa1a92c5c",
                     "commit": "337de11c7a33abbfd669fd1497e2945825e4e2ac",
@@ -1700,13 +1777,20 @@
                     "commits": 1
                 }
             ],
-            "observations": 1,
+            "observations": 2,
             "unstable": false,
             "flapCount": 0
         },
         "previews/ee.schimke.ha.previews.CardPreviewMatrixKt.CardPreviewMatrix_MediaControl_matrix — media-control": {
             "path": "renders/previews/CardPreviewMatrix_MediaControl_matrix_media_control-8fae1d59.png",
             "versions": [
+                {
+                    "blob": "7d376392c9d76d3c274e774c8c8a2a3bd3784f3b",
+                    "commit": "a0036b18d8c4d9382b7753fc3a69618e4bd12b30",
+                    "date": "2026-10-10T17:23:01Z",
+                    "sourceSha": "5923e55a",
+                    "commits": 1
+                },
                 {
                     "blob": "20ec1ede52878cdb86479331101eb95d6de78d92",
                     "commit": "547f9f6657214a4fc84bf78f5f474294362ea197",
@@ -1722,13 +1806,20 @@
                     "commits": 1
                 }
             ],
-            "observations": 2,
+            "observations": 3,
             "unstable": false,
             "flapCount": 0
         },
         "previews/ee.schimke.ha.previews.CardPreviewMatrixKt.CardPreviewMatrix_PictureEntity_matrix — picture-entity": {
             "path": "renders/previews/CardPreviewMatrix_PictureEntity_matrix_picture_entity-7c87f231.png",
             "versions": [
+                {
+                    "blob": "5640746b23608bfec265003f3e5ba725a91754da",
+                    "commit": "a0036b18d8c4d9382b7753fc3a69618e4bd12b30",
+                    "date": "2026-10-10T17:23:01Z",
+                    "sourceSha": "5923e55a",
+                    "commits": 1
+                },
                 {
                     "blob": "16ac893ae15fd5a5151280ae4cd909d423004db8",
                     "commit": "547f9f6657214a4fc84bf78f5f474294362ea197",
@@ -1744,13 +1835,20 @@
                     "commits": 1
                 }
             ],
-            "observations": 2,
+            "observations": 3,
             "unstable": false,
             "flapCount": 0
         },
         "previews/ee.schimke.ha.previews.CardPreviewMatrixKt.CardPreviewMatrix_Sensor_matrix — sensor": {
             "path": "renders/previews/CardPreviewMatrix_Sensor_matrix_sensor-0a1072f1.png",
             "versions": [
+                {
+                    "blob": "6520e8f292b7840b524ea7fd8bad5513f1734ead",
+                    "commit": "a0036b18d8c4d9382b7753fc3a69618e4bd12b30",
+                    "date": "2026-10-10T17:23:01Z",
+                    "sourceSha": "5923e55a",
+                    "commits": 1
+                },
                 {
                     "blob": "dc1642d5f54fe89e94a0de764c850da1d7699091",
                     "commit": "337de11c7a33abbfd669fd1497e2945825e4e2ac",
@@ -1759,13 +1857,20 @@
                     "commits": 1
                 }
             ],
-            "observations": 1,
+            "observations": 2,
             "unstable": false,
             "flapCount": 0
         },
         "previews/ee.schimke.ha.previews.CardPreviewMatrixKt.CardPreviewMatrix_Statistic_matrix — statistic": {
             "path": "renders/previews/CardPreviewMatrix_Statistic_matrix_statistic-3c6a1a49.png",
             "versions": [
+                {
+                    "blob": "9c741fcebd056b13ae6680b6bbd8c47880e6fad6",
+                    "commit": "a0036b18d8c4d9382b7753fc3a69618e4bd12b30",
+                    "date": "2026-10-10T17:23:01Z",
+                    "sourceSha": "5923e55a",
+                    "commits": 1
+                },
                 {
                     "blob": "444e239bce386b78c466bd44f3b6571a3f4bc7aa",
                     "commit": "337de11c7a33abbfd669fd1497e2945825e4e2ac",
@@ -1774,13 +1879,20 @@
                     "commits": 1
                 }
             ],
-            "observations": 1,
+            "observations": 2,
             "unstable": false,
             "flapCount": 0
         },
         "previews/ee.schimke.ha.previews.CardPreviewMatrixKt.CardPreviewMatrix_Thermostat_matrix — thermostat": {
             "path": "renders/previews/CardPreviewMatrix_Thermostat_matrix_thermostat-6ce1b10d.png",
             "versions": [
+                {
+                    "blob": "d13a918bbfee1b03e6b9815e19f8ec6b2e7116ee",
+                    "commit": "a0036b18d8c4d9382b7753fc3a69618e4bd12b30",
+                    "date": "2026-10-10T17:23:01Z",
+                    "sourceSha": "5923e55a",
+                    "commits": 1
+                },
                 {
                     "blob": "996a71f2acb278f0c9b437357a7fedd5157e7037",
                     "commit": "337de11c7a33abbfd669fd1497e2945825e4e2ac",
@@ -1789,13 +1901,20 @@
                     "commits": 1
                 }
             ],
-            "observations": 1,
+            "observations": 2,
             "unstable": false,
             "flapCount": 0
         },
         "previews/ee.schimke.ha.previews.CardPreviewMatrixKt.CardPreviewMatrix_Tile_matrix — tile": {
             "path": "renders/previews/CardPreviewMatrix_Tile_matrix_tile-3b5ef920.png",
             "versions": [
+                {
+                    "blob": "ab76361a9e64981a7c84e49bc433c2c4c31924df",
+                    "commit": "a0036b18d8c4d9382b7753fc3a69618e4bd12b30",
+                    "date": "2026-10-10T17:23:01Z",
+                    "sourceSha": "5923e55a",
+                    "commits": 1
+                },
                 {
                     "blob": "c45df1cc2d7feb0eb00763ee61dca9f463fe4402",
                     "commit": "337de11c7a33abbfd669fd1497e2945825e4e2ac",
@@ -1804,13 +1923,20 @@
                     "commits": 1
                 }
             ],
-            "observations": 1,
+            "observations": 2,
             "unstable": false,
             "flapCount": 0
         },
         "previews/ee.schimke.ha.previews.CardPreviewMatrixKt.CardPreviewMatrix_TodoList_matrix — todo-list": {
             "path": "renders/previews/CardPreviewMatrix_TodoList_matrix_todo_list-ed136856.png",
             "versions": [
+                {
+                    "blob": "3bc446e39237000b7ba6e3502a955c362d9cd697",
+                    "commit": "a0036b18d8c4d9382b7753fc3a69618e4bd12b30",
+                    "date": "2026-10-10T17:23:01Z",
+                    "sourceSha": "5923e55a",
+                    "commits": 1
+                },
                 {
                     "blob": "560163b18aa0ef76365c88bf71d8f93db82d6041",
                     "commit": "337de11c7a33abbfd669fd1497e2945825e4e2ac",
@@ -1819,13 +1945,20 @@
                     "commits": 1
                 }
             ],
-            "observations": 1,
+            "observations": 2,
             "unstable": false,
             "flapCount": 0
         },
         "previews/ee.schimke.ha.previews.CardPreviewMatrixKt.CardPreviewMatrix_WeatherForecast_matrix — weather-forecast": {
             "path": "renders/previews/CardPreviewMatrix_WeatherForecast_matrix_weather_forecast-ae933bbe.png",
             "versions": [
+                {
+                    "blob": "67638cff96b55baab3b66d14aa8de40cb29f430d",
+                    "commit": "a0036b18d8c4d9382b7753fc3a69618e4bd12b30",
+                    "date": "2026-10-10T17:23:01Z",
+                    "sourceSha": "5923e55a",
+                    "commits": 1
+                },
                 {
                     "blob": "0a9972b80c61242639dc69372224e19d505ae254",
                     "commit": "547f9f6657214a4fc84bf78f5f474294362ea197",
@@ -1841,7 +1974,7 @@
                     "commits": 1
                 }
             ],
-            "observations": 2,
+            "observations": 3,
             "unstable": false,
             "flapCount": 0
         },
@@ -3390,6 +3523,13 @@
             "path": "renders/previews/Dashboard3dPrintingMobile_dashboard_3d_printing_mobile-2701c9cf.png",
             "versions": [
                 {
+                    "blob": "ecf9fa723ad94c06ad1dce3a54aead4387e13b5b",
+                    "commit": "a0036b18d8c4d9382b7753fc3a69618e4bd12b30",
+                    "date": "2026-10-10T17:23:01Z",
+                    "sourceSha": "5923e55a",
+                    "commits": 1
+                },
+                {
                     "blob": "bcceedb0597ecc56a417ab9631546ab8cfc9a0b0",
                     "commit": "337de11c7a33abbfd669fd1497e2945825e4e2ac",
                     "date": "2026-08-15T21:53:51Z",
@@ -3397,13 +3537,20 @@
                     "commits": 1
                 }
             ],
-            "observations": 1,
+            "observations": 2,
             "unstable": false,
             "flapCount": 0
         },
         "previews/ee.schimke.ha.previews.DashboardPreviewsKt.Dashboard3dPrintingTablet_dashboard 3d-printing — tablet": {
             "path": "renders/previews/Dashboard3dPrintingTablet_dashboard_3d_printing_tablet-d15705fe.png",
             "versions": [
+                {
+                    "blob": "60901ddb093612b6fbcaae72706951c0756e2dc2",
+                    "commit": "a0036b18d8c4d9382b7753fc3a69618e4bd12b30",
+                    "date": "2026-10-10T17:23:01Z",
+                    "sourceSha": "5923e55a",
+                    "commits": 1
+                },
                 {
                     "blob": "e1c8ffb7786a8b444163856bc06593bfd5018150",
                     "commit": "337de11c7a33abbfd669fd1497e2945825e4e2ac",
@@ -3412,13 +3559,20 @@
                     "commits": 1
                 }
             ],
-            "observations": 1,
+            "observations": 2,
             "unstable": false,
             "flapCount": 0
         },
         "previews/ee.schimke.ha.previews.DashboardPreviewsKt.DashboardClimateMobile_dashboard climate — mobile": {
             "path": "renders/previews/DashboardClimateMobile_dashboard_climate_mobile-bdcd432b.png",
             "versions": [
+                {
+                    "blob": "f7285c53554dec2a122adb2921bcb0f3c15beab9",
+                    "commit": "a0036b18d8c4d9382b7753fc3a69618e4bd12b30",
+                    "date": "2026-10-10T17:23:01Z",
+                    "sourceSha": "5923e55a",
+                    "commits": 1
+                },
                 {
                     "blob": "d2fce50c245cc3dc0ba60c6c0d161d109d851649",
                     "commit": "547f9f6657214a4fc84bf78f5f474294362ea197",
@@ -3434,13 +3588,20 @@
                     "commits": 1
                 }
             ],
-            "observations": 2,
+            "observations": 3,
             "unstable": false,
             "flapCount": 0
         },
         "previews/ee.schimke.ha.previews.DashboardPreviewsKt.DashboardClimateTablet_dashboard climate — tablet": {
             "path": "renders/previews/DashboardClimateTablet_dashboard_climate_tablet-456c7098.png",
             "versions": [
+                {
+                    "blob": "71661caed6099bdd8c18a8df73c8b9a3c767b7ae",
+                    "commit": "a0036b18d8c4d9382b7753fc3a69618e4bd12b30",
+                    "date": "2026-10-10T17:23:01Z",
+                    "sourceSha": "5923e55a",
+                    "commits": 1
+                },
                 {
                     "blob": "18b79f6457ab352cbf4334b691ccb47c288a368c",
                     "commit": "547f9f6657214a4fc84bf78f5f474294362ea197",
@@ -3456,13 +3617,20 @@
                     "commits": 1
                 }
             ],
-            "observations": 2,
+            "observations": 3,
             "unstable": false,
             "flapCount": 0
         },
         "previews/ee.schimke.ha.previews.DashboardPreviewsKt.DashboardEnergyMobile_dashboard energy — mobile": {
             "path": "renders/previews/DashboardEnergyMobile_dashboard_energy_mobile-47191266.png",
             "versions": [
+                {
+                    "blob": "999f906d7f3cb03793f8f1533279f6c56e9ee165",
+                    "commit": "a0036b18d8c4d9382b7753fc3a69618e4bd12b30",
+                    "date": "2026-10-10T17:23:01Z",
+                    "sourceSha": "5923e55a",
+                    "commits": 1
+                },
                 {
                     "blob": "9cd3d6916649dcd48d0ce7e1df37bf51d210e839",
                     "commit": "337de11c7a33abbfd669fd1497e2945825e4e2ac",
@@ -3471,13 +3639,20 @@
                     "commits": 1
                 }
             ],
-            "observations": 1,
+            "observations": 2,
             "unstable": false,
             "flapCount": 0
         },
         "previews/ee.schimke.ha.previews.DashboardPreviewsKt.DashboardEnergyTablet_dashboard energy — tablet": {
             "path": "renders/previews/DashboardEnergyTablet_dashboard_energy_tablet-e2041a44.png",
             "versions": [
+                {
+                    "blob": "de420c4361655892efa72e554eed8a4ed52df760",
+                    "commit": "a0036b18d8c4d9382b7753fc3a69618e4bd12b30",
+                    "date": "2026-10-10T17:23:01Z",
+                    "sourceSha": "5923e55a",
+                    "commits": 1
+                },
                 {
                     "blob": "054306f07a2415ea0ab67e15ba160f045f97a32d",
                     "commit": "337de11c7a33abbfd669fd1497e2945825e4e2ac",
@@ -3486,13 +3661,20 @@
                     "commits": 1
                 }
             ],
-            "observations": 1,
+            "observations": 2,
             "unstable": false,
             "flapCount": 0
         },
         "previews/ee.schimke.ha.previews.DashboardPreviewsKt.DashboardGithubMobile_dashboard github — mobile": {
             "path": "renders/previews/DashboardGithubMobile_dashboard_github_mobile-8f04a7c1.png",
             "versions": [
+                {
+                    "blob": "d2fdd7c58928aa5338401284fb5ff3a285fdeb5b",
+                    "commit": "a0036b18d8c4d9382b7753fc3a69618e4bd12b30",
+                    "date": "2026-10-10T17:23:01Z",
+                    "sourceSha": "5923e55a",
+                    "commits": 1
+                },
                 {
                     "blob": "43d0e284968d565712318fb9ca7db239298f16e4",
                     "commit": "337de11c7a33abbfd669fd1497e2945825e4e2ac",
@@ -3501,13 +3683,20 @@
                     "commits": 1
                 }
             ],
-            "observations": 1,
+            "observations": 2,
             "unstable": false,
             "flapCount": 0
         },
         "previews/ee.schimke.ha.previews.DashboardPreviewsKt.DashboardGithubTablet_dashboard github — tablet": {
             "path": "renders/previews/DashboardGithubTablet_dashboard_github_tablet-89194c99.png",
             "versions": [
+                {
+                    "blob": "3770821fa8bcb27baeb5e0f7c125687742e77f4e",
+                    "commit": "a0036b18d8c4d9382b7753fc3a69618e4bd12b30",
+                    "date": "2026-10-10T17:23:01Z",
+                    "sourceSha": "5923e55a",
+                    "commits": 1
+                },
                 {
                     "blob": "d9864ffc6a36960e219b80d70aa95dd911fe8f4c",
                     "commit": "337de11c7a33abbfd669fd1497e2945825e4e2ac",
@@ -3516,13 +3705,20 @@
                     "commits": 1
                 }
             ],
-            "observations": 1,
+            "observations": 2,
             "unstable": false,
             "flapCount": 0
         },
         "previews/ee.schimke.ha.previews.DashboardPreviewsKt.DashboardMeshcoreMobile_dashboard meshcore — mobile": {
             "path": "renders/previews/DashboardMeshcoreMobile_dashboard_meshcore_mobile-30d7121c.png",
             "versions": [
+                {
+                    "blob": "329d5c772185178c17deb8fe43ea963927b440a9",
+                    "commit": "a0036b18d8c4d9382b7753fc3a69618e4bd12b30",
+                    "date": "2026-10-10T17:23:01Z",
+                    "sourceSha": "5923e55a",
+                    "commits": 1
+                },
                 {
                     "blob": "683e235a7a09ae15554fad3d3083c05ac54cb8dc",
                     "commit": "547f9f6657214a4fc84bf78f5f474294362ea197",
@@ -3538,13 +3734,20 @@
                     "commits": 1
                 }
             ],
-            "observations": 2,
+            "observations": 3,
             "unstable": false,
             "flapCount": 0
         },
         "previews/ee.schimke.ha.previews.DashboardPreviewsKt.DashboardMeshcoreTablet_dashboard meshcore — tablet": {
             "path": "renders/previews/DashboardMeshcoreTablet_dashboard_meshcore_tablet-e5c71810.png",
             "versions": [
+                {
+                    "blob": "3727225482799086e63907ce2296cf89c8e0658c",
+                    "commit": "a0036b18d8c4d9382b7753fc3a69618e4bd12b30",
+                    "date": "2026-10-10T17:23:01Z",
+                    "sourceSha": "5923e55a",
+                    "commits": 1
+                },
                 {
                     "blob": "cb4ddd3a5e3cfbbea36287e6d35a3be09704b91e",
                     "commit": "547f9f6657214a4fc84bf78f5f474294362ea197",
@@ -3560,13 +3763,20 @@
                     "commits": 1
                 }
             ],
-            "observations": 2,
+            "observations": 3,
             "unstable": false,
             "flapCount": 0
         },
         "previews/ee.schimke.ha.previews.DashboardPreviewsKt.DashboardNetworksMobile_dashboard networks — mobile": {
             "path": "renders/previews/DashboardNetworksMobile_dashboard_networks_mobile-d5ee47c2.png",
             "versions": [
+                {
+                    "blob": "dee7e43447d4a9f7640045694191f678e3cd7bff",
+                    "commit": "a0036b18d8c4d9382b7753fc3a69618e4bd12b30",
+                    "date": "2026-10-10T17:23:01Z",
+                    "sourceSha": "5923e55a",
+                    "commits": 1
+                },
                 {
                     "blob": "a0bb11d54ea38d47a0a95ae55fe4599494b89c24",
                     "commit": "337de11c7a33abbfd669fd1497e2945825e4e2ac",
@@ -3575,13 +3785,20 @@
                     "commits": 1
                 }
             ],
-            "observations": 1,
+            "observations": 2,
             "unstable": false,
             "flapCount": 0
         },
         "previews/ee.schimke.ha.previews.DashboardPreviewsKt.DashboardNetworksTablet_dashboard networks — tablet": {
             "path": "renders/previews/DashboardNetworksTablet_dashboard_networks_tablet-fbca9889.png",
             "versions": [
+                {
+                    "blob": "a82148cdbf5df2294896d8b191e7ee5546467ca9",
+                    "commit": "a0036b18d8c4d9382b7753fc3a69618e4bd12b30",
+                    "date": "2026-10-10T17:23:01Z",
+                    "sourceSha": "5923e55a",
+                    "commits": 1
+                },
                 {
                     "blob": "ce135a632d1630400669fc83ba38f11cf05c8678",
                     "commit": "337de11c7a33abbfd669fd1497e2945825e4e2ac",
@@ -3590,13 +3807,20 @@
                     "commits": 1
                 }
             ],
-            "observations": 1,
+            "observations": 2,
             "unstable": false,
             "flapCount": 0
         },
         "previews/ee.schimke.ha.previews.DashboardPreviewsKt.DashboardSecurityMobile_dashboard security — mobile": {
             "path": "renders/previews/DashboardSecurityMobile_dashboard_security_mobile-842e09ef.png",
             "versions": [
+                {
+                    "blob": "9fcf2d20a0c54b466bc99d8b4ba5d08e57751137",
+                    "commit": "a0036b18d8c4d9382b7753fc3a69618e4bd12b30",
+                    "date": "2026-10-10T17:23:01Z",
+                    "sourceSha": "5923e55a",
+                    "commits": 1
+                },
                 {
                     "blob": "3c701926cc9f13ec7a8437729118c26202286816",
                     "commit": "337de11c7a33abbfd669fd1497e2945825e4e2ac",
@@ -3605,13 +3829,20 @@
                     "commits": 1
                 }
             ],
-            "observations": 1,
+            "observations": 2,
             "unstable": false,
             "flapCount": 0
         },
         "previews/ee.schimke.ha.previews.DashboardPreviewsKt.DashboardSecurityTablet_dashboard security — tablet": {
             "path": "renders/previews/DashboardSecurityTablet_dashboard_security_tablet-d081c9e6.png",
             "versions": [
+                {
+                    "blob": "38f4d94d94b72c54f94a1578aaa5fb72bd023e63",
+                    "commit": "a0036b18d8c4d9382b7753fc3a69618e4bd12b30",
+                    "date": "2026-10-10T17:23:01Z",
+                    "sourceSha": "5923e55a",
+                    "commits": 1
+                },
                 {
                     "blob": "7f97a4c4c13c2339d8a720e0c1fb125a0a6a67b7",
                     "commit": "337de11c7a33abbfd669fd1497e2945825e4e2ac",
@@ -3620,7 +3851,7 @@
                     "commits": 1
                 }
             ],
-            "observations": 1,
+            "observations": 2,
             "unstable": false,
             "flapCount": 0
         },
@@ -4504,6 +4735,13 @@
             "path": "renders/previews/Sizing_WidthPinnedHeightAdaptive_sizing_width_pinned_height_adaptive-e082424e.png",
             "versions": [
                 {
+                    "blob": "d4ddfbc32d7da05b2cd0305a552ec6253c4beb99",
+                    "commit": "a0036b18d8c4d9382b7753fc3a69618e4bd12b30",
+                    "date": "2026-10-10T17:23:01Z",
+                    "sourceSha": "5923e55a",
+                    "commits": 1
+                },
+                {
                     "blob": "c5d09dcc8e9ddbe266f41cf8ccd3ee7b018e6c89",
                     "commit": "337de11c7a33abbfd669fd1497e2945825e4e2ac",
                     "date": "2026-08-15T21:53:51Z",
@@ -4511,7 +4749,7 @@
                     "commits": 1
                 }
             ],
-            "observations": 1,
+            "observations": 2,
             "unstable": false,
             "flapCount": 0
         },
@@ -4819,6 +5057,13 @@
             "path": "renders/previews/WrapContentHeightFixAlpha010_wrap_content_height_fix_WrapAdaptive_player-21200e61.png",
             "versions": [
                 {
+                    "blob": "c899e3241a3d526ab00def3dc9fb16034f902bfe",
+                    "commit": "a0036b18d8c4d9382b7753fc3a69618e4bd12b30",
+                    "date": "2026-10-10T17:23:01Z",
+                    "sourceSha": "5923e55a",
+                    "commits": 1
+                },
+                {
                     "blob": "70945c874146ae035a6f33fe3ce7cb2759db329a",
                     "commit": "337de11c7a33abbfd669fd1497e2945825e4e2ac",
                     "date": "2026-08-15T21:53:51Z",
@@ -4826,7 +5071,7 @@
                     "commits": 1
                 }
             ],
-            "observations": 1,
+            "observations": 2,
             "unstable": false,
             "flapCount": 0
         },
