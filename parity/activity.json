@@ -1,11 +1,19 @@
 {
   "schema": "compose-preview-activity/v1",
-  "generatedAt": "2026-10-10T17:53:18.420Z",
+  "generatedAt": "2026-10-10T19:15:51.851Z",
   "windowDays": 30,
   "code": {
     "repo": "yschimke/homeassistant-remotecompose",
     "ref": "main",
     "events": [
+      {
+        "sha": "c162bae9c328f326af79eb1c9554a5978f074766",
+        "subject": "chore(deps): update yschimke/compose-ai-tools digest to d4c376d (#711)",
+        "at": "2026-10-10T19:42:24+01:00",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
       {
         "sha": "03ebb5bdc5e2a764f3da21bbed77d64ae218cf83",
         "subject": "chore(deps): update compose-ai-tools (#710)",
