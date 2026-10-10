@@ -164,6 +164,16 @@ Auth is a long-lived access token (HA Profile → Security → create token).
 
 Release tags publish desktop installers to [GitHub Releases](https://github.com/yschimke/homeassistant-remotecompose/releases): Linux x64 (`.deb`), Windows x64 (`.msi`), and macOS Intel/Apple Silicon (`.dmg`). Each installer bundles Java; a separate Java installation is unnecessary. Installers are currently unsigned and macOS builds are not notarized.
 
-Desktop installer checks run on pull requests and retain their packages as workflow artifacts. The **Desktop installers** workflow can also build any ref without publishing, or rebuild an existing release by supplying its tag. Release assets include SHA-256 checksums, and their filenames identify the application version and architecture. Installer metadata offsets the semantic major version by one to satisfy macOS packaging requirements while keeping upgrades monotonic.
+Desktop installer checks run on pull requests and retain their packages as workflow artifacts. The **Desktop installers** workflow can also build any ref without publishing, or rebuild an existing release by supplying its tag. Manual builds stay build-only unless **publish** is explicitly selected; automated tagged releases publish all platforms. Release assets include SHA-256 checksums, and their filenames identify the application version and architecture. Installer metadata offsets the semantic major version by one to satisfy macOS packaging requirements while keeping upgrades monotonic.
 
 Local packaging: `./gradlew :app-ui:packageDistributionForCurrentOS`. Override the app version with `-PdesktopVersion=0.1.0`.
+
+### Web app
+
+The production Wasm app is deployed by **Wasm website** to [GitHub Pages](https://yschimke.github.io/homeassistant-remotecompose/). Pull requests build the same production distribution and exercise browser flows before deployment. Existing documentation and Android authentication pages remain available alongside the app.
+
+Local build: `./gradlew :app-ui:wasmJsBrowserDistribution`. Serve `app-ui/build/dist/wasmJs/productionExecutable` over HTTP on localhost or over HTTPS; opening `index.html` directly from disk does not work.
+
+Use an HTTPS Home Assistant URL and a long-lived access token from your profile. The browser connects over WSS, authenticates, loads your dashboards, and subscribes to state changes. Tokens remain in memory for the current session. Browser access requires a reachable Home Assistant endpoint with a valid TLS certificate. Supported entity, entities, tile and markdown cards use shared Compose UI; specialized Android card converters are not yet available on Wasm.
+
+Browser checks: `python -m pip install playwright==1.62.0`, `python -m playwright install chromium`, then `python scripts/test-wasm-browser.py app-ui/build/dist/wasmJs/productionExecutable`. Set `CHROMIUM_PATH` to use an existing Chromium installation.
