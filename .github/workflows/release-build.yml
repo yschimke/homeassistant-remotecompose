@@ -49,6 +49,7 @@ jobs:
       contents: write
     with:
       tag: ${{ github.ref_type == 'tag' && github.ref_name || inputs.tag }}
+      publish: ${{ github.event_name == 'push' || github.event_name == 'workflow_call' }}
 
   ios-assets:
     name: Build Apple release assets
