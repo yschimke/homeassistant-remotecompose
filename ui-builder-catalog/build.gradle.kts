@@ -75,3 +75,40 @@ tasks.register("exportTypedCatalog") {
   description = "Generate the opted-in native Home Assistant component catalog."
   dependsOn("testDebugUnitTest")
 }
+
+// Android implementations remain Android bytecode: an Android/Remote Compose host supplies the
+// shared runtime. Package the actual app libraries, not recompilations or host-side facsimiles.
+val stageAndroidCatalogBundle =
+  tasks.register<Sync>("stageAndroidCatalogBundle") {
+    dependsOn("exportTypedCatalog")
+    into(layout.buildDirectory.dir("android-catalog-bundle"))
+    from(layout.buildDirectory.dir("catalog/testDebugUnitTest"))
+    from("fixtures") { into("designs") }
+    for (module in listOf("ui-builder-catalog", "rc-components-ui", "rc-components")) {
+      val library = project(":$module")
+      dependsOn(":$module:bundleDebugAar")
+      from(
+        library.layout.buildDirectory.file(
+          "intermediates/aar_main_jar/debug/syncDebugLibJars/classes.jar"
+        )
+      ) {
+        into("lib")
+        rename { "$module.jar" }
+      }
+      from(library.layout.buildDirectory.file("outputs/aar/$module-debug.aar")) { into("android") }
+    }
+  }
+val packageAndroidCatalogBundle =
+  tasks.register<Zip>("packageAndroidCatalogBundle") {
+    group = "ui builder"
+    dependsOn(stageAndroidCatalogBundle)
+    from(layout.buildDirectory.dir("android-catalog-bundle"))
+    archiveFileName.set("homeassistant-remotecompose-android-catalog.zip")
+    destinationDirectory.set(layout.buildDirectory.dir("distributions"))
+  }
+
+tasks.register<Sync>("unpackAndroidCatalogBundle") {
+  dependsOn(packageAndroidCatalogBundle)
+  from(zipTree(packageAndroidCatalogBundle.flatMap { it.archiveFile }))
+  into(layout.buildDirectory.dir("installed-android-catalog"))
+}
