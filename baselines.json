@@ -1660,7 +1660,7 @@
     "functionName": "DashboardNetworksMobile",
     "module": "previews",
     "renderBasename": "DashboardNetworksMobile_dashboard_networks_mobile-d5ee47c2.png",
-    "sha256": "36e120ab130c8c44c2f67c90b127a92a797d4a494cc1ab7d07dacfba59581e77",
+    "sha256": "81cd7a25cc602907be6a551bdd65f876fe7162c7231db702d2b6aad1881eff55",
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/DashboardPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.DashboardPreviewsKt.DashboardNetworksTablet_dashboard networks \u2014 tablet": {
