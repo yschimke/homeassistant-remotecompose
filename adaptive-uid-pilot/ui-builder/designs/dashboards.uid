@@ -1,7 +1,7 @@
 {
   "schema": "compose-ui-builder-document/v1-candidate",
   "id": "dashboards",
-  "title": "Home Assistant · Dashboards",
+  "title": "Home Assistant \u00b7 Dashboards",
   "revision": 0,
   "catalogPin": {
     "systemId": "m3-catalog",
@@ -48,11 +48,7 @@
         },
         "paneSizing": {
           "type": "enum",
-          "value": "fixedStart"
-        },
-        "fixedPaneWidthDp": {
-          "type": "float",
-          "value": 360
+          "value": "preferred"
         },
         "activePaneIndex": {
           "type": "int",
@@ -360,7 +356,7 @@
       "properties": {
         "text": {
           "type": "string",
-          "value": "3 rooms · 12 entities"
+          "value": "3 rooms \u00b7 12 entities"
         },
         "style": {
           "type": "enum",
@@ -377,7 +373,7 @@
       "properties": {
         "text": {
           "type": "string",
-          "value": "Living room · 21.5 °C\nKitchen · 2 lights on\nBedroom · blinds open"
+          "value": "Living room \u00b7 21.5 \u00b0C\nKitchen \u00b7 2 lights on\nBedroom \u00b7 blinds open"
         },
         "style": {
           "type": "enum",

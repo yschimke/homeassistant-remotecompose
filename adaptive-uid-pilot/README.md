@@ -96,3 +96,11 @@ module `adaptive-uid-pilot`, and variant `sourceFile` pointing at
 `src/main/kotlin/ee/schimke/adaptivepilot/DashboardBrowser.kt`. Until publication is wired, put the
 commit, viewport, theme, state, comparison evidence and `.uid` node in a normal repository issue.
 Nothing here deploys to preview.coo.ee or files bugs automatically.
+
+Adaptive layout uses `currentWindowAdaptiveInfoV2()` at the screen boundary and
+`calculatePaneScaffoldDirective` / `ListDetailPaneScaffold` for pane adaptation.
+The scaffold owns pane sizing; no effect forces a fixed first-pane width.
+The UID uses `paneSizing: preferred` to express the same design intent.
+Tests resize the window information, verify selection/back behavior across the
+839/840dp boundary, and check that an 840dp window stays adaptive when a parent
+leaves only 760dp of content width. A nested content box is not the window.
