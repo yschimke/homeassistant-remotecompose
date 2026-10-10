@@ -125,3 +125,18 @@ Native reference setup and renderer dependency pins come from the server's
 Land the shared cleanup PRs before this consumer. Callers use immutable provider
 commits for integration testing; update them to landed revisions before merging.
 The audit starts only after its `workflow_run` caller reaches the default branch.
+
+## Hosted UID comparisons
+
+CI exports a catalog on each pilot PR and publishes it after a default-branch
+build. The committed `.uid` documents provide the rendered design references.
+Open the app design catalog to compare phone/tablet, list/detail, and light/dark
+captures, follow the source link, open the captured design in UI Builder, or
+prepare a GitHub issue containing the comparison evidence. UI Builder edits to a
+reference snapshot stay in the browser; download the `.uid` and commit it to
+propose a design change.
+
+Catalog: https://preview.coo.ee/homeassistant-uid/
+
+The shared design-parity workflow owns export and publication. This module only
+declares its catalog identity and source mapping in `references.json`.

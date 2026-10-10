@@ -236,5 +236,18 @@
       "dashboards-840-list-dark",
       "dashboards-840-detail-dark"
     ]
-  ]
+  ],
+  "publication": {
+    "system": "homeassistant-uid",
+    "title": "Home Assistant app design",
+    "sourceModule": "adaptive-uid-pilot",
+    "components": [
+      {
+        "designId": "dashboards",
+        "componentId": "Dashboard browser",
+        "sourceFile": "src/main/kotlin/ee/schimke/adaptivepilot/DashboardBrowser.kt",
+        "caption": "Adaptive stock Material 3 design proposal: phone and tablet, list and detail, light and dark."
+      }
+    ]
+  }
 }

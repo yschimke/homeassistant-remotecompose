@@ -25,12 +25,15 @@ concurrency:
   group: adaptive-uid-pilot-${{ github.ref }}
   cancel-in-progress: true
 
-# Shared setup: https://github.com/yschimke/design-parity/pull/540
+# Shared setup: https://github.com/yschimke/design-parity/pull/541
 # Integration-test pin. Replace with the landed revision before merging this caller.
 jobs:
   parity:
-    uses: yschimke/design-parity/.github/workflows/uid-parity-reusable.yml@1cd1bbee6c4f061043710b2755cd782607f1245a
+    permissions:
+      contents: write
+    uses: yschimke/design-parity/.github/workflows/uid-parity-reusable.yml@99ca4f61c834ab22a4a39e9f9c46aeb08e4dee3e
     with:
+      publish-catalog: true
       pilot-directory: adaptive-uid-pilot
       artifact-prefix: adaptive-uid
       bundle-name: dashboards
