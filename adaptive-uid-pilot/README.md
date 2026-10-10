@@ -28,9 +28,27 @@ screen for interaction behavior. The UI Builder's default editing view unfolds p
 ./gradlew -PadaptiveUidPilot=true :adaptive-uid-pilot:test :adaptive-uid-pilot:renderPilot
 ```
 
-The `Adaptive UID pilot` CI job runs formatting, interaction tests and candidate rendering,
-and uploads the eight PNGs and test reports. Reference publishing remains the explicit local
-step below until the companion server workflow is released.
+The `Adaptive UID pilot` workflow runs formatting, interaction tests and candidate rendering,
+then independently renders all eight committed UID references in the pinned native server image.
+It uploads a validated preview bundle and `adaptive-uid-evidence`: open `index.html` for reference /
+exact pixel diff / actual. `evidence.json` records image hashes, reference revisions and changed
+pixel counts. Missing evidence fails CI; visual differences are advisory for human review.
+
+`Adaptive UID design audit` follows successful runs in a separate trusted job. It uses the same
+`compose-preview guidelines` engine, `OPENROUTER_API_KEY` repository secret and $0.25 budget as
+remote-m3-catalog's preview publish workflow. Rules are copied from m3-catalog at
+`e588d36f971616e0bb6374d40b57e50abd7384d5`; the CLI is pinned to 2.40.0. Results, annotated
+screenshots, model/provider/cost records, rules, engine prompt source and provenance are preserved
+as `adaptive-uid-design-audit`. Findings are advisory; missing keys or failed requests are reported
+as an incomplete audit, never a clean result. No issue or PR comment is posted automatically.
+
+The trusted audit workflow only starts after this workflow file is merged into the default branch.
+It runs default-branch scripts and rules, validates the fixed eight-image capture plan, and executes
+no PR code or UID content with the key. This first CI audit receives pictures and capture sizes;
+it cannot establish accessibility semantics or interaction behavior from those images. The custom
+capture IDs are separate subjects, so cross-size guidance needs human review of the full matrix.
+The local `ui-audit-prompt.txt` is a separate, broader design critique prompt, not the prompt used
+by the guidelines engine. The local reference-rendering command remains useful for iteration:
 
 Candidates go to `build/pilot/previews/`. They are **custom bundle IDs**, not discovery IDs.
 The eight annotated IDE previews use separate discovery IDs and do not automatically acquire
