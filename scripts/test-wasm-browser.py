@@ -75,8 +75,7 @@ try:
         for label, text in [('Home Assistant URL', 'https://ha.example.test'),
                             ('Long-lived access token', 'browser-test-token')]:
             page.get_by_role('textbox', name=label, exact=True).click(force=True)
-            # Compose forwards the semantics click to the canvas asynchronously.
-            # Let its focus and value updates commit before the next input event.
+            # Let the canvas focus change reach Compose before inserting text.
             page.evaluate('() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))')
             page.keyboard.insert_text(text)
             page.evaluate('() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)))')

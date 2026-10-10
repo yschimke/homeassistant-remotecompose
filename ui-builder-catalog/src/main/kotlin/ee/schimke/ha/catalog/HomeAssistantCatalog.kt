@@ -1,6 +1,7 @@
 package ee.schimke.ha.catalog
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.key
 import androidx.compose.ui.Modifier
 import ee.schimke.composeai.discovery.*
 import ee.schimke.composeai.uibuilder.renderer.sdk.*
@@ -11,7 +12,8 @@ import ee.schimke.ha.rc.ui.HaVerticalStack
 /** Discoverable scalar export wrapper around the app's real Android/Remote Compose component. */
 @Composable
 fun CatalogHeading(title: String, modifier: Modifier = Modifier) {
-  HaHeading(HaHeadingUiData(title = title), modifier)
+  // RemoteContentPreview captures a document; a changed scalar must start a fresh capture.
+  key(title) { HaHeading(HaHeadingUiData(title = title), modifier) }
 }
 
 class HeadingAdapter(record: ComponentRecord) :
