@@ -1,11 +1,35 @@
 {
   "schema": "compose-preview-activity/v1",
-  "generatedAt": "2026-10-10T20:45:12.600Z",
+  "generatedAt": "2026-10-10T21:24:49.564Z",
   "windowDays": 30,
   "code": {
     "repo": "yschimke/homeassistant-remotecompose",
     "ref": "main",
     "events": [
+      {
+        "sha": "2bd596e2cd6cfaa43e037f4c944c54f067bf1415",
+        "subject": "chore(main): release 0.1.38 (#407)",
+        "at": "2026-10-10T21:21:50+01:00",
+        "author": "github-actions[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "99773232ef67b06979e282a9415c8016c84f127f",
+        "subject": "feat: publish the Wasm Home Assistant app through GitHub Pages (#715)",
+        "at": "2026-10-10T20:47:59+01:00",
+        "author": "Yuri Schimke",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "3f132a5c6ff6a12d4be4bf767216ef72ba954241",
+        "subject": "fix: keep manual release builds from publishing desktop assets (#714)",
+        "at": "2026-10-10T20:12:30+01:00",
+        "author": "Yuri Schimke",
+        "previewIds": [],
+        "components": []
+      },
       {
         "sha": "7bff59c501a0fb62706eb5f997c5164e5041c894",
         "subject": "fix: render and validate distinct UID themes (#713)",
