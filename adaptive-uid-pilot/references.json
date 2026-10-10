@@ -1,0 +1,158 @@
+{
+  "schema": "compose-ui-builder-references/v1",
+  "repository": "yschimke/homeassistant-remotecompose",
+  "captures": [
+    {
+      "id": "dashboards-412-list-light",
+      "previewId": "dashboards-412-list-light",
+      "file": "adaptive-uid-pilot/ui-builder/designs/dashboards.uid",
+      "designId": "dashboards",
+      "widthDp": 412,
+      "heightDp": 720,
+      "density": 2,
+      "theme": "light",
+      "state": "list",
+      "properties": {
+        "panes": {
+          "activePaneIndex": {
+            "type": "int",
+            "value": 0
+          }
+        }
+      }
+    },
+    {
+      "id": "dashboards-412-detail-light",
+      "previewId": "dashboards-412-detail-light",
+      "file": "adaptive-uid-pilot/ui-builder/designs/dashboards.uid",
+      "designId": "dashboards",
+      "widthDp": 412,
+      "heightDp": 720,
+      "density": 2,
+      "theme": "light",
+      "state": "detail",
+      "properties": {
+        "panes": {
+          "activePaneIndex": {
+            "type": "int",
+            "value": 1
+          }
+        }
+      }
+    },
+    {
+      "id": "dashboards-412-list-dark",
+      "previewId": "dashboards-412-list-dark",
+      "file": "adaptive-uid-pilot/ui-builder/designs/dashboards.uid",
+      "designId": "dashboards",
+      "widthDp": 412,
+      "heightDp": 720,
+      "density": 2,
+      "theme": "dark",
+      "state": "list",
+      "properties": {
+        "panes": {
+          "activePaneIndex": {
+            "type": "int",
+            "value": 0
+          }
+        }
+      }
+    },
+    {
+      "id": "dashboards-412-detail-dark",
+      "previewId": "dashboards-412-detail-dark",
+      "file": "adaptive-uid-pilot/ui-builder/designs/dashboards.uid",
+      "designId": "dashboards",
+      "widthDp": 412,
+      "heightDp": 720,
+      "density": 2,
+      "theme": "dark",
+      "state": "detail",
+      "properties": {
+        "panes": {
+          "activePaneIndex": {
+            "type": "int",
+            "value": 1
+          }
+        }
+      }
+    },
+    {
+      "id": "dashboards-840-list-light",
+      "previewId": "dashboards-840-list-light",
+      "file": "adaptive-uid-pilot/ui-builder/designs/dashboards.uid",
+      "designId": "dashboards",
+      "widthDp": 840,
+      "heightDp": 720,
+      "density": 2,
+      "theme": "light",
+      "state": "list",
+      "properties": {
+        "panes": {
+          "activePaneIndex": {
+            "type": "int",
+            "value": 0
+          }
+        }
+      }
+    },
+    {
+      "id": "dashboards-840-detail-light",
+      "previewId": "dashboards-840-detail-light",
+      "file": "adaptive-uid-pilot/ui-builder/designs/dashboards.uid",
+      "designId": "dashboards",
+      "widthDp": 840,
+      "heightDp": 720,
+      "density": 2,
+      "theme": "light",
+      "state": "detail",
+      "properties": {
+        "panes": {
+          "activePaneIndex": {
+            "type": "int",
+            "value": 1
+          }
+        }
+      }
+    },
+    {
+      "id": "dashboards-840-list-dark",
+      "previewId": "dashboards-840-list-dark",
+      "file": "adaptive-uid-pilot/ui-builder/designs/dashboards.uid",
+      "designId": "dashboards",
+      "widthDp": 840,
+      "heightDp": 720,
+      "density": 2,
+      "theme": "dark",
+      "state": "list",
+      "properties": {
+        "panes": {
+          "activePaneIndex": {
+            "type": "int",
+            "value": 0
+          }
+        }
+      }
+    },
+    {
+      "id": "dashboards-840-detail-dark",
+      "previewId": "dashboards-840-detail-dark",
+      "file": "adaptive-uid-pilot/ui-builder/designs/dashboards.uid",
+      "designId": "dashboards",
+      "widthDp": 840,
+      "heightDp": 720,
+      "density": 2,
+      "theme": "dark",
+      "state": "detail",
+      "properties": {
+        "panes": {
+          "activePaneIndex": {
+            "type": "int",
+            "value": 1
+          }
+        }
+      }
+    }
+  ]
+}
