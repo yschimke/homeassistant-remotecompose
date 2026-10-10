@@ -28,4 +28,5 @@ ios/**/*.xcodeproj/xcuserdata/
 
 # GitHub Pages staging and browser evidence.
 /_site/
+/_site-docs/
 /_wasm-test/

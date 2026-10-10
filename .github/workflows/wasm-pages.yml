@@ -51,9 +51,13 @@ jobs:
         uses: actions/jekyll-build-pages@v1
         with:
           source: ./docs
-          destination: ./_site
+          destination: ./_site-docs
       - name: Stage Wasm app alongside existing pages
-        run: cp -R app-ui/build/dist/wasmJs/productionExecutable/. _site/
+        run: |
+          # Jekyll's Docker action creates root-owned output. Copy it into a runner-owned site.
+          mkdir -p _site
+          cp -R _site-docs/. _site/
+          cp -R app-ui/build/dist/wasmJs/productionExecutable/. _site/
       - uses: actions/upload-pages-artifact@v4
         with:
           path: _site
