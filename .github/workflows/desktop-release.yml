@@ -1,115 +1,110 @@
 name: Desktop installers
-
 on:
-  pull_request:
-    paths:
-      - 'desktop-app/**'
-      - 'app-ui/**'
-      - 'meshcore-*/**'
-      - 'ha-client/**'
-      - 'ha-model/**'
-      - 'rc-player-ui/**'
-      - 'gradle/**'
-      - '*.gradle.kts'
-      - 'gradle.properties'
-      - '.github/actions/**'
-      - '.github/workflows/desktop-release.yml'
-      - '.github/workflows/release-build.yml'
-      - 'scripts/stage-desktop-assets.py'
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Existing release tag to build (empty builds this ref)'
+        description: 'Existing version tag@successful native build run ID'
         type: string
-        default: ''
-      publish:
-        description: 'Attach installers to the selected release tag'
-        type: boolean
-        default: false
-  workflow_call:
-    inputs:
-      tag:
         required: true
-        type: string
       publish:
+        description: 'Publish verified desktop installers to the existing release'
         type: boolean
         default: false
-
 permissions:
-  contents: read
-
+  contents: write
+  actions: read
 concurrency:
-  group: desktop-${{ inputs.tag || github.ref }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
-
+  group: desktop-publication-${{ inputs.tag }}
+  cancel-in-progress: false
 jobs:
-  package:
-    name: Desktop / ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, windows-2022, macos-15-intel, macos-15]
-    runs-on: ${{ matrix.os }}
-    timeout-minutes: 60
+  publish:
+    if: inputs.publish
+    runs-on: windows-2022
     defaults:
       run:
         shell: bash
     steps:
-      - uses: actions/checkout@v7.0.1
-        with:
-          ref: ${{ inputs.tag || github.ref }}
       - uses: actions/setup-python@v6
         with:
-          python-version: '3.x'
-      - uses: ./.github/actions/setup
-        with:
-          cache-read-only: 'true'
-      - name: Install Linux packaging tools
-        if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install -y fakeroot
-      - name: Resolve release version
-        id: version
+          python-version: '3.12'
+      - name: Validate source
+        id: source
         env:
-          RELEASE_TAG: ${{ inputs.tag }}
+          SPEC: ${{ inputs.tag }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           python - <<'PYTHON'
-          import json, os, re
-          from pathlib import Path
-          version = os.environ['RELEASE_TAG'].removeprefix('v') or json.loads(Path('.github/.release-please-manifest.json').read_text())['.']
-          if not re.fullmatch(r'[0-9]+\.[0-9]+\.[0-9]+', version):
-              raise SystemExit('Release tag must contain MAJOR.MINOR.PATCH')
-          with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
-              output.write(f'version={version}\n')
+          import os,re,json,subprocess
+          match=re.fullmatch(r'(v[0-9]+\.[0-9]+\.[0-9]+)@([0-9]+)',os.environ['SPEC'])
+          if not match: raise SystemExit('Expected vMAJOR.MINOR.PATCH@run-id')
+          tag,run=match.groups()
+          repo=os.environ['GITHUB_REPOSITORY']
+          data=json.loads(subprocess.check_output(['gh','api',f'repos/{repo}/actions/runs/{run}']))
+          if data['repository']['full_name'] != repo or data['path'] != '.github/workflows/release-please.yml':
+              raise SystemExit('Unexpected build provenance')
+          jobs=json.loads(subprocess.check_output(['gh','api',f'repos/{repo}/actions/runs/{run}/jobs?per_page=100']))['jobs']
+          desktops=[j for j in jobs if 'Desktop /' in j['name']]
+          if len(desktops)!=4 or any(j['conclusion']!='success' for j in desktops):
+              raise SystemExit('All four native builds must have succeeded')
+          sha=subprocess.check_output(['gh','api',f'repos/{repo}/commits/{tag}','--jq','.sha'],text=True).strip()
+          with open(os.environ['GITHUB_OUTPUT'],'a') as out:
+              out.write(f'run={run}\ntag={tag}\nsha={sha}\n')
           PYTHON
-      - name: Package native installer
-        env:
-          DESKTOP_VERSION: ${{ steps.version.outputs.version }}
-        run: ./gradlew :app-ui:packageDistributionForCurrentOS -PdesktopVersion="$DESKTOP_VERSION" --stacktrace
-      - name: Stage installers and checksums
-        env:
-          DESKTOP_VERSION: ${{ steps.version.outputs.version }}
-        run: python scripts/stage-desktop-assets.py app-ui terrazzo "$DESKTOP_VERSION"
-      - uses: actions/upload-artifact@v7.0.1
-        with:
-          name: desktop-${{ runner.os }}-${{ runner.arch }}
-          path: _release-desktop/
-          if-no-files-found: error
-
-  publish:
-    name: Attach desktop installers to release
-    if: inputs.publish && inputs.tag != '' && github.event_name != 'pull_request'
-    needs: package
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-    steps:
       - uses: actions/download-artifact@v8.0.1
         with:
+          run-id: ${{ steps.source.outputs.run }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           pattern: desktop-*
           path: _release-desktop
           merge-multiple: true
-      - uses: softprops/action-gh-release@v3.0.3
-        with:
-          tag_name: ${{ inputs.tag }}
-          files: _release-desktop/*
-          fail_on_unmatched_files: true
+      - name: Verify and publish existing native installers
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TAG: ${{ steps.source.outputs.tag }}
+          SOURCE_SHA: ${{ steps.source.outputs.sha }}
+          SOURCE_RUN: ${{ steps.source.outputs.run }}
+        run: |
+          python - <<'PYTHON'
+          import os,hashlib,json,subprocess
+          from pathlib import Path
+          repo=os.environ['GITHUB_REPOSITORY']
+          tag=os.environ['RELEASE_TAG']
+          version=tag.removeprefix('v')
+          app='terrazzo'
+          root=Path('_release-desktop')
+          expected={}
+          for platform,extension in [('linux-x64','deb'),('windows-x64','msi'),('macos-x64','dmg'),('macos-arm64','dmg')]:
+              name=f'{app}-desktop-{version}-{platform}.{extension}'
+              checksum=f'SHA256SUMS-desktop-{platform}.txt'
+              digest=hashlib.file_digest((root/name).open('rb'),'sha256').hexdigest()
+              if (root/checksum).read_text().strip()!=f'{digest}  {name}':
+                  raise SystemExit(f'Checksum mismatch: {name}')
+              expected[name]=digest
+              expected[checksum]=hashlib.file_digest((root/checksum).open('rb'),'sha256').hexdigest()
+          if {p.name for p in root.iterdir()} != set(expected):
+              raise SystemExit('Unexpected or missing assets')
+          supplement=tag
+          def find_release():
+              pages=json.loads(subprocess.check_output(['gh','api','--paginate','--slurp',f'repos/{repo}/releases?per_page=100']))
+              matches=[release for page in pages for release in page if release['tag_name']==supplement]
+              if len(matches)>1: raise SystemExit('Ambiguous release tag')
+              return matches[0] if matches else None
+          existing=find_release()
+          if existing and existing['target_commitish']!=os.environ['SOURCE_SHA']:
+              raise SystemExit('Release source does not match')
+          if not existing:
+              Path('desktop-notes.md').write_text(f'Native desktop installers for [{tag}](https://github.com/{repo}/releases/tag/{tag}).\n\nThe primary release is immutable, so these installers are published separately from the exact same source commit `{os.environ["SOURCE_SHA"]}`. All four native CI builds succeeded in [run {os.environ["SOURCE_RUN"]}](https://github.com/{repo}/actions/runs/{os.environ["SOURCE_RUN"]}); each installer includes a SHA-256 checksum.\n')
+              subprocess.run(['gh','release','create',supplement,'--repo',repo,'--draft','--target',os.environ['SOURCE_SHA'],'--title',f'Desktop installers {tag}','--notes-file','desktop-notes.md'],check=True)
+          if not existing or existing['draft'] or not existing.get('immutable',False):
+              subprocess.run(['gh','release','upload',supplement,'--repo',repo,'--clobber',*[str(root/n) for n in sorted(expected)]],check=True)
+          release=find_release()
+          if not release: raise SystemExit('Draft release was not created')
+          assets={a['name']:a for a in release['assets']}
+          if not set(expected)<=set(assets): raise SystemExit('Uploaded asset set does not match')
+          for name,digest in expected.items():
+              if assets[name]['digest']!=f'sha256:{digest}' or assets[name]['state']!='uploaded':
+                  raise SystemExit(f'Uploaded checksum mismatch: {name}')
+          if release['draft']:
+              subprocess.run(['gh','release','edit',supplement,'--repo',repo,'--draft=false','--latest=false'],check=True)
+          print(f'https://github.com/{repo}/releases/tag/{supplement}')
+          PYTHON
