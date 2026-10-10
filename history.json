@@ -1,6 +1,6 @@
 {
     "formatVersion": "compose-preview-history/v1",
-    "generatedFrom": "a6f93bbe120e627c85d8be221fc2ec3012a9e1c4",
+    "generatedFrom": "c6dd00c7d0f5a53e8fd8c0e7e5fda21d248f890b",
     "previews": {
         "app/ee.schimke.terrazzo.previews.CardDebugPreviewsKt.CardFlashPreview_Card flash on data change": {
             "path": "renders/app/CardFlashPreview_Card_flash_on_data_change-44b71c2b.gif",
@@ -3927,6 +3927,13 @@
             "path": "renders/previews/DashboardNetworksMobile_dashboard_networks_mobile-d5ee47c2.png",
             "versions": [
                 {
+                    "blob": "09e0fa51a92429bed530fcf3006cc916917b7872",
+                    "commit": "c6dd00c7d0f5a53e8fd8c0e7e5fda21d248f890b",
+                    "date": "2026-10-10T21:07:24Z",
+                    "sourceSha": "1a9e0f37",
+                    "commits": 1
+                },
+                {
                     "blob": "dee7e43447d4a9f7640045694191f678e3cd7bff",
                     "commit": "a0036b18d8c4d9382b7753fc3a69618e4bd12b30",
                     "date": "2026-10-10T17:23:01Z",
@@ -3941,7 +3948,7 @@
                     "commits": 1
                 }
             ],
-            "observations": 2,
+            "observations": 3,
             "unstable": false,
             "flapCount": 0
         },
@@ -4905,6 +4912,13 @@
             "path": "renders/previews/Sizing_WidthPinnedHeightAdaptive_sizing_width_pinned_height_adaptive-e082424e.png",
             "versions": [
                 {
+                    "blob": "04c585c56254b4c1cef041b8167b4560314029fd",
+                    "commit": "c6dd00c7d0f5a53e8fd8c0e7e5fda21d248f890b",
+                    "date": "2026-10-10T21:07:24Z",
+                    "sourceSha": "1a9e0f37",
+                    "commits": 1
+                },
+                {
                     "blob": "a0530e032a72f42c848cf254c91711f9622e6b12",
                     "commit": "a6f93bbe120e627c85d8be221fc2ec3012a9e1c4",
                     "date": "2026-10-10T20:36:20Z",
@@ -4961,9 +4975,9 @@
                     "commits": 1
                 }
             ],
-            "observations": 8,
+            "observations": 9,
             "unstable": false,
-            "flapCount": 0
+            "flapCount": 1
         },
         "previews/ee.schimke.ha.previews.ThemePreviewsKt.Theme_Home_Dark_theme_ Home (dark)": {
             "path": "renders/previews/Theme_Home_Dark_theme_Home_dark-acc1d4cc.png",
