@@ -1,11 +1,27 @@
 {
   "schema": "compose-preview-activity/v1",
-  "generatedAt": "2026-10-10T21:24:49.564Z",
+  "generatedAt": "2026-10-10T22:34:08.836Z",
   "windowDays": 30,
   "code": {
     "repo": "yschimke/homeassistant-remotecompose",
     "ref": "main",
     "events": [
+      {
+        "sha": "59b3a77a3003c9098ba5a13da9d62d090729b1d6",
+        "subject": "feat: publish and consume the initial Android component catalog (#717)",
+        "at": "2026-10-10T22:00:00+01:00",
+        "author": "Yuri Schimke",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "1a9e0f37273b5d59f0c4bc8b1e2239b31fe568d9",
+        "subject": "fix: pin desktop build checkouts to immutable commits (#718)",
+        "at": "2026-10-10T21:46:49+01:00",
+        "author": "Yuri Schimke",
+        "previewIds": [],
+        "components": []
+      },
       {
         "sha": "2bd596e2cd6cfaa43e037f4c944c54f067bf1415",
         "subject": "chore(main): release 0.1.38 (#407)",
