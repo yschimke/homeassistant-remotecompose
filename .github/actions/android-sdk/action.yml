@@ -5,4 +5,5 @@ runs:
   steps:
     - name: Install compile platform and build tools
       shell: bash
-      run: sdkmanager "platforms;android-37.1" "build-tools;37.0.0" >/dev/null
+      run: |
+        "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-37.1" "build-tools;37.0.0" >/dev/null
