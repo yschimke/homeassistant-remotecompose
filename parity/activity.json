@@ -1,11 +1,19 @@
 {
   "schema": "compose-preview-activity/v1",
-  "generatedAt": "2026-10-10T17:34:19.245Z",
+  "generatedAt": "2026-10-10T17:53:18.420Z",
   "windowDays": 30,
   "code": {
     "repo": "yschimke/homeassistant-remotecompose",
     "ref": "main",
     "events": [
+      {
+        "sha": "03ebb5bdc5e2a764f3da21bbed77d64ae218cf83",
+        "subject": "chore(deps): update compose-ai-tools (#710)",
+        "at": "2026-10-10T17:40:49Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
       {
         "sha": "5923e55a0e4782d3de6a538515f05ceefff6957a",
         "subject": "feat: add shared Terrazzo UI with desktop and Wasm hosts (#701)",
