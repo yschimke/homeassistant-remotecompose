@@ -42,6 +42,14 @@ concurrency:
 #   GOOGLE_SERVICES_JSON          base64 of app/google-services.json; presence
 #                                 enables Firebase Crashlytics in release builds
 jobs:
+  desktop:
+    name: Desktop release assets
+    uses: ./.github/workflows/desktop-release.yml
+    permissions:
+      contents: write
+    with:
+      tag: ${{ github.ref_type == 'tag' && github.ref_name || inputs.tag }}
+
   ios-assets:
     name: Build Apple release assets
     runs-on: macos-15
