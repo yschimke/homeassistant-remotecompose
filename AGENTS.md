@@ -62,3 +62,5 @@
   export the bearer as `COMPOSE_PREVIEW_TOKEN` and reconnect the server — an
   MCP host cannot inject a header its config never declared. A box older
   than that change answers `401` to every message, handshake included.
+
+- Shared desktop and Wasm hosts live in `app-ui/`; the production website is built and browser-tested by `.github/workflows/wasm-pages.yml`. Preserve `docs/auth/` and `docs/terrazzo-auth/` when deploying Pages: Android OAuth discovery uses them.
