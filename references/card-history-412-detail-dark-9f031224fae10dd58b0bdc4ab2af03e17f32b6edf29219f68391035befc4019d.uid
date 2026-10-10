@@ -1,0 +1,561 @@
+{
+  "schema": "compose-ui-builder-document/v1-candidate",
+  "id": "card-history",
+  "title": "Home Assistant · Card history",
+  "revision": 0,
+  "catalogPin": {
+    "systemId": "m3-catalog",
+    "catalogRevision": "candidate",
+    "capabilityDigest": "candidate",
+    "nativeRuntimeId": "candidate"
+  },
+  "environment": {
+    "widthDp": 412,
+    "heightDp": 720,
+    "density": 2,
+    "theme": "dark",
+    "dynamicColor": false,
+    "locale": "en-US",
+    "fontScale": 1,
+    "layoutDirection": "ltr",
+    "windowPosture": "flat",
+    "browserZoomPercent": 100,
+    "fixedTime": "2024-05-16T12:00:00Z",
+    "animations": "settled",
+    "networkAccess": false,
+    "exportDevices": []
+  },
+  "stateVariables": {},
+  "roots": [
+    "screen"
+  ],
+  "nodes": {
+    "screen": {
+      "id": "screen",
+      "componentId": "layout/scaffold",
+      "properties": {},
+      "slots": {
+        "content": [
+          "panes"
+        ]
+      },
+      "modifiers": [],
+      "eventBindings": {}
+    },
+    "panes": {
+      "id": "panes",
+      "componentId": "layout/list-detail-pane-scaffold",
+      "properties": {
+        "layoutMode": {
+          "type": "enum",
+          "value": "adaptive"
+        },
+        "listPaneVisible": {
+          "type": "bool",
+          "value": true
+        },
+        "detailPaneVisible": {
+          "type": "bool",
+          "value": true
+        },
+        "paneSizing": {
+          "type": "enum",
+          "value": "preferred"
+        },
+        "activePaneIndex": {
+          "type": "int",
+          "value": 1
+        }
+      },
+      "slots": {
+        "listPane": [
+          "main"
+        ],
+        "detailPane": [
+          "support"
+        ],
+        "extraPane": []
+      },
+      "modifiers": [
+        {
+          "type": "fillMaxSize"
+        }
+      ],
+      "eventBindings": {}
+    },
+    "brand": {
+      "id": "brand",
+      "componentId": "m3/text",
+      "properties": {
+        "text": {
+          "type": "string",
+          "value": "Home Assistant"
+        },
+        "style": {
+          "type": "enum",
+          "value": "labelLarge"
+        }
+      },
+      "slots": {},
+      "modifiers": [],
+      "eventBindings": {}
+    },
+    "title": {
+      "id": "title",
+      "componentId": "m3/text",
+      "properties": {
+        "text": {
+          "type": "string",
+          "value": "Card history"
+        },
+        "style": {
+          "type": "enum",
+          "value": "headlineMedium"
+        }
+      },
+      "slots": {},
+      "modifiers": [],
+      "eventBindings": {}
+    },
+    "summary": {
+      "id": "summary",
+      "componentId": "m3/text",
+      "properties": {
+        "text": {
+          "type": "string",
+          "value": "Recorded state changes for the selected entity."
+        },
+        "style": {
+          "type": "enum",
+          "value": "bodyLarge"
+        }
+      },
+      "slots": {},
+      "modifiers": [],
+      "eventBindings": {}
+    },
+    "status-title": {
+      "id": "status-title",
+      "componentId": "m3/text",
+      "properties": {
+        "text": {
+          "type": "string",
+          "value": "Kitchen temperature"
+        },
+        "style": {
+          "type": "enum",
+          "value": "titleMedium"
+        }
+      },
+      "slots": {},
+      "modifiers": [],
+      "eventBindings": {}
+    },
+    "status-body": {
+      "id": "status-body",
+      "componentId": "m3/text",
+      "properties": {
+        "text": {
+          "type": "string",
+          "value": "sensor.kitchen_temperature · °C"
+        },
+        "style": {
+          "type": "enum",
+          "value": "bodyLarge"
+        }
+      },
+      "slots": {},
+      "modifiers": [],
+      "eventBindings": {}
+    },
+    "status-content": {
+      "id": "status-content",
+      "componentId": "layout/column",
+      "properties": {
+        "verticalArrangement": {
+          "type": "enum",
+          "value": "top"
+        },
+        "verticalSpacingDp": {
+          "type": "float",
+          "value": 8
+        }
+      },
+      "slots": {
+        "children": [
+          "status-title",
+          "status-body"
+        ]
+      },
+      "modifiers": [
+        {
+          "type": "padding",
+          "startDp": 16,
+          "topDp": 16,
+          "endDp": 16,
+          "bottomDp": 16
+        }
+      ],
+      "eventBindings": {}
+    },
+    "status": {
+      "id": "status",
+      "componentId": "m3/card",
+      "properties": {},
+      "slots": {
+        "content": [
+          "status-content"
+        ]
+      },
+      "modifiers": [
+        {
+          "type": "fillMaxWidth"
+        }
+      ],
+      "eventBindings": {}
+    },
+    "panel-0-text": {
+      "id": "panel-0-text",
+      "componentId": "m3/text",
+      "properties": {
+        "text": {
+          "type": "string",
+          "value": "Last hour"
+        },
+        "style": {
+          "type": "enum",
+          "value": "labelLarge"
+        }
+      },
+      "slots": {},
+      "modifiers": [],
+      "eventBindings": {}
+    },
+    "panel-0": {
+      "id": "panel-0",
+      "componentId": "m3/button",
+      "properties": {
+        "enabled": {
+          "type": "bool",
+          "value": true
+        }
+      },
+      "slots": {
+        "content": [
+          "panel-0-text"
+        ]
+      },
+      "modifiers": [
+        {
+          "type": "fillMaxWidth"
+        }
+      ],
+      "eventBindings": {}
+    },
+    "panel-1-text": {
+      "id": "panel-1-text",
+      "componentId": "m3/text",
+      "properties": {
+        "text": {
+          "type": "string",
+          "value": "Last 24 hours"
+        },
+        "style": {
+          "type": "enum",
+          "value": "labelLarge"
+        }
+      },
+      "slots": {},
+      "modifiers": [],
+      "eventBindings": {}
+    },
+    "panel-1": {
+      "id": "panel-1",
+      "componentId": "m3/button",
+      "properties": {
+        "enabled": {
+          "type": "bool",
+          "value": true
+        }
+      },
+      "slots": {
+        "content": [
+          "panel-1-text"
+        ]
+      },
+      "modifiers": [
+        {
+          "type": "fillMaxWidth"
+        }
+      ],
+      "eventBindings": {}
+    },
+    "note": {
+      "id": "note",
+      "componentId": "m3/text",
+      "properties": {
+        "text": {
+          "type": "string",
+          "value": "Select a time range to review recorded values."
+        },
+        "style": {
+          "type": "enum",
+          "value": "bodyMedium"
+        }
+      },
+      "slots": {},
+      "modifiers": [],
+      "eventBindings": {}
+    },
+    "main": {
+      "id": "main",
+      "componentId": "layout/column",
+      "properties": {
+        "verticalArrangement": {
+          "type": "enum",
+          "value": "top"
+        },
+        "verticalSpacingDp": {
+          "type": "float",
+          "value": 8
+        }
+      },
+      "slots": {
+        "children": [
+          "brand",
+          "title",
+          "summary",
+          "status",
+          "panel-0",
+          "panel-1",
+          "note"
+        ]
+      },
+      "modifiers": [
+        {
+          "type": "fillMaxSize"
+        },
+        {
+          "type": "padding",
+          "startDp": 24,
+          "topDp": 24,
+          "endDp": 24,
+          "bottomDp": 24
+        },
+        {
+          "type": "verticalScroll"
+        }
+      ],
+      "eventBindings": {}
+    },
+    "detail-title": {
+      "id": "detail-title",
+      "componentId": "m3/text",
+      "properties": {
+        "text": {
+          "type": "string",
+          "value": "Last hour"
+        },
+        "style": {
+          "type": "enum",
+          "value": "headlineMedium"
+        }
+      },
+      "slots": {},
+      "modifiers": [],
+      "eventBindings": {}
+    },
+    "detail-subtitle": {
+      "id": "detail-subtitle",
+      "componentId": "m3/text",
+      "properties": {
+        "text": {
+          "type": "string",
+          "value": "Kitchen temperature"
+        },
+        "style": {
+          "type": "enum",
+          "value": "titleLarge"
+        }
+      },
+      "slots": {},
+      "modifiers": [],
+      "eventBindings": {}
+    },
+    "detail-card-title": {
+      "id": "detail-card-title",
+      "componentId": "m3/text",
+      "properties": {
+        "text": {
+          "type": "string",
+          "value": "Recorded values"
+        },
+        "style": {
+          "type": "enum",
+          "value": "titleMedium"
+        }
+      },
+      "slots": {},
+      "modifiers": [],
+      "eventBindings": {}
+    },
+    "detail-card-body": {
+      "id": "detail-card-body",
+      "componentId": "m3/text",
+      "properties": {
+        "text": {
+          "type": "string",
+          "value": "11:00   20.2 °C\n11:20   20.5 °C\n11:40   20.8 °C\n12:00   20.8 °C"
+        },
+        "style": {
+          "type": "enum",
+          "value": "bodyLarge"
+        }
+      },
+      "slots": {},
+      "modifiers": [],
+      "eventBindings": {}
+    },
+    "detail-card-content": {
+      "id": "detail-card-content",
+      "componentId": "layout/column",
+      "properties": {
+        "verticalArrangement": {
+          "type": "enum",
+          "value": "top"
+        },
+        "verticalSpacingDp": {
+          "type": "float",
+          "value": 8
+        }
+      },
+      "slots": {
+        "children": [
+          "detail-card-title",
+          "detail-card-body"
+        ]
+      },
+      "modifiers": [
+        {
+          "type": "padding",
+          "startDp": 16,
+          "topDp": 16,
+          "endDp": 16,
+          "bottomDp": 16
+        }
+      ],
+      "eventBindings": {}
+    },
+    "detail-card": {
+      "id": "detail-card",
+      "componentId": "m3/card",
+      "properties": {},
+      "slots": {
+        "content": [
+          "detail-card-content"
+        ]
+      },
+      "modifiers": [
+        {
+          "type": "fillMaxWidth"
+        }
+      ],
+      "eventBindings": {}
+    },
+    "readonly": {
+      "id": "readonly",
+      "componentId": "m3/text",
+      "properties": {
+        "text": {
+          "type": "string",
+          "value": "History is read only. Recorded times and values are fixed sample data."
+        },
+        "style": {
+          "type": "enum",
+          "value": "bodyLarge"
+        }
+      },
+      "slots": {},
+      "modifiers": [],
+      "eventBindings": {}
+    },
+    "back-text": {
+      "id": "back-text",
+      "componentId": "m3/text",
+      "properties": {
+        "text": {
+          "type": "string",
+          "value": "Back to card history"
+        },
+        "style": {
+          "type": "enum",
+          "value": "labelLarge"
+        }
+      },
+      "slots": {},
+      "modifiers": [],
+      "eventBindings": {}
+    },
+    "back": {
+      "id": "back",
+      "componentId": "m3/button",
+      "properties": {
+        "enabled": {
+          "type": "bool",
+          "value": true
+        },
+        "style": {
+          "type": "enum",
+          "value": "text"
+        }
+      },
+      "slots": {
+        "content": [
+          "back-text"
+        ]
+      },
+      "modifiers": [],
+      "eventBindings": {}
+    },
+    "support": {
+      "id": "support",
+      "componentId": "layout/column",
+      "properties": {
+        "verticalArrangement": {
+          "type": "enum",
+          "value": "top"
+        },
+        "verticalSpacingDp": {
+          "type": "float",
+          "value": 8
+        }
+      },
+      "slots": {
+        "children": [
+          "detail-title",
+          "detail-subtitle",
+          "detail-card",
+          "readonly",
+          "back"
+        ]
+      },
+      "modifiers": [
+        {
+          "type": "fillMaxSize"
+        },
+        {
+          "type": "padding",
+          "startDp": 24,
+          "topDp": 24,
+          "endDp": 24,
+          "bottomDp": 24
+        },
+        {
+          "type": "verticalScroll"
+        }
+      ],
+      "eventBindings": {}
+    }
+  },
+  "assets": {}
+}

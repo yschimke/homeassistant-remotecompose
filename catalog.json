@@ -5732,6 +5732,1046 @@
       "sourceFile": "src/main/kotlin/ee/schimke/adaptivepilot/DashboardBrowser.kt",
       "sourceDirectory": "adaptive-uid-pilot",
       "sourceModule": ":adaptive-uid-pilot"
+    },
+    {
+      "componentId": "Connect",
+      "images": [
+        {
+          "variant": "ideal",
+          "path": "images/connect/ideal__default__light__412dp.png",
+          "state": "default",
+          "width": 824,
+          "height": 1440,
+          "theme": "light",
+          "previewId": "connection-412-list-light",
+          "size": "412dp"
+        },
+        {
+          "variant": "ideal",
+          "path": "images/connect/ideal__default__dark__412dp.png",
+          "state": "default",
+          "width": 824,
+          "height": 1440,
+          "theme": "dark",
+          "previewId": "connection-412-list-dark",
+          "size": "412dp"
+        },
+        {
+          "variant": "ideal",
+          "path": "images/connect/ideal__detail__light__412dp.png",
+          "state": "detail",
+          "width": 824,
+          "height": 1440,
+          "theme": "light",
+          "previewId": "connection-412-detail-light",
+          "size": "412dp"
+        },
+        {
+          "variant": "ideal",
+          "path": "images/connect/ideal__detail__dark__412dp.png",
+          "state": "detail",
+          "width": 824,
+          "height": 1440,
+          "theme": "dark",
+          "previewId": "connection-412-detail-dark",
+          "size": "412dp"
+        },
+        {
+          "variant": "ideal",
+          "path": "images/connect/ideal__default__light__840dp.png",
+          "state": "default",
+          "width": 1680,
+          "height": 1440,
+          "theme": "light",
+          "previewId": "connection-840-list-light",
+          "size": "840dp"
+        },
+        {
+          "variant": "ideal",
+          "path": "images/connect/ideal__default__dark__840dp.png",
+          "state": "default",
+          "width": 1680,
+          "height": 1440,
+          "theme": "dark",
+          "previewId": "connection-840-list-dark",
+          "size": "840dp"
+        },
+        {
+          "variant": "ideal",
+          "path": "images/connect/ideal__detail__light__840dp.png",
+          "state": "detail",
+          "width": 1680,
+          "height": 1440,
+          "theme": "light",
+          "previewId": "connection-840-detail-light",
+          "size": "840dp"
+        },
+        {
+          "variant": "ideal",
+          "path": "images/connect/ideal__detail__dark__840dp.png",
+          "state": "detail",
+          "width": 1680,
+          "height": 1440,
+          "theme": "dark",
+          "previewId": "connection-840-detail-dark",
+          "size": "840dp"
+        },
+        {
+          "variant": "ideal",
+          "path": "images/connect/ideal__failure__light__412dp.png",
+          "state": "failure",
+          "width": 824,
+          "height": 1440,
+          "theme": "light",
+          "previewId": "connection-412-failure-light",
+          "size": "412dp"
+        },
+        {
+          "variant": "ideal",
+          "path": "images/connect/ideal__failure__dark__412dp.png",
+          "state": "failure",
+          "width": 824,
+          "height": 1440,
+          "theme": "dark",
+          "previewId": "connection-412-failure-dark",
+          "size": "412dp"
+        },
+        {
+          "variant": "ideal",
+          "path": "images/connect/ideal__failure__light__840dp.png",
+          "state": "failure",
+          "width": 1680,
+          "height": 1440,
+          "theme": "light",
+          "previewId": "connection-840-failure-light",
+          "size": "840dp"
+        },
+        {
+          "variant": "ideal",
+          "path": "images/connect/ideal__failure__dark__840dp.png",
+          "state": "failure",
+          "width": 1680,
+          "height": 1440,
+          "theme": "dark",
+          "previewId": "connection-840-failure-dark",
+          "size": "840dp"
+        }
+      ],
+      "greenlines": [],
+      "redlines": [],
+      "section": "Screens",
+      "caption": "Adaptive stock Material 3 design proposal; independent Compose specimen, not the production route.",
+      "sourceFile": "src/main/kotlin/ee/schimke/adaptivepilot/KeyScreens.kt",
+      "sourceDirectory": "adaptive-uid-pilot",
+      "sourceModule": ":adaptive-uid-pilot"
+    },
+    {
+      "componentId": "Home",
+      "images": [
+        {
+          "variant": "ideal",
+          "path": "images/home/ideal__default__light__412dp.png",
+          "state": "default",
+          "width": 824,
+          "height": 1440,
+          "theme": "light",
+          "previewId": "dashboard-view-412-list-light",
+          "size": "412dp"
+        },
+        {
+          "variant": "ideal",
+          "path": "images/home/ideal__default__dark__412dp.png",
+          "state": "default",
+          "width": 824,
+          "height": 1440,
+          "theme": "dark",
+          "previewId": "dashboard-view-412-list-dark",
+          "size": "412dp"
+        },
+        {
+          "variant": "ideal",
+          "path": "images/home/ideal__detail__light__412dp.png",
+          "state": "detail",
+          "width": 824,
+          "height": 1440,
+          "theme": "light",
+          "previewId": "dashboard-view-412-detail-light",
+          "size": "412dp"
+        },
+        {
+          "variant": "ideal",
+          "path": "images/home/ideal__detail__dark__412dp.png",
+          "state": "detail",
+          "width": 824,
+          "height": 1440,
+          "theme": "dark",
+          "previewId": "dashboard-view-412-detail-dark",
+          "size": "412dp"
+        },
+        {
+          "variant": "ideal",
+          "path": "images/home/ideal__default__light__840dp.png",
+          "state": "default",
+          "width": 1680,
+          "height": 1440,
+          "theme": "light",
+          "previewId": "dashboard-view-840-list-light",
+          "size": "840dp"
+        },
+        {
+          "variant": "ideal",
+          "path": "images/home/ideal__default__dark__840dp.png",
+          "state": "default",
+          "width": 1680,
+          "height": 1440,
+          "theme": "dark",
+          "previewId": "dashboard-view-840-list-dark",
+          "size": "840dp"
+        },
+        {
+          "variant": "ideal",
+          "path": "images/home/ideal__detail__light__840dp.png",
+          "state": "detail",
+          "width": 1680,
+          "height": 1440,
+          "theme": "light",
+          "previewId": "dashboard-view-840-detail-light",
+          "size": "840dp"
+        },
+        {
+          "variant": "ideal",
+          "path": "images/home/ideal__detail__dark__840dp.png",
+          "state": "detail",
+          "width": 1680,
+          "height": 1440,
+          "theme": "dark",
+          "previewId": "dashboard-view-840-detail-dark",
+          "size": "840dp"
+        },
+        {
+          "variant": "ideal",
+          "path": "images/home/ideal__offline__light__412dp.png",
+          "state": "offline",
+          "width": 824,
+          "height": 1440,
+          "theme": "light",
+          "previewId": "dashboard-view-412-offline-light",
+          "size": "412dp"
+        },
+        {
+          "variant": "ideal",
+          "path": "images/home/ideal__offline__dark__412dp.png",
+          "state": "offline",
+          "width": 824,
+          "height": 1440,
+          "theme": "dark",
+          "previewId": "dashboard-view-412-offline-dark",
+          "size": "412dp"
+        },
+        {
+          "variant": "ideal",
+          "path": "images/home/ideal__offline__light__840dp.png",
+          "state": "offline",
+          "width": 1680,
+          "height": 1440,
+          "theme": "light",
+          "previewId": "dashboard-view-840-offline-light",
+          "size": "840dp"
+        },
+        {
+          "variant": "ideal",
+          "path": "images/home/ideal__offline__dark__840dp.png",
+          "state": "offline",
+          "width": 1680,
+          "height": 1440,
+          "theme": "dark",
+          "previewId": "dashboard-view-840-offline-dark",
+          "size": "840dp"
+        }
+      ],
+      "greenlines": [],
+      "redlines": [],
+      "section": "Screens",
+      "caption": "Adaptive stock Material 3 design proposal; independent Compose specimen, not the production route.",
+      "sourceFile": "src/main/kotlin/ee/schimke/adaptivepilot/KeyScreens.kt",
+      "sourceDirectory": "adaptive-uid-pilot",
+      "sourceModule": ":adaptive-uid-pilot"
+    },
+    {
+      "componentId": "Choose dashboards",
+      "images": [
+        {
+          "variant": "ideal",
+          "path": "images/choose-dashboards/ideal__default__light__412dp.png",
+          "state": "default",
+          "width": 824,
+          "height": 1440,
+          "theme": "light",
+          "previewId": "choose-dashboards-412-list-light",
+          "size": "412dp"
+        },
+        {
+          "variant": "ideal",
+          "path": "images/choose-dashboards/ideal__default__dark__412dp.png",
+          "state": "default",
+          "width": 824,
+          "height": 1440,
+          "theme": "dark",
+          "previewId": "choose-dashboards-412-list-dark",
+          "size": "412dp"
+        },
+        {
+          "variant": "ideal",
+          "path": "images/choose-dashboards/ideal__detail__light__412dp.png",
+          "state": "detail",
+          "width": 824,
+          "height": 1440,
+          "theme": "light",
+          "previewId": "choose-dashboards-412-detail-light",
+          "size": "412dp"
+        },
+        {
+          "variant": "ideal",
+          "path": "images/choose-dashboards/ideal__detail__dark__412dp.png",
+          "state": "detail",
+          "width": 824,
+          "height": 1440,
+          "theme": "dark",
+          "previewId": "choose-dashboards-412-detail-dark",
+          "size": "412dp"
+        },
+        {
+          "variant": "ideal",
+          "path": "images/choose-dashboards/ideal__default__light__840dp.png",
+          "state": "default",
+          "width": 1680,
+          "height": 1440,
+          "theme": "light",
+          "previewId": "choose-dashboards-840-list-light",
+          "size": "840dp"
+        },
+        {
+          "variant": "ideal",
+          "path": "images/choose-dashboards/ideal__default__dark__840dp.png",
+          "state": "default",
+          "width": 1680,
+          "height": 1440,
+          "theme": "dark",
+          "previewId": "choose-dashboards-840-list-dark",
+          "size": "840dp"
+        },
+        {
+          "variant": "ideal",
+          "path": "images/choose-dashboards/ideal__detail__light__840dp.png",
+          "state": "detail",
+          "width": 1680,
+          "height": 1440,
+          "theme": "light",
+          "previewId": "choose-dashboards-840-detail-light",
+          "size": "840dp"
+        },
+        {
+          "variant": "ideal",
+          "path": "images/choose-dashboards/ideal__detail__dark__840dp.png",
+          "state": "detail",
+          "width": 1680,
+          "height": 1440,
+          "theme": "dark",
+          "previewId": "choose-dashboards-840-detail-dark",
+          "size": "840dp"
+        },
+        {
+          "variant": "ideal",
+          "path": "images/choose-dashboards/ideal__empty__light__412dp.png",
+          "state": "empty",
+          "width": 824,
+          "height": 1440,
+          "theme": "light",
+          "previewId": "choose-dashboards-412-empty-light",
+          "size": "412dp"
+        },
+        {
+          "variant": "ideal",
+          "path": "images/choose-dashboards/ideal__empty__dark__412dp.png",
+          "state": "empty",
+          "width": 824,
+          "height": 1440,
+          "theme": "dark",
+          "previewId": "choose-dashboards-412-empty-dark",
+          "size": "412dp"
+        },
+        {
+          "variant": "ideal",
+          "path": "images/choose-dashboards/ideal__empty__light__840dp.png",
+          "state": "empty",
+          "width": 1680,
+          "height": 1440,
+          "theme": "light",
+          "previewId": "choose-dashboards-840-empty-light",
+          "size": "840dp"
+        },
+        {
+          "variant": "ideal",
+          "path": "images/choose-dashboards/ideal__empty__dark__840dp.png",
+          "state": "empty",
+          "width": 1680,
+          "height": 1440,
+          "theme": "dark",
+          "previewId": "choose-dashboards-840-empty-dark",
+          "size": "840dp"
+        }
+      ],
+      "greenlines": [],
+      "redlines": [],
+      "section": "Screens",
+      "caption": "Adaptive stock Material 3 design proposal; independent Compose specimen, not the production route.",
+      "sourceFile": "src/main/kotlin/ee/schimke/adaptivepilot/KeyScreens.kt",
+      "sourceDirectory": "adaptive-uid-pilot",
+      "sourceModule": ":adaptive-uid-pilot"
+    },
+    {
+      "componentId": "Settings",
+      "images": [
+        {
+          "variant": "ideal",
+          "path": "images/settings/ideal__default__light__412dp.png",
+          "state": "default",
+          "width": 824,
+          "height": 1440,
+          "theme": "light",
+          "previewId": "settings-412-list-light",
+          "size": "412dp"
+        },
+        {
+          "variant": "ideal",
+          "path": "images/settings/ideal__default__dark__412dp.png",
+          "state": "default",
+          "width": 824,
+          "height": 1440,
+          "theme": "dark",
+          "previewId": "settings-412-list-dark",
+          "size": "412dp"
+        },
+        {
+          "variant": "ideal",
+          "path": "images/settings/ideal__detail__light__412dp.png",
+          "state": "detail",
+          "width": 824,
+          "height": 1440,
+          "theme": "light",
+          "previewId": "settings-412-detail-light",
+          "size": "412dp"
+        },
+        {
+          "variant": "ideal",
+          "path": "images/settings/ideal__detail__dark__412dp.png",
+          "state": "detail",
+          "width": 824,
+          "height": 1440,
+          "theme": "dark",
+          "previewId": "settings-412-detail-dark",
+          "size": "412dp"
+        },
+        {
+          "variant": "ideal",
+          "path": "images/settings/ideal__default__light__840dp.png",
+          "state": "default",
+          "width": 1680,
+          "height": 1440,
+          "theme": "light",
+          "previewId": "settings-840-list-light",
+          "size": "840dp"
+        },
+        {
+          "variant": "ideal",
+          "path": "images/settings/ideal__default__dark__840dp.png",
+          "state": "default",
+          "width": 1680,
+          "height": 1440,
+          "theme": "dark",
+          "previewId": "settings-840-list-dark",
+          "size": "840dp"
+        },
+        {
+          "variant": "ideal",
+          "path": "images/settings/ideal__detail__light__840dp.png",
+          "state": "detail",
+          "width": 1680,
+          "height": 1440,
+          "theme": "light",
+          "previewId": "settings-840-detail-light",
+          "size": "840dp"
+        },
+        {
+          "variant": "ideal",
+          "path": "images/settings/ideal__detail__dark__840dp.png",
+          "state": "detail",
+          "width": 1680,
+          "height": 1440,
+          "theme": "dark",
+          "previewId": "settings-840-detail-dark",
+          "size": "840dp"
+        }
+      ],
+      "greenlines": [],
+      "redlines": [],
+      "section": "Screens",
+      "caption": "Adaptive stock Material 3 design proposal; independent Compose specimen, not the production route.",
+      "sourceFile": "src/main/kotlin/ee/schimke/adaptivepilot/KeyScreens.kt",
+      "sourceDirectory": "adaptive-uid-pilot",
+      "sourceModule": ":adaptive-uid-pilot"
+    },
+    {
+      "componentId": "Installed widgets",
+      "images": [
+        {
+          "variant": "ideal",
+          "path": "images/installed-widgets/ideal__default__light__412dp.png",
+          "state": "default",
+          "width": 824,
+          "height": 1440,
+          "theme": "light",
+          "previewId": "widgets-412-list-light",
+          "size": "412dp"
+        },
+        {
+          "variant": "ideal",
+          "path": "images/installed-widgets/ideal__default__dark__412dp.png",
+          "state": "default",
+          "width": 824,
+          "height": 1440,
+          "theme": "dark",
+          "previewId": "widgets-412-list-dark",
+          "size": "412dp"
+        },
+        {
+          "variant": "ideal",
+          "path": "images/installed-widgets/ideal__detail__light__412dp.png",
+          "state": "detail",
+          "width": 824,
+          "height": 1440,
+          "theme": "light",
+          "previewId": "widgets-412-detail-light",
+          "size": "412dp"
+        },
+        {
+          "variant": "ideal",
+          "path": "images/installed-widgets/ideal__detail__dark__412dp.png",
+          "state": "detail",
+          "width": 824,
+          "height": 1440,
+          "theme": "dark",
+          "previewId": "widgets-412-detail-dark",
+          "size": "412dp"
+        },
+        {
+          "variant": "ideal",
+          "path": "images/installed-widgets/ideal__default__light__840dp.png",
+          "state": "default",
+          "width": 1680,
+          "height": 1440,
+          "theme": "light",
+          "previewId": "widgets-840-list-light",
+          "size": "840dp"
+        },
+        {
+          "variant": "ideal",
+          "path": "images/installed-widgets/ideal__default__dark__840dp.png",
+          "state": "default",
+          "width": 1680,
+          "height": 1440,
+          "theme": "dark",
+          "previewId": "widgets-840-list-dark",
+          "size": "840dp"
+        },
+        {
+          "variant": "ideal",
+          "path": "images/installed-widgets/ideal__detail__light__840dp.png",
+          "state": "detail",
+          "width": 1680,
+          "height": 1440,
+          "theme": "light",
+          "previewId": "widgets-840-detail-light",
+          "size": "840dp"
+        },
+        {
+          "variant": "ideal",
+          "path": "images/installed-widgets/ideal__detail__dark__840dp.png",
+          "state": "detail",
+          "width": 1680,
+          "height": 1440,
+          "theme": "dark",
+          "previewId": "widgets-840-detail-dark",
+          "size": "840dp"
+        }
+      ],
+      "greenlines": [],
+      "redlines": [],
+      "section": "Screens",
+      "caption": "Adaptive stock Material 3 design proposal; independent Compose specimen, not the production route.",
+      "sourceFile": "src/main/kotlin/ee/schimke/adaptivepilot/KeyScreens.kt",
+      "sourceDirectory": "adaptive-uid-pilot",
+      "sourceModule": ":adaptive-uid-pilot"
+    },
+    {
+      "componentId": "Manage pinned",
+      "images": [
+        {
+          "variant": "ideal",
+          "path": "images/manage-pinned/ideal__default__light__412dp.png",
+          "state": "default",
+          "width": 824,
+          "height": 1440,
+          "theme": "light",
+          "previewId": "pinned-412-list-light",
+          "size": "412dp"
+        },
+        {
+          "variant": "ideal",
+          "path": "images/manage-pinned/ideal__default__dark__412dp.png",
+          "state": "default",
+          "width": 824,
+          "height": 1440,
+          "theme": "dark",
+          "previewId": "pinned-412-list-dark",
+          "size": "412dp"
+        },
+        {
+          "variant": "ideal",
+          "path": "images/manage-pinned/ideal__detail__light__412dp.png",
+          "state": "detail",
+          "width": 824,
+          "height": 1440,
+          "theme": "light",
+          "previewId": "pinned-412-detail-light",
+          "size": "412dp"
+        },
+        {
+          "variant": "ideal",
+          "path": "images/manage-pinned/ideal__detail__dark__412dp.png",
+          "state": "detail",
+          "width": 824,
+          "height": 1440,
+          "theme": "dark",
+          "previewId": "pinned-412-detail-dark",
+          "size": "412dp"
+        },
+        {
+          "variant": "ideal",
+          "path": "images/manage-pinned/ideal__default__light__840dp.png",
+          "state": "default",
+          "width": 1680,
+          "height": 1440,
+          "theme": "light",
+          "previewId": "pinned-840-list-light",
+          "size": "840dp"
+        },
+        {
+          "variant": "ideal",
+          "path": "images/manage-pinned/ideal__default__dark__840dp.png",
+          "state": "default",
+          "width": 1680,
+          "height": 1440,
+          "theme": "dark",
+          "previewId": "pinned-840-list-dark",
+          "size": "840dp"
+        },
+        {
+          "variant": "ideal",
+          "path": "images/manage-pinned/ideal__detail__light__840dp.png",
+          "state": "detail",
+          "width": 1680,
+          "height": 1440,
+          "theme": "light",
+          "previewId": "pinned-840-detail-light",
+          "size": "840dp"
+        },
+        {
+          "variant": "ideal",
+          "path": "images/manage-pinned/ideal__detail__dark__840dp.png",
+          "state": "detail",
+          "width": 1680,
+          "height": 1440,
+          "theme": "dark",
+          "previewId": "pinned-840-detail-dark",
+          "size": "840dp"
+        }
+      ],
+      "greenlines": [],
+      "redlines": [],
+      "section": "Screens",
+      "caption": "Adaptive stock Material 3 design proposal; independent Compose specimen, not the production route.",
+      "sourceFile": "src/main/kotlin/ee/schimke/adaptivepilot/KeyScreens.kt",
+      "sourceDirectory": "adaptive-uid-pilot",
+      "sourceModule": ":adaptive-uid-pilot"
+    },
+    {
+      "componentId": "Wear widgets",
+      "images": [
+        {
+          "variant": "ideal",
+          "path": "images/wear-widgets/ideal__default__light__412dp.png",
+          "state": "default",
+          "width": 824,
+          "height": 1440,
+          "theme": "light",
+          "previewId": "wear-widgets-412-list-light",
+          "size": "412dp"
+        },
+        {
+          "variant": "ideal",
+          "path": "images/wear-widgets/ideal__default__dark__412dp.png",
+          "state": "default",
+          "width": 824,
+          "height": 1440,
+          "theme": "dark",
+          "previewId": "wear-widgets-412-list-dark",
+          "size": "412dp"
+        },
+        {
+          "variant": "ideal",
+          "path": "images/wear-widgets/ideal__detail__light__412dp.png",
+          "state": "detail",
+          "width": 824,
+          "height": 1440,
+          "theme": "light",
+          "previewId": "wear-widgets-412-detail-light",
+          "size": "412dp"
+        },
+        {
+          "variant": "ideal",
+          "path": "images/wear-widgets/ideal__detail__dark__412dp.png",
+          "state": "detail",
+          "width": 824,
+          "height": 1440,
+          "theme": "dark",
+          "previewId": "wear-widgets-412-detail-dark",
+          "size": "412dp"
+        },
+        {
+          "variant": "ideal",
+          "path": "images/wear-widgets/ideal__default__light__840dp.png",
+          "state": "default",
+          "width": 1680,
+          "height": 1440,
+          "theme": "light",
+          "previewId": "wear-widgets-840-list-light",
+          "size": "840dp"
+        },
+        {
+          "variant": "ideal",
+          "path": "images/wear-widgets/ideal__default__dark__840dp.png",
+          "state": "default",
+          "width": 1680,
+          "height": 1440,
+          "theme": "dark",
+          "previewId": "wear-widgets-840-list-dark",
+          "size": "840dp"
+        },
+        {
+          "variant": "ideal",
+          "path": "images/wear-widgets/ideal__detail__light__840dp.png",
+          "state": "detail",
+          "width": 1680,
+          "height": 1440,
+          "theme": "light",
+          "previewId": "wear-widgets-840-detail-light",
+          "size": "840dp"
+        },
+        {
+          "variant": "ideal",
+          "path": "images/wear-widgets/ideal__detail__dark__840dp.png",
+          "state": "detail",
+          "width": 1680,
+          "height": 1440,
+          "theme": "dark",
+          "previewId": "wear-widgets-840-detail-dark",
+          "size": "840dp"
+        }
+      ],
+      "greenlines": [],
+      "redlines": [],
+      "section": "Screens",
+      "caption": "Adaptive stock Material 3 design proposal; independent Compose specimen, not the production route.",
+      "sourceFile": "src/main/kotlin/ee/schimke/adaptivepilot/KeyScreens.kt",
+      "sourceDirectory": "adaptive-uid-pilot",
+      "sourceModule": ":adaptive-uid-pilot"
+    },
+    {
+      "componentId": "Sync diagnostics",
+      "images": [
+        {
+          "variant": "ideal",
+          "path": "images/sync-diagnostics/ideal__default__light__412dp.png",
+          "state": "default",
+          "width": 824,
+          "height": 1440,
+          "theme": "light",
+          "previewId": "sync-diagnostics-412-list-light",
+          "size": "412dp"
+        },
+        {
+          "variant": "ideal",
+          "path": "images/sync-diagnostics/ideal__default__dark__412dp.png",
+          "state": "default",
+          "width": 824,
+          "height": 1440,
+          "theme": "dark",
+          "previewId": "sync-diagnostics-412-list-dark",
+          "size": "412dp"
+        },
+        {
+          "variant": "ideal",
+          "path": "images/sync-diagnostics/ideal__detail__light__412dp.png",
+          "state": "detail",
+          "width": 824,
+          "height": 1440,
+          "theme": "light",
+          "previewId": "sync-diagnostics-412-detail-light",
+          "size": "412dp"
+        },
+        {
+          "variant": "ideal",
+          "path": "images/sync-diagnostics/ideal__detail__dark__412dp.png",
+          "state": "detail",
+          "width": 824,
+          "height": 1440,
+          "theme": "dark",
+          "previewId": "sync-diagnostics-412-detail-dark",
+          "size": "412dp"
+        },
+        {
+          "variant": "ideal",
+          "path": "images/sync-diagnostics/ideal__default__light__840dp.png",
+          "state": "default",
+          "width": 1680,
+          "height": 1440,
+          "theme": "light",
+          "previewId": "sync-diagnostics-840-list-light",
+          "size": "840dp"
+        },
+        {
+          "variant": "ideal",
+          "path": "images/sync-diagnostics/ideal__default__dark__840dp.png",
+          "state": "default",
+          "width": 1680,
+          "height": 1440,
+          "theme": "dark",
+          "previewId": "sync-diagnostics-840-list-dark",
+          "size": "840dp"
+        },
+        {
+          "variant": "ideal",
+          "path": "images/sync-diagnostics/ideal__detail__light__840dp.png",
+          "state": "detail",
+          "width": 1680,
+          "height": 1440,
+          "theme": "light",
+          "previewId": "sync-diagnostics-840-detail-light",
+          "size": "840dp"
+        },
+        {
+          "variant": "ideal",
+          "path": "images/sync-diagnostics/ideal__detail__dark__840dp.png",
+          "state": "detail",
+          "width": 1680,
+          "height": 1440,
+          "theme": "dark",
+          "previewId": "sync-diagnostics-840-detail-dark",
+          "size": "840dp"
+        }
+      ],
+      "greenlines": [],
+      "redlines": [],
+      "section": "Screens",
+      "caption": "Adaptive stock Material 3 design proposal; independent Compose specimen, not the production route.",
+      "sourceFile": "src/main/kotlin/ee/schimke/adaptivepilot/KeyScreens.kt",
+      "sourceDirectory": "adaptive-uid-pilot",
+      "sourceModule": ":adaptive-uid-pilot"
+    },
+    {
+      "componentId": "Logs",
+      "images": [
+        {
+          "variant": "ideal",
+          "path": "images/logs/ideal__default__light__412dp.png",
+          "state": "default",
+          "width": 824,
+          "height": 1440,
+          "theme": "light",
+          "previewId": "logs-412-list-light",
+          "size": "412dp"
+        },
+        {
+          "variant": "ideal",
+          "path": "images/logs/ideal__default__dark__412dp.png",
+          "state": "default",
+          "width": 824,
+          "height": 1440,
+          "theme": "dark",
+          "previewId": "logs-412-list-dark",
+          "size": "412dp"
+        },
+        {
+          "variant": "ideal",
+          "path": "images/logs/ideal__detail__light__412dp.png",
+          "state": "detail",
+          "width": 824,
+          "height": 1440,
+          "theme": "light",
+          "previewId": "logs-412-detail-light",
+          "size": "412dp"
+        },
+        {
+          "variant": "ideal",
+          "path": "images/logs/ideal__detail__dark__412dp.png",
+          "state": "detail",
+          "width": 824,
+          "height": 1440,
+          "theme": "dark",
+          "previewId": "logs-412-detail-dark",
+          "size": "412dp"
+        },
+        {
+          "variant": "ideal",
+          "path": "images/logs/ideal__default__light__840dp.png",
+          "state": "default",
+          "width": 1680,
+          "height": 1440,
+          "theme": "light",
+          "previewId": "logs-840-list-light",
+          "size": "840dp"
+        },
+        {
+          "variant": "ideal",
+          "path": "images/logs/ideal__default__dark__840dp.png",
+          "state": "default",
+          "width": 1680,
+          "height": 1440,
+          "theme": "dark",
+          "previewId": "logs-840-list-dark",
+          "size": "840dp"
+        },
+        {
+          "variant": "ideal",
+          "path": "images/logs/ideal__detail__light__840dp.png",
+          "state": "detail",
+          "width": 1680,
+          "height": 1440,
+          "theme": "light",
+          "previewId": "logs-840-detail-light",
+          "size": "840dp"
+        },
+        {
+          "variant": "ideal",
+          "path": "images/logs/ideal__detail__dark__840dp.png",
+          "state": "detail",
+          "width": 1680,
+          "height": 1440,
+          "theme": "dark",
+          "previewId": "logs-840-detail-dark",
+          "size": "840dp"
+        }
+      ],
+      "greenlines": [],
+      "redlines": [],
+      "section": "Screens",
+      "caption": "Adaptive stock Material 3 design proposal; independent Compose specimen, not the production route.",
+      "sourceFile": "src/main/kotlin/ee/schimke/adaptivepilot/KeyScreens.kt",
+      "sourceDirectory": "adaptive-uid-pilot",
+      "sourceModule": ":adaptive-uid-pilot"
+    },
+    {
+      "componentId": "Card history",
+      "images": [
+        {
+          "variant": "ideal",
+          "path": "images/card-history/ideal__default__light__412dp.png",
+          "state": "default",
+          "width": 824,
+          "height": 1440,
+          "theme": "light",
+          "previewId": "card-history-412-list-light",
+          "size": "412dp"
+        },
+        {
+          "variant": "ideal",
+          "path": "images/card-history/ideal__default__dark__412dp.png",
+          "state": "default",
+          "width": 824,
+          "height": 1440,
+          "theme": "dark",
+          "previewId": "card-history-412-list-dark",
+          "size": "412dp"
+        },
+        {
+          "variant": "ideal",
+          "path": "images/card-history/ideal__detail__light__412dp.png",
+          "state": "detail",
+          "width": 824,
+          "height": 1440,
+          "theme": "light",
+          "previewId": "card-history-412-detail-light",
+          "size": "412dp"
+        },
+        {
+          "variant": "ideal",
+          "path": "images/card-history/ideal__detail__dark__412dp.png",
+          "state": "detail",
+          "width": 824,
+          "height": 1440,
+          "theme": "dark",
+          "previewId": "card-history-412-detail-dark",
+          "size": "412dp"
+        },
+        {
+          "variant": "ideal",
+          "path": "images/card-history/ideal__default__light__840dp.png",
+          "state": "default",
+          "width": 1680,
+          "height": 1440,
+          "theme": "light",
+          "previewId": "card-history-840-list-light",
+          "size": "840dp"
+        },
+        {
+          "variant": "ideal",
+          "path": "images/card-history/ideal__default__dark__840dp.png",
+          "state": "default",
+          "width": 1680,
+          "height": 1440,
+          "theme": "dark",
+          "previewId": "card-history-840-list-dark",
+          "size": "840dp"
+        },
+        {
+          "variant": "ideal",
+          "path": "images/card-history/ideal__detail__light__840dp.png",
+          "state": "detail",
+          "width": 1680,
+          "height": 1440,
+          "theme": "light",
+          "previewId": "card-history-840-detail-light",
+          "size": "840dp"
+        },
+        {
+          "variant": "ideal",
+          "path": "images/card-history/ideal__detail__dark__840dp.png",
+          "state": "detail",
+          "width": 1680,
+          "height": 1440,
+          "theme": "dark",
+          "previewId": "card-history-840-detail-dark",
+          "size": "840dp"
+        }
+      ],
+      "greenlines": [],
+      "redlines": [],
+      "section": "Screens",
+      "caption": "Adaptive stock Material 3 design proposal; independent Compose specimen, not the production route.",
+      "sourceFile": "src/main/kotlin/ee/schimke/adaptivepilot/KeyScreens.kt",
+      "sourceDirectory": "adaptive-uid-pilot",
+      "sourceModule": ":adaptive-uid-pilot"
     }
   ],
   "library": [
@@ -5740,7 +6780,7 @@
     "ee.schimke.ha:rc-components (Terrazzo themes)"
   ],
   "renderer": "compose-preview 2.42.0",
-  "generatedAt": "2026-10-10T22:34:05.570Z",
+  "generatedAt": "2026-10-10T23:33:37.576Z",
   "display": {
     "hero": "Dashboard/Light"
   },
@@ -5759,7 +6799,7 @@
   "componentsFile": "components.json",
   "source": {
     "repo": "yschimke/homeassistant-remotecompose",
-    "ref": "59b3a77a3003c9098ba5a13da9d62d090729b1d6",
+    "ref": "2fa9d9aca6fb039084be7fec4988e1ce0e90c9e0",
     "module": ":previews"
   }
 }

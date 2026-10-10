@@ -1,0 +1,619 @@
+{
+  "schema": "compose-ui-builder-document/v1-candidate",
+  "id": "choose-dashboards",
+  "title": "Home Assistant · Choose dashboards",
+  "revision": 0,
+  "catalogPin": {
+    "systemId": "m3-catalog",
+    "catalogRevision": "candidate",
+    "capabilityDigest": "candidate",
+    "nativeRuntimeId": "candidate"
+  },
+  "environment": {
+    "widthDp": 840,
+    "heightDp": 720,
+    "density": 2,
+    "theme": "dark",
+    "dynamicColor": false,
+    "locale": "en-US",
+    "fontScale": 1,
+    "layoutDirection": "ltr",
+    "windowPosture": "flat",
+    "browserZoomPercent": 100,
+    "fixedTime": "2024-05-16T12:00:00Z",
+    "animations": "settled",
+    "networkAccess": false,
+    "exportDevices": []
+  },
+  "stateVariables": {},
+  "roots": [
+    "screen"
+  ],
+  "nodes": {
+    "screen": {
+      "id": "screen",
+      "componentId": "layout/scaffold",
+      "properties": {},
+      "slots": {
+        "content": [
+          "panes"
+        ]
+      },
+      "modifiers": [],
+      "eventBindings": {}
+    },
+    "panes": {
+      "id": "panes",
+      "componentId": "layout/list-detail-pane-scaffold",
+      "properties": {
+        "layoutMode": {
+          "type": "enum",
+          "value": "adaptive"
+        },
+        "listPaneVisible": {
+          "type": "bool",
+          "value": true
+        },
+        "detailPaneVisible": {
+          "type": "bool",
+          "value": true
+        },
+        "paneSizing": {
+          "type": "enum",
+          "value": "preferred"
+        },
+        "activePaneIndex": {
+          "type": "int",
+          "value": 0
+        }
+      },
+      "slots": {
+        "listPane": [
+          "main"
+        ],
+        "detailPane": [
+          "support"
+        ],
+        "extraPane": []
+      },
+      "modifiers": [
+        {
+          "type": "fillMaxSize"
+        }
+      ],
+      "eventBindings": {}
+    },
+    "brand": {
+      "id": "brand",
+      "componentId": "m3/text",
+      "properties": {
+        "text": {
+          "type": "string",
+          "value": "Home Assistant"
+        },
+        "style": {
+          "type": "enum",
+          "value": "labelLarge"
+        }
+      },
+      "slots": {},
+      "modifiers": [],
+      "eventBindings": {}
+    },
+    "title": {
+      "id": "title",
+      "componentId": "m3/text",
+      "properties": {
+        "text": {
+          "type": "string",
+          "value": "Choose dashboards"
+        },
+        "style": {
+          "type": "enum",
+          "value": "headlineMedium"
+        }
+      },
+      "slots": {},
+      "modifiers": [],
+      "eventBindings": {}
+    },
+    "summary": {
+      "id": "summary",
+      "componentId": "m3/text",
+      "properties": {
+        "text": {
+          "type": "string",
+          "value": "Choose which dashboards appear in your picker."
+        },
+        "style": {
+          "type": "enum",
+          "value": "bodyLarge"
+        }
+      },
+      "slots": {},
+      "modifiers": [],
+      "eventBindings": {}
+    },
+    "status-title": {
+      "id": "status-title",
+      "componentId": "m3/text",
+      "properties": {
+        "text": {
+          "type": "string",
+          "value": "Available dashboards"
+        },
+        "style": {
+          "type": "enum",
+          "value": "titleMedium"
+        }
+      },
+      "slots": {},
+      "modifiers": [],
+      "eventBindings": {}
+    },
+    "status-body": {
+      "id": "status-body",
+      "componentId": "m3/text",
+      "properties": {
+        "text": {
+          "type": "string",
+          "value": "Overview (built-in) · Home · Energy"
+        },
+        "style": {
+          "type": "enum",
+          "value": "bodyLarge"
+        }
+      },
+      "slots": {},
+      "modifiers": [],
+      "eventBindings": {}
+    },
+    "status-content": {
+      "id": "status-content",
+      "componentId": "layout/column",
+      "properties": {
+        "verticalArrangement": {
+          "type": "enum",
+          "value": "top"
+        },
+        "verticalSpacingDp": {
+          "type": "float",
+          "value": 8
+        }
+      },
+      "slots": {
+        "children": [
+          "status-title",
+          "status-body"
+        ]
+      },
+      "modifiers": [
+        {
+          "type": "padding",
+          "startDp": 16,
+          "topDp": 16,
+          "endDp": 16,
+          "bottomDp": 16
+        }
+      ],
+      "eventBindings": {}
+    },
+    "status": {
+      "id": "status",
+      "componentId": "m3/card",
+      "properties": {},
+      "slots": {
+        "content": [
+          "status-content"
+        ]
+      },
+      "modifiers": [
+        {
+          "type": "fillMaxWidth"
+        }
+      ],
+      "eventBindings": {}
+    },
+    "panel-0-text": {
+      "id": "panel-0-text",
+      "componentId": "m3/text",
+      "properties": {
+        "text": {
+          "type": "string",
+          "value": "Viewing · Overview (built-in) · Included"
+        },
+        "style": {
+          "type": "enum",
+          "value": "labelLarge"
+        }
+      },
+      "slots": {},
+      "modifiers": [],
+      "eventBindings": {}
+    },
+    "panel-0": {
+      "id": "panel-0",
+      "componentId": "m3/button",
+      "properties": {
+        "enabled": {
+          "type": "bool",
+          "value": true
+        }
+      },
+      "slots": {
+        "content": [
+          "panel-0-text"
+        ]
+      },
+      "modifiers": [
+        {
+          "type": "fillMaxWidth"
+        }
+      ],
+      "eventBindings": {}
+    },
+    "panel-1-text": {
+      "id": "panel-1-text",
+      "componentId": "m3/text",
+      "properties": {
+        "text": {
+          "type": "string",
+          "value": "Energy · Included"
+        },
+        "style": {
+          "type": "enum",
+          "value": "labelLarge"
+        }
+      },
+      "slots": {},
+      "modifiers": [],
+      "eventBindings": {}
+    },
+    "panel-1": {
+      "id": "panel-1",
+      "componentId": "m3/button",
+      "properties": {
+        "enabled": {
+          "type": "bool",
+          "value": true
+        }
+      },
+      "slots": {
+        "content": [
+          "panel-1-text"
+        ]
+      },
+      "modifiers": [
+        {
+          "type": "fillMaxWidth"
+        }
+      ],
+      "eventBindings": {}
+    },
+    "note": {
+      "id": "note",
+      "componentId": "m3/text",
+      "properties": {
+        "text": {
+          "type": "string",
+          "value": "The built-in Overview can be selected alongside custom dashboards."
+        },
+        "style": {
+          "type": "enum",
+          "value": "bodyMedium"
+        }
+      },
+      "slots": {},
+      "modifiers": [],
+      "eventBindings": {}
+    },
+    "main": {
+      "id": "main",
+      "componentId": "layout/column",
+      "properties": {
+        "verticalArrangement": {
+          "type": "enum",
+          "value": "top"
+        },
+        "verticalSpacingDp": {
+          "type": "float",
+          "value": 8
+        }
+      },
+      "slots": {
+        "children": [
+          "brand",
+          "title",
+          "summary",
+          "status",
+          "panel-0",
+          "panel-1",
+          "note"
+        ]
+      },
+      "modifiers": [
+        {
+          "type": "fillMaxSize"
+        },
+        {
+          "type": "padding",
+          "startDp": 24,
+          "topDp": 24,
+          "endDp": 24,
+          "bottomDp": 24
+        },
+        {
+          "type": "verticalScroll"
+        }
+      ],
+      "eventBindings": {}
+    },
+    "detail-title": {
+      "id": "detail-title",
+      "componentId": "m3/text",
+      "properties": {
+        "text": {
+          "type": "string",
+          "value": "Overview (built-in)"
+        },
+        "style": {
+          "type": "enum",
+          "value": "headlineMedium"
+        }
+      },
+      "slots": {},
+      "modifiers": [],
+      "eventBindings": {}
+    },
+    "detail-subtitle": {
+      "id": "detail-subtitle",
+      "componentId": "m3/text",
+      "properties": {
+        "text": {
+          "type": "string",
+          "value": "Default Home Assistant dashboard"
+        },
+        "style": {
+          "type": "enum",
+          "value": "titleLarge"
+        }
+      },
+      "slots": {},
+      "modifiers": [],
+      "eventBindings": {}
+    },
+    "detail-card-title": {
+      "id": "detail-card-title",
+      "componentId": "m3/text",
+      "properties": {
+        "text": {
+          "type": "string",
+          "value": "Visibility"
+        },
+        "style": {
+          "type": "enum",
+          "value": "titleMedium"
+        }
+      },
+      "slots": {},
+      "modifiers": [],
+      "eventBindings": {}
+    },
+    "detail-card-body": {
+      "id": "detail-card-body",
+      "componentId": "m3/text",
+      "properties": {
+        "text": {
+          "type": "string",
+          "value": "Include the built-in dashboard in your picker."
+        },
+        "style": {
+          "type": "enum",
+          "value": "bodyLarge"
+        }
+      },
+      "slots": {},
+      "modifiers": [],
+      "eventBindings": {}
+    },
+    "detail-card-content": {
+      "id": "detail-card-content",
+      "componentId": "layout/column",
+      "properties": {
+        "verticalArrangement": {
+          "type": "enum",
+          "value": "top"
+        },
+        "verticalSpacingDp": {
+          "type": "float",
+          "value": 8
+        }
+      },
+      "slots": {
+        "children": [
+          "detail-card-title",
+          "detail-card-body"
+        ]
+      },
+      "modifiers": [
+        {
+          "type": "padding",
+          "startDp": 16,
+          "topDp": 16,
+          "endDp": 16,
+          "bottomDp": 16
+        }
+      ],
+      "eventBindings": {}
+    },
+    "detail-card": {
+      "id": "detail-card",
+      "componentId": "m3/card",
+      "properties": {},
+      "slots": {
+        "content": [
+          "detail-card-content"
+        ]
+      },
+      "modifiers": [
+        {
+          "type": "fillMaxWidth"
+        }
+      ],
+      "eventBindings": {}
+    },
+    "control-label": {
+      "id": "control-label",
+      "componentId": "m3/text",
+      "properties": {
+        "text": {
+          "type": "string",
+          "value": "Show in dashboard picker"
+        },
+        "style": {
+          "type": "enum",
+          "value": "titleMedium"
+        }
+      },
+      "slots": {},
+      "modifiers": [],
+      "eventBindings": {}
+    },
+    "control": {
+      "id": "control",
+      "componentId": "m3/switch",
+      "properties": {
+        "checked": {
+          "type": "bool",
+          "value": true
+        },
+        "enabled": {
+          "type": "bool",
+          "value": true
+        }
+      },
+      "slots": {},
+      "modifiers": [
+        {
+          "type": "height",
+          "heightDp": 48
+        }
+      ],
+      "eventBindings": {}
+    },
+    "action-text": {
+      "id": "action-text",
+      "componentId": "m3/text",
+      "properties": {
+        "text": {
+          "type": "string",
+          "value": "Save selection"
+        },
+        "style": {
+          "type": "enum",
+          "value": "labelLarge"
+        }
+      },
+      "slots": {},
+      "modifiers": [],
+      "eventBindings": {}
+    },
+    "action": {
+      "id": "action",
+      "componentId": "m3/button",
+      "properties": {
+        "enabled": {
+          "type": "bool",
+          "value": true
+        }
+      },
+      "slots": {
+        "content": [
+          "action-text"
+        ]
+      },
+      "modifiers": [],
+      "eventBindings": {}
+    },
+    "back-text": {
+      "id": "back-text",
+      "componentId": "m3/text",
+      "properties": {
+        "text": {
+          "type": "string",
+          "value": "Back to choose dashboards"
+        },
+        "style": {
+          "type": "enum",
+          "value": "labelLarge"
+        }
+      },
+      "slots": {},
+      "modifiers": [],
+      "eventBindings": {}
+    },
+    "back": {
+      "id": "back",
+      "componentId": "m3/button",
+      "properties": {
+        "enabled": {
+          "type": "bool",
+          "value": true
+        },
+        "style": {
+          "type": "enum",
+          "value": "text"
+        }
+      },
+      "slots": {
+        "content": [
+          "back-text"
+        ]
+      },
+      "modifiers": [],
+      "eventBindings": {}
+    },
+    "support": {
+      "id": "support",
+      "componentId": "layout/column",
+      "properties": {
+        "verticalArrangement": {
+          "type": "enum",
+          "value": "top"
+        },
+        "verticalSpacingDp": {
+          "type": "float",
+          "value": 8
+        }
+      },
+      "slots": {
+        "children": [
+          "detail-title",
+          "detail-subtitle",
+          "detail-card",
+          "control-label",
+          "control",
+          "action",
+          "back"
+        ]
+      },
+      "modifiers": [
+        {
+          "type": "fillMaxSize"
+        },
+        {
+          "type": "padding",
+          "startDp": 24,
+          "topDp": 24,
+          "endDp": 24,
+          "bottomDp": 24
+        },
+        {
+          "type": "verticalScroll"
+        }
+      ],
+      "eventBindings": {}
+    }
+  },
+  "assets": {}
+}

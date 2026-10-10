@@ -1,11 +1,27 @@
 {
   "schema": "compose-preview-activity/v1",
-  "generatedAt": "2026-10-10T22:34:08.836Z",
+  "generatedAt": "2026-10-10T23:33:39.942Z",
   "windowDays": 30,
   "code": {
     "repo": "yschimke/homeassistant-remotecompose",
     "ref": "main",
     "events": [
+      {
+        "sha": "2fa9d9aca6fb039084be7fec4988e1ce0e90c9e0",
+        "subject": "feat: design Home Assistant key surfaces with adaptive UID references (#721)",
+        "at": "2026-10-10T22:47:33+01:00",
+        "author": "Yuri Schimke",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "80aaeba4e9925de0a65d60a6e9142b86f9109480",
+        "subject": "fix: wait for Compose focus before browser login input (#720)",
+        "at": "2026-10-10T22:33:24+01:00",
+        "author": "Yuri Schimke",
+        "previewIds": [],
+        "components": []
+      },
       {
         "sha": "59b3a77a3003c9098ba5a13da9d62d090729b1d6",
         "subject": "feat: publish and consume the initial Android component catalog (#717)",
@@ -466,22 +482,6 @@
         "sha": "859b30a7bf2b2737c9ce16076415406cb9295ddd",
         "subject": "fix(deps): update dependency ee.schimke.composeai:data-render-core to v2.18.0 (#657)",
         "at": "2026-09-12T04:55:38Z",
-        "author": "renovate[bot]",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "be9eb48766de8dbed484d840507b14f886c19856",
-        "subject": "fix(deps): update dependency ee.schimke.composeai:data-render-core to v2.17.0 (#656)",
-        "at": "2026-09-11T13:20:16Z",
-        "author": "renovate[bot]",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "38b25636104a90e324e3a31db9886d95808acf61",
-        "subject": "fix(deps): update dependency ee.schimke.composeai:data-render-core to v2.16.0 (#655)",
-        "at": "2026-09-11T03:32:50Z",
         "author": "renovate[bot]",
         "previewIds": [],
         "components": []
