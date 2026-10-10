@@ -1,0 +1,269 @@
+{
+  "schema": "compose-preview-references/v1",
+  "references": [
+    {
+      "id": "dashboards-412-list-light",
+      "previewId": "dashboard-browser__ideal__default__light__412dp",
+      "label": "UI Builder · 412dp · list · light",
+      "raster": {
+        "path": "references/dashboards-412-list-light-dc0bb1a9df7ea965aba6cb2e1730318fc55e523bb264295ea9d6d53b56b60766.png",
+        "width": 824,
+        "height": 1440,
+        "sha256": "dc0bb1a9df7ea965aba6cb2e1730318fc55e523bb264295ea9d6d53b56b60766"
+      },
+      "artifact": {
+        "kind": "uid",
+        "path": "references/dashboards-412-list-light-54b6ced98ee7e209c07563a192ee319cbaf3fa410523377585808d10ecebeb7f.uid"
+      },
+      "source": {
+        "provider": "ui-builder",
+        "revision": "1c3118453d406f92cfd6d825dddacb1d6635ba81",
+        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/1c3118453d406f92cfd6d825dddacb1d6635ba81/adaptive-uid-pilot/ui-builder/designs/dashboards.uid",
+        "attributes": {
+          "rendererBundleSha256": "420ba36df166f4c56b502b7757f3c484e5a588c4240752f5e66c29b545c2a162",
+          "componentsSha256": "dece3189c6e2d4b32f5442859b162527e947b442b27503e859fdd708e8694cd0",
+          "designId": "dashboards",
+          "sourceSha256": "d307fffba3882e8d7c52398f4fd29407a510f681e4814557716749b361bb4b23",
+          "documentSha256": "54b6ced98ee7e209c07563a192ee319cbaf3fa410523377585808d10ecebeb7f",
+          "widthDp": "412",
+          "heightDp": "720",
+          "theme": "light",
+          "state": "list",
+          "density": "2",
+          "componentId": "Dashboard browser"
+        }
+      }
+    },
+    {
+      "id": "dashboards-412-detail-light",
+      "previewId": "dashboard-browser__ideal__detail__light__412dp",
+      "label": "UI Builder · 412dp · detail · light",
+      "raster": {
+        "path": "references/dashboards-412-detail-light-97e6ec001b569ecf3258a1fe931c0e7726dc84a7b8cc770a87713169ff9d6135.png",
+        "width": 824,
+        "height": 1440,
+        "sha256": "97e6ec001b569ecf3258a1fe931c0e7726dc84a7b8cc770a87713169ff9d6135"
+      },
+      "artifact": {
+        "kind": "uid",
+        "path": "references/dashboards-412-detail-light-2a9de485e4f7fbe35312d031c65a8f3874a50ed9cf9fe23c726a40c81d826c44.uid"
+      },
+      "source": {
+        "provider": "ui-builder",
+        "revision": "1c3118453d406f92cfd6d825dddacb1d6635ba81",
+        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/1c3118453d406f92cfd6d825dddacb1d6635ba81/adaptive-uid-pilot/ui-builder/designs/dashboards.uid",
+        "attributes": {
+          "rendererBundleSha256": "420ba36df166f4c56b502b7757f3c484e5a588c4240752f5e66c29b545c2a162",
+          "componentsSha256": "dece3189c6e2d4b32f5442859b162527e947b442b27503e859fdd708e8694cd0",
+          "designId": "dashboards",
+          "sourceSha256": "d307fffba3882e8d7c52398f4fd29407a510f681e4814557716749b361bb4b23",
+          "documentSha256": "2a9de485e4f7fbe35312d031c65a8f3874a50ed9cf9fe23c726a40c81d826c44",
+          "widthDp": "412",
+          "heightDp": "720",
+          "theme": "light",
+          "state": "detail",
+          "density": "2",
+          "componentId": "Dashboard browser"
+        }
+      }
+    },
+    {
+      "id": "dashboards-412-list-dark",
+      "previewId": "dashboard-browser__ideal__default__dark__412dp",
+      "label": "UI Builder · 412dp · list · dark",
+      "raster": {
+        "path": "references/dashboards-412-list-dark-dc0bb1a9df7ea965aba6cb2e1730318fc55e523bb264295ea9d6d53b56b60766.png",
+        "width": 824,
+        "height": 1440,
+        "sha256": "dc0bb1a9df7ea965aba6cb2e1730318fc55e523bb264295ea9d6d53b56b60766"
+      },
+      "artifact": {
+        "kind": "uid",
+        "path": "references/dashboards-412-list-dark-4eefa063c4f0e8cb90a56e3847e13881a4bb0776da01a123ec3615c9c680f352.uid"
+      },
+      "source": {
+        "provider": "ui-builder",
+        "revision": "1c3118453d406f92cfd6d825dddacb1d6635ba81",
+        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/1c3118453d406f92cfd6d825dddacb1d6635ba81/adaptive-uid-pilot/ui-builder/designs/dashboards.uid",
+        "attributes": {
+          "rendererBundleSha256": "420ba36df166f4c56b502b7757f3c484e5a588c4240752f5e66c29b545c2a162",
+          "componentsSha256": "dece3189c6e2d4b32f5442859b162527e947b442b27503e859fdd708e8694cd0",
+          "designId": "dashboards",
+          "sourceSha256": "d307fffba3882e8d7c52398f4fd29407a510f681e4814557716749b361bb4b23",
+          "documentSha256": "4eefa063c4f0e8cb90a56e3847e13881a4bb0776da01a123ec3615c9c680f352",
+          "widthDp": "412",
+          "heightDp": "720",
+          "theme": "dark",
+          "state": "list",
+          "density": "2",
+          "componentId": "Dashboard browser"
+        }
+      }
+    },
+    {
+      "id": "dashboards-412-detail-dark",
+      "previewId": "dashboard-browser__ideal__detail__dark__412dp",
+      "label": "UI Builder · 412dp · detail · dark",
+      "raster": {
+        "path": "references/dashboards-412-detail-dark-97e6ec001b569ecf3258a1fe931c0e7726dc84a7b8cc770a87713169ff9d6135.png",
+        "width": 824,
+        "height": 1440,
+        "sha256": "97e6ec001b569ecf3258a1fe931c0e7726dc84a7b8cc770a87713169ff9d6135"
+      },
+      "artifact": {
+        "kind": "uid",
+        "path": "references/dashboards-412-detail-dark-be75db8497d45b8ed848b4fa500e5065d2fd639eeb51e5055a66d174acce2b16.uid"
+      },
+      "source": {
+        "provider": "ui-builder",
+        "revision": "1c3118453d406f92cfd6d825dddacb1d6635ba81",
+        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/1c3118453d406f92cfd6d825dddacb1d6635ba81/adaptive-uid-pilot/ui-builder/designs/dashboards.uid",
+        "attributes": {
+          "rendererBundleSha256": "420ba36df166f4c56b502b7757f3c484e5a588c4240752f5e66c29b545c2a162",
+          "componentsSha256": "dece3189c6e2d4b32f5442859b162527e947b442b27503e859fdd708e8694cd0",
+          "designId": "dashboards",
+          "sourceSha256": "d307fffba3882e8d7c52398f4fd29407a510f681e4814557716749b361bb4b23",
+          "documentSha256": "be75db8497d45b8ed848b4fa500e5065d2fd639eeb51e5055a66d174acce2b16",
+          "widthDp": "412",
+          "heightDp": "720",
+          "theme": "dark",
+          "state": "detail",
+          "density": "2",
+          "componentId": "Dashboard browser"
+        }
+      }
+    },
+    {
+      "id": "dashboards-840-list-light",
+      "previewId": "dashboard-browser__ideal__default__light__840dp",
+      "label": "UI Builder · 840dp · list · light",
+      "raster": {
+        "path": "references/dashboards-840-list-light-67590b95e3b3bade103064881aba114ad2767c48b9efc56385564f736d9f8e67.png",
+        "width": 1680,
+        "height": 1440,
+        "sha256": "67590b95e3b3bade103064881aba114ad2767c48b9efc56385564f736d9f8e67"
+      },
+      "artifact": {
+        "kind": "uid",
+        "path": "references/dashboards-840-list-light-cc6e3b3edd97b33ccf18bba042ae6b239d35bb7a7f2318535a601e36ea3555b8.uid"
+      },
+      "source": {
+        "provider": "ui-builder",
+        "revision": "1c3118453d406f92cfd6d825dddacb1d6635ba81",
+        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/1c3118453d406f92cfd6d825dddacb1d6635ba81/adaptive-uid-pilot/ui-builder/designs/dashboards.uid",
+        "attributes": {
+          "rendererBundleSha256": "420ba36df166f4c56b502b7757f3c484e5a588c4240752f5e66c29b545c2a162",
+          "componentsSha256": "dece3189c6e2d4b32f5442859b162527e947b442b27503e859fdd708e8694cd0",
+          "designId": "dashboards",
+          "sourceSha256": "d307fffba3882e8d7c52398f4fd29407a510f681e4814557716749b361bb4b23",
+          "documentSha256": "cc6e3b3edd97b33ccf18bba042ae6b239d35bb7a7f2318535a601e36ea3555b8",
+          "widthDp": "840",
+          "heightDp": "720",
+          "theme": "light",
+          "state": "list",
+          "density": "2",
+          "componentId": "Dashboard browser"
+        }
+      }
+    },
+    {
+      "id": "dashboards-840-detail-light",
+      "previewId": "dashboard-browser__ideal__detail__light__840dp",
+      "label": "UI Builder · 840dp · detail · light",
+      "raster": {
+        "path": "references/dashboards-840-detail-light-370a8284f05ec209772545267ff73be9884fcc893834ac15212243abd3cab2cf.png",
+        "width": 1680,
+        "height": 1440,
+        "sha256": "370a8284f05ec209772545267ff73be9884fcc893834ac15212243abd3cab2cf"
+      },
+      "artifact": {
+        "kind": "uid",
+        "path": "references/dashboards-840-detail-light-f1f78889201d12545fff6e00bf4288109f8c588c89395cb1f99962718379ac30.uid"
+      },
+      "source": {
+        "provider": "ui-builder",
+        "revision": "1c3118453d406f92cfd6d825dddacb1d6635ba81",
+        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/1c3118453d406f92cfd6d825dddacb1d6635ba81/adaptive-uid-pilot/ui-builder/designs/dashboards.uid",
+        "attributes": {
+          "rendererBundleSha256": "420ba36df166f4c56b502b7757f3c484e5a588c4240752f5e66c29b545c2a162",
+          "componentsSha256": "dece3189c6e2d4b32f5442859b162527e947b442b27503e859fdd708e8694cd0",
+          "designId": "dashboards",
+          "sourceSha256": "d307fffba3882e8d7c52398f4fd29407a510f681e4814557716749b361bb4b23",
+          "documentSha256": "f1f78889201d12545fff6e00bf4288109f8c588c89395cb1f99962718379ac30",
+          "widthDp": "840",
+          "heightDp": "720",
+          "theme": "light",
+          "state": "detail",
+          "density": "2",
+          "componentId": "Dashboard browser"
+        }
+      }
+    },
+    {
+      "id": "dashboards-840-list-dark",
+      "previewId": "dashboard-browser__ideal__default__dark__840dp",
+      "label": "UI Builder · 840dp · list · dark",
+      "raster": {
+        "path": "references/dashboards-840-list-dark-67590b95e3b3bade103064881aba114ad2767c48b9efc56385564f736d9f8e67.png",
+        "width": 1680,
+        "height": 1440,
+        "sha256": "67590b95e3b3bade103064881aba114ad2767c48b9efc56385564f736d9f8e67"
+      },
+      "artifact": {
+        "kind": "uid",
+        "path": "references/dashboards-840-list-dark-27dfad27188cbf07f97fb02d719d6fb3a5954b36ce178c89dfabd2249bc02dea.uid"
+      },
+      "source": {
+        "provider": "ui-builder",
+        "revision": "1c3118453d406f92cfd6d825dddacb1d6635ba81",
+        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/1c3118453d406f92cfd6d825dddacb1d6635ba81/adaptive-uid-pilot/ui-builder/designs/dashboards.uid",
+        "attributes": {
+          "rendererBundleSha256": "420ba36df166f4c56b502b7757f3c484e5a588c4240752f5e66c29b545c2a162",
+          "componentsSha256": "dece3189c6e2d4b32f5442859b162527e947b442b27503e859fdd708e8694cd0",
+          "designId": "dashboards",
+          "sourceSha256": "d307fffba3882e8d7c52398f4fd29407a510f681e4814557716749b361bb4b23",
+          "documentSha256": "27dfad27188cbf07f97fb02d719d6fb3a5954b36ce178c89dfabd2249bc02dea",
+          "widthDp": "840",
+          "heightDp": "720",
+          "theme": "dark",
+          "state": "list",
+          "density": "2",
+          "componentId": "Dashboard browser"
+        }
+      }
+    },
+    {
+      "id": "dashboards-840-detail-dark",
+      "previewId": "dashboard-browser__ideal__detail__dark__840dp",
+      "label": "UI Builder · 840dp · detail · dark",
+      "raster": {
+        "path": "references/dashboards-840-detail-dark-370a8284f05ec209772545267ff73be9884fcc893834ac15212243abd3cab2cf.png",
+        "width": 1680,
+        "height": 1440,
+        "sha256": "370a8284f05ec209772545267ff73be9884fcc893834ac15212243abd3cab2cf"
+      },
+      "artifact": {
+        "kind": "uid",
+        "path": "references/dashboards-840-detail-dark-bbbf0c84aff32cf02052dfd08f9082b5e68360fe2435cebf25a266a605d36d92.uid"
+      },
+      "source": {
+        "provider": "ui-builder",
+        "revision": "1c3118453d406f92cfd6d825dddacb1d6635ba81",
+        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/1c3118453d406f92cfd6d825dddacb1d6635ba81/adaptive-uid-pilot/ui-builder/designs/dashboards.uid",
+        "attributes": {
+          "rendererBundleSha256": "420ba36df166f4c56b502b7757f3c484e5a588c4240752f5e66c29b545c2a162",
+          "componentsSha256": "dece3189c6e2d4b32f5442859b162527e947b442b27503e859fdd708e8694cd0",
+          "designId": "dashboards",
+          "sourceSha256": "d307fffba3882e8d7c52398f4fd29407a510f681e4814557716749b361bb4b23",
+          "documentSha256": "bbbf0c84aff32cf02052dfd08f9082b5e68360fe2435cebf25a266a605d36d92",
+          "widthDp": "840",
+          "heightDp": "720",
+          "theme": "dark",
+          "state": "detail",
+          "density": "2",
+          "componentId": "Dashboard browser"
+        }
+      }
+    }
+  ]
+}

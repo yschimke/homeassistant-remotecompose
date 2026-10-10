@@ -5640,6 +5640,98 @@
           "type": "Boolean"
         }
       ]
+    },
+    {
+      "componentId": "Dashboard browser",
+      "images": [
+        {
+          "variant": "ideal",
+          "path": "images/dashboard-browser/ideal__default__light__412dp.png",
+          "state": "default",
+          "width": 824,
+          "height": 1440,
+          "theme": "light",
+          "previewId": "dashboards-412-list-light",
+          "size": "412dp"
+        },
+        {
+          "variant": "ideal",
+          "path": "images/dashboard-browser/ideal__detail__light__412dp.png",
+          "state": "detail",
+          "width": 824,
+          "height": 1440,
+          "theme": "light",
+          "previewId": "dashboards-412-detail-light",
+          "size": "412dp"
+        },
+        {
+          "variant": "ideal",
+          "path": "images/dashboard-browser/ideal__default__dark__412dp.png",
+          "state": "default",
+          "width": 824,
+          "height": 1440,
+          "theme": "dark",
+          "previewId": "dashboards-412-list-dark",
+          "size": "412dp"
+        },
+        {
+          "variant": "ideal",
+          "path": "images/dashboard-browser/ideal__detail__dark__412dp.png",
+          "state": "detail",
+          "width": 824,
+          "height": 1440,
+          "theme": "dark",
+          "previewId": "dashboards-412-detail-dark",
+          "size": "412dp"
+        },
+        {
+          "variant": "ideal",
+          "path": "images/dashboard-browser/ideal__default__light__840dp.png",
+          "state": "default",
+          "width": 1680,
+          "height": 1440,
+          "theme": "light",
+          "previewId": "dashboards-840-list-light",
+          "size": "840dp"
+        },
+        {
+          "variant": "ideal",
+          "path": "images/dashboard-browser/ideal__detail__light__840dp.png",
+          "state": "detail",
+          "width": 1680,
+          "height": 1440,
+          "theme": "light",
+          "previewId": "dashboards-840-detail-light",
+          "size": "840dp"
+        },
+        {
+          "variant": "ideal",
+          "path": "images/dashboard-browser/ideal__default__dark__840dp.png",
+          "state": "default",
+          "width": 1680,
+          "height": 1440,
+          "theme": "dark",
+          "previewId": "dashboards-840-list-dark",
+          "size": "840dp"
+        },
+        {
+          "variant": "ideal",
+          "path": "images/dashboard-browser/ideal__detail__dark__840dp.png",
+          "state": "detail",
+          "width": 1680,
+          "height": 1440,
+          "theme": "dark",
+          "previewId": "dashboards-840-detail-dark",
+          "size": "840dp"
+        }
+      ],
+      "greenlines": [],
+      "redlines": [],
+      "section": "Screens",
+      "caption": "Adaptive stock Material 3 design proposal: phone and tablet, list and detail, light and dark.",
+      "sourceFile": "src/main/kotlin/ee/schimke/adaptivepilot/DashboardBrowser.kt",
+      "sourceDirectory": "adaptive-uid-pilot",
+      "sourceModule": ":adaptive-uid-pilot"
     }
   ],
   "library": [
@@ -5647,8 +5739,8 @@
     "androidx.compose.remote:remote-player-compose (RemoteCompose)",
     "ee.schimke.ha:rc-components (Terrazzo themes)"
   ],
-  "renderer": "compose-preview 2.4.1",
-  "generatedAt": "2026-10-05T14:21:29.326Z",
+  "renderer": "compose-preview 2.40.0",
+  "generatedAt": "2026-10-10T17:15:36.977Z",
   "display": {
     "hero": "Dashboard/Light"
   },
@@ -5667,7 +5759,7 @@
   "componentsFile": "components.json",
   "source": {
     "repo": "yschimke/homeassistant-remotecompose",
-    "ref": "main",
+    "ref": "1c3118453d406f92cfd6d825dddacb1d6635ba81",
     "module": ":previews"
   }
 }

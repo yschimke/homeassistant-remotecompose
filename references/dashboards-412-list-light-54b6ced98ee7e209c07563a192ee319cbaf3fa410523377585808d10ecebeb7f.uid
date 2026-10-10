@@ -1,0 +1,449 @@
+{
+  "schema": "compose-ui-builder-document/v1-candidate",
+  "id": "dashboards",
+  "title": "Home Assistant · Dashboards",
+  "revision": 0,
+  "catalogPin": {
+    "systemId": "m3-catalog",
+    "catalogRevision": "candidate",
+    "capabilityDigest": "candidate",
+    "nativeRuntimeId": "candidate"
+  },
+  "environment": {
+    "widthDp": 412,
+    "heightDp": 720,
+    "density": 2,
+    "theme": "light",
+    "dynamicColor": false,
+    "locale": "en-US",
+    "fontScale": 1,
+    "layoutDirection": "ltr",
+    "windowPosture": "flat",
+    "browserZoomPercent": 100,
+    "fixedTime": "2024-05-16T12:00:00Z",
+    "animations": "settled",
+    "networkAccess": false,
+    "exportDevices": []
+  },
+  "stateVariables": {},
+  "roots": [
+    "screen"
+  ],
+  "nodes": {
+    "panes": {
+      "id": "panes",
+      "componentId": "layout/list-detail-pane-scaffold",
+      "properties": {
+        "layoutMode": {
+          "type": "enum",
+          "value": "adaptive"
+        },
+        "listPaneVisible": {
+          "type": "bool",
+          "value": true
+        },
+        "detailPaneVisible": {
+          "type": "bool",
+          "value": true
+        },
+        "paneSizing": {
+          "type": "enum",
+          "value": "preferred"
+        },
+        "activePaneIndex": {
+          "type": "int",
+          "value": 0
+        }
+      },
+      "slots": {
+        "listPane": [
+          "main"
+        ],
+        "detailPane": [
+          "support"
+        ],
+        "extraPane": []
+      },
+      "modifiers": [
+        {
+          "type": "fillMaxSize"
+        }
+      ],
+      "eventBindings": {}
+    },
+    "main": {
+      "id": "main",
+      "componentId": "layout/column",
+      "properties": {
+        "verticalArrangement": {
+          "type": "enum",
+          "value": "top"
+        },
+        "verticalSpacingDp": {
+          "type": "float",
+          "value": 8
+        }
+      },
+      "slots": {
+        "children": [
+          "brand",
+          "title",
+          "intro",
+          "entry-0",
+          "entry-1",
+          "entry-2"
+        ]
+      },
+      "modifiers": [
+        {
+          "type": "fillMaxSize"
+        },
+        {
+          "type": "padding",
+          "startDp": 24,
+          "topDp": 24,
+          "endDp": 24,
+          "bottomDp": 24
+        },
+        {
+          "type": "verticalScroll"
+        }
+      ],
+      "eventBindings": {}
+    },
+    "support": {
+      "id": "support",
+      "componentId": "layout/column",
+      "properties": {
+        "verticalArrangement": {
+          "type": "enum",
+          "value": "top"
+        },
+        "verticalSpacingDp": {
+          "type": "float",
+          "value": 8
+        }
+      },
+      "slots": {
+        "children": [
+          "detail-title",
+          "detail-subtitle",
+          "detail-status",
+          "detail-body",
+          "open-entry",
+          "back-to-list"
+        ]
+      },
+      "modifiers": [
+        {
+          "type": "fillMaxSize"
+        },
+        {
+          "type": "padding",
+          "startDp": 24,
+          "topDp": 24,
+          "endDp": 24,
+          "bottomDp": 24
+        },
+        {
+          "type": "verticalScroll"
+        }
+      ],
+      "eventBindings": {}
+    },
+    "screen": {
+      "id": "screen",
+      "componentId": "layout/scaffold",
+      "properties": {},
+      "slots": {
+        "content": [
+          "panes"
+        ]
+      },
+      "modifiers": [],
+      "eventBindings": {}
+    },
+    "brand": {
+      "id": "brand",
+      "componentId": "m3/text",
+      "properties": {
+        "text": {
+          "type": "string",
+          "value": "Home Assistant"
+        },
+        "style": {
+          "type": "enum",
+          "value": "labelLarge"
+        }
+      },
+      "slots": {},
+      "modifiers": [],
+      "eventBindings": {}
+    },
+    "title": {
+      "id": "title",
+      "componentId": "m3/text",
+      "properties": {
+        "text": {
+          "type": "string",
+          "value": "Dashboards"
+        },
+        "style": {
+          "type": "enum",
+          "value": "headlineMedium"
+        }
+      },
+      "slots": {},
+      "modifiers": [],
+      "eventBindings": {}
+    },
+    "intro": {
+      "id": "intro",
+      "componentId": "m3/text",
+      "properties": {
+        "text": {
+          "type": "string",
+          "value": "Choose a dashboard to explore your home."
+        },
+        "style": {
+          "type": "enum",
+          "value": "bodyLarge"
+        }
+      },
+      "slots": {},
+      "modifiers": [],
+      "eventBindings": {}
+    },
+    "entry-0-label": {
+      "id": "entry-0-label",
+      "componentId": "m3/text",
+      "properties": {
+        "text": {
+          "type": "string",
+          "value": "Home"
+        }
+      },
+      "slots": {},
+      "modifiers": [],
+      "eventBindings": {}
+    },
+    "entry-0": {
+      "id": "entry-0",
+      "componentId": "m3/button",
+      "properties": {
+        "style": {
+          "type": "enum",
+          "value": "filled"
+        }
+      },
+      "slots": {
+        "content": [
+          "entry-0-label"
+        ]
+      },
+      "modifiers": [
+        {
+          "type": "fillMaxWidth"
+        }
+      ],
+      "eventBindings": {}
+    },
+    "entry-1-label": {
+      "id": "entry-1-label",
+      "componentId": "m3/text",
+      "properties": {
+        "text": {
+          "type": "string",
+          "value": "Energy"
+        }
+      },
+      "slots": {},
+      "modifiers": [],
+      "eventBindings": {}
+    },
+    "entry-1": {
+      "id": "entry-1",
+      "componentId": "m3/button",
+      "properties": {
+        "style": {
+          "type": "enum",
+          "value": "filled"
+        }
+      },
+      "slots": {
+        "content": [
+          "entry-1-label"
+        ]
+      },
+      "modifiers": [
+        {
+          "type": "fillMaxWidth"
+        }
+      ],
+      "eventBindings": {}
+    },
+    "entry-2-label": {
+      "id": "entry-2-label",
+      "componentId": "m3/text",
+      "properties": {
+        "text": {
+          "type": "string",
+          "value": "Security"
+        }
+      },
+      "slots": {},
+      "modifiers": [],
+      "eventBindings": {}
+    },
+    "entry-2": {
+      "id": "entry-2",
+      "componentId": "m3/button",
+      "properties": {
+        "style": {
+          "type": "enum",
+          "value": "filled"
+        }
+      },
+      "slots": {
+        "content": [
+          "entry-2-label"
+        ]
+      },
+      "modifiers": [
+        {
+          "type": "fillMaxWidth"
+        }
+      ],
+      "eventBindings": {}
+    },
+    "detail-title": {
+      "id": "detail-title",
+      "componentId": "m3/text",
+      "properties": {
+        "text": {
+          "type": "string",
+          "value": "Home"
+        },
+        "style": {
+          "type": "enum",
+          "value": "headlineMedium"
+        }
+      },
+      "slots": {},
+      "modifiers": [],
+      "eventBindings": {}
+    },
+    "detail-subtitle": {
+      "id": "detail-subtitle",
+      "componentId": "m3/text",
+      "properties": {
+        "text": {
+          "type": "string",
+          "value": "Your everyday controls, together."
+        },
+        "style": {
+          "type": "enum",
+          "value": "titleLarge"
+        }
+      },
+      "slots": {},
+      "modifiers": [],
+      "eventBindings": {}
+    },
+    "detail-status": {
+      "id": "detail-status",
+      "componentId": "m3/text",
+      "properties": {
+        "text": {
+          "type": "string",
+          "value": "3 rooms · 12 entities"
+        },
+        "style": {
+          "type": "enum",
+          "value": "labelLarge"
+        }
+      },
+      "slots": {},
+      "modifiers": [],
+      "eventBindings": {}
+    },
+    "detail-body": {
+      "id": "detail-body",
+      "componentId": "m3/text",
+      "properties": {
+        "text": {
+          "type": "string",
+          "value": "Living room · 21.5 °C\nKitchen · 2 lights on\nBedroom · blinds open"
+        },
+        "style": {
+          "type": "enum",
+          "value": "bodyLarge"
+        }
+      },
+      "slots": {},
+      "modifiers": [],
+      "eventBindings": {}
+    },
+    "open-entry-label": {
+      "id": "open-entry-label",
+      "componentId": "m3/text",
+      "properties": {
+        "text": {
+          "type": "string",
+          "value": "Open dashboard"
+        }
+      },
+      "slots": {},
+      "modifiers": [],
+      "eventBindings": {}
+    },
+    "open-entry": {
+      "id": "open-entry",
+      "componentId": "m3/button",
+      "properties": {
+        "style": {
+          "type": "enum",
+          "value": "filled"
+        }
+      },
+      "slots": {
+        "content": [
+          "open-entry-label"
+        ]
+      },
+      "modifiers": [],
+      "eventBindings": {}
+    },
+    "back-to-list-label": {
+      "id": "back-to-list-label",
+      "componentId": "m3/text",
+      "properties": {
+        "text": {
+          "type": "string",
+          "value": "Back to dashboards"
+        }
+      },
+      "slots": {},
+      "modifiers": [],
+      "eventBindings": {}
+    },
+    "back-to-list": {
+      "id": "back-to-list",
+      "componentId": "m3/button",
+      "properties": {
+        "style": {
+          "type": "enum",
+          "value": "filled"
+        }
+      },
+      "slots": {
+        "content": [
+          "back-to-list-label"
+        ]
+      },
+      "modifiers": [],
+      "eventBindings": {}
+    }
+  },
+  "assets": {}
+}

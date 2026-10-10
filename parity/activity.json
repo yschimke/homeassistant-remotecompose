@@ -1,11 +1,139 @@
 {
   "schema": "compose-preview-activity/v1",
-  "generatedAt": "2026-10-05T14:21:34.168Z",
+  "generatedAt": "2026-10-10T17:15:39.926Z",
   "windowDays": 30,
   "code": {
     "repo": "yschimke/homeassistant-remotecompose",
     "ref": "main",
     "events": [
+      {
+        "sha": "1c3118453d406f92cfd6d825dddacb1d6635ba81",
+        "subject": "ci: retire CMP Wasm exceptions that now render (#709)",
+        "at": "2026-10-10T17:42:18+01:00",
+        "author": "Yuri Schimke",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "63bbc66be727b8b729d3ac3f1b4a5b893ec3871d",
+        "subject": "ci: pin dashboard publication to merged shared workflows (#708)",
+        "at": "2026-10-10T17:13:11+01:00",
+        "author": "Yuri Schimke",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "b7ff51e62cc4bb9cac875edfcb78c0babc200ce3",
+        "subject": "feat: add adaptive dashboard UID references to the existing catalog (#704)",
+        "at": "2026-10-10T16:51:34+01:00",
+        "author": "Yuri Schimke",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "fbe50a2888a8ac1c5e5c7a537031c21b7e491e32",
+        "subject": "ci: install the published Android 37.0 platform (#707)",
+        "at": "2026-10-10T16:37:00+01:00",
+        "author": "Yuri Schimke",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "3d73cc68782b8892ab627950445b12f14731742a",
+        "subject": "chore(deps): update yschimke/compose-ai-tools action to v2.42.0 (#706)",
+        "at": "2026-10-10T16:31:47+01:00",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "81f6043b733ca35d67b89d0267fde56b7d162ab1",
+        "subject": "feat: add an opt-in typed UI builder catalog for Home Assistant (#705)",
+        "at": "2026-10-10T16:11:12+01:00",
+        "author": "Yuri Schimke",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "ff8944a81e735dfe41b2fd336b7ae67b4a56bad3",
+        "subject": "fix: restore colors in native iOS cards (#669)",
+        "at": "2026-10-10T15:15:45+01:00",
+        "author": "Yuri Schimke",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "5ea0ba7e8fe812d23667ff7aef50b1b4ee22f5b6",
+        "subject": "feat: add adaptive dashboard browser UID pilot (#700)",
+        "at": "2026-10-10T15:12:36+01:00",
+        "author": "Yuri Schimke",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "e7b7eae467426bbe97dda7319b585b5508600af7",
+        "subject": "docs: require explicit user requests for merging PRs (#703)",
+        "at": "2026-10-10T15:12:22+01:00",
+        "author": "Yuri Schimke",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "de7106357e1195194bbcde9c2881d623154e4327",
+        "subject": "chore(deps): update yschimke/compose-ai-tools action to v2.41.0 (#702)",
+        "at": "2026-10-10T12:50:45Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "55e30bb9ece4ffae7a287ae5c5ba133a04d14964",
+        "subject": "fix(deps): update compose-ai-tools (#699)",
+        "at": "2026-10-10T12:18:45Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "34b59e446ee11ccc10caee1fc5e2f72740eb7fb3",
+        "subject": "fix(deps): update compose-ai-tools (#698)",
+        "at": "2026-10-10T11:02:10Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "f49ddd3cdf24144c97b399a7d501b78fdbc60c27",
+        "subject": "chore(deps): update compose-ai-tools (#696)",
+        "at": "2026-10-10T04:50:10Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "9b50a142d68816ef554e7a2e713f97c52398853b",
+        "subject": "fix(deps): update dependency ee.schimke.composeai:data-render-core to v3.23.1 (#697)",
+        "at": "2026-10-10T01:02:52Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "e77253367aa43c9aa339c26e782f312dfff47c32",
+        "subject": "fix(deps): update remote-compose (#687)",
+        "at": "2026-10-10T00:43:21+01:00",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "c5ce435fb3fab16bb5308a3fdd9c5ece294c0ff8",
+        "subject": "chore(deps): update compose-ai-tools (#672)",
+        "at": "2026-10-10T00:43:18+01:00",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
       {
         "sha": "ed8d0c6946be839109c509aa7c926e8ed5022396",
         "subject": "fix(deps): update dependency ch.qos.logback:logback-classic to v1.6.5 (#695)",
@@ -274,142 +402,6 @@
         "sha": "38b25636104a90e324e3a31db9886d95808acf61",
         "subject": "fix(deps): update dependency ee.schimke.composeai:data-render-core to v2.16.0 (#655)",
         "at": "2026-09-11T03:32:50Z",
-        "author": "renovate[bot]",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "0f44ee4c9b1eaf81a79cb21a07563ed0e3c3b400",
-        "subject": "fix(deps): update dependency ee.schimke.composeai:data-render-core to v2.15.0 (#654)",
-        "at": "2026-09-10T15:59:05Z",
-        "author": "renovate[bot]",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "9c031fbfa43c0d1b30ea3acd72f6bb3398373f4c",
-        "subject": "fix(deps): update dependency ee.schimke.composeai:data-render-core to v2.14.0 (#653)",
-        "at": "2026-09-09T23:26:34Z",
-        "author": "renovate[bot]",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "699cdc95c28cf3961e019363554a606c29d839b0",
-        "subject": "fix(deps): update dependency ee.schimke.composeai:data-render-core to v2.11.0 (#652)",
-        "at": "2026-09-07T12:23:18Z",
-        "author": "renovate[bot]",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "d6d871da5bf3927dc51f846d8d12b621d1fc3632",
-        "subject": "fix(deps): update dependency org.jetbrains:markdown to v0.7.12 (#649)",
-        "at": "2026-09-07T01:16:44Z",
-        "author": "renovate[bot]",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "31d70a3f7be03a01b8cd3ce9076b1b72b824adb7",
-        "subject": "chore(deps): update agp to v9.4.0 (#650)",
-        "at": "2026-09-07T00:52:36Z",
-        "author": "renovate[bot]",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "fc0769924918b7918e7d57c34e22d081a9239e14",
-        "subject": "fix(deps): update coil to v3.6.2 (#651)",
-        "at": "2026-09-07T00:52:33Z",
-        "author": "renovate[bot]",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "77179fb2c3a9bae9dc441b4627bf1129b0fb24e8",
-        "subject": "chore(deps): update anthropics/claude-code-action action to v1.0.217 (#648)",
-        "at": "2026-09-06T23:23:27Z",
-        "author": "renovate[bot]",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "924fc78895b85601693c8dc7909b00b38ffc81f0",
-        "subject": "fix(deps): update dependency ee.schimke.composeai:data-render-core to v2.10.0 (#647)",
-        "at": "2026-09-06T22:59:31Z",
-        "author": "renovate[bot]",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "e2cb71538120938e29da665346e6addedea12ac7",
-        "subject": "fix(deps): update dependency ee.schimke.composeai:data-render-core to v2.9.0 (#646)",
-        "at": "2026-09-06T14:10:18Z",
-        "author": "renovate[bot]",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "c5e07f0487b3c9b6a39c48db42e8d15be136e8e9",
-        "subject": "fix(deps): update compose-ai-tools to v1.85.0 (#645)",
-        "at": "2026-09-06T13:46:23Z",
-        "author": "renovate[bot]",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "ce9f2e5065ea3489b925d73f53d2987b35d4c404",
-        "subject": "fix(deps): update compose-ai-tools to v1.84.0 (#644)",
-        "at": "2026-09-06T10:28:18Z",
-        "author": "renovate[bot]",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "df411b80a6e28e004aa16213144c49565302b069",
-        "subject": "fix(deps): update compose-ai-tools to v1.83.0 (#643)",
-        "at": "2026-09-06T05:36:24Z",
-        "author": "renovate[bot]",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "8a422d8d760b69ccb35224dbceb7e7b7ba920489",
-        "subject": "feat: front the catalog with the full dashboard stack (#642)",
-        "at": "2026-09-05T22:37:41+01:00",
-        "author": "Yuri Schimke",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "75d6e19f8e57baa16e7a313bbd50f52414a38b47",
-        "subject": "fix(deps): update dependency ee.schimke.composeai:data-render-core to v2.8.0 (#641)",
-        "at": "2026-09-05T20:50:44Z",
-        "author": "renovate[bot]",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "55834ad49d64906c0221bdec86f74ee77a2f6f4d",
-        "subject": "fix(deps): update compose-ai-tools to v1.82.0 (#639)",
-        "at": "2026-09-05T19:35:08Z",
-        "author": "renovate[bot]",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "6e776ab10d0dfe4e53ebaff36ac7cb0aa5016776",
-        "subject": "fix(deps): update dependency ee.schimke.composeai:data-render-core to v2.7.0 (#640)",
-        "at": "2026-09-05T19:14:14Z",
-        "author": "renovate[bot]",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "f9a15fcaa39d8c500911cdb4f3c2b3421ff20eab",
-        "subject": "fix(deps): update compose-ai-tools to v1.81.0 (#638)",
-        "at": "2026-09-05T18:50:21Z",
         "author": "renovate[bot]",
         "previewIds": [],
         "components": []
