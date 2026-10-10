@@ -132,25 +132,10 @@ jobs:
       # has meaning when `split-per-preview` is set. Ported from yschimke/meshcore-mobile#461.
       split-per-preview: false
       allow-incomplete: ${{ github.event_name == 'workflow_dispatch' && inputs.allow_incomplete || false }}
-      # The CMP/Wasm player lane — the fifth column, and the one that made
-      # /remote-m3/compare a five-player page while this catalog had one. Unlike the embedded and
-      # cmp-jvm lanes (default-on upstream, and tolerant: a dead harness drops its column and the
-      # render still publishes) this one is a GATE. When it is on, `:rc-player-wasm:wasmPlayerDist`
-      # must build and every ir/*.rc must render inside the first-frame budgets — 10s cold, 5s warm
-      # — or the step fails and NOTHING publishes. A failure leaves the delivery branch on its last
-      # good commit, so the served catalog goes stale rather than broken, and the run goes red.
-      #
-      # Entered with no allowlist on purpose, and run #60 is what that bought: the lane named its
-      # four failures before the gate stopped publication, so the exceptions below are written
-      # against observed ids rather than guesses. Two causes, not four —
-      # `AlarmPanel_{Dark,Light}` need LAYOUT_STATE (opcode 217), which
-      # `rc-operations.manifest` already lists as unsupported, and
-      # `PictureEntity_AppMode_{Dark,Light}` carry a URL-encoded bitmap the CMP player declines
-      # without an image host. Both are gaps the player documents about itself; each entry carries
-      # its own expiry so it has to be re-argued rather than inherited.
-      #
-      # The gate is otherwise comfortable: 118/122 rendered, cold first frame 919 ms against a
-      # 10s budget and warm 890 ms against 5s, so the budgets are nowhere near binding.
+      # Require every Remote Compose document to render in CMP/Wasm before publication.
+      # Pixel differences and first-frame timings remain visible in the evidence report.
+      # Run 38064057450 rendered all 122 documents, including all four formerly excepted
+      # AlarmPanel and PictureEntity_AppMode cases, so the temporary allowlist is empty.
       rc-cmp-wasm-lane: true
       rc-cmp-wasm-allowlist: rc-cmp-wasm-allowlist.json
       # Generated delivery branch — attributed to the repo owner, not a bot.
