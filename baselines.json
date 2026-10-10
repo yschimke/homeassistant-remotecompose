@@ -1660,7 +1660,7 @@
     "functionName": "DashboardNetworksMobile",
     "module": "previews",
     "renderBasename": "DashboardNetworksMobile_dashboard_networks_mobile-d5ee47c2.png",
-    "sha256": "f6fee0476c65619bd33bf49f7d02b4b5502ff42a610c6e205d0ea0160abc668a",
+    "sha256": "36e120ab130c8c44c2f67c90b127a92a797d4a494cc1ab7d07dacfba59581e77",
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/DashboardPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.DashboardPreviewsKt.DashboardNetworksTablet_dashboard networks \u2014 tablet": {
@@ -2148,7 +2148,7 @@
     "functionName": "Sizing_WidthPinnedHeightAdaptive",
     "module": "previews",
     "renderBasename": "Sizing_WidthPinnedHeightAdaptive_sizing_width_pinned_height_adaptive-e082424e.png",
-    "sha256": "e600c3abd4dffbc048b20bc4eeaddb6111771a6960632fb0702cec17d4b0e570",
+    "sha256": "1312c5e504ad4f01dcf9a49910bedeee044ecb23ab6e7b708b3fa11f9f642c01",
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/SizingExperimentPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.ThemePreviewsKt.Theme_Home_Dark_theme_ Home (dark)": {
