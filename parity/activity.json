@@ -1,11 +1,19 @@
 {
   "schema": "compose-preview-activity/v1",
-  "generatedAt": "2026-10-10T17:15:39.926Z",
+  "generatedAt": "2026-10-10T17:34:19.245Z",
   "windowDays": 30,
   "code": {
     "repo": "yschimke/homeassistant-remotecompose",
     "ref": "main",
     "events": [
+      {
+        "sha": "5923e55a0e4782d3de6a538515f05ceefff6957a",
+        "subject": "feat: add shared Terrazzo UI with desktop and Wasm hosts (#701)",
+        "at": "2026-10-10T18:10:34+01:00",
+        "author": "Yuri Schimke",
+        "previewIds": [],
+        "components": []
+      },
       {
         "sha": "1c3118453d406f92cfd6d825dddacb1d6635ba81",
         "subject": "ci: retire CMP Wasm exceptions that now render (#709)",
