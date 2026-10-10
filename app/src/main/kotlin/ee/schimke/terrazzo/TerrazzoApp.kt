@@ -345,26 +345,17 @@ private fun AuthenticatedShell(
   // non-Dashboards screens follow their existing rules. Inside
   // DashboardsRoot another BackHandler routes view → picker; the
   // platform handles back at the picker (exits app).
-  BackHandler(enabled = screen != AppScreen.Dashboards) {
+  val navigateBack: () -> Unit = {
     when {
       screen == AppScreen.ChooseDashboards && selectionEntry == SelectionEntry.Signin -> Unit
-      screen == AppScreen.ChooseDashboards -> screen = AppScreen.Settings
-      screen == AppScreen.SyncDiagnostics -> screen = AppScreen.Settings
+      screen == AppScreen.ChooseDashboards || screen == AppScreen.SyncDiagnostics ->
+        screen = AppScreen.Settings
       else -> screen = AppScreen.Dashboards
     }
   }
+  BackHandler(enabled = screen != AppScreen.Dashboards, onBack = navigateBack)
 
-  TerrazzoNavigation(
-    screen,
-    onBack = {
-      when {
-        screen == AppScreen.ChooseDashboards && selectionEntry == SelectionEntry.Signin -> Unit
-        screen == AppScreen.ChooseDashboards || screen == AppScreen.SyncDiagnostics ->
-          screen = AppScreen.Settings
-        else -> screen = AppScreen.Dashboards
-      }
-    },
-  ) { destination ->
+  TerrazzoNavigation(screen, onBack = navigateBack) { destination ->
     when (destination) {
       AppScreen.Dashboards ->
         DashboardsRoot(

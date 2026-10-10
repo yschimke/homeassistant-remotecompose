@@ -1,7 +1,6 @@
 package ee.schimke.terrazzo.shared
 
-import androidx.compose.material3.OutlinedCard
-import androidx.compose.material3.Text
+import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.remember
@@ -41,9 +40,7 @@ fun RemoteComposeCard(
   }
   val document = decoded.getOrNull()
   if (document == null) {
-    OutlinedCard(modifier) {
-      Text("This card needs playback capabilities unavailable on this platform.")
-    }
+    BasicText("This card needs playback capabilities unavailable on this platform.", modifier)
   } else {
     RcComposePlayer(
       document = document,

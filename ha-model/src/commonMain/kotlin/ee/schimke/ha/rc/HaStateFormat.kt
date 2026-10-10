@@ -29,7 +29,11 @@ private fun normalizeNumericValue(raw: String): String? {
     Regex("^([+-]?)(\\d*)(?:\\.(\\d*))?(?:[eE]([+-]?\\d+))?$").matchEntire(raw) ?: return null
   val integer = match.groupValues[2]
   val fraction = match.groupValues[3]
-  val exponent = match.groupValues[4].takeIf { it.isNotEmpty() }?.toIntOrNull() ?: 0
+  val exponentText = match.groupValues[4]
+  val exponent = if (exponentText.isEmpty()) 0 else exponentText.toIntOrNull() ?: return null
+  // Finite Double underflow may still contain an arbitrarily large negative exponent.
+  if (exponent < -400) return "0"
+  if (exponent > 400) return null
   val digits = integer + fraction
   if (digits.isEmpty()) return null
   val decimalAt = integer.length + exponent

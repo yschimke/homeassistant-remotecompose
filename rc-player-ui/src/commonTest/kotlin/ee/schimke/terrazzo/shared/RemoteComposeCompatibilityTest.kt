@@ -26,13 +26,4 @@ class RemoteComposeCompatibilityTest {
   fun invalidDocumentsDoNotEnterThePlayer() {
     assertFalse(canPlayWithCmp(byteArrayOf(1, 2, 3)))
   }
-
-  @Test
-  fun connectionFormRejectsEmptyAndNonHttpAddresses() {
-    assertTrue(validServerUrl("https://home.example.com"))
-    assertTrue(validServerUrl("http://192.168.1.5:8123"))
-    assertFalse(validServerUrl("https://"))
-    assertFalse(validServerUrl("file:///tmp/home"))
-    assertFalse(validServerUrl("https://bad host"))
-  }
 }

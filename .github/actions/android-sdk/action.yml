@@ -1,0 +1,8 @@
+name: Install Android SDK 37.1
+description: Install the platform required by the current Compose artifacts.
+runs:
+  using: composite
+  steps:
+    - name: Install compile platform and build tools
+      shell: bash
+      run: sdkmanager "platforms;android-37.1" "build-tools;37.0.0" >/dev/null

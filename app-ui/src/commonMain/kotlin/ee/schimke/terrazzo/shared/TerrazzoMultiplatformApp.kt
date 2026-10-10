@@ -23,12 +23,10 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.ui.NavDisplay
-import ee.schimke.composeai.rcplayer.runtime.RcHostActionValue
-import ee.schimke.composeai.rcplayer.runtime.RcPlayerEvent
-import ee.schimke.ha.client.AddonClient
 import ee.schimke.ha.client.DashboardSummary
 import ee.schimke.ha.client.HaClient
 import ee.schimke.ha.client.HaConfig
+import ee.schimke.ha.client.stateSnapshots
 import ee.schimke.ha.model.*
 import ee.schimke.ha.rc.formatState
 import ee.schimke.terrazzo.dashboard.DashboardListState
@@ -37,6 +35,8 @@ import ee.schimke.terrazzo.dashboard.DashboardSwitcher
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.*
@@ -47,18 +47,10 @@ private data object SettingsDestination : NavKey
 
 private data class DashboardDestination(val path: String?) : NavKey
 
-private class AppConnection(val config: HaConfig, addonUrl: String) {
+private class AppConnection(val config: HaConfig) {
   val client = HaClient(config)
-  val addon =
-    addonUrl
-      .trim()
-      .takeIf { it.isNotEmpty() }
-      ?.let { AddonClient(it.trimEnd('/'), config.accessToken) }
 
-  suspend fun close() {
-    addon?.close()
-    client.close()
-  }
+  suspend fun close() = client.close()
 }
 
 /** The same dashboard-first application runs on Android, desktop and Wasm. */
@@ -73,11 +65,11 @@ fun TerrazzoMultiplatformApp() {
     val active = connection
     Surface(Modifier.fillMaxSize()) {
       if (active == null) {
-        ConnectionScreen(busy, error) { url, token, addon ->
+        ConnectionScreen(busy, error) { url, token ->
           scope.launch {
             busy = true
             error = null
-            val candidate = AppConnection(HaConfig(url.trimEnd('/'), token), addon)
+            val candidate = AppConnection(HaConfig(url.trimEnd('/'), token))
             try {
               candidate.client.connect()
               connection = candidate
@@ -112,12 +104,11 @@ fun TerrazzoMultiplatformApp() {
 private fun ConnectionScreen(
   busy: Boolean,
   error: String?,
-  connect: (String, String, String) -> Unit,
+  connect: (String, String) -> Unit,
 ) {
   var url by rememberSaveable { mutableStateOf("") }
   // Credentials intentionally never enter saved state or browser localStorage.
   var token by remember { mutableStateOf("") }
-  var addon by rememberSaveable { mutableStateOf("") }
   Scaffold(topBar = { TopAppBar(title = { Text("Terrazzo") }) }) { padding ->
     Column(
       Modifier.padding(padding)
@@ -146,26 +137,14 @@ private fun ConnectionScreen(
         enabled = !busy,
         modifier = Modifier.fillMaxWidth(),
       )
-      OutlinedTextField(
-        addon,
-        { addon = it },
-        label = { Text("Remote Compose add-on URL (optional)") },
-        singleLine = true,
-        enabled = !busy,
-        modifier = Modifier.fillMaxWidth(),
-      )
       Text(
-        "Create a long-lived access token in your Home Assistant profile.",
+        "Create a long-lived access token in your Home Assistant profile. Use an HTTPS server address.",
         style = MaterialTheme.typography.bodySmall,
       )
       error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
       Button(
-        onClick = { connect(url.trim(), token.trim(), addon.trim()) },
-        enabled =
-          !busy &&
-            validServerUrl(url) &&
-            token.isNotBlank() &&
-            (addon.isBlank() || validServerUrl(addon)),
+        onClick = { connect(url.trim(), token.trim()) },
+        enabled = !busy && validServerUrl(url) && token.isNotBlank(),
       ) {
         Text(if (busy) "Connecting…" else "Connect")
       }
@@ -173,17 +152,68 @@ private fun ConnectionScreen(
   }
 }
 
-internal fun validServerUrl(value: String): Boolean =
-  value.trim().let {
-    (it.startsWith("https://") || it.startsWith("http://")) &&
-      it.substringAfter("://").isNotBlank() &&
-      !it.any(Char::isWhitespace)
-  }
+internal fun validServerUrl(value: String): Boolean = runCatching {
+  val trimmed = value.trim()
+  if (
+    !trimmed.startsWith("https://") ||
+      trimmed
+        .substringAfter("://")
+        .substringBefore('/')
+        .substringBefore('?')
+        .substringBefore('#')
+        .isBlank()
+  )
+    return@runCatching false
+  val url = io.ktor.http.Url(trimmed)
+  url.protocol == io.ktor.http.URLProtocol.HTTPS &&
+    url.host.isNotBlank() &&
+    url.user == null &&
+    url.password == null &&
+    url.fragment.isEmpty() &&
+    url.encodedQuery.isEmpty() &&
+    !value.any(Char::isWhitespace)
+}
+  .getOrDefault(false)
 
 @Composable
 private fun DashboardShell(connection: AppConnection, onSignOut: () -> Unit) {
   var list by remember { mutableStateOf<DashboardListState>(DashboardListState.Loading) }
   val stack = remember { mutableStateListOf<NavKey>(DashboardDestination(null)) }
+  var snapshot by remember(connection) { mutableStateOf(HaSnapshot()) }
+  var connectionError by remember(connection) { mutableStateOf<String?>(null) }
+  // One subscription per connection, surviving navigation between dashboard views.
+  LaunchedEffect(connection) {
+    while (true) {
+      connection.client.state.first { it != HaClient.ConnectionState.Ready }
+      try {
+        connection.client.connect()
+      } catch (e: CancellationException) {
+        throw e
+      } catch (e: Exception) {
+        connectionError = "Connection lost. Retrying…"
+        delay(2_000)
+      }
+    }
+  }
+  LaunchedEffect(connection) {
+    connection.client.state.collectLatest { state ->
+      if (state == HaClient.ConnectionState.Ready) {
+        try {
+          val events = connection.client.subscribeEvents("state_changed")
+          stateSnapshots(events) { connection.client.snapshot() }
+            .collect {
+              snapshot = it
+              connectionError = null
+            }
+        } catch (e: CancellationException) {
+          throw e
+        } catch (e: Exception) {
+          connectionError = "Connection lost. Retrying…"
+          connection.client.disconnect()
+        }
+      } else connectionError = "Connection lost. Retrying…"
+    }
+  }
   LaunchedEffect(connection) {
     try {
       val fetched = connection.client.listDashboards()
@@ -251,7 +281,13 @@ private fun DashboardShell(connection: AppConnection, onSignOut: () -> Unit) {
                 )
               }
             ) { padding ->
-              LiveDashboard(connection, route.path, Modifier.fillMaxSize().padding(padding))
+              LiveDashboard(
+                connection,
+                route.path,
+                snapshot,
+                connectionError,
+                Modifier.fillMaxSize().padding(padding),
+              )
             }
           }
         },
@@ -260,24 +296,28 @@ private fun DashboardShell(connection: AppConnection, onSignOut: () -> Unit) {
 }
 
 @Composable
-private fun LiveDashboard(connection: AppConnection, path: String?, modifier: Modifier) {
+private fun LiveDashboard(
+  connection: AppConnection,
+  path: String?,
+  snapshot: HaSnapshot,
+  connectionError: String?,
+  modifier: Modifier,
+) {
   var dashboard by remember(connection, path) { mutableStateOf<Dashboard?>(null) }
-  var snapshot by remember(connection, path) { mutableStateOf(HaSnapshot()) }
   var error by remember(connection, path) { mutableStateOf<String?>(null) }
   val scope = rememberCoroutineScope()
   LaunchedEffect(connection, path) {
-    while (true) {
-      try {
-        connection.client.connect()
-        if (dashboard == null) dashboard = connection.client.fetchDashboard(path)
-        snapshot = connection.client.snapshot()
-        error = null
-      } catch (e: CancellationException) {
-        throw e
-      } catch (e: Exception) {
-        error = "Connection lost. Retrying…"
+    connection.client.state.collectLatest { state ->
+      if (state == HaClient.ConnectionState.Ready && dashboard == null) {
+        try {
+          dashboard = connection.client.fetchDashboard(path)
+          error = null
+        } catch (e: CancellationException) {
+          throw e
+        } catch (e: Exception) {
+          error = "Could not load this dashboard. Reconnect to retry."
+        }
       }
-      delay(2_000)
     }
   }
   fun dispatch(payload: String) {
@@ -293,12 +333,22 @@ private fun LiveDashboard(connection: AppConnection, path: String?, modifier: Mo
   }
   val current = dashboard
   Column(modifier) {
-    error?.let { Text(it, Modifier.padding(16.dp), color = MaterialTheme.colorScheme.error) }
+    (error ?: connectionError)?.let {
+      Text(it, Modifier.padding(16.dp), color = MaterialTheme.colorScheme.error)
+    }
     if (current == null) {
       CircularProgressIndicator(Modifier.padding(24.dp))
     } else
-      DashboardContent(current, path, snapshot, Modifier.weight(1f)) { key, card ->
-        AddonOrNativeCard(connection, key, card, snapshot, ::dispatch)
+      DashboardContent(current, path, snapshot, Modifier.weight(1f)) { _, card ->
+        NativeCard(card, snapshot) { entityId ->
+          dispatch(
+            buildJsonObject {
+              put("type", "ee.schimke.ha.rc.components.HaAction.Toggle")
+              put("entityId", entityId)
+            }
+              .toString()
+          )
+        }
       }
   }
 }
@@ -356,49 +406,6 @@ fun DashboardContent(
           }
         }
       }
-    }
-  }
-}
-
-@Composable
-private fun AddonOrNativeCard(
-  connection: AppConnection,
-  key: CardKey,
-  card: CardConfig,
-  snapshot: HaSnapshot,
-  dispatch: (String) -> Unit,
-) {
-  var bytes by remember(connection, key) { mutableStateOf<ByteArray?>(null) }
-  // Refresh the document when any input snapshot changes, including structural/baked content.
-  LaunchedEffect(connection, key, snapshot) {
-    bytes =
-      connection.addon?.fetchCardBytes(key, CardSize(640, 400, 320), ClientProfile.Phone)?.bytes
-  }
-  val document = bytes
-  if (document != null && canPlayWithCmp(document)) {
-    RemoteComposeCard(
-      document,
-      modifier = Modifier.fillMaxWidth().heightIn(min = 80.dp, max = 480.dp),
-      onEvent = { event ->
-        when (event) {
-          is RcPlayerEvent.HostNamedAction ->
-            if (event.name == "ha") {
-              (event.value as? RcHostActionValue.TextValue)?.value?.let(dispatch)
-            }
-          is RcPlayerEvent.HostActionMetadata -> dispatch(event.metadata)
-          else -> Unit
-        }
-      },
-    )
-  } else {
-    NativeCard(card, snapshot) { entityId ->
-      dispatch(
-        buildJsonObject {
-          put("type", "ee.schimke.ha.rc.components.HaAction.Toggle")
-          put("entityId", entityId)
-        }
-          .toString()
-      )
     }
   }
 }
@@ -474,7 +481,7 @@ private fun NativeCard(card: CardConfig, snapshot: HaSnapshot, toggle: (String) 
           )
         }
       } else {
-        Text("Connect the Remote Compose add-on to display this card.")
+        Text("This card type is not supported on desktop or web yet.")
       }
     }
   }

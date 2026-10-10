@@ -1,5 +1,8 @@
 package ee.schimke.terrazzo.shared
 
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.togetherWith
 import androidx.compose.runtime.Composable
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
@@ -26,6 +29,9 @@ fun TerrazzoNavigation(
   NavDisplay(
     backStack = listOf(screen),
     onBack = onBack,
+    transitionSpec = { EnterTransition.None togetherWith ExitTransition.None },
+    popTransitionSpec = { EnterTransition.None togetherWith ExitTransition.None },
+    predictivePopTransitionSpec = { EnterTransition.None togetherWith ExitTransition.None },
     entryProvider = entryProvider { entry<AppScreen> { content(it) } },
   )
 }

@@ -20,6 +20,12 @@ class LiveBindingsMultiplatformTest {
         "1e3" to "1000",
         "21.500" to "21.5",
         "21.xx" to "21",
+        "NaN" to "NaN",
+        "Infinity" to "Infinity",
+        "-Infinity" to "-Infinity",
+        "1e-99999999999" to "1e-99999999999",
+        "1e-2147483648" to "0",
+        "1e99999999999" to "1e99999999999",
       )
     cases.forEach { (input, expected) ->
       assertEquals(expected, formatValueWithUnit(input, null), input)

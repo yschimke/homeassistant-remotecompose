@@ -19,7 +19,6 @@ android {
 }
 
 dependencies {
-  implementation(project(":app-ui"))
   api(project(":rc-components"))
   implementation(project(":ha-model"))
   implementation(project(":ha-client"))

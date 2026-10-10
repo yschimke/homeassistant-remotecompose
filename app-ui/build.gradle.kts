@@ -38,12 +38,19 @@ kotlin {
       implementation(libs.cmp.navigation3.ui)
       implementation(libs.cmp.adaptive)
       implementation(libs.cmp.navigation.suite)
-      api(libs.rc.player.compose)
+      implementation(project(":rc-player-ui"))
       implementation(libs.kotlinx.coroutines.core)
-      implementation("org.jetbrains.compose.material:material-icons-extended:1.7.3")
+      implementation(libs.ktor.client.core)
+      implementation(libs.cmp.material.icons.core)
     }
-    jvmMain.dependencies { implementation(compose.desktop.currentOs) }
-    commonTest.dependencies { implementation(libs.kotlin.test) }
+    jvmMain.dependencies {
+      implementation(compose.desktop.currentOs)
+      implementation(libs.kotlinx.coroutines.swing)
+    }
+    commonTest.dependencies {
+      implementation(libs.kotlin.test)
+      implementation(libs.kotlinx.coroutines.test)
+    }
   }
 }
 

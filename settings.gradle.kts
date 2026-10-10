@@ -79,4 +79,5 @@ include(
   ":integration",
   ":addon-server",
   ":app-ui",
+  ":rc-player-ui",
 )
