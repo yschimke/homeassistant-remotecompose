@@ -1,0 +1,80 @@
+name: Typed component catalog
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'ui-builder-catalog/**'
+      - 'scripts/validate-typed-catalog.sh'
+      - '.github/workflows/typed-catalog.yml'
+      - '**/*.gradle.kts'
+      - 'gradle/**'
+      - 'rc-components-ui/**'
+      - 'rc-components/**'
+  push:
+    branches: [main]
+    paths:
+      - 'ui-builder-catalog/**'
+      - 'scripts/validate-typed-catalog.sh'
+      - '.github/workflows/typed-catalog.yml'
+      - '**/*.gradle.kts'
+      - 'gradle/**'
+      - 'rc-components-ui/**'
+      - 'rc-components/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  catalog:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    defaults:
+      run:
+        working-directory: homeassistant-remotecompose
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          path: homeassistant-remotecompose
+          persist-credentials: false
+      # Coordinated, immutable sources until the typed API and renderer SDK are released.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: yschimke/compose-ai-tools
+          ref: 4ec97f2a5ba97a9db325be13f442054374cadc6e
+          path: compose-ai-tools
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: yschimke/compose-ui-builder
+          ref: f77cdd37dab838991d0ccb52cb71b241f85e6c97
+          path: compose-ui-builder
+          persist-credentials: false
+      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          distribution: temurin
+          java-version: |
+            21
+            17
+      - uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
+        with:
+          cache-provider: basic
+      - name: Install Android platform used by the app
+        uses: ./homeassistant-remotecompose/.github/actions/android-sdk
+      - name: Generate, render and validate in a separate catalog consumer
+        run: scripts/validate-typed-catalog.sh "$GITHUB_WORKSPACE/compose-ai-tools" "$GITHUB_WORKSPACE/compose-ui-builder"
+      - if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: homeassistant-remotecompose-typed-catalog
+          path: |
+            homeassistant-remotecompose/ui-builder-catalog/build/catalog
+            homeassistant-remotecompose/ui-builder-catalog/build/renders
+            homeassistant-remotecompose/ui-builder-catalog/build/test-results
+            compose-ui-builder/ui-builder-runtime/build/test-results/test
+          if-no-files-found: warn

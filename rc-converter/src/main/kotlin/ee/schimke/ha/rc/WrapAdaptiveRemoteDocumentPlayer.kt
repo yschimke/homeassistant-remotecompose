@@ -170,6 +170,9 @@ private fun primeAndMeasure(view: RemoteComposePlayer, maxWPx: Int, maxHPx: Int)
   val warmupBmp = Bitmap.createBitmap(warmupW, warmupH, Bitmap.Config.ARGB_8888)
   view.draw(Canvas(warmupBmp))
   warmupBmp.recycle()
+  // The initial draw can cache a partial layout at the full canvas height. Force a full
+  // document measure as well as clearing the Android View measurement caches.
+  view.document.document.invalidateMeasure()
   forceLayoutTree(view)
   view.measure(widthSpec, heightSpec)
 }

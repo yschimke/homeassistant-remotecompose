@@ -10,6 +10,7 @@ kotlin { jvmToolchain(21) }
 // This opt-in desktop specimen uses the native UID renderer's Material vocabulary.
 // It does not change the Android app's dependencies or branded theme.
 dependencies {
+  implementation(libs.kotlinx.serialization.json)
   implementation(libs.compose.multiplatform.ui.tooling.preview)
   implementation(compose.desktop.currentOs)
   implementation(libs.compose.multiplatform.material3)
@@ -26,6 +27,7 @@ tasks.register<JavaExec>("renderPilot") {
   description = "Render the independent app screen at every UID reference size and state."
   classpath = sourceSets["main"].runtimeClasspath
   mainClass = "ee.schimke.adaptivepilot.RenderPilotKt"
+  args(layout.projectDirectory.file("references.json").asFile.absolutePath)
   args(layout.buildDirectory.dir("pilot/previews").get().asFile.absolutePath)
   systemProperty("java.awt.headless", "true")
 }

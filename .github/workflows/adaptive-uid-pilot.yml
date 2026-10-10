@@ -8,15 +8,8 @@ on:
       - 'build-logic/**'
       - '*.gradle.kts'
       - '.github/workflows/adaptive-uid-*.yml'
-  push:
-    branches: [main]
-    paths:
-      - 'adaptive-uid-pilot/**'
-      - 'gradle/**'
-      - 'build-logic/**'
-      - '*.gradle.kts'
-      - '.github/workflows/adaptive-uid-*.yml'
   workflow_dispatch:
+  workflow_call:
 
 permissions:
   contents: read
@@ -25,14 +18,15 @@ concurrency:
   group: adaptive-uid-pilot-${{ github.ref }}
   cancel-in-progress: true
 
-# Shared setup: https://github.com/yschimke/design-parity/pull/538
-# Pin the landed reusable workflow revision.
+# Shared UID capture, comparison and prepared catalog export (merged main commit).
 jobs:
   parity:
-    uses: yschimke/design-parity/.github/workflows/uid-parity-reusable.yml@6efe154d9219ff0de9baea220b56ea026b820f9a
+    uses: yschimke/design-parity/.github/workflows/uid-parity-reusable.yml@9383dc22584ec32f04cd53dec692a201ca531f7c
     with:
+      export-catalog: true
       pilot-directory: adaptive-uid-pilot
       artifact-prefix: adaptive-uid
+      bundle-name: dashboards
       build-command: >-
         ./gradlew -PadaptiveUidPilot=true
         :adaptive-uid-pilot:ktfmtCheck
