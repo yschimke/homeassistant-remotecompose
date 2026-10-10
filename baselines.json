@@ -4,7 +4,7 @@
     "functionName": "CardFlashPreview",
     "module": "app",
     "renderBasename": "CardFlashPreview_Card_flash_on_data_change-44b71c2b.gif",
-    "sha256": "9f346f7453d464cbca124d145c9a4460116d891ffcfc0acb45a45237ecfc1c1f",
+    "sha256": "9025d87a673b4a86c47a2139e81679852d7b284e2e3407741fbf4b68781d6f61",
     "sourceFile": "src/debug/kotlin/ee/schimke/terrazzo/previews/CardDebugPreviews.kt"
   },
   "app/ee.schimke.terrazzo.previews.CardDebugPreviewsKt.DataGridOverlayPreview_Data grid overlay": {
@@ -492,7 +492,7 @@
     "functionName": "MainActivity",
     "module": "demo-app",
     "renderBasename": "activity__MainActivity.png",
-    "sha256": "0282cbf3cd57c2ed3a293d304c01c1384186017b56e98c833864883844646176",
+    "sha256": "0fe5ddb2767d5741b4ddc5d4e2aaaa8946aa9f4b939d2d402571917d6621e5f5",
     "sourceFile": null
   },
   "previews/ee.schimke.ha.previews.AnimationPreviewsKt.Gauge_Animation_Dark_gauge-anim (dark)": {
@@ -2332,7 +2332,7 @@
     "functionName": "TvMainActivity",
     "module": "tv",
     "renderBasename": "activity__TvMainActivity.png",
-    "sha256": "47afb72686b3d3ea85572b0656c2a75f62b98bbeecb836779b386bb395b6440f",
+    "sha256": "717edaf656d96b382786ac7ba28ccc63890477956384cbd0b47d854ed7a8c824",
     "sourceFile": null
   },
   "tv/ee.schimke.terrazzo.tv.ui.TvPreviewsKt.TvKioskPreview_Demo_TV_ kiosk (demo)": {
