@@ -1,0 +1,10 @@
+{
+  "schema": "compose-ui-builder-design-index/v1",
+  "designs": [
+    {
+      "id": "dashboards",
+      "title": "Home Assistant \u00b7 Dashboards",
+      "file": "dashboards.uid"
+    }
+  ]
+}

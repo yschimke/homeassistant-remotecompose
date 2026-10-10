@@ -1,0 +1,201 @@
+{
+  "schema": "compose-ui-builder/catalog-guidelines/v1",
+  "catalog": "m3-catalog",
+  "platform": "mobile",
+  "version": 1,
+  "about": "Adaptive phone and tablet design guidance from developer.android.com.",
+  "frames": [
+    {
+      "kind": "sized",
+      "label": "phone",
+      "widthDp": 412,
+      "heightDp": 915,
+      "description": "the design in a compact window, a phone in portrait, whatever size it was authored at."
+    },
+    {
+      "kind": "sized",
+      "label": "tablet",
+      "widthDp": 1280,
+      "heightDp": 800,
+      "description": "the same design in an expanded window, a tablet in landscape. Judge the adaptive rules by comparing it with the phone picture."
+    }
+  ],
+  "rules": [
+    {
+      "id": "mobile.adaptive.replace-not-stretch",
+      "kind": "visual",
+      "severity": "warning",
+      "guidance": "Instead of just stretching or shrinking UI elements in response to different window sizes, adaptive apps replace layout components and show or hide content.",
+      "check": "Comparing the phone and tablet pictures, does the tablet picture change the layout to use the extra width (a different navigation component, an extra pane, more columns, or content revealed) rather than showing the phone layout simply stretched wider? Answer not_applicable when the design is only a dialog or sheet.",
+      "source": "https://developer.android.com/develop/ui/compose/layouts/adaptive/get-started-with-adaptive-apps"
+    },
+    {
+      "id": "mobile.navigation.bar-on-compact",
+      "kind": "visual",
+      "severity": "warning",
+      "guidance": "The default behavior is to show a navigation bar if the width or height is compact or if the device is in tabletop posture, and a navigation rail for everything else.",
+      "check": "In the phone picture, if the screen offers top-level app destinations, are they shown in a bottom navigation bar (m3/navigation-bar) rather than a navigation rail or a permanently open drawer that takes width from the compact screen? Answer not_applicable when the screen has no top-level navigation.",
+      "source": "https://developer.android.com/develop/ui/compose/layouts/adaptive/build-adaptive-navigation"
+    },
+    {
+      "id": "mobile.navigation.rail-on-expanded",
+      "kind": "visual",
+      "severity": "warning",
+      "guidance": "Change UI components as the window size changes to take advantage of available display space. For example, swap the bottom navigation bar used on compact window sizes for a vertical navigation rail on medium and expanded windows.",
+      "check": "In the tablet picture, if the screen offers top-level app destinations, are they shown in a navigation rail or navigation drawer on the leading edge, rather than in a bottom navigation bar stretched across the full width? Answer not_applicable when the screen has no top-level navigation.",
+      "source": "https://developer.android.com/develop/ui/compose/layouts/adaptive/adaptive-dos-and-donts"
+    },
+    {
+      "id": "mobile.panes.compact-single-pane",
+      "kind": "visual",
+      "severity": "warning",
+      "guidance": "Compact sizes should stick to a one pane layout. Medium can use 1–2 pane layouts. Large and extra-large can use multiple pane layouts.",
+      "check": "In the phone picture, is the content shown as a single pane, with no two panes squeezed side by side into the compact width?",
+      "source": "https://developer.android.com/design/ui/mobile/guides/layout-and-content/adapt-layout"
+    },
+    {
+      "id": "mobile.panes.expanded-multi-pane",
+      "kind": "visual",
+      "severity": "info",
+      "guidance": "Create multi-pane layouts (where appropriate) to take advantage of large screen space.",
+      "check": "In the tablet picture, if the screen holds a collection with details, or main content with related supporting content, is it shown in two or more panes side by side rather than one pane filling the window? Answer not_applicable for a single focused task such as a form, a sign-in screen or a full-screen media view.",
+      "source": "https://developer.android.com/docs/quality-guidelines/adaptive-app-quality/tier-2"
+    },
+    {
+      "id": "mobile.canonical.list-detail",
+      "kind": "visual",
+      "severity": "warning",
+      "guidance": "Expanded-width displays accommodate both the list and detail at the same time. Medium- and compact-width displays show either the list or the detail, depending on user interaction with the app.",
+      "check": "If the design is a list of items that open to details (messages, contacts, files, settings), does the tablet picture show the list and the detail side by side while the phone picture shows only one of them? Answer not_applicable when the design is not a list-detail screen.",
+      "source": "https://developer.android.com/develop/ui/compose/layouts/adaptive/canonical-layouts"
+    },
+    {
+      "id": "mobile.canonical.list-detail-selection",
+      "kind": "visual",
+      "severity": "info",
+      "guidance": "The list and detail are shown together, and the list indicates that the item corresponding to the content in the detail pane is selected. If just the list pane was visible and the window widens to expanded, the list and a placeholder detail pane are shown together.",
+      "check": "In the tablet picture of a list-detail screen, does the list visibly mark the item whose details fill the detail pane, or, when nothing is selected, does the detail pane show a placeholder rather than being left blank? Answer not_applicable when the tablet picture shows no list-detail panes.",
+      "source": "https://developer.android.com/develop/ui/compose/layouts/adaptive/canonical-layouts"
+    },
+    {
+      "id": "mobile.canonical.supporting-pane-split",
+      "kind": "visual",
+      "severity": "info",
+      "guidance": "For medium width, split the display space equally between the main and supporting content. For expanded width, give 70% of the space to the main content, 30% to the supporting content.",
+      "check": "In the tablet picture, if the design shows main content beside a supporting pane, is the main content the wider pane (roughly 70% of the width) and the supporting pane the narrower one (roughly 30%)? Answer not_applicable when there is no supporting pane.",
+      "source": "https://developer.android.com/develop/ui/compose/layouts/adaptive/canonical-layouts"
+    },
+    {
+      "id": "mobile.canonical.feed-columns",
+      "kind": "visual",
+      "severity": "warning",
+      "guidance": "A feed layout supports displays of almost any size because the grid can adapt from a single, scrolling column to a multi-column scrolling feed of content.",
+      "check": "If the design is a feed or gallery of equivalent cards or tiles, does the tablet picture show more columns than the phone picture, rather than the same single column made wider? Answer not_applicable when the design is not a feed or gallery.",
+      "source": "https://developer.android.com/develop/ui/compose/layouts/adaptive/canonical-layouts"
+    },
+    {
+      "id": "mobile.canonical.feed-adaptive-grid",
+      "kind": "structure",
+      "severity": "info",
+      "guidance": "The key to an adaptive feed is the columns configuration. GridCells.Adaptive(minSize = 180.dp) creates a grid where each column is at least 180.dp wide. The grid then displays as many columns as can fit in the available space.",
+      "check": "If the design is a feed or gallery of equivalent items, is it built on a grid whose column count follows the available width (an adaptive or minimum-size column setting, or columns chosen per window size class) rather than a fixed column count or a plain layout/lazy-column? Answer not_applicable when the design is not a feed or gallery.",
+      "source": "https://developer.android.com/develop/ui/compose/layouts/adaptive/canonical-layouts"
+    },
+    {
+      "id": "mobile.layout.no-stretched-content",
+      "kind": "visual",
+      "severity": "warning",
+      "guidance": "Do set a max width on content and components to prevent stretching full width. Don't allow content to stretch full width.",
+      "check": "In the tablet picture, is the body content held to a sensible width (by a max width, panes or columns), rather than single-column cards, list rows or images stretched across the whole 1280dp window?",
+      "source": "https://developer.android.com/design/ui/mobile/guides/layout-and-content/adapt-layout"
+    },
+    {
+      "id": "mobile.text.line-length",
+      "kind": "visual",
+      "severity": "warning",
+      "guidance": "If you're not using content panes, don't just stretch UI elements to fill available display space. Long lines of text are difficult to read.",
+      "check": "In the tablet picture, are paragraphs of body text set in a column narrow enough to read comfortably, rather than running in long lines across most of the window width? Answer not_applicable when the design has no multi-line body text.",
+      "source": "https://developer.android.com/develop/ui/compose/layouts/adaptive/adaptive-dos-and-donts"
+    },
+    {
+      "id": "mobile.buttons.not-full-width-large",
+      "kind": "visual",
+      "severity": "warning",
+      "guidance": "Buttons are not full width on large screens.",
+      "check": "In the tablet picture, is every button sized to its label or to a constrained column or pane, with none stretched across the full width of the window?",
+      "source": "https://developer.android.com/docs/quality-guidelines/adaptive-app-quality/tier-2"
+    },
+    {
+      "id": "mobile.text-fields.not-full-width-large",
+      "kind": "visual",
+      "severity": "warning",
+      "guidance": "Text fields and boxes don't stretch to full width on large screens.",
+      "check": "In the tablet picture, are text fields and search boxes held to a bounded width, with none stretched across the full width of the window? Answer not_applicable when the design has no text input.",
+      "source": "https://developer.android.com/docs/quality-guidelines/adaptive-app-quality/tier-2"
+    },
+    {
+      "id": "mobile.layout.fill-max-width-bounded",
+      "kind": "structure",
+      "severity": "info",
+      "guidance": "Stretched buttons look poorly designed. If you use Modifier.fillMaxWidth, don't assume that's the right behavior for all display sizes.",
+      "check": "Where buttons, text fields, cards or body text use fillMaxWidth, is that width bounded on wide windows, by a max width (widthIn) on them or on an enclosing column, or by a pane or grid cell they sit in? Answer not_applicable when nothing uses fillMaxWidth.",
+      "source": "https://developer.android.com/develop/ui/compose/layouts/adaptive/adaptive-dos-and-donts"
+    },
+    {
+      "id": "mobile.sheets.max-width",
+      "kind": "visual",
+      "severity": "warning",
+      "guidance": "Bottom sheets are not full width on large screens. (Apply a maximum width to avoid stretching.) Allow a component to change its presentation. For example, a bottom sheet can become a side sheet at larger sizes.",
+      "check": "In the tablet picture, if the design shows a bottom sheet, is it held to a maximum width (or presented as a side sheet) rather than spanning the full window width? Answer not_applicable when there is no sheet.",
+      "source": "https://developer.android.com/docs/quality-guidelines/adaptive-app-quality/tier-2"
+    },
+    {
+      "id": "mobile.dialogs.keep-context",
+      "kind": "visual",
+      "severity": "warning",
+      "guidance": "Small edit menus or modals don't cover the entire screen and maintain context for the user as much as possible.",
+      "check": "In the tablet picture, does every dialog, menu or small modal appear as a bounded surface with the screen behind it still visible, rather than covering the entire window? Answer not_applicable when the design has no dialog, menu or modal.",
+      "source": "https://developer.android.com/docs/quality-guidelines/adaptive-app-quality/tier-2"
+    },
+    {
+      "id": "mobile.touch-target-48dp",
+      "kind": "structure",
+      "severity": "warning",
+      "guidance": "Ensure all touch targets are at least 48 dp, even if this extends past the UI element visual.",
+      "check": "Is every interactive element at least 48dp in both dimensions, or given a 48dp minimum interactive size, with no size, height or width modifier shrinking a clickable element's touch area below 48dp?",
+      "source": "https://developer.android.com/design/ui/mobile/guides/foundations/accessibility"
+    },
+    {
+      "id": "mobile.edge-to-edge.content-inset",
+      "kind": "visual",
+      "severity": "warning",
+      "guidance": "Avoid adding tap gestures or drag targets under system insets; these conflict with edge-to-edge and gesture navigation. Don't place critical UI at the very edge of the screen.",
+      "check": "In both pictures, are text, icons and controls clear of the status bar, the navigation bar and any display cutout area, with nothing interactive placed under them or hard against the screen edge?",
+      "source": "https://developer.android.com/design/ui/mobile/guides/layout-and-content/edge-to-edge"
+    },
+    {
+      "id": "mobile.layout.margins-adapt",
+      "kind": "visual",
+      "severity": "info",
+      "guidance": "A standard margin value for compact sizing is 16 dp, but margins should adapt to accommodate larger screens. Your app's body content and actions must stay within and align with these margins.",
+      "check": "Comparing the phone and tablet pictures, does body content sit inside consistent side margins (about 16dp on the phone, wider on the tablet), with content and actions aligned to those margins rather than touching the window edge?",
+      "source": "https://developer.android.com/design/ui/mobile/guides/layout-and-content/content-structure"
+    },
+    {
+      "id": "mobile.type.sp-and-min-body",
+      "kind": "structure",
+      "severity": "warning",
+      "guidance": "To allow users to adjust the font size, specify font size in scalable pixels (sp). Don't make the body size any smaller than 12 sp. This guideline aligns with the Material typescale as a default.",
+      "check": "Is every text size taken from the theme's type scale or given in sp, with no body text set smaller than 12sp?",
+      "source": "https://developer.android.com/design/ui/mobile/guides/foundations/accessibility"
+    },
+    {
+      "id": "mobile.images.not-stretched",
+      "kind": "visual",
+      "severity": "info",
+      "guidance": "Images are displayed at a proper resolution and are not stretched or cropped.",
+      "check": "In the tablet picture, are images shown at their natural aspect ratio, not stretched, distorted or cropped to a thin strip by a container that grew wider than on the phone? Answer not_applicable when the design has no images.",
+      "source": "https://developer.android.com/docs/quality-guidelines/adaptive-app-quality/tier-2"
+    }
+  ]
+}

@@ -1,0 +1,40 @@
+name: Adaptive UID pilot
+
+on:
+  pull_request:
+    paths:
+      - 'adaptive-uid-pilot/**'
+      - 'gradle/**'
+      - 'build-logic/**'
+      - '*.gradle.kts'
+      - '.github/workflows/adaptive-uid-*.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'adaptive-uid-pilot/**'
+      - 'gradle/**'
+      - 'build-logic/**'
+      - '*.gradle.kts'
+      - '.github/workflows/adaptive-uid-*.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: adaptive-uid-pilot-${{ github.ref }}
+  cancel-in-progress: true
+
+# Shared setup: https://github.com/yschimke/design-parity/pull/538
+# Integration-test pin. Replace with the landed revision before merging this caller.
+jobs:
+  parity:
+    uses: yschimke/design-parity/.github/workflows/uid-parity-reusable.yml@60d3195ad29ed5d78813eb77ee557db93b9e6085
+    with:
+      pilot-directory: adaptive-uid-pilot
+      artifact-prefix: adaptive-uid
+      build-command: >-
+        ./gradlew -PadaptiveUidPilot=true
+        :adaptive-uid-pilot:ktfmtCheck
+        :adaptive-uid-pilot:test
+        :adaptive-uid-pilot:renderPilot
