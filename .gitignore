@@ -25,3 +25,7 @@ ios/**/*.xcodeproj/xcuserdata/
 
 # Staged desktop release installers.
 /_release-desktop/
+
+# GitHub Pages staging and browser evidence.
+/_site/
+/_wasm-test/

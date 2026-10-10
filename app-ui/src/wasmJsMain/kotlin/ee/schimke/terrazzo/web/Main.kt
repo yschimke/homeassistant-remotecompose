@@ -6,5 +6,7 @@ import ee.schimke.terrazzo.shared.TerrazzoMultiplatformApp
 
 @OptIn(ExperimentalComposeUiApi::class)
 fun main() {
-  ComposeViewport { TerrazzoMultiplatformApp() }
+  ComposeViewport(viewportContainerId = "app", configure = { enableBrowserWindowInsets = true }) {
+    TerrazzoMultiplatformApp()
+  }
 }
