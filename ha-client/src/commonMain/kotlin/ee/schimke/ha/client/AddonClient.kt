@@ -18,7 +18,9 @@ import io.ktor.client.statement.bodyAsBytes
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.encodeURLPathPart
 import io.ktor.http.isSuccess
+import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 
@@ -69,7 +71,7 @@ class AddonClient(
       }
     resp.status.isSuccess()
   }
-    .getOrElse { false }
+    .getOrElse { if (it is CancellationException) throw it else false }
 
   /** Wraps the add-on's `/v1/dashboards` listing. */
   suspend fun listDashboards(): JsonArray {
@@ -81,7 +83,7 @@ class AddonClient(
   /** Wraps `/v1/dashboards/{path}`. `null` path = the default dashboard. */
   suspend fun fetchDashboard(urlPath: String?): Dashboard {
     val pathSegment = urlPath ?: "_default"
-    val resp = http.get(url("/v1/dashboards/$pathSegment")) { authHeader() }
+    val resp = http.get(url("/v1/dashboards/${pathSegment.encodeURLPathPart()}")) { authHeader() }
     if (!resp.status.isSuccess()) error("fetchDashboard($pathSegment): ${resp.status}")
     return json.decodeFromString(Dashboard.serializer(), resp.bodyAsText())
   }
@@ -98,7 +100,7 @@ class AddonClient(
   suspend fun fetchCardBytes(card: CardKey, size: CardSize, profile: ClientProfile): CardBytes? =
     runCatching {
       val resp: HttpResponse =
-        http.get(url("/v1/cards/${card.toCacheKey()}.rc")) {
+        http.get(url("/v1/cards/${card.toCacheKey().encodeURLPathPart()}.rc")) {
           authHeader()
           parameter("w", size.widthPx)
           parameter("h", size.heightPx)
@@ -117,7 +119,7 @@ class AddonClient(
         else -> null
       }
     }
-    .getOrElse { null }
+    .getOrElse { if (it is CancellationException) throw it else null }
 
   fun close() {
     http.close()

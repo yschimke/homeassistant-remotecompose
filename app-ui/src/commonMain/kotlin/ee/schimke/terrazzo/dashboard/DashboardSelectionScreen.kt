@@ -36,20 +36,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import ee.schimke.ha.client.DashboardSummary
-import ee.schimke.terrazzo.core.prefs.PreferencesStore
 
 /**
  * Multi-select screen for the dashboards the user wants surfaced in the picker and the top-bar
- * switcher. Shown once during the signin flow (gated by [PreferencesStore.selectedDashboardUrls]
- * being `null`) and reachable from Settings → "Manage dashboards".
+ * switcher. Shown once during the signin flow (gated by [the saved dashboard selection] being
+ * `null`) and reachable from Settings → "Manage dashboards".
  *
  * Lists everything HA returned from `lovelace/dashboards/list` plus a synthetic entry for the
  * built-in default dashboard ([builtInDefaultDashboard]) — that one isn't in HA's response but is
  * always available at `urlPath = null`, and users invariably expect to be able to opt in to it.
  *
- * Selection is encoded for [PreferencesStore.setSelectedDashboardUrls]: the built-in default's
- * `null` urlPath maps to [PreferencesStore.DEFAULT_DASHBOARD_SENTINEL]; other entries store their
- * `urlPath` verbatim.
+ * Selection is encoded for [the host preferences]: the built-in default's `null` urlPath maps to
+ * [DEFAULT_DASHBOARD_SENTINEL]; other entries store their `urlPath` verbatim.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -107,11 +105,11 @@ fun List<DashboardSummary>.withBuiltInDefault(): List<DashboardSummary> {
 }
 
 /**
- * Encode a [DashboardSummary]'s `urlPath` for storage in [PreferencesStore.selectedDashboardUrls].
- * The built-in default's `null` becomes [PreferencesStore.DEFAULT_DASHBOARD_SENTINEL]; every other
- * dashboard stores its `urlPath` verbatim.
+ * Encode a [DashboardSummary]'s `urlPath` for storage in [the saved dashboard selection]. The
+ * built-in default's `null` becomes [DEFAULT_DASHBOARD_SENTINEL]; every other dashboard stores its
+ * `urlPath` verbatim.
  */
-fun DashboardSummary.selectionKey(): String = urlPath ?: PreferencesStore.DEFAULT_DASHBOARD_SENTINEL
+fun DashboardSummary.selectionKey(): String = urlPath ?: DEFAULT_DASHBOARD_SENTINEL
 
 @Composable
 private fun LoadingBody(padding: PaddingValues) {

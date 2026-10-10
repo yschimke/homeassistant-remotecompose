@@ -12,10 +12,12 @@ import io.ktor.http.headersOf
 import io.ktor.utils.io.ByteReadChannel
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.test.runTest
 
 /**
@@ -107,5 +109,36 @@ class AddonClientTest {
     val client = AddonClient("http://addon", accessToken = "secret", engine = engine)
     client.fetchCardBytes(card, size, ClientProfile.Phone)
     assertEquals("Bearer secret", sawAuth)
+  }
+
+  @Test
+  fun cardKeyIsOneEncodedPathSegmentWithoutAFragment() = runTest {
+    val key = CardKey("lovelace/test", "view#1", cardIndex = 0, type = "tile")
+    val engine = MockEngine { request ->
+      assertEquals("", request.url.fragment)
+      assertTrue(request.url.encodedPath.contains("%2F"))
+      assertTrue(request.url.encodedPath.contains("%23"))
+      respondOk("")
+    }
+    val client = AddonClient("http://addon", engine = engine)
+    try {
+      assertNotNull(client.fetchCardBytes(key, size, ClientProfile.Phone))
+    } finally {
+      client.close()
+    }
+  }
+
+  @Test
+  fun cancellationDoesNotBecomeAFallbackCardOrFailedHealthProbe() = runTest {
+    val engine = MockEngine { throw CancellationException("cancelled fetch") }
+    val client = AddonClient("http://addon", engine = engine)
+    try {
+      assertFailsWith<CancellationException> {
+        client.fetchCardBytes(card, size, ClientProfile.Phone)
+      }
+      assertFailsWith<CancellationException> { client.health() }
+    } finally {
+      client.close()
+    }
   }
 }

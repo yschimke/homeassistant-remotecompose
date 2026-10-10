@@ -1,11 +1,11 @@
 package ee.schimke.terrazzo.ui
 
-import android.content.res.Configuration
+import androidx.compose.material3.adaptive.currentWindowAdaptiveInfoV2
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.ReadOnlyComposable
-import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.window.core.layout.WindowSizeClass
 
 /**
  * Coarse window-width buckets used by the dashboard layout to decide how aggressively to pack
@@ -61,12 +61,20 @@ data class LayoutConfig(
 private val ExpandedMaxWidth = 840.dp
 
 @Composable
-@ReadOnlyComposable
 fun rememberLayoutConfig(): LayoutConfig {
-  val configuration = LocalConfiguration.current
-  val widthDp = configuration.screenWidthDp
-  val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
-  return when (WindowSize.fromWidthDp(widthDp)) {
+  val size = LocalWindowInfo.current.containerDpSize
+  val widthDp = size.width.value
+  val isLandscape = size.width > size.height
+  val window = currentWindowAdaptiveInfoV2().windowSizeClass
+  val bucket =
+    when {
+      window.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_EXPANDED_LOWER_BOUND) ->
+        WindowSize.Expanded
+      window.isWidthAtLeastBreakpoint(WindowSizeClass.WIDTH_DP_MEDIUM_LOWER_BOUND) ->
+        WindowSize.Medium
+      else -> WindowSize.Compact
+    }
+  return when (bucket) {
     WindowSize.Compact ->
       LayoutConfig(
         windowSize = WindowSize.Compact,

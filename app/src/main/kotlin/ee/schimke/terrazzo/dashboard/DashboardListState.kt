@@ -18,18 +18,6 @@ import ee.schimke.terrazzo.core.session.HaSession
  * list — without hoisting we'd re-fetch from HA each time the user opens the dropdown vs. visits
  * the picker, which on a cold network is visible.
  */
-sealed interface DashboardListState {
-  data object Loading : DashboardListState
-
-  data class Error(val message: String) : DashboardListState
-
-  /**
-   * Dashboards as returned by HA, with one synthetic exception: HA returns an *empty* list when the
-   * only dashboard is the default one, so we materialise a `(urlPath = null, title = "Home")` entry
-   * in that case so the picker / switcher always have something to render.
-   */
-  data class Ready(val dashboards: List<DashboardSummary>) : DashboardListState
-}
 
 /**
  * Load + cache the **unfiltered** dashboards list for the lifetime of [session]. A new [HaSession]

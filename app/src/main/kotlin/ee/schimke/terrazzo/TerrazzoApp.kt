@@ -70,6 +70,8 @@ import ee.schimke.terrazzo.dashboard.rememberDashboardListState
 import ee.schimke.terrazzo.dashboard.rememberSelectedDashboardListState
 import ee.schimke.terrazzo.discovery.DiscoveryScreen
 import ee.schimke.terrazzo.notifications.NotificationBell
+import ee.schimke.terrazzo.shared.AppScreen
+import ee.schimke.terrazzo.shared.TerrazzoNavigation
 import ee.schimke.terrazzo.ui.statusColors
 import ee.schimke.terrazzo.wearsync.WearWidgetsScreen
 import ee.schimke.terrazzo.widget.WidgetInstallSheet
@@ -269,17 +271,6 @@ private fun UnauthenticatedScreen(
   )
 }
 
-private enum class AppScreen {
-  Dashboards,
-  Settings,
-  Widgets,
-  Pinned,
-  WearWidgets,
-  SyncDiagnostics,
-  Logs,
-  ChooseDashboards,
-}
-
 /**
  * How the user arrived on [AppScreen.ChooseDashboards]. The two paths differ in two ways:
  * - **Back / confirm destination** — signin-gate confirm lands on Dashboards; settings re-edit
@@ -354,111 +345,114 @@ private fun AuthenticatedShell(
   // non-Dashboards screens follow their existing rules. Inside
   // DashboardsRoot another BackHandler routes view → picker; the
   // platform handles back at the picker (exits app).
-  BackHandler(enabled = screen != AppScreen.Dashboards) {
+  val navigateBack: () -> Unit = {
     when {
       screen == AppScreen.ChooseDashboards && selectionEntry == SelectionEntry.Signin -> Unit
-      screen == AppScreen.ChooseDashboards -> screen = AppScreen.Settings
-      screen == AppScreen.SyncDiagnostics -> screen = AppScreen.Settings
+      screen == AppScreen.ChooseDashboards || screen == AppScreen.SyncDiagnostics ->
+        screen = AppScreen.Settings
       else -> screen = AppScreen.Dashboards
     }
   }
+  BackHandler(enabled = screen != AppScreen.Dashboards, onBack = navigateBack)
 
-  when (screen) {
-    AppScreen.Dashboards ->
-      DashboardsRoot(
-        session = session,
-        initialDashboard = initialDashboard,
-        onOpenSettings = { screen = AppScreen.Settings },
-        onOpenWidgets = { screen = AppScreen.Widgets },
-        onOpenPinned = { screen = AppScreen.Pinned },
-        onOpenWearWidgets = { screen = AppScreen.WearWidgets },
-        onOpenLogs = { screen = AppScreen.Logs },
-        onSignOut = onSignOut,
-      )
-    AppScreen.Settings -> {
-      val wearReady by graph.wearSyncManager.wearableAvailable.collectAsState()
-      SettingsScreen(
-        session = session,
-        onToggleDemo = onToggleDemo,
-        onSignOut = onSignOut,
-        onBack = { screen = AppScreen.Dashboards },
-        onOpenSyncDiagnostics =
-          if (wearReady) {
-            { screen = AppScreen.SyncDiagnostics }
-          } else null,
-        onManageDashboards = {
-          selectionEntry = SelectionEntry.Settings
-          selectionInitialResolved = false
-          scope.launch {
-            selectionInitial = graph.preferencesStore.selectedDashboardUrlsNow()
-            selectionInitialResolved = true
-          }
-          screen = AppScreen.ChooseDashboards
-        },
-      )
-    }
-    AppScreen.Widgets -> WidgetsScreen(onBack = { screen = AppScreen.Dashboards })
-    AppScreen.Pinned -> ManagePinnedScreen(onBack = { screen = AppScreen.Dashboards })
-    AppScreen.WearWidgets -> WearWidgetsScreen(onBack = { screen = AppScreen.Dashboards })
-    AppScreen.SyncDiagnostics -> {
-      val streaming by graph.wearSyncManager.streamActive.collectAsState()
-      ee.schimke.terrazzo.wearsync.SyncDiagnosticsScreen(
-        statsStore = app.syncStats,
-        streamActive = streaming,
-        onBack = { screen = AppScreen.Settings },
-      )
-    }
-    AppScreen.Logs ->
-      ee.schimke.terrazzo.logs.LogsScreen(onBack = { screen = AppScreen.Dashboards })
-    AppScreen.ChooseDashboards -> {
-      val rawList by rememberDashboardListState(session)
-      // Render the screen only once we have a snapshot of the
-      // persisted selection in hand. Without the gate, the
-      // settings re-edit path would briefly mount with
-      // `initialSelection = null` (defaulting to "all checked")
-      // and the user's saved subset would only arrive after the
-      // screen's internal `selected` state was already seeded.
-      if (!selectionInitialResolved) {
-        DashboardSelectionScreen(
-          state = DashboardListState.Loading,
-          initialSelection = null,
-          onConfirm = {},
-          onBack = null,
-          title =
-            when (selectionEntry) {
-              SelectionEntry.Signin -> "Choose dashboards"
-              SelectionEntry.Settings -> "Manage dashboards"
-            },
+  TerrazzoNavigation(screen, onBack = navigateBack) { destination ->
+    when (destination) {
+      AppScreen.Dashboards ->
+        DashboardsRoot(
+          session = session,
+          initialDashboard = initialDashboard,
+          onOpenSettings = { screen = AppScreen.Settings },
+          onOpenWidgets = { screen = AppScreen.Widgets },
+          onOpenPinned = { screen = AppScreen.Pinned },
+          onOpenWearWidgets = { screen = AppScreen.WearWidgets },
+          onOpenLogs = { screen = AppScreen.Logs },
+          onSignOut = onSignOut,
         )
-      } else {
-        DashboardSelectionScreen(
-          state = rawList,
-          initialSelection = selectionInitial,
-          onConfirm = { urls ->
-            scope.launch { graph.preferencesStore.setSelectedDashboardUrls(urls) }
-            // Avoid stranding the user on this screen
-            // between the pref write and the snapshot
-            // flag flipping.
-            selectionMissingAtSignin = false
-            screen =
-              when (selectionEntry) {
-                SelectionEntry.Signin -> AppScreen.Dashboards
-                SelectionEntry.Settings -> AppScreen.Settings
-              }
+      AppScreen.Settings -> {
+        val wearReady by graph.wearSyncManager.wearableAvailable.collectAsState()
+        SettingsScreen(
+          session = session,
+          onToggleDemo = onToggleDemo,
+          onSignOut = onSignOut,
+          onBack = { screen = AppScreen.Dashboards },
+          onOpenSyncDiagnostics =
+            if (wearReady) {
+              { screen = AppScreen.SyncDiagnostics }
+            } else null,
+          onManageDashboards = {
+            selectionEntry = SelectionEntry.Settings
+            selectionInitialResolved = false
+            scope.launch {
+              selectionInitial = graph.preferencesStore.selectedDashboardUrlsNow()
+              selectionInitialResolved = true
+            }
+            screen = AppScreen.ChooseDashboards
           },
-          onBack =
-            when (selectionEntry) {
-              SelectionEntry.Signin -> null
-              SelectionEntry.Settings -> {
-                { screen = AppScreen.Settings }
-              }
-            },
-          title =
-            when (selectionEntry) {
-              SelectionEntry.Signin -> "Choose dashboards"
-              SelectionEntry.Settings -> "Manage dashboards"
-            },
         )
+      }
+      AppScreen.Widgets -> WidgetsScreen(onBack = { screen = AppScreen.Dashboards })
+      AppScreen.Pinned -> ManagePinnedScreen(onBack = { screen = AppScreen.Dashboards })
+      AppScreen.WearWidgets -> WearWidgetsScreen(onBack = { screen = AppScreen.Dashboards })
+      AppScreen.SyncDiagnostics -> {
+        val streaming by graph.wearSyncManager.streamActive.collectAsState()
+        ee.schimke.terrazzo.wearsync.SyncDiagnosticsScreen(
+          statsStore = app.syncStats,
+          streamActive = streaming,
+          onBack = { screen = AppScreen.Settings },
+        )
+      }
+      AppScreen.Logs ->
+        ee.schimke.terrazzo.logs.LogsScreen(onBack = { screen = AppScreen.Dashboards })
+      AppScreen.ChooseDashboards -> {
+        val rawList by rememberDashboardListState(session)
+        // Render the screen only once we have a snapshot of the
+        // persisted selection in hand. Without the gate, the
+        // settings re-edit path would briefly mount with
+        // `initialSelection = null` (defaulting to "all checked")
+        // and the user's saved subset would only arrive after the
+        // screen's internal `selected` state was already seeded.
+        if (!selectionInitialResolved) {
+          DashboardSelectionScreen(
+            state = DashboardListState.Loading,
+            initialSelection = null,
+            onConfirm = {},
+            onBack = null,
+            title =
+              when (selectionEntry) {
+                SelectionEntry.Signin -> "Choose dashboards"
+                SelectionEntry.Settings -> "Manage dashboards"
+              },
+          )
+        } else {
+          DashboardSelectionScreen(
+            state = rawList,
+            initialSelection = selectionInitial,
+            onConfirm = { urls ->
+              scope.launch { graph.preferencesStore.setSelectedDashboardUrls(urls) }
+              // Avoid stranding the user on this screen
+              // between the pref write and the snapshot
+              // flag flipping.
+              selectionMissingAtSignin = false
+              screen =
+                when (selectionEntry) {
+                  SelectionEntry.Signin -> AppScreen.Dashboards
+                  SelectionEntry.Settings -> AppScreen.Settings
+                }
+            },
+            onBack =
+              when (selectionEntry) {
+                SelectionEntry.Signin -> null
+                SelectionEntry.Settings -> {
+                  { screen = AppScreen.Settings }
+                }
+              },
+            title =
+              when (selectionEntry) {
+                SelectionEntry.Signin -> "Choose dashboards"
+                SelectionEntry.Settings -> "Manage dashboards"
+              },
+          )
+        }
       }
     }
   }

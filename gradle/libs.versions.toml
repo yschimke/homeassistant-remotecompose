@@ -1,9 +1,6 @@
 [versions]
-compose-multiplatform = "1.12.1"
-compose-multiplatform-material3 = "1.12.0-alpha03"
-compose-multiplatform-adaptive = "1.3.0"
 # Toolchain
-kotlin = "2.4.20"
+kotlin = "2.4.21"
 agp = "9.4.1"
 java = "21"
 okhttp = "5.5.0"
@@ -22,8 +19,8 @@ compose-compiler = "1.5.15"
 # produced runtime NoClassDefFoundErrors inside the wear components. They now
 # resolve from Google Maven releases rather than an androidx.dev snapshot, so
 # when bumping any one of them check the other two: `remote-material3`
-# 1.0.0-alpha10 and `glance-wear` 1.0.0-alpha17 both declare
-# `androidx.compose.remote:remote-creation*:1.0.0-alpha18`, which is what keeps
+# 1.0.0-alpha13 and `glance-wear` 1.0.0-alpha20 both declare
+# `androidx.compose.remote:remote-creation*:1.0.0-alpha21`, which is what keeps
 # this set consistent.
 remote-compose = "1.0.0-alpha21"
 remote-material3 = "1.0.0-alpha13"
@@ -44,7 +41,7 @@ kotlinx-coroutines = "1.11.0"
 kotlinx-datetime = "0.8.0"
 logback = "1.6.5"
 junit = "4.13.2"
-mockserver = "7.6.0"
+mockserver = "8.0.0"
 indriya = "2.2.4"
 
 # Preview tooling — pinned compose-ai-tools release. The CLI and the
@@ -83,7 +80,7 @@ coil = "3.6.3"
 ktfmt-gradle = "0.27.0"
 
 # Markdown parsing (KMP, by JetBrains — used by IntelliJ)
-jetbrains-markdown = "0.7.15"
+jetbrains-markdown = "0.7.16"
 
 # Wear data layer + Proto DataStore + Horologist
 horologist = "0.8.3-alpha"
@@ -93,12 +90,34 @@ play-services-wearable = "20.0.1"
 # key is configured; see app/build.gradle.kts `crashlyticsEnabled`).
 firebase-bom = "34.19.0"
 
+
+cmp-navigation3 = "1.2.0-rc01"
+cmp-navigation3-runtime = "1.2.0"
+cmp-icons = "1.7.3"
+cmp-adaptive = "1.3.0"
+rc-player = "2.4.0"
+compose-multiplatform = "1.13.0-alpha02"
+cmp-material3 = "1.13.0-alpha02"
+
 [libraries]
+kotlinx-coroutines-swing = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-swing", version.ref = "kotlinx-coroutines" }
+cmp-material-icons-core = { module = "org.jetbrains.compose.material:material-icons-core", version.ref = "cmp-icons" }
+cmp-navigation3-runtime = { module = "androidx.navigation3:navigation3-runtime", version.ref = "cmp-navigation3-runtime" }
+cmp-navigation3-ui = { module = "org.jetbrains.androidx.navigation3:navigation3-ui", version.ref = "cmp-navigation3" }
+cmp-adaptive = { module = "org.jetbrains.compose.material3.adaptive:adaptive", version.ref = "cmp-adaptive" }
+rc-player-compose = { module = "ee.schimke.composeai:rc-player-compose", version.ref = "rc-player" }
+cmp-runtime = { module = "org.jetbrains.compose.runtime:runtime", version.ref = "compose-multiplatform" }
+cmp-foundation = { module = "org.jetbrains.compose.foundation:foundation", version.ref = "compose-multiplatform" }
+cmp-ui = { module = "org.jetbrains.compose.ui:ui", version.ref = "compose-multiplatform" }
+cmp-material3 = { module = "org.jetbrains.compose.material3:material3", version.ref = "cmp-material3" }
+cmp-navigation-suite = { module = "org.jetbrains.compose.material3:material3-adaptive-navigation-suite", version.ref = "cmp-material3" }
+ktor-client-js = { module = "io.ktor:ktor-client-js", version.ref = "ktor" }
+
 compose-multiplatform-ui-tooling-preview = { module = "org.jetbrains.compose.ui:ui-tooling-preview", version.ref = "compose-multiplatform" }
-compose-multiplatform-material3 = { module = "org.jetbrains.compose.material3:material3", version.ref = "compose-multiplatform-material3" }
-compose-multiplatform-adaptive = { module = "org.jetbrains.compose.material3.adaptive:adaptive", version.ref = "compose-multiplatform-adaptive" }
-compose-multiplatform-adaptive-layout = { module = "org.jetbrains.compose.material3.adaptive:adaptive-layout", version.ref = "compose-multiplatform-adaptive" }
-compose-multiplatform-adaptive-navigation = { module = "org.jetbrains.compose.material3.adaptive:adaptive-navigation", version.ref = "compose-multiplatform-adaptive" }
+compose-multiplatform-material3 = { module = "org.jetbrains.compose.material3:material3", version.ref = "cmp-material3" }
+compose-multiplatform-adaptive = { module = "org.jetbrains.compose.material3.adaptive:adaptive", version.ref = "cmp-adaptive" }
+compose-multiplatform-adaptive-layout = { module = "org.jetbrains.compose.material3.adaptive:adaptive-layout", version.ref = "cmp-adaptive" }
+compose-multiplatform-adaptive-navigation = { module = "org.jetbrains.compose.material3.adaptive:adaptive-navigation", version.ref = "cmp-adaptive" }
 compose-multiplatform-ui-test = { module = "org.jetbrains.compose.ui:ui-test", version.ref = "compose-multiplatform" }
 compose-multiplatform-ui-test-junit4 = { module = "org.jetbrains.compose.ui:ui-test-junit4", version.ref = "compose-multiplatform" }
 ktor-client-darwin = { module = "io.ktor:ktor-client-darwin", version.ref = "ktor" }

@@ -65,7 +65,7 @@ jobs:
         with:
           cache-provider: basic
       - name: Install Android platform used by the app
-        run: '"$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-37.0"'
+        uses: ./homeassistant-remotecompose/.github/actions/android-sdk
       - name: Generate, render and validate in a separate catalog consumer
         run: scripts/validate-typed-catalog.sh "$GITHUB_WORKSPACE/compose-ai-tools" "$GITHUB_WORKSPACE/compose-ui-builder"
       - if: always()

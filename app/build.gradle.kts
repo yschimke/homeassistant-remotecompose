@@ -37,7 +37,9 @@ if (crashlyticsEnabled) {
 
 android {
   namespace = "ee.schimke.terrazzo"
-  compileSdk = libs.versions.android.compileSdk.get().toInt()
+  compileSdk {
+    version = release(libs.versions.android.compileSdk.get().toInt()) { minorApiLevel = 1 }
+  }
   defaultConfig {
     applicationId = "ee.schimke.harc"
     // Widget playback via RemoteViews.DrawInstructions needs API 35+
@@ -129,6 +131,7 @@ play {
 }
 
 dependencies {
+  implementation(project(":app-ui"))
   implementation(project(":ha-model"))
   implementation(project(":ha-client"))
   implementation(project(":rc-converter"))

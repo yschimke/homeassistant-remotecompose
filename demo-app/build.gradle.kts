@@ -6,7 +6,9 @@ plugins {
 
 android {
   namespace = "ee.schimke.ha.demo"
-  compileSdk = libs.versions.android.compileSdk.get().toInt()
+  compileSdk {
+    version = release(libs.versions.android.compileSdk.get().toInt()) { minorApiLevel = 1 }
+  }
   defaultConfig {
     applicationId = "ee.schimke.ha.demo"
     minSdk = libs.versions.android.minSdk.get().toInt()

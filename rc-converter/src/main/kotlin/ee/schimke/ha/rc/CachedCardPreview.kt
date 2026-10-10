@@ -2,7 +2,13 @@
 
 package ee.schimke.ha.rc
 
+import android.view.View
+import android.view.ViewGroup
 import androidx.annotation.RestrictTo
+import androidx.compose.remote.core.Operation
+import androidx.compose.remote.core.RemoteContext
+import androidx.compose.remote.core.VariableSupport
+import androidx.compose.remote.core.operations.layout.Container
 import androidx.compose.remote.creation.compose.capture.captureSingleRemoteDocument
 import androidx.compose.remote.creation.compose.layout.RemoteComposable
 import androidx.compose.remote.creation.profile.Profile
@@ -10,7 +16,8 @@ import androidx.compose.remote.creation.profile.RcPlatformProfiles
 import androidx.compose.remote.player.compose.ExperimentalRemotePlayerApi
 import androidx.compose.remote.player.compose.RemoteComposePlayerFlags
 import androidx.compose.remote.player.core.platform.BitmapLoader
-import androidx.compose.remote.player.core.state.StateUpdater
+import androidx.compose.remote.player.view.RemoteComposePlayer
+import androidx.compose.remote.player.view.platform.RemoteComposeView
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
@@ -43,7 +50,7 @@ import kotlinx.coroutines.runBlocking
  * per `(card, theme)` and no value updates ever reach the player. The push:
  * 1. Walks `card.raw` once with [cardEntityIds] to enumerate the entities the card consumes
  *    (`entity:` / `entities:`, including nested cards in stack / conditional / picture-elements).
- * 2. Captures the player's [StateUpdater] via `WrapAdaptiveRemoteDocumentPlayer(init = ...)`.
+ * 2. Captures the [RemoteComposePlayer] via `WrapAdaptiveRemoteDocumentPlayer(init = ...)`.
  * 3. On every [snapshot] change, computes the bindings via [cardSnapshotBindings] and writes only
  *    those that actually changed since the last push (`<id>.state`, `<id>.is_on`).
  *
@@ -153,7 +160,7 @@ fun CachedCardPreview(
   val entityIds = remember(card) { card?.let { cardEntityIds(it) }.orEmpty() }
   // The handle survives recomposition but is replaced if the player
   // is torn down and rebuilt (cache invalidation, theme flip).
-  val updaterHolder = remember { mutableStateOf<StateUpdater?>(null) }
+  val playerHolder = remember { mutableStateOf<RemoteComposePlayer?>(null) }
   // Tracks the last value we pushed for each binding so a redundant
   // snapshot recompose doesn't re-issue identical writes. Reset when
   // [cacheKey] changes — the new document carries its own initial
@@ -165,8 +172,8 @@ fun CachedCardPreview(
   // entity's raw named bindings would clobber a per-card-formatted `<id>.state` with the plain
   // value. The re-encode (driven by the signature in the cache key) is authoritative for them.
   if (liveBindings && card != null && snapshot != null && entityIds.isNotEmpty()) {
-    LaunchedEffect(updaterHolder.value, snapshot) {
-      val updater = updaterHolder.value ?: return@LaunchedEffect
+    LaunchedEffect(playerHolder.value, snapshot) {
+      val updater = playerHolder.value ?: return@LaunchedEffect
       pushSnapshotBindings(updater, entityIds, snapshot, pushed)
     }
   }
@@ -181,7 +188,7 @@ fun CachedCardPreview(
     documentBytes = cardDocument.bytes,
     modifier = modifier,
     bitmapLoader = bitmapLoader,
-    init = { player -> updaterHolder.value = player.stateUpdater },
+    init = { player -> playerHolder.value = player },
     onNamedAction = { name, value ->
       if (name == HA_ACTION_NAME) {
         decodeHaAction(value)?.let(dispatcher::dispatch)
@@ -208,27 +215,75 @@ private data class DebugBorderedCacheKey(val inner: Any)
  * typed setters.
  */
 private fun pushSnapshotBindings(
-  updater: StateUpdater,
+  updater: RemoteComposePlayer,
   entityIds: Set<String>,
   snapshot: HaSnapshot,
   pushed: MutableMap<String, Any?>,
 ) {
   val bindings = cardSnapshotBindings(entityIds, snapshot)
+  var changed = false
   for ((name, value) in bindings.strings) {
     if (pushed[name] == value) continue
-    runCatching { updater.setUserLocalString(name, value) }.onSuccess { pushed[name] = value }
+    runCatching { updater.setUserLocalString(name, value) }
+      .onSuccess {
+        pushed[name] = value
+        changed = true
+      }
   }
   for ((name, value) in bindings.booleans) {
     if (pushed[name] == value) continue
     runCatching { updater.setUserLocalInt(name, if (value) 1 else 0) }
-      .onSuccess { pushed[name] = value }
+      .onSuccess {
+        pushed[name] = value
+        changed = true
+      }
   }
   for ((name, value) in bindings.ints) {
     if (pushed[name] == value) continue
-    runCatching { updater.setUserLocalInt(name, value) }.onSuccess { pushed[name] = value }
+    runCatching { updater.setUserLocalInt(name, value) }
+      .onSuccess {
+        pushed[name] = value
+        changed = true
+      }
   }
   for ((name, value) in bindings.floats) {
     if (pushed[name] == value) continue
-    runCatching { updater.setUserLocalFloat(name, value) }.onSuccess { pushed[name] = value }
+    runCatching { updater.setUserLocalFloat(name, value) }
+      .onSuccess {
+        pushed[name] = value
+        changed = true
+      }
+  }
+  if (changed) refreshBoundPlayerViews(updater)
+}
+
+private fun refreshBoundPlayerViews(view: View) {
+  if (view is RemoteComposeView) {
+    val context = view.remoteContext
+    val previousMode = context.mode
+    context.mode = RemoteContext.ContextMode.DATA
+    try {
+      // Alpha21 keeps expressions in the root container. Its paint pass skips those data ops,
+      // so evaluate dirty bindings before painting, without registering listeners again.
+      applyDirtyDataOperations(view.document.document.operations, context)
+    } finally {
+      context.mode = previousMode
+    }
+  }
+  view.invalidate()
+  if (view is ViewGroup) {
+    for (index in 0 until view.childCount) refreshBoundPlayerViews(view.getChildAt(index))
+  }
+}
+
+private fun applyDirtyDataOperations(operations: List<Operation>, context: RemoteContext) {
+  for (operation in operations) {
+    if (operation is Container) {
+      applyDirtyDataOperations(operation.list, context)
+    } else if (operation is VariableSupport && operation.isDirty) {
+      operation.markNotDirty()
+      operation.updateVariables(context)
+      operation.apply(context)
+    }
   }
 }

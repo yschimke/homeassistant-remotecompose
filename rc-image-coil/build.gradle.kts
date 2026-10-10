@@ -5,7 +5,9 @@ plugins {
 
 android {
   namespace = "ee.schimke.ha.rc.image"
-  compileSdk = libs.versions.android.compileSdk.get().toInt()
+  compileSdk {
+    version = release(libs.versions.android.compileSdk.get().toInt()) { minorApiLevel = 1 }
+  }
   defaultConfig { minSdk = libs.versions.android.minSdk.get().toInt() }
   compileOptions {
     sourceCompatibility = JavaVersion.toVersion(libs.versions.java.get())

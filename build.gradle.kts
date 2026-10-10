@@ -31,6 +31,7 @@ plugins {
   alias(libs.plugins.kotlin.jvm) apply false
   alias(libs.plugins.kotlin.serialization) apply false
   alias(libs.plugins.compose.compiler) apply false
+  alias(libs.plugins.compose.multiplatform) apply false
   alias(libs.plugins.play.publisher) apply false
   alias(libs.plugins.tapmoc) apply false
   // Shared ktfmt + dependency-hygiene conventions, also formatting this root
