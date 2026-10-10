@@ -7330,15 +7330,7 @@
     {
       "annotatedBasename": "WearCalendarSmall_wear_calendar_small-befff39c.a11y.png",
       "cleanBasename": "WearCalendarSmall_wear_calendar_small-befff39c.png",
-      "findings": [
-        {
-          "boundsInScreen": "55,256,294,286",
-          "level": "INFO",
-          "message": "This non-clickable item's speakable text: \"No upcoming events\" is identical to that of 1 other item(s).",
-          "type": "DuplicateSpeakableTextCheck",
-          "viewDescription": "android.widget.TextView"
-        }
-      ],
+      "findings": [],
       "functionName": "WearCalendarSmall",
       "module": "wear",
       "previewId": "ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearCalendarSmall_wear \u00b7 calendar (small)",
@@ -7628,9 +7620,9 @@
       "cleanBasename": "WearLogbookSmall_wear_logbook_small-95be0862.png",
       "findings": [
         {
-          "boundsInScreen": "55,254,99,278",
+          "boundsInScreen": "55,270,87,291",
           "level": "INFO",
-          "message": "This non-clickable item's speakable text: \"Front door\" is identical to that of 3 other item(s).",
+          "message": "This non-clickable item's speakable text: \"Front door\" is identical to that of 1 other item(s).",
           "type": "DuplicateSpeakableTextCheck",
           "viewDescription": "android.widget.Button  desc=\"Front door\""
         }
@@ -7645,22 +7637,7 @@
     {
       "annotatedBasename": "WearMarkdownSmall_wear_markdown_small-a6bdb89c.a11y.png",
       "cleanBasename": "WearMarkdownSmall_wear_markdown_small-a6bdb89c.png",
-      "findings": [
-        {
-          "boundsInScreen": "51,291,239,292",
-          "level": "INFO",
-          "message": "This non-clickable item's speakable text: \"Welcome home.\" is identical to that of 1 other item(s).",
-          "type": "DuplicateSpeakableTextCheck",
-          "viewDescription": "android.widget.TextView"
-        },
-        {
-          "boundsInScreen": "51,216,137,254",
-          "level": "INFO",
-          "message": "This non-clickable item's speakable text: \"Notes\" is identical to that of 1 other item(s).",
-          "type": "DuplicateSpeakableTextCheck",
-          "viewDescription": "android.widget.TextView"
-        }
-      ],
+      "findings": [],
       "functionName": "WearMarkdownSmall",
       "module": "wear",
       "previewId": "ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearMarkdownSmall_wear \u00b7 markdown (small)",
@@ -7847,22 +7824,7 @@
     {
       "annotatedBasename": "WearSensorLarge_wear_sensor_large-8173f01c.a11y.png",
       "cleanBasename": "WearSensorLarge_wear_sensor_large-8173f01c.png",
-      "findings": [
-        {
-          "boundsInScreen": "199,281,256,306",
-          "level": "INFO",
-          "message": "This non-clickable item's speakable text: \"8.2 \u00b0C\" is identical to that of 1 other item(s).",
-          "type": "DuplicateSpeakableTextCheck",
-          "viewDescription": "android.widget.TextView"
-        },
-        {
-          "boundsInScreen": "195,205,259,241",
-          "level": "INFO",
-          "message": "This non-clickable item's speakable text: \"Outside\" is identical to that of 1 other item(s).",
-          "type": "DuplicateSpeakableTextCheck",
-          "viewDescription": "android.widget.Button  desc=\"Outside\""
-        }
-      ],
+      "findings": [],
       "functionName": "WearSensorLarge",
       "module": "wear",
       "previewId": "ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearSensorLarge_wear \u00b7 sensor (large)",
@@ -7873,22 +7835,7 @@
     {
       "annotatedBasename": "WearSensorSmall_wear_sensor_small-fc79a838.a11y.png",
       "cleanBasename": "WearSensorSmall_wear_sensor_small-fc79a838.png",
-      "findings": [
-        {
-          "boundsInScreen": "199,281,256,306",
-          "level": "INFO",
-          "message": "This non-clickable item's speakable text: \"8.2 \u00b0C\" is identical to that of 1 other item(s).",
-          "type": "DuplicateSpeakableTextCheck",
-          "viewDescription": "android.widget.TextView"
-        },
-        {
-          "boundsInScreen": "195,205,259,252",
-          "level": "INFO",
-          "message": "This non-clickable item's speakable text: \"Outside\" is identical to that of 1 other item(s).",
-          "type": "DuplicateSpeakableTextCheck",
-          "viewDescription": "android.widget.Button  desc=\"Outside\""
-        }
-      ],
+      "findings": [],
       "functionName": "WearSensorSmall",
       "module": "wear",
       "previewId": "ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearSensorSmall_wear \u00b7 sensor (small)",
@@ -7910,22 +7857,7 @@
     {
       "annotatedBasename": "WearStatisticLarge_wear_statistic_large-c9627bd9.a11y.png",
       "cleanBasename": "WearStatisticLarge_wear_statistic_large-c9627bd9.png",
-      "findings": [
-        {
-          "boundsInScreen": "195,205,259,269",
-          "level": "INFO",
-          "message": "This non-clickable item's speakable text: \"House power\" is identical to that of 1 other item(s).",
-          "type": "DuplicateSpeakableTextCheck",
-          "viewDescription": "android.widget.Button  desc=\"House power\""
-        },
-        {
-          "boundsInScreen": "209,281,245,306",
-          "level": "INFO",
-          "message": "This non-clickable item's speakable text: \"412\" is identical to that of 1 other item(s).",
-          "type": "DuplicateSpeakableTextCheck",
-          "viewDescription": "android.widget.TextView"
-        }
-      ],
+      "findings": [],
       "functionName": "WearStatisticLarge",
       "module": "wear",
       "previewId": "ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearStatisticLarge_wear \u00b7 statistic (large)",
@@ -7936,22 +7868,7 @@
     {
       "annotatedBasename": "WearStatisticSmall_wear_statistic_small-4ff71ac5.a11y.png",
       "cleanBasename": "WearStatisticSmall_wear_statistic_small-4ff71ac5.png",
-      "findings": [
-        {
-          "boundsInScreen": "195,205,259,269",
-          "level": "INFO",
-          "message": "This non-clickable item's speakable text: \"House power\" is identical to that of 1 other item(s).",
-          "type": "DuplicateSpeakableTextCheck",
-          "viewDescription": "android.widget.Button  desc=\"House power\""
-        },
-        {
-          "boundsInScreen": "209,281,245,306",
-          "level": "INFO",
-          "message": "This non-clickable item's speakable text: \"412\" is identical to that of 1 other item(s).",
-          "type": "DuplicateSpeakableTextCheck",
-          "viewDescription": "android.widget.TextView"
-        }
-      ],
+      "findings": [],
       "functionName": "WearStatisticSmall",
       "module": "wear",
       "previewId": "ee.schimke.terrazzo.wear.widget.CardSlotWidgetPreviewsKt.WearStatisticSmall_wear \u00b7 statistic (small)",
