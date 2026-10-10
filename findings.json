@@ -24,34 +24,6 @@
       "cleanBasename": "Play_Phone_01_HomeLight_play_phone_home_light-27629862.png",
       "findings": [
         {
-          "boundsInScreen": "40,144,782,471",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "40,495,782,879",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "40,903,782,1164",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "40,1188,782,1272",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
           "boundsInScreen": "40,1296,782,1462",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
@@ -59,46 +31,32 @@
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "280,202,344,266",
+          "boundsInScreen": "264,186,360,262",
           "level": "ERROR",
-          "message": "This item's size is 32dp x 32dp. Consider making this touch target 48dp wide and 48dp high or larger.",
+          "message": "This item's height is 38dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Open\""
+          "viewDescription": "android.view.View"
         },
         {
-          "boundsInScreen": "280,278,344,342",
+          "boundsInScreen": "264,262,360,338",
           "level": "ERROR",
-          "message": "This item's size is 32dp x 32dp. Consider making this touch target 48dp wide and 48dp high or larger.",
+          "message": "This item's height is 38dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Stop\""
+          "viewDescription": "android.view.View"
         },
         {
-          "boundsInScreen": "280,354,344,418",
-          "level": "ERROR",
-          "message": "This item's size is 32dp x 32dp. Consider making this touch target 48dp wide and 48dp high or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Close\""
-        },
-        {
-          "boundsInScreen": "40,903,782,990",
+          "boundsInScreen": "64,899,758,986",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Vent\""
+          "viewDescription": "android.view.View"
         },
         {
-          "boundsInScreen": "40,990,782,1077",
+          "boundsInScreen": "64,986,758,1073",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Half open\""
-        },
-        {
-          "boundsInScreen": "40,1077,782,1164",
-          "level": "ERROR",
-          "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Impulse\""
+          "viewDescription": "android.view.View"
         },
         {
           "boundsInScreen": "40,495,782,879",
@@ -120,34 +78,6 @@
       "cleanBasename": "Play_Phone_02_HomeDark_play_phone_home_dark-87829c7b.png",
       "findings": [
         {
-          "boundsInScreen": "40,144,782,471",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "40,495,782,879",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "40,903,782,1164",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "40,1188,782,1272",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
           "boundsInScreen": "40,1296,782,1462",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
@@ -155,46 +85,32 @@
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "280,202,344,266",
+          "boundsInScreen": "264,186,360,262",
           "level": "ERROR",
-          "message": "This item's size is 32dp x 32dp. Consider making this touch target 48dp wide and 48dp high or larger.",
+          "message": "This item's height is 38dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Open\""
+          "viewDescription": "android.view.View"
         },
         {
-          "boundsInScreen": "280,278,344,342",
+          "boundsInScreen": "264,262,360,338",
           "level": "ERROR",
-          "message": "This item's size is 32dp x 32dp. Consider making this touch target 48dp wide and 48dp high or larger.",
+          "message": "This item's height is 38dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Stop\""
+          "viewDescription": "android.view.View"
         },
         {
-          "boundsInScreen": "280,354,344,418",
-          "level": "ERROR",
-          "message": "This item's size is 32dp x 32dp. Consider making this touch target 48dp wide and 48dp high or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Close\""
-        },
-        {
-          "boundsInScreen": "40,903,782,990",
+          "boundsInScreen": "64,899,758,986",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Vent\""
+          "viewDescription": "android.view.View"
         },
         {
-          "boundsInScreen": "40,990,782,1077",
+          "boundsInScreen": "64,986,758,1073",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Half open\""
-        },
-        {
-          "boundsInScreen": "40,1077,782,1164",
-          "level": "ERROR",
-          "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Impulse\""
+          "viewDescription": "android.view.View"
         },
         {
           "boundsInScreen": "40,495,782,879",
@@ -249,63 +165,28 @@
       "cleanBasename": "Play_Tablet10_01_Home_play_10_inch_home-7ca1827e.png",
       "findings": [
         {
-          "boundsInScreen": "33,101,1087,370",
+          "boundsInScreen": "33,1132,1087,1792",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "33,387,1087,735",
+          "boundsInScreen": "204,148,271,205",
           "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "33,752,1087,1013",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "33,1030,1087,1114",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "33,1131,1087,1792",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "215,159,260,203",
-          "level": "ERROR",
-          "message": "This item's size is 32dp x 31dp. Consider making this touch target 48dp wide and 48dp high or larger.",
+          "message": "This item's height is 41dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Open\""
+          "viewDescription": "android.view.View"
         },
         {
-          "boundsInScreen": "215,215,260,260",
+          "boundsInScreen": "204,205,271,262",
           "level": "ERROR",
-          "message": "This item's size is 32dp x 32dp. Consider making this touch target 48dp wide and 48dp high or larger.",
+          "message": "This item's height is 41dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Stop\""
+          "viewDescription": "android.view.View"
         },
         {
-          "boundsInScreen": "215,272,260,317",
-          "level": "ERROR",
-          "message": "This item's size is 32dp x 32dp. Consider making this touch target 48dp wide and 48dp high or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Close\""
-        },
-        {
-          "boundsInScreen": "33,387,1087,735",
+          "boundsInScreen": "33,388,1087,736",
           "level": "INFO",
           "message": "This non-clickable item's speakable text: \"dashboard-card:grid\" is identical to that of 2 other item(s).",
           "type": "DuplicateSpeakableTextCheck",
@@ -324,63 +205,28 @@
       "cleanBasename": "Play_Tablet7_01_Home_play_7_inch_home-eb94cb4a.png",
       "findings": [
         {
-          "boundsInScreen": "36,108,864,431",
+          "boundsInScreen": "36,1427,864,1440",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "36,449,864,913",
+          "boundsInScreen": "232,173,304,237",
           "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "36,931,864,1279",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "36,1297,864,1407",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "36,1425,864,1440",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "243,184,291,232",
-          "level": "ERROR",
-          "message": "This item's size is 32dp x 32dp. Consider making this touch target 48dp wide and 48dp high or larger.",
+          "message": "This item's height is 43dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Open\""
+          "viewDescription": "android.view.View"
         },
         {
-          "boundsInScreen": "243,248,291,296",
+          "boundsInScreen": "232,237,304,301",
           "level": "ERROR",
-          "message": "This item's size is 32dp x 32dp. Consider making this touch target 48dp wide and 48dp high or larger.",
+          "message": "This item's height is 43dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Stop\""
+          "viewDescription": "android.view.View"
         },
         {
-          "boundsInScreen": "243,312,291,360",
-          "level": "ERROR",
-          "message": "This item's size is 32dp x 32dp. Consider making this touch target 48dp wide and 48dp high or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Close\""
-        },
-        {
-          "boundsInScreen": "36,449,864,913",
+          "boundsInScreen": "36,451,864,915",
           "level": "INFO",
           "message": "This non-clickable item's speakable text: \"dashboard-card:grid\" is identical to that of 2 other item(s).",
           "type": "DuplicateSpeakableTextCheck",
@@ -395,24 +241,9 @@
       "variant": "spec:width=600dp,height=960dp,dpi=240"
     },
     {
-      "annotatedBasename": "Screen_CardHistory_card_history-07f74f5f.a11y.png",
-      "cleanBasename": "Screen_CardHistory_card_history-07f74f5f.png",
-      "findings": [
-        {
-          "boundsInScreen": "352,221,730,442",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "352,273,730,389",
-          "level": "ERROR",
-          "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Downstairs Temperature\""
-        }
-      ],
+      "annotatedBasename": "",
+      "cleanBasename": "",
+      "findings": [],
       "functionName": "Screen_CardHistory",
       "module": "app",
       "previewId": "ee.schimke.terrazzo.previews.ScreenPreviewsKt.Screen_CardHistory_card history",
@@ -421,24 +252,9 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "ee.schimke.terrazzo.previews.ScreenPreviewsKt.Screen_CardHistory_ThemeStyle_card history \u00b7 theme.a11y.png",
+      "annotatedBasename": "",
       "cleanBasename": "",
-      "findings": [
-        {
-          "boundsInScreen": "352,221,730,442",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "352,273,730,389",
-          "level": "ERROR",
-          "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Downstairs Temperature\""
-        }
-      ],
+      "findings": [],
       "functionName": "Screen_CardHistory_ThemeStyle",
       "module": "app",
       "previewId": "ee.schimke.terrazzo.previews.ScreenPreviewsKt.Screen_CardHistory_ThemeStyle_card history \u00b7 theme",
@@ -537,84 +353,42 @@
       "cleanBasename": "Screen_DashboardView_dashboard_view-c60327e8.png",
       "findings": [
         {
-          "boundsInScreen": "53,190,1028,621",
+          "boundsInScreen": "53,1713,1028,2341",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "53,653,1028,1157",
+          "boundsInScreen": "348,246,474,346",
           "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "53,1189,1028,1537",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "53,1569,1028,1679",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "53,1711,1028,2341",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "368,266,452,350",
-          "level": "ERROR",
-          "message": "This item's size is 32dp x 32dp. Consider making this touch target 48dp wide and 48dp high or larger.",
+          "message": "This item's height is 38dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Open\""
+          "viewDescription": "android.view.View"
         },
         {
-          "boundsInScreen": "368,366,452,450",
+          "boundsInScreen": "348,346,474,446",
           "level": "ERROR",
-          "message": "This item's size is 32dp x 32dp. Consider making this touch target 48dp wide and 48dp high or larger.",
+          "message": "This item's height is 38dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Stop\""
+          "viewDescription": "android.view.View"
         },
         {
-          "boundsInScreen": "368,466,452,550",
-          "level": "ERROR",
-          "message": "This item's size is 32dp x 32dp. Consider making this touch target 48dp wide and 48dp high or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Close\""
-        },
-        {
-          "boundsInScreen": "53,1189,1028,1305",
+          "boundsInScreen": "85,1186,997,1302",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Vent\""
+          "viewDescription": "android.view.View"
         },
         {
-          "boundsInScreen": "53,1305,1028,1421",
+          "boundsInScreen": "85,1302,997,1418",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Half open\""
+          "viewDescription": "android.view.View"
         },
         {
-          "boundsInScreen": "53,1421,1028,1537",
-          "level": "ERROR",
-          "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Impulse\""
-        },
-        {
-          "boundsInScreen": "53,653,1028,1157",
+          "boundsInScreen": "53,655,1028,1159",
           "level": "INFO",
           "message": "This non-clickable item's speakable text: \"dashboard-card:grid\" is identical to that of 2 other item(s).",
           "type": "DuplicateSpeakableTextCheck",
@@ -633,39 +407,18 @@
       "cleanBasename": "Screen_DashboardView_PhoneLandscapeMedium_dashboard_view_phone_landscape_medium-8837149f.png",
       "findings": [
         {
-          "boundsInScreen": "63,190,1858,621",
+          "boundsInScreen": "358,246,484,346",
           "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "63,653,1858,1081",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "378,266,462,350",
-          "level": "ERROR",
-          "message": "This item's size is 32dp x 32dp. Consider making this touch target 48dp wide and 48dp high or larger.",
+          "message": "This item's height is 38dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Open\""
+          "viewDescription": "android.view.View"
         },
         {
-          "boundsInScreen": "378,366,462,450",
+          "boundsInScreen": "358,346,484,446",
           "level": "ERROR",
-          "message": "This item's size is 32dp x 32dp. Consider making this touch target 48dp wide and 48dp high or larger.",
+          "message": "This item's height is 38dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Stop\""
-        },
-        {
-          "boundsInScreen": "378,466,462,550",
-          "level": "ERROR",
-          "message": "This item's size is 32dp x 32dp. Consider making this touch target 48dp wide and 48dp high or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Close\""
+          "viewDescription": "android.view.View"
         }
       ],
       "functionName": "Screen_DashboardView_PhoneLandscapeMedium",
@@ -680,84 +433,42 @@
       "cleanBasename": "",
       "findings": [
         {
-          "boundsInScreen": "53,190,1028,621",
+          "boundsInScreen": "53,1713,1028,2341",
           "level": "ERROR",
           "message": "This item may not have a label readable by screen readers.",
           "type": "SpeakableTextPresentCheck",
           "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
         },
         {
-          "boundsInScreen": "53,653,1028,1157",
+          "boundsInScreen": "348,246,474,346",
           "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "53,1189,1028,1537",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "53,1569,1028,1679",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "53,1711,1028,2341",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "368,266,452,350",
-          "level": "ERROR",
-          "message": "This item's size is 32dp x 32dp. Consider making this touch target 48dp wide and 48dp high or larger.",
+          "message": "This item's height is 38dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Open\""
+          "viewDescription": "android.view.View"
         },
         {
-          "boundsInScreen": "368,366,452,450",
+          "boundsInScreen": "348,346,474,446",
           "level": "ERROR",
-          "message": "This item's size is 32dp x 32dp. Consider making this touch target 48dp wide and 48dp high or larger.",
+          "message": "This item's height is 38dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Stop\""
+          "viewDescription": "android.view.View"
         },
         {
-          "boundsInScreen": "368,466,452,550",
-          "level": "ERROR",
-          "message": "This item's size is 32dp x 32dp. Consider making this touch target 48dp wide and 48dp high or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Close\""
-        },
-        {
-          "boundsInScreen": "53,1189,1028,1305",
+          "boundsInScreen": "85,1186,997,1302",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Vent\""
+          "viewDescription": "android.view.View"
         },
         {
-          "boundsInScreen": "53,1305,1028,1421",
+          "boundsInScreen": "85,1302,997,1418",
           "level": "ERROR",
           "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Half open\""
+          "viewDescription": "android.view.View"
         },
         {
-          "boundsInScreen": "53,1421,1028,1537",
-          "level": "ERROR",
-          "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Impulse\""
-        },
-        {
-          "boundsInScreen": "53,653,1028,1157",
+          "boundsInScreen": "53,655,1028,1159",
           "level": "INFO",
           "message": "This non-clickable item's speakable text: \"dashboard-card:grid\" is identical to that of 2 other item(s).",
           "type": "DuplicateSpeakableTextCheck",
@@ -1482,52 +1193,9 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "CardPreviewMatrix_AlarmPanel_matrix_alarm_panel-43d6a747.a11y.png",
-      "cleanBasename": "CardPreviewMatrix_AlarmPanel_matrix_alarm_panel-43d6a747.png",
-      "findings": [
-        {
-          "boundsInScreen": "21,137,756,2341",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "804,321,1204,441",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "1279,269,1679,493",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "143,299,376,378",
-          "level": "ERROR",
-          "message": "This item's height is 30dp. Consider making the height of this touch target 48dp or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View"
-        },
-        {
-          "boundsInScreen": "397,299,634,378",
-          "level": "ERROR",
-          "message": "This item's height is 30dp. Consider making the height of this touch target 48dp or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View"
-        },
-        {
-          "boundsInScreen": "923,230,1086,263",
-          "level": "INFO",
-          "message": "This non-clickable item's speakable text: \"Terrazzo slot\" is identical to that of 1 other item(s).",
-          "type": "DuplicateSpeakableTextCheck",
-          "viewDescription": "android.widget.TextView"
-        }
-      ],
+      "annotatedBasename": "",
+      "cleanBasename": "",
+      "findings": [],
       "functionName": "CardPreviewMatrix_AlarmPanel",
       "module": "previews",
       "previewId": "ee.schimke.ha.previews.CardPreviewMatrixKt.CardPreviewMatrix_AlarmPanel_matrix \u2014 alarm-panel",
@@ -1536,45 +1204,9 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "CardPreviewMatrix_Button_matrix_button-51cae881.a11y.png",
-      "cleanBasename": "CardPreviewMatrix_Button_matrix_button-51cae881.png",
-      "findings": [
-        {
-          "boundsInScreen": "21,137,861,1186",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "909,321,1309,441",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "1384,269,1784,493",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "909,321,1309,441",
-          "level": "ERROR",
-          "message": "This item's height is 46dp. Consider making the height of this touch target 48dp or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Kitchen\""
-        },
-        {
-          "boundsInScreen": "1028,230,1191,263",
-          "level": "INFO",
-          "message": "This non-clickable item's speakable text: \"Terrazzo slot\" is identical to that of 1 other item(s).",
-          "type": "DuplicateSpeakableTextCheck",
-          "viewDescription": "android.widget.TextView"
-        }
-      ],
+      "annotatedBasename": "",
+      "cleanBasename": "",
+      "findings": [],
       "functionName": "CardPreviewMatrix_Button",
       "module": "previews",
       "previewId": "ee.schimke.ha.previews.CardPreviewMatrixKt.CardPreviewMatrix_Button_matrix \u2014 button",
@@ -1583,38 +1215,9 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "CardPreviewMatrix_Calendar_matrix_calendar-dc5ce4f9.a11y.png",
-      "cleanBasename": "CardPreviewMatrix_Calendar_matrix_calendar-dc5ce4f9.png",
-      "findings": [
-        {
-          "boundsInScreen": "21,137,861,1606",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "909,321,1309,441",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "1384,269,1784,493",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "1028,230,1191,263",
-          "level": "INFO",
-          "message": "This non-clickable item's speakable text: \"Terrazzo slot\" is identical to that of 1 other item(s).",
-          "type": "DuplicateSpeakableTextCheck",
-          "viewDescription": "android.widget.TextView"
-        }
-      ],
+      "annotatedBasename": "",
+      "cleanBasename": "",
+      "findings": [],
       "functionName": "CardPreviewMatrix_Calendar",
       "module": "previews",
       "previewId": "ee.schimke.ha.previews.CardPreviewMatrixKt.CardPreviewMatrix_Calendar_matrix \u2014 calendar",
@@ -1623,101 +1226,9 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "CardPreviewMatrix_Entities_matrix_entities-898c466b.a11y.png",
-      "cleanBasename": "CardPreviewMatrix_Entities_matrix_entities-898c466b.png",
-      "findings": [
-        {
-          "boundsInScreen": "21,137,861,1921",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "909,321,1309,441",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "1384,269,1784,493",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "52,220,829,304",
-          "level": "ERROR",
-          "message": "This item's height is 32dp. Consider making the height of this touch target 48dp or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Living Room\""
-        },
-        {
-          "boundsInScreen": "52,304,829,394",
-          "level": "ERROR",
-          "message": "This item's height is 34dp. Consider making the height of this touch target 48dp or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Office lamp\""
-        },
-        {
-          "boundsInScreen": "52,394,829,483",
-          "level": "ERROR",
-          "message": "This item's height is 34dp. Consider making the height of this touch target 48dp or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Coffee maker\""
-        },
-        {
-          "boundsInScreen": "52,483,829,572",
-          "level": "ERROR",
-          "message": "This item's height is 34dp. Consider making the height of this touch target 48dp or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Front door\""
-        },
-        {
-          "boundsInScreen": "965,410,1055,414",
-          "level": "ERROR",
-          "message": "This item's size is 34dp x 2dp. Consider making this touch target 48dp wide and 48dp high or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Living Room\""
-        },
-        {
-          "boundsInScreen": "1080,410,1154,414",
-          "level": "ERROR",
-          "message": "This item's size is 28dp x 2dp. Consider making this touch target 48dp wide and 48dp high or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Office lamp\""
-        },
-        {
-          "boundsInScreen": "1179,410,1252,414",
-          "level": "ERROR",
-          "message": "This item's size is 28dp x 2dp. Consider making this touch target 48dp wide and 48dp high or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Coffee maker\""
-        },
-        {
-          "boundsInScreen": "1415,358,1587,466",
-          "level": "ERROR",
-          "message": "This item's height is 41dp. Consider making the height of this touch target 48dp or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Living Room\""
-        },
-        {
-          "boundsInScreen": "1587,358,1752,466",
-          "level": "ERROR",
-          "message": "This item's height is 41dp. Consider making the height of this touch target 48dp or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Office lamp\""
-        },
-        {
-          "boundsInScreen": "1028,230,1191,263",
-          "level": "INFO",
-          "message": "This non-clickable item's speakable text: \"Terrazzo slot\" is identical to that of 1 other item(s).",
-          "type": "DuplicateSpeakableTextCheck",
-          "viewDescription": "android.widget.TextView"
-        }
-      ],
+      "annotatedBasename": "",
+      "cleanBasename": "",
+      "findings": [],
       "functionName": "CardPreviewMatrix_Entities",
       "module": "previews",
       "previewId": "ee.schimke.ha.previews.CardPreviewMatrixKt.CardPreviewMatrix_Entities_matrix \u2014 entities",
@@ -1726,52 +1237,9 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "CardPreviewMatrix_Entity_matrix_entity-9c406217.a11y.png",
-      "cleanBasename": "CardPreviewMatrix_Entity_matrix_entity-9c406217.png",
-      "findings": [
-        {
-          "boundsInScreen": "21,137,861,1029",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "909,321,1309,441",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "1384,269,1784,493",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "21,137,861,226",
-          "level": "ERROR",
-          "message": "This item's height is 34dp. Consider making the height of this touch target 48dp or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Front door\""
-        },
-        {
-          "boundsInScreen": "909,321,1309,441",
-          "level": "ERROR",
-          "message": "This item's height is 46dp. Consider making the height of this touch target 48dp or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Front door\""
-        },
-        {
-          "boundsInScreen": "1028,230,1191,263",
-          "level": "INFO",
-          "message": "This non-clickable item's speakable text: \"Terrazzo slot\" is identical to that of 1 other item(s).",
-          "type": "DuplicateSpeakableTextCheck",
-          "viewDescription": "android.widget.TextView"
-        }
-      ],
+      "annotatedBasename": "",
+      "cleanBasename": "",
+      "findings": [],
       "functionName": "CardPreviewMatrix_Entity",
       "module": "previews",
       "previewId": "ee.schimke.ha.previews.CardPreviewMatrixKt.CardPreviewMatrix_Entity_matrix \u2014 entity",
@@ -1780,45 +1248,9 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "CardPreviewMatrix_Gauge_matrix_gauge-6aca601e.a11y.png",
-      "cleanBasename": "CardPreviewMatrix_Gauge_matrix_gauge-6aca601e.png",
-      "findings": [
-        {
-          "boundsInScreen": "21,137,861,1291",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "909,321,1309,441",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "1384,269,1784,493",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "909,321,1309,441",
-          "level": "ERROR",
-          "message": "This item's height is 46dp. Consider making the height of this touch target 48dp or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View"
-        },
-        {
-          "boundsInScreen": "1028,230,1191,263",
-          "level": "INFO",
-          "message": "This non-clickable item's speakable text: \"Terrazzo slot\" is identical to that of 1 other item(s).",
-          "type": "DuplicateSpeakableTextCheck",
-          "viewDescription": "android.widget.TextView"
-        }
-      ],
+      "annotatedBasename": "",
+      "cleanBasename": "",
+      "findings": [],
       "functionName": "CardPreviewMatrix_Gauge",
       "module": "previews",
       "previewId": "ee.schimke.ha.previews.CardPreviewMatrixKt.CardPreviewMatrix_Gauge_matrix \u2014 gauge",
@@ -1827,38 +1259,9 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "CardPreviewMatrix_HistoryGraph_matrix_history_graph-89fb213c.a11y.png",
-      "cleanBasename": "CardPreviewMatrix_HistoryGraph_matrix_history_graph-89fb213c.png",
-      "findings": [
-        {
-          "boundsInScreen": "21,137,861,1606",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "909,321,1309,441",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "1384,269,1784,493",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "1028,230,1191,263",
-          "level": "INFO",
-          "message": "This non-clickable item's speakable text: \"Terrazzo slot\" is identical to that of 1 other item(s).",
-          "type": "DuplicateSpeakableTextCheck",
-          "viewDescription": "android.widget.TextView"
-        }
-      ],
+      "annotatedBasename": "",
+      "cleanBasename": "",
+      "findings": [],
       "functionName": "CardPreviewMatrix_HistoryGraph",
       "module": "previews",
       "previewId": "ee.schimke.ha.previews.CardPreviewMatrixKt.CardPreviewMatrix_HistoryGraph_matrix \u2014 history-graph",
@@ -1867,52 +1270,9 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "CardPreviewMatrix_Humidifier_matrix_humidifier-96bee44d.a11y.png",
-      "cleanBasename": "CardPreviewMatrix_Humidifier_matrix_humidifier-96bee44d.png",
-      "findings": [
-        {
-          "boundsInScreen": "21,137,651,2026",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "699,321,1099,441",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "1174,269,1574,493",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "210,720,304,815",
-          "level": "ERROR",
-          "message": "This item's size is 36dp x 36dp. Consider making this touch target 48dp wide and 48dp high or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"stepper\""
-        },
-        {
-          "boundsInScreen": "367,720,462,815",
-          "level": "ERROR",
-          "message": "This item's size is 36dp x 36dp. Consider making this touch target 48dp wide and 48dp high or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"stepper\""
-        },
-        {
-          "boundsInScreen": "818,230,981,263",
-          "level": "INFO",
-          "message": "This non-clickable item's speakable text: \"Terrazzo slot\" is identical to that of 1 other item(s).",
-          "type": "DuplicateSpeakableTextCheck",
-          "viewDescription": "android.widget.TextView"
-        }
-      ],
+      "annotatedBasename": "",
+      "cleanBasename": "",
+      "findings": [],
       "functionName": "CardPreviewMatrix_Humidifier",
       "module": "previews",
       "previewId": "ee.schimke.ha.previews.CardPreviewMatrixKt.CardPreviewMatrix_Humidifier_matrix \u2014 humidifier",
@@ -1921,45 +1281,9 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "CardPreviewMatrix_Light_matrix_light-27b95ce0.a11y.png",
-      "cleanBasename": "CardPreviewMatrix_Light_matrix_light-27b95ce0.png",
-      "findings": [
-        {
-          "boundsInScreen": "21,137,651,2026",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "699,321,1099,441",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "1174,269,1574,493",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "699,321,1099,441",
-          "level": "ERROR",
-          "message": "This item's height is 46dp. Consider making the height of this touch target 48dp or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View"
-        },
-        {
-          "boundsInScreen": "818,230,981,263",
-          "level": "INFO",
-          "message": "This non-clickable item's speakable text: \"Terrazzo slot\" is identical to that of 1 other item(s).",
-          "type": "DuplicateSpeakableTextCheck",
-          "viewDescription": "android.widget.TextView"
-        }
-      ],
+      "annotatedBasename": "",
+      "cleanBasename": "",
+      "findings": [],
       "functionName": "CardPreviewMatrix_Light",
       "module": "previews",
       "previewId": "ee.schimke.ha.previews.CardPreviewMatrixKt.CardPreviewMatrix_Light_matrix \u2014 light",
@@ -1968,38 +1292,9 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "CardPreviewMatrix_Logbook_matrix_logbook-1e109936.a11y.png",
-      "cleanBasename": "CardPreviewMatrix_Logbook_matrix_logbook-1e109936.png",
-      "findings": [
-        {
-          "boundsInScreen": "21,137,861,1606",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "909,321,1309,441",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "1384,269,1784,493",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "1028,230,1191,263",
-          "level": "INFO",
-          "message": "This non-clickable item's speakable text: \"Terrazzo slot\" is identical to that of 1 other item(s).",
-          "type": "DuplicateSpeakableTextCheck",
-          "viewDescription": "android.widget.TextView"
-        }
-      ],
+      "annotatedBasename": "",
+      "cleanBasename": "",
+      "findings": [],
       "functionName": "CardPreviewMatrix_Logbook",
       "module": "previews",
       "previewId": "ee.schimke.ha.previews.CardPreviewMatrixKt.CardPreviewMatrix_Logbook_matrix \u2014 logbook",
@@ -2012,30 +1307,30 @@
       "cleanBasename": "CardPreviewMatrix_Markdown_matrix_markdown-477bd199.png",
       "findings": [
         {
-          "boundsInScreen": "21,137,861,1606",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
+          "boundsInScreen": "909,321,960,358",
+          "level": "INFO",
+          "message": "This non-clickable item's speakable text: \"400\" is identical to that of 1 other item(s).",
+          "type": "DuplicateSpeakableTextCheck",
+          "viewDescription": "android.widget.TextView"
         },
         {
-          "boundsInScreen": "909,321,1309,441",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "1384,269,1784,493",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
+          "boundsInScreen": "53,221,405,301",
+          "level": "INFO",
+          "message": "This non-clickable item's speakable text: \"Welcome home. Temperature is normal.\" is identical to that of 2 other item(s).",
+          "type": "DuplicateSpeakableTextCheck",
+          "viewDescription": "android.widget.TextView"
         },
         {
           "boundsInScreen": "1028,230,1191,263",
           "level": "INFO",
           "message": "This non-clickable item's speakable text: \"Terrazzo slot\" is identical to that of 1 other item(s).",
+          "type": "DuplicateSpeakableTextCheck",
+          "viewDescription": "android.widget.TextView"
+        },
+        {
+          "boundsInScreen": "53,163,157,210",
+          "level": "INFO",
+          "message": "This non-clickable item's speakable text: \"Notes\" is identical to that of 2 other item(s).",
           "type": "DuplicateSpeakableTextCheck",
           "viewDescription": "android.widget.TextView"
         }
@@ -2048,59 +1343,9 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "CardPreviewMatrix_MediaControl_matrix_media_control-8fae1d59.a11y.png",
-      "cleanBasename": "CardPreviewMatrix_MediaControl_matrix_media_control-8fae1d59.png",
-      "findings": [
-        {
-          "boundsInScreen": "21,137,861,1606",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "909,321,1309,441",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "1384,269,1784,493",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "52,314,136,398",
-          "level": "ERROR",
-          "message": "This item's size is 32dp x 32dp. Consider making this touch target 48dp wide and 48dp high or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"transport\""
-        },
-        {
-          "boundsInScreen": "147,304,252,409",
-          "level": "ERROR",
-          "message": "This item's size is 40dp x 40dp. Consider making this touch target 48dp wide and 48dp high or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"transport\""
-        },
-        {
-          "boundsInScreen": "262,314,346,398",
-          "level": "ERROR",
-          "message": "This item's size is 32dp x 32dp. Consider making this touch target 48dp wide and 48dp high or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"transport\""
-        },
-        {
-          "boundsInScreen": "1028,230,1191,263",
-          "level": "INFO",
-          "message": "This non-clickable item's speakable text: \"Terrazzo slot\" is identical to that of 1 other item(s).",
-          "type": "DuplicateSpeakableTextCheck",
-          "viewDescription": "android.widget.TextView"
-        }
-      ],
+      "annotatedBasename": "",
+      "cleanBasename": "",
+      "findings": [],
       "functionName": "CardPreviewMatrix_MediaControl",
       "module": "previews",
       "previewId": "ee.schimke.ha.previews.CardPreviewMatrixKt.CardPreviewMatrix_MediaControl_matrix \u2014 media-control",
@@ -2109,45 +1354,9 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "CardPreviewMatrix_PictureEntity_matrix_picture_entity-7c87f231.a11y.png",
-      "cleanBasename": "CardPreviewMatrix_PictureEntity_matrix_picture_entity-7c87f231.png",
-      "findings": [
-        {
-          "boundsInScreen": "21,137,861,1606",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "909,321,1309,441",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "1384,269,1784,493",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "909,321,1309,441",
-          "level": "ERROR",
-          "message": "This item's height is 46dp. Consider making the height of this touch target 48dp or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View"
-        },
-        {
-          "boundsInScreen": "1028,230,1191,263",
-          "level": "INFO",
-          "message": "This non-clickable item's speakable text: \"Terrazzo slot\" is identical to that of 1 other item(s).",
-          "type": "DuplicateSpeakableTextCheck",
-          "viewDescription": "android.widget.TextView"
-        }
-      ],
+      "annotatedBasename": "",
+      "cleanBasename": "",
+      "findings": [],
       "functionName": "CardPreviewMatrix_PictureEntity",
       "module": "previews",
       "previewId": "ee.schimke.ha.previews.CardPreviewMatrixKt.CardPreviewMatrix_PictureEntity_matrix \u2014 picture-entity",
@@ -2156,38 +1365,9 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "CardPreviewMatrix_Sensor_matrix_sensor-0a1072f1.a11y.png",
-      "cleanBasename": "CardPreviewMatrix_Sensor_matrix_sensor-0a1072f1.png",
-      "findings": [
-        {
-          "boundsInScreen": "21,137,861,1029",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "909,321,1309,441",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "1384,269,1784,493",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "1028,230,1191,263",
-          "level": "INFO",
-          "message": "This non-clickable item's speakable text: \"Terrazzo slot\" is identical to that of 1 other item(s).",
-          "type": "DuplicateSpeakableTextCheck",
-          "viewDescription": "android.widget.TextView"
-        }
-      ],
+      "annotatedBasename": "",
+      "cleanBasename": "",
+      "findings": [],
       "functionName": "CardPreviewMatrix_Sensor",
       "module": "previews",
       "previewId": "ee.schimke.ha.previews.CardPreviewMatrixKt.CardPreviewMatrix_Sensor_matrix \u2014 sensor",
@@ -2196,38 +1376,9 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "CardPreviewMatrix_Statistic_matrix_statistic-3c6a1a49.a11y.png",
-      "cleanBasename": "CardPreviewMatrix_Statistic_matrix_statistic-3c6a1a49.png",
-      "findings": [
-        {
-          "boundsInScreen": "21,137,861,1029",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "909,321,1309,441",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "1384,269,1784,493",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "1028,230,1191,263",
-          "level": "INFO",
-          "message": "This non-clickable item's speakable text: \"Terrazzo slot\" is identical to that of 1 other item(s).",
-          "type": "DuplicateSpeakableTextCheck",
-          "viewDescription": "android.widget.TextView"
-        }
-      ],
+      "annotatedBasename": "",
+      "cleanBasename": "",
+      "findings": [],
       "functionName": "CardPreviewMatrix_Statistic",
       "module": "previews",
       "previewId": "ee.schimke.ha.previews.CardPreviewMatrixKt.CardPreviewMatrix_Statistic_matrix \u2014 statistic",
@@ -2236,52 +1387,9 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "CardPreviewMatrix_Thermostat_matrix_thermostat-6ce1b10d.a11y.png",
-      "cleanBasename": "CardPreviewMatrix_Thermostat_matrix_thermostat-6ce1b10d.png",
-      "findings": [
-        {
-          "boundsInScreen": "21,137,651,2026",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "699,321,1099,441",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "1174,269,1574,493",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "210,720,304,815",
-          "level": "ERROR",
-          "message": "This item's size is 36dp x 36dp. Consider making this touch target 48dp wide and 48dp high or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"stepper\""
-        },
-        {
-          "boundsInScreen": "367,720,462,815",
-          "level": "ERROR",
-          "message": "This item's size is 36dp x 36dp. Consider making this touch target 48dp wide and 48dp high or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"stepper\""
-        },
-        {
-          "boundsInScreen": "818,230,981,263",
-          "level": "INFO",
-          "message": "This non-clickable item's speakable text: \"Terrazzo slot\" is identical to that of 1 other item(s).",
-          "type": "DuplicateSpeakableTextCheck",
-          "viewDescription": "android.widget.TextView"
-        }
-      ],
+      "annotatedBasename": "",
+      "cleanBasename": "",
+      "findings": [],
       "functionName": "CardPreviewMatrix_Thermostat",
       "module": "previews",
       "previewId": "ee.schimke.ha.previews.CardPreviewMatrixKt.CardPreviewMatrix_Thermostat_matrix \u2014 thermostat",
@@ -2290,59 +1398,9 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "CardPreviewMatrix_Tile_matrix_tile-3b5ef920.a11y.png",
-      "cleanBasename": "CardPreviewMatrix_Tile_matrix_tile-3b5ef920.png",
-      "findings": [
-        {
-          "boundsInScreen": "21,137,861,1029",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "909,321,1309,441",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "1384,269,1784,493",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "21,137,861,253",
-          "level": "ERROR",
-          "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Living Room\""
-        },
-        {
-          "boundsInScreen": "909,323,1309,439",
-          "level": "ERROR",
-          "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Living Room\""
-        },
-        {
-          "boundsInScreen": "1384,323,1784,439",
-          "level": "ERROR",
-          "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Living Room\""
-        },
-        {
-          "boundsInScreen": "1028,230,1191,263",
-          "level": "INFO",
-          "message": "This non-clickable item's speakable text: \"Terrazzo slot\" is identical to that of 1 other item(s).",
-          "type": "DuplicateSpeakableTextCheck",
-          "viewDescription": "android.widget.TextView"
-        }
-      ],
+      "annotatedBasename": "",
+      "cleanBasename": "",
+      "findings": [],
       "functionName": "CardPreviewMatrix_Tile",
       "module": "previews",
       "previewId": "ee.schimke.ha.previews.CardPreviewMatrixKt.CardPreviewMatrix_Tile_matrix \u2014 tile",
@@ -2351,59 +1409,9 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "CardPreviewMatrix_TodoList_matrix_todo_list-ed136856.a11y.png",
-      "cleanBasename": "CardPreviewMatrix_TodoList_matrix_todo_list-ed136856.png",
-      "findings": [
-        {
-          "boundsInScreen": "21,137,861,1606",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "909,321,1309,441",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "1384,269,1784,493",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "57,293,824,361",
-          "level": "ERROR",
-          "message": "This item's height is 26dp. Consider making the height of this touch target 48dp or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Salt\""
-        },
-        {
-          "boundsInScreen": "57,382,824,451",
-          "level": "ERROR",
-          "message": "This item's height is 26dp. Consider making the height of this touch target 48dp or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Butter\""
-        },
-        {
-          "boundsInScreen": "57,527,824,595",
-          "level": "ERROR",
-          "message": "This item's height is 26dp. Consider making the height of this touch target 48dp or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Milk\""
-        },
-        {
-          "boundsInScreen": "1028,230,1191,263",
-          "level": "INFO",
-          "message": "This non-clickable item's speakable text: \"Terrazzo slot\" is identical to that of 1 other item(s).",
-          "type": "DuplicateSpeakableTextCheck",
-          "viewDescription": "android.widget.TextView"
-        }
-      ],
+      "annotatedBasename": "",
+      "cleanBasename": "",
+      "findings": [],
       "functionName": "CardPreviewMatrix_TodoList",
       "module": "previews",
       "previewId": "ee.schimke.ha.previews.CardPreviewMatrixKt.CardPreviewMatrix_TodoList_matrix \u2014 todo-list",
@@ -2412,38 +1420,9 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "CardPreviewMatrix_WeatherForecast_matrix_weather_forecast-ae933bbe.a11y.png",
-      "cleanBasename": "CardPreviewMatrix_WeatherForecast_matrix_weather_forecast-ae933bbe.png",
-      "findings": [
-        {
-          "boundsInScreen": "21,137,861,1501",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "909,321,1309,441",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "1384,269,1784,493",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "1028,230,1191,263",
-          "level": "INFO",
-          "message": "This non-clickable item's speakable text: \"Terrazzo slot\" is identical to that of 1 other item(s).",
-          "type": "DuplicateSpeakableTextCheck",
-          "viewDescription": "android.widget.TextView"
-        }
-      ],
+      "annotatedBasename": "",
+      "cleanBasename": "",
+      "findings": [],
       "functionName": "CardPreviewMatrix_WeatherForecast",
       "module": "previews",
       "previewId": "ee.schimke.ha.previews.CardPreviewMatrixKt.CardPreviewMatrix_WeatherForecast_matrix \u2014 weather-forecast",
@@ -2532,74 +1511,18 @@
       "cleanBasename": "ComponentWidthRuntimeProbe_componentWidth_runtime_probe-2fa8a478.png",
       "findings": [
         {
-          "boundsInScreen": "21,68,231,278",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
+          "boundsInScreen": "252,357,411,394",
+          "level": "INFO",
+          "message": "This non-clickable item's speakable text: \"HELPER-T1\" is identical to that of 3 other item(s).",
+          "type": "DuplicateSpeakableTextCheck",
+          "viewDescription": "android.widget.TextView"
         },
         {
-          "boundsInScreen": "252,68,567,278",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "588,68,1008,278",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "1029,68,1554,278",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "1575,68,2205,278",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "21,357,231,567",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "252,357,567,567",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "588,357,1008,567",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "1029,357,1554,567",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "1575,357,2205,567",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
+          "boundsInScreen": "252,68,399,105",
+          "level": "INFO",
+          "message": "This non-clickable item's speakable text: \"INLINE-ON\" is identical to that of 3 other item(s).",
+          "type": "DuplicateSpeakableTextCheck",
+          "viewDescription": "android.widget.TextView"
         }
       ],
       "functionName": "ComponentWidthRuntimeProbe",
@@ -2610,24 +1533,9 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "Dashboard3dPrintingMobile_dashboard_3d_printing_mobile-2701c9cf.a11y.png",
-      "cleanBasename": "Dashboard3dPrintingMobile_dashboard_3d_printing_mobile-2701c9cf.png",
-      "findings": [
-        {
-          "boundsInScreen": "32,264,1046,4360",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "32,4381,1046,4725",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        }
-      ],
+      "annotatedBasename": "",
+      "cleanBasename": "",
+      "findings": [],
       "functionName": "Dashboard3dPrintingMobile",
       "module": "previews",
       "previewId": "ee.schimke.ha.previews.DashboardPreviewsKt.Dashboard3dPrintingMobile_dashboard 3d-printing \u2014 mobile",
@@ -2636,38 +1544,9 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "Dashboard3dPrintingTablet_dashboard_3d_printing_tablet-d15705fe.a11y.png",
-      "cleanBasename": "Dashboard3dPrintingTablet_dashboard_3d_printing_tablet-d15705fe.png",
-      "findings": [
-        {
-          "boundsInScreen": "53,264,1002,4360",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "53,4381,1002,4725",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "1098,264,2047,4360",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "1098,4381,2047,4725",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        }
-      ],
+      "annotatedBasename": "",
+      "cleanBasename": "",
+      "findings": [],
       "functionName": "Dashboard3dPrintingTablet",
       "module": "previews",
       "previewId": "ee.schimke.ha.previews.DashboardPreviewsKt.Dashboard3dPrintingTablet_dashboard 3d-printing \u2014 tablet",
@@ -2676,24 +1555,9 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "DashboardClimateMobile_dashboard_climate_mobile-bdcd432b.a11y.png",
-      "cleanBasename": "DashboardClimateMobile_dashboard_climate_mobile-bdcd432b.png",
-      "findings": [
-        {
-          "boundsInScreen": "32,264,1046,4360",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "32,4381,1046,4725",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        }
-      ],
+      "annotatedBasename": "",
+      "cleanBasename": "",
+      "findings": [],
       "functionName": "DashboardClimateMobile",
       "module": "previews",
       "previewId": "ee.schimke.ha.previews.DashboardPreviewsKt.DashboardClimateMobile_dashboard climate \u2014 mobile",
@@ -2702,38 +1566,9 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "DashboardClimateTablet_dashboard_climate_tablet-456c7098.a11y.png",
-      "cleanBasename": "DashboardClimateTablet_dashboard_climate_tablet-456c7098.png",
-      "findings": [
-        {
-          "boundsInScreen": "53,264,1002,4360",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "53,4381,1002,4725",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "1098,264,2047,4360",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "1098,4381,2047,4725",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        }
-      ],
+      "annotatedBasename": "",
+      "cleanBasename": "",
+      "findings": [],
       "functionName": "DashboardClimateTablet",
       "module": "previews",
       "previewId": "ee.schimke.ha.previews.DashboardPreviewsKt.DashboardClimateTablet_dashboard climate \u2014 tablet",
@@ -2742,31 +1577,9 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "DashboardEnergyMobile_dashboard_energy_mobile-47191266.a11y.png",
-      "cleanBasename": "DashboardEnergyMobile_dashboard_energy_mobile-47191266.png",
-      "findings": [
-        {
-          "boundsInScreen": "32,264,1046,4360",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "32,4381,1046,4725",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "32,4381,1046,4497",
-          "level": "ERROR",
-          "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Solar production\""
-        }
-      ],
+      "annotatedBasename": "",
+      "cleanBasename": "",
+      "findings": [],
       "functionName": "DashboardEnergyMobile",
       "module": "previews",
       "previewId": "ee.schimke.ha.previews.DashboardPreviewsKt.DashboardEnergyMobile_dashboard energy \u2014 mobile",
@@ -2775,31 +1588,9 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "DashboardEnergyTablet_dashboard_energy_tablet-e2041a44.a11y.png",
-      "cleanBasename": "DashboardEnergyTablet_dashboard_energy_tablet-e2041a44.png",
-      "findings": [
-        {
-          "boundsInScreen": "53,264,1002,4360",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "53,4381,1002,4725",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "53,4381,1002,4497",
-          "level": "ERROR",
-          "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Solar production\""
-        }
-      ],
+      "annotatedBasename": "",
+      "cleanBasename": "",
+      "findings": [],
       "functionName": "DashboardEnergyTablet",
       "module": "previews",
       "previewId": "ee.schimke.ha.previews.DashboardPreviewsKt.DashboardEnergyTablet_dashboard energy \u2014 tablet",
@@ -2808,24 +1599,9 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "DashboardGithubMobile_dashboard_github_mobile-8f04a7c1.a11y.png",
-      "cleanBasename": "DashboardGithubMobile_dashboard_github_mobile-8f04a7c1.png",
-      "findings": [
-        {
-          "boundsInScreen": "32,264,1046,4360",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "32,4381,1046,4725",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        }
-      ],
+      "annotatedBasename": "",
+      "cleanBasename": "",
+      "findings": [],
       "functionName": "DashboardGithubMobile",
       "module": "previews",
       "previewId": "ee.schimke.ha.previews.DashboardPreviewsKt.DashboardGithubMobile_dashboard github \u2014 mobile",
@@ -2834,80 +1610,9 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "DashboardGithubTablet_dashboard_github_tablet-89194c99.a11y.png",
-      "cleanBasename": "DashboardGithubTablet_dashboard_github_tablet-89194c99.png",
-      "findings": [
-        {
-          "boundsInScreen": "53,264,1002,4360",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "53,4381,1002,4725",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "1098,264,2047,4360",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "1098,4381,2047,4615",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "1098,4636,2047,4725",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "1129,4407,1435,4454",
-          "level": "ERROR",
-          "message": "This item's height is 18dp. Consider making the height of this touch target 48dp or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View"
-        },
-        {
-          "boundsInScreen": "1129,4494,1381,4541",
-          "level": "ERROR",
-          "message": "This item's height is 18dp. Consider making the height of this touch target 48dp or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View"
-        },
-        {
-          "boundsInScreen": "1392,4494,1644,4541",
-          "level": "ERROR",
-          "message": "This item's height is 18dp. Consider making the height of this touch target 48dp or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View"
-        },
-        {
-          "boundsInScreen": "1654,4494,1906,4541",
-          "level": "ERROR",
-          "message": "This item's height is 18dp. Consider making the height of this touch target 48dp or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View"
-        },
-        {
-          "boundsInScreen": "1129,4541,1381,4588",
-          "level": "ERROR",
-          "message": "This item's height is 18dp. Consider making the height of this touch target 48dp or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View"
-        }
-      ],
+      "annotatedBasename": "",
+      "cleanBasename": "",
+      "findings": [],
       "functionName": "DashboardGithubTablet",
       "module": "previews",
       "previewId": "ee.schimke.ha.previews.DashboardPreviewsKt.DashboardGithubTablet_dashboard github \u2014 tablet",
@@ -2916,38 +1621,9 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "DashboardMeshcoreMobile_dashboard_meshcore_mobile-30d7121c.a11y.png",
-      "cleanBasename": "DashboardMeshcoreMobile_dashboard_meshcore_mobile-30d7121c.png",
-      "findings": [
-        {
-          "boundsInScreen": "32,264,1046,4360",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "32,4381,1046,4725",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "32,4381,1046,4497",
-          "level": "ERROR",
-          "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Status\""
-        },
-        {
-          "boundsInScreen": "32,4497,1046,4613",
-          "level": "ERROR",
-          "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Nodes seen\""
-        }
-      ],
+      "annotatedBasename": "",
+      "cleanBasename": "",
+      "findings": [],
       "functionName": "DashboardMeshcoreMobile",
       "module": "previews",
       "previewId": "ee.schimke.ha.previews.DashboardPreviewsKt.DashboardMeshcoreMobile_dashboard meshcore \u2014 mobile",
@@ -2956,38 +1632,9 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "DashboardMeshcoreTablet_dashboard_meshcore_tablet-e5c71810.a11y.png",
-      "cleanBasename": "DashboardMeshcoreTablet_dashboard_meshcore_tablet-e5c71810.png",
-      "findings": [
-        {
-          "boundsInScreen": "53,264,1002,4360",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "53,4381,1002,4725",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "53,4381,1002,4497",
-          "level": "ERROR",
-          "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Status\""
-        },
-        {
-          "boundsInScreen": "53,4497,1002,4613",
-          "level": "ERROR",
-          "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Nodes seen\""
-        }
-      ],
+      "annotatedBasename": "",
+      "cleanBasename": "",
+      "findings": [],
       "functionName": "DashboardMeshcoreTablet",
       "module": "previews",
       "previewId": "ee.schimke.ha.previews.DashboardPreviewsKt.DashboardMeshcoreTablet_dashboard meshcore \u2014 tablet",
@@ -2996,38 +1643,9 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "DashboardNetworksMobile_dashboard_networks_mobile-d5ee47c2.a11y.png",
-      "cleanBasename": "DashboardNetworksMobile_dashboard_networks_mobile-d5ee47c2.png",
-      "findings": [
-        {
-          "boundsInScreen": "32,264,1046,4360",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "32,4381,1046,4725",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "32,4381,1046,4497",
-          "level": "ERROR",
-          "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Home download\""
-        },
-        {
-          "boundsInScreen": "32,4497,1046,4613",
-          "level": "ERROR",
-          "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Garage download\""
-        }
-      ],
+      "annotatedBasename": "",
+      "cleanBasename": "",
+      "findings": [],
       "functionName": "DashboardNetworksMobile",
       "module": "previews",
       "previewId": "ee.schimke.ha.previews.DashboardPreviewsKt.DashboardNetworksMobile_dashboard networks \u2014 mobile",
@@ -3036,38 +1654,9 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "DashboardNetworksTablet_dashboard_networks_tablet-fbca9889.a11y.png",
-      "cleanBasename": "DashboardNetworksTablet_dashboard_networks_tablet-fbca9889.png",
-      "findings": [
-        {
-          "boundsInScreen": "53,264,1002,4360",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "53,4381,1002,4725",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "53,4381,1002,4497",
-          "level": "ERROR",
-          "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Home download\""
-        },
-        {
-          "boundsInScreen": "53,4497,1002,4613",
-          "level": "ERROR",
-          "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Garage download\""
-        }
-      ],
+      "annotatedBasename": "",
+      "cleanBasename": "",
+      "findings": [],
       "functionName": "DashboardNetworksTablet",
       "module": "previews",
       "previewId": "ee.schimke.ha.previews.DashboardPreviewsKt.DashboardNetworksTablet_dashboard networks \u2014 tablet",
@@ -3076,38 +1665,9 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "DashboardSecurityMobile_dashboard_security_mobile-842e09ef.a11y.png",
-      "cleanBasename": "DashboardSecurityMobile_dashboard_security_mobile-842e09ef.png",
-      "findings": [
-        {
-          "boundsInScreen": "32,264,1046,4360",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "32,4381,1046,4725",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "347,4457,431,4541",
-          "level": "ERROR",
-          "message": "This item's size is 32dp x 32dp. Consider making this touch target 48dp wide and 48dp high or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Open\""
-        },
-        {
-          "boundsInScreen": "347,4557,431,4641",
-          "level": "ERROR",
-          "message": "This item's size is 32dp x 32dp. Consider making this touch target 48dp wide and 48dp high or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Stop\""
-        }
-      ],
+      "annotatedBasename": "",
+      "cleanBasename": "",
+      "findings": [],
       "functionName": "DashboardSecurityMobile",
       "module": "previews",
       "previewId": "ee.schimke.ha.previews.DashboardPreviewsKt.DashboardSecurityMobile_dashboard security \u2014 mobile",
@@ -3116,38 +1676,9 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "DashboardSecurityTablet_dashboard_security_tablet-d081c9e6.a11y.png",
-      "cleanBasename": "DashboardSecurityTablet_dashboard_security_tablet-d081c9e6.png",
-      "findings": [
-        {
-          "boundsInScreen": "53,264,1002,4360",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "53,4381,1002,4725",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "368,4457,452,4541",
-          "level": "ERROR",
-          "message": "This item's size is 32dp x 32dp. Consider making this touch target 48dp wide and 48dp high or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Open\""
-        },
-        {
-          "boundsInScreen": "368,4557,452,4641",
-          "level": "ERROR",
-          "message": "This item's size is 32dp x 32dp. Consider making this touch target 48dp wide and 48dp high or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Stop\""
-        }
-      ],
+      "annotatedBasename": "",
+      "cleanBasename": "",
+      "findings": [],
       "functionName": "DashboardSecurityTablet",
       "module": "previews",
       "previewId": "ee.schimke.ha.previews.DashboardPreviewsKt.DashboardSecurityTablet_dashboard security \u2014 tablet",
@@ -4682,17 +3213,9 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "PictureEntity_IconFallback_Light_picture_entity_icon_fallback_light-c5cf7c6c.a11y.png",
-      "cleanBasename": "PictureEntity_IconFallback_Light_picture_entity_icon_fallback_light-c5cf7c6c.png",
-      "findings": [
-        {
-          "boundsInScreen": "0,0,945,420",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        }
-      ],
+      "annotatedBasename": "",
+      "cleanBasename": "",
+      "findings": [],
       "functionName": "PictureEntity_IconFallback_Light",
       "module": "previews",
       "previewId": "ee.schimke.ha.previews.PictureEntityStrategyPreviewsKt.PictureEntity_IconFallback_Light_picture-entity icon-fallback (light)",
@@ -4720,17 +3243,9 @@
       "variant": ""
     },
     {
-      "annotatedBasename": "PictureEntity_WidgetMode_Light_picture_entity_widget_mode_light-f8a84474.a11y.png",
-      "cleanBasename": "PictureEntity_WidgetMode_Light_picture_entity_widget_mode_light-f8a84474.png",
-      "findings": [
-        {
-          "boundsInScreen": "0,0,945,420",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        }
-      ],
+      "annotatedBasename": "",
+      "cleanBasename": "",
+      "findings": [],
       "functionName": "PictureEntity_WidgetMode_Light",
       "module": "previews",
       "previewId": "ee.schimke.ha.previews.PictureEntityStrategyPreviewsKt.PictureEntity_WidgetMode_Light_picture-entity widget-mode (light)",
@@ -5057,186 +3572,95 @@
       "cleanBasename": "Sizing_ConstraintMatrix_PaintMeasure_sizing_width_height_matrix_paint_measure_pr-9f9b8e19.png",
       "findings": [
         {
-          "boundsInScreen": "21,205,494,318",
+          "boundsInScreen": "53,1153,463,1240",
           "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "21,386,809,499",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "21,567,2079,680",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "21,748,1019,958",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "21,1089,494,1572",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "21,1640,809,2123",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "21,2191,2079,2674",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "21,2742,1019,2952",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "21,3083,494,3391",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "21,205,494,318",
-          "level": "ERROR",
-          "message": "This item's height is 43dp. Consider making the height of this touch target 48dp or larger.",
+          "message": "This item's height is 33dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Living Room\""
+          "viewDescription": "android.view.View"
         },
         {
-          "boundsInScreen": "21,386,809,499",
-          "level": "ERROR",
-          "message": "This item's height is 43dp. Consider making the height of this touch target 48dp or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Living Room\""
-        },
-        {
-          "boundsInScreen": "21,567,2079,680",
-          "level": "ERROR",
-          "message": "This item's height is 43dp. Consider making the height of this touch target 48dp or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Living Room\""
-        },
-        {
-          "boundsInScreen": "21,748,1019,864",
-          "level": "ERROR",
-          "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Living Room\""
-        },
-        {
-          "boundsInScreen": "52,1172,462,1256",
-          "level": "ERROR",
-          "message": "This item's height is 32dp. Consider making the height of this touch target 48dp or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Living Room\""
-        },
-        {
-          "boundsInScreen": "52,1256,462,1346",
+          "boundsInScreen": "53,1240,463,1330",
           "level": "ERROR",
           "message": "This item's height is 34dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Kitchen\""
+          "viewDescription": "android.view.View"
         },
         {
-          "boundsInScreen": "52,1346,462,1435",
+          "boundsInScreen": "353,1240,479,1330",
+          "level": "WARNING",
+          "message": "This item's height is 34dp. Consider making the height of this touch target 48dp or larger. A parent container may be handling touch events for this item. If selecting the larger container performs the same action as selecting this item, consider defining this item as not clickable. If a different action is performed, consider increasing the size of this item.",
+          "type": "TouchTargetSizeCheck",
+          "viewDescription": "android.view.View"
+        },
+        {
+          "boundsInScreen": "53,1704,778,1791",
+          "level": "ERROR",
+          "message": "This item's height is 33dp. Consider making the height of this touch target 48dp or larger.",
+          "type": "TouchTargetSizeCheck",
+          "viewDescription": "android.view.View"
+        },
+        {
+          "boundsInScreen": "53,1791,778,1881",
           "level": "ERROR",
           "message": "This item's height is 34dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Coffee maker\""
+          "viewDescription": "android.view.View"
         },
         {
-          "boundsInScreen": "52,1723,777,1807",
-          "level": "ERROR",
-          "message": "This item's height is 32dp. Consider making the height of this touch target 48dp or larger.",
+          "boundsInScreen": "668,1791,794,1881",
+          "level": "WARNING",
+          "message": "This item's height is 34dp. Consider making the height of this touch target 48dp or larger. A parent container may be handling touch events for this item. If selecting the larger container performs the same action as selecting this item, consider defining this item as not clickable. If a different action is performed, consider increasing the size of this item.",
           "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Living Room\""
+          "viewDescription": "android.view.View"
         },
         {
-          "boundsInScreen": "52,1807,777,1897",
+          "boundsInScreen": "53,2255,2048,2342",
           "level": "ERROR",
-          "message": "This item's height is 34dp. Consider making the height of this touch target 48dp or larger.",
+          "message": "This item's height is 33dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Kitchen\""
+          "viewDescription": "android.view.View"
         },
         {
-          "boundsInScreen": "52,1897,777,1986",
-          "level": "ERROR",
-          "message": "This item's height is 34dp. Consider making the height of this touch target 48dp or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Coffee maker\""
-        },
-        {
-          "boundsInScreen": "52,2274,2047,2358",
-          "level": "ERROR",
-          "message": "This item's height is 32dp. Consider making the height of this touch target 48dp or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Living Room\""
-        },
-        {
-          "boundsInScreen": "52,2358,2047,2448",
+          "boundsInScreen": "53,2342,2048,2432",
           "level": "ERROR",
           "message": "This item's height is 34dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Kitchen\""
+          "viewDescription": "android.view.View"
         },
         {
-          "boundsInScreen": "52,2448,2047,2537",
-          "level": "ERROR",
-          "message": "This item's height is 34dp. Consider making the height of this touch target 48dp or larger.",
+          "boundsInScreen": "1938,2342,2064,2432",
+          "level": "WARNING",
+          "message": "This item's height is 34dp. Consider making the height of this touch target 48dp or larger. A parent container may be handling touch events for this item. If selecting the larger container performs the same action as selecting this item, consider defining this item as not clickable. If a different action is performed, consider increasing the size of this item.",
           "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Coffee maker\""
+          "viewDescription": "android.view.View"
         },
         {
-          "boundsInScreen": "52,2825,987,2909",
+          "boundsInScreen": "53,2806,988,2864",
           "level": "ERROR",
-          "message": "This item's height is 32dp. Consider making the height of this touch target 48dp or larger.",
+          "message": "This item's height is 22dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Living Room\""
+          "viewDescription": "android.view.View"
         },
         {
-          "boundsInScreen": "52,2909,987,2925",
+          "boundsInScreen": "53,2864,988,2878",
           "level": "ERROR",
-          "message": "This item's height is 6dp. Consider making the height of this touch target 48dp or larger.",
+          "message": "This item's height is 5dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Kitchen\""
+          "viewDescription": "android.view.View"
         },
         {
-          "boundsInScreen": "314,3172,417,3358",
+          "boundsInScreen": "878,2864,1004,2878",
           "level": "ERROR",
-          "message": "This item's width is 39dp. Consider making the width of this touch target 48dp or larger.",
+          "message": "This item's height is 5dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Kitchen\""
+          "viewDescription": "android.view.View"
         },
         {
-          "boundsInScreen": "185,3358,330,3391",
-          "level": "ERROR",
-          "message": "This item's height is 13dp. Consider making the height of this touch target 48dp or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Front door\""
+          "boundsInScreen": "53,199,463,325",
+          "level": "WARNING",
+          "message": "This clickable item's speakable text: \"Living Room, Living Room, 21.4 \u00b0C\" is identical to that of 8 other item(s).",
+          "type": "DuplicateSpeakableTextCheck",
+          "viewDescription": "android.view.View"
         },
         {
           "boundsInScreen": "21,701,583,743",
@@ -5244,6 +3668,27 @@
           "message": "This non-clickable item's speakable text: \"\u00b7 w=380 \u00d7 h=80 (clip) (host=380\u00d780dp)\" is identical to that of 1 other item(s).",
           "type": "DuplicateSpeakableTextCheck",
           "viewDescription": "android.widget.TextView"
+        },
+        {
+          "boundsInScreen": "53,1330,463,1456",
+          "level": "WARNING",
+          "message": "This clickable item's speakable text: \"Coffee maker, Coffee maker\" is identical to that of 2 other item(s).",
+          "type": "DuplicateSpeakableTextCheck",
+          "viewDescription": "android.view.View"
+        },
+        {
+          "boundsInScreen": "53,1115,269,1153",
+          "level": "INFO",
+          "message": "This non-clickable item's speakable text: \"Living Room\" is identical to that of 3 other item(s).",
+          "type": "DuplicateSpeakableTextCheck",
+          "viewDescription": "android.widget.TextView"
+        },
+        {
+          "boundsInScreen": "53,1240,463,1330",
+          "level": "WARNING",
+          "message": "This clickable item's speakable text: \"Kitchen, Kitchen\" is identical to that of 2 other item(s).",
+          "type": "DuplicateSpeakableTextCheck",
+          "viewDescription": "android.view.View"
         }
       ],
       "functionName": "Sizing_ConstraintMatrix_PaintMeasure",
@@ -5258,186 +3703,95 @@
       "cleanBasename": "Sizing_ConstraintMatrix_Wrap_sizing_width_height_matrix_wrap_profile-3a37721e.png",
       "findings": [
         {
-          "boundsInScreen": "21,205,494,318",
+          "boundsInScreen": "53,1153,463,1240",
           "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "21,386,809,499",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "21,567,2079,680",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "21,748,1019,958",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "21,1089,494,1572",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "21,1640,809,2123",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "21,2191,2079,2674",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "21,2742,1019,2952",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "21,3083,494,3391",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "21,205,494,318",
-          "level": "ERROR",
-          "message": "This item's height is 43dp. Consider making the height of this touch target 48dp or larger.",
+          "message": "This item's height is 33dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Living Room\""
+          "viewDescription": "android.view.View"
         },
         {
-          "boundsInScreen": "21,386,809,499",
-          "level": "ERROR",
-          "message": "This item's height is 43dp. Consider making the height of this touch target 48dp or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Living Room\""
-        },
-        {
-          "boundsInScreen": "21,567,2079,680",
-          "level": "ERROR",
-          "message": "This item's height is 43dp. Consider making the height of this touch target 48dp or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Living Room\""
-        },
-        {
-          "boundsInScreen": "21,748,1019,864",
-          "level": "ERROR",
-          "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Living Room\""
-        },
-        {
-          "boundsInScreen": "52,1172,462,1256",
-          "level": "ERROR",
-          "message": "This item's height is 32dp. Consider making the height of this touch target 48dp or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Living Room\""
-        },
-        {
-          "boundsInScreen": "52,1256,462,1346",
+          "boundsInScreen": "53,1240,463,1330",
           "level": "ERROR",
           "message": "This item's height is 34dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Kitchen\""
+          "viewDescription": "android.view.View"
         },
         {
-          "boundsInScreen": "52,1346,462,1435",
+          "boundsInScreen": "353,1240,479,1330",
+          "level": "WARNING",
+          "message": "This item's height is 34dp. Consider making the height of this touch target 48dp or larger. A parent container may be handling touch events for this item. If selecting the larger container performs the same action as selecting this item, consider defining this item as not clickable. If a different action is performed, consider increasing the size of this item.",
+          "type": "TouchTargetSizeCheck",
+          "viewDescription": "android.view.View"
+        },
+        {
+          "boundsInScreen": "53,1704,778,1791",
+          "level": "ERROR",
+          "message": "This item's height is 33dp. Consider making the height of this touch target 48dp or larger.",
+          "type": "TouchTargetSizeCheck",
+          "viewDescription": "android.view.View"
+        },
+        {
+          "boundsInScreen": "53,1791,778,1881",
           "level": "ERROR",
           "message": "This item's height is 34dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Coffee maker\""
+          "viewDescription": "android.view.View"
         },
         {
-          "boundsInScreen": "52,1723,777,1807",
-          "level": "ERROR",
-          "message": "This item's height is 32dp. Consider making the height of this touch target 48dp or larger.",
+          "boundsInScreen": "668,1791,794,1881",
+          "level": "WARNING",
+          "message": "This item's height is 34dp. Consider making the height of this touch target 48dp or larger. A parent container may be handling touch events for this item. If selecting the larger container performs the same action as selecting this item, consider defining this item as not clickable. If a different action is performed, consider increasing the size of this item.",
           "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Living Room\""
+          "viewDescription": "android.view.View"
         },
         {
-          "boundsInScreen": "52,1807,777,1897",
+          "boundsInScreen": "53,2255,2048,2342",
           "level": "ERROR",
-          "message": "This item's height is 34dp. Consider making the height of this touch target 48dp or larger.",
+          "message": "This item's height is 33dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Kitchen\""
+          "viewDescription": "android.view.View"
         },
         {
-          "boundsInScreen": "52,1897,777,1986",
-          "level": "ERROR",
-          "message": "This item's height is 34dp. Consider making the height of this touch target 48dp or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Coffee maker\""
-        },
-        {
-          "boundsInScreen": "52,2274,2047,2358",
-          "level": "ERROR",
-          "message": "This item's height is 32dp. Consider making the height of this touch target 48dp or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Living Room\""
-        },
-        {
-          "boundsInScreen": "52,2358,2047,2448",
+          "boundsInScreen": "53,2342,2048,2432",
           "level": "ERROR",
           "message": "This item's height is 34dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Kitchen\""
+          "viewDescription": "android.view.View"
         },
         {
-          "boundsInScreen": "52,2448,2047,2537",
-          "level": "ERROR",
-          "message": "This item's height is 34dp. Consider making the height of this touch target 48dp or larger.",
+          "boundsInScreen": "1938,2342,2064,2432",
+          "level": "WARNING",
+          "message": "This item's height is 34dp. Consider making the height of this touch target 48dp or larger. A parent container may be handling touch events for this item. If selecting the larger container performs the same action as selecting this item, consider defining this item as not clickable. If a different action is performed, consider increasing the size of this item.",
           "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Coffee maker\""
+          "viewDescription": "android.view.View"
         },
         {
-          "boundsInScreen": "52,2825,987,2909",
+          "boundsInScreen": "53,2806,988,2864",
           "level": "ERROR",
-          "message": "This item's height is 32dp. Consider making the height of this touch target 48dp or larger.",
+          "message": "This item's height is 22dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Living Room\""
+          "viewDescription": "android.view.View"
         },
         {
-          "boundsInScreen": "52,2909,987,2925",
+          "boundsInScreen": "53,2864,988,2878",
           "level": "ERROR",
-          "message": "This item's height is 6dp. Consider making the height of this touch target 48dp or larger.",
+          "message": "This item's height is 5dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Kitchen\""
+          "viewDescription": "android.view.View"
         },
         {
-          "boundsInScreen": "314,3172,417,3358",
+          "boundsInScreen": "878,2864,1004,2878",
           "level": "ERROR",
-          "message": "This item's width is 39dp. Consider making the width of this touch target 48dp or larger.",
+          "message": "This item's height is 5dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Kitchen\""
+          "viewDescription": "android.view.View"
         },
         {
-          "boundsInScreen": "185,3358,330,3391",
-          "level": "ERROR",
-          "message": "This item's height is 13dp. Consider making the height of this touch target 48dp or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Front door\""
+          "boundsInScreen": "53,199,463,325",
+          "level": "WARNING",
+          "message": "This clickable item's speakable text: \"Living Room, Living Room, 21.4 \u00b0C\" is identical to that of 8 other item(s).",
+          "type": "DuplicateSpeakableTextCheck",
+          "viewDescription": "android.view.View"
         },
         {
           "boundsInScreen": "21,701,583,743",
@@ -5445,6 +3799,27 @@
           "message": "This non-clickable item's speakable text: \"\u00b7 w=380 \u00d7 h=80 (clip) (host=380\u00d780dp)\" is identical to that of 1 other item(s).",
           "type": "DuplicateSpeakableTextCheck",
           "viewDescription": "android.widget.TextView"
+        },
+        {
+          "boundsInScreen": "53,1330,463,1456",
+          "level": "WARNING",
+          "message": "This clickable item's speakable text: \"Coffee maker, Coffee maker\" is identical to that of 2 other item(s).",
+          "type": "DuplicateSpeakableTextCheck",
+          "viewDescription": "android.view.View"
+        },
+        {
+          "boundsInScreen": "53,1115,269,1153",
+          "level": "INFO",
+          "message": "This non-clickable item's speakable text: \"Living Room\" is identical to that of 3 other item(s).",
+          "type": "DuplicateSpeakableTextCheck",
+          "viewDescription": "android.widget.TextView"
+        },
+        {
+          "boundsInScreen": "53,1240,463,1330",
+          "level": "WARNING",
+          "message": "This clickable item's speakable text: \"Kitchen, Kitchen\" is identical to that of 2 other item(s).",
+          "type": "DuplicateSpeakableTextCheck",
+          "viewDescription": "android.view.View"
         }
       ],
       "functionName": "Sizing_ConstraintMatrix_Wrap",
@@ -5459,81 +3834,39 @@
       "cleanBasename": "Sizing_FixedSlot_PaintMeasure_sizing_fixed_slot_paint_measure_profile-78c4aec3.png",
       "findings": [
         {
-          "boundsInScreen": "24,156,1054,269",
+          "boundsInScreen": "56,953,1023,1040",
           "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "24,354,1054,593",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "24,678,1054,804",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "24,889,1054,1372",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "24,1457,1054,1856",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "24,156,1054,269",
-          "level": "ERROR",
-          "message": "This item's height is 43dp. Consider making the height of this touch target 48dp or larger.",
+          "message": "This item's height is 33dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Living Room\""
+          "viewDescription": "android.view.View"
         },
         {
-          "boundsInScreen": "24,678,1054,762",
-          "level": "ERROR",
-          "message": "This item's height is 32dp. Consider making the height of this touch target 48dp or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Living Room\""
-        },
-        {
-          "boundsInScreen": "55,972,1022,1056",
-          "level": "ERROR",
-          "message": "This item's height is 32dp. Consider making the height of this touch target 48dp or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Living Room\""
-        },
-        {
-          "boundsInScreen": "55,1056,1022,1146",
+          "boundsInScreen": "56,1040,1023,1130",
           "level": "ERROR",
           "message": "This item's height is 34dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Kitchen\""
+          "viewDescription": "android.view.View"
         },
         {
-          "boundsInScreen": "55,1146,1022,1235",
-          "level": "ERROR",
-          "message": "This item's height is 34dp. Consider making the height of this touch target 48dp or larger.",
+          "boundsInScreen": "913,1040,1039,1130",
+          "level": "WARNING",
+          "message": "This item's height is 34dp. Consider making the height of this touch target 48dp or larger. A parent container may be handling touch events for this item. If selecting the larger container performs the same action as selecting this item, consider defining this item as not clickable. If a different action is performed, consider increasing the size of this item.",
           "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Coffee maker\""
+          "viewDescription": "android.view.View"
         },
         {
-          "boundsInScreen": "501,1546,604,1732",
-          "level": "ERROR",
-          "message": "This item's width is 39dp. Consider making the width of this touch target 48dp or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Kitchen\""
+          "boundsInScreen": "56,150,1023,276",
+          "level": "WARNING",
+          "message": "This clickable item's speakable text: \"Living Room, Living Room, 21.4 \u00b0C\" is identical to that of 3 other item(s).",
+          "type": "DuplicateSpeakableTextCheck",
+          "viewDescription": "android.view.View"
+        },
+        {
+          "boundsInScreen": "56,386,1023,562",
+          "level": "WARNING",
+          "message": "This clickable item's speakable text: \"Kitchen, Kitchen\" is identical to that of 1 other item(s).",
+          "type": "DuplicateSpeakableTextCheck",
+          "viewDescription": "android.view.View"
         }
       ],
       "functionName": "Sizing_FixedSlot_PaintMeasure",
@@ -5548,81 +3881,39 @@
       "cleanBasename": "Sizing_FixedSlot_Wrap_sizing_fixed_slot_wrap_profile-8dc35821.png",
       "findings": [
         {
-          "boundsInScreen": "24,156,1054,269",
+          "boundsInScreen": "56,953,1023,1040",
           "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "24,354,1054,593",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "24,678,1054,804",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "24,889,1054,1372",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "24,1457,1054,1856",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "24,156,1054,269",
-          "level": "ERROR",
-          "message": "This item's height is 43dp. Consider making the height of this touch target 48dp or larger.",
+          "message": "This item's height is 33dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Living Room\""
+          "viewDescription": "android.view.View"
         },
         {
-          "boundsInScreen": "24,678,1054,762",
-          "level": "ERROR",
-          "message": "This item's height is 32dp. Consider making the height of this touch target 48dp or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Living Room\""
-        },
-        {
-          "boundsInScreen": "55,972,1022,1056",
-          "level": "ERROR",
-          "message": "This item's height is 32dp. Consider making the height of this touch target 48dp or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Living Room\""
-        },
-        {
-          "boundsInScreen": "55,1056,1022,1146",
+          "boundsInScreen": "56,1040,1023,1130",
           "level": "ERROR",
           "message": "This item's height is 34dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Kitchen\""
+          "viewDescription": "android.view.View"
         },
         {
-          "boundsInScreen": "55,1146,1022,1235",
-          "level": "ERROR",
-          "message": "This item's height is 34dp. Consider making the height of this touch target 48dp or larger.",
+          "boundsInScreen": "913,1040,1039,1130",
+          "level": "WARNING",
+          "message": "This item's height is 34dp. Consider making the height of this touch target 48dp or larger. A parent container may be handling touch events for this item. If selecting the larger container performs the same action as selecting this item, consider defining this item as not clickable. If a different action is performed, consider increasing the size of this item.",
           "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Coffee maker\""
+          "viewDescription": "android.view.View"
         },
         {
-          "boundsInScreen": "501,1546,604,1732",
-          "level": "ERROR",
-          "message": "This item's width is 39dp. Consider making the width of this touch target 48dp or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Kitchen\""
+          "boundsInScreen": "56,150,1023,276",
+          "level": "WARNING",
+          "message": "This clickable item's speakable text: \"Living Room, Living Room, 21.4 \u00b0C\" is identical to that of 3 other item(s).",
+          "type": "DuplicateSpeakableTextCheck",
+          "viewDescription": "android.view.View"
+        },
+        {
+          "boundsInScreen": "56,386,1023,562",
+          "level": "WARNING",
+          "message": "This clickable item's speakable text: \"Kitchen, Kitchen\" is identical to that of 1 other item(s).",
+          "type": "DuplicateSpeakableTextCheck",
+          "viewDescription": "android.view.View"
         }
       ],
       "functionName": "Sizing_FixedSlot_Wrap",
@@ -5637,81 +3928,39 @@
       "cleanBasename": "Sizing_SlackSlot_PaintMeasure_sizing_slack_slot_paint_measure_profile-2303bb70.png",
       "findings": [
         {
-          "boundsInScreen": "24,156,1054,332",
+          "boundsInScreen": "56,1142,1023,1229",
           "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "24,417,1054,719",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "24,804,1054,993",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "24,1078,1054,1624",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "24,1709,1054,2171",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "24,156,1054,272",
-          "level": "ERROR",
-          "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
+          "message": "This item's height is 33dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Living Room\""
+          "viewDescription": "android.view.View"
         },
         {
-          "boundsInScreen": "24,804,1054,888",
-          "level": "ERROR",
-          "message": "This item's height is 32dp. Consider making the height of this touch target 48dp or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Living Room\""
-        },
-        {
-          "boundsInScreen": "55,1161,1022,1245",
-          "level": "ERROR",
-          "message": "This item's height is 32dp. Consider making the height of this touch target 48dp or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Living Room\""
-        },
-        {
-          "boundsInScreen": "55,1245,1022,1335",
+          "boundsInScreen": "56,1229,1023,1319",
           "level": "ERROR",
           "message": "This item's height is 34dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Kitchen\""
+          "viewDescription": "android.view.View"
         },
         {
-          "boundsInScreen": "55,1335,1022,1424",
-          "level": "ERROR",
-          "message": "This item's height is 34dp. Consider making the height of this touch target 48dp or larger.",
+          "boundsInScreen": "913,1229,1039,1319",
+          "level": "WARNING",
+          "message": "This item's height is 34dp. Consider making the height of this touch target 48dp or larger. A parent container may be handling touch events for this item. If selecting the larger container performs the same action as selecting this item, consider defining this item as not clickable. If a different action is performed, consider increasing the size of this item.",
           "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Coffee maker\""
+          "viewDescription": "android.view.View"
         },
         {
-          "boundsInScreen": "501,1798,604,1984",
-          "level": "ERROR",
-          "message": "This item's width is 39dp. Consider making the width of this touch target 48dp or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Kitchen\""
+          "boundsInScreen": "56,151,1023,277",
+          "level": "WARNING",
+          "message": "This clickable item's speakable text: \"Living Room, Living Room, 21.4 \u00b0C\" is identical to that of 3 other item(s).",
+          "type": "DuplicateSpeakableTextCheck",
+          "viewDescription": "android.view.View"
+        },
+        {
+          "boundsInScreen": "56,449,1023,631",
+          "level": "WARNING",
+          "message": "This clickable item's speakable text: \"Kitchen, Kitchen\" is identical to that of 1 other item(s).",
+          "type": "DuplicateSpeakableTextCheck",
+          "viewDescription": "android.view.View"
         }
       ],
       "functionName": "Sizing_SlackSlot_PaintMeasure",
@@ -5726,81 +3975,39 @@
       "cleanBasename": "Sizing_SlackSlot_Wrap_sizing_slack_slot_wrap_profile-d620e6e1.png",
       "findings": [
         {
-          "boundsInScreen": "24,156,1054,332",
+          "boundsInScreen": "56,1142,1023,1229",
           "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "24,417,1054,719",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "24,804,1054,993",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "24,1078,1054,1624",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "24,1709,1054,2171",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "24,156,1054,272",
-          "level": "ERROR",
-          "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
+          "message": "This item's height is 33dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Living Room\""
+          "viewDescription": "android.view.View"
         },
         {
-          "boundsInScreen": "24,804,1054,888",
-          "level": "ERROR",
-          "message": "This item's height is 32dp. Consider making the height of this touch target 48dp or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Living Room\""
-        },
-        {
-          "boundsInScreen": "55,1161,1022,1245",
-          "level": "ERROR",
-          "message": "This item's height is 32dp. Consider making the height of this touch target 48dp or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Living Room\""
-        },
-        {
-          "boundsInScreen": "55,1245,1022,1335",
+          "boundsInScreen": "56,1229,1023,1319",
           "level": "ERROR",
           "message": "This item's height is 34dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Kitchen\""
+          "viewDescription": "android.view.View"
         },
         {
-          "boundsInScreen": "55,1335,1022,1424",
-          "level": "ERROR",
-          "message": "This item's height is 34dp. Consider making the height of this touch target 48dp or larger.",
+          "boundsInScreen": "913,1229,1039,1319",
+          "level": "WARNING",
+          "message": "This item's height is 34dp. Consider making the height of this touch target 48dp or larger. A parent container may be handling touch events for this item. If selecting the larger container performs the same action as selecting this item, consider defining this item as not clickable. If a different action is performed, consider increasing the size of this item.",
           "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Coffee maker\""
+          "viewDescription": "android.view.View"
         },
         {
-          "boundsInScreen": "501,1798,604,1984",
-          "level": "ERROR",
-          "message": "This item's width is 39dp. Consider making the width of this touch target 48dp or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Kitchen\""
+          "boundsInScreen": "56,151,1023,277",
+          "level": "WARNING",
+          "message": "This clickable item's speakable text: \"Living Room, Living Room, 21.4 \u00b0C\" is identical to that of 3 other item(s).",
+          "type": "DuplicateSpeakableTextCheck",
+          "viewDescription": "android.view.View"
+        },
+        {
+          "boundsInScreen": "56,449,1023,631",
+          "level": "WARNING",
+          "message": "This clickable item's speakable text: \"Kitchen, Kitchen\" is identical to that of 1 other item(s).",
+          "type": "DuplicateSpeakableTextCheck",
+          "viewDescription": "android.view.View"
         }
       ],
       "functionName": "Sizing_SlackSlot_Wrap",
@@ -5815,81 +4022,32 @@
       "cleanBasename": "Sizing_TightSlot_PaintMeasure_sizing_tight_slot_paint_measure_profile-6d918ba0.png",
       "findings": [
         {
-          "boundsInScreen": "24,156,1054,227",
+          "boundsInScreen": "56,827,1023,914",
           "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "24,312,1054,509",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "24,594,1054,678",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "24,763,1054,1204",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "24,1289,1054,1646",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "24,156,1054,227",
-          "level": "ERROR",
-          "message": "This item's height is 27dp. Consider making the height of this touch target 48dp or larger.",
+          "message": "This item's height is 33dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Living Room\""
+          "viewDescription": "android.view.View"
         },
         {
-          "boundsInScreen": "24,594,1054,678",
-          "level": "ERROR",
-          "message": "This item's height is 32dp. Consider making the height of this touch target 48dp or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Living Room\""
-        },
-        {
-          "boundsInScreen": "55,846,1022,930",
-          "level": "ERROR",
-          "message": "This item's height is 32dp. Consider making the height of this touch target 48dp or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Living Room\""
-        },
-        {
-          "boundsInScreen": "55,930,1022,1020",
+          "boundsInScreen": "56,914,1023,1004",
           "level": "ERROR",
           "message": "This item's height is 34dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Kitchen\""
+          "viewDescription": "android.view.View"
         },
         {
-          "boundsInScreen": "55,1020,1022,1109",
-          "level": "ERROR",
-          "message": "This item's height is 34dp. Consider making the height of this touch target 48dp or larger.",
+          "boundsInScreen": "913,914,1039,1004",
+          "level": "WARNING",
+          "message": "This item's height is 34dp. Consider making the height of this touch target 48dp or larger. A parent container may be handling touch events for this item. If selecting the larger container performs the same action as selecting this item, consider defining this item as not clickable. If a different action is performed, consider increasing the size of this item.",
           "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Coffee maker\""
+          "viewDescription": "android.view.View"
         },
         {
-          "boundsInScreen": "501,1378,604,1564",
-          "level": "ERROR",
-          "message": "This item's width is 39dp. Consider making the width of this touch target 48dp or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Kitchen\""
+          "boundsInScreen": "24,573,1054,699",
+          "level": "WARNING",
+          "message": "This clickable item's speakable text: \"Living Room, Living Room, 21.4 \u00b0C\" is identical to that of 2 other item(s).",
+          "type": "DuplicateSpeakableTextCheck",
+          "viewDescription": "android.view.View"
         }
       ],
       "functionName": "Sizing_TightSlot_PaintMeasure",
@@ -5904,81 +4062,32 @@
       "cleanBasename": "Sizing_TightSlot_Wrap_sizing_tight_slot_wrap_profile-48f47102.png",
       "findings": [
         {
-          "boundsInScreen": "24,156,1054,227",
+          "boundsInScreen": "56,827,1023,914",
           "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "24,312,1054,509",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "24,594,1054,678",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "24,763,1054,1204",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "24,1289,1054,1646",
-          "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
-        },
-        {
-          "boundsInScreen": "24,156,1054,227",
-          "level": "ERROR",
-          "message": "This item's height is 27dp. Consider making the height of this touch target 48dp or larger.",
+          "message": "This item's height is 33dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Living Room\""
+          "viewDescription": "android.view.View"
         },
         {
-          "boundsInScreen": "24,594,1054,678",
-          "level": "ERROR",
-          "message": "This item's height is 32dp. Consider making the height of this touch target 48dp or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Living Room\""
-        },
-        {
-          "boundsInScreen": "55,846,1022,930",
-          "level": "ERROR",
-          "message": "This item's height is 32dp. Consider making the height of this touch target 48dp or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Living Room\""
-        },
-        {
-          "boundsInScreen": "55,930,1022,1020",
+          "boundsInScreen": "56,914,1023,1004",
           "level": "ERROR",
           "message": "This item's height is 34dp. Consider making the height of this touch target 48dp or larger.",
           "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Kitchen\""
+          "viewDescription": "android.view.View"
         },
         {
-          "boundsInScreen": "55,1020,1022,1109",
-          "level": "ERROR",
-          "message": "This item's height is 34dp. Consider making the height of this touch target 48dp or larger.",
+          "boundsInScreen": "913,914,1039,1004",
+          "level": "WARNING",
+          "message": "This item's height is 34dp. Consider making the height of this touch target 48dp or larger. A parent container may be handling touch events for this item. If selecting the larger container performs the same action as selecting this item, consider defining this item as not clickable. If a different action is performed, consider increasing the size of this item.",
           "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Coffee maker\""
+          "viewDescription": "android.view.View"
         },
         {
-          "boundsInScreen": "501,1378,604,1564",
-          "level": "ERROR",
-          "message": "This item's width is 39dp. Consider making the width of this touch target 48dp or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Kitchen\""
+          "boundsInScreen": "24,573,1054,699",
+          "level": "WARNING",
+          "message": "This clickable item's speakable text: \"Living Room, Living Room, 21.4 \u00b0C\" is identical to that of 2 other item(s).",
+          "type": "DuplicateSpeakableTextCheck",
+          "viewDescription": "android.view.View"
         }
       ],
       "functionName": "Sizing_TightSlot_Wrap",
@@ -5993,18 +4102,18 @@
       "cleanBasename": "Sizing_WidthPinnedHeightAdaptive_sizing_width_pinned_height_adaptive-e082424e.png",
       "findings": [
         {
-          "boundsInScreen": "21,211,494,2079",
+          "boundsInScreen": "53,2058,463,2100",
           "level": "ERROR",
-          "message": "This item may not have a label readable by screen readers.",
-          "type": "SpeakableTextPresentCheck",
-          "viewDescription": "androidx.compose.remote.player.view.RemoteComposePlayer"
+          "message": "This item's height is 16dp. Consider making the height of this touch target 32dp or larger.",
+          "type": "TouchTargetSizeCheck",
+          "viewDescription": "android.view.View"
         },
         {
-          "boundsInScreen": "21,211,494,327",
-          "level": "ERROR",
-          "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
+          "boundsInScreen": "353,2058,479,2100",
+          "level": "WARNING",
+          "message": "This item's height is 16dp. Consider making the height of this touch target 32dp or larger. A parent container may be handling touch events for this item. If selecting the larger container performs the same action as selecting this item, consider defining this item as not clickable. If a different action is performed, consider increasing the size of this item.",
           "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View  desc=\"Living Room\""
+          "viewDescription": "android.view.View"
         }
       ],
       "functionName": "Sizing_WidthPinnedHeightAdaptive",
