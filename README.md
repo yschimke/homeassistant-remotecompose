@@ -159,3 +159,11 @@ Auth is a long-lived access token (HA Profile → Security → create token).
   (serves `.rc` bytes over HTTP) and an Android-side deployment (fetches
   config + renders locally) are both viable; keep the converter pure so
   both work.
+
+### Desktop downloads
+
+Release tags publish desktop installers to [GitHub Releases](https://github.com/yschimke/homeassistant-remotecompose/releases): Linux x64 (`.deb`), Windows x64 (`.msi`), and macOS Intel/Apple Silicon (`.dmg`). Each installer bundles Java; a separate Java installation is unnecessary. Installers are currently unsigned and macOS builds are not notarized.
+
+Desktop installer checks run on pull requests and retain their packages as workflow artifacts. The **Desktop installers** workflow can also build any ref without publishing, or rebuild an existing release by supplying its tag. Release assets include SHA-256 checksums, and their filenames identify the application version and architecture. Installer metadata offsets the semantic major version by one to satisfy macOS packaging requirements while keeping upgrades monotonic.
+
+Local packaging: `./gradlew :app-ui:packageDistributionForCurrentOS`. Override the app version with `-PdesktopVersion=0.1.0`.

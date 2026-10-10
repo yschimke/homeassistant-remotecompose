@@ -1,0 +1,108 @@
+name: Desktop installers
+
+on:
+  pull_request:
+    paths:
+      - 'desktop-app/**'
+      - 'app-ui/**'
+      - 'meshcore-*/**'
+      - 'ha-client/**'
+      - 'ha-model/**'
+      - 'rc-player-ui/**'
+      - 'gradle/**'
+      - '*.gradle.kts'
+      - 'gradle.properties'
+      - '.github/actions/**'
+      - '.github/workflows/desktop-release.yml'
+      - '.github/workflows/release-build.yml'
+      - 'scripts/stage-desktop-assets.py'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Existing release tag to build and publish (empty builds this ref without publishing)'
+        type: string
+        default: ''
+  workflow_call:
+    inputs:
+      tag:
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: desktop-${{ inputs.tag || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  package:
+    name: Desktop / ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-2022, macos-15-intel, macos-15]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          ref: ${{ inputs.tag || github.ref }}
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.x'
+      - uses: ./.github/actions/setup
+        with:
+          cache-read-only: 'true'
+      - name: Install Linux packaging tools
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y fakeroot
+      - name: Resolve release version
+        id: version
+        env:
+          RELEASE_TAG: ${{ inputs.tag }}
+        run: |
+          python - <<'PYTHON'
+          import json, os, re
+          from pathlib import Path
+          version = os.environ['RELEASE_TAG'].removeprefix('v') or json.loads(Path('.github/.release-please-manifest.json').read_text())['.']
+          if not re.fullmatch(r'[0-9]+\.[0-9]+\.[0-9]+', version):
+              raise SystemExit('Release tag must contain MAJOR.MINOR.PATCH')
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
+              output.write(f'version={version}\n')
+          PYTHON
+      - name: Package native installer
+        env:
+          DESKTOP_VERSION: ${{ steps.version.outputs.version }}
+        run: ./gradlew :app-ui:packageDistributionForCurrentOS -PdesktopVersion="$DESKTOP_VERSION" --stacktrace
+      - name: Stage installers and checksums
+        env:
+          DESKTOP_VERSION: ${{ steps.version.outputs.version }}
+        run: python scripts/stage-desktop-assets.py app-ui terrazzo "$DESKTOP_VERSION"
+      - uses: actions/upload-artifact@v7.0.1
+        with:
+          name: desktop-${{ runner.os }}-${{ runner.arch }}
+          path: _release-desktop/
+          if-no-files-found: error
+
+  publish:
+    name: Attach desktop installers to release
+    if: inputs.tag != '' && github.event_name != 'pull_request'
+    needs: package
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v8.0.1
+        with:
+          pattern: desktop-*
+          path: _release-desktop
+          merge-multiple: true
+      - uses: softprops/action-gh-release@v3.0.3
+        with:
+          tag_name: ${{ inputs.tag }}
+          files: _release-desktop/*
+          fail_on_unmatched_files: true

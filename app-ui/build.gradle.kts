@@ -54,13 +54,43 @@ kotlin {
   }
 }
 
+// Release jobs pass the tag version; local builds follow Android's release-please version.
+val desktopVersion =
+  providers
+    .gradleProperty("desktopVersion")
+    .orElse(
+      providers
+        .fileContents(rootProject.layout.projectDirectory.file("app/build.gradle.kts"))
+        .asText
+        .map { Regex("""val appVersionName = "([^"]+)"""").find(it)!!.groupValues[1] }
+    )
+    .get()
+
+require(Regex("[0-9]+\\.[0-9]+\\.[0-9]+").matches(desktopVersion)) {
+  "desktopVersion must be MAJOR.MINOR.PATCH"
+}
+
+// jpackage requires a positive major on macOS. Offset the major on every OS
+// to keep installer upgrades monotonic, including the eventual 1.0 release.
+val installerVersion = desktopVersion.split(".").let { "${it[0].toInt() + 1}.${it[1]}.${it[2]}" }
+
 compose.desktop {
   application {
     mainClass = "ee.schimke.terrazzo.desktop.MainKt"
     nativeDistributions {
       targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
       packageName = "Terrazzo"
-      packageVersion = "1.0.0"
+      packageVersion = installerVersion
+      includeAllModules = true
+      description = "Terrazzo desktop client"
+      vendor = "Yuri Schimke"
+      macOS { bundleID = "ee.schimke.terrazzo.desktop" }
+      windows {
+        menu = true
+        shortcut = true
+        upgradeUuid = "6e4c949a-3f8d-4259-bdf4-fbb042453817"
+      }
+      linux { menuGroup = "Network" }
     }
   }
 }

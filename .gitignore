@@ -22,3 +22,6 @@ __pycache__/
 ios/DerivedData/
 ios/*.xcworkspace/xcuserdata/
 ios/**/*.xcodeproj/xcuserdata/
+
+# Staged desktop release installers.
+/_release-desktop/

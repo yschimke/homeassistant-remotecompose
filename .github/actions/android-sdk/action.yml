@@ -6,4 +6,6 @@ runs:
     - name: Install compile platform and build tools
       shell: bash
       run: |
-        "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-37.1" "build-tools;37.0.0" >/dev/null
+        sdkmanager="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+        if [[ "$RUNNER_OS" == "Windows" ]]; then sdkmanager="${sdkmanager}.bat"; fi
+        "$sdkmanager" "platforms;android-37.1" "build-tools;37.0.0" >/dev/null
