@@ -1,11 +1,27 @@
 {
   "schema": "compose-preview-activity/v1",
-  "generatedAt": "2026-10-10T19:15:51.851Z",
+  "generatedAt": "2026-10-10T20:45:12.600Z",
   "windowDays": 30,
   "code": {
     "repo": "yschimke/homeassistant-remotecompose",
     "ref": "main",
     "events": [
+      {
+        "sha": "7bff59c501a0fb62706eb5f997c5164e5041c894",
+        "subject": "fix: render and validate distinct UID themes (#713)",
+        "at": "2026-10-10T19:54:32+01:00",
+        "author": "Yuri Schimke",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "6c923b01187320d6aecdee0a382b740bb361b717",
+        "subject": "feat: publish desktop installers with application releases (#712)",
+        "at": "2026-10-10T19:42:36+01:00",
+        "author": "Yuri Schimke",
+        "previewIds": [],
+        "components": []
+      },
       {
         "sha": "c162bae9c328f326af79eb1c9554a5978f074766",
         "subject": "chore(deps): update yschimke/compose-ai-tools digest to d4c376d (#711)",
