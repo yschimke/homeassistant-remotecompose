@@ -502,7 +502,7 @@
       "properties": {
         "checked": {
           "type": "bool",
-          "value": false
+          "value": true
         },
         "enabled": {
           "type": "bool",
@@ -510,7 +510,12 @@
         }
       },
       "slots": {},
-      "modifiers": [],
+      "modifiers": [
+        {
+          "type": "height",
+          "heightDp": 48
+        }
+      ],
       "eventBindings": {}
     },
     "back-text": {
