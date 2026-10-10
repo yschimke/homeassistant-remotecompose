@@ -235,6 +235,22 @@
     [
       "dashboards-840-list-dark",
       "dashboards-840-detail-dark"
+    ],
+    [
+      "dashboards-412-list-light",
+      "dashboards-412-list-dark"
+    ],
+    [
+      "dashboards-412-detail-light",
+      "dashboards-412-detail-dark"
+    ],
+    [
+      "dashboards-840-list-light",
+      "dashboards-840-list-dark"
+    ],
+    [
+      "dashboards-840-detail-light",
+      "dashboards-840-detail-dark"
     ]
   ],
   "publication": {
