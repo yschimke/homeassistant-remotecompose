@@ -1,3 +1,4 @@
+import CoreFoundation
 import Foundation
 
 struct DashboardFeed: Codable, Equatable, Sendable {
@@ -54,12 +55,23 @@ struct DashboardCard: Codable, Identifiable, Equatable, Sendable {
 enum BindingValue: Equatable, Sendable {
   case string(String)
   case float(Float)
+  case integer(Int)
   case color(UInt32)
 
-  init?(json: Any) {
+  init?(name: String, json: Any) {
     switch json {
-    case let value as Bool: self = .float(value ? 1 : 0)
-    case let value as NSNumber: self = .float(value.floatValue)
+    case let value as NSNumber:
+      if CFGetTypeID(value) == CFBooleanGetTypeID() {
+        self = .integer(value.boolValue ? 1 : 0)
+      } else if name.hasSuffix(".state_int") || name.hasSuffix(".is_on") {
+        guard let integer = Int(exactly: value.doubleValue),
+          !name.hasSuffix(".is_on") || integer == 0 || integer == 1
+        else { return nil }
+        self = .integer(integer)
+      } else {
+        guard value.floatValue.isFinite else { return nil }
+        self = .float(value.floatValue)
+      }
     case let value as String: self = .string(value)
     default: return nil
     }

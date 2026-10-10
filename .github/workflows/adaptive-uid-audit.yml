@@ -1,0 +1,23 @@
+name: Adaptive UID design audit
+
+# Match remote-m3-catalog's OpenRouter guidelines lane. This workflow must land
+# on the default branch before workflow_run can trigger it for PRs.
+on:
+  workflow_run:
+    workflows: [Adaptive UID pilot]
+    types: [completed]
+
+permissions:
+  contents: read
+  actions: read
+
+# Shared setup: https://github.com/yschimke/compose-ai-tools/pull/5783
+# Integration-test pin. Replace with the landed revision before merging this caller.
+jobs:
+  audit:
+    uses: yschimke/compose-ai-tools/.github/workflows/uid-design-audit-reusable.yml@6d2bfe0ed52a5134b6413f7b4780e7bb932cf057
+    with:
+      enabled: true
+      pilot-directory: adaptive-uid-pilot
+    secrets:
+      OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}

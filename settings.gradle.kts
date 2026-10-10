@@ -68,3 +68,8 @@ if (providers.gradleProperty("typedAdapterCatalog").orNull == "true") {
   includeBuild(builderSource)
   include(":ui-builder-catalog")
 }
+
+// Repository-owned UI Builder screen pilot; excluded from default catalog publication.
+if (providers.gradleProperty("adaptiveUidPilot").orNull == "true") {
+  include(":adaptive-uid-pilot")
+}
