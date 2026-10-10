@@ -296,7 +296,7 @@
       "properties": {
         "text": {
           "type": "string",
-          "value": "These preferences are local proposal state. They do not change the app settings."
+          "value": "Demo preferences \u00b7 Changes stay in this preview."
         },
         "style": {
           "type": "enum",

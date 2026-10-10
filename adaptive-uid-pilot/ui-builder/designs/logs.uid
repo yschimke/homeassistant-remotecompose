@@ -296,7 +296,7 @@
       "properties": {
         "text": {
           "type": "string",
-          "value": "Sample logs omit access tokens and credentials."
+          "value": "Access tokens and credentials are hidden."
         },
         "style": {
           "type": "enum",

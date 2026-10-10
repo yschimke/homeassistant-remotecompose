@@ -296,7 +296,7 @@
       "properties": {
         "text": {
           "type": "string",
-          "value": "Sample controls call local callbacks; they never operate a real device."
+          "value": "Demo controls \u00b7 No devices are changed."
         },
         "style": {
           "type": "enum",

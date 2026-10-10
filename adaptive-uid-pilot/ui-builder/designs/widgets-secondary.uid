@@ -157,7 +157,7 @@
       "properties": {
         "text": {
           "type": "string",
-          "value": "The installed-widget inventory is not implemented in the current app."
+          "value": "Add your first widget from a dashboard card."
         },
         "style": {
           "type": "enum",
@@ -296,7 +296,7 @@
       "properties": {
         "text": {
           "type": "string",
-          "value": "This proposal keeps the existing empty state; it does not invent an installed inventory."
+          "value": "Long-press a dashboard card to add it to your home screen."
         },
         "style": {
           "type": "enum",

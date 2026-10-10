@@ -296,7 +296,7 @@
       "properties": {
         "text": {
           "type": "string",
-          "value": "This proposal uses an accessible value list; production also draws history charts."
+          "value": "Select a time range to review recorded values."
         },
         "style": {
           "type": "enum",

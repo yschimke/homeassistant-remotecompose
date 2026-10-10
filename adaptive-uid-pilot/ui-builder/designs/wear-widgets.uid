@@ -405,7 +405,7 @@
       "properties": {
         "text": {
           "type": "string",
-          "value": "Pinned light card\nChoose another pinned card or clear this slot."
+          "value": "Pinned light card\nClear this slot to remove it from your watch."
         },
         "style": {
           "type": "enum",

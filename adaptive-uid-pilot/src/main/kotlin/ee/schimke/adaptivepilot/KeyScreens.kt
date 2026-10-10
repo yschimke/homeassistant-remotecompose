@@ -341,7 +341,7 @@ private val screenSpecs =
         "Your rooms and frequently used controls.",
         "Connected",
         "Home · Live updates",
-        "Sample controls call local callbacks; they never operate a real device.",
+        "Demo controls · No devices are changed.",
         listOf(
           Panel(
             "Living room",
@@ -391,7 +391,7 @@ private val screenSpecs =
         "Connection and display preferences.",
         "Configured server",
         "http://homeassistant.local:8123",
-        "These preferences are local proposal state. They do not change the app settings.",
+        "Demo preferences · Changes stay in this preview.",
         listOf(
           Panel(
             "Session",
@@ -412,8 +412,8 @@ private val screenSpecs =
         "Installed widgets",
         "Add dashboard cards to your phone's home screen.",
         "No widgets yet",
-        "The installed-widget inventory is not implemented in the current app.",
-        "This proposal keeps the existing empty state; it does not invent an installed inventory.",
+        "Add your first widget from a dashboard card.",
+        "Long-press a dashboard card to add it to your home screen.",
         listOf(
           Panel(
             "Add a widget",
@@ -465,7 +465,7 @@ private val screenSpecs =
             "Slot 1",
             "Assigned widget",
             "Living room lamp",
-            "Pinned light card\nChoose another pinned card or clear this slot.",
+            "Pinned light card\nClear this slot to remove it from your watch.",
           ),
           Panel(
             "Slot 2",
@@ -481,7 +481,7 @@ private val screenSpecs =
         "Inspect the phone-to-watch data stream.",
         "Watch connected",
         "Live deltas while the watch lease is active",
-        "Counters describe sample traffic, not measurements from a connected watch.",
+        "Demo counters · Sample watch traffic.",
         listOf(
           Panel(
             "Active stream",
@@ -503,7 +503,7 @@ private val screenSpecs =
         "Connection and action diagnostics.",
         "Connection healthy",
         "WebSocket connected · Last update 12:00",
-        "Sample logs omit access tokens and credentials.",
+        "Access tokens and credentials are hidden.",
         listOf(
           Panel(
             "Connection events",
@@ -525,7 +525,7 @@ private val screenSpecs =
         "Recorded state changes for the selected entity.",
         "Kitchen temperature",
         "sensor.kitchen_temperature · °C",
-        "This proposal uses an accessible value list; production also draws history charts.",
+        "Select a time range to review recorded values.",
         listOf(
           Panel(
             "Last hour",

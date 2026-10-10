@@ -296,7 +296,7 @@
       "properties": {
         "text": {
           "type": "string",
-          "value": "Counters describe sample traffic, not measurements from a connected watch."
+          "value": "Demo counters \u00b7 Sample watch traffic."
         },
         "style": {
           "type": "enum",
