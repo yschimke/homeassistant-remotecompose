@@ -14,11 +14,14 @@ kotlin {
 
   android {
     namespace = "ee.schimke.ha.client"
-    compileSdk = libs.versions.android.compileSdk.get().toInt()
+    compileSdk {
+      version = release(libs.versions.android.compileSdk.get().toInt()) { minorApiLevel = 1 }
+    }
     minSdk = libs.versions.android.minSdk.get().toInt()
     withHostTest {}
   }
   jvm()
+  @OptIn(org.jetbrains.kotlin.gradle.ExperimentalWasmDsl::class) wasmJs { browser() }
   listOf(iosArm64(), iosSimulatorArm64()).forEach { appleTarget ->
     appleTarget.binaries.framework {
       baseName = "TerrazzoKit"
@@ -44,6 +47,7 @@ kotlin {
     }
     androidMain.dependencies { implementation(libs.ktor.client.okhttp) }
     jvmMain.dependencies { implementation(libs.ktor.client.cio) }
+    wasmJsMain.dependencies { implementation(libs.ktor.client.js) }
     iosMain.dependencies { implementation(libs.ktor.client.darwin) }
   }
 }

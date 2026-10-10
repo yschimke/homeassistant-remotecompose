@@ -10,11 +10,14 @@ kotlin {
 
   android {
     namespace = "ee.schimke.ha.model"
-    compileSdk = libs.versions.android.compileSdk.get().toInt()
+    compileSdk {
+      version = release(libs.versions.android.compileSdk.get().toInt()) { minorApiLevel = 1 }
+    }
     minSdk = libs.versions.android.minSdk.get().toInt()
     withHostTest {}
   }
   jvm()
+  @OptIn(org.jetbrains.kotlin.gradle.ExperimentalWasmDsl::class) wasmJs { browser() }
   iosArm64()
   iosSimulatorArm64()
 

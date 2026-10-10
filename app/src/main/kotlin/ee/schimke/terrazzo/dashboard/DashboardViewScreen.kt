@@ -8,7 +8,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalGridApi
 import androidx.compose.foundation.layout.Grid
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -727,7 +726,6 @@ private fun SectionRow(
  * Cards inside a section size themselves to their document's intrinsic content height via
  * `WrapAdaptiveRemoteDocumentPlayer` (called from `CachedCardPreview`).
  */
-@OptIn(ExperimentalGridApi::class)
 @Composable
 private fun SectionGrid(
   sections: List<SectionLayout>,

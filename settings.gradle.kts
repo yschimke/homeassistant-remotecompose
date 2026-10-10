@@ -22,7 +22,7 @@ file("local.properties")
   }
 
 dependencyResolutionManagement {
-  repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+  repositoriesMode.set(RepositoriesMode.PREFER_SETTINGS)
   repositories {
     // Remote Compose (`androidx.compose.remote`), its Wear widget layer
     // (`androidx.wear.compose.remote`) and Glance Wear (`androidx.glance.wear`)
@@ -32,6 +32,31 @@ dependencyResolutionManagement {
     // note on `remote-compose` in `gradle/libs.versions.toml`.
     google()
     mavenCentral()
+    // Kotlin's browser toolchain adds temporary project repositories. Keep resolution
+    // centralized here, including the Node and Yarn distributions it needs.
+    ivy {
+      name = "Binaryen distributions"
+      url = uri("https://github.com/WebAssembly/binaryen/releases/download")
+      patternLayout {
+        artifact("version_[revision]/[artifact]-version_[revision]-[classifier].[ext]")
+      }
+      metadataSources { artifact() }
+      content { includeGroup("com.github.webassembly") }
+    }
+    ivy {
+      name = "Node distributions"
+      url = uri("https://nodejs.org/dist")
+      patternLayout { artifact("v[revision]/[artifact](-v[revision]-[classifier]).[ext]") }
+      metadataSources { artifact() }
+      content { includeGroup("org.nodejs") }
+    }
+    ivy {
+      name = "Yarn distributions"
+      url = uri("https://github.com/yarnpkg/yarn/releases/download")
+      patternLayout { artifact("v[revision]/[artifact](-v[revision]).[ext]") }
+      metadataSources { artifact() }
+      content { includeGroup("com.yarnpkg") }
+    }
   }
 }
 
@@ -53,4 +78,5 @@ include(
   ":tv",
   ":integration",
   ":addon-server",
+  ":app-ui",
 )

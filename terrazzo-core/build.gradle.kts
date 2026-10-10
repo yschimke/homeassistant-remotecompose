@@ -12,12 +12,16 @@ kotlin {
 
   android {
     namespace = "ee.schimke.terrazzo.core"
-    compileSdk = libs.versions.android.compileSdk.get().toInt()
+    compileSdk {
+      version = release(libs.versions.android.compileSdk.get().toInt()) { minorApiLevel = 1 }
+    }
     // RemoteCompose widget needs API 35+; align with :app so Android
     // sources can reference the same platform APIs.
     minSdk = 35
     withHostTest {}
   }
+  jvm()
+  @OptIn(org.jetbrains.kotlin.gradle.ExperimentalWasmDsl::class) wasmJs { browser() }
 
   sourceSets {
     commonMain.dependencies {
@@ -26,6 +30,7 @@ kotlin {
       implementation(libs.kotlinx.coroutines.core)
       implementation(libs.kotlinx.serialization.json)
       implementation(libs.kotlinx.serialization.protobuf)
+      implementation(libs.ktor.client.core)
     }
     androidMain.dependencies {
       implementation(libs.androidx.datastore)

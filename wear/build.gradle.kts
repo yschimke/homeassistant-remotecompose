@@ -21,7 +21,9 @@ plugins {
 
 android {
   namespace = "ee.schimke.terrazzo.wear"
-  compileSdk = libs.versions.android.compileSdk.get().toInt()
+  compileSdk {
+    version = release(libs.versions.android.compileSdk.get().toInt()) { minorApiLevel = 1 }
+  }
   defaultConfig {
     applicationId = "ee.schimke.harc"
     minSdk = 30

@@ -18,9 +18,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import ee.schimke.composeai.rcplayer.runtime.RcHostActionValue
+import ee.schimke.composeai.rcplayer.runtime.RcNamedValue
+import ee.schimke.composeai.rcplayer.runtime.RcPlayerEvent
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.components.HA_ACTION_NAME
+import ee.schimke.terrazzo.shared.RemoteComposeCard
+import ee.schimke.terrazzo.shared.canPlayWithCmp
 import kotlinx.coroutines.runBlocking
 
 /**
@@ -151,6 +156,39 @@ fun CachedCardPreview(
   val dispatcher = LocalHaActionDispatcher.current
 
   val entityIds = remember(card) { card?.let { cardEntityIds(it) }.orEmpty() }
+  val useCmp = remember(cardDocument.bytes) { canPlayWithCmp(cardDocument.bytes) }
+  if (useCmp) {
+    val bindings =
+      if (liveBindings && snapshot != null) {
+        val source = cardSnapshotBindings(entityIds, snapshot)
+        buildMap<String, RcNamedValue> {
+          source.strings.forEach { (name, value) -> put(name, RcNamedValue.Text(value)) }
+          source.booleans.forEach { (name, value) -> put(name, RcNamedValue.BooleanValue(value)) }
+          source.ints.forEach { (name, value) -> put(name, RcNamedValue.Integer(value)) }
+          source.floats.forEach { (name, value) -> put(name, RcNamedValue.FloatValue(value)) }
+        }
+      } else emptyMap()
+    RemoteComposeCard(
+      bytes = cardDocument.bytes,
+      modifier = modifier,
+      bindings = bindings,
+      onEvent = { event ->
+        when (event) {
+          is RcPlayerEvent.HostNamedAction ->
+            if (event.name == HA_ACTION_NAME) {
+              (event.value as? RcHostActionValue.TextValue)
+                ?.value
+                ?.let(::decodeHaAction)
+                ?.let(dispatcher::dispatch)
+            }
+          is RcPlayerEvent.HostActionMetadata ->
+            decodeHaAction(event.metadata)?.let(dispatcher::dispatch)
+          else -> Unit
+        }
+      },
+    )
+    return
+  }
   // The handle survives recomposition but is replaced if the player
   // is torn down and rebuilt (cache invalidation, theme flip).
   val updaterHolder = remember { mutableStateOf<StateUpdater?>(null) }

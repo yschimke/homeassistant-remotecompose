@@ -6,7 +6,9 @@ plugins {
 
 android {
   namespace = "ee.schimke.terrazzo.tv"
-  compileSdk = libs.versions.android.compileSdk.get().toInt()
+  compileSdk {
+    version = release(libs.versions.android.compileSdk.get().toInt()) { minorApiLevel = 1 }
+  }
   defaultConfig {
     applicationId = "ee.schimke.terrazzo.tv"
     // Match rc-components' minSdk (29). Android TV 10 (API 29) is

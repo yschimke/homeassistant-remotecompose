@@ -7,7 +7,9 @@ plugins {
 
 android {
   namespace = "ee.schimke.ha.rc.cards.shutter"
-  compileSdk = libs.versions.android.compileSdk.get().toInt()
+  compileSdk {
+    version = release(libs.versions.android.compileSdk.get().toInt()) { minorApiLevel = 1 }
+  }
   defaultConfig { minSdk = libs.versions.android.minSdk.get().toInt() }
   buildFeatures { compose = true }
   compileOptions {
