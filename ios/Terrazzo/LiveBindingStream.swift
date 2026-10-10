@@ -92,6 +92,10 @@ actor LiveBindingStream {
       return .documentsChanged(Set(cardIDs))
     }
     guard type == "state", let raw = object["bindings"] as? [String: Any] else { return nil }
-    return .bindings(raw.compactMapValues(BindingValue.init(json:)))
+    var bindings: [String: BindingValue] = [:]
+    for (name, value) in raw {
+      bindings[name] = BindingValue(name: name, json: value)
+    }
+    return .bindings(bindings)
   }
 }
