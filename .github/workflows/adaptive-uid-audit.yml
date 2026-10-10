@@ -11,13 +11,15 @@ permissions:
   contents: read
   actions: read
 
-# Shared setup: https://github.com/yschimke/compose-ai-tools/pull/5783
+# Shared setup: https://github.com/yschimke/compose-ai-tools/pull/5787
 # Integration-test pin. Replace with the landed revision before merging this caller.
 jobs:
   audit:
-    uses: yschimke/compose-ai-tools/.github/workflows/uid-design-audit-reusable.yml@6d2bfe0ed52a5134b6413f7b4780e7bb932cf057
+    uses: yschimke/compose-ai-tools/.github/workflows/uid-design-audit-reusable.yml@f7ef9df14d71a619864709bc38055ed2011af196
     with:
       enabled: true
       pilot-directory: adaptive-uid-pilot
+      guidelines-url: https://raw.githubusercontent.com/yschimke/m3-catalog/e588d36f971616e0bb6374d40b57e50abd7384d5/ui-builder.guidelines.json
+      guidelines-sha256: 61e14fd0d2dcb341e21b672dac6ffa8f7e7405472a65b17664c4d624234a3438
     secrets:
       OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}

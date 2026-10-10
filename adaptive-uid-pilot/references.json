@@ -19,6 +19,9 @@
             "value": 0
           }
         }
+      },
+      "candidateState": {
+        "selectedIndex": 0
       }
     },
     {
@@ -38,6 +41,9 @@
             "value": 1
           }
         }
+      },
+      "candidateState": {
+        "selectedIndex": 0
       }
     },
     {
@@ -57,6 +63,9 @@
             "value": 0
           }
         }
+      },
+      "candidateState": {
+        "selectedIndex": 0
       }
     },
     {
@@ -76,6 +85,9 @@
             "value": 1
           }
         }
+      },
+      "candidateState": {
+        "selectedIndex": 0
       }
     },
     {
@@ -95,6 +107,9 @@
             "value": 0
           }
         }
+      },
+      "candidateState": {
+        "selectedIndex": 0
       }
     },
     {
@@ -138,6 +153,9 @@
             "value": "Solar \u00b7 3.2 kWh\nGrid \u00b7 5.2 kWh\nBattery \u00b7 76%"
           }
         }
+      },
+      "candidateState": {
+        "selectedIndex": 1
       }
     },
     {
@@ -157,6 +175,9 @@
             "value": 0
           }
         }
+      },
+      "candidateState": {
+        "selectedIndex": 0
       }
     },
     {
@@ -200,7 +221,20 @@
             "value": "Solar \u00b7 3.2 kWh\nGrid \u00b7 5.2 kWh\nBattery \u00b7 76%"
           }
         }
+      },
+      "candidateState": {
+        "selectedIndex": 1
       }
     }
+  ],
+  "distinctCaptures": [
+    [
+      "dashboards-840-list-light",
+      "dashboards-840-detail-light"
+    ],
+    [
+      "dashboards-840-list-dark",
+      "dashboards-840-detail-dark"
+    ]
   ]
 }
