@@ -1,3 +1,4 @@
+import CoreFoundation
 import Foundation
 
 struct DashboardFeed: Codable, Equatable, Sendable {
@@ -62,9 +63,13 @@ enum BindingValue: Equatable, Sendable {
     case let value as NSNumber:
       if CFGetTypeID(value) == CFBooleanGetTypeID() {
         self = .integer(value.boolValue ? 1 : 0)
-      } else if name.hasSuffix(".state_int") {
-        self = .integer(value.intValue)
+      } else if name.hasSuffix(".state_int") || name.hasSuffix(".is_on") {
+        guard let integer = Int(exactly: value.doubleValue),
+          !name.hasSuffix(".is_on") || integer == 0 || integer == 1
+        else { return nil }
+        self = .integer(integer)
       } else {
+        guard value.floatValue.isFinite else { return nil }
         self = .float(value.floatValue)
       }
     case let value as String: self = .string(value)

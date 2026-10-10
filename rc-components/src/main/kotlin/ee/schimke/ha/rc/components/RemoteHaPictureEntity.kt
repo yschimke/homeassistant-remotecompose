@@ -2,6 +2,7 @@
 
 package ee.schimke.ha.rc.components
 
+import androidx.compose.remote.creation.compose.capture.toRemoteImageVector
 import androidx.compose.remote.creation.compose.layout.RemoteAlignment
 import androidx.compose.remote.creation.compose.layout.RemoteArrangement
 import androidx.compose.remote.creation.compose.layout.RemoteBox
@@ -129,7 +130,7 @@ fun RemoteHaPictureEntity(
             // this URL — fall back to the icon path so the
             // tile renders something instead of a hole.
             RemoteIcon(
-              imageVector = data.icon,
+              imageVector = data.icon.toRemoteImageVector(),
               contentDescription = data.name.rs,
               modifier = RemoteModifier.size(40.rdp),
               tint = accent.copy(alpha = accent.alpha * 0.55f.rf),
@@ -137,7 +138,7 @@ fun RemoteHaPictureEntity(
           }
         } else {
           RemoteIcon(
-            imageVector = data.icon,
+            imageVector = data.icon.toRemoteImageVector(),
             contentDescription = data.name.rs,
             modifier = RemoteModifier.size(40.rdp),
             tint = accent.copy(alpha = accent.alpha * 0.55f.rf),

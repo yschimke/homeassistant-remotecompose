@@ -86,6 +86,23 @@ offline-first contract. Bearer credentials are stored separately in the iOS Keyc
 The bundled demo is also the temporary local-generator implementation: six recorded, real `.rc`
 documents exercise the exact `CardDocumentGenerator` seam that the future KMP converter will fill.
 
+## Native color support and tests
+
+The vendored player applies live SRC_IN color filters to solid primitives, preserving their
+destination alpha. Filters on images, textures, gradients, text, or other blend modes report an
+unsupported-operation diagnostic rather than silently displaying an unfiltered card. Clearing
+a filter restores the normal drawing path. JSON on/off bindings use integer values; ordinary
+numeric bindings retain their float type.
+
+On macOS, run the native package tests and the app's Foundation-only binding tests:
+
+```sh
+swift test --package-path ios/Packages/RcNativePlayerUIKit
+scripts/test-ios-bindings.sh
+```
+
+The iOS CI job runs both commands before linking the client and building the SwiftUI app.
+
 ## Release assets
 
 Each project release publishes three Apple artifacts on the GitHub release page:

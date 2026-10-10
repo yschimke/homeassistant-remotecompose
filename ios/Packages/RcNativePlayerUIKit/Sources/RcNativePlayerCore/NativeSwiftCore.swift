@@ -1753,19 +1753,35 @@ private struct ParsedDrawCommand {
   ) throws
     -> NativeSwiftDrawCommandSnapshot
   {
+    // SRC_IN is equivalent to tinting only a solid primitive. Images and shader paints need
+    // actual filter compositing, which UIKit's current draw paths do not implement.
+    if let mode = paint.colorFilterMode, !(0...7).contains(kind) {
+      guard mode == 5, kind != 17, image == nil, paint.gradient == nil, paint.textureImageID == nil else {
+        throw NativeSwiftCoreError.unsupported(
+          opcode: 40, offset: paint.colorFilterOffset,
+          reason: "Color filter mode \(mode) on image/shader or unsupported primitive")
+      }
+    }
     let geometryWords =
       words + (path?.words ?? []) + (image?.destination ?? [])
       + (paint.gradient?.coordinateWords ?? [])
     let usesComponentGeometry = geometryWords.contains { word in
       NativeSwiftFloatExpression.referenceID(word).map(componentValueIDs.contains) ?? false
     }
+    let originalColor = paint.colorID.flatMap { colors[$0] } ?? paint.colorARGB
+    let drawColor: UInt32
+    if paint.colorFilterMode == 5 {
+      let tint = paint.colorFilterID.flatMap { colors[$0] } ?? paint.colorFilterARGB ?? originalColor
+      // SRC_IN keeps the source RGB and multiplies source and destination alpha.
+      let alpha = ((tint >> 24) * (originalColor >> 24) + 127) / 255
+      drawColor = (tint & 0x00ff_ffff) | (alpha << 24)
+    } else {
+      drawColor = originalColor
+    }
     return NativeSwiftDrawCommandSnapshot(
       kind: kind,
       values: words.map { NativeSwiftFloatExpression.resolve($0, values: values) },
-      colorARGB:
-        paint.colorFilterMode == 5
-        ? (paint.colorFilterID.flatMap { colors[$0] } ?? paint.colorFilterARGB ?? paint.colorARGB)
-        : (paint.colorID.flatMap { colors[$0] } ?? paint.colorARGB),
+      colorARGB: drawColor,
       alpha: alphaWord.map { NativeSwiftFloatExpression.resolve($0, values: values) } ?? paint.alpha,
       strokeWidth: NativeSwiftFloatExpression.resolve(paint.strokeWidth, values: values),
       isStroke: paint.isStroke,
@@ -1951,6 +1967,7 @@ private struct ParsedPaint {
   var colorFilterARGB: UInt32?
   var colorFilterID: Int?
   var colorFilterMode: Int?
+  var colorFilterOffset: Int = 0
   var gradient: ParsedGradient?
   var alpha: Float = 1
   var strokeWidth: UInt32 = Float(1).bitPattern
@@ -3639,10 +3656,12 @@ private enum NativeSwiftDocumentDecoder {
         paint.colorFilterARGB = UInt32(bitPattern: Int32(words[index]))
         paint.colorFilterID = nil
         paint.colorFilterMode = highBits
+        paint.colorFilterOffset = input.offset
       case 20:
         paint.colorFilterID = words[index]
         paint.colorFilterARGB = nil
         paint.colorFilterMode = highBits
+        paint.colorFilterOffset = input.offset
       case 21:
         paint.colorFilterARGB = nil
         paint.colorFilterID = nil

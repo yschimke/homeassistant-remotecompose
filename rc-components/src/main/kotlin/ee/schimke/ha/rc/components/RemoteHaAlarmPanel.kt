@@ -4,6 +4,7 @@ package ee.schimke.ha.rc.components
 
 import androidx.compose.remote.creation.compose.action.combinedAction
 import androidx.compose.remote.creation.compose.action.valueChange
+import androidx.compose.remote.creation.compose.capture.toRemoteImageVector
 import androidx.compose.remote.creation.compose.layout.RemoteAlignment
 import androidx.compose.remote.creation.compose.layout.RemoteArrangement
 import androidx.compose.remote.creation.compose.layout.RemoteBox
@@ -138,7 +139,7 @@ fun RemoteHaAlarmPanelWide(data: HaAlarmPanelData, modifier: RemoteModifier = Re
           contentAlignment = RemoteAlignment.Center,
         ) {
           RemoteIcon(
-            imageVector = status.icon,
+            imageVector = status.icon.toRemoteImageVector(),
             contentDescription = status.label.rs,
             modifier = RemoteModifier.size(22.rdp),
             tint = status.accent.rc,
@@ -214,7 +215,7 @@ private fun StatusRow(
         contentAlignment = RemoteAlignment.Center,
       ) {
         RemoteIcon(
-          imageVector = status.icon,
+          imageVector = status.icon.toRemoteImageVector(),
           contentDescription = status.label.rs,
           modifier = RemoteModifier.size(22.rdp),
           tint = status.accent.rc,

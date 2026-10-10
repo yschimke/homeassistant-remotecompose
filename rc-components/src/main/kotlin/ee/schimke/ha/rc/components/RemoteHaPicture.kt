@@ -2,6 +2,7 @@
 
 package ee.schimke.ha.rc.components
 
+import androidx.compose.remote.creation.compose.capture.toRemoteImageVector
 import androidx.compose.remote.creation.compose.layout.RemoteAlignment
 import androidx.compose.remote.creation.compose.layout.RemoteArrangement
 import androidx.compose.remote.creation.compose.layout.RemoteBox
@@ -59,7 +60,7 @@ fun RemoteHaPicture(
     contentAlignment = RemoteAlignment.Center,
   ) {
     RemoteIcon(
-      imageVector = data.placeholderIcon,
+      imageVector = data.placeholderIcon.toRemoteImageVector(),
       contentDescription = (data.name ?: "image").rs,
       modifier = RemoteModifier.size(48.rdp),
       tint = theme.placeholderAccent,
@@ -118,7 +119,7 @@ fun RemoteHaPictureGlance(data: HaPictureGlanceData, modifier: RemoteModifier = 
         contentAlignment = RemoteAlignment.Center,
       ) {
         RemoteIcon(
-          imageVector = data.placeholderIcon,
+          imageVector = data.placeholderIcon.toRemoteImageVector(),
           contentDescription = (data.title ?: "image").rs,
           modifier = RemoteModifier.size(40.rdp),
           tint = theme.placeholderAccent,
@@ -172,7 +173,7 @@ private fun Cell(cell: HaPictureGlanceCell, theme: RemoteHaTheme) {
     contentAlignment = RemoteAlignment.Center,
   ) {
     RemoteIcon(
-      imageVector = cell.icon,
+      imageVector = cell.icon.toRemoteImageVector(),
       contentDescription = cell.label.rs,
       modifier = RemoteModifier.size(18.rdp),
       tint = tint,
@@ -214,7 +215,7 @@ fun RemoteHaPictureElements(
       contentAlignment = RemoteAlignment.Center,
     ) {
       RemoteIcon(
-        imageVector = data.placeholderIcon,
+        imageVector = data.placeholderIcon.toRemoteImageVector(),
         contentDescription = "elements".rs,
         modifier = RemoteModifier.size(40.rdp),
         tint = theme.placeholderAccent,
@@ -275,7 +276,7 @@ private fun Element(
         contentAlignment = RemoteAlignment.Center,
       ) {
         RemoteIcon(
-          imageVector = element.icon,
+          imageVector = element.icon.toRemoteImageVector(),
           contentDescription = "element".rs,
           modifier = RemoteModifier.size(16.rdp),
           tint = tint,

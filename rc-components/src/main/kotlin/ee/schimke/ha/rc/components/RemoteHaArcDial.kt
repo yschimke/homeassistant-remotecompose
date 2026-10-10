@@ -6,6 +6,7 @@ import android.graphics.Paint as AndroidPaint
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Remove
+import androidx.compose.remote.creation.compose.capture.toRemoteImageVector
 import androidx.compose.remote.creation.compose.layout.RemoteAlignment
 import androidx.compose.remote.creation.compose.layout.RemoteArrangement
 import androidx.compose.remote.creation.compose.layout.RemoteBox
@@ -194,7 +195,7 @@ private fun DialBody(data: HaArcDialData, theme: RemoteHaTheme) {
     ) {
       if (data.centerIcon != null) {
         RemoteIcon(
-          imageVector = data.centerIcon,
+          imageVector = data.centerIcon.toRemoteImageVector(),
           contentDescription = data.name.rs,
           modifier = RemoteModifier.size(40.rdp),
           tint = data.accent.rc,
@@ -384,7 +385,7 @@ private fun StepperButton(
     contentAlignment = RemoteAlignment.Center,
   ) {
     RemoteIcon(
-      imageVector = icon,
+      imageVector = icon.toRemoteImageVector(),
       contentDescription = "stepper".rs,
       modifier = RemoteModifier.size(20.rdp),
       tint = accent.rc,
