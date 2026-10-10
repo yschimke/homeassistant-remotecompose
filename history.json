@@ -1,6 +1,6 @@
 {
     "formatVersion": "compose-preview-history/v1",
-    "generatedFrom": "d28ab74b261c6757aa44f29338273b65570bc57c",
+    "generatedFrom": "56def2961bbf0a8ab38586b606fc5bb62107f01b",
     "previews": {
         "app/ee.schimke.terrazzo.previews.CardDebugPreviewsKt.CardFlashPreview_Card flash on data change": {
             "path": "renders/app/CardFlashPreview_Card_flash_on_data_change-44b71c2b.gif",
@@ -3927,6 +3927,13 @@
             "path": "renders/previews/DashboardNetworksMobile_dashboard_networks_mobile-d5ee47c2.png",
             "versions": [
                 {
+                    "blob": "dee7e43447d4a9f7640045694191f678e3cd7bff",
+                    "commit": "56def2961bbf0a8ab38586b606fc5bb62107f01b",
+                    "date": "2026-10-10T21:52:18Z",
+                    "sourceSha": "80aaeba4",
+                    "commits": 1
+                },
+                {
                     "blob": "3d17b8f2fb7c452a6bf7de3fdeaaefd8861acde2",
                     "commit": "d28ab74b261c6757aa44f29338273b65570bc57c",
                     "date": "2026-10-10T21:22:15Z",
@@ -3955,9 +3962,9 @@
                     "commits": 1
                 }
             ],
-            "observations": 4,
+            "observations": 5,
             "unstable": false,
-            "flapCount": 0
+            "flapCount": 1
         },
         "previews/ee.schimke.ha.previews.DashboardPreviewsKt.DashboardNetworksTablet_dashboard networks — tablet": {
             "path": "renders/previews/DashboardNetworksTablet_dashboard_networks_tablet-fbca9889.png",
