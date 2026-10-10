@@ -49,3 +49,7 @@ dependencies {
 
   implementation(libs.kotlinx.serialization.json)
 }
+
+// The full catalog includes large tablet dashboards. Its Robolectric render task is a Test
+// process; Gradle's default 512 MiB heap fails in InMemoryStillCapture while copying that bitmap.
+tasks.withType<Test>().configureEach { maxHeapSize = "2g" }

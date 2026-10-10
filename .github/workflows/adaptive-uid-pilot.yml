@@ -22,7 +22,7 @@ concurrency:
 # Integration-test pin. Replace with the landed revision before merging this caller.
 jobs:
   parity:
-    uses: yschimke/design-parity/.github/workflows/uid-parity-reusable.yml@6ba2118ea00b504c243a904006700b0d9c482af3
+    uses: yschimke/design-parity/.github/workflows/uid-parity-reusable.yml@aa613cba6e87848102b356dd36d2f7b456c94e59
     with:
       export-catalog: true
       pilot-directory: adaptive-uid-pilot
