@@ -6,9 +6,6 @@ on:
   pull_request:
     paths:
       - 'app-ui/**'
-      - 'meshcore-core/**'
-      - 'meshcore-components/**'
-      - 'meshcore-transport-webserial/**'
       - 'ha-client/**'
       - 'ha-model/**'
       - 'rc-player-ui/**'
