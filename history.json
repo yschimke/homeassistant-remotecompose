@@ -1,6 +1,6 @@
 {
     "formatVersion": "compose-preview-history/v1",
-    "generatedFrom": "89455e6ccafeefd2fb8f9ececff35f491fd79154",
+    "generatedFrom": "fdae2c53f3fd7f03524fd9fa4d4b5b9e122270bc",
     "previews": {
         "app/ee.schimke.terrazzo.previews.CardDebugPreviewsKt.CardFlashPreview_Card flash on data change": {
             "path": "renders/app/CardFlashPreview_Card_flash_on_data_change-44b71c2b.gif",
@@ -3697,6 +3697,13 @@
             "path": "renders/previews/DashboardGithubMobile_dashboard_github_mobile-8f04a7c1.png",
             "versions": [
                 {
+                    "blob": "04b415d820b192336b06d9633a1df8d8d319692f",
+                    "commit": "fdae2c53f3fd7f03524fd9fa4d4b5b9e122270bc",
+                    "date": "2026-10-10T19:43:48Z",
+                    "sourceSha": "3f132a5c",
+                    "commits": 1
+                },
+                {
                     "blob": "d2fdd7c58928aa5338401284fb5ff3a285fdeb5b",
                     "commit": "a0036b18d8c4d9382b7753fc3a69618e4bd12b30",
                     "date": "2026-10-10T17:23:01Z",
@@ -3711,7 +3718,7 @@
                     "commits": 1
                 }
             ],
-            "observations": 2,
+            "observations": 3,
             "unstable": false,
             "flapCount": 0
         },
@@ -4763,6 +4770,13 @@
             "path": "renders/previews/Sizing_WidthPinnedHeightAdaptive_sizing_width_pinned_height_adaptive-e082424e.png",
             "versions": [
                 {
+                    "blob": "fc476a9b777657fd41024ee5dab2e52b886589f4",
+                    "commit": "fdae2c53f3fd7f03524fd9fa4d4b5b9e122270bc",
+                    "date": "2026-10-10T19:43:48Z",
+                    "sourceSha": "3f132a5c",
+                    "commits": 1
+                },
+                {
                     "blob": "04c585c56254b4c1cef041b8167b4560314029fd",
                     "commit": "89455e6ccafeefd2fb8f9ececff35f491fd79154",
                     "date": "2026-10-10T19:15:14Z",
@@ -4798,7 +4812,7 @@
                     "commits": 1
                 }
             ],
-            "observations": 5,
+            "observations": 6,
             "unstable": false,
             "flapCount": 0
         },
