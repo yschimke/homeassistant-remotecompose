@@ -48,13 +48,14 @@ It runs pinned shared staging tools with the default-branch capture plan and gui
 no PR code or UID content with the key. This first CI audit receives pictures and capture sizes;
 it cannot establish accessibility semantics or interaction behavior from those images. The custom
 capture IDs are separate subjects, so cross-size guidance needs human review of the full matrix.
-The shared [interactive critique prompt](https://github.com/yschimke/compose-ai-tools/blob/f7ef9df14d71a619864709bc38055ed2011af196/docs/UID_DESIGN_CRITIQUE_PROMPT.txt)
+The shared [interactive critique prompt](https://github.com/yschimke/compose-ai-tools/blob/da4612a1fe17b0b7e5cfa2a4f7fe9cfb685e7e07/docs/UID_DESIGN_CRITIQUE_PROMPT.txt)
 is separate from the versioned guidelines engine prompt. The local reference-rendering command remains useful for iteration:
 
 Candidates go to `build/pilot/previews/`. They are **custom bundle IDs**, not discovery IDs.
 The eight annotated IDE previews use separate discovery IDs and do not automatically acquire
-these custom references. The pilot is excluded from default Gradle projects and the deployed app catalog; do not add
-these IDs to the normal catalog spec without a discovery/publication adapter.
+these custom references. The pilot is excluded from default Gradle projects. The shared UID
+exporter maps these captures into the existing app catalog as described below; do not add the
+custom IDs directly to the discovery-based catalog spec.
 
 Commit the UID and `references.json` before publishing references. With the companion
 [server UID workflow](https://github.com/yschimke/compose-preview-server/pull/1495) available:
@@ -94,9 +95,10 @@ An uploaded zip supplies comparisons and the UID editor, but it does **not** sup
 source/provenance metadata. App-specific code links and issue destinations require a catalog
 producer (or a local `ServeBundleHost`) with repo `yschimke/homeassistant-remotecompose`, the captured commit,
 module `adaptive-uid-pilot`, and variant `sourceFile` pointing at
-`src/main/kotlin/ee/schimke/adaptivepilot/DashboardBrowser.kt`. Until publication is wired, put the
-commit, viewport, theme, state, comparison evidence and `.uid` node in a normal repository issue.
-Nothing here deploys to preview.coo.ee or files bugs automatically.
+`src/main/kotlin/ee/schimke/adaptivepilot/DashboardBrowser.kt`. The shared catalog exporter supplies that metadata for
+the hosted flow below. The local zip command does not publish; the Design Artifacts workflow
+publishes through the app's existing delivery branch. Issue links open a draft for review and
+do not file bugs automatically.
 
 Adaptive layout uses `currentWindowAdaptiveInfoV2()` at the screen boundary and
 `calculatePaneScaffoldDirective` / `ListDetailPaneScaffold` for pane adaptation.
