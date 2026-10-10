@@ -1628,7 +1628,7 @@
     "functionName": "DashboardGithubMobile",
     "module": "previews",
     "renderBasename": "DashboardGithubMobile_dashboard_github_mobile-8f04a7c1.png",
-    "sha256": "1ecaf744aff82fc5123d79f58b24ad39ec69a0c388465cf6f244b2ce40ef0897",
+    "sha256": "3ab0d2ca88e2fddfa9819dc3e9d1df6219250c22ccb65f0152b2e8f770c16cfe",
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/DashboardPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.DashboardPreviewsKt.DashboardGithubTablet_dashboard github \u2014 tablet": {
@@ -2148,7 +2148,7 @@
     "functionName": "Sizing_WidthPinnedHeightAdaptive",
     "module": "previews",
     "renderBasename": "Sizing_WidthPinnedHeightAdaptive_sizing_width_pinned_height_adaptive-e082424e.png",
-    "sha256": "1312c5e504ad4f01dcf9a49910bedeee044ecb23ab6e7b708b3fa11f9f642c01",
+    "sha256": "04f830b8099cdb61e351698ca40fbcfdfa335cfa00b217c4903f6bedb5d5910c",
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/SizingExperimentPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.ThemePreviewsKt.Theme_Home_Dark_theme_ Home (dark)": {
