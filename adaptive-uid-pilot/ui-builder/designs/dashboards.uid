@@ -433,7 +433,7 @@
       "properties": {
         "style": {
           "type": "enum",
-          "value": "filled"
+          "value": "text"
         }
       },
       "slots": {

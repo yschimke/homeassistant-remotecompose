@@ -106,6 +106,12 @@
             "type": "int",
             "value": 0
           }
+        },
+        "entry-0-label": {
+          "text": {
+            "type": "string",
+            "value": "Selected \u00b7 Home"
+          }
         }
       },
       "candidateState": {
@@ -152,6 +158,12 @@
             "type": "string",
             "value": "Solar \u00b7 3.2 kWh\nGrid \u00b7 5.2 kWh\nBattery \u00b7 76%"
           }
+        },
+        "entry-1-label": {
+          "text": {
+            "type": "string",
+            "value": "Selected \u00b7 Energy"
+          }
         }
       },
       "candidateState": {
@@ -173,6 +185,12 @@
           "activePaneIndex": {
             "type": "int",
             "value": 0
+          }
+        },
+        "entry-0-label": {
+          "text": {
+            "type": "string",
+            "value": "Selected \u00b7 Home"
           }
         }
       },
@@ -220,10 +238,2328 @@
             "type": "string",
             "value": "Solar \u00b7 3.2 kWh\nGrid \u00b7 5.2 kWh\nBattery \u00b7 76%"
           }
+        },
+        "entry-1-label": {
+          "text": {
+            "type": "string",
+            "value": "Selected \u00b7 Energy"
+          }
         }
       },
       "candidateState": {
         "selectedIndex": 1
+      }
+    },
+    {
+      "id": "connection-412-list-light",
+      "previewId": "connection-412-list-light",
+      "file": "adaptive-uid-pilot/ui-builder/designs/connection.uid",
+      "designId": "connection",
+      "widthDp": 412,
+      "heightDp": 720,
+      "density": 2,
+      "theme": "light",
+      "state": "list",
+      "properties": {
+        "panes": {
+          "activePaneIndex": {
+            "type": "int",
+            "value": 0
+          }
+        }
+      },
+      "candidateState": {
+        "selectedIndex": 0
+      }
+    },
+    {
+      "id": "connection-412-list-dark",
+      "previewId": "connection-412-list-dark",
+      "file": "adaptive-uid-pilot/ui-builder/designs/connection.uid",
+      "designId": "connection",
+      "widthDp": 412,
+      "heightDp": 720,
+      "density": 2,
+      "theme": "dark",
+      "state": "list",
+      "properties": {
+        "panes": {
+          "activePaneIndex": {
+            "type": "int",
+            "value": 0
+          }
+        }
+      },
+      "candidateState": {
+        "selectedIndex": 0
+      }
+    },
+    {
+      "id": "connection-412-detail-light",
+      "previewId": "connection-412-detail-light",
+      "file": "adaptive-uid-pilot/ui-builder/designs/connection.uid",
+      "designId": "connection",
+      "widthDp": 412,
+      "heightDp": 720,
+      "density": 2,
+      "theme": "light",
+      "state": "detail",
+      "properties": {
+        "panes": {
+          "activePaneIndex": {
+            "type": "int",
+            "value": 1
+          }
+        }
+      },
+      "candidateState": {
+        "selectedIndex": 0
+      }
+    },
+    {
+      "id": "connection-412-detail-dark",
+      "previewId": "connection-412-detail-dark",
+      "file": "adaptive-uid-pilot/ui-builder/designs/connection.uid",
+      "designId": "connection",
+      "widthDp": 412,
+      "heightDp": 720,
+      "density": 2,
+      "theme": "dark",
+      "state": "detail",
+      "properties": {
+        "panes": {
+          "activePaneIndex": {
+            "type": "int",
+            "value": 1
+          }
+        }
+      },
+      "candidateState": {
+        "selectedIndex": 0
+      }
+    },
+    {
+      "id": "connection-840-list-light",
+      "previewId": "connection-840-list-light",
+      "file": "adaptive-uid-pilot/ui-builder/designs/connection.uid",
+      "designId": "connection",
+      "widthDp": 840,
+      "heightDp": 720,
+      "density": 2,
+      "theme": "light",
+      "state": "list",
+      "properties": {
+        "panes": {
+          "activePaneIndex": {
+            "type": "int",
+            "value": 0
+          }
+        },
+        "panel-0-text": {
+          "text": {
+            "type": "string",
+            "value": "Selected \u00b7 Local instance"
+          }
+        }
+      },
+      "candidateState": {
+        "selectedIndex": 0
+      }
+    },
+    {
+      "id": "connection-840-list-dark",
+      "previewId": "connection-840-list-dark",
+      "file": "adaptive-uid-pilot/ui-builder/designs/connection.uid",
+      "designId": "connection",
+      "widthDp": 840,
+      "heightDp": 720,
+      "density": 2,
+      "theme": "dark",
+      "state": "list",
+      "properties": {
+        "panes": {
+          "activePaneIndex": {
+            "type": "int",
+            "value": 0
+          }
+        },
+        "panel-0-text": {
+          "text": {
+            "type": "string",
+            "value": "Selected \u00b7 Local instance"
+          }
+        }
+      },
+      "candidateState": {
+        "selectedIndex": 0
+      }
+    },
+    {
+      "id": "connection-840-detail-light",
+      "previewId": "connection-840-detail-light",
+      "file": "adaptive-uid-pilot/ui-builder/designs/connection-secondary.uid",
+      "designId": "connection",
+      "widthDp": 840,
+      "heightDp": 720,
+      "density": 2,
+      "theme": "light",
+      "state": "detail",
+      "properties": {
+        "panes": {
+          "activePaneIndex": {
+            "type": "int",
+            "value": 1
+          }
+        },
+        "panel-1-text": {
+          "text": {
+            "type": "string",
+            "value": "Selected \u00b7 Remote instance"
+          }
+        }
+      },
+      "candidateState": {
+        "selectedIndex": 1
+      }
+    },
+    {
+      "id": "connection-840-detail-dark",
+      "previewId": "connection-840-detail-dark",
+      "file": "adaptive-uid-pilot/ui-builder/designs/connection-secondary.uid",
+      "designId": "connection",
+      "widthDp": 840,
+      "heightDp": 720,
+      "density": 2,
+      "theme": "dark",
+      "state": "detail",
+      "properties": {
+        "panes": {
+          "activePaneIndex": {
+            "type": "int",
+            "value": 1
+          }
+        },
+        "panel-1-text": {
+          "text": {
+            "type": "string",
+            "value": "Selected \u00b7 Remote instance"
+          }
+        }
+      },
+      "candidateState": {
+        "selectedIndex": 1
+      }
+    },
+    {
+      "id": "dashboard-view-412-list-light",
+      "previewId": "dashboard-view-412-list-light",
+      "file": "adaptive-uid-pilot/ui-builder/designs/dashboard-view.uid",
+      "designId": "dashboard-view",
+      "widthDp": 412,
+      "heightDp": 720,
+      "density": 2,
+      "theme": "light",
+      "state": "list",
+      "properties": {
+        "panes": {
+          "activePaneIndex": {
+            "type": "int",
+            "value": 0
+          }
+        }
+      },
+      "candidateState": {
+        "selectedIndex": 0
+      }
+    },
+    {
+      "id": "dashboard-view-412-list-dark",
+      "previewId": "dashboard-view-412-list-dark",
+      "file": "adaptive-uid-pilot/ui-builder/designs/dashboard-view.uid",
+      "designId": "dashboard-view",
+      "widthDp": 412,
+      "heightDp": 720,
+      "density": 2,
+      "theme": "dark",
+      "state": "list",
+      "properties": {
+        "panes": {
+          "activePaneIndex": {
+            "type": "int",
+            "value": 0
+          }
+        }
+      },
+      "candidateState": {
+        "selectedIndex": 0
+      }
+    },
+    {
+      "id": "dashboard-view-412-detail-light",
+      "previewId": "dashboard-view-412-detail-light",
+      "file": "adaptive-uid-pilot/ui-builder/designs/dashboard-view.uid",
+      "designId": "dashboard-view",
+      "widthDp": 412,
+      "heightDp": 720,
+      "density": 2,
+      "theme": "light",
+      "state": "detail",
+      "properties": {
+        "panes": {
+          "activePaneIndex": {
+            "type": "int",
+            "value": 1
+          }
+        }
+      },
+      "candidateState": {
+        "selectedIndex": 0
+      }
+    },
+    {
+      "id": "dashboard-view-412-detail-dark",
+      "previewId": "dashboard-view-412-detail-dark",
+      "file": "adaptive-uid-pilot/ui-builder/designs/dashboard-view.uid",
+      "designId": "dashboard-view",
+      "widthDp": 412,
+      "heightDp": 720,
+      "density": 2,
+      "theme": "dark",
+      "state": "detail",
+      "properties": {
+        "panes": {
+          "activePaneIndex": {
+            "type": "int",
+            "value": 1
+          }
+        }
+      },
+      "candidateState": {
+        "selectedIndex": 0
+      }
+    },
+    {
+      "id": "dashboard-view-840-list-light",
+      "previewId": "dashboard-view-840-list-light",
+      "file": "adaptive-uid-pilot/ui-builder/designs/dashboard-view.uid",
+      "designId": "dashboard-view",
+      "widthDp": 840,
+      "heightDp": 720,
+      "density": 2,
+      "theme": "light",
+      "state": "list",
+      "properties": {
+        "panes": {
+          "activePaneIndex": {
+            "type": "int",
+            "value": 0
+          }
+        },
+        "panel-0-text": {
+          "text": {
+            "type": "string",
+            "value": "Selected \u00b7 Living room"
+          }
+        }
+      },
+      "candidateState": {
+        "selectedIndex": 0
+      }
+    },
+    {
+      "id": "dashboard-view-840-list-dark",
+      "previewId": "dashboard-view-840-list-dark",
+      "file": "adaptive-uid-pilot/ui-builder/designs/dashboard-view.uid",
+      "designId": "dashboard-view",
+      "widthDp": 840,
+      "heightDp": 720,
+      "density": 2,
+      "theme": "dark",
+      "state": "list",
+      "properties": {
+        "panes": {
+          "activePaneIndex": {
+            "type": "int",
+            "value": 0
+          }
+        },
+        "panel-0-text": {
+          "text": {
+            "type": "string",
+            "value": "Selected \u00b7 Living room"
+          }
+        }
+      },
+      "candidateState": {
+        "selectedIndex": 0
+      }
+    },
+    {
+      "id": "dashboard-view-840-detail-light",
+      "previewId": "dashboard-view-840-detail-light",
+      "file": "adaptive-uid-pilot/ui-builder/designs/dashboard-view-secondary.uid",
+      "designId": "dashboard-view",
+      "widthDp": 840,
+      "heightDp": 720,
+      "density": 2,
+      "theme": "light",
+      "state": "detail",
+      "properties": {
+        "panes": {
+          "activePaneIndex": {
+            "type": "int",
+            "value": 1
+          }
+        },
+        "panel-1-text": {
+          "text": {
+            "type": "string",
+            "value": "Selected \u00b7 Kitchen"
+          }
+        }
+      },
+      "candidateState": {
+        "selectedIndex": 1
+      }
+    },
+    {
+      "id": "dashboard-view-840-detail-dark",
+      "previewId": "dashboard-view-840-detail-dark",
+      "file": "adaptive-uid-pilot/ui-builder/designs/dashboard-view-secondary.uid",
+      "designId": "dashboard-view",
+      "widthDp": 840,
+      "heightDp": 720,
+      "density": 2,
+      "theme": "dark",
+      "state": "detail",
+      "properties": {
+        "panes": {
+          "activePaneIndex": {
+            "type": "int",
+            "value": 1
+          }
+        },
+        "panel-1-text": {
+          "text": {
+            "type": "string",
+            "value": "Selected \u00b7 Kitchen"
+          }
+        }
+      },
+      "candidateState": {
+        "selectedIndex": 1
+      }
+    },
+    {
+      "id": "choose-dashboards-412-list-light",
+      "previewId": "choose-dashboards-412-list-light",
+      "file": "adaptive-uid-pilot/ui-builder/designs/choose-dashboards.uid",
+      "designId": "choose-dashboards",
+      "widthDp": 412,
+      "heightDp": 720,
+      "density": 2,
+      "theme": "light",
+      "state": "list",
+      "properties": {
+        "panes": {
+          "activePaneIndex": {
+            "type": "int",
+            "value": 0
+          }
+        }
+      },
+      "candidateState": {
+        "selectedIndex": 0
+      }
+    },
+    {
+      "id": "choose-dashboards-412-list-dark",
+      "previewId": "choose-dashboards-412-list-dark",
+      "file": "adaptive-uid-pilot/ui-builder/designs/choose-dashboards.uid",
+      "designId": "choose-dashboards",
+      "widthDp": 412,
+      "heightDp": 720,
+      "density": 2,
+      "theme": "dark",
+      "state": "list",
+      "properties": {
+        "panes": {
+          "activePaneIndex": {
+            "type": "int",
+            "value": 0
+          }
+        }
+      },
+      "candidateState": {
+        "selectedIndex": 0
+      }
+    },
+    {
+      "id": "choose-dashboards-412-detail-light",
+      "previewId": "choose-dashboards-412-detail-light",
+      "file": "adaptive-uid-pilot/ui-builder/designs/choose-dashboards.uid",
+      "designId": "choose-dashboards",
+      "widthDp": 412,
+      "heightDp": 720,
+      "density": 2,
+      "theme": "light",
+      "state": "detail",
+      "properties": {
+        "panes": {
+          "activePaneIndex": {
+            "type": "int",
+            "value": 1
+          }
+        }
+      },
+      "candidateState": {
+        "selectedIndex": 0
+      }
+    },
+    {
+      "id": "choose-dashboards-412-detail-dark",
+      "previewId": "choose-dashboards-412-detail-dark",
+      "file": "adaptive-uid-pilot/ui-builder/designs/choose-dashboards.uid",
+      "designId": "choose-dashboards",
+      "widthDp": 412,
+      "heightDp": 720,
+      "density": 2,
+      "theme": "dark",
+      "state": "detail",
+      "properties": {
+        "panes": {
+          "activePaneIndex": {
+            "type": "int",
+            "value": 1
+          }
+        }
+      },
+      "candidateState": {
+        "selectedIndex": 0
+      }
+    },
+    {
+      "id": "choose-dashboards-840-list-light",
+      "previewId": "choose-dashboards-840-list-light",
+      "file": "adaptive-uid-pilot/ui-builder/designs/choose-dashboards.uid",
+      "designId": "choose-dashboards",
+      "widthDp": 840,
+      "heightDp": 720,
+      "density": 2,
+      "theme": "light",
+      "state": "list",
+      "properties": {
+        "panes": {
+          "activePaneIndex": {
+            "type": "int",
+            "value": 0
+          }
+        },
+        "panel-0-text": {
+          "text": {
+            "type": "string",
+            "value": "Viewing \u00b7 Overview (built-in) \u00b7 Included"
+          }
+        }
+      },
+      "candidateState": {
+        "selectedIndex": 0
+      }
+    },
+    {
+      "id": "choose-dashboards-840-list-dark",
+      "previewId": "choose-dashboards-840-list-dark",
+      "file": "adaptive-uid-pilot/ui-builder/designs/choose-dashboards.uid",
+      "designId": "choose-dashboards",
+      "widthDp": 840,
+      "heightDp": 720,
+      "density": 2,
+      "theme": "dark",
+      "state": "list",
+      "properties": {
+        "panes": {
+          "activePaneIndex": {
+            "type": "int",
+            "value": 0
+          }
+        },
+        "panel-0-text": {
+          "text": {
+            "type": "string",
+            "value": "Viewing \u00b7 Overview (built-in) \u00b7 Included"
+          }
+        }
+      },
+      "candidateState": {
+        "selectedIndex": 0
+      }
+    },
+    {
+      "id": "choose-dashboards-840-detail-light",
+      "previewId": "choose-dashboards-840-detail-light",
+      "file": "adaptive-uid-pilot/ui-builder/designs/choose-dashboards-secondary.uid",
+      "designId": "choose-dashboards",
+      "widthDp": 840,
+      "heightDp": 720,
+      "density": 2,
+      "theme": "light",
+      "state": "detail",
+      "properties": {
+        "panes": {
+          "activePaneIndex": {
+            "type": "int",
+            "value": 1
+          }
+        },
+        "panel-1-text": {
+          "text": {
+            "type": "string",
+            "value": "Viewing \u00b7 Energy \u00b7 Included"
+          }
+        }
+      },
+      "candidateState": {
+        "selectedIndex": 1
+      }
+    },
+    {
+      "id": "choose-dashboards-840-detail-dark",
+      "previewId": "choose-dashboards-840-detail-dark",
+      "file": "adaptive-uid-pilot/ui-builder/designs/choose-dashboards-secondary.uid",
+      "designId": "choose-dashboards",
+      "widthDp": 840,
+      "heightDp": 720,
+      "density": 2,
+      "theme": "dark",
+      "state": "detail",
+      "properties": {
+        "panes": {
+          "activePaneIndex": {
+            "type": "int",
+            "value": 1
+          }
+        },
+        "panel-1-text": {
+          "text": {
+            "type": "string",
+            "value": "Viewing \u00b7 Energy \u00b7 Included"
+          }
+        }
+      },
+      "candidateState": {
+        "selectedIndex": 1
+      }
+    },
+    {
+      "id": "settings-412-list-light",
+      "previewId": "settings-412-list-light",
+      "file": "adaptive-uid-pilot/ui-builder/designs/settings.uid",
+      "designId": "settings",
+      "widthDp": 412,
+      "heightDp": 720,
+      "density": 2,
+      "theme": "light",
+      "state": "list",
+      "properties": {
+        "panes": {
+          "activePaneIndex": {
+            "type": "int",
+            "value": 0
+          }
+        }
+      },
+      "candidateState": {
+        "selectedIndex": 0
+      }
+    },
+    {
+      "id": "settings-412-list-dark",
+      "previewId": "settings-412-list-dark",
+      "file": "adaptive-uid-pilot/ui-builder/designs/settings.uid",
+      "designId": "settings",
+      "widthDp": 412,
+      "heightDp": 720,
+      "density": 2,
+      "theme": "dark",
+      "state": "list",
+      "properties": {
+        "panes": {
+          "activePaneIndex": {
+            "type": "int",
+            "value": 0
+          }
+        }
+      },
+      "candidateState": {
+        "selectedIndex": 0
+      }
+    },
+    {
+      "id": "settings-412-detail-light",
+      "previewId": "settings-412-detail-light",
+      "file": "adaptive-uid-pilot/ui-builder/designs/settings.uid",
+      "designId": "settings",
+      "widthDp": 412,
+      "heightDp": 720,
+      "density": 2,
+      "theme": "light",
+      "state": "detail",
+      "properties": {
+        "panes": {
+          "activePaneIndex": {
+            "type": "int",
+            "value": 1
+          }
+        }
+      },
+      "candidateState": {
+        "selectedIndex": 0
+      }
+    },
+    {
+      "id": "settings-412-detail-dark",
+      "previewId": "settings-412-detail-dark",
+      "file": "adaptive-uid-pilot/ui-builder/designs/settings.uid",
+      "designId": "settings",
+      "widthDp": 412,
+      "heightDp": 720,
+      "density": 2,
+      "theme": "dark",
+      "state": "detail",
+      "properties": {
+        "panes": {
+          "activePaneIndex": {
+            "type": "int",
+            "value": 1
+          }
+        }
+      },
+      "candidateState": {
+        "selectedIndex": 0
+      }
+    },
+    {
+      "id": "settings-840-list-light",
+      "previewId": "settings-840-list-light",
+      "file": "adaptive-uid-pilot/ui-builder/designs/settings.uid",
+      "designId": "settings",
+      "widthDp": 840,
+      "heightDp": 720,
+      "density": 2,
+      "theme": "light",
+      "state": "list",
+      "properties": {
+        "panes": {
+          "activePaneIndex": {
+            "type": "int",
+            "value": 0
+          }
+        },
+        "panel-0-text": {
+          "text": {
+            "type": "string",
+            "value": "Selected \u00b7 Session"
+          }
+        }
+      },
+      "candidateState": {
+        "selectedIndex": 0
+      }
+    },
+    {
+      "id": "settings-840-list-dark",
+      "previewId": "settings-840-list-dark",
+      "file": "adaptive-uid-pilot/ui-builder/designs/settings.uid",
+      "designId": "settings",
+      "widthDp": 840,
+      "heightDp": 720,
+      "density": 2,
+      "theme": "dark",
+      "state": "list",
+      "properties": {
+        "panes": {
+          "activePaneIndex": {
+            "type": "int",
+            "value": 0
+          }
+        },
+        "panel-0-text": {
+          "text": {
+            "type": "string",
+            "value": "Selected \u00b7 Session"
+          }
+        }
+      },
+      "candidateState": {
+        "selectedIndex": 0
+      }
+    },
+    {
+      "id": "settings-840-detail-light",
+      "previewId": "settings-840-detail-light",
+      "file": "adaptive-uid-pilot/ui-builder/designs/settings-secondary.uid",
+      "designId": "settings",
+      "widthDp": 840,
+      "heightDp": 720,
+      "density": 2,
+      "theme": "light",
+      "state": "detail",
+      "properties": {
+        "panes": {
+          "activePaneIndex": {
+            "type": "int",
+            "value": 1
+          }
+        },
+        "panel-1-text": {
+          "text": {
+            "type": "string",
+            "value": "Selected \u00b7 Display"
+          }
+        }
+      },
+      "candidateState": {
+        "selectedIndex": 1
+      }
+    },
+    {
+      "id": "settings-840-detail-dark",
+      "previewId": "settings-840-detail-dark",
+      "file": "adaptive-uid-pilot/ui-builder/designs/settings-secondary.uid",
+      "designId": "settings",
+      "widthDp": 840,
+      "heightDp": 720,
+      "density": 2,
+      "theme": "dark",
+      "state": "detail",
+      "properties": {
+        "panes": {
+          "activePaneIndex": {
+            "type": "int",
+            "value": 1
+          }
+        },
+        "panel-1-text": {
+          "text": {
+            "type": "string",
+            "value": "Selected \u00b7 Display"
+          }
+        }
+      },
+      "candidateState": {
+        "selectedIndex": 1
+      }
+    },
+    {
+      "id": "widgets-412-list-light",
+      "previewId": "widgets-412-list-light",
+      "file": "adaptive-uid-pilot/ui-builder/designs/widgets.uid",
+      "designId": "widgets",
+      "widthDp": 412,
+      "heightDp": 720,
+      "density": 2,
+      "theme": "light",
+      "state": "list",
+      "properties": {
+        "panes": {
+          "activePaneIndex": {
+            "type": "int",
+            "value": 0
+          }
+        }
+      },
+      "candidateState": {
+        "selectedIndex": 0
+      }
+    },
+    {
+      "id": "widgets-412-list-dark",
+      "previewId": "widgets-412-list-dark",
+      "file": "adaptive-uid-pilot/ui-builder/designs/widgets.uid",
+      "designId": "widgets",
+      "widthDp": 412,
+      "heightDp": 720,
+      "density": 2,
+      "theme": "dark",
+      "state": "list",
+      "properties": {
+        "panes": {
+          "activePaneIndex": {
+            "type": "int",
+            "value": 0
+          }
+        }
+      },
+      "candidateState": {
+        "selectedIndex": 0
+      }
+    },
+    {
+      "id": "widgets-412-detail-light",
+      "previewId": "widgets-412-detail-light",
+      "file": "adaptive-uid-pilot/ui-builder/designs/widgets.uid",
+      "designId": "widgets",
+      "widthDp": 412,
+      "heightDp": 720,
+      "density": 2,
+      "theme": "light",
+      "state": "detail",
+      "properties": {
+        "panes": {
+          "activePaneIndex": {
+            "type": "int",
+            "value": 1
+          }
+        }
+      },
+      "candidateState": {
+        "selectedIndex": 0
+      }
+    },
+    {
+      "id": "widgets-412-detail-dark",
+      "previewId": "widgets-412-detail-dark",
+      "file": "adaptive-uid-pilot/ui-builder/designs/widgets.uid",
+      "designId": "widgets",
+      "widthDp": 412,
+      "heightDp": 720,
+      "density": 2,
+      "theme": "dark",
+      "state": "detail",
+      "properties": {
+        "panes": {
+          "activePaneIndex": {
+            "type": "int",
+            "value": 1
+          }
+        }
+      },
+      "candidateState": {
+        "selectedIndex": 0
+      }
+    },
+    {
+      "id": "widgets-840-list-light",
+      "previewId": "widgets-840-list-light",
+      "file": "adaptive-uid-pilot/ui-builder/designs/widgets.uid",
+      "designId": "widgets",
+      "widthDp": 840,
+      "heightDp": 720,
+      "density": 2,
+      "theme": "light",
+      "state": "list",
+      "properties": {
+        "panes": {
+          "activePaneIndex": {
+            "type": "int",
+            "value": 0
+          }
+        },
+        "panel-0-text": {
+          "text": {
+            "type": "string",
+            "value": "Selected \u00b7 Add a widget"
+          }
+        }
+      },
+      "candidateState": {
+        "selectedIndex": 0
+      }
+    },
+    {
+      "id": "widgets-840-list-dark",
+      "previewId": "widgets-840-list-dark",
+      "file": "adaptive-uid-pilot/ui-builder/designs/widgets.uid",
+      "designId": "widgets",
+      "widthDp": 840,
+      "heightDp": 720,
+      "density": 2,
+      "theme": "dark",
+      "state": "list",
+      "properties": {
+        "panes": {
+          "activePaneIndex": {
+            "type": "int",
+            "value": 0
+          }
+        },
+        "panel-0-text": {
+          "text": {
+            "type": "string",
+            "value": "Selected \u00b7 Add a widget"
+          }
+        }
+      },
+      "candidateState": {
+        "selectedIndex": 0
+      }
+    },
+    {
+      "id": "widgets-840-detail-light",
+      "previewId": "widgets-840-detail-light",
+      "file": "adaptive-uid-pilot/ui-builder/designs/widgets-secondary.uid",
+      "designId": "widgets",
+      "widthDp": 840,
+      "heightDp": 720,
+      "density": 2,
+      "theme": "light",
+      "state": "detail",
+      "properties": {
+        "panes": {
+          "activePaneIndex": {
+            "type": "int",
+            "value": 1
+          }
+        },
+        "panel-1-text": {
+          "text": {
+            "type": "string",
+            "value": "Selected \u00b7 Widget limits"
+          }
+        }
+      },
+      "candidateState": {
+        "selectedIndex": 1
+      }
+    },
+    {
+      "id": "widgets-840-detail-dark",
+      "previewId": "widgets-840-detail-dark",
+      "file": "adaptive-uid-pilot/ui-builder/designs/widgets-secondary.uid",
+      "designId": "widgets",
+      "widthDp": 840,
+      "heightDp": 720,
+      "density": 2,
+      "theme": "dark",
+      "state": "detail",
+      "properties": {
+        "panes": {
+          "activePaneIndex": {
+            "type": "int",
+            "value": 1
+          }
+        },
+        "panel-1-text": {
+          "text": {
+            "type": "string",
+            "value": "Selected \u00b7 Widget limits"
+          }
+        }
+      },
+      "candidateState": {
+        "selectedIndex": 1
+      }
+    },
+    {
+      "id": "pinned-412-list-light",
+      "previewId": "pinned-412-list-light",
+      "file": "adaptive-uid-pilot/ui-builder/designs/pinned.uid",
+      "designId": "pinned",
+      "widthDp": 412,
+      "heightDp": 720,
+      "density": 2,
+      "theme": "light",
+      "state": "list",
+      "properties": {
+        "panes": {
+          "activePaneIndex": {
+            "type": "int",
+            "value": 0
+          }
+        }
+      },
+      "candidateState": {
+        "selectedIndex": 0
+      }
+    },
+    {
+      "id": "pinned-412-list-dark",
+      "previewId": "pinned-412-list-dark",
+      "file": "adaptive-uid-pilot/ui-builder/designs/pinned.uid",
+      "designId": "pinned",
+      "widthDp": 412,
+      "heightDp": 720,
+      "density": 2,
+      "theme": "dark",
+      "state": "list",
+      "properties": {
+        "panes": {
+          "activePaneIndex": {
+            "type": "int",
+            "value": 0
+          }
+        }
+      },
+      "candidateState": {
+        "selectedIndex": 0
+      }
+    },
+    {
+      "id": "pinned-412-detail-light",
+      "previewId": "pinned-412-detail-light",
+      "file": "adaptive-uid-pilot/ui-builder/designs/pinned.uid",
+      "designId": "pinned",
+      "widthDp": 412,
+      "heightDp": 720,
+      "density": 2,
+      "theme": "light",
+      "state": "detail",
+      "properties": {
+        "panes": {
+          "activePaneIndex": {
+            "type": "int",
+            "value": 1
+          }
+        }
+      },
+      "candidateState": {
+        "selectedIndex": 0
+      }
+    },
+    {
+      "id": "pinned-412-detail-dark",
+      "previewId": "pinned-412-detail-dark",
+      "file": "adaptive-uid-pilot/ui-builder/designs/pinned.uid",
+      "designId": "pinned",
+      "widthDp": 412,
+      "heightDp": 720,
+      "density": 2,
+      "theme": "dark",
+      "state": "detail",
+      "properties": {
+        "panes": {
+          "activePaneIndex": {
+            "type": "int",
+            "value": 1
+          }
+        }
+      },
+      "candidateState": {
+        "selectedIndex": 0
+      }
+    },
+    {
+      "id": "pinned-840-list-light",
+      "previewId": "pinned-840-list-light",
+      "file": "adaptive-uid-pilot/ui-builder/designs/pinned.uid",
+      "designId": "pinned",
+      "widthDp": 840,
+      "heightDp": 720,
+      "density": 2,
+      "theme": "light",
+      "state": "list",
+      "properties": {
+        "panes": {
+          "activePaneIndex": {
+            "type": "int",
+            "value": 0
+          }
+        },
+        "panel-0-text": {
+          "text": {
+            "type": "string",
+            "value": "Selected \u00b7 Living room lamp"
+          }
+        }
+      },
+      "candidateState": {
+        "selectedIndex": 0
+      }
+    },
+    {
+      "id": "pinned-840-list-dark",
+      "previewId": "pinned-840-list-dark",
+      "file": "adaptive-uid-pilot/ui-builder/designs/pinned.uid",
+      "designId": "pinned",
+      "widthDp": 840,
+      "heightDp": 720,
+      "density": 2,
+      "theme": "dark",
+      "state": "list",
+      "properties": {
+        "panes": {
+          "activePaneIndex": {
+            "type": "int",
+            "value": 0
+          }
+        },
+        "panel-0-text": {
+          "text": {
+            "type": "string",
+            "value": "Selected \u00b7 Living room lamp"
+          }
+        }
+      },
+      "candidateState": {
+        "selectedIndex": 0
+      }
+    },
+    {
+      "id": "pinned-840-detail-light",
+      "previewId": "pinned-840-detail-light",
+      "file": "adaptive-uid-pilot/ui-builder/designs/pinned-secondary.uid",
+      "designId": "pinned",
+      "widthDp": 840,
+      "heightDp": 720,
+      "density": 2,
+      "theme": "light",
+      "state": "detail",
+      "properties": {
+        "panes": {
+          "activePaneIndex": {
+            "type": "int",
+            "value": 1
+          }
+        },
+        "panel-1-text": {
+          "text": {
+            "type": "string",
+            "value": "Selected \u00b7 Kitchen temperature"
+          }
+        }
+      },
+      "candidateState": {
+        "selectedIndex": 1
+      }
+    },
+    {
+      "id": "pinned-840-detail-dark",
+      "previewId": "pinned-840-detail-dark",
+      "file": "adaptive-uid-pilot/ui-builder/designs/pinned-secondary.uid",
+      "designId": "pinned",
+      "widthDp": 840,
+      "heightDp": 720,
+      "density": 2,
+      "theme": "dark",
+      "state": "detail",
+      "properties": {
+        "panes": {
+          "activePaneIndex": {
+            "type": "int",
+            "value": 1
+          }
+        },
+        "panel-1-text": {
+          "text": {
+            "type": "string",
+            "value": "Selected \u00b7 Kitchen temperature"
+          }
+        }
+      },
+      "candidateState": {
+        "selectedIndex": 1
+      }
+    },
+    {
+      "id": "wear-widgets-412-list-light",
+      "previewId": "wear-widgets-412-list-light",
+      "file": "adaptive-uid-pilot/ui-builder/designs/wear-widgets.uid",
+      "designId": "wear-widgets",
+      "widthDp": 412,
+      "heightDp": 720,
+      "density": 2,
+      "theme": "light",
+      "state": "list",
+      "properties": {
+        "panes": {
+          "activePaneIndex": {
+            "type": "int",
+            "value": 0
+          }
+        }
+      },
+      "candidateState": {
+        "selectedIndex": 0
+      }
+    },
+    {
+      "id": "wear-widgets-412-list-dark",
+      "previewId": "wear-widgets-412-list-dark",
+      "file": "adaptive-uid-pilot/ui-builder/designs/wear-widgets.uid",
+      "designId": "wear-widgets",
+      "widthDp": 412,
+      "heightDp": 720,
+      "density": 2,
+      "theme": "dark",
+      "state": "list",
+      "properties": {
+        "panes": {
+          "activePaneIndex": {
+            "type": "int",
+            "value": 0
+          }
+        }
+      },
+      "candidateState": {
+        "selectedIndex": 0
+      }
+    },
+    {
+      "id": "wear-widgets-412-detail-light",
+      "previewId": "wear-widgets-412-detail-light",
+      "file": "adaptive-uid-pilot/ui-builder/designs/wear-widgets.uid",
+      "designId": "wear-widgets",
+      "widthDp": 412,
+      "heightDp": 720,
+      "density": 2,
+      "theme": "light",
+      "state": "detail",
+      "properties": {
+        "panes": {
+          "activePaneIndex": {
+            "type": "int",
+            "value": 1
+          }
+        }
+      },
+      "candidateState": {
+        "selectedIndex": 0
+      }
+    },
+    {
+      "id": "wear-widgets-412-detail-dark",
+      "previewId": "wear-widgets-412-detail-dark",
+      "file": "adaptive-uid-pilot/ui-builder/designs/wear-widgets.uid",
+      "designId": "wear-widgets",
+      "widthDp": 412,
+      "heightDp": 720,
+      "density": 2,
+      "theme": "dark",
+      "state": "detail",
+      "properties": {
+        "panes": {
+          "activePaneIndex": {
+            "type": "int",
+            "value": 1
+          }
+        }
+      },
+      "candidateState": {
+        "selectedIndex": 0
+      }
+    },
+    {
+      "id": "wear-widgets-840-list-light",
+      "previewId": "wear-widgets-840-list-light",
+      "file": "adaptive-uid-pilot/ui-builder/designs/wear-widgets.uid",
+      "designId": "wear-widgets",
+      "widthDp": 840,
+      "heightDp": 720,
+      "density": 2,
+      "theme": "light",
+      "state": "list",
+      "properties": {
+        "panes": {
+          "activePaneIndex": {
+            "type": "int",
+            "value": 0
+          }
+        },
+        "panel-0-text": {
+          "text": {
+            "type": "string",
+            "value": "Selected \u00b7 Slot 1"
+          }
+        }
+      },
+      "candidateState": {
+        "selectedIndex": 0
+      }
+    },
+    {
+      "id": "wear-widgets-840-list-dark",
+      "previewId": "wear-widgets-840-list-dark",
+      "file": "adaptive-uid-pilot/ui-builder/designs/wear-widgets.uid",
+      "designId": "wear-widgets",
+      "widthDp": 840,
+      "heightDp": 720,
+      "density": 2,
+      "theme": "dark",
+      "state": "list",
+      "properties": {
+        "panes": {
+          "activePaneIndex": {
+            "type": "int",
+            "value": 0
+          }
+        },
+        "panel-0-text": {
+          "text": {
+            "type": "string",
+            "value": "Selected \u00b7 Slot 1"
+          }
+        }
+      },
+      "candidateState": {
+        "selectedIndex": 0
+      }
+    },
+    {
+      "id": "wear-widgets-840-detail-light",
+      "previewId": "wear-widgets-840-detail-light",
+      "file": "adaptive-uid-pilot/ui-builder/designs/wear-widgets-secondary.uid",
+      "designId": "wear-widgets",
+      "widthDp": 840,
+      "heightDp": 720,
+      "density": 2,
+      "theme": "light",
+      "state": "detail",
+      "properties": {
+        "panes": {
+          "activePaneIndex": {
+            "type": "int",
+            "value": 1
+          }
+        },
+        "panel-1-text": {
+          "text": {
+            "type": "string",
+            "value": "Selected \u00b7 Slot 2"
+          }
+        }
+      },
+      "candidateState": {
+        "selectedIndex": 1
+      }
+    },
+    {
+      "id": "wear-widgets-840-detail-dark",
+      "previewId": "wear-widgets-840-detail-dark",
+      "file": "adaptive-uid-pilot/ui-builder/designs/wear-widgets-secondary.uid",
+      "designId": "wear-widgets",
+      "widthDp": 840,
+      "heightDp": 720,
+      "density": 2,
+      "theme": "dark",
+      "state": "detail",
+      "properties": {
+        "panes": {
+          "activePaneIndex": {
+            "type": "int",
+            "value": 1
+          }
+        },
+        "panel-1-text": {
+          "text": {
+            "type": "string",
+            "value": "Selected \u00b7 Slot 2"
+          }
+        }
+      },
+      "candidateState": {
+        "selectedIndex": 1
+      }
+    },
+    {
+      "id": "sync-diagnostics-412-list-light",
+      "previewId": "sync-diagnostics-412-list-light",
+      "file": "adaptive-uid-pilot/ui-builder/designs/sync-diagnostics.uid",
+      "designId": "sync-diagnostics",
+      "widthDp": 412,
+      "heightDp": 720,
+      "density": 2,
+      "theme": "light",
+      "state": "list",
+      "properties": {
+        "panes": {
+          "activePaneIndex": {
+            "type": "int",
+            "value": 0
+          }
+        }
+      },
+      "candidateState": {
+        "selectedIndex": 0
+      }
+    },
+    {
+      "id": "sync-diagnostics-412-list-dark",
+      "previewId": "sync-diagnostics-412-list-dark",
+      "file": "adaptive-uid-pilot/ui-builder/designs/sync-diagnostics.uid",
+      "designId": "sync-diagnostics",
+      "widthDp": 412,
+      "heightDp": 720,
+      "density": 2,
+      "theme": "dark",
+      "state": "list",
+      "properties": {
+        "panes": {
+          "activePaneIndex": {
+            "type": "int",
+            "value": 0
+          }
+        }
+      },
+      "candidateState": {
+        "selectedIndex": 0
+      }
+    },
+    {
+      "id": "sync-diagnostics-412-detail-light",
+      "previewId": "sync-diagnostics-412-detail-light",
+      "file": "adaptive-uid-pilot/ui-builder/designs/sync-diagnostics.uid",
+      "designId": "sync-diagnostics",
+      "widthDp": 412,
+      "heightDp": 720,
+      "density": 2,
+      "theme": "light",
+      "state": "detail",
+      "properties": {
+        "panes": {
+          "activePaneIndex": {
+            "type": "int",
+            "value": 1
+          }
+        }
+      },
+      "candidateState": {
+        "selectedIndex": 0
+      }
+    },
+    {
+      "id": "sync-diagnostics-412-detail-dark",
+      "previewId": "sync-diagnostics-412-detail-dark",
+      "file": "adaptive-uid-pilot/ui-builder/designs/sync-diagnostics.uid",
+      "designId": "sync-diagnostics",
+      "widthDp": 412,
+      "heightDp": 720,
+      "density": 2,
+      "theme": "dark",
+      "state": "detail",
+      "properties": {
+        "panes": {
+          "activePaneIndex": {
+            "type": "int",
+            "value": 1
+          }
+        }
+      },
+      "candidateState": {
+        "selectedIndex": 0
+      }
+    },
+    {
+      "id": "sync-diagnostics-840-list-light",
+      "previewId": "sync-diagnostics-840-list-light",
+      "file": "adaptive-uid-pilot/ui-builder/designs/sync-diagnostics.uid",
+      "designId": "sync-diagnostics",
+      "widthDp": 840,
+      "heightDp": 720,
+      "density": 2,
+      "theme": "light",
+      "state": "list",
+      "properties": {
+        "panes": {
+          "activePaneIndex": {
+            "type": "int",
+            "value": 0
+          }
+        },
+        "panel-0-text": {
+          "text": {
+            "type": "string",
+            "value": "Selected \u00b7 Active stream"
+          }
+        }
+      },
+      "candidateState": {
+        "selectedIndex": 0
+      }
+    },
+    {
+      "id": "sync-diagnostics-840-list-dark",
+      "previewId": "sync-diagnostics-840-list-dark",
+      "file": "adaptive-uid-pilot/ui-builder/designs/sync-diagnostics.uid",
+      "designId": "sync-diagnostics",
+      "widthDp": 840,
+      "heightDp": 720,
+      "density": 2,
+      "theme": "dark",
+      "state": "list",
+      "properties": {
+        "panes": {
+          "activePaneIndex": {
+            "type": "int",
+            "value": 0
+          }
+        },
+        "panel-0-text": {
+          "text": {
+            "type": "string",
+            "value": "Selected \u00b7 Active stream"
+          }
+        }
+      },
+      "candidateState": {
+        "selectedIndex": 0
+      }
+    },
+    {
+      "id": "sync-diagnostics-840-detail-light",
+      "previewId": "sync-diagnostics-840-detail-light",
+      "file": "adaptive-uid-pilot/ui-builder/designs/sync-diagnostics-secondary.uid",
+      "designId": "sync-diagnostics",
+      "widthDp": 840,
+      "heightDp": 720,
+      "density": 2,
+      "theme": "light",
+      "state": "detail",
+      "properties": {
+        "panes": {
+          "activePaneIndex": {
+            "type": "int",
+            "value": 1
+          }
+        },
+        "panel-1-text": {
+          "text": {
+            "type": "string",
+            "value": "Selected \u00b7 Idle stream"
+          }
+        }
+      },
+      "candidateState": {
+        "selectedIndex": 1
+      }
+    },
+    {
+      "id": "sync-diagnostics-840-detail-dark",
+      "previewId": "sync-diagnostics-840-detail-dark",
+      "file": "adaptive-uid-pilot/ui-builder/designs/sync-diagnostics-secondary.uid",
+      "designId": "sync-diagnostics",
+      "widthDp": 840,
+      "heightDp": 720,
+      "density": 2,
+      "theme": "dark",
+      "state": "detail",
+      "properties": {
+        "panes": {
+          "activePaneIndex": {
+            "type": "int",
+            "value": 1
+          }
+        },
+        "panel-1-text": {
+          "text": {
+            "type": "string",
+            "value": "Selected \u00b7 Idle stream"
+          }
+        }
+      },
+      "candidateState": {
+        "selectedIndex": 1
+      }
+    },
+    {
+      "id": "logs-412-list-light",
+      "previewId": "logs-412-list-light",
+      "file": "adaptive-uid-pilot/ui-builder/designs/logs.uid",
+      "designId": "logs",
+      "widthDp": 412,
+      "heightDp": 720,
+      "density": 2,
+      "theme": "light",
+      "state": "list",
+      "properties": {
+        "panes": {
+          "activePaneIndex": {
+            "type": "int",
+            "value": 0
+          }
+        }
+      },
+      "candidateState": {
+        "selectedIndex": 0
+      }
+    },
+    {
+      "id": "logs-412-list-dark",
+      "previewId": "logs-412-list-dark",
+      "file": "adaptive-uid-pilot/ui-builder/designs/logs.uid",
+      "designId": "logs",
+      "widthDp": 412,
+      "heightDp": 720,
+      "density": 2,
+      "theme": "dark",
+      "state": "list",
+      "properties": {
+        "panes": {
+          "activePaneIndex": {
+            "type": "int",
+            "value": 0
+          }
+        }
+      },
+      "candidateState": {
+        "selectedIndex": 0
+      }
+    },
+    {
+      "id": "logs-412-detail-light",
+      "previewId": "logs-412-detail-light",
+      "file": "adaptive-uid-pilot/ui-builder/designs/logs.uid",
+      "designId": "logs",
+      "widthDp": 412,
+      "heightDp": 720,
+      "density": 2,
+      "theme": "light",
+      "state": "detail",
+      "properties": {
+        "panes": {
+          "activePaneIndex": {
+            "type": "int",
+            "value": 1
+          }
+        }
+      },
+      "candidateState": {
+        "selectedIndex": 0
+      }
+    },
+    {
+      "id": "logs-412-detail-dark",
+      "previewId": "logs-412-detail-dark",
+      "file": "adaptive-uid-pilot/ui-builder/designs/logs.uid",
+      "designId": "logs",
+      "widthDp": 412,
+      "heightDp": 720,
+      "density": 2,
+      "theme": "dark",
+      "state": "detail",
+      "properties": {
+        "panes": {
+          "activePaneIndex": {
+            "type": "int",
+            "value": 1
+          }
+        }
+      },
+      "candidateState": {
+        "selectedIndex": 0
+      }
+    },
+    {
+      "id": "logs-840-list-light",
+      "previewId": "logs-840-list-light",
+      "file": "adaptive-uid-pilot/ui-builder/designs/logs.uid",
+      "designId": "logs",
+      "widthDp": 840,
+      "heightDp": 720,
+      "density": 2,
+      "theme": "light",
+      "state": "list",
+      "properties": {
+        "panes": {
+          "activePaneIndex": {
+            "type": "int",
+            "value": 0
+          }
+        },
+        "panel-0-text": {
+          "text": {
+            "type": "string",
+            "value": "Selected \u00b7 Connection events"
+          }
+        }
+      },
+      "candidateState": {
+        "selectedIndex": 0
+      }
+    },
+    {
+      "id": "logs-840-list-dark",
+      "previewId": "logs-840-list-dark",
+      "file": "adaptive-uid-pilot/ui-builder/designs/logs.uid",
+      "designId": "logs",
+      "widthDp": 840,
+      "heightDp": 720,
+      "density": 2,
+      "theme": "dark",
+      "state": "list",
+      "properties": {
+        "panes": {
+          "activePaneIndex": {
+            "type": "int",
+            "value": 0
+          }
+        },
+        "panel-0-text": {
+          "text": {
+            "type": "string",
+            "value": "Selected \u00b7 Connection events"
+          }
+        }
+      },
+      "candidateState": {
+        "selectedIndex": 0
+      }
+    },
+    {
+      "id": "logs-840-detail-light",
+      "previewId": "logs-840-detail-light",
+      "file": "adaptive-uid-pilot/ui-builder/designs/logs-secondary.uid",
+      "designId": "logs",
+      "widthDp": 840,
+      "heightDp": 720,
+      "density": 2,
+      "theme": "light",
+      "state": "detail",
+      "properties": {
+        "panes": {
+          "activePaneIndex": {
+            "type": "int",
+            "value": 1
+          }
+        },
+        "panel-1-text": {
+          "text": {
+            "type": "string",
+            "value": "Selected \u00b7 Action events"
+          }
+        }
+      },
+      "candidateState": {
+        "selectedIndex": 1
+      }
+    },
+    {
+      "id": "logs-840-detail-dark",
+      "previewId": "logs-840-detail-dark",
+      "file": "adaptive-uid-pilot/ui-builder/designs/logs-secondary.uid",
+      "designId": "logs",
+      "widthDp": 840,
+      "heightDp": 720,
+      "density": 2,
+      "theme": "dark",
+      "state": "detail",
+      "properties": {
+        "panes": {
+          "activePaneIndex": {
+            "type": "int",
+            "value": 1
+          }
+        },
+        "panel-1-text": {
+          "text": {
+            "type": "string",
+            "value": "Selected \u00b7 Action events"
+          }
+        }
+      },
+      "candidateState": {
+        "selectedIndex": 1
+      }
+    },
+    {
+      "id": "card-history-412-list-light",
+      "previewId": "card-history-412-list-light",
+      "file": "adaptive-uid-pilot/ui-builder/designs/card-history.uid",
+      "designId": "card-history",
+      "widthDp": 412,
+      "heightDp": 720,
+      "density": 2,
+      "theme": "light",
+      "state": "list",
+      "properties": {
+        "panes": {
+          "activePaneIndex": {
+            "type": "int",
+            "value": 0
+          }
+        }
+      },
+      "candidateState": {
+        "selectedIndex": 0
+      }
+    },
+    {
+      "id": "card-history-412-list-dark",
+      "previewId": "card-history-412-list-dark",
+      "file": "adaptive-uid-pilot/ui-builder/designs/card-history.uid",
+      "designId": "card-history",
+      "widthDp": 412,
+      "heightDp": 720,
+      "density": 2,
+      "theme": "dark",
+      "state": "list",
+      "properties": {
+        "panes": {
+          "activePaneIndex": {
+            "type": "int",
+            "value": 0
+          }
+        }
+      },
+      "candidateState": {
+        "selectedIndex": 0
+      }
+    },
+    {
+      "id": "card-history-412-detail-light",
+      "previewId": "card-history-412-detail-light",
+      "file": "adaptive-uid-pilot/ui-builder/designs/card-history.uid",
+      "designId": "card-history",
+      "widthDp": 412,
+      "heightDp": 720,
+      "density": 2,
+      "theme": "light",
+      "state": "detail",
+      "properties": {
+        "panes": {
+          "activePaneIndex": {
+            "type": "int",
+            "value": 1
+          }
+        }
+      },
+      "candidateState": {
+        "selectedIndex": 0
+      }
+    },
+    {
+      "id": "card-history-412-detail-dark",
+      "previewId": "card-history-412-detail-dark",
+      "file": "adaptive-uid-pilot/ui-builder/designs/card-history.uid",
+      "designId": "card-history",
+      "widthDp": 412,
+      "heightDp": 720,
+      "density": 2,
+      "theme": "dark",
+      "state": "detail",
+      "properties": {
+        "panes": {
+          "activePaneIndex": {
+            "type": "int",
+            "value": 1
+          }
+        }
+      },
+      "candidateState": {
+        "selectedIndex": 0
+      }
+    },
+    {
+      "id": "card-history-840-list-light",
+      "previewId": "card-history-840-list-light",
+      "file": "adaptive-uid-pilot/ui-builder/designs/card-history.uid",
+      "designId": "card-history",
+      "widthDp": 840,
+      "heightDp": 720,
+      "density": 2,
+      "theme": "light",
+      "state": "list",
+      "properties": {
+        "panes": {
+          "activePaneIndex": {
+            "type": "int",
+            "value": 0
+          }
+        },
+        "panel-0-text": {
+          "text": {
+            "type": "string",
+            "value": "Selected \u00b7 Last hour"
+          }
+        }
+      },
+      "candidateState": {
+        "selectedIndex": 0
+      }
+    },
+    {
+      "id": "card-history-840-list-dark",
+      "previewId": "card-history-840-list-dark",
+      "file": "adaptive-uid-pilot/ui-builder/designs/card-history.uid",
+      "designId": "card-history",
+      "widthDp": 840,
+      "heightDp": 720,
+      "density": 2,
+      "theme": "dark",
+      "state": "list",
+      "properties": {
+        "panes": {
+          "activePaneIndex": {
+            "type": "int",
+            "value": 0
+          }
+        },
+        "panel-0-text": {
+          "text": {
+            "type": "string",
+            "value": "Selected \u00b7 Last hour"
+          }
+        }
+      },
+      "candidateState": {
+        "selectedIndex": 0
+      }
+    },
+    {
+      "id": "card-history-840-detail-light",
+      "previewId": "card-history-840-detail-light",
+      "file": "adaptive-uid-pilot/ui-builder/designs/card-history-secondary.uid",
+      "designId": "card-history",
+      "widthDp": 840,
+      "heightDp": 720,
+      "density": 2,
+      "theme": "light",
+      "state": "detail",
+      "properties": {
+        "panes": {
+          "activePaneIndex": {
+            "type": "int",
+            "value": 1
+          }
+        },
+        "panel-1-text": {
+          "text": {
+            "type": "string",
+            "value": "Selected \u00b7 Last 24 hours"
+          }
+        }
+      },
+      "candidateState": {
+        "selectedIndex": 1
+      }
+    },
+    {
+      "id": "card-history-840-detail-dark",
+      "previewId": "card-history-840-detail-dark",
+      "file": "adaptive-uid-pilot/ui-builder/designs/card-history-secondary.uid",
+      "designId": "card-history",
+      "widthDp": 840,
+      "heightDp": 720,
+      "density": 2,
+      "theme": "dark",
+      "state": "detail",
+      "properties": {
+        "panes": {
+          "activePaneIndex": {
+            "type": "int",
+            "value": 1
+          }
+        },
+        "panel-1-text": {
+          "text": {
+            "type": "string",
+            "value": "Selected \u00b7 Last 24 hours"
+          }
+        }
+      },
+      "candidateState": {
+        "selectedIndex": 1
+      }
+    },
+    {
+      "id": "connection-412-failure-light",
+      "previewId": "connection-412-failure-light",
+      "file": "adaptive-uid-pilot/ui-builder/designs/connection-failure.uid",
+      "designId": "connection",
+      "widthDp": 412,
+      "heightDp": 720,
+      "density": 2,
+      "theme": "light",
+      "state": "failure",
+      "properties": {
+        "panes": {
+          "activePaneIndex": {
+            "type": "int",
+            "value": 1
+          }
+        }
+      },
+      "candidateState": {
+        "selectedIndex": 0,
+        "unavailable": true
+      }
+    },
+    {
+      "id": "connection-412-failure-dark",
+      "previewId": "connection-412-failure-dark",
+      "file": "adaptive-uid-pilot/ui-builder/designs/connection-failure.uid",
+      "designId": "connection",
+      "widthDp": 412,
+      "heightDp": 720,
+      "density": 2,
+      "theme": "dark",
+      "state": "failure",
+      "properties": {
+        "panes": {
+          "activePaneIndex": {
+            "type": "int",
+            "value": 1
+          }
+        }
+      },
+      "candidateState": {
+        "selectedIndex": 0,
+        "unavailable": true
+      }
+    },
+    {
+      "id": "connection-840-failure-light",
+      "previewId": "connection-840-failure-light",
+      "file": "adaptive-uid-pilot/ui-builder/designs/connection-failure.uid",
+      "designId": "connection",
+      "widthDp": 840,
+      "heightDp": 720,
+      "density": 2,
+      "theme": "light",
+      "state": "failure",
+      "properties": {
+        "panes": {
+          "activePaneIndex": {
+            "type": "int",
+            "value": 1
+          }
+        },
+        "panel-0-text": {
+          "text": {
+            "type": "string",
+            "value": "Selected \u00b7 Local instance"
+          }
+        }
+      },
+      "candidateState": {
+        "selectedIndex": 0,
+        "unavailable": true
+      }
+    },
+    {
+      "id": "connection-840-failure-dark",
+      "previewId": "connection-840-failure-dark",
+      "file": "adaptive-uid-pilot/ui-builder/designs/connection-failure.uid",
+      "designId": "connection",
+      "widthDp": 840,
+      "heightDp": 720,
+      "density": 2,
+      "theme": "dark",
+      "state": "failure",
+      "properties": {
+        "panes": {
+          "activePaneIndex": {
+            "type": "int",
+            "value": 1
+          }
+        },
+        "panel-0-text": {
+          "text": {
+            "type": "string",
+            "value": "Selected \u00b7 Local instance"
+          }
+        }
+      },
+      "candidateState": {
+        "selectedIndex": 0,
+        "unavailable": true
+      }
+    },
+    {
+      "id": "dashboard-view-412-offline-light",
+      "previewId": "dashboard-view-412-offline-light",
+      "file": "adaptive-uid-pilot/ui-builder/designs/dashboard-view-offline.uid",
+      "designId": "dashboard-view",
+      "widthDp": 412,
+      "heightDp": 720,
+      "density": 2,
+      "theme": "light",
+      "state": "offline",
+      "properties": {
+        "panes": {
+          "activePaneIndex": {
+            "type": "int",
+            "value": 1
+          }
+        }
+      },
+      "candidateState": {
+        "selectedIndex": 0,
+        "unavailable": true
+      }
+    },
+    {
+      "id": "dashboard-view-412-offline-dark",
+      "previewId": "dashboard-view-412-offline-dark",
+      "file": "adaptive-uid-pilot/ui-builder/designs/dashboard-view-offline.uid",
+      "designId": "dashboard-view",
+      "widthDp": 412,
+      "heightDp": 720,
+      "density": 2,
+      "theme": "dark",
+      "state": "offline",
+      "properties": {
+        "panes": {
+          "activePaneIndex": {
+            "type": "int",
+            "value": 1
+          }
+        }
+      },
+      "candidateState": {
+        "selectedIndex": 0,
+        "unavailable": true
+      }
+    },
+    {
+      "id": "dashboard-view-840-offline-light",
+      "previewId": "dashboard-view-840-offline-light",
+      "file": "adaptive-uid-pilot/ui-builder/designs/dashboard-view-offline.uid",
+      "designId": "dashboard-view",
+      "widthDp": 840,
+      "heightDp": 720,
+      "density": 2,
+      "theme": "light",
+      "state": "offline",
+      "properties": {
+        "panes": {
+          "activePaneIndex": {
+            "type": "int",
+            "value": 1
+          }
+        },
+        "panel-0-text": {
+          "text": {
+            "type": "string",
+            "value": "Selected \u00b7 Living room"
+          }
+        }
+      },
+      "candidateState": {
+        "selectedIndex": 0,
+        "unavailable": true
+      }
+    },
+    {
+      "id": "dashboard-view-840-offline-dark",
+      "previewId": "dashboard-view-840-offline-dark",
+      "file": "adaptive-uid-pilot/ui-builder/designs/dashboard-view-offline.uid",
+      "designId": "dashboard-view",
+      "widthDp": 840,
+      "heightDp": 720,
+      "density": 2,
+      "theme": "dark",
+      "state": "offline",
+      "properties": {
+        "panes": {
+          "activePaneIndex": {
+            "type": "int",
+            "value": 1
+          }
+        },
+        "panel-0-text": {
+          "text": {
+            "type": "string",
+            "value": "Selected \u00b7 Living room"
+          }
+        }
+      },
+      "candidateState": {
+        "selectedIndex": 0,
+        "unavailable": true
+      }
+    },
+    {
+      "id": "choose-dashboards-412-empty-light",
+      "previewId": "choose-dashboards-412-empty-light",
+      "file": "adaptive-uid-pilot/ui-builder/designs/choose-dashboards-empty.uid",
+      "designId": "choose-dashboards",
+      "widthDp": 412,
+      "heightDp": 720,
+      "density": 2,
+      "theme": "light",
+      "state": "empty",
+      "properties": {
+        "panes": {
+          "activePaneIndex": {
+            "type": "int",
+            "value": 1
+          }
+        }
+      },
+      "candidateState": {
+        "selectedIndex": 0,
+        "emptySelection": true
+      }
+    },
+    {
+      "id": "choose-dashboards-412-empty-dark",
+      "previewId": "choose-dashboards-412-empty-dark",
+      "file": "adaptive-uid-pilot/ui-builder/designs/choose-dashboards-empty.uid",
+      "designId": "choose-dashboards",
+      "widthDp": 412,
+      "heightDp": 720,
+      "density": 2,
+      "theme": "dark",
+      "state": "empty",
+      "properties": {
+        "panes": {
+          "activePaneIndex": {
+            "type": "int",
+            "value": 1
+          }
+        }
+      },
+      "candidateState": {
+        "selectedIndex": 0,
+        "emptySelection": true
+      }
+    },
+    {
+      "id": "choose-dashboards-840-empty-light",
+      "previewId": "choose-dashboards-840-empty-light",
+      "file": "adaptive-uid-pilot/ui-builder/designs/choose-dashboards-empty.uid",
+      "designId": "choose-dashboards",
+      "widthDp": 840,
+      "heightDp": 720,
+      "density": 2,
+      "theme": "light",
+      "state": "empty",
+      "properties": {
+        "panes": {
+          "activePaneIndex": {
+            "type": "int",
+            "value": 1
+          }
+        },
+        "panel-0-text": {
+          "text": {
+            "type": "string",
+            "value": "Viewing \u00b7 Overview (built-in) \u00b7 Hidden"
+          }
+        }
+      },
+      "candidateState": {
+        "selectedIndex": 0,
+        "emptySelection": true
+      }
+    },
+    {
+      "id": "choose-dashboards-840-empty-dark",
+      "previewId": "choose-dashboards-840-empty-dark",
+      "file": "adaptive-uid-pilot/ui-builder/designs/choose-dashboards-empty.uid",
+      "designId": "choose-dashboards",
+      "widthDp": 840,
+      "heightDp": 720,
+      "density": 2,
+      "theme": "dark",
+      "state": "empty",
+      "properties": {
+        "panes": {
+          "activePaneIndex": {
+            "type": "int",
+            "value": 1
+          }
+        },
+        "panel-0-text": {
+          "text": {
+            "type": "string",
+            "value": "Viewing \u00b7 Overview (built-in) \u00b7 Hidden"
+          }
+        }
+      },
+      "candidateState": {
+        "selectedIndex": 0,
+        "emptySelection": true
       }
     }
   ],
@@ -251,6 +2587,278 @@
     [
       "dashboards-840-detail-light",
       "dashboards-840-detail-dark"
+    ],
+    [
+      "connection-412-list-light",
+      "connection-412-list-dark"
+    ],
+    [
+      "connection-412-detail-light",
+      "connection-412-detail-dark"
+    ],
+    [
+      "connection-840-list-light",
+      "connection-840-list-dark"
+    ],
+    [
+      "connection-840-detail-light",
+      "connection-840-detail-dark"
+    ],
+    [
+      "connection-840-list-light",
+      "connection-840-detail-light"
+    ],
+    [
+      "connection-840-list-dark",
+      "connection-840-detail-dark"
+    ],
+    [
+      "dashboard-view-412-list-light",
+      "dashboard-view-412-list-dark"
+    ],
+    [
+      "dashboard-view-412-detail-light",
+      "dashboard-view-412-detail-dark"
+    ],
+    [
+      "dashboard-view-840-list-light",
+      "dashboard-view-840-list-dark"
+    ],
+    [
+      "dashboard-view-840-detail-light",
+      "dashboard-view-840-detail-dark"
+    ],
+    [
+      "dashboard-view-840-list-light",
+      "dashboard-view-840-detail-light"
+    ],
+    [
+      "dashboard-view-840-list-dark",
+      "dashboard-view-840-detail-dark"
+    ],
+    [
+      "choose-dashboards-412-list-light",
+      "choose-dashboards-412-list-dark"
+    ],
+    [
+      "choose-dashboards-412-detail-light",
+      "choose-dashboards-412-detail-dark"
+    ],
+    [
+      "choose-dashboards-840-list-light",
+      "choose-dashboards-840-list-dark"
+    ],
+    [
+      "choose-dashboards-840-detail-light",
+      "choose-dashboards-840-detail-dark"
+    ],
+    [
+      "choose-dashboards-840-list-light",
+      "choose-dashboards-840-detail-light"
+    ],
+    [
+      "choose-dashboards-840-list-dark",
+      "choose-dashboards-840-detail-dark"
+    ],
+    [
+      "settings-412-list-light",
+      "settings-412-list-dark"
+    ],
+    [
+      "settings-412-detail-light",
+      "settings-412-detail-dark"
+    ],
+    [
+      "settings-840-list-light",
+      "settings-840-list-dark"
+    ],
+    [
+      "settings-840-detail-light",
+      "settings-840-detail-dark"
+    ],
+    [
+      "settings-840-list-light",
+      "settings-840-detail-light"
+    ],
+    [
+      "settings-840-list-dark",
+      "settings-840-detail-dark"
+    ],
+    [
+      "widgets-412-list-light",
+      "widgets-412-list-dark"
+    ],
+    [
+      "widgets-412-detail-light",
+      "widgets-412-detail-dark"
+    ],
+    [
+      "widgets-840-list-light",
+      "widgets-840-list-dark"
+    ],
+    [
+      "widgets-840-detail-light",
+      "widgets-840-detail-dark"
+    ],
+    [
+      "widgets-840-list-light",
+      "widgets-840-detail-light"
+    ],
+    [
+      "widgets-840-list-dark",
+      "widgets-840-detail-dark"
+    ],
+    [
+      "pinned-412-list-light",
+      "pinned-412-list-dark"
+    ],
+    [
+      "pinned-412-detail-light",
+      "pinned-412-detail-dark"
+    ],
+    [
+      "pinned-840-list-light",
+      "pinned-840-list-dark"
+    ],
+    [
+      "pinned-840-detail-light",
+      "pinned-840-detail-dark"
+    ],
+    [
+      "pinned-840-list-light",
+      "pinned-840-detail-light"
+    ],
+    [
+      "pinned-840-list-dark",
+      "pinned-840-detail-dark"
+    ],
+    [
+      "wear-widgets-412-list-light",
+      "wear-widgets-412-list-dark"
+    ],
+    [
+      "wear-widgets-412-detail-light",
+      "wear-widgets-412-detail-dark"
+    ],
+    [
+      "wear-widgets-840-list-light",
+      "wear-widgets-840-list-dark"
+    ],
+    [
+      "wear-widgets-840-detail-light",
+      "wear-widgets-840-detail-dark"
+    ],
+    [
+      "wear-widgets-840-list-light",
+      "wear-widgets-840-detail-light"
+    ],
+    [
+      "wear-widgets-840-list-dark",
+      "wear-widgets-840-detail-dark"
+    ],
+    [
+      "sync-diagnostics-412-list-light",
+      "sync-diagnostics-412-list-dark"
+    ],
+    [
+      "sync-diagnostics-412-detail-light",
+      "sync-diagnostics-412-detail-dark"
+    ],
+    [
+      "sync-diagnostics-840-list-light",
+      "sync-diagnostics-840-list-dark"
+    ],
+    [
+      "sync-diagnostics-840-detail-light",
+      "sync-diagnostics-840-detail-dark"
+    ],
+    [
+      "sync-diagnostics-840-list-light",
+      "sync-diagnostics-840-detail-light"
+    ],
+    [
+      "sync-diagnostics-840-list-dark",
+      "sync-diagnostics-840-detail-dark"
+    ],
+    [
+      "logs-412-list-light",
+      "logs-412-list-dark"
+    ],
+    [
+      "logs-412-detail-light",
+      "logs-412-detail-dark"
+    ],
+    [
+      "logs-840-list-light",
+      "logs-840-list-dark"
+    ],
+    [
+      "logs-840-detail-light",
+      "logs-840-detail-dark"
+    ],
+    [
+      "logs-840-list-light",
+      "logs-840-detail-light"
+    ],
+    [
+      "logs-840-list-dark",
+      "logs-840-detail-dark"
+    ],
+    [
+      "card-history-412-list-light",
+      "card-history-412-list-dark"
+    ],
+    [
+      "card-history-412-detail-light",
+      "card-history-412-detail-dark"
+    ],
+    [
+      "card-history-840-list-light",
+      "card-history-840-list-dark"
+    ],
+    [
+      "card-history-840-detail-light",
+      "card-history-840-detail-dark"
+    ],
+    [
+      "card-history-840-list-light",
+      "card-history-840-detail-light"
+    ],
+    [
+      "card-history-840-list-dark",
+      "card-history-840-detail-dark"
+    ],
+    [
+      "connection-412-failure-light",
+      "connection-412-failure-dark"
+    ],
+    [
+      "connection-840-failure-light",
+      "connection-840-failure-dark"
+    ],
+    [
+      "connection-412-detail-light",
+      "connection-412-failure-light"
+    ],
+    [
+      "dashboard-view-412-offline-light",
+      "dashboard-view-412-offline-dark"
+    ],
+    [
+      "dashboard-view-840-offline-light",
+      "dashboard-view-840-offline-dark"
+    ],
+    [
+      "dashboard-view-412-detail-light",
+      "dashboard-view-412-offline-light"
+    ],
+    [
+      "choose-dashboards-412-empty-light",
+      "choose-dashboards-412-empty-dark"
+    ],
+    [
+      "choose-dashboards-840-empty-light",
+      "choose-dashboards-840-empty-dark"
     ]
   ],
   "publication": {
@@ -264,6 +2872,76 @@
         "defaultState": "list",
         "sourceFile": "src/main/kotlin/ee/schimke/adaptivepilot/DashboardBrowser.kt",
         "caption": "Adaptive stock Material 3 design proposal: phone and tablet, list and detail, light and dark."
+      },
+      {
+        "designId": "connection",
+        "componentId": "Connect",
+        "defaultState": "list",
+        "sourceFile": "src/main/kotlin/ee/schimke/adaptivepilot/KeyScreens.kt",
+        "caption": "Adaptive stock Material 3 design proposal; independent Compose specimen, not the production route."
+      },
+      {
+        "designId": "dashboard-view",
+        "componentId": "Home",
+        "defaultState": "list",
+        "sourceFile": "src/main/kotlin/ee/schimke/adaptivepilot/KeyScreens.kt",
+        "caption": "Adaptive stock Material 3 design proposal; independent Compose specimen, not the production route."
+      },
+      {
+        "designId": "choose-dashboards",
+        "componentId": "Choose dashboards",
+        "defaultState": "list",
+        "sourceFile": "src/main/kotlin/ee/schimke/adaptivepilot/KeyScreens.kt",
+        "caption": "Adaptive stock Material 3 design proposal; independent Compose specimen, not the production route."
+      },
+      {
+        "designId": "settings",
+        "componentId": "Settings",
+        "defaultState": "list",
+        "sourceFile": "src/main/kotlin/ee/schimke/adaptivepilot/KeyScreens.kt",
+        "caption": "Adaptive stock Material 3 design proposal; independent Compose specimen, not the production route."
+      },
+      {
+        "designId": "widgets",
+        "componentId": "Installed widgets",
+        "defaultState": "list",
+        "sourceFile": "src/main/kotlin/ee/schimke/adaptivepilot/KeyScreens.kt",
+        "caption": "Adaptive stock Material 3 design proposal; independent Compose specimen, not the production route."
+      },
+      {
+        "designId": "pinned",
+        "componentId": "Manage pinned",
+        "defaultState": "list",
+        "sourceFile": "src/main/kotlin/ee/schimke/adaptivepilot/KeyScreens.kt",
+        "caption": "Adaptive stock Material 3 design proposal; independent Compose specimen, not the production route."
+      },
+      {
+        "designId": "wear-widgets",
+        "componentId": "Wear widgets",
+        "defaultState": "list",
+        "sourceFile": "src/main/kotlin/ee/schimke/adaptivepilot/KeyScreens.kt",
+        "caption": "Adaptive stock Material 3 design proposal; independent Compose specimen, not the production route."
+      },
+      {
+        "designId": "sync-diagnostics",
+        "componentId": "Sync diagnostics",
+        "defaultState": "list",
+        "sourceFile": "src/main/kotlin/ee/schimke/adaptivepilot/KeyScreens.kt",
+        "caption": "Adaptive stock Material 3 design proposal; independent Compose specimen, not the production route."
+      },
+      {
+        "designId": "logs",
+        "componentId": "Logs",
+        "defaultState": "list",
+        "sourceFile": "src/main/kotlin/ee/schimke/adaptivepilot/KeyScreens.kt",
+        "caption": "Adaptive stock Material 3 design proposal; independent Compose specimen, not the production route."
+      },
+      {
+        "designId": "card-history",
+        "componentId": "Card history",
+        "defaultState": "list",
+        "sourceFile": "src/main/kotlin/ee/schimke/adaptivepilot/KeyScreens.kt",
+        "caption": "Adaptive stock Material 3 design proposal; independent Compose specimen, not the production route."
       }
     ],
     "sourceDirectory": "adaptive-uid-pilot"
