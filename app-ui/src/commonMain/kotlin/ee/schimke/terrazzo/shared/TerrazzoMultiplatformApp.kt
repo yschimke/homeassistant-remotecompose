@@ -215,16 +215,19 @@ private fun DashboardShell(connection: AppConnection, onSignOut: () -> Unit) {
     }
   }
   LaunchedEffect(connection) {
-    try {
-      val fetched = connection.client.listDashboards()
-      list =
-        DashboardListState.Ready(
-          listOf(DashboardSummary(null, "Home")) + fetched.filter { it.urlPath != null }
-        )
-    } catch (e: CancellationException) {
-      throw e
-    } catch (e: Exception) {
-      list = DashboardListState.Error("Could not load dashboards. Reconnect to retry.")
+    connection.client.state.collectLatest { state ->
+      if (state != HaClient.ConnectionState.Ready) return@collectLatest
+      try {
+        val fetched = connection.client.listDashboards()
+        list =
+          DashboardListState.Ready(
+            listOf(DashboardSummary(null, "Home")) + fetched.filter { it.urlPath != null }
+          )
+      } catch (e: CancellationException) {
+        throw e
+      } catch (e: Exception) {
+        list = DashboardListState.Error("Could not load dashboards. Will retry after reconnecting.")
+      }
     }
   }
   fun select(route: NavKey) {
