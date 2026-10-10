@@ -1,146 +1,114 @@
-# Home Assistant dashboard browser
+# Home Assistant adaptive design workbench
 
-One adaptive screen proposal for the no-Figma design workflow. The reviewed design is
-[`ui-builder/designs/dashboards.uid`](ui-builder/designs/dashboards.uid); the independently written
-Compose implementation is [`DashboardBrowser.kt`](src/main/kotlin/ee/schimke/adaptivepilot/DashboardBrowser.kt).
-The Kotlin screen never loads the UID or its rendered PNGs.
+Eleven key surfaces have editable UI Builder UID references and independently written
+Compose previews. These are **stock Material 3 design proposals**, not a replacement for
+production navigation, Remote Compose cards, or the Terrazzo theme. The candidate renderer
+never reads UID layouts or reference PNGs. Fixtures contain English sample data; actions call
+local callbacks and never connect to Home Assistant, authenticate, operate devices, alter
+preferences, remove real pins, clear logs, or update a watch.
 
-This is an **opt-in desktop pilot**, not a replacement for the app's current navigation,
-existing design references or branded theme. It uses stock Material 3 from the native UID
-renderer, fixed English sample data, and an `onOpen` callback. No Home Assistant connection,
-radio transport, dashboard control or message send happens in this prototype. The callback
-is tested with the selected entry's ID; previews leave it unconnected.
+| Surface | UID | Production implementation |
+| --- | --- | --- |
+| Connect / discovery | [connection.uid](ui-builder/designs/connection.uid) | [DiscoveryScreen](../app/src/main/kotlin/ee/schimke/terrazzo/discovery/DiscoveryScreen.kt) |
+| Dashboard picker | [dashboards.uid](ui-builder/designs/dashboards.uid) | [DashboardPickerScreen](../app-ui/src/commonMain/kotlin/ee/schimke/terrazzo/dashboard/DashboardPickerScreen.kt) |
+| Dashboard view | [dashboard-view.uid](ui-builder/designs/dashboard-view.uid) | [DashboardViewScreen](../app/src/main/kotlin/ee/schimke/terrazzo/dashboard/DashboardViewScreen.kt) |
+| Choose dashboards | [choose-dashboards.uid](ui-builder/designs/choose-dashboards.uid) | [DashboardSelectionScreen](../app-ui/src/commonMain/kotlin/ee/schimke/terrazzo/dashboard/DashboardSelectionScreen.kt) |
+| Settings | [settings.uid](ui-builder/designs/settings.uid) | [SettingsScreen in TerrazzoApp](../app/src/main/kotlin/ee/schimke/terrazzo/TerrazzoApp.kt) |
+| Installed widgets | [widgets.uid](ui-builder/designs/widgets.uid) | [WidgetsScreen](../app/src/main/kotlin/ee/schimke/terrazzo/widget/WidgetsScreen.kt) |
+| Manage pinned | [pinned.uid](ui-builder/designs/pinned.uid) | [ManagePinnedScreen](../app/src/main/kotlin/ee/schimke/terrazzo/dashboard/ManagePinnedScreen.kt) |
+| Wear widget slots | [wear-widgets.uid](ui-builder/designs/wear-widgets.uid) | [WearWidgetsScreen](../app/src/main/kotlin/ee/schimke/terrazzo/wearsync/WearWidgetsScreen.kt) |
+| Sync diagnostics | [sync-diagnostics.uid](ui-builder/designs/sync-diagnostics.uid) | [SyncDiagnosticsScreen](../app/src/main/kotlin/ee/schimke/terrazzo/wearsync/SyncDiagnosticsScreen.kt) |
+| Logs | [logs.uid](ui-builder/designs/logs.uid) | [LogsScreen](../app/src/main/kotlin/ee/schimke/terrazzo/logs/LogsScreen.kt) |
+| Card history | [card-history.uid](ui-builder/designs/card-history.uid) | [CardHistoryScreen](../app/src/main/kotlin/ee/schimke/terrazzo/dashboard/CardHistoryScreen.kt) |
 
-- **412 × 720dp:** list initially; choosing an entry replaces it with details. Back returns to the list.
-- **840 × 720dp:** list and selected details side by side, using standard scaffold pane sizing.
-- Selection survives resizing; interactive tests exercise the second entry, back, the action
-  callback and the 839/840dp boundary. Back remains visible on tablets, as specified in the UID.
-- Both widths have list/detail states in light/dark: eight comparisons at 2px/dp. Tablet list uses item 0; tablet detail uses item 1
-  (Energy), so both tablet states exercise distinct selected content.
-  The largest image is 1680 × 1440px, below 1800px in either dimension.
+[DashboardBrowser](src/main/kotlin/ee/schimke/adaptivepilot/DashboardBrowser.kt) implements the
+picker proposal; [KeyScreens](src/main/kotlin/ee/schimke/adaptivepilot/KeyScreens.kt) implements
+the other proposals. The production links above provide context; these previews do not assert
+pixel parity with the current production bodies. The installed-widget inventory is still a
+placeholder in production, so its proposal shows the empty state and add-widget guidance.
+Card history uses a value list, not the production chart. Remote Compose card types, external
+browser authentication, actual Android/Wear widgets, permission dialogs, loading, keyboard-open,
+large-text, scrolling long lists and screen-reader traversal require separate device coverage.
 
-The `.uid` is an editable layout reference. Its buttons are layout specimens; use the Compose
-screen for interaction behavior. The UI Builder's default editing view unfolds panes; select
-**Device view** to inspect the adaptive layout at the captured size.
+## Adaptive variants and interaction
 
-## Render and compare
+[`references.json`](references.json) defines **100 comparisons**: eleven surfaces × phone/tablet ×
+list/detail × light/dark, plus twelve connection-failure/offline-dashboard/empty-selection variants. Phone is
+412 × 720dp; tablet is 840 × 720dp. Density is 2px/dp; the maximum image is 1680 × 1440px.
+Every light/dark pair must differ in both candidate and reference. Tablet detail selects a
+second destination, with a visible selection label, so it is not a duplicate of tablet list.
+Alternate structural states use editable `*-secondary.uid` snapshots; connection failure and
+offline dashboard are separate UID files. IDE handles in
+[KeyScreenPreviews](src/main/kotlin/ee/schimke/adaptivepilot/KeyScreenPreviews.kt) and
+[ScreenPreviews](src/main/kotlin/ee/schimke/adaptivepilot/ScreenPreviews.kt) cover these variants.
 
-```sh
-./gradlew -PadaptiveUidPilot=true :adaptive-uid-pilot:test :adaptive-uid-pilot:renderPilot
-```
+All screens use `currentWindowAdaptiveInfoV2()` and standard `ListDetailPaneScaffold` sizing.
+The window owns adaptation; there are no content-box size classes or forced pane widths.
+Phones show one pane, tablets overview and detail together. Tests cover the 839/840dp boundary,
+narrow tablet content, resizing, edited URL callbacks, invalid-address protection, persistent
+multi-dashboard choices, selected device actions, disabled offline controls, settings callbacks
+and empty Wear slots. Proposal selection IDs are local fixture IDs, not persisted app preferences.
 
-The `Adaptive UID pilot` workflow runs formatting, interaction tests and candidate rendering,
-then independently renders all eight committed UID references in the pinned native server image.
-It uploads a validated preview bundle and `adaptive-uid-evidence`: open `index.html` for reference /
-exact pixel diff / actual. `evidence.json` records image hashes, reference revisions and changed
-pixel counts. Missing evidence fails CI; visual differences are advisory for human review.
+UID buttons are layout specimens. Use Compose previews/tests for behavior. The UI Builder editing
+canvas unfolds panes; choose **Device view** for the captured adaptive layout. Download edits,
+review and commit the UID before replacing a reference. Static UID layout references do not
+reproduce the navigator's runtime focus restoration, so focus highlights can produce advisory diffs.
 
-`Adaptive UID design audit` follows successful runs in a separate trusted job. It uses the same
-`compose-preview guidelines` engine, `OPENROUTER_API_KEY` repository secret and $0.25 budget as
-remote-m3-catalog's preview publish workflow. Rules are fetched from canonical m3-catalog at
-`e588d36f971616e0bb6374d40b57e50abd7384d5`, verified against the workflow's SHA-256 pin and archived with their source URL; the CLI is pinned to 2.40.0. Results, annotated
-screenshots, model/provider/cost records, rules, engine prompt source and provenance are preserved
-as `adaptive-uid-design-audit`. Findings are advisory; missing keys or failed requests are reported
-as an incomplete audit, never a clean result. No issue or PR comment is posted automatically.
-
-The trusted audit workflow only starts after this workflow file is merged into the default branch.
-It runs pinned shared staging tools with the default-branch capture plan and guideline pins, and executes
-no PR code or UID content with the key. This first CI audit receives pictures and capture sizes;
-it cannot establish accessibility semantics or interaction behavior from those images. The custom
-capture IDs are separate subjects, so cross-size guidance needs human review of the full matrix.
-The shared [interactive critique prompt](https://github.com/yschimke/compose-ai-tools/blob/da4612a1fe17b0b7e5cfa2a4f7fe9cfb685e7e07/docs/UID_DESIGN_CRITIQUE_PROMPT.txt)
-is separate from the versioned guidelines engine prompt. The local reference-rendering command remains useful for iteration:
-
-Candidates go to `build/pilot/previews/`. They are **custom bundle IDs**, not discovery IDs.
-The eight annotated IDE previews use separate discovery IDs and do not automatically acquire
-these custom references. The pilot is excluded from default Gradle projects. The shared UID
-exporter maps these captures into the existing app catalog as described below; do not add the
-custom IDs directly to the discovery-based catalog spec.
-
-Commit the UID and `references.json` before publishing references. With the companion
-[server UID workflow](https://github.com/yschimke/compose-preview-server/pull/1495) available:
+## Local rendering, PR diffs and existing catalog
 
 ```sh
+./gradlew -PadaptiveUidPilot=true :adaptive-uid-pilot:ktfmtCheck \
+  :adaptive-uid-pilot:test :adaptive-uid-pilot:renderPilot
 node ../compose-preview-server/scripts/ui-builder/publish-references.mjs \
   --root . --plan adaptive-uid-pilot/references.json \
   --out adaptive-uid-pilot/build/pilot --revision "$(git rev-parse HEAD)" \
   --renderer /path/to/compose-preview-server \
   --catalog /path/to/ui-builder-renderer.bundle.png \
   --components m3-catalog=/path/to/m3-catalog-components-v1.json
+python3 ../design-parity/scripts/uid/evidence.py \
+  --plan adaptive-uid-pilot/references.json --root adaptive-uid-pilot/build/pilot
+python3 ../design-parity/scripts/uid/package.py --pilot-directory adaptive-uid-pilot \
+  --output adaptive-uid-pilot/build/key-screens.zip
 ```
 
-Use the native renderer bundle and component record from the same released server/UI Builder
-set, with its Kotlin compiler sidecar installed. The publisher verifies committed input bytes,
-image dimensions and hashes; it updates the reference manifest only after every render succeeds.
-Start each publication with a fresh `build/pilot` directory to avoid shipping old hashed files.
-Updating Compose candidates never approves a new reference.
+Use matching released renderer assets and compiler sidecars; start with a fresh reference output
+for each revision. The publisher verifies committed input bytes and records immutable source,
+UID and image hashes. Candidates go to `build/pilot/previews/`. The PR's `Adaptive UID pilot`
+check uploads `adaptive-uid-evidence`: download it and open `index.html` for Reference / Diff /
+Actual. Shared tooling validates missing images, dimensions, hashes and declared distinct pairs;
+changed pixels remain advisory. No new renderer or difference scorer is introduced here.
 
-Package the candidates and references using the checker (run from the repository root):
+For the real local compare page and UID editor while the hosted deployment is unavailable:
 
 ```sh
-python3 ../design-parity/scripts/uid/package.py --pilot-directory adaptive-uid-pilot \
-  --output adaptive-uid-pilot/build/dashboards.zip
-/path/to/compose-preview-server serve --host 127.0.0.1 --port 18081 \
-  --bundle dashboards=adaptive-uid-pilot/build/dashboards.zip \
+/path/to/compose-preview-server serve --host 127.0.0.1 --port 18091 \
+  --bundle key-screens=adaptive-uid-pilot/build/key-screens.zip \
+  --ui-builder-state-dir adaptive-uid-pilot/build/editor-state \
   --ui-builder-dir /path/to/server-distribution/ui-builder
 ```
 
-Open the server's authenticated browse link, then `/dashboards/compare/dashboards-412-detail-light`.
-Reference / Diff / Actual, overlays, region selection and the digest-bound **Open in UI Builder**
-link use the existing server workflow. The editor opens that captured design; download edits,
-review and commit them before replacing the baseline. Rendered artifacts stay under ignored
-`build/`, not in source control.
+Use the authenticated browse link, then `/key-screens/compare/connection-840-detail-dark`.
+**Open in UI Builder** loads the captured UID; downloaded edits need review and a commit.
+Local serving does not publish. After merge, the existing Design Artifacts workflow folds the
+prepared screens and UID references into [the existing Home Assistant catalog](https://preview.coo.ee/homeassistant-remotecompose/).
+There is one catalog and one publisher. Source links go to the independent proposal; the table
+above links production routes. Catalog metadata also supplies draft issue links for human review.
 
-An uploaded zip supplies comparisons and the UID editor, but it does **not** supply catalog
-source/provenance metadata. App-specific code links and issue destinations require a catalog
-producer (or a local `ServeBundleHost`) with repo `yschimke/homeassistant-remotecompose`, the captured commit,
-module `adaptive-uid-pilot`, and variant `sourceFile` pointing at
-`src/main/kotlin/ee/schimke/adaptivepilot/DashboardBrowser.kt`. The shared catalog exporter supplies that metadata for
-the hosted flow below. The local zip command does not publish; the Design Artifacts workflow
-publishes through the app's existing delivery branch. Issue links open a draft for review and
-do not file bugs automatically.
+## Advisory AI audit
 
-Adaptive layout uses `currentWindowAdaptiveInfoV2()` at the screen boundary and
-`calculatePaneScaffoldDirective` / `ListDetailPaneScaffold` for pane adaptation.
-The scaffold owns pane sizing; no effect forces a fixed first-pane width.
-The UID uses `paneSizing: preferred` to express the same design intent.
-Tests resize the window information, verify selection/back behavior across the
-839/840dp boundary, and check that an 840dp window stays adaptive when a parent
-leaves only 760dp of content width. A nested content box is not the window.
+The trusted audit workflow reuses compose-ai-tools, `OPENROUTER_API_KEY`, its $0.25 cap and
+[canonical m3-catalog guidelines](https://github.com/yschimke/m3-catalog/blob/e588d36f971616e0bb6374d40b57e50abd7384d5/ui-builder.guidelines.json)
+verified by digest. No guidance copy is committed here. Same-repository runs only; no PR code
+executes with the key. Rules, prompt source, model/cost records and annotated images are preserved.
+Findings are advisory, not a gate or automatic issue filing.
 
-CI setup is shared: [design-parity's UID workflow](https://github.com/yschimke/design-parity/pull/540)
-owns build-tool setup, native references, comparison and artifact handoff;
-[compose-ai-tools' optional audit workflow](https://github.com/yschimke/compose-ai-tools/pull/5787)
-owns the trusted image-only OpenRouter audit. Both callers pin immutable commits.
-Only triggers/path filters, the app build command, screen code, interaction tests,
-UID designs and capture/state bindings stay here. The app renderer reads dimensions,
-density, theme, state and `candidateState.selectedIndex` from `references.json`.
-It never loads the UID. `distinctCaptures` declares the tablet state pairs that must
-differ, without encoding a universal breakpoint in the shared evidence validator.
-The IDE annotation previews remain app-owned navigation handles.
+The trusted workflow uses the **default-branch capture plan**. Before this expanded plan is
+merged, automatic PR auditing covers the existing eight dashboard-picker captures, not the
+whole 100-image suite. The full local independent agent audit is separate and must not be
+reported as a completed 100-capture OpenRouter CI audit. After merge, new subjects can be audited
+within the cap; budget-limited/failed runs are incomplete. Images alone do not prove behavior
+or accessibility semantics.
 
-Evidence validation, pixel diffs, HTML, audit staging and packaging come from
-[design-parity's shared tools](https://github.com/yschimke/design-parity/tree/1cd1bbee6c4f061043710b2755cd782607f1245a/scripts/uid).
-Native reference setup and renderer dependency pins come from the server's
-`render-ci-references.sh`. Their tests live with those implementations.
-
-Land the shared cleanup PRs before this consumer. Callers use immutable provider
-commits for integration testing; update them to landed revisions before merging.
-The audit starts only after its `workflow_run` caller reaches the default branch.
-
-## UID references in the existing app catalog
-
-The screen appears under **Screens** in the app's existing catalog:
-https://preview.coo.ee/homeassistant-remotecompose/
-
-The committed `.uid` documents provide the native-rendered design references.
-Compare phone/tablet, list/detail, and light/dark captures, follow the source link,
-open the captured design in UI Builder, or prepare a GitHub issue with comparison
-evidence. UI Builder snapshot edits stay in the browser; download and commit the
-`.uid` to propose a change.
-
-PR CI exports comparison evidence and a prepared catalog section. The existing
-Design Artifacts workflow calls this same pilot workflow, folds its screen and UID
-references into the existing catalog, then publishes its normal delivery branch.
-There is one catalog and one publisher. The capture plan supplies only the screen's
-identity and source mapping; shared tooling owns export and reference merging.
+Shared immutable workflow pins own renderer setup, evidence, packaging and trusted auditing.
+This opt-in module owns app-specific designs, fixtures, states and interactions. It is excluded
+from default Gradle projects unless `-PadaptiveUidPilot=true` is supplied.

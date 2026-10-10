@@ -72,7 +72,7 @@ class DashboardBrowserTest {
 
 // Model a window resize, rather than deriving adaptive information from the content box.
 @Composable
-private fun TestWindow(width: Dp, content: @Composable () -> Unit) {
+internal fun TestWindow(width: Dp, content: @Composable () -> Unit) {
   val density = LocalDensity.current
   val hostWindow = LocalWindowInfo.current
   val window =

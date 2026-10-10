@@ -13,10 +13,12 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfoV2
 import androidx.compose.material3.adaptive.layout.AnimatedPane
 import androidx.compose.material3.adaptive.layout.ListDetailPaneScaffold
 import androidx.compose.material3.adaptive.layout.ListDetailPaneScaffoldRole
+import androidx.compose.material3.adaptive.layout.PaneAdaptedValue
 import androidx.compose.material3.adaptive.layout.calculatePaneScaffoldDirective
 import androidx.compose.material3.adaptive.navigation.rememberListDetailPaneScaffoldNavigator
 import androidx.compose.material3.darkColorScheme
@@ -25,6 +27,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 
@@ -79,9 +83,19 @@ fun DashboardBrowser(
                   onClick = {
                     scope.launch { navigator.navigateTo(ListDetailPaneScaffoldRole.Detail, index) }
                   },
-                  modifier = Modifier.fillMaxWidth().testTag("entry-$index"),
+                  modifier =
+                    Modifier.fillMaxWidth().testTag("entry-$index").semantics {
+                      this.selected = selected == index
+                    },
                 ) {
-                  Text(entry.title)
+                  Text(
+                    if (
+                      navigator.scaffoldValue[ListDetailPaneScaffoldRole.Detail] ==
+                        PaneAdaptedValue.Expanded && selected == index
+                    )
+                      "Selected · ${entry.title}"
+                    else entry.title
+                  )
                 }
               }
             }
@@ -104,7 +118,7 @@ fun DashboardBrowser(
               Button(onClick = { onOpen(entry.id) }, modifier = Modifier.testTag("open-entry")) {
                 Text("Open dashboard")
               }
-              Button(
+              TextButton(
                 onClick = {
                   scope.launch { navigator.navigateTo(ListDetailPaneScaffoldRole.List, selected) }
                 },
