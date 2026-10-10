@@ -57,6 +57,9 @@ on:
       - 'build.gradle.kts'
       - '**/build.gradle.kts'
       - 'catalog.spec.json'
+      - 'adaptive-uid-pilot/**'
+      - 'build-logic/**'
+      - '.github/workflows/adaptive-uid-*.yml'
       # Same class as catalog.spec.json: config that changes what the run publishes. An
       # allowlist edit is usually a *removal* — an exception dropped because the player
       # gained the operation — and that is precisely the change that has to be re-run to
@@ -79,16 +82,25 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  uid-references:
+    uses: ./.github/workflows/adaptive-uid-pilot.yml
+
   generate:
+    needs: uid-references
     name: homeassistant-remotecompose
     # Don't run on forks — the publish step pushes a branch into this repo.
     if: ${{ github.repository == 'yschimke/homeassistant-remotecompose' }}
     permissions:
       # Widened here (workflow default is read-only) for the branch force-push.
       contents: write
-    uses: yschimke/compose-ai-tools/.github/workflows/design-artifacts-reusable.yml@main
+    uses: yschimke/compose-ai-tools/.github/workflows/design-artifacts-reusable.yml@c348cb985f57213f44a698ec47e447c76a809280
     with:
       system: homeassistant-remotecompose
+      ref: ${{ github.sha }}
+      catalog-section-artifact: adaptive-uid-catalog
+      catalog-section: Screens
+      publish: ${{ github.ref == 'refs/heads/main' }}
+      upload-out: true
       spec: catalog.spec.json
       module: ':previews'
       # `:previews` has the plugin AUTO-injected (via --init-script), so keep the
