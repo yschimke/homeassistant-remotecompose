@@ -18,11 +18,10 @@ concurrency:
   group: adaptive-uid-pilot-${{ github.ref }}
   cancel-in-progress: true
 
-# Shared setup: https://github.com/yschimke/design-parity/pull/541
-# Integration-test pin. Replace with the landed revision before merging this caller.
+# Shared UID capture, comparison and prepared catalog export (merged main commit).
 jobs:
   parity:
-    uses: yschimke/design-parity/.github/workflows/uid-parity-reusable.yml@aa613cba6e87848102b356dd36d2f7b456c94e59
+    uses: yschimke/design-parity/.github/workflows/uid-parity-reusable.yml@9383dc22584ec32f04cd53dec692a201ca531f7c
     with:
       export-catalog: true
       pilot-directory: adaptive-uid-pilot
