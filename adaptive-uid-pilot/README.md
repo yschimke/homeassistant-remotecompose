@@ -104,3 +104,12 @@ The UID uses `paneSizing: preferred` to express the same design intent.
 Tests resize the window information, verify selection/back behavior across the
 839/840dp boundary, and check that an 840dp window stays adaptive when a parent
 leaves only 760dp of content width. A nested content box is not the window.
+
+CI setup is shared: [design-parity's UID workflow](https://github.com/yschimke/design-parity/pull/538)
+owns build-tool setup, native references, comparison and artifact handoff;
+[compose-ai-tools' optional audit workflow](https://github.com/yschimke/compose-ai-tools/pull/5779)
+owns the trusted image-only OpenRouter audit. Both callers pin immutable commits.
+Only triggers/path filters, the app build command, capture plan, rules and
+pilot-specific validation stay here. Artifact names and checks are unchanged.
+Land the shared workflow PRs before this consumer. The audit starts only after
+its `workflow_run` caller reaches this repository's default branch.

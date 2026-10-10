@@ -1,5 +1,6 @@
 #!/bin/sh
 set -eu
+pilot_directory=${1:-adaptive-uid-pilot}
 # Run inside the pinned compose-preview-host image, which carries BTA and Skiko.
 # Checkout runs as the runner user; this container executes as root. Trust only this checkout.
 git config --global --add safe.directory "$(pwd)"
@@ -30,8 +31,8 @@ DEPS
 export JAVA_TOOL_OPTIONS="${JAVA_TOOL_OPTIONS:-} -Dmaven.repo.local=$RUNNER_TEMP/uid-maven"
 
 node _preview_server/scripts/ui-builder/publish-references.mjs \
-  --root . --plan adaptive-uid-pilot/references.json \
-  --out adaptive-uid-pilot/build/pilot --revision "$revision" \
+  --root . --plan "$pilot_directory/references.json" \
+  --out "$pilot_directory/build/pilot" --revision "$revision" \
   --renderer /opt/compose-preview-server/bin/compose-preview-server \
   --catalog "$RUNNER_TEMP/uid-renderer/catalog.png" \
   --components m3-catalog=/opt/compose-preview-server/ui-builder-components/m3-catalog-components-v1.json

@@ -25,106 +25,14 @@ concurrency:
   group: adaptive-uid-pilot-${{ github.ref }}
   cancel-in-progress: true
 
+# Shared setup: https://github.com/yschimke/design-parity/pull/538
 jobs:
-  candidate:
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    steps:
-      - uses: actions/checkout@v7.0.1
-        with:
-          persist-credentials: false
-      - uses: actions/setup-java@v6.0.1
-        with:
-          distribution: temurin
-          java-version: 21.0.12+101.0.LTS
-      - uses: gradle/actions/setup-gradle@v6.4.0
-      - name: Check interactions and render candidate matrix
-        run: >-
-          ./gradlew -PadaptiveUidPilot=true
-          :adaptive-uid-pilot:ktfmtCheck
-          :adaptive-uid-pilot:test
-          :adaptive-uid-pilot:renderPilot
-      - uses: actions/upload-artifact@v7.0.1
-        with:
-          name: adaptive-uid-candidates
-          path: adaptive-uid-pilot/build/pilot/previews/
-          if-no-files-found: error
-      - uses: actions/upload-artifact@v7.0.1
-        if: always()
-        with:
-          name: adaptive-uid-tests
-          path: adaptive-uid-pilot/build/reports/tests/
-          if-no-files-found: warn
-
-  references:
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    container:
-      # v3.117.0, including native renderer, Kotlin compiler and Skiko sidecars.
-      image: ghcr.io/yschimke/compose-preview-host@sha256:7049b567e962db6a4e26d46585273cb39295b8d0924563e837fc5d20234eabb1
-    steps:
-      - uses: actions/checkout@v7.0.1
-        with:
-          persist-credentials: false
-      - uses: actions/checkout@v7.0.1
-        with:
-          repository: yschimke/compose-preview-server
-          ref: 312e6676ce4c933c8955f9855e1b1f6d1b9623f0
-          path: _preview_server
-          persist-credentials: false
-      - uses: actions/setup-node@v6
-        with:
-          node-version: '22'
-      - name: Render committed UID references independently
-        run: |
-          set +e
-          sh adaptive-uid-pilot/ci/native-references.sh > native-reference.log 2>&1
-          result=$?
-          cat native-reference.log
-          if [ "$result" -ne 0 ]; then
-            node -e 'const fs = require("fs"); const message = fs.readFileSync("native-reference.log", "utf8").slice(-8000).replaceAll("%", "%25").replaceAll("\r", "%0D").replaceAll("\n", "%0A"); console.log("::error::" + message)'
-          fi
-          exit "$result"
-      - uses: actions/upload-artifact@v7.0.1
-        with:
-          name: adaptive-uid-references
-          path: adaptive-uid-pilot/build/pilot/references/
-          if-no-files-found: error
-
-  compare:
-    needs: [candidate, references]
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@v7.0.1
-        with:
-          persist-credentials: false
-      - uses: actions/setup-python@v6
-        with:
-          python-version: '3.12'
-      - run: python -m pip install Pillow==12.3.0
-      - uses: actions/download-artifact@v8.0.1
-        with:
-          name: adaptive-uid-candidates
-          path: adaptive-uid-pilot/build/pilot/previews
-      - uses: actions/download-artifact@v8.0.1
-        with:
-          name: adaptive-uid-references
-          path: adaptive-uid-pilot/build/pilot/references
-      - run: python -m unittest discover -s adaptive-uid-pilot/ci -p 'test_*.py'
-      - name: Produce pixel diffs and validate bundle
-        run: |
-          python adaptive-uid-pilot/ci/evidence.py --plan adaptive-uid-pilot/references.json --root adaptive-uid-pilot/build/pilot
-          python adaptive-uid-pilot/package.py
-          echo 'Download adaptive-uid-evidence and open index.html: UID reference, exact pixel diff, Compose actual. Changed pixels are advisory; missing or invalid evidence fails this job.' >> "$GITHUB_STEP_SUMMARY"
-          cat adaptive-uid-pilot/build/pilot/evidence.json >> "$GITHUB_STEP_SUMMARY"
-      - uses: actions/upload-artifact@v7.0.1
-        with:
-          name: adaptive-uid-evidence
-          path: adaptive-uid-pilot/build/pilot/
-          if-no-files-found: error
-      - uses: actions/upload-artifact@v7.0.1
-        with:
-          name: adaptive-uid-bundle
-          path: adaptive-uid-pilot/build/*.zip
-          if-no-files-found: error
+  parity:
+    uses: yschimke/design-parity/.github/workflows/uid-parity-reusable.yml@ff9487c46a08cf0fea77e7ddd15b840753e1021f
+    with:
+      pilot-directory: adaptive-uid-pilot
+      build-command: >-
+        ./gradlew -PadaptiveUidPilot=true
+        :adaptive-uid-pilot:ktfmtCheck
+        :adaptive-uid-pilot:test
+        :adaptive-uid-pilot:renderPilot
