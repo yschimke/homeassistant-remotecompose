@@ -93,7 +93,7 @@ if (providers.gradleProperty("typedAdapterCatalog").orNull == "true") {
     "uiBuilderSource must point to the matching compose-ui-builder checkout"
   }
   includeBuild(builderSource)
-  include(":ui-builder-catalog")
+  include(":ui-builder-catalog", ":ui-builder-catalog-host")
 }
 
 // Repository-owned UI Builder screen pilot; excluded from default catalog publication.

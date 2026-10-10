@@ -1,0 +1,54 @@
+{
+  "schema": "compose-ui-builder-document/v1-candidate",
+  "id": "external-ha-heading",
+  "title": "External Home Assistant",
+  "revision": 0,
+  "catalogPin": {
+    "catalogId": "homeassistant-remotecompose"
+  },
+  "environment": {
+    "theme": "light"
+  },
+  "stateVariables": {},
+  "nodes": {
+    "stack": {
+      "id": "stack",
+      "componentId": "homeassistant-remotecompose/vertical-stack",
+      "slots": {
+        "content": [
+          "heading",
+          "child"
+        ]
+      }
+    },
+    "heading": {
+      "id": "heading",
+      "componentId": "homeassistant-remotecompose/heading",
+      "properties": {
+        "title": {
+          "type": "string",
+          "value": "Kitchen"
+        }
+      },
+      "modifiers": [
+        {
+          "type": "height",
+          "heightDp": 64
+        }
+      ]
+    },
+    "child": {
+      "id": "child",
+      "componentId": "host/text",
+      "properties": {
+        "text": {
+          "type": "string",
+          "value": "Published slot child"
+        }
+      }
+    }
+  },
+  "roots": [
+    "stack"
+  ]
+}

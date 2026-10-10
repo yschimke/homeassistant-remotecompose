@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-  namespace = "ee.schimke.ha.catalog"
+  namespace = "ee.schimke.catalog.host"
   compileSdk {
     version = release(libs.versions.android.compileSdk.get().toInt()) { minorApiLevel = 1 }
   }
@@ -31,7 +31,6 @@ val prepareRobolectricSdk by
 dependencies {
   // Matches Robolectric 4.17's SDK 35 provider; resolve with Gradle, not a hidden test download.
   robolectricSdk("org.robolectric:android-all-instrumented:15-robolectric-13954326-i7")
-  implementation(project(":rc-components-ui"))
   // SDK bytecode is portable Compose; use this app's Android Compose runtime, not Desktop jars.
   implementation("ee.schimke.composeai:ui-builder-renderer-sdk:0.0.0") {
     exclude(group = "org.jetbrains.compose.runtime")
@@ -44,7 +43,16 @@ dependencies {
   implementation(libs.compose.foundation)
   implementation(libs.compose.material3)
   implementation(libs.kotlinx.serialization.json)
-  testImplementation("ee.schimke.composeai:preview-discovery:0.0.0")
+  // Runtime engines are supplied by the host. No Home Assistant classes enter this classpath.
+  implementation(libs.remote.creation.compose)
+  implementation(libs.remote.creation)
+  implementation(libs.remote.creation.core)
+  implementation(libs.remote.core)
+  implementation(libs.remote.material3)
+  implementation(libs.remote.player.core)
+  implementation(libs.remote.player.compose)
+  implementation(libs.remote.tooling.preview)
+  implementation(libs.materialkolor)
   testImplementation(libs.kotlin.test.junit)
   testImplementation("org.robolectric:robolectric:4.17")
   testImplementation(libs.compose.ui.test.junit4)
@@ -64,51 +72,16 @@ tasks.withType<Test>().configureEach {
     "robolectric.dependency.dir",
     layout.buildDirectory.dir("robolectric-sdk").get().asFile.absolutePath,
   )
-  val output = layout.buildDirectory.dir("catalog/$name")
-  systemProperty("typedCatalogOutput", output.get().asFile.absolutePath)
-  outputs.dir(output)
 }
 
-// The metadata export runs in the existing native test host, on fresh compiled library classes.
-tasks.register("exportTypedCatalog") {
-  group = "ui builder"
-  description = "Generate the opted-in native Home Assistant component catalog."
-  dependsOn("testDebugUnitTest")
-}
+val installedBundle =
+  providers.gradleProperty("typedCatalogAndroidBundle").orNull?.let { rootProject.file(it) }
+    ?: rootProject.file("ui-builder-catalog/build/installed-android-catalog")
 
-// Android implementations remain Android bytecode: an Android/Remote Compose host supplies the
-// shared runtime. Package the actual app libraries, not recompilations or host-side facsimiles.
-val stageAndroidCatalogBundle =
-  tasks.register<Sync>("stageAndroidCatalogBundle") {
-    dependsOn("exportTypedCatalog")
-    into(layout.buildDirectory.dir("android-catalog-bundle"))
-    from(layout.buildDirectory.dir("catalog/testDebugUnitTest"))
-    from("fixtures") { into("designs") }
-    for (module in listOf("ui-builder-catalog", "rc-components-ui", "rc-components")) {
-      val library = project(":$module")
-      dependsOn(":$module:bundleDebugAar")
-      from(
-        library.layout.buildDirectory.file(
-          "intermediates/aar_main_jar/debug/syncDebugLibJars/classes.jar"
-        )
-      ) {
-        into("lib")
-        rename { "$module.jar" }
-      }
-      from(library.layout.buildDirectory.file("outputs/aar/$module-debug.aar")) { into("android") }
-    }
+tasks.withType<Test>().configureEach {
+  if (!providers.gradleProperty("typedCatalogAndroidBundle").isPresent) {
+    mustRunAfter(":ui-builder-catalog:unpackAndroidCatalogBundle")
   }
-val packageAndroidCatalogBundle =
-  tasks.register<Zip>("packageAndroidCatalogBundle") {
-    group = "ui builder"
-    dependsOn(stageAndroidCatalogBundle)
-    from(layout.buildDirectory.dir("android-catalog-bundle"))
-    archiveFileName.set("homeassistant-remotecompose-android-catalog.zip")
-    destinationDirectory.set(layout.buildDirectory.dir("distributions"))
-  }
-
-tasks.register<Sync>("unpackAndroidCatalogBundle") {
-  dependsOn(packageAndroidCatalogBundle)
-  from(zipTree(packageAndroidCatalogBundle.flatMap { it.archiveFile }))
-  into(layout.buildDirectory.dir("installed-android-catalog"))
+  inputs.dir(installedBundle)
+  systemProperty("typedCatalogAndroidBundle", installedBundle.absolutePath)
 }
