@@ -19,14 +19,21 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Existing release tag to build and publish (empty builds this ref without publishing)'
+        description: 'Existing release tag to build (empty builds this ref)'
         type: string
         default: ''
+      publish:
+        description: 'Attach installers to the selected release tag'
+        type: boolean
+        default: false
   workflow_call:
     inputs:
       tag:
         required: true
         type: string
+      publish:
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -90,7 +97,7 @@ jobs:
 
   publish:
     name: Attach desktop installers to release
-    if: inputs.tag != '' && github.event_name != 'pull_request'
+    if: inputs.publish && inputs.tag != '' && github.event_name != 'pull_request'
     needs: package
     runs-on: ubuntu-latest
     permissions:
