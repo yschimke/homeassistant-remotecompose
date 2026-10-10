@@ -74,7 +74,15 @@ jobs:
         with:
           node-version: '22'
       - name: Render committed UID references independently
-        run: sh adaptive-uid-pilot/ci/native-references.sh
+        run: |
+          set +e
+          sh adaptive-uid-pilot/ci/native-references.sh > native-reference.log 2>&1
+          result=$?
+          cat native-reference.log
+          if [ "$result" -ne 0 ]; then
+            node -e 'const fs = require("fs"); const message = fs.readFileSync("native-reference.log", "utf8").slice(-8000).replaceAll("%", "%25").replaceAll("\r", "%0D").replaceAll("\n", "%0A"); console.log("::error::" + message)'
+          fi
+          exit "$result"
       - uses: actions/upload-artifact@v7.0.1
         with:
           name: adaptive-uid-references
