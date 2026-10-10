@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
 # Publish only an already validated catalog build from clean, immutable sources.
 set -euo pipefail
-app_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
+publisher_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
+app_root=$(cd "${3:-$publisher_root}" && pwd)
 tools_root=$(cd "${1:-$app_root/../compose-ai-tools}" && pwd)
 builder_root=$(cd "${2:-$app_root/../compose-ui-builder}" && pwd)
-for source in "$app_root" "$tools_root" "$builder_root"; do
+for source in "$publisher_root" "$app_root" "$tools_root" "$builder_root"; do
   git -C "$source" diff --quiet
   git -C "$source" diff --cached --quiet
 done
@@ -13,6 +14,21 @@ tools_sha=$(git -C "$tools_root" rev-parse HEAD)
 builder_sha=$(git -C "$builder_root" rev-parse HEAD)
 repo=${GITHUB_REPOSITORY:-$(gh repo view --json nameWithOwner --jq .nameWithOwner)}
 tag="typed-catalog-preview-${source_sha}"
+for dependency_sha in "$tools_sha" "$builder_sha"; do
+  if ! rg -Fq "ref: $dependency_sha" "$app_root/.github/workflows/typed-catalog.yml"; then
+    echo "Dependency revision differs from the validated source workflow" >&2
+    exit 1
+  fi
+done
+release_target=(--target "$source_sha")
+if tag_sha=$(gh api "repos/$repo/git/ref/tags/$tag" --jq .object.sha 2>/dev/null); then
+  if [[ "$tag_sha" != "$source_sha" ]]; then
+    echo "Existing tag does not identify the validated source commit" >&2
+    exit 1
+  fi
+  # An explicit commit target can require workflow permissions even for an existing tag.
+  release_target=(--verify-tag)
+fi
 publication="$app_root/ui-builder-catalog/build/publication"
 mkdir -p "$publication"
 cp "$app_root/ui-builder-catalog/build/distributions/homeassistant-remotecompose-android-catalog.zip" "$publication/"
@@ -49,5 +65,5 @@ EOF
 # Never replace an existing generation; one source commit identifies one validated publication.
 gh release create "$tag" "$publication/homeassistant-remotecompose-android-catalog.zip" "$publication/components.json" \
   "$publication/ui-builder.json" "$publication/catalog.json" "$publication/bundle.json" \
-  "$publication/SHA256SUMS" --repo "$repo" --target "$source_sha" \
+  "$publication/SHA256SUMS" --repo "$repo" "${release_target[@]}" \
   --title "Initial typed catalog preview (android)" --notes-file "$notes" --prerelease --latest=false

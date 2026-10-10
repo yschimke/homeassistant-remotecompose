@@ -77,6 +77,12 @@ A separate job publishes the tested CI artifact as `typed-catalog-preview-FULL_S
 standard catalog files, checksums and full app/tools/builder provenance. Existing generations are
 never replaced; ordinary PR runs remain read-only and production delivery remains unchanged.
 
+To retry publication after fixing the publisher, pass `-f validated_run_id=RUN_ID` to that manual
+workflow. It verifies that the original run's catalog job succeeded, checks out that run's exact
+source, checks the dependency pins, and downloads its existing artifact without rebuilding. A
+pre-existing preview tag must point directly at that source commit; publication verifies it and
+omits the commit-target field that can otherwise require GitHub workflow permissions.
+
 From the matching UI Builder checkout, fetch and verify the public artifact:
 
 ```sh

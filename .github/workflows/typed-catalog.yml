@@ -31,6 +31,10 @@ on:
         description: Publish this validated generation as an experimental catalog prerelease
         type: boolean
         default: false
+      validated_run_id:
+        description: Optional successful catalog validation run to publish without rebuilding
+        type: string
+        default: ''
 
 permissions:
   contents: read
@@ -41,6 +45,7 @@ concurrency:
 
 jobs:
   catalog:
+    if: inputs.validated_run_id == ''
     runs-on: ubuntu-latest
     timeout-minutes: 45
     defaults:
@@ -92,18 +97,34 @@ jobs:
           if-no-files-found: warn
 
   publish:
-    if: github.event_name == 'workflow_dispatch' && inputs.publish
+    if: always() && github.event_name == 'workflow_dispatch' && inputs.publish && (needs.catalog.result == 'success' || inputs.validated_run_id != '')
     needs: catalog
     runs-on: ubuntu-latest
     permissions:
       contents: write
-    defaults:
-      run:
-        working-directory: homeassistant-remotecompose
+      actions: read
     steps:
+      - name: Resolve and verify the validated generation
+        id: validated
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VALIDATED_RUN_ID: ${{ inputs.validated_run_id || github.run_id }}
+        run: |
+          [[ "$VALIDATED_RUN_ID" =~ ^[0-9]+$ ]]
+          run=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$VALIDATED_RUN_ID")
+          jq -e '.path == ".github/workflows/typed-catalog.yml"' <<< "$run"
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$VALIDATED_RUN_ID/jobs?per_page=100" \
+            | jq -e 'any(.jobs[]; .name == "catalog" and .status == "completed" and .conclusion == "success")'
+          echo "source_sha=$(jq -r .head_sha <<< "$run")" >> "$GITHUB_OUTPUT"
+          echo "run_id=$VALIDATED_RUN_ID" >> "$GITHUB_OUTPUT"
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          path: publisher
+          persist-credentials: false
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           path: homeassistant-remotecompose
+          ref: ${{ steps.validated.outputs.source_sha }}
           persist-credentials: false
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -121,7 +142,9 @@ jobs:
         with:
           name: homeassistant-remotecompose-typed-catalog
           path: ${{ github.workspace }}
+          run-id: ${{ steps.validated.outputs.run_id }}
+          github-token: ${{ github.token }}
       - name: Publish the tested artifact without rebuilding it
         env:
           GH_TOKEN: ${{ github.token }}
-        run: scripts/publish-typed-catalog.sh "$GITHUB_WORKSPACE/compose-ai-tools" "$GITHUB_WORKSPACE/compose-ui-builder"
+        run: publisher/scripts/publish-typed-catalog.sh "$GITHUB_WORKSPACE/compose-ai-tools" "$GITHUB_WORKSPACE/compose-ui-builder" "$GITHUB_WORKSPACE/homeassistant-remotecompose"
