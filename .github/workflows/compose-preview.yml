@@ -24,6 +24,10 @@ concurrency:
 jobs:
   apply:
     name: Render previews (baseline or PR comment, auto-selected)
+    # Skip on release-please PRs: they only bump the manifest, CHANGELOG and
+    # version lines, all of which main's push CI already built. Matches the
+    # bot-authored PR (or a bot dispatch); humans and main always run it.
+    if: ${{ !(startsWith(github.head_ref || github.ref_name, 'release-please--') && (github.event.pull_request.user.login || github.actor) == 'github-actions[bot]') }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
