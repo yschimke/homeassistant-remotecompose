@@ -95,12 +95,19 @@ class FileDesignStore(private val dir: File) : DesignStore {
   }
 
   private fun write(target: File, bytes: ByteArray) {
-    target.parentFile?.mkdirs()
-    val tmp = File(target.parentFile, "${target.name}.tmp")
-    tmp.writeBytes(bytes)
-    if (!tmp.renameTo(target)) {
-      target.delete()
-      tmp.renameTo(target)
+    val dir = requireNotNull(target.parentFile).apply { mkdirs() }
+    // A unique temp file per write, so two writers can never clobber each other's partial file.
+    val tmp = File.createTempFile("${target.name}.", ".tmp", dir)
+    try {
+      tmp.writeBytes(bytes)
+      java.nio.file.Files.move(
+        tmp.toPath(),
+        target.toPath(),
+        java.nio.file.StandardCopyOption.REPLACE_EXISTING,
+        java.nio.file.StandardCopyOption.ATOMIC_MOVE,
+      )
+    } finally {
+      tmp.delete()
     }
   }
 }

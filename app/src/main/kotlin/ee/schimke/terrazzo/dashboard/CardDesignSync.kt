@@ -20,6 +20,8 @@ import ee.schimke.terrazzo.terrazzoGraph
 import java.io.File
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 /**
  * Background sync for the experimental card design server. Designs change rarely, so the network
@@ -27,6 +29,9 @@ import kotlinx.coroutines.flow.first
  * the dashboard itself never fetches, it only reads what this job left on disk.
  */
 object CardDesignSync {
+
+  /** Serializes refreshes across worker instances (WorkManager runs workers in-process). */
+  internal val refreshLock = Mutex()
 
   private const val PERIODIC_WORK = "terrazzo.cardDesigns.nightly"
   private const val NOW_WORK = "terrazzo.cardDesigns.now"
@@ -96,7 +101,12 @@ class CardDesignSyncWorker(context: Context, params: WorkerParameters) :
     if (url.isBlank()) return Result.success()
     // `refresh` already respects the manifest TTL and never throws for network trouble; a failed
     // run just waits for the next scheduled one.
-    val result = CardDesignSync.networkRepository(applicationContext, url).refresh()
+    // The nightly and the on-change job can be due at the same moment; one refresh at a time per
+    // process keeps them from writing the same cache files concurrently.
+    val result =
+      CardDesignSync.refreshLock.withLock {
+        CardDesignSync.networkRepository(applicationContext, url).refresh()
+      }
     Log.d(TAG, "card design sync: $result")
     return Result.success()
   }
