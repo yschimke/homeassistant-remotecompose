@@ -68,7 +68,7 @@
     "functionName": "Play_Tablet10_01_Home",
     "module": "app",
     "renderBasename": "Play_Tablet10_01_Home_play_10_inch_home-7ca1827e.png",
-    "sha256": "5278ef3fa869d50bc23e979ce2bd8270dde1cc0f503adc44cc810d465bbe9fdb",
+    "sha256": "fd3bc41769b80bd48f0d2b7aeb2545a9ed498dc6fe6fef3ea049050ac7fe3350",
     "sourceFile": "src/main/kotlin/ee/schimke/terrazzo/previews/ScreenPreviews.kt"
   },
   "app/ee.schimke.terrazzo.previews.ScreenPreviewsKt.Play_Tablet7_01_Home_play \u00b7 7-inch \u00b7 home": {
@@ -2148,7 +2148,7 @@
     "functionName": "Sizing_WidthPinnedHeightAdaptive",
     "module": "previews",
     "renderBasename": "Sizing_WidthPinnedHeightAdaptive_sizing_width_pinned_height_adaptive-e082424e.png",
-    "sha256": "1312c5e504ad4f01dcf9a49910bedeee044ecb23ab6e7b708b3fa11f9f642c01",
+    "sha256": "deaee951d1e2d8b1981cd0f6a0525d10ca55ecfb99d8f3f47615fad265fa4f69",
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/SizingExperimentPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.ThemePreviewsKt.Theme_Home_Dark_theme_ Home (dark)": {
