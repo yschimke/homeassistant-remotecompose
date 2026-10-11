@@ -122,8 +122,9 @@ class CardDesignParityTest {
     dark: Boolean,
     bitmapLoader: androidx.compose.remote.player.core.platform.BitmapLoader =
       androidx.compose.remote.player.core.platform.BitmapLoader.UNSUPPORTED,
+    history: Map<String, List<ee.schimke.ha.model.HistoryPoint>> = emptyMap(),
   ) {
-    val snapshot = HaSnapshot(states = states.associateBy { it.entityId })
+    val snapshot = HaSnapshot(states = states.associateBy { it.entityId }, history = history)
     val context = org.robolectric.RuntimeEnvironment.getApplication()
     val key = assertNotNull(CardDesignTemplates.keyFor(card, snapshot, style, dark, registry))
     val playback =
@@ -537,5 +538,64 @@ class CardDesignParityTest {
       },
       entity("light.kitchen", "on", "friendly_name" to "Kitchen"),
       dark = true,
+    )
+
+  private fun series(vararg values: Number) = values.mapIndexed { i, v ->
+    ee.schimke.ha.model.HistoryPoint(
+      kotlin.time.Instant.fromEpochMilliseconds(i * 600_000L),
+      v.toString(),
+    )
+  }
+
+  @Test
+  fun sensorWithHistory() =
+    assertParity(
+      "sensor-history",
+      card("sensor") {
+        put("entity", "sensor.temp")
+        put("hours_to_show", 12)
+      },
+      listOf(listStates[1]),
+      dark = false,
+      history = mapOf("sensor.temp" to series(19.5, 20, 20.5, 21.8, 21.2, 22, 21.5, 20.9, 21.5)),
+    )
+
+  @Test
+  fun sensorNoHistoryDark() =
+    assertParity(
+      "sensor-empty-dark",
+      card("sensor") { put("entity", "sensor.temp") },
+      listOf(listStates[1]),
+      dark = true,
+    )
+
+  @Test
+  fun historyGraph() =
+    assertParity(
+      "history-graph",
+      card("history-graph") {
+        put("title", "Climate")
+        putJsonArray("entities") {
+          add("sensor.temp")
+          add("sensor.humidity")
+          add("binary_sensor.front_door")
+        }
+      },
+      listOf(
+        listStates[1],
+        entity(
+          "sensor.humidity",
+          "48",
+          "friendly_name" to "Humidity",
+          "device_class" to "humidity",
+        ),
+        listStates[2],
+      ),
+      dark = false,
+      history =
+        mapOf(
+          "sensor.temp" to series(19, 21, 20, 23, 22),
+          "sensor.humidity" to series(40, 45, 52, 48),
+        ),
     )
 }

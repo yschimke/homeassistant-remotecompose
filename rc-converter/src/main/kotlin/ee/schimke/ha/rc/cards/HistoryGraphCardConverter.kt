@@ -3,6 +3,8 @@ package ee.schimke.ha.rc.cards
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.runtime.Composable
+import ee.schimke.ha.design.CardDesignSlots
+import ee.schimke.ha.design.DesignProperties
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.HaSnapshot
@@ -10,6 +12,8 @@ import ee.schimke.ha.model.HistoryPoint
 import ee.schimke.ha.rc.BreakpointAxis
 import ee.schimke.ha.rc.CardConverter
 import ee.schimke.ha.rc.CardSizeMode
+import ee.schimke.ha.rc.CardSnapshotBindings
+import ee.schimke.ha.rc.DesignTemplateInput
 import ee.schimke.ha.rc.HaStateColor
 import ee.schimke.ha.rc.LocalCardSizeMode
 import ee.schimke.ha.rc.RemoteSizeBreakpoint
@@ -20,11 +24,16 @@ import ee.schimke.ha.rc.components.HaHistoryGraphRow
 import ee.schimke.ha.rc.components.LiveValues
 import ee.schimke.ha.rc.components.RemoteHaHistoryGraph
 import ee.schimke.ha.rc.components.RemoteHaHistoryGraphIdentity
+import ee.schimke.ha.rc.components.placeholderTitle
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.add
+import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.put
+import kotlinx.serialization.json.putJsonArray
 
 /**
  * `history-graph` card. Renders one sparkline per entity using the snapshot's `history[entityId]`.
@@ -48,10 +57,78 @@ class HistoryGraphCardConverter : CardConverter {
     return title + 16 + 52 * rows + 20
   }
 
+  /**
+   * A history graph renders from a card design: per row, the entity's [EntityDesign] properties
+   * (accent) and whether it has a line ([SeriesDesign]); plus the row count and whether there is a
+   * title. Names, summaries (`<slot>.summary`), samples, ranges, the title and the range label are
+   * bindings.
+   */
+  override fun designProperties(card: CardConfig, snapshot: HaSnapshot): DesignProperties? {
+    if (!TEMPLATE_CONFIG_KEYS.containsAll(card.raw.keys)) return null
+    val ids = entityIds(card)
+    if (ids.isEmpty() || ids.size != (card.raw["entities"] as? JsonArray)?.size) return null
+    var ok = true
+    val properties = DesignProperties.build {
+      enum(HAS_TITLE, if (card.raw["title"] != null) 1 else 0)
+      enum(EntityDesign.COUNT, ids.size)
+      ids.forEachIndexed { i, id ->
+        with(EntityDesign) { if (!entity("e$i.", id, null, snapshot)) ok = false }
+        enum("e$i.${SeriesDesign.HAS_DATA}", if (SeriesDesign.hasData(snapshot, id)) 1 else 0)
+      }
+    }
+    return properties.takeIf { ok }
+  }
+
+  override fun designTemplate(properties: DesignProperties): DesignTemplateInput? {
+    val count = properties[EntityDesign.COUNT]?.toIntOrNull() ?: return null
+    val entities =
+      (0 until count).map { i -> EntityDesign.templateEntity(properties, "e$i.", i) ?: return null }
+    val card =
+      CardConfig(
+        type = cardType,
+        raw =
+          buildJsonObject {
+            put("type", cardType)
+            if (properties[HAS_TITLE] == "1") put("title", placeholderTitle(0))
+            putJsonArray("entities") { entities.forEach { add(it.entityId) } }
+          },
+      )
+    val history =
+      entities.withIndex().associate { (i, e) ->
+        e.entityId to
+          SeriesDesign.placeholderHistory(properties["e$i.${SeriesDesign.HAS_DATA}"] == "1")
+      }
+    return DesignTemplateInput(
+      card,
+      HaSnapshot(states = entities.associateBy { it.entityId }, history = history),
+    )
+  }
+
+  override fun designBindings(card: CardConfig, snapshot: HaSnapshot): CardSnapshotBindings {
+    val ids = entityIds(card)
+    val strings = buildMap {
+      put("card.range", rangeLabel(card))
+      ids.forEachIndexed { i, id ->
+        val slot = CardDesignSlots.slotId(CardDesignSlots.domainOf(id), i)
+        put("$slot.summary", summarise(snapshot.history[id].orEmpty()))
+        // Rows name their entity by friendly name only, never a per-row `name:`.
+        put(
+          "$slot.name",
+          snapshot.states[id]?.attributes?.get("friendly_name")?.jsonPrimitive?.content ?: id,
+        )
+      }
+    }
+    return CardSnapshotBindings(
+      strings,
+      emptyMap(),
+      emptyMap(),
+      SeriesDesign.slotBindings(ids, snapshot),
+    )
+  }
+
   @Composable
   override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
     val title = card.raw["title"]?.jsonPrimitive?.content
-    val hours = card.raw["hours_to_show"]?.jsonPrimitive?.content?.toIntOrNull() ?: 24
     val ids = entityIds(card)
 
     val rows = ids.map { id ->
@@ -62,13 +139,14 @@ class HistoryGraphCardConverter : CardConverter {
       HaHistoryGraphRow(
         entityId = id,
         name = name,
-        summary = LiveValues.state(id, summarise(history)),
+        // Its own binding, not `<id>.state`: the summary describes the history, not the state.
+        summary = LiveValues.named(id, "summary", summarise(history)),
         accent = HaStateColor.activeFor(entity),
         points = numeric,
       )
     }
 
-    val data = HaHistoryGraphData(title = title, rangeLabel = "Last ${hours}h", rows = rows)
+    val data = HaHistoryGraphData(title = title, rangeLabel = rangeLabel(card), rows = rows)
 
     when (LocalCardSizeMode.current) {
       // Dashboard: the full per-row graph (HA reference).
@@ -117,3 +195,9 @@ private fun entityIds(card: CardConfig): List<String> {
     }
   }
 }
+
+private val TEMPLATE_CONFIG_KEYS = setOf("type", "title", "entities", "hours_to_show")
+private const val HAS_TITLE = "has_title"
+
+private fun rangeLabel(card: CardConfig): String =
+  "Last ${card.raw["hours_to_show"]?.jsonPrimitive?.content?.toIntOrNull() ?: 24}h"

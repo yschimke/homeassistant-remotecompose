@@ -60,7 +60,7 @@ fun RemoteHaHistoryGraph(data: HaHistoryGraphData, modifier: RemoteModifier = Re
     RemoteColumn(verticalArrangement = RemoteArrangement.spacedBy(6.rdp)) {
       if (data.title != null) {
         RemoteText(
-          text = data.title.rs,
+          text = cardTitle(data.title),
           color = theme.primaryText,
           fontSize = 15.rsp,
           fontWeight = FontWeight.Medium,
@@ -70,7 +70,7 @@ fun RemoteHaHistoryGraph(data: HaHistoryGraphData, modifier: RemoteModifier = Re
         )
       }
       RemoteText(
-        text = data.rangeLabel.rs,
+        text = cardText("range", data.rangeLabel),
         color = theme.secondaryText,
         fontSize = 11.rsp,
         style = RemoteTextStyle.Default,
@@ -117,7 +117,8 @@ fun RemoteHaHistoryGraphIdentity(
       verticalArrangement = RemoteArrangement.spacedBy(4.rdp),
     ) {
       RemoteText(
-        text = (row?.name ?: data.title ?: "History").rs,
+        text =
+          if (row != null) entityName(row.entityId, row.name) else (data.title ?: "History").rs,
         color = theme.secondaryText,
         fontSize = 11.rsp,
         style = RemoteTextStyle.Default,
@@ -157,7 +158,7 @@ private fun Row(row: HaHistoryGraphRow, theme: RemoteHaTheme) {
     horizontalArrangement = RemoteArrangement.SpaceBetween,
   ) {
     RemoteText(
-      text = row.name.rs,
+      text = entityName(row.entityId, row.name),
       color = theme.primaryText,
       fontSize = 12.rsp,
       fontWeight = FontWeight.Medium,
@@ -188,18 +189,15 @@ private fun Row(row: HaHistoryGraphRow, theme: RemoteHaTheme) {
 
 @Composable
 private fun Sparkline(entityId: String?, points: List<Float>, accent: Color, theme: RemoteHaTheme) {
-  val minP = points.min()
-  val maxP = points.max()
-  val span = (maxP - minP).takeIf { it > 0f } ?: 1f
-
-  // One named RemoteFloat per sample (`<entityId>.numeric.<i>`) so a
-  // host can push the next window of values without re-encoding. The
-  // y-range is fixed at encode time from the initial captured values;
-  // values that drift outside [minP, maxP] still render, just clipped
-  // by the canvas.
-  val bound: List<RemoteFloat> = LiveValues.numericPoints(entityId, points)
-  val minRf = minP.rf
-  val spanRf = span.rf
+  // A fixed number of samples, one named RemoteFloat each (`<entityId>.numeric.<i>`), so the
+  // series length is never part of the document's structure and a host can push the next window
+  // without re-encoding. The y-range is `<entityId>.series_min` / `series_span`: constants in a
+  // live capture, bindings in a design template.
+  val samples = sparklineSamples(points)
+  val range = sparklineRange(samples)
+  val bound: List<RemoteFloat> = LiveValues.numericPoints(entityId, samples)
+  val minRf = entityFloat(entityId, "series_min", range.min)
+  val spanRf = entityFloat(entityId, "series_span", range.span)
   RemoteCanvas(modifier = RemoteModifier.fillMaxWidth().height(28.rdp)) {
     val w = width
     val h = height
@@ -251,3 +249,30 @@ private fun Color.toArgb(): Int =
     (green * 255f).toInt(),
     (blue * 255f).toInt(),
   )
+
+/** How many samples every sparkline draws, whatever the history length. */
+const val SPARKLINE_SAMPLES: Int = 48
+
+/**
+ * [points] resampled to [SPARKLINE_SAMPLES] by linear interpolation over their order, so the drawn
+ * line has the same shape whatever the history length. Fewer than two points have no line: empty.
+ */
+fun sparklineSamples(points: List<Float>): List<Float> {
+  if (points.size < 2) return emptyList()
+  val last = points.size - 1
+  return List(SPARKLINE_SAMPLES) { i ->
+    val pos = i.toFloat() * last / (SPARKLINE_SAMPLES - 1)
+    val lo = pos.toInt().coerceAtMost(last - 1)
+    val t = pos - lo
+    points[lo] + (points[lo + 1] - points[lo]) * t
+  }
+}
+
+/** A sparkline's y-range: its lowest sample and the span above it (1 for a flat line). */
+data class SparklineRange(val min: Float, val span: Float)
+
+fun sparklineRange(samples: List<Float>): SparklineRange {
+  if (samples.isEmpty()) return SparklineRange(0f, 1f)
+  val min = samples.min()
+  return SparklineRange(min, (samples.max() - min).takeIf { it > 0f } ?: 1f)
+}

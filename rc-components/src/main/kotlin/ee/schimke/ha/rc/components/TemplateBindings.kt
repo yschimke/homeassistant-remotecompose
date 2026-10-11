@@ -66,6 +66,19 @@ fun cardFloat(field: String, value: Float): RemoteFloat {
   }
 }
 
+/**
+ * A number derived from [entityId]'s data that a live capture bakes (a sparkline's y-range):
+ * `<entityId>.<field>` as a named float inside a template capture, otherwise the constant [value].
+ */
+@Composable
+fun entityFloat(entityId: String?, field: String, value: Float): RemoteFloat {
+  val bindings = LocalTemplateBindings.current ?: return value.rf
+  if (entityId == null) return value.rf
+  return bindings.floats.getOrPut("$entityId.$field") {
+    LiveValues.namedFloat(entityId, field, value)
+  }
+}
+
 /** Binding-name prefix for card-level (not per-entity) bindings: `card.title`, … */
 const val CARD_BINDING_PREFIX: String = "card"
 

@@ -7,11 +7,14 @@ import androidx.compose.remote.creation.compose.modifier.fillMaxSize
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.runtime.Composable
+import ee.schimke.ha.design.DesignProperties
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.CardConverter
 import ee.schimke.ha.rc.CardSizeMode
+import ee.schimke.ha.rc.CardSnapshotBindings
+import ee.schimke.ha.rc.DesignTemplateInput
 import ee.schimke.ha.rc.HaStateColor
 import ee.schimke.ha.rc.LocalCardSizeMode
 import ee.schimke.ha.rc.RemoteSizeBreakpoint
@@ -42,6 +45,34 @@ class SensorCardConverter : CardConverter {
 
   override fun naturalHeightDp(card: CardConfig, snapshot: HaSnapshot): Int = 120
 
+  /**
+   * A sensor card renders from a card design: the value is the state binding, the history line is
+   * [SeriesDesign]'s sample and range bindings, and the range label is `card.range`. Structure: the
+   * entity's [EntityDesign] properties (the line's accent) and whether there is a line at all.
+   */
+  override fun designProperties(card: CardConfig, snapshot: HaSnapshot): DesignProperties? =
+    EntityDesign.single(card, snapshot, TEMPLATE_CONFIG_KEYS) {
+      val id = card.raw["entity"]?.jsonPrimitive?.content
+      enum(SeriesDesign.HAS_DATA, if (id != null && SeriesDesign.hasData(snapshot, id)) 1 else 0)
+    }
+
+  override fun designTemplate(properties: DesignProperties): DesignTemplateInput? {
+    val input = EntityDesign.singleTemplate(cardType, properties) ?: return null
+    val slot = input.snapshot.states.keys.single()
+    val history = SeriesDesign.placeholderHistory(properties[SeriesDesign.HAS_DATA] == "1")
+    return input.copy(snapshot = input.snapshot.copy(history = mapOf(slot to history)))
+  }
+
+  override fun designBindings(card: CardConfig, snapshot: HaSnapshot): CardSnapshotBindings {
+    val ids = listOfNotNull(card.raw["entity"]?.jsonPrimitive?.content)
+    return CardSnapshotBindings(
+      mapOf("card.range" to rangeLabel(card)),
+      emptyMap(),
+      emptyMap(),
+      SeriesDesign.slotBindings(ids, snapshot),
+    )
+  }
+
   @Composable
   override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
     when (LocalCardSizeMode.current) {
@@ -61,7 +92,6 @@ class SensorCardConverter : CardConverter {
   private fun FullSensor(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
     val entityId = card.raw["entity"]?.jsonPrimitive?.content
     val entity = entityId?.let { snapshot.states[it] }
-    val hours = card.raw["hours_to_show"]?.jsonPrimitive?.content?.toIntOrNull() ?: 24
     val history = entityId?.let { snapshot.history[it].orEmpty() } ?: emptyList()
     val numeric = history.mapNotNull { it.state.toFloatOrNull() }
 
@@ -72,7 +102,7 @@ class SensorCardConverter : CardConverter {
         valueLabel = formatState(entity),
         accent = HaStateColor.activeFor(entity),
         points = numeric,
-        rangeLabel = "Last ${hours}h",
+        rangeLabel = rangeLabel(card),
       ),
       modifier = modifier,
     )
@@ -105,3 +135,8 @@ class SensorCardConverter : CardConverter {
       ?: "Sensor"
   }
 }
+
+private val TEMPLATE_CONFIG_KEYS = setOf("type", "entity", "name", "hours_to_show")
+
+private fun rangeLabel(card: CardConfig): String =
+  "Last ${card.raw["hours_to_show"]?.jsonPrimitive?.content?.toIntOrNull() ?: 24}h"
