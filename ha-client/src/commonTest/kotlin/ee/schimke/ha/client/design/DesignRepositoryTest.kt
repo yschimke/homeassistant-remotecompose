@@ -130,6 +130,33 @@ class DesignRepositoryTest {
   }
 
   @Test
+  fun revocationAppliesEvenWhenAnotherBlobIsMissing() = runTest {
+    val host = FakeHost(published(serial = 1).files)
+    val store = InMemoryDesignStore()
+    repo(host, store).refresh()
+
+    // Serial 2 revokes the cached design and adds another whose blob the host doesn't have.
+    val otherKey = key.copy(shape = "domain=switch")
+    val next =
+      published(
+        serial = 2,
+        designs = listOf(design(), BuiltDesign(otherKey, 1, "other".encodeToByteArray())),
+      )
+    val revoked =
+      next.manifest.copy(
+        designs = next.manifest.designs.map { if (it.key == key) it.copy(revoked = true) else it }
+      )
+    host.files =
+      mapOf(
+        "manifest.json" to
+          kotlinx.serialization.json.Json.encodeToString(DesignManifest.serializer(), revoked)
+            .encodeToByteArray()
+      )
+    assertEquals(RefreshResult.Failed, repo(host, store).refresh(force = true))
+    assertNull(repo(host, store).resolve(key))
+  }
+
+  @Test
   fun olderSerialIsRejected() = runTest {
     val host = FakeHost(published(serial = 5).files)
     val store = InMemoryDesignStore()
