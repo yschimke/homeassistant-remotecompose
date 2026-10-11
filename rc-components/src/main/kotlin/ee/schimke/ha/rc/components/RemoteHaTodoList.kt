@@ -46,7 +46,7 @@ fun RemoteHaTodoList(data: HaTodoListData, modifier: RemoteModifier = RemoteModi
   ) {
     RemoteColumn(verticalArrangement = RemoteArrangement.spacedBy(8.rdp)) {
       RemoteText(
-        text = data.title.rs,
+        text = cardTitle(data.title),
         color = theme.primaryText,
         fontSize = 16.rsp,
         fontWeight = FontWeight.Medium,
@@ -57,11 +57,15 @@ fun RemoteHaTodoList(data: HaTodoListData, modifier: RemoteModifier = RemoteModi
 
       if (data.activeItems.isNotEmpty()) {
         Section("Active", theme)
-        data.activeItems.forEach { Row(it, completed = false, theme = theme) }
+        data.activeItems.forEachIndexed { i, item ->
+          Row("active.$i", item, completed = false, theme = theme)
+        }
       }
       if (data.completedItems.isNotEmpty()) {
         Section("Completed", theme)
-        data.completedItems.forEach { Row(it, completed = true, theme = theme) }
+        data.completedItems.forEachIndexed { i, item ->
+          Row("done.$i", item, completed = true, theme = theme)
+        }
       }
       // Note: an empty stub when both sections empty.
       if (data.activeItems.isEmpty() && data.completedItems.isEmpty()) {
@@ -132,7 +136,8 @@ private fun Section(label: String, theme: RemoteHaTheme) {
 }
 
 @Composable
-private fun Row(item: HaTodoItem, completed: Boolean, theme: RemoteHaTheme) {
+private fun Row(key: String, item: HaTodoItem, completed: Boolean, theme: RemoteHaTheme) {
+  val summary = cardText("$key.summary", item.summary)
   val click =
     item.tapAction.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
   RemoteRow(
@@ -143,13 +148,13 @@ private fun Row(item: HaTodoItem, completed: Boolean, theme: RemoteHaTheme) {
       imageVector =
         (if (completed) Icons.Filled.CheckBox else Icons.Outlined.CheckBoxOutlineBlank)
           .toRemoteImageVector(),
-      contentDescription = item.summary.rs,
+      contentDescription = summary,
       modifier = RemoteModifier.size(18.rdp),
       tint = if (completed) theme.placeholderAccent else theme.secondaryText,
     )
     RemoteBox(modifier = RemoteModifier.padding(start = 10.rdp)) {
       RemoteText(
-        text = item.summary.rs,
+        text = summary,
         color = if (completed) theme.secondaryText else theme.primaryText,
         fontSize = 13.rsp,
         style = RemoteTextStyle.Default,

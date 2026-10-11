@@ -840,4 +840,132 @@ class CardDesignParityTest {
       listStates,
       dark = true,
     )
+
+  private fun entityJson(id: String, state: String, attrs: JsonObject) =
+    EntityState(id, state, attrs)
+
+  @Test
+  fun logbook() =
+    assertParity(
+      "logbook",
+      card("logbook") {
+        put("title", "Activity")
+        putJsonArray("entities") {
+          add("light.kitchen")
+          add("binary_sensor.front_door")
+        }
+      },
+      listStates,
+      dark = false,
+    )
+
+  @Test
+  fun calendar() {
+    fun events(vararg e: Pair<String, String>) =
+      kotlinx.serialization.json.JsonArray(
+        e.map { (summary, start) ->
+          buildJsonObject {
+            put("summary", summary)
+            put("start", start)
+          }
+        }
+      )
+    assertParity(
+      "calendar",
+      card("calendar") {
+        putJsonArray("entities") {
+          add("calendar.family")
+          add("calendar.work")
+        }
+      },
+      listOf(
+        entityJson(
+          "calendar.family",
+          "on",
+          buildJsonObject {
+            put("friendly_name", "Family")
+            put("events", events("Dentist" to "2026-10-12T09:30:00", "Football" to "2026-10-13"))
+          },
+        ),
+        entityJson(
+          "calendar.work",
+          "off",
+          buildJsonObject { put("events", events("Standup" to "2026-10-12T10:00:00")) },
+        ),
+      ),
+      dark = false,
+    )
+  }
+
+  @Test
+  fun todoListDark() =
+    assertParity(
+      "todo-dark",
+      card("todo-list") { put("entity", "todo.shopping") },
+      listOf(
+        entityJson(
+          "todo.shopping",
+          "2",
+          buildJsonObject {
+            put("friendly_name", "Shopping")
+            put(
+              "items",
+              kotlinx.serialization.json.JsonArray(
+                listOf(
+                  buildJsonObject {
+                    put("summary", "Milk")
+                    put("status", "needs_action")
+                  },
+                  buildJsonObject {
+                    put("summary", "Bread")
+                    put("status", "needs_action")
+                  },
+                  buildJsonObject {
+                    put("summary", "Eggs")
+                    put("status", "completed")
+                  },
+                )
+              ),
+            )
+          },
+        )
+      ),
+      dark = true,
+    )
+
+  @Test
+  fun weatherForecast() =
+    assertParity(
+      "weather",
+      card("weather-forecast") { put("entity", "weather.home") },
+      listOf(
+        entityJson(
+          "weather.home",
+          "partlycloudy",
+          buildJsonObject {
+            put("friendly_name", "Home")
+            put("temperature", "17.5")
+            put("temperature_unit", "°C")
+            put("humidity", "62")
+            put("wind_speed", "11")
+            put("wind_speed_unit", "km/h")
+            put(
+              "forecast",
+              kotlinx.serialization.json.JsonArray(
+                listOf("sunny" to "2026-10-12", "rainy" to "2026-10-13", "cloudy" to "2026-10-14")
+                  .mapIndexed { i, (cond, dt) ->
+                    buildJsonObject {
+                      put("condition", cond)
+                      put("temperature", "${18 + i}")
+                      put("templow", "${9 + i}")
+                      put("datetime", "${dt}T00:00:00")
+                    }
+                  }
+              ),
+            )
+          },
+        )
+      ),
+      dark = false,
+    )
 }

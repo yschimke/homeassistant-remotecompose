@@ -423,6 +423,67 @@ class CardDesignTemplatesEndToEndTest {
     assertTrue("switch.s1.state" in bindings.strings)
   }
 
+  @Test
+  fun todoTapRunsTheLiveItemAtTheTappedPosition() {
+    val todo =
+      CardConfig(
+        type = "todo-list",
+        raw =
+          buildJsonObject {
+            put("type", "todo-list")
+            put("entity", "todo.shopping")
+          },
+      )
+    fun item(summary: String, status: String) = buildJsonObject {
+      put("summary", summary)
+      put("status", status)
+    }
+    val snapshot =
+      HaSnapshot(
+        states =
+          mapOf(
+            "todo.shopping" to
+              EntityState(
+                "todo.shopping",
+                "1",
+                kotlinx.serialization.json.JsonObject(
+                  mapOf(
+                    "items" to
+                      kotlinx.serialization.json.JsonArray(
+                        listOf(item("Milk", "needs_action"), item("Eggs", "completed"))
+                      )
+                  )
+                ),
+              )
+          )
+      )
+    val playback = CardDesignTemplates.playback(todo, ByteArray(0))
+    fun update(entity: String, summary: String, status: String) =
+      ee.schimke.ha.rc.components.HaAction.CallService(
+        "todo",
+        "update_item",
+        entity,
+        buildJsonObject {
+          put("item", summary)
+          put("status", status)
+        },
+      )
+    // The template's first active item completes the live first active item.
+    assertEquals(
+      update("todo.shopping", "Milk", "completed"),
+      playback.resolveTap(update("todo.s0", "Item a0", "completed"), snapshot),
+    )
+    assertEquals(
+      update("todo.shopping", "Eggs", "needs_action"),
+      playback.resolveTap(update("todo.s0", "Item d0", "needs_action"), snapshot),
+    )
+    // An item the template names itself never reaches Home Assistant.
+    assertEquals(
+      playback.slotTapActions[0],
+      playback.resolveTap(update("todo.s0", "Buy a boat", "completed"), snapshot),
+    )
+  }
+
   /**
    * With `-PcardDesignsOut=<dir>`, writes every spike design as the files a static host serves.
    * Skipped otherwise.
