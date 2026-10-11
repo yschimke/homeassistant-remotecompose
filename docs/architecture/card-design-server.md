@@ -60,7 +60,8 @@ nothing.
 | Piece | Where |
 | --- | --- |
 | Wire model: `DesignKey`, `DesignSurface`, `DesignManifest`, `DesignEntry` | `ha-model/.../design/CardDesign.kt` |
-| Slot mapping, shape, slot bindings (with `status`, neutral defaults) | `ha-model/.../design/CardDesignSlots.kt` |
+| Slot mapping and slot bindings (with `status`, neutral defaults); `DesignProperties` | `ha-model/.../design/CardDesignSlots.kt`, `DesignProperties.kt` |
+| `CardConverter.designProperties` / `designTemplate`, implemented by the tile | `rc-converter/.../CardConverter.kt`, `cards/TileCardConverter.kt` |
 | Client: config (off by default), refresh rules, TTL, back-off, serial rollback check, expiry, sha256-verified blobs, stale and inbuilt fallback, revocation; `DesignPublisher` writes the static files | `ha-client/.../client/design/` |
 | Template capture (`LocalCardTemplateCapture`), keys, spike key matrix, local design library (`CardDesignLibrary`) | `rc-converter/.../CardDesignTemplates.kt` |
 | Template playback: slot-binding push, slot → entity action remap | `CachedCardPreview(template = …)` |
@@ -72,10 +73,11 @@ Deliberate spike limits, each owned by a milestone below:
 
 - **Tile only** (`light`, `switch`, `sensor`, `binary_sensor`), mobile app surface, and only tiles
   whose config is `entity` plus optional `name`. Anything else has no shape and stays local.
-- **The shape includes entity attributes that change the tile's look**: `domain` (icon family,
-  toggle chrome), `device_class` for sensors and binary sensors (icon, colour), and an `icon`
-  attribute. Slot ids keep the domain (`light.s0`, not `s0`) for the same reason. A library
-  template therefore draws exactly what the converter drew, with name and state as bindings.
+- **The tile's generation properties** (`TileCardConverter.designProperties`) are what changes its
+  look: `domain` (icon family, toggle chrome), `device_class` for sensors and binary sensors (icon,
+  colour), and an `icon` attribute. Slot ids keep the domain (`light.s0`, not `s0`) for the same
+  reason. A library template therefore draws exactly what the converter drew, with name and state
+  as bindings.
 - **One known difference:** templates are captured with a placeholder `off` state, so an
   unavailable light or switch keeps its toggle chip (inactive colour) where the converter drew a
   plain grey icon. `<slot>.status` is bound, and moving that visual in-document is M1.
@@ -221,24 +223,39 @@ in **row-count buckets** (1, 2, 3, 4, 6, 8) and hide unused rows with
 inbuilt converter. A data-list op in RC could later replace the buckets
 (spike S3).
 
-### Configuration shape
+### Generation properties
 
-Bindings carry values, and slot mapping carries entities, but some card
-config changes the **structure** a converter emits, and no binding can
-apply it after capture. For example, `HeadingCardConverter` bakes
-`heading_style`, `ClockCardConverter` bakes `clock_size`,
-`show_seconds` and whether `time_zone` is set, and
-`AlarmPanelCardConverter` bakes `states` and `show_keypad`.
+Bindings carry values, and slot mapping carries entities, but some inputs change the **structure**
+a converter emits, and no binding can apply them after capture. For example, `HeadingCardConverter`
+bakes `heading_style`, `ClockCardConverter` bakes `clock_size`, `show_seconds` and whether
+`time_zone` is set, `AlarmPanelCardConverter` bakes `states` and `show_keypad`, and the tile picks
+its icon and colour from the entity's domain, `device_class` and `icon` attribute.
 
-Each card type therefore declares a **shape function** in `ha-model`
-next to `slotsFor`: `fun shapeOf(card: CardConfig): String?`. It
-normalises only the structural keys (`heading_style=title`,
-`clock_size=large;seconds=1;tz=1`), sorted and stable. The shape is part
-of the `DesignKey`, and the pipeline captures one template for each
-shape listed in `matrix.json`. A config whose shape the manifest doesn't
-list, or a key the shape function doesn't recognise (`null`), falls
-through to the local converter. Two cards with different structures can
-never share bytes.
+Each converter therefore declares its **generation properties**:
+`CardConverter.designProperties(card, snapshot): DesignProperties?`. They are the discrete inputs
+that change its document, taken from the card config and the entity's attributes:
+
+- **Strings and enum ints only** (`DesignProperties.Builder` offers `string` and `enum`, nothing
+  else). A float such as `numeric_state` would mean one template per reading, and display text is
+  a binding, so neither is ever a property.
+- **They are the index.** Their canonical encoding (`DesignProperties.shape`, sorted `name=value`
+  pairs) is the template part of the `DesignKey`. Each distinct set has its own template: the
+  server manifest is the remote index, and the local design library is the same index, filled on
+  demand.
+- **The converter can rebuild a template from them.** `CardConverter.designTemplate(properties)`
+  returns the config and placeholder snapshot to capture: slot entity ids, with the properties
+  mapped back onto the placeholder entity.
+- **Null means "not templatable"**: an unsupported config, or an entity that isn't loaded yet. The
+  card then captures through its converter.
+
+An enum-like **state** can also be a property (for example a lock's state index). Every state then
+gets its own template variant, and a state change swaps templates instead of pushing a binding.
+That is the right trade for hosts that can't receive bindings at all.
+
+**Launcher widgets and other push-less hosts.** These hosts play the bytes they're handed. They
+pick the template by its generation properties, then **rewrite** the remaining bindings (names,
+formatted states, numbers) into the document's initial values before handing it over (spike S1).
+Discrete structure is chosen by the properties, so the rewrite only has to touch named values.
 
 Non-structural config values (gauge `min` / `max`, severity
 thresholds, a time zone ID) are bindings, not shapes, or the matrix
@@ -250,7 +267,7 @@ colour), the domain is part of the shape.
 
 - **v1 (binding cards):** sensor, entity, tile, button, glance, area,
   entities, alarm-panel, gauge, heading, clock. Alarm-panel, heading and
-  clock need a [config shape](#configuration-shape). Gauge needs its
+  clock need [generation properties](#generation-properties). Gauge needs its
   severity band moved in-document first (see
   [No decisions at capture time](#no-decisions-at-capture-time)).
 - **Later:** thermostat, humidifier and light, once their arc fraction
@@ -301,7 +318,7 @@ DesignKey(
   opProfile,       // bitmask: ANDROIDX | WIDGETS | EXPERIMENTAL | …
   sizeMode,        // wrap(widthDp range) | fixed(range of W×H)
   themeMode,       // host (ColorTheme / WearM3 / theme.* bindings) | baked(style, dark)
-  shape,           // normalised structural config, see "Configuration shape"
+  shape,           // generation properties (DesignProperties.shape), see "Generation properties"
   bucket,          // row-count bucket, or 1
   schema,          // binding schema version, "1"
 )
@@ -635,7 +652,7 @@ Each manifest entry gets a `catalogId` and appears in the
 | M6 | Wear: phone syncs blobs over the Data Layer, watch cache + inbuilt designs, wear-widget and wear-app targets | M3 |
 | M7 | Catalog: generated `Designs` group rendering shipped blobs | M2 |
 | M8 | Second variant (`modern`): branched from the `default` references in UI Builder, agreed there, implemented, compared; plus the variant picker in settings | M3, M7, M2b |
-| M9 | More cards, each reference first: entities/glance buckets, alarm-panel, area, heading (with config shapes); the arc cards once their fraction is in-document | M1, R1 |
+| M9 | More cards, each reference first: entities/glance buckets, alarm-panel, area, heading (with generation properties); the arc cards once their fraction is in-document | M1, R1 |
 
 ## Open questions
 

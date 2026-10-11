@@ -15,6 +15,7 @@ import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.CardDesignLibrary
 import ee.schimke.ha.rc.CardDesignTemplates
+import ee.schimke.ha.rc.CardRegistry
 import ee.schimke.ha.rc.CardTemplatePlayback
 import ee.schimke.ha.rc.components.ThemeStyle
 import java.io.File
@@ -56,9 +57,10 @@ fun cardTemplateFor(
   serverDesigns: Map<DesignKey, ByteArray>,
   style: ThemeStyle,
   dark: Boolean,
+  registry: CardRegistry,
 ): CardTemplatePlayback? {
-  val key = CardDesignTemplates.keyFor(card, snapshot, style, dark) ?: return null
-  val bytes = serverDesigns[key] ?: CardDesignLibrary.template(context, key)
+  val key = CardDesignTemplates.keyFor(card, snapshot, style, dark, registry) ?: return null
+  val bytes = serverDesigns[key] ?: CardDesignLibrary.template(context, key, registry)
   return CardDesignTemplates.playback(card, bytes)
 }
 

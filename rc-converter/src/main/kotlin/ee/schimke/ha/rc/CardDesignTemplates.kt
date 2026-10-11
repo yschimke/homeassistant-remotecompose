@@ -12,6 +12,7 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import ee.schimke.ha.client.design.BuiltDesign
 import ee.schimke.ha.design.CardDesignSlots
 import ee.schimke.ha.design.DesignKey
+import ee.schimke.ha.design.DesignProperties
 import ee.schimke.ha.design.DesignSurface
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
@@ -37,18 +38,19 @@ object CardDesignTemplates {
 
   /**
    * The [DesignKey] a live [card] renders with on [surface], or null when the card has no template
-   * shape (it then renders through the local converter). [snapshot] supplies the entity attributes
-   * that are part of the shape (`device_class`, `icon`); values never are.
+   * shape (it then renders through the local converter). The shape is the card converter's
+   * [CardConverter.designProperties]: discrete generation inputs, never values.
    */
   fun keyFor(
     card: CardConfig,
     snapshot: HaSnapshot,
     style: ThemeStyle,
     dark: Boolean,
+    registry: CardRegistry = defaultTemplateRegistry,
     surface: DesignSurface = DesignSurface.MobileApp,
   ): DesignKey? {
     if (surface != DesignSurface.MobileApp) return null
-    val shape = CardDesignSlots.shapeOf(card, snapshot) ?: return null
+    val shape = registry.get(card.type)?.designProperties(card, snapshot)?.shape ?: return null
     return DesignKey(
       cardType = card.type,
       surface = surface,
@@ -79,7 +81,7 @@ object CardDesignTemplates {
    * the local [CardDesignLibrary].
    */
   fun spikeKeys(): List<DesignKey> = buildList {
-    for (domain in CardDesignSlots.TILE_DOMAINS) {
+    for (domain in ee.schimke.ha.rc.cards.TileCardConverter.TEMPLATE_DOMAINS) {
       for (style in ThemeStyle.entries) {
         for (dark in listOf(false, true)) {
           val key =
@@ -87,7 +89,11 @@ object CardDesignTemplates {
               cardType = ee.schimke.ha.model.CardTypes.TILE,
               surface = DesignSurface.MobileApp,
               rcApiLevel = MOBILE_APP_API_LEVEL,
-              shape = "domain=$domain",
+              shape =
+                DesignProperties.build {
+                    string(ee.schimke.ha.rc.cards.TileCardConverter.DOMAIN, domain)
+                  }
+                  .shape,
               theme = DesignKey.bakedTheme(style.name, dark),
             )
           add(key)
@@ -104,12 +110,15 @@ object CardDesignTemplates {
   fun capture(
     context: Context,
     key: DesignKey,
-    registry: CardRegistry = ee.schimke.ha.rc.cards.defaultRegistry(),
+    registry: CardRegistry = defaultTemplateRegistry,
   ): BuiltDesign {
     require(key.surface == DesignSurface.MobileApp) { "spike only builds mobile-app templates" }
     val (style, dark) = parseBakedTheme(key.theme)
-    val card = CardDesignSlots.templateCard(key.cardType, key.shape)
-    val snapshot = CardDesignSlots.templateSnapshot(key.shape)
+    val converter = requireNotNull(registry.get(key.cardType)) { "no converter: ${key.cardType}" }
+    val (card, snapshot) =
+      requireNotNull(converter.designTemplate(DesignProperties.parse(key.shape))) {
+        "${key.cardType} has no template for ${key.shape}"
+      }
     val theme = haThemeFor(style, dark)
     val bytes = runBlocking {
       captureSingleRemoteDocument(context = context, profile = androidXExperimentalWrap) {
@@ -126,6 +135,11 @@ object CardDesignTemplates {
 
   /** Build every spike template. */
   fun buildAll(context: Context): List<BuiltDesign> = spikeKeys().map { capture(context, it) }
+
+  /** Registry used when the caller doesn't pass its own; designs only need the built-in cards. */
+  internal val defaultTemplateRegistry: CardRegistry by lazy {
+    ee.schimke.ha.rc.cards.defaultRegistry()
+  }
 
   private fun parseBakedTheme(theme: String): Pair<ThemeStyle, Boolean> {
     val parts = theme.split(':')
@@ -145,6 +159,10 @@ object CardDesignTemplates {
 object CardDesignLibrary {
   private val templates = java.util.concurrent.ConcurrentHashMap<DesignKey, ByteArray>()
 
-  fun template(context: Context, key: DesignKey): ByteArray =
-    templates.getOrPut(key) { CardDesignTemplates.capture(context, key).bytes }
+  fun template(
+    context: Context,
+    key: DesignKey,
+    registry: CardRegistry = CardDesignTemplates.defaultTemplateRegistry,
+  ): ByteArray =
+    templates.getOrPut(key) { CardDesignTemplates.capture(context, key, registry).bytes }
 }

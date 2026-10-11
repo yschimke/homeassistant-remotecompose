@@ -2,6 +2,7 @@ package ee.schimke.ha.rc
 
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.runtime.Composable
+import ee.schimke.ha.design.DesignProperties
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
 
@@ -57,6 +58,25 @@ interface CardConverter {
    * genuinely can't be expressed as a binding.
    */
   fun dataSignature(card: CardConfig, snapshot: HaSnapshot): String? = null
+
+  /**
+   * The generation properties of [card] under [snapshot], or null when this card can't render from
+   * a card design (the default: it then captures through [Render]).
+   *
+   * Return only the **discrete** inputs that change the document [Render] emits — strings and enum
+   * ints such as a domain, a `device_class` or an icon name, never a float or display text. Each
+   * distinct set indexes its own template ([DesignProperties.shape] is the template part of the
+   * design key), on the design server and in the local library. Everything else must reach the
+   * document as a named binding (`<slot>.state`, `<slot>.name`, …).
+   */
+  fun designProperties(card: CardConfig, snapshot: HaSnapshot): DesignProperties? = null
+
+  /**
+   * The config and placeholder snapshot a template for [properties] is captured from: slot entity
+   * ids (`CardDesignSlots.slotId`) in place of real ones, and the properties mapped back onto the
+   * placeholder entity. Required whenever [designProperties] can return non-null.
+   */
+  fun designTemplate(properties: DesignProperties): DesignTemplateInput? = null
 
   /**
    * Preferred rendered height in dp when this card fills its parent width. **Hint only**: dashboard
@@ -151,3 +171,6 @@ class CardRegistry(converters: Iterable<CardConverter> = emptyList()) {
 
   fun supported(): Set<String> = byType.keys.toSet()
 }
+
+/** What a card design template is captured from: see [CardConverter.designTemplate]. */
+data class DesignTemplateInput(val card: CardConfig, val snapshot: HaSnapshot)

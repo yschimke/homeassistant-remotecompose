@@ -129,7 +129,7 @@ class CardDesignTemplatesEndToEndTest {
       assertNotNull(
         CardDesignTemplates.keyFor(doorCard, doorSnapshot, ThemeStyle.Material3, dark = true)
       )
-    assertEquals("domain=binary_sensor;device_class=door", key.shape)
+    assertEquals("device_class=door;domain=binary_sensor", key.shape)
     assertFalse(key in CardDesignTemplates.spikeKeys(), "a shape the server spike doesn't publish")
 
     val bytes = CardDesignLibrary.template(context, key)
