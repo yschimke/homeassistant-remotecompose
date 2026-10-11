@@ -1,6 +1,6 @@
 {
     "formatVersion": "compose-preview-history/v1",
-    "generatedFrom": "07c3f2184abbb03828acad4514d60d8522067e7a",
+    "generatedFrom": "12c1b03936954b1afcdad6a28d70a33812cedac6",
     "previews": {
         "app/ee.schimke.terrazzo.previews.CardDebugPreviewsKt.CardFlashPreview_Card flash on data change": {
             "path": "renders/app/CardFlashPreview_Card_flash_on_data_change-44b71c2b.gif",
@@ -182,17 +182,19 @@
             "path": "renders/app/Play_Tablet10_01_Home_play_10_inch_home-7ca1827e.png",
             "versions": [
                 {
+                    "blob": "f2d0190fa57f00e844b2b28b3f12fe7227485c31",
+                    "commit": "12c1b03936954b1afcdad6a28d70a33812cedac6",
+                    "date": "2026-10-11T12:52:09Z",
+                    "sourceSha": "ac996af5",
+                    "sinceCommit": "547f9f6657214a4fc84bf78f5f474294362ea197",
+                    "commits": 3,
+                    "occurrences": 3
+                },
+                {
                     "blob": "bfc149e6c3db948722935df90a0a1b8e8586bb5e",
                     "commit": "07c3f2184abbb03828acad4514d60d8522067e7a",
                     "date": "2026-10-11T12:29:01Z",
                     "sourceSha": "d41ca89e",
-                    "commits": 1
-                },
-                {
-                    "blob": "f2d0190fa57f00e844b2b28b3f12fe7227485c31",
-                    "commit": "a6f93bbe120e627c85d8be221fc2ec3012a9e1c4",
-                    "date": "2026-10-10T20:36:20Z",
-                    "sourceSha": "2bd596e2",
                     "commits": 1
                 },
                 {
@@ -203,13 +205,6 @@
                     "commits": 1
                 },
                 {
-                    "blob": "f2d0190fa57f00e844b2b28b3f12fe7227485c31",
-                    "commit": "547f9f6657214a4fc84bf78f5f474294362ea197",
-                    "date": "2026-08-18T21:40:49Z",
-                    "sourceSha": "e2efa68d",
-                    "commits": 1
-                },
-                {
                     "blob": "5d9a1371204ed80d86d1a3774fe833c9a0061b3a",
                     "commit": "337de11c7a33abbfd669fd1497e2945825e4e2ac",
                     "date": "2026-08-15T21:53:51Z",
@@ -217,9 +212,9 @@
                     "commits": 1
                 }
             ],
-            "observations": 5,
-            "unstable": false,
-            "flapCount": 1
+            "observations": 6,
+            "unstable": true,
+            "flapCount": 2
         },
         "app/ee.schimke.terrazzo.previews.ScreenPreviewsKt.Play_Tablet7_01_Home_play · 7-inch · home": {
             "path": "renders/app/Play_Tablet7_01_Home_play_7_inch_home-eb94cb4a.png",
@@ -4949,6 +4944,13 @@
             "path": "renders/previews/Sizing_WidthPinnedHeightAdaptive_sizing_width_pinned_height_adaptive-e082424e.png",
             "versions": [
                 {
+                    "blob": "0008ca92a09c1a4a618d57bea24437ff98f15d15",
+                    "commit": "12c1b03936954b1afcdad6a28d70a33812cedac6",
+                    "date": "2026-10-11T12:52:09Z",
+                    "sourceSha": "ac996af5",
+                    "commits": 1
+                },
+                {
                     "blob": "04c585c56254b4c1cef041b8167b4560314029fd",
                     "commit": "07c3f2184abbb03828acad4514d60d8522067e7a",
                     "date": "2026-10-11T12:29:01Z",
@@ -5042,7 +5044,7 @@
                     "commits": 1
                 }
             ],
-            "observations": 16,
+            "observations": 17,
             "unstable": true,
             "flapCount": 3
         },
