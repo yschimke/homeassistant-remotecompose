@@ -1,6 +1,6 @@
 {
     "formatVersion": "compose-preview-history/v1",
-    "generatedFrom": "b595cdbb9f896e69070f38071c20462380e333c9",
+    "generatedFrom": "07c3f2184abbb03828acad4514d60d8522067e7a",
     "previews": {
         "app/ee.schimke.terrazzo.previews.CardDebugPreviewsKt.CardFlashPreview_Card flash on data change": {
             "path": "renders/app/CardFlashPreview_Card_flash_on_data_change-44b71c2b.gif",
@@ -182,6 +182,13 @@
             "path": "renders/app/Play_Tablet10_01_Home_play_10_inch_home-7ca1827e.png",
             "versions": [
                 {
+                    "blob": "bfc149e6c3db948722935df90a0a1b8e8586bb5e",
+                    "commit": "07c3f2184abbb03828acad4514d60d8522067e7a",
+                    "date": "2026-10-11T12:29:01Z",
+                    "sourceSha": "d41ca89e",
+                    "commits": 1
+                },
+                {
                     "blob": "f2d0190fa57f00e844b2b28b3f12fe7227485c31",
                     "commit": "a6f93bbe120e627c85d8be221fc2ec3012a9e1c4",
                     "date": "2026-10-10T20:36:20Z",
@@ -210,7 +217,7 @@
                     "commits": 1
                 }
             ],
-            "observations": 4,
+            "observations": 5,
             "unstable": false,
             "flapCount": 1
         },
@@ -4942,20 +4949,20 @@
             "path": "renders/previews/Sizing_WidthPinnedHeightAdaptive_sizing_width_pinned_height_adaptive-e082424e.png",
             "versions": [
                 {
+                    "blob": "04c585c56254b4c1cef041b8167b4560314029fd",
+                    "commit": "07c3f2184abbb03828acad4514d60d8522067e7a",
+                    "date": "2026-10-11T12:29:01Z",
+                    "sourceSha": "d41ca89e",
+                    "sinceCommit": "89455e6ccafeefd2fb8f9ececff35f491fd79154",
+                    "commits": 4,
+                    "occurrences": 4
+                },
+                {
                     "blob": "b668a48feb19eab3411e153ac4a96260865e04ce",
                     "commit": "b595cdbb9f896e69070f38071c20462380e333c9",
                     "date": "2026-10-11T11:18:07Z",
                     "sourceSha": "1d5a0ea6",
                     "commits": 1
-                },
-                {
-                    "blob": "04c585c56254b4c1cef041b8167b4560314029fd",
-                    "commit": "a19369773677291aca8a26883948b2618e13a635",
-                    "date": "2026-10-11T10:09:45Z",
-                    "sourceSha": "be569374",
-                    "sinceCommit": "89455e6ccafeefd2fb8f9ececff35f491fd79154",
-                    "commits": 3,
-                    "occurrences": 3
                 },
                 {
                     "blob": "1f16d48881f4ee45a5519ea895c926d3740e45da",
@@ -5035,9 +5042,9 @@
                     "commits": 1
                 }
             ],
-            "observations": 15,
+            "observations": 16,
             "unstable": true,
-            "flapCount": 2
+            "flapCount": 3
         },
         "previews/ee.schimke.ha.previews.ThemePreviewsKt.Theme_Home_Dark_theme_ Home (dark)": {
             "path": "renders/previews/Theme_Home_Dark_theme_Home_dark-acc1d4cc.png",
