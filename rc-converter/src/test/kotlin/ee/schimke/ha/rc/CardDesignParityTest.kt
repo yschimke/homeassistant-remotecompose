@@ -968,4 +968,53 @@ class CardDesignParityTest {
       ),
       dark = false,
     )
+
+  @Test
+  fun lightOnDial() =
+    assertParity(
+      "light-dial-on",
+      card("light") { put("entity", "light.kitchen") },
+      entity("light.kitchen", "on", "friendly_name" to "Kitchen", "brightness" to "200"),
+      dark = false,
+    )
+
+  @Test
+  fun lightOffDialDark() =
+    assertParity(
+      "light-dial-off-dark",
+      card("light") { put("entity", "light.kitchen") },
+      entity("light.kitchen", "off", "friendly_name" to "Kitchen"),
+      dark = true,
+    )
+
+  @Test
+  fun mediaPlaying() =
+    assertParity(
+      "media-playing",
+      card("media-control") { put("entity", "media_player.lounge") },
+      entity(
+        "media_player.lounge",
+        "playing",
+        "friendly_name" to "Lounge",
+        "media_title" to "Blue in Green",
+        "media_artist" to "Miles Davis",
+        "media_position" to "95",
+        "media_duration" to "337",
+      ),
+      dark = false,
+    )
+
+  @Test
+  fun mediaPausedDark() =
+    assertParity(
+      "media-paused-dark",
+      card("media-control") { put("entity", "media_player.lounge") },
+      entity(
+        "media_player.lounge",
+        "paused",
+        "friendly_name" to "Lounge",
+        "media_title" to "Podcast",
+      ),
+      dark = true,
+    )
 }

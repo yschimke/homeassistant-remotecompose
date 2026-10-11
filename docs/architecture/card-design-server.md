@@ -50,7 +50,7 @@ A first end-to-end slice is in the codebase, with **one rendering path**: every 
 (today: tile, entity, button, heading, glance, entities, alarm panel, gauge, clock, area, picture-entity,
 sensor, history-graph, statistic, line statistics-graph, thermostat, humidifier, vertical / horizontal stacks, grids,
 conditional and entity-filter cards, markdown, picture, picture-glance, logbook, calendar,
-to-do list, weather forecast and the unsupported placeholder) renders from a card design. The design comes from the server when one is
+to-do list, weather forecast, light, media control and the unsupported placeholder) renders from a card design. The design comes from the server when one is
 cached for the card's key, and from the **local design library** otherwise. The library captures
 the same template from the app's own converters on first use and keeps it for the process, so with
 no server configured (the default) cards still take the design path, just with built-in designs.
@@ -116,6 +116,9 @@ Deliberate spike limits, each owned by a milestone below:
   look (an entity's icon, a calendar's colour, a forecast day's condition group) and bind every
   row's text (`card.row.<i>.*`, `card.day.<i>.*`, …); a to-do tap is matched against the
   template's own items and rebuilt from the live item at that position.
+  A light and a media player key on a discrete state index (on, playing) that decides their
+  controls; brightness, progress and every label are bindings, and their taps are matched
+  against the template's own controls and rebuilt for the live entity.
 - **Generation properties** (`EntityDesign`) are what changes the look, per bound entity:
   `domain` (icon family, toggle chrome), `device_class` for sensors and binary sensors (icon,
   colour), the `icon` attribute and a config `icon` (`card_icon`). List cards prefix them with the

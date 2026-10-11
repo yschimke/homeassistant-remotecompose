@@ -61,7 +61,8 @@ class HumidifierCardConverter : CardConverter {
       cardType = cardType,
       domain = "humidifier",
       configKeys = setOf("type", "entity", "name"),
-      placeholder = { hasTarget ->
+      placeholder = { properties ->
+        val hasTarget = properties[DialCard.HAS_TARGET] == "1"
         "on" to
           buildMap {
             put("current_humidity", "40")

@@ -97,7 +97,7 @@ fun RemoteHaMediaControl(
         ) {
           RemoteIcon(
             imageVector = Icons.Filled.MusicNote.toRemoteImageVector(),
-            contentDescription = data.title.rs,
+            contentDescription = LiveValues.attribute(data.entityId, "media_title", data.title),
             modifier = RemoteModifier.size(40.rdp),
             tint = data.accent.rc,
           )
@@ -110,7 +110,7 @@ fun RemoteHaMediaControl(
 @Composable
 private fun TitleBlock(data: HaMediaControlData, theme: RemoteHaTheme) {
   RemoteText(
-    text = data.playerName.rs,
+    text = entityName(data.entityId, data.playerName),
     color = data.accent.rc,
     fontSize = 11.rsp,
     fontWeight = FontWeight.Medium,
@@ -159,7 +159,7 @@ private fun TransportRow(data: HaMediaControlData) {
 
 @Composable
 private fun SeekBlock(data: HaMediaControlData, theme: RemoteHaTheme) {
-  ProgressBar(data.positionFraction, data.accent, theme)
+  ProgressBar(data.entityId, data.positionFraction, data.accent, theme)
   if (data.positionLabel != null && data.durationLabel != null) {
     RemoteRow(
       modifier = RemoteModifier.fillMaxWidth(),
@@ -209,7 +209,7 @@ fun RemoteHaMediaControlWide(data: HaMediaControlData, modifier: RemoteModifier 
     ) {
       RemoteIcon(
         imageVector = Icons.Filled.MusicNote.toRemoteImageVector(),
-        contentDescription = data.title.rs,
+        contentDescription = LiveValues.attribute(data.entityId, "media_title", data.title),
         modifier = RemoteModifier.size(22.rdp),
         tint = data.accent.rc,
       )
@@ -228,7 +228,7 @@ fun RemoteHaMediaControlWide(data: HaMediaControlData, modifier: RemoteModifier 
         overflow = TextOverflow.Ellipsis,
       )
       RemoteText(
-        text = data.playerName.rs,
+        text = entityName(data.entityId, data.playerName),
         color = theme.secondaryText,
         fontSize = 11.rsp,
         style = RemoteTextStyle.Default,
@@ -275,11 +275,13 @@ private fun TransportButton(
 
 @Composable
 private fun ProgressBar(
+  entityId: String?,
   fraction: Float,
   accent: androidx.compose.ui.graphics.Color,
   theme: RemoteHaTheme,
 ) {
-  val f = fraction.coerceIn(0f, 1f)
+  // `<entityId>.media_position_fraction`: constant in a live capture, bound in a design template.
+  val f = entityFloat(entityId, "media_position_fraction", fraction.coerceIn(0f, 1f))
   RemoteBox(
     modifier =
       RemoteModifier.fillMaxWidth()

@@ -28,22 +28,31 @@ internal class DialCard(
   val cardType: String,
   val domain: String,
   val configKeys: Set<String>,
-  /** Attributes a template's placeholder entity carries, with and without a target. */
-  val placeholder: (hasTarget: Boolean) -> Pair<String, Map<String, String>>,
+  /** The placeholder entity's state and attributes for a template's [DesignProperties]. */
+  val placeholder: (DesignProperties) -> Pair<String, Map<String, String>>,
   val data: (CardConfig, HaSnapshot) -> HaArcDialData,
+  /**
+   * The dial's structural properties: by default whether it has a target. A light's steppers and
+   * accent follow its on/off state instead, a discrete state index the client keys on.
+   */
+  val structure: (CardConfig, HaSnapshot, HaArcDialData) -> Map<String, Int> = { _, _, dial ->
+    mapOf(HAS_TARGET to if (dial.targetFraction != null) 1 else 0)
+  },
 ) {
   fun properties(card: CardConfig, snapshot: HaSnapshot): DesignProperties? {
     if (!configKeys.containsAll(card.raw.keys)) return null
     val entityId = card.raw["entity"]?.jsonPrimitive?.contentOrNull ?: return null
     if (CardDesignSlots.domainOf(entityId) != domain || entityId !in snapshot.states) return null
     val dial = data(card, snapshot)
-    return DesignProperties.build { enum(HAS_TARGET, if (dial.targetFraction != null) 1 else 0) }
+    return DesignProperties.build {
+      for ((name, value) in structure(card, snapshot, dial)) enum(name, value)
+    }
   }
 
   fun template(properties: DesignProperties): DesignTemplateInput? {
-    val hasTarget = properties[HAS_TARGET] ?: return null
+    if (properties.values.isEmpty()) return null
     val slot = CardDesignSlots.slotId(domain, 0)
-    val (state, attributes) = placeholder(hasTarget == "1")
+    val (state, attributes) = placeholder(properties)
     val card =
       CardConfig(
         type = cardType,
@@ -100,6 +109,7 @@ internal class DialCard(
     return when (templateAction) {
       placeholderDial.incrementAction -> dial.incrementAction
       placeholderDial.decrementAction -> dial.decrementAction
+      placeholderDial.tapAction -> dial.tapAction
       else -> null
     }.takeUnless { it == HaAction.None }
   }
