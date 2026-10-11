@@ -1,6 +1,6 @@
 {
     "formatVersion": "compose-preview-history/v1",
-    "generatedFrom": "839ff44d859180133fbd9f4b63910b6af00d5ad2",
+    "generatedFrom": "1d0e2aecbf2943b1f553e5da678eb963b02fdb08",
     "previews": {
         "app/ee.schimke.terrazzo.previews.CardDebugPreviewsKt.CardFlashPreview_Card flash on data change": {
             "path": "renders/app/CardFlashPreview_Card_flash_on_data_change-44b71c2b.gif",
@@ -5162,6 +5162,15 @@
             "path": "renders/previews/DashboardSecurityMobile_dashboard_security_mobile-842e09ef.png",
             "versions": [
                 {
+                    "blob": "c0619c3d68b1e20cad702afd872c528795ea0fdf",
+                    "commit": "1d0e2aecbf2943b1f553e5da678eb963b02fdb08",
+                    "date": "2026-10-11T17:58:38Z",
+                    "sourceSha": "bd2b86a1",
+                    "sinceCommit": "2fde5cc2cf93899f1c9dfe93de1eca2d4df38200",
+                    "commits": 3,
+                    "occurrences": 3
+                },
+                {
                     "blob": "a5ddda79e23b239b00c00671f6e1f7b02b5a3bba",
                     "commit": "839ff44d859180133fbd9f4b63910b6af00d5ad2",
                     "date": "2026-10-11T17:44:16Z",
@@ -5169,24 +5178,10 @@
                     "commits": 1
                 },
                 {
-                    "blob": "c0619c3d68b1e20cad702afd872c528795ea0fdf",
-                    "commit": "0d59dfcb6b7186435b6f922004b4544be6460141",
-                    "date": "2026-10-11T16:56:21Z",
-                    "sourceSha": "b493036e",
-                    "commits": 1
-                },
-                {
                     "blob": "2971756945ffd42ec0ac4b97241ca1cd9ae10fd4",
                     "commit": "ee42d8e9e266e1350df42759ff3289ce0b40ed4c",
                     "date": "2026-10-11T16:10:42Z",
                     "sourceSha": "ec413f27",
-                    "commits": 1
-                },
-                {
-                    "blob": "c0619c3d68b1e20cad702afd872c528795ea0fdf",
-                    "commit": "2fde5cc2cf93899f1c9dfe93de1eca2d4df38200",
-                    "date": "2026-10-11T13:40:08Z",
-                    "sourceSha": "dc167af5",
                     "commits": 1
                 },
                 {
@@ -5204,9 +5199,9 @@
                     "commits": 1
                 }
             ],
-            "observations": 6,
-            "unstable": false,
-            "flapCount": 1
+            "observations": 7,
+            "unstable": true,
+            "flapCount": 2
         },
         "previews/ee.schimke.ha.previews.DashboardPreviewsKt.DashboardSecurityTablet_dashboard security — tablet": {
             "path": "renders/previews/DashboardSecurityTablet_dashboard_security_tablet-d081c9e6.png",
