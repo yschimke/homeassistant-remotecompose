@@ -25,9 +25,12 @@ class LiveBindingsMultiplatformTest {
         ("media_player.tv" to "paused") to false,
         ("light.kitchen" to "on") to true,
         ("switch.fan" to "off") to false,
-        // No active concept: falls back to the literal "on".
+        ("cover.garage" to "opening") to true,
+        // No modelled active concept: falls back to the literal "on" or "open".
         ("sensor.temp" to "21.5") to false,
         ("scene.night" to "on") to true,
+        ("valve.garden" to "open") to true,
+        ("valve.garden" to "closed") to false,
       )
     cases.forEach { (entity, expected) ->
       val (id, state) = entity
