@@ -6,6 +6,7 @@ import ee.schimke.ha.model.HaLiveBindings
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.CardSnapshotBindings
 import ee.schimke.ha.rc.formatState
+import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.contentOrNull
@@ -29,13 +30,49 @@ object CardDesignSlots {
 
   fun domainOf(entityId: String): String = entityId.substringBefore('.', missingDelimiterValue = "")
 
-  /** Real entity ids a single-entity card binds, in slot order (its `entity:`), or null. */
-  fun slotEntities(card: CardConfig): List<String>? =
-    card.raw["entity"]?.jsonPrimitive?.contentOrNull?.let { listOf(it) }
+  /** One bound entity of a card: its real id and the card's own name for it, if any. */
+  data class SlotEntry(val entityId: String, val name: String?)
 
-  /** Map real entity id → slot entity id for [card]. */
-  fun slotMap(card: CardConfig): Map<String, String> =
-    slotEntities(card).orEmpty().mapIndexed { i, id -> id to slotId(domainOf(id), i) }.toMap()
+  /**
+   * The entities [card] binds, in slot order: its `entity:` (named by the card's `name:`), or else
+   * each `entities:` row — a bare entity id or `{ entity, name? }`. Null when it binds none.
+   */
+  fun slotEntries(card: CardConfig): List<SlotEntry>? {
+    card.raw["entity"]?.jsonPrimitive?.contentOrNull?.let { id ->
+      return listOf(SlotEntry(id, card.raw["name"]?.jsonPrimitive?.contentOrNull))
+    }
+    val rows = card.raw["entities"] as? JsonArray ?: return null
+    return rows.mapNotNull { row ->
+      when (row) {
+        is JsonPrimitive -> row.contentOrNull?.let { SlotEntry(it, null) }
+        is JsonObject ->
+          row["entity"]?.jsonPrimitive?.contentOrNull?.let {
+            SlotEntry(it, row["name"]?.jsonPrimitive?.contentOrNull)
+          }
+        else -> null
+      }
+    }
+  }
+
+  /** Real entity ids [card] binds, in slot order, or null. */
+  fun slotEntities(card: CardConfig): List<String>? = slotEntries(card)?.map { it.entityId }
+
+  /**
+   * Map real entity id → slot entity id for [card]. A list that repeats an entity keeps its first
+   * slot; [slotBindings] still fills every slot.
+   */
+  fun slotMap(card: CardConfig): Map<String, String> {
+    val map = LinkedHashMap<String, String>()
+    slotEntries(card).orEmpty().forEachIndexed { i, e ->
+      map.getOrPut(e.entityId) { slotId(domainOf(e.entityId), i) }
+    }
+    return map
+  }
+
+  /** The card-level title a template binds as `card.title`: `heading:` or `title:`. */
+  fun cardTitle(card: CardConfig): String? =
+    card.raw["heading"]?.jsonPrimitive?.contentOrNull
+      ?: card.raw["title"]?.jsonPrimitive?.contentOrNull
 
   /**
    * A placeholder entity for template capture: the given [attributes] (generation properties a
@@ -70,10 +107,13 @@ object CardDesignSlots {
     val booleans = LinkedHashMap<String, Boolean>()
     val ints = LinkedHashMap<String, Int>()
     val floats = LinkedHashMap<String, Float>()
-    for ((entityId, slot) in slotMap(card)) {
+    cardTitle(card)?.let { strings[CARD_TITLE] = it }
+    slotEntries(card).orEmpty().forEachIndexed { i, entry ->
+      val entityId = entry.entityId
+      val slot = slotId(domainOf(entityId), i)
       val state = snapshot.states[entityId]
       val name =
-        card.raw["name"]?.jsonPrimitive?.contentOrNull
+        entry.name
           ?: state?.attributes?.get("friendly_name")?.jsonPrimitive?.contentOrNull
           ?: entityId
       strings["$slot.state"] = formatState(state)
@@ -100,6 +140,9 @@ object CardDesignSlots {
   const val STATUS_UNAVAILABLE: Int = 1
   const val STATUS_UNKNOWN: Int = 2
   const val STATUS_MISSING: Int = 3
+
+  /** Card-level title binding; matches `CARD_TITLE_BINDING` in rc-components. */
+  const val CARD_TITLE: String = "card.title"
 
   /** Placeholder name baked into a template; the `<slot>.name` binding replaces it. */
   const val NAME_PLACEHOLDER: String = "Name"

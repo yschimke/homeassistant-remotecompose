@@ -30,8 +30,11 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.add
+import kotlinx.serialization.json.addJsonObject
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
+import kotlinx.serialization.json.putJsonArray
 import org.junit.Rule
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -67,8 +70,57 @@ class CardDesignParityTest {
   private fun entity(id: String, state: String, vararg attrs: Pair<String, String>) =
     EntityState(id, state, JsonObject(attrs.associate { (k, v) -> k to JsonPrimitive(v) }))
 
-  private fun assertParity(name: String, card: CardConfig, state: EntityState, dark: Boolean) {
-    val snapshot = HaSnapshot(states = mapOf(state.entityId to state))
+  private fun card(type: String, block: kotlinx.serialization.json.JsonObjectBuilder.() -> Unit) =
+    CardConfig(
+      type = type,
+      raw =
+        buildJsonObject {
+          put("type", type)
+          block()
+        },
+    )
+
+  private val listStates =
+    listOf(
+      entity("light.kitchen", "on", "friendly_name" to "Kitchen"),
+      entity(
+        "sensor.temp",
+        "21.5",
+        "friendly_name" to "Living room",
+        "device_class" to "temperature",
+        "unit_of_measurement" to "°C",
+      ),
+      entity("binary_sensor.front_door", "off", "device_class" to "door"),
+      entity("switch.fan", "on", "friendly_name" to "Fan"),
+    )
+
+  private fun listCard(type: String, title: String?) =
+    card(type) {
+      title?.let { put("title", it) }
+      putJsonArray("entities") {
+        add("light.kitchen")
+        addJsonObject {
+          put("entity", "sensor.temp")
+          put("name", "Temperature")
+        }
+        addJsonObject {
+          put("entity", "binary_sensor.front_door")
+          put("name", "Front door")
+        }
+        add("switch.fan")
+      }
+    }
+
+  private fun assertParity(name: String, card: CardConfig, state: EntityState, dark: Boolean) =
+    assertParity(name, card, listOf(state), dark)
+
+  private fun assertParity(
+    name: String,
+    card: CardConfig,
+    states: List<EntityState>,
+    dark: Boolean,
+  ) {
+    val snapshot = HaSnapshot(states = states.associateBy { it.entityId })
     val context = org.robolectric.RuntimeEnvironment.getApplication()
     val key = assertNotNull(CardDesignTemplates.keyFor(card, snapshot, style, dark, registry))
     val playback =
@@ -183,6 +235,86 @@ class CardDesignParityTest {
         "friendly_name" to "Front door",
         "device_class" to "door",
       ),
+      dark = false,
+    )
+
+  @Test
+  fun entityRowLight() =
+    assertParity(
+      "entity-light",
+      card("entity") { put("entity", "light.kitchen") },
+      entity("light.kitchen", "on", "friendly_name" to "Kitchen"),
+      dark = false,
+    )
+
+  @Test
+  fun entityRowSensorDark() =
+    assertParity(
+      "entity-sensor-dark",
+      card("entity") {
+        put("entity", "sensor.temp")
+        put("name", "Outside")
+      },
+      listStates[1],
+      dark = true,
+    )
+
+  @Test
+  fun buttonToggle() =
+    assertParity(
+      "button-switch",
+      card("button") { put("entity", "switch.fan") },
+      entity("switch.fan", "on", "friendly_name" to "Fan"),
+      dark = false,
+    )
+
+  @Test
+  fun buttonIconNoName() =
+    assertParity(
+      "button-icon-no-name",
+      card("button") {
+        put("entity", "light.kitchen")
+        put("icon", "mdi:lamp")
+        put("show_name", false)
+      },
+      entity("light.kitchen", "off", "friendly_name" to "Kitchen"),
+      dark = false,
+    )
+
+  @Test
+  fun headingTitle() =
+    assertParity(
+      "heading-title",
+      card("heading") { put("heading", "Living room") },
+      emptyList(),
+      dark = false,
+    )
+
+  @Test
+  fun headingSubtitleDark() =
+    assertParity(
+      "heading-subtitle-dark",
+      card("heading") {
+        put("heading", "Lights and switches")
+        put("heading_style", "subtitle")
+      },
+      emptyList(),
+      dark = true,
+    )
+
+  @Test
+  fun glance() = assertParity("glance", listCard("glance", "At a glance"), listStates, dark = false)
+
+  @Test
+  fun glanceNoTitleDark() =
+    assertParity("glance-no-title-dark", listCard("glance", null), listStates, dark = true)
+
+  @Test
+  fun entities() =
+    assertParity(
+      "entities",
+      listCard("entities", "Downstairs, around the living room"),
+      listStates,
       dark = false,
     )
 }

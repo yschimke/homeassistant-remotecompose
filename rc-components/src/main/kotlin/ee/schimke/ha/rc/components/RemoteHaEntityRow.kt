@@ -26,7 +26,6 @@ import androidx.compose.remote.creation.compose.state.asRemoteDp
 import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rf
-import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.remote.creation.compose.state.rsp
 import androidx.compose.remote.creation.compose.state.tween
 import androidx.compose.remote.creation.compose.text.RemoteTextStyle
@@ -64,13 +63,13 @@ fun RemoteHaEntityRow(data: HaEntityRowData, modifier: RemoteModifier = RemoteMo
     RemoteRow(verticalAlignment = RemoteAlignment.CenterVertically) {
       RemoteIcon(
         imageVector = data.icon.toRemoteImageVector(),
-        contentDescription = data.name.rs,
+        contentDescription = entityName(data.entityId, data.name),
         modifier = RemoteModifier.size(20.rdp),
         tint = accent,
       )
       RemoteBox(modifier = RemoteModifier.padding(start = 12.rdp)) {
         RemoteText(
-          text = data.name.rs,
+          text = entityName(data.entityId, data.name),
           color = theme.primaryText,
           fontSize = 13.rsp,
           style = RemoteTextStyle.Default,

@@ -71,10 +71,22 @@ class TileDesignPropertiesTest {
   @Test
   fun unmodelledTilesHaveNoProperties() {
     val snapshot = snapshotOf(state("light.kitchen"), state("climate.living", "heat"))
-    assertNull(tile.designProperties(card("light.kitchen", "icon" to "mdi:lamp"), snapshot))
+    assertNull(tile.designProperties(card("light.kitchen", "color" to "red"), snapshot))
     assertNull(tile.designProperties(card("climate.living"), snapshot))
     // Not loaded yet: the converter renders the missing entity.
     assertNull(tile.designProperties(card("light.unknown"), snapshot))
+  }
+
+  @Test
+  fun configIconIsAProperty() {
+    val snapshot = snapshotOf(state("light.kitchen"))
+    assertEquals(
+      "card_icon=mdi:lamp;domain=light",
+      tile.designProperties(card("light.kitchen", "icon" to "mdi:lamp"), snapshot)?.shape,
+    )
+    val input =
+      assertNotNull(tile.designTemplate(DesignProperties.parse("card_icon=mdi:lamp;domain=light")))
+    assertEquals("mdi:lamp", input.card.raw["icon"]?.jsonPrimitive?.content)
   }
 
   @Test

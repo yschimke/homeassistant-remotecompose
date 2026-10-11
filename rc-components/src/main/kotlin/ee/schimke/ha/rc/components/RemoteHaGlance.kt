@@ -20,7 +20,6 @@ import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.modifier.size
 import androidx.compose.remote.creation.compose.state.RemoteColor
 import androidx.compose.remote.creation.compose.state.rdp
-import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.remote.creation.compose.state.rsp
 import androidx.compose.remote.creation.compose.text.RemoteTextStyle
 import androidx.compose.runtime.Composable
@@ -68,7 +67,7 @@ fun RemoteHaGlance(
     RemoteColumn(modifier = if (fillHeight) RemoteModifier.fillMaxSize() else RemoteModifier) {
       if (data.title != null) {
         RemoteText(
-          text = data.title.rs,
+          text = cardTitle(data.title),
           color = theme.primaryText,
           fontSize = adaptiveTitleSizeSp(data.title).rsp,
           fontWeight = FontWeight.Medium,
@@ -151,7 +150,7 @@ fun RemoteHaGlanceCell(data: HaGlanceCellData, modifier: RemoteModifier = Remote
     horizontalAlignment = RemoteAlignment.CenterHorizontally,
   ) {
     RemoteText(
-      text = data.name.rs,
+      text = entityName(data.entityId, data.name),
       color = theme.primaryText,
       fontSize = 12.rsp,
       style = RemoteTextStyle.Default,
@@ -159,7 +158,7 @@ fun RemoteHaGlanceCell(data: HaGlanceCellData, modifier: RemoteModifier = Remote
     RemoteBox(modifier = RemoteModifier.padding(vertical = 4.rdp)) {
       RemoteIcon(
         imageVector = data.icon.toRemoteImageVector(),
-        contentDescription = data.name.rs,
+        contentDescription = entityName(data.entityId, data.name),
         modifier = RemoteModifier.size(28.rdp),
         tint = accent,
       )

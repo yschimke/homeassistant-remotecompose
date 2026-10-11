@@ -22,7 +22,6 @@ import androidx.compose.remote.creation.compose.shapes.RemoteCircleShape
 import androidx.compose.remote.creation.compose.state.RemoteColor
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rf
-import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.remote.creation.compose.state.rsp
 import androidx.compose.remote.creation.compose.text.RemoteTextStyle
 import androidx.compose.runtime.Composable
@@ -74,7 +73,7 @@ fun RemoteHaTile(data: HaTileData, modifier: RemoteModifier = RemoteModifier) {
         ) {
           RemoteIcon(
             imageVector = data.icon.toRemoteImageVector(),
-            contentDescription = data.nameBinding ?: data.name.rs,
+            contentDescription = entityName(data.entityId, data.name),
             modifier = RemoteModifier.size(20.rdp),
             tint = accent,
           )
@@ -82,14 +81,14 @@ fun RemoteHaTile(data: HaTileData, modifier: RemoteModifier = RemoteModifier) {
       } else {
         RemoteIcon(
           imageVector = data.icon.toRemoteImageVector(),
-          contentDescription = data.nameBinding ?: data.name.rs,
+          contentDescription = entityName(data.entityId, data.name),
           modifier = RemoteModifier.size(24.rdp),
           tint = accent,
         )
       }
       RemoteColumn(modifier = RemoteModifier.padding(start = 10.rdp)) {
         RemoteText(
-          text = data.nameBinding ?: data.name.rs,
+          text = entityName(data.entityId, data.name),
           color = theme.primaryText,
           fontSize = 13.rsp,
           fontWeight = FontWeight.Medium,
@@ -159,7 +158,7 @@ fun RemoteHaIconChip(data: HaTileData, modifier: RemoteModifier = RemoteModifier
   ) {
     RemoteIcon(
       imageVector = data.icon.toRemoteImageVector(),
-      contentDescription = data.nameBinding ?: data.name.rs,
+      contentDescription = entityName(data.entityId, data.name),
       modifier = RemoteModifier.size(32.rdp),
       tint = accent,
     )

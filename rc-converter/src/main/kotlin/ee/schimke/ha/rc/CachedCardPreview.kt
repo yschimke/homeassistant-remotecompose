@@ -207,9 +207,9 @@ fun CachedCardPreview(
   val onNamedAction: (String, Any?) -> Unit = { name, value ->
     if (name == HA_ACTION_NAME) {
       if (template != null) {
-        // A template is remote content: never dispatch an action it encodes. Any tap in it runs
-        // the action this card's own config resolves to locally.
-        dispatcher.dispatch(template.tapAction)
+        // A template is remote content: never dispatch an action it encodes. It only picks which
+        // of this card's own, locally resolved actions runs.
+        dispatcher.dispatch(template.resolveTap(decodeHaAction(value)))
       } else {
         decodeHaAction(value)?.let(dispatcher::dispatch)
       }
@@ -363,11 +363,36 @@ private fun entityIds(card: CardConfig?): Set<String> = card?.let { cardEntityId
  * Plays a card design template in place of a local capture. [bytes] is a values-free document from
  * the design server (or cache), and [bindings] derives every slot binding from a snapshot.
  *
- * [tapAction] is resolved from the card's **local** config, never from the template: the bytes are
- * remote, so the action a template encodes is ignored and any tap in it dispatches [tapAction].
+ * Taps are resolved from the card's **local** config, never from the template: the bytes are
+ * remote, so the action a template encodes only picks *which* of the card's own actions runs. A tap
+ * on a slot's entity (`<domain>.s<N>`) runs [slotTapActions]`[N]` — one per row of a list card —
+ * and any other tap runs the card's [tapAction].
  */
 class CardTemplatePlayback(
   val bytes: ByteArray,
   val bindings: (HaSnapshot) -> CardSnapshotBindings,
   val tapAction: HaAction,
-)
+  val slotTapActions: List<HaAction> = emptyList(),
+) {
+  /** The card-local action for a tap whose template-encoded action is [templateAction]. */
+  fun resolveTap(templateAction: HaAction?): HaAction {
+    val slot = templateAction?.let(::actionEntityId)?.let(::slotIndexOf) ?: return tapAction
+    return slotTapActions.getOrNull(slot) ?: tapAction
+  }
+
+  private fun slotIndexOf(entityId: String): Int? =
+    entityId.substringAfter('.', "").takeIf { it.startsWith("s") }?.drop(1)?.toIntOrNull()
+
+  private fun actionEntityId(action: HaAction): String? =
+    when (action) {
+      is HaAction.CallService -> action.entityId
+      is HaAction.Toggle -> action.entityId
+      is HaAction.MoreInfo -> action.entityId
+      is HaAction.AlarmKey -> action.entityId
+      is HaAction.AlarmPin -> action.entityId
+      is HaAction.AlarmIntent -> action.entityId
+      is HaAction.Navigate,
+      is HaAction.Url,
+      HaAction.None -> null
+    }
+}
