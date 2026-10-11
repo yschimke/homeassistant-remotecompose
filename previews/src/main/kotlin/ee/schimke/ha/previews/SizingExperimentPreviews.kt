@@ -182,11 +182,10 @@ fun Sizing_TightSlot_Wrap() {
 // width and Compose reports the resulting bitmap accordingly.
 // Height is pinned in the matrix below for two reasons:
 //   1. EXACTLY constraints from a pinned slot are a useful baseline.
-//   2. The wrap-h-with-paint-context warmup happens inside
-//      `WrapAdaptiveRemoteDocumentPlayer` (used by
-//      `CachedCardPreview`), which is what unblocked end-to-end
-//      adaptive sizing in the dashboard. See
-//      `Sizing_WidthPinnedHeightAdaptive` for the wrap-h demo.
+//   2. Adaptive (wrap) height is the CMP player's job: `CachedCardPreview`
+//      lays the document out as Compose nodes and measures it with an
+//      unbounded height. See `Sizing_WidthPinnedHeightAdaptive` for the
+//      wrap-h demo.
 
 @Preview(
   name = "sizing — width × height matrix · wrap profile",
@@ -375,7 +374,7 @@ private fun WidthOnlyDemo() {
           verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
           Text(
-            text = "width=180dp · height=wrap (now adapts via WrapAdaptive player)",
+            text = "width=180dp · height=wrap (adapts via the CMP player)",
             style = MaterialTheme.typography.titleSmall,
             fontWeight = FontWeight.Bold,
           )

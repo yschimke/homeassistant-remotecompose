@@ -38,6 +38,7 @@ import coil3.SingletonImageLoader
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.CachedCardPreview
+import ee.schimke.ha.rc.CardPlayback
 import ee.schimke.ha.rc.ProvideCardRegistry
 import ee.schimke.ha.rc.RenderChild
 import ee.schimke.ha.rc.cardDataSignature
@@ -144,6 +145,9 @@ fun WidgetInstallSheet(
           liveBindings = registry.cardDataSignature(card, snapshot) == null,
           bitmapLoader = bitmapLoader,
           modifier = Modifier.width(previewSize.widthDp.dp).height(previewSize.heightDp.dp),
+          // This previews the launcher widget, which the platform draws with the AndroidX
+          // `RemoteComposePlayer` — so the preview uses that player too, not the CMP one.
+          playback = CardPlayback.LauncherWidget,
         ) {
           ProvideCardRegistry(registry) {
             ProvideHaTheme(HaTheme.Light) {

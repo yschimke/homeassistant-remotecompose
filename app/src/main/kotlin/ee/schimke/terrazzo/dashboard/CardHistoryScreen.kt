@@ -72,6 +72,7 @@ import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.model.HistoryPoint
 import ee.schimke.ha.rc.CachedCardPreview
+import ee.schimke.ha.rc.CardPlayback
 import ee.schimke.ha.rc.CardSizeMode
 import ee.schimke.ha.rc.ProvideCardRegistry
 import ee.schimke.ha.rc.ProvideCardSizeMode
@@ -278,6 +279,9 @@ private fun ResizableLauncherPreview(session: HaSession, card: CardConfig, snaps
         liveBindings = registry.cardDataSignature(card, snapshot) == null,
         bitmapLoader = bitmapLoader,
         modifier = Modifier.fillMaxSize(),
+        // A launcher-widget preview: play it with the AndroidX `RemoteComposePlayer` the home
+        // screen widget itself uses, not the CMP player the rest of the app uses.
+        playback = CardPlayback.LauncherWidget,
       ) {
         ProvideCardRegistry(registry) {
           ProvideHaTheme(haTheme) {

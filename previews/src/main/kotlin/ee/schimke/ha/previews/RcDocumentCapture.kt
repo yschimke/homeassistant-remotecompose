@@ -2,17 +2,13 @@
 
 package ee.schimke.ha.previews
 
-import androidx.compose.remote.creation.compose.capture.captureSingleRemoteDocument
 import androidx.compose.remote.creation.compose.layout.RemoteComposable
 import androidx.compose.remote.creation.profile.Profile
-import androidx.compose.remote.tooling.preview.RemoteContentPreview
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import ee.schimke.composeai.data.render.IrSidecarChannel
-import kotlinx.coroutines.runBlocking
 
 /**
  * Capturing the encoded RemoteCompose document for a preview, so the published catalog carries the
@@ -28,10 +24,9 @@ import kotlinx.coroutines.runBlocking
  * Nothing offers into that channel by default. Upstream's in-body `RemoteContentPreview` captures a
  * document internally but never hands the bytes out — only the annotation-driven
  * `@PreviewWrapper(RemotePreviewWrapper::class)` path (which the compose-ai-tools Remote Compose
- * connector substitutes) produces a sidecar, and our previews don't use it: they need
- * `RemoteContentPreview`'s content-sized measure path, where the player's size flows from the
- * surrounding Compose constraints. So the capture is done here instead, alongside the unchanged
- * draw.
+ * connector substitutes) produces a sidecar, and our previews don't use it: they play through their
+ * own host, [RcContentPreview] (the Compose Multiplatform player, sized by the surrounding Compose
+ * constraints). So the capture is done here instead, from the same bytes that are drawn.
  *
  * **What counts as an "appropriate" preview.** Exactly one document per preview. The channel keeps
  * only the last offer for a preview id, so a preview that hosts several documents (the dashboard
@@ -45,56 +40,17 @@ internal fun CapturingRemoteContentPreview(
   modifier: Modifier = Modifier,
   content: @Composable @RemoteComposable () -> Unit,
 ) {
-  CaptureRemoteDocument(profile, content)
-  RemoteContentPreview(modifier = modifier, profile = profile, content = content)
-}
-
-/**
- * Encode [content] under [profile] once and offer the bytes as this preview's `.rc` sidecar.
- *
- * Draws nothing — [CapturingRemoteContentPreview] pairs it with the real [RemoteContentPreview]
- * draw, so the rendered pixels are byte-for-byte what they were before the capture existed. The
- * cost is a second encode of the same content, which is why it is skipped outside a harness render
- * (the IDE preview pane, a unit test, the app itself): with no current preview id there is nowhere
- * to offer the bytes, and [IrSidecarChannel.offer] would drop them.
- *
- * Best-effort by design — a capture failure must leave the preview rendering. A card whose ops the
- * capture profile rejects loses its `.rc` sidecar and keeps its baked PNG, which is the same
- * degradation the catalog had before.
- */
-@Composable
-private fun CaptureRemoteDocument(
-  profile: Profile,
-  content: @Composable @RemoteComposable () -> Unit,
-) {
-  val context = LocalContext.current
-  val previewId = IrSidecarChannel.currentPreviewId()
-  val density = context.resources.displayMetrics.density
-  // `remember` keyed on the content so the encode happens once per preview composition rather than
-  // on every recomposition — the same memoisation upstream's own capture path uses. It *computes*
-  // the bytes and nothing more; the offer is a side effect, so it belongs in `SideEffect` (a
-  // `remember` block that only mutates state outside the composition is the `RememberReturnType`
-  // lint error, and rightly so — a composition that is abandoned or retried would otherwise still
-  // have published).
-  val captured: ByteArray? =
-    remember(previewId, profile, content) {
-      if (previewId == null) null
-      else
-        runCatching {
-          runBlocking {
-            val bytes =
-              captureSingleRemoteDocument(context = context, profile = profile, content = content)
-                .bytes
-            // Idempotent, never-throws; leaves the bytes alone if it can't stamp.
-            stampGenerationDensity(bytes, density)
-          }
-        }
-          .getOrNull()
-    }
-  // Publishes once the composition succeeds, still inside the render's preview-id window (the
-  // harness drains the channel only after the render completes). Re-offering on a recomposition is
-  // harmless: the channel keys by preview id, so it replaces an identical entry.
-  SideEffect { captured?.let(::offerRemoteDocument) }
+  // One encode serves both: [RcContentPreview] plays the bytes with the CMP player and hands them
+  // to
+  // the sidecar sink, which stamps the generation density and offers them (a no-op outside a
+  // harness render). Best-effort by design — a capture the profile rejects loses its `.rc` sidecar
+  // and draws an empty box rather than failing the render.
+  RcContentPreview(
+    profile = profile,
+    modifier = modifier,
+    onDocument = rememberRemoteDocumentSink(),
+    content = content,
+  )
 }
 
 // Remote Compose modern-header wire constants (big-endian). The header op is:

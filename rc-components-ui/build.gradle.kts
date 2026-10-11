@@ -25,6 +25,8 @@ android {
 
 dependencies {
   api(project(":rc-components"))
+  // Card playback host (`HaRcComposePlayer`, the CMP player with its AndroidX fallback).
+  implementation(project(":rc-converter"))
 
   implementation(platform(libs.compose.bom))
   implementation(libs.compose.ui)

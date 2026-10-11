@@ -44,6 +44,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import ee.schimke.ha.rc.HaRcComposePlayer
 import ee.schimke.ha.rc.WrapAdaptiveRemoteDocumentPlayer
 import kotlinx.coroutines.runBlocking
 
@@ -253,4 +254,74 @@ private fun ReproPlayer(modifier: Modifier) {
       modifier = Modifier.fillMaxSize(),
     )
   }
+}
+
+/**
+ * The same document and host slots as [WrapContentHeightFixAlpha010], played with the Compose
+ * Multiplatform player ([HaRcComposePlayer]) that every card host now uses. The document is laid
+ * out as Compose nodes, so the slot tracks its content height without any View paint-context
+ * priming. Red and blue should coincide.
+ */
+@Preview(
+  name = "wrap-content height · CMP player",
+  widthDp = 411,
+  heightDp = 300,
+  showBackground = true,
+  backgroundColor = 0xFFFFFFFFL,
+)
+@Composable
+fun WrapContentHeightCmp() {
+  Column(modifier = Modifier.fillMaxWidth().padding(8.dp)) {
+    Text(
+      text = "CMP RcComposePlayer (HaRcComposePlayer)",
+      style = MaterialTheme.typography.titleSmall,
+      fontWeight = FontWeight.Bold,
+    )
+    Text(
+      text = "Red = host slot. Blue = document's intrinsic content height. Should coincide.",
+      style = MaterialTheme.typography.labelSmall,
+    )
+    Text(
+      text = "1) width=180, height=wrap → adaptive height",
+      style = MaterialTheme.typography.labelMedium,
+      fontWeight = FontWeight.Bold,
+    )
+    Row(modifier = Modifier.fillMaxWidth().border(1.dp, Color(0xFF2E7D32))) {
+      CmpPlayer(modifier = Modifier.width(180.dp).border(1.dp, Color(0xFFD32F2F)))
+    }
+    Text(
+      text = "2) width=fillMax, height=wrap → adaptive height",
+      style = MaterialTheme.typography.labelMedium,
+      fontWeight = FontWeight.Bold,
+    )
+    Row(modifier = Modifier.fillMaxWidth().border(1.dp, Color(0xFF2E7D32))) {
+      CmpPlayer(modifier = Modifier.fillMaxWidth().border(1.dp, Color(0xFFD32F2F)))
+    }
+  }
+}
+
+@Composable
+private fun CmpPlayer(modifier: Modifier) {
+  val context = LocalContext.current
+  val documentBytes = remember {
+    runBlocking {
+      captureSingleRemoteDocument(context = context, profile = wrapProfile) {
+          RemoteBox(
+            modifier =
+              RemoteModifier.rcFillMaxWidth()
+                .rcBorder(1.rdp, Color(0xFF1565C0).rc, RemoteRoundedCornerShape(0.rdp))
+          ) {
+            RemoteColumn(modifier = RemoteModifier.rcFillMaxWidth().rcPadding(4.rdp)) {
+              RemoteText(text = "Hello".rs, modifier = RemoteModifier.rcFillMaxWidth())
+            }
+          }
+        }
+        .bytes
+    }
+  }
+  HaRcComposePlayer(
+    documentBytes = documentBytes,
+    modifier = modifier,
+    fallback = { WrapAdaptiveRemoteDocumentPlayer(documentBytes, modifier = modifier) },
+  )
 }

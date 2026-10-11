@@ -33,10 +33,37 @@ desktop does not need CORS. Add-on document fetching is not enabled in these hos
 `RemoteComposeCard` uses rc-players CMP playback and its backend capability report.
 Embedded PNG/raw bitmaps render through that player. URL/file-backed images need the
 forthcoming host image-resolution API. Keep its integration here rather than adding
-an app-specific bitmap protocol. Android continues to use its existing AndroidX player for every cached card, preserving its
-wrap-height workaround, authenticated loader, live-binding setters and action/long-press behavior.
-The common player is available for future document sources; the initial desktop/browser hosts
-currently render native entity/heading/basic markdown cards rather than requesting add-on bytes.
+an app-specific bitmap protocol. The initial desktop/browser hosts currently render native
+entity/heading/basic markdown cards rather than requesting add-on bytes.
+
+### Android playback
+
+Android plays card documents with the same CMP player, `RcComposePlayer`, through
+`rc-converter`'s `HaRcComposePlayer` — the dashboard cards, `CachedCardPreview` in general, the
+`rc-components-ui` embedding hosts (`HaEmbeddedPlayer`, `HaUiHost`), every `:previews` host
+(`RcContentPreview`, `CapturingRemoteContentPreview`) and the Wear widget preview
+(`WearWidgetPreviewSnapshot`). It keeps the Android host contracts:
+
+| Contract | CMP mapping |
+| --- | --- |
+| Authenticated external images | `CoilBitmapLoader` implements `RcImageLoader` and awaits the Coil pipeline; other `BitmapLoader`s are adapted |
+| Live bindings (`<entity>.state`, …) | written into the player's `namedValues`, so the document is not re-created |
+| HA actions | `RcPlayerEvent.HostNamedAction("ha", json)` → `HaActionDispatcher` |
+| Long-press | unchanged: the slot's initial-pass gesture sits outside the player |
+| Frozen `LocalHaClock` (previews, tests) | provided to the player as `LocalRcTimeSource` |
+| Wrap-content height (#153) | free: the document is laid out as Compose nodes |
+
+**The exception: mobile launcher-widget previews** keep the AndroidX `RemoteComposePlayer`
+(`CardPlayback.LauncherWidget`), because the real launcher widget is
+`RemoteViews(DrawInstructions)` drawn by that platform player. That covers the widget install
+sheet, the card-history long-press resize preview, and the launcher cells of
+`CardPreviewMatrix`. `WrapAdaptiveRemoteDocumentPlayer` stays for that path and as the
+per-document fallback when rc-player-compose's capability report says it can't fully render a
+document (the reasons are logged).
+
+Why: the View player runs animations on its own clock, so a still captured from it is
+nondeterministic (`docs/bugs/rc-alpha18-player-divergence.md`); the CMP player animates on the
+composition's frame clock.
 
 Android preserves the converter live-update contract: named values for binding cards,
 document regeneration for cards with a data signature. Desktop/browser fetch a snapshot once per connection and apply `state_changed` deltas through
@@ -57,9 +84,9 @@ or compatible add-on documents. Android retains those existing integrations.
 Dependency modernization is part of this change. SDK 37.1 is required by the upgraded Android
 Compose artifacts; target SDK remains 37. Kotlin's Wasm Node/Yarn/Binaryen setup creates project
 repositories, so settings prefer the centrally declared, group-filtered toolchain repositories.
-The converter does not depend on `app-ui` or `rc-player-ui`; Wear, demo and preview hosts retain
-Android-only card playback. The Android phone consumes shared presentation and therefore resolves
-the CMP Android variants, which can raise Compose above its BOM minimum.
+The converter does not depend on `app-ui` or `rc-player-ui`, but it does depend on
+`rc-player-compose` directly for card playback, so the phone, Wear, demo and preview modules all
+resolve the CMP Android variants, which can raise Compose above its BOM minimum.
 
 `dependencyInsight` on `debugRuntimeClasspath` confirms Foundation's Android artifact resolves to
 `1.13.0-alpha03` in both phone and Wear. Remote Compose alpha21 already requests that artifact
