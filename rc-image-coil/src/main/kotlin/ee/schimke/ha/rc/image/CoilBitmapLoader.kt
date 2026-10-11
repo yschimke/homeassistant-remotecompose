@@ -6,6 +6,8 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.util.Log
 import androidx.compose.remote.player.core.platform.BitmapLoader
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
 import coil3.BitmapImage
 import coil3.Image
 import coil3.ImageLoader
@@ -15,14 +17,17 @@ import coil3.request.ErrorResult
 import coil3.request.ImageRequest
 import coil3.request.SuccessResult
 import coil3.request.allowHardware
+import ee.schimke.composeai.rcplayer.compose.RcImageLoader
+import ee.schimke.composeai.rcplayer.protocol.RcBitmapData
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
 import java.util.concurrent.ConcurrentHashMap
 
 /**
- * Non-blocking [BitmapLoader] backed by Coil. Used by the RemoteCompose player to resolve
- * named-bitmap references (`RemoteHaImageNamed` / `rememberNamedRemoteBitmap(...)`).
+ * Non-blocking [BitmapLoader] backed by Coil — and, via [load], the suspending [RcImageLoader] the
+ * Compose Multiplatform player uses. Used by the RemoteCompose players to resolve named-bitmap
+ * references (`RemoteHaImageNamed` / `rememberNamedRemoteBitmap(...)`).
  *
  * **Never blocks.** [loadBitmap] runs on the player's decode thread, so the implementation must be
  * a hash-map lookup, not a coroutine dispatch. We bypass [ImageLoader.execute] entirely (it spins
@@ -92,7 +97,7 @@ open class CoilBitmapLoader(
   private val compressQuality: Int = 100,
   private val maxImageDimensionPx: Int = DEFAULT_MAX_IMAGE_DIMENSION_PX,
   private val configure: ImageRequest.Builder.() -> Unit = {},
-) : BitmapLoader {
+) : BitmapLoader, RcImageLoader {
 
   private val baseUrlPrefix: String? = baseUrl?.trimEnd('/')
 
@@ -210,33 +215,63 @@ open class CoilBitmapLoader(
    * [encodeImage]).
    */
   protected open fun warmUpAsync(name: String, key: MemoryCache.Key) {
-    val request =
-      ImageRequest.Builder(context)
-        .data(name)
-        .memoryCacheKey(key)
-        .allowHardware(false)
-        .listener(
-          onSuccess = { _, result: SuccessResult ->
-            val img = result.image
-            val dims =
-              if (img is BitmapImage) "${img.bitmap.width}x${img.bitmap.height}"
-              else img::class.java.simpleName
-            Log.d(TAG, "warmUp SUCCESS url=$name dataSource=${result.dataSource} image=$dims")
-          },
-          onError = { _, result: ErrorResult ->
-            Log.w(
-              TAG,
-              "warmUp ERROR url=$name " +
-                "throwable=${result.throwable::class.java.simpleName}: " +
-                "${result.throwable.message}",
-            )
-          },
-        )
-        .apply(configure)
-        .build()
     Log.d(TAG, "warmUp enqueue url=$name")
-    imageLoader.enqueue(request)
+    imageLoader.enqueue(warmUpRequest(name, key))
   }
+
+  /**
+   * [RcImageLoader] entry point for the Compose Multiplatform player (`RcComposePlayer`), which —
+   * unlike the AndroidX player's [loadBitmap] — asks once per image and can suspend. So instead of
+   * returning a miss and relying on the next redecode, this awaits the full Coil pipeline (memory →
+   * disk → authenticated network) for URL / file images. It applies the same [baseUrl] resolution,
+   * explicit memory-cache key and [maxImageDimensionPx] clamp as [loadBitmap], so both players draw
+   * the same pixels. Inline images never reach the loader; anything else returns null, which keeps
+   * the player's placeholder.
+   */
+  final override suspend fun load(data: RcBitmapData): ImageBitmap? {
+    if (data.encoding != RcBitmapData.ENCODING_URL && data.encoding != RcBitmapData.ENCODING_FILE) {
+      return null
+    }
+    val resolved = resolveName(data.data.decodeToString())
+    val key = memoryCacheKeyFor(resolved)
+    val image =
+      imageLoader.memoryCache?.get(key)?.image
+        ?: (imageLoader.execute(warmUpRequest(resolved, key)) as? SuccessResult)?.image
+        ?: return null
+    val source = (image as? BitmapImage)?.bitmap ?: return null
+    val software =
+      if (source.config == Bitmap.Config.HARDWARE) {
+        source.copy(Bitmap.Config.ARGB_8888, /* isMutable= */ false) ?: return null
+      } else {
+        source
+      }
+    return downscaleToFit(software).asImageBitmap()
+  }
+
+  private fun warmUpRequest(name: String, key: MemoryCache.Key): ImageRequest =
+    ImageRequest.Builder(context)
+      .data(name)
+      .memoryCacheKey(key)
+      .allowHardware(false)
+      .listener(
+        onSuccess = { _, result: SuccessResult ->
+          val img = result.image
+          val dims =
+            if (img is BitmapImage) "${img.bitmap.width}x${img.bitmap.height}"
+            else img::class.java.simpleName
+          Log.d(TAG, "warmUp SUCCESS url=$name dataSource=${result.dataSource} image=$dims")
+        },
+        onError = { _, result: ErrorResult ->
+          Log.w(
+            TAG,
+            "warmUp ERROR url=$name " +
+              "throwable=${result.throwable::class.java.simpleName}: " +
+              "${result.throwable.message}",
+          )
+        },
+      )
+      .apply(configure)
+      .build()
 
   private enum class LogState {
     Hit,

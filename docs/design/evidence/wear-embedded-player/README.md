@@ -34,3 +34,14 @@ All movement is confined to the bbox `(179,207)-(275,303)` — the 96×96 icon c
 
 Root cause and the two upstream defects:
 [`docs/bugs/rc-alpha18-player-divergence.md`](../../../bugs/rc-alpha18-player-divergence.md).
+
+## Update: Wear moved to the CMP player
+
+`WearWidgetPreviewSnapshot` no longer uses `ExperimentalRemoteDocumentPlayer`. It plays
+through the Compose Multiplatform `RcComposePlayer` (`rc-player-compose`, via
+`rc-converter`'s `HaRcComposePlayer`), the same player every phone card host and
+`:previews` host now uses (only mobile launcher-widget previews stay on the AndroidX View
+player). `RemoteComposePlayerFlags.isEmbeddedPlayerEnabled` is no longer set.
+`WearEntitiesLarge` is byte-identical under both Compose-based players, including the
+missing third "On" label recorded in the bug doc. The images above are kept as the
+record of the View-vs-embedded comparison.

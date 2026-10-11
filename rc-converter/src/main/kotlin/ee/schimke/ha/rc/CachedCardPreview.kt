@@ -21,10 +21,12 @@ import androidx.compose.remote.player.view.platform.RemoteComposeView
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import ee.schimke.composeai.rcplayer.runtime.RcNamedValue
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.components.HA_ACTION_NAME
@@ -50,9 +52,10 @@ import kotlinx.coroutines.runBlocking
  * per `(card, theme)` and no value updates ever reach the player. The push:
  * 1. Walks `card.raw` once with [cardEntityIds] to enumerate the entities the card consumes
  *    (`entity:` / `entities:`, including nested cards in stack / conditional / picture-elements).
- * 2. Captures the [RemoteComposePlayer] via `WrapAdaptiveRemoteDocumentPlayer(init = ...)`.
- * 3. On every [snapshot] change, computes the bindings via [cardSnapshotBindings] and writes only
- *    those that actually changed since the last push (`<id>.state`, `<id>.is_on`).
+ * 2. On every [snapshot] change, computes the bindings via [cardSnapshotBindings] and writes only
+ *    those that actually changed since the last push (`<id>.state`, `<id>.is_on`) — into the
+ *    Compose player's named values, or through the AndroidX `RemoteComposePlayer`'s `setUserLocal*`
+ *    setters when that player is drawing.
  *
  * [onDocument] observes the encoded bytes once per document (on a cache hit too, since the caller
  * cares about the document, not about who encoded it). It exists for the preview module, which
@@ -60,15 +63,20 @@ import kotlinx.coroutines.runBlocking
  * Compose data tier next to the baked PNG — see `:previews`' `RcDocumentCapture.kt`. Null (the
  * default) for every in-app caller: no observer, no behaviour change.
  *
- * Sizing model: the captured document is authored with the wrap-friendly measure path
- * (FEATURE_PAINT_MEASURE = 0, baked by `androidXExperimentalWrap`). Playback goes through
- * [WrapAdaptiveRemoteDocumentPlayer], which warms up the `RemoteComposePlayer`'s paint context with
- * one off-screen draw at the parent's max constraints, then re-measures. This unblocks the alpha010
- * wrap-h bug (the `RemoteComposeView` skips the document's measure pass until paint context is set,
- * causing a `Modifier.fillMaxWidth()`-only host to balloon to the authored canvas height) — see
- * https://github.com/yschimke/homeassistant-remotecompose/issues/153. Callers can therefore size
- * the slot via [modifier] alone: `fillMaxWidth()` for adaptive height, or `Modifier.height(...) /
- * .size(...)` for an EXACTLY constraint that pins the slot.
+ * **Player.** [playback] picks who draws the bytes — see [CardPlayback]. The default,
+ * [CardPlayback.Compose], is the Compose Multiplatform `RcComposePlayer` (via [HaRcComposePlayer]):
+ * the document becomes real Compose layout nodes, so the slot sizes like any other composable —
+ * `fillMaxWidth()` gives an adaptive (wrap-content) height, `Modifier.height(...) / .size(...)`
+ * pins it — and animations run on the composition's frame clock rather than the View player's own,
+ * which is what makes preview stills deterministic. [CardPlayback.LauncherWidget] keeps the
+ * AndroidX View player for previews of the mobile launcher widget, which the platform draws with
+ * that player; it is also the per-document fallback when rc-player-compose reports a document it
+ * can't fully render.
+ *
+ * Sizing on the AndroidX path: the document is authored with the wrap-friendly measure path
+ * (FEATURE_PAINT_MEASURE = 0, baked by `androidXExperimentalWrap`) and played through
+ * [WrapAdaptiveRemoteDocumentPlayer], which primes the View's paint context before Compose measures
+ * it — the workaround for https://github.com/yschimke/homeassistant-remotecompose/issues/153.
  */
 @OptIn(ExperimentalRemotePlayerApi::class)
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
@@ -82,12 +90,11 @@ fun CachedCardPreview(
   liveBindings: Boolean = true,
   bitmapLoader: BitmapLoader = BitmapLoader.UNSUPPORTED,
   onDocument: ((ByteArray) -> Unit)? = null,
+  playback: CardPlayback = CardPlayback.Compose,
   content: @RemoteComposable @Composable () -> Unit,
 ) {
-  // Flip the player into wrap-content mode — idempotent assignment.
-  // Today this only matters when the host's parent is bounded
-  // (EXACTLY); see KDoc above. Kept on so future alpha bumps that
-  // make wrap-content work for unbounded parents pick it up.
+  // AndroidX path only: flip the View player into wrap-content mode —
+  // idempotent assignment. See KDoc above.
   RemoteComposePlayerFlags.shouldPlayerWrapContentSize = true
 
   val context = LocalContext.current
@@ -158,43 +165,60 @@ fun CachedCardPreview(
   val dispatcher = LocalHaActionDispatcher.current
 
   val entityIds = remember(card) { card?.let { cardEntityIds(it) }.orEmpty() }
-  // The handle survives recomposition but is replaced if the player
-  // is torn down and rebuilt (cache invalidation, theme flip).
+  // Compose player: live values the running document reads by name. Re-created with the document
+  // ([cacheKey]) — the new document carries its own initial bake.
+  val namedValues = remember(cacheKey) { mutableStateMapOf<String, RcNamedValue>() }
+  // AndroidX player (launcher-widget previews, per-document fallback): the View handle survives
+  // recomposition but is replaced if the player is torn down and rebuilt (cache invalidation,
+  // theme flip, resize).
   val playerHolder = remember { mutableStateOf<RemoteComposePlayer?>(null) }
-  // Tracks the last value we pushed for each binding so a redundant
-  // snapshot recompose doesn't re-issue identical writes. Reset when
-  // [cacheKey] changes — the new document carries its own initial
-  // bake, and we want the next push to be unconditional.
-  val pushed = remember(cacheKey) { HashMap<String, Any?>() }
+  // Track the last value pushed to each player so a redundant snapshot recompose doesn't re-issue
+  // identical writes. Reset when [cacheKey] changes so the next push is unconditional.
+  val pushedNamed = remember(cacheKey) { HashMap<String, Any?>() }
+  val pushedView = remember(cacheKey) { HashMap<String, Any?>() }
 
   // [liveBindings] is off for cards that refresh by document re-encode (those that declare a
   // `CardConverter.dataSignature`): their dynamic content is baked, not bound, so pushing the
   // entity's raw named bindings would clobber a per-card-formatted `<id>.state` with the plain
   // value. The re-encode (driven by the signature in the cache key) is authoritative for them.
   if (liveBindings && card != null && snapshot != null && entityIds.isNotEmpty()) {
+    LaunchedEffect(namedValues, snapshot) {
+      pushSnapshotBindings(NamedValueWriter(namedValues), entityIds, snapshot, pushedNamed)
+    }
     LaunchedEffect(playerHolder.value, snapshot) {
       val updater = playerHolder.value ?: return@LaunchedEffect
-      pushSnapshotBindings(updater, entityIds, snapshot, pushed)
+      pushSnapshotBindings(ViewPlayerWriter(updater), entityIds, snapshot, pushedView)
     }
   }
 
-  // Use the wrap-adaptive player (a primed `RemoteComposePlayer`
-  // View that has had its paint context warmed up before Compose
-  // measures it). Lets `modifier` be wrap-content on the height
-  // axis without the alpha010 bug ballooning the slot to the
-  // authored canvas size; pinned EXACTLY constraints continue to
-  // dominate the inner View's measure.
-  WrapAdaptiveRemoteDocumentPlayer(
-    documentBytes = cardDocument.bytes,
-    modifier = modifier,
-    bitmapLoader = bitmapLoader,
-    init = { player -> playerHolder.value = player },
-    onNamedAction = { name, value ->
-      if (name == HA_ACTION_NAME) {
-        decodeHaAction(value)?.let(dispatcher::dispatch)
-      }
-    },
-  )
+  val onNamedAction: (String, Any?) -> Unit = { name, value ->
+    if (name == HA_ACTION_NAME) {
+      decodeHaAction(value)?.let(dispatcher::dispatch)
+    }
+  }
+  // The AndroidX View player, primed so `modifier` can be wrap-content on the height axis (#153)
+  // while pinned EXACTLY constraints still dominate the View's measure.
+  val androidXPlayer: @Composable () -> Unit = {
+    WrapAdaptiveRemoteDocumentPlayer(
+      documentBytes = cardDocument.bytes,
+      modifier = modifier,
+      bitmapLoader = bitmapLoader,
+      init = { player -> playerHolder.value = player },
+      onNamedAction = onNamedAction,
+    )
+  }
+  when (playback) {
+    CardPlayback.Compose ->
+      HaRcComposePlayer(
+        documentBytes = cardDocument.bytes,
+        modifier = modifier,
+        bitmapLoader = bitmapLoader,
+        namedValues = namedValues,
+        onNamedAction = onNamedAction,
+        fallback = androidXPlayer,
+      )
+    CardPlayback.LauncherWidget -> androidXPlayer()
+  }
 }
 
 /**
@@ -203,58 +227,79 @@ fun CachedCardPreview(
  */
 private data class DebugBorderedCacheKey(val inner: Any)
 
+/** Where [pushSnapshotBindings] writes: the Compose player's named values or the View player. */
+internal interface BindingWriter {
+  fun string(name: String, value: String)
+
+  fun int(name: String, value: Int)
+
+  fun float(name: String, value: Float)
+
+  /** Called once after a push that changed at least one binding. */
+  fun flush() {}
+}
+
+/**
+ * Compose player: plain names (`<id>.state`); rc-player resolves them against the document's
+ * `USER:` named variables, like the View player's `setUserLocal*` setters do.
+ */
+internal class NamedValueWriter(private val values: MutableMap<String, RcNamedValue>) :
+  BindingWriter {
+  override fun string(name: String, value: String) {
+    values[name] = RcNamedValue.Text(value)
+  }
+
+  override fun int(name: String, value: Int) {
+    values[name] = RcNamedValue.Integer(value)
+  }
+
+  override fun float(name: String, value: Float) {
+    values[name] = RcNamedValue.FloatValue(value)
+  }
+}
+
+private class ViewPlayerWriter(private val updater: RemoteComposePlayer) : BindingWriter {
+  override fun string(name: String, value: String) = updater.setUserLocalString(name, value)
+
+  override fun int(name: String, value: Int) = updater.setUserLocalInt(name, value)
+
+  override fun float(name: String, value: Float) = updater.setUserLocalFloat(name, value)
+
+  override fun flush() = refreshBoundPlayerViews(updater)
+}
+
 /**
  * Push the diff between the previous push (tracked in [pushed]) and the current [snapshot] for the
- * named bindings of [entityIds] into [updater]. Catches per-binding failures so a single unknown
- * name doesn't take down the whole push (the player rejects writes for names not declared in the
- * document).
+ * named bindings of [entityIds] into [writer]. Catches per-binding failures so a single unknown
+ * name doesn't take down the whole push (the View player rejects writes for names not declared in
+ * the document).
  *
- * Boolean bindings are pushed as ints — `LiveValues.isOn` creates a `RemoteBoolean` which alpha010
- * stores internally as a `RemoteInt` (0/1), and the player only exposes `setUserLocalInt` for that
- * channel. Int (`<id>.state_int`) and float (`<id>.numeric_state`) bindings go through their own
- * typed setters.
+ * Boolean bindings are pushed as ints — `LiveValues.isOn` creates a `RemoteBoolean` which Remote
+ * Compose stores internally as a `RemoteInt` (0/1), so both players see it on the int channel. Int
+ * (`<id>.state_int`) and float (`<id>.numeric_state`) bindings go through their own typed setters.
  */
-private fun pushSnapshotBindings(
-  updater: RemoteComposePlayer,
+internal fun pushSnapshotBindings(
+  writer: BindingWriter,
   entityIds: Set<String>,
   snapshot: HaSnapshot,
   pushed: MutableMap<String, Any?>,
 ) {
   val bindings = cardSnapshotBindings(entityIds, snapshot)
   var changed = false
-  for ((name, value) in bindings.strings) {
-    if (pushed[name] == value) continue
-    runCatching { updater.setUserLocalString(name, value) }
-      .onSuccess {
-        pushed[name] = value
-        changed = true
-      }
+  fun write(name: String, value: Any?, block: () -> Unit) {
+    if (pushed[name] == value) return
+    runCatching(block).onSuccess {
+      pushed[name] = value
+      changed = true
+    }
   }
+  for ((name, value) in bindings.strings) write(name, value) { writer.string(name, value) }
   for ((name, value) in bindings.booleans) {
-    if (pushed[name] == value) continue
-    runCatching { updater.setUserLocalInt(name, if (value) 1 else 0) }
-      .onSuccess {
-        pushed[name] = value
-        changed = true
-      }
+    write(name, value) { writer.int(name, if (value) 1 else 0) }
   }
-  for ((name, value) in bindings.ints) {
-    if (pushed[name] == value) continue
-    runCatching { updater.setUserLocalInt(name, value) }
-      .onSuccess {
-        pushed[name] = value
-        changed = true
-      }
-  }
-  for ((name, value) in bindings.floats) {
-    if (pushed[name] == value) continue
-    runCatching { updater.setUserLocalFloat(name, value) }
-      .onSuccess {
-        pushed[name] = value
-        changed = true
-      }
-  }
-  if (changed) refreshBoundPlayerViews(updater)
+  for ((name, value) in bindings.ints) write(name, value) { writer.int(name, value) }
+  for ((name, value) in bindings.floats) write(name, value) { writer.float(name, value) }
+  if (changed) writer.flush()
 }
 
 private fun refreshBoundPlayerViews(view: View) {

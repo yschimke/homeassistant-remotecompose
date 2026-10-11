@@ -43,6 +43,7 @@ import androidx.compose.ui.unit.sp
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.CachedCardPreview
+import ee.schimke.ha.rc.CardPlayback
 import ee.schimke.ha.rc.CardSizeMode
 import ee.schimke.ha.rc.FixedHaClock
 import ee.schimke.ha.rc.LocalHaClock
@@ -321,6 +322,9 @@ private fun FixedModeCell(
           modifier = Modifier.fillMaxSize(),
           card = card,
           snapshot = snapshot,
+          // Launcher-widget cells: the home screen draws the widget with the AndroidX
+          // `RemoteComposePlayer`, so these cells use it too. Every other cell is CMP.
+          playback = CardPlayback.LauncherWidget,
         ) {
           MatrixCaptureLocals {
             ProvideCardSizeMode(CardSizeMode.Fixed) {

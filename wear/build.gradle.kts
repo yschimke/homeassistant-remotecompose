@@ -90,11 +90,10 @@ dependencies {
   // implementation, drop the vendored copies (and re-evaluate keeping
   // this dep — it only ships RemoteDocPreview today).
   implementation(libs.remote.tooling.preview)
-  // The embedded (pure-Compose) Remote Compose player. Already present
-  // transitively at runtime under remote-tooling-preview; declared here so
-  // WearWidgetPreviewSnapshot can call ExperimentalRemoteDocumentPlayer
-  // directly instead of RemoteDocumentPreview, which wraps the View-based
-  // RemoteComposePlayer in an AndroidView.
+  // The AndroidX Compose player. WearWidgetPreviewSnapshot now plays through
+  // the Compose Multiplatform `RcComposePlayer` (via rc-converter's
+  // HaRcComposePlayer); this stays for EmbeddedSystemThemeTest, which
+  // exercises the AndroidX embedded player's theming directly.
   implementation(libs.remote.player.compose)
   implementation(libs.remote.player.core)
   implementation(libs.remote.material3)

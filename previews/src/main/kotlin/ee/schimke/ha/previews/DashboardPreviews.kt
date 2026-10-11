@@ -32,6 +32,7 @@ import ee.schimke.ha.rc.CachedCardPreview
 import ee.schimke.ha.rc.ProvideCardRegistry
 import ee.schimke.ha.rc.RenderChild
 import ee.schimke.ha.rc.androidXExperimentalWrap
+import ee.schimke.ha.rc.cardDataSignature
 import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.cards.shutter.withEnhancedShutter
 import ee.schimke.ha.rc.cards.shutter.withGarageShutter
@@ -46,10 +47,10 @@ import java.io.ByteArrayOutputStream
  * adaptive-layout candidates: render each captured dashboard at mobile (411 dp wide) and tablet
  * (800 dp wide) and look at the resulting PNGs side-by-side.
  *
- * Card heights flow from each document's intrinsic content via `WrapAdaptiveRemoteDocumentPlayer`
- * (used by `CachedCardPreview`), so vertical-stack / grid / sections cards size themselves to
- * whatever they actually drew. The whole dashboard renders inside one `verticalScroll` so previews
- * longer than the canvas crop instead of clipping silently.
+ * Card heights flow from each document's intrinsic content via the CMP player (used by
+ * `CachedCardPreview`), so vertical-stack / grid / sections cards size themselves to whatever they
+ * actually drew. The whole dashboard renders inside one `verticalScroll` so previews longer than
+ * the canvas crop instead of clipping silently.
  *
  * Skips rendering when the sibling [homeassistant-agents] checkout isn't present at the expected
  * path (see [DashboardFixtures]). The preview lambda short-circuits with a single placeholder
@@ -271,6 +272,9 @@ private fun CardSlot(card: CardConfig, snapshot: HaSnapshot, bitmapLoader: Bitma
       modifier = Modifier.uiFillMaxWidth(),
       card = card,
       snapshot = snapshot,
+      // Mirror `DashboardViewScreen.CardSlot`: cards that re-encode on a data signature bake their
+      // live content, so pushing raw named bindings would clobber their per-card formatting.
+      liveBindings = registry.cardDataSignature(card, snapshot) == null,
       bitmapLoader = bitmapLoader,
     ) {
       ProvideCardRegistry(registry) {

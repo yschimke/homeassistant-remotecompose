@@ -61,10 +61,10 @@ interface CardConverter {
   /**
    * Preferred rendered height in dp when this card fills its parent width. **Hint only**: dashboard
    * slots no longer pin to this — the RemoteCompose document's intrinsic content height drives the
-   * Compose layout via `WrapAdaptiveRemoteDocumentPlayer`. The hint is still consumed by hosts that
-   * need an explicit pixel size up front: bitmap captures for Glance widgets
-   * (`TerrazzoWidgetProvider`, `MonitoringService`), the widget install preview
-   * (`WidgetInstallSheet`), and the sizing experiment previews (slack/tight slot variants).
+   * Compose layout via `CachedCardPreview`'s player. The hint is still consumed by hosts that need
+   * an explicit pixel size up front: bitmap captures for Glance widgets (`TerrazzoWidgetProvider`,
+   * `MonitoringService`), the widget install preview (`WidgetInstallSheet`), and the sizing
+   * experiment previews (slack/tight slot variants).
    *
    * The default is a catch-all; each converter should override with a value that matches its HA
    * reference capture. If a card's height depends on its payload (e.g. `entities` with N rows),

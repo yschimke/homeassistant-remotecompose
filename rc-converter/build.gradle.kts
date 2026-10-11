@@ -45,6 +45,8 @@ dependencies {
   implementation(libs.remote.player.compose)
   implementation(libs.remote.player.view)
   implementation(libs.remote.material3)
+  // Compose Multiplatform player — the default for every card host (see `CardPlayback`).
+  api(libs.rc.player.compose)
 
   testImplementation(libs.kotlin.test)
   testImplementation(libs.kotlin.test.junit)

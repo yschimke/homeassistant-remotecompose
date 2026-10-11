@@ -27,6 +27,7 @@ import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.CachedCardPreview
+import ee.schimke.ha.rc.CardPlayback
 import ee.schimke.ha.rc.InMemoryCardDocumentCache
 import ee.schimke.ha.rc.LocalCardDocumentCache
 import ee.schimke.ha.rc.androidXExperimentalWrap
@@ -39,13 +40,23 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 
-/** Exercises the retained AndroidX player, including integer-backed RemoteBoolean writes. */
+/**
+ * Exercises both card players — the default CMP `RcComposePlayer` and the AndroidX player kept for
+ * launcher-widget previews — including integer-backed RemoteBoolean writes.
+ */
 @RunWith(AndroidJUnit4::class)
 class CachedCardPlaybackTest {
   @get:Rule val compose = createComposeRule()
 
   @Test
-  fun onOffChangesReuseTheDocumentAndPreserveWrapHeight() {
+  fun composePlayerAppliesLiveBindingsAndWrapsHeight() =
+    onOffChangesReuseTheDocumentAndPreserveWrapHeight(CardPlayback.Compose)
+
+  @Test
+  fun androidXPlayerAppliesLiveBindingsAndWrapsHeight() =
+    onOffChangesReuseTheDocumentAndPreserveWrapHeight(CardPlayback.LauncherWidget)
+
+  private fun onOffChangesReuseTheDocumentAndPreserveWrapHeight(playback: CardPlayback) {
     val entity = "light.test"
     val card = CardConfig("tile", buildJsonObject { put("entity", entity) })
     fun snapshot(on: Boolean) =
@@ -63,6 +74,7 @@ class CachedCardPlaybackTest {
             card = card,
             snapshot = current.value,
             onDocument = { documents.add(it) },
+            playback = playback,
           ) {
             val on = checkNotNull(LiveValues.isOn(entity, false))
             RemoteBox(

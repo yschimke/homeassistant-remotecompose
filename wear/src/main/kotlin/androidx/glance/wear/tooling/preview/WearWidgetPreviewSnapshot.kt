@@ -39,10 +39,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.remote.player.compose.ExperimentalRemotePlayerApi
-import androidx.compose.remote.player.compose.RemoteComposePlayerFlags
-import androidx.compose.remote.player.compose.embedded.ExperimentalRemoteDocumentPlayer
-import androidx.compose.remote.player.core.RemoteDocument
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -55,6 +51,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.glance.wear.GlanceWearWidget
 import androidx.glance.wear.core.WearWidgetParams
+import ee.schimke.ha.rc.HaRcComposePlayer
+import ee.schimke.ha.rc.WrapAdaptiveRemoteDocumentPlayer
 import ee.schimke.ha.rc.components.R
 import ee.schimke.terrazzo.wear.widget.WearWidgetIrSidecar
 import kotlinx.coroutines.runBlocking
@@ -71,19 +69,12 @@ import kotlinx.coroutines.runBlocking
  * @param modifier The [Modifier] applied to the inner widget surface.
  */
 @SuppressLint("RestrictedApi")
-@OptIn(ExperimentalRemotePlayerApi::class)
 @Composable
 public fun WearWidgetPreviewSnapshot(
   widget: GlanceWearWidget,
   params: WearWidgetParams,
   modifier: Modifier = Modifier,
 ) {
-  // The embedded player ships behind a flag; without it `RcPlayer` throws
-  // "Embedded player is disabled" and every preview fails to render. An idempotent
-  // static assignment, and this composable only ever runs from a @Preview, so the
-  // flag never flips in the shipped widget path.
-  RemoteComposePlayerFlags.isEmbeddedPlayerEnabled = true
-
   val context = LocalContext.current
   val document =
     remember(widget, params, context) {
@@ -103,13 +94,21 @@ public fun WearWidgetPreviewSnapshot(
     modifier = Modifier.size(227.dp).clip(CircleShape).background(Color.Black),
     contentAlignment = Alignment.Center,
   ) {
-    ExperimentalRemoteDocumentPlayer(
-      remember(document) { RemoteDocument(document) },
-      modifier =
-        modifier
-          .offset(y = 14.dp)
-          .width((params.widthDp + 2f * params.horizontalPaddingDp).dp)
-          .height((params.heightDp + 2f * params.verticalPaddingDp).dp),
+    // Played with the Compose Multiplatform player (`RcComposePlayer`): it animates on the
+    // composition's frame clock, so a still is deterministic, which the AndroidX View player's
+    // own clock is not (docs/bugs/rc-alpha18-player-divergence.md). A document it reports it
+    // can't fully render falls back to the AndroidX View player.
+    val playerModifier =
+      modifier
+        .offset(y = 14.dp)
+        .width((params.widthDp + 2f * params.horizontalPaddingDp).dp)
+        .height((params.heightDp + 2f * params.verticalPaddingDp).dp)
+    HaRcComposePlayer(
+      documentBytes = document,
+      modifier = playerModifier,
+      fallback = {
+        WrapAdaptiveRemoteDocumentPlayer(documentBytes = document, modifier = playerModifier)
+      },
     )
 
     Column(

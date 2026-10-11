@@ -723,8 +723,8 @@ private fun SectionRow(
  * renderer.
  *
  * Implicit row tracks default to `GridTrackSize.Auto`, so each row sizes to its tallest section.
- * Cards inside a section size themselves to their document's intrinsic content height via
- * `WrapAdaptiveRemoteDocumentPlayer` (called from `CachedCardPreview`).
+ * Cards inside a section size themselves to their document's intrinsic content height via the
+ * Compose Multiplatform player `CachedCardPreview` plays them with.
  */
 @Composable
 private fun SectionGrid(
@@ -787,14 +787,12 @@ private fun SectionColumn(
     section.cards.forEach { card ->
       // Key by the card config so each slot's hosted player is tied
       // to its card identity, not its position in the section — a
-      // reused slot must not keep a previous card's `AndroidView`.
+      // reused slot must not keep a previous card's player state.
       key(card) {
-        // No `height(...)` — the wrap-adaptive player (see
-        // `CachedCardPreview` / `WrapAdaptiveRemoteDocumentPlayer`)
-        // sizes itself to the document's intrinsic content height
-        // after a paint-context warmup, so the slot wraps to the
-        // card's actual rendered height instead of pinning per-card
-        // via `naturalHeightDp`.
+        // No `height(...)` — `CachedCardPreview`'s Compose
+        // Multiplatform player lays the document out as Compose
+        // nodes, so the slot wraps to the card's actual rendered
+        // height instead of pinning per-card via `naturalHeightDp`.
         CardSlot(
           card = card,
           snapshot = snapshot,
@@ -851,7 +849,7 @@ private fun CardRow(
       // Key by the card config so a slot never inherits an
       // unrelated card's hosted player when repacking shifts cards
       // between rows (e.g. a width-class change re-chunks the row).
-      // Without it the reused `AndroidView` would keep the prior
+      // Without it the reused player would keep the prior
       // card's view — the same staleness seen on dashboard switch.
       key(card) {
         CardSlot(

@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.remote.creation.compose.layout.RemoteComposable
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
-import androidx.compose.remote.tooling.preview.RemoteContentPreview
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
@@ -357,7 +356,7 @@ private fun DashboardHost(theme: HaTheme) {
 
 /**
  * Bounded box hosting a single RemoteCompose document. Each slot has a fixed height —
- * `RemoteDocPreview` sizes the doc to its container, so callers must pin the container size.
+ * `RcContentPreview` sizes the doc to its container, so callers must pin the container size.
  *
  * Deliberately NOT the capturing host: the dashboard preview stacks several of these, and the IR
  * channel keeps only the last offer per preview, so capturing here would publish a `.rc` sidecar
@@ -370,7 +369,7 @@ private fun PlayerSlot(
   content: @Composable @RemoteComposable () -> Unit,
 ) {
   Box(modifier = Modifier.uiFillMaxWidth().height(heightDp.dp)) {
-    RemoteContentPreview(profile = androidXExperimental) {
+    RcContentPreview(profile = androidXExperimental) {
       CompositionLocalProvider(LocalHaClock provides FixedHaClock(PreviewNow)) {
         ProvideCardRegistry(defaultRegistry()) { ProvideHaTheme(theme) { content() } }
       }
