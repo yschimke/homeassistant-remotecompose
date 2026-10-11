@@ -205,14 +205,17 @@ fun CachedCardPreview(
     }
   }
 
-  // The player may keep the first callback it was given; read the snapshot at tap time.
+  // The player may keep the first callback it was given (same bytes, new card or snapshot); read
+  // both at tap time.
   val latestSnapshot = rememberUpdatedState(snapshot)
+  val latestTemplate = rememberUpdatedState(template)
   val onNamedAction: (String, Any?) -> Unit = { name, value ->
     if (name == HA_ACTION_NAME) {
-      if (template != null) {
+      val current = latestTemplate.value
+      if (current != null) {
         // A template is remote content: never dispatch an action it encodes. It only picks which
         // of this card's own, locally resolved actions runs.
-        dispatcher.dispatch(template.resolveTap(decodeHaAction(value), latestSnapshot.value))
+        dispatcher.dispatch(current.resolveTap(decodeHaAction(value), latestSnapshot.value))
       } else {
         decodeHaAction(value)?.let(dispatcher::dispatch)
       }

@@ -259,6 +259,22 @@ class CardDesignTemplatesEndToEndTest {
       )) {
       assertEquals(playback.slotTapActions[0], playback.resolveTap(forged, snapshot))
     }
+    // With the keypad hidden, no key is accepted at all.
+    val noKeypad =
+      CardDesignTemplates.playback(
+        CardConfig(
+          type = "alarm-panel",
+          raw =
+            kotlinx.serialization.json.JsonObject(
+              alarm.raw + ("show_keypad" to kotlinx.serialization.json.JsonPrimitive(false))
+            ),
+        ),
+        ByteArray(0),
+      )
+    assertEquals(
+      noKeypad.slotTapActions[0],
+      noKeypad.resolveTap(ee.schimke.ha.rc.components.HaAction.AlarmKey(slot, "7"), snapshot),
+    )
   }
 
   /**

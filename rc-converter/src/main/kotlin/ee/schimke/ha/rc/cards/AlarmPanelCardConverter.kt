@@ -94,7 +94,8 @@ class AlarmPanelCardConverter : CardConverter {
 
   /**
    * Which ARM button or keypad key a template tap pressed, rebuilt from this card's own `states`
-   * and code length against its real entity. Anything else gets the slot's default tap.
+   * and code length against its real entity; keys only while the card shows its keypad. Anything
+   * else gets the slot's default tap.
    */
   override fun designAction(
     card: CardConfig,
@@ -112,7 +113,9 @@ class AlarmPanelCardConverter : CardConverter {
             HaAction.AlarmIntent(entityId, it, codeLengthFor(card, snapshot?.states?.get(entityId)))
           }
       is HaAction.AlarmKey ->
-        templateAction.key.takeIf { it in KEYPAD_KEYS }?.let { HaAction.AlarmKey(entityId, it) }
+        templateAction.key
+          .takeIf { showKeypad(card) && it in KEYPAD_KEYS }
+          ?.let { HaAction.AlarmKey(entityId, it) }
       else -> null
     }
   }
