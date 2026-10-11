@@ -208,7 +208,118 @@
             "overloadsCollided": false,
             "builder": null,
             "requiredOptIns": [],
-            "androidxOptIns": []
+            "androidxOptIns": [],
+            "overloads": [
+                {
+                    "descriptor": "(Landroidx/compose/ui/Modifier;Landroidx/compose/ui/graphics/Shape;JJFFLandroidx/compose/foundation/BorderStroke;Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;II)V",
+                    "parameters": [
+                        {
+                            "name": "modifier",
+                            "type": "Modifier",
+                            "typeFqn": "androidx.compose.ui.Modifier",
+                            "hasDefault": true,
+                            "composableSlot": false,
+                            "composableSlotReceiver": null,
+                            "nullable": false,
+                            "noArgConstructible": false,
+                            "noArgFactory": null,
+                            "scopeDslReceiver": null,
+                            "lambdaReturnTypeFqn": null
+                        },
+                        {
+                            "name": "shape",
+                            "type": "Shape",
+                            "typeFqn": "androidx.compose.ui.graphics.Shape",
+                            "hasDefault": true,
+                            "composableSlot": false,
+                            "composableSlotReceiver": null,
+                            "nullable": false,
+                            "noArgConstructible": false,
+                            "noArgFactory": null,
+                            "scopeDslReceiver": null,
+                            "lambdaReturnTypeFqn": null
+                        },
+                        {
+                            "name": "color",
+                            "type": "Color",
+                            "typeFqn": "androidx.compose.ui.graphics.Color",
+                            "hasDefault": true,
+                            "composableSlot": false,
+                            "composableSlotReceiver": null,
+                            "nullable": false,
+                            "noArgConstructible": false,
+                            "noArgFactory": null,
+                            "scopeDslReceiver": null,
+                            "lambdaReturnTypeFqn": null
+                        },
+                        {
+                            "name": "contentColor",
+                            "type": "Color",
+                            "typeFqn": "androidx.compose.ui.graphics.Color",
+                            "hasDefault": true,
+                            "composableSlot": false,
+                            "composableSlotReceiver": null,
+                            "nullable": false,
+                            "noArgConstructible": false,
+                            "noArgFactory": null,
+                            "scopeDslReceiver": null,
+                            "lambdaReturnTypeFqn": null
+                        },
+                        {
+                            "name": "tonalElevation",
+                            "type": "Dp",
+                            "typeFqn": "androidx.compose.ui.unit.Dp",
+                            "hasDefault": true,
+                            "composableSlot": false,
+                            "composableSlotReceiver": null,
+                            "nullable": false,
+                            "noArgConstructible": false,
+                            "noArgFactory": null,
+                            "scopeDslReceiver": null,
+                            "lambdaReturnTypeFqn": null
+                        },
+                        {
+                            "name": "shadowElevation",
+                            "type": "Dp",
+                            "typeFqn": "androidx.compose.ui.unit.Dp",
+                            "hasDefault": true,
+                            "composableSlot": false,
+                            "composableSlotReceiver": null,
+                            "nullable": false,
+                            "noArgConstructible": false,
+                            "noArgFactory": null,
+                            "scopeDslReceiver": null,
+                            "lambdaReturnTypeFqn": null
+                        },
+                        {
+                            "name": "border",
+                            "type": "BorderStroke?",
+                            "typeFqn": "androidx.compose.foundation.BorderStroke",
+                            "hasDefault": true,
+                            "composableSlot": false,
+                            "composableSlotReceiver": null,
+                            "nullable": true,
+                            "noArgConstructible": false,
+                            "noArgFactory": null,
+                            "scopeDslReceiver": null,
+                            "lambdaReturnTypeFqn": null
+                        },
+                        {
+                            "name": "content",
+                            "type": "() -> Unit",
+                            "typeFqn": "kotlin.Function0",
+                            "hasDefault": false,
+                            "composableSlot": true,
+                            "composableSlotReceiver": null,
+                            "nullable": false,
+                            "noArgConstructible": false,
+                            "noArgFactory": null,
+                            "scopeDslReceiver": null,
+                            "lambdaReturnTypeFqn": "kotlin.Unit"
+                        }
+                    ]
+                }
+            ]
         },
         {
             "canonicalId": "previews/androidx.compose.material3.TextKt.Text",
@@ -774,7 +885,248 @@
             "overloadsCollided": false,
             "builder": null,
             "requiredOptIns": [],
-            "androidxOptIns": []
+            "androidxOptIns": [],
+            "overloads": [
+                {
+                    "descriptor": "(Ljava/lang/String;Landroidx/compose/ui/Modifier;JLandroidx/compose/foundation/text/TextAutoSize;JLandroidx/compose/ui/text/font/FontStyle;Landroidx/compose/ui/text/font/FontWeight;Landroidx/compose/ui/text/font/FontFamily;JLandroidx/compose/ui/text/style/TextDecoration;Landroidx/compose/ui/text/style/TextAlign;JIZIILkotlin/jvm/functions/Function1;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/runtime/Composer;III)V",
+                    "parameters": [
+                        {
+                            "name": "text",
+                            "type": "String",
+                            "typeFqn": "kotlin.String",
+                            "hasDefault": false,
+                            "composableSlot": false,
+                            "composableSlotReceiver": null,
+                            "nullable": false,
+                            "noArgConstructible": false,
+                            "noArgFactory": null,
+                            "scopeDslReceiver": null,
+                            "lambdaReturnTypeFqn": null
+                        },
+                        {
+                            "name": "modifier",
+                            "type": "Modifier",
+                            "typeFqn": "androidx.compose.ui.Modifier",
+                            "hasDefault": true,
+                            "composableSlot": false,
+                            "composableSlotReceiver": null,
+                            "nullable": false,
+                            "noArgConstructible": false,
+                            "noArgFactory": null,
+                            "scopeDslReceiver": null,
+                            "lambdaReturnTypeFqn": null
+                        },
+                        {
+                            "name": "color",
+                            "type": "Color",
+                            "typeFqn": "androidx.compose.ui.graphics.Color",
+                            "hasDefault": true,
+                            "composableSlot": false,
+                            "composableSlotReceiver": null,
+                            "nullable": false,
+                            "noArgConstructible": false,
+                            "noArgFactory": null,
+                            "scopeDslReceiver": null,
+                            "lambdaReturnTypeFqn": null
+                        },
+                        {
+                            "name": "autoSize",
+                            "type": "TextAutoSize?",
+                            "typeFqn": "androidx.compose.foundation.text.TextAutoSize",
+                            "hasDefault": true,
+                            "composableSlot": false,
+                            "composableSlotReceiver": null,
+                            "nullable": true,
+                            "noArgConstructible": false,
+                            "noArgFactory": null,
+                            "scopeDslReceiver": null,
+                            "lambdaReturnTypeFqn": null
+                        },
+                        {
+                            "name": "fontSize",
+                            "type": "TextUnit",
+                            "typeFqn": "androidx.compose.ui.unit.TextUnit",
+                            "hasDefault": true,
+                            "composableSlot": false,
+                            "composableSlotReceiver": null,
+                            "nullable": false,
+                            "noArgConstructible": false,
+                            "noArgFactory": null,
+                            "scopeDslReceiver": null,
+                            "lambdaReturnTypeFqn": null
+                        },
+                        {
+                            "name": "fontStyle",
+                            "type": "FontStyle?",
+                            "typeFqn": "androidx.compose.ui.text.font.FontStyle",
+                            "hasDefault": true,
+                            "composableSlot": false,
+                            "composableSlotReceiver": null,
+                            "nullable": true,
+                            "noArgConstructible": false,
+                            "noArgFactory": null,
+                            "scopeDslReceiver": null,
+                            "lambdaReturnTypeFqn": null
+                        },
+                        {
+                            "name": "fontWeight",
+                            "type": "FontWeight?",
+                            "typeFqn": "androidx.compose.ui.text.font.FontWeight",
+                            "hasDefault": true,
+                            "composableSlot": false,
+                            "composableSlotReceiver": null,
+                            "nullable": true,
+                            "noArgConstructible": false,
+                            "noArgFactory": null,
+                            "scopeDslReceiver": null,
+                            "lambdaReturnTypeFqn": null
+                        },
+                        {
+                            "name": "fontFamily",
+                            "type": "FontFamily?",
+                            "typeFqn": "androidx.compose.ui.text.font.FontFamily",
+                            "hasDefault": true,
+                            "composableSlot": false,
+                            "composableSlotReceiver": null,
+                            "nullable": true,
+                            "noArgConstructible": false,
+                            "noArgFactory": null,
+                            "scopeDslReceiver": null,
+                            "lambdaReturnTypeFqn": null
+                        },
+                        {
+                            "name": "letterSpacing",
+                            "type": "TextUnit",
+                            "typeFqn": "androidx.compose.ui.unit.TextUnit",
+                            "hasDefault": true,
+                            "composableSlot": false,
+                            "composableSlotReceiver": null,
+                            "nullable": false,
+                            "noArgConstructible": false,
+                            "noArgFactory": null,
+                            "scopeDslReceiver": null,
+                            "lambdaReturnTypeFqn": null
+                        },
+                        {
+                            "name": "textDecoration",
+                            "type": "TextDecoration?",
+                            "typeFqn": "androidx.compose.ui.text.style.TextDecoration",
+                            "hasDefault": true,
+                            "composableSlot": false,
+                            "composableSlotReceiver": null,
+                            "nullable": true,
+                            "noArgConstructible": false,
+                            "noArgFactory": null,
+                            "scopeDslReceiver": null,
+                            "lambdaReturnTypeFqn": null
+                        },
+                        {
+                            "name": "textAlign",
+                            "type": "TextAlign?",
+                            "typeFqn": "androidx.compose.ui.text.style.TextAlign",
+                            "hasDefault": true,
+                            "composableSlot": false,
+                            "composableSlotReceiver": null,
+                            "nullable": true,
+                            "noArgConstructible": false,
+                            "noArgFactory": null,
+                            "scopeDslReceiver": null,
+                            "lambdaReturnTypeFqn": null
+                        },
+                        {
+                            "name": "lineHeight",
+                            "type": "TextUnit",
+                            "typeFqn": "androidx.compose.ui.unit.TextUnit",
+                            "hasDefault": true,
+                            "composableSlot": false,
+                            "composableSlotReceiver": null,
+                            "nullable": false,
+                            "noArgConstructible": false,
+                            "noArgFactory": null,
+                            "scopeDslReceiver": null,
+                            "lambdaReturnTypeFqn": null
+                        },
+                        {
+                            "name": "overflow",
+                            "type": "TextOverflow",
+                            "typeFqn": "androidx.compose.ui.text.style.TextOverflow",
+                            "hasDefault": true,
+                            "composableSlot": false,
+                            "composableSlotReceiver": null,
+                            "nullable": false,
+                            "noArgConstructible": false,
+                            "noArgFactory": null,
+                            "scopeDslReceiver": null,
+                            "lambdaReturnTypeFqn": null
+                        },
+                        {
+                            "name": "softWrap",
+                            "type": "Boolean",
+                            "typeFqn": "kotlin.Boolean",
+                            "hasDefault": true,
+                            "composableSlot": false,
+                            "composableSlotReceiver": null,
+                            "nullable": false,
+                            "noArgConstructible": false,
+                            "noArgFactory": null,
+                            "scopeDslReceiver": null,
+                            "lambdaReturnTypeFqn": null
+                        },
+                        {
+                            "name": "maxLines",
+                            "type": "Int",
+                            "typeFqn": "kotlin.Int",
+                            "hasDefault": true,
+                            "composableSlot": false,
+                            "composableSlotReceiver": null,
+                            "nullable": false,
+                            "noArgConstructible": false,
+                            "noArgFactory": null,
+                            "scopeDslReceiver": null,
+                            "lambdaReturnTypeFqn": null
+                        },
+                        {
+                            "name": "minLines",
+                            "type": "Int",
+                            "typeFqn": "kotlin.Int",
+                            "hasDefault": true,
+                            "composableSlot": false,
+                            "composableSlotReceiver": null,
+                            "nullable": false,
+                            "noArgConstructible": false,
+                            "noArgFactory": null,
+                            "scopeDslReceiver": null,
+                            "lambdaReturnTypeFqn": null
+                        },
+                        {
+                            "name": "onTextLayout",
+                            "type": "((TextLayoutResult) -> Unit)?",
+                            "typeFqn": "kotlin.Function1",
+                            "hasDefault": true,
+                            "composableSlot": false,
+                            "composableSlotReceiver": null,
+                            "nullable": true,
+                            "noArgConstructible": false,
+                            "noArgFactory": null,
+                            "scopeDslReceiver": null,
+                            "lambdaReturnTypeFqn": "kotlin.Unit"
+                        },
+                        {
+                            "name": "style",
+                            "type": "TextStyle",
+                            "typeFqn": "androidx.compose.ui.text.TextStyle",
+                            "hasDefault": true,
+                            "composableSlot": false,
+                            "composableSlotReceiver": null,
+                            "nullable": false,
+                            "noArgConstructible": false,
+                            "noArgFactory": null,
+                            "scopeDslReceiver": null,
+                            "lambdaReturnTypeFqn": null
+                        }
+                    ]
+                }
+            ]
         },
         {
             "canonicalId": "previews/ee.schimke.ha.previews.AnimationPreviewsKt.GaugeFrameHost",
@@ -851,7 +1203,8 @@
             "overloadsCollided": false,
             "builder": null,
             "requiredOptIns": [],
-            "androidxOptIns": []
+            "androidxOptIns": [],
+            "overloads": []
         },
         {
             "canonicalId": "previews/ee.schimke.ha.previews.AppIconPreviewsKt.AppIconShowcase",
@@ -909,7 +1262,8 @@
             "overloadsCollided": false,
             "builder": null,
             "requiredOptIns": [],
-            "androidxOptIns": []
+            "androidxOptIns": [],
+            "overloads": []
         },
         {
             "canonicalId": "previews/ee.schimke.ha.previews.CardPreviewMatrixKt.CardPreviewMatrix",
@@ -1117,7 +1471,8 @@
             "overloadsCollided": false,
             "builder": null,
             "requiredOptIns": [],
-            "androidxOptIns": []
+            "androidxOptIns": [],
+            "overloads": []
         },
         {
             "canonicalId": "previews/ee.schimke.ha.previews.CardPreviewsKt.CardHost",
@@ -1634,7 +1989,8 @@
             "overloadsCollided": false,
             "builder": null,
             "requiredOptIns": [],
-            "androidxOptIns": []
+            "androidxOptIns": [],
+            "overloads": []
         },
         {
             "canonicalId": "previews/ee.schimke.ha.previews.CardPreviewsKt.DashboardHost",
@@ -1692,7 +2048,8 @@
             "overloadsCollided": false,
             "builder": null,
             "requiredOptIns": [],
-            "androidxOptIns": []
+            "androidxOptIns": [],
+            "overloads": []
         },
         {
             "canonicalId": "previews/ee.schimke.ha.previews.DashboardPreviewsKt.DashboardPreview",
@@ -1810,7 +2167,8 @@
             "overloadsCollided": false,
             "builder": null,
             "requiredOptIns": [],
-            "androidxOptIns": []
+            "androidxOptIns": [],
+            "overloads": []
         },
         {
             "canonicalId": "previews/ee.schimke.ha.previews.GarageShutterCardPreviewsKt.GarageHost",
@@ -1907,7 +2265,8 @@
             "overloadsCollided": false,
             "builder": null,
             "requiredOptIns": [],
-            "androidxOptIns": []
+            "androidxOptIns": [],
+            "overloads": []
         },
         {
             "canonicalId": "previews/ee.schimke.ha.previews.ImagePreviewsKt.FakeCoilUrlHost",
@@ -1965,7 +2324,8 @@
             "overloadsCollided": false,
             "builder": null,
             "requiredOptIns": [],
-            "androidxOptIns": []
+            "androidxOptIns": [],
+            "overloads": []
         },
         {
             "canonicalId": "previews/ee.schimke.ha.previews.ImagePreviewsKt.ImageHost",
@@ -2052,7 +2412,8 @@
             "overloadsCollided": false,
             "builder": null,
             "requiredOptIns": [],
-            "androidxOptIns": []
+            "androidxOptIns": [],
+            "overloads": []
         },
         {
             "canonicalId": "previews/ee.schimke.ha.previews.ImagePreviewsKt.ProbeUrlHost",
@@ -2123,7 +2484,8 @@
             "overloadsCollided": false,
             "builder": null,
             "requiredOptIns": [],
-            "androidxOptIns": []
+            "androidxOptIns": [],
+            "overloads": []
         },
         {
             "canonicalId": "previews/ee.schimke.ha.previews.PictureEntityStrategyPreviewsKt.AppModeHost",
@@ -2181,7 +2543,8 @@
             "overloadsCollided": false,
             "builder": null,
             "requiredOptIns": [],
-            "androidxOptIns": []
+            "androidxOptIns": [],
+            "overloads": []
         },
         {
             "canonicalId": "previews/ee.schimke.ha.previews.RcDocumentCaptureKt.CapturingRemoteContentPreview",
@@ -2281,7 +2644,8 @@
             "overloadsCollided": false,
             "builder": null,
             "requiredOptIns": [],
-            "androidxOptIns": []
+            "androidxOptIns": [],
+            "overloads": []
         },
         {
             "canonicalId": "previews/ee.schimke.ha.previews.RcDocumentCaptureKt.rememberRemoteDocumentSink",
@@ -2327,7 +2691,8 @@
             "overloadsCollided": false,
             "builder": null,
             "requiredOptIns": [],
-            "androidxOptIns": []
+            "androidxOptIns": [],
+            "overloads": []
         },
         {
             "canonicalId": "previews/ee.schimke.ha.previews.ShutterCardPreviewsKt.ShutterHost",
@@ -2404,7 +2769,8 @@
             "overloadsCollided": false,
             "builder": null,
             "requiredOptIns": [],
-            "androidxOptIns": []
+            "androidxOptIns": [],
+            "overloads": []
         },
         {
             "canonicalId": "previews/ee.schimke.ha.previews.SizingExperimentPreviewsKt.ConstraintMatrix",
@@ -2475,7 +2841,8 @@
             "overloadsCollided": false,
             "builder": null,
             "requiredOptIns": [],
-            "androidxOptIns": []
+            "androidxOptIns": [],
+            "overloads": []
         },
         {
             "canonicalId": "previews/ee.schimke.ha.previews.SizingExperimentPreviewsKt.DebugStack",
@@ -2579,7 +2946,8 @@
             "overloadsCollided": false,
             "builder": null,
             "requiredOptIns": [],
-            "androidxOptIns": []
+            "androidxOptIns": [],
+            "overloads": []
         },
         {
             "canonicalId": "previews/ee.schimke.ha.previews.SizingExperimentPreviewsKt.WidthOnlyDemo",
@@ -2618,7 +2986,8 @@
             "overloadsCollided": false,
             "builder": null,
             "requiredOptIns": [],
-            "androidxOptIns": []
+            "androidxOptIns": [],
+            "overloads": []
         },
         {
             "canonicalId": "previews/ee.schimke.ha.previews.ThemePreviewsKt.ThemeShowcase",
@@ -2729,7 +3098,8 @@
             "overloadsCollided": false,
             "builder": null,
             "requiredOptIns": [],
-            "androidxOptIns": []
+            "androidxOptIns": [],
+            "overloads": []
         },
         {
             "canonicalId": "previews/ee.schimke.ha.previews.TileCardPreviewsKt.TileHost",
@@ -2816,7 +3186,8 @@
             "overloadsCollided": false,
             "builder": null,
             "requiredOptIns": [],
-            "androidxOptIns": []
+            "androidxOptIns": [],
+            "overloads": []
         },
         {
             "canonicalId": "previews/ee.schimke.ha.previews.ToggleSwitchPreviewsKt.SwitchHost",
@@ -2913,7 +3284,8 @@
             "overloadsCollided": false,
             "builder": null,
             "requiredOptIns": [],
-            "androidxOptIns": []
+            "androidxOptIns": [],
+            "overloads": []
         },
         {
             "canonicalId": "previews/ee.schimke.ha.previews.WrapContentHeightReproKt.CmpPlayer",
@@ -2966,7 +3338,8 @@
             "overloadsCollided": false,
             "builder": null,
             "requiredOptIns": [],
-            "androidxOptIns": []
+            "androidxOptIns": [],
+            "overloads": []
         },
         {
             "canonicalId": "previews/ee.schimke.ha.previews.WrapContentHeightReproKt.FixedPlayer",
@@ -3019,7 +3392,8 @@
             "overloadsCollided": false,
             "builder": null,
             "requiredOptIns": [],
-            "androidxOptIns": []
+            "androidxOptIns": [],
+            "overloads": []
         },
         {
             "canonicalId": "previews/ee.schimke.ha.previews.WrapContentHeightReproKt.ReproPlayer",
@@ -3072,7 +3446,8 @@
             "overloadsCollided": false,
             "builder": null,
             "requiredOptIns": [],
-            "androidxOptIns": []
+            "androidxOptIns": [],
+            "overloads": []
         }
     ],
     "builderOrphans": []

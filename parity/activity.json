@@ -1,11 +1,19 @@
 {
   "schema": "compose-preview-activity/v1",
-  "generatedAt": "2026-10-11T16:38:41.196Z",
+  "generatedAt": "2026-10-11T17:18:42.169Z",
   "windowDays": 30,
   "code": {
     "repo": "yschimke/homeassistant-remotecompose",
     "ref": "main",
     "events": [
+      {
+        "sha": "b493036e366246814f59a1490e0225b3badd4899",
+        "subject": "fix(deps): update compose-ai-tools (#735)",
+        "at": "2026-10-11T16:42:30Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
       {
         "sha": "ec413f2707617e015cf7e67088097264fb8e6815",
         "subject": "ci: skip the UID audit with a warning when OpenRouter is out of credit (#739)",
@@ -474,14 +482,6 @@
         "sha": "9304d226f8e69204623b996108777677851d2f76",
         "subject": "chore(deps): update github-actions (#682)",
         "at": "2026-09-28T01:53:37Z",
-        "author": "renovate[bot]",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "f756836ac9b17306285f0517a46ce9685cb9ae9e",
-        "subject": "fix(deps): update androidx (#683)",
-        "at": "2026-09-28T01:53:34Z",
         "author": "renovate[bot]",
         "previewIds": [],
         "components": []
