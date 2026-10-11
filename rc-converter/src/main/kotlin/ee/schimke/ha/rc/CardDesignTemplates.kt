@@ -55,6 +55,21 @@ object CardDesignTemplates {
     )
   }
 
+  /**
+   * Template playback for [card] with [bytes] from the design repository. Bindings and the tap
+   * action both come from the card's own config; nothing but layout is taken from the template.
+   */
+  fun playback(card: CardConfig, bytes: ByteArray): CardTemplatePlayback {
+    val entityId = CardDesignSlots.slotEntities(card)?.firstOrNull()
+    val tapCfg = card.raw["tap_action"] as? kotlinx.serialization.json.JsonObject
+    return CardTemplatePlayback(
+      bytes = bytes,
+      bindings = { snapshot -> CardDesignSlots.slotBindings(card, snapshot) },
+      tapAction =
+        if (tapCfg != null) parseHaAction(tapCfg, entityId) else defaultTapActionFor(entityId),
+    )
+  }
+
   /** Every key the spike publishes: tile × domain × theme style × light/dark, mobile app only. */
   fun spikeKeys(): List<Pair<DesignKey, String>> = buildList {
     for (domain in CardDesignSlots.TILE_DOMAINS) {

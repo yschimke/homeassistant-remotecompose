@@ -206,9 +206,13 @@ fun CachedCardPreview(
 
   val onNamedAction: (String, Any?) -> Unit = { name, value ->
     if (name == HA_ACTION_NAME) {
-      decodeHaAction(value)
-        ?.let { action -> template?.let { remapSlotAction(action, it.slotToEntity) } ?: action }
-        ?.let(dispatcher::dispatch)
+      if (template != null) {
+        // A template is remote content: never dispatch an action it encodes. Any tap in it runs
+        // the action this card's own config resolves to locally.
+        dispatcher.dispatch(template.tapAction)
+      } else {
+        decodeHaAction(value)?.let(dispatcher::dispatch)
+      }
     }
   }
   // The AndroidX View player, primed so `modifier` can be wrap-content on the height axis (#153)
@@ -357,22 +361,13 @@ private fun entityIds(card: CardConfig?): Set<String> = card?.let { cardEntityId
 
 /**
  * Plays a card design template in place of a local capture. [bytes] is a values-free document from
- * the design server (or cache); [bindings] derives every slot binding from a snapshot; and taps in
- * the template name slot entities, which [slotToEntity] maps back to the card's real ones.
+ * the design server (or cache), and [bindings] derives every slot binding from a snapshot.
+ *
+ * [tapAction] is resolved from the card's **local** config, never from the template: the bytes are
+ * remote, so the action a template encodes is ignored and any tap in it dispatches [tapAction].
  */
 class CardTemplatePlayback(
   val bytes: ByteArray,
   val bindings: (HaSnapshot) -> CardSnapshotBindings,
-  val slotToEntity: Map<String, String>,
+  val tapAction: HaAction,
 )
-
-/** Map a template's slot entity ids (`light.s0`) in [action] back to the real entity. */
-internal fun remapSlotAction(action: HaAction, slotToEntity: Map<String, String>): HaAction {
-  fun real(id: String) = slotToEntity[id] ?: id
-  return when (action) {
-    is HaAction.Toggle -> action.copy(entityId = real(action.entityId))
-    is HaAction.MoreInfo -> action.copy(entityId = real(action.entityId))
-    is HaAction.CallService -> action.copy(entityId = action.entityId?.let(::real))
-    else -> action
-  }
-}

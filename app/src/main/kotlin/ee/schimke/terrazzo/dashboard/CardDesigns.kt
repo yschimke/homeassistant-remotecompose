@@ -10,9 +10,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import ee.schimke.ha.client.design.DesignServerConfig
 import ee.schimke.ha.client.design.DesignStore
+import ee.schimke.ha.client.design.Sha256
 import ee.schimke.ha.client.design.StoredManifest
 import ee.schimke.ha.client.design.createDesignRepository
-import ee.schimke.ha.design.CardDesignSlots
 import ee.schimke.ha.design.DesignKey
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.rc.CardDesignTemplates
@@ -42,7 +42,15 @@ fun rememberCardDesigns(context: Context, serverUrl: String): Map<DesignKey, Byt
     remember(serverUrl) {
       createDesignRepository(
         config = DesignServerConfig(baseUrl = serverUrl, allowUnsigned = true),
-        store = FileDesignStore(File(context.filesDir, "terrazzo/designs")),
+        // One directory per server: switching URLs must not show the old server's designs or
+        // hold the new one to the old server's manifest serial.
+        store =
+          FileDesignStore(
+            File(
+              context.filesDir,
+              "terrazzo/designs/${Sha256.hex(serverUrl.trimEnd('/').encodeToByteArray())}",
+            )
+          ),
         clock = System::currentTimeMillis,
       )
     }
@@ -69,13 +77,7 @@ fun cardTemplateFor(
   if (designs.isEmpty()) return null
   val key = CardDesignTemplates.keyFor(card, style, dark) ?: return null
   val bytes = designs[key] ?: return null
-  val slotToEntity =
-    CardDesignSlots.slotMap(card).entries.associate { (real, slot) -> slot to real }
-  return CardTemplatePlayback(
-    bytes = bytes,
-    bindings = { snapshot -> CardDesignSlots.slotBindings(card, snapshot) },
-    slotToEntity = slotToEntity,
-  )
+  return CardDesignTemplates.playback(card, bytes)
 }
 
 /**

@@ -105,16 +105,10 @@ class CardDesignTemplatesEndToEndTest {
   }
 
   @Test
-  fun slotActionsMapBackToTheRealEntity() {
-    val slots = mapOf("light.s0" to "light.kitchen")
-    assertEquals(
-      ee.schimke.ha.rc.components.HaAction.Toggle("light.kitchen"),
-      remapSlotAction(ee.schimke.ha.rc.components.HaAction.Toggle("light.s0"), slots),
-    )
-    assertEquals(
-      ee.schimke.ha.rc.components.HaAction.Navigate("/lovelace/1"),
-      remapSlotAction(ee.schimke.ha.rc.components.HaAction.Navigate("/lovelace/1"), slots),
-    )
+  fun templateTapRunsTheCardsOwnAction() {
+    val playback = CardDesignTemplates.playback(card, ByteArray(0))
+    // The tile's default tap for a light, on the real entity — never anything the template encodes.
+    assertEquals(defaultTapActionFor("light.kitchen"), playback.tapAction)
   }
 
   /**
