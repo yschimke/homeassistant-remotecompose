@@ -1,6 +1,6 @@
 {
     "formatVersion": "compose-preview-history/v1",
-    "generatedFrom": "ecfe549a327e710e2011071e45c1e90c73cf9d00",
+    "generatedFrom": "10d4bf02ad497417701cc22108e23f68d4fb2910",
     "previews": {
         "app/ee.schimke.terrazzo.previews.CardDebugPreviewsKt.CardFlashPreview_Card flash on data change": {
             "path": "renders/app/CardFlashPreview_Card_flash_on_data_change-44b71c2b.gif",
@@ -4896,6 +4896,13 @@
             "path": "renders/previews/DashboardGithubTablet_dashboard_github_tablet-89194c99.png",
             "versions": [
                 {
+                    "blob": "1bb334e6fa2193b604918489f37971b21e7903a7",
+                    "commit": "10d4bf02ad497417701cc22108e23f68d4fb2910",
+                    "date": "2026-10-11T15:05:28Z",
+                    "sourceSha": "7f8327ee",
+                    "commits": 1
+                },
+                {
                     "blob": "757cbef805bc28b8a826aafa9df34c29036597c7",
                     "commit": "ecfe549a327e710e2011071e45c1e90c73cf9d00",
                     "date": "2026-10-11T14:21:41Z",
@@ -4938,9 +4945,9 @@
                     "commits": 1
                 }
             ],
-            "observations": 6,
+            "observations": 7,
             "unstable": false,
-            "flapCount": 0
+            "flapCount": 1
         },
         "previews/ee.schimke.ha.previews.DashboardPreviewsKt.DashboardMeshcoreMobile_dashboard meshcore — mobile": {
             "path": "renders/previews/DashboardMeshcoreMobile_dashboard_meshcore_mobile-30d7121c.png",
