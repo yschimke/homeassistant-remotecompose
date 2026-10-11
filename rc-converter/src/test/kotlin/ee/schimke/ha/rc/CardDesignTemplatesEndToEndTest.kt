@@ -315,6 +315,62 @@ class CardDesignTemplatesEndToEndTest {
     }
   }
 
+  @Test
+  fun thermostatStepperIsRebuiltFromTheLiveTarget() {
+    val card =
+      CardConfig(
+        type = "thermostat",
+        raw =
+          buildJsonObject {
+            put("type", "thermostat")
+            put("entity", "climate.office")
+          },
+      )
+    val snapshot =
+      HaSnapshot(
+        states =
+          mapOf(
+            "climate.office" to
+              EntityState(
+                "climate.office",
+                "heat",
+                kotlinx.serialization.json.JsonObject(
+                  mapOf(
+                    "temperature" to kotlinx.serialization.json.JsonPrimitive("21"),
+                    "target_temp_step" to kotlinx.serialization.json.JsonPrimitive("1"),
+                  )
+                ),
+              )
+          )
+      )
+    val registry = CardDesignTemplates.defaultTemplateRegistry
+    val converter = registry.get("thermostat")!!
+    val input = converter.designTemplate(converter.designProperties(card, snapshot)!!)!!
+    // The steppers the template itself renders, against its placeholder slot.
+    val templateDial = ee.schimke.ha.rc.cards.thermostatDial(input.card, input.snapshot)
+    val liveDial = ee.schimke.ha.rc.cards.thermostatDial(card, snapshot)
+    val playback = CardDesignTemplates.playback(card, ByteArray(0))
+    assertEquals(
+      liveDial.incrementAction,
+      playback.resolveTap(templateDial.incrementAction, snapshot),
+    )
+    assertEquals(
+      liveDial.decrementAction,
+      playback.resolveTap(templateDial.decrementAction, snapshot),
+    )
+    // A set_temperature of the template's own choosing never runs.
+    val forged =
+      ee.schimke.ha.rc.components.HaAction.CallService(
+        "climate",
+        "set_temperature",
+        "climate.s0",
+        kotlinx.serialization.json.JsonObject(
+          mapOf("temperature" to kotlinx.serialization.json.JsonPrimitive(35))
+        ),
+      )
+    assertEquals(playback.slotTapActions[0], playback.resolveTap(forged, snapshot))
+  }
+
   /**
    * With `-PcardDesignsOut=<dir>`, writes every spike design as the files a static host serves.
    * Skipped otherwise.

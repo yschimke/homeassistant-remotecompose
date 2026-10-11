@@ -48,7 +48,8 @@ values**. The client fills those bindings from its own HA connection.
 
 A first end-to-end slice is in the codebase, with **one rendering path**: every templatable card
 (today: tile, entity, button, heading, glance, entities, alarm panel, gauge, clock, area, picture-entity,
-sensor, history-graph, statistic, line statistics-graph and the unsupported placeholder) renders from a card design. The design comes from the server when one is
+sensor, history-graph, statistic, line statistics-graph, thermostat, humidifier and the unsupported
+placeholder) renders from a card design. The design comes from the server when one is
 cached for the card's key, and from the **local design library** otherwise. The library captures
 the same template from the app's own converters on first use and keeps it for the process, so with
 no server configured (the default) cards still take the design path, just with built-in designs.
@@ -96,6 +97,10 @@ Deliberate spike limits, each owned by a milestone below:
   history length is never structure: the samples are `<slot>.numeric.<i>`, the y-range
   `<slot>.series_min` / `series_span`, a history graph's per-row summary `<slot>.summary`, and
   the only property the data decides is whether a row has a line at all (`has_data`).
+  The arc dials (thermostat, humidifier) already read `value_fraction`, `target_fraction` and
+  their label attributes as bindings; the client now pushes them, a state-picked accent is an
+  index into the card's own palette (`<slot>.accent_index`, selected in-document), and a
+  stepper tap is matched against the template's own steppers and rebuilt from the live target.
 - **Generation properties** (`EntityDesign`) are what changes the look, per bound entity:
   `domain` (icon family, toggle chrome), `device_class` for sensors and binary sensors (icon,
   colour), the `icon` attribute and a config `icon` (`card_icon`). List cards prefix them with the

@@ -6,12 +6,15 @@ import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import ee.schimke.ha.design.DesignProperties
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.CardConverter
 import ee.schimke.ha.rc.CardSizeMode
+import ee.schimke.ha.rc.CardSnapshotBindings
+import ee.schimke.ha.rc.DesignTemplateInput
 import ee.schimke.ha.rc.LocalCardSizeMode
 import ee.schimke.ha.rc.RemoteSizeBreakpoint
 import ee.schimke.ha.rc.cardDataSignature
@@ -42,70 +45,105 @@ class ThermostatCardConverter : CardConverter {
 
   override fun naturalHeightDp(card: CardConfig, snapshot: HaSnapshot): Int = 290
 
+  /** A thermostat renders from a card design; see [DialCard]. */
+  override fun designProperties(card: CardConfig, snapshot: HaSnapshot): DesignProperties? =
+    dial.properties(card, snapshot)
+
+  override fun designTemplate(properties: DesignProperties): DesignTemplateInput? =
+    dial.template(properties)
+
+  override fun designBindings(card: CardConfig, snapshot: HaSnapshot): CardSnapshotBindings =
+    dial.bindings(card, snapshot)
+
+  override fun designAction(
+    card: CardConfig,
+    snapshot: HaSnapshot?,
+    slot: Int,
+    templateAction: HaAction,
+  ): HaAction? = dial.action(card, snapshot, templateAction)
+
   @Composable
   override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
-    val entityId = card.raw["entity"]?.jsonPrimitive?.content
-    val entity = entityId?.let { snapshot.states[it] }
-    val attrs = entity?.attributes ?: JsonObject(emptyMap())
-    val name =
-      card.raw["name"]?.jsonPrimitive?.content
-        ?: attrs["friendly_name"]?.jsonPrimitive?.content
-        ?: entityId
-        ?: "Thermostat"
-    val unit = attrs["temperature_unit"]?.jsonPrimitive?.content ?: "°C"
-    val current = attrs["current_temperature"]?.jsonPrimitive?.content?.toFloatOrNull()
-    val target = attrs["temperature"]?.jsonPrimitive?.content?.toFloatOrNull()
-    val min = attrs["min_temp"]?.jsonPrimitive?.content?.toFloatOrNull() ?: 7f
-    val max = attrs["max_temp"]?.jsonPrimitive?.content?.toFloatOrNull() ?: 35f
-    val step = attrs["target_temp_step"]?.jsonPrimitive?.content?.toFloatOrNull() ?: 0.5f
-    val mode = entity?.state ?: "off"
-    val hvacAction = attrs["hvac_action"]?.jsonPrimitive?.content
-    val modeChip =
-      when (hvacAction) {
-        "heating" -> "Heating"
-        "cooling" -> "Cooling"
-        "drying" -> "Drying"
-        "fan" -> "Fan"
-        "idle" -> "Idle"
-        else -> mode.replace('_', ' ').replaceFirstChar { it.uppercaseChar() }
-      }
-    val accent = climateAccent(mode, hvacAction)
-    val span = (max - min).coerceAtLeast(0.0001f)
-    val valueFraction = ((current ?: target ?: min) - min) / span
-    val targetFraction = target?.let { (it - min) / span }
-
-    val centerLabel =
-      current?.let { "${formatTemp(it)}$unit" } ?: target?.let { "${formatTemp(it)}$unit" } ?: "—"
-    val supportingLabel = target?.let { t -> "↑ ${formatTemp(t)}$unit" }
-
-    val (incAction, decAction) =
-      stepperActions(entity, target, step) ?: (HaAction.None to HaAction.None)
-
-    val data =
-      HaArcDialData(
-        entityId = entityId,
-        name = name,
-        valueFraction = valueFraction.coerceIn(0f, 1f),
-        targetFraction = targetFraction?.coerceIn(0f, 1f),
-        centerLabel = centerLabel,
-        centerLabelAttribute = "current_temperature_label",
-        supportingLabel = supportingLabel,
-        supportingLabelAttribute = supportingLabel?.let { "temperature_label" },
-        modeChip =
-          HaModeChip.Static(
-            entityId = entityId,
-            attribute = "hvac_action_label",
-            initial = modeChip,
-          ),
-        accent = accent,
-        showSteppers = target != null,
-        centerIcon = null,
-        incrementAction = incAction,
-        decrementAction = decAction,
-      )
-
-    RenderArcDial(data, modifier)
+    RenderArcDial(thermostatDial(card, snapshot), modifier)
   }
+
+  private val dial =
+    DialCard(
+      cardType = cardType,
+      domain = "climate",
+      configKeys = setOf("type", "entity", "name"),
+      placeholder = { hasTarget ->
+        "heat" to
+          buildMap {
+            put("current_temperature", "19")
+            if (hasTarget) put("temperature", "20")
+          }
+      },
+      data = ::thermostatDial,
+    )
+}
+
+/** The thermostat's dial for [card] and [snapshot]: what it draws, and what a template binds. */
+internal fun thermostatDial(card: CardConfig, snapshot: HaSnapshot): HaArcDialData {
+  val entityId = card.raw["entity"]?.jsonPrimitive?.content
+  val entity = entityId?.let { snapshot.states[it] }
+  val attrs = entity?.attributes ?: JsonObject(emptyMap())
+  val name =
+    card.raw["name"]?.jsonPrimitive?.content
+      ?: attrs["friendly_name"]?.jsonPrimitive?.content
+      ?: entityId
+      ?: "Thermostat"
+  val unit = attrs["temperature_unit"]?.jsonPrimitive?.content ?: "°C"
+  val current = attrs["current_temperature"]?.jsonPrimitive?.content?.toFloatOrNull()
+  val target = attrs["temperature"]?.jsonPrimitive?.content?.toFloatOrNull()
+  val min = attrs["min_temp"]?.jsonPrimitive?.content?.toFloatOrNull() ?: 7f
+  val max = attrs["max_temp"]?.jsonPrimitive?.content?.toFloatOrNull() ?: 35f
+  val step = attrs["target_temp_step"]?.jsonPrimitive?.content?.toFloatOrNull() ?: 0.5f
+  val mode = entity?.state ?: "off"
+  val hvacAction = attrs["hvac_action"]?.jsonPrimitive?.content
+  val modeChip =
+    when (hvacAction) {
+      "heating" -> "Heating"
+      "cooling" -> "Cooling"
+      "drying" -> "Drying"
+      "fan" -> "Fan"
+      "idle" -> "Idle"
+      else -> mode.replace('_', ' ').replaceFirstChar { it.uppercaseChar() }
+    }
+  val accent = climateAccent(mode, hvacAction)
+  val span = (max - min).coerceAtLeast(0.0001f)
+  val valueFraction = ((current ?: target ?: min) - min) / span
+  val targetFraction = target?.let { (it - min) / span }
+
+  val centerLabel =
+    current?.let { "${formatTemp(it)}$unit" } ?: target?.let { "${formatTemp(it)}$unit" } ?: "—"
+  val supportingLabel = target?.let { t -> "↑ ${formatTemp(t)}$unit" }
+
+  val (incAction, decAction) =
+    stepperActions(entity, target, step) ?: (HaAction.None to HaAction.None)
+
+  return HaArcDialData(
+    entityId = entityId,
+    name = name,
+    valueFraction = valueFraction.coerceIn(0f, 1f),
+    targetFraction = targetFraction?.coerceIn(0f, 1f),
+    centerLabel = centerLabel,
+    centerLabelAttribute = "current_temperature_label",
+    supportingLabel = supportingLabel,
+    supportingLabelAttribute = supportingLabel?.let { "temperature_label" },
+    modeChip =
+      HaModeChip.Static(
+        entityId = entityId,
+        attribute = "hvac_action_label",
+        initial = modeChip,
+      ),
+    accent = accent,
+    showSteppers = target != null,
+    centerIcon = null,
+    incrementAction = incAction,
+    decrementAction = decAction,
+    accentChoices = ClimateAccents,
+  )
 }
 
 /**
@@ -163,14 +201,25 @@ private fun stepperActions(
   return up to down
 }
 
+private val AccentHeat = Color(0xFFE65100)
+private val AccentCool = Color(0xFF2196F3)
+private val AccentDry = Color(0xFFFDD835)
+private val AccentFan = Color(0xFF00BFA5)
+private val AccentAuto = Color(0xFF546E7A)
+private val AccentOff = Color(0xFF9E9E9E)
+
+/** Every accent [climateAccent] can pick; a design template selects among them in-document. */
+private val ClimateAccents =
+  listOf(AccentHeat, AccentCool, AccentDry, AccentFan, AccentAuto, AccentOff)
+
 private fun climateAccent(mode: String, hvacAction: String?): Color =
   when {
-    hvacAction == "heating" || mode == "heat" -> Color(0xFFE65100)
-    hvacAction == "cooling" || mode == "cool" -> Color(0xFF2196F3)
-    hvacAction == "drying" || mode == "dry" -> Color(0xFFFDD835)
-    hvacAction == "fan" || mode == "fan_only" -> Color(0xFF00BFA5)
-    mode == "auto" || mode == "heat_cool" -> Color(0xFF546E7A)
-    else -> Color(0xFF9E9E9E)
+    hvacAction == "heating" || mode == "heat" -> AccentHeat
+    hvacAction == "cooling" || mode == "cool" -> AccentCool
+    hvacAction == "drying" || mode == "dry" -> AccentDry
+    hvacAction == "fan" || mode == "fan_only" -> AccentFan
+    mode == "auto" || mode == "heat_cool" -> AccentAuto
+    else -> AccentOff
   }
 
 private fun formatTemp(v: Float): String =

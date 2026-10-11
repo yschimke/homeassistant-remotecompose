@@ -640,4 +640,45 @@ class CardDesignParityTest {
       dark = true,
       statistics = mapOf("sensor.temp" to stats(18.0, 19.5, 21.0, 20.0, 22.0, 21.5)),
     )
+
+  @Test
+  fun thermostatCooling() =
+    assertParity(
+      "thermostat-cool",
+      card("thermostat") { put("entity", "climate.office") },
+      entity(
+        "climate.office",
+        "cool",
+        "friendly_name" to "Office",
+        "current_temperature" to "24.5",
+        "temperature" to "22",
+        "hvac_action" to "cooling",
+      ),
+      dark = false,
+    )
+
+  @Test
+  fun thermostatOffNoTargetDark() =
+    assertParity(
+      "thermostat-off-dark",
+      card("thermostat") { put("entity", "climate.office") },
+      entity("climate.office", "off", "friendly_name" to "Office", "current_temperature" to "18"),
+      dark = true,
+    )
+
+  @Test
+  fun humidifier() =
+    assertParity(
+      "humidifier",
+      card("humidifier") { put("entity", "humidifier.bedroom") },
+      entity(
+        "humidifier.bedroom",
+        "on",
+        "friendly_name" to "Bedroom",
+        "current_humidity" to "38",
+        "humidity" to "45",
+        "action" to "humidifying",
+      ),
+      dark = false,
+    )
 }

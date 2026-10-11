@@ -3,8 +3,10 @@
 package ee.schimke.ha.rc.components
 
 import androidx.compose.remote.creation.compose.state.RemoteFloat
+import androidx.compose.remote.creation.compose.state.RemoteInt
 import androidx.compose.remote.creation.compose.state.RemoteString
 import androidx.compose.remote.creation.compose.state.rf
+import androidx.compose.remote.creation.compose.state.ri
 import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.staticCompositionLocalOf
@@ -24,6 +26,7 @@ val LocalTemplateBindings = staticCompositionLocalOf<TemplateBindings?> { null }
 class TemplateBindings {
   internal val strings = mutableMapOf<String, RemoteString>()
   internal val floats = mutableMapOf<String, RemoteFloat>()
+  internal val ints = mutableMapOf<String, RemoteInt>()
 }
 
 /**
@@ -88,6 +91,17 @@ fun entityFloat(entityId: String?, field: String, value: Float): RemoteFloat {
   return bindings.floats.getOrPut("$entityId.$field") {
     LiveValues.namedFloat(entityId, field, value)
   }
+}
+
+/**
+ * An index derived from [entityId]'s state that a live capture bakes (which accent a state picks):
+ * `<entityId>.<field>` as a named int inside a template capture, otherwise the constant [value].
+ */
+@Composable
+fun entityInt(entityId: String?, field: String, value: Int): RemoteInt {
+  val bindings = LocalTemplateBindings.current ?: return value.ri
+  if (entityId == null) return value.ri
+  return bindings.ints.getOrPut("$entityId.$field") { LiveValues.namedInt(entityId, field, value) }
 }
 
 /** Binding-name prefix for card-level (not per-entity) bindings: `card.title`, … */
