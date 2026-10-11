@@ -1628,7 +1628,7 @@
     "functionName": "DashboardGithubMobile",
     "module": "previews",
     "renderBasename": "DashboardGithubMobile_dashboard_github_mobile-8f04a7c1.png",
-    "sha256": "1d44541a27768f2f50a04662c9abe994c4e8dbaa99e771d08922bea8b9bd494a",
+    "sha256": "e5342bdec5e72c00517586fe80b9ae447e2a3ccc3d3a1f0c6c336669ed601fe3",
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/DashboardPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.DashboardPreviewsKt.DashboardGithubTablet_dashboard github \u2014 tablet": {
@@ -1636,7 +1636,7 @@
     "functionName": "DashboardGithubTablet",
     "module": "previews",
     "renderBasename": "DashboardGithubTablet_dashboard_github_tablet-89194c99.png",
-    "sha256": "3f0171fb5a54af7868bdf7cf2555e94ada5a651903ce0e2eaa60d39d9c6d1303",
+    "sha256": "d209cc8bd03343af13a6d4f3d8f916d94d510270f90ab623faacb378db797914",
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/DashboardPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.DashboardPreviewsKt.DashboardMeshcoreMobile_dashboard meshcore \u2014 mobile": {
