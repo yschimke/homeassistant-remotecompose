@@ -123,8 +123,14 @@ class CardDesignParityTest {
     bitmapLoader: androidx.compose.remote.player.core.platform.BitmapLoader =
       androidx.compose.remote.player.core.platform.BitmapLoader.UNSUPPORTED,
     history: Map<String, List<ee.schimke.ha.model.HistoryPoint>> = emptyMap(),
+    statistics: Map<String, List<ee.schimke.ha.model.StatisticPoint>> = emptyMap(),
   ) {
-    val snapshot = HaSnapshot(states = states.associateBy { it.entityId }, history = history)
+    val snapshot =
+      HaSnapshot(
+        states = states.associateBy { it.entityId },
+        history = history,
+        statistics = statistics,
+      )
     val context = org.robolectric.RuntimeEnvironment.getApplication()
     val key = assertNotNull(CardDesignTemplates.keyFor(card, snapshot, style, dark, registry))
     val playback =
@@ -597,5 +603,41 @@ class CardDesignParityTest {
           "sensor.temp" to series(19, 21, 20, 23, 22),
           "sensor.humidity" to series(40, 45, 52, 48),
         ),
+    )
+
+  private fun stats(vararg means: Double) = means.mapIndexed { i, v ->
+    ee.schimke.ha.model.StatisticPoint(
+      kotlin.time.Instant.fromEpochMilliseconds(i * 3_600_000L),
+      mean = v,
+      min = v - 1,
+      max = v + 1,
+    )
+  }
+
+  @Test
+  fun statisticWithUnitAndPeriod() =
+    assertParity(
+      "statistic",
+      card("statistic") {
+        put("entity", "sensor.temp")
+        put("period", "day")
+        put("stat_type", "max")
+      },
+      listOf(listStates[1]),
+      dark = false,
+      statistics = mapOf("sensor.temp" to stats(19.0, 22.5, 21.0)),
+    )
+
+  @Test
+  fun statisticsGraphLine() =
+    assertParity(
+      "statistics-graph",
+      card("statistics-graph") {
+        put("title", "Temperature")
+        putJsonArray("entities") { add("sensor.temp") }
+      },
+      listOf(listStates[1]),
+      dark = true,
+      statistics = mapOf("sensor.temp" to stats(18.0, 19.5, 21.0, 20.0, 22.0, 21.5)),
     )
 }

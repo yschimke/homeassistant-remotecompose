@@ -48,7 +48,7 @@ values**. The client fills those bindings from its own HA connection.
 
 A first end-to-end slice is in the codebase, with **one rendering path**: every templatable card
 (today: tile, entity, button, heading, glance, entities, alarm panel, gauge, clock, area, picture-entity,
-sensor, history-graph and the unsupported placeholder) renders from a card design. The design comes from the server when one is
+sensor, history-graph, statistic, line statistics-graph and the unsupported placeholder) renders from a card design. The design comes from the server when one is
 cached for the card's key, and from the **local design library** otherwise. The library captures
 the same template from the app's own converters on first use and keeps it for the process, so with
 no server configured (the default) cards still take the design path, just with built-in designs.

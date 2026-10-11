@@ -14,7 +14,6 @@ import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
-import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.remote.creation.compose.state.rsp
 import androidx.compose.remote.creation.compose.text.RemoteTextStyle
 import androidx.compose.runtime.Composable
@@ -38,7 +37,7 @@ fun RemoteHaStatisticCard(data: HaStatisticCardData, modifier: RemoteModifier = 
   ) {
     RemoteColumn(verticalArrangement = RemoteArrangement.spacedBy(4.rdp)) {
       RemoteText(
-        text = data.name.rs,
+        text = entityName(data.entityId, data.name),
         color = theme.secondaryText,
         fontSize = 12.rsp,
         fontWeight = FontWeight.Medium,
@@ -58,7 +57,7 @@ fun RemoteHaStatisticCard(data: HaStatisticCardData, modifier: RemoteModifier = 
         if (data.unit != null) {
           RemoteBox(modifier = RemoteModifier.padding(start = 4.rdp, bottom = 4.rdp)) {
             RemoteText(
-              text = data.unit.rs,
+              text = entityText(data.entityId, "unit", data.unit),
               color = theme.secondaryText,
               fontSize = 14.rsp,
               style = RemoteTextStyle.Default,
@@ -69,7 +68,7 @@ fun RemoteHaStatisticCard(data: HaStatisticCardData, modifier: RemoteModifier = 
       }
       if (data.periodLabel != null) {
         RemoteText(
-          text = data.periodLabel.rs,
+          text = cardText("period", data.periodLabel),
           color = data.accent.rc,
           fontSize = 11.rsp,
           style = RemoteTextStyle.Default,

@@ -23,9 +23,9 @@ internal object SeriesDesign {
   fun hasData(snapshot: HaSnapshot, entityId: String): Boolean =
     points(snapshot, entityId).size >= 2
 
-  /** The sparkline bindings of [entityId]'s history, under [slot]. */
-  fun bindings(slot: String, snapshot: HaSnapshot, entityId: String): Map<String, Float> {
-    val samples = sparklineSamples(points(snapshot, entityId))
+  /** The sparkline bindings of [points], under [slot]. */
+  fun bindings(slot: String, points: List<Float>): Map<String, Float> {
+    val samples = sparklineSamples(points)
     if (samples.isEmpty()) return emptyMap()
     val range = sparklineRange(samples)
     return buildMap {
@@ -36,9 +36,13 @@ internal object SeriesDesign {
   }
 
   /** The sparkline bindings for every slot of a card, in slot order. */
-  fun slotBindings(entityIds: List<String>, snapshot: HaSnapshot): Map<String, Float> = buildMap {
+  fun slotBindings(
+    entityIds: List<String>,
+    snapshot: HaSnapshot,
+    pointsOf: (String) -> List<Float> = { points(snapshot, it) },
+  ): Map<String, Float> = buildMap {
     entityIds.forEachIndexed { i, id ->
-      putAll(bindings(CardDesignSlots.slotId(CardDesignSlots.domainOf(id), i), snapshot, id))
+      putAll(bindings(CardDesignSlots.slotId(CardDesignSlots.domainOf(id), i), pointsOf(id)))
     }
   }
 
