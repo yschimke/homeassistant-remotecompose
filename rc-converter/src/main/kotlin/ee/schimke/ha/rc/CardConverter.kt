@@ -80,6 +80,15 @@ interface CardConverter {
   fun designTemplate(properties: DesignProperties): DesignTemplateInput? = null
 
   /**
+   * The card this card shows instead of itself, for [snapshot], when that choice depends on live
+   * data the client holds — a conditional card's inner card while its conditions hold, an entity
+   * filter's glance over the matching entities. The design path then keys, binds and taps the
+   * delegate ([CardDesignTemplates.designCard]); the choice is the client's, made at playback, and
+   * never part of a template.
+   */
+  fun designDelegate(card: CardConfig, snapshot: HaSnapshot): CardConfig? = null
+
+  /**
    * Card-level bindings a design template of this card reads beyond the slot bindings, for
    * [snapshot]: config the template binds instead of baking (`card.<field>`, see `rc-components`'
    * `cardText` / `cardFloat`), or a slot value the card reads differently. They are pushed on top

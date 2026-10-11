@@ -57,6 +57,7 @@ import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.model.JinjaTemplate
 import ee.schimke.ha.model.TemplateBindings
 import ee.schimke.ha.rc.CachedCardPreview
+import ee.schimke.ha.rc.CardDesignTemplates
 import ee.schimke.ha.rc.CardWidthClass
 import ee.schimke.ha.rc.LocalCardCaptureEpoch
 import ee.schimke.ha.rc.LocalHaActionDispatcher
@@ -933,10 +934,12 @@ private fun CardSlot(
   // this card's key, the local library's otherwise. The card's generation properties key the
   // template, so value-only snapshot changes keep the same document and arrive as bindings.
   val cardDesigns = LocalCardDesigns.current
-  val designShape = registry.get(card.type)?.designProperties(card, snapshot)
+  // A conditional or entity-filter card renders as the card it currently shows.
+  val designCard = CardDesignTemplates.designCard(card, snapshot, registry)
+  val designShape = registry.get(designCard.type)?.designProperties(designCard, snapshot)
   val template =
-    remember(card, designShape, cardDesigns, style, dark) {
-      cardTemplateFor(context, card, snapshot, cardDesigns, style, dark, registry)
+    remember(designCard, designShape, cardDesigns, style, dark) {
+      cardTemplateFor(context, designCard, snapshot, cardDesigns, style, dark, registry)
     }
   val bitmapLoader =
     remember(context, baseUrl, imageLoader) {

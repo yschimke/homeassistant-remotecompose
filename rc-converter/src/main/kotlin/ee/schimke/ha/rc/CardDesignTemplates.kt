@@ -48,15 +48,35 @@ object CardDesignTemplates {
     surface: DesignSurface = DesignSurface.MobileApp,
   ): DesignKey? {
     if (surface != DesignSurface.MobileApp) return null
-    val shape = registry.get(card.type)?.designProperties(card, snapshot)?.shape ?: return null
+    val design = designCard(card, snapshot, registry)
+    val shape = registry.get(design.type)?.designProperties(design, snapshot)?.shape ?: return null
     return DesignKey(
-      cardType = card.type,
+      cardType = design.type,
       surface = surface,
       rcApiLevel = MOBILE_APP_API_LEVEL,
       shape = shape,
       theme = DesignKey.bakedTheme(style.name, dark),
     )
   }
+
+  /**
+   * The card whose design [card] renders as for [snapshot]: [card] itself, or the card its
+   * converter delegates to ([CardConverter.designDelegate]), followed to the end. Callers key and
+   * play the result, so a delegate's bindings and taps are its own.
+   */
+  fun designCard(
+    card: CardConfig,
+    snapshot: HaSnapshot,
+    registry: CardRegistry = defaultTemplateRegistry,
+  ): CardConfig {
+    var current = card
+    repeat(MAX_DELEGATION) {
+      current = registry.get(current.type)?.designDelegate(current, snapshot) ?: return current
+    }
+    return current
+  }
+
+  private const val MAX_DELEGATION = 8
 
   /**
    * Template playback for [card] with [bytes] from the design repository. Bindings and tap actions

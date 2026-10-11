@@ -134,7 +134,10 @@ class CardDesignParityTest {
     val context = org.robolectric.RuntimeEnvironment.getApplication()
     val key = assertNotNull(CardDesignTemplates.keyFor(card, snapshot, style, dark, registry))
     val playback =
-      CardDesignTemplates.playback(card, CardDesignLibrary.template(context, key, registry))
+      CardDesignTemplates.playback(
+        CardDesignTemplates.designCard(card, snapshot, registry),
+        CardDesignLibrary.template(context, key, registry),
+      )
     val theme = haThemeFor(style, dark)
 
     var useTemplate by mutableStateOf(false)
@@ -742,6 +745,40 @@ class CardDesignParityTest {
           put("heading_style", "subtitle")
         },
       ),
+      listStates,
+      dark = false,
+    )
+
+  @Test
+  fun conditionalShowingItsCard() =
+    assertParity(
+      "conditional",
+      card("conditional") {
+        putJsonArray("conditions") {
+          addJsonObject {
+            put("entity", "light.kitchen")
+            put("state", "on")
+          }
+        }
+        put("card", tile("switch.fan").raw)
+      },
+      listStates,
+      dark = false,
+    )
+
+  @Test
+  fun entityFilterOnLights() =
+    assertParity(
+      "entity-filter",
+      card("entity-filter") {
+        putJsonArray("entities") {
+          add("light.kitchen")
+          add("switch.fan")
+          add("sensor.temp")
+        }
+        putJsonArray("state_filter") { add("on") }
+        put("card", buildJsonObject { put("title", "On now") })
+      },
       listStates,
       dark = false,
     )

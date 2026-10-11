@@ -44,6 +44,13 @@ class ConditionalCardConverter(private val registryForHeight: CardRegistry? = nu
     return registryForHeight?.cardHeightDp(inner, snapshot) ?: 160
   }
 
+  /**
+   * While its conditions hold, a conditional card renders as its inner card's design; the client
+   * evaluates the conditions on live data. Otherwise it shows nothing, through the converter.
+   */
+  override fun designDelegate(card: CardConfig, snapshot: HaSnapshot): CardConfig? =
+    if (conditionsMet(card, snapshot)) innerCard(card) else null
+
   @Composable
   override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
     if (!conditionsMet(card, snapshot)) return
