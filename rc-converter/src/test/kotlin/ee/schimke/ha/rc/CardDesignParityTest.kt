@@ -351,4 +351,70 @@ class CardDesignParityTest {
       entity("alarm_control_panel.home", "triggered"),
       dark = true,
     )
+
+  private fun gauge(block: kotlinx.serialization.json.JsonObjectBuilder.() -> Unit = {}) =
+    card("gauge") {
+      put("entity", "sensor.cpu")
+      block()
+    }
+
+  private val cpu =
+    entity("sensor.cpu", "64", "friendly_name" to "CPU", "unit_of_measurement" to "%")
+
+  @Test
+  fun gaugeWarningBand() =
+    assertParity(
+      "gauge-warning",
+      gauge {
+        put(
+          "severity",
+          buildJsonObject {
+            put("green", 0)
+            put("yellow", 50)
+            put("red", 80)
+          },
+        )
+      },
+      cpu,
+      dark = false,
+    )
+
+  @Test
+  fun gaugeDescendingBandsCustomRangeDark() =
+    assertParity(
+      "gauge-descending-dark",
+      gauge {
+        put("min", 20)
+        put("max", 90)
+        put("name", "Processor")
+        put(
+          "severity",
+          buildJsonObject {
+            put("green", 60)
+            put("yellow", 30)
+            put("red", 0)
+          },
+        )
+      },
+      cpu,
+      dark = true,
+    )
+
+  @Test
+  fun gaugeNoSeverityNoUnit() =
+    assertParity(
+      "gauge-plain",
+      gauge(),
+      entity("sensor.cpu", "37", "friendly_name" to "Load"),
+      dark = false,
+    )
+
+  @Test
+  fun gaugeUnavailable() =
+    assertParity(
+      "gauge-unavailable",
+      gauge { put("severity", buildJsonObject { put("red", 10) }) },
+      entity("sensor.cpu", "unavailable", "friendly_name" to "CPU", "unit_of_measurement" to "%"),
+      dark = false,
+    )
 }

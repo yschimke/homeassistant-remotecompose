@@ -80,6 +80,14 @@ interface CardConverter {
   fun designTemplate(properties: DesignProperties): DesignTemplateInput? = null
 
   /**
+   * Card-level bindings a design template of this card reads beyond the slot bindings, for
+   * [snapshot]: config the template binds instead of baking (`card.<field>`, see `rc-components`'
+   * `cardText` / `cardFloat`), or a slot value the card reads differently. They are pushed on top
+   * of `CardDesignSlots.slotBindings`.
+   */
+  fun designBindings(card: CardConfig, snapshot: HaSnapshot): CardSnapshotBindings? = null
+
+  /**
    * The action to run for a tap on slot [slot] of this card's design template, whose bytes encode
    * [templateAction] (with the slot's entity id), or null for the slot's default tap. Templates are
    * remote content, so an implementation never returns [templateAction] itself: it may only use it

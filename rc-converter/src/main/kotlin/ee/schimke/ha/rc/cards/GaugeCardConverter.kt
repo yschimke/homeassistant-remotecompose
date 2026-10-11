@@ -5,26 +5,35 @@ package ee.schimke.ha.rc.cards
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.fillMaxSize
 import androidx.compose.runtime.Composable
+import ee.schimke.ha.design.CardDesignSlots
+import ee.schimke.ha.design.DesignProperties
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
+import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.BreakpointAxis
 import ee.schimke.ha.rc.CardConverter
 import ee.schimke.ha.rc.CardSizeMode
+import ee.schimke.ha.rc.CardSnapshotBindings
+import ee.schimke.ha.rc.DesignTemplateInput
 import ee.schimke.ha.rc.LocalCardSizeMode
 import ee.schimke.ha.rc.RemoteSizeBreakpoint
+import ee.schimke.ha.rc.components.HaGaugeBands
 import ee.schimke.ha.rc.components.HaGaugeData
-import ee.schimke.ha.rc.components.HaGaugeSeverity
 import ee.schimke.ha.rc.components.LiveValues
 import ee.schimke.ha.rc.components.RemoteHaGauge
 import ee.schimke.ha.rc.components.RemoteHaGaugeStacked
 import ee.schimke.ha.rc.components.RemoteHaGaugeWide
+import ee.schimke.ha.rc.components.gaugeRangeText
 import ee.schimke.ha.rc.defaultTapActionFor
 import ee.schimke.ha.rc.formatState
 import ee.schimke.ha.rc.parseHaAction
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.put
 
 /**
  * `gauge` card. Maps the entity's numeric state into a half-circle dial with HA's severity bands
@@ -54,6 +63,64 @@ class GaugeCardConverter : CardConverter {
   override val cardType: String = CardTypes.GAUGE
 
   override fun naturalHeightDp(card: CardConfig, snapshot: HaSnapshot): Int = 150
+
+  /**
+   * A gauge renders from a card design: its value, range and severity bands are all computed
+   * in-document, so the only structure is whether the range line exists (it shows only with a
+   * unit). Name, state, numeric value, `min` / `max`, thresholds and the range text are bindings
+   * ([designBindings]).
+   */
+  override fun designProperties(card: CardConfig, snapshot: HaSnapshot): DesignProperties? {
+    if (!TEMPLATE_CONFIG_KEYS.containsAll(card.raw.keys)) return null
+    val severity = card.raw["severity"]
+    if (severity != null && (severity !is JsonObject || !SEVERITY_KEYS.containsAll(severity.keys)))
+      return null
+    val entityId = card.raw["entity"]?.jsonPrimitive?.contentOrNull ?: return null
+    val entity = snapshot.states[entityId] ?: return null
+    return DesignProperties.build { enum(HAS_UNIT, if (unitOf(card, entity) != null) 1 else 0) }
+  }
+
+  override fun designTemplate(properties: DesignProperties): DesignTemplateInput? {
+    val hasUnit = properties[HAS_UNIT] ?: return null
+    // The domain doesn't change a gauge's look; any one gives the slot a name.
+    val slot = CardDesignSlots.slotId("sensor", 0)
+    val card =
+      CardConfig(
+        type = cardType,
+        raw =
+          buildJsonObject {
+            put("type", cardType)
+            put("entity", slot)
+            if (hasUnit == "1") put("unit", "unit")
+          },
+      )
+    val entity = CardDesignSlots.templateEntity(slot, placeholderState = "0")
+    return DesignTemplateInput(card, HaSnapshot(states = mapOf(slot to entity)))
+  }
+
+  override fun designBindings(card: CardConfig, snapshot: HaSnapshot): CardSnapshotBindings {
+    val entityId = card.raw["entity"]?.jsonPrimitive?.contentOrNull
+    val entity = entityId?.let { snapshot.states[it] }
+    val (min, max) = rangeOf(card)
+    val bands = bandsOf(card)
+    val floats = buildMap {
+      put("card.min", min.toFloat())
+      put("card.max", max.toFloat())
+      // An unset band is a threshold no value reaches, as RemoteHaGauge bakes it.
+      put("card.severity_green", bands.green?.toFloat() ?: UNSET_THRESHOLD)
+      put("card.severity_yellow", bands.yellow?.toFloat() ?: UNSET_THRESHOLD)
+      put("card.severity_red", bands.red?.toFloat() ?: UNSET_THRESHOLD)
+      // A non-numeric state sits at `min`, as gaugeData reads it.
+      entityId?.let {
+        val slot = CardDesignSlots.slotId(CardDesignSlots.domainOf(it), 0)
+        put("$slot.numeric_state", (entity?.state?.toDoubleOrNull() ?: min).toFloat())
+      }
+    }
+    val strings = buildMap {
+      unitOf(card, entity)?.let { put("card.range", gaugeRangeText(min, max, it)) }
+    }
+    return CardSnapshotBindings(strings, emptyMap(), emptyMap(), floats)
+  }
 
   @Composable
   override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
@@ -92,6 +159,13 @@ class GaugeCardConverter : CardConverter {
 
   private companion object {
     const val MinStackedHeightDp = 70
+
+    val TEMPLATE_CONFIG_KEYS = setOf("type", "entity", "name", "unit", "min", "max", "severity")
+    val SEVERITY_KEYS = setOf("green", "yellow", "red")
+    const val HAS_UNIT = "has_unit"
+
+    /** Mirrors RemoteHaGauge's threshold for an unset band. */
+    const val UNSET_THRESHOLD = 1e30f
   }
 
   @Composable
@@ -110,13 +184,9 @@ private fun gaugeData(card: CardConfig, snapshot: HaSnapshot): HaGaugeData {
       ?: entity?.attributes?.get("friendly_name")?.jsonPrimitive?.content
       ?: entityId
       ?: "(no entity)"
-  val unit =
-    card.raw["unit"]?.jsonPrimitive?.content
-      ?: entity?.attributes?.get("unit_of_measurement")?.jsonPrimitive?.content
-  val min = card.raw["min"]?.jsonPrimitive?.content?.toDoubleOrNull() ?: 0.0
-  val max = card.raw["max"]?.jsonPrimitive?.content?.toDoubleOrNull() ?: 100.0
+  val unit = unitOf(card, entity)
+  val (min, max) = rangeOf(card)
   val value = entity?.state?.toDoubleOrNull() ?: min
-  val severity = parseSeverity(card.raw["severity"] as? JsonObject, value)
   val tapCfg = card.raw["tap_action"]?.jsonObject
   val tapAction =
     if (tapCfg != null) parseHaAction(tapCfg, entityId) else defaultTapActionFor(entityId)
@@ -128,29 +198,25 @@ private fun gaugeData(card: CardConfig, snapshot: HaSnapshot): HaGaugeData {
     value = LiveValues.numericState(entityId, value.toFloat()),
     min = min,
     max = max,
-    severity = severity,
+    severity = bandsOf(card),
     tapAction = tapAction,
   )
 }
 
+private fun unitOf(card: CardConfig, entity: EntityState?): String? =
+  card.raw["unit"]?.jsonPrimitive?.content
+    ?: entity?.attributes?.get("unit_of_measurement")?.jsonPrimitive?.content
+
+private fun rangeOf(card: CardConfig): Pair<Double, Double> =
+  (card.raw["min"]?.jsonPrimitive?.content?.toDoubleOrNull() ?: 0.0) to
+    (card.raw["max"]?.jsonPrimitive?.content?.toDoubleOrNull() ?: 100.0)
+
 /**
- * HA's severity config is a map of `green` / `yellow` / `red` to numeric thresholds. The active
- * band is the highest threshold the value crosses, regardless of the threshold ordering (HA accepts
- * both "green=60, yellow=30, red=0" descending and "red=50, yellow=10, green=0" ascending — see the
- * meshcore dashboard for examples).
+ * HA's severity config: a map of `green` / `yellow` / `red` to numeric thresholds. Which band is
+ * active is decided in-document from the live value ([HaGaugeBands]).
  */
-private fun parseSeverity(cfg: JsonObject?, value: Double): HaGaugeSeverity {
-  if (cfg == null) return HaGaugeSeverity.None
-  val green = cfg["green"]?.jsonPrimitive?.content?.toDoubleOrNull()
-  val yellow = cfg["yellow"]?.jsonPrimitive?.content?.toDoubleOrNull()
-  val red = cfg["red"]?.jsonPrimitive?.content?.toDoubleOrNull()
-  val bands =
-    listOfNotNull(
-      green?.let { HaGaugeSeverity.Normal to it },
-      yellow?.let { HaGaugeSeverity.Warning to it },
-      red?.let { HaGaugeSeverity.Critical to it },
-    )
-  if (bands.isEmpty()) return HaGaugeSeverity.None
-  val ascending = bands.sortedBy { it.second }
-  return ascending.lastOrNull { value >= it.second }?.first ?: HaGaugeSeverity.None
+private fun bandsOf(card: CardConfig): HaGaugeBands {
+  val cfg = card.raw["severity"] as? JsonObject ?: return HaGaugeBands()
+  fun threshold(key: String) = cfg[key]?.jsonPrimitive?.content?.toDoubleOrNull()
+  return HaGaugeBands(threshold("green"), threshold("yellow"), threshold("red"))
 }
