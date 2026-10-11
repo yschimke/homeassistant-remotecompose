@@ -61,7 +61,7 @@ fun RemoteHaPicture(
   ) {
     RemoteIcon(
       imageVector = data.placeholderIcon.toRemoteImageVector(),
-      contentDescription = (data.name ?: "image").rs,
+      contentDescription = data.name?.let { cardText("name", it) } ?: "image".rs,
       modifier = RemoteModifier.size(48.rdp),
       tint = theme.placeholderAccent,
     )
@@ -73,7 +73,7 @@ fun RemoteHaPicture(
             .padding(horizontal = 12.rdp, vertical = 6.rdp)
       ) {
         RemoteText(
-          text = data.name.rs,
+          text = cardText("name", data.name),
           color = theme.primaryText,
           fontSize = 13.rsp,
           fontWeight = FontWeight.Medium,
@@ -92,7 +92,7 @@ fun RemoteHaPicture(
             .padding(horizontal = 6.rdp, vertical = 2.rdp)
       ) {
         RemoteText(
-          text = data.captionUrl.rs,
+          text = cardText("image", data.captionUrl),
           color = theme.secondaryText,
           fontSize = 9.rsp,
           style = RemoteTextStyle.Default,
@@ -120,7 +120,7 @@ fun RemoteHaPictureGlance(data: HaPictureGlanceData, modifier: RemoteModifier = 
       ) {
         RemoteIcon(
           imageVector = data.placeholderIcon.toRemoteImageVector(),
-          contentDescription = (data.title ?: "image").rs,
+          contentDescription = data.title?.let { cardTitle(it) } ?: "image".rs,
           modifier = RemoteModifier.size(40.rdp),
           tint = theme.placeholderAccent,
         )
@@ -135,7 +135,7 @@ fun RemoteHaPictureGlance(data: HaPictureGlanceData, modifier: RemoteModifier = 
       ) {
         if (data.title != null) {
           RemoteText(
-            text = data.title.rs,
+            text = cardTitle(data.title),
             color = theme.primaryText,
             fontSize = 13.rsp,
             fontWeight = FontWeight.Medium,
@@ -174,7 +174,7 @@ private fun Cell(cell: HaPictureGlanceCell, theme: RemoteHaTheme) {
   ) {
     RemoteIcon(
       imageVector = cell.icon.toRemoteImageVector(),
-      contentDescription = cell.label.rs,
+      contentDescription = entityName(cell.entityId, cell.label),
       modifier = RemoteModifier.size(18.rdp),
       tint = tint,
     )

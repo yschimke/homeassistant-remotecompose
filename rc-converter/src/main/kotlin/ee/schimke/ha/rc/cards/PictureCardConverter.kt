@@ -4,17 +4,22 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.runtime.Composable
+import ee.schimke.ha.design.DesignProperties
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.CardConverter
 import ee.schimke.ha.rc.CardSizeMode
+import ee.schimke.ha.rc.CardSnapshotBindings
+import ee.schimke.ha.rc.DesignTemplateInput
 import ee.schimke.ha.rc.LocalCardSizeMode
 import ee.schimke.ha.rc.components.HaPictureCardData
 import ee.schimke.ha.rc.components.RemoteHaPicture
 import ee.schimke.ha.rc.parseHaAction
+import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.put
 
 /**
  * `picture` card — static image URL. RC has no media-image channel yet; renderer paints a
@@ -24,6 +29,44 @@ class PictureCardConverter : CardConverter {
   override val cardType: String = CardTypes.PICTURE
 
   override fun naturalHeightDp(card: CardConfig, snapshot: HaSnapshot): Int = 140
+
+  /**
+   * A picture card renders from a card design: its name and image caption are `card.name` and
+   * `card.image`, so only which of them it has is structure. Its tap is the card's own.
+   */
+  override fun designProperties(card: CardConfig, snapshot: HaSnapshot): DesignProperties? {
+    if (!setOf("type", "image", "name", "tap_action").containsAll(card.raw.keys)) return null
+    return DesignProperties.build {
+      enum("has_name", if (card.raw["name"] != null) 1 else 0)
+      enum("has_image", if (card.raw["image"] != null) 1 else 0)
+    }
+  }
+
+  override fun designTemplate(properties: DesignProperties): DesignTemplateInput? {
+    if (properties["has_name"] == null) return null
+    val card =
+      CardConfig(
+        type = cardType,
+        raw =
+          buildJsonObject {
+            put("type", cardType)
+            if (properties["has_name"] == "1") put("name", "Name")
+            if (properties["has_image"] == "1") put("image", "image")
+          },
+      )
+    return DesignTemplateInput(card, HaSnapshot())
+  }
+
+  override fun designBindings(card: CardConfig, snapshot: HaSnapshot): CardSnapshotBindings =
+    CardSnapshotBindings(
+      buildMap {
+        card.raw["name"]?.jsonPrimitive?.content?.let { put("card.name", it) }
+        card.raw["image"]?.jsonPrimitive?.content?.let { put("card.image", it) }
+      },
+      emptyMap(),
+      emptyMap(),
+      emptyMap(),
+    )
 
   @Composable
   override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {

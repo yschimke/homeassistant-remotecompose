@@ -782,4 +782,33 @@ class CardDesignParityTest {
       listStates,
       dark = false,
     )
+
+  @Test
+  fun picture() =
+    assertParity(
+      "picture",
+      card("picture") {
+        put("image", "/local/garden.jpg")
+        put("name", "Garden")
+      },
+      emptyList(),
+      dark = false,
+    )
+
+  @Test
+  fun pictureGlanceDark() =
+    assertParity(
+      "picture-glance-dark",
+      card("picture-glance") {
+        put("title", "Living room")
+        put("image", "/local/living.jpg")
+        putJsonArray("entities") {
+          add("light.kitchen")
+          add("switch.fan")
+          add("binary_sensor.front_door")
+        }
+      },
+      listStates,
+      dark = true,
+    )
 }
