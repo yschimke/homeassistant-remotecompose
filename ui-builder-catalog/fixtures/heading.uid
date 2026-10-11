@@ -17,7 +17,8 @@
       "slots": {
         "content": [
           "heading",
-          "child"
+          "child",
+          "row"
         ]
       }
     },
@@ -46,6 +47,35 @@
           "value": "Published slot child"
         }
       }
+    },
+    "row": {
+      "id": "row",
+      "componentId": "homeassistant-remotecompose/horizontal-stack",
+      "slots": {
+        "content": [
+          "tile"
+        ]
+      }
+    },
+    "tile": {
+      "id": "tile",
+      "componentId": "homeassistant-remotecompose/tile",
+      "properties": {
+        "name": {
+          "type": "string",
+          "value": "Kitchen light"
+        },
+        "state": {
+          "type": "string",
+          "value": "On"
+        }
+      },
+      "modifiers": [
+        {
+          "type": "height",
+          "heightDp": 48
+        }
+      ]
     }
   },
   "roots": [

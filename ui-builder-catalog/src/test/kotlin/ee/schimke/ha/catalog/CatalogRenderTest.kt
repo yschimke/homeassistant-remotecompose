@@ -48,30 +48,30 @@ class CatalogRenderTest {
       {},
     )
 
-  @Test
-  fun `native Remote Compose heading and typed adapter render the same pixels`() {
+  private fun literals(vararg values: Pair<String, JsonPrimitive>) = buildJsonObject {
+    for ((name, value) in values) put(
+      name,
+      buildJsonObject {
+        put("type", if (value.isString) "string" else "bool")
+        put("value", value)
+      },
+    )
+  }
+
+  /** Draws the direct native call, then the typed adapter, and requires identical real pixels. */
+  private fun assertTypedParity(
+    name: String,
+    id: String,
+    properties: JsonObject,
+    native: @Composable () -> Unit,
+  ) {
     val catalog = HomeAssistantCatalog(discoverCatalogComponents())
-    val adapter = requireNotNull(catalog.registry()[catalog.heading.id])
+    val adapter = requireNotNull(catalog.registry()[id])
     var adapted by mutableStateOf(false)
     compose.setContent {
       MaterialTheme {
         Box(Modifier.size(400.dp, 160.dp).testTag("catalog")) {
-          if (!adapted) CatalogHeading("Kitchen")
-          else
-            adapter(
-              scope(
-                catalog.heading.id,
-                buildJsonObject {
-                  put(
-                    "title",
-                    buildJsonObject {
-                      put("type", "string")
-                      put("value", "Kitchen")
-                    },
-                  )
-                },
-              )
-            )
+          if (!adapted) native() else adapter(scope(id, properties))
         }
       }
     }
@@ -79,14 +79,14 @@ class CatalogRenderTest {
     val directImage = compose.onNodeWithTag("catalog").captureToImage()
     val directory =
       File(requireNotNull(System.getProperty("typedCatalogRenders"))).also { it.mkdirs() }
-    directory.resolve("native-heading.png").outputStream().use {
+    directory.resolve("native-$name.png").outputStream().use {
       directImage.asAndroidBitmap().compress(Bitmap.CompressFormat.PNG, 100, it)
     }
     val direct = directImage.toPixelMap()
     compose.runOnIdle { adapted = true }
     compose.waitForIdle()
     val typedImage = compose.onNodeWithTag("catalog").captureToImage()
-    directory.resolve("typed-heading.png").outputStream().use {
+    directory.resolve("typed-$name.png").outputStream().use {
       typedImage.asAndroidBitmap().compress(Bitmap.CompressFormat.PNG, 100, it)
     }
     val typed = typedImage.toPixelMap()
@@ -97,7 +97,51 @@ class CatalogRenderTest {
       colors += direct[x, y]
       assertEquals(direct[x, y], typed[x, y], "pixel $x,$y")
     }
-    assertTrue(colors.size > 2, "the native player must draw real heading content")
+    assertTrue(colors.size > 2, "the native player must draw real $name content")
+  }
+
+  @Test
+  fun `native Remote Compose heading and typed adapter render the same pixels`() {
+    assertTypedParity(
+      "heading",
+      "homeassistant-remotecompose/heading",
+      literals("title" to JsonPrimitive("Kitchen")),
+    ) {
+      CatalogHeading("Kitchen")
+    }
+  }
+
+  @Test
+  fun `native Remote Compose tile and typed adapter render the same pixels`() {
+    assertTypedParity(
+      "tile",
+      "homeassistant-remotecompose/tile",
+      literals("name" to JsonPrimitive("Kitchen"), "state" to JsonPrimitive("On")),
+    ) {
+      CatalogTile("Kitchen", "On")
+    }
+  }
+
+  @Test
+  fun `native Remote Compose button and typed adapter render the same pixels`() {
+    assertTypedParity(
+      "button",
+      "homeassistant-remotecompose/button",
+      literals("name" to JsonPrimitive("Kitchen"), "showName" to JsonPrimitive(true)),
+    ) {
+      CatalogButton("Kitchen", showName = true)
+    }
+  }
+
+  @Test
+  fun `native Remote Compose entity row and typed adapter render the same pixels`() {
+    assertTypedParity(
+      "entity-row",
+      "homeassistant-remotecompose/entity-row",
+      literals("name" to JsonPrimitive("Kitchen"), "state" to JsonPrimitive("On")),
+    ) {
+      CatalogEntityRow("Kitchen", "On")
+    }
   }
 
   @Test
@@ -106,5 +150,15 @@ class CatalogRenderTest {
     val adapter = requireNotNull(catalog.registry()[catalog.stack.id])
     compose.setContent { adapter(scope(catalog.stack.id) { Text("Catalog slot child") }) }
     compose.onNodeWithText("Catalog slot child").assertExists()
+  }
+
+  @Test
+  fun `actual app horizontal stack receives catalog slot children`() {
+    val catalog = HomeAssistantCatalog(discoverCatalogComponents())
+    val adapter = requireNotNull(catalog.registry()[catalog.horizontalStack.id])
+    compose.setContent {
+      adapter(scope(catalog.horizontalStack.id) { Text("Catalog row child") })
+    }
+    compose.onNodeWithText("Catalog row child").assertExists()
   }
 }

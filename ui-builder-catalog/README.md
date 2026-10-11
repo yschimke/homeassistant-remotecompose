@@ -1,8 +1,25 @@
 # Home Assistant typed component catalog
 
-This opt-in module wires `HaVerticalStack` and a scalar `CatalogHeading` wrapper that invokes the real `HaHeading` / Remote Compose player into the typed UI-builder adapter API. It is excluded from
-normal application builds while the API and bridge are unreleased. Each definition publishes its
-own ID and properties/slots, and the registry invokes the actual component with compiled calls.
+This opt-in module wires real Home Assistant card components into the typed UI-builder adapter API.
+It is excluded from normal application builds while the API and bridge are unreleased. Each
+definition publishes its own ID and properties/slots, and the registry invokes the actual component
+with compiled calls:
+
+| Component ID | Real component | Typed surface |
+| --- | --- | --- |
+| `homeassistant-remotecompose/heading` | `CatalogHeading` → `HaHeading` | `title: String` |
+| `homeassistant-remotecompose/tile` | `CatalogTile` → `HaTile` | `name: String`, `state: String` |
+| `homeassistant-remotecompose/button` | `CatalogButton` → `HaButton` | `name: String`, `showName: Boolean` |
+| `homeassistant-remotecompose/entity-row` | `CatalogEntityRow` → `HaEntityRow` | `name: String`, `state: String` |
+| `homeassistant-remotecompose/vertical-stack` | `HaVerticalStack` | `content` slot |
+| `homeassistant-remotecompose/horizontal-stack` | `HaHorizontalStack` | `content` slot |
+
+The `Catalog*` functions are scalar wrappers: the real Tier-2 components take `*UiData` models with
+an `ImageVector` icon and `Color` accents, which the typed codecs cannot carry. Each wrapper fills
+the non-scalar inputs with one fixed glyph and a read-only accent (no live `is_on` binding, no icon
+library dependency) and keys the Remote Compose capture on its scalars, so an edit recaptures.
+Property references still point at the real `HaHeadingUiData` / `HaTileUiData` / `HaButtonUiData` /
+`HaEntityRowUiData` fields.
 
 Check out compose-ai-tools and compose-ui-builder beside this repository at the immutable revisions
 in `.github/workflows/typed-catalog.yml`. The workflow validates the same source integration on
@@ -14,7 +31,9 @@ scripts/validate-typed-catalog.sh
 
 The script accepts optional tools and builder checkout paths. It scans current compiled app classes,
 generates only explicitly selected records, checks JSON readback and stale-record refusal, then
-compares the actual Android Remote Compose heading with its typed adapter pixel for pixel and checks children delivered to the real stack slot. A separate builder process reads the resulting pair through
+compares the actual Android Remote Compose heading, tile, button and entity row with their typed
+adapters pixel for pixel and checks children delivered to the real vertical and horizontal stack
+slots. A separate builder process reads the resulting pair through
 `PublishedUiBuilderCatalog` with no app implementation on its classpath. PNG comparisons are saved
 under `ui-builder-catalog/build/renders`; neither rendering test connects to a real device or server.
 
@@ -43,8 +62,9 @@ packaged. The independent Android host below now proves executable delivery; a g
 its live preview bundles are not replaced by this opt-in proof. General event capabilities and
 omitted-property default/export parity retain the limits documented in the authoring API.
 
-The committed `evidence/` images show the direct native call and the typed adapter from the parity
-test. Regenerate them from `build/renders` after component changes; CI uploads current renders.
+The committed `evidence/` images show the direct native call and the typed adapter from the heading
+parity test; the tile, button and entity-row pairs (`native-<card>.png` / `typed-<card>.png`) are in
+the CI render artifact. Regenerate them from `build/renders` after component changes; CI uploads current renders.
 
 ## Independent Android host and public publication
 
@@ -56,14 +76,14 @@ The initial catalog can be packaged without converting the app components into d
   :ui-builder-catalog:unpackAndroidCatalogBundle
 ```
 
-The ZIP contains the standard pair, a saved `heading.uid` design, and all three app library JARs and
-AARs. Its provider is registered using JVM service metadata. The host supplies matching Android
+The ZIP contains the standard pair, a saved `heading.uid` design (a heading, a slot child and a tile
+in a horizontal stack), and all three app library JARs and AARs. Its provider is registered using JVM service metadata. The host supplies matching Android
 Compose and Remote Compose engines; Android resources in the AARs remain available for packaging.
-The prototype heading/stack proof does not dynamically install arbitrary Android resources.
+The prototype heading/card/stack proof does not dynamically install arbitrary Android resources.
 
 `:ui-builder-catalog-host` has no dependency on Home Assistant modules. It checks app classes are
-absent from the host, loads them from the installed JARs, draws the real Remote Compose heading and
-visible stack child, changes the title, saves/reopens, and compares the reopened pixels. The scalar
+absent from the host, loads them from the installed JARs, draws the real Remote Compose heading,
+visible stack child and tile, changes the title, saves/reopens, and compares the reopened pixels. The scalar
 heading wrapper recaptures its Remote Compose document when the title changes, so edits appear
 immediately. The generic renderer is UI Builder's existing document host and registry interpreter.
 

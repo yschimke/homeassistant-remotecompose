@@ -53,7 +53,14 @@ class ExternalAndroidCatalogEndToEndTest {
     )
     val ids = policy.getValue("statusSemantics").jsonObject.getValue("components").jsonObject.keys
     assertEquals(
-      setOf("homeassistant-remotecompose/heading", "homeassistant-remotecompose/vertical-stack"),
+      setOf(
+        "homeassistant-remotecompose/heading",
+        "homeassistant-remotecompose/tile",
+        "homeassistant-remotecompose/button",
+        "homeassistant-remotecompose/entity-row",
+        "homeassistant-remotecompose/vertical-stack",
+        "homeassistant-remotecompose/horizontal-stack",
+      ),
       ids,
     )
     val host = javaClass.classLoader

@@ -21,7 +21,14 @@ class CatalogContractTest {
     }
     val pair = adapters.generate(records)
     assertEquals(
-      setOf("homeassistant-remotecompose/heading", "homeassistant-remotecompose/vertical-stack"),
+      setOf(
+        "homeassistant-remotecompose/heading",
+        "homeassistant-remotecompose/tile",
+        "homeassistant-remotecompose/button",
+        "homeassistant-remotecompose/entity-row",
+        "homeassistant-remotecompose/vertical-stack",
+        "homeassistant-remotecompose/horizontal-stack",
+      ),
       pair.catalog.statusSemantics.components.keys,
     )
     assertTrue(pair.catalog.diagnostics.isEmpty())
