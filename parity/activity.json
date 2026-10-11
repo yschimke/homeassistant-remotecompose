@@ -1,11 +1,35 @@
 {
   "schema": "compose-preview-activity/v1",
-  "generatedAt": "2026-10-11T21:05:53.337Z",
+  "generatedAt": "2026-10-11T22:06:03.035Z",
   "windowDays": 30,
   "code": {
     "repo": "yschimke/homeassistant-remotecompose",
     "ref": "main",
     "events": [
+      {
+        "sha": "66512387dd31b8f4b94b237f00eef3fc90dcc2f4",
+        "subject": "chore(deps): update compose-ai-tools (#747)",
+        "at": "2026-10-11T21:14:52Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "a99eb8866fd5a1f096fbb798d82101c4abffbca8",
+        "subject": "feat: render templatable cards from designs, server first with a local library fallback (#748)",
+        "at": "2026-10-11T22:14:49+01:00",
+        "author": "Yuri Schimke",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "1b99b7729482e1d8d407ff78916627debe394488",
+        "subject": "fix: sync card designs nightly while charging instead of polling from the dashboard (#746)",
+        "at": "2026-10-11T21:24:24+01:00",
+        "author": "Yuri Schimke",
+        "previewIds": [],
+        "components": []
+      },
       {
         "sha": "1f95279b9bb665291d8f51c084176c329893c754",
         "subject": "fix(deps): update compose-ai-tools (#744)",
@@ -458,30 +482,6 @@
         "sha": "064a6dff2bb975e159982c4edf95a43982b1acdb",
         "subject": "fix(deps): update dependency ee.schimke.composeai:data-render-core to v3.7.0 (#692)",
         "at": "2026-10-01T14:22:04Z",
-        "author": "renovate[bot]",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "0263845c9dad0b427aaa5e9576cbe6284ebbe8ef",
-        "subject": "fix(deps): update dependency ee.schimke.composeai:data-render-core to v3 (#691)",
-        "at": "2026-10-01T06:56:57Z",
-        "author": "renovate[bot]",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "7bc056e3f6ed5a20f9051788350fcd0d849334e1",
-        "subject": "fix(deps): update ktor to v3.6.0 (#690)",
-        "at": "2026-09-28T08:21:36Z",
-        "author": "renovate[bot]",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "1f32a2fb03b7e24d20d3686fb9139583332087db",
-        "subject": "chore(deps): update gradle to v9.8.0 (#688)",
-        "at": "2026-09-28T05:11:08Z",
         "author": "renovate[bot]",
         "previewIds": [],
         "components": []
