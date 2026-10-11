@@ -1150,8 +1150,9 @@ private fun DesignServerSetting(url: String, onUrlChange: (String) -> Unit) {
   Column(modifier = Modifier.fillMaxWidth()) {
     Text("Experimental: card design server", style = MaterialTheme.typography.titleMedium)
     Text(
-      "Fetch tile designs from this URL (manifest.json + blobs/) instead of drawing them " +
-        "locally. Leave empty to keep it off.",
+      "Tiles always render from card designs. With a URL, designs from that server " +
+        "(manifest.json + blobs/) replace the built-in ones; it is checked nightly while " +
+        "charging. Leave empty to use only the built-in designs.",
       style = MaterialTheme.typography.bodySmall,
     )
     androidx.compose.material3.OutlinedTextField(

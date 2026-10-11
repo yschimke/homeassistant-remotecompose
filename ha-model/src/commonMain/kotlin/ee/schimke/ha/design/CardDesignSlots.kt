@@ -34,8 +34,8 @@ object CardDesignSlots {
 
   /**
    * Config keys a templated tile may carry. Anything else (custom `icon`, `tap_action`, `color`,
-   * features, …) changes structure or actions the spike doesn't model yet, so [shapeOf] returns
-   * null and the card stays on the local converter.
+   * features, …) changes structure or actions the spike doesn't model yet, so the card isn't
+   * templatable and renders through the local converter.
    */
   private val TILE_KEYS = setOf("type", "entity", "name")
 
@@ -43,36 +43,70 @@ object CardDesignSlots {
 
   fun domainOf(entityId: String): String = entityId.substringBefore('.', missingDelimiterValue = "")
 
-  /** Real entity ids a card binds, in slot order, or null when the card has no template shape. */
+  /** Real entity ids a card binds, in slot order, or null when the card can't be templated. */
   fun slotEntities(card: CardConfig): List<String>? {
-    if (shapeOf(card) == null) return null
-    val entity = card.raw["entity"]?.jsonPrimitive?.contentOrNull ?: return null
-    return listOf(entity)
+    if (!isTemplatable(card)) return null
+    return listOf(card.raw["entity"]?.jsonPrimitive?.contentOrNull ?: return null)
+  }
+
+  /** Whether [card]'s config is one the template path models at all (type, keys, domain). */
+  fun isTemplatable(card: CardConfig): Boolean {
+    if (card.type !in SUPPORTED_TYPES) return false
+    if (!TILE_KEYS.containsAll(card.raw.keys)) return false
+    val entity = card.raw["entity"]?.jsonPrimitive?.contentOrNull ?: return false
+    return domainOf(entity) in TILE_DOMAINS
   }
 
   /**
-   * Normalised structural shape for [card], or null when the spike can't template it. Holds only
-   * keys that change what the converter emits; values (names, states, thresholds) never appear.
+   * Normalised structural shape for [card], or null when it can't be templated. Holds only what
+   * changes the document the converter emits — never a value such as a name or a state:
+   * - `domain` — icon family and whether the tile toggles;
+   * - `device_class` (sensors and binary sensors) — their icon and accent colour;
+   * - `icon` — an `icon` attribute on the entity, which overrides the default icon.
+   *
+   * Null when the entity isn't in [snapshot] yet: the local converter renders that state.
    */
-  fun shapeOf(card: CardConfig): String? {
-    if (card.type !in SUPPORTED_TYPES) return null
-    if (!TILE_KEYS.containsAll(card.raw.keys)) return null
-    val entity = card.raw["entity"]?.jsonPrimitive?.contentOrNull ?: return null
+  fun shapeOf(card: CardConfig, snapshot: HaSnapshot): String? {
+    val entity = slotEntities(card)?.single() ?: return null
+    val state = snapshot.states[entity] ?: return null
     val domain = domainOf(entity)
-    if (domain !in TILE_DOMAINS) return null
-    return "domain=$domain"
+    return buildString {
+      append("domain=").append(domain)
+      if (domain in DEVICE_CLASS_DOMAINS) {
+        state.attributes["device_class"]?.jsonPrimitive?.contentOrNull?.let {
+          append(";device_class=").append(it)
+        }
+      }
+      state.attributes["icon"]?.jsonPrimitive?.contentOrNull?.let {
+        append(";icon=").append(it.trim().lowercase())
+      }
+    }
   }
+
+  /** Parse a shape from [shapeOf] back into its fields. */
+  fun parseShape(shape: String): Map<String, String> =
+    shape
+      .split(';')
+      .mapNotNull { part ->
+        val i = part.indexOf('=')
+        if (i <= 0) null else part.substring(0, i) to part.substring(i + 1)
+      }
+      .toMap()
+
+  /** Domains whose `device_class` changes the tile's icon or colour. */
+  private val DEVICE_CLASS_DOMAINS = setOf("sensor", "binary_sensor")
 
   /** Map real entity id → slot entity id for [card]. Empty when the card has no template shape. */
   fun slotMap(card: CardConfig): Map<String, String> =
     slotEntities(card).orEmpty().mapIndexed { i, id -> id to slotId(domainOf(id), i) }.toMap()
 
   /**
-   * The card config a template is captured from: the same shape, with slot entity ids and a name
-   * placeholder. Used by the template builder.
+   * The card config a template is captured from: the same shape, with a slot entity id. Used by the
+   * template builder.
    */
-  fun templateCard(cardType: String, domain: String): CardConfig =
-    CardConfig(
+  fun templateCard(cardType: String, shape: String): CardConfig {
+    val domain = requireNotNull(parseShape(shape)["domain"]) { "shape has no domain: $shape" }
+    return CardConfig(
       type = cardType,
       raw =
         buildJsonObject {
@@ -80,15 +114,23 @@ object CardDesignSlots {
           put("entity", slotId(domain, 0))
         },
     )
+  }
 
   /**
-   * Placeholder snapshot for template capture. Values only seed the named bindings' initial values;
-   * the client overwrites every one of them before the first frame matters. The placeholder is
-   * `off`, a state every templated domain models, so toggle chrome is captured with its binding (an
-   * `unknown` placeholder would make the converter leave the toggle out).
+   * Placeholder snapshot for template capture: the shape's attributes on the slot entity, and
+   * placeholder values that only seed the named bindings' initial values (the client overwrites
+   * every one of them). The state is `off`, which every templated domain models, so toggle chrome
+   * is captured with its binding (an `unknown` placeholder would make the converter leave it out).
    */
-  fun templateSnapshot(domain: String, placeholderState: String = "off"): HaSnapshot {
+  fun templateSnapshot(shape: String, placeholderState: String = "off"): HaSnapshot {
+    val fields = parseShape(shape)
+    val domain = requireNotNull(fields["domain"]) { "shape has no domain: $shape" }
     val id = slotId(domain, 0)
+    val attributes = buildMap {
+      put("friendly_name", JsonPrimitive(NAME_PLACEHOLDER))
+      fields["device_class"]?.let { put("device_class", JsonPrimitive(it)) }
+      fields["icon"]?.let { put("icon", JsonPrimitive(it)) }
+    }
     return HaSnapshot(
       states =
         mapOf(
@@ -96,7 +138,7 @@ object CardDesignSlots {
             EntityState(
               entityId = id,
               state = placeholderState,
-              attributes = JsonObject(mapOf("friendly_name" to JsonPrimitive(NAME_PLACEHOLDER))),
+              attributes = JsonObject(attributes),
             )
         )
     )

@@ -14,6 +14,7 @@ import ee.schimke.ha.design.CardDesignSlots
 import ee.schimke.ha.design.DesignKey
 import ee.schimke.ha.design.DesignSurface
 import ee.schimke.ha.model.CardConfig
+import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.components.ProvideHaTheme
 import ee.schimke.ha.rc.components.ThemeStyle
 import ee.schimke.ha.rc.components.haThemeFor
@@ -35,17 +36,19 @@ object CardDesignTemplates {
   val MOBILE_APP_API_LEVEL: Int = CoreDocument.DOCUMENT_API_LEVEL
 
   /**
-   * The [DesignKey] a live [card] would render with on [surface], or null when the card has no
-   * template shape (it then renders through the local converter).
+   * The [DesignKey] a live [card] renders with on [surface], or null when the card has no template
+   * shape (it then renders through the local converter). [snapshot] supplies the entity attributes
+   * that are part of the shape (`device_class`, `icon`); values never are.
    */
   fun keyFor(
     card: CardConfig,
+    snapshot: HaSnapshot,
     style: ThemeStyle,
     dark: Boolean,
     surface: DesignSurface = DesignSurface.MobileApp,
   ): DesignKey? {
     if (surface != DesignSurface.MobileApp) return null
-    val shape = CardDesignSlots.shapeOf(card) ?: return null
+    val shape = CardDesignSlots.shapeOf(card, snapshot) ?: return null
     return DesignKey(
       cardType = card.type,
       surface = surface,
@@ -70,8 +73,12 @@ object CardDesignTemplates {
     )
   }
 
-  /** Every key the spike publishes: tile × domain × theme style × light/dark, mobile app only. */
-  fun spikeKeys(): List<Pair<DesignKey, String>> = buildList {
+  /**
+   * The keys the spike publishes to a server: tile × domain × theme style × light/dark, mobile app
+   * only, for entities with no `device_class` or `icon` attribute. Every other shape is served by
+   * the local [CardDesignLibrary].
+   */
+  fun spikeKeys(): List<DesignKey> = buildList {
     for (domain in CardDesignSlots.TILE_DOMAINS) {
       for (style in ThemeStyle.entries) {
         for (dark in listOf(false, true)) {
@@ -83,7 +90,7 @@ object CardDesignTemplates {
               shape = "domain=$domain",
               theme = DesignKey.bakedTheme(style.name, dark),
             )
-          add(key to domain)
+          add(key)
         }
       }
     }
@@ -97,13 +104,12 @@ object CardDesignTemplates {
   fun capture(
     context: Context,
     key: DesignKey,
-    domain: String,
     registry: CardRegistry = ee.schimke.ha.rc.cards.defaultRegistry(),
   ): BuiltDesign {
     require(key.surface == DesignSurface.MobileApp) { "spike only builds mobile-app templates" }
     val (style, dark) = parseBakedTheme(key.theme)
-    val card = CardDesignSlots.templateCard(key.cardType, domain)
-    val snapshot = CardDesignSlots.templateSnapshot(domain)
+    val card = CardDesignSlots.templateCard(key.cardType, key.shape)
+    val snapshot = CardDesignSlots.templateSnapshot(key.shape)
     val theme = haThemeFor(style, dark)
     val bytes = runBlocking {
       captureSingleRemoteDocument(context = context, profile = androidXExperimentalWrap) {
@@ -119,12 +125,26 @@ object CardDesignTemplates {
   }
 
   /** Build every spike template. */
-  fun buildAll(context: Context): List<BuiltDesign> =
-    spikeKeys().map { (key, domain) -> capture(context, key, domain) }
+  fun buildAll(context: Context): List<BuiltDesign> = spikeKeys().map { capture(context, it) }
 
   private fun parseBakedTheme(theme: String): Pair<ThemeStyle, Boolean> {
     val parts = theme.split(':')
     require(parts.size == 3 && parts[0] == "baked") { "not a baked theme: $theme" }
     return ThemeStyle.valueOf(parts[1]) to (parts[2] == "dark")
   }
+}
+
+/**
+ * The local design library: every template the app can build from its own converters, captured on
+ * first use and kept for the process. It is the fallback under the design server: a card renders
+ * from the server's design when one is cached for its key, and from this library otherwise. Both
+ * are the same kind of document played the same way, so there is one rendering path.
+ *
+ * Capture runs on the calling thread, like any local card capture.
+ */
+object CardDesignLibrary {
+  private val templates = java.util.concurrent.ConcurrentHashMap<DesignKey, ByteArray>()
+
+  fun template(context: Context, key: DesignKey): ByteArray =
+    templates.getOrPut(key) { CardDesignTemplates.capture(context, key).bytes }
 }

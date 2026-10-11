@@ -51,6 +51,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import coil3.ImageLoader
 import coil3.SingletonImageLoader
+import ee.schimke.ha.design.CardDesignSlots
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.Dashboard
 import ee.schimke.ha.model.HaSnapshot
@@ -929,11 +930,15 @@ private fun CardSlot(
       CardSlotCacheKey(card, style, dark, captureEpoch, templateValues, dataSignature)
     }
   val context = androidx.compose.ui.platform.LocalContext.current
-  // A design template from the card design server, when one is configured and matches this card's
-  // shape and theme. Null — always, while the feature is off — captures locally as before.
+  // Templatable cards always render from a card design: the design server's when one is cached for
+  // this card's key, the local library's otherwise. The shape (domain, device_class, icon) keys the
+  // template, so value-only snapshot changes keep the same document and arrive as bindings.
   val cardDesigns = LocalCardDesigns.current
+  val designShape = CardDesignSlots.shapeOf(card, snapshot)
   val template =
-    remember(card, cardDesigns, style, dark) { cardTemplateFor(card, cardDesigns, style, dark) }
+    remember(card, designShape, cardDesigns, style, dark) {
+      cardTemplateFor(context, card, snapshot, cardDesigns, style, dark)
+    }
   val bitmapLoader =
     remember(context, baseUrl, imageLoader) {
       CoilBitmapLoader(context.applicationContext, imageLoader = imageLoader, baseUrl = baseUrl)

@@ -46,16 +46,23 @@ values**. The client fills those bindings from its own HA connection.
 
 ## Spike status
 
-A first end-to-end slice is in the codebase. It is **off unless configured**: the app setting
-"Experimental: card design server" is empty by default, and with no URL nothing is fetched and
-every card renders through the local converter exactly as before.
+A first end-to-end slice is in the codebase, with **one rendering path**: every templatable card
+(today, a plain tile) renders from a card design. The design comes from the server when one is
+cached for the card's key, and from the **local design library** otherwise. The library captures
+the same template from the app's own converters on first use and keeps it for the process, so with
+no server configured (the default) cards still take the design path, just with built-in designs.
+Cards that have no template shape render through their converter as before.
+
+The server only overrides: the setting "Experimental: card design server" is empty by default,
+and with no URL nothing is fetched. A revoked server design falls back to the library's, never to
+nothing.
 
 | Piece | Where |
 | --- | --- |
 | Wire model: `DesignKey`, `DesignSurface`, `DesignManifest`, `DesignEntry` | `ha-model/.../design/CardDesign.kt` |
 | Slot mapping, shape, slot bindings (with `status`, neutral defaults) | `ha-model/.../design/CardDesignSlots.kt` |
 | Client: config (off by default), refresh rules, TTL, back-off, serial rollback check, expiry, sha256-verified blobs, stale and inbuilt fallback, revocation; `DesignPublisher` writes the static files | `ha-client/.../client/design/` |
-| Template capture (`LocalCardTemplateCapture`), keys, spike key matrix | `rc-converter/.../CardDesignTemplates.kt` |
+| Template capture (`LocalCardTemplateCapture`), keys, spike key matrix, local design library (`CardDesignLibrary`) | `rc-converter/.../CardDesignTemplates.kt` |
 | Template playback: slot-binding push, slot → entity action remap | `CachedCardPreview(template = …)` |
 | App: URL setting, `FileDesignStore`, `LocalCardDesigns`, dashboard hook (reads the cache only) | `app/.../dashboard/CardDesigns.kt`, `PreferencesStore.designServerUrl` |
 | App: nightly sync while charging on unmetered network, plus one fetch when the URL changes | `app/.../dashboard/CardDesignSync.kt` |
@@ -65,15 +72,22 @@ Deliberate spike limits, each owned by a milestone below:
 
 - **Tile only** (`light`, `switch`, `sensor`, `binary_sensor`), mobile app surface, and only tiles
   whose config is `entity` plus optional `name`. Anything else has no shape and stays local.
-- **Slot ids keep the domain** (`light.s0`, not `s0`), because the tile converter still derives
-  its icon family and toggle chrome from the domain. The domain is part of the shape.
+- **The shape includes entity attributes that change the tile's look**: `domain` (icon family,
+  toggle chrome), `device_class` for sensors and binary sensors (icon, colour), and an `icon`
+  attribute. Slot ids keep the domain (`light.s0`, not `s0`) for the same reason. A library
+  template therefore draws exactly what the converter drew, with name and state as bindings.
+- **One known difference:** templates are captured with a placeholder `off` state, so an
+  unavailable light or switch keeps its toggle chip (inactive colour) where the converter drew a
+  plain grey icon. `<slot>.status` is bound, and moving that visual in-document is M1.
 - **Baked themes.** Designs are keyed `baked:<ThemeStyle>:<light|dark>`, so the matrix has one
   template per theme. `theme.*` bindings (S2) replace this.
-- **Still decided at capture:** the tile icon (from the placeholder `off` state) and its accent
-  colours. Moving these in-document is M1.
+- **Still decided at capture:** the tile icon and accent colours, from the shape (domain,
+  `device_class`, `icon`). They don't depend on the state for the templated domains; the on/off
+  accent switches in-document from `is_on`. Binding them instead of keying on them is M1.
 - **No manifest signature** yet: the app accepts unsigned manifests (`allowUnsigned`). M4 adds
   signing, and the client already reserves `signature` and checks `serial` and expiry.
-- **No inbuilt designs, no launcher or Wear** (S1, M5, M6), no published host (M4), no UI Builder
+- **The library is captured at runtime**, not shipped as assets, and covers the dashboard only;
+  launcher and Wear still capture directly (S1, M5, M6). No published host (M4), no UI Builder
   references (R1, R2, M2b).
 
 To try it, generate the host files and serve them from any static host, then paste the URL into

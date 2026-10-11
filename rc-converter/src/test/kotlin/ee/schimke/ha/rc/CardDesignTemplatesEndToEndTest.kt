@@ -55,10 +55,13 @@ class CardDesignTemplatesEndToEndTest {
   @Test
   fun templateIsValuesFree_publishedFetchedAndBound() = runTest {
     val context = org.robolectric.RuntimeEnvironment.getApplication()
-    val key = assertNotNull(CardDesignTemplates.keyFor(card, ThemeStyle.TerrazzoHome, dark = false))
+    val key =
+      assertNotNull(
+        CardDesignTemplates.keyFor(card, snapshot, ThemeStyle.TerrazzoHome, dark = false)
+      )
 
     // Pipeline: capture the template and publish the host's files.
-    val built = CardDesignTemplates.capture(context, key, domain = "light")
+    val built = CardDesignTemplates.capture(context, key)
     val document = String(built.bytes, Charsets.ISO_8859_1)
     for (binding in listOf("light.s0.state", "light.s0.name", "light.s0.is_on")) {
       assertTrue(binding in document, "template binds $binding")
@@ -97,10 +100,55 @@ class CardDesignTemplatesEndToEndTest {
   }
 
   @Test
+  fun libraryServesShapesTheServerDoesNot() {
+    val context = org.robolectric.RuntimeEnvironment.getApplication()
+    val doorCard =
+      CardConfig(
+        type = "tile",
+        raw =
+          buildJsonObject {
+            put("type", "tile")
+            put("entity", "binary_sensor.front_door")
+          },
+      )
+    val doorSnapshot =
+      HaSnapshot(
+        states =
+          mapOf(
+            "binary_sensor.front_door" to
+              EntityState(
+                "binary_sensor.front_door",
+                "on",
+                kotlinx.serialization.json.JsonObject(
+                  mapOf("device_class" to kotlinx.serialization.json.JsonPrimitive("door"))
+                ),
+              )
+          )
+      )
+    val key =
+      assertNotNull(
+        CardDesignTemplates.keyFor(doorCard, doorSnapshot, ThemeStyle.Material3, dark = true)
+      )
+    assertEquals("domain=binary_sensor;device_class=door", key.shape)
+    assertFalse(key in CardDesignTemplates.spikeKeys(), "a shape the server spike doesn't publish")
+
+    val bytes = CardDesignLibrary.template(context, key)
+    val document = String(bytes, Charsets.ISO_8859_1)
+    assertTrue("binary_sensor.s0.state" in document)
+    assertTrue("binary_sensor.s0.name" in document)
+    assertFalse("front_door" in document)
+    // Memoized: the second lookup is the same document, not a fresh capture.
+    assertTrue(bytes === CardDesignLibrary.template(context, key))
+  }
+
+  @Test
   fun configuredOff_resolvesNothing() = runTest {
     val repository = DesignRepository(DesignServerConfig.Off, InMemoryDesignStore(), null) { NOW }
     assertEquals(RefreshResult.Disabled, repository.refresh(force = true))
-    val key = assertNotNull(CardDesignTemplates.keyFor(card, ThemeStyle.TerrazzoHome, dark = false))
+    val key =
+      assertNotNull(
+        CardDesignTemplates.keyFor(card, snapshot, ThemeStyle.TerrazzoHome, dark = false)
+      )
     assertEquals(null, repository.resolve(key))
   }
 

@@ -25,20 +25,56 @@ class CardDesignSlotsTest {
         },
     )
 
+  private fun snapshotOf(vararg states: EntityState) =
+    HaSnapshot(states = states.associateBy { it.entityId })
+
+  private fun state(id: String, value: String = "on", vararg attrs: Pair<String, String>) =
+    EntityState(id, value, JsonObject(attrs.associate { (k, v) -> k to JsonPrimitive(v) }))
+
   @Test
   fun shapeHoldsStructureOnly() {
-    assertEquals("domain=light", CardDesignSlots.shapeOf(tile("light.kitchen")))
+    val snapshot =
+      snapshotOf(state("light.kitchen", "on", "friendly_name" to "Kitchen"), state("light.hall"))
+    assertEquals("domain=light", CardDesignSlots.shapeOf(tile("light.kitchen"), snapshot))
+    // Names, states and friendly names never change the shape.
     assertEquals(
-      CardDesignSlots.shapeOf(tile("light.kitchen")),
-      CardDesignSlots.shapeOf(tile("light.hall", "name" to "Hall")),
+      CardDesignSlots.shapeOf(tile("light.kitchen"), snapshot),
+      CardDesignSlots.shapeOf(tile("light.hall", "name" to "Hall"), snapshot),
+    )
+  }
+
+  @Test
+  fun shapeCarriesWhatChangesTheTilesLook() {
+    val snapshot =
+      snapshotOf(
+        state("binary_sensor.door", "off", "device_class" to "door"),
+        state("sensor.temp", "21", "device_class" to "temperature", "icon" to "MDI:Thermometer"),
+        state("switch.fan", "on", "device_class" to "outlet"),
+      )
+    assertEquals(
+      "domain=binary_sensor;device_class=door",
+      CardDesignSlots.shapeOf(tile("binary_sensor.door"), snapshot),
+    )
+    assertEquals(
+      "domain=sensor;device_class=temperature;icon=mdi:thermometer",
+      CardDesignSlots.shapeOf(tile("sensor.temp"), snapshot),
+    )
+    // A switch's device_class doesn't change its tile, so it stays out of the shape.
+    assertEquals("domain=switch", CardDesignSlots.shapeOf(tile("switch.fan"), snapshot))
+    assertEquals(
+      mapOf("domain" to "sensor", "device_class" to "temperature", "icon" to "mdi:thermometer"),
+      CardDesignSlots.parseShape("domain=sensor;device_class=temperature;icon=mdi:thermometer"),
     )
   }
 
   @Test
   fun unmodelledConfigHasNoShape() {
-    assertNull(CardDesignSlots.shapeOf(tile("light.kitchen", "icon" to "mdi:lamp")))
-    assertNull(CardDesignSlots.shapeOf(tile("climate.living")))
-    assertNull(CardDesignSlots.shapeOf(CardConfig(type = "gauge")))
+    val snapshot = snapshotOf(state("light.kitchen"), state("climate.living", "heat"))
+    assertNull(CardDesignSlots.shapeOf(tile("light.kitchen", "icon" to "mdi:lamp"), snapshot))
+    assertNull(CardDesignSlots.shapeOf(tile("climate.living"), snapshot))
+    assertNull(CardDesignSlots.shapeOf(CardConfig(type = "gauge"), snapshot))
+    // Not loaded yet: the local converter renders the missing entity.
+    assertNull(CardDesignSlots.shapeOf(tile("light.unknown"), snapshot))
   }
 
   @Test
