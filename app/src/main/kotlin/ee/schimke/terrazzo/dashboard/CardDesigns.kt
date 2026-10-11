@@ -61,7 +61,7 @@ fun cardTemplateFor(
 ): CardTemplatePlayback? {
   val key = CardDesignTemplates.keyFor(card, snapshot, style, dark, registry) ?: return null
   val bytes = serverDesigns[key] ?: CardDesignLibrary.template(context, key, registry)
-  return CardDesignTemplates.playback(card, bytes)
+  return CardDesignTemplates.playback(card, bytes, registry)
 }
 
 /**

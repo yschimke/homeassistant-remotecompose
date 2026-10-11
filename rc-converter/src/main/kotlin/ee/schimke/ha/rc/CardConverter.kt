@@ -5,6 +5,7 @@ import androidx.compose.runtime.Composable
 import ee.schimke.ha.design.DesignProperties
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
+import ee.schimke.ha.rc.components.HaAction
 
 /**
  * A converter that knows how to emit one Lovelace card type as RemoteCompose content.
@@ -77,6 +78,20 @@ interface CardConverter {
    * placeholder entity. Required whenever [designProperties] can return non-null.
    */
   fun designTemplate(properties: DesignProperties): DesignTemplateInput? = null
+
+  /**
+   * The action to run for a tap on slot [slot] of this card's design template, whose bytes encode
+   * [templateAction] (with the slot's entity id), or null for the slot's default tap. Templates are
+   * remote content, so an implementation never returns [templateAction] itself: it may only use it
+   * to pick one of the actions [card]'s own config allows, rebuilt against the real entity and the
+   * current [snapshot] — e.g. which ARM button or keypad key of an alarm panel was pressed.
+   */
+  fun designAction(
+    card: CardConfig,
+    snapshot: HaSnapshot?,
+    slot: Int,
+    templateAction: HaAction,
+  ): HaAction? = null
 
   /**
    * Preferred rendered height in dp when this card fills its parent width. **Hint only**: dashboard

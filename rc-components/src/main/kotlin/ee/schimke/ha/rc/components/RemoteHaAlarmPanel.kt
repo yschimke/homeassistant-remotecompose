@@ -150,7 +150,7 @@ fun RemoteHaAlarmPanelWide(data: HaAlarmPanelData, modifier: RemoteModifier = Re
           verticalArrangement = RemoteArrangement.Center,
         ) {
           RemoteText(
-            text = data.title.rs,
+            text = entityName(data.entityId, data.title),
             color = theme.primaryText,
             fontSize = 14.rsp,
             fontWeight = FontWeight.Medium,
@@ -191,7 +191,7 @@ private fun StatusRow(
     ) {
       RemoteColumn {
         RemoteText(
-          text = data.title.rs,
+          text = entityName(data.entityId, data.title),
           color = theme.primaryText,
           fontSize = 16.rsp,
           fontWeight = FontWeight.Medium,

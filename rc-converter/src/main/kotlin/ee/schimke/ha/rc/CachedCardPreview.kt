@@ -24,6 +24,7 @@ import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import ee.schimke.composeai.rcplayer.runtime.RcNamedValue
@@ -204,12 +205,14 @@ fun CachedCardPreview(
     }
   }
 
+  // The player may keep the first callback it was given; read the snapshot at tap time.
+  val latestSnapshot = rememberUpdatedState(snapshot)
   val onNamedAction: (String, Any?) -> Unit = { name, value ->
     if (name == HA_ACTION_NAME) {
       if (template != null) {
         // A template is remote content: never dispatch an action it encodes. It only picks which
         // of this card's own, locally resolved actions runs.
-        dispatcher.dispatch(template.resolveTap(decodeHaAction(value)))
+        dispatcher.dispatch(template.resolveTap(decodeHaAction(value), latestSnapshot.value))
       } else {
         decodeHaAction(value)?.let(dispatcher::dispatch)
       }
@@ -365,19 +368,27 @@ private fun entityIds(card: CardConfig?): Set<String> = card?.let { cardEntityId
  *
  * Taps are resolved from the card's **local** config, never from the template: the bytes are
  * remote, so the action a template encodes only picks *which* of the card's own actions runs. A tap
- * on a slot's entity (`<domain>.s<N>`) runs [slotTapActions]`[N]` — one per row of a list card —
- * and any other tap runs the card's [tapAction].
+ * on a slot's entity (`<domain>.s<N>`) runs [slotTapActions]`[N]` — one per row of a list card — —
+ * unless the converter rebuilds a more specific one from the card's config ([slotAction]) — and any
+ * other tap runs the card's [tapAction].
  */
 class CardTemplatePlayback(
   val bytes: ByteArray,
   val bindings: (HaSnapshot) -> CardSnapshotBindings,
   val tapAction: HaAction,
   val slotTapActions: List<HaAction> = emptyList(),
+  /** A card-specific action for a tap on a slot: see [CardConverter.designAction]. */
+  val slotAction: (snapshot: HaSnapshot?, slot: Int, templateAction: HaAction) -> HaAction? =
+    { _, _, _ ->
+      null
+    },
 ) {
   /** The card-local action for a tap whose template-encoded action is [templateAction]. */
-  fun resolveTap(templateAction: HaAction?): HaAction {
-    val slot = templateAction?.let(::actionEntityId)?.let(::slotIndexOf) ?: return tapAction
-    return slotTapActions.getOrNull(slot) ?: tapAction
+  fun resolveTap(templateAction: HaAction?, snapshot: HaSnapshot? = null): HaAction {
+    if (templateAction == null) return tapAction
+    val slot = actionEntityId(templateAction)?.let(::slotIndexOf) ?: return tapAction
+    if (slot !in slotTapActions.indices) return tapAction
+    return slotAction(snapshot, slot, templateAction) ?: slotTapActions[slot]
   }
 
   private fun slotIndexOf(entityId: String): Int? =
