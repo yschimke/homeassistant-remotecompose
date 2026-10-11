@@ -14,6 +14,10 @@ concurrency:
 jobs:
   ios:
     name: iOS app and shared framework
+    # Skip on release-please PRs: they only bump the manifest, CHANGELOG and
+    # version lines, all of which main's push CI already built. Matches the
+    # bot-authored PR (or a bot dispatch); humans and main always run it.
+    if: ${{ !(startsWith(github.head_ref || github.ref_name, 'release-please--') && (github.event.pull_request.user.login || github.actor) == 'github-actions[bot]') }}
     runs-on: macos-15
     timeout-minutes: 45
     steps:
@@ -42,6 +46,8 @@ jobs:
 
   build:
     name: Assemble (debug)
+    # Release-please guard: see the ios job.
+    if: ${{ !(startsWith(github.head_ref || github.ref_name, 'release-please--') && (github.event.pull_request.user.login || github.actor) == 'github-actions[bot]') }}
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
@@ -58,6 +64,8 @@ jobs:
 
   test:
     name: Unit tests
+    # Release-please guard: see the ios job.
+    if: ${{ !(startsWith(github.head_ref || github.ref_name, 'release-please--') && (github.event.pull_request.user.login || github.actor) == 'github-actions[bot]') }}
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
@@ -104,6 +112,8 @@ jobs:
 
   lint:
     name: Android lint
+    # Release-please guard: see the ios job.
+    if: ${{ !(startsWith(github.head_ref || github.ref_name, 'release-please--') && (github.event.pull_request.user.login || github.actor) == 'github-actions[bot]') }}
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
@@ -132,6 +142,11 @@ jobs:
     name: Instrumented tests (API 36)
     runs-on: ubuntu-latest
     timeout-minutes: 60
+    # Release-please guard (see the ios job), applied per step instead of at
+    # job level: a matrix job skipped by a job-level `if:` is never expanded,
+    # so the required "(36, default, x86_64)" check would never report.
+    env:
+      RUN_HEAVY: ${{ !(startsWith(github.head_ref || github.ref_name, 'release-please--') && (github.event.pull_request.user.login || github.actor) == 'github-actions[bot]') }}
     strategy:
       fail-fast: false
       matrix:
@@ -141,6 +156,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7.0.1
       - name: Enable KVM
+        if: env.RUN_HEAVY == 'true'
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' \
             | sudo tee /etc/udev/rules.d/99-kvm4all.rules
@@ -148,13 +164,17 @@ jobs:
           sudo udevadm trigger --name-match=kvm
       # Kotlin toolchain and Gradle daemon both run on JVM 21 (libs.versions.toml).
       - uses: actions/setup-java@v6.0.1
+        if: env.RUN_HEAVY == 'true'
         with:
           distribution: temurin
           java-version: 21.0.12+101.0.LTS
       - uses: gradle/actions/setup-gradle@v6.4.0
+        if: env.RUN_HEAVY == 'true'
       - uses: ./.github/actions/android-sdk
+        if: env.RUN_HEAVY == 'true'
 
       - name: AVD cache
+        if: env.RUN_HEAVY == 'true'
         uses: actions/cache@v6.1.0
         id: avd-cache
         with:
@@ -164,7 +184,7 @@ jobs:
           key: avd-${{ matrix.api-level }}-${{ matrix.target }}-${{ matrix.arch }}
 
       - name: Create AVD snapshot for caching
-        if: steps.avd-cache.outputs.cache-hit != 'true'
+        if: env.RUN_HEAVY == 'true' && (steps.avd-cache.outputs.cache-hit != 'true')
         uses: reactivecircus/android-emulator-runner@v2.38.0
         with:
           api-level: ${{ matrix.api-level }}
@@ -176,6 +196,7 @@ jobs:
           script: echo "Generated AVD snapshot."
 
       - name: Run connectedDebugAndroidTest
+        if: env.RUN_HEAVY == 'true'
         uses: reactivecircus/android-emulator-runner@v2.38.0
         with:
           api-level: ${{ matrix.api-level }}
@@ -189,7 +210,7 @@ jobs:
           script: ./gradlew connectedDebugAndroidTest -x :wear:connectedDebugAndroidTest --stacktrace
 
       - name: Upload instrumented test reports
-        if: always()
+        if: always() && env.RUN_HEAVY == 'true'
         uses: actions/upload-artifact@v7.0.1
         with:
           name: android-test-reports
