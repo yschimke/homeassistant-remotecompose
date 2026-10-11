@@ -48,7 +48,7 @@ fun RemoteHaArea(data: HaAreaCardData, modifier: RemoteModifier = RemoteModifier
   ) {
     RemoteColumn(verticalArrangement = RemoteArrangement.spacedBy(8.rdp)) {
       RemoteText(
-        text = data.name.rs,
+        text = cardText("name", data.name),
         color = theme.primaryText,
         fontSize = 16.rsp,
         fontWeight = FontWeight.Medium,

@@ -461,4 +461,25 @@ class CardDesignParityTest {
       entity("input_number.volume", "7", "friendly_name" to "Volume"),
       dark = false,
     )
+
+  @Test
+  fun areaWithStatsAndActions() =
+    assertParity(
+      "area",
+      card("area") {
+        put("area", "living_room")
+        putJsonArray("entities") {
+          add("sensor.temp")
+          add("light.kitchen")
+          add("binary_sensor.front_door")
+          add("switch.fan")
+        }
+      },
+      listStates,
+      dark = false,
+    )
+
+  @Test
+  fun areaNameOnlyDark() =
+    assertParity("area-name-dark", card("area") { put("name", "Garage") }, emptyList(), dark = true)
 }
