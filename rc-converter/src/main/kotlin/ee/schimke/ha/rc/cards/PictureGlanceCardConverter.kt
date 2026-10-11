@@ -6,6 +6,7 @@ import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.runtime.Composable
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
+import ee.schimke.ha.model.HaLiveBindings
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.CardConverter
 import ee.schimke.ha.rc.HaStateColor
@@ -42,7 +43,7 @@ class PictureGlanceCardConverter : CardConverter {
     val cells = ids.map { id ->
       val entity = snapshot.states[id]
       val name = entity?.attributes?.get("friendly_name")?.jsonPrimitive?.content ?: id
-      val active = entity?.state == "on" || entity?.state == "open"
+      val active = entity != null && HaLiveBindings.isOn(id, entity.state)
       HaPictureGlanceCell(
         entityId = id,
         icon = HaIconMap.resolve(null, entity),

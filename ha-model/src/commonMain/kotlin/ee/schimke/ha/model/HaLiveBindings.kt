@@ -25,11 +25,12 @@ object HaLiveBindings {
    * Whether the entity is in its active / on-like state ↔ `<entityId>.is_on`. Converters bake the
    * initial accent from [HaEntity.isActive], so the pushed value must come from the same place: a
    * heating thermostat, an open cover, a locked lock or a playing media player is active even
-   * though its state isn't literally `"on"`. Domains without an active concept fall back to `state
-   * == "on"`.
+   * though its state isn't literally `"on"`. Domains without a modelled active concept (valves,
+   * scenes, …) fall back to `"on"` or `"open"`. Converters seed `<id>.is_on` from this same
+   * function, so the first push never changes an accent the document already shows.
    */
   fun isOn(entityId: String, state: String): Boolean =
-    EntityState(entityId, state).toTyped().isActive ?: (state == "on")
+    EntityState(entityId, state).toTyped().isActive ?: (state == "on" || state == "open")
 
   /**
    * Parsed numeric form of an entity's primary state ↔ `<entityId>.numeric_state`. Gauges / arcs

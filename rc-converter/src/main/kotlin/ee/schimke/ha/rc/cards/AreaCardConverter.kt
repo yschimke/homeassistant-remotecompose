@@ -12,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
+import ee.schimke.ha.model.HaLiveBindings
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.CardConverter
 import ee.schimke.ha.rc.components.HaAction
@@ -90,7 +91,7 @@ class AreaCardConverter : CardConverter {
         entityId = id,
         icon = icon,
         accent = accent,
-        initiallyActive = entity.state == "on" || entity.state == "open",
+        initiallyActive = HaLiveBindings.isOn(id, entity.state),
         tapAction = HaAction.Toggle(id),
       )
     }
