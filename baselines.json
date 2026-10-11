@@ -2148,7 +2148,7 @@
     "functionName": "Sizing_WidthPinnedHeightAdaptive",
     "module": "previews",
     "renderBasename": "Sizing_WidthPinnedHeightAdaptive_sizing_width_pinned_height_adaptive-e082424e.png",
-    "sha256": "2a2ba67adeb675180a975bd7ccf611bed52d03d075d720d293ffa71070d01a60",
+    "sha256": "edf7eeb46130502ec7a38e1d5a046a74e951d8f1146f6d4923c2159779c8debf",
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/SizingExperimentPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.ThemePreviewsKt.Theme_Home_Dark_theme_ Home (dark)": {
