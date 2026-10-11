@@ -1684,7 +1684,7 @@
     "functionName": "DashboardSecurityTablet",
     "module": "previews",
     "renderBasename": "DashboardSecurityTablet_dashboard_security_tablet-d081c9e6.png",
-    "sha256": "dd4cc3bd53bb4f70a04314ece8603eaaa428cba65460c905fea6c62d45f9af3a",
+    "sha256": "9c4fb469ebb0ef18f48935ea7e94b8c8d0200ff12fc10c11ee29435583680e8c",
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/DashboardPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.GarageShutterCardPreviewsKt.Garage_Animation_Dark_garage-anim (dark)": {
