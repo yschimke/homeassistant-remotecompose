@@ -1,11 +1,27 @@
 {
   "schema": "compose-preview-activity/v1",
-  "generatedAt": "2026-10-11T15:26:44.082Z",
+  "generatedAt": "2026-10-11T16:38:41.196Z",
   "windowDays": 30,
   "code": {
     "repo": "yschimke/homeassistant-remotecompose",
     "ref": "main",
     "events": [
+      {
+        "sha": "ec413f2707617e015cf7e67088097264fb8e6815",
+        "subject": "ci: skip the UID audit with a warning when OpenRouter is out of credit (#739)",
+        "at": "2026-10-11T17:04:26+01:00",
+        "author": "Yuri Schimke",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "944116ccaeef6f27f3d58883b69989adfdf1bceb",
+        "subject": "docs: design server plan — no capture-time value decisions, UI Builder references (#738)",
+        "at": "2026-10-11T16:13:42+01:00",
+        "author": "Yuri Schimke",
+        "previewIds": [],
+        "components": []
+      },
       {
         "sha": "7f8327eee3c53be9bb8102435bb5e972a6d1a4eb",
         "subject": "fix: restore the typed component catalog workflow on main (#737)",
@@ -466,22 +482,6 @@
         "sha": "f756836ac9b17306285f0517a46ce9685cb9ae9e",
         "subject": "fix(deps): update androidx (#683)",
         "at": "2026-09-28T01:53:34Z",
-        "author": "renovate[bot]",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "22d669c45f89dc27ac2ca7dcb07d107e094d8002",
-        "subject": "chore(deps): update github-actions (#675)",
-        "at": "2026-09-21T05:57:52Z",
-        "author": "renovate[bot]",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "5fd8e4fff169e07ec7d0f4a54c4f904895b969a6",
-        "subject": "chore(deps): update dependency dev.zacsweers.metro to v1.4.4 (#674)",
-        "at": "2026-09-21T05:24:48Z",
         "author": "renovate[bot]",
         "previewIds": [],
         "components": []
