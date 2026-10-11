@@ -1,6 +1,6 @@
 {
     "formatVersion": "compose-preview-history/v1",
-    "generatedFrom": "cafee4ed4b58f03a8a6b86e19eb9d64e5c1f7e5e",
+    "generatedFrom": "e8f7d56c1d6e861a49de95258d92b9649746aaf2",
     "previews": {
         "app/ee.schimke.terrazzo.previews.CardDebugPreviewsKt.CardFlashPreview_Card flash on data change": {
             "path": "renders/app/CardFlashPreview_Card_flash_on_data_change-44b71c2b.gif",
@@ -3934,6 +3934,13 @@
             "path": "renders/previews/DashboardNetworksMobile_dashboard_networks_mobile-d5ee47c2.png",
             "versions": [
                 {
+                    "blob": "df3cf63566e78f3de6f31f0412999a134b201d57",
+                    "commit": "e8f7d56c1d6e861a49de95258d92b9649746aaf2",
+                    "date": "2026-10-11T02:18:36Z",
+                    "sourceSha": "408d1df4",
+                    "commits": 1
+                },
+                {
                     "blob": "dee7e43447d4a9f7640045694191f678e3cd7bff",
                     "commit": "1c0e665af215c4410ad93352da2ae363d520d284",
                     "date": "2026-10-11T01:01:47Z",
@@ -3971,7 +3978,7 @@
                     "commits": 1
                 }
             ],
-            "observations": 7,
+            "observations": 8,
             "unstable": true,
             "flapCount": 2
         },
@@ -4935,6 +4942,13 @@
             "path": "renders/previews/Sizing_WidthPinnedHeightAdaptive_sizing_width_pinned_height_adaptive-e082424e.png",
             "versions": [
                 {
+                    "blob": "1f16d48881f4ee45a5519ea895c926d3740e45da",
+                    "commit": "e8f7d56c1d6e861a49de95258d92b9649746aaf2",
+                    "date": "2026-10-11T02:18:36Z",
+                    "sourceSha": "408d1df4",
+                    "commits": 1
+                },
+                {
                     "blob": "2d3800eada164daa9f91ec64e5ba70a6398b7fb1",
                     "commit": "cafee4ed4b58f03a8a6b86e19eb9d64e5c1f7e5e",
                     "date": "2026-10-11T01:41:22Z",
@@ -5019,7 +5033,7 @@
                     "commits": 1
                 }
             ],
-            "observations": 12,
+            "observations": 13,
             "unstable": false,
             "flapCount": 1
         },
