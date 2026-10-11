@@ -92,6 +92,7 @@ config, then pushes values under the slot names.
 | `s<N>.is_on` | bool | `state == "on"` |
 | `s<N>.numeric_state` | float | parsed numeric state |
 | `s<N>.state_int` | int | domain-keyed variant, same tables as today |
+| `s<N>.status` | int | `0` available, `1` unavailable, `2` unknown, `3` entity missing |
 | `s<N>.name` | string | `name:` from config, else `friendly_name` |
 | `s<N>.icon` | bitmap | icon rendered by the client (MDI path → bitmap) |
 | `s<N>.min`, `s<N>.max` | float | range from config (`min:` / `max:`), else the card's default |
@@ -134,7 +135,7 @@ the value changes:
 | State colour (`HaStateColor`) | `s<N>.is_on` / `s<N>.state_int` select a theme role in-document; lights mix in `s<N>.rgb` |
 | On/off icon, lock/unlock pictogram | `RemoteStateLayout` over `s<N>.state_int`, with every variant in the document |
 | Arc fraction (thermostat, humidifier, light) | `(numeric_state - min) / (max - min)`, computed in-document |
-| Shown or hidden parts (empty name, unavailable state) | visibility driven by bindings, not by leaving nodes out |
+| Shown or hidden parts (empty name, unavailable state) | visibility driven by bindings (`s<N>.status`, an empty `s<N>.name`), not by leaving nodes out |
 
 The client never computes a presentation value either. It pushes raw,
 host-reproducible values (`state`, `numeric_state`, thresholds, ranges)
@@ -142,9 +143,17 @@ and the design decides what they look like. A variant can therefore
 restyle severity colours or the on/off look without a client change,
 which is the point of serving designs.
 
+The client pushes **every** binding of a slot on every update, never a
+subset. Today `cardSnapshotBindings` leaves out `numeric_state` and
+`state_int` for an unavailable entity, which would leave the previous
+number in the player. For templates, a value with no meaning gets a
+defined neutral value (`numeric_state = NaN`, `state_int = -1`), and
+`s<N>.status` says why. The design never infers availability from the
+formatted, localised `s<N>.state` string.
+
 This is enforced in the pipeline, not by review. The validator captures
 every template twice, with two **different** design snapshots (different
-placeholder values, thresholds and ranges), and fails if the two
+placeholder values, thresholds, ranges and `status`), and fails if the two
 documents differ anywhere except the initial values of named variables.
 A converter that branches on a value at capture time produces two
 different documents, and the build stops.
@@ -439,7 +448,10 @@ with one task, `generateCardDesigns`:
      values, thresholds and ranges gives the same document apart from
      named-variable initial values (see
      [No decisions at capture time](#no-decisions-at-capture-time)).
-   - A committed UI Builder reference exists for the target.
+   - A committed UI Builder reference exists for the target, and the
+     comparison of this blob against it passes (milestone M2b). Until
+     M2b exists the pipeline can build blobs, but it writes no manifest
+     entries.
 4. Write `blobs/<sha256>.rc` and `manifest.json`, then sign the
    manifest in CI with a repository secret. Local builds produce an
    unsigned dev manifest, which only debug builds accept.
@@ -512,8 +524,9 @@ visuals are designed and checked, not just the default frame.
 4. CI renders each shipped blob, instantiated with each capture's
    binding fixtures, and compares it with the reference render
    (`ui_builder_compare_reference`, or the shared references publisher
-   the pilot uses). Diffs are advisory while the components settle, then
-   gate the build.
+   the pilot uses). While the components settle, a failing comparison
+   is only reported on the PR, but the target still gets no manifest
+   entry and no inbuilt asset. Once settled, it also fails the build.
 
 **What may ship.** The manifest only lists a `(cardType, variant,
 surface)` that has a committed reference, a linked implementation and a
@@ -554,10 +567,10 @@ Each manifest entry gets a `catalogId` and appears in the
 | R1 | Typed UI Builder components for the v1 cards, with binding-shaped properties | — |
 | R2 | Reference `.uid` designs for tile, sensor, entity, button, gauge (`default` variant, each surface) with binding fixtures in `card-designs/references.json` | R1 |
 | M1 | Binding schema v1 + `slotsFor` / `shapeOf` in `ha-model`; tile, sensor, entity, button and gauge converters move names, icons, colours and severity in-document; design-snapshot capture | S1, S2 |
-| M2 | `card-designs` module: matrix, capture, validator (including snapshot invariance), manifest, blobs; inbuilt assets in `app` | M1 |
-| M2b | CI comparison of shipped blobs against the UI Builder references (advisory, then gating) | M2, R2 |
-| M3 | Client: `DesignRepository` (disk cache, refresh rules, signature check), `DesignCardGenerator`, `CardRender.Template`, wire `CardSource` into the dashboard | M2 |
-| M4 | Static hosting on Pages (`/designs/v1/`), CI signing, kill switch | M2 |
+| M2 | `card-designs` module: matrix, capture, validator (including snapshot invariance), blobs; inbuilt assets in `app` for debug builds only | M1 |
+| M2b | CI comparison of shipped blobs against the UI Builder references, gating the manifest: only passing targets get entries | M2, R2 |
+| M3 | Client: `DesignRepository` (disk cache, refresh rules, signature check), `DesignCardGenerator`, `CardRender.Template`, wire `CardSource` into the dashboard. Inbuilt assets ship in a release only after M2b | M2b |
+| M4 | Static hosting on Pages (`/designs/v1/`), CI signing, kill switch | M2b |
 | M5 | Launcher surface (instantiate in `TerrazzoWidgetProvider`) | M3, S1 |
 | M6 | Wear: phone syncs blobs over the Data Layer, watch cache + inbuilt designs, wear-widget and wear-app targets | M3 |
 | M7 | Catalog: generated `Designs` group rendering shipped blobs | M2 |
