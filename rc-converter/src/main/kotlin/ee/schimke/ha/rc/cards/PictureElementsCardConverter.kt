@@ -6,6 +6,7 @@ import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.runtime.Composable
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
+import ee.schimke.ha.model.HaLiveBindings
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.CardConverter
 import ee.schimke.ha.rc.HaStateColor
@@ -67,7 +68,7 @@ private fun mapElement(obj: JsonObject, snapshot: HaSnapshot): HaPictureElement?
         entityId = entityId,
         icon = HaIconMap.resolve(obj["icon"]?.jsonPrimitive?.content, entity),
         accent = HaStateColor.activeFor(entity),
-        initiallyActive = entity?.state == "on" || entity?.state == "open",
+        initiallyActive = entity != null && HaLiveBindings.isOn(entityId, entity.state),
         tapAction = parseTap(obj, entityId),
         position = position,
       )

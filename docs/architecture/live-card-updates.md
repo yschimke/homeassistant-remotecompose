@@ -25,7 +25,7 @@ derived by `HaLiveBindings` / `cardSnapshotBindings` (the host):
 | Binding | Type | Host value |
 | --- | --- | --- |
 | `<id>.state` | string | `formatState(entity)` — the **formatted** display string |
-| `<id>.is_on` | bool | `state == "on"` |
+| `<id>.is_on` | bool | `HaLiveBindings.isOn(id, state)`: the typed `HaEntity.isActive` (climate `heat`/`cool`/…, cover `open`/`opening`/`closing`, lock `locked`, media `playing`, …), else `state == "on"` or `"open"`. Converters seed `LiveValues.isOn` from the same function. |
 | `<id>.numeric_state` | float | parsed numeric state (gauges/arcs derive their sweep in-document) |
 | `<id>.state_int` | int | domain-keyed variant (alarm panel today) |
 
