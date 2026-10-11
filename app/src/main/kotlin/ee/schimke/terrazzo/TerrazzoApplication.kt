@@ -13,11 +13,14 @@ import ee.schimke.ha.rc.enableRemoteComposeWrapContent
 import ee.schimke.terrazzo.core.di.TerrazzoGraph
 import ee.schimke.terrazzo.core.monitor.CardMonitor
 import ee.schimke.terrazzo.crash.CrashReporter
+import ee.schimke.terrazzo.dashboard.CardDesignSync
 import ee.schimke.terrazzo.di.AppGraph
 import ee.schimke.terrazzo.image.HaImageStack
 import ee.schimke.terrazzo.monitor.createMonitor
 import ee.schimke.terrazzo.wearsync.MobileSyncStatsStore
 import ee.schimke.terrazzo.wearsync.MobileWearSyncManager
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.plus
 
 /**
@@ -81,6 +84,11 @@ class TerrazzoApplication : Application() {
       pinStore = graph.pinStore,
       slotsStore = graph.wearWidgetSlotsStore,
     )
+    // Keep the experimental card design sync scheduled for a URL saved by an earlier version (or
+    // cancelled when it's blank). Unique work, so re-applying on every start is a no-op.
+    (ProcessLifecycleOwner.get().lifecycleScope + graph.logStore.coroutineExceptionHandler).launch {
+      CardDesignSync.apply(applicationContext, graph.preferencesStore.designServerUrl.first())
+    }
   }
 
   /**

@@ -335,3 +335,14 @@ fun createDesignRepository(
   clock: () -> Long,
 ): DesignRepository =
   DesignRepository(config, store, if (config.enabled) HttpClient() else null, inbuilt, clock)
+
+/**
+ * A [DesignRepository] that only reads [store]: no HTTP client, so [DesignRepository.refresh] is
+ * always [RefreshResult.Disabled]. For hosts that render designs while a background job owns the
+ * network refresh.
+ */
+fun cachedDesignRepository(
+  store: DesignStore,
+  inbuilt: InbuiltDesigns = InbuiltDesigns.None,
+  clock: () -> Long,
+): DesignRepository = DesignRepository(DesignServerConfig.Off, store, null, inbuilt, clock)
