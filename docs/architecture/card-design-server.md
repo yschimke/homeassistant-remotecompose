@@ -75,7 +75,7 @@ Deliberate spike limits, each owned by a milestone below:
 
 - **Which cards:** tile, entity and button (`entity` plus optional `name` / `icon`, and the
   button's `show_name`), heading (`heading_style`), and glance and entities (`title` plus rows
-  that are a bare entity id or `{ entity, name?, icon? }`). Entities must be `light`, `switch`,
+  that are a bare entity id or `{ entity, name?, icon?, tap_action? }`). Entities must be `light`, `switch`,
   `sensor` or `binary_sensor`, on the mobile app surface. Any other config has no shape and stays
   local.
 - **Generation properties** (`EntityDesign`) are what changes the look, per bound entity:

@@ -106,6 +106,7 @@ class CardDesignParityTest {
         addJsonObject {
           put("entity", "binary_sensor.front_door")
           put("name", "Front door")
+          put("tap_action", buildJsonObject { put("action", "more-info") })
         }
         add("switch.fan")
       }
@@ -280,6 +281,12 @@ class CardDesignParityTest {
       entity("light.kitchen", "off", "friendly_name" to "Kitchen"),
       dark = false,
     )
+
+  @Test
+  fun headingWithoutTextHasNoDesign() {
+    val heading = card("heading") { put("heading_style", "subtitle") }
+    kotlin.test.assertNull(registry.get("heading")?.designProperties(heading, HaSnapshot()))
+  }
 
   @Test
   fun headingTitle() =

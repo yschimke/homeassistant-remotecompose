@@ -49,8 +49,11 @@ internal object EntityDesign {
   const val COUNT = "count"
   const val TITLE_SIZE = "title_size"
 
-  /** Config keys an `entities:` row may carry for the card to be templated. */
-  private val ROW_KEYS = setOf("entity", "name", "icon")
+  /**
+   * Config keys an `entities:` row may carry for the card to be templated. `tap_action` isn't
+   * structural: playback runs the row's own action for a tap on its slot.
+   */
+  private val ROW_KEYS = setOf("entity", "name", "icon", "tap_action")
 
   /** Placeholder state: every templated domain models `off`, so toggle chrome is captured. */
   private const val PLACEHOLDER_STATE = "off"

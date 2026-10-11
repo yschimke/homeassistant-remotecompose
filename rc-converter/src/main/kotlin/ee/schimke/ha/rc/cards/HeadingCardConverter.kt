@@ -2,6 +2,7 @@ package ee.schimke.ha.rc.cards
 
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.runtime.Composable
+import ee.schimke.ha.design.CardDesignSlots
 import ee.schimke.ha.design.DesignProperties
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
@@ -27,6 +28,8 @@ class HeadingCardConverter : CardConverter {
    */
   override fun designProperties(card: CardConfig, snapshot: HaSnapshot): DesignProperties? {
     if (!TEMPLATE_CONFIG_KEYS.containsAll(card.raw.keys)) return null
+    // No text means no `card.title` to push; the template would keep its placeholder.
+    if (CardDesignSlots.cardTitle(card) == null) return null
     return DesignProperties.build { string(HEADING_STYLE, styleOf(card).name.lowercase()) }
   }
 
