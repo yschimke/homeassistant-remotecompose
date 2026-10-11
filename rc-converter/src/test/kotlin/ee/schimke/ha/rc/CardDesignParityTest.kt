@@ -120,6 +120,8 @@ class CardDesignParityTest {
     card: CardConfig,
     states: List<EntityState>,
     dark: Boolean,
+    bitmapLoader: androidx.compose.remote.player.core.platform.BitmapLoader =
+      androidx.compose.remote.player.core.platform.BitmapLoader.UNSUPPORTED,
   ) {
     val snapshot = HaSnapshot(states = states.associateBy { it.entityId })
     val context = org.robolectric.RuntimeEnvironment.getApplication()
@@ -137,6 +139,7 @@ class CardDesignParityTest {
             profile = androidXExperimentalWrap,
             card = card,
             snapshot = snapshot,
+            bitmapLoader = bitmapLoader,
           ) {
             ProvideCardRegistry(registry) {
               ProvideHaTheme(theme) { RenderChild(card, snapshot, RemoteModifier.fillMaxWidth()) }
@@ -148,6 +151,7 @@ class CardDesignParityTest {
             profile = androidXExperimentalWrap,
             card = card,
             snapshot = snapshot,
+            bitmapLoader = bitmapLoader,
             template = playback,
           ) {}
         }
@@ -482,4 +486,56 @@ class CardDesignParityTest {
   @Test
   fun areaNameOnlyDark() =
     assertParity("area-name-dark", card("area") { put("name", "Garage") }, emptyList(), dark = true)
+
+  /** Serves a test image for exactly one URL, as a host's loader would for the real picture. */
+  private fun loaderFor(url: String) =
+    androidx.compose.remote.player.core.platform.BitmapLoader { requested ->
+      if (requested != url) throw java.io.IOException("unexpected image $requested")
+      val bitmap = Bitmap.createBitmap(64, 48, Bitmap.Config.ARGB_8888)
+      android.graphics.Canvas(bitmap).apply {
+        drawColor(android.graphics.Color.rgb(30, 90, 160))
+        drawCircle(
+          32f,
+          24f,
+          14f,
+          android.graphics.Paint().apply { color = android.graphics.Color.YELLOW },
+        )
+      }
+      java.io
+        .ByteArrayOutputStream()
+        .also { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
+        .toByteArray()
+        .inputStream()
+    }
+
+  @Test
+  fun pictureEntityCamera() {
+    val url = "/api/camera_proxy/camera.driveway?token=abc"
+    assertParity(
+      "picture-entity-camera",
+      card("picture-entity") { put("entity", "camera.driveway") },
+      listOf(
+        entity(
+          "camera.driveway",
+          "recording",
+          "friendly_name" to "Driveway",
+          "entity_picture" to url,
+        )
+      ),
+      dark = false,
+      bitmapLoader = loaderFor(url),
+    )
+  }
+
+  @Test
+  fun pictureEntityNoPictureNoStateDark() =
+    assertParity(
+      "picture-entity-icon-dark",
+      card("picture-entity") {
+        put("entity", "light.kitchen")
+        put("show_state", false)
+      },
+      entity("light.kitchen", "on", "friendly_name" to "Kitchen"),
+      dark = true,
+    )
 }

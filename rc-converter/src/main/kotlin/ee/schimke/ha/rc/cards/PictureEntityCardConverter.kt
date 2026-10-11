@@ -4,6 +4,8 @@ import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.fillMaxSize
 import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.runtime.Composable
+import ee.schimke.ha.design.CardDesignSlots
+import ee.schimke.ha.design.DesignProperties
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.HaSnapshot
@@ -11,6 +13,7 @@ import ee.schimke.ha.model.toTyped
 import ee.schimke.ha.rc.BreakpointAxis
 import ee.schimke.ha.rc.CardConverter
 import ee.schimke.ha.rc.CardSizeMode
+import ee.schimke.ha.rc.DesignTemplateInput
 import ee.schimke.ha.rc.HaStateColor
 import ee.schimke.ha.rc.LocalCardSizeMode
 import ee.schimke.ha.rc.RemoteSizeBreakpoint
@@ -22,8 +25,11 @@ import ee.schimke.ha.rc.defaultTapActionFor
 import ee.schimke.ha.rc.formatState
 import ee.schimke.ha.rc.icons.HaIconMap
 import ee.schimke.ha.rc.parseHaAction
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.put
 
 /**
  * `picture-entity` card. RemoteCompose alpha08 can't pull a live camera stream into a `.rc`
@@ -35,6 +41,68 @@ class PictureEntityCardConverter : CardConverter {
 
   override fun naturalHeightDp(card: CardConfig, snapshot: HaSnapshot): Int = 160
 
+  /**
+   * A picture-entity card renders from a card design. The image is the slot's picture URL
+   * (`CardDesignSlots.pictureUrl`), which playback resolves to the entity's own `entity_picture`;
+   * the name and state are bindings. Structure: the entity's [EntityDesign] properties (icon and
+   * accent behind or instead of the image), whether it has a picture at all, and which strip lines
+   * show.
+   */
+  override fun designProperties(card: CardConfig, snapshot: HaSnapshot): DesignProperties? {
+    if (!TEMPLATE_CONFIG_KEYS.containsAll(card.raw.keys)) return null
+    val entityId = card.raw["entity"]?.jsonPrimitive?.contentOrNull ?: return null
+    val entity = snapshot.states[entityId] ?: return null
+    // A demo frame stamp is a per-frame value printed over the image; keep the converter.
+    if (entity.attributes["demo_frame_stamp"] != null) return null
+    var ok = false
+    val properties = DesignProperties.build {
+      with(EntityDesign) {
+        ok =
+          entity(
+            "",
+            entityId,
+            card.raw["icon"]?.jsonPrimitive?.contentOrNull,
+            snapshot,
+            PICTURE_DOMAINS,
+          )
+      }
+      enum(HAS_PICTURE, if (entity.attributes["entity_picture"] != null) 1 else 0)
+      enum(SHOW_NAME, if (flag(card, "show_name")) 1 else 0)
+      enum(SHOW_STATE, if (flag(card, "show_state")) 1 else 0)
+    }
+    return properties.takeIf { ok }
+  }
+
+  override fun designTemplate(properties: DesignProperties): DesignTemplateInput? {
+    val base = EntityDesign.templateEntity(properties, "", 0) ?: return null
+    val entity =
+      if (properties[HAS_PICTURE] == "1") {
+        base.copy(
+          attributes =
+            kotlinx.serialization.json.JsonObject(
+              base.attributes +
+                ("entity_picture" to
+                  kotlinx.serialization.json.JsonPrimitive(
+                    CardDesignSlots.pictureUrl(base.entityId)
+                  ))
+            )
+        )
+      } else base
+    val card =
+      CardConfig(
+        type = cardType,
+        raw =
+          buildJsonObject {
+            put("type", cardType)
+            put("entity", entity.entityId)
+            properties[EntityDesign.CARD_ICON]?.let { put("icon", it) }
+            if (properties[SHOW_NAME] == "0") put("show_name", false)
+            if (properties[SHOW_STATE] == "0") put("show_state", false)
+          },
+      )
+    return DesignTemplateInput(card, HaSnapshot(states = mapOf(entity.entityId to entity)))
+  }
+
   @Composable
   override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
     val entityId = card.raw["entity"]?.jsonPrimitive?.content
@@ -44,8 +112,8 @@ class PictureEntityCardConverter : CardConverter {
         ?: entity?.attributes?.get("friendly_name")?.jsonPrimitive?.content
         ?: entityId
         ?: "(no entity)"
-    val showName = card.raw["show_name"]?.jsonPrimitive?.content?.toBooleanStrictOrNull() ?: true
-    val showState = card.raw["show_state"]?.jsonPrimitive?.content?.toBooleanStrictOrNull() ?: true
+    val showName = flag(card, "show_name")
+    val showState = flag(card, "show_state")
     val tapCfg = card.raw["tap_action"]?.jsonObject
     val tapAction =
       if (tapCfg != null) parseHaAction(tapCfg, entityId) else defaultTapActionFor(entityId)
@@ -105,3 +173,16 @@ class PictureEntityCardConverter : CardConverter {
  * returns. Same ~72 dp cell maths as the bulk family ([BULK_IDENTITY_THRESHOLD_DP]).
  */
 private const val PICTURE_IDENTITY_THRESHOLD_DP: Int = 180
+
+private val TEMPLATE_CONFIG_KEYS =
+  setOf("type", "entity", "name", "icon", "show_name", "show_state")
+
+/** Picture entities: cameras and images, plus the entity domains every templated card supports. */
+private val PICTURE_DOMAINS = EntityDesign.DOMAINS + listOf("camera", "image")
+
+private const val HAS_PICTURE = "has_picture"
+private const val SHOW_NAME = "show_name"
+private const val SHOW_STATE = "show_state"
+
+private fun flag(card: CardConfig, key: String): Boolean =
+  card.raw[key]?.jsonPrimitive?.content?.toBooleanStrictOrNull() ?: true

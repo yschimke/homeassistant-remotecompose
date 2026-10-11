@@ -209,6 +209,18 @@ fun CachedCardPreview(
   // both at tap time.
   val latestSnapshot = rememberUpdatedState(snapshot)
   val latestTemplate = rememberUpdatedState(template)
+  // A template's images resolve through the card's own entities; nothing else it names is fetched.
+  val playerBitmapLoader =
+    remember(bitmapLoader, template != null) {
+      if (template == null) bitmapLoader
+      else
+        BitmapLoader { url ->
+          val real =
+            latestTemplate.value?.bitmapUrl?.invoke(url, latestSnapshot.value)
+              ?: throw java.io.IOException("template image not resolvable: $url")
+          bitmapLoader.loadBitmap(real)
+        }
+    }
   val onNamedAction: (String, Any?) -> Unit = { name, value ->
     if (name == HA_ACTION_NAME) {
       val current = latestTemplate.value
@@ -227,7 +239,7 @@ fun CachedCardPreview(
     WrapAdaptiveRemoteDocumentPlayer(
       documentBytes = cardDocument.bytes,
       modifier = modifier,
-      bitmapLoader = bitmapLoader,
+      bitmapLoader = playerBitmapLoader,
       init = { player -> playerHolder.value = player },
       onNamedAction = onNamedAction,
     )
@@ -237,7 +249,7 @@ fun CachedCardPreview(
       HaRcComposePlayer(
         documentBytes = cardDocument.bytes,
         modifier = modifier,
-        bitmapLoader = bitmapLoader,
+        bitmapLoader = playerBitmapLoader,
         namedValues = namedValues,
         onNamedAction = onNamedAction,
         fallback = androidXPlayer,
@@ -381,6 +393,11 @@ class CardTemplatePlayback(
   val tapAction: HaAction,
   val slotTapActions: List<HaAction> = emptyList(),
   /** A card-specific action for a tap on a slot: see [CardConverter.designAction]. */
+  /**
+   * The URL to fetch for an image URL the template encodes, or null to refuse it: only the card's
+   * own slot pictures resolve (`CardDesignSlots.pictureUrl`).
+   */
+  val bitmapUrl: (url: String, snapshot: HaSnapshot?) -> String? = { _, _ -> null },
   val slotAction: (snapshot: HaSnapshot?, slot: Int, templateAction: HaAction) -> HaAction? =
     { _, _, _ ->
       null

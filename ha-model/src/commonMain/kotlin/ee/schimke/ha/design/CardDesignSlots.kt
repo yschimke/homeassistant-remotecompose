@@ -141,6 +141,35 @@ object CardDesignSlots {
   const val STATUS_UNKNOWN: Int = 2
   const val STATUS_MISSING: Int = 3
 
+  /**
+   * The image URL a template carries for [slotId]'s `entity_picture`, in place of the real one.
+   * Playback resolves it against the card's own entity ([resolvePictureUrl]); a template can never
+   * make the client fetch any other URL.
+   */
+  fun pictureUrl(slotId: String): String = "$SLOT_URL_SCHEME$slotId/$ENTITY_PICTURE"
+
+  /**
+   * The real `entity_picture` for a template URL from [pictureUrl], looking the slot up in [card]'s
+   * own entities and [snapshot]; null for any URL that isn't a slot picture of this card.
+   */
+  fun resolvePictureUrl(url: String, card: CardConfig, snapshot: HaSnapshot?): String? {
+    if (!url.startsWith(SLOT_URL_SCHEME)) return null
+    val (slot, attribute) =
+      url.removePrefix(SLOT_URL_SCHEME).split('/', limit = 2).takeIf { it.size == 2 } ?: return null
+    if (attribute != ENTITY_PICTURE) return null
+    val entityId = slotMap(card).entries.firstOrNull { it.value == slot }?.key ?: return null
+    return snapshot
+      ?.states
+      ?.get(entityId)
+      ?.attributes
+      ?.get(ENTITY_PICTURE)
+      ?.jsonPrimitive
+      ?.contentOrNull
+  }
+
+  private const val SLOT_URL_SCHEME = "rc-slot://"
+  private const val ENTITY_PICTURE = "entity_picture"
+
   /** Card-level title binding; matches `CARD_TITLE_BINDING` in rc-components. */
   const val CARD_TITLE: String = "card.title"
 

@@ -67,10 +67,11 @@ internal object EntityDesign {
     entityId: String?,
     cardIcon: String?,
     snapshot: HaSnapshot,
+    domains: List<String> = DOMAINS,
   ): Boolean {
     if (entityId == null) return false
     val domain = CardDesignSlots.domainOf(entityId)
-    if (domain !in DOMAINS) return false
+    if (domain !in domains) return false
     val state = snapshot.states[entityId] ?: return false
     string(prefix + DOMAIN, domain)
     if (domain in DEVICE_CLASS_DOMAINS) {

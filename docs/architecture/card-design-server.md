@@ -47,8 +47,8 @@ values**. The client fills those bindings from its own HA connection.
 ## Spike status
 
 A first end-to-end slice is in the codebase, with **one rendering path**: every templatable card
-(today: tile, entity, button, heading, glance, entities, alarm panel, gauge, clock and the
-unsupported placeholder) renders from a card design. The design comes from the server when one is
+(today: tile, entity, button, heading, glance, entities, alarm panel, gauge, clock, area, picture-entity
+and the unsupported placeholder) renders from a card design. The design comes from the server when one is
 cached for the card's key, and from the **local design library** otherwise. The library captures
 the same template from the app's own converters on first use and keeps it for the process, so with
 no server configured (the default) cards still take the design path, just with built-in designs.
@@ -88,6 +88,10 @@ Deliberate spike limits, each owned by a milestone below:
   The clock is keyed on which lines show and its time format; the date line is `card.date` and
   another zone's offset `card.zone_offset_minutes`, so neither DST nor midnight changes its
   structure. The unsupported placeholder shows only its type, which is already in the key.
+  The area card is keyed per row on domain and `device_class`, its name is `card.name`. A
+  picture-entity template carries `rc-slot://<slot>/entity_picture` in place of the image URL;
+  playback resolves it to the card's own entity's picture and refuses every other URL a
+  template names (`CardTemplatePlayback.bitmapUrl`).
 - **Generation properties** (`EntityDesign`) are what changes the look, per bound entity:
   `domain` (icon family, toggle chrome), `device_class` for sensors and binary sensors (icon,
   colour), the `icon` attribute and a config `icon` (`card_icon`). List cards prefix them with the

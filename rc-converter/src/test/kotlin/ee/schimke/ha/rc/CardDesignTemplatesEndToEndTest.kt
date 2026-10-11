@@ -277,6 +277,44 @@ class CardDesignTemplatesEndToEndTest {
     )
   }
 
+  @Test
+  fun templateImagesResolveOnlyToTheCardsOwnPicture() {
+    val camera =
+      CardConfig(
+        type = "picture-entity",
+        raw =
+          buildJsonObject {
+            put("type", "picture-entity")
+            put("entity", "camera.driveway")
+          },
+      )
+    val snapshot =
+      HaSnapshot(
+        states =
+          mapOf(
+            "camera.driveway" to
+              EntityState(
+                "camera.driveway",
+                "idle",
+                kotlinx.serialization.json.JsonObject(
+                  mapOf("entity_picture" to kotlinx.serialization.json.JsonPrimitive("/cam?t=1"))
+                ),
+              )
+          )
+      )
+    val playback = CardDesignTemplates.playback(camera, ByteArray(0))
+    assertEquals("/cam?t=1", playback.bitmapUrl(CardDesignSlots.pictureUrl("camera.s0"), snapshot))
+    // Another slot, another attribute, or a URL of the template's own choosing: never fetched.
+    for (url in
+      listOf(
+        CardDesignSlots.pictureUrl("camera.s1"),
+        "rc-slot://camera.s0/token",
+        "https://tracker.test/pixel.png",
+      )) {
+      assertEquals(null, playback.bitmapUrl(url, snapshot), url)
+    }
+  }
+
   /**
    * With `-PcardDesignsOut=<dir>`, writes every spike design as the files a static host serves.
    * Skipped otherwise.

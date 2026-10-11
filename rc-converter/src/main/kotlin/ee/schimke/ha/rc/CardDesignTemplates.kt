@@ -91,6 +91,7 @@ object CardDesignTemplates {
       },
       tapAction = tapActionOf(card.raw["tap_action"] as? JsonObject, entityId),
       slotTapActions = slotTaps,
+      bitmapUrl = { url, snapshot -> CardDesignSlots.resolvePictureUrl(url, card, snapshot) },
       slotAction = { snapshot, slot, action ->
         converter?.designAction(card, snapshot, slot, action)
       },
