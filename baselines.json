@@ -1636,7 +1636,7 @@
     "functionName": "DashboardGithubTablet",
     "module": "previews",
     "renderBasename": "DashboardGithubTablet_dashboard_github_tablet-89194c99.png",
-    "sha256": "32fe64da362edbb2a181833537f238483344cffbdedeb8c581f32fb69137bdf1",
+    "sha256": "9c71dab678698202f365fa5b2b06cd218a8e5e9c313d45f8a42407ea0d675393",
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/DashboardPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.DashboardPreviewsKt.DashboardMeshcoreMobile_dashboard meshcore \u2014 mobile": {
