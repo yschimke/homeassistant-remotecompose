@@ -59,6 +59,7 @@ import ee.schimke.terrazzo.core.prefs.ThemePref
 import ee.schimke.terrazzo.core.session.DemoHaSession
 import ee.schimke.terrazzo.core.session.HaSession
 import ee.schimke.terrazzo.core.session.SessionConnectionStatus
+import ee.schimke.terrazzo.dashboard.CardDesignSync
 import ee.schimke.terrazzo.dashboard.CardHistoryScreen
 import ee.schimke.terrazzo.dashboard.DashboardListState
 import ee.schimke.terrazzo.dashboard.DashboardPickerScreen
@@ -1019,7 +1020,12 @@ internal fun SettingsScreen(
 
       DesignServerSetting(
         url = designServerUrl,
-        onUrlChange = { url -> scope.launch { graph.preferencesStore.setDesignServerUrl(url) } },
+        onUrlChange = { url ->
+          scope.launch {
+            graph.preferencesStore.setDesignServerUrl(url)
+            CardDesignSync.apply(context, url.trim(), syncNow = true)
+          }
+        },
       )
 
       Row(

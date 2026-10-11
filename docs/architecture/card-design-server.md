@@ -57,7 +57,8 @@ every card renders through the local converter exactly as before.
 | Client: config (off by default), refresh rules, TTL, back-off, serial rollback check, expiry, sha256-verified blobs, stale and inbuilt fallback, revocation; `DesignPublisher` writes the static files | `ha-client/.../client/design/` |
 | Template capture (`LocalCardTemplateCapture`), keys, spike key matrix | `rc-converter/.../CardDesignTemplates.kt` |
 | Template playback: slot-binding push, slot → entity action remap | `CachedCardPreview(template = …)` |
-| App: URL setting, `FileDesignStore`, `LocalCardDesigns`, dashboard hook | `app/.../dashboard/CardDesigns.kt`, `PreferencesStore.designServerUrl` |
+| App: URL setting, `FileDesignStore`, `LocalCardDesigns`, dashboard hook (reads the cache only) | `app/.../dashboard/CardDesigns.kt`, `PreferencesStore.designServerUrl` |
+| App: nightly sync while charging on unmetered network, plus one fetch when the URL changes | `app/.../dashboard/CardDesignSync.kt` |
 | End-to-end test: capture → publish → fetch from a fake host → resolve → bind | `rc-converter/src/test/.../CardDesignTemplatesEndToEndTest.kt` |
 
 Deliberate spike limits, each owned by a milestone below:
@@ -410,9 +411,14 @@ not cleared on sign-out (unlike `OfflineCache`). Writes are atomic
 
 **Refresh rules**
 
-- Refresh after a dashboard load if the manifest is older than
-  `ttlSeconds` (default 24h). Debounce it, and don't run more than one
-  refresh in parallel.
+- Refresh in a **nightly background job** that runs only while the
+  device is charging and on an unmetered network (WorkManager on
+  Android). Designs change rarely, so the dashboard never fetches; it only
+  reads the disk cache. The job is a no-op until the manifest is older
+  than `ttlSeconds` (default 24h), and never runs two refreshes in
+  parallel.
+- Run one extra fetch as soon as the user sets a new server URL, so the
+  setting takes effect without waiting for the night.
 - Also refresh on app upgrade, and when a new surface is gated on (first
   widget installed, watch paired).
 - Stale-while-revalidate: always render with what is on disk, swap in

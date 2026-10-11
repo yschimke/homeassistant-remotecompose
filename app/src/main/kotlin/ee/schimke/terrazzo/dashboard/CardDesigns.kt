@@ -8,12 +8,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
-import ee.schimke.ha.client.design.DesignServerConfig
 import ee.schimke.ha.client.design.DesignStore
-import ee.schimke.ha.client.design.RefreshResult
-import ee.schimke.ha.client.design.Sha256
 import ee.schimke.ha.client.design.StoredManifest
-import ee.schimke.ha.client.design.createDesignRepository
 import ee.schimke.ha.design.DesignKey
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.rc.CardDesignTemplates
@@ -21,7 +17,6 @@ import ee.schimke.ha.rc.CardTemplatePlayback
 import ee.schimke.ha.rc.components.ThemeStyle
 import java.io.File
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 
@@ -33,42 +28,20 @@ import kotlinx.serialization.json.Json
 val LocalCardDesigns = staticCompositionLocalOf<Map<DesignKey, ByteArray>> { emptyMap() }
 
 /**
- * Loads the designs for [serverUrl]. With an empty URL this returns an empty map and does no work
- * at all. Otherwise it serves whatever is cached on disk straight away, then refreshes from the
- * server (respecting the manifest TTL) and swaps in the result.
+ * The designs cached on disk for [serverUrl]. With an empty URL this returns an empty map and does
+ * no work. It never touches the network: [CardDesignSync]'s nightly job fills the cache, and a
+ * newly synced design shows the next time the dashboard is composed.
  */
 @Composable
 fun rememberCardDesigns(context: Context, serverUrl: String): Map<DesignKey, ByteArray> {
   if (serverUrl.isBlank()) return emptyMap()
-  val repository =
-    remember(serverUrl) {
-      createDesignRepository(
-        config = DesignServerConfig(baseUrl = serverUrl, allowUnsigned = true),
-        // One directory per server: switching URLs must not show the old server's designs or
-        // hold the new one to the old server's manifest serial.
-        store =
-          FileDesignStore(
-            File(
-              context.filesDir,
-              "terrazzo/designs/${Sha256.hex(serverUrl.trimEnd('/').encodeToByteArray())}",
-            )
-          ),
-        clock = System::currentTimeMillis,
-      )
-    }
+  val repository = remember(serverUrl) { CardDesignSync.cachedRepository(context, serverUrl) }
   var designs by remember(serverUrl) { mutableStateOf<Map<DesignKey, ByteArray>>(emptyMap()) }
   LaunchedEffect(repository) {
-    suspend fun load() =
+    designs =
       CardDesignTemplates.spikeKeys()
         .mapNotNull { (key, _) -> repository.resolve(key)?.let { key to it.bytes } }
         .toMap()
-    designs = load()
-    // Re-check periodically while the dashboard is up: `refresh` is a no-op until the manifest's
-    // TTL or the failure back-off has passed, so this costs nothing in between.
-    while (true) {
-      if (repository.refresh() == RefreshResult.Updated) designs = load()
-      delay(REFRESH_CHECK_INTERVAL_MS)
-    }
   }
   return designs
 }
@@ -131,5 +104,3 @@ class FileDesignStore(private val dir: File) : DesignStore {
     }
   }
 }
-
-private const val REFRESH_CHECK_INTERVAL_MS: Long = 15 * 60 * 1000
