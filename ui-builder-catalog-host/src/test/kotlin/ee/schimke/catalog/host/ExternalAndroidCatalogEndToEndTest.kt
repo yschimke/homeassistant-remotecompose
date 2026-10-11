@@ -58,6 +58,8 @@ class ExternalAndroidCatalogEndToEndTest {
         "homeassistant-remotecompose/tile",
         "homeassistant-remotecompose/button",
         "homeassistant-remotecompose/entity-row",
+        "homeassistant-remotecompose/entities",
+        "homeassistant-remotecompose/glance",
         "homeassistant-remotecompose/vertical-stack",
         "homeassistant-remotecompose/horizontal-stack",
       ),

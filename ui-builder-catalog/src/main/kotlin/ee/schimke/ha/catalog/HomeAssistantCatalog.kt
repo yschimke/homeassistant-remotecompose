@@ -12,8 +12,13 @@ import ee.schimke.composeai.discovery.*
 import ee.schimke.composeai.uibuilder.renderer.sdk.*
 import ee.schimke.ha.rc.ui.HaButton
 import ee.schimke.ha.rc.ui.HaButtonUiData
+import ee.schimke.ha.rc.ui.HaEntities
+import ee.schimke.ha.rc.ui.HaEntitiesUiData
 import ee.schimke.ha.rc.ui.HaEntityRow
 import ee.schimke.ha.rc.ui.HaEntityRowUiData
+import ee.schimke.ha.rc.ui.HaGlance
+import ee.schimke.ha.rc.ui.HaGlanceCellUiData
+import ee.schimke.ha.rc.ui.HaGlanceUiData
 import ee.schimke.ha.rc.ui.HaHeading
 import ee.schimke.ha.rc.ui.HaHeadingUiData
 import ee.schimke.ha.rc.ui.HaHorizontalStack
@@ -101,6 +106,79 @@ fun CatalogEntityRow(name: String, state: String, modifier: Modifier = Modifier)
   }
 }
 
+/**
+ * One entity a list card shows: its friendly name over its state. A plain public class whose
+ * constructor parameters are its fields, so an export writes `CatalogEntity(name = …, state = …)`.
+ */
+data class CatalogEntity(val name: String, val state: String = "")
+
+/** Typed surface of the `entities` card wrapper: an optional title over a list of entity rows. */
+data class CatalogEntitiesProps(val title: String, val rows: List<CatalogEntity>)
+
+/** Typed surface of the `glance` card wrapper: an optional title over a list of entity cells. */
+data class CatalogGlanceProps(val title: String, val cells: List<CatalogEntity>)
+
+/** Object codec for [CatalogEntity]; `state` may be left out and then reads as empty. */
+val CatalogEntityCodec: AdapterObjectCodec<CatalogEntity> =
+  AdapterValueCodecs.obj("ee.schimke.ha.catalog.CatalogEntity") {
+    val name = field(CatalogEntity::name, AdapterValueCodecs.String)
+    val state = field(CatalogEntity::state, AdapterValueCodecs.String, default = "")
+    construct { CatalogEntity(name = it[name], state = it[state]) }
+  }
+
+private val catalogEntitiesDefault =
+  listOf(CatalogEntity("Kitchen", "On"), CatalogEntity("Hallway", "Off"))
+
+/**
+ * List export wrapper around the real `entities` card: one [HaEntities] row per [rows] entry, an
+ * empty [title] meaning no header.
+ */
+@Composable
+fun CatalogEntities(title: String, rows: List<CatalogEntity>, modifier: Modifier = Modifier) {
+  key(title, rows) {
+    HaEntities(
+      HaEntitiesUiData(
+        title = title.ifEmpty { null },
+        rows =
+          rows.map {
+            HaEntityRowUiData(
+              name = it.name,
+              state = it.state,
+              icon = catalogIcon,
+              accent = catalogAccent,
+            )
+          },
+      ),
+      modifier,
+    )
+  }
+}
+
+/**
+ * List export wrapper around the real `glance` card: one [HaGlance] cell per [cells] entry, an
+ * empty [title] meaning no header.
+ */
+@Composable
+fun CatalogGlance(title: String, cells: List<CatalogEntity>, modifier: Modifier = Modifier) {
+  key(title, cells) {
+    HaGlance(
+      HaGlanceUiData(
+        title = title.ifEmpty { null },
+        cells =
+          cells.map {
+            HaGlanceCellUiData(
+              name = it.name,
+              state = it.state,
+              icon = catalogIcon,
+              accent = catalogAccent,
+            )
+          },
+      ),
+      modifier,
+    )
+  }
+}
+
 class HeadingAdapter(record: ComponentRecord) :
   TypedComponentAdapter<HaHeadingUiData>("homeassistant-remotecompose/heading", record) {
   val title = property(HaHeadingUiData::title, AdapterValueCodecs.String, "Home Assistant")
@@ -124,6 +202,28 @@ class EntityRowAdapter(record: ComponentRecord) :
   val state = property(HaEntityRowUiData::state, AdapterValueCodecs.String, "On")
 }
 
+class EntitiesAdapter(record: ComponentRecord) :
+  TypedComponentAdapter<CatalogEntitiesProps>("homeassistant-remotecompose/entities", record) {
+  val title = property(CatalogEntitiesProps::title, AdapterValueCodecs.String, "Living room")
+  val rows =
+    property(
+      CatalogEntitiesProps::rows,
+      AdapterValueCodecs.list(CatalogEntityCodec),
+      catalogEntitiesDefault,
+    )
+}
+
+class GlanceAdapter(record: ComponentRecord) :
+  TypedComponentAdapter<CatalogGlanceProps>("homeassistant-remotecompose/glance", record) {
+  val title = property(CatalogGlanceProps::title, AdapterValueCodecs.String, "Living room")
+  val cells =
+    property(
+      CatalogGlanceProps::cells,
+      AdapterValueCodecs.list(CatalogEntityCodec),
+      catalogEntitiesDefault,
+    )
+}
+
 class StackAdapter(record: ComponentRecord) :
   TypedComponentAdapter<Unit>("homeassistant-remotecompose/vertical-stack", record) {
   val content = slot("content")
@@ -140,10 +240,13 @@ class HomeAssistantCatalog(records: ComponentRecordFile) {
   val button = ButtonAdapter(records.components.single { it.symbol.name == "CatalogButton" })
   val entityRow =
     EntityRowAdapter(records.components.single { it.symbol.name == "CatalogEntityRow" })
+  val entities = EntitiesAdapter(records.components.single { it.symbol.name == "CatalogEntities" })
+  val glance = GlanceAdapter(records.components.single { it.symbol.name == "CatalogGlance" })
   val stack = StackAdapter(records.components.single { it.symbol.name == "HaVerticalStack" })
   val horizontalStack =
     HorizontalStackAdapter(records.components.single { it.symbol.name == "HaHorizontalStack" })
-  val definitions = listOf(heading, tile, button, entityRow, stack, horizontalStack)
+  val definitions =
+    listOf(heading, tile, button, entityRow, entities, glance, stack, horizontalStack)
 
   fun generate(records: ComponentRecordFile): GeneratedAdapterCatalog =
     TypedAdapterCatalog.generate(
@@ -174,6 +277,16 @@ class HomeAssistantCatalog(records: ComponentRecordFile) {
         state = value(entityRow.state),
         modifier = modifier,
       )
+    }
+    register(entities) {
+      CatalogEntities(
+        title = value(entities.title),
+        rows = value(entities.rows),
+        modifier = modifier,
+      )
+    }
+    register(glance) {
+      CatalogGlance(title = value(glance.title), cells = value(glance.cells), modifier = modifier)
     }
     register(stack) { HaVerticalStack(modifier = modifier) { Slot(stack.content) } }
     register(horizontalStack) {

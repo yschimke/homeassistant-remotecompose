@@ -5,6 +5,7 @@ import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.test.*
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonObject
 
 class CatalogContractTest {
   @Test
@@ -26,6 +27,8 @@ class CatalogContractTest {
         "homeassistant-remotecompose/tile",
         "homeassistant-remotecompose/button",
         "homeassistant-remotecompose/entity-row",
+        "homeassistant-remotecompose/entities",
+        "homeassistant-remotecompose/glance",
         "homeassistant-remotecompose/vertical-stack",
         "homeassistant-remotecompose/horizontal-stack",
       ),
@@ -57,6 +60,37 @@ class CatalogContractTest {
       ),
     )
     assertFailsWith<IllegalArgumentException> { pair.writeTo(destination) }
+  }
+
+  @Test
+  fun `entity lists store nested list and object wrappers and default an omitted state`() {
+    val catalog = HomeAssistantCatalog(discoverCatalogComponents())
+    val stored =
+      Json.parseToJsonElement(
+          """
+          {"type":"list","values":[
+            {"type":"object","fields":{
+              "name":{"type":"string","value":"Kitchen"},"state":{"type":"string","value":"On"}}},
+            {"type":"object","fields":{"name":{"type":"string","value":"Porch"}}}]}
+          """
+        )
+        .jsonObject
+    val expected = listOf(CatalogEntity("Kitchen", "On"), CatalogEntity("Porch"))
+    assertEquals(expected, catalog.entities.rows.unwrap(stored))
+    assertEquals(expected, catalog.glance.cells.unwrap(stored))
+    val wrapped = catalog.entities.rows.codec.wrap(expected)
+    assertEquals(expected, catalog.entities.rows.unwrap(wrapped))
+    assertEquals(catalog.entities.rows.default, catalog.entities.rows.unwrap(null))
+    assertFailsWith<IllegalArgumentException> {
+      catalog.entities.rows.unwrap(
+        Json.parseToJsonElement(
+            """{"type":"list","values":[{"type":"object","fields":{"state":{"type":"string","value":"On"}}}]}"""
+          )
+          .jsonObject
+      )
+    }
+    assertEquals("ee.schimke.ha.catalog.CatalogEntity", CatalogEntityCodec.typeFqn)
+    assertEquals(CatalogEntity::class.qualifiedName, CatalogEntityCodec.typeFqn)
   }
 
   @Test
