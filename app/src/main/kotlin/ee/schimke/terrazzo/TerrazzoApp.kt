@@ -42,6 +42,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
@@ -814,6 +815,7 @@ internal fun SettingsScreen(
   val logsViewEnabled by graph.preferencesStore.logsViewEnabled.collectAsState(initial = false)
   val flashOnDataChange by graph.preferencesStore.flashOnDataChange.collectAsState(initial = false)
   val dataGridOverlay by graph.preferencesStore.dataGridOverlay.collectAsState(initial = false)
+  val designServerUrl by graph.preferencesStore.designServerUrl.collectAsState(initial = "")
   val permanentWriteEnabled by
     graph.preferencesStore.permanentWriteMode.collectAsState(initial = false)
 
@@ -1015,6 +1017,11 @@ internal fun SettingsScreen(
         )
       }
 
+      DesignServerSetting(
+        url = designServerUrl,
+        onUrlChange = { url -> scope.launch { graph.preferencesStore.setDesignServerUrl(url) } },
+      )
+
       Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -1125,3 +1132,37 @@ private fun themePrefTagline(pref: ThemePref): String =
     ThemePref.TerrazzoMinimalist -> "Neutral slate · IBM Plex Sans"
     ThemePref.TerrazzoKiosk -> "High-contrast teal · Atkinson Hyperlegible"
   }
+
+/**
+ * Experimental: base URL of a card design server. Empty (the default) keeps the feature off. Saved
+ * when the field loses focus or the keyboard's Done is pressed, not on every keystroke, so a
+ * half-typed URL never triggers a fetch.
+ */
+@Composable
+private fun DesignServerSetting(url: String, onUrlChange: (String) -> Unit) {
+  var draft by remember(url) { mutableStateOf(url) }
+  Column(modifier = Modifier.fillMaxWidth()) {
+    Text("Experimental: card design server", style = MaterialTheme.typography.titleMedium)
+    Text(
+      "Fetch tile designs from this URL (manifest.json + blobs/) instead of drawing them " +
+        "locally. Leave empty to keep it off.",
+      style = MaterialTheme.typography.bodySmall,
+    )
+    androidx.compose.material3.OutlinedTextField(
+      value = draft,
+      onValueChange = { draft = it },
+      singleLine = true,
+      placeholder = { Text("Off") },
+      keyboardOptions =
+        androidx.compose.foundation.text.KeyboardOptions(
+          imeAction = androidx.compose.ui.text.input.ImeAction.Done
+        ),
+      keyboardActions =
+        androidx.compose.foundation.text.KeyboardActions(onDone = { onUrlChange(draft) }),
+      modifier =
+        Modifier.fillMaxWidth().onFocusChanged {
+          if (!it.isFocused && draft != url) onUrlChange(draft)
+        },
+    )
+  }
+}

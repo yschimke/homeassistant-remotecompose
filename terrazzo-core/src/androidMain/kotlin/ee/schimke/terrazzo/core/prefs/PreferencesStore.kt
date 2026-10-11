@@ -233,6 +233,18 @@ class PreferencesStore(private val context: Context) {
     context.store.edit { it.remove(SELECTED_DASHBOARDS_KEY) }
   }
 
+  /**
+   * Experimental card design server (`docs/architecture/card-design-server.md`): the base URL that
+   * serves `manifest.json` and `blobs/`. Empty — the default — switches the feature off: no network
+   * request is made and every card renders through the local converter.
+   */
+  val designServerUrl: Flow<String>
+    get() = context.store.data.map { it[DESIGN_SERVER_URL_KEY] ?: "" }
+
+  suspend fun setDesignServerUrl(url: String) {
+    context.store.edit { it[DESIGN_SERVER_URL_KEY] = url.trim() }
+  }
+
   companion object {
     private val Context.store by preferencesDataStore(name = "terrazzo_prefs")
     private val DEMO_KEY = booleanPreferencesKey("demo_mode")
@@ -246,6 +258,7 @@ class PreferencesStore(private val context: Context) {
     private val DATA_GRID_OVERLAY_KEY = booleanPreferencesKey("data_grid_overlay")
     private val PERMANENT_WRITE_KEY = booleanPreferencesKey("permanent_write_mode")
     private val SELECTED_DASHBOARDS_KEY = stringPreferencesKey("selected_dashboards")
+    private val DESIGN_SERVER_URL_KEY = stringPreferencesKey("design_server_url")
 
     /** Stored value for HA's default (unnamed) dashboard. */
     const val DEFAULT_DASHBOARD_SENTINEL: String = "__default__"

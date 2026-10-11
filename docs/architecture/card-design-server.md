@@ -44,6 +44,46 @@ values**. The client fills those bindings from its own HA connection.
 - Converting arbitrary custom cards. Card types with no converter stay
   `Unsupported`.
 
+## Spike status
+
+A first end-to-end slice is in the codebase. It is **off unless configured**: the app setting
+"Experimental: card design server" is empty by default, and with no URL nothing is fetched and
+every card renders through the local converter exactly as before.
+
+| Piece | Where |
+| --- | --- |
+| Wire model: `DesignKey`, `DesignSurface`, `DesignManifest`, `DesignEntry` | `ha-model/.../design/CardDesign.kt` |
+| Slot mapping, shape, slot bindings (with `status`, neutral defaults) | `ha-model/.../design/CardDesignSlots.kt` |
+| Client: config (off by default), refresh rules, TTL, back-off, serial rollback check, expiry, sha256-verified blobs, stale and inbuilt fallback, revocation; `DesignPublisher` writes the static files | `ha-client/.../client/design/` |
+| Template capture (`LocalCardTemplateCapture`), keys, spike key matrix | `rc-converter/.../CardDesignTemplates.kt` |
+| Template playback: slot-binding push, slot → entity action remap | `CachedCardPreview(template = …)` |
+| App: URL setting, `FileDesignStore`, `LocalCardDesigns`, dashboard hook | `app/.../dashboard/CardDesigns.kt`, `PreferencesStore.designServerUrl` |
+| End-to-end test: capture → publish → fetch from a fake host → resolve → bind | `rc-converter/src/test/.../CardDesignTemplatesEndToEndTest.kt` |
+
+Deliberate spike limits, each owned by a milestone below:
+
+- **Tile only** (`light`, `switch`, `sensor`, `binary_sensor`), mobile app surface, and only tiles
+  whose config is `entity` plus optional `name`. Anything else has no shape and stays local.
+- **Slot ids keep the domain** (`light.s0`, not `s0`), because the tile converter still derives
+  its icon family and toggle chrome from the domain. The domain is part of the shape.
+- **Baked themes.** Designs are keyed `baked:<ThemeStyle>:<light|dark>`, so the matrix has one
+  template per theme. `theme.*` bindings (S2) replace this.
+- **Still decided at capture:** the tile icon (from the placeholder `off` state) and its accent
+  colours. Moving these in-document is M1.
+- **No manifest signature** yet: the app accepts unsigned manifests (`allowUnsigned`). M4 adds
+  signing, and the client already reserves `signature` and checks `serial` and expiry.
+- **No inbuilt designs, no launcher or Wear** (S1, M5, M6), no published host (M4), no UI Builder
+  references (R1, R2, M2b).
+
+To try it, generate the host files and serve them from any static host, then paste the URL into
+the setting:
+
+```sh
+./gradlew :rc-converter:testDebugUnitTest \
+  --tests '*CardDesignTemplatesEndToEndTest.publishSpikeDesigns' \
+  -PcardDesignsOut=build/card-designs
+```
+
 ## Where we are today
 
 What the codebase already gives us, and what blocks a values-free
