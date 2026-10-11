@@ -60,7 +60,12 @@ object CardDesignTemplates {
    * Template playback for [card] with [bytes] from the design repository. Bindings and tap actions
    * all come from the card's own config; nothing but layout is taken from the template.
    */
-  fun playback(card: CardConfig, bytes: ByteArray): CardTemplatePlayback {
+  fun playback(
+    card: CardConfig,
+    bytes: ByteArray,
+    registry: CardRegistry = defaultTemplateRegistry,
+  ): CardTemplatePlayback {
+    val converter = registry.get(card.type)
     val entityId = card.raw["entity"]?.jsonPrimitive?.contentOrNull
     val rows = card.raw["entities"] as? JsonArray
     val slotTaps =
@@ -82,6 +87,9 @@ object CardDesignTemplates {
       bindings = { snapshot -> CardDesignSlots.slotBindings(card, snapshot) },
       tapAction = tapActionOf(card.raw["tap_action"] as? JsonObject, entityId),
       slotTapActions = slotTaps,
+      slotAction = { snapshot, slot, action ->
+        converter?.designAction(card, snapshot, slot, action)
+      },
     )
   }
 

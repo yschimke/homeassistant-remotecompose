@@ -206,6 +206,77 @@ class CardDesignTemplatesEndToEndTest {
     )
   }
 
+  @Test
+  fun alarmTemplateTapsAreRebuiltFromTheCardsOwnConfig() {
+    val alarm =
+      CardConfig(
+        type = "alarm-panel",
+        raw =
+          buildJsonObject {
+            put("type", "alarm-panel")
+            put("entity", "alarm_control_panel.home")
+            put(
+              "states",
+              kotlinx.serialization.json.buildJsonArray {
+                add(kotlinx.serialization.json.JsonPrimitive("arm_home"))
+              },
+            )
+          },
+      )
+    val snapshot =
+      HaSnapshot(
+        states =
+          mapOf(
+            "alarm_control_panel.home" to
+              EntityState(
+                "alarm_control_panel.home",
+                "disarmed",
+                kotlinx.serialization.json.JsonObject(
+                  mapOf("code_arm_required" to kotlinx.serialization.json.JsonPrimitive(false))
+                ),
+              )
+          )
+      )
+    val playback = CardDesignTemplates.playback(alarm, ByteArray(0))
+    val slot = "alarm_control_panel.s0"
+    // The template's code length is ignored; the entity says no code is needed.
+    assertEquals(
+      ee.schimke.ha.rc.components.HaAction.AlarmIntent("alarm_control_panel.home", "arm_home", 0),
+      playback.resolveTap(
+        ee.schimke.ha.rc.components.HaAction.AlarmIntent(slot, "arm_home", 4),
+        snapshot,
+      ),
+    )
+    assertEquals(
+      ee.schimke.ha.rc.components.HaAction.AlarmKey("alarm_control_panel.home", "7"),
+      playback.resolveTap(ee.schimke.ha.rc.components.HaAction.AlarmKey(slot, "7"), snapshot),
+    )
+    // A service this card doesn't offer, or a key that isn't on the keypad, never runs.
+    for (forged in
+      listOf(
+        ee.schimke.ha.rc.components.HaAction.AlarmIntent(slot, "disarm", 0),
+        ee.schimke.ha.rc.components.HaAction.AlarmKey(slot, "1234"),
+      )) {
+      assertEquals(playback.slotTapActions[0], playback.resolveTap(forged, snapshot))
+    }
+    // With the keypad hidden, no key is accepted at all.
+    val noKeypad =
+      CardDesignTemplates.playback(
+        CardConfig(
+          type = "alarm-panel",
+          raw =
+            kotlinx.serialization.json.JsonObject(
+              alarm.raw + ("show_keypad" to kotlinx.serialization.json.JsonPrimitive(false))
+            ),
+        ),
+        ByteArray(0),
+      )
+    assertEquals(
+      noKeypad.slotTapActions[0],
+      noKeypad.resolveTap(ee.schimke.ha.rc.components.HaAction.AlarmKey(slot, "7"), snapshot),
+    )
+  }
+
   /**
    * With `-PcardDesignsOut=<dir>`, writes every spike design as the files a static host serves.
    * Skipped otherwise.

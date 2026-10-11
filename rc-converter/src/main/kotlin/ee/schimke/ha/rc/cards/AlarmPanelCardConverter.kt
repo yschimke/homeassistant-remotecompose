@@ -10,13 +10,17 @@ import androidx.compose.remote.creation.compose.modifier.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import ee.schimke.ha.design.CardDesignSlots
+import ee.schimke.ha.design.DesignProperties
 import ee.schimke.ha.model.AlarmStateInt
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
+import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.model.alarmStateIntFromRaw
 import ee.schimke.ha.rc.CardConverter
 import ee.schimke.ha.rc.CardSizeMode
+import ee.schimke.ha.rc.DesignTemplateInput
 import ee.schimke.ha.rc.LocalCardSizeMode
 import ee.schimke.ha.rc.RemoteSizeBreakpoint
 import ee.schimke.ha.rc.components.HaAction
@@ -27,9 +31,14 @@ import ee.schimke.ha.rc.components.RemoteHaAlarmPanel
 import ee.schimke.ha.rc.components.RemoteHaAlarmPanelWide
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.add
 import kotlinx.serialization.json.booleanOrNull
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.put
+import kotlinx.serialization.json.putJsonArray
 
 /**
  * `alarm-panel` card. Maps `alarm_control_panel.*` entity state into a panel showing the
@@ -47,6 +56,70 @@ class AlarmPanelCardConverter : CardConverter {
 
   override fun naturalHeightDp(card: CardConfig, snapshot: HaSnapshot): Int = 380
 
+  /**
+   * An alarm panel renders from a card design: its status variants already switch in-document on
+   * `<slot>.state_int`, so only the ARM buttons (`states`) and the keypad (`show_keypad`) are
+   * structure. The code length only shapes the actions, which [designAction] rebuilds locally.
+   */
+  override fun designProperties(card: CardConfig, snapshot: HaSnapshot): DesignProperties? {
+    if (!TEMPLATE_CONFIG_KEYS.containsAll(card.raw.keys)) return null
+    val entityId = card.raw["entity"]?.jsonPrimitive?.contentOrNull ?: return null
+    if (CardDesignSlots.domainOf(entityId) != DOMAIN) return null
+    if (entityId !in snapshot.states) return null
+    val states = armStates(card)
+    if (states.any { ',' in it || ';' in it }) return null
+    return DesignProperties.build {
+      string(STATES, states.joinToString(","))
+      enum(SHOW_KEYPAD, if (showKeypad(card)) 1 else 0)
+    }
+  }
+
+  override fun designTemplate(properties: DesignProperties): DesignTemplateInput? {
+    val states = properties[STATES]?.split(',')?.filter { it.isNotEmpty() } ?: return null
+    val slot = CardDesignSlots.slotId(DOMAIN, 0)
+    val card =
+      CardConfig(
+        type = cardType,
+        raw =
+          buildJsonObject {
+            put("type", cardType)
+            put("entity", slot)
+            putJsonArray("states") { states.forEach { add(it) } }
+            if (properties[SHOW_KEYPAD] == "0") put("show_keypad", false)
+          },
+      )
+    val entity = CardDesignSlots.templateEntity(slot, placeholderState = "disarmed")
+    return DesignTemplateInput(card, HaSnapshot(states = mapOf(slot to entity)))
+  }
+
+  /**
+   * Which ARM button or keypad key a template tap pressed, rebuilt from this card's own `states`
+   * and code length against its real entity; keys only while the card shows its keypad. Anything
+   * else gets the slot's default tap.
+   */
+  override fun designAction(
+    card: CardConfig,
+    snapshot: HaSnapshot?,
+    slot: Int,
+    templateAction: HaAction,
+  ): HaAction? {
+    if (slot != 0) return null
+    val entityId = card.raw["entity"]?.jsonPrimitive?.contentOrNull ?: return null
+    return when (templateAction) {
+      is HaAction.AlarmIntent ->
+        templateAction.service
+          .takeIf { it in armStates(card) }
+          ?.let {
+            HaAction.AlarmIntent(entityId, it, codeLengthFor(card, snapshot?.states?.get(entityId)))
+          }
+      is HaAction.AlarmKey ->
+        templateAction.key
+          .takeIf { showKeypad(card) && it in KEYPAD_KEYS }
+          ?.let { HaAction.AlarmKey(entityId, it) }
+      else -> null
+    }
+  }
+
   @Composable
   override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
     val entityId = card.raw["entity"]?.jsonPrimitive?.content
@@ -57,21 +130,8 @@ class AlarmPanelCardConverter : CardConverter {
         ?: entityId
         ?: "Alarm"
     val state = entity?.state ?: "unknown"
-    val statesArr =
-      (card.raw["states"] as? JsonArray)?.mapNotNull { (it as? JsonPrimitive)?.content }
-        ?: listOf("arm_away", "arm_home")
-    val codeRequired =
-      entity?.attributes?.get("code_arm_required")?.jsonPrimitive?.booleanOrNull ?: true
-    // HA doesn't surface a structured length, so let the dashboard
-    // YAML pin one (`code_length: 4`); attribute-level hints are
-    // strings like "number" / "^\\d{4}$" that we don't parse.
-    val configuredLen = card.raw["code_length"]?.jsonPrimitive?.intOrNull
-    val codeLength: Int? =
-      when {
-        !codeRequired -> 0
-        configuredLen != null && configuredLen > 0 -> configuredLen
-        else -> null
-      }
+    val statesArr = armStates(card)
+    val codeLength = codeLengthFor(card, entity)
     val actions =
       entityId
         ?.let { id ->
@@ -94,8 +154,7 @@ class AlarmPanelCardConverter : CardConverter {
         initialStateInt = alarmStateIntFromRaw(state),
         statuses = AlarmStatuses,
         actions = actions,
-        showKeypad =
-          card.raw["show_keypad"]?.jsonPrimitive?.content?.toBooleanStrictOrNull() ?: true,
+        showKeypad = showKeypad(card),
         codeLength = codeLength,
       )
 
@@ -117,6 +176,36 @@ class AlarmPanelCardConverter : CardConverter {
           }
         }
     }
+  }
+}
+
+private const val DOMAIN = "alarm_control_panel"
+private const val STATES = "states"
+private const val SHOW_KEYPAD = "show_keypad"
+private val TEMPLATE_CONFIG_KEYS =
+  setOf("type", "entity", "name", "states", "show_keypad", "code_length")
+private val KEYPAD_KEYS = (0..9).map { it.toString() }.toSet() + setOf("backspace", "clear")
+
+private fun armStates(card: CardConfig): List<String> =
+  (card.raw["states"] as? JsonArray)?.mapNotNull { (it as? JsonPrimitive)?.content }
+    ?: listOf("arm_away", "arm_home")
+
+private fun showKeypad(card: CardConfig): Boolean =
+  card.raw["show_keypad"]?.jsonPrimitive?.content?.toBooleanStrictOrNull() ?: true
+
+/**
+ * The code length the alarm actions carry: 0 when the entity reports `code_arm_required: false`,
+ * else the dashboard's `code_length:` (HA doesn't surface a structured length; attribute-level
+ * hints are strings like "number" we don't parse), else unknown.
+ */
+private fun codeLengthFor(card: CardConfig, entity: EntityState?): Int? {
+  val codeRequired =
+    entity?.attributes?.get("code_arm_required")?.jsonPrimitive?.booleanOrNull ?: true
+  val configuredLen = card.raw["code_length"]?.jsonPrimitive?.intOrNull
+  return when {
+    !codeRequired -> 0
+    configuredLen != null && configuredLen > 0 -> configuredLen
+    else -> null
   }
 }
 

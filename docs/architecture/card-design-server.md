@@ -47,7 +47,7 @@ values**. The client fills those bindings from its own HA connection.
 ## Spike status
 
 A first end-to-end slice is in the codebase, with **one rendering path**: every templatable card
-(today: tile, entity, button, heading, glance and entities) renders from a card design. The design comes from the server when one is
+(today: tile, entity, button, heading, glance, entities and alarm panel) renders from a card design. The design comes from the server when one is
 cached for the card's key, and from the **local design library** otherwise. The library captures
 the same template from the app's own converters on first use and keeps it for the process, so with
 no server configured (the default) cards still take the design path, just with built-in designs.
@@ -77,7 +77,8 @@ Deliberate spike limits, each owned by a milestone below:
   button's `show_name`), heading (`heading_style`), and glance and entities (`title` plus rows
   that are a bare entity id or `{ entity, name?, icon?, tap_action? }`). Entities must be `light`, `switch`,
   `sensor` or `binary_sensor`, on the mobile app surface. Any other config has no shape and stays
-  local.
+  local. The alarm panel is keyed on its ARM buttons (`states`) and `show_keypad`; its status
+  variants already switch in-document on `<slot>.state_int`.
 - **Generation properties** (`EntityDesign`) are what changes the look, per bound entity:
   `domain` (icon family, toggle chrome), `device_class` for sensors and binary sensors (icon,
   colour), the `icon` attribute and a config `icon` (`card_icon`). List cards prefix them with the
@@ -86,7 +87,10 @@ Deliberate spike limits, each owned by a milestone below:
   therefore draws exactly what the converter drew, with names, titles and states as bindings
   (`<slot>.name`, `card.title`).
 - **Taps** come from the card's own config. A template's encoded action only says which slot was
-  tapped, so a glance cell runs that row's `tap_action`; per-card `tap_action` keeps the converter
+  tapped, so a glance cell runs that row's `tap_action`. A converter may also rebuild a more
+  specific action from its own config (`CardConverter.designAction`): the alarm panel accepts an
+  ARM service only if its `states` offer it, and a key only if the keypad has it, with the code
+  length taken from the live entity; per-card `tap_action` keeps the converter
   path for now because `none` drops the clickable.
 - **One known difference:** templates are captured with a placeholder `off` state, so an
   unavailable light or switch keeps its toggle chip (inactive colour) where the converter drew a

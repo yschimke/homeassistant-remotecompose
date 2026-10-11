@@ -324,4 +324,31 @@ class CardDesignParityTest {
       listStates,
       dark = false,
     )
+
+  @Test
+  fun alarmPanelArmedAway() =
+    assertParity(
+      "alarm-armed-away",
+      card("alarm-panel") { put("entity", "alarm_control_panel.home") },
+      entity("alarm_control_panel.home", "armed_away", "friendly_name" to "Home alarm"),
+      dark = false,
+    )
+
+  @Test
+  fun alarmPanelNoKeypadDark() =
+    assertParity(
+      "alarm-no-keypad-dark",
+      card("alarm-panel") {
+        put("entity", "alarm_control_panel.home")
+        put("name", "House")
+        put("show_keypad", false)
+        putJsonArray("states") {
+          add("arm_home")
+          add("arm_night")
+          add("arm_away")
+        }
+      },
+      entity("alarm_control_panel.home", "triggered"),
+      dark = true,
+    )
 }
