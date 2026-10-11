@@ -68,6 +68,13 @@ class CardDesignTemplatesEndToEndTest {
     }
     assertFalse("light.kitchen" in document, "template must not name a real entity")
     assertFalse("Kitchen" in document, "template must not bake the card's name")
+    // The placeholder name appears once, as the `light.s0.name` binding's initial value. Content
+    // descriptions read that binding too, so TalkBack never gets a baked placeholder.
+    assertEquals(
+      1,
+      Regex(Regex.escape(CardDesignSlots.NAME_PLACEHOLDER)).findAll(document).count(),
+      "placeholder name baked outside its binding",
+    )
     val output = DesignPublisher.publish(listOf(built), serial = 1, nowEpochMs = NOW)
 
     // Client: fetch from a fake static host and resolve the live card's key.
