@@ -316,6 +316,7 @@ The render task completed but no PNG was produced for these previews. Entries wi
 | `ToggleInitial_Off` | <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/main/renders/previews/ToggleInitial_Off_toggle_initial_off-e610f9d2.png" width="150" /> |
 | `ToggleInitial_On_Dark` | <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/main/renders/previews/ToggleInitial_On_Dark_toggle_initial_on_dark-20707628.png" width="150" /> |
 | `ToggleInitial_On` | <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/main/renders/previews/ToggleInitial_On_toggle_initial_on-17495b93.png" width="150" /> |
+| `WrapContentHeightCmp` | <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/main/renders/previews/WrapContentHeightCmp_wrap_content_height_CMP_player-e74b165d.png" width="150" /> |
 | `WrapContentHeightFixAlpha010` | <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/main/renders/previews/WrapContentHeightFixAlpha010_wrap_content_height_fix_WrapAdaptive_player-21200e61.png" width="150" /> |
 | `WrapContentHeightReproAlpha010` | <img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/main/renders/previews/WrapContentHeightReproAlpha010_wrap_content_height_repro_alpha010-adbd8ce7.png" width="150" /> |
 
