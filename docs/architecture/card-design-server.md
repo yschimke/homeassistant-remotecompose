@@ -27,6 +27,11 @@ values**. The client fills those bindings from its own HA connection.
   installed).
 - Each design is published in the `homeassistant-remotecompose` catalog,
   so the catalog shows exactly what ships.
+- Each design has a reference design made in UI Builder, and the shipped
+  document is checked against it.
+- Nothing in a design is decided from a value when it is built. Colours,
+  bands, icons and visibility are worked out in the document from bound
+  values, so a variant can restyle them.
 
 ## Non-goals
 
@@ -89,7 +94,9 @@ config, then pushes values under the slot names.
 | `s<N>.state_int` | int | domain-keyed variant, same tables as today |
 | `s<N>.name` | string | `name:` from config, else `friendly_name` |
 | `s<N>.icon` | bitmap | icon rendered by the client (MDI path → bitmap) |
-| `s<N>.color` | color | state colour (`HaStateColor`), resolved by the client |
+| `s<N>.min`, `s<N>.max` | float | range from config (`min:` / `max:`), else the card's default |
+| `s<N>.threshold.<band>` | float | configured band starts (gauge `severity.green` / `yellow` / `red`) |
+| `s<N>.rgb` | color | `rgb_color` attribute passed through as-is (lights) |
 | `card.title` | string | card-level `title:` / `name:` |
 | `card.count` | int | number of populated rows, for list-shaped cards |
 | `theme.<role>` | color | theme role (primary, surface, onSurface, …) where the target has no `ColorTheme` / `WearM3` |
@@ -111,6 +118,36 @@ and the add-on agree on it: `fun slotsFor(card: CardConfig):
 List<SlotBinding>`, one mapper per card type (tile → 1 slot, entities →
 N rows, glance → N cells). The output goes into a design manifest entry,
 so the client can check that a template's slot count fits the config.
+
+### No decisions at capture time
+
+A template must not contain anything **chosen** from a value. The
+converter output may depend on the config **shape** (below) and nothing
+else. A value or a config number never picks a branch, a colour, an icon
+or a size while the document is being built. Every visual that depends
+on a value is worked out **in the document**, from bindings, every time
+the value changes:
+
+| Today (picked at capture) | In the template |
+| --- | --- |
+| Gauge severity band, from the value and `severity:` thresholds (`GaugeCardConverter`) | RC float expressions compare `s<N>.numeric_state` with `s<N>.threshold.*` and pick the band colour from theme roles |
+| State colour (`HaStateColor`) | `s<N>.is_on` / `s<N>.state_int` select a theme role in-document; lights mix in `s<N>.rgb` |
+| On/off icon, lock/unlock pictogram | `RemoteStateLayout` over `s<N>.state_int`, with every variant in the document |
+| Arc fraction (thermostat, humidifier, light) | `(numeric_state - min) / (max - min)`, computed in-document |
+| Shown or hidden parts (empty name, unavailable state) | visibility driven by bindings, not by leaving nodes out |
+
+The client never computes a presentation value either. It pushes raw,
+host-reproducible values (`state`, `numeric_state`, thresholds, ranges)
+and the design decides what they look like. A variant can therefore
+restyle severity colours or the on/off look without a client change,
+which is the point of serving designs.
+
+This is enforced in the pipeline, not by review. The validator captures
+every template twice, with two **different** design snapshots (different
+placeholder values, thresholds and ranges), and fails if the two
+documents differ anywhere except the initial values of named variables.
+A converter that branches on a value at capture time produces two
+different documents, and the build stops.
 
 ### Variable-length cards
 
@@ -139,23 +176,22 @@ list, or a key the shape function doesn't recognise (`null`), falls
 through to the local converter. Two cards with different structures can
 never share bytes.
 
-Non-structural config values (gauge `min` / `max`, a time zone ID) are
-bindings, not shapes, or the matrix explodes.
+Non-structural config values (gauge `min` / `max`, severity
+thresholds, a time zone ID) are bindings, not shapes, or the matrix
+explodes. When a structural choice depends on the entity's domain (a
+tile for a lock and a tile for a light differ in shape, not just
+colour), the domain is part of the shape.
 
 ### Which cards fit
 
 - **v1 (binding cards):** sensor, entity, tile, button, glance, area,
-  entities, alarm-panel, heading, clock. Alarm-panel, heading and clock
-  need a [config shape](#configuration-shape).
-- **Later, once the schema grows:** gauge (`GaugeCardConverter` picks
-  the severity band from the current value and the configured
-  thresholds at capture time, so a template would freeze the
-  placeholder's colour; it needs bound thresholds plus an in-document
-  band pick, or an `s<N>.severity_int` binding), thermostat, humidifier
-  and light
-  (arc fraction derived in-document from `numeric_state` plus
-  `s<N>.min` / `s<N>.max`), media-control (split title and progress
-  into bindings).
+  entities, alarm-panel, gauge, heading, clock. Alarm-panel, heading and
+  clock need a [config shape](#configuration-shape). Gauge needs its
+  severity band moved in-document first (see
+  [No decisions at capture time](#no-decisions-at-capture-time)).
+- **Later:** thermostat, humidifier and light, once their arc fraction
+  and labels are computed in-document; media-control, once its title and
+  progress are bindings.
 - **Stay local:** calendar, logbook, to-do, history and statistics
   graphs, map, weather-forecast, markdown with Jinja. They need list or
   series data, so they keep re-encoding on the device. The design server
@@ -399,6 +435,11 @@ with one task, `generateCardDesigns`:
    - The document decodes under that target's op set (level, profile,
      no `COLOR_THEME` on `widgetsProfile`).
    - Size tiers are present for Fixed targets.
+   - **Snapshot invariance:** a second capture with different placeholder
+     values, thresholds and ranges gives the same document apart from
+     named-variable initial values (see
+     [No decisions at capture time](#no-decisions-at-capture-time)).
+   - A committed UI Builder reference exists for the target.
 4. Write `blobs/<sha256>.rc` and `manifest.json`, then sign the
    manifest in CI with a repository secret. Local builds produce an
    unsigned dev manifest, which only debug builds accept.
@@ -419,10 +460,70 @@ served at that commit. It ages from there until the next refresh.
 - A live-update test: push a new value, then assert the frame changes
   with no re-encode.
 
+## Reference designs in UI Builder
+
+Every design starts life as a **UI Builder reference**: a `.uid`
+document in the `homeassistant-remotecompose` catalog that says what the
+card should look like, before any converter code changes. The shipped
+template is then checked against it. This is the same workflow
+`adaptive-uid-pilot/` already runs for app screens (`.uid` references,
+`references.json`, Reference / Diff / Actual evidence in the PR),
+applied to cards.
+
+**Components.** References are built from the typed components in
+`ui-builder-catalog/` (`homeassistant-remotecompose/tile`, `button`,
+`entity-row`, `heading`, the stacks). Those adapters need to grow in two
+ways:
+
+- Cover every v1 card type, gauge and glance included.
+- Expose **binding-shaped properties**, not just scalars. A tile
+  reference sets `state`, `is_on`, `numeric_state`, thresholds and ranges
+  the same way the template's bindings receive them, and the component
+  works out the look in-document. The reference then exercises the same
+  rule as the template. Today's `Catalog*` wrappers fill icons and accents
+  with fixed values; that becomes binding-driven.
+
+**Layout.** References live next to the pipeline:
+
+```
+card-designs/
+  matrix.json
+  references.json                         # compose-ui-builder-references/v1, like adaptive-uid-pilot
+  ui-builder/designs/<cardType>-<variant>-<surface>[-<shape>].uid
+```
+
+`references.json` lists the captures for each reference: surface frame
+(dashboard width, launcher cells base ±1, Wear widget small/large, round
+Wear), light/dark, and **binding fixtures** that cover each visual state:
+on and off, each severity band, unavailable, a long name. Value-driven
+visuals are designed and checked, not just the default frame.
+
+**Flow for a new or changed design.**
+
+1. Create or open the reference in UI Builder
+   (`ui_builder_create_design`, or `ui_builder_branch_design` /
+   `ui_builder_fork_design` from the `default` reference for a new
+   variant like `modern`). Discussion happens in the design's comments,
+   in the catalog.
+2. Agree on it there (`ui_builder_record_decision`), then download and
+   commit the `.uid` in the PR.
+3. Implement or adjust the converter (variant), and link it with
+   `ui_builder_set_implementation`.
+4. CI renders each shipped blob, instantiated with each capture's
+   binding fixtures, and compares it with the reference render
+   (`ui_builder_compare_reference`, or the shared references publisher
+   the pilot uses). Diffs are advisory while the components settle, then
+   gate the build.
+
+**What may ship.** The manifest only lists a `(cardType, variant,
+surface)` that has a committed reference, a linked implementation and a
+passing comparison. A variant that exists only in UI Builder is a
+proposal, not a design clients can receive.
+
 ## Catalog
 
 Each manifest entry gets a `catalogId` and appears in the
-`homeassistant-remotecompose` catalog:
+`homeassistant-remotecompose` catalog, next to its UI Builder reference:
 
 - Entries are **generated** from `matrix.json`, so nobody keeps
   `catalog.spec.json` in sync by hand: a `Designs` group with
@@ -437,6 +538,9 @@ Each manifest entry gets a `catalogId` and appears in the
   Wear widget small/large shells for `wear-widget`.
 - Captions list the slots, bindings and size range, so the catalog
   doubles as the binding reference.
+- Each entry links to its UI Builder reference (`ui_builder_set_links`),
+  so a reviewer can open the reference, the shipped render and the diff
+  from one place.
 - A design PR shows up as a catalog diff (`catalog_history_diff`), which
   becomes the review step for "change a design on the fly".
 
@@ -445,17 +549,20 @@ Each manifest entry gets a `catalogId` and appears in the
 | | Deliverable | Depends on |
 | --- | --- | --- |
 | **S1** | Spike: instantiate a template by patching named-variable initial values; prove on the launcher (`DrawInstructions`) and a Glance Wear widget | — |
-| **S2** | Spike: icon and colour as named bindings (`s<N>.icon` bitmap, `s<N>.color`), and `theme.*` named colours in the Wrap profile | — |
+| **S2** | Spike: icon as a named bitmap (`s<N>.icon`), `theme.*` named colours in the Wrap profile, and in-document colour selection (state colour, gauge severity band) from bindings | — |
 | **S3** | Spike: list op vs row-count buckets for entities/glance | — |
-| M1 | Binding schema v1 + `slotsFor` in `ha-model`; converters for tile, sensor, entity, button move names, icons and colours onto bindings; design-snapshot capture | S1, S2 |
-| M2 | `card-designs` module: matrix, capture, validator, manifest, blobs; inbuilt assets in `app` | M1 |
+| R1 | Typed UI Builder components for the v1 cards, with binding-shaped properties | — |
+| R2 | Reference `.uid` designs for tile, sensor, entity, button, gauge (`default` variant, each surface) with binding fixtures in `card-designs/references.json` | R1 |
+| M1 | Binding schema v1 + `slotsFor` / `shapeOf` in `ha-model`; tile, sensor, entity, button and gauge converters move names, icons, colours and severity in-document; design-snapshot capture | S1, S2 |
+| M2 | `card-designs` module: matrix, capture, validator (including snapshot invariance), manifest, blobs; inbuilt assets in `app` | M1 |
+| M2b | CI comparison of shipped blobs against the UI Builder references (advisory, then gating) | M2, R2 |
 | M3 | Client: `DesignRepository` (disk cache, refresh rules, signature check), `DesignCardGenerator`, `CardRender.Template`, wire `CardSource` into the dashboard | M2 |
 | M4 | Static hosting on Pages (`/designs/v1/`), CI signing, kill switch | M2 |
 | M5 | Launcher surface (instantiate in `TerrazzoWidgetProvider`) | M3, S1 |
 | M6 | Wear: phone syncs blobs over the Data Layer, watch cache + inbuilt designs, wear-widget and wear-app targets | M3 |
 | M7 | Catalog: generated `Designs` group rendering shipped blobs | M2 |
-| M8 | Second variant (`modern`) end to end, plus the variant picker in settings | M3, M7 |
-| M9 | More cards: entities/glance buckets, alarm-panel, area, heading (with config shapes); gauge once severity is bound or picked in-document; the arc cards once `min`/`max` bindings exist | M1 |
+| M8 | Second variant (`modern`): branched from the `default` references in UI Builder, agreed there, implemented, compared; plus the variant picker in settings | M3, M7, M2b |
+| M9 | More cards, each reference first: entities/glance buckets, alarm-panel, area, heading (with config shapes); the arc cards once their fraction is in-document | M1, R1 |
 
 ## Open questions
 
