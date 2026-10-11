@@ -1,11 +1,19 @@
 {
   "schema": "compose-preview-activity/v1",
-  "generatedAt": "2026-10-11T18:55:34.314Z",
+  "generatedAt": "2026-10-11T19:32:50.842Z",
   "windowDays": 30,
   "code": {
     "repo": "yschimke/homeassistant-remotecompose",
     "ref": "main",
     "events": [
+      {
+        "sha": "9362f7c62ea2dc34fb312d6a88d4e4bedfb5b0ec",
+        "subject": "chore(deps): update compose-ai-tools (#743)",
+        "at": "2026-10-11T18:43:55Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
       {
         "sha": "3c65f884b18c249a72dd33ac13bb4cec988558db",
         "subject": "chore(deps): update compose-ai-tools (#742)",
@@ -474,14 +482,6 @@
         "sha": "6b32adc9e88410f9de0c234093c454eb53813848",
         "subject": "fix(deps): update dependency org.jetbrains:markdown to v0.7.15 (#686)",
         "at": "2026-09-28T03:24:17Z",
-        "author": "renovate[bot]",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "7db647efe6c55f0e6cbe709283aa44936c47ac3b",
-        "subject": "fix(deps): update dependency ch.qos.logback:logback-classic to v1.6.4 (#685)",
-        "at": "2026-09-28T03:04:45Z",
         "author": "renovate[bot]",
         "previewIds": [],
         "components": []
