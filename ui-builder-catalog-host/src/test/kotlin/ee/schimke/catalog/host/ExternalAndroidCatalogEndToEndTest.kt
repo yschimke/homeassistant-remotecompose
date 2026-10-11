@@ -71,7 +71,7 @@ class ExternalAndroidCatalogEndToEndTest {
       )
     }
     val jars = requireNotNull(bundle.resolve("lib").listFiles()).sortedBy { it.name }
-    assertEquals(3, jars.size)
+    assertEquals(4, jars.size)
     var active by mutableStateOf(true)
     val loader = URLClassLoader(jars.map { it.toURI().toURL() }.toTypedArray(), host)
     // Keep the loader alive until the test rule disposes the Android composition.
