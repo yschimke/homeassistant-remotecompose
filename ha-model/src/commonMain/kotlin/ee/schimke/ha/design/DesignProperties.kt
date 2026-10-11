@@ -29,7 +29,7 @@ class DesignProperties private constructor(val values: Map<String, String>) {
 
   /** Collects properties; only discrete kinds are offered. */
   class Builder internal constructor() {
-    internal val values = sortedMapOf<String, String>()
+    internal val values = mutableMapOf<String, String>()
 
     /** A string-valued property, such as a domain or an icon name. Null leaves it out. */
     fun string(name: String, value: String?) {
@@ -44,21 +44,26 @@ class DesignProperties private constructor(val values: Map<String, String>) {
 
   companion object {
     fun build(block: Builder.() -> Unit): DesignProperties =
-      DesignProperties(Builder().apply(block).values.toMap())
+      DesignProperties(sorted(Builder().apply(block).values))
 
     /** Decode a [shape]. */
     fun parse(shape: String): DesignProperties =
       DesignProperties(
-        shape
-          .split(';')
-          .filter { it.isNotEmpty() }
-          .associate { part ->
-            val i = part.indexOf('=')
-            require(i > 0) { "not a property: $part" }
-            part.substring(0, i) to part.substring(i + 1)
-          }
-          .toSortedMap()
+        sorted(
+          shape
+            .split(';')
+            .filter { it.isNotEmpty() }
+            .associate { part ->
+              val i = part.indexOf('=')
+              require(i > 0) { "not a property: $part" }
+              part.substring(0, i) to part.substring(i + 1)
+            }
+        )
       )
+
+    /** Sorted by name; `associate` keeps insertion order, so the result iterates in that order. */
+    private fun sorted(values: Map<String, String>): Map<String, String> =
+      values.entries.sortedBy { it.key }.associate { it.key to it.value }
 
     private fun checkName(name: String): String = name.also {
       require(it.isNotEmpty() && it.none { c -> c == ';' || c == '=' }) { "bad name: $it" }
