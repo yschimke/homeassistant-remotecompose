@@ -156,9 +156,7 @@ class CatalogRenderTest {
   fun `actual app horizontal stack receives catalog slot children`() {
     val catalog = HomeAssistantCatalog(discoverCatalogComponents())
     val adapter = requireNotNull(catalog.registry()[catalog.horizontalStack.id])
-    compose.setContent {
-      adapter(scope(catalog.horizontalStack.id) { Text("Catalog row child") })
-    }
+    compose.setContent { adapter(scope(catalog.horizontalStack.id) { Text("Catalog row child") }) }
     compose.onNodeWithText("Catalog row child").assertExists()
   }
 }
