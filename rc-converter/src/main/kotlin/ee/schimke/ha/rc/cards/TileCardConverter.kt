@@ -16,6 +16,7 @@ import ee.schimke.ha.rc.CardSizeMode
 import ee.schimke.ha.rc.CardWidthClass
 import ee.schimke.ha.rc.HaStateColor
 import ee.schimke.ha.rc.LocalCardSizeMode
+import ee.schimke.ha.rc.LocalCardTemplateCapture
 import ee.schimke.ha.rc.RemoteSizeBreakpoint
 import ee.schimke.ha.rc.components.HaTileData
 import ee.schimke.ha.rc.components.HaToggleAccent
@@ -98,6 +99,9 @@ class TileCardConverter : CardConverter {
           toggleable = isActive != null,
         ),
       tapAction = tapAction,
+      // Design templates bind the name so the client can fill it in; live captures bake it.
+      nameBinding =
+        if (LocalCardTemplateCapture.current) LiveValues.named(entityId, "name", name) else null,
     )
   }
 }

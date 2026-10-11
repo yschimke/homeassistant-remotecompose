@@ -30,6 +30,7 @@ import ee.schimke.composeai.rcplayer.runtime.RcNamedValue
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.components.HA_ACTION_NAME
+import ee.schimke.ha.rc.components.HaAction
 import kotlinx.coroutines.runBlocking
 
 /**
@@ -91,6 +92,7 @@ fun CachedCardPreview(
   bitmapLoader: BitmapLoader = BitmapLoader.UNSUPPORTED,
   onDocument: ((ByteArray) -> Unit)? = null,
   playback: CardPlayback = CardPlayback.Compose,
+  template: CardTemplatePlayback? = null,
   content: @RemoteComposable @Composable () -> Unit,
 ) {
   // AndroidX path only: flip the View player into wrap-content mode —
@@ -108,8 +110,9 @@ fun CachedCardPreview(
     }
 
   val cardDocument =
-    remember(effectiveCacheKey) {
-      cache.get(effectiveCacheKey)
+    remember(effectiveCacheKey, template) {
+      template?.let { CardDocument(bytes = it.bytes, widthPx = 0, heightPx = 0) }
+        ?: cache.get(effectiveCacheKey)
         ?: runBlocking {
           val captureContent: @RemoteComposable @Composable () -> Unit =
             if (debugBorders) {
@@ -155,6 +158,8 @@ fun CachedCardPreview(
         }
           .also { cache.put(effectiveCacheKey, it) }
     }
+  val bindingsFor: (HaSnapshot) -> CardSnapshotBindings =
+    template?.bindings ?: { snap -> cardSnapshotBindings(entityIds(card), snap) }
 
   // Hand the encoded document to an observer once the composition succeeds. `SideEffect` rather
   // than `remember`: publishing from a `remember` block is the `RememberReturnType` lint error,
@@ -164,36 +169,50 @@ fun CachedCardPreview(
 
   val dispatcher = LocalHaActionDispatcher.current
 
-  val entityIds = remember(card) { card?.let { cardEntityIds(it) }.orEmpty() }
+  val entityIds = remember(card) { entityIds(card) }
   // Compose player: live values the running document reads by name. Re-created with the document
   // ([cacheKey]) — the new document carries its own initial bake.
-  val namedValues = remember(cacheKey) { mutableStateMapOf<String, RcNamedValue>() }
+  val namedValues = remember(cacheKey, template) { mutableStateMapOf<String, RcNamedValue>() }
   // AndroidX player (launcher-widget previews, per-document fallback): the View handle survives
   // recomposition but is replaced if the player is torn down and rebuilt (cache invalidation,
   // theme flip, resize).
   val playerHolder = remember { mutableStateOf<RemoteComposePlayer?>(null) }
   // Track the last value pushed to each player so a redundant snapshot recompose doesn't re-issue
   // identical writes. Reset when [cacheKey] changes so the next push is unconditional.
-  val pushedNamed = remember(cacheKey) { HashMap<String, Any?>() }
-  val pushedView = remember(cacheKey) { HashMap<String, Any?>() }
+  // A template swapping in (or out) is a new document too, so it resets the push state as well.
+  val pushedNamed = remember(cacheKey, template) { HashMap<String, Any?>() }
+  val pushedView = remember(cacheKey, template) { HashMap<String, Any?>() }
 
   // [liveBindings] is off for cards that refresh by document re-encode (those that declare a
   // `CardConverter.dataSignature`): their dynamic content is baked, not bound, so pushing the
   // entity's raw named bindings would clobber a per-card-formatted `<id>.state` with the plain
   // value. The re-encode (driven by the signature in the cache key) is authoritative for them.
-  if (liveBindings && card != null && snapshot != null && entityIds.isNotEmpty()) {
+  // A design template carries no values at all, so it always takes the push — every slot binding
+  // the client can derive, on every snapshot.
+  if (
+    (liveBindings || template != null) &&
+      card != null &&
+      snapshot != null &&
+      (entityIds.isNotEmpty() || template != null)
+  ) {
     LaunchedEffect(namedValues, snapshot) {
-      pushSnapshotBindings(NamedValueWriter(namedValues), entityIds, snapshot, pushedNamed)
+      pushSnapshotBindings(NamedValueWriter(namedValues), bindingsFor(snapshot), pushedNamed)
     }
     LaunchedEffect(playerHolder.value, snapshot) {
       val updater = playerHolder.value ?: return@LaunchedEffect
-      pushSnapshotBindings(ViewPlayerWriter(updater), entityIds, snapshot, pushedView)
+      pushSnapshotBindings(ViewPlayerWriter(updater), bindingsFor(snapshot), pushedView)
     }
   }
 
   val onNamedAction: (String, Any?) -> Unit = { name, value ->
     if (name == HA_ACTION_NAME) {
-      decodeHaAction(value)?.let(dispatcher::dispatch)
+      if (template != null) {
+        // A template is remote content: never dispatch an action it encodes. Any tap in it runs
+        // the action this card's own config resolves to locally.
+        dispatcher.dispatch(template.tapAction)
+      } else {
+        decodeHaAction(value)?.let(dispatcher::dispatch)
+      }
     }
   }
   // The AndroidX View player, primed so `modifier` can be wrap-content on the height axis (#153)
@@ -283,8 +302,13 @@ internal fun pushSnapshotBindings(
   entityIds: Set<String>,
   snapshot: HaSnapshot,
   pushed: MutableMap<String, Any?>,
+) = pushSnapshotBindings(writer, cardSnapshotBindings(entityIds, snapshot), pushed)
+
+internal fun pushSnapshotBindings(
+  writer: BindingWriter,
+  bindings: CardSnapshotBindings,
+  pushed: MutableMap<String, Any?>,
 ) {
-  val bindings = cardSnapshotBindings(entityIds, snapshot)
   var changed = false
   fun write(name: String, value: Any?, block: () -> Unit) {
     if (pushed[name] == value) return
@@ -332,3 +356,18 @@ private fun applyDirtyDataOperations(operations: List<Operation>, context: Remot
     }
   }
 }
+
+private fun entityIds(card: CardConfig?): Set<String> = card?.let { cardEntityIds(it) }.orEmpty()
+
+/**
+ * Plays a card design template in place of a local capture. [bytes] is a values-free document from
+ * the design server (or cache), and [bindings] derives every slot binding from a snapshot.
+ *
+ * [tapAction] is resolved from the card's **local** config, never from the template: the bytes are
+ * remote, so the action a template encodes is ignored and any tap in it dispatches [tapAction].
+ */
+class CardTemplatePlayback(
+  val bytes: ByteArray,
+  val bindings: (HaSnapshot) -> CardSnapshotBindings,
+  val tapAction: HaAction,
+)

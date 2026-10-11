@@ -255,6 +255,8 @@ private fun DashboardList(
   // production renders are untouched; reads are cheap StateFlows.
   val flashOnDataChange by preferencesStore.flashOnDataChange.collectAsState(initial = false)
   val dataGridOverlay by preferencesStore.dataGridOverlay.collectAsState(initial = false)
+  // Experimental card design server; empty URL (the default) keeps it off and the map empty.
+  val designServerUrl by preferencesStore.designServerUrl.collectAsState(initial = "")
   // Pull the process-singleton image stack (a Metro AppScope binding —
   // see AppGraph.haImageStack). Coil documents that exactly one
   // DiskCache per directory is safe; the stack owns that single
@@ -302,7 +304,11 @@ private fun DashboardList(
   val haTheme = remember(style, dark) { haThemeFor(style, dark) }
 
   Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
-    CompositionLocalProvider(LocalFlashOnDataChange provides flashOnDataChange) {
+    val cardDesigns = rememberCardDesigns(context, designServerUrl)
+    CompositionLocalProvider(
+      LocalFlashOnDataChange provides flashOnDataChange,
+      LocalCardDesigns provides cardDesigns,
+    ) {
       LazyColumn(
         modifier =
           Modifier.fillMaxSize()
@@ -923,6 +929,11 @@ private fun CardSlot(
       CardSlotCacheKey(card, style, dark, captureEpoch, templateValues, dataSignature)
     }
   val context = androidx.compose.ui.platform.LocalContext.current
+  // A design template from the card design server, when one is configured and matches this card's
+  // shape and theme. Null — always, while the feature is off — captures locally as before.
+  val cardDesigns = LocalCardDesigns.current
+  val template =
+    remember(card, cardDesigns, style, dark) { cardTemplateFor(card, cardDesigns, style, dark) }
   val bitmapLoader =
     remember(context, baseUrl, imageLoader) {
       CoilBitmapLoader(context.applicationContext, imageLoader = imageLoader, baseUrl = baseUrl)
@@ -951,6 +962,7 @@ private fun CardSlot(
       snapshot = snapshot,
       liveBindings = dataSignature == null,
       bitmapLoader = bitmapLoader,
+      template = template,
     ) {
       ProvideCardRegistry(registry) {
         ProvideHaTheme(haTheme) { RenderChild(card, snapshot, RemoteModifier.fillMaxWidth()) }

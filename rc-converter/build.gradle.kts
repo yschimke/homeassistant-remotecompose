@@ -16,6 +16,36 @@ android {
     targetCompatibility = JavaVersion.toVersion(libs.versions.java.get())
   }
   kotlin { jvmToolchain(libs.versions.java.get().toInt()) }
+  testOptions { unitTests.isIncludeAndroidResources = true }
+}
+
+// Robolectric's SDK jar, resolved by Gradle (offline at test time) — same setup as
+// `:ui-builder-catalog`. Used by the card design template end-to-end test, which captures a real
+// document.
+val robolectricSdk by configurations.creating {
+  isCanBeConsumed = false
+  isTransitive = false
+}
+val prepareRobolectricSdk by
+  tasks.registering(Sync::class) {
+    from(robolectricSdk)
+    into(layout.buildDirectory.dir("robolectric-sdk"))
+  }
+
+tasks.withType<Test>().configureEach {
+  inputs.files(robolectricSdk)
+  dependsOn(prepareRobolectricSdk)
+  systemProperty("robolectric.offline", "true")
+  systemProperty(
+    "robolectric.dependency.dir",
+    layout.buildDirectory.dir("robolectric-sdk").get().asFile.absolutePath,
+  )
+  // `-PcardDesignsOut=<dir>` writes the spike's design-server files (manifest.json + blobs/)
+  // there — see CardDesignTemplatesEndToEndTest.publishSpikeDesigns.
+  providers.gradleProperty("cardDesignsOut").orNull?.let {
+    systemProperty("cardDesignsOut", file(it).absolutePath)
+    outputs.upToDateWhen { false }
+  }
 }
 
 dependencies {
@@ -52,4 +82,7 @@ dependencies {
   testImplementation(libs.kotlin.test.junit)
   testImplementation(libs.kotlinx.coroutines.test)
   testImplementation(libs.indriya)
+  testImplementation(libs.ktor.client.mock)
+  testImplementation("org.robolectric:robolectric:4.17")
+  robolectricSdk("org.robolectric:android-all-instrumented:15-robolectric-13954326-i7")
 }
