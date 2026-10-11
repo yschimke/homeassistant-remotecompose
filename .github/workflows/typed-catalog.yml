@@ -72,8 +72,8 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: yschimke/compose-ui-builder
-          # main at compose-ui-builder#717: renders, edits and validates list and object properties.
-          ref: 84809b636d795a763d2264f95d2f0353bb0b5fa9
+          # v3.108.0: renders, edits and validates list and object properties (compose-ui-builder#717).
+          ref: 5ac712cbd69f6ed86bd1f8e470dedc4d4189b233
           path: compose-ui-builder
           persist-credentials: false
       - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
@@ -143,8 +143,8 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: yschimke/compose-ui-builder
-          # main at compose-ui-builder#717: renders, edits and validates list and object properties.
-          ref: 84809b636d795a763d2264f95d2f0353bb0b5fa9
+          # v3.108.0: renders, edits and validates list and object properties (compose-ui-builder#717).
+          ref: 5ac712cbd69f6ed86bd1f8e470dedc4d4189b233
           path: compose-ui-builder
           persist-credentials: false
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
