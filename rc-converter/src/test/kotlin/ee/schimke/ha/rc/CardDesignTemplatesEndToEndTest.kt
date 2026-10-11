@@ -371,6 +371,58 @@ class CardDesignTemplatesEndToEndTest {
     assertEquals(playback.slotTapActions[0], playback.resolveTap(forged, snapshot))
   }
 
+  @Test
+  fun containerTapsResolveThroughTheTappedChild() {
+    val glance = buildJsonObject {
+      put("type", "glance")
+      put(
+        "entities",
+        kotlinx.serialization.json.buildJsonArray {
+          add(kotlinx.serialization.json.JsonPrimitive("switch.fan"))
+          add(
+            buildJsonObject {
+              put("entity", "sensor.temp")
+              put("tap_action", buildJsonObject { put("action", "none") })
+            }
+          )
+        },
+      )
+    }
+    val stack =
+      CardConfig(
+        type = "vertical-stack",
+        raw =
+          buildJsonObject {
+            put("type", "vertical-stack")
+            put(
+              "cards",
+              kotlinx.serialization.json.buildJsonArray {
+                add(card.raw)
+                add(glance)
+              },
+            )
+          },
+      )
+    val playback = CardDesignTemplates.playback(stack, ByteArray(0))
+    // Slot 0 is the tile's light; slots 1 and 2 are the glance rows.
+    assertEquals(
+      defaultTapActionFor("light.kitchen"),
+      playback.resolveTap(ee.schimke.ha.rc.components.HaAction.Toggle("light.s0"), snapshot),
+    )
+    assertEquals(
+      defaultTapActionFor("switch.fan"),
+      playback.resolveTap(ee.schimke.ha.rc.components.HaAction.Toggle("switch.s1"), snapshot),
+    )
+    assertEquals(
+      ee.schimke.ha.rc.components.HaAction.None,
+      playback.resolveTap(ee.schimke.ha.rc.components.HaAction.MoreInfo("sensor.s2"), snapshot),
+    )
+    // Children's card-level bindings are namespaced per child; slots are one sequence.
+    val bindings = playback.bindings(snapshot)
+    assertEquals("Kitchen", bindings.strings["light.s0.name"])
+    assertTrue("switch.s1.state" in bindings.strings)
+  }
+
   /**
    * With `-PcardDesignsOut=<dir>`, writes every spike design as the files a static host serves.
    * Skipped otherwise.

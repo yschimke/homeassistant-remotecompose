@@ -9,6 +9,7 @@ import androidx.compose.remote.creation.compose.state.rf
 import androidx.compose.remote.creation.compose.state.ri
 import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.staticCompositionLocalOf
 
 /**
@@ -47,13 +48,30 @@ fun entityName(entityId: String?, name: String): RemoteString {
  */
 @Composable fun cardTitle(title: String): RemoteString = cardText("title", title)
 
+/**
+ * The prefix of card-level bindings for the card being captured: `card` for a top-level card, and
+ * `card.c<k>` for the k-th child of a container, so two children's `title`s are two bindings.
+ */
+val LocalCardBindingPrefix = staticCompositionLocalOf { CARD_BINDING_PREFIX }
+
+/** Captures [content] as the [index]-th child of the current card: see [LocalCardBindingPrefix]. */
+@Composable
+fun ProvideChildCardBindings(index: Int, content: @Composable () -> Unit) {
+  CompositionLocalProvider(
+    LocalCardBindingPrefix provides childCardBindingPrefix(LocalCardBindingPrefix.current, index),
+    content = content,
+  )
+}
+
+/** The card-level binding prefix of child [index] under [parent]. */
+fun childCardBindingPrefix(parent: String, index: Int): String = "$parent.c$index"
+
 /** Card-level text `card.<field>`: a binding inside a template capture, else [value] literally. */
 @Composable
 fun cardText(field: String, value: String): RemoteString {
   val bindings = LocalTemplateBindings.current ?: return value.rs
-  return bindings.strings.getOrPut("$CARD_BINDING_PREFIX.$field") {
-    LiveValues.named(CARD_BINDING_PREFIX, field, value)
-  }
+  val prefix = LocalCardBindingPrefix.current
+  return bindings.strings.getOrPut("$prefix.$field") { LiveValues.named(prefix, field, value) }
 }
 
 /**
@@ -64,9 +82,8 @@ fun cardText(field: String, value: String): RemoteString {
 @Composable
 fun cardFloat(field: String, value: Float): RemoteFloat {
   val bindings = LocalTemplateBindings.current ?: return value.rf
-  return bindings.floats.getOrPut("$CARD_BINDING_PREFIX.$field") {
-    LiveValues.namedFloat(CARD_BINDING_PREFIX, field, value)
-  }
+  val prefix = LocalCardBindingPrefix.current
+  return bindings.floats.getOrPut("$prefix.$field") { LiveValues.namedFloat(prefix, field, value) }
 }
 
 /**

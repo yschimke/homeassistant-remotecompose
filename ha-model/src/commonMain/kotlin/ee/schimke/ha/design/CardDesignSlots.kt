@@ -34,12 +34,21 @@ object CardDesignSlots {
   data class SlotEntry(val entityId: String, val name: String?)
 
   /**
-   * The entities [card] binds, in slot order: its `entity:` (named by the card's `name:`), or else
-   * each `entities:` row — a bare entity id or `{ entity, name? }`. Null when it binds none.
+   * The entities [card] binds, in slot order: its `entity:` (named by the card's `name:`), or its
+   * children's (`cards:`), or else each `entities:` row — a bare entity id or `{ entity, name? }`.
+   * Null when it binds none.
    */
   fun slotEntries(card: CardConfig): List<SlotEntry>? {
     card.raw["entity"]?.jsonPrimitive?.contentOrNull?.let { id ->
       return listOf(SlotEntry(id, card.raw["name"]?.jsonPrimitive?.contentOrNull))
+    }
+    // A container (stack, grid) binds its children's entities, in order, as one slot sequence.
+    (card.raw["cards"] as? JsonArray)?.let { children ->
+      return children.flatMap { child ->
+        val obj = child as? JsonObject ?: return@flatMap emptyList()
+        val type = obj["type"]?.jsonPrimitive?.contentOrNull ?: return@flatMap emptyList()
+        slotEntries(CardConfig(type = type, raw = obj)).orEmpty()
+      }
     }
     val rows = card.raw["entities"] as? JsonArray ?: return null
     return rows.mapNotNull { row ->

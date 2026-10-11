@@ -15,6 +15,7 @@ import ee.schimke.ha.design.DesignProperties
 import ee.schimke.ha.design.DesignSurface
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
+import ee.schimke.ha.rc.components.HaAction
 import ee.schimke.ha.rc.components.LocalTemplateBindings
 import ee.schimke.ha.rc.components.ProvideHaTheme
 import ee.schimke.ha.rc.components.TemplateBindings
@@ -80,6 +81,9 @@ object CardDesignTemplates {
               ?: return@mapNotNull null
           tapActionOf(obj?.get("tap_action") as? JsonObject, id)
         }
+      } else if (card.raw["cards"] is JsonArray) {
+        // A container: every child slot's tap is resolved by the container (designAction).
+        List(CardDesignSlots.slotEntities(card)?.size ?: 0) { HaAction.None }
       } else {
         listOfNotNull(entityId?.let { tapActionOf(card.raw["tap_action"] as? JsonObject, it) })
       }

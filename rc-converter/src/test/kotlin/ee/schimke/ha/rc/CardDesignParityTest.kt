@@ -681,4 +681,68 @@ class CardDesignParityTest {
       ),
       dark = false,
     )
+
+  private fun stack(type: String, vararg children: CardConfig) =
+    card(type) { put("cards", kotlinx.serialization.json.JsonArray(children.map { it.raw })) }
+
+  @Test
+  fun verticalStack() =
+    assertParity(
+      "vertical-stack",
+      stack(
+        "vertical-stack",
+        card("heading") { put("heading", "Kitchen") },
+        tile("light.kitchen"),
+        listCard("glance", "Around"),
+      ),
+      listStates,
+      dark = false,
+    )
+
+  @Test
+  fun horizontalStackDark() =
+    assertParity(
+      "horizontal-stack-dark",
+      stack(
+        "horizontal-stack",
+        card("button") { put("entity", "switch.fan") },
+        card("button") {
+          put("entity", "light.kitchen")
+          put("show_name", false)
+        },
+      ),
+      listStates,
+      dark = true,
+    )
+
+  @Test
+  fun gridOfMixedCards() =
+    assertParity(
+      "grid",
+      stack(
+        "grid",
+        tile("sensor.temp"),
+        card("entity") { put("entity", "binary_sensor.front_door") },
+        card("gauge") { put("entity", "sensor.temp") },
+      ),
+      listStates,
+      dark = false,
+    )
+
+  @Test
+  fun nestedStacks() =
+    assertParity(
+      "nested-stack",
+      stack(
+        "vertical-stack",
+        card("heading") { put("heading", "Upstairs") },
+        stack("horizontal-stack", tile("light.kitchen"), tile("switch.fan")),
+        card("heading") {
+          put("heading", "Downstairs")
+          put("heading_style", "subtitle")
+        },
+      ),
+      listStates,
+      dark = false,
+    )
 }
