@@ -84,5 +84,7 @@ dependencies {
   testImplementation(libs.indriya)
   testImplementation(libs.ktor.client.mock)
   testImplementation("org.robolectric:robolectric:4.17")
+  testImplementation(libs.compose.ui.test.junit4)
+  debugImplementation(libs.compose.ui.test.manifest)
   robolectricSdk("org.robolectric:android-all-instrumented:15-robolectric-13954326-i7")
 }
