@@ -1,6 +1,6 @@
 {
     "formatVersion": "compose-preview-history/v1",
-    "generatedFrom": "a261c804364a92f28335d405df3b8ba2bdc16965",
+    "generatedFrom": "ecfe549a327e710e2011071e45c1e90c73cf9d00",
     "previews": {
         "app/ee.schimke.terrazzo.previews.CardDebugPreviewsKt.CardFlashPreview_Card flash on data change": {
             "path": "renders/app/CardFlashPreview_Card_flash_on_data_change-44b71c2b.gif",
@@ -4849,6 +4849,15 @@
             "path": "renders/previews/DashboardGithubMobile_dashboard_github_mobile-8f04a7c1.png",
             "versions": [
                 {
+                    "blob": "3e0ab7d826ed885fd6488001a1bd902e9e76719c",
+                    "commit": "ecfe549a327e710e2011071e45c1e90c73cf9d00",
+                    "date": "2026-10-11T14:21:41Z",
+                    "sourceSha": "a0f67b3e",
+                    "sinceCommit": "2fde5cc2cf93899f1c9dfe93de1eca2d4df38200",
+                    "commits": 2,
+                    "occurrences": 2
+                },
+                {
                     "blob": "0113d6436ff4970912c90d361ee258b8d80aee16",
                     "commit": "a261c804364a92f28335d405df3b8ba2bdc16965",
                     "date": "2026-10-11T14:14:25Z",
@@ -4856,31 +4865,19 @@
                     "commits": 1
                 },
                 {
-                    "blob": "3e0ab7d826ed885fd6488001a1bd902e9e76719c",
-                    "commit": "2fde5cc2cf93899f1c9dfe93de1eca2d4df38200",
-                    "date": "2026-10-11T13:40:08Z",
-                    "sourceSha": "dc167af5",
-                    "commits": 1
-                },
-                {
                     "blob": "d2fdd7c58928aa5338401284fb5ff3a285fdeb5b",
                     "commit": "9de4ff87bcbe87224c1785df5c6619f7c27fe9c9",
                     "date": "2026-10-10T20:08:45Z",
                     "sourceSha": "99773232",
-                    "commits": 1
+                    "sinceCommit": "a0036b18d8c4d9382b7753fc3a69618e4bd12b30",
+                    "commits": 2,
+                    "occurrences": 2
                 },
                 {
                     "blob": "04b415d820b192336b06d9633a1df8d8d319692f",
                     "commit": "fdae2c53f3fd7f03524fd9fa4d4b5b9e122270bc",
                     "date": "2026-10-10T19:43:48Z",
                     "sourceSha": "3f132a5c",
-                    "commits": 1
-                },
-                {
-                    "blob": "d2fdd7c58928aa5338401284fb5ff3a285fdeb5b",
-                    "commit": "a0036b18d8c4d9382b7753fc3a69618e4bd12b30",
-                    "date": "2026-10-10T17:23:01Z",
-                    "sourceSha": "5923e55a",
                     "commits": 1
                 },
                 {
@@ -4891,13 +4888,20 @@
                     "commits": 1
                 }
             ],
-            "observations": 6,
-            "unstable": false,
-            "flapCount": 1
+            "observations": 7,
+            "unstable": true,
+            "flapCount": 2
         },
         "previews/ee.schimke.ha.previews.DashboardPreviewsKt.DashboardGithubTablet_dashboard github — tablet": {
             "path": "renders/previews/DashboardGithubTablet_dashboard_github_tablet-89194c99.png",
             "versions": [
+                {
+                    "blob": "757cbef805bc28b8a826aafa9df34c29036597c7",
+                    "commit": "ecfe549a327e710e2011071e45c1e90c73cf9d00",
+                    "date": "2026-10-11T14:21:41Z",
+                    "sourceSha": "a0f67b3e",
+                    "commits": 1
+                },
                 {
                     "blob": "763e762c709ff7bc57169802a1b7b4ae85e9111d",
                     "commit": "a261c804364a92f28335d405df3b8ba2bdc16965",
@@ -4934,7 +4938,7 @@
                     "commits": 1
                 }
             ],
-            "observations": 5,
+            "observations": 6,
             "unstable": false,
             "flapCount": 0
         },
