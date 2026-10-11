@@ -1676,7 +1676,7 @@
     "functionName": "DashboardSecurityMobile",
     "module": "previews",
     "renderBasename": "DashboardSecurityMobile_dashboard_security_mobile-842e09ef.png",
-    "sha256": "0f936b0dda42a4209fcc88bda99d56d15f177afea4481e1051dae208cad5dfee",
+    "sha256": "cec7c3fbb981445c766cb9306aeb598f020c4631f25a40406393db708e14d3a7",
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/DashboardPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.DashboardPreviewsKt.DashboardSecurityTablet_dashboard security \u2014 tablet": {
