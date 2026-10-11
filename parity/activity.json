@@ -1,11 +1,43 @@
 {
   "schema": "compose-preview-activity/v1",
-  "generatedAt": "2026-10-11T14:25:02.129Z",
+  "generatedAt": "2026-10-11T15:26:44.082Z",
   "windowDays": 30,
   "code": {
     "repo": "yschimke/homeassistant-remotecompose",
     "ref": "main",
     "events": [
+      {
+        "sha": "7f8327eee3c53be9bb8102435bb5e972a6d1a4eb",
+        "subject": "fix: restore the typed component catalog workflow on main (#737)",
+        "at": "2026-10-11T15:59:24+01:00",
+        "author": "Yuri Schimke",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "a0f67b3e2225a67be769129207e040f25ada4ebc",
+        "subject": "docs: plan a card design server for values-free RC templates (#736)",
+        "at": "2026-10-11T15:15:53+01:00",
+        "author": "Yuri Schimke",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "7aab0a3a0eb45931d742ec09bca5ec7e5d068f31",
+        "subject": "fix: use the same is_on rule in area, picture and entity-filter cards (#734)",
+        "at": "2026-10-11T15:03:30+01:00",
+        "author": "Yuri Schimke",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "c848c68501393b88765d8bbf532968b6ed635ddf",
+        "subject": "fix: push is_on from the same active state converters bake (#733)",
+        "at": "2026-10-11T14:35:06+01:00",
+        "author": "Yuri Schimke",
+        "previewIds": [],
+        "components": []
+      },
       {
         "sha": "cf45f0418a08d99bf3cffc3524584d32ccbe93dd",
         "subject": "chore(deps): update compose-ai-tools (#725)",
@@ -450,38 +482,6 @@
         "sha": "5fd8e4fff169e07ec7d0f4a54c4f904895b969a6",
         "subject": "chore(deps): update dependency dev.zacsweers.metro to v1.4.4 (#674)",
         "at": "2026-09-21T05:24:48Z",
-        "author": "renovate[bot]",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "7da445b9953e7eaa13017492586aa7a6deecd18f",
-        "subject": "fix(deps): update coil to v3.6.3 (#676)",
-        "at": "2026-09-21T05:00:11Z",
-        "author": "renovate[bot]",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "231cb9c6185e2b7c445f3d7908e9b318248d152c",
-        "subject": "chore(deps): update agp to v9.4.1 (#673)",
-        "at": "2026-09-21T04:40:28Z",
-        "author": "renovate[bot]",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "85cd4778b22484ca9383713d47315c1489b68ee5",
-        "subject": "fix(deps): update compose-ai-tools (#671)",
-        "at": "2026-09-20T20:51:06Z",
-        "author": "renovate[bot]",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "c86d9731ae2536236b37021dd291a13492e0caf8",
-        "subject": "fix(deps): update compose-ai-tools to v2 (#670)",
-        "at": "2026-09-20T20:27:48Z",
         "author": "renovate[bot]",
         "previewIds": [],
         "components": []

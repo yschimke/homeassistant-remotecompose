@@ -17,8 +17,8 @@
       },
       "source": {
         "provider": "ui-builder",
-        "revision": "cf45f0418a08d99bf3cffc3524584d32ccbe93dd",
-        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/cf45f0418a08d99bf3cffc3524584d32ccbe93dd/adaptive-uid-pilot/ui-builder/designs/dashboards.uid",
+        "revision": "7f8327eee3c53be9bb8102435bb5e972a6d1a4eb",
+        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/7f8327eee3c53be9bb8102435bb5e972a6d1a4eb/adaptive-uid-pilot/ui-builder/designs/dashboards.uid",
         "attributes": {
           "rendererBundleSha256": "3e8b50626fa66081ddc6f33437a51cb93d62051803d0ab965b548ff93b856ddb",
           "componentsSha256": "dece3189c6e2d4b32f5442859b162527e947b442b27503e859fdd708e8694cd0",
@@ -50,8 +50,8 @@
       },
       "source": {
         "provider": "ui-builder",
-        "revision": "cf45f0418a08d99bf3cffc3524584d32ccbe93dd",
-        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/cf45f0418a08d99bf3cffc3524584d32ccbe93dd/adaptive-uid-pilot/ui-builder/designs/dashboards.uid",
+        "revision": "7f8327eee3c53be9bb8102435bb5e972a6d1a4eb",
+        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/7f8327eee3c53be9bb8102435bb5e972a6d1a4eb/adaptive-uid-pilot/ui-builder/designs/dashboards.uid",
         "attributes": {
           "rendererBundleSha256": "3e8b50626fa66081ddc6f33437a51cb93d62051803d0ab965b548ff93b856ddb",
           "componentsSha256": "dece3189c6e2d4b32f5442859b162527e947b442b27503e859fdd708e8694cd0",
@@ -83,8 +83,8 @@
       },
       "source": {
         "provider": "ui-builder",
-        "revision": "cf45f0418a08d99bf3cffc3524584d32ccbe93dd",
-        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/cf45f0418a08d99bf3cffc3524584d32ccbe93dd/adaptive-uid-pilot/ui-builder/designs/dashboards.uid",
+        "revision": "7f8327eee3c53be9bb8102435bb5e972a6d1a4eb",
+        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/7f8327eee3c53be9bb8102435bb5e972a6d1a4eb/adaptive-uid-pilot/ui-builder/designs/dashboards.uid",
         "attributes": {
           "rendererBundleSha256": "3e8b50626fa66081ddc6f33437a51cb93d62051803d0ab965b548ff93b856ddb",
           "componentsSha256": "dece3189c6e2d4b32f5442859b162527e947b442b27503e859fdd708e8694cd0",
@@ -116,8 +116,8 @@
       },
       "source": {
         "provider": "ui-builder",
-        "revision": "cf45f0418a08d99bf3cffc3524584d32ccbe93dd",
-        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/cf45f0418a08d99bf3cffc3524584d32ccbe93dd/adaptive-uid-pilot/ui-builder/designs/dashboards.uid",
+        "revision": "7f8327eee3c53be9bb8102435bb5e972a6d1a4eb",
+        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/7f8327eee3c53be9bb8102435bb5e972a6d1a4eb/adaptive-uid-pilot/ui-builder/designs/dashboards.uid",
         "attributes": {
           "rendererBundleSha256": "3e8b50626fa66081ddc6f33437a51cb93d62051803d0ab965b548ff93b856ddb",
           "componentsSha256": "dece3189c6e2d4b32f5442859b162527e947b442b27503e859fdd708e8694cd0",
@@ -149,8 +149,8 @@
       },
       "source": {
         "provider": "ui-builder",
-        "revision": "cf45f0418a08d99bf3cffc3524584d32ccbe93dd",
-        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/cf45f0418a08d99bf3cffc3524584d32ccbe93dd/adaptive-uid-pilot/ui-builder/designs/dashboards.uid",
+        "revision": "7f8327eee3c53be9bb8102435bb5e972a6d1a4eb",
+        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/7f8327eee3c53be9bb8102435bb5e972a6d1a4eb/adaptive-uid-pilot/ui-builder/designs/dashboards.uid",
         "attributes": {
           "rendererBundleSha256": "3e8b50626fa66081ddc6f33437a51cb93d62051803d0ab965b548ff93b856ddb",
           "componentsSha256": "dece3189c6e2d4b32f5442859b162527e947b442b27503e859fdd708e8694cd0",
@@ -182,8 +182,8 @@
       },
       "source": {
         "provider": "ui-builder",
-        "revision": "cf45f0418a08d99bf3cffc3524584d32ccbe93dd",
-        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/cf45f0418a08d99bf3cffc3524584d32ccbe93dd/adaptive-uid-pilot/ui-builder/designs/dashboards.uid",
+        "revision": "7f8327eee3c53be9bb8102435bb5e972a6d1a4eb",
+        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/7f8327eee3c53be9bb8102435bb5e972a6d1a4eb/adaptive-uid-pilot/ui-builder/designs/dashboards.uid",
         "attributes": {
           "rendererBundleSha256": "3e8b50626fa66081ddc6f33437a51cb93d62051803d0ab965b548ff93b856ddb",
           "componentsSha256": "dece3189c6e2d4b32f5442859b162527e947b442b27503e859fdd708e8694cd0",
@@ -215,8 +215,8 @@
       },
       "source": {
         "provider": "ui-builder",
-        "revision": "cf45f0418a08d99bf3cffc3524584d32ccbe93dd",
-        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/cf45f0418a08d99bf3cffc3524584d32ccbe93dd/adaptive-uid-pilot/ui-builder/designs/dashboards.uid",
+        "revision": "7f8327eee3c53be9bb8102435bb5e972a6d1a4eb",
+        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/7f8327eee3c53be9bb8102435bb5e972a6d1a4eb/adaptive-uid-pilot/ui-builder/designs/dashboards.uid",
         "attributes": {
           "rendererBundleSha256": "3e8b50626fa66081ddc6f33437a51cb93d62051803d0ab965b548ff93b856ddb",
           "componentsSha256": "dece3189c6e2d4b32f5442859b162527e947b442b27503e859fdd708e8694cd0",
@@ -248,8 +248,8 @@
       },
       "source": {
         "provider": "ui-builder",
-        "revision": "cf45f0418a08d99bf3cffc3524584d32ccbe93dd",
-        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/cf45f0418a08d99bf3cffc3524584d32ccbe93dd/adaptive-uid-pilot/ui-builder/designs/dashboards.uid",
+        "revision": "7f8327eee3c53be9bb8102435bb5e972a6d1a4eb",
+        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/7f8327eee3c53be9bb8102435bb5e972a6d1a4eb/adaptive-uid-pilot/ui-builder/designs/dashboards.uid",
         "attributes": {
           "rendererBundleSha256": "3e8b50626fa66081ddc6f33437a51cb93d62051803d0ab965b548ff93b856ddb",
           "componentsSha256": "dece3189c6e2d4b32f5442859b162527e947b442b27503e859fdd708e8694cd0",
@@ -281,8 +281,8 @@
       },
       "source": {
         "provider": "ui-builder",
-        "revision": "cf45f0418a08d99bf3cffc3524584d32ccbe93dd",
-        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/cf45f0418a08d99bf3cffc3524584d32ccbe93dd/adaptive-uid-pilot/ui-builder/designs/connection.uid",
+        "revision": "7f8327eee3c53be9bb8102435bb5e972a6d1a4eb",
+        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/7f8327eee3c53be9bb8102435bb5e972a6d1a4eb/adaptive-uid-pilot/ui-builder/designs/connection.uid",
         "attributes": {
           "rendererBundleSha256": "3e8b50626fa66081ddc6f33437a51cb93d62051803d0ab965b548ff93b856ddb",
           "componentsSha256": "dece3189c6e2d4b32f5442859b162527e947b442b27503e859fdd708e8694cd0",
@@ -314,8 +314,8 @@
       },
       "source": {
         "provider": "ui-builder",
-        "revision": "cf45f0418a08d99bf3cffc3524584d32ccbe93dd",
-        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/cf45f0418a08d99bf3cffc3524584d32ccbe93dd/adaptive-uid-pilot/ui-builder/designs/connection.uid",
+        "revision": "7f8327eee3c53be9bb8102435bb5e972a6d1a4eb",
+        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/7f8327eee3c53be9bb8102435bb5e972a6d1a4eb/adaptive-uid-pilot/ui-builder/designs/connection.uid",
         "attributes": {
           "rendererBundleSha256": "3e8b50626fa66081ddc6f33437a51cb93d62051803d0ab965b548ff93b856ddb",
           "componentsSha256": "dece3189c6e2d4b32f5442859b162527e947b442b27503e859fdd708e8694cd0",
@@ -347,8 +347,8 @@
       },
       "source": {
         "provider": "ui-builder",
-        "revision": "cf45f0418a08d99bf3cffc3524584d32ccbe93dd",
-        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/cf45f0418a08d99bf3cffc3524584d32ccbe93dd/adaptive-uid-pilot/ui-builder/designs/connection.uid",
+        "revision": "7f8327eee3c53be9bb8102435bb5e972a6d1a4eb",
+        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/7f8327eee3c53be9bb8102435bb5e972a6d1a4eb/adaptive-uid-pilot/ui-builder/designs/connection.uid",
         "attributes": {
           "rendererBundleSha256": "3e8b50626fa66081ddc6f33437a51cb93d62051803d0ab965b548ff93b856ddb",
           "componentsSha256": "dece3189c6e2d4b32f5442859b162527e947b442b27503e859fdd708e8694cd0",
@@ -380,8 +380,8 @@
       },
       "source": {
         "provider": "ui-builder",
-        "revision": "cf45f0418a08d99bf3cffc3524584d32ccbe93dd",
-        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/cf45f0418a08d99bf3cffc3524584d32ccbe93dd/adaptive-uid-pilot/ui-builder/designs/connection.uid",
+        "revision": "7f8327eee3c53be9bb8102435bb5e972a6d1a4eb",
+        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/7f8327eee3c53be9bb8102435bb5e972a6d1a4eb/adaptive-uid-pilot/ui-builder/designs/connection.uid",
         "attributes": {
           "rendererBundleSha256": "3e8b50626fa66081ddc6f33437a51cb93d62051803d0ab965b548ff93b856ddb",
           "componentsSha256": "dece3189c6e2d4b32f5442859b162527e947b442b27503e859fdd708e8694cd0",
@@ -413,8 +413,8 @@
       },
       "source": {
         "provider": "ui-builder",
-        "revision": "cf45f0418a08d99bf3cffc3524584d32ccbe93dd",
-        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/cf45f0418a08d99bf3cffc3524584d32ccbe93dd/adaptive-uid-pilot/ui-builder/designs/connection.uid",
+        "revision": "7f8327eee3c53be9bb8102435bb5e972a6d1a4eb",
+        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/7f8327eee3c53be9bb8102435bb5e972a6d1a4eb/adaptive-uid-pilot/ui-builder/designs/connection.uid",
         "attributes": {
           "rendererBundleSha256": "3e8b50626fa66081ddc6f33437a51cb93d62051803d0ab965b548ff93b856ddb",
           "componentsSha256": "dece3189c6e2d4b32f5442859b162527e947b442b27503e859fdd708e8694cd0",
@@ -446,8 +446,8 @@
       },
       "source": {
         "provider": "ui-builder",
-        "revision": "cf45f0418a08d99bf3cffc3524584d32ccbe93dd",
-        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/cf45f0418a08d99bf3cffc3524584d32ccbe93dd/adaptive-uid-pilot/ui-builder/designs/connection.uid",
+        "revision": "7f8327eee3c53be9bb8102435bb5e972a6d1a4eb",
+        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/7f8327eee3c53be9bb8102435bb5e972a6d1a4eb/adaptive-uid-pilot/ui-builder/designs/connection.uid",
         "attributes": {
           "rendererBundleSha256": "3e8b50626fa66081ddc6f33437a51cb93d62051803d0ab965b548ff93b856ddb",
           "componentsSha256": "dece3189c6e2d4b32f5442859b162527e947b442b27503e859fdd708e8694cd0",
@@ -479,8 +479,8 @@
       },
       "source": {
         "provider": "ui-builder",
-        "revision": "cf45f0418a08d99bf3cffc3524584d32ccbe93dd",
-        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/cf45f0418a08d99bf3cffc3524584d32ccbe93dd/adaptive-uid-pilot/ui-builder/designs/connection-secondary.uid",
+        "revision": "7f8327eee3c53be9bb8102435bb5e972a6d1a4eb",
+        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/7f8327eee3c53be9bb8102435bb5e972a6d1a4eb/adaptive-uid-pilot/ui-builder/designs/connection-secondary.uid",
         "attributes": {
           "rendererBundleSha256": "3e8b50626fa66081ddc6f33437a51cb93d62051803d0ab965b548ff93b856ddb",
           "componentsSha256": "dece3189c6e2d4b32f5442859b162527e947b442b27503e859fdd708e8694cd0",
@@ -512,8 +512,8 @@
       },
       "source": {
         "provider": "ui-builder",
-        "revision": "cf45f0418a08d99bf3cffc3524584d32ccbe93dd",
-        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/cf45f0418a08d99bf3cffc3524584d32ccbe93dd/adaptive-uid-pilot/ui-builder/designs/connection-secondary.uid",
+        "revision": "7f8327eee3c53be9bb8102435bb5e972a6d1a4eb",
+        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/7f8327eee3c53be9bb8102435bb5e972a6d1a4eb/adaptive-uid-pilot/ui-builder/designs/connection-secondary.uid",
         "attributes": {
           "rendererBundleSha256": "3e8b50626fa66081ddc6f33437a51cb93d62051803d0ab965b548ff93b856ddb",
           "componentsSha256": "dece3189c6e2d4b32f5442859b162527e947b442b27503e859fdd708e8694cd0",
@@ -545,8 +545,8 @@
       },
       "source": {
         "provider": "ui-builder",
-        "revision": "cf45f0418a08d99bf3cffc3524584d32ccbe93dd",
-        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/cf45f0418a08d99bf3cffc3524584d32ccbe93dd/adaptive-uid-pilot/ui-builder/designs/dashboard-view.uid",
+        "revision": "7f8327eee3c53be9bb8102435bb5e972a6d1a4eb",
+        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/7f8327eee3c53be9bb8102435bb5e972a6d1a4eb/adaptive-uid-pilot/ui-builder/designs/dashboard-view.uid",
         "attributes": {
           "rendererBundleSha256": "3e8b50626fa66081ddc6f33437a51cb93d62051803d0ab965b548ff93b856ddb",
           "componentsSha256": "dece3189c6e2d4b32f5442859b162527e947b442b27503e859fdd708e8694cd0",
@@ -578,8 +578,8 @@
       },
       "source": {
         "provider": "ui-builder",
-        "revision": "cf45f0418a08d99bf3cffc3524584d32ccbe93dd",
-        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/cf45f0418a08d99bf3cffc3524584d32ccbe93dd/adaptive-uid-pilot/ui-builder/designs/dashboard-view.uid",
+        "revision": "7f8327eee3c53be9bb8102435bb5e972a6d1a4eb",
+        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/7f8327eee3c53be9bb8102435bb5e972a6d1a4eb/adaptive-uid-pilot/ui-builder/designs/dashboard-view.uid",
         "attributes": {
           "rendererBundleSha256": "3e8b50626fa66081ddc6f33437a51cb93d62051803d0ab965b548ff93b856ddb",
           "componentsSha256": "dece3189c6e2d4b32f5442859b162527e947b442b27503e859fdd708e8694cd0",
@@ -611,8 +611,8 @@
       },
       "source": {
         "provider": "ui-builder",
-        "revision": "cf45f0418a08d99bf3cffc3524584d32ccbe93dd",
-        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/cf45f0418a08d99bf3cffc3524584d32ccbe93dd/adaptive-uid-pilot/ui-builder/designs/dashboard-view.uid",
+        "revision": "7f8327eee3c53be9bb8102435bb5e972a6d1a4eb",
+        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/7f8327eee3c53be9bb8102435bb5e972a6d1a4eb/adaptive-uid-pilot/ui-builder/designs/dashboard-view.uid",
         "attributes": {
           "rendererBundleSha256": "3e8b50626fa66081ddc6f33437a51cb93d62051803d0ab965b548ff93b856ddb",
           "componentsSha256": "dece3189c6e2d4b32f5442859b162527e947b442b27503e859fdd708e8694cd0",
@@ -644,8 +644,8 @@
       },
       "source": {
         "provider": "ui-builder",
-        "revision": "cf45f0418a08d99bf3cffc3524584d32ccbe93dd",
-        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/cf45f0418a08d99bf3cffc3524584d32ccbe93dd/adaptive-uid-pilot/ui-builder/designs/dashboard-view.uid",
+        "revision": "7f8327eee3c53be9bb8102435bb5e972a6d1a4eb",
+        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/7f8327eee3c53be9bb8102435bb5e972a6d1a4eb/adaptive-uid-pilot/ui-builder/designs/dashboard-view.uid",
         "attributes": {
           "rendererBundleSha256": "3e8b50626fa66081ddc6f33437a51cb93d62051803d0ab965b548ff93b856ddb",
           "componentsSha256": "dece3189c6e2d4b32f5442859b162527e947b442b27503e859fdd708e8694cd0",
@@ -677,8 +677,8 @@
       },
       "source": {
         "provider": "ui-builder",
-        "revision": "cf45f0418a08d99bf3cffc3524584d32ccbe93dd",
-        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/cf45f0418a08d99bf3cffc3524584d32ccbe93dd/adaptive-uid-pilot/ui-builder/designs/dashboard-view.uid",
+        "revision": "7f8327eee3c53be9bb8102435bb5e972a6d1a4eb",
+        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/7f8327eee3c53be9bb8102435bb5e972a6d1a4eb/adaptive-uid-pilot/ui-builder/designs/dashboard-view.uid",
         "attributes": {
           "rendererBundleSha256": "3e8b50626fa66081ddc6f33437a51cb93d62051803d0ab965b548ff93b856ddb",
           "componentsSha256": "dece3189c6e2d4b32f5442859b162527e947b442b27503e859fdd708e8694cd0",
@@ -710,8 +710,8 @@
       },
       "source": {
         "provider": "ui-builder",
-        "revision": "cf45f0418a08d99bf3cffc3524584d32ccbe93dd",
-        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/cf45f0418a08d99bf3cffc3524584d32ccbe93dd/adaptive-uid-pilot/ui-builder/designs/dashboard-view.uid",
+        "revision": "7f8327eee3c53be9bb8102435bb5e972a6d1a4eb",
+        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/7f8327eee3c53be9bb8102435bb5e972a6d1a4eb/adaptive-uid-pilot/ui-builder/designs/dashboard-view.uid",
         "attributes": {
           "rendererBundleSha256": "3e8b50626fa66081ddc6f33437a51cb93d62051803d0ab965b548ff93b856ddb",
           "componentsSha256": "dece3189c6e2d4b32f5442859b162527e947b442b27503e859fdd708e8694cd0",
@@ -743,8 +743,8 @@
       },
       "source": {
         "provider": "ui-builder",
-        "revision": "cf45f0418a08d99bf3cffc3524584d32ccbe93dd",
-        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/cf45f0418a08d99bf3cffc3524584d32ccbe93dd/adaptive-uid-pilot/ui-builder/designs/dashboard-view-secondary.uid",
+        "revision": "7f8327eee3c53be9bb8102435bb5e972a6d1a4eb",
+        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/7f8327eee3c53be9bb8102435bb5e972a6d1a4eb/adaptive-uid-pilot/ui-builder/designs/dashboard-view-secondary.uid",
         "attributes": {
           "rendererBundleSha256": "3e8b50626fa66081ddc6f33437a51cb93d62051803d0ab965b548ff93b856ddb",
           "componentsSha256": "dece3189c6e2d4b32f5442859b162527e947b442b27503e859fdd708e8694cd0",
@@ -776,8 +776,8 @@
       },
       "source": {
         "provider": "ui-builder",
-        "revision": "cf45f0418a08d99bf3cffc3524584d32ccbe93dd",
-        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/cf45f0418a08d99bf3cffc3524584d32ccbe93dd/adaptive-uid-pilot/ui-builder/designs/dashboard-view-secondary.uid",
+        "revision": "7f8327eee3c53be9bb8102435bb5e972a6d1a4eb",
+        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/7f8327eee3c53be9bb8102435bb5e972a6d1a4eb/adaptive-uid-pilot/ui-builder/designs/dashboard-view-secondary.uid",
         "attributes": {
           "rendererBundleSha256": "3e8b50626fa66081ddc6f33437a51cb93d62051803d0ab965b548ff93b856ddb",
           "componentsSha256": "dece3189c6e2d4b32f5442859b162527e947b442b27503e859fdd708e8694cd0",
@@ -809,8 +809,8 @@
       },
       "source": {
         "provider": "ui-builder",
-        "revision": "cf45f0418a08d99bf3cffc3524584d32ccbe93dd",
-        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/cf45f0418a08d99bf3cffc3524584d32ccbe93dd/adaptive-uid-pilot/ui-builder/designs/choose-dashboards.uid",
+        "revision": "7f8327eee3c53be9bb8102435bb5e972a6d1a4eb",
+        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/7f8327eee3c53be9bb8102435bb5e972a6d1a4eb/adaptive-uid-pilot/ui-builder/designs/choose-dashboards.uid",
         "attributes": {
           "rendererBundleSha256": "3e8b50626fa66081ddc6f33437a51cb93d62051803d0ab965b548ff93b856ddb",
           "componentsSha256": "dece3189c6e2d4b32f5442859b162527e947b442b27503e859fdd708e8694cd0",
@@ -842,8 +842,8 @@
       },
       "source": {
         "provider": "ui-builder",
-        "revision": "cf45f0418a08d99bf3cffc3524584d32ccbe93dd",
-        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/cf45f0418a08d99bf3cffc3524584d32ccbe93dd/adaptive-uid-pilot/ui-builder/designs/choose-dashboards.uid",
+        "revision": "7f8327eee3c53be9bb8102435bb5e972a6d1a4eb",
+        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/7f8327eee3c53be9bb8102435bb5e972a6d1a4eb/adaptive-uid-pilot/ui-builder/designs/choose-dashboards.uid",
         "attributes": {
           "rendererBundleSha256": "3e8b50626fa66081ddc6f33437a51cb93d62051803d0ab965b548ff93b856ddb",
           "componentsSha256": "dece3189c6e2d4b32f5442859b162527e947b442b27503e859fdd708e8694cd0",
@@ -875,8 +875,8 @@
       },
       "source": {
         "provider": "ui-builder",
-        "revision": "cf45f0418a08d99bf3cffc3524584d32ccbe93dd",
-        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/cf45f0418a08d99bf3cffc3524584d32ccbe93dd/adaptive-uid-pilot/ui-builder/designs/choose-dashboards.uid",
+        "revision": "7f8327eee3c53be9bb8102435bb5e972a6d1a4eb",
+        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/7f8327eee3c53be9bb8102435bb5e972a6d1a4eb/adaptive-uid-pilot/ui-builder/designs/choose-dashboards.uid",
         "attributes": {
           "rendererBundleSha256": "3e8b50626fa66081ddc6f33437a51cb93d62051803d0ab965b548ff93b856ddb",
           "componentsSha256": "dece3189c6e2d4b32f5442859b162527e947b442b27503e859fdd708e8694cd0",
@@ -908,8 +908,8 @@
       },
       "source": {
         "provider": "ui-builder",
-        "revision": "cf45f0418a08d99bf3cffc3524584d32ccbe93dd",
-        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/cf45f0418a08d99bf3cffc3524584d32ccbe93dd/adaptive-uid-pilot/ui-builder/designs/choose-dashboards.uid",
+        "revision": "7f8327eee3c53be9bb8102435bb5e972a6d1a4eb",
+        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/7f8327eee3c53be9bb8102435bb5e972a6d1a4eb/adaptive-uid-pilot/ui-builder/designs/choose-dashboards.uid",
         "attributes": {
           "rendererBundleSha256": "3e8b50626fa66081ddc6f33437a51cb93d62051803d0ab965b548ff93b856ddb",
           "componentsSha256": "dece3189c6e2d4b32f5442859b162527e947b442b27503e859fdd708e8694cd0",
@@ -941,8 +941,8 @@
       },
       "source": {
         "provider": "ui-builder",
-        "revision": "cf45f0418a08d99bf3cffc3524584d32ccbe93dd",
-        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/cf45f0418a08d99bf3cffc3524584d32ccbe93dd/adaptive-uid-pilot/ui-builder/designs/choose-dashboards.uid",
+        "revision": "7f8327eee3c53be9bb8102435bb5e972a6d1a4eb",
+        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/7f8327eee3c53be9bb8102435bb5e972a6d1a4eb/adaptive-uid-pilot/ui-builder/designs/choose-dashboards.uid",
         "attributes": {
           "rendererBundleSha256": "3e8b50626fa66081ddc6f33437a51cb93d62051803d0ab965b548ff93b856ddb",
           "componentsSha256": "dece3189c6e2d4b32f5442859b162527e947b442b27503e859fdd708e8694cd0",
@@ -974,8 +974,8 @@
       },
       "source": {
         "provider": "ui-builder",
-        "revision": "cf45f0418a08d99bf3cffc3524584d32ccbe93dd",
-        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/cf45f0418a08d99bf3cffc3524584d32ccbe93dd/adaptive-uid-pilot/ui-builder/designs/choose-dashboards.uid",
+        "revision": "7f8327eee3c53be9bb8102435bb5e972a6d1a4eb",
+        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/7f8327eee3c53be9bb8102435bb5e972a6d1a4eb/adaptive-uid-pilot/ui-builder/designs/choose-dashboards.uid",
         "attributes": {
           "rendererBundleSha256": "3e8b50626fa66081ddc6f33437a51cb93d62051803d0ab965b548ff93b856ddb",
           "componentsSha256": "dece3189c6e2d4b32f5442859b162527e947b442b27503e859fdd708e8694cd0",
@@ -1007,8 +1007,8 @@
       },
       "source": {
         "provider": "ui-builder",
-        "revision": "cf45f0418a08d99bf3cffc3524584d32ccbe93dd",
-        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/cf45f0418a08d99bf3cffc3524584d32ccbe93dd/adaptive-uid-pilot/ui-builder/designs/choose-dashboards-secondary.uid",
+        "revision": "7f8327eee3c53be9bb8102435bb5e972a6d1a4eb",
+        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/7f8327eee3c53be9bb8102435bb5e972a6d1a4eb/adaptive-uid-pilot/ui-builder/designs/choose-dashboards-secondary.uid",
         "attributes": {
           "rendererBundleSha256": "3e8b50626fa66081ddc6f33437a51cb93d62051803d0ab965b548ff93b856ddb",
           "componentsSha256": "dece3189c6e2d4b32f5442859b162527e947b442b27503e859fdd708e8694cd0",
@@ -1040,8 +1040,8 @@
       },
       "source": {
         "provider": "ui-builder",
-        "revision": "cf45f0418a08d99bf3cffc3524584d32ccbe93dd",
-        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/cf45f0418a08d99bf3cffc3524584d32ccbe93dd/adaptive-uid-pilot/ui-builder/designs/choose-dashboards-secondary.uid",
+        "revision": "7f8327eee3c53be9bb8102435bb5e972a6d1a4eb",
+        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/7f8327eee3c53be9bb8102435bb5e972a6d1a4eb/adaptive-uid-pilot/ui-builder/designs/choose-dashboards-secondary.uid",
         "attributes": {
           "rendererBundleSha256": "3e8b50626fa66081ddc6f33437a51cb93d62051803d0ab965b548ff93b856ddb",
           "componentsSha256": "dece3189c6e2d4b32f5442859b162527e947b442b27503e859fdd708e8694cd0",
@@ -1073,8 +1073,8 @@
       },
       "source": {
         "provider": "ui-builder",
-        "revision": "cf45f0418a08d99bf3cffc3524584d32ccbe93dd",
-        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/cf45f0418a08d99bf3cffc3524584d32ccbe93dd/adaptive-uid-pilot/ui-builder/designs/settings.uid",
+        "revision": "7f8327eee3c53be9bb8102435bb5e972a6d1a4eb",
+        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/7f8327eee3c53be9bb8102435bb5e972a6d1a4eb/adaptive-uid-pilot/ui-builder/designs/settings.uid",
         "attributes": {
           "rendererBundleSha256": "3e8b50626fa66081ddc6f33437a51cb93d62051803d0ab965b548ff93b856ddb",
           "componentsSha256": "dece3189c6e2d4b32f5442859b162527e947b442b27503e859fdd708e8694cd0",
@@ -1106,8 +1106,8 @@
       },
       "source": {
         "provider": "ui-builder",
-        "revision": "cf45f0418a08d99bf3cffc3524584d32ccbe93dd",
-        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/cf45f0418a08d99bf3cffc3524584d32ccbe93dd/adaptive-uid-pilot/ui-builder/designs/settings.uid",
+        "revision": "7f8327eee3c53be9bb8102435bb5e972a6d1a4eb",
+        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/7f8327eee3c53be9bb8102435bb5e972a6d1a4eb/adaptive-uid-pilot/ui-builder/designs/settings.uid",
         "attributes": {
           "rendererBundleSha256": "3e8b50626fa66081ddc6f33437a51cb93d62051803d0ab965b548ff93b856ddb",
           "componentsSha256": "dece3189c6e2d4b32f5442859b162527e947b442b27503e859fdd708e8694cd0",
@@ -1139,8 +1139,8 @@
       },
       "source": {
         "provider": "ui-builder",
-        "revision": "cf45f0418a08d99bf3cffc3524584d32ccbe93dd",
-        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/cf45f0418a08d99bf3cffc3524584d32ccbe93dd/adaptive-uid-pilot/ui-builder/designs/settings.uid",
+        "revision": "7f8327eee3c53be9bb8102435bb5e972a6d1a4eb",
+        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/7f8327eee3c53be9bb8102435bb5e972a6d1a4eb/adaptive-uid-pilot/ui-builder/designs/settings.uid",
         "attributes": {
           "rendererBundleSha256": "3e8b50626fa66081ddc6f33437a51cb93d62051803d0ab965b548ff93b856ddb",
           "componentsSha256": "dece3189c6e2d4b32f5442859b162527e947b442b27503e859fdd708e8694cd0",
@@ -1172,8 +1172,8 @@
       },
       "source": {
         "provider": "ui-builder",
-        "revision": "cf45f0418a08d99bf3cffc3524584d32ccbe93dd",
-        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/cf45f0418a08d99bf3cffc3524584d32ccbe93dd/adaptive-uid-pilot/ui-builder/designs/settings.uid",
+        "revision": "7f8327eee3c53be9bb8102435bb5e972a6d1a4eb",
+        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/7f8327eee3c53be9bb8102435bb5e972a6d1a4eb/adaptive-uid-pilot/ui-builder/designs/settings.uid",
         "attributes": {
           "rendererBundleSha256": "3e8b50626fa66081ddc6f33437a51cb93d62051803d0ab965b548ff93b856ddb",
           "componentsSha256": "dece3189c6e2d4b32f5442859b162527e947b442b27503e859fdd708e8694cd0",
@@ -1205,8 +1205,8 @@
       },
       "source": {
         "provider": "ui-builder",
-        "revision": "cf45f0418a08d99bf3cffc3524584d32ccbe93dd",
-        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/cf45f0418a08d99bf3cffc3524584d32ccbe93dd/adaptive-uid-pilot/ui-builder/designs/settings.uid",
+        "revision": "7f8327eee3c53be9bb8102435bb5e972a6d1a4eb",
+        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/7f8327eee3c53be9bb8102435bb5e972a6d1a4eb/adaptive-uid-pilot/ui-builder/designs/settings.uid",
         "attributes": {
           "rendererBundleSha256": "3e8b50626fa66081ddc6f33437a51cb93d62051803d0ab965b548ff93b856ddb",
           "componentsSha256": "dece3189c6e2d4b32f5442859b162527e947b442b27503e859fdd708e8694cd0",
@@ -1238,8 +1238,8 @@
       },
       "source": {
         "provider": "ui-builder",
-        "revision": "cf45f0418a08d99bf3cffc3524584d32ccbe93dd",
-        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/cf45f0418a08d99bf3cffc3524584d32ccbe93dd/adaptive-uid-pilot/ui-builder/designs/settings.uid",
+        "revision": "7f8327eee3c53be9bb8102435bb5e972a6d1a4eb",
+        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/7f8327eee3c53be9bb8102435bb5e972a6d1a4eb/adaptive-uid-pilot/ui-builder/designs/settings.uid",
         "attributes": {
           "rendererBundleSha256": "3e8b50626fa66081ddc6f33437a51cb93d62051803d0ab965b548ff93b856ddb",
           "componentsSha256": "dece3189c6e2d4b32f5442859b162527e947b442b27503e859fdd708e8694cd0",
@@ -1271,8 +1271,8 @@
       },
       "source": {
         "provider": "ui-builder",
-        "revision": "cf45f0418a08d99bf3cffc3524584d32ccbe93dd",
-        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/cf45f0418a08d99bf3cffc3524584d32ccbe93dd/adaptive-uid-pilot/ui-builder/designs/settings-secondary.uid",
+        "revision": "7f8327eee3c53be9bb8102435bb5e972a6d1a4eb",
+        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/7f8327eee3c53be9bb8102435bb5e972a6d1a4eb/adaptive-uid-pilot/ui-builder/designs/settings-secondary.uid",
         "attributes": {
           "rendererBundleSha256": "3e8b50626fa66081ddc6f33437a51cb93d62051803d0ab965b548ff93b856ddb",
           "componentsSha256": "dece3189c6e2d4b32f5442859b162527e947b442b27503e859fdd708e8694cd0",
@@ -1304,8 +1304,8 @@
       },
       "source": {
         "provider": "ui-builder",
-        "revision": "cf45f0418a08d99bf3cffc3524584d32ccbe93dd",
-        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/cf45f0418a08d99bf3cffc3524584d32ccbe93dd/adaptive-uid-pilot/ui-builder/designs/settings-secondary.uid",
+        "revision": "7f8327eee3c53be9bb8102435bb5e972a6d1a4eb",
+        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/7f8327eee3c53be9bb8102435bb5e972a6d1a4eb/adaptive-uid-pilot/ui-builder/designs/settings-secondary.uid",
         "attributes": {
           "rendererBundleSha256": "3e8b50626fa66081ddc6f33437a51cb93d62051803d0ab965b548ff93b856ddb",
           "componentsSha256": "dece3189c6e2d4b32f5442859b162527e947b442b27503e859fdd708e8694cd0",
@@ -1337,8 +1337,8 @@
       },
       "source": {
         "provider": "ui-builder",
-        "revision": "cf45f0418a08d99bf3cffc3524584d32ccbe93dd",
-        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/cf45f0418a08d99bf3cffc3524584d32ccbe93dd/adaptive-uid-pilot/ui-builder/designs/widgets.uid",
+        "revision": "7f8327eee3c53be9bb8102435bb5e972a6d1a4eb",
+        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/7f8327eee3c53be9bb8102435bb5e972a6d1a4eb/adaptive-uid-pilot/ui-builder/designs/widgets.uid",
         "attributes": {
           "rendererBundleSha256": "3e8b50626fa66081ddc6f33437a51cb93d62051803d0ab965b548ff93b856ddb",
           "componentsSha256": "dece3189c6e2d4b32f5442859b162527e947b442b27503e859fdd708e8694cd0",
@@ -1370,8 +1370,8 @@
       },
       "source": {
         "provider": "ui-builder",
-        "revision": "cf45f0418a08d99bf3cffc3524584d32ccbe93dd",
-        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/cf45f0418a08d99bf3cffc3524584d32ccbe93dd/adaptive-uid-pilot/ui-builder/designs/widgets.uid",
+        "revision": "7f8327eee3c53be9bb8102435bb5e972a6d1a4eb",
+        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/7f8327eee3c53be9bb8102435bb5e972a6d1a4eb/adaptive-uid-pilot/ui-builder/designs/widgets.uid",
         "attributes": {
           "rendererBundleSha256": "3e8b50626fa66081ddc6f33437a51cb93d62051803d0ab965b548ff93b856ddb",
           "componentsSha256": "dece3189c6e2d4b32f5442859b162527e947b442b27503e859fdd708e8694cd0",
@@ -1403,8 +1403,8 @@
       },
       "source": {
         "provider": "ui-builder",
-        "revision": "cf45f0418a08d99bf3cffc3524584d32ccbe93dd",
-        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/cf45f0418a08d99bf3cffc3524584d32ccbe93dd/adaptive-uid-pilot/ui-builder/designs/widgets.uid",
+        "revision": "7f8327eee3c53be9bb8102435bb5e972a6d1a4eb",
+        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/7f8327eee3c53be9bb8102435bb5e972a6d1a4eb/adaptive-uid-pilot/ui-builder/designs/widgets.uid",
         "attributes": {
           "rendererBundleSha256": "3e8b50626fa66081ddc6f33437a51cb93d62051803d0ab965b548ff93b856ddb",
           "componentsSha256": "dece3189c6e2d4b32f5442859b162527e947b442b27503e859fdd708e8694cd0",
@@ -1436,8 +1436,8 @@
       },
       "source": {
         "provider": "ui-builder",
-        "revision": "cf45f0418a08d99bf3cffc3524584d32ccbe93dd",
-        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/cf45f0418a08d99bf3cffc3524584d32ccbe93dd/adaptive-uid-pilot/ui-builder/designs/widgets.uid",
+        "revision": "7f8327eee3c53be9bb8102435bb5e972a6d1a4eb",
+        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/7f8327eee3c53be9bb8102435bb5e972a6d1a4eb/adaptive-uid-pilot/ui-builder/designs/widgets.uid",
         "attributes": {
           "rendererBundleSha256": "3e8b50626fa66081ddc6f33437a51cb93d62051803d0ab965b548ff93b856ddb",
           "componentsSha256": "dece3189c6e2d4b32f5442859b162527e947b442b27503e859fdd708e8694cd0",
@@ -1469,8 +1469,8 @@
       },
       "source": {
         "provider": "ui-builder",
-        "revision": "cf45f0418a08d99bf3cffc3524584d32ccbe93dd",
-        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/cf45f0418a08d99bf3cffc3524584d32ccbe93dd/adaptive-uid-pilot/ui-builder/designs/widgets.uid",
+        "revision": "7f8327eee3c53be9bb8102435bb5e972a6d1a4eb",
+        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/7f8327eee3c53be9bb8102435bb5e972a6d1a4eb/adaptive-uid-pilot/ui-builder/designs/widgets.uid",
         "attributes": {
           "rendererBundleSha256": "3e8b50626fa66081ddc6f33437a51cb93d62051803d0ab965b548ff93b856ddb",
           "componentsSha256": "dece3189c6e2d4b32f5442859b162527e947b442b27503e859fdd708e8694cd0",
@@ -1502,8 +1502,8 @@
       },
       "source": {
         "provider": "ui-builder",
-        "revision": "cf45f0418a08d99bf3cffc3524584d32ccbe93dd",
-        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/cf45f0418a08d99bf3cffc3524584d32ccbe93dd/adaptive-uid-pilot/ui-builder/designs/widgets.uid",
+        "revision": "7f8327eee3c53be9bb8102435bb5e972a6d1a4eb",
+        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/7f8327eee3c53be9bb8102435bb5e972a6d1a4eb/adaptive-uid-pilot/ui-builder/designs/widgets.uid",
         "attributes": {
           "rendererBundleSha256": "3e8b50626fa66081ddc6f33437a51cb93d62051803d0ab965b548ff93b856ddb",
           "componentsSha256": "dece3189c6e2d4b32f5442859b162527e947b442b27503e859fdd708e8694cd0",
@@ -1535,8 +1535,8 @@
       },
       "source": {
         "provider": "ui-builder",
-        "revision": "cf45f0418a08d99bf3cffc3524584d32ccbe93dd",
-        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/cf45f0418a08d99bf3cffc3524584d32ccbe93dd/adaptive-uid-pilot/ui-builder/designs/widgets-secondary.uid",
+        "revision": "7f8327eee3c53be9bb8102435bb5e972a6d1a4eb",
+        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/7f8327eee3c53be9bb8102435bb5e972a6d1a4eb/adaptive-uid-pilot/ui-builder/designs/widgets-secondary.uid",
         "attributes": {
           "rendererBundleSha256": "3e8b50626fa66081ddc6f33437a51cb93d62051803d0ab965b548ff93b856ddb",
           "componentsSha256": "dece3189c6e2d4b32f5442859b162527e947b442b27503e859fdd708e8694cd0",
@@ -1568,8 +1568,8 @@
       },
       "source": {
         "provider": "ui-builder",
-        "revision": "cf45f0418a08d99bf3cffc3524584d32ccbe93dd",
-        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/cf45f0418a08d99bf3cffc3524584d32ccbe93dd/adaptive-uid-pilot/ui-builder/designs/widgets-secondary.uid",
+        "revision": "7f8327eee3c53be9bb8102435bb5e972a6d1a4eb",
+        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/7f8327eee3c53be9bb8102435bb5e972a6d1a4eb/adaptive-uid-pilot/ui-builder/designs/widgets-secondary.uid",
         "attributes": {
           "rendererBundleSha256": "3e8b50626fa66081ddc6f33437a51cb93d62051803d0ab965b548ff93b856ddb",
           "componentsSha256": "dece3189c6e2d4b32f5442859b162527e947b442b27503e859fdd708e8694cd0",
@@ -1601,8 +1601,8 @@
       },
       "source": {
         "provider": "ui-builder",
-        "revision": "cf45f0418a08d99bf3cffc3524584d32ccbe93dd",
-        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/cf45f0418a08d99bf3cffc3524584d32ccbe93dd/adaptive-uid-pilot/ui-builder/designs/pinned.uid",
+        "revision": "7f8327eee3c53be9bb8102435bb5e972a6d1a4eb",
+        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/7f8327eee3c53be9bb8102435bb5e972a6d1a4eb/adaptive-uid-pilot/ui-builder/designs/pinned.uid",
         "attributes": {
           "rendererBundleSha256": "3e8b50626fa66081ddc6f33437a51cb93d62051803d0ab965b548ff93b856ddb",
           "componentsSha256": "dece3189c6e2d4b32f5442859b162527e947b442b27503e859fdd708e8694cd0",
@@ -1634,8 +1634,8 @@
       },
       "source": {
         "provider": "ui-builder",
-        "revision": "cf45f0418a08d99bf3cffc3524584d32ccbe93dd",
-        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/cf45f0418a08d99bf3cffc3524584d32ccbe93dd/adaptive-uid-pilot/ui-builder/designs/pinned.uid",
+        "revision": "7f8327eee3c53be9bb8102435bb5e972a6d1a4eb",
+        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/7f8327eee3c53be9bb8102435bb5e972a6d1a4eb/adaptive-uid-pilot/ui-builder/designs/pinned.uid",
         "attributes": {
           "rendererBundleSha256": "3e8b50626fa66081ddc6f33437a51cb93d62051803d0ab965b548ff93b856ddb",
           "componentsSha256": "dece3189c6e2d4b32f5442859b162527e947b442b27503e859fdd708e8694cd0",
@@ -1667,8 +1667,8 @@
       },
       "source": {
         "provider": "ui-builder",
-        "revision": "cf45f0418a08d99bf3cffc3524584d32ccbe93dd",
-        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/cf45f0418a08d99bf3cffc3524584d32ccbe93dd/adaptive-uid-pilot/ui-builder/designs/pinned.uid",
+        "revision": "7f8327eee3c53be9bb8102435bb5e972a6d1a4eb",
+        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/7f8327eee3c53be9bb8102435bb5e972a6d1a4eb/adaptive-uid-pilot/ui-builder/designs/pinned.uid",
         "attributes": {
           "rendererBundleSha256": "3e8b50626fa66081ddc6f33437a51cb93d62051803d0ab965b548ff93b856ddb",
           "componentsSha256": "dece3189c6e2d4b32f5442859b162527e947b442b27503e859fdd708e8694cd0",
@@ -1700,8 +1700,8 @@
       },
       "source": {
         "provider": "ui-builder",
-        "revision": "cf45f0418a08d99bf3cffc3524584d32ccbe93dd",
-        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/cf45f0418a08d99bf3cffc3524584d32ccbe93dd/adaptive-uid-pilot/ui-builder/designs/pinned.uid",
+        "revision": "7f8327eee3c53be9bb8102435bb5e972a6d1a4eb",
+        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/7f8327eee3c53be9bb8102435bb5e972a6d1a4eb/adaptive-uid-pilot/ui-builder/designs/pinned.uid",
         "attributes": {
           "rendererBundleSha256": "3e8b50626fa66081ddc6f33437a51cb93d62051803d0ab965b548ff93b856ddb",
           "componentsSha256": "dece3189c6e2d4b32f5442859b162527e947b442b27503e859fdd708e8694cd0",
@@ -1733,8 +1733,8 @@
       },
       "source": {
         "provider": "ui-builder",
-        "revision": "cf45f0418a08d99bf3cffc3524584d32ccbe93dd",
-        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/cf45f0418a08d99bf3cffc3524584d32ccbe93dd/adaptive-uid-pilot/ui-builder/designs/pinned.uid",
+        "revision": "7f8327eee3c53be9bb8102435bb5e972a6d1a4eb",
+        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/7f8327eee3c53be9bb8102435bb5e972a6d1a4eb/adaptive-uid-pilot/ui-builder/designs/pinned.uid",
         "attributes": {
           "rendererBundleSha256": "3e8b50626fa66081ddc6f33437a51cb93d62051803d0ab965b548ff93b856ddb",
           "componentsSha256": "dece3189c6e2d4b32f5442859b162527e947b442b27503e859fdd708e8694cd0",
@@ -1766,8 +1766,8 @@
       },
       "source": {
         "provider": "ui-builder",
-        "revision": "cf45f0418a08d99bf3cffc3524584d32ccbe93dd",
-        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/cf45f0418a08d99bf3cffc3524584d32ccbe93dd/adaptive-uid-pilot/ui-builder/designs/pinned.uid",
+        "revision": "7f8327eee3c53be9bb8102435bb5e972a6d1a4eb",
+        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/7f8327eee3c53be9bb8102435bb5e972a6d1a4eb/adaptive-uid-pilot/ui-builder/designs/pinned.uid",
         "attributes": {
           "rendererBundleSha256": "3e8b50626fa66081ddc6f33437a51cb93d62051803d0ab965b548ff93b856ddb",
           "componentsSha256": "dece3189c6e2d4b32f5442859b162527e947b442b27503e859fdd708e8694cd0",
@@ -1799,8 +1799,8 @@
       },
       "source": {
         "provider": "ui-builder",
-        "revision": "cf45f0418a08d99bf3cffc3524584d32ccbe93dd",
-        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/cf45f0418a08d99bf3cffc3524584d32ccbe93dd/adaptive-uid-pilot/ui-builder/designs/pinned-secondary.uid",
+        "revision": "7f8327eee3c53be9bb8102435bb5e972a6d1a4eb",
+        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/7f8327eee3c53be9bb8102435bb5e972a6d1a4eb/adaptive-uid-pilot/ui-builder/designs/pinned-secondary.uid",
         "attributes": {
           "rendererBundleSha256": "3e8b50626fa66081ddc6f33437a51cb93d62051803d0ab965b548ff93b856ddb",
           "componentsSha256": "dece3189c6e2d4b32f5442859b162527e947b442b27503e859fdd708e8694cd0",
@@ -1832,8 +1832,8 @@
       },
       "source": {
         "provider": "ui-builder",
-        "revision": "cf45f0418a08d99bf3cffc3524584d32ccbe93dd",
-        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/cf45f0418a08d99bf3cffc3524584d32ccbe93dd/adaptive-uid-pilot/ui-builder/designs/pinned-secondary.uid",
+        "revision": "7f8327eee3c53be9bb8102435bb5e972a6d1a4eb",
+        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/7f8327eee3c53be9bb8102435bb5e972a6d1a4eb/adaptive-uid-pilot/ui-builder/designs/pinned-secondary.uid",
         "attributes": {
           "rendererBundleSha256": "3e8b50626fa66081ddc6f33437a51cb93d62051803d0ab965b548ff93b856ddb",
           "componentsSha256": "dece3189c6e2d4b32f5442859b162527e947b442b27503e859fdd708e8694cd0",
@@ -1865,8 +1865,8 @@
       },
       "source": {
         "provider": "ui-builder",
-        "revision": "cf45f0418a08d99bf3cffc3524584d32ccbe93dd",
-        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/cf45f0418a08d99bf3cffc3524584d32ccbe93dd/adaptive-uid-pilot/ui-builder/designs/wear-widgets.uid",
+        "revision": "7f8327eee3c53be9bb8102435bb5e972a6d1a4eb",
+        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/7f8327eee3c53be9bb8102435bb5e972a6d1a4eb/adaptive-uid-pilot/ui-builder/designs/wear-widgets.uid",
         "attributes": {
           "rendererBundleSha256": "3e8b50626fa66081ddc6f33437a51cb93d62051803d0ab965b548ff93b856ddb",
           "componentsSha256": "dece3189c6e2d4b32f5442859b162527e947b442b27503e859fdd708e8694cd0",
@@ -1898,8 +1898,8 @@
       },
       "source": {
         "provider": "ui-builder",
-        "revision": "cf45f0418a08d99bf3cffc3524584d32ccbe93dd",
-        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/cf45f0418a08d99bf3cffc3524584d32ccbe93dd/adaptive-uid-pilot/ui-builder/designs/wear-widgets.uid",
+        "revision": "7f8327eee3c53be9bb8102435bb5e972a6d1a4eb",
+        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/7f8327eee3c53be9bb8102435bb5e972a6d1a4eb/adaptive-uid-pilot/ui-builder/designs/wear-widgets.uid",
         "attributes": {
           "rendererBundleSha256": "3e8b50626fa66081ddc6f33437a51cb93d62051803d0ab965b548ff93b856ddb",
           "componentsSha256": "dece3189c6e2d4b32f5442859b162527e947b442b27503e859fdd708e8694cd0",
@@ -1931,8 +1931,8 @@
       },
       "source": {
         "provider": "ui-builder",
-        "revision": "cf45f0418a08d99bf3cffc3524584d32ccbe93dd",
-        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/cf45f0418a08d99bf3cffc3524584d32ccbe93dd/adaptive-uid-pilot/ui-builder/designs/wear-widgets.uid",
+        "revision": "7f8327eee3c53be9bb8102435bb5e972a6d1a4eb",
+        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/7f8327eee3c53be9bb8102435bb5e972a6d1a4eb/adaptive-uid-pilot/ui-builder/designs/wear-widgets.uid",
         "attributes": {
           "rendererBundleSha256": "3e8b50626fa66081ddc6f33437a51cb93d62051803d0ab965b548ff93b856ddb",
           "componentsSha256": "dece3189c6e2d4b32f5442859b162527e947b442b27503e859fdd708e8694cd0",
@@ -1964,8 +1964,8 @@
       },
       "source": {
         "provider": "ui-builder",
-        "revision": "cf45f0418a08d99bf3cffc3524584d32ccbe93dd",
-        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/cf45f0418a08d99bf3cffc3524584d32ccbe93dd/adaptive-uid-pilot/ui-builder/designs/wear-widgets.uid",
+        "revision": "7f8327eee3c53be9bb8102435bb5e972a6d1a4eb",
+        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/7f8327eee3c53be9bb8102435bb5e972a6d1a4eb/adaptive-uid-pilot/ui-builder/designs/wear-widgets.uid",
         "attributes": {
           "rendererBundleSha256": "3e8b50626fa66081ddc6f33437a51cb93d62051803d0ab965b548ff93b856ddb",
           "componentsSha256": "dece3189c6e2d4b32f5442859b162527e947b442b27503e859fdd708e8694cd0",
@@ -1997,8 +1997,8 @@
       },
       "source": {
         "provider": "ui-builder",
-        "revision": "cf45f0418a08d99bf3cffc3524584d32ccbe93dd",
-        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/cf45f0418a08d99bf3cffc3524584d32ccbe93dd/adaptive-uid-pilot/ui-builder/designs/wear-widgets.uid",
+        "revision": "7f8327eee3c53be9bb8102435bb5e972a6d1a4eb",
+        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/7f8327eee3c53be9bb8102435bb5e972a6d1a4eb/adaptive-uid-pilot/ui-builder/designs/wear-widgets.uid",
         "attributes": {
           "rendererBundleSha256": "3e8b50626fa66081ddc6f33437a51cb93d62051803d0ab965b548ff93b856ddb",
           "componentsSha256": "dece3189c6e2d4b32f5442859b162527e947b442b27503e859fdd708e8694cd0",
@@ -2030,8 +2030,8 @@
       },
       "source": {
         "provider": "ui-builder",
-        "revision": "cf45f0418a08d99bf3cffc3524584d32ccbe93dd",
-        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/cf45f0418a08d99bf3cffc3524584d32ccbe93dd/adaptive-uid-pilot/ui-builder/designs/wear-widgets.uid",
+        "revision": "7f8327eee3c53be9bb8102435bb5e972a6d1a4eb",
+        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/7f8327eee3c53be9bb8102435bb5e972a6d1a4eb/adaptive-uid-pilot/ui-builder/designs/wear-widgets.uid",
         "attributes": {
           "rendererBundleSha256": "3e8b50626fa66081ddc6f33437a51cb93d62051803d0ab965b548ff93b856ddb",
           "componentsSha256": "dece3189c6e2d4b32f5442859b162527e947b442b27503e859fdd708e8694cd0",
@@ -2063,8 +2063,8 @@
       },
       "source": {
         "provider": "ui-builder",
-        "revision": "cf45f0418a08d99bf3cffc3524584d32ccbe93dd",
-        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/cf45f0418a08d99bf3cffc3524584d32ccbe93dd/adaptive-uid-pilot/ui-builder/designs/wear-widgets-secondary.uid",
+        "revision": "7f8327eee3c53be9bb8102435bb5e972a6d1a4eb",
+        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/7f8327eee3c53be9bb8102435bb5e972a6d1a4eb/adaptive-uid-pilot/ui-builder/designs/wear-widgets-secondary.uid",
         "attributes": {
           "rendererBundleSha256": "3e8b50626fa66081ddc6f33437a51cb93d62051803d0ab965b548ff93b856ddb",
           "componentsSha256": "dece3189c6e2d4b32f5442859b162527e947b442b27503e859fdd708e8694cd0",
@@ -2096,8 +2096,8 @@
       },
       "source": {
         "provider": "ui-builder",
-        "revision": "cf45f0418a08d99bf3cffc3524584d32ccbe93dd",
-        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/cf45f0418a08d99bf3cffc3524584d32ccbe93dd/adaptive-uid-pilot/ui-builder/designs/wear-widgets-secondary.uid",
+        "revision": "7f8327eee3c53be9bb8102435bb5e972a6d1a4eb",
+        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/7f8327eee3c53be9bb8102435bb5e972a6d1a4eb/adaptive-uid-pilot/ui-builder/designs/wear-widgets-secondary.uid",
         "attributes": {
           "rendererBundleSha256": "3e8b50626fa66081ddc6f33437a51cb93d62051803d0ab965b548ff93b856ddb",
           "componentsSha256": "dece3189c6e2d4b32f5442859b162527e947b442b27503e859fdd708e8694cd0",
@@ -2129,8 +2129,8 @@
       },
       "source": {
         "provider": "ui-builder",
-        "revision": "cf45f0418a08d99bf3cffc3524584d32ccbe93dd",
-        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/cf45f0418a08d99bf3cffc3524584d32ccbe93dd/adaptive-uid-pilot/ui-builder/designs/sync-diagnostics.uid",
+        "revision": "7f8327eee3c53be9bb8102435bb5e972a6d1a4eb",
+        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/7f8327eee3c53be9bb8102435bb5e972a6d1a4eb/adaptive-uid-pilot/ui-builder/designs/sync-diagnostics.uid",
         "attributes": {
           "rendererBundleSha256": "3e8b50626fa66081ddc6f33437a51cb93d62051803d0ab965b548ff93b856ddb",
           "componentsSha256": "dece3189c6e2d4b32f5442859b162527e947b442b27503e859fdd708e8694cd0",
@@ -2162,8 +2162,8 @@
       },
       "source": {
         "provider": "ui-builder",
-        "revision": "cf45f0418a08d99bf3cffc3524584d32ccbe93dd",
-        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/cf45f0418a08d99bf3cffc3524584d32ccbe93dd/adaptive-uid-pilot/ui-builder/designs/sync-diagnostics.uid",
+        "revision": "7f8327eee3c53be9bb8102435bb5e972a6d1a4eb",
+        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/7f8327eee3c53be9bb8102435bb5e972a6d1a4eb/adaptive-uid-pilot/ui-builder/designs/sync-diagnostics.uid",
         "attributes": {
           "rendererBundleSha256": "3e8b50626fa66081ddc6f33437a51cb93d62051803d0ab965b548ff93b856ddb",
           "componentsSha256": "dece3189c6e2d4b32f5442859b162527e947b442b27503e859fdd708e8694cd0",
@@ -2195,8 +2195,8 @@
       },
       "source": {
         "provider": "ui-builder",
-        "revision": "cf45f0418a08d99bf3cffc3524584d32ccbe93dd",
-        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/cf45f0418a08d99bf3cffc3524584d32ccbe93dd/adaptive-uid-pilot/ui-builder/designs/sync-diagnostics.uid",
+        "revision": "7f8327eee3c53be9bb8102435bb5e972a6d1a4eb",
+        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/7f8327eee3c53be9bb8102435bb5e972a6d1a4eb/adaptive-uid-pilot/ui-builder/designs/sync-diagnostics.uid",
         "attributes": {
           "rendererBundleSha256": "3e8b50626fa66081ddc6f33437a51cb93d62051803d0ab965b548ff93b856ddb",
           "componentsSha256": "dece3189c6e2d4b32f5442859b162527e947b442b27503e859fdd708e8694cd0",
@@ -2228,8 +2228,8 @@
       },
       "source": {
         "provider": "ui-builder",
-        "revision": "cf45f0418a08d99bf3cffc3524584d32ccbe93dd",
-        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/cf45f0418a08d99bf3cffc3524584d32ccbe93dd/adaptive-uid-pilot/ui-builder/designs/sync-diagnostics.uid",
+        "revision": "7f8327eee3c53be9bb8102435bb5e972a6d1a4eb",
+        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/7f8327eee3c53be9bb8102435bb5e972a6d1a4eb/adaptive-uid-pilot/ui-builder/designs/sync-diagnostics.uid",
         "attributes": {
           "rendererBundleSha256": "3e8b50626fa66081ddc6f33437a51cb93d62051803d0ab965b548ff93b856ddb",
           "componentsSha256": "dece3189c6e2d4b32f5442859b162527e947b442b27503e859fdd708e8694cd0",
@@ -2261,8 +2261,8 @@
       },
       "source": {
         "provider": "ui-builder",
-        "revision": "cf45f0418a08d99bf3cffc3524584d32ccbe93dd",
-        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/cf45f0418a08d99bf3cffc3524584d32ccbe93dd/adaptive-uid-pilot/ui-builder/designs/sync-diagnostics.uid",
+        "revision": "7f8327eee3c53be9bb8102435bb5e972a6d1a4eb",
+        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/7f8327eee3c53be9bb8102435bb5e972a6d1a4eb/adaptive-uid-pilot/ui-builder/designs/sync-diagnostics.uid",
         "attributes": {
           "rendererBundleSha256": "3e8b50626fa66081ddc6f33437a51cb93d62051803d0ab965b548ff93b856ddb",
           "componentsSha256": "dece3189c6e2d4b32f5442859b162527e947b442b27503e859fdd708e8694cd0",
@@ -2294,8 +2294,8 @@
       },
       "source": {
         "provider": "ui-builder",
-        "revision": "cf45f0418a08d99bf3cffc3524584d32ccbe93dd",
-        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/cf45f0418a08d99bf3cffc3524584d32ccbe93dd/adaptive-uid-pilot/ui-builder/designs/sync-diagnostics.uid",
+        "revision": "7f8327eee3c53be9bb8102435bb5e972a6d1a4eb",
+        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/7f8327eee3c53be9bb8102435bb5e972a6d1a4eb/adaptive-uid-pilot/ui-builder/designs/sync-diagnostics.uid",
         "attributes": {
           "rendererBundleSha256": "3e8b50626fa66081ddc6f33437a51cb93d62051803d0ab965b548ff93b856ddb",
           "componentsSha256": "dece3189c6e2d4b32f5442859b162527e947b442b27503e859fdd708e8694cd0",
@@ -2327,8 +2327,8 @@
       },
       "source": {
         "provider": "ui-builder",
-        "revision": "cf45f0418a08d99bf3cffc3524584d32ccbe93dd",
-        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/cf45f0418a08d99bf3cffc3524584d32ccbe93dd/adaptive-uid-pilot/ui-builder/designs/sync-diagnostics-secondary.uid",
+        "revision": "7f8327eee3c53be9bb8102435bb5e972a6d1a4eb",
+        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/7f8327eee3c53be9bb8102435bb5e972a6d1a4eb/adaptive-uid-pilot/ui-builder/designs/sync-diagnostics-secondary.uid",
         "attributes": {
           "rendererBundleSha256": "3e8b50626fa66081ddc6f33437a51cb93d62051803d0ab965b548ff93b856ddb",
           "componentsSha256": "dece3189c6e2d4b32f5442859b162527e947b442b27503e859fdd708e8694cd0",
@@ -2360,8 +2360,8 @@
       },
       "source": {
         "provider": "ui-builder",
-        "revision": "cf45f0418a08d99bf3cffc3524584d32ccbe93dd",
-        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/cf45f0418a08d99bf3cffc3524584d32ccbe93dd/adaptive-uid-pilot/ui-builder/designs/sync-diagnostics-secondary.uid",
+        "revision": "7f8327eee3c53be9bb8102435bb5e972a6d1a4eb",
+        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/7f8327eee3c53be9bb8102435bb5e972a6d1a4eb/adaptive-uid-pilot/ui-builder/designs/sync-diagnostics-secondary.uid",
         "attributes": {
           "rendererBundleSha256": "3e8b50626fa66081ddc6f33437a51cb93d62051803d0ab965b548ff93b856ddb",
           "componentsSha256": "dece3189c6e2d4b32f5442859b162527e947b442b27503e859fdd708e8694cd0",
@@ -2393,8 +2393,8 @@
       },
       "source": {
         "provider": "ui-builder",
-        "revision": "cf45f0418a08d99bf3cffc3524584d32ccbe93dd",
-        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/cf45f0418a08d99bf3cffc3524584d32ccbe93dd/adaptive-uid-pilot/ui-builder/designs/logs.uid",
+        "revision": "7f8327eee3c53be9bb8102435bb5e972a6d1a4eb",
+        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/7f8327eee3c53be9bb8102435bb5e972a6d1a4eb/adaptive-uid-pilot/ui-builder/designs/logs.uid",
         "attributes": {
           "rendererBundleSha256": "3e8b50626fa66081ddc6f33437a51cb93d62051803d0ab965b548ff93b856ddb",
           "componentsSha256": "dece3189c6e2d4b32f5442859b162527e947b442b27503e859fdd708e8694cd0",
@@ -2426,8 +2426,8 @@
       },
       "source": {
         "provider": "ui-builder",
-        "revision": "cf45f0418a08d99bf3cffc3524584d32ccbe93dd",
-        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/cf45f0418a08d99bf3cffc3524584d32ccbe93dd/adaptive-uid-pilot/ui-builder/designs/logs.uid",
+        "revision": "7f8327eee3c53be9bb8102435bb5e972a6d1a4eb",
+        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/7f8327eee3c53be9bb8102435bb5e972a6d1a4eb/adaptive-uid-pilot/ui-builder/designs/logs.uid",
         "attributes": {
           "rendererBundleSha256": "3e8b50626fa66081ddc6f33437a51cb93d62051803d0ab965b548ff93b856ddb",
           "componentsSha256": "dece3189c6e2d4b32f5442859b162527e947b442b27503e859fdd708e8694cd0",
@@ -2459,8 +2459,8 @@
       },
       "source": {
         "provider": "ui-builder",
-        "revision": "cf45f0418a08d99bf3cffc3524584d32ccbe93dd",
-        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/cf45f0418a08d99bf3cffc3524584d32ccbe93dd/adaptive-uid-pilot/ui-builder/designs/logs.uid",
+        "revision": "7f8327eee3c53be9bb8102435bb5e972a6d1a4eb",
+        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/7f8327eee3c53be9bb8102435bb5e972a6d1a4eb/adaptive-uid-pilot/ui-builder/designs/logs.uid",
         "attributes": {
           "rendererBundleSha256": "3e8b50626fa66081ddc6f33437a51cb93d62051803d0ab965b548ff93b856ddb",
           "componentsSha256": "dece3189c6e2d4b32f5442859b162527e947b442b27503e859fdd708e8694cd0",
@@ -2492,8 +2492,8 @@
       },
       "source": {
         "provider": "ui-builder",
-        "revision": "cf45f0418a08d99bf3cffc3524584d32ccbe93dd",
-        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/cf45f0418a08d99bf3cffc3524584d32ccbe93dd/adaptive-uid-pilot/ui-builder/designs/logs.uid",
+        "revision": "7f8327eee3c53be9bb8102435bb5e972a6d1a4eb",
+        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/7f8327eee3c53be9bb8102435bb5e972a6d1a4eb/adaptive-uid-pilot/ui-builder/designs/logs.uid",
         "attributes": {
           "rendererBundleSha256": "3e8b50626fa66081ddc6f33437a51cb93d62051803d0ab965b548ff93b856ddb",
           "componentsSha256": "dece3189c6e2d4b32f5442859b162527e947b442b27503e859fdd708e8694cd0",
@@ -2525,8 +2525,8 @@
       },
       "source": {
         "provider": "ui-builder",
-        "revision": "cf45f0418a08d99bf3cffc3524584d32ccbe93dd",
-        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/cf45f0418a08d99bf3cffc3524584d32ccbe93dd/adaptive-uid-pilot/ui-builder/designs/logs.uid",
+        "revision": "7f8327eee3c53be9bb8102435bb5e972a6d1a4eb",
+        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/7f8327eee3c53be9bb8102435bb5e972a6d1a4eb/adaptive-uid-pilot/ui-builder/designs/logs.uid",
         "attributes": {
           "rendererBundleSha256": "3e8b50626fa66081ddc6f33437a51cb93d62051803d0ab965b548ff93b856ddb",
           "componentsSha256": "dece3189c6e2d4b32f5442859b162527e947b442b27503e859fdd708e8694cd0",
@@ -2558,8 +2558,8 @@
       },
       "source": {
         "provider": "ui-builder",
-        "revision": "cf45f0418a08d99bf3cffc3524584d32ccbe93dd",
-        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/cf45f0418a08d99bf3cffc3524584d32ccbe93dd/adaptive-uid-pilot/ui-builder/designs/logs.uid",
+        "revision": "7f8327eee3c53be9bb8102435bb5e972a6d1a4eb",
+        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/7f8327eee3c53be9bb8102435bb5e972a6d1a4eb/adaptive-uid-pilot/ui-builder/designs/logs.uid",
         "attributes": {
           "rendererBundleSha256": "3e8b50626fa66081ddc6f33437a51cb93d62051803d0ab965b548ff93b856ddb",
           "componentsSha256": "dece3189c6e2d4b32f5442859b162527e947b442b27503e859fdd708e8694cd0",
@@ -2591,8 +2591,8 @@
       },
       "source": {
         "provider": "ui-builder",
-        "revision": "cf45f0418a08d99bf3cffc3524584d32ccbe93dd",
-        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/cf45f0418a08d99bf3cffc3524584d32ccbe93dd/adaptive-uid-pilot/ui-builder/designs/logs-secondary.uid",
+        "revision": "7f8327eee3c53be9bb8102435bb5e972a6d1a4eb",
+        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/7f8327eee3c53be9bb8102435bb5e972a6d1a4eb/adaptive-uid-pilot/ui-builder/designs/logs-secondary.uid",
         "attributes": {
           "rendererBundleSha256": "3e8b50626fa66081ddc6f33437a51cb93d62051803d0ab965b548ff93b856ddb",
           "componentsSha256": "dece3189c6e2d4b32f5442859b162527e947b442b27503e859fdd708e8694cd0",
@@ -2624,8 +2624,8 @@
       },
       "source": {
         "provider": "ui-builder",
-        "revision": "cf45f0418a08d99bf3cffc3524584d32ccbe93dd",
-        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/cf45f0418a08d99bf3cffc3524584d32ccbe93dd/adaptive-uid-pilot/ui-builder/designs/logs-secondary.uid",
+        "revision": "7f8327eee3c53be9bb8102435bb5e972a6d1a4eb",
+        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/7f8327eee3c53be9bb8102435bb5e972a6d1a4eb/adaptive-uid-pilot/ui-builder/designs/logs-secondary.uid",
         "attributes": {
           "rendererBundleSha256": "3e8b50626fa66081ddc6f33437a51cb93d62051803d0ab965b548ff93b856ddb",
           "componentsSha256": "dece3189c6e2d4b32f5442859b162527e947b442b27503e859fdd708e8694cd0",
@@ -2657,8 +2657,8 @@
       },
       "source": {
         "provider": "ui-builder",
-        "revision": "cf45f0418a08d99bf3cffc3524584d32ccbe93dd",
-        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/cf45f0418a08d99bf3cffc3524584d32ccbe93dd/adaptive-uid-pilot/ui-builder/designs/card-history.uid",
+        "revision": "7f8327eee3c53be9bb8102435bb5e972a6d1a4eb",
+        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/7f8327eee3c53be9bb8102435bb5e972a6d1a4eb/adaptive-uid-pilot/ui-builder/designs/card-history.uid",
         "attributes": {
           "rendererBundleSha256": "3e8b50626fa66081ddc6f33437a51cb93d62051803d0ab965b548ff93b856ddb",
           "componentsSha256": "dece3189c6e2d4b32f5442859b162527e947b442b27503e859fdd708e8694cd0",
@@ -2690,8 +2690,8 @@
       },
       "source": {
         "provider": "ui-builder",
-        "revision": "cf45f0418a08d99bf3cffc3524584d32ccbe93dd",
-        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/cf45f0418a08d99bf3cffc3524584d32ccbe93dd/adaptive-uid-pilot/ui-builder/designs/card-history.uid",
+        "revision": "7f8327eee3c53be9bb8102435bb5e972a6d1a4eb",
+        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/7f8327eee3c53be9bb8102435bb5e972a6d1a4eb/adaptive-uid-pilot/ui-builder/designs/card-history.uid",
         "attributes": {
           "rendererBundleSha256": "3e8b50626fa66081ddc6f33437a51cb93d62051803d0ab965b548ff93b856ddb",
           "componentsSha256": "dece3189c6e2d4b32f5442859b162527e947b442b27503e859fdd708e8694cd0",
@@ -2723,8 +2723,8 @@
       },
       "source": {
         "provider": "ui-builder",
-        "revision": "cf45f0418a08d99bf3cffc3524584d32ccbe93dd",
-        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/cf45f0418a08d99bf3cffc3524584d32ccbe93dd/adaptive-uid-pilot/ui-builder/designs/card-history.uid",
+        "revision": "7f8327eee3c53be9bb8102435bb5e972a6d1a4eb",
+        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/7f8327eee3c53be9bb8102435bb5e972a6d1a4eb/adaptive-uid-pilot/ui-builder/designs/card-history.uid",
         "attributes": {
           "rendererBundleSha256": "3e8b50626fa66081ddc6f33437a51cb93d62051803d0ab965b548ff93b856ddb",
           "componentsSha256": "dece3189c6e2d4b32f5442859b162527e947b442b27503e859fdd708e8694cd0",
@@ -2756,8 +2756,8 @@
       },
       "source": {
         "provider": "ui-builder",
-        "revision": "cf45f0418a08d99bf3cffc3524584d32ccbe93dd",
-        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/cf45f0418a08d99bf3cffc3524584d32ccbe93dd/adaptive-uid-pilot/ui-builder/designs/card-history.uid",
+        "revision": "7f8327eee3c53be9bb8102435bb5e972a6d1a4eb",
+        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/7f8327eee3c53be9bb8102435bb5e972a6d1a4eb/adaptive-uid-pilot/ui-builder/designs/card-history.uid",
         "attributes": {
           "rendererBundleSha256": "3e8b50626fa66081ddc6f33437a51cb93d62051803d0ab965b548ff93b856ddb",
           "componentsSha256": "dece3189c6e2d4b32f5442859b162527e947b442b27503e859fdd708e8694cd0",
@@ -2789,8 +2789,8 @@
       },
       "source": {
         "provider": "ui-builder",
-        "revision": "cf45f0418a08d99bf3cffc3524584d32ccbe93dd",
-        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/cf45f0418a08d99bf3cffc3524584d32ccbe93dd/adaptive-uid-pilot/ui-builder/designs/card-history.uid",
+        "revision": "7f8327eee3c53be9bb8102435bb5e972a6d1a4eb",
+        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/7f8327eee3c53be9bb8102435bb5e972a6d1a4eb/adaptive-uid-pilot/ui-builder/designs/card-history.uid",
         "attributes": {
           "rendererBundleSha256": "3e8b50626fa66081ddc6f33437a51cb93d62051803d0ab965b548ff93b856ddb",
           "componentsSha256": "dece3189c6e2d4b32f5442859b162527e947b442b27503e859fdd708e8694cd0",
@@ -2822,8 +2822,8 @@
       },
       "source": {
         "provider": "ui-builder",
-        "revision": "cf45f0418a08d99bf3cffc3524584d32ccbe93dd",
-        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/cf45f0418a08d99bf3cffc3524584d32ccbe93dd/adaptive-uid-pilot/ui-builder/designs/card-history.uid",
+        "revision": "7f8327eee3c53be9bb8102435bb5e972a6d1a4eb",
+        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/7f8327eee3c53be9bb8102435bb5e972a6d1a4eb/adaptive-uid-pilot/ui-builder/designs/card-history.uid",
         "attributes": {
           "rendererBundleSha256": "3e8b50626fa66081ddc6f33437a51cb93d62051803d0ab965b548ff93b856ddb",
           "componentsSha256": "dece3189c6e2d4b32f5442859b162527e947b442b27503e859fdd708e8694cd0",
@@ -2855,8 +2855,8 @@
       },
       "source": {
         "provider": "ui-builder",
-        "revision": "cf45f0418a08d99bf3cffc3524584d32ccbe93dd",
-        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/cf45f0418a08d99bf3cffc3524584d32ccbe93dd/adaptive-uid-pilot/ui-builder/designs/card-history-secondary.uid",
+        "revision": "7f8327eee3c53be9bb8102435bb5e972a6d1a4eb",
+        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/7f8327eee3c53be9bb8102435bb5e972a6d1a4eb/adaptive-uid-pilot/ui-builder/designs/card-history-secondary.uid",
         "attributes": {
           "rendererBundleSha256": "3e8b50626fa66081ddc6f33437a51cb93d62051803d0ab965b548ff93b856ddb",
           "componentsSha256": "dece3189c6e2d4b32f5442859b162527e947b442b27503e859fdd708e8694cd0",
@@ -2888,8 +2888,8 @@
       },
       "source": {
         "provider": "ui-builder",
-        "revision": "cf45f0418a08d99bf3cffc3524584d32ccbe93dd",
-        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/cf45f0418a08d99bf3cffc3524584d32ccbe93dd/adaptive-uid-pilot/ui-builder/designs/card-history-secondary.uid",
+        "revision": "7f8327eee3c53be9bb8102435bb5e972a6d1a4eb",
+        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/7f8327eee3c53be9bb8102435bb5e972a6d1a4eb/adaptive-uid-pilot/ui-builder/designs/card-history-secondary.uid",
         "attributes": {
           "rendererBundleSha256": "3e8b50626fa66081ddc6f33437a51cb93d62051803d0ab965b548ff93b856ddb",
           "componentsSha256": "dece3189c6e2d4b32f5442859b162527e947b442b27503e859fdd708e8694cd0",
@@ -2921,8 +2921,8 @@
       },
       "source": {
         "provider": "ui-builder",
-        "revision": "cf45f0418a08d99bf3cffc3524584d32ccbe93dd",
-        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/cf45f0418a08d99bf3cffc3524584d32ccbe93dd/adaptive-uid-pilot/ui-builder/designs/connection-failure.uid",
+        "revision": "7f8327eee3c53be9bb8102435bb5e972a6d1a4eb",
+        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/7f8327eee3c53be9bb8102435bb5e972a6d1a4eb/adaptive-uid-pilot/ui-builder/designs/connection-failure.uid",
         "attributes": {
           "rendererBundleSha256": "3e8b50626fa66081ddc6f33437a51cb93d62051803d0ab965b548ff93b856ddb",
           "componentsSha256": "dece3189c6e2d4b32f5442859b162527e947b442b27503e859fdd708e8694cd0",
@@ -2954,8 +2954,8 @@
       },
       "source": {
         "provider": "ui-builder",
-        "revision": "cf45f0418a08d99bf3cffc3524584d32ccbe93dd",
-        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/cf45f0418a08d99bf3cffc3524584d32ccbe93dd/adaptive-uid-pilot/ui-builder/designs/connection-failure.uid",
+        "revision": "7f8327eee3c53be9bb8102435bb5e972a6d1a4eb",
+        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/7f8327eee3c53be9bb8102435bb5e972a6d1a4eb/adaptive-uid-pilot/ui-builder/designs/connection-failure.uid",
         "attributes": {
           "rendererBundleSha256": "3e8b50626fa66081ddc6f33437a51cb93d62051803d0ab965b548ff93b856ddb",
           "componentsSha256": "dece3189c6e2d4b32f5442859b162527e947b442b27503e859fdd708e8694cd0",
@@ -2987,8 +2987,8 @@
       },
       "source": {
         "provider": "ui-builder",
-        "revision": "cf45f0418a08d99bf3cffc3524584d32ccbe93dd",
-        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/cf45f0418a08d99bf3cffc3524584d32ccbe93dd/adaptive-uid-pilot/ui-builder/designs/connection-failure.uid",
+        "revision": "7f8327eee3c53be9bb8102435bb5e972a6d1a4eb",
+        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/7f8327eee3c53be9bb8102435bb5e972a6d1a4eb/adaptive-uid-pilot/ui-builder/designs/connection-failure.uid",
         "attributes": {
           "rendererBundleSha256": "3e8b50626fa66081ddc6f33437a51cb93d62051803d0ab965b548ff93b856ddb",
           "componentsSha256": "dece3189c6e2d4b32f5442859b162527e947b442b27503e859fdd708e8694cd0",
@@ -3020,8 +3020,8 @@
       },
       "source": {
         "provider": "ui-builder",
-        "revision": "cf45f0418a08d99bf3cffc3524584d32ccbe93dd",
-        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/cf45f0418a08d99bf3cffc3524584d32ccbe93dd/adaptive-uid-pilot/ui-builder/designs/connection-failure.uid",
+        "revision": "7f8327eee3c53be9bb8102435bb5e972a6d1a4eb",
+        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/7f8327eee3c53be9bb8102435bb5e972a6d1a4eb/adaptive-uid-pilot/ui-builder/designs/connection-failure.uid",
         "attributes": {
           "rendererBundleSha256": "3e8b50626fa66081ddc6f33437a51cb93d62051803d0ab965b548ff93b856ddb",
           "componentsSha256": "dece3189c6e2d4b32f5442859b162527e947b442b27503e859fdd708e8694cd0",
@@ -3053,8 +3053,8 @@
       },
       "source": {
         "provider": "ui-builder",
-        "revision": "cf45f0418a08d99bf3cffc3524584d32ccbe93dd",
-        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/cf45f0418a08d99bf3cffc3524584d32ccbe93dd/adaptive-uid-pilot/ui-builder/designs/dashboard-view-offline.uid",
+        "revision": "7f8327eee3c53be9bb8102435bb5e972a6d1a4eb",
+        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/7f8327eee3c53be9bb8102435bb5e972a6d1a4eb/adaptive-uid-pilot/ui-builder/designs/dashboard-view-offline.uid",
         "attributes": {
           "rendererBundleSha256": "3e8b50626fa66081ddc6f33437a51cb93d62051803d0ab965b548ff93b856ddb",
           "componentsSha256": "dece3189c6e2d4b32f5442859b162527e947b442b27503e859fdd708e8694cd0",
@@ -3086,8 +3086,8 @@
       },
       "source": {
         "provider": "ui-builder",
-        "revision": "cf45f0418a08d99bf3cffc3524584d32ccbe93dd",
-        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/cf45f0418a08d99bf3cffc3524584d32ccbe93dd/adaptive-uid-pilot/ui-builder/designs/dashboard-view-offline.uid",
+        "revision": "7f8327eee3c53be9bb8102435bb5e972a6d1a4eb",
+        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/7f8327eee3c53be9bb8102435bb5e972a6d1a4eb/adaptive-uid-pilot/ui-builder/designs/dashboard-view-offline.uid",
         "attributes": {
           "rendererBundleSha256": "3e8b50626fa66081ddc6f33437a51cb93d62051803d0ab965b548ff93b856ddb",
           "componentsSha256": "dece3189c6e2d4b32f5442859b162527e947b442b27503e859fdd708e8694cd0",
@@ -3119,8 +3119,8 @@
       },
       "source": {
         "provider": "ui-builder",
-        "revision": "cf45f0418a08d99bf3cffc3524584d32ccbe93dd",
-        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/cf45f0418a08d99bf3cffc3524584d32ccbe93dd/adaptive-uid-pilot/ui-builder/designs/dashboard-view-offline.uid",
+        "revision": "7f8327eee3c53be9bb8102435bb5e972a6d1a4eb",
+        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/7f8327eee3c53be9bb8102435bb5e972a6d1a4eb/adaptive-uid-pilot/ui-builder/designs/dashboard-view-offline.uid",
         "attributes": {
           "rendererBundleSha256": "3e8b50626fa66081ddc6f33437a51cb93d62051803d0ab965b548ff93b856ddb",
           "componentsSha256": "dece3189c6e2d4b32f5442859b162527e947b442b27503e859fdd708e8694cd0",
@@ -3152,8 +3152,8 @@
       },
       "source": {
         "provider": "ui-builder",
-        "revision": "cf45f0418a08d99bf3cffc3524584d32ccbe93dd",
-        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/cf45f0418a08d99bf3cffc3524584d32ccbe93dd/adaptive-uid-pilot/ui-builder/designs/dashboard-view-offline.uid",
+        "revision": "7f8327eee3c53be9bb8102435bb5e972a6d1a4eb",
+        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/7f8327eee3c53be9bb8102435bb5e972a6d1a4eb/adaptive-uid-pilot/ui-builder/designs/dashboard-view-offline.uid",
         "attributes": {
           "rendererBundleSha256": "3e8b50626fa66081ddc6f33437a51cb93d62051803d0ab965b548ff93b856ddb",
           "componentsSha256": "dece3189c6e2d4b32f5442859b162527e947b442b27503e859fdd708e8694cd0",
@@ -3185,8 +3185,8 @@
       },
       "source": {
         "provider": "ui-builder",
-        "revision": "cf45f0418a08d99bf3cffc3524584d32ccbe93dd",
-        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/cf45f0418a08d99bf3cffc3524584d32ccbe93dd/adaptive-uid-pilot/ui-builder/designs/choose-dashboards-empty.uid",
+        "revision": "7f8327eee3c53be9bb8102435bb5e972a6d1a4eb",
+        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/7f8327eee3c53be9bb8102435bb5e972a6d1a4eb/adaptive-uid-pilot/ui-builder/designs/choose-dashboards-empty.uid",
         "attributes": {
           "rendererBundleSha256": "3e8b50626fa66081ddc6f33437a51cb93d62051803d0ab965b548ff93b856ddb",
           "componentsSha256": "dece3189c6e2d4b32f5442859b162527e947b442b27503e859fdd708e8694cd0",
@@ -3218,8 +3218,8 @@
       },
       "source": {
         "provider": "ui-builder",
-        "revision": "cf45f0418a08d99bf3cffc3524584d32ccbe93dd",
-        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/cf45f0418a08d99bf3cffc3524584d32ccbe93dd/adaptive-uid-pilot/ui-builder/designs/choose-dashboards-empty.uid",
+        "revision": "7f8327eee3c53be9bb8102435bb5e972a6d1a4eb",
+        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/7f8327eee3c53be9bb8102435bb5e972a6d1a4eb/adaptive-uid-pilot/ui-builder/designs/choose-dashboards-empty.uid",
         "attributes": {
           "rendererBundleSha256": "3e8b50626fa66081ddc6f33437a51cb93d62051803d0ab965b548ff93b856ddb",
           "componentsSha256": "dece3189c6e2d4b32f5442859b162527e947b442b27503e859fdd708e8694cd0",
@@ -3251,8 +3251,8 @@
       },
       "source": {
         "provider": "ui-builder",
-        "revision": "cf45f0418a08d99bf3cffc3524584d32ccbe93dd",
-        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/cf45f0418a08d99bf3cffc3524584d32ccbe93dd/adaptive-uid-pilot/ui-builder/designs/choose-dashboards-empty.uid",
+        "revision": "7f8327eee3c53be9bb8102435bb5e972a6d1a4eb",
+        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/7f8327eee3c53be9bb8102435bb5e972a6d1a4eb/adaptive-uid-pilot/ui-builder/designs/choose-dashboards-empty.uid",
         "attributes": {
           "rendererBundleSha256": "3e8b50626fa66081ddc6f33437a51cb93d62051803d0ab965b548ff93b856ddb",
           "componentsSha256": "dece3189c6e2d4b32f5442859b162527e947b442b27503e859fdd708e8694cd0",
@@ -3284,8 +3284,8 @@
       },
       "source": {
         "provider": "ui-builder",
-        "revision": "cf45f0418a08d99bf3cffc3524584d32ccbe93dd",
-        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/cf45f0418a08d99bf3cffc3524584d32ccbe93dd/adaptive-uid-pilot/ui-builder/designs/choose-dashboards-empty.uid",
+        "revision": "7f8327eee3c53be9bb8102435bb5e972a6d1a4eb",
+        "uri": "https://github.com/yschimke/homeassistant-remotecompose/blob/7f8327eee3c53be9bb8102435bb5e972a6d1a4eb/adaptive-uid-pilot/ui-builder/designs/choose-dashboards-empty.uid",
         "attributes": {
           "rendererBundleSha256": "3e8b50626fa66081ddc6f33437a51cb93d62051803d0ab965b548ff93b856ddb",
           "componentsSha256": "dece3189c6e2d4b32f5442859b162527e947b442b27503e859fdd708e8694cd0",

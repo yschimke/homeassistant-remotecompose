@@ -12044,7 +12044,7 @@
     "ee.schimke.ha:rc-components (Terrazzo themes)"
   ],
   "renderer": "compose-preview 2.45.0",
-  "generatedAt": "2026-10-11T14:24:58.887Z",
+  "generatedAt": "2026-10-11T15:26:41.836Z",
   "display": {
     "hero": "Dashboard/Light"
   },
@@ -12063,7 +12063,7 @@
   "componentsFile": "components.json",
   "source": {
     "repo": "yschimke/homeassistant-remotecompose",
-    "ref": "cf45f0418a08d99bf3cffc3524584d32ccbe93dd",
+    "ref": "7f8327eee3c53be9bb8102435bb5e972a6d1a4eb",
     "module": ":previews"
   }
 }
