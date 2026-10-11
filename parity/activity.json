@@ -1,11 +1,19 @@
 {
   "schema": "compose-preview-activity/v1",
-  "generatedAt": "2026-10-11T02:05:04.856Z",
+  "generatedAt": "2026-10-11T02:37:09.911Z",
   "windowDays": 30,
   "code": {
     "repo": "yschimke/homeassistant-remotecompose",
     "ref": "main",
     "events": [
+      {
+        "sha": "408d1df4f91fc7b2176438da0297a60ca9325dda",
+        "subject": "fix(deps): update dependency ee.schimke.composeai:rc-player-compose to v2.5.0 (#724)",
+        "at": "2026-10-11T02:12:59Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
       {
         "sha": "dc068614763b9d81882e93ed86669491486e470d",
         "subject": "chore(deps): update yschimke/compose-ai-tools digest to c1f72f0 (#723)",
@@ -474,14 +482,6 @@
         "sha": "7e5f3ba1acc7a2737a32597e20ae5567c5b32bef",
         "subject": "chore(deps): update anthropics/claude-code-action action to v1.0.223 (#658)",
         "at": "2026-09-14T04:47:26Z",
-        "author": "renovate[bot]",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "f4d8ea8933a4da1c0e49bf4390bcadc2ebad8e96",
-        "subject": "chore(deps): update dependency dev.zacsweers.metro to v1.4.3 (#659)",
-        "at": "2026-09-14T04:23:13Z",
         "author": "renovate[bot]",
         "previewIds": [],
         "components": []
