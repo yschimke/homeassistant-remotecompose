@@ -144,6 +144,60 @@ class CatalogRenderTest {
     }
   }
 
+  /** A typed list of [CatalogEntity] objects, spelled as the document's nested wrappers. */
+  private fun entityList(vararg entities: Pair<String, String>) = buildJsonObject {
+    put("type", "list")
+    putJsonArray("values") {
+      for ((name, state) in entities) addJsonObject {
+        put("type", "object")
+        putJsonObject("fields") {
+          putJsonObject("name") {
+            put("type", "string")
+            put("value", name)
+          }
+          putJsonObject("state") {
+            put("type", "string")
+            put("value", state)
+          }
+        }
+      }
+    }
+  }
+
+  @Test
+  fun `native Remote Compose entities card and typed list adapter render the same pixels`() {
+    assertTypedParity(
+      "entities",
+      "homeassistant-remotecompose/entities",
+      JsonObject(
+        literals("title" to JsonPrimitive("Living room")) +
+          ("rows" to entityList("Kitchen" to "On", "Hallway" to "Off"))
+      ),
+    ) {
+      CatalogEntities(
+        "Living room",
+        listOf(CatalogEntity("Kitchen", "On"), CatalogEntity("Hallway", "Off")),
+      )
+    }
+  }
+
+  @Test
+  fun `native Remote Compose glance card and typed list adapter render the same pixels`() {
+    assertTypedParity(
+      "glance",
+      "homeassistant-remotecompose/glance",
+      JsonObject(
+        literals("title" to JsonPrimitive("Living room")) +
+          ("cells" to entityList("Kitchen" to "On", "Hallway" to "Off"))
+      ),
+    ) {
+      CatalogGlance(
+        "Living room",
+        listOf(CatalogEntity("Kitchen", "On"), CatalogEntity("Hallway", "Off")),
+      )
+    }
+  }
+
   @Test
   fun `actual app stack receives catalog slot children`() {
     val catalog = HomeAssistantCatalog(discoverCatalogComponents())

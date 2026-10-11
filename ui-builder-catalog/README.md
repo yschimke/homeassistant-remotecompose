@@ -11,6 +11,8 @@ with compiled calls:
 | `homeassistant-remotecompose/tile` | `CatalogTile` → `HaTile` | `name: String`, `state: String` |
 | `homeassistant-remotecompose/button` | `CatalogButton` → `HaButton` | `name: String`, `showName: Boolean` |
 | `homeassistant-remotecompose/entity-row` | `CatalogEntityRow` → `HaEntityRow` | `name: String`, `state: String` |
+| `homeassistant-remotecompose/entities` | `CatalogEntities` → `HaEntities` | `title: String`, `rows: List<CatalogEntity>` |
+| `homeassistant-remotecompose/glance` | `CatalogGlance` → `HaGlance` | `title: String`, `cells: List<CatalogEntity>` |
 | `homeassistant-remotecompose/vertical-stack` | `HaVerticalStack` | `content` slot |
 | `homeassistant-remotecompose/horizontal-stack` | `HaHorizontalStack` | `content` slot |
 
@@ -20,6 +22,15 @@ the non-scalar inputs with one fixed glyph and a read-only accent (no live `is_o
 library dependency) and keys the Remote Compose capture on its scalars, so an edit recaptures.
 Property references still point at the real `HaHeadingUiData` / `HaTileUiData` / `HaButtonUiData` /
 `HaEntityRowUiData` fields.
+
+The `entities` and `glance` cards take a list property of `CatalogEntity(name, state)` objects
+(`AdapterValueCodecs.list(CatalogEntityCodec)`, with `CatalogEntityCodec` an
+`AdapterValueCodecs.obj("ee.schimke.ha.catalog.CatalogEntity")`). A design stores them as nested
+wrappers, `{"type":"list","values":[{"type":"object","fields":{"name":…,"state":…}}]}`; `state`
+may be omitted and reads as empty, and an export writes
+`listOf(CatalogEntity(name = "Kitchen", state = "On"))`. Their property references point at the
+`CatalogEntitiesProps` / `CatalogGlanceProps` surfaces, because the real `HaEntitiesUiData` /
+`HaGlanceUiData` rows carry an icon and accent the codecs cannot. An empty `title` means no header.
 
 Check out compose-ai-tools and compose-ui-builder beside this repository at the immutable revisions
 in `.github/workflows/typed-catalog.yml`. The workflow validates the same source integration on
@@ -31,7 +42,8 @@ scripts/validate-typed-catalog.sh
 
 The script accepts optional tools and builder checkout paths. It scans current compiled app classes,
 generates only explicitly selected records, checks JSON readback and stale-record refusal, then
-compares the actual Android Remote Compose heading, tile, button and entity row with their typed
+compares the actual Android Remote Compose heading, tile, button, entity row, entities and glance
+cards with their typed
 adapters pixel for pixel and checks children delivered to the real vertical and horizontal stack
 slots. A separate builder process reads the resulting pair through
 `PublishedUiBuilderCatalog` with no app implementation on its classpath. PNG comparisons are saved
@@ -63,7 +75,7 @@ its live preview bundles are not replaced by this opt-in proof. General event ca
 omitted-property default/export parity retain the limits documented in the authoring API.
 
 The committed `evidence/` images show the direct native call and the typed adapter from the heading
-parity test; the tile, button and entity-row pairs (`native-<card>.png` / `typed-<card>.png`) are in
+parity test; the tile, button, entity-row, entities and glance pairs (`native-<card>.png` / `typed-<card>.png`) are in
 the CI render artifact. Regenerate them from `build/renders` after component changes; CI uploads current renders.
 
 ## Independent Android host and public publication

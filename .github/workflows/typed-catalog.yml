@@ -65,13 +65,15 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: yschimke/compose-ai-tools
-          ref: a1d116206a85f8a7c72f7175ca06283ca5fe8f61
+          # v2.49.0: list and object properties for typed adapters (compose-ai-tools#5865).
+          ref: 9513e93ceade788e05aa200466c87656e589f046
           path: compose-ai-tools
           persist-credentials: false
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: yschimke/compose-ui-builder
-          ref: 21ae10f037ce417507f93715fc316f72c88e3265
+          # main at compose-ui-builder#717: renders, edits and validates list and object properties.
+          ref: 84809b636d795a763d2264f95d2f0353bb0b5fa9
           path: compose-ui-builder
           persist-credentials: false
       - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
@@ -134,13 +136,15 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: yschimke/compose-ai-tools
-          ref: a1d116206a85f8a7c72f7175ca06283ca5fe8f61
+          # v2.49.0: list and object properties for typed adapters (compose-ai-tools#5865).
+          ref: 9513e93ceade788e05aa200466c87656e589f046
           path: compose-ai-tools
           persist-credentials: false
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: yschimke/compose-ui-builder
-          ref: 21ae10f037ce417507f93715fc316f72c88e3265
+          # main at compose-ui-builder#717: renders, edits and validates list and object properties.
+          ref: 84809b636d795a763d2264f95d2f0353bb0b5fa9
           path: compose-ui-builder
           persist-credentials: false
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093

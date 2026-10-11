@@ -24,6 +24,14 @@ fun discoverCatalogComponents(): ComponentRecordFile =
           "ee.schimke.ha.catalog.HomeAssistantCatalogKt",
           "CatalogEntityRow",
         ),
+        TypedAdapterDiscovery.Callable(
+          "ee.schimke.ha.catalog.HomeAssistantCatalogKt",
+          "CatalogEntities",
+        ),
+        TypedAdapterDiscovery.Callable(
+          "ee.schimke.ha.catalog.HomeAssistantCatalogKt",
+          "CatalogGlance",
+        ),
         TypedAdapterDiscovery.Callable("ee.schimke.ha.rc.ui.HaStackKt", "HaVerticalStack"),
         TypedAdapterDiscovery.Callable("ee.schimke.ha.rc.ui.HaStackKt", "HaHorizontalStack"),
       ),
