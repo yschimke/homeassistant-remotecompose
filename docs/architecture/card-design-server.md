@@ -120,11 +120,39 @@ in **row-count buckets** (1, 2, 3, 4, 6, 8) and hide unused rows with
 inbuilt converter. A data-list op in RC could later replace the buckets
 (spike S3).
 
+### Configuration shape
+
+Bindings carry values, and slot mapping carries entities, but some card
+config changes the **structure** a converter emits, and no binding can
+apply it after capture. For example, `HeadingCardConverter` bakes
+`heading_style`, `ClockCardConverter` bakes `clock_size`,
+`show_seconds` and whether `time_zone` is set, and
+`AlarmPanelCardConverter` bakes `states` and `show_keypad`.
+
+Each card type therefore declares a **shape function** in `ha-model`
+next to `slotsFor`: `fun shapeOf(card: CardConfig): String?`. It
+normalises only the structural keys (`heading_style=title`,
+`clock_size=large;seconds=1;tz=1`), sorted and stable. The shape is part
+of the `DesignKey`, and the pipeline captures one template for each
+shape listed in `matrix.json`. A config whose shape the manifest doesn't
+list, or a key the shape function doesn't recognise (`null`), falls
+through to the local converter. Two cards with different structures can
+never share bytes.
+
+Non-structural config values (gauge `min` / `max`, a time zone ID) are
+bindings, not shapes, or the matrix explodes.
+
 ### Which cards fit
 
 - **v1 (binding cards):** sensor, entity, tile, button, glance, area,
-  entities, alarm-panel, gauge, heading, clock.
-- **Later, once the schema grows:** thermostat, humidifier and light
+  entities, alarm-panel, heading, clock. Alarm-panel, heading and clock
+  need a [config shape](#configuration-shape).
+- **Later, once the schema grows:** gauge (`GaugeCardConverter` picks
+  the severity band from the current value and the configured
+  thresholds at capture time, so a template would freeze the
+  placeholder's colour; it needs bound thresholds plus an in-document
+  band pick, or an `s<N>.severity_int` binding), thermostat, humidifier
+  and light
   (arc fraction derived in-document from `numeric_state` plus
   `s<N>.min` / `s<N>.max`), media-control (split title and progress
   into bindings).
@@ -173,6 +201,7 @@ DesignKey(
   opProfile,       // bitmask: ANDROIDX | WIDGETS | EXPERIMENTAL | …
   sizeMode,        // wrap(widthDp range) | fixed(range of W×H)
   themeMode,       // host (ColorTheme / WearM3 / theme.* bindings) | baked(style, dark)
+  shape,           // normalised structural config, see "Configuration shape"
   bucket,          // row-count bucket, or 1
   schema,          // binding schema version, "1"
 )
@@ -227,7 +256,7 @@ read-only, cacheable and content-addressed.
 
 ```
 GET /designs/v1/manifest.json
-  → { schema: 1, generatedAt, minClient, ttlSeconds,
+  → { schema: 1, serial, generatedAt, expiresAt, minClient, ttlSeconds,
       designs: [ { key: DesignKey, sha256, bytes, slots, sizeRange,
                    catalogId, deprecated? } … ],
       variants: { "<surface>": ["default", "material", "modern"] },
@@ -245,6 +274,15 @@ GET /designs/v1/blobs/<sha256>.rc     (immutable, Cache-Control: max-age=3153600
   manifest. The manifest is signed (Ed25519) with a key whose public half
   ships in the app, so a compromised host or CDN can't push designs. A
   bad signature is treated like a network failure.
+- **Freshness.** A signature proves who wrote a manifest, not that it is
+  current: a compromised host could keep serving an older signed manifest
+  and hide later `revoked` flags. The signed body therefore carries a
+  monotonic `serial` and an `expiresAt` (for example 14 days after
+  `generatedAt`). The client stores the highest `serial` it has accepted
+  and rejects any manifest with a lower one. A manifest past `expiresAt`
+  doesn't count as a successful refresh: the client keeps rendering from
+  cache but keeps retrying, and after a grace period it stops using
+  remote designs and drops to inbuilt ones.
 - **Kill switch.** `minClient`, plus a `deprecated` / `revoked` flag on
   each design, lets us pull a broken design. The client then drops to its
   inbuilt copy.
@@ -351,7 +389,7 @@ with one task, `generateCardDesigns`:
 
 1. Enumerate the target matrix from a checked-in
    `card-designs/matrix.json`: card types × variants × surfaces ×
-   levels × buckets.
+   levels × shapes × buckets.
 2. For each target, capture with the target's `Profile`, size mode,
    theme mode and the design snapshot (slot IDs, placeholder values).
 3. Validate the result:
@@ -417,7 +455,7 @@ Each manifest entry gets a `catalogId` and appears in the
 | M6 | Wear: phone syncs blobs over the Data Layer, watch cache + inbuilt designs, wear-widget and wear-app targets | M3 |
 | M7 | Catalog: generated `Designs` group rendering shipped blobs | M2 |
 | M8 | Second variant (`modern`) end to end, plus the variant picker in settings | M3, M7 |
-| M9 | More cards: entities/glance buckets, gauge, alarm-panel, area, heading; the arc cards once `min`/`max` bindings exist | M1 |
+| M9 | More cards: entities/glance buckets, alarm-panel, area, heading (with config shapes); gauge once severity is bound or picked in-document; the arc cards once `min`/`max` bindings exist | M1 |
 
 ## Open questions
 
