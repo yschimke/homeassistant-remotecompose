@@ -1,6 +1,6 @@
 {
     "formatVersion": "compose-preview-history/v1",
-    "generatedFrom": "1d0e2aecbf2943b1f553e5da678eb963b02fdb08",
+    "generatedFrom": "4868b522749ea35b60116cc1d45c1b5b47c1acfc",
     "previews": {
         "app/ee.schimke.terrazzo.previews.CardDebugPreviewsKt.CardFlashPreview_Card flash on data change": {
             "path": "renders/app/CardFlashPreview_Card_flash_on_data_change-44b71c2b.gif",
@@ -4903,6 +4903,13 @@
             "path": "renders/previews/DashboardGithubTablet_dashboard_github_tablet-89194c99.png",
             "versions": [
                 {
+                    "blob": "323ea5f03d5e01dd652afa28158c387da8ac48bd",
+                    "commit": "4868b522749ea35b60116cc1d45c1b5b47c1acfc",
+                    "date": "2026-10-11T19:33:56Z",
+                    "sourceSha": "adc29b93",
+                    "commits": 1
+                },
+                {
                     "blob": "1bb334e6fa2193b604918489f37971b21e7903a7",
                     "commit": "10d4bf02ad497417701cc22108e23f68d4fb2910",
                     "date": "2026-10-11T15:05:28Z",
@@ -4952,7 +4959,7 @@
                     "commits": 1
                 }
             ],
-            "observations": 7,
+            "observations": 8,
             "unstable": false,
             "flapCount": 1
         },
