@@ -1,6 +1,6 @@
 {
     "formatVersion": "compose-preview-history/v1",
-    "generatedFrom": "3e3b42076ab884ab2dc7ca115368a4680958d5c0",
+    "generatedFrom": "3c80d97a7c4741c26a4904db13ff7ba961423f4a",
     "previews": {
         "app/ee.schimke.terrazzo.previews.CardDebugPreviewsKt.CardFlashPreview_Card flash on data change": {
             "path": "renders/app/CardFlashPreview_Card_flash_on_data_change-44b71c2b.gif",
@@ -4903,6 +4903,15 @@
             "path": "renders/previews/DashboardGithubTablet_dashboard_github_tablet-89194c99.png",
             "versions": [
                 {
+                    "blob": "765bd3d15a8c7e8df62d72addd0e425bd1963ea5",
+                    "commit": "3c80d97a7c4741c26a4904db13ff7ba961423f4a",
+                    "date": "2026-10-11T22:38:28Z",
+                    "sourceSha": "a01ddf97",
+                    "sinceCommit": "4894392cccf859ea6775665c19dd3b5d6d5dc51a",
+                    "commits": 2,
+                    "occurrences": 2
+                },
+                {
                     "blob": "1bb334e6fa2193b604918489f37971b21e7903a7",
                     "commit": "6e7caf19fc292d3c752f28e3f9b04c4fd923c3b1",
                     "date": "2026-10-11T21:30:42Z",
@@ -4910,13 +4919,6 @@
                     "sinceCommit": "2fde5cc2cf93899f1c9dfe93de1eca2d4df38200",
                     "commits": 3,
                     "occurrences": 3
-                },
-                {
-                    "blob": "765bd3d15a8c7e8df62d72addd0e425bd1963ea5",
-                    "commit": "4894392cccf859ea6775665c19dd3b5d6d5dc51a",
-                    "date": "2026-10-11T20:47:29Z",
-                    "sourceSha": "1b99b772",
-                    "commits": 1
                 },
                 {
                     "blob": "757cbef805bc28b8a826aafa9df34c29036597c7",
@@ -4963,9 +4965,9 @@
                     "commits": 1
                 }
             ],
-            "observations": 11,
+            "observations": 12,
             "unstable": true,
-            "flapCount": 3
+            "flapCount": 4
         },
         "previews/ee.schimke.ha.previews.DashboardPreviewsKt.DashboardMeshcoreMobile_dashboard meshcore — mobile": {
             "path": "renders/previews/DashboardMeshcoreMobile_dashboard_meshcore_mobile-30d7121c.png",
@@ -5218,20 +5220,20 @@
             "path": "renders/previews/DashboardSecurityTablet_dashboard_security_tablet-d081c9e6.png",
             "versions": [
                 {
+                    "blob": "3f3aed19429628699b34609493a964d3dc8ab5d9",
+                    "commit": "3c80d97a7c4741c26a4904db13ff7ba961423f4a",
+                    "date": "2026-10-11T22:38:28Z",
+                    "sourceSha": "a01ddf97",
+                    "sinceCommit": "2fde5cc2cf93899f1c9dfe93de1eca2d4df38200",
+                    "commits": 3,
+                    "occurrences": 3
+                },
+                {
                     "blob": "8ff936dfdbba9c9877dab4016835fd45f9c6dbd9",
                     "commit": "3e3b42076ab884ab2dc7ca115368a4680958d5c0",
                     "date": "2026-10-11T21:56:38Z",
                     "sourceSha": "6668c7a0",
                     "sinceCommit": "ee42d8e9e266e1350df42759ff3289ce0b40ed4c",
-                    "commits": 2,
-                    "occurrences": 2
-                },
-                {
-                    "blob": "3f3aed19429628699b34609493a964d3dc8ab5d9",
-                    "commit": "0d59dfcb6b7186435b6f922004b4544be6460141",
-                    "date": "2026-10-11T16:56:21Z",
-                    "sourceSha": "b493036e",
-                    "sinceCommit": "2fde5cc2cf93899f1c9dfe93de1eca2d4df38200",
                     "commits": 2,
                     "occurrences": 2
                 },
@@ -5257,9 +5259,9 @@
                     "commits": 1
                 }
             ],
-            "observations": 7,
+            "observations": 8,
             "unstable": true,
-            "flapCount": 2
+            "flapCount": 3
         },
         "previews/ee.schimke.ha.previews.GarageShutterCardPreviewsKt.Garage_Animation_Dark_garage-anim (dark)": {
             "path": "renders/previews/Garage_Animation_Dark_garage_anim_dark-419c85bc_closed.png",
