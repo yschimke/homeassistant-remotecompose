@@ -49,7 +49,8 @@ values**. The client fills those bindings from its own HA connection.
 A first end-to-end slice is in the codebase, with **one rendering path**: every templatable card
 (today: tile, entity, button, heading, glance, entities, alarm panel, gauge, clock, area, picture-entity,
 sensor, history-graph, statistic, line statistics-graph, thermostat, humidifier, vertical / horizontal stacks, grids,
-conditional and entity-filter cards and the unsupported placeholder) renders from a card design. The design comes from the server when one is
+conditional and entity-filter cards, markdown, picture, picture-glance and the unsupported
+placeholder) renders from a card design. The design comes from the server when one is
 cached for the card's key, and from the **local design library** otherwise. The library captures
 the same template from the app's own converters on first use and keeps it for the process, so with
 no server configured (the default) cards still take the design path, just with built-in designs.
@@ -108,6 +109,9 @@ Deliberate spike limits, each owned by a milestone below:
   Conditional and entity-filter cards render as the card they currently show
   (`CardConverter.designDelegate`, resolved by `CardDesignTemplates.designCard`): the client
   evaluates the conditions or the filter on live data and keys, binds and taps that card.
+  Markdown renders its content (tokens and Jinja alike) on the client; the template is keyed
+  on the rendered block structure and each block's text is `card.md.<i>`. Blocks with links or
+  images keep the converter, since their URLs can't be in a template.
 - **Generation properties** (`EntityDesign`) are what changes the look, per bound entity:
   `domain` (icon family, toggle chrome), `device_class` for sensors and binary sensors (icon,
   colour), the `icon` attribute and a config `icon` (`card_icon`). List cards prefix them with the

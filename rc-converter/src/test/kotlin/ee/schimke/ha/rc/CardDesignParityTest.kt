@@ -811,4 +811,33 @@ class CardDesignParityTest {
       listStates,
       dark = true,
     )
+
+  @Test
+  fun markdownWithStateTokens() =
+    assertParity(
+      "markdown",
+      card("markdown") {
+        put("title", "House notes")
+        put(
+          "content",
+          "## Climate\n\nIt is {{ states('sensor.temp') }} inside.\n\n- Kitchen light: {{ states('light.kitchen') }}\n- Fan: {{ states('switch.fan') }}\n\n---\n\nHave a nice day.",
+        )
+      },
+      listStates,
+      dark = false,
+    )
+
+  @Test
+  fun markdownJinjaDark() =
+    assertParity(
+      "markdown-jinja-dark",
+      card("markdown") {
+        put(
+          "content",
+          "{% if is_state('light.kitchen', 'on') %}# Lights on{% else %}# Lights off{% endif %}\n\nTemperature {{ states('sensor.temp') | float | round(0) }}",
+        )
+      },
+      listStates,
+      dark = true,
+    )
 }
