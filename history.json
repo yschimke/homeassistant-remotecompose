@@ -1,6 +1,6 @@
 {
     "formatVersion": "compose-preview-history/v1",
-    "generatedFrom": "3c80d97a7c4741c26a4904db13ff7ba961423f4a",
+    "generatedFrom": "1f7cfe89492c7453dbb659830bb9c7aa5895afed",
     "previews": {
         "app/ee.schimke.terrazzo.previews.CardDebugPreviewsKt.CardFlashPreview_Card flash on data change": {
             "path": "renders/app/CardFlashPreview_Card_flash_on_data_change-44b71c2b.gif",
@@ -4903,6 +4903,15 @@
             "path": "renders/previews/DashboardGithubTablet_dashboard_github_tablet-89194c99.png",
             "versions": [
                 {
+                    "blob": "1bb334e6fa2193b604918489f37971b21e7903a7",
+                    "commit": "1f7cfe89492c7453dbb659830bb9c7aa5895afed",
+                    "date": "2026-10-11T23:27:27Z",
+                    "sourceSha": "4aa43480",
+                    "sinceCommit": "2fde5cc2cf93899f1c9dfe93de1eca2d4df38200",
+                    "commits": 4,
+                    "occurrences": 4
+                },
+                {
                     "blob": "765bd3d15a8c7e8df62d72addd0e425bd1963ea5",
                     "commit": "3c80d97a7c4741c26a4904db13ff7ba961423f4a",
                     "date": "2026-10-11T22:38:28Z",
@@ -4910,15 +4919,6 @@
                     "sinceCommit": "4894392cccf859ea6775665c19dd3b5d6d5dc51a",
                     "commits": 2,
                     "occurrences": 2
-                },
-                {
-                    "blob": "1bb334e6fa2193b604918489f37971b21e7903a7",
-                    "commit": "6e7caf19fc292d3c752f28e3f9b04c4fd923c3b1",
-                    "date": "2026-10-11T21:30:42Z",
-                    "sourceSha": "66512387",
-                    "sinceCommit": "2fde5cc2cf93899f1c9dfe93de1eca2d4df38200",
-                    "commits": 3,
-                    "occurrences": 3
                 },
                 {
                     "blob": "757cbef805bc28b8a826aafa9df34c29036597c7",
@@ -4965,9 +4965,9 @@
                     "commits": 1
                 }
             ],
-            "observations": 12,
+            "observations": 13,
             "unstable": true,
-            "flapCount": 4
+            "flapCount": 5
         },
         "previews/ee.schimke.ha.previews.DashboardPreviewsKt.DashboardMeshcoreMobile_dashboard meshcore — mobile": {
             "path": "renders/previews/DashboardMeshcoreMobile_dashboard_meshcore_mobile-30d7121c.png",
