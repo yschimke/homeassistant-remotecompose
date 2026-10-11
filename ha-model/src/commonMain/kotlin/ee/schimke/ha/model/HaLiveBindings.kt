@@ -22,6 +22,16 @@ package ee.schimke.ha.model
 object HaLiveBindings {
 
   /**
+   * Whether the entity is in its active / on-like state ↔ `<entityId>.is_on`. Converters bake the
+   * initial accent from [HaEntity.isActive], so the pushed value must come from the same place: a
+   * heating thermostat, an open cover, a locked lock or a playing media player is active even
+   * though its state isn't literally `"on"`. Domains without an active concept fall back to `state
+   * == "on"`.
+   */
+  fun isOn(entityId: String, state: String): Boolean =
+    EntityState(entityId, state).toTyped().isActive ?: (state == "on")
+
+  /**
    * Parsed numeric form of an entity's primary state ↔ `<entityId>.numeric_state`. Gauges / arcs
    * bind this and compute their sweep in-document, so pushing the raw number keeps them live
    * without a re-encode. Non-numeric or non-finite states (e.g. `"on"`, `"unavailable"`) have no

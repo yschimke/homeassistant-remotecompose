@@ -1,6 +1,7 @@
 package ee.schimke.ha.rc
 
 import ee.schimke.ha.model.EntityState
+import ee.schimke.ha.model.HaLiveBindings
 import ee.schimke.ha.model.HaSnapshot
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -8,6 +9,38 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 
 class LiveBindingsMultiplatformTest {
+  @Test
+  fun isOnFollowsTheActiveStateConvertersBake() {
+    val cases =
+      mapOf(
+        ("climate.living_room" to "heat") to true,
+        ("climate.living_room" to "cool") to true,
+        ("climate.living_room" to "heat_cool") to true,
+        ("climate.living_room" to "off") to false,
+        ("climate.living_room" to "unavailable") to false,
+        ("cover.garage" to "open") to true,
+        ("cover.garage" to "closed") to false,
+        ("lock.front" to "locked") to true,
+        ("media_player.tv" to "playing") to true,
+        ("media_player.tv" to "paused") to false,
+        ("light.kitchen" to "on") to true,
+        ("switch.fan" to "off") to false,
+        // No active concept: falls back to the literal "on".
+        ("sensor.temp" to "21.5") to false,
+        ("scene.night" to "on") to true,
+      )
+    cases.forEach { (entity, expected) ->
+      val (id, state) = entity
+      assertEquals(expected, HaLiveBindings.isOn(id, state), "$id=$state")
+      val snapshot = HaSnapshot(states = mapOf(id to EntityState(id, state)))
+      assertEquals(
+        expected,
+        cardSnapshotBindings(setOf(id), snapshot).booleans["$id.is_on"],
+        "$id=$state",
+      )
+    }
+  }
+
   @Test
   fun decimalRoundingMatchesAuthoringOnEveryHost() {
     val cases =

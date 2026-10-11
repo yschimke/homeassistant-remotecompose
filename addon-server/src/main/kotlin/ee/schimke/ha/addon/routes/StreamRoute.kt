@@ -66,7 +66,10 @@ fun Routing.streamRoute(bridge: HaSupervisorBridge) {
                   // client knows by default; emitting it
                   // for everything is harmless — clients
                   // ignore unknown names.
-                  put("${state.entityId}.is_on", JsonPrimitive(state.state == "on"))
+                  put(
+                    "${state.entityId}.is_on",
+                    JsonPrimitive(HaLiveBindings.isOn(state.entityId, state.state)),
+                  )
                   // Domain-specific int / parsed-numeric keys so `RemoteStateLayout(RemoteInt, …)`
                   // chrome and gauge sweeps flip without a re-encode. Same harmless-extra policy as
                   // `is_on`.
@@ -137,7 +140,7 @@ private suspend fun handleClientFrame(
           buildJsonObject {
             for ((entityId, state) in bindings) {
               put("$entityId.state", JsonPrimitive(state.state))
-              put("$entityId.is_on", JsonPrimitive(state.state == "on"))
+              put("$entityId.is_on", JsonPrimitive(HaLiveBindings.isOn(entityId, state.state)))
               putStateInt(entityId, state.state)
               putNumericState(entityId, state.state)
             }
