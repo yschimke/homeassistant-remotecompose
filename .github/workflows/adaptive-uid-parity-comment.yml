@@ -17,7 +17,7 @@ permissions:
 # Contract: https://github.com/yschimke/design-parity/blob/main/docs/UID_PARITY_CI.md#pr-comment
 jobs:
   comment:
-    uses: yschimke/design-parity/.github/workflows/uid-parity-comment-reusable.yml@942427775737f56d29124d14741a6bb769977cf7
+    uses: yschimke/design-parity/.github/workflows/uid-parity-comment-reusable.yml@1ba6f3d95793550256721662e4f6775cb3d2f41e
     with:
       artifact-prefix: adaptive-uid
       # main's evidence comes from the pilot call inside Design Artifacts.
