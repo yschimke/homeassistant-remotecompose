@@ -28,7 +28,7 @@ enum class DesignSurface(val wire: String) {
 /**
  * Everything that picks one design document. Two cards that resolve to equal keys can share bytes.
  *
- * @property shape normalised structural config, from [CardDesignSlots.shapeOf]. Never a value.
+ * @property shape the card's generation properties ([DesignProperties.shape]). Never a value.
  * @property theme how colours are resolved. The spike only produces baked themes
  *   (`baked:<ThemeStyle>:<light|dark>`); `host` is reserved for designs whose colours come from
  *   `theme.*` bindings, `ColorTheme` or `WearM3`.

@@ -929,11 +929,15 @@ private fun CardSlot(
       CardSlotCacheKey(card, style, dark, captureEpoch, templateValues, dataSignature)
     }
   val context = androidx.compose.ui.platform.LocalContext.current
-  // A design template from the card design server, when one is configured and matches this card's
-  // shape and theme. Null — always, while the feature is off — captures locally as before.
+  // Templatable cards always render from a card design: the design server's when one is cached for
+  // this card's key, the local library's otherwise. The card's generation properties key the
+  // template, so value-only snapshot changes keep the same document and arrive as bindings.
   val cardDesigns = LocalCardDesigns.current
+  val designShape = registry.get(card.type)?.designProperties(card, snapshot)
   val template =
-    remember(card, cardDesigns, style, dark) { cardTemplateFor(card, cardDesigns, style, dark) }
+    remember(card, designShape, cardDesigns, style, dark) {
+      cardTemplateFor(context, card, snapshot, cardDesigns, style, dark, registry)
+    }
   val bitmapLoader =
     remember(context, baseUrl, imageLoader) {
       CoilBitmapLoader(context.applicationContext, imageLoader = imageLoader, baseUrl = baseUrl)

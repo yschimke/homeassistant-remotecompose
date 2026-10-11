@@ -12,7 +12,10 @@ import ee.schimke.ha.client.design.DesignStore
 import ee.schimke.ha.client.design.StoredManifest
 import ee.schimke.ha.design.DesignKey
 import ee.schimke.ha.model.CardConfig
+import ee.schimke.ha.model.HaSnapshot
+import ee.schimke.ha.rc.CardDesignLibrary
 import ee.schimke.ha.rc.CardDesignTemplates
+import ee.schimke.ha.rc.CardRegistry
 import ee.schimke.ha.rc.CardTemplatePlayback
 import ee.schimke.ha.rc.components.ThemeStyle
 import java.io.File
@@ -21,41 +24,43 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 
 /**
- * Card design templates the dashboard can play instead of capturing locally, keyed by [DesignKey].
- * Empty — the default, and always the case while no design server URL is configured — means every
- * card renders through the local converter exactly as before.
+ * Designs from the card design server, cached on disk by [CardDesignSync], keyed by [DesignKey].
+ * Empty while no server is configured. These only override: every templatable card renders from a
+ * design either way, falling back to the local [CardDesignLibrary] for keys the server doesn't
+ * cover. See [cardTemplateFor].
  */
 val LocalCardDesigns = staticCompositionLocalOf<Map<DesignKey, ByteArray>> { emptyMap() }
 
 /**
- * The designs cached on disk for [serverUrl]. With an empty URL this returns an empty map and does
- * no work. It never touches the network: [CardDesignSync]'s nightly job fills the cache, and a
- * newly synced design shows the next time the dashboard is composed.
+ * The server designs cached on disk for [serverUrl]. With an empty URL this returns an empty map
+ * and does no work. It never touches the network: [CardDesignSync]'s nightly job fills the cache,
+ * and a newly synced design shows the next time the dashboard is composed.
  */
 @Composable
 fun rememberCardDesigns(context: Context, serverUrl: String): Map<DesignKey, ByteArray> {
   if (serverUrl.isBlank()) return emptyMap()
   val repository = remember(serverUrl) { CardDesignSync.cachedRepository(context, serverUrl) }
   var designs by remember(serverUrl) { mutableStateOf<Map<DesignKey, ByteArray>>(emptyMap()) }
-  LaunchedEffect(repository) {
-    designs =
-      CardDesignTemplates.spikeKeys()
-        .mapNotNull { (key, _) -> repository.resolve(key)?.let { key to it.bytes } }
-        .toMap()
-  }
+  LaunchedEffect(repository) { designs = repository.resolveAll() }
   return designs
 }
 
-/** Template playback for [card] from [designs], or null to capture it locally. */
+/**
+ * The design [card] renders with: the server's design for its key when one is cached, otherwise the
+ * local library's. Null only when the card has no template shape (an unsupported type or config, or
+ * an entity not loaded yet); those cards capture through their converter.
+ */
 fun cardTemplateFor(
+  context: Context,
   card: CardConfig,
-  designs: Map<DesignKey, ByteArray>,
+  snapshot: HaSnapshot,
+  serverDesigns: Map<DesignKey, ByteArray>,
   style: ThemeStyle,
   dark: Boolean,
+  registry: CardRegistry,
 ): CardTemplatePlayback? {
-  if (designs.isEmpty()) return null
-  val key = CardDesignTemplates.keyFor(card, style, dark) ?: return null
-  val bytes = designs[key] ?: return null
+  val key = CardDesignTemplates.keyFor(card, snapshot, style, dark, registry) ?: return null
+  val bytes = serverDesigns[key] ?: CardDesignLibrary.template(context, key, registry)
   return CardDesignTemplates.playback(card, bytes)
 }
 

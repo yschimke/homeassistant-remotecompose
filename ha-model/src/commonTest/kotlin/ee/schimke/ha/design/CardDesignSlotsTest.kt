@@ -5,7 +5,6 @@ import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HaSnapshot
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -24,22 +23,6 @@ class CardDesignSlotsTest {
           for ((k, v) in extra) put(k, v)
         },
     )
-
-  @Test
-  fun shapeHoldsStructureOnly() {
-    assertEquals("domain=light", CardDesignSlots.shapeOf(tile("light.kitchen")))
-    assertEquals(
-      CardDesignSlots.shapeOf(tile("light.kitchen")),
-      CardDesignSlots.shapeOf(tile("light.hall", "name" to "Hall")),
-    )
-  }
-
-  @Test
-  fun unmodelledConfigHasNoShape() {
-    assertNull(CardDesignSlots.shapeOf(tile("light.kitchen", "icon" to "mdi:lamp")))
-    assertNull(CardDesignSlots.shapeOf(tile("climate.living")))
-    assertNull(CardDesignSlots.shapeOf(CardConfig(type = "gauge")))
-  }
 
   @Test
   fun slotBindingsAreKeyedBySlotAndAlwaysComplete() {

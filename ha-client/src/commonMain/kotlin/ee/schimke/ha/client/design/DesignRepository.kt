@@ -206,6 +206,23 @@ class DesignRepository(
     }
   }
 
+  /**
+   * Every cached remote design that is not revoked and still verifies, by key. Hosts that layer
+   * their own fallback underneath (a local design library) load this once and look keys up.
+   */
+  suspend fun resolveAll(): Map<DesignKey, ByteArray> {
+    val stored = store.readManifest() ?: return emptyMap()
+    return stored.manifest.designs
+      .filter { !it.revoked }
+      .mapNotNull { entry ->
+        store
+          .readBlob(entry.sha256)
+          ?.takeIf { Sha256.hex(it) == entry.sha256 }
+          ?.let { entry.key to it }
+      }
+      .toMap()
+  }
+
   /** Best design for [key], or null to fall through to the local converter. */
   suspend fun resolve(key: DesignKey): DesignBlob? {
     val stored = store.readManifest()

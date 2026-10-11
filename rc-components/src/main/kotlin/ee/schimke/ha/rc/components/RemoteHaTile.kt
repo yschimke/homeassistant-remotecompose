@@ -74,7 +74,7 @@ fun RemoteHaTile(data: HaTileData, modifier: RemoteModifier = RemoteModifier) {
         ) {
           RemoteIcon(
             imageVector = data.icon.toRemoteImageVector(),
-            contentDescription = data.name.rs,
+            contentDescription = data.nameBinding ?: data.name.rs,
             modifier = RemoteModifier.size(20.rdp),
             tint = accent,
           )
@@ -82,7 +82,7 @@ fun RemoteHaTile(data: HaTileData, modifier: RemoteModifier = RemoteModifier) {
       } else {
         RemoteIcon(
           imageVector = data.icon.toRemoteImageVector(),
-          contentDescription = data.name.rs,
+          contentDescription = data.nameBinding ?: data.name.rs,
           modifier = RemoteModifier.size(24.rdp),
           tint = accent,
         )
@@ -159,7 +159,7 @@ fun RemoteHaIconChip(data: HaTileData, modifier: RemoteModifier = RemoteModifier
   ) {
     RemoteIcon(
       imageVector = data.icon.toRemoteImageVector(),
-      contentDescription = data.name.rs,
+      contentDescription = data.nameBinding ?: data.name.rs,
       modifier = RemoteModifier.size(32.rdp),
       tint = accent,
     )

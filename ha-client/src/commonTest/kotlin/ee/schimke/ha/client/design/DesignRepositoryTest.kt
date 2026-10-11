@@ -157,6 +157,22 @@ class DesignRepositoryTest {
   }
 
   @Test
+  fun resolveAllReturnsVerifiedNonRevokedDesigns() = runTest {
+    val store = InMemoryDesignStore()
+    repo(FakeHost(published().files), store).refresh()
+    assertContentEquals(template, repo(null, store).resolveAll()[key])
+
+    val stored = assertNotNull(store.readManifest())
+    store.writeManifest(
+      stored.copy(
+        manifest =
+          stored.manifest.copy(designs = stored.manifest.designs.map { it.copy(revoked = true) })
+      )
+    )
+    assertEquals(emptyMap(), repo(null, store).resolveAll())
+  }
+
+  @Test
   fun olderSerialIsRejected() = runTest {
     val host = FakeHost(published(serial = 5).files)
     val store = InMemoryDesignStore()
