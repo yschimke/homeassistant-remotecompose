@@ -1,11 +1,27 @@
 {
   "schema": "compose-preview-activity/v1",
-  "generatedAt": "2026-10-11T19:32:50.842Z",
+  "generatedAt": "2026-10-11T21:05:53.337Z",
   "windowDays": 30,
   "code": {
     "repo": "yschimke/homeassistant-remotecompose",
     "ref": "main",
     "events": [
+      {
+        "sha": "1f95279b9bb665291d8f51c084176c329893c754",
+        "subject": "fix(deps): update compose-ai-tools (#744)",
+        "at": "2026-10-11T20:19:42Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "adc29b93fa050cf911044a57fc12d157a40c7384",
+        "subject": "fix: design server keeps the previous manifest until new blobs arrive, re-checks periodically (#745)",
+        "at": "2026-10-11T20:24:11+01:00",
+        "author": "Yuri Schimke",
+        "previewIds": [],
+        "components": []
+      },
       {
         "sha": "9362f7c62ea2dc34fb312d6a88d4e4bedfb5b0ec",
         "subject": "chore(deps): update compose-ai-tools (#743)",
@@ -466,22 +482,6 @@
         "sha": "1f32a2fb03b7e24d20d3686fb9139583332087db",
         "subject": "chore(deps): update gradle to v9.8.0 (#688)",
         "at": "2026-09-28T05:11:08Z",
-        "author": "renovate[bot]",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "ee0071e5425edcdf871b5c997defe360321dea0c",
-        "subject": "fix(deps): update androidx-wear to v1.7.0 (#689)",
-        "at": "2026-09-28T03:46:30Z",
-        "author": "renovate[bot]",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "6b32adc9e88410f9de0c234093c454eb53813848",
-        "subject": "fix(deps): update dependency org.jetbrains:markdown to v0.7.15 (#686)",
-        "at": "2026-09-28T03:24:17Z",
         "author": "renovate[bot]",
         "previewIds": [],
         "components": []
