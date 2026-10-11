@@ -175,6 +175,23 @@ class DesignRepository(
           val bytes = runCatching { fetchBlob(baseUrl, entry) }.getOrNull() ?: continue
           store.writeBlob(entry.sha256, bytes)
         }
+        // Only switch to the new manifest once every design it lists is on disk. Otherwise keep
+        // the previous one, whose verified blobs still serve as the stale fallback — but apply the
+        // new manifest's revocations to it, so a kill switch never waits on an unrelated download.
+        if (manifest.designs.any { !it.revoked && store.readBlob(it.sha256) == null }) {
+          if (stored != null) {
+            val revokedKeys = manifest.designs.filter { it.revoked }.map { it.key }.toSet()
+            if (revokedKeys.isNotEmpty()) {
+              val designs =
+                stored.manifest.designs.map {
+                  if (it.key in revokedKeys) it.copy(revoked = true) else it
+                }
+              store.writeManifest(stored.copy(manifest = stored.manifest.copy(designs = designs)))
+            }
+          }
+          recordFailure(now)
+          return RefreshResult.Failed
+        }
         store.writeManifest(
           StoredManifest(
             manifest = manifest,
