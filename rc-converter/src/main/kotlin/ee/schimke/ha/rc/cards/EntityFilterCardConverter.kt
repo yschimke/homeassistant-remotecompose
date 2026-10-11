@@ -4,6 +4,7 @@ import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.runtime.Composable
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
+import ee.schimke.ha.model.HaLiveBindings
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.CardConverter
 import kotlinx.serialization.json.JsonArray
@@ -50,7 +51,12 @@ class EntityFilterCardConverter : CardConverter {
   }
 }
 
-private fun filteredEntities(card: CardConfig, snapshot: HaSnapshot): List<String> {
+/**
+ * The entities an `entity-filter` card shows. Without a `state_filter`, that is the active ones, by
+ * the same [HaLiveBindings.isOn] rule tiles use for their accent, so a locked lock or a heating
+ * thermostat is listed just as a light that is on is.
+ */
+internal fun filteredEntities(card: CardConfig, snapshot: HaSnapshot): List<String> {
   val arr = card.raw["entities"] as? JsonArray ?: return emptyList()
   val filters = (card.raw["state_filter"] as? JsonArray)?.toList() ?: emptyList()
   return arr
@@ -63,8 +69,7 @@ private fun filteredEntities(card: CardConfig, snapshot: HaSnapshot): List<Strin
     }
     .filter { id ->
       val state = snapshot.states[id]?.state ?: return@filter false
-      if (filters.isEmpty()) state == "on" || state == "open"
-      else filters.any { matches(state, it) }
+      if (filters.isEmpty()) HaLiveBindings.isOn(id, state) else filters.any { matches(state, it) }
     }
 }
 
