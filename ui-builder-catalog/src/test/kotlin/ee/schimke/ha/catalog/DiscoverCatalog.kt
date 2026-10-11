@@ -12,7 +12,20 @@ fun discoverCatalogComponents(): ComponentRecordFile =
           "ee.schimke.ha.catalog.HomeAssistantCatalogKt",
           "CatalogHeading",
         ),
+        TypedAdapterDiscovery.Callable(
+          "ee.schimke.ha.catalog.HomeAssistantCatalogKt",
+          "CatalogTile",
+        ),
+        TypedAdapterDiscovery.Callable(
+          "ee.schimke.ha.catalog.HomeAssistantCatalogKt",
+          "CatalogButton",
+        ),
+        TypedAdapterDiscovery.Callable(
+          "ee.schimke.ha.catalog.HomeAssistantCatalogKt",
+          "CatalogEntityRow",
+        ),
         TypedAdapterDiscovery.Callable("ee.schimke.ha.rc.ui.HaStackKt", "HaVerticalStack"),
+        TypedAdapterDiscovery.Callable("ee.schimke.ha.rc.ui.HaStackKt", "HaHorizontalStack"),
       ),
     )
     .let { records ->
