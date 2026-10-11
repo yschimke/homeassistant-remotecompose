@@ -1,11 +1,19 @@
 {
   "schema": "compose-preview-activity/v1",
-  "generatedAt": "2026-10-11T00:47:08.841Z",
+  "generatedAt": "2026-10-11T01:30:12.717Z",
   "windowDays": 30,
   "code": {
     "repo": "yschimke/homeassistant-remotecompose",
     "ref": "main",
     "events": [
+      {
+        "sha": "8e98e5903c65fba0da880b2654fba17eabb65d4b",
+        "subject": "chore(deps): update yschimke/compose-ai-tools digest to 8fdb40d (#722)",
+        "at": "2026-10-11T00:49:23Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
       {
         "sha": "af9efb1c94632e6b0d3666125e51dfbf4155d4d4",
         "subject": "chore(deps): update compose-ai-tools (#716)",
@@ -474,14 +482,6 @@
         "sha": "c1c15c0ab43ba3b17f25874c6b3aa2fc60a431e2",
         "subject": "fix(deps): update androidx-compose (#661)",
         "at": "2026-09-14T03:58:52Z",
-        "author": "renovate[bot]",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "4db3fd34420f0b1e7d713eb0b026f4ee41cce8ca",
-        "subject": "fix(deps): update kotlin to v2.4.20 (#662)",
-        "at": "2026-09-14T03:58:49Z",
         "author": "renovate[bot]",
         "previewIds": [],
         "components": []
