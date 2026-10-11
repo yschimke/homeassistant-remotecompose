@@ -146,6 +146,312 @@
       "variant": ""
     },
     {
+      "annotatedBasename": "DashboardGithubMobile_dashboard_github_mobile-8f04a7c1.a11y.png",
+      "cleanBasename": "DashboardGithubMobile_dashboard_github_mobile-8f04a7c1.png",
+      "findings": [
+        {
+          "boundsInScreen": "64,1194,316,1241",
+          "level": "ERROR",
+          "message": "This item may not have a label readable by screen readers.",
+          "type": "SpeakableTextPresentCheck",
+          "viewDescription": "android.widget.Button"
+        },
+        {
+          "boundsInScreen": "327,1194,579,1320",
+          "level": "ERROR",
+          "message": "This item may not have a label readable by screen readers.",
+          "type": "SpeakableTextPresentCheck",
+          "viewDescription": "android.widget.Button"
+        },
+        {
+          "boundsInScreen": "590,1194,842,1320",
+          "level": "ERROR",
+          "message": "This item may not have a label readable by screen readers.",
+          "type": "SpeakableTextPresentCheck",
+          "viewDescription": "android.widget.Button"
+        },
+        {
+          "boundsInScreen": "64,1241,316,1367",
+          "level": "ERROR",
+          "message": "This item may not have a label readable by screen readers.",
+          "type": "SpeakableTextPresentCheck",
+          "viewDescription": "android.widget.Button"
+        },
+        {
+          "boundsInScreen": "64,2559,316,2606",
+          "level": "ERROR",
+          "message": "This item may not have a label readable by screen readers.",
+          "type": "SpeakableTextPresentCheck",
+          "viewDescription": "android.widget.Button"
+        },
+        {
+          "boundsInScreen": "327,2559,579,2606",
+          "level": "ERROR",
+          "message": "This item may not have a label readable by screen readers.",
+          "type": "SpeakableTextPresentCheck",
+          "viewDescription": "android.widget.Button"
+        },
+        {
+          "boundsInScreen": "590,2559,842,2606",
+          "level": "ERROR",
+          "message": "This item may not have a label readable by screen readers.",
+          "type": "SpeakableTextPresentCheck",
+          "viewDescription": "android.widget.Button"
+        },
+        {
+          "boundsInScreen": "64,2606,316,2732",
+          "level": "ERROR",
+          "message": "This item may not have a label readable by screen readers.",
+          "type": "SpeakableTextPresentCheck",
+          "viewDescription": "android.widget.Button"
+        },
+        {
+          "boundsInScreen": "327,2606,579,2732",
+          "level": "ERROR",
+          "message": "This item may not have a label readable by screen readers.",
+          "type": "SpeakableTextPresentCheck",
+          "viewDescription": "android.widget.Button"
+        },
+        {
+          "boundsInScreen": "590,2606,842,2732",
+          "level": "ERROR",
+          "message": "This item may not have a label readable by screen readers.",
+          "type": "SpeakableTextPresentCheck",
+          "viewDescription": "android.widget.Button"
+        },
+        {
+          "boundsInScreen": "64,3924,316,3971",
+          "level": "ERROR",
+          "message": "This item may not have a label readable by screen readers.",
+          "type": "SpeakableTextPresentCheck",
+          "viewDescription": "android.widget.Button"
+        },
+        {
+          "boundsInScreen": "327,3924,579,3971",
+          "level": "ERROR",
+          "message": "This item may not have a label readable by screen readers.",
+          "type": "SpeakableTextPresentCheck",
+          "viewDescription": "android.widget.Button"
+        },
+        {
+          "boundsInScreen": "590,3924,842,4050",
+          "level": "ERROR",
+          "message": "This item may not have a label readable by screen readers.",
+          "type": "SpeakableTextPresentCheck",
+          "viewDescription": "android.widget.Button"
+        },
+        {
+          "boundsInScreen": "64,3971,316,4097",
+          "level": "ERROR",
+          "message": "This item may not have a label readable by screen readers.",
+          "type": "SpeakableTextPresentCheck",
+          "viewDescription": "android.widget.Button"
+        },
+        {
+          "boundsInScreen": "327,3971,579,4097",
+          "level": "ERROR",
+          "message": "This item may not have a label readable by screen readers.",
+          "type": "SpeakableTextPresentCheck",
+          "viewDescription": "android.widget.Button"
+        },
+        {
+          "boundsInScreen": "64,1107,370,1193",
+          "level": "ERROR",
+          "message": "This item's height is 33dp. Consider making the height of this touch target 48dp or larger.",
+          "type": "TouchTargetSizeCheck",
+          "viewDescription": "android.widget.Button"
+        },
+        {
+          "boundsInScreen": "64,1194,316,1241",
+          "level": "ERROR",
+          "message": "This item's height is 18dp. Consider making the height of this touch target 48dp or larger.",
+          "type": "TouchTargetSizeCheck",
+          "viewDescription": "android.widget.Button"
+        },
+        {
+          "boundsInScreen": "64,1370,1015,1486",
+          "level": "ERROR",
+          "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
+          "type": "TouchTargetSizeCheck",
+          "viewDescription": "android.view.View"
+        },
+        {
+          "boundsInScreen": "64,1486,1015,1602",
+          "level": "ERROR",
+          "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
+          "type": "TouchTargetSizeCheck",
+          "viewDescription": "android.view.View"
+        },
+        {
+          "boundsInScreen": "64,1853,1015,1969",
+          "level": "ERROR",
+          "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
+          "type": "TouchTargetSizeCheck",
+          "viewDescription": "android.view.View"
+        },
+        {
+          "boundsInScreen": "64,1969,1015,2085",
+          "level": "ERROR",
+          "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
+          "type": "TouchTargetSizeCheck",
+          "viewDescription": "android.view.View"
+        },
+        {
+          "boundsInScreen": "64,2085,1015,2201",
+          "level": "ERROR",
+          "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
+          "type": "TouchTargetSizeCheck",
+          "viewDescription": "android.view.View"
+        },
+        {
+          "boundsInScreen": "64,2472,369,2558",
+          "level": "ERROR",
+          "message": "This item's height is 33dp. Consider making the height of this touch target 48dp or larger.",
+          "type": "TouchTargetSizeCheck",
+          "viewDescription": "android.widget.Button"
+        },
+        {
+          "boundsInScreen": "64,2559,316,2606",
+          "level": "ERROR",
+          "message": "This item's height is 18dp. Consider making the height of this touch target 48dp or larger.",
+          "type": "TouchTargetSizeCheck",
+          "viewDescription": "android.widget.Button"
+        },
+        {
+          "boundsInScreen": "327,2559,579,2606",
+          "level": "ERROR",
+          "message": "This item's height is 18dp. Consider making the height of this touch target 48dp or larger.",
+          "type": "TouchTargetSizeCheck",
+          "viewDescription": "android.widget.Button"
+        },
+        {
+          "boundsInScreen": "590,2559,842,2606",
+          "level": "ERROR",
+          "message": "This item's height is 18dp. Consider making the height of this touch target 48dp or larger.",
+          "type": "TouchTargetSizeCheck",
+          "viewDescription": "android.widget.Button"
+        },
+        {
+          "boundsInScreen": "64,2735,1015,2851",
+          "level": "ERROR",
+          "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
+          "type": "TouchTargetSizeCheck",
+          "viewDescription": "android.view.View"
+        },
+        {
+          "boundsInScreen": "64,2851,1015,2967",
+          "level": "ERROR",
+          "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
+          "type": "TouchTargetSizeCheck",
+          "viewDescription": "android.view.View"
+        },
+        {
+          "boundsInScreen": "64,3218,1015,3334",
+          "level": "ERROR",
+          "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
+          "type": "TouchTargetSizeCheck",
+          "viewDescription": "android.view.View"
+        },
+        {
+          "boundsInScreen": "64,3334,1015,3450",
+          "level": "ERROR",
+          "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
+          "type": "TouchTargetSizeCheck",
+          "viewDescription": "android.view.View"
+        },
+        {
+          "boundsInScreen": "64,3450,1015,3566",
+          "level": "ERROR",
+          "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
+          "type": "TouchTargetSizeCheck",
+          "viewDescription": "android.view.View"
+        },
+        {
+          "boundsInScreen": "64,3924,316,3971",
+          "level": "ERROR",
+          "message": "This item's height is 18dp. Consider making the height of this touch target 48dp or larger.",
+          "type": "TouchTargetSizeCheck",
+          "viewDescription": "android.widget.Button"
+        },
+        {
+          "boundsInScreen": "327,3924,579,3971",
+          "level": "ERROR",
+          "message": "This item's height is 18dp. Consider making the height of this touch target 48dp or larger.",
+          "type": "TouchTargetSizeCheck",
+          "viewDescription": "android.widget.Button"
+        },
+        {
+          "boundsInScreen": "64,4100,1015,4216",
+          "level": "ERROR",
+          "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
+          "type": "TouchTargetSizeCheck",
+          "viewDescription": "android.view.View"
+        },
+        {
+          "boundsInScreen": "64,4216,1015,4332",
+          "level": "ERROR",
+          "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
+          "type": "TouchTargetSizeCheck",
+          "viewDescription": "android.view.View"
+        },
+        {
+          "boundsInScreen": "64,4583,1015,4699",
+          "level": "ERROR",
+          "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
+          "type": "TouchTargetSizeCheck",
+          "viewDescription": "android.view.View"
+        },
+        {
+          "boundsInScreen": "64,1770,406,1810",
+          "level": "INFO",
+          "message": "This non-clickable item's speakable text: \"no recent commit data\" is identical to that of 2 other item(s).",
+          "type": "DuplicateSpeakableTextCheck",
+          "viewDescription": "android.widget.TextView"
+        },
+        {
+          "boundsInScreen": "64,3837,622,3963",
+          "level": "WARNING",
+          "message": "This clickable item's speakable text: \"homeassistant-remotecompose\" is identical to that of 1 other item(s).",
+          "type": "DuplicateSpeakableTextCheck",
+          "viewDescription": "android.widget.Button"
+        },
+        {
+          "boundsInScreen": "69,587,218,621",
+          "level": "INFO",
+          "message": "This non-clickable item's speakable text: \"No samples\" is identical to that of 3 other item(s).",
+          "type": "DuplicateSpeakableTextCheck",
+          "viewDescription": "android.widget.TextView"
+        },
+        {
+          "boundsInScreen": "64,1107,370,1193",
+          "level": "WARNING",
+          "message": "This clickable item's speakable text: \"meshcore-mobile\" is identical to that of 1 other item(s).",
+          "type": "DuplicateSpeakableTextCheck",
+          "viewDescription": "android.widget.Button"
+        },
+        {
+          "boundsInScreen": "916,536,1009,570",
+          "level": "INFO",
+          "message": "This non-clickable item's speakable text: \"no data\" is identical to that of 3 other item(s).",
+          "type": "DuplicateSpeakableTextCheck",
+          "viewDescription": "android.widget.TextView"
+        },
+        {
+          "boundsInScreen": "64,2472,369,2558",
+          "level": "WARNING",
+          "message": "This clickable item's speakable text: \"compose-ai-tools\" is identical to that of 1 other item(s).",
+          "type": "DuplicateSpeakableTextCheck",
+          "viewDescription": "android.widget.Button"
+        }
+      ],
+      "functionName": "DashboardGithubMobile",
+      "module": "previews",
+      "previewId": "ee.schimke.ha.previews.DashboardPreviewsKt.DashboardGithubMobile_dashboard github \u2014 mobile",
+      "rendersDir": "previews",
+      "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/DashboardPreviews.kt",
+      "variant": ""
+    },
+    {
       "annotatedBasename": "DashboardGithubTablet_dashboard_github_tablet-89194c99.a11y.png",
       "cleanBasename": "DashboardGithubTablet_dashboard_github_tablet-89194c99.png",
       "findings": [
@@ -1063,10 +1369,6 @@
     {
       "module": "previews",
       "previewId": "ee.schimke.ha.previews.DashboardPreviewsKt.DashboardEnergyTablet_dashboard energy \u2014 tablet"
-    },
-    {
-      "module": "previews",
-      "previewId": "ee.schimke.ha.previews.DashboardPreviewsKt.DashboardGithubMobile_dashboard github \u2014 mobile"
     },
     {
       "module": "previews",
