@@ -1,11 +1,59 @@
 {
   "schema": "compose-preview-activity/v1",
-  "generatedAt": "2026-10-11T13:20:51.359Z",
+  "generatedAt": "2026-10-11T14:25:02.129Z",
   "windowDays": 30,
   "code": {
     "repo": "yschimke/homeassistant-remotecompose",
     "ref": "main",
     "events": [
+      {
+        "sha": "cf45f0418a08d99bf3cffc3524584d32ccbe93dd",
+        "subject": "chore(deps): update compose-ai-tools (#725)",
+        "at": "2026-10-11T14:25:40+01:00",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "c73fb5d933524d368ba94a3bbf14518f70ad2ef3",
+        "subject": "feat: widen the typed catalog with tile, button, entity row and horizontal stack (#732)",
+        "at": "2026-10-11T14:25:28+01:00",
+        "author": "Yuri Schimke",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "dc167af5347c3622a0c3dd463aa3485a09ecff5c",
+        "subject": "feat: play cards and previews with the CMP Remote Compose player (#731)",
+        "at": "2026-10-11T14:25:14+01:00",
+        "author": "Yuri Schimke",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "ce5b00b81b5ef0bfd989495cb38fe857868ce2b3",
+        "subject": "ci: run the UID design audit on CLI 2.45.0 (#730)",
+        "at": "2026-10-11T13:42:31+01:00",
+        "author": "Yuri Schimke",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "ac996af5a48fabd033fa411f931ae1532685b513",
+        "subject": "ci: skip the heavy CI lanes on release-please PRs (#729)",
+        "at": "2026-10-11T13:22:18+01:00",
+        "author": "Yuri Schimke",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "d41ca89e0b38a48d7a9b06f67f50418b038b5b51",
+        "subject": "ci: pin the UID parity comment workflow to design-parity#553 (#728)",
+        "at": "2026-10-11T13:14:27+01:00",
+        "author": "Yuri Schimke",
+        "previewIds": [],
+        "components": []
+      },
       {
         "sha": "1d5a0ea60cc93dc690f81bb8dcc8f993ae02117e",
         "subject": "ci: post a sticky UID parity comment on pull requests (#727)",
@@ -434,54 +482,6 @@
         "sha": "c86d9731ae2536236b37021dd291a13492e0caf8",
         "subject": "fix(deps): update compose-ai-tools to v2 (#670)",
         "at": "2026-09-20T20:27:48Z",
-        "author": "renovate[bot]",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "57eb8b3454e6f76d3a84da0e46f8225cb588ba39",
-        "subject": "feat: add native iOS dashboard app (#668)",
-        "at": "2026-09-20T13:43:08+01:00",
-        "author": "Yuri Schimke",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "1856eac1fab750c048f20c82b1cb50258d70456d",
-        "subject": "fix(deps): update dependency ee.schimke.composeai:data-render-core to v2.20.0 (#667)",
-        "at": "2026-09-16T12:44:25Z",
-        "author": "renovate[bot]",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "eab81e894901349c86f5617bed250899c5c140e8",
-        "subject": "fix(deps): update dependency ee.schimke.composeai:data-render-core to v2.19.0 (#666)",
-        "at": "2026-09-16T01:35:31Z",
-        "author": "renovate[bot]",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "03f92df586a51e3bbdc2cc9ff07ef37dfbf6f055",
-        "subject": "fix(deps): update remote-compose (#663)",
-        "at": "2026-09-14T20:25:03Z",
-        "author": "renovate[bot]",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "89ceefc69bd2453cecd8cfda61356845f5890349",
-        "subject": "chore(deps): update actions/setup-java action to v6 (#665)",
-        "at": "2026-09-14T20:25:00Z",
-        "author": "renovate[bot]",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "0b1f1bedc887476ea51c6f1a09cea1a93122808e",
-        "subject": "fix(deps): update androidx to v1.2.0-rc01 (#660)",
-        "at": "2026-09-14T10:06:47Z",
         "author": "renovate[bot]",
         "previewIds": [],
         "components": []

@@ -19,7 +19,48 @@
           "density": 2.625
         }
       ],
-      "greenlines": [],
+      "greenlines": [
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 95,
+              "y": 475,
+              "width": 756,
+              "height": 74
+            }
+          },
+          "bounds": {
+            "x": 95,
+            "y": 475,
+            "width": 756,
+            "height": 74
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 95,
+              "y": 643,
+              "width": 756,
+              "height": 84
+            }
+          },
+          "bounds": {
+            "x": 95,
+            "y": 643,
+            "width": 756,
+            "height": 84
+          }
+        }
+      ],
       "redlines": [
         {
           "bounds": {
@@ -336,12 +377,42 @@
         },
         {
           "bounds": {
+            "x": 95,
+            "y": 475,
+            "width": 756,
+            "height": 74
+          },
+          "role": "Button",
+          "padding": {
+            "start": 12.190476,
+            "top": 8,
+            "end": 11.809524,
+            "bottom": 8
+          }
+        },
+        {
+          "bounds": {
             "x": 63,
             "y": 622,
             "width": 819,
             "height": 252
           },
           "cornerRadius": 12
+        },
+        {
+          "bounds": {
+            "x": 95,
+            "y": 643,
+            "width": 756,
+            "height": 84
+          },
+          "role": "Button",
+          "padding": {
+            "start": 12.190476,
+            "top": 8,
+            "end": 11.809524,
+            "bottom": 8
+          }
         }
       ],
       "group": "Themes",
@@ -349,7 +420,7 @@
       "wireframe": "wireframes/theme-material3-light.svg",
       "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/ThemePreviews.kt",
       "sourceModule": ":previews",
-      "bodyLine": 60,
+      "bodyLine": 59,
       "sourceDirectory": "previews",
       "sourceFunction": "Theme_Material3_Light",
       "parameters": [
@@ -379,7 +450,48 @@
           "density": 2.625
         }
       ],
-      "greenlines": [],
+      "greenlines": [
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 95,
+              "y": 475,
+              "width": 756,
+              "height": 74
+            }
+          },
+          "bounds": {
+            "x": 95,
+            "y": 475,
+            "width": 756,
+            "height": 74
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 95,
+              "y": 643,
+              "width": 756,
+              "height": 84
+            }
+          },
+          "bounds": {
+            "x": 95,
+            "y": 643,
+            "width": 756,
+            "height": 84
+          }
+        }
+      ],
       "redlines": [
         {
           "bounds": {
@@ -696,12 +808,42 @@
         },
         {
           "bounds": {
+            "x": 95,
+            "y": 475,
+            "width": 756,
+            "height": 74
+          },
+          "role": "Button",
+          "padding": {
+            "start": 12.190476,
+            "top": 8,
+            "end": 11.809524,
+            "bottom": 8
+          }
+        },
+        {
+          "bounds": {
             "x": 63,
             "y": 622,
             "width": 819,
             "height": 252
           },
           "cornerRadius": 12
+        },
+        {
+          "bounds": {
+            "x": 95,
+            "y": 643,
+            "width": 756,
+            "height": 84
+          },
+          "role": "Button",
+          "padding": {
+            "start": 12.190476,
+            "top": 8,
+            "end": 11.809524,
+            "bottom": 8
+          }
         }
       ],
       "group": "Themes",
@@ -709,7 +851,7 @@
       "wireframe": "wireframes/theme-material3-dark.svg",
       "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/ThemePreviews.kt",
       "sourceModule": ":previews",
-      "bodyLine": 64,
+      "bodyLine": 63,
       "sourceDirectory": "previews",
       "sourceFunction": "Theme_Material3_Dark",
       "parameters": [
@@ -739,7 +881,48 @@
           "density": 2.625
         }
       ],
-      "greenlines": [],
+      "greenlines": [
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 95,
+              "y": 475,
+              "width": 756,
+              "height": 74
+            }
+          },
+          "bounds": {
+            "x": 95,
+            "y": 475,
+            "width": 756,
+            "height": 74
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 95,
+              "y": 643,
+              "width": 756,
+              "height": 84
+            }
+          },
+          "bounds": {
+            "x": 95,
+            "y": 643,
+            "width": 756,
+            "height": 84
+          }
+        }
+      ],
       "redlines": [
         {
           "bounds": {
@@ -1056,12 +1239,42 @@
         },
         {
           "bounds": {
+            "x": 95,
+            "y": 475,
+            "width": 756,
+            "height": 74
+          },
+          "role": "Button",
+          "padding": {
+            "start": 12.190476,
+            "top": 8,
+            "end": 11.809524,
+            "bottom": 8
+          }
+        },
+        {
+          "bounds": {
             "x": 63,
             "y": 622,
             "width": 819,
             "height": 252
           },
           "cornerRadius": 12
+        },
+        {
+          "bounds": {
+            "x": 95,
+            "y": 643,
+            "width": 756,
+            "height": 84
+          },
+          "role": "Button",
+          "padding": {
+            "start": 12.190476,
+            "top": 8,
+            "end": 11.809524,
+            "bottom": 8
+          }
         }
       ],
       "group": "Themes",
@@ -1069,7 +1282,7 @@
       "wireframe": "wireframes/theme-home-light.svg",
       "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/ThemePreviews.kt",
       "sourceModule": ":previews",
-      "bodyLine": 70,
+      "bodyLine": 69,
       "sourceDirectory": "previews",
       "sourceFunction": "Theme_Home_Light",
       "parameters": [
@@ -1099,7 +1312,48 @@
           "density": 2.625
         }
       ],
-      "greenlines": [],
+      "greenlines": [
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 95,
+              "y": 475,
+              "width": 756,
+              "height": 74
+            }
+          },
+          "bounds": {
+            "x": 95,
+            "y": 475,
+            "width": 756,
+            "height": 74
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 95,
+              "y": 643,
+              "width": 756,
+              "height": 84
+            }
+          },
+          "bounds": {
+            "x": 95,
+            "y": 643,
+            "width": 756,
+            "height": 84
+          }
+        }
+      ],
       "redlines": [
         {
           "bounds": {
@@ -1416,12 +1670,42 @@
         },
         {
           "bounds": {
+            "x": 95,
+            "y": 475,
+            "width": 756,
+            "height": 74
+          },
+          "role": "Button",
+          "padding": {
+            "start": 12.190476,
+            "top": 8,
+            "end": 11.809524,
+            "bottom": 8
+          }
+        },
+        {
+          "bounds": {
             "x": 63,
             "y": 622,
             "width": 819,
             "height": 252
           },
           "cornerRadius": 12
+        },
+        {
+          "bounds": {
+            "x": 95,
+            "y": 643,
+            "width": 756,
+            "height": 84
+          },
+          "role": "Button",
+          "padding": {
+            "start": 12.190476,
+            "top": 8,
+            "end": 11.809524,
+            "bottom": 8
+          }
         }
       ],
       "group": "Themes",
@@ -1429,7 +1713,7 @@
       "wireframe": "wireframes/theme-home-dark.svg",
       "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/ThemePreviews.kt",
       "sourceModule": ":previews",
-      "bodyLine": 74,
+      "bodyLine": 73,
       "sourceDirectory": "previews",
       "sourceFunction": "Theme_Home_Dark",
       "parameters": [
@@ -1459,7 +1743,48 @@
           "density": 2.625
         }
       ],
-      "greenlines": [],
+      "greenlines": [
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 95,
+              "y": 475,
+              "width": 756,
+              "height": 74
+            }
+          },
+          "bounds": {
+            "x": 95,
+            "y": 475,
+            "width": 756,
+            "height": 74
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 95,
+              "y": 643,
+              "width": 756,
+              "height": 84
+            }
+          },
+          "bounds": {
+            "x": 95,
+            "y": 643,
+            "width": 756,
+            "height": 84
+          }
+        }
+      ],
       "redlines": [
         {
           "bounds": {
@@ -1776,12 +2101,42 @@
         },
         {
           "bounds": {
+            "x": 95,
+            "y": 475,
+            "width": 756,
+            "height": 74
+          },
+          "role": "Button",
+          "padding": {
+            "start": 12.190476,
+            "top": 8,
+            "end": 11.809524,
+            "bottom": 8
+          }
+        },
+        {
+          "bounds": {
             "x": 63,
             "y": 622,
             "width": 819,
             "height": 252
           },
           "cornerRadius": 12
+        },
+        {
+          "bounds": {
+            "x": 95,
+            "y": 643,
+            "width": 756,
+            "height": 84
+          },
+          "role": "Button",
+          "padding": {
+            "start": 12.190476,
+            "top": 8,
+            "end": 11.809524,
+            "bottom": 8
+          }
         }
       ],
       "group": "Themes",
@@ -1789,7 +2144,7 @@
       "wireframe": "wireframes/theme-mushroom-light.svg",
       "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/ThemePreviews.kt",
       "sourceModule": ":previews",
-      "bodyLine": 80,
+      "bodyLine": 79,
       "sourceDirectory": "previews",
       "sourceFunction": "Theme_Mushroom_Light",
       "parameters": [
@@ -1819,7 +2174,48 @@
           "density": 2.625
         }
       ],
-      "greenlines": [],
+      "greenlines": [
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 95,
+              "y": 475,
+              "width": 756,
+              "height": 74
+            }
+          },
+          "bounds": {
+            "x": 95,
+            "y": 475,
+            "width": 756,
+            "height": 74
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 95,
+              "y": 643,
+              "width": 756,
+              "height": 84
+            }
+          },
+          "bounds": {
+            "x": 95,
+            "y": 643,
+            "width": 756,
+            "height": 84
+          }
+        }
+      ],
       "redlines": [
         {
           "bounds": {
@@ -2136,12 +2532,42 @@
         },
         {
           "bounds": {
+            "x": 95,
+            "y": 475,
+            "width": 756,
+            "height": 74
+          },
+          "role": "Button",
+          "padding": {
+            "start": 12.190476,
+            "top": 8,
+            "end": 11.809524,
+            "bottom": 8
+          }
+        },
+        {
+          "bounds": {
             "x": 63,
             "y": 622,
             "width": 819,
             "height": 252
           },
           "cornerRadius": 12
+        },
+        {
+          "bounds": {
+            "x": 95,
+            "y": 643,
+            "width": 756,
+            "height": 84
+          },
+          "role": "Button",
+          "padding": {
+            "start": 12.190476,
+            "top": 8,
+            "end": 11.809524,
+            "bottom": 8
+          }
         }
       ],
       "group": "Themes",
@@ -2149,7 +2575,7 @@
       "wireframe": "wireframes/theme-mushroom-dark.svg",
       "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/ThemePreviews.kt",
       "sourceModule": ":previews",
-      "bodyLine": 84,
+      "bodyLine": 83,
       "sourceDirectory": "previews",
       "sourceFunction": "Theme_Mushroom_Dark",
       "parameters": [
@@ -2179,7 +2605,48 @@
           "density": 2.625
         }
       ],
-      "greenlines": [],
+      "greenlines": [
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 95,
+              "y": 476,
+              "width": 756,
+              "height": 74
+            }
+          },
+          "bounds": {
+            "x": 95,
+            "y": 476,
+            "width": 756,
+            "height": 74
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 95,
+              "y": 644,
+              "width": 756,
+              "height": 84
+            }
+          },
+          "bounds": {
+            "x": 95,
+            "y": 644,
+            "width": 756,
+            "height": 84
+          }
+        }
+      ],
       "redlines": [
         {
           "bounds": {
@@ -2496,12 +2963,42 @@
         },
         {
           "bounds": {
+            "x": 95,
+            "y": 476,
+            "width": 756,
+            "height": 74
+          },
+          "role": "Button",
+          "padding": {
+            "start": 12.190476,
+            "top": 8,
+            "end": 11.809524,
+            "bottom": 8
+          }
+        },
+        {
+          "bounds": {
             "x": 63,
             "y": 623,
             "width": 819,
             "height": 252
           },
           "cornerRadius": 12
+        },
+        {
+          "bounds": {
+            "x": 95,
+            "y": 644,
+            "width": 756,
+            "height": 84
+          },
+          "role": "Button",
+          "padding": {
+            "start": 12.190476,
+            "top": 8,
+            "end": 11.809524,
+            "bottom": 8
+          }
         }
       ],
       "group": "Themes",
@@ -2509,7 +3006,7 @@
       "wireframe": "wireframes/theme-minimalist-light.svg",
       "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/ThemePreviews.kt",
       "sourceModule": ":previews",
-      "bodyLine": 90,
+      "bodyLine": 89,
       "sourceDirectory": "previews",
       "sourceFunction": "Theme_Minimalist_Light",
       "parameters": [
@@ -2539,7 +3036,48 @@
           "density": 2.625
         }
       ],
-      "greenlines": [],
+      "greenlines": [
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 95,
+              "y": 476,
+              "width": 756,
+              "height": 74
+            }
+          },
+          "bounds": {
+            "x": 95,
+            "y": 476,
+            "width": 756,
+            "height": 74
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 95,
+              "y": 644,
+              "width": 756,
+              "height": 84
+            }
+          },
+          "bounds": {
+            "x": 95,
+            "y": 644,
+            "width": 756,
+            "height": 84
+          }
+        }
+      ],
       "redlines": [
         {
           "bounds": {
@@ -2856,12 +3394,42 @@
         },
         {
           "bounds": {
+            "x": 95,
+            "y": 476,
+            "width": 756,
+            "height": 74
+          },
+          "role": "Button",
+          "padding": {
+            "start": 12.190476,
+            "top": 8,
+            "end": 11.809524,
+            "bottom": 8
+          }
+        },
+        {
+          "bounds": {
             "x": 63,
             "y": 623,
             "width": 819,
             "height": 252
           },
           "cornerRadius": 12
+        },
+        {
+          "bounds": {
+            "x": 95,
+            "y": 644,
+            "width": 756,
+            "height": 84
+          },
+          "role": "Button",
+          "padding": {
+            "start": 12.190476,
+            "top": 8,
+            "end": 11.809524,
+            "bottom": 8
+          }
         }
       ],
       "group": "Themes",
@@ -2869,7 +3437,7 @@
       "wireframe": "wireframes/theme-minimalist-dark.svg",
       "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/ThemePreviews.kt",
       "sourceModule": ":previews",
-      "bodyLine": 94,
+      "bodyLine": 93,
       "sourceDirectory": "previews",
       "sourceFunction": "Theme_Minimalist_Dark",
       "parameters": [
@@ -2899,7 +3467,48 @@
           "density": 2.625
         }
       ],
-      "greenlines": [],
+      "greenlines": [
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 95,
+              "y": 475,
+              "width": 756,
+              "height": 74
+            }
+          },
+          "bounds": {
+            "x": 95,
+            "y": 475,
+            "width": 756,
+            "height": 74
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 95,
+              "y": 643,
+              "width": 756,
+              "height": 84
+            }
+          },
+          "bounds": {
+            "x": 95,
+            "y": 643,
+            "width": 756,
+            "height": 84
+          }
+        }
+      ],
       "redlines": [
         {
           "bounds": {
@@ -3216,12 +3825,42 @@
         },
         {
           "bounds": {
+            "x": 95,
+            "y": 475,
+            "width": 756,
+            "height": 74
+          },
+          "role": "Button",
+          "padding": {
+            "start": 12.190476,
+            "top": 8,
+            "end": 11.809524,
+            "bottom": 8
+          }
+        },
+        {
+          "bounds": {
             "x": 63,
             "y": 622,
             "width": 819,
             "height": 252
           },
           "cornerRadius": 12
+        },
+        {
+          "bounds": {
+            "x": 95,
+            "y": 643,
+            "width": 756,
+            "height": 84
+          },
+          "role": "Button",
+          "padding": {
+            "start": 12.190476,
+            "top": 8,
+            "end": 11.809524,
+            "bottom": 8
+          }
         }
       ],
       "group": "Themes",
@@ -3229,7 +3868,7 @@
       "wireframe": "wireframes/theme-kiosk-light.svg",
       "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/ThemePreviews.kt",
       "sourceModule": ":previews",
-      "bodyLine": 100,
+      "bodyLine": 99,
       "sourceDirectory": "previews",
       "sourceFunction": "Theme_Kiosk_Light",
       "parameters": [
@@ -3259,7 +3898,48 @@
           "density": 2.625
         }
       ],
-      "greenlines": [],
+      "greenlines": [
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 95,
+              "y": 475,
+              "width": 756,
+              "height": 74
+            }
+          },
+          "bounds": {
+            "x": 95,
+            "y": 475,
+            "width": 756,
+            "height": 74
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 95,
+              "y": 643,
+              "width": 756,
+              "height": 84
+            }
+          },
+          "bounds": {
+            "x": 95,
+            "y": 643,
+            "width": 756,
+            "height": 84
+          }
+        }
+      ],
       "redlines": [
         {
           "bounds": {
@@ -3576,12 +4256,42 @@
         },
         {
           "bounds": {
+            "x": 95,
+            "y": 475,
+            "width": 756,
+            "height": 74
+          },
+          "role": "Button",
+          "padding": {
+            "start": 12.190476,
+            "top": 8,
+            "end": 11.809524,
+            "bottom": 8
+          }
+        },
+        {
+          "bounds": {
             "x": 63,
             "y": 622,
             "width": 819,
             "height": 252
           },
           "cornerRadius": 12
+        },
+        {
+          "bounds": {
+            "x": 95,
+            "y": 643,
+            "width": 756,
+            "height": 84
+          },
+          "role": "Button",
+          "padding": {
+            "start": 12.190476,
+            "top": 8,
+            "end": 11.809524,
+            "bottom": 8
+          }
         }
       ],
       "group": "Themes",
@@ -3589,7 +4299,7 @@
       "wireframe": "wireframes/theme-kiosk-dark.svg",
       "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/ThemePreviews.kt",
       "sourceModule": ":previews",
-      "bodyLine": 104,
+      "bodyLine": 103,
       "sourceDirectory": "previews",
       "sourceFunction": "Theme_Kiosk_Dark",
       "parameters": [
@@ -3619,14 +4329,51 @@
           "density": 2.625
         }
       ],
-      "greenlines": [],
-      "redlines": [],
+      "greenlines": [
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 32,
+              "y": 32,
+              "width": 427,
+              "height": 175
+            }
+          },
+          "bounds": {
+            "x": 32,
+            "y": 32,
+            "width": 427,
+            "height": 175
+          }
+        }
+      ],
+      "redlines": [
+        {
+          "bounds": {
+            "x": 32,
+            "y": 32,
+            "width": 427,
+            "height": 175
+          },
+          "role": "Button",
+          "padding": {
+            "start": 12.190476,
+            "top": 12.190476,
+            "end": 11.809524,
+            "bottom": 11.809524
+          }
+        }
+      ],
       "group": "Cards",
       "caption": "Button card — a light entity, on (light).",
       "wireframe": "wireframes/card-button-light.svg",
       "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
       "sourceModule": ":previews",
-      "bodyLine": 128,
+      "bodyLine": 127,
       "sourceDirectory": "previews",
       "sourceFunction": "Button_On_Light",
       "parameters": [
@@ -3657,14 +4404,51 @@
           "density": 2.625
         }
       ],
-      "greenlines": [],
-      "redlines": [],
+      "greenlines": [
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 32,
+              "y": 32,
+              "width": 427,
+              "height": 175
+            }
+          },
+          "bounds": {
+            "x": 32,
+            "y": 32,
+            "width": 427,
+            "height": 175
+          }
+        }
+      ],
+      "redlines": [
+        {
+          "bounds": {
+            "x": 32,
+            "y": 32,
+            "width": 427,
+            "height": 175
+          },
+          "role": "Button",
+          "padding": {
+            "start": 12.190476,
+            "top": 12.190476,
+            "end": 11.809524,
+            "bottom": 11.809524
+          }
+        }
+      ],
       "group": "Cards",
       "caption": "Button card — a light entity, on (dark).",
       "wireframe": "wireframes/card-button-dark.svg",
       "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
       "sourceModule": ":previews",
-      "bodyLine": 135,
+      "bodyLine": 134,
       "sourceDirectory": "previews",
       "sourceFunction": "Button_On_Dark",
       "parameters": [
@@ -3695,14 +4479,51 @@
           "density": 2.625
         }
       ],
-      "greenlines": [],
-      "redlines": [],
+      "greenlines": [
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 0,
+              "y": 16,
+              "width": 490,
+              "height": 53
+            }
+          },
+          "bounds": {
+            "x": 0,
+            "y": 16,
+            "width": 490,
+            "height": 53
+          }
+        }
+      ],
+      "redlines": [
+        {
+          "bounds": {
+            "x": 0,
+            "y": 16,
+            "width": 490,
+            "height": 53
+          },
+          "role": "Button",
+          "padding": {
+            "start": 0,
+            "top": 6.095238,
+            "end": 0,
+            "bottom": 6.095238
+          }
+        }
+      ],
       "group": "Cards",
       "caption": "Entity card — a single entity row (light).",
       "wireframe": "wireframes/card-entity-light.svg",
       "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
       "sourceModule": ":previews",
-      "bodyLine": 148,
+      "bodyLine": 147,
       "sourceDirectory": "previews",
       "sourceFunction": "Entity_Light",
       "parameters": [
@@ -3733,14 +4554,51 @@
           "density": 2.625
         }
       ],
-      "greenlines": [],
-      "redlines": [],
+      "greenlines": [
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 0,
+              "y": 16,
+              "width": 490,
+              "height": 53
+            }
+          },
+          "bounds": {
+            "x": 0,
+            "y": 16,
+            "width": 490,
+            "height": 53
+          }
+        }
+      ],
+      "redlines": [
+        {
+          "bounds": {
+            "x": 0,
+            "y": 16,
+            "width": 490,
+            "height": 53
+          },
+          "role": "Button",
+          "padding": {
+            "start": 0,
+            "top": 6.095238,
+            "end": 0,
+            "bottom": 6.095238
+          }
+        }
+      ],
       "group": "Cards",
       "caption": "Entity card (dark).",
       "wireframe": "wireframes/card-entity-dark.svg",
       "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
       "sourceModule": ":previews",
-      "bodyLine": 152,
+      "bodyLine": 151,
       "sourceDirectory": "previews",
       "sourceFunction": "Entity_Dark",
       "parameters": [
@@ -3771,14 +4629,203 @@
           "density": 2.625
         }
       ],
-      "greenlines": [],
-      "redlines": [],
+      "greenlines": [
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 32,
+              "y": 100,
+              "width": 934,
+              "height": 53
+            }
+          },
+          "bounds": {
+            "x": 32,
+            "y": 100,
+            "width": 934,
+            "height": 53
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 32,
+              "y": 185,
+              "width": 934,
+              "height": 58
+            }
+          },
+          "bounds": {
+            "x": 32,
+            "y": 185,
+            "width": 934,
+            "height": 58
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 871,
+              "y": 185,
+              "width": 95,
+              "height": 58
+            }
+          },
+          "bounds": {
+            "x": 871,
+            "y": 185,
+            "width": 95,
+            "height": 58
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 32,
+              "y": 275,
+              "width": 934,
+              "height": 58
+            }
+          },
+          "bounds": {
+            "x": 32,
+            "y": 275,
+            "width": 934,
+            "height": 58
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 871,
+              "y": 275,
+              "width": 95,
+              "height": 58
+            }
+          },
+          "bounds": {
+            "x": 871,
+            "y": 275,
+            "width": 95,
+            "height": 58
+          }
+        }
+      ],
+      "redlines": [
+        {
+          "bounds": {
+            "x": 32,
+            "y": 26,
+            "width": 934,
+            "height": 323
+          },
+          "padding": {
+            "start": 12.190476,
+            "top": 9.904762,
+            "end": 11.809524,
+            "bottom": 10.285714
+          }
+        },
+        {
+          "bounds": {
+            "x": 32,
+            "y": 100,
+            "width": 934,
+            "height": 53
+          },
+          "role": "Button",
+          "padding": {
+            "start": 0,
+            "top": 6.095238,
+            "end": 0,
+            "bottom": 6.095238
+          }
+        },
+        {
+          "bounds": {
+            "x": 32,
+            "y": 185,
+            "width": 934,
+            "height": 58
+          },
+          "role": "Button",
+          "padding": {
+            "start": 0,
+            "top": 6.095238,
+            "end": 0,
+            "bottom": 6.095238
+          }
+        },
+        {
+          "bounds": {
+            "x": 916,
+            "y": 193,
+            "width": 42,
+            "height": 42
+          },
+          "padding": {
+            "start": 17.142857,
+            "top": 3.047619,
+            "end": 0,
+            "bottom": 0
+          }
+        },
+        {
+          "bounds": {
+            "x": 32,
+            "y": 275,
+            "width": 934,
+            "height": 58
+          },
+          "role": "Button",
+          "padding": {
+            "start": 0,
+            "top": 6.095238,
+            "end": 0,
+            "bottom": 6.095238
+          }
+        },
+        {
+          "bounds": {
+            "x": 916,
+            "y": 283,
+            "width": 42,
+            "height": 42
+          },
+          "padding": {
+            "start": 17.142857,
+            "top": 3.047619,
+            "end": 0,
+            "bottom": 0
+          }
+        }
+      ],
       "group": "Cards",
       "caption": "Entities card — a multi-entity list (light).",
       "wireframe": "wireframes/card-entities-light.svg",
       "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
       "sourceModule": ":previews",
-      "bodyLine": 160,
+      "bodyLine": 159,
       "sourceDirectory": "previews",
       "sourceFunction": "Entities_Light",
       "parameters": [
@@ -3809,14 +4856,203 @@
           "density": 2.625
         }
       ],
-      "greenlines": [],
-      "redlines": [],
+      "greenlines": [
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 32,
+              "y": 100,
+              "width": 934,
+              "height": 53
+            }
+          },
+          "bounds": {
+            "x": 32,
+            "y": 100,
+            "width": 934,
+            "height": 53
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 32,
+              "y": 185,
+              "width": 934,
+              "height": 58
+            }
+          },
+          "bounds": {
+            "x": 32,
+            "y": 185,
+            "width": 934,
+            "height": 58
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 871,
+              "y": 185,
+              "width": 95,
+              "height": 58
+            }
+          },
+          "bounds": {
+            "x": 871,
+            "y": 185,
+            "width": 95,
+            "height": 58
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 32,
+              "y": 275,
+              "width": 934,
+              "height": 58
+            }
+          },
+          "bounds": {
+            "x": 32,
+            "y": 275,
+            "width": 934,
+            "height": 58
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 871,
+              "y": 275,
+              "width": 95,
+              "height": 58
+            }
+          },
+          "bounds": {
+            "x": 871,
+            "y": 275,
+            "width": 95,
+            "height": 58
+          }
+        }
+      ],
+      "redlines": [
+        {
+          "bounds": {
+            "x": 32,
+            "y": 26,
+            "width": 934,
+            "height": 323
+          },
+          "padding": {
+            "start": 12.190476,
+            "top": 9.904762,
+            "end": 11.809524,
+            "bottom": 10.285714
+          }
+        },
+        {
+          "bounds": {
+            "x": 32,
+            "y": 100,
+            "width": 934,
+            "height": 53
+          },
+          "role": "Button",
+          "padding": {
+            "start": 0,
+            "top": 6.095238,
+            "end": 0,
+            "bottom": 6.095238
+          }
+        },
+        {
+          "bounds": {
+            "x": 32,
+            "y": 185,
+            "width": 934,
+            "height": 58
+          },
+          "role": "Button",
+          "padding": {
+            "start": 0,
+            "top": 6.095238,
+            "end": 0,
+            "bottom": 6.095238
+          }
+        },
+        {
+          "bounds": {
+            "x": 916,
+            "y": 193,
+            "width": 42,
+            "height": 42
+          },
+          "padding": {
+            "start": 17.142857,
+            "top": 3.047619,
+            "end": 0,
+            "bottom": 0
+          }
+        },
+        {
+          "bounds": {
+            "x": 32,
+            "y": 275,
+            "width": 934,
+            "height": 58
+          },
+          "role": "Button",
+          "padding": {
+            "start": 0,
+            "top": 6.095238,
+            "end": 0,
+            "bottom": 6.095238
+          }
+        },
+        {
+          "bounds": {
+            "x": 916,
+            "y": 283,
+            "width": 42,
+            "height": 42
+          },
+          "padding": {
+            "start": 17.142857,
+            "top": 3.047619,
+            "end": 0,
+            "bottom": 0
+          }
+        }
+      ],
       "group": "Cards",
       "caption": "Entities card (dark).",
       "wireframe": "wireframes/card-entities-dark.svg",
       "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
       "sourceModule": ":previews",
-      "bodyLine": 164,
+      "bodyLine": 163,
       "sourceDirectory": "previews",
       "sourceFunction": "Entities_Dark",
       "parameters": [
@@ -3847,14 +5083,135 @@
           "density": 2.625
         }
       ],
-      "greenlines": [],
-      "redlines": [],
+      "greenlines": [
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 161,
+              "y": 100,
+              "width": 172,
+              "height": 166
+            }
+          },
+          "bounds": {
+            "x": 161,
+            "y": 100,
+            "width": 172,
+            "height": 166
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 461,
+              "y": 100,
+              "width": 103,
+              "height": 166
+            }
+          },
+          "bounds": {
+            "x": 461,
+            "y": 100,
+            "width": 103,
+            "height": 166
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 693,
+              "y": 100,
+              "width": 145,
+              "height": 166
+            }
+          },
+          "bounds": {
+            "x": 693,
+            "y": 100,
+            "width": 145,
+            "height": 166
+          }
+        }
+      ],
+      "redlines": [
+        {
+          "bounds": {
+            "x": 32,
+            "y": 26,
+            "width": 934,
+            "height": 250
+          },
+          "padding": {
+            "start": 12.190476,
+            "top": 9.904762,
+            "end": 11.809524,
+            "bottom": 10.285714
+          }
+        },
+        {
+          "bounds": {
+            "x": 161,
+            "y": 100,
+            "width": 172,
+            "height": 166
+          },
+          "role": "Button",
+          "padding": {
+            "start": 0,
+            "top": 4.1904764,
+            "end": 0,
+            "bottom": 3.8095238
+          }
+        },
+        {
+          "bounds": {
+            "x": 461,
+            "y": 100,
+            "width": 103,
+            "height": 166
+          },
+          "role": "Button",
+          "padding": {
+            "start": 0,
+            "top": 4.1904764,
+            "end": 0,
+            "bottom": 3.8095238
+          }
+        },
+        {
+          "bounds": {
+            "x": 693,
+            "y": 100,
+            "width": 145,
+            "height": 166
+          },
+          "role": "Button",
+          "padding": {
+            "start": 0,
+            "top": 4.1904764,
+            "end": 0,
+            "bottom": 3.8095238
+          }
+        }
+      ],
       "group": "Cards",
       "caption": "Glance card — an icon grid (light).",
       "wireframe": "wireframes/card-glance-light.svg",
       "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
       "sourceModule": ":previews",
-      "bodyLine": 180,
+      "bodyLine": 179,
       "sourceDirectory": "previews",
       "sourceFunction": "Glance_Light",
       "parameters": [
@@ -3885,14 +5242,135 @@
           "density": 2.625
         }
       ],
-      "greenlines": [],
-      "redlines": [],
+      "greenlines": [
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 161,
+              "y": 100,
+              "width": 172,
+              "height": 166
+            }
+          },
+          "bounds": {
+            "x": 161,
+            "y": 100,
+            "width": 172,
+            "height": 166
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 461,
+              "y": 100,
+              "width": 103,
+              "height": 166
+            }
+          },
+          "bounds": {
+            "x": 461,
+            "y": 100,
+            "width": 103,
+            "height": 166
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 693,
+              "y": 100,
+              "width": 145,
+              "height": 166
+            }
+          },
+          "bounds": {
+            "x": 693,
+            "y": 100,
+            "width": 145,
+            "height": 166
+          }
+        }
+      ],
+      "redlines": [
+        {
+          "bounds": {
+            "x": 32,
+            "y": 26,
+            "width": 934,
+            "height": 250
+          },
+          "padding": {
+            "start": 12.190476,
+            "top": 9.904762,
+            "end": 11.809524,
+            "bottom": 10.285714
+          }
+        },
+        {
+          "bounds": {
+            "x": 161,
+            "y": 100,
+            "width": 172,
+            "height": 166
+          },
+          "role": "Button",
+          "padding": {
+            "start": 0,
+            "top": 4.1904764,
+            "end": 0,
+            "bottom": 3.8095238
+          }
+        },
+        {
+          "bounds": {
+            "x": 461,
+            "y": 100,
+            "width": 103,
+            "height": 166
+          },
+          "role": "Button",
+          "padding": {
+            "start": 0,
+            "top": 4.1904764,
+            "end": 0,
+            "bottom": 3.8095238
+          }
+        },
+        {
+          "bounds": {
+            "x": 693,
+            "y": 100,
+            "width": 145,
+            "height": 166
+          },
+          "role": "Button",
+          "padding": {
+            "start": 0,
+            "top": 4.1904764,
+            "end": 0,
+            "bottom": 3.8095238
+          }
+        }
+      ],
       "group": "Cards",
       "caption": "Glance card (dark).",
       "wireframe": "wireframes/card-glance-dark.svg",
       "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
       "sourceModule": ":previews",
-      "bodyLine": 184,
+      "bodyLine": 183,
       "sourceDirectory": "previews",
       "sourceFunction": "Glance_Dark",
       "parameters": [
@@ -3922,8 +5400,45 @@
           "density": 2.625
         }
       ],
-      "greenlines": [],
-      "redlines": [],
+      "greenlines": [
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 32,
+              "y": 21,
+              "width": 427,
+              "height": 70
+            }
+          },
+          "bounds": {
+            "x": 32,
+            "y": 21,
+            "width": 427,
+            "height": 70
+          }
+        }
+      ],
+      "redlines": [
+        {
+          "bounds": {
+            "x": 32,
+            "y": 21,
+            "width": 427,
+            "height": 70
+          },
+          "role": "Button",
+          "padding": {
+            "start": 12.190476,
+            "top": 8,
+            "end": 11.809524,
+            "bottom": 8
+          }
+        }
+      ],
       "group": "Cards",
       "caption": "Tile card — the primary HA card, a light entity on (light).",
       "wireframe": "wireframes/card-tile-light.svg",
@@ -3960,8 +5475,45 @@
           "density": 2.625
         }
       ],
-      "greenlines": [],
-      "redlines": [],
+      "greenlines": [
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 32,
+              "y": 21,
+              "width": 427,
+              "height": 70
+            }
+          },
+          "bounds": {
+            "x": 32,
+            "y": 21,
+            "width": 427,
+            "height": 70
+          }
+        }
+      ],
+      "redlines": [
+        {
+          "bounds": {
+            "x": 32,
+            "y": 21,
+            "width": 427,
+            "height": 70
+          },
+          "role": "Button",
+          "padding": {
+            "start": 12.190476,
+            "top": 8,
+            "end": 11.809524,
+            "bottom": 8
+          }
+        }
+      ],
       "group": "Cards",
       "caption": "Tile card — a light entity on (dark).",
       "wireframe": "wireframes/card-tile-dark.svg",
@@ -3998,14 +5550,91 @@
           "density": 2.625
         }
       ],
-      "greenlines": [],
-      "redlines": [],
+      "greenlines": [
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 37,
+              "y": 32,
+              "width": 556,
+              "height": 590
+            }
+          },
+          "bounds": {
+            "x": 37,
+            "y": 32,
+            "width": 556,
+            "height": 590
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 189,
+              "y": 586,
+              "width": 95,
+              "height": 36
+            }
+          },
+          "bounds": {
+            "x": 189,
+            "y": 586,
+            "width": 95,
+            "height": 36
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 347,
+              "y": 586,
+              "width": 95,
+              "height": 36
+            }
+          },
+          "bounds": {
+            "x": 347,
+            "y": 586,
+            "width": 95,
+            "height": 36
+          }
+        }
+      ],
+      "redlines": [
+        {
+          "bounds": {
+            "x": 37,
+            "y": 32,
+            "width": 556,
+            "height": 590
+          },
+          "role": "Button",
+          "padding": {
+            "start": 14.095238,
+            "top": 12.190476,
+            "end": 14.095238,
+            "bottom": 11.809524
+          }
+        }
+      ],
       "group": "Cards",
       "caption": "Light card — brightness + colour controls (light).",
       "wireframe": "wireframes/card-light-light.svg",
       "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
       "sourceModule": ":previews",
-      "bodyLine": 667,
+      "bodyLine": 666,
       "sourceDirectory": "previews",
       "sourceFunction": "LightCard_Light",
       "parameters": [
@@ -4036,14 +5665,91 @@
           "density": 2.625
         }
       ],
-      "greenlines": [],
-      "redlines": [],
+      "greenlines": [
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 37,
+              "y": 32,
+              "width": 556,
+              "height": 590
+            }
+          },
+          "bounds": {
+            "x": 37,
+            "y": 32,
+            "width": 556,
+            "height": 590
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 189,
+              "y": 586,
+              "width": 95,
+              "height": 36
+            }
+          },
+          "bounds": {
+            "x": 189,
+            "y": 586,
+            "width": 95,
+            "height": 36
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 347,
+              "y": 586,
+              "width": 95,
+              "height": 36
+            }
+          },
+          "bounds": {
+            "x": 347,
+            "y": 586,
+            "width": 95,
+            "height": 36
+          }
+        }
+      ],
+      "redlines": [
+        {
+          "bounds": {
+            "x": 37,
+            "y": 32,
+            "width": 556,
+            "height": 590
+          },
+          "role": "Button",
+          "padding": {
+            "start": 14.095238,
+            "top": 12.190476,
+            "end": 14.095238,
+            "bottom": 11.809524
+          }
+        }
+      ],
       "group": "Cards",
       "caption": "Light card (dark).",
       "wireframe": "wireframes/card-light-dark.svg",
       "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
       "sourceModule": ":previews",
-      "bodyLine": 674,
+      "bodyLine": 673,
       "sourceDirectory": "previews",
       "sourceFunction": "LightCard_Dark",
       "parameters": [
@@ -4074,14 +5780,70 @@
           "density": 2.625
         }
       ],
-      "greenlines": [],
-      "redlines": [],
+      "greenlines": [
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 189,
+              "y": 586,
+              "width": 95,
+              "height": 95
+            }
+          },
+          "bounds": {
+            "x": 189,
+            "y": 586,
+            "width": 95,
+            "height": 95
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 347,
+              "y": 586,
+              "width": 95,
+              "height": 95
+            }
+          },
+          "bounds": {
+            "x": 347,
+            "y": 586,
+            "width": 95,
+            "height": 95
+          }
+        }
+      ],
+      "redlines": [
+        {
+          "bounds": {
+            "x": 37,
+            "y": 32,
+            "width": 556,
+            "height": 649
+          },
+          "padding": {
+            "start": 14.095238,
+            "top": 12.190476,
+            "end": 14.095238,
+            "bottom": 11.809524
+          }
+        }
+      ],
       "group": "Cards",
       "caption": "Thermostat card — climate setpoint dial (light).",
       "wireframe": "wireframes/card-thermostat-light.svg",
       "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
       "sourceModule": ":previews",
-      "bodyLine": 635,
+      "bodyLine": 634,
       "sourceDirectory": "previews",
       "sourceFunction": "Thermostat_Light",
       "parameters": [
@@ -4112,14 +5874,70 @@
           "density": 2.625
         }
       ],
-      "greenlines": [],
-      "redlines": [],
+      "greenlines": [
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 189,
+              "y": 586,
+              "width": 95,
+              "height": 95
+            }
+          },
+          "bounds": {
+            "x": 189,
+            "y": 586,
+            "width": 95,
+            "height": 95
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 347,
+              "y": 586,
+              "width": 95,
+              "height": 95
+            }
+          },
+          "bounds": {
+            "x": 347,
+            "y": 586,
+            "width": 95,
+            "height": 95
+          }
+        }
+      ],
+      "redlines": [
+        {
+          "bounds": {
+            "x": 37,
+            "y": 32,
+            "width": 556,
+            "height": 649
+          },
+          "padding": {
+            "start": 14.095238,
+            "top": 12.190476,
+            "end": 14.095238,
+            "bottom": 11.809524
+          }
+        }
+      ],
       "group": "Cards",
       "caption": "Thermostat card (dark).",
       "wireframe": "wireframes/card-thermostat-dark.svg",
       "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
       "sourceModule": ":previews",
-      "bodyLine": 642,
+      "bodyLine": 641,
       "sourceDirectory": "previews",
       "sourceFunction": "Thermostat_Dark",
       "parameters": [
@@ -4150,14 +5968,51 @@
           "density": 2.625
         }
       ],
-      "greenlines": [],
-      "redlines": [],
+      "greenlines": [
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 37,
+              "y": 32,
+              "width": 416,
+              "height": 330
+            }
+          },
+          "bounds": {
+            "x": 37,
+            "y": 32,
+            "width": 416,
+            "height": 330
+          }
+        }
+      ],
+      "redlines": [
+        {
+          "bounds": {
+            "x": 37,
+            "y": 32,
+            "width": 416,
+            "height": 330
+          },
+          "role": "Button",
+          "padding": {
+            "start": 14.095238,
+            "top": 12.190476,
+            "end": 14.095238,
+            "bottom": 11.809524
+          }
+        }
+      ],
       "group": "Cards",
       "caption": "Gauge card — a bounded numeric reading (light).",
       "wireframe": "wireframes/card-gauge-light.svg",
       "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
       "sourceModule": ":previews",
-      "bodyLine": 397,
+      "bodyLine": 396,
       "sourceDirectory": "previews",
       "sourceFunction": "Gauge_Light",
       "parameters": [
@@ -4188,14 +6043,51 @@
           "density": 2.625
         }
       ],
-      "greenlines": [],
-      "redlines": [],
+      "greenlines": [
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 37,
+              "y": 32,
+              "width": 416,
+              "height": 330
+            }
+          },
+          "bounds": {
+            "x": 37,
+            "y": 32,
+            "width": 416,
+            "height": 330
+          }
+        }
+      ],
+      "redlines": [
+        {
+          "bounds": {
+            "x": 37,
+            "y": 32,
+            "width": 416,
+            "height": 330
+          },
+          "role": "Button",
+          "padding": {
+            "start": 14.095238,
+            "top": 12.190476,
+            "end": 14.095238,
+            "bottom": 11.809524
+          }
+        }
+      ],
       "group": "Cards",
       "caption": "Gauge card (dark).",
       "wireframe": "wireframes/card-gauge-dark.svg",
       "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
       "sourceModule": ":previews",
-      "bodyLine": 404,
+      "bodyLine": 403,
       "sourceDirectory": "previews",
       "sourceFunction": "Gauge_Dark",
       "parameters": [
@@ -4227,13 +6119,84 @@
         }
       ],
       "greenlines": [],
-      "redlines": [],
+      "redlines": [
+        {
+          "bounds": {
+            "x": 37,
+            "y": 32,
+            "width": 923,
+            "height": 521
+          },
+          "padding": {
+            "start": 14.095238,
+            "top": 12.190476,
+            "end": 14.095238,
+            "bottom": 11.809524
+          }
+        },
+        {
+          "bounds": {
+            "x": 48,
+            "y": 404,
+            "width": 209,
+            "height": 128
+          },
+          "padding": {
+            "start": 4.1904764,
+            "top": 8,
+            "end": 3.8095238,
+            "bottom": 8
+          }
+        },
+        {
+          "bounds": {
+            "x": 299,
+            "y": 404,
+            "width": 210,
+            "height": 128
+          },
+          "padding": {
+            "start": 4.1904764,
+            "top": 8,
+            "end": 3.8095238,
+            "bottom": 8
+          }
+        },
+        {
+          "bounds": {
+            "x": 551,
+            "y": 404,
+            "width": 210,
+            "height": 128
+          },
+          "padding": {
+            "start": 4.1904764,
+            "top": 8,
+            "end": 3.8095238,
+            "bottom": 8
+          }
+        },
+        {
+          "bounds": {
+            "x": 803,
+            "y": 404,
+            "width": 194,
+            "height": 128
+          },
+          "padding": {
+            "start": 4.1904764,
+            "top": 8,
+            "end": 3.8095238,
+            "bottom": 8
+          }
+        }
+      ],
       "group": "Cards",
       "caption": "Weather forecast card (light).",
       "wireframe": "wireframes/card-weather-light.svg",
       "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
       "sourceModule": ":previews",
-      "bodyLine": 447,
+      "bodyLine": 446,
       "sourceDirectory": "previews",
       "sourceFunction": "WeatherForecast_Light",
       "parameters": [
@@ -4265,13 +6228,84 @@
         }
       ],
       "greenlines": [],
-      "redlines": [],
+      "redlines": [
+        {
+          "bounds": {
+            "x": 37,
+            "y": 32,
+            "width": 923,
+            "height": 521
+          },
+          "padding": {
+            "start": 14.095238,
+            "top": 12.190476,
+            "end": 14.095238,
+            "bottom": 11.809524
+          }
+        },
+        {
+          "bounds": {
+            "x": 48,
+            "y": 404,
+            "width": 209,
+            "height": 128
+          },
+          "padding": {
+            "start": 4.1904764,
+            "top": 8,
+            "end": 3.8095238,
+            "bottom": 8
+          }
+        },
+        {
+          "bounds": {
+            "x": 299,
+            "y": 404,
+            "width": 210,
+            "height": 128
+          },
+          "padding": {
+            "start": 4.1904764,
+            "top": 8,
+            "end": 3.8095238,
+            "bottom": 8
+          }
+        },
+        {
+          "bounds": {
+            "x": 551,
+            "y": 404,
+            "width": 210,
+            "height": 128
+          },
+          "padding": {
+            "start": 4.1904764,
+            "top": 8,
+            "end": 3.8095238,
+            "bottom": 8
+          }
+        },
+        {
+          "bounds": {
+            "x": 803,
+            "y": 404,
+            "width": 194,
+            "height": 128
+          },
+          "padding": {
+            "start": 4.1904764,
+            "top": 8,
+            "end": 3.8095238,
+            "bottom": 8
+          }
+        }
+      ],
       "group": "Cards",
       "caption": "Weather forecast card (dark).",
       "wireframe": "wireframes/card-weather-dark.svg",
       "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
       "sourceModule": ":previews",
-      "bodyLine": 454,
+      "bodyLine": 453,
       "sourceDirectory": "previews",
       "sourceFunction": "WeatherForecast_Dark",
       "parameters": [
@@ -4302,14 +6336,104 @@
           "density": 2.625
         }
       ],
-      "greenlines": [],
-      "redlines": [],
+      "greenlines": [
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 32,
+              "y": 179,
+              "width": 84,
+              "height": 84
+            }
+          },
+          "bounds": {
+            "x": 32,
+            "y": 179,
+            "width": 84,
+            "height": 84
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 127,
+              "y": 168,
+              "width": 105,
+              "height": 105
+            }
+          },
+          "bounds": {
+            "x": 127,
+            "y": 168,
+            "width": 105,
+            "height": 105
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 243,
+              "y": 179,
+              "width": 84,
+              "height": 84
+            }
+          },
+          "bounds": {
+            "x": 243,
+            "y": 179,
+            "width": 84,
+            "height": 84
+          }
+        }
+      ],
+      "redlines": [
+        {
+          "bounds": {
+            "x": 32,
+            "y": 32,
+            "width": 934,
+            "height": 283
+          },
+          "padding": {
+            "start": 12.190476,
+            "top": 12.190476,
+            "end": 11.809524,
+            "bottom": 11.809524
+          }
+        },
+        {
+          "bounds": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0
+          },
+          "padding": {
+            "start": 0,
+            "top": 4.1904764,
+            "end": 0,
+            "bottom": 0
+          }
+        }
+      ],
       "group": "Cards",
       "caption": "Media control card — now-playing + transport (light).",
       "wireframe": "wireframes/card-media-light.svg",
       "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
       "sourceModule": ":previews",
-      "bodyLine": 775,
+      "bodyLine": 774,
       "sourceDirectory": "previews",
       "sourceFunction": "MediaControl_Light",
       "parameters": [
@@ -4340,14 +6464,104 @@
           "density": 2.625
         }
       ],
-      "greenlines": [],
-      "redlines": [],
+      "greenlines": [
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 32,
+              "y": 179,
+              "width": 84,
+              "height": 84
+            }
+          },
+          "bounds": {
+            "x": 32,
+            "y": 179,
+            "width": 84,
+            "height": 84
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 127,
+              "y": 168,
+              "width": 105,
+              "height": 105
+            }
+          },
+          "bounds": {
+            "x": 127,
+            "y": 168,
+            "width": 105,
+            "height": 105
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 243,
+              "y": 179,
+              "width": 84,
+              "height": 84
+            }
+          },
+          "bounds": {
+            "x": 243,
+            "y": 179,
+            "width": 84,
+            "height": 84
+          }
+        }
+      ],
+      "redlines": [
+        {
+          "bounds": {
+            "x": 32,
+            "y": 32,
+            "width": 934,
+            "height": 283
+          },
+          "padding": {
+            "start": 12.190476,
+            "top": 12.190476,
+            "end": 11.809524,
+            "bottom": 11.809524
+          }
+        },
+        {
+          "bounds": {
+            "x": 0,
+            "y": 0,
+            "width": 0,
+            "height": 0
+          },
+          "padding": {
+            "start": 0,
+            "top": 4.1904764,
+            "end": 0,
+            "bottom": 0
+          }
+        }
+      ],
       "group": "Cards",
       "caption": "Media control card (dark).",
       "wireframe": "wireframes/card-media-dark.svg",
       "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
       "sourceModule": ":previews",
-      "bodyLine": 782,
+      "bodyLine": 781,
       "sourceDirectory": "previews",
       "sourceFunction": "MediaControl_Dark",
       "parameters": [
@@ -4378,14 +6592,320 @@
           "density": 2.625
         }
       ],
-      "greenlines": [],
-      "redlines": [],
+      "greenlines": [
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 211,
+              "y": 184,
+              "width": 160,
+              "height": 37
+            }
+          },
+          "bounds": {
+            "x": 211,
+            "y": 184,
+            "width": 160,
+            "height": 37
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 466,
+              "y": 184,
+              "width": 163,
+              "height": 37
+            }
+          },
+          "bounds": {
+            "x": 466,
+            "y": 184,
+            "width": 163,
+            "height": 37
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 210,
+              "y": 284,
+              "width": 126,
+              "height": 126
+            }
+          },
+          "bounds": {
+            "x": 210,
+            "y": 284,
+            "width": 126,
+            "height": 126
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 357,
+              "y": 284,
+              "width": 126,
+              "height": 126
+            }
+          },
+          "bounds": {
+            "x": 357,
+            "y": 284,
+            "width": 126,
+            "height": 126
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 504,
+              "y": 284,
+              "width": 126,
+              "height": 126
+            }
+          },
+          "bounds": {
+            "x": 504,
+            "y": 284,
+            "width": 126,
+            "height": 126
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 210,
+              "y": 426,
+              "width": 126,
+              "height": 126
+            }
+          },
+          "bounds": {
+            "x": 210,
+            "y": 426,
+            "width": 126,
+            "height": 126
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 357,
+              "y": 426,
+              "width": 126,
+              "height": 126
+            }
+          },
+          "bounds": {
+            "x": 357,
+            "y": 426,
+            "width": 126,
+            "height": 126
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 504,
+              "y": 426,
+              "width": 126,
+              "height": 126
+            }
+          },
+          "bounds": {
+            "x": 504,
+            "y": 426,
+            "width": 126,
+            "height": 126
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 210,
+              "y": 568,
+              "width": 126,
+              "height": 126
+            }
+          },
+          "bounds": {
+            "x": 210,
+            "y": 568,
+            "width": 126,
+            "height": 126
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 357,
+              "y": 568,
+              "width": 126,
+              "height": 126
+            }
+          },
+          "bounds": {
+            "x": 357,
+            "y": 568,
+            "width": 126,
+            "height": 126
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 504,
+              "y": 568,
+              "width": 126,
+              "height": 126
+            }
+          },
+          "bounds": {
+            "x": 504,
+            "y": 568,
+            "width": 126,
+            "height": 126
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 357,
+              "y": 710,
+              "width": 126,
+              "height": 126
+            }
+          },
+          "bounds": {
+            "x": 357,
+            "y": 710,
+            "width": 126,
+            "height": 126
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 504,
+              "y": 710,
+              "width": 126,
+              "height": 126
+            }
+          },
+          "bounds": {
+            "x": 504,
+            "y": 710,
+            "width": 126,
+            "height": 126
+          }
+        }
+      ],
+      "redlines": [
+        {
+          "bounds": {
+            "x": 37,
+            "y": 32,
+            "width": 766,
+            "height": 804
+          },
+          "padding": {
+            "start": 14.095238,
+            "top": 12.190476,
+            "end": 14.095238,
+            "bottom": 11.809524
+          }
+        },
+        {
+          "bounds": {
+            "x": 211,
+            "y": 184,
+            "width": 160,
+            "height": 37
+          },
+          "role": "Button",
+          "padding": {
+            "start": 14.095238,
+            "top": 8,
+            "end": 14.095238,
+            "bottom": 8
+          }
+        },
+        {
+          "bounds": {
+            "x": 466,
+            "y": 184,
+            "width": 163,
+            "height": 37
+          },
+          "role": "Button",
+          "padding": {
+            "start": 14.095238,
+            "top": 8,
+            "end": 14.095238,
+            "bottom": 8
+          }
+        }
+      ],
       "group": "Cards",
       "caption": "Alarm panel card — keypad + arm states (light).",
       "wireframe": "wireframes/card-alarm-light.svg",
       "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
       "sourceModule": ":previews",
-      "bodyLine": 753,
+      "bodyLine": 752,
       "sourceDirectory": "previews",
       "sourceFunction": "AlarmPanel_Light",
       "parameters": [
@@ -4416,14 +6936,320 @@
           "density": 2.625
         }
       ],
-      "greenlines": [],
-      "redlines": [],
+      "greenlines": [
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 211,
+              "y": 184,
+              "width": 160,
+              "height": 37
+            }
+          },
+          "bounds": {
+            "x": 211,
+            "y": 184,
+            "width": 160,
+            "height": 37
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 466,
+              "y": 184,
+              "width": 163,
+              "height": 37
+            }
+          },
+          "bounds": {
+            "x": 466,
+            "y": 184,
+            "width": 163,
+            "height": 37
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 210,
+              "y": 284,
+              "width": 126,
+              "height": 126
+            }
+          },
+          "bounds": {
+            "x": 210,
+            "y": 284,
+            "width": 126,
+            "height": 126
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 357,
+              "y": 284,
+              "width": 126,
+              "height": 126
+            }
+          },
+          "bounds": {
+            "x": 357,
+            "y": 284,
+            "width": 126,
+            "height": 126
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 504,
+              "y": 284,
+              "width": 126,
+              "height": 126
+            }
+          },
+          "bounds": {
+            "x": 504,
+            "y": 284,
+            "width": 126,
+            "height": 126
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 210,
+              "y": 426,
+              "width": 126,
+              "height": 126
+            }
+          },
+          "bounds": {
+            "x": 210,
+            "y": 426,
+            "width": 126,
+            "height": 126
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 357,
+              "y": 426,
+              "width": 126,
+              "height": 126
+            }
+          },
+          "bounds": {
+            "x": 357,
+            "y": 426,
+            "width": 126,
+            "height": 126
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 504,
+              "y": 426,
+              "width": 126,
+              "height": 126
+            }
+          },
+          "bounds": {
+            "x": 504,
+            "y": 426,
+            "width": 126,
+            "height": 126
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 210,
+              "y": 568,
+              "width": 126,
+              "height": 126
+            }
+          },
+          "bounds": {
+            "x": 210,
+            "y": 568,
+            "width": 126,
+            "height": 126
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 357,
+              "y": 568,
+              "width": 126,
+              "height": 126
+            }
+          },
+          "bounds": {
+            "x": 357,
+            "y": 568,
+            "width": 126,
+            "height": 126
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 504,
+              "y": 568,
+              "width": 126,
+              "height": 126
+            }
+          },
+          "bounds": {
+            "x": 504,
+            "y": 568,
+            "width": 126,
+            "height": 126
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 357,
+              "y": 710,
+              "width": 126,
+              "height": 126
+            }
+          },
+          "bounds": {
+            "x": 357,
+            "y": 710,
+            "width": 126,
+            "height": 126
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 504,
+              "y": 710,
+              "width": 126,
+              "height": 126
+            }
+          },
+          "bounds": {
+            "x": 504,
+            "y": 710,
+            "width": 126,
+            "height": 126
+          }
+        }
+      ],
+      "redlines": [
+        {
+          "bounds": {
+            "x": 37,
+            "y": 32,
+            "width": 766,
+            "height": 804
+          },
+          "padding": {
+            "start": 14.095238,
+            "top": 12.190476,
+            "end": 14.095238,
+            "bottom": 11.809524
+          }
+        },
+        {
+          "bounds": {
+            "x": 211,
+            "y": 184,
+            "width": 160,
+            "height": 37
+          },
+          "role": "Button",
+          "padding": {
+            "start": 14.095238,
+            "top": 8,
+            "end": 14.095238,
+            "bottom": 8
+          }
+        },
+        {
+          "bounds": {
+            "x": 466,
+            "y": 184,
+            "width": 163,
+            "height": 37
+          },
+          "role": "Button",
+          "padding": {
+            "start": 14.095238,
+            "top": 8,
+            "end": 14.095238,
+            "bottom": 8
+          }
+        }
+      ],
       "group": "Cards",
       "caption": "Alarm panel card (dark).",
       "wireframe": "wireframes/card-alarm-dark.svg",
       "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
       "sourceModule": ":previews",
-      "bodyLine": 760,
+      "bodyLine": 759,
       "sourceDirectory": "previews",
       "sourceFunction": "AlarmPanel_Dark",
       "parameters": [
@@ -4454,14 +7280,135 @@
           "density": 2.625
         }
       ],
-      "greenlines": [],
-      "redlines": [],
+      "greenlines": [
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 37,
+              "y": 168,
+              "width": 766,
+              "height": 47
+            }
+          },
+          "bounds": {
+            "x": 37,
+            "y": 168,
+            "width": 766,
+            "height": 47
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 37,
+              "y": 257,
+              "width": 766,
+              "height": 47
+            }
+          },
+          "bounds": {
+            "x": 37,
+            "y": 257,
+            "width": 766,
+            "height": 47
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 37,
+              "y": 401,
+              "width": 766,
+              "height": 47
+            }
+          },
+          "bounds": {
+            "x": 37,
+            "y": 401,
+            "width": 766,
+            "height": 47
+          }
+        }
+      ],
+      "redlines": [
+        {
+          "bounds": {
+            "x": 37,
+            "y": 32,
+            "width": 766,
+            "height": 426
+          },
+          "padding": {
+            "start": 14.095238,
+            "top": 12.190476,
+            "end": 14.095238,
+            "bottom": 11.809524
+          }
+        },
+        {
+          "bounds": {
+            "x": 37,
+            "y": 168,
+            "width": 766,
+            "height": 47
+          },
+          "role": "Button",
+          "padding": {
+            "start": 0,
+            "top": 4.1904764,
+            "end": 0,
+            "bottom": 3.8095238
+          }
+        },
+        {
+          "bounds": {
+            "x": 37,
+            "y": 257,
+            "width": 766,
+            "height": 47
+          },
+          "role": "Button",
+          "padding": {
+            "start": 0,
+            "top": 4.1904764,
+            "end": 0,
+            "bottom": 3.8095238
+          }
+        },
+        {
+          "bounds": {
+            "x": 37,
+            "y": 401,
+            "width": 766,
+            "height": 47
+          },
+          "role": "Button",
+          "padding": {
+            "start": 0,
+            "top": 4.1904764,
+            "end": 0,
+            "bottom": 3.8095238
+          }
+        }
+      ],
       "group": "Cards",
       "caption": "To-do list card (light).",
       "wireframe": "wireframes/card-todo-light.svg",
       "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
       "sourceModule": ":previews",
-      "bodyLine": 794,
+      "bodyLine": 793,
       "sourceDirectory": "previews",
       "sourceFunction": "TodoList_Light",
       "parameters": [
@@ -4492,14 +7439,135 @@
           "density": 2.625
         }
       ],
-      "greenlines": [],
-      "redlines": [],
+      "greenlines": [
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 37,
+              "y": 168,
+              "width": 766,
+              "height": 47
+            }
+          },
+          "bounds": {
+            "x": 37,
+            "y": 168,
+            "width": 766,
+            "height": 47
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 37,
+              "y": 257,
+              "width": 766,
+              "height": 47
+            }
+          },
+          "bounds": {
+            "x": 37,
+            "y": 257,
+            "width": 766,
+            "height": 47
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 37,
+              "y": 401,
+              "width": 766,
+              "height": 47
+            }
+          },
+          "bounds": {
+            "x": 37,
+            "y": 401,
+            "width": 766,
+            "height": 47
+          }
+        }
+      ],
+      "redlines": [
+        {
+          "bounds": {
+            "x": 37,
+            "y": 32,
+            "width": 766,
+            "height": 426
+          },
+          "padding": {
+            "start": 14.095238,
+            "top": 12.190476,
+            "end": 14.095238,
+            "bottom": 11.809524
+          }
+        },
+        {
+          "bounds": {
+            "x": 37,
+            "y": 168,
+            "width": 766,
+            "height": 47
+          },
+          "role": "Button",
+          "padding": {
+            "start": 0,
+            "top": 4.1904764,
+            "end": 0,
+            "bottom": 3.8095238
+          }
+        },
+        {
+          "bounds": {
+            "x": 37,
+            "y": 257,
+            "width": 766,
+            "height": 47
+          },
+          "role": "Button",
+          "padding": {
+            "start": 0,
+            "top": 4.1904764,
+            "end": 0,
+            "bottom": 3.8095238
+          }
+        },
+        {
+          "bounds": {
+            "x": 37,
+            "y": 401,
+            "width": 766,
+            "height": 47
+          },
+          "role": "Button",
+          "padding": {
+            "start": 0,
+            "top": 4.1904764,
+            "end": 0,
+            "bottom": 3.8095238
+          }
+        }
+      ],
       "group": "Cards",
       "caption": "To-do list card (dark).",
       "wireframe": "wireframes/card-todo-dark.svg",
       "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
       "sourceModule": ":previews",
-      "bodyLine": 801,
+      "bodyLine": 800,
       "sourceDirectory": "previews",
       "sourceFunction": "TodoList_Dark",
       "parameters": [
@@ -4531,13 +7599,28 @@
         }
       ],
       "greenlines": [],
-      "redlines": [],
+      "redlines": [
+        {
+          "bounds": {
+            "x": 37,
+            "y": 32,
+            "width": 923,
+            "height": 367
+          },
+          "padding": {
+            "start": 14.095238,
+            "top": 12.190476,
+            "end": 14.095238,
+            "bottom": 11.809524
+          }
+        }
+      ],
       "group": "Cards",
       "caption": "Calendar card (light).",
       "wireframe": "wireframes/card-calendar-light.svg",
       "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
       "sourceModule": ":previews",
-      "bodyLine": 813,
+      "bodyLine": 812,
       "sourceDirectory": "previews",
       "sourceFunction": "Calendar_Light",
       "parameters": [
@@ -4569,13 +7652,28 @@
         }
       ],
       "greenlines": [],
-      "redlines": [],
+      "redlines": [
+        {
+          "bounds": {
+            "x": 37,
+            "y": 32,
+            "width": 923,
+            "height": 367
+          },
+          "padding": {
+            "start": 14.095238,
+            "top": 12.190476,
+            "end": 14.095238,
+            "bottom": 11.809524
+          }
+        }
+      ],
       "group": "Cards",
       "caption": "Calendar card (dark).",
       "wireframe": "wireframes/card-calendar-dark.svg",
       "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
       "sourceModule": ":previews",
-      "bodyLine": 820,
+      "bodyLine": 819,
       "sourceDirectory": "previews",
       "sourceFunction": "Calendar_Dark",
       "parameters": [
@@ -4606,14 +7704,90 @@
           "density": 2.625
         }
       ],
-      "greenlines": [],
-      "redlines": [],
+      "greenlines": [
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 37,
+              "y": 176,
+              "width": 105,
+              "height": 105
+            }
+          },
+          "bounds": {
+            "x": 37,
+            "y": 176,
+            "width": 105,
+            "height": 105
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 163,
+              "y": 176,
+              "width": 105,
+              "height": 105
+            }
+          },
+          "bounds": {
+            "x": 163,
+            "y": 176,
+            "width": 105,
+            "height": 105
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 289,
+              "y": 176,
+              "width": 105,
+              "height": 105
+            }
+          },
+          "bounds": {
+            "x": 289,
+            "y": 176,
+            "width": 105,
+            "height": 105
+          }
+        }
+      ],
+      "redlines": [
+        {
+          "bounds": {
+            "x": 37,
+            "y": 32,
+            "width": 661,
+            "height": 249
+          },
+          "padding": {
+            "start": 14.095238,
+            "top": 12.190476,
+            "end": 14.095238,
+            "bottom": 11.809524
+          }
+        }
+      ],
       "group": "Cards",
       "caption": "Area card — a room summary tile (light).",
       "wireframe": "wireframes/card-area-light.svg",
       "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
       "sourceModule": ":previews",
-      "bodyLine": 835,
+      "bodyLine": 834,
       "sourceDirectory": "previews",
       "sourceFunction": "Area_Light",
       "parameters": [
@@ -4644,14 +7818,90 @@
           "density": 2.625
         }
       ],
-      "greenlines": [],
-      "redlines": [],
+      "greenlines": [
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 37,
+              "y": 176,
+              "width": 105,
+              "height": 105
+            }
+          },
+          "bounds": {
+            "x": 37,
+            "y": 176,
+            "width": 105,
+            "height": 105
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 163,
+              "y": 176,
+              "width": 105,
+              "height": 105
+            }
+          },
+          "bounds": {
+            "x": 163,
+            "y": 176,
+            "width": 105,
+            "height": 105
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 289,
+              "y": 176,
+              "width": 105,
+              "height": 105
+            }
+          },
+          "bounds": {
+            "x": 289,
+            "y": 176,
+            "width": 105,
+            "height": 105
+          }
+        }
+      ],
+      "redlines": [
+        {
+          "bounds": {
+            "x": 37,
+            "y": 32,
+            "width": 661,
+            "height": 249
+          },
+          "padding": {
+            "start": 14.095238,
+            "top": 12.190476,
+            "end": 14.095238,
+            "bottom": 11.809524
+          }
+        }
+      ],
       "group": "Cards",
       "caption": "Area card (dark).",
       "wireframe": "wireframes/card-area-dark.svg",
       "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
       "sourceModule": ":previews",
-      "bodyLine": 842,
+      "bodyLine": 841,
       "sourceDirectory": "previews",
       "sourceFunction": "Area_Dark",
       "parameters": [
@@ -4683,13 +7933,43 @@
         }
       ],
       "greenlines": [],
-      "redlines": [],
+      "redlines": [
+        {
+          "bounds": {
+            "x": 37,
+            "y": 26,
+            "width": 766,
+            "height": 177
+          },
+          "padding": {
+            "start": 14.095238,
+            "top": 9.904762,
+            "end": 14.095238,
+            "bottom": 10.285714
+          }
+        },
+        {
+          "bounds": {
+            "x": 37,
+            "y": 76,
+            "width": 671,
+            "height": 37
+          },
+          "label": "Outside",
+          "padding": {
+            "start": 0,
+            "top": 0,
+            "end": 8,
+            "bottom": 0
+          }
+        }
+      ],
       "group": "Cards",
       "caption": "Sensor card — a single value read-out (light).",
       "wireframe": "wireframes/card-sensor-light.svg",
       "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
       "sourceModule": ":previews",
-      "bodyLine": 959,
+      "bodyLine": 958,
       "sourceDirectory": "previews",
       "sourceFunction": "Sensor_Light",
       "parameters": [
@@ -4721,13 +8001,43 @@
         }
       ],
       "greenlines": [],
-      "redlines": [],
+      "redlines": [
+        {
+          "bounds": {
+            "x": 37,
+            "y": 26,
+            "width": 766,
+            "height": 177
+          },
+          "padding": {
+            "start": 14.095238,
+            "top": 9.904762,
+            "end": 14.095238,
+            "bottom": 10.285714
+          }
+        },
+        {
+          "bounds": {
+            "x": 37,
+            "y": 76,
+            "width": 671,
+            "height": 37
+          },
+          "label": "Outside",
+          "padding": {
+            "start": 0,
+            "top": 0,
+            "end": 8,
+            "bottom": 0
+          }
+        }
+      ],
       "group": "Cards",
       "caption": "Sensor card (dark).",
       "wireframe": "wireframes/card-sensor-dark.svg",
       "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
       "sourceModule": ":previews",
-      "bodyLine": 966,
+      "bodyLine": 965,
       "sourceDirectory": "previews",
       "sourceFunction": "Sensor_Dark",
       "parameters": [
@@ -4759,13 +8069,28 @@
         }
       ],
       "greenlines": [],
-      "redlines": [],
+      "redlines": [
+        {
+          "bounds": {
+            "x": 37,
+            "y": 32,
+            "width": 556,
+            "height": 192
+          },
+          "padding": {
+            "start": 14.095238,
+            "top": 12.190476,
+            "end": 14.095238,
+            "bottom": 11.809524
+          }
+        }
+      ],
       "group": "Cards",
       "caption": "Statistic card — an aggregated value (light).",
       "wireframe": "wireframes/card-statistic-light.svg",
       "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
       "sourceModule": ":previews",
-      "bodyLine": 940,
+      "bodyLine": 939,
       "sourceDirectory": "previews",
       "sourceFunction": "Statistic_Light",
       "parameters": [
@@ -4797,13 +8122,28 @@
         }
       ],
       "greenlines": [],
-      "redlines": [],
+      "redlines": [
+        {
+          "bounds": {
+            "x": 37,
+            "y": 32,
+            "width": 556,
+            "height": 192
+          },
+          "padding": {
+            "start": 14.095238,
+            "top": 12.190476,
+            "end": 14.095238,
+            "bottom": 11.809524
+          }
+        }
+      ],
       "group": "Cards",
       "caption": "Statistic card (dark).",
       "wireframe": "wireframes/card-statistic-dark.svg",
       "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
       "sourceModule": ":previews",
-      "bodyLine": 947,
+      "bodyLine": 946,
       "sourceDirectory": "previews",
       "sourceFunction": "Statistic_Dark",
       "parameters": [
@@ -4835,13 +8175,28 @@
         }
       ],
       "greenlines": [],
-      "redlines": [],
+      "redlines": [
+        {
+          "bounds": {
+            "x": 32,
+            "y": 26,
+            "width": 934,
+            "height": 138
+          },
+          "padding": {
+            "start": 12.190476,
+            "top": 9.904762,
+            "end": 11.809524,
+            "bottom": 10.285714
+          }
+        }
+      ],
       "group": "Cards",
       "caption": "Markdown card — rich text content (light).",
       "wireframe": "wireframes/card-markdown-light.svg",
       "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
       "sourceModule": ":previews",
-      "bodyLine": 213,
+      "bodyLine": 212,
       "sourceDirectory": "previews",
       "sourceFunction": "Markdown_Light",
       "parameters": [
@@ -4873,13 +8228,28 @@
         }
       ],
       "greenlines": [],
-      "redlines": [],
+      "redlines": [
+        {
+          "bounds": {
+            "x": 32,
+            "y": 26,
+            "width": 934,
+            "height": 138
+          },
+          "padding": {
+            "start": 12.190476,
+            "top": 9.904762,
+            "end": 11.809524,
+            "bottom": 10.285714
+          }
+        }
+      ],
       "group": "Cards",
       "caption": "Markdown card (dark).",
       "wireframe": "wireframes/card-markdown-dark.svg",
       "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
       "sourceModule": ":previews",
-      "bodyLine": 217,
+      "bodyLine": 216,
       "sourceDirectory": "previews",
       "sourceFunction": "Markdown_Dark",
       "parameters": [
@@ -4911,13 +8281,28 @@
         }
       ],
       "greenlines": [],
-      "redlines": [],
+      "redlines": [
+        {
+          "bounds": {
+            "x": 37,
+            "y": 32,
+            "width": 451,
+            "height": 199
+          },
+          "padding": {
+            "start": 14.095238,
+            "top": 12.190476,
+            "end": 14.095238,
+            "bottom": 11.809524
+          }
+        }
+      ],
       "group": "Cards",
       "caption": "Clock card (light).",
       "wireframe": "wireframes/card-clock-light.svg",
       "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
       "sourceModule": ":previews",
-      "bodyLine": 691,
+      "bodyLine": 690,
       "sourceDirectory": "previews",
       "sourceFunction": "Clock_Light",
       "parameters": [
@@ -4949,13 +8334,28 @@
         }
       ],
       "greenlines": [],
-      "redlines": [],
+      "redlines": [
+        {
+          "bounds": {
+            "x": 37,
+            "y": 32,
+            "width": 451,
+            "height": 199
+          },
+          "padding": {
+            "start": 14.095238,
+            "top": 12.190476,
+            "end": 14.095238,
+            "bottom": 11.809524
+          }
+        }
+      ],
       "group": "Cards",
       "caption": "Clock card (dark).",
       "wireframe": "wireframes/card-clock-dark.svg",
       "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
       "sourceModule": ":previews",
-      "bodyLine": 698,
+      "bodyLine": 697,
       "sourceDirectory": "previews",
       "sourceFunction": "Clock_Dark",
       "parameters": [
@@ -4986,14 +8386,86 @@
           "density": 2.625
         }
       ],
-      "greenlines": [],
-      "redlines": [],
+      "greenlines": [
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 32,
+              "y": 21,
+              "width": 546,
+              "height": 74
+            }
+          },
+          "bounds": {
+            "x": 32,
+            "y": 21,
+            "width": 546,
+            "height": 74
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 32,
+              "y": 158,
+              "width": 546,
+              "height": 83
+            }
+          },
+          "bounds": {
+            "x": 32,
+            "y": 158,
+            "width": 546,
+            "height": 83
+          }
+        }
+      ],
+      "redlines": [
+        {
+          "bounds": {
+            "x": 32,
+            "y": 21,
+            "width": 546,
+            "height": 74
+          },
+          "role": "Button",
+          "padding": {
+            "start": 12.190476,
+            "top": 8,
+            "end": 11.809524,
+            "bottom": 8
+          }
+        },
+        {
+          "bounds": {
+            "x": 32,
+            "y": 158,
+            "width": 546,
+            "height": 83
+          },
+          "role": "Button",
+          "padding": {
+            "start": 12.190476,
+            "top": 8,
+            "end": 11.809524,
+            "bottom": 8
+          }
+        }
+      ],
       "group": "Layout",
       "caption": "Vertical stack — cards stacked in a column (light).",
       "wireframe": "wireframes/layout-verticalstack-light.svg",
       "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
       "sourceModule": ":previews",
-      "bodyLine": 226,
+      "bodyLine": 225,
       "sourceDirectory": "previews",
       "sourceFunction": "VerticalStack_Light",
       "parameters": [
@@ -5024,14 +8496,86 @@
           "density": 2.625
         }
       ],
-      "greenlines": [],
-      "redlines": [],
+      "greenlines": [
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 32,
+              "y": 21,
+              "width": 546,
+              "height": 74
+            }
+          },
+          "bounds": {
+            "x": 32,
+            "y": 21,
+            "width": 546,
+            "height": 74
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 32,
+              "y": 158,
+              "width": 546,
+              "height": 83
+            }
+          },
+          "bounds": {
+            "x": 32,
+            "y": 158,
+            "width": 546,
+            "height": 83
+          }
+        }
+      ],
+      "redlines": [
+        {
+          "bounds": {
+            "x": 32,
+            "y": 21,
+            "width": 546,
+            "height": 74
+          },
+          "role": "Button",
+          "padding": {
+            "start": 12.190476,
+            "top": 8,
+            "end": 11.809524,
+            "bottom": 8
+          }
+        },
+        {
+          "bounds": {
+            "x": 32,
+            "y": 158,
+            "width": 546,
+            "height": 83
+          },
+          "role": "Button",
+          "padding": {
+            "start": 12.190476,
+            "top": 8,
+            "end": 11.809524,
+            "bottom": 8
+          }
+        }
+      ],
       "group": "Layout",
       "caption": "Vertical stack (dark).",
       "wireframe": "wireframes/layout-verticalstack-dark.svg",
       "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
       "sourceModule": ":previews",
-      "bodyLine": 231,
+      "bodyLine": 230,
       "sourceDirectory": "previews",
       "sourceFunction": "VerticalStack_Dark",
       "parameters": [
@@ -5062,14 +8606,86 @@
           "density": 2.625
         }
       ],
-      "greenlines": [],
-      "redlines": [],
+      "greenlines": [
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 32,
+              "y": 32,
+              "width": 126,
+              "height": 178
+            }
+          },
+          "bounds": {
+            "x": 32,
+            "y": 32,
+            "width": 126,
+            "height": 178
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 242,
+              "y": 32,
+              "width": 126,
+              "height": 178
+            }
+          },
+          "bounds": {
+            "x": 242,
+            "y": 32,
+            "width": 126,
+            "height": 178
+          }
+        }
+      ],
+      "redlines": [
+        {
+          "bounds": {
+            "x": 32,
+            "y": 32,
+            "width": 126,
+            "height": 178
+          },
+          "role": "Button",
+          "padding": {
+            "start": 12.190476,
+            "top": 12.190476,
+            "end": 11.809524,
+            "bottom": 11.809524
+          }
+        },
+        {
+          "bounds": {
+            "x": 242,
+            "y": 32,
+            "width": 126,
+            "height": 178
+          },
+          "role": "Button",
+          "padding": {
+            "start": 12.190476,
+            "top": 12.190476,
+            "end": 11.809524,
+            "bottom": 11.809524
+          }
+        }
+      ],
       "group": "Layout",
       "caption": "Horizontal stack — cards side by side (light).",
       "wireframe": "wireframes/layout-horizontalstack-light.svg",
       "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
       "sourceModule": ":previews",
-      "bodyLine": 247,
+      "bodyLine": 246,
       "sourceDirectory": "previews",
       "sourceFunction": "HorizontalStack_Light",
       "parameters": [
@@ -5100,14 +8716,86 @@
           "density": 2.625
         }
       ],
-      "greenlines": [],
-      "redlines": [],
+      "greenlines": [
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 32,
+              "y": 32,
+              "width": 126,
+              "height": 178
+            }
+          },
+          "bounds": {
+            "x": 32,
+            "y": 32,
+            "width": 126,
+            "height": 178
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 242,
+              "y": 32,
+              "width": 126,
+              "height": 178
+            }
+          },
+          "bounds": {
+            "x": 242,
+            "y": 32,
+            "width": 126,
+            "height": 178
+          }
+        }
+      ],
+      "redlines": [
+        {
+          "bounds": {
+            "x": 32,
+            "y": 32,
+            "width": 126,
+            "height": 178
+          },
+          "role": "Button",
+          "padding": {
+            "start": 12.190476,
+            "top": 12.190476,
+            "end": 11.809524,
+            "bottom": 11.809524
+          }
+        },
+        {
+          "bounds": {
+            "x": 242,
+            "y": 32,
+            "width": 126,
+            "height": 178
+          },
+          "role": "Button",
+          "padding": {
+            "start": 12.190476,
+            "top": 12.190476,
+            "end": 11.809524,
+            "bottom": 11.809524
+          }
+        }
+      ],
       "group": "Layout",
       "caption": "Horizontal stack (dark).",
       "wireframe": "wireframes/layout-horizontalstack-dark.svg",
       "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
       "sourceModule": ":previews",
-      "bodyLine": 252,
+      "bodyLine": 251,
       "sourceDirectory": "previews",
       "sourceFunction": "HorizontalStack_Dark",
       "parameters": [
@@ -5138,14 +8826,156 @@
           "density": 2.625
         }
       ],
-      "greenlines": [],
-      "redlines": [],
+      "greenlines": [
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 32,
+              "y": 32,
+              "width": 126,
+              "height": 182
+            }
+          },
+          "bounds": {
+            "x": 32,
+            "y": 32,
+            "width": 126,
+            "height": 182
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 242,
+              "y": 32,
+              "width": 126,
+              "height": 182
+            }
+          },
+          "bounds": {
+            "x": 242,
+            "y": 32,
+            "width": 126,
+            "height": 182
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 452,
+              "y": 32,
+              "width": 126,
+              "height": 182
+            }
+          },
+          "bounds": {
+            "x": 452,
+            "y": 32,
+            "width": 126,
+            "height": 182
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 662,
+              "y": 32,
+              "width": 126,
+              "height": 182
+            }
+          },
+          "bounds": {
+            "x": 662,
+            "y": 32,
+            "width": 126,
+            "height": 182
+          }
+        }
+      ],
+      "redlines": [
+        {
+          "bounds": {
+            "x": 32,
+            "y": 32,
+            "width": 126,
+            "height": 182
+          },
+          "role": "Button",
+          "padding": {
+            "start": 12.190476,
+            "top": 12.190476,
+            "end": 11.809524,
+            "bottom": 11.809524
+          }
+        },
+        {
+          "bounds": {
+            "x": 242,
+            "y": 32,
+            "width": 126,
+            "height": 182
+          },
+          "role": "Button",
+          "padding": {
+            "start": 12.190476,
+            "top": 12.190476,
+            "end": 11.809524,
+            "bottom": 11.809524
+          }
+        },
+        {
+          "bounds": {
+            "x": 452,
+            "y": 32,
+            "width": 126,
+            "height": 182
+          },
+          "role": "Button",
+          "padding": {
+            "start": 12.190476,
+            "top": 12.190476,
+            "end": 11.809524,
+            "bottom": 11.809524
+          }
+        },
+        {
+          "bounds": {
+            "x": 662,
+            "y": 32,
+            "width": 126,
+            "height": 182
+          },
+          "role": "Button",
+          "padding": {
+            "start": 12.190476,
+            "top": 12.190476,
+            "end": 11.809524,
+            "bottom": 11.809524
+          }
+        }
+      ],
       "group": "Layout",
       "caption": "Grid — cards in a fixed-column grid (light).",
       "wireframe": "wireframes/layout-grid-light.svg",
       "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
       "sourceModule": ":previews",
-      "bodyLine": 269,
+      "bodyLine": 268,
       "sourceDirectory": "previews",
       "sourceFunction": "Grid_Light",
       "parameters": [
@@ -5176,14 +9006,156 @@
           "density": 2.625
         }
       ],
-      "greenlines": [],
-      "redlines": [],
+      "greenlines": [
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 32,
+              "y": 32,
+              "width": 126,
+              "height": 182
+            }
+          },
+          "bounds": {
+            "x": 32,
+            "y": 32,
+            "width": 126,
+            "height": 182
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 242,
+              "y": 32,
+              "width": 126,
+              "height": 182
+            }
+          },
+          "bounds": {
+            "x": 242,
+            "y": 32,
+            "width": 126,
+            "height": 182
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 452,
+              "y": 32,
+              "width": 126,
+              "height": 182
+            }
+          },
+          "bounds": {
+            "x": 452,
+            "y": 32,
+            "width": 126,
+            "height": 182
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 662,
+              "y": 32,
+              "width": 126,
+              "height": 182
+            }
+          },
+          "bounds": {
+            "x": 662,
+            "y": 32,
+            "width": 126,
+            "height": 182
+          }
+        }
+      ],
+      "redlines": [
+        {
+          "bounds": {
+            "x": 32,
+            "y": 32,
+            "width": 126,
+            "height": 182
+          },
+          "role": "Button",
+          "padding": {
+            "start": 12.190476,
+            "top": 12.190476,
+            "end": 11.809524,
+            "bottom": 11.809524
+          }
+        },
+        {
+          "bounds": {
+            "x": 242,
+            "y": 32,
+            "width": 126,
+            "height": 182
+          },
+          "role": "Button",
+          "padding": {
+            "start": 12.190476,
+            "top": 12.190476,
+            "end": 11.809524,
+            "bottom": 11.809524
+          }
+        },
+        {
+          "bounds": {
+            "x": 452,
+            "y": 32,
+            "width": 126,
+            "height": 182
+          },
+          "role": "Button",
+          "padding": {
+            "start": 12.190476,
+            "top": 12.190476,
+            "end": 11.809524,
+            "bottom": 11.809524
+          }
+        },
+        {
+          "bounds": {
+            "x": 662,
+            "y": 32,
+            "width": 126,
+            "height": 182
+          },
+          "role": "Button",
+          "padding": {
+            "start": 12.190476,
+            "top": 12.190476,
+            "end": 11.809524,
+            "bottom": 11.809524
+          }
+        }
+      ],
       "group": "Layout",
       "caption": "Grid (dark).",
       "wireframe": "wireframes/layout-grid-dark.svg",
       "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
       "sourceModule": ":previews",
-      "bodyLine": 273,
+      "bodyLine": 272,
       "sourceDirectory": "previews",
       "sourceFunction": "Grid_Dark",
       "parameters": [
@@ -5215,13 +9187,29 @@
         }
       ],
       "greenlines": [],
-      "redlines": [],
+      "redlines": [
+        {
+          "bounds": {
+            "x": 0,
+            "y": 21,
+            "width": 283,
+            "height": 2
+          },
+          "label": "Downstairs",
+          "padding": {
+            "start": 0,
+            "top": 8,
+            "end": 0,
+            "bottom": 8
+          }
+        }
+      ],
       "group": "Layout",
       "caption": "Heading — a section title row (light).",
       "wireframe": "wireframes/layout-heading-light.svg",
       "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
       "sourceModule": ":previews",
-      "bodyLine": 201,
+      "bodyLine": 200,
       "sourceDirectory": "previews",
       "sourceFunction": "Heading_Light",
       "parameters": [
@@ -5253,13 +9241,29 @@
         }
       ],
       "greenlines": [],
-      "redlines": [],
+      "redlines": [
+        {
+          "bounds": {
+            "x": 0,
+            "y": 21,
+            "width": 283,
+            "height": 2
+          },
+          "label": "Downstairs",
+          "padding": {
+            "start": 0,
+            "top": 8,
+            "end": 0,
+            "bottom": 8
+          }
+        }
+      ],
       "group": "Layout",
       "caption": "Heading (dark).",
       "wireframe": "wireframes/layout-heading-dark.svg",
       "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
       "sourceModule": ":previews",
-      "bodyLine": 205,
+      "bodyLine": 204,
       "sourceDirectory": "previews",
       "sourceFunction": "Heading_Dark",
       "parameters": [
@@ -5290,8 +9294,144 @@
           "density": 2.625
         }
       ],
-      "greenlines": [],
-      "redlines": [],
+      "greenlines": [
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 316,
+              "y": 150,
+              "width": 84,
+              "height": 84
+            }
+          },
+          "bounds": {
+            "x": 316,
+            "y": 150,
+            "width": 84,
+            "height": 84
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 316,
+              "y": 250,
+              "width": 84,
+              "height": 84
+            }
+          },
+          "bounds": {
+            "x": 316,
+            "y": 250,
+            "width": 84,
+            "height": 84
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 316,
+              "y": 350,
+              "width": 84,
+              "height": 84
+            }
+          },
+          "bounds": {
+            "x": 316,
+            "y": 350,
+            "width": 84,
+            "height": 84
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 316,
+              "y": 556,
+              "width": 84,
+              "height": 84
+            }
+          },
+          "bounds": {
+            "x": 316,
+            "y": 556,
+            "width": 84,
+            "height": 84
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 316,
+              "y": 656,
+              "width": 84,
+              "height": 84
+            }
+          },
+          "bounds": {
+            "x": 316,
+            "y": 656,
+            "width": 84,
+            "height": 84
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 316,
+              "y": 756,
+              "width": 84,
+              "height": 4
+            }
+          },
+          "bounds": {
+            "x": 316,
+            "y": 756,
+            "width": 84,
+            "height": 4
+          }
+        }
+      ],
+      "redlines": [
+        {
+          "bounds": {
+            "x": 32,
+            "y": 26,
+            "width": 672,
+            "height": 734
+          },
+          "padding": {
+            "start": 12.190476,
+            "top": 9.904762,
+            "end": 11.809524,
+            "bottom": 10.285714
+          }
+        }
+      ],
       "group": "Specialised cards",
       "caption": "Enhanced shutter card (light).",
       "wireframe": "wireframes/card-shutter-light.svg",
@@ -5328,8 +9468,144 @@
           "density": 2.625
         }
       ],
-      "greenlines": [],
-      "redlines": [],
+      "greenlines": [
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 316,
+              "y": 150,
+              "width": 84,
+              "height": 84
+            }
+          },
+          "bounds": {
+            "x": 316,
+            "y": 150,
+            "width": 84,
+            "height": 84
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 316,
+              "y": 250,
+              "width": 84,
+              "height": 84
+            }
+          },
+          "bounds": {
+            "x": 316,
+            "y": 250,
+            "width": 84,
+            "height": 84
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 316,
+              "y": 350,
+              "width": 84,
+              "height": 84
+            }
+          },
+          "bounds": {
+            "x": 316,
+            "y": 350,
+            "width": 84,
+            "height": 84
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 316,
+              "y": 556,
+              "width": 84,
+              "height": 84
+            }
+          },
+          "bounds": {
+            "x": 316,
+            "y": 556,
+            "width": 84,
+            "height": 84
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 316,
+              "y": 656,
+              "width": 84,
+              "height": 84
+            }
+          },
+          "bounds": {
+            "x": 316,
+            "y": 656,
+            "width": 84,
+            "height": 84
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 316,
+              "y": 756,
+              "width": 84,
+              "height": 4
+            }
+          },
+          "bounds": {
+            "x": 316,
+            "y": 756,
+            "width": 84,
+            "height": 4
+          }
+        }
+      ],
+      "redlines": [
+        {
+          "bounds": {
+            "x": 32,
+            "y": 26,
+            "width": 672,
+            "height": 734
+          },
+          "padding": {
+            "start": 12.190476,
+            "top": 9.904762,
+            "end": 11.809524,
+            "bottom": 10.285714
+          }
+        }
+      ],
       "group": "Specialised cards",
       "caption": "Enhanced shutter card (dark).",
       "wireframe": "wireframes/card-shutter-dark.svg",
@@ -5366,8 +9642,144 @@
           "density": 2.625
         }
       ],
-      "greenlines": [],
-      "redlines": [],
+      "greenlines": [
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 379,
+              "y": 150,
+              "width": 84,
+              "height": 84
+            }
+          },
+          "bounds": {
+            "x": 379,
+            "y": 150,
+            "width": 84,
+            "height": 84
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 379,
+              "y": 250,
+              "width": 84,
+              "height": 84
+            }
+          },
+          "bounds": {
+            "x": 379,
+            "y": 250,
+            "width": 84,
+            "height": 84
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 379,
+              "y": 350,
+              "width": 84,
+              "height": 84
+            }
+          },
+          "bounds": {
+            "x": 379,
+            "y": 350,
+            "width": 84,
+            "height": 84
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 379,
+              "y": 556,
+              "width": 84,
+              "height": 84
+            }
+          },
+          "bounds": {
+            "x": 379,
+            "y": 556,
+            "width": 84,
+            "height": 84
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 379,
+              "y": 656,
+              "width": 84,
+              "height": 84
+            }
+          },
+          "bounds": {
+            "x": 379,
+            "y": 656,
+            "width": 84,
+            "height": 84
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 379,
+              "y": 756,
+              "width": 84,
+              "height": 84
+            }
+          },
+          "bounds": {
+            "x": 379,
+            "y": 756,
+            "width": 84,
+            "height": 84
+          }
+        }
+      ],
+      "redlines": [
+        {
+          "bounds": {
+            "x": 32,
+            "y": 26,
+            "width": 672,
+            "height": 839
+          },
+          "padding": {
+            "start": 12.190476,
+            "top": 9.904762,
+            "end": 11.809524,
+            "bottom": 10.285714
+          }
+        }
+      ],
       "group": "Specialised cards",
       "caption": "Garage door card — cover + light (light).",
       "wireframe": "wireframes/card-garage-light.svg",
@@ -5404,8 +9816,144 @@
           "density": 2.625
         }
       ],
-      "greenlines": [],
-      "redlines": [],
+      "greenlines": [
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 379,
+              "y": 150,
+              "width": 84,
+              "height": 84
+            }
+          },
+          "bounds": {
+            "x": 379,
+            "y": 150,
+            "width": 84,
+            "height": 84
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 379,
+              "y": 250,
+              "width": 84,
+              "height": 84
+            }
+          },
+          "bounds": {
+            "x": 379,
+            "y": 250,
+            "width": 84,
+            "height": 84
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 379,
+              "y": 350,
+              "width": 84,
+              "height": 84
+            }
+          },
+          "bounds": {
+            "x": 379,
+            "y": 350,
+            "width": 84,
+            "height": 84
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 379,
+              "y": 556,
+              "width": 84,
+              "height": 84
+            }
+          },
+          "bounds": {
+            "x": 379,
+            "y": 556,
+            "width": 84,
+            "height": 84
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 379,
+              "y": 656,
+              "width": 84,
+              "height": 84
+            }
+          },
+          "bounds": {
+            "x": 379,
+            "y": 656,
+            "width": 84,
+            "height": 84
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 379,
+              "y": 756,
+              "width": 84,
+              "height": 84
+            }
+          },
+          "bounds": {
+            "x": 379,
+            "y": 756,
+            "width": 84,
+            "height": 84
+          }
+        }
+      ],
+      "redlines": [
+        {
+          "bounds": {
+            "x": 32,
+            "y": 26,
+            "width": 672,
+            "height": 839
+          },
+          "padding": {
+            "start": 12.190476,
+            "top": 9.904762,
+            "end": 11.809524,
+            "bottom": 10.285714
+          }
+        }
+      ],
       "group": "Specialised cards",
       "caption": "Garage door card — cover + light (dark).",
       "wireframe": "wireframes/card-garage-dark.svg",
@@ -5442,14 +9990,372 @@
           "density": 2.625
         }
       ],
-      "greenlines": [],
-      "redlines": [],
+      "greenlines": [
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 32,
+              "y": 116,
+              "width": 934,
+              "height": 74
+            }
+          },
+          "bounds": {
+            "x": 32,
+            "y": 116,
+            "width": 934,
+            "height": 74
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 32,
+              "y": 242,
+              "width": 934,
+              "height": 84
+            }
+          },
+          "bounds": {
+            "x": 32,
+            "y": 242,
+            "width": 934,
+            "height": 84
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 32,
+              "y": 447,
+              "width": 934,
+              "height": 58
+            }
+          },
+          "bounds": {
+            "x": 32,
+            "y": 447,
+            "width": 934,
+            "height": 58
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 871,
+              "y": 447,
+              "width": 95,
+              "height": 58
+            }
+          },
+          "bounds": {
+            "x": 871,
+            "y": 447,
+            "width": 95,
+            "height": 58
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 32,
+              "y": 537,
+              "width": 934,
+              "height": 58
+            }
+          },
+          "bounds": {
+            "x": 32,
+            "y": 537,
+            "width": 934,
+            "height": 58
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 871,
+              "y": 537,
+              "width": 95,
+              "height": 58
+            }
+          },
+          "bounds": {
+            "x": 871,
+            "y": 537,
+            "width": 95,
+            "height": 58
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 161,
+              "y": 783,
+              "width": 172,
+              "height": 166
+            }
+          },
+          "bounds": {
+            "x": 161,
+            "y": 783,
+            "width": 172,
+            "height": 166
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 461,
+              "y": 783,
+              "width": 103,
+              "height": 166
+            }
+          },
+          "bounds": {
+            "x": 461,
+            "y": 783,
+            "width": 103,
+            "height": 166
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 693,
+              "y": 783,
+              "width": 145,
+              "height": 166
+            }
+          },
+          "bounds": {
+            "x": 693,
+            "y": 783,
+            "width": 145,
+            "height": 166
+          }
+        }
+      ],
+      "redlines": [
+        {
+          "bounds": {
+            "x": 0,
+            "y": 21,
+            "width": 997,
+            "height": 53
+          },
+          "label": "Home",
+          "padding": {
+            "start": 0,
+            "top": 8,
+            "end": 0,
+            "bottom": 8
+          }
+        },
+        {
+          "bounds": {
+            "x": 32,
+            "y": 116,
+            "width": 934,
+            "height": 74
+          },
+          "role": "Button",
+          "padding": {
+            "start": 12.190476,
+            "top": 8,
+            "end": 11.809524,
+            "bottom": 8
+          }
+        },
+        {
+          "bounds": {
+            "x": 32,
+            "y": 242,
+            "width": 934,
+            "height": 84
+          },
+          "role": "Button",
+          "padding": {
+            "start": 12.190476,
+            "top": 8,
+            "end": 11.809524,
+            "bottom": 8
+          }
+        },
+        {
+          "bounds": {
+            "x": 32,
+            "y": 373,
+            "width": 934,
+            "height": 238
+          },
+          "padding": {
+            "start": 12.190476,
+            "top": 9.904762,
+            "end": 11.809524,
+            "bottom": 10.285714
+          }
+        },
+        {
+          "bounds": {
+            "x": 32,
+            "y": 447,
+            "width": 934,
+            "height": 58
+          },
+          "role": "Button",
+          "padding": {
+            "start": 0,
+            "top": 6.095238,
+            "end": 0,
+            "bottom": 6.095238
+          }
+        },
+        {
+          "bounds": {
+            "x": 916,
+            "y": 455,
+            "width": 42,
+            "height": 42
+          },
+          "padding": {
+            "start": 17.142857,
+            "top": 3.047619,
+            "end": 0,
+            "bottom": 0
+          }
+        },
+        {
+          "bounds": {
+            "x": 32,
+            "y": 537,
+            "width": 934,
+            "height": 58
+          },
+          "role": "Button",
+          "padding": {
+            "start": 0,
+            "top": 6.095238,
+            "end": 0,
+            "bottom": 6.095238
+          }
+        },
+        {
+          "bounds": {
+            "x": 916,
+            "y": 545,
+            "width": 42,
+            "height": 42
+          },
+          "padding": {
+            "start": 17.142857,
+            "top": 3.047619,
+            "end": 0,
+            "bottom": 0
+          }
+        },
+        {
+          "bounds": {
+            "x": 32,
+            "y": 709,
+            "width": 934,
+            "height": 250
+          },
+          "padding": {
+            "start": 12.190476,
+            "top": 9.904762,
+            "end": 11.809524,
+            "bottom": 10.285714
+          }
+        },
+        {
+          "bounds": {
+            "x": 161,
+            "y": 783,
+            "width": 172,
+            "height": 166
+          },
+          "role": "Button",
+          "padding": {
+            "start": 0,
+            "top": 4.1904764,
+            "end": 0,
+            "bottom": 3.8095238
+          }
+        },
+        {
+          "bounds": {
+            "x": 461,
+            "y": 783,
+            "width": 103,
+            "height": 166
+          },
+          "role": "Button",
+          "padding": {
+            "start": 0,
+            "top": 4.1904764,
+            "end": 0,
+            "bottom": 3.8095238
+          }
+        },
+        {
+          "bounds": {
+            "x": 693,
+            "y": 783,
+            "width": 145,
+            "height": 166
+          },
+          "role": "Button",
+          "padding": {
+            "start": 0,
+            "top": 4.1904764,
+            "end": 0,
+            "bottom": 3.8095238
+          }
+        }
+      ],
       "group": "Specialised cards",
       "caption": "A full mixed-card dashboard stack (light).",
       "wireframe": "wireframes/dashboard-light.svg",
       "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
       "sourceModule": ":previews",
-      "bodyLine": 299,
+      "bodyLine": 298,
       "sourceDirectory": "previews",
       "sourceFunction": "Dashboard_Light",
       "parameters": [
@@ -5475,14 +10381,372 @@
           "density": 2.625
         }
       ],
-      "greenlines": [],
-      "redlines": [],
+      "greenlines": [
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 32,
+              "y": 116,
+              "width": 934,
+              "height": 74
+            }
+          },
+          "bounds": {
+            "x": 32,
+            "y": 116,
+            "width": 934,
+            "height": 74
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 32,
+              "y": 242,
+              "width": 934,
+              "height": 84
+            }
+          },
+          "bounds": {
+            "x": 32,
+            "y": 242,
+            "width": 934,
+            "height": 84
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 32,
+              "y": 447,
+              "width": 934,
+              "height": 58
+            }
+          },
+          "bounds": {
+            "x": 32,
+            "y": 447,
+            "width": 934,
+            "height": 58
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 871,
+              "y": 447,
+              "width": 95,
+              "height": 58
+            }
+          },
+          "bounds": {
+            "x": 871,
+            "y": 447,
+            "width": 95,
+            "height": 58
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 32,
+              "y": 537,
+              "width": 934,
+              "height": 58
+            }
+          },
+          "bounds": {
+            "x": 32,
+            "y": 537,
+            "width": 934,
+            "height": 58
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 871,
+              "y": 537,
+              "width": 95,
+              "height": 58
+            }
+          },
+          "bounds": {
+            "x": 871,
+            "y": 537,
+            "width": 95,
+            "height": 58
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 161,
+              "y": 783,
+              "width": 172,
+              "height": 166
+            }
+          },
+          "bounds": {
+            "x": 161,
+            "y": 783,
+            "width": 172,
+            "height": 166
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 461,
+              "y": 783,
+              "width": 103,
+              "height": 166
+            }
+          },
+          "bounds": {
+            "x": 461,
+            "y": 783,
+            "width": 103,
+            "height": 166
+          }
+        },
+        {
+          "kind": "a11y",
+          "severity": "info",
+          "message": "button",
+          "detail": {
+            "role": "button",
+            "bounds": {
+              "x": 693,
+              "y": 783,
+              "width": 145,
+              "height": 166
+            }
+          },
+          "bounds": {
+            "x": 693,
+            "y": 783,
+            "width": 145,
+            "height": 166
+          }
+        }
+      ],
+      "redlines": [
+        {
+          "bounds": {
+            "x": 0,
+            "y": 21,
+            "width": 997,
+            "height": 53
+          },
+          "label": "Home",
+          "padding": {
+            "start": 0,
+            "top": 8,
+            "end": 0,
+            "bottom": 8
+          }
+        },
+        {
+          "bounds": {
+            "x": 32,
+            "y": 116,
+            "width": 934,
+            "height": 74
+          },
+          "role": "Button",
+          "padding": {
+            "start": 12.190476,
+            "top": 8,
+            "end": 11.809524,
+            "bottom": 8
+          }
+        },
+        {
+          "bounds": {
+            "x": 32,
+            "y": 242,
+            "width": 934,
+            "height": 84
+          },
+          "role": "Button",
+          "padding": {
+            "start": 12.190476,
+            "top": 8,
+            "end": 11.809524,
+            "bottom": 8
+          }
+        },
+        {
+          "bounds": {
+            "x": 32,
+            "y": 373,
+            "width": 934,
+            "height": 238
+          },
+          "padding": {
+            "start": 12.190476,
+            "top": 9.904762,
+            "end": 11.809524,
+            "bottom": 10.285714
+          }
+        },
+        {
+          "bounds": {
+            "x": 32,
+            "y": 447,
+            "width": 934,
+            "height": 58
+          },
+          "role": "Button",
+          "padding": {
+            "start": 0,
+            "top": 6.095238,
+            "end": 0,
+            "bottom": 6.095238
+          }
+        },
+        {
+          "bounds": {
+            "x": 916,
+            "y": 455,
+            "width": 42,
+            "height": 42
+          },
+          "padding": {
+            "start": 17.142857,
+            "top": 3.047619,
+            "end": 0,
+            "bottom": 0
+          }
+        },
+        {
+          "bounds": {
+            "x": 32,
+            "y": 537,
+            "width": 934,
+            "height": 58
+          },
+          "role": "Button",
+          "padding": {
+            "start": 0,
+            "top": 6.095238,
+            "end": 0,
+            "bottom": 6.095238
+          }
+        },
+        {
+          "bounds": {
+            "x": 916,
+            "y": 545,
+            "width": 42,
+            "height": 42
+          },
+          "padding": {
+            "start": 17.142857,
+            "top": 3.047619,
+            "end": 0,
+            "bottom": 0
+          }
+        },
+        {
+          "bounds": {
+            "x": 32,
+            "y": 709,
+            "width": 934,
+            "height": 250
+          },
+          "padding": {
+            "start": 12.190476,
+            "top": 9.904762,
+            "end": 11.809524,
+            "bottom": 10.285714
+          }
+        },
+        {
+          "bounds": {
+            "x": 161,
+            "y": 783,
+            "width": 172,
+            "height": 166
+          },
+          "role": "Button",
+          "padding": {
+            "start": 0,
+            "top": 4.1904764,
+            "end": 0,
+            "bottom": 3.8095238
+          }
+        },
+        {
+          "bounds": {
+            "x": 461,
+            "y": 783,
+            "width": 103,
+            "height": 166
+          },
+          "role": "Button",
+          "padding": {
+            "start": 0,
+            "top": 4.1904764,
+            "end": 0,
+            "bottom": 3.8095238
+          }
+        },
+        {
+          "bounds": {
+            "x": 693,
+            "y": 783,
+            "width": 145,
+            "height": 166
+          },
+          "role": "Button",
+          "padding": {
+            "start": 0,
+            "top": 4.1904764,
+            "end": 0,
+            "bottom": 3.8095238
+          }
+        }
+      ],
       "group": "Specialised cards",
       "caption": "A full mixed-card dashboard stack (dark).",
       "wireframe": "wireframes/dashboard-dark.svg",
       "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
       "sourceModule": ":previews",
-      "bodyLine": 303,
+      "bodyLine": 302,
       "sourceDirectory": "previews",
       "sourceFunction": "Dashboard_Dark",
       "parameters": [
@@ -6779,8 +12043,8 @@
     "androidx.compose.remote:remote-player-compose (RemoteCompose)",
     "ee.schimke.ha:rc-components (Terrazzo themes)"
   ],
-  "renderer": "compose-preview 2.43.0",
-  "generatedAt": "2026-10-11T13:20:48.497Z",
+  "renderer": "compose-preview 2.45.0",
+  "generatedAt": "2026-10-11T14:24:58.887Z",
   "display": {
     "hero": "Dashboard/Light"
   },
@@ -6799,7 +12063,7 @@
   "componentsFile": "components.json",
   "source": {
     "repo": "yschimke/homeassistant-remotecompose",
-    "ref": "1d5a0ea60cc93dc690f81bb8dcc8f993ae02117e",
+    "ref": "cf45f0418a08d99bf3cffc3524584d32ccbe93dd",
     "module": ":previews"
   }
 }

@@ -743,6 +743,11 @@
                     "group": null
                 },
                 {
+                    "previewId": "ee.schimke.ha.previews.WrapContentHeightReproKt.WrapContentHeightCmp_wrap-content_height___CMP_player",
+                    "componentId": null,
+                    "group": null
+                },
+                {
                     "previewId": "ee.schimke.ha.previews.WrapContentHeightReproKt.WrapContentHeightFixAlpha010_wrap-content_height_fix___WrapAdaptive_player",
                     "componentId": null,
                     "group": null
@@ -2890,6 +2895,59 @@
                 },
                 {
                     "previewId": "ee.schimke.ha.previews.ToggleSwitchPreviewsKt.ToggleInitial_On_toggle_initial_on",
+                    "componentId": null,
+                    "group": null
+                }
+            ],
+            "code": {
+                "call": null,
+                "imports": [],
+                "refusedReason": "not public or internal, so a generated file cannot call it",
+                "requiredOptIns": [],
+                "androidxOptIns": []
+            },
+            "signatureKnown": true,
+            "callableFromAnotherFile": false,
+            "hasTypeParameters": false,
+            "hasContextReceivers": false,
+            "overloadsCollided": false,
+            "builder": null,
+            "requiredOptIns": [],
+            "androidxOptIns": []
+        },
+        {
+            "canonicalId": "previews/ee.schimke.ha.previews.WrapContentHeightReproKt.CmpPlayer",
+            "componentIds": [],
+            "symbol": {
+                "jvmOwner": "ee.schimke.ha.previews.WrapContentHeightReproKt",
+                "callable": "ee.schimke.ha.previews.CmpPlayer",
+                "name": "CmpPlayer",
+                "origin": "PROJECT",
+                "jvmName": "CmpPlayer",
+                "descriptor": "(Landroidx/compose/ui/Modifier;Landroidx/compose/runtime/Composer;I)V",
+                "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/WrapContentHeightRepro.kt",
+                "docs": "unavailable",
+                "receiver": null
+            },
+            "parameters": [
+                {
+                    "name": "modifier",
+                    "type": "Modifier",
+                    "typeFqn": "androidx.compose.ui.Modifier",
+                    "hasDefault": false,
+                    "composableSlot": false,
+                    "composableSlotReceiver": null,
+                    "nullable": false,
+                    "noArgConstructible": false,
+                    "noArgFactory": null,
+                    "scopeDslReceiver": null,
+                    "lambdaReturnTypeFqn": null
+                }
+            ],
+            "slots": [],
+            "bindings": [
+                {
+                    "previewId": "ee.schimke.ha.previews.WrapContentHeightReproKt.WrapContentHeightCmp_wrap-content_height___CMP_player",
                     "componentId": null,
                     "group": null
                 }
