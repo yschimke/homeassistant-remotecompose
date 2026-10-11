@@ -19,7 +19,6 @@ import androidx.compose.remote.creation.compose.state.RemoteColor
 import androidx.compose.remote.creation.compose.state.RemoteString
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rf
-import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.remote.creation.compose.state.rsp
 import androidx.compose.remote.creation.compose.state.tween
 import androidx.compose.remote.creation.compose.text.RemoteTextStyle
@@ -117,7 +116,7 @@ fun RemoteHaButtonIcon(data: HaButtonData, modifier: RemoteModifier = RemoteModi
     modifier = modifier.then(clickable).then(cardChrome(theme.cardBackground, theme.divider)),
     contentAlignment = RemoteAlignment.Center,
   ) {
-    ButtonIconChip(data.icon, data.name.rs, accent, FullChipDp, FullIconDp)
+    ButtonIconChip(data.icon, entityName(data.entityId, data.name), accent, FullChipDp, FullIconDp)
   }
 }
 
@@ -176,11 +175,11 @@ private fun ButtonBody(
     contentAlignment = RemoteAlignment.Center,
   ) {
     RemoteColumn(horizontalAlignment = RemoteAlignment.CenterHorizontally) {
-      ButtonIconChip(data.icon, data.name.rs, accent, chipDp, iconDp)
+      ButtonIconChip(data.icon, entityName(data.entityId, data.name), accent, chipDp, iconDp)
       if (data.showName) {
         RemoteBox(modifier = RemoteModifier.padding(top = namePadDp.rdp)) {
           RemoteText(
-            text = data.name.rs,
+            text = entityName(data.entityId, data.name),
             color = theme.primaryText,
             fontSize = nameSizeSp.rsp,
             fontWeight = FontWeight.Medium,

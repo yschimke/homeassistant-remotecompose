@@ -47,7 +47,7 @@ values**. The client fills those bindings from its own HA connection.
 ## Spike status
 
 A first end-to-end slice is in the codebase, with **one rendering path**: every templatable card
-(today, a plain tile) renders from a card design. The design comes from the server when one is
+(today: tile, entity, button, heading, glance and entities) renders from a card design. The design comes from the server when one is
 cached for the card's key, and from the **local design library** otherwise. The library captures
 the same template from the app's own converters on first use and keeps it for the process, so with
 no server configured (the default) cards still take the design path, just with built-in designs.
@@ -61,23 +61,33 @@ nothing.
 | --- | --- |
 | Wire model: `DesignKey`, `DesignSurface`, `DesignManifest`, `DesignEntry` | `ha-model/.../design/CardDesign.kt` |
 | Slot mapping and slot bindings (with `status`, neutral defaults); `DesignProperties` | `ha-model/.../design/CardDesignSlots.kt`, `DesignProperties.kt` |
-| `CardConverter.designProperties` / `designTemplate`, implemented by the tile | `rc-converter/.../CardConverter.kt`, `cards/TileCardConverter.kt` |
+| `CardConverter.designProperties` / `designTemplate`; shared entity properties (`EntityDesign`) | `rc-converter/.../CardConverter.kt`, `cards/EntityDesign.kt`, each `*CardConverter` |
+| Bound name and title text in templates (`LocalTemplateBindings`, `entityName`, `cardTitle`) | `rc-components/.../TemplateBindings.kt` |
 | Client: config (off by default), refresh rules, TTL, back-off, serial rollback check, expiry, sha256-verified blobs, stale and inbuilt fallback, revocation; `DesignPublisher` writes the static files | `ha-client/.../client/design/` |
-| Template capture (`LocalCardTemplateCapture`), keys, spike key matrix, local design library (`CardDesignLibrary`) | `rc-converter/.../CardDesignTemplates.kt` |
-| Template playback: slot-binding push, slot → entity action remap | `CachedCardPreview(template = …)` |
+| Template capture, keys, spike key matrix, local design library (`CardDesignLibrary`) | `rc-converter/.../CardDesignTemplates.kt` |
+| Template playback: slot-binding push; a tap runs the card's own action for the tapped slot | `CachedCardPreview(template = …)`, `CardTemplatePlayback.resolveTap` |
 | App: URL setting, `FileDesignStore`, `LocalCardDesigns`, dashboard hook (reads the cache only) | `app/.../dashboard/CardDesigns.kt`, `PreferencesStore.designServerUrl` |
 | App: nightly sync while charging on unmetered network, plus one fetch when the URL changes | `app/.../dashboard/CardDesignSync.kt` |
 | End-to-end test: capture → publish → fetch from a fake host → resolve → bind | `rc-converter/src/test/.../CardDesignTemplatesEndToEndTest.kt` |
+| Pixel parity: each card through its template and through its converter draws identical pixels | `rc-converter/src/test/.../CardDesignParityTest.kt` |
 
 Deliberate spike limits, each owned by a milestone below:
 
-- **Tile only** (`light`, `switch`, `sensor`, `binary_sensor`), mobile app surface, and only tiles
-  whose config is `entity` plus optional `name`. Anything else has no shape and stays local.
-- **The tile's generation properties** (`TileCardConverter.designProperties`) are what changes its
-  look: `domain` (icon family, toggle chrome), `device_class` for sensors and binary sensors (icon,
-  colour), and an `icon` attribute. Slot ids keep the domain (`light.s0`, not `s0`) for the same
-  reason. A library template therefore draws exactly what the converter drew, with name and state
-  as bindings.
+- **Which cards:** tile, entity and button (`entity` plus optional `name` / `icon`, and the
+  button's `show_name`), heading (`heading_style`), and glance and entities (`title` plus rows
+  that are a bare entity id or `{ entity, name?, icon?, tap_action? }`). Entities must be `light`, `switch`,
+  `sensor` or `binary_sensor`, on the mobile app surface. Any other config has no shape and stays
+  local.
+- **Generation properties** (`EntityDesign`) are what changes the look, per bound entity:
+  `domain` (icon family, toggle chrome), `device_class` for sensors and binary sensors (icon,
+  colour), the `icon` attribute and a config `icon` (`card_icon`). List cards prefix them with the
+  row's slot (`e0.domain`, …) and add `count` and the title's font-size bucket (`title_size`).
+  Slot ids keep the domain (`light.s0`, not `s0`) for the same reason. A library template
+  therefore draws exactly what the converter drew, with names, titles and states as bindings
+  (`<slot>.name`, `card.title`).
+- **Taps** come from the card's own config. A template's encoded action only says which slot was
+  tapped, so a glance cell runs that row's `tap_action`; per-card `tap_action` keeps the converter
+  path for now because `none` drops the clickable.
 - **One known difference:** templates are captured with a placeholder `off` state, so an
   unavailable light or switch keeps its toggle chip (inactive colour) where the converter drew a
   plain grey icon. `<slot>.status` is bound, and moving that visual in-document is M1.

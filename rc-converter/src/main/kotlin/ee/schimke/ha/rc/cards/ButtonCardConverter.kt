@@ -15,6 +15,7 @@ import androidx.compose.remote.creation.compose.state.rf
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
+import ee.schimke.ha.design.DesignProperties
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.HaSnapshot
@@ -22,6 +23,7 @@ import ee.schimke.ha.model.toTyped
 import ee.schimke.ha.rc.CardConverter
 import ee.schimke.ha.rc.CardSizeMode
 import ee.schimke.ha.rc.CardWidthClass
+import ee.schimke.ha.rc.DesignTemplateInput
 import ee.schimke.ha.rc.HaStateColor
 import ee.schimke.ha.rc.LocalCardSizeMode
 import ee.schimke.ha.rc.components.HaButtonData
@@ -36,6 +38,7 @@ import java.text.DecimalFormat
 import java.util.UUID
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.put
 
 /**
  * `button` card. Toggleable entities (lights / switches / locks / covers / media-players etc)
@@ -66,6 +69,20 @@ class ButtonCardConverter : CardConverter {
 
   override fun naturalWidthClass(card: CardConfig, snapshot: HaSnapshot): CardWidthClass =
     CardWidthClass.Compact
+
+  /**
+   * A plain entity button renders from a card design: the [EntityDesign] properties of its entity
+   * plus `show_name`, which decides whether the name line exists at all.
+   */
+  override fun designProperties(card: CardConfig, snapshot: HaSnapshot): DesignProperties? =
+    EntityDesign.single(card, snapshot, TEMPLATE_CONFIG_KEYS) {
+      enum(SHOW_NAME, if (showName(card)) 1 else 0)
+    }
+
+  override fun designTemplate(properties: DesignProperties): DesignTemplateInput? =
+    EntityDesign.singleTemplate(cardType, properties) {
+      if (properties[SHOW_NAME] == "0") put("show_name", false)
+    }
 
   @Composable
   override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
@@ -112,6 +129,10 @@ class ButtonCardConverter : CardConverter {
   }
 
   private companion object {
+    val TEMPLATE_CONFIG_KEYS = setOf("type", "entity", "name", "icon", "show_name")
+
+    const val SHOW_NAME = "show_name"
+
     /** Smallest cell width that fits the icon + name tier. */
     const val MinIconNameWidthDp = 96
 
@@ -130,7 +151,7 @@ private fun buttonData(card: CardConfig, snapshot: HaSnapshot): HaButtonData {
       ?: entity?.attributes?.get("friendly_name")?.jsonPrimitive?.content
       ?: entityId
       ?: "Button"
-  val showName = card.raw["show_name"]?.jsonPrimitive?.content?.toBooleanStrictOrNull() ?: true
+  val showName = showName(card)
   val tapCfg = card.raw["tap_action"]?.jsonObject
   val tapAction =
     if (tapCfg != null) parseHaAction(tapCfg, entityId) else defaultTapActionFor(entityId)
@@ -152,5 +173,8 @@ private fun buttonData(card: CardConfig, snapshot: HaSnapshot): HaButtonData {
     tapAction = tapAction,
   )
 }
+
+private fun showName(card: CardConfig): Boolean =
+  card.raw["show_name"]?.jsonPrimitive?.content?.toBooleanStrictOrNull() ?: true
 
 private val IntFormat = DecimalFormat("0")

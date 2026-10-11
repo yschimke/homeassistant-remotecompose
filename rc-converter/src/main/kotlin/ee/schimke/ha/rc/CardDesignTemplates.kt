@@ -8,7 +8,6 @@ import androidx.compose.remote.creation.compose.capture.captureSingleRemoteDocum
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.staticCompositionLocalOf
 import ee.schimke.ha.client.design.BuiltDesign
 import ee.schimke.ha.design.CardDesignSlots
 import ee.schimke.ha.design.DesignKey
@@ -16,19 +15,16 @@ import ee.schimke.ha.design.DesignProperties
 import ee.schimke.ha.design.DesignSurface
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
+import ee.schimke.ha.rc.components.LocalTemplateBindings
 import ee.schimke.ha.rc.components.ProvideHaTheme
 import ee.schimke.ha.rc.components.ThemeStyle
 import ee.schimke.ha.rc.components.haThemeFor
 import kotlinx.coroutines.runBlocking
-
-/**
- * True while a converter is capturing a **card design template** (see
- * `docs/architecture/card-design-server.md`) rather than a live card. Converters that support
- * templates bind config-derived text they would otherwise bake — today the tile name, as
- * `<slot>.name` — so the client can fill it in. False for every live capture, so dashboards,
- * widgets and previews are unchanged.
- */
-val LocalCardTemplateCapture = staticCompositionLocalOf { false }
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.jsonPrimitive
 
 /** Card design templates: build them (pipeline side) and key them (client side). */
 object CardDesignTemplates {
@@ -61,19 +57,36 @@ object CardDesignTemplates {
   }
 
   /**
-   * Template playback for [card] with [bytes] from the design repository. Bindings and the tap
-   * action both come from the card's own config; nothing but layout is taken from the template.
+   * Template playback for [card] with [bytes] from the design repository. Bindings and tap actions
+   * all come from the card's own config; nothing but layout is taken from the template.
    */
   fun playback(card: CardConfig, bytes: ByteArray): CardTemplatePlayback {
-    val entityId = CardDesignSlots.slotEntities(card)?.firstOrNull()
-    val tapCfg = card.raw["tap_action"] as? kotlinx.serialization.json.JsonObject
+    val entityId = card.raw["entity"]?.jsonPrimitive?.contentOrNull
+    val rows = card.raw["entities"] as? JsonArray
+    val slotTaps =
+      if (rows != null) {
+        // Same rows, in the same order, as CardDesignSlots.slotEntries.
+        rows.mapNotNull { row ->
+          val obj = row as? JsonObject
+          val id =
+            (obj?.get("entity") as? JsonPrimitive)?.contentOrNull
+              ?: (row as? JsonPrimitive)?.contentOrNull
+              ?: return@mapNotNull null
+          tapActionOf(obj?.get("tap_action") as? JsonObject, id)
+        }
+      } else {
+        listOfNotNull(entityId?.let { tapActionOf(card.raw["tap_action"] as? JsonObject, it) })
+      }
     return CardTemplatePlayback(
       bytes = bytes,
       bindings = { snapshot -> CardDesignSlots.slotBindings(card, snapshot) },
-      tapAction =
-        if (tapCfg != null) parseHaAction(tapCfg, entityId) else defaultTapActionFor(entityId),
+      tapAction = tapActionOf(card.raw["tap_action"] as? JsonObject, entityId),
+      slotTapActions = slotTaps,
     )
   }
+
+  private fun tapActionOf(config: JsonObject?, entityId: String?) =
+    if (config != null) parseHaAction(config, entityId) else defaultTapActionFor(entityId)
 
   /**
    * The keys the spike publishes to a server: tile × domain × theme style × light/dark, mobile app
@@ -104,7 +117,7 @@ object CardDesignTemplates {
 
   /**
    * Capture the template for [key]: the card's converter, run against slot entity ids and a
-   * placeholder snapshot, inside [LocalCardTemplateCapture]. Wrap mode at the dashboard's capture
+   * placeholder snapshot, with [LocalTemplateBindings] set. Wrap mode at the dashboard's capture
    * profile, so the bytes play exactly where a live tile would.
    */
   fun capture(
@@ -122,7 +135,8 @@ object CardDesignTemplates {
     val theme = haThemeFor(style, dark)
     val bytes = runBlocking {
       captureSingleRemoteDocument(context = context, profile = androidXExperimentalWrap) {
-          CompositionLocalProvider(LocalCardTemplateCapture provides true) {
+          // Bound name / title text instead of literals: see LocalTemplateBindings.
+          CompositionLocalProvider(LocalTemplateBindings provides mutableMapOf()) {
             ProvideCardRegistry(registry) {
               ProvideHaTheme(theme) { RenderChild(card, snapshot, RemoteModifier.fillMaxWidth()) }
             }
@@ -130,7 +144,11 @@ object CardDesignTemplates {
         }
         .bytes
     }
-    return BuiltDesign(key = key, slots = 1, bytes = bytes)
+    return BuiltDesign(
+      key = key,
+      slots = CardDesignSlots.slotEntities(card)?.size ?: 0,
+      bytes = bytes,
+    )
   }
 
   /** Build every spike template. */

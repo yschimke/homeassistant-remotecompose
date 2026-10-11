@@ -4,6 +4,7 @@ import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.fillMaxSize
 import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.runtime.Composable
+import ee.schimke.ha.design.DesignProperties
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.EntityState
@@ -12,6 +13,7 @@ import ee.schimke.ha.model.toTyped
 import ee.schimke.ha.rc.CardConverter
 import ee.schimke.ha.rc.CardSizeMode
 import ee.schimke.ha.rc.CardWidthClass
+import ee.schimke.ha.rc.DesignTemplateInput
 import ee.schimke.ha.rc.HaStateColor
 import ee.schimke.ha.rc.LocalCardSizeMode
 import ee.schimke.ha.rc.RemoteSizeBreakpoint
@@ -47,6 +49,13 @@ class EntityCardConverter : CardConverter {
 
   override fun naturalWidthClass(card: CardConfig, snapshot: HaSnapshot): CardWidthClass =
     CardWidthClass.Compact
+
+  /** A plain entity card renders from a card design, like a plain tile ([EntityDesign]). */
+  override fun designProperties(card: CardConfig, snapshot: HaSnapshot): DesignProperties? =
+    EntityDesign.single(card, snapshot, TEMPLATE_CONFIG_KEYS)
+
+  override fun designTemplate(properties: DesignProperties): DesignTemplateInput? =
+    EntityDesign.singleTemplate(cardType, properties)
 
   @Composable
   override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
@@ -125,6 +134,8 @@ class EntityCardConverter : CardConverter {
   }
 
   companion object {
+    private val TEMPLATE_CONFIG_KEYS = setOf("type", "entity", "name", "icon")
+
     internal fun nameFor(card: CardConfig, entity: EntityState?, entityId: String?): String =
       card.raw["name"]?.jsonPrimitive?.content
         ?: entity?.attributes?.get("friendly_name")?.jsonPrimitive?.content

@@ -5,6 +5,7 @@ import androidx.compose.remote.creation.compose.modifier.fillMaxSize
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.runtime.Composable
+import ee.schimke.ha.design.DesignProperties
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.HaSnapshot
@@ -12,6 +13,7 @@ import ee.schimke.ha.model.toTyped
 import ee.schimke.ha.rc.BreakpointAxis
 import ee.schimke.ha.rc.CardConverter
 import ee.schimke.ha.rc.CardSizeMode
+import ee.schimke.ha.rc.DesignTemplateInput
 import ee.schimke.ha.rc.HaStateColor
 import ee.schimke.ha.rc.LocalCardSizeMode
 import ee.schimke.ha.rc.RemoteSizeBreakpoint
@@ -47,6 +49,16 @@ class EntitiesCardConverter : CardConverter {
     val title = if (card.raw["title"] != null) 36 else 0
     return title + 16 + 44 * rows // title + top-pad + 44dp per entity row.
   }
+
+  /**
+   * A titled list of plain entity rows renders from a card design: per row, the [EntityDesign]
+   * properties of its entity, plus the row count and the title's size bucket.
+   */
+  override fun designProperties(card: CardConfig, snapshot: HaSnapshot): DesignProperties? =
+    EntityDesign.list(card, snapshot, TEMPLATE_CONFIG_KEYS)
+
+  override fun designTemplate(properties: DesignProperties): DesignTemplateInput? =
+    EntityDesign.listTemplate(cardType, properties)
 
   @Composable
   override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
@@ -190,6 +202,10 @@ class EntitiesCardConverter : CardConverter {
         )
       }
     RemoteHaEntities(HaEntitiesData(title = title, rows = rows), modifier = modifier)
+  }
+
+  private companion object {
+    val TEMPLATE_CONFIG_KEYS = setOf("type", "title", "entities")
   }
 
   private fun normalize(el: JsonElement): Pair<String?, JsonObject?> =

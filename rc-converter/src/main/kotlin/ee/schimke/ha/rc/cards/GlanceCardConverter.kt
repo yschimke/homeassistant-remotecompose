@@ -3,12 +3,14 @@ package ee.schimke.ha.rc.cards
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.runtime.Composable
+import ee.schimke.ha.design.DesignProperties
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.model.toTyped
 import ee.schimke.ha.rc.CardConverter
 import ee.schimke.ha.rc.CardSizeMode
+import ee.schimke.ha.rc.DesignTemplateInput
 import ee.schimke.ha.rc.HaStateColor
 import ee.schimke.ha.rc.LocalCardSizeMode
 import ee.schimke.ha.rc.components.HaGlanceCellData
@@ -38,6 +40,16 @@ class GlanceCardConverter : CardConverter {
     val title = if (card.raw["title"] != null) 40 else 0
     return title + 112 // HA glance cell is ~112dp tall (icon + name + state).
   }
+
+  /**
+   * A titled list of plain entity rows renders from a card design: per row, the [EntityDesign]
+   * properties of its entity, plus the row count and the title's size bucket.
+   */
+  override fun designProperties(card: CardConfig, snapshot: HaSnapshot): DesignProperties? =
+    EntityDesign.list(card, snapshot, TEMPLATE_CONFIG_KEYS)
+
+  override fun designTemplate(properties: DesignProperties): DesignTemplateInput? =
+    EntityDesign.listTemplate(cardType, properties)
 
   @Composable
   override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
@@ -81,6 +93,10 @@ class GlanceCardConverter : CardConverter {
       modifier = modifier,
       fillHeight = fillHeight,
     )
+  }
+
+  private companion object {
+    val TEMPLATE_CONFIG_KEYS = setOf("type", "title", "entities")
   }
 
   private fun normalize(el: JsonElement): Pair<String?, JsonObject?> =

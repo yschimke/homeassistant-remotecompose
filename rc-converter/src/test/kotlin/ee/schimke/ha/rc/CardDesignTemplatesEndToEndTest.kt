@@ -166,6 +166,46 @@ class CardDesignTemplatesEndToEndTest {
     assertEquals(defaultTapActionFor("light.kitchen"), playback.tapAction)
   }
 
+  @Test
+  fun listTemplateTapRunsTheTappedRowsOwnAction() {
+    val list =
+      CardConfig(
+        type = "glance",
+        raw =
+          buildJsonObject {
+            put("type", "glance")
+            put(
+              "entities",
+              kotlinx.serialization.json.buildJsonArray {
+                add(kotlinx.serialization.json.JsonPrimitive("light.kitchen"))
+                add(
+                  buildJsonObject {
+                    put("entity", "sensor.temp")
+                    put("tap_action", buildJsonObject { put("action", "none") })
+                  }
+                )
+              },
+            )
+          },
+      )
+    val playback = CardDesignTemplates.playback(list, ByteArray(0))
+    val toggleS0 = ee.schimke.ha.rc.components.HaAction.Toggle("light.s0")
+    assertEquals(defaultTapActionFor("light.kitchen"), playback.resolveTap(toggleS0))
+    assertEquals(
+      ee.schimke.ha.rc.components.HaAction.None,
+      playback.resolveTap(ee.schimke.ha.rc.components.HaAction.MoreInfo("sensor.s1")),
+    )
+    // Anything the template encodes beyond a slot reference is ignored.
+    assertEquals(
+      playback.tapAction,
+      playback.resolveTap(ee.schimke.ha.rc.components.HaAction.Url("https://evil.test")),
+    )
+    assertEquals(
+      playback.tapAction,
+      playback.resolveTap(ee.schimke.ha.rc.components.HaAction.Toggle("light.s9")),
+    )
+  }
+
   /**
    * With `-PcardDesignsOut=<dir>`, writes every spike design as the files a static host serves.
    * Skipped otherwise.

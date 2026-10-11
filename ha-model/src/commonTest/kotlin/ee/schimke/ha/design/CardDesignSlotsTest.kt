@@ -63,4 +63,54 @@ class CardDesignSlotsTest {
     assertEquals("Temp", unavailable.strings["sensor.s0.name"])
     assertTrue(unavailable.floats["sensor.s0.numeric_state"]!!.isNaN())
   }
+
+  @Test
+  fun listCardsBindEveryRowAndTheTitle() {
+    val card =
+      CardConfig(
+        type = "entities",
+        raw =
+          buildJsonObject {
+            put("type", "entities")
+            put("title", "Downstairs")
+            put(
+              "entities",
+              kotlinx.serialization.json.buildJsonArray {
+                add(JsonPrimitive("light.kitchen"))
+                add(
+                  buildJsonObject {
+                    put("entity", "light.kitchen")
+                    put("name", "Again")
+                  }
+                )
+                add(buildJsonObject { put("type", "divider") })
+                add(JsonPrimitive("sensor.temp"))
+              },
+            )
+          },
+      )
+    val snapshot =
+      HaSnapshot(
+        states =
+          mapOf(
+            "light.kitchen" to
+              EntityState(
+                "light.kitchen",
+                "on",
+                JsonObject(mapOf("friendly_name" to JsonPrimitive("Kitchen"))),
+              )
+          )
+      )
+    assertEquals(
+      listOf("light.kitchen", "light.kitchen", "sensor.temp"),
+      CardDesignSlots.slotEntities(card),
+    )
+    val bindings = CardDesignSlots.slotBindings(card, snapshot)
+    assertEquals("Downstairs", bindings.strings[CardDesignSlots.CARD_TITLE])
+    assertEquals("Kitchen", bindings.strings["light.s0.name"])
+    // A repeated entity still fills its own slot, with its row's name.
+    assertEquals("Again", bindings.strings["light.s1.name"])
+    assertEquals(true, bindings.booleans["light.s1.is_on"])
+    assertEquals(CardDesignSlots.STATUS_MISSING, bindings.ints["sensor.s2.status"])
+  }
 }

@@ -50,11 +50,6 @@ data class HaTileData(
   val icon: ImageVector,
   val accent: HaToggleAccent,
   val tapAction: HaAction = HaAction.None,
-  /**
-   * Bound name (`<id>.name`) for card design templates; null bakes [name] as a literal, which is
-   * what every live dashboard capture does.
-   */
-  val nameBinding: RemoteString? = null,
 )
 
 /** HA button card model. */
