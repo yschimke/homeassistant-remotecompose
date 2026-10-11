@@ -80,7 +80,8 @@ Deliberate spike limits, each owned by a milestone below:
   `sensor` or `binary_sensor`, on the mobile app surface. Any other config has no shape and stays
   local. The alarm panel is keyed on its ARM buttons (`states`) and `show_keypad`; its status
   variants already switch in-document on `<slot>.state_int`.
-  The gauge's only property is whether its range line shows (`has_unit`): `min`, `max` and the
+  The gauge's properties are its entity's domain (which names the slot) and whether its range
+  line shows (`has_unit`): `min`, `max` and the
   severity thresholds are card-level float bindings (`card.min`, `card.severity_red`, …), the
   range text is `card.range`, and the document picks the band from the live value
   (`CardConverter.designBindings` supplies the card-level values).

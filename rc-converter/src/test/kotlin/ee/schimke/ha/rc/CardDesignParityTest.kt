@@ -449,4 +449,16 @@ class CardDesignParityTest {
       emptyList(),
       dark = false,
     )
+
+  @Test
+  fun gaugeInputNumber() =
+    assertParity(
+      "gauge-input-number",
+      card("gauge") {
+        put("entity", "input_number.volume")
+        put("max", 10)
+      },
+      entity("input_number.volume", "7", "friendly_name" to "Volume"),
+      dark = false,
+    )
 }

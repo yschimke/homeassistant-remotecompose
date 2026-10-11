@@ -77,13 +77,16 @@ class GaugeCardConverter : CardConverter {
       return null
     val entityId = card.raw["entity"]?.jsonPrimitive?.contentOrNull ?: return null
     val entity = snapshot.states[entityId] ?: return null
-    return DesignProperties.build { enum(HAS_UNIT, if (unitOf(card, entity) != null) 1 else 0) }
+    return DesignProperties.build {
+      // The domain names the slot (`input_number.s0`), so bindings reach the template.
+      string(DOMAIN, CardDesignSlots.domainOf(entityId))
+      enum(HAS_UNIT, if (unitOf(card, entity) != null) 1 else 0)
+    }
   }
 
   override fun designTemplate(properties: DesignProperties): DesignTemplateInput? {
     val hasUnit = properties[HAS_UNIT] ?: return null
-    // The domain doesn't change a gauge's look; any one gives the slot a name.
-    val slot = CardDesignSlots.slotId("sensor", 0)
+    val slot = CardDesignSlots.slotId(properties[DOMAIN] ?: return null, 0)
     val card =
       CardConfig(
         type = cardType,
@@ -163,6 +166,7 @@ class GaugeCardConverter : CardConverter {
     val TEMPLATE_CONFIG_KEYS = setOf("type", "entity", "name", "unit", "min", "max", "severity")
     val SEVERITY_KEYS = setOf("green", "yellow", "red")
     const val HAS_UNIT = "has_unit"
+    const val DOMAIN = "domain"
 
     /** Mirrors RemoteHaGauge's threshold for an unset band. */
     const val UNSET_THRESHOLD = 1e30f
