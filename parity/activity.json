@@ -1,11 +1,27 @@
 {
   "schema": "compose-preview-activity/v1",
-  "generatedAt": "2026-10-11T18:18:47.785Z",
+  "generatedAt": "2026-10-11T18:55:34.314Z",
   "windowDays": 30,
   "code": {
     "repo": "yschimke/homeassistant-remotecompose",
     "ref": "main",
     "events": [
+      {
+        "sha": "3c65f884b18c249a72dd33ac13bb4cec988558db",
+        "subject": "chore(deps): update compose-ai-tools (#742)",
+        "at": "2026-10-11T18:17:38Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "bd2b86a116f5a51ec23c3665a8a1726f34bad544",
+        "subject": "feat: card design server spike, off unless a server URL is configured (#741)",
+        "at": "2026-10-11T18:46:34+01:00",
+        "author": "Yuri Schimke",
+        "previewIds": [],
+        "components": []
+      },
       {
         "sha": "5520e4453da61a81c28e96fcec7ac6ad2fd80bfa",
         "subject": "chore(deps): update compose-ai-tools (#740)",
@@ -466,22 +482,6 @@
         "sha": "7db647efe6c55f0e6cbe709283aa44936c47ac3b",
         "subject": "fix(deps): update dependency ch.qos.logback:logback-classic to v1.6.4 (#685)",
         "at": "2026-09-28T03:04:45Z",
-        "author": "renovate[bot]",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "5c132609195208ac5521098d46c000e58f19c4c0",
-        "subject": "fix(deps): update dependency androidx.compose.material3:material3 to v1.5.0-alpha29 (#684)",
-        "at": "2026-09-28T02:40:13Z",
-        "author": "renovate[bot]",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "8d6d5014e7705d4d7d0fd7951ebcc72ca24fca04",
-        "subject": "chore(deps): update dependency dev.zacsweers.metro to v1.4.5 (#681)",
-        "at": "2026-09-28T02:16:38Z",
         "author": "renovate[bot]",
         "previewIds": [],
         "components": []
