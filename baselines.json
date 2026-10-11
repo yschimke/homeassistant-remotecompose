@@ -1676,7 +1676,7 @@
     "functionName": "DashboardSecurityMobile",
     "module": "previews",
     "renderBasename": "DashboardSecurityMobile_dashboard_security_mobile-842e09ef.png",
-    "sha256": "cec7c3fbb981445c766cb9306aeb598f020c4631f25a40406393db708e14d3a7",
+    "sha256": "fb83700fcf6bb1e58a610d79cc6603b58e06bf9853c8ac0eb6c5119305c01951",
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/DashboardPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.DashboardPreviewsKt.DashboardSecurityTablet_dashboard security \u2014 tablet": {
@@ -1684,7 +1684,7 @@
     "functionName": "DashboardSecurityTablet",
     "module": "previews",
     "renderBasename": "DashboardSecurityTablet_dashboard_security_tablet-d081c9e6.png",
-    "sha256": "88967abf5f7f7d351ef5727bfc9b7ad72de0e8ca5f7de3f067ae23a297c62e37",
+    "sha256": "9c4fb469ebb0ef18f48935ea7e94b8c8d0200ff12fc10c11ee29435583680e8c",
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/DashboardPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.GarageShutterCardPreviewsKt.Garage_Animation_Dark_garage-anim (dark)": {
