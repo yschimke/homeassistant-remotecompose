@@ -1,11 +1,19 @@
 {
   "schema": "compose-preview-activity/v1",
-  "generatedAt": "2026-10-10T23:33:39.942Z",
+  "generatedAt": "2026-10-11T00:47:08.841Z",
   "windowDays": 30,
   "code": {
     "repo": "yschimke/homeassistant-remotecompose",
     "ref": "main",
     "events": [
+      {
+        "sha": "af9efb1c94632e6b0d3666125e51dfbf4155d4d4",
+        "subject": "chore(deps): update compose-ai-tools (#716)",
+        "at": "2026-10-10T22:46:04Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
       {
         "sha": "2fa9d9aca6fb039084be7fec4988e1ce0e90c9e0",
         "subject": "feat: design Home Assistant key surfaces with adaptive UID references (#721)",
@@ -474,14 +482,6 @@
         "sha": "4db3fd34420f0b1e7d713eb0b026f4ee41cce8ca",
         "subject": "fix(deps): update kotlin to v2.4.20 (#662)",
         "at": "2026-09-14T03:58:49Z",
-        "author": "renovate[bot]",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "859b30a7bf2b2737c9ce16076415406cb9295ddd",
-        "subject": "fix(deps): update dependency ee.schimke.composeai:data-render-core to v2.18.0 (#657)",
-        "at": "2026-09-12T04:55:38Z",
         "author": "renovate[bot]",
         "previewIds": [],
         "components": []
