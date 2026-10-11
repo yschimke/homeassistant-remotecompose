@@ -175,6 +175,12 @@ class DesignRepository(
           val bytes = runCatching { fetchBlob(baseUrl, entry) }.getOrNull() ?: continue
           store.writeBlob(entry.sha256, bytes)
         }
+        // Only switch to the new manifest once every design it lists is on disk. Otherwise keep
+        // the previous one, whose verified blobs still serve as the stale fallback.
+        if (manifest.designs.any { !it.revoked && store.readBlob(it.sha256) == null }) {
+          recordFailure(now)
+          return RefreshResult.Failed
+        }
         store.writeManifest(
           StoredManifest(
             manifest = manifest,

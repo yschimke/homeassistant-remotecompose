@@ -118,6 +118,18 @@ class DesignRepositoryTest {
   }
 
   @Test
+  fun newManifestWithAMissingBlobKeepsThePreviousDesigns() = runTest {
+    val host = FakeHost(published(serial = 1).files)
+    val store = InMemoryDesignStore()
+    repo(host, store).refresh()
+
+    val next = published(serial = 2, designs = listOf(design("newer".encodeToByteArray())))
+    host.files = next.files - DesignManifest.blobPath(next.manifest.designs.single().sha256)
+    assertEquals(RefreshResult.Failed, repo(host, store).refresh(force = true))
+    assertContentEquals(template, repo(host, store).resolve(key)?.bytes)
+  }
+
+  @Test
   fun olderSerialIsRejected() = runTest {
     val host = FakeHost(published(serial = 5).files)
     val store = InMemoryDesignStore()

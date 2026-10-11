@@ -10,6 +10,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import ee.schimke.ha.client.design.DesignServerConfig
 import ee.schimke.ha.client.design.DesignStore
+import ee.schimke.ha.client.design.RefreshResult
 import ee.schimke.ha.client.design.Sha256
 import ee.schimke.ha.client.design.StoredManifest
 import ee.schimke.ha.client.design.createDesignRepository
@@ -20,6 +21,7 @@ import ee.schimke.ha.rc.CardTemplatePlayback
 import ee.schimke.ha.rc.components.ThemeStyle
 import java.io.File
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 
@@ -61,8 +63,12 @@ fun rememberCardDesigns(context: Context, serverUrl: String): Map<DesignKey, Byt
         .mapNotNull { (key, _) -> repository.resolve(key)?.let { key to it.bytes } }
         .toMap()
     designs = load()
-    repository.refresh()
-    designs = load()
+    // Re-check periodically while the dashboard is up: `refresh` is a no-op until the manifest's
+    // TTL or the failure back-off has passed, so this costs nothing in between.
+    while (true) {
+      if (repository.refresh() == RefreshResult.Updated) designs = load()
+      delay(REFRESH_CHECK_INTERVAL_MS)
+    }
   }
   return designs
 }
@@ -125,3 +131,5 @@ class FileDesignStore(private val dir: File) : DesignStore {
     }
   }
 }
+
+private const val REFRESH_CHECK_INTERVAL_MS: Long = 15 * 60 * 1000
