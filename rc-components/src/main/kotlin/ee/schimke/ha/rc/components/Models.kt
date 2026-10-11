@@ -387,6 +387,11 @@ data class HaClockData(
   val use24Hour: Boolean,
   val zoneOffsetMinutes: Int = 0,
   val showSeconds: Boolean = false,
+  /**
+   * The card shows another time zone: the time is shifted in-document by `card.zone_offset_minutes`
+   * (constant [zoneOffsetMinutes] in a live capture, a binding in a design template).
+   */
+  val zoned: Boolean = zoneOffsetMinutes != 0,
 )
 
 /**

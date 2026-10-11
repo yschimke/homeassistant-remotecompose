@@ -417,4 +417,36 @@ class CardDesignParityTest {
       entity("sensor.cpu", "unavailable", "friendly_name" to "CPU", "unit_of_measurement" to "%"),
       dark = false,
     )
+
+  @Test
+  fun clockWithTitleAndDate() =
+    assertParity(
+      "clock-title-date",
+      card("clock") { put("title", "Kitchen clock") },
+      emptyList(),
+      dark = false,
+    )
+
+  @Test
+  fun clockZoned12hLargeDark() =
+    assertParity(
+      "clock-zoned-dark",
+      card("clock") {
+        put("time_zone", "Asia/Tokyo")
+        put("time_format", "12")
+        put("clock_size", "large")
+        put("display", "time")
+      },
+      emptyList(),
+      dark = true,
+    )
+
+  @Test
+  fun iframePlaceholder() =
+    assertParity(
+      "iframe",
+      card("iframe") { put("url", "https://example.com") },
+      emptyList(),
+      dark = false,
+    )
 }
