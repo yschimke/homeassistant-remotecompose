@@ -1,6 +1,17 @@
 {
   "entries": [
     {
+      "annotatedBasename": "DashboardGithubTablet_dashboard_github_tablet-89194c99.a11y.png",
+      "cleanBasename": "DashboardGithubTablet_dashboard_github_tablet-89194c99.png",
+      "findings": [],
+      "functionName": "DashboardGithubTablet",
+      "module": "previews",
+      "previewId": "ee.schimke.ha.previews.DashboardPreviewsKt.DashboardGithubTablet_dashboard github \u2014 tablet",
+      "rendersDir": "previews",
+      "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/DashboardPreviews.kt",
+      "variant": ""
+    },
+    {
       "annotatedBasename": "DashboardSecurityTablet_dashboard_security_tablet-d081c9e6.a11y.png",
       "cleanBasename": "DashboardSecurityTablet_dashboard_security_tablet-d081c9e6.png",
       "findings": [
@@ -513,10 +524,6 @@
     {
       "module": "previews",
       "previewId": "ee.schimke.ha.previews.DashboardPreviewsKt.DashboardGithubMobile_dashboard github \u2014 mobile"
-    },
-    {
-      "module": "previews",
-      "previewId": "ee.schimke.ha.previews.DashboardPreviewsKt.DashboardGithubTablet_dashboard github \u2014 tablet"
     },
     {
       "module": "previews",

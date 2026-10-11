@@ -1,10 +1,16 @@
 # Accessibility Report
 
-_Auto-generated from `compose-preview/a11y/pr`. 1 preview(s) across 1 module(s) · 5 error(s) · 0 warning(s) · 0 info._
+_Auto-generated from `compose-preview/a11y/pr`. 2 preview(s) across 1 module(s) · 5 error(s) · 0 warning(s) · 0 info._
 
 Browse inline; image URLs are pinned to the commit SHA on the baseline branch so links keep resolving after merge.
 
 ## previews
+
+### `DashboardGithubTablet`
+
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/pr/renders/previews/DashboardGithubTablet_dashboard_github_tablet-89194c99.a11y.png" width="400" />
+
+_No findings._
 
 ### `DashboardSecurityTablet`
 
