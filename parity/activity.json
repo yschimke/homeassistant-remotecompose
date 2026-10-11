@@ -1,11 +1,19 @@
 {
   "schema": "compose-preview-activity/v1",
-  "generatedAt": "2026-10-11T22:06:03.035Z",
+  "generatedAt": "2026-10-11T23:12:29.694Z",
   "windowDays": 30,
   "code": {
     "repo": "yschimke/homeassistant-remotecompose",
     "ref": "main",
     "events": [
+      {
+        "sha": "5b5d0520887532f10ff33561b17bc95f8587192d",
+        "subject": "test: pixel parity between card design templates and direct tile captures (#749)",
+        "at": "2026-10-11T22:32:52+01:00",
+        "author": "Yuri Schimke",
+        "previewIds": [],
+        "components": []
+      },
       {
         "sha": "66512387dd31b8f4b94b237f00eef3fc90dcc2f4",
         "subject": "chore(deps): update compose-ai-tools (#747)",
@@ -474,14 +482,6 @@
         "sha": "0daad80f6d4f0edd449e9524a95a37292328826e",
         "subject": "fix(deps): update dependency ee.schimke.composeai:data-render-core to v3.15.0 (#693)",
         "at": "2026-10-01T14:53:08Z",
-        "author": "renovate[bot]",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "064a6dff2bb975e159982c4edf95a43982b1acdb",
-        "subject": "fix(deps): update dependency ee.schimke.composeai:data-render-core to v3.7.0 (#692)",
-        "at": "2026-10-01T14:22:04Z",
         "author": "renovate[bot]",
         "previewIds": [],
         "components": []
