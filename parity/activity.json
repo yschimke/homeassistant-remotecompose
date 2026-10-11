@@ -1,11 +1,19 @@
 {
   "schema": "compose-preview-activity/v1",
-  "generatedAt": "2026-10-11T02:37:09.911Z",
+  "generatedAt": "2026-10-11T11:12:41.501Z",
   "windowDays": 30,
   "code": {
     "repo": "yschimke/homeassistant-remotecompose",
     "ref": "main",
     "events": [
+      {
+        "sha": "be5693740d4a8df584f03d85a9bbbb72bae35897",
+        "subject": "fix(deps): update dependency ee.schimke.composeai:data-render-core to v3.28.0 (#726)",
+        "at": "2026-10-11T09:57:18Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
       {
         "sha": "408d1df4f91fc7b2176438da0297a60ca9325dda",
         "subject": "fix(deps): update dependency ee.schimke.composeai:rc-player-compose to v2.5.0 (#724)",
@@ -474,14 +482,6 @@
         "sha": "8af054a8c6de1575545b651185aa61b1facc9a60",
         "subject": "fix(deps): update dependency com.google.firebase:firebase-bom to v34.19.0 (#664)",
         "at": "2026-09-14T09:46:20Z",
-        "author": "renovate[bot]",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "7e5f3ba1acc7a2737a32597e20ae5567c5b32bef",
-        "subject": "chore(deps): update anthropics/claude-code-action action to v1.0.223 (#658)",
-        "at": "2026-09-14T04:47:26Z",
         "author": "renovate[bot]",
         "previewIds": [],
         "components": []
