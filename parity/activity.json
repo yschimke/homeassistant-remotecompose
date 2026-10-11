@@ -1,11 +1,19 @@
 {
   "schema": "compose-preview-activity/v1",
-  "generatedAt": "2026-10-11T11:12:41.501Z",
+  "generatedAt": "2026-10-11T13:20:51.359Z",
   "windowDays": 30,
   "code": {
     "repo": "yschimke/homeassistant-remotecompose",
     "ref": "main",
     "events": [
+      {
+        "sha": "1d5a0ea60cc93dc690f81bb8dcc8f993ae02117e",
+        "subject": "ci: post a sticky UID parity comment on pull requests (#727)",
+        "at": "2026-10-11T12:04:09+01:00",
+        "author": "Yuri Schimke",
+        "previewIds": [],
+        "components": []
+      },
       {
         "sha": "be5693740d4a8df584f03d85a9bbbb72bae35897",
         "subject": "fix(deps): update dependency ee.schimke.composeai:data-render-core to v3.28.0 (#726)",
@@ -474,14 +482,6 @@
         "sha": "0b1f1bedc887476ea51c6f1a09cea1a93122808e",
         "subject": "fix(deps): update androidx to v1.2.0-rc01 (#660)",
         "at": "2026-09-14T10:06:47Z",
-        "author": "renovate[bot]",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "8af054a8c6de1575545b651185aa61b1facc9a60",
-        "subject": "fix(deps): update dependency com.google.firebase:firebase-bom to v34.19.0 (#664)",
-        "at": "2026-09-14T09:46:20Z",
         "author": "renovate[bot]",
         "previewIds": [],
         "components": []
