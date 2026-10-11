@@ -84,7 +84,8 @@ val stageAndroidCatalogBundle =
     into(layout.buildDirectory.dir("android-catalog-bundle"))
     from(layout.buildDirectory.dir("catalog/testDebugUnitTest"))
     from("fixtures") { into("designs") }
-    for (module in listOf("ui-builder-catalog", "rc-components-ui", "rc-components")) {
+    for (module in
+      listOf("ui-builder-catalog", "rc-components-ui", "rc-components", "rc-converter")) {
       val library = project(":$module")
       dependsOn(":$module:bundleDebugAar")
       from(
