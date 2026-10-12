@@ -1580,7 +1580,7 @@
     "functionName": "Dashboard3dPrintingMobile",
     "module": "previews",
     "renderBasename": "Dashboard3dPrintingMobile_dashboard_3d_printing_mobile-2701c9cf.png",
-    "sha256": "2a2d4ea6ddc2912e18051178273c9177927fda8b29acb208528770b6567a7d9a",
+    "sha256": "5a73ecd620b01396d828ddb4ea3404ffc30ed40eba016cec8488a5f473815adb",
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/DashboardPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.DashboardPreviewsKt.Dashboard3dPrintingTablet_dashboard 3d-printing \u2014 tablet": {
