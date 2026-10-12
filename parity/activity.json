@@ -1,11 +1,19 @@
 {
   "schema": "compose-preview-activity/v1",
-  "generatedAt": "2026-10-12T12:09:39.859Z",
+  "generatedAt": "2026-10-12T15:18:45.804Z",
   "windowDays": 30,
   "code": {
     "repo": "yschimke/homeassistant-remotecompose",
     "ref": "main",
     "events": [
+      {
+        "sha": "277c6d9cabceff6f01093ec012accac1a0be5915",
+        "subject": "fix(deps): update compose-ai-tools (#775)",
+        "at": "2026-10-12T14:49:06Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
       {
         "sha": "49a0569ff2e9c1efd1531638aabde88e1c7c8c1e",
         "subject": "fix(deps): update compose-ai-tools (#767)",
@@ -474,14 +482,6 @@
         "sha": "99773232ef67b06979e282a9415c8016c84f127f",
         "subject": "feat: publish the Wasm Home Assistant app through GitHub Pages (#715)",
         "at": "2026-10-10T20:47:59+01:00",
-        "author": "Yuri Schimke",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "3f132a5c6ff6a12d4be4bf767216ef72ba954241",
-        "subject": "fix: keep manual release builds from publishing desktop assets (#714)",
-        "at": "2026-10-10T20:12:30+01:00",
         "author": "Yuri Schimke",
         "previewIds": [],
         "components": []

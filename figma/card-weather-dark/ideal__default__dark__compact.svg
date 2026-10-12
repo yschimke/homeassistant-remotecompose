@@ -4,13 +4,13 @@
   <g id="Root">
     <clipPath id="clip-0"><rect x="37" y="32" width="923" height="521" rx="31.5" ry="31.5"/></clipPath>
     <g id="Box">
-      <image href="ideal__default__dark__compact.figma-raster/1633.png" x="0" y="0" width="997" height="584"/>
+      <image href="ideal__default__dark__compact.figma-raster/1275.png" x="0" y="0" width="997" height="584"/>
       <g clip-path="url(#clip-0)">
         <g id="Column">
           <g id="Row">
             <g id="Row">
               <g id="Spacer">
-                <image href="ideal__default__dark__compact.figma-raster/1644.png" x="37" y="48" width="95" height="95"/>
+                <image href="ideal__default__dark__compact.figma-raster/1286.png" x="37" y="48" width="95" height="95"/>
               </g>
               <g id="Column">
                 <g id="Empty">
@@ -36,7 +36,7 @@
                 <text x="106" y="210.96" font-size="28.88" font-family="Roboto, sans-serif" font-weight="400" fill="#878787">Thu</text>
               </g>
               <g id="Spacer">
-                <image href="ideal__default__dark__compact.figma-raster/1667.png" x="103" y="223" width="53" height="53"/>
+                <image href="ideal__default__dark__compact.figma-raster/1309.png" x="103" y="223" width="53" height="53"/>
               </g>
               <g id="Empty">
                 <text x="78" y="310.36" font-size="31.5" font-family="Roboto, sans-serif" font-weight="500" fill="#E1E1E1">13.4 °C</text>
@@ -50,7 +50,7 @@
                 <text x="298" y="210.96" font-size="28.88" font-family="Roboto, sans-serif" font-weight="400" fill="#878787">Fri</text>
               </g>
               <g id="Spacer">
-                <image href="ideal__default__dark__compact.figma-raster/1680.png" x="287" y="223" width="53" height="53"/>
+                <image href="ideal__default__dark__compact.figma-raster/1322.png" x="287" y="223" width="53" height="53"/>
               </g>
               <g id="Empty">
                 <text x="262" y="310.36" font-size="31.5" font-family="Roboto, sans-serif" font-weight="500" fill="#E1E1E1">11.9 °C</text>
@@ -64,7 +64,7 @@
                 <text x="477" y="210.96" font-size="28.88" font-family="Roboto, sans-serif" font-weight="400" fill="#878787">Sat</text>
               </g>
               <g id="Spacer">
-                <image href="ideal__default__dark__compact.figma-raster/1693.png" x="471" y="223" width="53" height="53"/>
+                <image href="ideal__default__dark__compact.figma-raster/1335.png" x="471" y="223" width="53" height="53"/>
               </g>
               <g id="Empty">
                 <text x="446" y="310.36" font-size="31.5" font-family="Roboto, sans-serif" font-weight="500" fill="#E1E1E1">12.2 °C</text>
@@ -78,7 +78,7 @@
                 <text x="659" y="210.96" font-size="28.88" font-family="Roboto, sans-serif" font-weight="400" fill="#878787">Sun</text>
               </g>
               <g id="Spacer">
-                <image href="ideal__default__dark__compact.figma-raster/1706.png" x="656" y="223" width="53" height="53"/>
+                <image href="ideal__default__dark__compact.figma-raster/1348.png" x="656" y="223" width="53" height="53"/>
               </g>
               <g id="Empty">
                 <text x="631" y="310.36" font-size="31.5" font-family="Roboto, sans-serif" font-weight="500" fill="#E1E1E1">16.7 °C</text>
@@ -92,7 +92,7 @@
                 <text x="840" y="210.96" font-size="28.88" font-family="Roboto, sans-serif" font-weight="400" fill="#878787">Mon</text>
               </g>
               <g id="Spacer">
-                <image href="ideal__default__dark__compact.figma-raster/1719.png" x="841" y="223" width="53" height="53"/>
+                <image href="ideal__default__dark__compact.figma-raster/1361.png" x="841" y="223" width="53" height="53"/>
               </g>
               <g id="Empty">
                 <text x="830" y="310.36" font-size="31.5" font-family="Roboto, sans-serif" font-weight="500" fill="#E1E1E1">14 °C</text>
@@ -104,9 +104,9 @@
           </g>
           <g id="Row">
             <g id="Column">
-              <image href="ideal__default__dark__compact.figma-raster/1727.png" x="37" y="383" width="230" height="170"/>
+              <image href="ideal__default__dark__compact.figma-raster/1369.png" x="37" y="383" width="230" height="170"/>
               <g id="Spacer">
-                <image href="ideal__default__dark__compact.figma-raster/1732.png" x="132" y="404" width="42" height="42"/>
+                <image href="ideal__default__dark__compact.figma-raster/1374.png" x="132" y="404" width="42" height="42"/>
               </g>
               <g id="Empty">
                 <text x="107" y="485.77" font-size="34.13" font-family="Roboto, sans-serif" font-weight="500" fill="#E1E1E1">9.8 °C</text>
@@ -116,9 +116,9 @@
               </g>
             </g>
             <g id="Column">
-              <image href="ideal__default__dark__compact.figma-raster/1738.png" x="288" y="383" width="231" height="170"/>
+              <image href="ideal__default__dark__compact.figma-raster/1380.png" x="288" y="383" width="231" height="170"/>
               <g id="Spacer">
-                <image href="ideal__default__dark__compact.figma-raster/1743.png" x="383" y="404" width="42" height="42"/>
+                <image href="ideal__default__dark__compact.figma-raster/1385.png" x="383" y="404" width="42" height="42"/>
               </g>
               <g id="Empty">
                 <text x="369" y="485.77" font-size="34.13" font-family="Roboto, sans-serif" font-weight="500" fill="#E1E1E1">72 %</text>
@@ -128,9 +128,9 @@
               </g>
             </g>
             <g id="Column">
-              <image href="ideal__default__dark__compact.figma-raster/1749.png" x="540" y="383" width="231" height="170"/>
+              <image href="ideal__default__dark__compact.figma-raster/1391.png" x="540" y="383" width="231" height="170"/>
               <g id="Spacer">
-                <image href="ideal__default__dark__compact.figma-raster/1754.png" x="635" y="404" width="42" height="42"/>
+                <image href="ideal__default__dark__compact.figma-raster/1396.png" x="635" y="404" width="42" height="42"/>
               </g>
               <g id="Empty">
                 <text x="593" y="485.77" font-size="34.13" font-family="Roboto, sans-serif" font-weight="500" fill="#E1E1E1">14 km/h</text>
@@ -140,9 +140,9 @@
               </g>
             </g>
             <g id="Column">
-              <image href="ideal__default__dark__compact.figma-raster/1760.png" x="792" y="383" width="231" height="170"/>
+              <image href="ideal__default__dark__compact.figma-raster/1402.png" x="792" y="383" width="231" height="170"/>
               <g id="Spacer">
-                <image href="ideal__default__dark__compact.figma-raster/1765.png" x="887" y="404" width="42" height="42"/>
+                <image href="ideal__default__dark__compact.figma-raster/1407.png" x="887" y="404" width="42" height="42"/>
               </g>
               <g id="Empty">
                 <text x="837" y="485.77" font-size="34.13" font-family="Roboto, sans-serif" font-weight="500" fill="#E1E1E1">1014 hPa</text>

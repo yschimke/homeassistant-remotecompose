@@ -4,7 +4,7 @@
   <g id="Root">
     <clipPath id="clip-0"><rect x="32" y="26" width="934" height="250" rx="31.5" ry="31.5"/></clipPath>
     <g id="Box">
-      <image href="card-glance-light.figma-raster/2636.png" x="0" y="0" width="997" height="303"/>
+      <image href="card-glance-light.figma-raster/3021.png" x="0" y="0" width="997" height="303"/>
       <g clip-path="url(#clip-0)">
         <g id="Column">
           <g id="Empty">
@@ -18,7 +18,7 @@
                 <text x="161" y="129.36" font-size="31.5" font-family="Roboto, sans-serif" font-weight="400" fill="#141414">Living Room</text>
               </g>
               <g id="Spacer">
-                <image href="card-glance-light.figma-raster/2656.png" x="210" y="148" width="74" height="74"/>
+                <image href="card-glance-light.figma-raster/3041.png" x="210" y="148" width="74" height="74"/>
               </g>
               <g id="Empty">
                 <text x="202" y="258.96" font-size="28.88" font-family="Roboto, sans-serif" font-weight="400" fill="#8F8F8F">21.4 °C</text>
@@ -29,7 +29,7 @@
                 <text x="461" y="129.36" font-size="31.5" font-family="Roboto, sans-serif" font-weight="400" fill="#141414">Kitchen</text>
               </g>
               <g id="Spacer">
-                <image href="card-glance-light.figma-raster/2669.png" x="476" y="148" width="74" height="74"/>
+                <image href="card-glance-light.figma-raster/3054.png" x="476" y="148" width="74" height="74"/>
               </g>
               <g id="Empty">
                 <text x="496" y="258.96" font-size="28.88" font-family="Roboto, sans-serif" font-weight="400" fill="#8F8F8F">On</text>
@@ -40,7 +40,7 @@
                 <text x="693" y="129.36" font-size="31.5" font-family="Roboto, sans-serif" font-weight="400" fill="#141414">Front door</text>
               </g>
               <g id="Spacer">
-                <image href="card-glance-light.figma-raster/2682.png" x="729" y="148" width="74" height="74"/>
+                <image href="card-glance-light.figma-raster/3067.png" x="729" y="148" width="74" height="74"/>
               </g>
               <g id="Empty">
                 <text x="720" y="258.96" font-size="28.88" font-family="Roboto, sans-serif" font-weight="400" fill="#8F8F8F">Locked</text>

@@ -4,7 +4,7 @@
   <g id="Root">
     <clipPath id="clip-0"><rect x="37" y="32" width="766" height="426" rx="31.5" ry="31.5"/></clipPath>
     <g id="Box">
-      <image href="ideal__default__light__compact.figma-raster/7048.png" x="0" y="0" width="840" height="489"/>
+      <image href="ideal__default__light__compact.figma-raster/7406.png" x="0" y="0" width="840" height="489"/>
       <g clip-path="url(#clip-0)">
         <g id="Column">
           <g id="Empty">
@@ -15,7 +15,7 @@
           </g>
           <g id="Row">
             <g id="Spacer">
-              <image href="ideal__default__light__compact.figma-raster/7061.png" x="37" y="168" width="47" height="47"/>
+              <image href="ideal__default__light__compact.figma-raster/7419.png" x="37" y="168" width="47" height="47"/>
             </g>
             <g id="Empty">
               <text x="110" y="203.77" font-size="34.13" font-family="Roboto, sans-serif" font-weight="400" fill="#141414">Salt</text>
@@ -23,7 +23,7 @@
           </g>
           <g id="Row">
             <g id="Spacer">
-              <image href="ideal__default__light__compact.figma-raster/7072.png" x="37" y="257" width="47" height="47"/>
+              <image href="ideal__default__light__compact.figma-raster/7430.png" x="37" y="257" width="47" height="47"/>
             </g>
             <g id="Empty">
               <text x="110" y="292.77" font-size="34.13" font-family="Roboto, sans-serif" font-weight="400" fill="#141414">Butter</text>
@@ -34,7 +34,7 @@
           </g>
           <g id="Row">
             <g id="Spacer">
-              <image href="ideal__default__light__compact.figma-raster/7085.png" x="37" y="401" width="47" height="47"/>
+              <image href="ideal__default__light__compact.figma-raster/7443.png" x="37" y="401" width="47" height="47"/>
             </g>
             <g id="Empty">
               <text x="110" y="436.77" font-size="34.13" font-family="Roboto, sans-serif" font-weight="400" fill="#8F8F8F">Milk</text>
