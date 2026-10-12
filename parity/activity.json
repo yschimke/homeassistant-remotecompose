@@ -1,11 +1,59 @@
 {
   "schema": "compose-preview-activity/v1",
-  "generatedAt": "2026-10-11T23:12:29.694Z",
+  "generatedAt": "2026-10-12T03:08:49.774Z",
   "windowDays": 30,
   "code": {
     "repo": "yschimke/homeassistant-remotecompose",
     "ref": "main",
     "events": [
+      {
+        "sha": "f1e447dd4b77928656bcdc3a1d7bfd21a246de6d",
+        "subject": "chore(deps): update gradle to v9.8.1 (#756)",
+        "at": "2026-10-12T00:30:37Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "1afb4cf3c2c7a6f3adecf1db57b47d8ea9b0c323",
+        "subject": "feat: render gauge, clock and placeholder cards from designs (#759)",
+        "at": "2026-10-12T01:01:12+01:00",
+        "author": "Yuri Schimke",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "5809919e15fe11d518f06f8348480eab93fa5fa6",
+        "subject": "ci: build the typed catalog against compose-ui-builder v3.108.0 (#754)",
+        "at": "2026-10-12T00:16:30+01:00",
+        "author": "Yuri Schimke",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "4aa434803ffc9f992fbb515719e89f2c6e1705a9",
+        "subject": "feat: render alarm panel cards from designs (#753)",
+        "at": "2026-10-12T00:05:00+01:00",
+        "author": "Yuri Schimke",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "a01ddf97b7795a2a15255592ef0472e50b152990",
+        "subject": "feat: render entity, button, heading, glance and entities cards from designs (#752)",
+        "at": "2026-10-11T23:26:31+01:00",
+        "author": "Yuri Schimke",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "6668c7a03d5b9f1c4df381c1dab1484219ed588e",
+        "subject": "feat: list and object components in the typed catalog (#751)",
+        "at": "2026-10-11T22:46:00+01:00",
+        "author": "Yuri Schimke",
+        "previewIds": [],
+        "components": []
+      },
       {
         "sha": "5b5d0520887532f10ff33561b17bc95f8587192d",
         "subject": "test: pixel parity between card design templates and direct tile captures (#749)",
@@ -434,54 +482,6 @@
         "sha": "f49ddd3cdf24144c97b399a7d501b78fdbc60c27",
         "subject": "chore(deps): update compose-ai-tools (#696)",
         "at": "2026-10-10T04:50:10Z",
-        "author": "renovate[bot]",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "9b50a142d68816ef554e7a2e713f97c52398853b",
-        "subject": "fix(deps): update dependency ee.schimke.composeai:data-render-core to v3.23.1 (#697)",
-        "at": "2026-10-10T01:02:52Z",
-        "author": "renovate[bot]",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "e77253367aa43c9aa339c26e782f312dfff47c32",
-        "subject": "fix(deps): update remote-compose (#687)",
-        "at": "2026-10-10T00:43:21+01:00",
-        "author": "renovate[bot]",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "c5ce435fb3fab16bb5308a3fdd9c5ece294c0ff8",
-        "subject": "chore(deps): update compose-ai-tools (#672)",
-        "at": "2026-10-10T00:43:18+01:00",
-        "author": "renovate[bot]",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "ed8d0c6946be839109c509aa7c926e8ed5022396",
-        "subject": "fix(deps): update dependency ch.qos.logback:logback-classic to v1.6.5 (#695)",
-        "at": "2026-10-05T06:36:29Z",
-        "author": "renovate[bot]",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "e44644b279f6cf4eb39ce532f223acef9a51a772",
-        "subject": "chore(deps): update github-actions (#694)",
-        "at": "2026-10-05T05:59:27Z",
-        "author": "renovate[bot]",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "0daad80f6d4f0edd449e9524a95a37292328826e",
-        "subject": "fix(deps): update dependency ee.schimke.composeai:data-render-core to v3.15.0 (#693)",
-        "at": "2026-10-01T14:53:08Z",
         "author": "renovate[bot]",
         "previewIds": [],
         "components": []
