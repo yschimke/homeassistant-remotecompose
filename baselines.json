@@ -1588,7 +1588,7 @@
     "functionName": "Dashboard3dPrintingTablet",
     "module": "previews",
     "renderBasename": "Dashboard3dPrintingTablet_dashboard_3d_printing_tablet-d15705fe.png",
-    "sha256": "4f18f60257dd0c5150620a8bd9b4c6b0ca4124bbd7a91035f8f204f2856b840d",
+    "sha256": "1c848d774c41744b29bb99e3d4ede186aaea31904dac1d33b030d6a85cbe4e37",
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/DashboardPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.DashboardPreviewsKt.DashboardClimateMobile_dashboard climate \u2014 mobile": {
@@ -1636,7 +1636,7 @@
     "functionName": "DashboardGithubTablet",
     "module": "previews",
     "renderBasename": "DashboardGithubTablet_dashboard_github_tablet-89194c99.png",
-    "sha256": "87b19e0aaaf3a5db0587e7dc03d7003935e3411fb46546acbe80ff8c79cfdf4d",
+    "sha256": "32fe64da362edbb2a181833537f238483344cffbdedeb8c581f32fb69137bdf1",
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/DashboardPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.DashboardPreviewsKt.DashboardMeshcoreMobile_dashboard meshcore \u2014 mobile": {
