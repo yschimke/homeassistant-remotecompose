@@ -1,11 +1,19 @@
 {
   "schema": "compose-preview-activity/v1",
-  "generatedAt": "2026-10-12T07:04:22.098Z",
+  "generatedAt": "2026-10-12T07:40:53.653Z",
   "windowDays": 30,
   "code": {
     "repo": "yschimke/homeassistant-remotecompose",
     "ref": "main",
     "events": [
+      {
+        "sha": "ded16dbe9fb5874d4e4fda09832facff4f397b55",
+        "subject": "feat: bundle UI Builder in the design server and seed card designs from schemas (#769)",
+        "at": "2026-10-12T08:05:00+01:00",
+        "author": "Yuri Schimke",
+        "previewIds": [],
+        "components": []
+      },
       {
         "sha": "6012b7cb3480f0109c37a63d36e36529d9b77220",
         "subject": "feat: card design server with a template browser (#768)",
@@ -474,14 +482,6 @@
         "sha": "1c3118453d406f92cfd6d825dddacb1d6635ba81",
         "subject": "ci: retire CMP Wasm exceptions that now render (#709)",
         "at": "2026-10-10T17:42:18+01:00",
-        "author": "Yuri Schimke",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "63bbc66be727b8b729d3ac3f1b4a5b893ec3871d",
-        "subject": "ci: pin dashboard publication to merged shared workflows (#708)",
-        "at": "2026-10-10T17:13:11+01:00",
         "author": "Yuri Schimke",
         "previewIds": [],
         "components": []
