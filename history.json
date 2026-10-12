@@ -1,6 +1,6 @@
 {
     "formatVersion": "compose-preview-history/v1",
-    "generatedFrom": "ce68696511b74a016906b552fa83b7db2aaf0e26",
+    "generatedFrom": "461c6032ff19e075511bbef7c9962aad465af193",
     "previews": {
         "app/ee.schimke.terrazzo.previews.CardDebugPreviewsKt.CardFlashPreview_Card flash on data change": {
             "path": "renders/app/CardFlashPreview_Card_flash_on_data_change-44b71c2b.gif",
@@ -4732,20 +4732,20 @@
             "path": "renders/previews/Dashboard3dPrintingTablet_dashboard_3d_printing_tablet-d15705fe.png",
             "versions": [
                 {
+                    "blob": "b667946afe97587515aff8e3c91223d795a6d87f",
+                    "commit": "461c6032ff19e075511bbef7c9962aad465af193",
+                    "date": "2026-10-12T03:34:26Z",
+                    "sourceSha": "7bb97871",
+                    "sinceCommit": "2fde5cc2cf93899f1c9dfe93de1eca2d4df38200",
+                    "commits": 3,
+                    "occurrences": 3
+                },
+                {
                     "blob": "0ccb30138352c36670b5c156ba7bdff551ea97f3",
                     "commit": "ce68696511b74a016906b552fa83b7db2aaf0e26",
                     "date": "2026-10-12T03:26:44Z",
                     "sourceSha": "54b56d1e",
                     "sinceCommit": "8bfe316660ffd98dca99d0fd88f84b9e98f2dc55",
-                    "commits": 2,
-                    "occurrences": 2
-                },
-                {
-                    "blob": "b667946afe97587515aff8e3c91223d795a6d87f",
-                    "commit": "0001d786004ef1b9cf384c4635ef3f20a91dde5d",
-                    "date": "2026-10-12T00:23:03Z",
-                    "sourceSha": "1afb4cf3",
-                    "sinceCommit": "2fde5cc2cf93899f1c9dfe93de1eca2d4df38200",
                     "commits": 2,
                     "occurrences": 2
                 },
@@ -4764,9 +4764,9 @@
                     "commits": 1
                 }
             ],
-            "observations": 6,
+            "observations": 7,
             "unstable": true,
-            "flapCount": 2
+            "flapCount": 3
         },
         "previews/ee.schimke.ha.previews.DashboardPreviewsKt.DashboardClimateMobile_dashboard climate — mobile": {
             "path": "renders/previews/DashboardClimateMobile_dashboard_climate_mobile-bdcd432b.png",
@@ -4930,6 +4930,13 @@
             "path": "renders/previews/DashboardGithubMobile_dashboard_github_mobile-8f04a7c1.png",
             "versions": [
                 {
+                    "blob": "006abf710e675bd02f2b62e32a9b1b5baf637369",
+                    "commit": "461c6032ff19e075511bbef7c9962aad465af193",
+                    "date": "2026-10-12T03:34:26Z",
+                    "sourceSha": "7bb97871",
+                    "commits": 1
+                },
+                {
                     "blob": "3e0ab7d826ed885fd6488001a1bd902e9e76719c",
                     "commit": "ecfe549a327e710e2011071e45c1e90c73cf9d00",
                     "date": "2026-10-11T14:21:41Z",
@@ -4969,13 +4976,22 @@
                     "commits": 1
                 }
             ],
-            "observations": 7,
+            "observations": 8,
             "unstable": true,
             "flapCount": 2
         },
         "previews/ee.schimke.ha.previews.DashboardPreviewsKt.DashboardGithubTablet_dashboard github — tablet": {
             "path": "renders/previews/DashboardGithubTablet_dashboard_github_tablet-89194c99.png",
             "versions": [
+                {
+                    "blob": "1bb334e6fa2193b604918489f37971b21e7903a7",
+                    "commit": "461c6032ff19e075511bbef7c9962aad465af193",
+                    "date": "2026-10-12T03:34:26Z",
+                    "sourceSha": "7bb97871",
+                    "sinceCommit": "2fde5cc2cf93899f1c9dfe93de1eca2d4df38200",
+                    "commits": 7,
+                    "occurrences": 7
+                },
                 {
                     "blob": "757cbef805bc28b8a826aafa9df34c29036597c7",
                     "commit": "ce68696511b74a016906b552fa83b7db2aaf0e26",
@@ -4984,15 +5000,6 @@
                     "sinceCommit": "ecfe549a327e710e2011071e45c1e90c73cf9d00",
                     "commits": 3,
                     "occurrences": 3
-                },
-                {
-                    "blob": "1bb334e6fa2193b604918489f37971b21e7903a7",
-                    "commit": "fcc6dd02a60a937856e5c75d9cce353e5119b7da",
-                    "date": "2026-10-12T03:15:40Z",
-                    "sourceSha": "e482a749",
-                    "sinceCommit": "2fde5cc2cf93899f1c9dfe93de1eca2d4df38200",
-                    "commits": 6,
-                    "occurrences": 6
                 },
                 {
                     "blob": "8e63fca887c62672382d04fcbca6a7ca605b896e",
@@ -5048,9 +5055,9 @@
                     "commits": 1
                 }
             ],
-            "observations": 18,
+            "observations": 19,
             "unstable": true,
-            "flapCount": 9
+            "flapCount": 10
         },
         "previews/ee.schimke.ha.previews.DashboardPreviewsKt.DashboardMeshcoreMobile_dashboard meshcore — mobile": {
             "path": "renders/previews/DashboardMeshcoreMobile_dashboard_meshcore_mobile-30d7121c.png",
