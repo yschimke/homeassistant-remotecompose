@@ -36,6 +36,7 @@ import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.CachedCardPreview
 import ee.schimke.ha.rc.CardSnapshotBindings
 import ee.schimke.ha.rc.CardTemplatePlayback
+import ee.schimke.ha.rc.HaRcComposePlayer
 import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.components.HaAction
 import ee.schimke.ha.rc.components.ThemeStyle
@@ -213,6 +214,27 @@ class SlotWidgetDesignTest {
           it.data.contentEquals(yellowPng)
       },
       "the synced PNG is embedded",
+    )
+    // And drawn: played as the watch face preview plays a widget, at its container's size.
+    compose.setContent {
+      Box(Modifier.size(params.widthDp.dp, params.heightDp.dp).testTag("widget")) {
+        HaRcComposePlayer(
+          documentBytes = bytes,
+          modifier = Modifier.size(params.widthDp.dp, params.heightDp.dp),
+          fallback = { error("the baked widget plays in the Compose player") },
+        )
+      }
+    }
+    compose.waitForIdle()
+    val pixels = pixels("synced-picture")
+    var yellow = 0
+    for (y in 0 until pixels.height) for (x in 0 until pixels.width) {
+      val c = pixels[x, y]
+      if (c.red > 0.9f && c.green > 0.9f && c.blue < 0.2f) yellow++
+    }
+    assertTrue(
+      yellow > pixels.width * pixels.height / 3,
+      "the synced picture fills the card: $yellow of ${pixels.width * pixels.height} pixels",
     )
   }
 
