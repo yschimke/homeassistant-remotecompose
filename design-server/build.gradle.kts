@@ -40,6 +40,16 @@ tasks.test {
   providers.gradleProperty("embed.golden.update").orNull?.let {
     systemProperty("embed.golden.update", it)
   }
+  // The `ha-cards` catalog's starting templates, generated from card schemas by
+  // HaCardsTemplatesTest; `-PhaCardsTemplates.update=true` rewrites them.
+  val haCards = rootProject.file("ha-cards-catalog")
+  inputs.file(haCards.resolve("ui-builder.policy.json"))
+  inputs.dir(haCards.resolve("ui-builder/designs"))
+  systemProperty("haCards.dir", haCards.path)
+  providers.gradleProperty("haCardsTemplates.update").orNull?.let {
+    systemProperty("haCards.update", it)
+    outputs.upToDateWhen { false }
+  }
 }
 
 dependencies {

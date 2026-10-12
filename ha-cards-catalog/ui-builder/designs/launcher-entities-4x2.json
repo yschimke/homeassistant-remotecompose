@@ -1,0 +1,183 @@
+{
+  "schema": "compose-ui-builder-document/v1-candidate",
+  "id": "launcher-entities-4x2",
+  "title": "Entities · launcher 4x2",
+  "revision": 0,
+  "template": "launcher-entities-4x2",
+  "catalogPin": {
+    "systemId": "ha-cards",
+    "catalogRevision": "candidate",
+    "capabilityDigest": "candidate",
+    "nativeRuntimeId": "candidate"
+  },
+  "environment": {
+    "widthDp": 276,
+    "heightDp": 220,
+    "density": 2,
+    "theme": "light",
+    "locale": "en-US",
+    "fontScale": 1,
+    "layoutDirection": "ltr"
+  },
+  "stateVariables": {},
+  "roots": [
+    "root"
+  ],
+  "nodes": {
+    "root": {
+      "id": "root",
+      "componentId": "remote-widgets/launcher-widget",
+      "properties": {
+        "background": {
+          "type": "string",
+          "value": "#FFFFFFFF"
+        }
+      },
+      "modifiers": [],
+      "slots": {
+        "content": [
+          "column"
+        ]
+      }
+    },
+    "heading": {
+      "id": "heading",
+      "componentId": "ha-cards/heading",
+      "properties": {
+        "title": {
+          "type": "string",
+          "value": "Living room"
+        },
+        "subtitle": {
+          "type": "bool",
+          "value": true
+        }
+      },
+      "modifiers": [],
+      "slots": {}
+    },
+    "row0": {
+      "id": "row0",
+      "componentId": "ha-cards/entity-row",
+      "properties": {
+        "name": {
+          "type": "string",
+          "value": "Ceiling light"
+        },
+        "state": {
+          "type": "string",
+          "value": "On"
+        },
+        "entityId": {
+          "type": "string",
+          "value": "light.living_room"
+        },
+        "icon": {
+          "type": "string",
+          "value": "light"
+        },
+        "toggleable": {
+          "type": "bool",
+          "value": true
+        },
+        "isOn": {
+          "type": "bool",
+          "value": true
+        }
+      },
+      "modifiers": [
+        {
+          "type": "fillMaxWidth"
+        }
+      ],
+      "slots": {}
+    },
+    "row1": {
+      "id": "row1",
+      "componentId": "ha-cards/entity-row",
+      "properties": {
+        "name": {
+          "type": "string",
+          "value": "Fan"
+        },
+        "state": {
+          "type": "string",
+          "value": "Off"
+        },
+        "entityId": {
+          "type": "string",
+          "value": "switch.fan"
+        },
+        "icon": {
+          "type": "string",
+          "value": "switch"
+        },
+        "toggleable": {
+          "type": "bool",
+          "value": true
+        },
+        "isOn": {
+          "type": "bool",
+          "value": false
+        }
+      },
+      "modifiers": [
+        {
+          "type": "fillMaxWidth"
+        }
+      ],
+      "slots": {}
+    },
+    "row2": {
+      "id": "row2",
+      "componentId": "ha-cards/entity-row",
+      "properties": {
+        "name": {
+          "type": "string",
+          "value": "Temperature"
+        },
+        "state": {
+          "type": "string",
+          "value": "21.5 °C"
+        },
+        "entityId": {
+          "type": "string",
+          "value": "sensor.living_room_temperature"
+        },
+        "icon": {
+          "type": "string",
+          "value": "sensor"
+        }
+      },
+      "modifiers": [
+        {
+          "type": "fillMaxWidth"
+        }
+      ],
+      "slots": {}
+    },
+    "column": {
+      "id": "column",
+      "componentId": "layout/column",
+      "properties": {
+        "verticalSpacingDp": {
+          "type": "float",
+          "value": 4.0
+        }
+      },
+      "modifiers": [
+        {
+          "type": "fillMaxWidth"
+        }
+      ],
+      "slots": {
+        "children": [
+          "heading",
+          "row0",
+          "row1",
+          "row2"
+        ]
+      }
+    }
+  }
+}
