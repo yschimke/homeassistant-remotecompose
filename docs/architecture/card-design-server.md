@@ -502,6 +502,7 @@ host can serve them:
   keep `docs/auth/` and `docs/terrazzo-auth/`, so the designs path is
   added next to them, never in their place.
 - Alternative: the `design-artifacts/homeassistant-remotecompose` branch
+  (in the `yschimke/homeassistant-remotecompose-out` output repository)
   that preview.coo.ee serves. This keeps designs and catalog in one
   bundle, but couples app runtime to the preview server's uptime.
 - Optional mirror: the add-on serves the same files at
