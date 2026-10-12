@@ -213,12 +213,15 @@ class WearSyncRepository(context: Context, private val scope: CoroutineScope) {
  */
 internal suspend fun syncWidgetStateFromDataLayer(context: Context, store: WearOfflineStore) {
   val client = Wearable.getDataClient(context)
-  newerThan(dataItem(client, WearSyncPaths.SLOTS), store.readSlots(), WearWidgetSlots::updatedAtMs)
+  val slotsTime = WearWidgetSlots::updatedAtMs
+  newerThan(dataItem(client, WearSyncPaths.SLOTS, slotsTime), store.readSlots(), slotsTime)
     ?.let(store::writeSlots)
-  newerThan(dataItem(client, WearSyncPaths.PINNED), store.readPinned(), PinnedCardSet::updatedAtMs)
+  val pinnedTime = PinnedCardSet::updatedAtMs
+  newerThan(dataItem(client, WearSyncPaths.PINNED, pinnedTime), store.readPinned(), pinnedTime)
     ?.let(store::writePinned)
   // Stream deltas the running app merged carry their own capture time, so the newer one wins.
-  newerThan(dataItem(client, WearSyncPaths.VALUES), store.readValues(), LiveValues::capturedAtMs)
+  val valuesTime = LiveValues::capturedAtMs
+  newerThan(dataItem(client, WearSyncPaths.VALUES, valuesTime), store.readValues(), valuesTime)
     ?.let(store::writeValues)
 }
 
@@ -231,7 +234,7 @@ internal suspend fun syncPicturesFromDataLayer(
   if (entityIds.isEmpty()) return
   val client = Wearable.getDataClient(context)
   for (entityId in entityIds) {
-    val synced = dataItem<WearPicture>(client, WearSyncPaths.picturePath(entityId))
+    val synced = dataItem(client, WearSyncPaths.picturePath(entityId), WearPicture::updatedAtMs)
     newerThan(synced, store.readPicture(entityId), WearPicture::updatedAtMs)
       ?.let(store::writePicture)
   }
@@ -244,10 +247,14 @@ internal fun <T : Any> newerThan(candidate: T?, stored: T?, time: (T) -> Long): 
   }
 
 /**
- * A DataItem at [path]. Each sending node keeps its own copy; the phone is the only sender, so the
- * last one decoded stands.
+ * The newest by [time] of the DataItems at [path]: each node that ever wrote one (a replaced phone,
+ * say) keeps its own copy, in no particular order. Null if none decode.
  */
-private suspend inline fun <reified T> dataItem(client: DataClient, path: String): T? {
+private suspend inline fun <reified T> dataItem(
+  client: DataClient,
+  path: String,
+  crossinline time: (T) -> Long,
+): T? {
   val uri = android.net.Uri.Builder().scheme(PutDataRequest.WEAR_URI_SCHEME).path(path).build()
   val buffer = runCatching { client.getDataItems(uri).await() }.getOrNull() ?: return null
   return try {
@@ -257,7 +264,7 @@ private suspend inline fun <reified T> dataItem(client: DataClient, path: String
           decodeProto<T>(it)
         }
       }
-      .lastOrNull()
+      .maxByOrNull { time(it) }
   } finally {
     buffer.release()
   }

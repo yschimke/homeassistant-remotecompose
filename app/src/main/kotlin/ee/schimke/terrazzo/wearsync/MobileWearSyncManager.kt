@@ -326,9 +326,9 @@ class MobileWearSyncManager(
   private suspend fun pushValuesItem(values: Map<String, EntityValue>) {
     if (values == lastValuesItem) return
     val payload = LiveValues(values = values, capturedAtMs = System.currentTimeMillis())
-    // Not urgent: no app is on screen to see it; the Data Layer batches it for the widgets.
-    writeDataItem(WearSyncPaths.VALUES, encodeProto(payload), urgent = false)
-    lastValuesItem = values
+    // Urgent: it is the widgets' only update path while the app is closed, and a non-urgent item
+    // can wait up to 30 minutes to sync. Recorded only once written, so a failed write is retried.
+    if (writeDataItem(WearSyncPaths.VALUES, encodeProto(payload))) lastValuesItem = values
   }
 
   private suspend fun pushStream(values: Map<String, EntityValue>) {
@@ -370,30 +370,32 @@ class MobileWearSyncManager(
           .onFailure { if (it is CancellationException) throw it }
           .getOrNull() ?: continue
       val hash = png.contentHashCode()
-      if (last == null || last.url != url || last.pngHash != hash) {
-        val picture = WearPicture(entityId = entityId, url = url, png = png, updatedAtMs = now)
-        writeDataItem(WearSyncPaths.picturePath(entityId), encodeProto(picture))
+      val changed = last == null || last.url != url || last.pngHash != hash
+      val picture = WearPicture(entityId = entityId, url = url, png = png, updatedAtMs = now)
+      // Recorded only once written, so a failed write is retried on the next tick.
+      if (!changed || writeDataItem(WearSyncPaths.picturePath(entityId), encodeProto(picture))) {
+        pushedPictures[entityId] = PushedPicture(url, hash, now)
       }
-      pushedPictures[entityId] = PushedPicture(url, hash, now)
     }
   }
 
-  private suspend fun writeDataItem(path: String, bytes: ByteArray, urgent: Boolean = true) {
-    if (!wearableAvailableState.value) return
-    runCatching {
+  /** Writes [bytes] at [path]; false when the wearable API is unavailable or the write failed. */
+  private suspend fun writeDataItem(path: String, bytes: ByteArray): Boolean {
+    if (!wearableAvailableState.value) return false
+    return runCatching {
       val request =
         PutDataMapRequest.create(path).apply {
           dataMap.putByteArray(KEY_PROTO, bytes)
           dataMap.putLong(KEY_TS, System.currentTimeMillis())
         }
-      val put = request.asPutDataRequest()
-      dataClient.putDataItem(if (urgent) put.setUrgent() else put).await()
+      dataClient.putDataItem(request.asPutDataRequest().setUrgent()).await()
       statsStore.recordWrite(System.currentTimeMillis())
     }
       .onFailure {
         if (it is CancellationException) throw it
         handleFailure("writeDataItem $path", it)
       }
+      .isSuccess
   }
 
   /**
