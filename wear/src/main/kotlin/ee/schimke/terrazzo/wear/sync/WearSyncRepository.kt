@@ -18,6 +18,7 @@ import ee.schimke.terrazzo.wearsync.proto.PinnedCardSet
 import ee.schimke.terrazzo.wearsync.proto.PinnedSectionSet
 import ee.schimke.terrazzo.wearsync.proto.StreamUpdate
 import ee.schimke.terrazzo.wearsync.proto.WearLease
+import ee.schimke.terrazzo.wearsync.proto.WearPicture
 import ee.schimke.terrazzo.wearsync.proto.WearSettings
 import ee.schimke.terrazzo.wearsync.proto.WearSyncPaths
 import ee.schimke.terrazzo.wearsync.proto.WearWidgetSlots
@@ -183,6 +184,9 @@ class WearSyncRepository(context: Context, private val scope: CoroutineScope) {
           _values.value = live.values
           offline.writeValues(live)
         }
+      // Read straight from disk by the Wear widgets when they bake.
+      path.startsWith(WearSyncPaths.PICTURE_PREFIX) ->
+        decodeProto<WearPicture>(bytes)?.let { offline.writePicture(it) }
       path.startsWith(WearSyncPaths.DASHBOARD_PREFIX) ->
         decodeProto<DashboardData>(bytes)?.let { dashboard ->
           val current = _dashboards.value.toMutableList()

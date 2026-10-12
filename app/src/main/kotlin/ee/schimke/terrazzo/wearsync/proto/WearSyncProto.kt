@@ -20,6 +20,7 @@ import kotlinx.serialization.Serializable
  *     - `/wear/slots` — [WearWidgetSlots]
  *     - `/wear/values` — [LiveValues]
  *     - `/wear/dashboard/<urlPath>` — [DashboardData]
+ *     - `/wear/picture/<entityId>` — [WearPicture]
  * - MessageClient (ephemeral):
  *     - `/wear/lease` — [WearLease] (wear → phone heartbeat)
  *     - `/wear/stream` — [StreamUpdate] (phone → wear delta push)
@@ -64,6 +65,21 @@ data class EntityValue(
   val friendlyName: String = "",
   val unit: String = "",
   val deviceClass: String = "",
+  /** The entity's `entity_picture` URL; the picture itself travels as a [WearPicture]. */
+  val entityPicture: String = "",
+)
+
+/**
+ * An entity's picture for Wear widgets, which can't fetch one: fetched and downscaled on the phone,
+ * PNG-encoded (the format a baked widget embeds). [url] is the `entity_picture` it was fetched
+ * from.
+ */
+@Serializable
+class WearPicture(
+  val entityId: String = "",
+  val url: String = "",
+  val png: ByteArray = ByteArray(0),
+  val updatedAtMs: Long = 0L,
 )
 
 /** MessageClient stream frame — only entities that changed. */
@@ -180,8 +196,12 @@ object WearSyncPaths {
   const val SLOTS: String = "/wear/slots"
   const val VALUES: String = "/wear/values"
   const val DASHBOARD_PREFIX: String = "/wear/dashboard/"
+  const val PICTURE_PREFIX: String = "/wear/picture/"
   const val LEASE_MESSAGE: String = "/wear/lease"
   const val STREAM_MESSAGE: String = "/wear/stream"
+
+  /** The DataItem path of [entityId]'s [WearPicture]. */
+  fun picturePath(entityId: String): String = PICTURE_PREFIX + entityId
 
   /** Number of wear-widget slots. Mirrors [WearWidgetSlots] capacity. */
   const val WIDGET_SLOT_COUNT: Int = 5

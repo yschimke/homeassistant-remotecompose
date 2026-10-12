@@ -23,8 +23,11 @@ import androidx.glance.wear.core.ContainerInfo
 import androidx.glance.wear.core.WearWidgetParams
 import androidx.glance.wear.core.WidgetInstanceId
 import androidx.wear.compose.remote.material3.RemoteColorScheme
+import ee.schimke.composeai.rcplayer.edit.RcTargetProfiles
 import ee.schimke.composeai.rcplayer.edit.bitmapUrls
 import ee.schimke.composeai.rcplayer.edit.namedVariables
+import ee.schimke.composeai.rcplayer.edit.validateFor
+import ee.schimke.composeai.rcplayer.protocol.RcBitmapData
 import ee.schimke.composeai.rcplayer.protocol.RcDocumentCodec
 import ee.schimke.composeai.rcplayer.protocol.RcWireLimits
 import ee.schimke.ha.model.CardConfig
@@ -93,25 +96,70 @@ class SlotWidgetDesignTest {
   private fun entity(id: String, state: String, vararg attrs: Pair<String, String>) =
     EntityState(id, state, JsonObject(attrs.associate { (k, v) -> k to JsonPrimitive(v) }))
 
-  private fun data(card: CardConfig, snapshot: HaSnapshot): WearWidgetData =
-    slotWidgetData(registry, colors, style, card, snapshot, slotIndex = 0)
+  private fun data(
+    card: CardConfig,
+    snapshot: HaSnapshot,
+    fetchImage: (String) -> ByteArray? = { null },
+  ): WearWidgetData = slotWidgetData(registry, colors, style, card, snapshot, 0, fetchImage)
+
+  private val cameraUrl = "/api/camera_proxy/camera.driveway?token=abc"
+
+  private val camera =
+    HaSnapshot(
+      states =
+        mapOf(
+          "camera.driveway" to
+            entity(
+              "camera.driveway",
+              "idle",
+              "friendly_name" to "Driveway",
+              "entity_picture" to cameraUrl,
+            )
+        )
+    )
+
+  /** A solid yellow PNG: the picture the phone synced. */
+  private val yellowPng: ByteArray =
+    Bitmap.createBitmap(64, 48, Bitmap.Config.ARGB_8888).let { bitmap ->
+      android.graphics.Canvas(bitmap).drawColor(android.graphics.Color.YELLOW)
+      java.io
+        .ByteArrayOutputStream()
+        .also { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
+        .toByteArray()
+    }
 
   private fun capture(data: WearWidgetData): ByteArray = runBlocking {
     data.captureRawContent(RuntimeEnvironment.getApplication(), params, false).rcDocument
   }
 
-  private fun assertBaked(card: CardConfig, snapshot: HaSnapshot, slot: String, text: String) {
-    val data = data(card, snapshot)
+  private fun assertBaked(
+    card: CardConfig,
+    snapshot: HaSnapshot,
+    slot: String,
+    text: String,
+    fetchImage: (String) -> ByteArray? = { null },
+  ): ByteArray {
+    val data = data(card, snapshot, fetchImage)
     assertFalse(data is WearWidgetDocument, "${card.type} renders from its design")
     val bytes = capture(data)
     val document = RcDocumentCodec.decode(bytes, RcWireLimits())
     assertEquals(
       emptyList(),
-      document.namedVariables.map { it.name }.filter { slot in it },
+      // A slot picture keeps its name with the embedded bytes as its value (bitmapUrls below):
+      // a host may swap it, but has nothing to supply.
+      document.namedVariables
+        .map { it.name }
+        .filter { slot in it && !it.endsWith(".entity_picture") },
       "every slot binding is baked",
     )
     assertEquals(emptyList(), document.bitmapUrls, "a Wear widget names no image URL")
+    assertEquals(
+      emptyList(),
+      document.validateFor(RcTargetProfiles.WEAR_WIDGETS),
+      "the baked widget stays in the Wear widget op set",
+    )
     assertTrue(text in String(bytes, Charsets.ISO_8859_1), "the value is baked in")
+    return bytes
   }
 
   @Test
@@ -133,7 +181,7 @@ class SlotWidgetDesignTest {
   }
 
   @Test
-  fun tileBakesItsValues() =
+  fun tileBakesItsValues() {
     assertBaked(
       card("tile", "light.kitchen"),
       HaSnapshot(
@@ -143,26 +191,39 @@ class SlotWidgetDesignTest {
       "light.s0",
       "Kitchen",
     )
+  }
 
   @Test
-  fun pictureCardBakesWithoutAnImageChannel() =
-    assertBaked(
-      card("picture-entity", "camera.driveway"),
-      HaSnapshot(
-        states =
-          mapOf(
-            "camera.driveway" to
-              entity(
-                "camera.driveway",
-                "idle",
-                "friendly_name" to "Driveway",
-                "entity_picture" to "/api/camera_proxy/camera.driveway?token=abc",
-              )
-          )
-      ),
-      "camera.s0",
-      "Driveway",
+  fun pictureCardEmbedsItsSyncedPicture() {
+    val fetched = mutableListOf<String>()
+    val bytes =
+      assertBaked(card("picture-entity", "camera.driveway"), camera, "camera.s0", "Driveway") {
+        fetched += it
+        if (it == cameraUrl) yellowPng else null
+      }
+    // Only the card's own picture was asked for, and the widget carries it inline.
+    assertEquals(listOf(cameraUrl), fetched)
+    val bitmaps =
+      RcDocumentCodec.decode(bytes, RcWireLimits()).operations.filterIsInstance<RcBitmapData>()
+    assertTrue(
+      bitmaps.any {
+        it.encoding == RcBitmapData.ENCODING_INLINE &&
+          it.width == 64 &&
+          it.height == 48 &&
+          it.data.contentEquals(yellowPng)
+      },
+      "the synced PNG is embedded",
     )
+  }
+
+  @Test
+  fun pictureCardWithoutASyncedPictureShowsItsIcon() {
+    // Not synced yet: the direct capture, which draws the card's icon.
+    val bytes = capture(data(card("picture-entity", "camera.driveway"), camera))
+    val document = RcDocumentCodec.decode(bytes, RcWireLimits())
+    assertEquals(emptyList(), document.bitmapUrls, "a Wear widget names no image URL")
+    assertTrue("Driveway" in String(bytes, Charsets.ISO_8859_1))
+  }
 
   @Test
   fun bakedTileMatchesADirectCapture() =
@@ -184,21 +245,16 @@ class SlotWidgetDesignTest {
       ),
     )
 
+  /** A picture card whose entity has no picture: its icon design, baked. */
   @Test
-  fun bakedPictureMatchesADirectCapture() =
+  fun bakedPicturelessCardMatchesADirectCapture() =
     assertParity(
       "picture-entity",
       card("picture-entity", "camera.driveway"),
       HaSnapshot(
         states =
           mapOf(
-            "camera.driveway" to
-              entity(
-                "camera.driveway",
-                "idle",
-                "friendly_name" to "Driveway",
-                "entity_picture" to "/api/camera_proxy/camera.driveway?token=abc",
-              )
+            "camera.driveway" to entity("camera.driveway", "idle", "friendly_name" to "Driveway")
           )
       ),
     )

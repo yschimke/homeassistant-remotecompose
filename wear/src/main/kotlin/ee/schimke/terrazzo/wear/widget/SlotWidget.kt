@@ -108,15 +108,18 @@ abstract class SlotWidget(internal val slotIndex: Int) : GlanceWearWidget() {
     val updatedColors =
       wearColors.copy(tertiary = wearColors.primary, secondary = wearColors.onSurfaceVariant)
 
-    return slotWidgetData(registry, updatedColors, style, card, snapshot, slotIndex)
+    return slotWidgetData(registry, updatedColors, style, card, snapshot, slotIndex) { url ->
+      syncedPicture(store, snapshot, url)
+    }
   }
 }
 
 /**
  * The widget data for a slot showing [card]. Design first: the card's Wear template, captured by
  * Glance Wear itself (its profile and canvas) and baked with the card's values — a Wear widget
- * can't receive bindings. Cards with no design, or one that can't be baked, keep the direct
- * document. [themeKey] names [colors] in the template cache.
+ * can't receive bindings. A slot picture is embedded from [fetchImage] (the phone syncs them: the
+ * watch can't fetch one). Cards with no design, or one that can't be baked (a picture not synced
+ * yet), keep the direct document. [themeKey] names [colors] in the template cache.
  */
 internal fun slotWidgetData(
   registry: CardRegistry,
@@ -125,6 +128,7 @@ internal fun slotWidgetData(
   card: CardConfig?,
   snapshot: HaSnapshot,
   slotIndex: Int,
+  fetchImage: (url: String) -> ByteArray? = { null },
 ): WearWidgetData {
   val direct = slotDocument(registry, colors, card, snapshot, slotIndex)
   if (card == null) return direct
@@ -155,7 +159,7 @@ internal fun slotWidgetData(
             .also { wearTemplates[key] = it }
       val playback = CardDesignTemplates.playback(design, template.rcDocument, registry)
       val baked =
-        LauncherDesigns.bakeValues(template.rcDocument, playback, snapshot)
+        LauncherDesigns.bakeValues(template.rcDocument, playback, snapshot, fetchImage)
           ?: return direct.captureRawContent(context, params, isPreview)
       return WearWidgetRawContent(baked, template.extras, template.widgetTitle)
     }
@@ -170,6 +174,18 @@ internal fun slotDirectDocument(
   snapshot: HaSnapshot,
   slotIndex: Int,
 ): WearWidgetData = slotDocument(registry, colors, card, snapshot, slotIndex)
+
+/**
+ * The synced picture for [url] — an entity's `entity_picture` in [snapshot]. A camera's URL changes
+ * with its token faster than pictures sync, so the entity's last synced picture stands in for it.
+ */
+private fun syncedPicture(store: WearOfflineStore, snapshot: HaSnapshot, url: String): ByteArray? {
+  val entity =
+    snapshot.states.values.firstOrNull {
+      (it.attributes["entity_picture"] as? JsonPrimitive)?.content == url
+    } ?: return null
+  return store.readPicture(entity.entityId)?.png?.takeIf { it.isNotEmpty() }
+}
 
 /** One captured Wear template per card shape, theme and container: see [SlotWidget]. */
 private data class WearTemplateKey(
@@ -202,12 +218,13 @@ private fun slotDocument(
   WearWidgetDocument(
     background = WearWidgetBrush.Companion,
     content = {
-      // The watch has no Home Assistant connection to fetch a picture with, and its widget host
-      // no image loader: pictures render as their card's icon, in direct and template captures
-      // alike.
+      // The watch's widget host has no image loader. A template names its slot pictures by URL,
+      // and baking embeds the phone-synced bytes; a direct capture can't, so it shows the card's
+      // icon.
       CompositionLocalProvider(
         LocalTemplateBindings provides if (template) TemplateBindings() else null,
-        LocalPictureImageStrategy provides NO_PICTURES,
+        LocalPictureImageStrategy provides
+          if (template) PictureImageStrategy.DefaultAppUrl else NO_PICTURES,
       ) {
         ProvideCardRegistry(registry) {
           RemoteMaterialTheme(colorScheme = colors) {
@@ -262,8 +279,9 @@ private fun String.toCardConfigOrNull(): CardConfig? = runCatching {
 
 /**
  * Project the proto [LiveValues] snapshot into the [HaSnapshot] shape card converters expect. Only
- * the four fields the wire format carries survive the round-trip — state, friendly_name,
- * unit_of_measurement, device_class. Cards reading other attributes will see them as absent.
+ * the fields the wire format carries survive the round-trip — state, friendly_name,
+ * unit_of_measurement, device_class, entity_picture. Cards reading other attributes will see them
+ * as absent.
  */
 private fun LiveValues?.toSnapshot(): HaSnapshot {
   val live = this ?: return HaSnapshot()
@@ -277,6 +295,7 @@ private fun EntityValue.toEntityState(entityId: String): EntityState {
       if (friendlyName.isNotEmpty()) put("friendly_name", JsonPrimitive(friendlyName))
       if (unit.isNotEmpty()) put("unit_of_measurement", JsonPrimitive(unit))
       if (deviceClass.isNotEmpty()) put("device_class", JsonPrimitive(deviceClass))
+      if (entityPicture.isNotEmpty()) put("entity_picture", JsonPrimitive(entityPicture))
     }
   return EntityState(entityId = entityId, state = state, attributes = JsonObject(attrs))
 }
