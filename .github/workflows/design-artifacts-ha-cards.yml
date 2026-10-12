@@ -1,0 +1,89 @@
+name: Design Artifacts (ha-cards)
+
+# Render `:ha-cards-catalog` — the `ha-cards` UI-builder catalog: Home Assistant cards in Remote
+# Compose, the palette and starting templates of the white-labelled builder on ha.coo.ee — and
+# publish its importable bundle (catalog.json, ui-builder.json, components.json, the template
+# designs under ui-builder/designs/, PNGs and the `.rc` documents) to the
+# `design-artifacts/ha-cards` branch of the output repository
+# yschimke/homeassistant-remotecompose-out. Serving it is the preview server's deploy config
+# (compose-preview-server's `catalogs.json`), not this file.
+#
+# A workflow of its own rather than a second job in `design-artifacts.yml`, as remote-m3-catalog
+# keeps `remote-widgets` apart from `remote-m3`: the `homeassistant-remotecompose` sheet runs the
+# adaptive-UID pilot, the CMP/Wasm lane and a two-hour budget, and a palette change should neither
+# re-run that nor wait behind its concurrency group. Same pipeline — the shared reusable workflow in
+# compose-ai-tools, at the same pinned revision — with this catalog's parameters.
+
+on:
+  # Weekly, a little after the main sheet, so the catalog tracks renderer changes upstream.
+  schedule:
+    - cron: '30 6 * * 1' # Mondays 06:30 UTC
+  push:
+    branches:
+      - main
+    paths:
+      - 'ha-cards-catalog/**'
+      # The components the palette wraps, and the seed its templates are generated with.
+      - 'rc-components/**'
+      - 'rc-converter/**'
+      - 'design-server/src/main/kotlin/ee/schimke/ha/designserver/HaCardsSeed.kt'
+      - 'design-server/src/main/kotlin/ee/schimke/ha/designserver/UiBuilder.kt'
+      - 'gradle/libs.versions.toml'
+      - 'gradle/wrapper/gradle-wrapper.properties'
+      - 'settings.gradle.kts'
+      - 'build.gradle.kts'
+      - 'build-logic/**'
+      - '.github/workflows/design-artifacts-ha-cards.yml'
+  workflow_dispatch:
+    inputs:
+      allow_incomplete:
+        description: 'Publish even if some previews fail to render or lack semantics.'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  ha-cards:
+    name: ha-cards
+    # Don't run on forks — the publish step pushes to the output repository with ARTIFACTS_TOKEN.
+    if: ${{ github.repository == 'yschimke/homeassistant-remotecompose' }}
+    permissions:
+      # The delivery branch is pushed with ARTIFACTS_TOKEN; GITHUB_TOKEN writes the source
+      # provenance marker `refs/design-artifacts/source/ha-cards` here.
+      contents: write
+    # One publisher at a time for this delivery branch — this lane force-pushes
+    # `design-artifacts/ha-cards` and nothing else does.
+    concurrency:
+      group: design-artifacts-${{ github.ref }}-ha-cards
+      cancel-in-progress: false
+    uses: yschimke/compose-ai-tools/.github/workflows/design-artifacts-reusable.yml@8f5c801144a7f482b44afb8e9f3e34a4871b9d7e
+    with:
+      system: ha-cards
+      artifact-repository: yschimke/homeassistant-remotecompose-out
+      ref: ${{ github.sha }}
+      # Only main (push, schedule, dispatch on main) publishes; any other ref renders only.
+      publish: ${{ github.ref == 'refs/heads/main' }}
+      upload-out: true
+      spec: ha-cards-catalog/catalog.spec.json
+      module: ':ha-cards-catalog'
+      # The render CLI in lockstep with the applied Gradle plugin, as the main sheet does.
+      cli-version: catalog
+      catalog-key: compose-preview-plugin
+      # An ANDROID module: every sticker is a RemoteDocument rasterised under Robolectric.
+      desktop-render: false
+      # A module-level live bundle, so a serve host can re-render a sticker on demand. No
+      # per-preview split, for the reason design-artifacts.yml gives.
+      publish-live-bundle: true
+      split-per-preview: false
+      # The documents as text beside the pixels, so a change to a component reads as a diff.
+      rc-document-json: true
+      allow-incomplete: ${{ github.event_name == 'workflow_dispatch' && inputs.allow_incomplete || false }}
+      # Generated delivery branch — attributed to the repo owner, not a bot.
+      commit-user-name: 'Yuri Schimke'
+      commit-user-email: 'yuri@schimke.ee'
+      timeout-minutes: 60
+    secrets:
+      # Contents write on yschimke/homeassistant-remotecompose-out only.
+      artifacts_token: ${{ secrets.ARTIFACTS_TOKEN }}

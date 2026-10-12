@@ -82,6 +82,7 @@ include(
   ":design-server",
   ":app-ui",
   ":rc-player-ui",
+  ":ha-cards-catalog",
 )
 
 // Unreleased typed catalog API: opt in explicitly and build against pinned source checkouts.

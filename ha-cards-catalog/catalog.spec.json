@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/yschimke/compose-ai-tools/main/scripts/design-artifacts/catalog.spec.schema.json",
+  "$comment": "Cover sheet for :ha-cards-catalog, the `ha-cards` system: Home Assistant cards in Remote Compose, the UI-builder palette the white-labelled builder on ha.coo.ee offers. The inventory lives in @CatalogComponent annotations under ha-cards-catalog/src/main/kotlin/ee/schimke/ha/cards/, and the builder definition in ui-builder.policy.json beside this file. A design system of its own beside `homeassistant-remotecompose` (the :previews sheet of whole converted cards, catalog.spec.json at the repository root): this one is the palette a design is built from — HA card components plus a core of Remote Material 3 — and its starting templates are whole cards for three targets: dashboard cards, Wear widgets and phone launcher widgets. Each sticker pins its own @Preview size; the one breakpoint is the single-column dashboard width the stickers are drawn at. Light mode, the HA default theme the stickers capture in. No referenceKits: there is no published design kit for Home Assistant cards.",
+  "system": "ha-cards",
+  "title": "Home Assistant cards · RemoteCompose",
+  "library": [
+    "androidx.compose.remote:remote-creation-compose",
+    "androidx.wear.compose.remote:remote-material3",
+    "ee.schimke.ha:rc-components (RemoteHa* cards)"
+  ],
+  "module": ":ha-cards-catalog",
+  "modes": ["light"],
+  "display": {
+    "surface": "light",
+    "hero": "HaCard/Tile"
+  },
+  "breakpoints": [{ "size": "card", "widthDp": 360 }],
+  "referenceKits": []
+}

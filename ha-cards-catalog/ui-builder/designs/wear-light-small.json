@@ -1,0 +1,221 @@
+{
+  "schema": "compose-ui-builder-document/v1-candidate",
+  "id": "wear-light-small",
+  "title": "Light · Wear widget, Small",
+  "revision": 0,
+  "template": "wear-light-small",
+  "catalogPin": {
+    "systemId": "ha-cards",
+    "catalogRevision": "candidate",
+    "capabilityDigest": "candidate",
+    "nativeRuntimeId": "candidate"
+  },
+  "environment": {
+    "widthDp": 216,
+    "heightDp": 76,
+    "density": 2,
+    "theme": "light",
+    "locale": "en-US",
+    "fontScale": 1,
+    "layoutDirection": "ltr"
+  },
+  "stateVariables": {
+    "light.s0.is_on": {
+      "type": "value",
+      "valueType": "bool",
+      "initialValue": true,
+      "persistence": "design"
+    },
+    "light.s0.name": {
+      "type": "text",
+      "valueType": "string",
+      "initialValue": "Kitchen",
+      "persistence": "design"
+    },
+    "light.s0.numeric_state": {
+      "type": "value",
+      "valueType": "float",
+      "initialValue": 0.0,
+      "persistence": "design"
+    },
+    "light.s0.state": {
+      "type": "text",
+      "valueType": "string",
+      "initialValue": "On",
+      "persistence": "design"
+    },
+    "light.s0.state_int": {
+      "type": "value",
+      "valueType": "int",
+      "initialValue": -1,
+      "persistence": "design"
+    },
+    "light.s0.status": {
+      "type": "value",
+      "valueType": "int",
+      "initialValue": 0,
+      "persistence": "design"
+    }
+  },
+  "roots": [
+    "root"
+  ],
+  "nodes": {
+    "name0": {
+      "id": "name0",
+      "componentId": "ha-cards/remote-text",
+      "properties": {
+        "text": {
+          "type": "state",
+          "variable": "light.s0.name"
+        },
+        "fontSize": {
+          "type": "float",
+          "value": 15.0
+        },
+        "maxLines": {
+          "type": "int",
+          "value": 1
+        }
+      },
+      "modifiers": [],
+      "slots": {}
+    },
+    "state0": {
+      "id": "state0",
+      "componentId": "ha-cards/remote-text",
+      "properties": {
+        "text": {
+          "type": "state",
+          "variable": "light.s0.state"
+        },
+        "fontSize": {
+          "type": "float",
+          "value": 13.0
+        },
+        "maxLines": {
+          "type": "int",
+          "value": 1
+        }
+      },
+      "modifiers": [],
+      "slots": {}
+    },
+    "text0": {
+      "id": "text0",
+      "componentId": "layout/column",
+      "properties": {
+        "weight": {
+          "type": "float",
+          "value": 1.0
+        }
+      },
+      "modifiers": [],
+      "slots": {
+        "children": [
+          "name0",
+          "state0"
+        ]
+      }
+    },
+    "switch-label0": {
+      "id": "switch-label0",
+      "componentId": "ha-cards/remote-text",
+      "properties": {
+        "text": {
+          "type": "state",
+          "variable": "light.s0.state"
+        },
+        "fontSize": {
+          "type": "float",
+          "value": 12.0
+        },
+        "maxLines": {
+          "type": "int",
+          "value": 1
+        }
+      },
+      "modifiers": [],
+      "slots": {}
+    },
+    "switch0": {
+      "id": "switch0",
+      "componentId": "ha-cards/remote-switch-button",
+      "properties": {
+        "checked": {
+          "type": "state",
+          "variable": "light.s0.is_on"
+        }
+      },
+      "modifiers": [],
+      "slots": {
+        "label": [
+          "switch-label0"
+        ],
+        "icon": [],
+        "secondaryLabel": []
+      }
+    },
+    "row0": {
+      "id": "row0",
+      "componentId": "layout/row",
+      "properties": {
+        "horizontalSpacingDp": {
+          "type": "float",
+          "value": 12.0
+        },
+        "verticalAlignment": {
+          "type": "enum",
+          "value": "center"
+        }
+      },
+      "modifiers": [
+        {
+          "type": "fillMaxWidth"
+        }
+      ],
+      "slots": {
+        "children": [
+          "text0",
+          "switch0"
+        ]
+      }
+    },
+    "column": {
+      "id": "column",
+      "componentId": "layout/column",
+      "properties": {
+        "verticalSpacingDp": {
+          "type": "float",
+          "value": 4.0
+        }
+      },
+      "modifiers": [
+        {
+          "type": "fillMaxWidth"
+        }
+      ],
+      "slots": {
+        "children": [
+          "row0"
+        ]
+      }
+    },
+    "root": {
+      "id": "root",
+      "componentId": "remote-m3/widget-container-small",
+      "properties": {
+        "background": {
+          "type": "string",
+          "value": "#FF1C1C1C"
+        }
+      },
+      "modifiers": [],
+      "slots": {
+        "content": [
+          "column"
+        ]
+      }
+    }
+  }
+}
