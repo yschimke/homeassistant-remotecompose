@@ -97,6 +97,9 @@ collapsible and fit layouts and `for-each`, checked on the design matrix at the 
 (dashboard columns, launcher cells, Wear small/large). Branching designs by width is the thing
 adaptive layout avoids.
 
+The UI Builder side of steps 4–7, written as general enhancements for any host that embeds UI
+Builder to produce RemoteCompose, is in [ui-builder-embedding.md](ui-builder-embedding.md).
+
 ## Running it
 
 ```sh
