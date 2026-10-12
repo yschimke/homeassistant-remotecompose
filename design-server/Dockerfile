@@ -20,8 +20,12 @@ ADD https://github.com/yschimke/compose-preview-server/releases/download/v${UI_B
 RUN mkdir -p /opt && tar xzf /tmp/ui-builder.tar.gz -C /opt \
   && mv /opt/compose-preview-server-${UI_BUILDER_VERSION} /opt/compose-preview-server
 
-# UI Builder's launcher is a shell script, so a JRE with a shell rather than distroless.
+# UI Builder's launcher is a shell script, so a JRE with a shell rather than distroless. Its
+# renderer (Skiko) loads libGL and fontconfig even when it draws offscreen, for PNG/SVG export.
 FROM eclipse-temurin:21-jre
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends libgl1 libfontconfig1 fonts-dejavu-core \
+  && rm -rf /var/lib/apt/lists/*
 RUN useradd --create-home --home-dir /data --uid 10001 designs
 COPY --from=ui-builder /opt/compose-preview-server /opt/compose-preview-server
 COPY design-server/build/install/design-server/lib /app/lib
