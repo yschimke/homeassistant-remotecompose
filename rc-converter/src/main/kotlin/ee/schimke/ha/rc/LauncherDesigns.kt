@@ -96,7 +96,8 @@ object LauncherDesigns {
     registry: CardRegistry = CardDesignTemplates.defaultTemplateRegistry,
   ): DesignKey? {
     val design = CardDesignTemplates.designCard(card, snapshot, registry)
-    val shape = registry.get(design.type)?.designProperties(design, snapshot)?.shape ?: return null
+    val shape =
+      registry.converterFor(design.type)?.designProperties(design, snapshot)?.shape ?: return null
     return DesignKey(
       cardType = design.type,
       variant = "${widthDp}x$heightDp",
@@ -120,11 +121,16 @@ object LauncherDesigns {
     val parts = key.theme.split(':')
     val profile = if (parts.getOrNull(1) == "system") systemThemedWidgetsProfile else widgetsProfile
     val dark = parts.getOrNull(2) == "dark"
-    val converter = requireNotNull(registry.get(key.cardType)) { "no converter: ${key.cardType}" }
+    val converter =
+      requireNotNull(registry.converterFor(key.cardType)) { "no converter: ${key.cardType}" }
     val (card, snapshot) =
       requireNotNull(converter.designTemplate(DesignProperties.parse(key.shape))) {
-        "${key.cardType} has no template for ${key.shape}"
-      }
+          "${key.cardType} has no template for ${key.shape}"
+        }
+        // The placeholder converter templates its own type; the key names the card's.
+        .let {
+          if (it.card.type == key.cardType) it else it.copy(card = it.card.ofType(key.cardType))
+        }
     val actions = WidgetActionRegistry(emptyMap())
     val widthPx = dpToPx(widthDp, densityDpi)
     val heightPx = dpToPx(heightDp, densityDpi)

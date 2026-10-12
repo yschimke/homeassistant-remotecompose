@@ -1209,4 +1209,13 @@ class CardDesignParityTest {
       printer,
       dark = false,
     )
+
+  @Test
+  fun customCardPlaceholder() =
+    assertParity(
+      "custom-card",
+      card("custom:mushroom-light-card") { put("entity", "light.kitchen") },
+      listStates,
+      dark = false,
+    )
 }

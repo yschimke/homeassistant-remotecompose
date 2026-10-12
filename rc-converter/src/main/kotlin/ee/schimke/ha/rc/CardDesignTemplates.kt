@@ -49,7 +49,8 @@ object CardDesignTemplates {
   ): DesignKey? {
     if (surface != DesignSurface.MobileApp) return null
     val design = designCard(card, snapshot, registry)
-    val shape = registry.get(design.type)?.designProperties(design, snapshot)?.shape ?: return null
+    val shape =
+      registry.converterFor(design.type)?.designProperties(design, snapshot)?.shape ?: return null
     return DesignKey(
       cardType = design.type,
       surface = surface,
@@ -71,7 +72,8 @@ object CardDesignTemplates {
   ): CardConfig {
     var current = card
     repeat(MAX_DELEGATION) {
-      current = registry.get(current.type)?.designDelegate(current, snapshot) ?: return current
+      current =
+        registry.converterFor(current.type)?.designDelegate(current, snapshot) ?: return current
     }
     return current
   }
@@ -87,7 +89,7 @@ object CardDesignTemplates {
     bytes: ByteArray,
     registry: CardRegistry = defaultTemplateRegistry,
   ): CardTemplatePlayback {
-    val converter = registry.get(card.type)
+    val converter = registry.converterFor(card.type)
     val entityId = card.raw["entity"]?.jsonPrimitive?.contentOrNull
     val rows = card.raw["entities"] as? JsonArray
     val slotTaps =
@@ -164,11 +166,16 @@ object CardDesignTemplates {
   ): BuiltDesign {
     require(key.surface == DesignSurface.MobileApp) { "spike only builds mobile-app templates" }
     val (style, dark) = parseBakedTheme(key.theme)
-    val converter = requireNotNull(registry.get(key.cardType)) { "no converter: ${key.cardType}" }
+    val converter =
+      requireNotNull(registry.converterFor(key.cardType)) { "no converter: ${key.cardType}" }
     val (card, snapshot) =
       requireNotNull(converter.designTemplate(DesignProperties.parse(key.shape))) {
-        "${key.cardType} has no template for ${key.shape}"
-      }
+          "${key.cardType} has no template for ${key.shape}"
+        }
+        // The placeholder converter templates its own type; the key names the card's.
+        .let {
+          if (it.card.type == key.cardType) it else it.copy(card = it.card.ofType(key.cardType))
+        }
     val theme = haThemeFor(style, dark)
     val bytes = runBlocking {
       captureSingleRemoteDocument(context = context, profile = androidXExperimentalWrap) {
@@ -221,3 +228,13 @@ object CardDesignLibrary {
   ): ByteArray =
     templates.getOrPut(key) { CardDesignTemplates.capture(context, key, registry).bytes }
 }
+
+/** This card as [type]: its config's `type:` and its [CardConfig.type] both. */
+internal fun CardConfig.ofType(type: String): CardConfig =
+  CardConfig(
+    type = type,
+    raw =
+      kotlinx.serialization.json.JsonObject(
+        raw + ("type" to kotlinx.serialization.json.JsonPrimitive(type))
+      ),
+  )
