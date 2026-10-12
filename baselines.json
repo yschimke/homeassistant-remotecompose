@@ -1588,7 +1588,7 @@
     "functionName": "Dashboard3dPrintingTablet",
     "module": "previews",
     "renderBasename": "Dashboard3dPrintingTablet_dashboard_3d_printing_tablet-d15705fe.png",
-    "sha256": "1c848d774c41744b29bb99e3d4ede186aaea31904dac1d33b030d6a85cbe4e37",
+    "sha256": "4f18f60257dd0c5150620a8bd9b4c6b0ca4124bbd7a91035f8f204f2856b840d",
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/DashboardPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.DashboardPreviewsKt.DashboardClimateMobile_dashboard climate \u2014 mobile": {
@@ -1628,7 +1628,7 @@
     "functionName": "DashboardGithubMobile",
     "module": "previews",
     "renderBasename": "DashboardGithubMobile_dashboard_github_mobile-8f04a7c1.png",
-    "sha256": "1d44541a27768f2f50a04662c9abe994c4e8dbaa99e771d08922bea8b9bd494a",
+    "sha256": "267ab52623f7b0bb97824725d541591572ceadad44341223d783ff8395eb5ef0",
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/DashboardPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.DashboardPreviewsKt.DashboardGithubTablet_dashboard github \u2014 tablet": {
@@ -1636,7 +1636,7 @@
     "functionName": "DashboardGithubTablet",
     "module": "previews",
     "renderBasename": "DashboardGithubTablet_dashboard_github_tablet-89194c99.png",
-    "sha256": "32fe64da362edbb2a181833537f238483344cffbdedeb8c581f32fb69137bdf1",
+    "sha256": "87b19e0aaaf3a5db0587e7dc03d7003935e3411fb46546acbe80ff8c79cfdf4d",
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/DashboardPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.DashboardPreviewsKt.DashboardMeshcoreMobile_dashboard meshcore \u2014 mobile": {
