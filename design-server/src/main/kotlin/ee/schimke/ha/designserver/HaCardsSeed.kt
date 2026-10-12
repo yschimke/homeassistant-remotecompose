@@ -156,13 +156,17 @@ object HaCardsSeed {
     )
 
   /**
-   * A gauge's unit: the card's own `unit`, else what follows the number in the entity's formatted
-   * state (`46 %` → `%`), which is where `unit_of_measurement` lands in a [CardSchema].
+   * A gauge's unit: the card's own `unit` (blank hides it), else what follows the number in the
+   * entity's formatted state (`46 %` → `%`), which is where `unit_of_measurement` lands in a
+   * [CardSchema].
    */
   internal fun gaugeUnit(card: JsonObject?, formattedState: String?): String? {
-    (card?.get("unit") as? JsonPrimitive)?.contentOrNull?.trim()?.takeIf(String::isNotEmpty)?.let {
-      return it
-    }
+    // A configured unit wins outright, as in GaugeCardConverter: `""` hides the entity's unit.
+    (card?.get("unit") as? JsonPrimitive)
+      ?.takeIf { it.isString }
+      ?.let {
+        return it.content.trim().takeIf(String::isNotEmpty)
+      }
     val match =
       Regex("""^\s*-?[0-9]+(?:[.,][0-9]+)?\s*([^0-9.,\s].*?)\s*$""")
         .find(formattedState ?: return null)

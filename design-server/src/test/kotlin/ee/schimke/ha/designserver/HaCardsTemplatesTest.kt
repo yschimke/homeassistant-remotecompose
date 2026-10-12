@@ -157,6 +157,7 @@ class HaCardsTemplatesTest {
     assertEquals("°C", HaCardsSeed.gaugeUnit(null, "21.5 °C"))
     assertEquals("kWh", HaCardsSeed.gaugeUnit(buildJsonObject { put("unit", "kWh") }, "46 %"))
     assertEquals(null, HaCardsSeed.gaugeUnit(null, "46"))
+    assertEquals(null, HaCardsSeed.gaugeUnit(buildJsonObject { put("unit", "") }, "46 %"))
     assertEquals(null, HaCardsSeed.gaugeUnit(null, "unavailable"))
     assertEquals(null, HaCardsSeed.gaugeUnit(null, null))
   }
