@@ -30,3 +30,6 @@ ios/**/*.xcodeproj/xcuserdata/
 /_site/
 /_site-docs/
 /_wasm-test/
+
+# The card embed's test dependencies (Playwright), installed by CI and locally.
+embed/node_modules/

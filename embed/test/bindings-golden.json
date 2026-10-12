@@ -1,0 +1,1123 @@
+{
+    "_comment": "Inputs for the slot-binding port in embed/ha-card.js. `expected` is written by design-server's EmbedBindingsGoldenTest from ha-model (CardDesignSlots.slotBindings); run it with -Pembed.golden.update=true after changing a case. Floats are exact float values as doubles, or \"NaN\".",
+    "cases": [
+        {
+            "name": "numeric and text formatting",
+            "card": {
+                "type": "entities",
+                "title": "Formatting",
+                "entities": [
+                    "sensor.n0",
+                    "sensor.n1",
+                    "sensor.n2",
+                    "sensor.n3",
+                    "sensor.n4",
+                    "sensor.n5",
+                    "sensor.n6",
+                    "sensor.n7",
+                    "sensor.n8",
+                    "sensor.n9",
+                    "sensor.n10",
+                    "sensor.n11",
+                    "sensor.n12",
+                    "sensor.n13",
+                    "sensor.n14",
+                    "sensor.n15",
+                    "sensor.n16",
+                    "sensor.n17",
+                    "sensor.n18",
+                    "sensor.n19",
+                    "sensor.n20",
+                    "sensor.n21",
+                    "sensor.n22",
+                    "sensor.n23",
+                    "sensor.n24",
+                    "sensor.n25",
+                    "sensor.n26",
+                    "sensor.n27",
+                    "sensor.n28"
+                ]
+            },
+            "states": {
+                "sensor.n0": {
+                    "state": "21.456",
+                    "attributes": {
+                        "unit_of_measurement": "°C"
+                    }
+                },
+                "sensor.n1": {
+                    "state": "21.455",
+                    "attributes": {
+                        "unit_of_measurement": "  "
+                    }
+                },
+                "sensor.n2": {
+                    "state": "21.454",
+                    "attributes": {}
+                },
+                "sensor.n3": {
+                    "state": "-0.004",
+                    "attributes": {
+                        "unit_of_measurement": "°C"
+                    }
+                },
+                "sensor.n4": {
+                    "state": "-0.005",
+                    "attributes": {
+                        "unit_of_measurement": "  "
+                    }
+                },
+                "sensor.n5": {
+                    "state": "0",
+                    "attributes": {}
+                },
+                "sensor.n6": {
+                    "state": "007",
+                    "attributes": {
+                        "unit_of_measurement": "°C"
+                    }
+                },
+                "sensor.n7": {
+                    "state": "1e3",
+                    "attributes": {
+                        "unit_of_measurement": "  "
+                    }
+                },
+                "sensor.n8": {
+                    "state": "1.5E-3",
+                    "attributes": {}
+                },
+                "sensor.n9": {
+                    "state": "2.999",
+                    "attributes": {
+                        "unit_of_measurement": "°C"
+                    }
+                },
+                "sensor.n10": {
+                    "state": "99.995",
+                    "attributes": {
+                        "unit_of_measurement": "  "
+                    }
+                },
+                "sensor.n11": {
+                    "state": "-99.995",
+                    "attributes": {}
+                },
+                "sensor.n12": {
+                    "state": "12.xx",
+                    "attributes": {
+                        "unit_of_measurement": "°C"
+                    }
+                },
+                "sensor.n13": {
+                    "state": "5.",
+                    "attributes": {
+                        "unit_of_measurement": "  "
+                    }
+                },
+                "sensor.n14": {
+                    "state": "+.5",
+                    "attributes": {}
+                },
+                "sensor.n15": {
+                    "state": "5f",
+                    "attributes": {
+                        "unit_of_measurement": "°C"
+                    }
+                },
+                "sensor.n16": {
+                    "state": " 7 ",
+                    "attributes": {
+                        "unit_of_measurement": "  "
+                    }
+                },
+                "sensor.n17": {
+                    "state": "1e400",
+                    "attributes": {}
+                },
+                "sensor.n18": {
+                    "state": "NaN",
+                    "attributes": {
+                        "unit_of_measurement": "°C"
+                    }
+                },
+                "sensor.n19": {
+                    "state": "Infinity",
+                    "attributes": {
+                        "unit_of_measurement": "  "
+                    }
+                },
+                "sensor.n20": {
+                    "state": "on",
+                    "attributes": {}
+                },
+                "sensor.n21": {
+                    "state": "off",
+                    "attributes": {
+                        "unit_of_measurement": "°C"
+                    }
+                },
+                "sensor.n22": {
+                    "state": "not_home",
+                    "attributes": {
+                        "unit_of_measurement": "  "
+                    }
+                },
+                "sensor.n23": {
+                    "state": "heat_cool",
+                    "attributes": {}
+                },
+                "sensor.n24": {
+                    "state": "unknown",
+                    "attributes": {
+                        "unit_of_measurement": "°C"
+                    }
+                },
+                "sensor.n25": {
+                    "state": "unavailable",
+                    "attributes": {
+                        "unit_of_measurement": "  "
+                    }
+                },
+                "sensor.n26": {
+                    "state": "",
+                    "attributes": {}
+                },
+                "sensor.n27": {
+                    "state": "3e-500",
+                    "attributes": {
+                        "unit_of_measurement": "°C"
+                    }
+                },
+                "sensor.n28": {
+                    "state": "123456789012345678901234567890.125",
+                    "attributes": {
+                        "unit_of_measurement": "  "
+                    }
+                }
+            },
+            "expected": {
+                "strings": {
+                    "card.title": "Formatting",
+                    "sensor.s0.state": "21.46 °C",
+                    "sensor.s0.name": "sensor.n0",
+                    "sensor.s1.state": "21.46",
+                    "sensor.s1.name": "sensor.n1",
+                    "sensor.s2.state": "21.45",
+                    "sensor.s2.name": "sensor.n2",
+                    "sensor.s3.state": "0 °C",
+                    "sensor.s3.name": "sensor.n3",
+                    "sensor.s4.state": "-0.01",
+                    "sensor.s4.name": "sensor.n4",
+                    "sensor.s5.state": "0",
+                    "sensor.s5.name": "sensor.n5",
+                    "sensor.s6.state": "7 °C",
+                    "sensor.s6.name": "sensor.n6",
+                    "sensor.s7.state": "1000",
+                    "sensor.s7.name": "sensor.n7",
+                    "sensor.s8.state": "0",
+                    "sensor.s8.name": "sensor.n8",
+                    "sensor.s9.state": "3 °C",
+                    "sensor.s9.name": "sensor.n9",
+                    "sensor.s10.state": "100",
+                    "sensor.s10.name": "sensor.n10",
+                    "sensor.s11.state": "-100",
+                    "sensor.s11.name": "sensor.n11",
+                    "sensor.s12.state": "12 °C",
+                    "sensor.s12.name": "sensor.n12",
+                    "sensor.s13.state": "5",
+                    "sensor.s13.name": "sensor.n13",
+                    "sensor.s14.state": "0.5",
+                    "sensor.s14.name": "sensor.n14",
+                    "sensor.s15.state": "5f",
+                    "sensor.s15.name": "sensor.n15",
+                    "sensor.s16.state": " 7 ",
+                    "sensor.s16.name": "sensor.n16",
+                    "sensor.s17.state": "1e400",
+                    "sensor.s17.name": "sensor.n17",
+                    "sensor.s18.state": "NaN",
+                    "sensor.s18.name": "sensor.n18",
+                    "sensor.s19.state": "Infinity",
+                    "sensor.s19.name": "sensor.n19",
+                    "sensor.s20.state": "On",
+                    "sensor.s20.name": "sensor.n20",
+                    "sensor.s21.state": "Off",
+                    "sensor.s21.name": "sensor.n21",
+                    "sensor.s22.state": "Not home",
+                    "sensor.s22.name": "sensor.n22",
+                    "sensor.s23.state": "Heat cool",
+                    "sensor.s23.name": "sensor.n23",
+                    "sensor.s24.state": "Unavailable",
+                    "sensor.s24.name": "sensor.n24",
+                    "sensor.s25.state": "Unavailable",
+                    "sensor.s25.name": "sensor.n25",
+                    "sensor.s26.state": "",
+                    "sensor.s26.name": "sensor.n26",
+                    "sensor.s27.state": "0 °C",
+                    "sensor.s27.name": "sensor.n27",
+                    "sensor.s28.state": "123456789012345678901234567890.13",
+                    "sensor.s28.name": "sensor.n28"
+                },
+                "booleans": {
+                    "sensor.s0.is_on": false,
+                    "sensor.s1.is_on": false,
+                    "sensor.s2.is_on": false,
+                    "sensor.s3.is_on": false,
+                    "sensor.s4.is_on": false,
+                    "sensor.s5.is_on": false,
+                    "sensor.s6.is_on": false,
+                    "sensor.s7.is_on": false,
+                    "sensor.s8.is_on": false,
+                    "sensor.s9.is_on": false,
+                    "sensor.s10.is_on": false,
+                    "sensor.s11.is_on": false,
+                    "sensor.s12.is_on": false,
+                    "sensor.s13.is_on": false,
+                    "sensor.s14.is_on": false,
+                    "sensor.s15.is_on": false,
+                    "sensor.s16.is_on": false,
+                    "sensor.s17.is_on": false,
+                    "sensor.s18.is_on": false,
+                    "sensor.s19.is_on": false,
+                    "sensor.s20.is_on": true,
+                    "sensor.s21.is_on": false,
+                    "sensor.s22.is_on": false,
+                    "sensor.s23.is_on": false,
+                    "sensor.s24.is_on": false,
+                    "sensor.s25.is_on": false,
+                    "sensor.s26.is_on": false,
+                    "sensor.s27.is_on": false,
+                    "sensor.s28.is_on": false
+                },
+                "ints": {
+                    "sensor.s0.state_int": -1,
+                    "sensor.s0.status": 0,
+                    "sensor.s1.state_int": -1,
+                    "sensor.s1.status": 0,
+                    "sensor.s2.state_int": -1,
+                    "sensor.s2.status": 0,
+                    "sensor.s3.state_int": -1,
+                    "sensor.s3.status": 0,
+                    "sensor.s4.state_int": -1,
+                    "sensor.s4.status": 0,
+                    "sensor.s5.state_int": -1,
+                    "sensor.s5.status": 0,
+                    "sensor.s6.state_int": -1,
+                    "sensor.s6.status": 0,
+                    "sensor.s7.state_int": -1,
+                    "sensor.s7.status": 0,
+                    "sensor.s8.state_int": -1,
+                    "sensor.s8.status": 0,
+                    "sensor.s9.state_int": -1,
+                    "sensor.s9.status": 0,
+                    "sensor.s10.state_int": -1,
+                    "sensor.s10.status": 0,
+                    "sensor.s11.state_int": -1,
+                    "sensor.s11.status": 0,
+                    "sensor.s12.state_int": -1,
+                    "sensor.s12.status": 0,
+                    "sensor.s13.state_int": -1,
+                    "sensor.s13.status": 0,
+                    "sensor.s14.state_int": -1,
+                    "sensor.s14.status": 0,
+                    "sensor.s15.state_int": -1,
+                    "sensor.s15.status": 0,
+                    "sensor.s16.state_int": -1,
+                    "sensor.s16.status": 0,
+                    "sensor.s17.state_int": -1,
+                    "sensor.s17.status": 0,
+                    "sensor.s18.state_int": -1,
+                    "sensor.s18.status": 0,
+                    "sensor.s19.state_int": -1,
+                    "sensor.s19.status": 0,
+                    "sensor.s20.state_int": -1,
+                    "sensor.s20.status": 0,
+                    "sensor.s21.state_int": -1,
+                    "sensor.s21.status": 0,
+                    "sensor.s22.state_int": -1,
+                    "sensor.s22.status": 0,
+                    "sensor.s23.state_int": -1,
+                    "sensor.s23.status": 0,
+                    "sensor.s24.state_int": -1,
+                    "sensor.s24.status": 2,
+                    "sensor.s25.state_int": -1,
+                    "sensor.s25.status": 1,
+                    "sensor.s26.state_int": -1,
+                    "sensor.s26.status": 0,
+                    "sensor.s27.state_int": -1,
+                    "sensor.s27.status": 0,
+                    "sensor.s28.state_int": -1,
+                    "sensor.s28.status": 0
+                },
+                "floats": {
+                    "sensor.s0.numeric_state": 21.45599937438965,
+                    "sensor.s1.numeric_state": 21.454999923706055,
+                    "sensor.s2.numeric_state": 21.45400047302246,
+                    "sensor.s3.numeric_state": -0.004000000189989805,
+                    "sensor.s4.numeric_state": -0.004999999888241291,
+                    "sensor.s5.numeric_state": 0.0,
+                    "sensor.s6.numeric_state": 7.0,
+                    "sensor.s7.numeric_state": 1000.0,
+                    "sensor.s8.numeric_state": 0.001500000013038516,
+                    "sensor.s9.numeric_state": 2.999000072479248,
+                    "sensor.s10.numeric_state": 99.99500274658203,
+                    "sensor.s11.numeric_state": -99.99500274658203,
+                    "sensor.s12.numeric_state": "NaN",
+                    "sensor.s13.numeric_state": 5.0,
+                    "sensor.s14.numeric_state": 0.5,
+                    "sensor.s15.numeric_state": 5.0,
+                    "sensor.s16.numeric_state": 7.0,
+                    "sensor.s17.numeric_state": "NaN",
+                    "sensor.s18.numeric_state": "NaN",
+                    "sensor.s19.numeric_state": "NaN",
+                    "sensor.s20.numeric_state": "NaN",
+                    "sensor.s21.numeric_state": "NaN",
+                    "sensor.s22.numeric_state": "NaN",
+                    "sensor.s23.numeric_state": "NaN",
+                    "sensor.s24.numeric_state": "NaN",
+                    "sensor.s25.numeric_state": "NaN",
+                    "sensor.s26.numeric_state": "NaN",
+                    "sensor.s27.numeric_state": 0.0,
+                    "sensor.s28.numeric_state": 1.2345678918272927E29
+                }
+            }
+        },
+        {
+            "name": "is_on per domain",
+            "card": {
+                "type": "glance",
+                "entities": [
+                    {
+                        "entity": "light.a",
+                        "name": "Row 0"
+                    },
+                    "light.b",
+                    "switch.c",
+                    "cover.d",
+                    {
+                        "entity": "cover.e",
+                        "name": "Row 4"
+                    },
+                    "lock.f",
+                    "lock.g",
+                    "media_player.h",
+                    {
+                        "entity": "media_player.i",
+                        "name": "Row 8"
+                    },
+                    "media_player.j",
+                    "media_player.k",
+                    "climate.l",
+                    {
+                        "entity": "climate.m",
+                        "name": "Row 12"
+                    },
+                    "vacuum.n",
+                    "person.o",
+                    "device_tracker.p",
+                    {
+                        "entity": "valve.q",
+                        "name": "Row 16"
+                    },
+                    "scene.r",
+                    "binary_sensor.s",
+                    "fan.t",
+                    {
+                        "entity": "input_boolean.u",
+                        "name": "Row 20"
+                    },
+                    "weather.v"
+                ]
+            },
+            "states": {
+                "light.a": {
+                    "state": "on",
+                    "attributes": {
+                        "friendly_name": "A"
+                    }
+                },
+                "light.b": {
+                    "state": "off",
+                    "attributes": {
+                        "friendly_name": "B"
+                    }
+                },
+                "switch.c": {
+                    "state": "on",
+                    "attributes": {
+                        "friendly_name": "C"
+                    }
+                },
+                "cover.d": {
+                    "state": "opening",
+                    "attributes": {
+                        "friendly_name": "D"
+                    }
+                },
+                "cover.e": {
+                    "state": "closed",
+                    "attributes": {
+                        "friendly_name": "E"
+                    }
+                },
+                "lock.f": {
+                    "state": "locked",
+                    "attributes": {
+                        "friendly_name": "F"
+                    }
+                },
+                "lock.g": {
+                    "state": "unlocked",
+                    "attributes": {
+                        "friendly_name": "G"
+                    }
+                },
+                "media_player.h": {
+                    "state": "playing",
+                    "attributes": {
+                        "friendly_name": "H"
+                    }
+                },
+                "media_player.i": {
+                    "state": "paused",
+                    "attributes": {
+                        "friendly_name": "I"
+                    }
+                },
+                "media_player.j": {
+                    "state": "weird",
+                    "attributes": {
+                        "friendly_name": "J"
+                    }
+                },
+                "media_player.k": {
+                    "state": "on",
+                    "attributes": {
+                        "friendly_name": "K"
+                    }
+                },
+                "climate.l": {
+                    "state": "heat_cool",
+                    "attributes": {
+                        "friendly_name": "L"
+                    }
+                },
+                "climate.m": {
+                    "state": "off",
+                    "attributes": {
+                        "friendly_name": "M"
+                    }
+                },
+                "vacuum.n": {
+                    "state": "returning",
+                    "attributes": {
+                        "friendly_name": "N"
+                    }
+                },
+                "person.o": {
+                    "state": "home",
+                    "attributes": {
+                        "friendly_name": "O"
+                    }
+                },
+                "device_tracker.p": {
+                    "state": "not_home",
+                    "attributes": {
+                        "friendly_name": "P"
+                    }
+                },
+                "valve.q": {
+                    "state": "open",
+                    "attributes": {
+                        "friendly_name": "Q"
+                    }
+                },
+                "scene.r": {
+                    "state": "on",
+                    "attributes": {
+                        "friendly_name": "R"
+                    }
+                },
+                "binary_sensor.s": {
+                    "state": "on",
+                    "attributes": {
+                        "friendly_name": "S"
+                    }
+                },
+                "fan.t": {
+                    "state": "unavailable",
+                    "attributes": {
+                        "friendly_name": "T"
+                    }
+                },
+                "input_boolean.u": {
+                    "state": "unknown",
+                    "attributes": {
+                        "friendly_name": "U"
+                    }
+                },
+                "weather.v": {
+                    "state": "sunny",
+                    "attributes": {
+                        "friendly_name": "V"
+                    }
+                }
+            },
+            "expected": {
+                "strings": {
+                    "light.s0.state": "On",
+                    "light.s0.name": "Row 0",
+                    "light.s1.state": "Off",
+                    "light.s1.name": "B",
+                    "switch.s2.state": "On",
+                    "switch.s2.name": "C",
+                    "cover.s3.state": "Opening",
+                    "cover.s3.name": "D",
+                    "cover.s4.state": "Closed",
+                    "cover.s4.name": "Row 4",
+                    "lock.s5.state": "Locked",
+                    "lock.s5.name": "F",
+                    "lock.s6.state": "Unlocked",
+                    "lock.s6.name": "G",
+                    "media_player.s7.state": "Playing",
+                    "media_player.s7.name": "H",
+                    "media_player.s8.state": "Paused",
+                    "media_player.s8.name": "Row 8",
+                    "media_player.s9.state": "Weird",
+                    "media_player.s9.name": "J",
+                    "media_player.s10.state": "On",
+                    "media_player.s10.name": "K",
+                    "climate.s11.state": "Heat cool",
+                    "climate.s11.name": "L",
+                    "climate.s12.state": "Off",
+                    "climate.s12.name": "Row 12",
+                    "vacuum.s13.state": "Returning",
+                    "vacuum.s13.name": "N",
+                    "person.s14.state": "Home",
+                    "person.s14.name": "O",
+                    "device_tracker.s15.state": "Not home",
+                    "device_tracker.s15.name": "P",
+                    "valve.s16.state": "Open",
+                    "valve.s16.name": "Row 16",
+                    "scene.s17.state": "On",
+                    "scene.s17.name": "R",
+                    "binary_sensor.s18.state": "On",
+                    "binary_sensor.s18.name": "S",
+                    "fan.s19.state": "Unavailable",
+                    "fan.s19.name": "T",
+                    "input_boolean.s20.state": "Unavailable",
+                    "input_boolean.s20.name": "Row 20",
+                    "weather.s21.state": "Sunny",
+                    "weather.s21.name": "V"
+                },
+                "booleans": {
+                    "light.s0.is_on": true,
+                    "light.s1.is_on": false,
+                    "switch.s2.is_on": true,
+                    "cover.s3.is_on": true,
+                    "cover.s4.is_on": false,
+                    "lock.s5.is_on": true,
+                    "lock.s6.is_on": false,
+                    "media_player.s7.is_on": true,
+                    "media_player.s8.is_on": false,
+                    "media_player.s9.is_on": false,
+                    "media_player.s10.is_on": true,
+                    "climate.s11.is_on": true,
+                    "climate.s12.is_on": false,
+                    "vacuum.s13.is_on": true,
+                    "person.s14.is_on": true,
+                    "device_tracker.s15.is_on": false,
+                    "valve.s16.is_on": true,
+                    "scene.s17.is_on": true,
+                    "binary_sensor.s18.is_on": true,
+                    "fan.s19.is_on": false,
+                    "input_boolean.s20.is_on": false,
+                    "weather.s21.is_on": false
+                },
+                "ints": {
+                    "light.s0.state_int": -1,
+                    "light.s0.status": 0,
+                    "light.s1.state_int": -1,
+                    "light.s1.status": 0,
+                    "switch.s2.state_int": -1,
+                    "switch.s2.status": 0,
+                    "cover.s3.state_int": -1,
+                    "cover.s3.status": 0,
+                    "cover.s4.state_int": -1,
+                    "cover.s4.status": 0,
+                    "lock.s5.state_int": -1,
+                    "lock.s5.status": 0,
+                    "lock.s6.state_int": -1,
+                    "lock.s6.status": 0,
+                    "media_player.s7.state_int": -1,
+                    "media_player.s7.status": 0,
+                    "media_player.s8.state_int": -1,
+                    "media_player.s8.status": 0,
+                    "media_player.s9.state_int": -1,
+                    "media_player.s9.status": 0,
+                    "media_player.s10.state_int": -1,
+                    "media_player.s10.status": 0,
+                    "climate.s11.state_int": -1,
+                    "climate.s11.status": 0,
+                    "climate.s12.state_int": -1,
+                    "climate.s12.status": 0,
+                    "vacuum.s13.state_int": -1,
+                    "vacuum.s13.status": 0,
+                    "person.s14.state_int": -1,
+                    "person.s14.status": 0,
+                    "device_tracker.s15.state_int": -1,
+                    "device_tracker.s15.status": 0,
+                    "valve.s16.state_int": -1,
+                    "valve.s16.status": 0,
+                    "scene.s17.state_int": -1,
+                    "scene.s17.status": 0,
+                    "binary_sensor.s18.state_int": -1,
+                    "binary_sensor.s18.status": 0,
+                    "fan.s19.state_int": -1,
+                    "fan.s19.status": 1,
+                    "input_boolean.s20.state_int": -1,
+                    "input_boolean.s20.status": 2,
+                    "weather.s21.state_int": -1,
+                    "weather.s21.status": 0
+                },
+                "floats": {
+                    "light.s0.numeric_state": "NaN",
+                    "light.s1.numeric_state": "NaN",
+                    "switch.s2.numeric_state": "NaN",
+                    "cover.s3.numeric_state": "NaN",
+                    "cover.s4.numeric_state": "NaN",
+                    "lock.s5.numeric_state": "NaN",
+                    "lock.s6.numeric_state": "NaN",
+                    "media_player.s7.numeric_state": "NaN",
+                    "media_player.s8.numeric_state": "NaN",
+                    "media_player.s9.numeric_state": "NaN",
+                    "media_player.s10.numeric_state": "NaN",
+                    "climate.s11.numeric_state": "NaN",
+                    "climate.s12.numeric_state": "NaN",
+                    "vacuum.s13.numeric_state": "NaN",
+                    "person.s14.numeric_state": "NaN",
+                    "device_tracker.s15.numeric_state": "NaN",
+                    "valve.s16.numeric_state": "NaN",
+                    "scene.s17.numeric_state": "NaN",
+                    "binary_sensor.s18.numeric_state": "NaN",
+                    "fan.s19.numeric_state": "NaN",
+                    "input_boolean.s20.numeric_state": "NaN",
+                    "weather.s21.numeric_state": "NaN"
+                }
+            }
+        },
+        {
+            "name": "alarm state_int",
+            "card": {
+                "type": "entities",
+                "heading": "Alarm",
+                "entities": [
+                    "alarm_control_panel.a0",
+                    "alarm_control_panel.a1",
+                    "alarm_control_panel.a2",
+                    "alarm_control_panel.a3",
+                    "alarm_control_panel.a4",
+                    "alarm_control_panel.a5",
+                    "alarm_control_panel.a6",
+                    "alarm_control_panel.a7",
+                    "alarm_control_panel.a8",
+                    "alarm_control_panel.a9",
+                    "alarm_control_panel.a10",
+                    "alarm_control_panel.a11",
+                    "alarm_control_panel.a12"
+                ]
+            },
+            "states": {
+                "alarm_control_panel.a0": {
+                    "state": "disarmed",
+                    "attributes": {}
+                },
+                "alarm_control_panel.a1": {
+                    "state": "armed_home",
+                    "attributes": {}
+                },
+                "alarm_control_panel.a2": {
+                    "state": "armed_away",
+                    "attributes": {}
+                },
+                "alarm_control_panel.a3": {
+                    "state": "armed_night",
+                    "attributes": {}
+                },
+                "alarm_control_panel.a4": {
+                    "state": "armed_vacation",
+                    "attributes": {}
+                },
+                "alarm_control_panel.a5": {
+                    "state": "armed_custom_bypass",
+                    "attributes": {}
+                },
+                "alarm_control_panel.a6": {
+                    "state": "triggered",
+                    "attributes": {}
+                },
+                "alarm_control_panel.a7": {
+                    "state": "pending",
+                    "attributes": {}
+                },
+                "alarm_control_panel.a8": {
+                    "state": "arming",
+                    "attributes": {}
+                },
+                "alarm_control_panel.a9": {
+                    "state": "disarming",
+                    "attributes": {}
+                },
+                "alarm_control_panel.a10": {
+                    "state": "unavailable",
+                    "attributes": {}
+                },
+                "alarm_control_panel.a11": {
+                    "state": "unknown",
+                    "attributes": {}
+                },
+                "alarm_control_panel.a12": {
+                    "state": "something_new",
+                    "attributes": {}
+                }
+            },
+            "expected": {
+                "strings": {
+                    "card.title": "Alarm",
+                    "alarm_control_panel.s0.state": "Disarmed",
+                    "alarm_control_panel.s0.name": "alarm_control_panel.a0",
+                    "alarm_control_panel.s1.state": "Armed home",
+                    "alarm_control_panel.s1.name": "alarm_control_panel.a1",
+                    "alarm_control_panel.s2.state": "Armed away",
+                    "alarm_control_panel.s2.name": "alarm_control_panel.a2",
+                    "alarm_control_panel.s3.state": "Armed night",
+                    "alarm_control_panel.s3.name": "alarm_control_panel.a3",
+                    "alarm_control_panel.s4.state": "Armed vacation",
+                    "alarm_control_panel.s4.name": "alarm_control_panel.a4",
+                    "alarm_control_panel.s5.state": "Armed custom bypass",
+                    "alarm_control_panel.s5.name": "alarm_control_panel.a5",
+                    "alarm_control_panel.s6.state": "Triggered",
+                    "alarm_control_panel.s6.name": "alarm_control_panel.a6",
+                    "alarm_control_panel.s7.state": "Pending",
+                    "alarm_control_panel.s7.name": "alarm_control_panel.a7",
+                    "alarm_control_panel.s8.state": "Arming",
+                    "alarm_control_panel.s8.name": "alarm_control_panel.a8",
+                    "alarm_control_panel.s9.state": "Disarming",
+                    "alarm_control_panel.s9.name": "alarm_control_panel.a9",
+                    "alarm_control_panel.s10.state": "Unavailable",
+                    "alarm_control_panel.s10.name": "alarm_control_panel.a10",
+                    "alarm_control_panel.s11.state": "Unavailable",
+                    "alarm_control_panel.s11.name": "alarm_control_panel.a11",
+                    "alarm_control_panel.s12.state": "Something new",
+                    "alarm_control_panel.s12.name": "alarm_control_panel.a12"
+                },
+                "booleans": {
+                    "alarm_control_panel.s0.is_on": false,
+                    "alarm_control_panel.s1.is_on": true,
+                    "alarm_control_panel.s2.is_on": true,
+                    "alarm_control_panel.s3.is_on": true,
+                    "alarm_control_panel.s4.is_on": true,
+                    "alarm_control_panel.s5.is_on": true,
+                    "alarm_control_panel.s6.is_on": true,
+                    "alarm_control_panel.s7.is_on": true,
+                    "alarm_control_panel.s8.is_on": true,
+                    "alarm_control_panel.s9.is_on": false,
+                    "alarm_control_panel.s10.is_on": false,
+                    "alarm_control_panel.s11.is_on": false,
+                    "alarm_control_panel.s12.is_on": false
+                },
+                "ints": {
+                    "alarm_control_panel.s0.state_int": 0,
+                    "alarm_control_panel.s0.status": 0,
+                    "alarm_control_panel.s1.state_int": 1,
+                    "alarm_control_panel.s1.status": 0,
+                    "alarm_control_panel.s2.state_int": 2,
+                    "alarm_control_panel.s2.status": 0,
+                    "alarm_control_panel.s3.state_int": 3,
+                    "alarm_control_panel.s3.status": 0,
+                    "alarm_control_panel.s4.state_int": 4,
+                    "alarm_control_panel.s4.status": 0,
+                    "alarm_control_panel.s5.state_int": 5,
+                    "alarm_control_panel.s5.status": 0,
+                    "alarm_control_panel.s6.state_int": 6,
+                    "alarm_control_panel.s6.status": 0,
+                    "alarm_control_panel.s7.state_int": 7,
+                    "alarm_control_panel.s7.status": 0,
+                    "alarm_control_panel.s8.state_int": 8,
+                    "alarm_control_panel.s8.status": 0,
+                    "alarm_control_panel.s9.state_int": 9,
+                    "alarm_control_panel.s9.status": 0,
+                    "alarm_control_panel.s10.state_int": 10,
+                    "alarm_control_panel.s10.status": 1,
+                    "alarm_control_panel.s11.state_int": 11,
+                    "alarm_control_panel.s11.status": 2,
+                    "alarm_control_panel.s12.state_int": 11,
+                    "alarm_control_panel.s12.status": 0
+                },
+                "floats": {
+                    "alarm_control_panel.s0.numeric_state": "NaN",
+                    "alarm_control_panel.s1.numeric_state": "NaN",
+                    "alarm_control_panel.s2.numeric_state": "NaN",
+                    "alarm_control_panel.s3.numeric_state": "NaN",
+                    "alarm_control_panel.s4.numeric_state": "NaN",
+                    "alarm_control_panel.s5.numeric_state": "NaN",
+                    "alarm_control_panel.s6.numeric_state": "NaN",
+                    "alarm_control_panel.s7.numeric_state": "NaN",
+                    "alarm_control_panel.s8.numeric_state": "NaN",
+                    "alarm_control_panel.s9.numeric_state": "NaN",
+                    "alarm_control_panel.s10.numeric_state": "NaN",
+                    "alarm_control_panel.s11.numeric_state": "NaN",
+                    "alarm_control_panel.s12.numeric_state": "NaN"
+                }
+            }
+        },
+        {
+            "name": "tile with name",
+            "card": {
+                "type": "tile",
+                "entity": "light.kitchen",
+                "name": "Kitchen"
+            },
+            "states": {
+                "light.kitchen": {
+                    "state": "on",
+                    "attributes": {
+                        "friendly_name": "Kitchen Light",
+                        "brightness": 255
+                    }
+                }
+            },
+            "expected": {
+                "strings": {
+                    "light.s0.state": "On",
+                    "light.s0.name": "Kitchen"
+                },
+                "booleans": {
+                    "light.s0.is_on": true
+                },
+                "ints": {
+                    "light.s0.state_int": -1,
+                    "light.s0.status": 0
+                },
+                "floats": {
+                    "light.s0.numeric_state": "NaN"
+                }
+            }
+        },
+        {
+            "name": "tile missing entity",
+            "card": {
+                "type": "tile",
+                "entity": "light.gone"
+            },
+            "states": {},
+            "expected": {
+                "strings": {
+                    "light.s0.state": "Unavailable",
+                    "light.s0.name": "light.gone"
+                },
+                "booleans": {
+                    "light.s0.is_on": false
+                },
+                "ints": {
+                    "light.s0.state_int": -1,
+                    "light.s0.status": 3
+                },
+                "floats": {
+                    "light.s0.numeric_state": "NaN"
+                }
+            }
+        },
+        {
+            "name": "stack of children",
+            "card": {
+                "type": "vertical-stack",
+                "cards": [
+                    {
+                        "type": "tile",
+                        "entity": "light.kitchen"
+                    },
+                    {
+                        "entities": [
+                            "sensor.x"
+                        ]
+                    },
+                    {
+                        "type": "entities",
+                        "title": "Inner",
+                        "entities": [
+                            "sensor.x",
+                            {
+                                "entity": "switch.y",
+                                "name": "Fan"
+                            }
+                        ]
+                    },
+                    {
+                        "type": "button",
+                        "entity": "switch.y"
+                    }
+                ]
+            },
+            "states": {
+                "light.kitchen": {
+                    "state": "off",
+                    "attributes": {}
+                },
+                "sensor.x": {
+                    "state": "12.3456",
+                    "attributes": {
+                        "unit_of_measurement": "kWh",
+                        "friendly_name": "Energy"
+                    }
+                },
+                "switch.y": {
+                    "state": "on",
+                    "attributes": {}
+                }
+            },
+            "expected": {
+                "strings": {
+                    "light.s0.state": "Off",
+                    "light.s0.name": "light.kitchen",
+                    "sensor.s1.state": "12.35 kWh",
+                    "sensor.s1.name": "Energy",
+                    "switch.s2.state": "On",
+                    "switch.s2.name": "Fan",
+                    "switch.s3.state": "On",
+                    "switch.s3.name": "switch.y"
+                },
+                "booleans": {
+                    "light.s0.is_on": false,
+                    "sensor.s1.is_on": false,
+                    "switch.s2.is_on": true,
+                    "switch.s3.is_on": true
+                },
+                "ints": {
+                    "light.s0.state_int": -1,
+                    "light.s0.status": 0,
+                    "sensor.s1.state_int": -1,
+                    "sensor.s1.status": 0,
+                    "switch.s2.state_int": -1,
+                    "switch.s2.status": 0,
+                    "switch.s3.state_int": -1,
+                    "switch.s3.status": 0
+                },
+                "floats": {
+                    "light.s0.numeric_state": "NaN",
+                    "sensor.s1.numeric_state": 12.345600128173828,
+                    "switch.s2.numeric_state": "NaN",
+                    "switch.s3.numeric_state": "NaN"
+                }
+            }
+        },
+        {
+            "name": "picture elements",
+            "card": {
+                "type": "picture-elements",
+                "title": "Plan",
+                "elements": [
+                    {
+                        "type": "state-icon",
+                        "entity": "light.kitchen"
+                    },
+                    {
+                        "type": "image"
+                    },
+                    {
+                        "type": "state-label",
+                        "entity": "sensor.x"
+                    }
+                ]
+            },
+            "states": {
+                "light.kitchen": {
+                    "state": "on",
+                    "attributes": {}
+                },
+                "sensor.x": {
+                    "state": "unknown",
+                    "attributes": {}
+                }
+            },
+            "expected": {
+                "strings": {
+                    "card.title": "Plan",
+                    "light.s0.state": "On",
+                    "light.s0.name": "light.kitchen",
+                    "sensor.s1.state": "Unavailable",
+                    "sensor.s1.name": "sensor.x"
+                },
+                "booleans": {
+                    "light.s0.is_on": true,
+                    "sensor.s1.is_on": false
+                },
+                "ints": {
+                    "light.s0.state_int": -1,
+                    "light.s0.status": 0,
+                    "sensor.s1.state_int": -1,
+                    "sensor.s1.status": 2
+                },
+                "floats": {
+                    "light.s0.numeric_state": "NaN",
+                    "sensor.s1.numeric_state": "NaN"
+                }
+            }
+        },
+        {
+            "name": "no entities",
+            "card": {
+                "type": "markdown",
+                "content": "hi",
+                "title": "Notes"
+            },
+            "states": {},
+            "expected": {
+                "strings": {
+                    "card.title": "Notes"
+                },
+                "booleans": {},
+                "ints": {},
+                "floats": {}
+            }
+        },
+        {
+            "name": "repeated entity",
+            "card": {
+                "type": "entities",
+                "entities": [
+                    "light.kitchen",
+                    "light.kitchen"
+                ]
+            },
+            "states": {
+                "light.kitchen": {
+                    "state": "on",
+                    "attributes": {}
+                }
+            },
+            "expected": {
+                "strings": {
+                    "light.s0.state": "On",
+                    "light.s0.name": "light.kitchen",
+                    "light.s1.state": "On",
+                    "light.s1.name": "light.kitchen"
+                },
+                "booleans": {
+                    "light.s0.is_on": true,
+                    "light.s1.is_on": true
+                },
+                "ints": {
+                    "light.s0.state_int": -1,
+                    "light.s0.status": 0,
+                    "light.s1.state_int": -1,
+                    "light.s1.status": 0
+                },
+                "floats": {
+                    "light.s0.numeric_state": "NaN",
+                    "light.s1.numeric_state": "NaN"
+                }
+            }
+        }
+    ]
+}

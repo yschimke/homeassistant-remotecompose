@@ -75,6 +75,10 @@ class LibraryHolder(
  *   revalidates by ETag; blobs are content-addressed and immutable.
  * - `/designs/v1/catalog.json`, `/designs/v1/previews/...` — the browser's data.
  * - `/`, `/designs/<id>` — the template browser; `/api/designs[/<id>]` — the same as JSON.
+ * - `/embed/v1/ha-card.js`, `/embed/v1/rc-player.js` — the card embed and its player;
+ *   `/embed/v1/demo.html` — its demo page (docs/architecture/card-embedding.md). The embed reads
+ *   the manifest and blobs from other origins, so those, like the scripts, allow any origin: they
+ *   hold no user data.
  * - `/healthz`.
  */
 fun Application.designServer(
@@ -96,6 +100,7 @@ fun Application.designServer(
     get("$API_BASE/manifest.json") {
       val library = holder.current()
       call.response.header(HttpHeaders.ETag, library.manifestEtag)
+      call.allowAnyOrigin()
       // Clients revalidate on every refresh; a 304 costs nothing.
       call.response.header(HttpHeaders.CacheControl, "no-cache")
       if (
@@ -111,6 +116,7 @@ fun Application.designServer(
       val sha = BLOB_NAME.matchEntire(call.parameters["name"].orEmpty())?.groupValues?.get(1)
       val bytes = sha?.let { holder.current().blob(it) } ?: return@get call.notFound()
       call.response.header(HttpHeaders.ETag, "\"$sha\"")
+      call.allowAnyOrigin()
       call.response.header(HttpHeaders.CacheControl, "public, max-age=31536000, immutable")
       call.respondBytes(bytes, ContentType.Application.OctetStream)
     }
@@ -131,6 +137,16 @@ fun Application.designServer(
       // Named by design, not content: a regenerated library may redraw them.
       call.response.header(HttpHeaders.CacheControl, "public, max-age=3600")
       call.respondBytes(bytes, ContentType.Image.PNG)
+    }
+
+    get("/embed/v1/{name}") {
+      val name = call.parameters["name"].orEmpty()
+      val type = EMBED_FILES[name] ?: return@get call.notFound()
+      val bytes = embedResource("embed/v1/$name") ?: return@get call.notFound()
+      call.allowAnyOrigin()
+      // Not content-addressed: a page keeps loading the same URL across releases.
+      call.response.header(HttpHeaders.CacheControl, "public, max-age=300")
+      call.respondBytes(bytes, type)
     }
 
     get("/api/designs") {
@@ -337,6 +353,21 @@ private fun ApplicationCall.editor(
 
 /** The client protocol's base path: the app's design server URL is `<host>$API_BASE`. */
 const val API_BASE = "/designs/v1"
+
+/** The embed's files, served from the classpath (`:design-server:embedResources`). */
+private val EMBED_FILES =
+  mapOf(
+    "ha-card.js" to ContentType.Text.JavaScript,
+    "rc-player.js" to ContentType.Text.JavaScript,
+    "demo.html" to ContentType.Text.Html,
+  )
+
+private fun embedResource(path: String): ByteArray? =
+  LibraryHolder::class.java.classLoader.getResourceAsStream(path)?.use { it.readBytes() }
+
+private fun ApplicationCall.allowAnyOrigin() {
+  response.header(HttpHeaders.AccessControlAllowOrigin, "*")
+}
 
 private val BLOB_NAME = Regex("([0-9a-f]{64})\\.rc")
 private val PREVIEW_NAME = Regex("[0-9a-f]{16}-(example|template)\\.png")

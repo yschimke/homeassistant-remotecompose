@@ -140,6 +140,29 @@ class DesignServerTest {
     }
 
   @Test
+  fun servesTheEmbedToAnyOrigin() =
+    serve(library()) {
+      // Pages on other origins import the embed as a module and fetch the library's files.
+      val sha = DesignLibrary.load(library()).manifest.designs.first().sha256
+      for (path in listOf("$API_BASE/manifest.json", "$API_BASE/blobs/$sha.rc")) {
+        assertEquals("*", client.get(path).headers[HttpHeaders.AccessControlAllowOrigin], path)
+      }
+      for (name in listOf("ha-card.js", "rc-player.js")) {
+        val script = client.get("/embed/v1/$name")
+        assertEquals(HttpStatusCode.OK, script.status, name)
+        assertEquals("*", script.headers[HttpHeaders.AccessControlAllowOrigin], name)
+        assertTrue(script.headers[HttpHeaders.ContentType]!!.startsWith("text/javascript"), name)
+      }
+      assertTrue(
+        client.get("/embed/v1/ha-card.js").bodyAsText().contains("customElements.define('ha-card'")
+      )
+      assertTrue(client.get("/embed/v1/rc-player.js").bodyAsText().contains("RcdPlayer"))
+      assertTrue(client.get("/embed/v1/demo.html").bodyAsText().contains("<ha-card"))
+      assertEquals(HttpStatusCode.NotFound, client.get("/embed/v1/index.html").status)
+      assertEquals(HttpStatusCode.NotFound, client.get("/embed/v1/..%2F..%2Flogback.xml").status)
+    }
+
+  @Test
   fun refusesALibraryWhoseBlobDoesntMatchItsManifest() {
     val dir = library()
     val sha = DesignLibrary.load(dir).manifest.designs.first().sha256
