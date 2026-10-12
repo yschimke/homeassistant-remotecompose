@@ -120,6 +120,7 @@ class MobileWearSyncManager(
   private var streamJob: Job? = null
   private var recoveryJob: Job? = null
   private var lastSnapshot: Map<String, EntityValue> = emptyMap()
+  private var lastValuesItem: Map<String, EntityValue>? = null
 
   /** The cards in assigned Wear widget slots: whose pictures the watch needs. */
   private val wearSlotCards: MutableStateFlow<List<CardConfig>> = MutableStateFlow(emptyList())
@@ -289,14 +290,15 @@ class MobileWearSyncManager(
 
   /**
    * Repeatedly fetches snapshots from [session]; streams via MessageClient (deltas) when wear has a
-   * lease or pinned cards exist, otherwise batches into the DataStore-Proto entry. Live sessions
-   * that don't expose a refresh interval fall back to a 30 s heartbeat so values aren't infinitely
-   * stale.
+   * lease or pinned cards exist, and writes the DataStore-Proto entry whenever the watch app isn't
+   * open (its widgets read that one). Live sessions that don't expose a refresh interval fall back
+   * to a 30 s heartbeat so values aren't infinitely stale.
    */
   private suspend fun sessionPump(session: HaSession, hasPinned: Boolean) {
     val cadence = session.refreshIntervalMillis ?: 30_000L
     // Reset snapshot baseline so the first push is a full set, and resend this session's pictures.
     lastSnapshot = emptyMap()
+    lastValuesItem = null
     pushedPictures.clear()
     session.connectionStatus.first { it == SessionConnectionStatus.Connected }
     while (true) {
@@ -311,19 +313,22 @@ class MobileWearSyncManager(
         .getOrNull()
       if (snapshot != null) {
         val current = snapshot.states.mapValues { (_, state) -> state.toEntityValue() }
-        val streaming = hasPinned || isLeaseFresh(leaseState.value)
-        if (streaming) pushStream(current) else pushDataItem(current)
+        val delivery = valuesDelivery(hasPinned, watchAppOpen = isLeaseFresh(leaseState.value))
+        if (delivery.stream) pushStream(current)
+        if (delivery.dataItem) pushValuesItem(current)
         pushPictures(session.baseUrl, snapshot)
       }
       delay(cadence)
     }
   }
 
-  private suspend fun pushDataItem(values: Map<String, EntityValue>) {
-    val now = System.currentTimeMillis()
-    val payload = LiveValues(values = values, capturedAtMs = now)
-    writeDataItem(WearSyncPaths.VALUES, encodeProto(payload))
-    lastSnapshot = values
+  /** The `/wear/values` DataItem, when [values] changed since the last one written. */
+  private suspend fun pushValuesItem(values: Map<String, EntityValue>) {
+    if (values == lastValuesItem) return
+    val payload = LiveValues(values = values, capturedAtMs = System.currentTimeMillis())
+    // Urgent: it is the widgets' only update path while the app is closed, and a non-urgent item
+    // can wait up to 30 minutes to sync. Recorded only once written, so a failed write is retried.
+    if (writeDataItem(WearSyncPaths.VALUES, encodeProto(payload))) lastValuesItem = values
   }
 
   private suspend fun pushStream(values: Map<String, EntityValue>) {
@@ -365,17 +370,19 @@ class MobileWearSyncManager(
           .onFailure { if (it is CancellationException) throw it }
           .getOrNull() ?: continue
       val hash = png.contentHashCode()
-      if (last == null || last.url != url || last.pngHash != hash) {
-        val picture = WearPicture(entityId = entityId, url = url, png = png, updatedAtMs = now)
-        writeDataItem(WearSyncPaths.picturePath(entityId), encodeProto(picture))
+      val changed = last == null || last.url != url || last.pngHash != hash
+      val picture = WearPicture(entityId = entityId, url = url, png = png, updatedAtMs = now)
+      // Recorded only once written, so a failed write is retried on the next tick.
+      if (!changed || writeDataItem(WearSyncPaths.picturePath(entityId), encodeProto(picture))) {
+        pushedPictures[entityId] = PushedPicture(url, hash, now)
       }
-      pushedPictures[entityId] = PushedPicture(url, hash, now)
     }
   }
 
-  private suspend fun writeDataItem(path: String, bytes: ByteArray) {
-    if (!wearableAvailableState.value) return
-    runCatching {
+  /** Writes [bytes] at [path]; false when the wearable API is unavailable or the write failed. */
+  private suspend fun writeDataItem(path: String, bytes: ByteArray): Boolean {
+    if (!wearableAvailableState.value) return false
+    return runCatching {
       val request =
         PutDataMapRequest.create(path).apply {
           dataMap.putByteArray(KEY_PROTO, bytes)
@@ -388,6 +395,7 @@ class MobileWearSyncManager(
         if (it is CancellationException) throw it
         handleFailure("writeDataItem $path", it)
       }
+      .isSuccess
   }
 
   /**
@@ -471,6 +479,18 @@ internal fun wearPictureUrls(cards: List<CardConfig>, snapshot: HaSnapshot): Map
       url?.let { entityId to it }
     }
     .toMap()
+
+/** How entity values reach the watch on one pump tick. */
+internal data class ValuesDelivery(val stream: Boolean, val dataItem: Boolean)
+
+/**
+ * Values stream (MessageClient deltas) while the watch app is open, or whenever cards are pinned to
+ * keep it warm. The stream only reaches a running app, though: its widgets render with the app
+ * closed and read the persistent `/wear/values` DataItem, so that one is written whenever the app
+ * isn't open.
+ */
+internal fun valuesDelivery(hasPinned: Boolean, watchAppOpen: Boolean): ValuesDelivery =
+  ValuesDelivery(stream = hasPinned || watchAppOpen, dataItem = !watchAppOpen)
 
 private class PushedPicture(val url: String, val pngHash: Int, val atMs: Long)
 

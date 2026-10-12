@@ -93,3 +93,23 @@ class WearPictureSyncTest {
     val deviceClass: String = "",
   )
 }
+
+/** How entity values reach the watch: its widgets must get them with the watch app closed. */
+class WearValuesDeliveryTest {
+  @Test
+  fun aClosedWatchAppWithPinnedCardsStillGetsThePersistentValues() {
+    // Pinned cards keep the stream warm, but only a running app receives it.
+    assertEquals(ValuesDelivery(stream = true, dataItem = true), valuesDelivery(true, false))
+  }
+
+  @Test
+  fun anOpenWatchAppStreams() {
+    assertEquals(ValuesDelivery(stream = true, dataItem = false), valuesDelivery(true, true))
+    assertEquals(ValuesDelivery(stream = true, dataItem = false), valuesDelivery(false, true))
+  }
+
+  @Test
+  fun nothingPinnedAndTheAppClosedWritesTheDataItemOnly() {
+    assertEquals(ValuesDelivery(stream = false, dataItem = true), valuesDelivery(false, false))
+  }
+}
