@@ -142,7 +142,8 @@ class StatisticCardConverter : CardConverter {
     return HaTileData(
       entityId = entityId,
       name = nameFor(card, snapshot),
-      state = LiveValues.state(entityId, valueLabel(card, snapshot)),
+      // The aggregate's own binding, as in the full tier: it isn't the entity's state.
+      state = LiveValues.named(entityId, "statistic", valueLabel(card, snapshot)),
       icon = HaIconMap.resolve(card.raw["icon"]?.jsonPrimitive?.content, entity),
       accent = HaToggleAccent(activeAccent = accent, inactiveAccent = accent, toggleable = false),
     )

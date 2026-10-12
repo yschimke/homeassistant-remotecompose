@@ -39,6 +39,7 @@ class PictureCardConverter : CardConverter {
     return DesignProperties.build {
       enum("has_name", if (card.raw["name"] != null) 1 else 0)
       enum("has_image", if (card.raw["image"] != null) 1 else 0)
+      enum("has_tap", if (cardTap(card) != ee.schimke.ha.rc.components.HaAction.None) 1 else 0)
     }
   }
 
@@ -52,10 +53,31 @@ class PictureCardConverter : CardConverter {
             put("type", cardType)
             if (properties["has_name"] == "1") put("name", "Name")
             if (properties["has_image"] == "1") put("image", "image")
+            // A tap marker, so the template is clickable; playback runs the card's own tap.
+            if (properties["has_tap"] == "1") {
+              put(
+                "tap_action",
+                buildJsonObject {
+                  put("action", "navigate")
+                  put("navigation_path", CARD_TAP)
+                },
+              )
+            }
           },
       )
     return DesignTemplateInput(card, HaSnapshot())
   }
+
+  /** The template's tap marker: the card's own configured tap. */
+  override fun designAction(
+    card: CardConfig,
+    snapshot: HaSnapshot?,
+    slot: Int,
+    templateAction: ee.schimke.ha.rc.components.HaAction,
+  ): ee.schimke.ha.rc.components.HaAction? =
+    if ((templateAction as? ee.schimke.ha.rc.components.HaAction.Navigate)?.path == CARD_TAP) {
+      cardTap(card)
+    } else null
 
   override fun designBindings(card: CardConfig, snapshot: HaSnapshot): CardSnapshotBindings =
     CardSnapshotBindings(
@@ -89,3 +111,8 @@ class PictureCardConverter : CardConverter {
     )
   }
 }
+
+private const val CARD_TAP = "#card"
+
+private fun cardTap(card: CardConfig): ee.schimke.ha.rc.components.HaAction =
+  parseHaAction(card.raw["tap_action"]?.jsonObject, defaultEntityId = null)

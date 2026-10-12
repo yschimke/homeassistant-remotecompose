@@ -566,6 +566,76 @@ class CardDesignTemplatesEndToEndTest {
     )
   }
 
+  @Test
+  fun pictureCardTapRunsItsOwnConfiguredTap() {
+    val picture =
+      CardConfig(
+        type = "picture",
+        raw =
+          buildJsonObject {
+            put("type", "picture")
+            put("image", "/local/a.png")
+            put(
+              "tap_action",
+              buildJsonObject {
+                put("action", "navigate")
+                put("navigation_path", "/lovelace/cameras")
+              },
+            )
+          },
+      )
+    val converter = CardDesignTemplates.defaultTemplateRegistry.get("picture")!!
+    val input = converter.designTemplate(converter.designProperties(picture, HaSnapshot())!!)!!
+    // The template carries a tap marker, so it is clickable at all.
+    assertTrue(input.card.raw["tap_action"] != null)
+    val playback = CardDesignTemplates.playback(picture, ByteArray(0))
+    assertEquals(
+      ee.schimke.ha.rc.components.HaAction.Navigate("/lovelace/cameras"),
+      playback.resolveTap(ee.schimke.ha.rc.components.HaAction.Navigate("#card"), snapshot),
+    )
+  }
+
+  @Test
+  fun repeatedPicturesInAStackEachResolve() {
+    fun camera() = buildJsonObject {
+      put("type", "picture-entity")
+      put("entity", "camera.driveway")
+    }
+    val stack =
+      CardConfig(
+        type = "vertical-stack",
+        raw =
+          buildJsonObject {
+            put("type", "vertical-stack")
+            put(
+              "cards",
+              kotlinx.serialization.json.buildJsonArray {
+                add(camera())
+                add(camera())
+              },
+            )
+          },
+      )
+    val snapshot =
+      HaSnapshot(
+        states =
+          mapOf(
+            "camera.driveway" to
+              EntityState(
+                "camera.driveway",
+                "idle",
+                kotlinx.serialization.json.JsonObject(
+                  mapOf("entity_picture" to kotlinx.serialization.json.JsonPrimitive("/cam"))
+                ),
+              )
+          )
+      )
+    val playback = CardDesignTemplates.playback(stack, ByteArray(0))
+    assertEquals("/cam", playback.bitmapUrl(CardDesignSlots.pictureUrl("camera.s0"), snapshot))
+    assertEquals("/cam", playback.bitmapUrl(CardDesignSlots.pictureUrl("camera.s1"), snapshot))
+    assertEquals(null, playback.bitmapUrl(CardDesignSlots.pictureUrl("light.s1"), snapshot))
+  }
+
   /**
    * With `-PcardDesignsOut=<dir>`, writes every spike design as the files a static host serves.
    * Skipped otherwise.

@@ -174,7 +174,10 @@ object CardDesignSlots {
     val (slot, attribute) =
       url.removePrefix(SLOT_URL_SCHEME).split('/', limit = 2).takeIf { it.size == 2 } ?: return null
     if (attribute != ENTITY_PICTURE) return null
-    val entityId = slotMap(card).entries.firstOrNull { it.value == slot }?.key ?: return null
+    // By position, not through slotMap: a card can show the same entity in several slots.
+    val index = slot.substringAfter('.', "").removePrefix("s").toIntOrNull() ?: return null
+    val entityId = slotEntries(card)?.getOrNull(index)?.entityId ?: return null
+    if (slotId(domainOf(entityId), index) != slot) return null
     return snapshot
       ?.states
       ?.get(entityId)
