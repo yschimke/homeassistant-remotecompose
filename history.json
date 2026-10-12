@@ -1,6 +1,6 @@
 {
     "formatVersion": "compose-preview-history/v1",
-    "generatedFrom": "8bfe316660ffd98dca99d0fd88f84b9e98f2dc55",
+    "generatedFrom": "0001d786004ef1b9cf384c4635ef3f20a91dde5d",
     "previews": {
         "app/ee.schimke.terrazzo.previews.CardDebugPreviewsKt.CardFlashPreview_Card flash on data change": {
             "path": "renders/app/CardFlashPreview_Card_flash_on_data_change-44b71c2b.gif",
@@ -4669,6 +4669,13 @@
             "path": "renders/previews/Dashboard3dPrintingTablet_dashboard_3d_printing_tablet-d15705fe.png",
             "versions": [
                 {
+                    "blob": "b667946afe97587515aff8e3c91223d795a6d87f",
+                    "commit": "0001d786004ef1b9cf384c4635ef3f20a91dde5d",
+                    "date": "2026-10-12T00:23:03Z",
+                    "sourceSha": "1afb4cf3",
+                    "commits": 1
+                },
+                {
                     "blob": "0ccb30138352c36670b5c156ba7bdff551ea97f3",
                     "commit": "8bfe316660ffd98dca99d0fd88f84b9e98f2dc55",
                     "date": "2026-10-11T23:51:23Z",
@@ -4697,9 +4704,9 @@
                     "commits": 1
                 }
             ],
-            "observations": 4,
+            "observations": 5,
             "unstable": false,
-            "flapCount": 0
+            "flapCount": 1
         },
         "previews/ee.schimke.ha.previews.DashboardPreviewsKt.DashboardClimateMobile_dashboard climate — mobile": {
             "path": "renders/previews/DashboardClimateMobile_dashboard_climate_mobile-bdcd432b.png",
