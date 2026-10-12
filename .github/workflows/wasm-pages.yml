@@ -38,7 +38,7 @@ jobs:
           cache-read-only: 'true'
       - name: Build production Wasm
         run: ./gradlew :app-ui:wasmJsBrowserDistribution :ha-client:jvmTest :app-ui:jvmTest --stacktrace
-      - uses: actions/setup-python@v6
+      - uses: actions/setup-python@v7
         with:
           python-version: '3.12'
       - name: Install browser test tools
@@ -58,7 +58,7 @@ jobs:
           mkdir -p _site
           cp -R _site-docs/. _site/
           cp -R app-ui/build/dist/wasmJs/productionExecutable/. _site/
-      - uses: actions/upload-pages-artifact@v4
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: _site
       - name: Retain browser evidence
@@ -84,8 +84,8 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - uses: actions/configure-pages@v5
-      - uses: actions/deploy-pages@v4
+      - uses: actions/configure-pages@v6
+      - uses: actions/deploy-pages@v5
         id: deployment
       - name: Verify published website
         env:
