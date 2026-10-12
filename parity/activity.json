@@ -1,11 +1,19 @@
 {
   "schema": "compose-preview-activity/v1",
-  "generatedAt": "2026-10-12T15:18:45.804Z",
+  "generatedAt": "2026-10-12T15:52:57.967Z",
   "windowDays": 30,
   "code": {
     "repo": "yschimke/homeassistant-remotecompose",
     "ref": "main",
     "events": [
+      {
+        "sha": "1fbe4f491d207daebdddfe20c04a525d0e295c0b",
+        "subject": "fix(deps): update dependency ee.schimke.composeai:rc-player-compose to v2.10.0 (#776)",
+        "at": "2026-10-12T15:16:30Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
       {
         "sha": "277c6d9cabceff6f01093ec012accac1a0be5915",
         "subject": "fix(deps): update compose-ai-tools (#775)",
@@ -475,14 +483,6 @@
         "subject": "chore(main): release 0.1.38 (#407)",
         "at": "2026-10-10T21:21:50+01:00",
         "author": "github-actions[bot]",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "99773232ef67b06979e282a9415c8016c84f127f",
-        "subject": "feat: publish the Wasm Home Assistant app through GitHub Pages (#715)",
-        "at": "2026-10-10T20:47:59+01:00",
-        "author": "Yuri Schimke",
         "previewIds": [],
         "components": []
       }
