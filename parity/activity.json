@@ -1,11 +1,51 @@
 {
   "schema": "compose-preview-activity/v1",
-  "generatedAt": "2026-10-12T07:40:53.653Z",
+  "generatedAt": "2026-10-12T10:53:47.584Z",
   "windowDays": 30,
   "code": {
     "repo": "yschimke/homeassistant-remotecompose",
     "ref": "main",
     "events": [
+      {
+        "sha": "0d7bba77cc05252effff5e75973c091bef908c83",
+        "subject": "feat(rc-components-ui): plain-data wrappers for every card (#774)",
+        "at": "2026-10-12T11:25:28+01:00",
+        "author": "Yuri Schimke",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "bc0fc5ea5821d116a3fc8622ca79557fa6c31563",
+        "subject": "feat: GitHub sign-in for the design server, each seeded design shared with its designer (#773)",
+        "at": "2026-10-12T09:28:55+01:00",
+        "author": "Yuri Schimke",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "3e377fc0f4271f74f9424bb6a441b54355c6b2e6",
+        "subject": "fix: design server review findings — atomic library, card-specific schema bindings, unsupported bindings, UI_BUILDER_HOST (#772)",
+        "at": "2026-10-12T09:14:19+01:00",
+        "author": "Yuri Schimke",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "92a1ed9f532ca360ab28f5c1482a2852ae0f13a5",
+        "subject": "docs: UI Builder enhancements for embedded, host-bound RemoteCompose designs (#771)",
+        "at": "2026-10-12T08:32:46+01:00",
+        "author": "Yuri Schimke",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "a0ac9c4bb8b7c29de6556dfaaeac8226c37bffc1",
+        "subject": "fix: install libGL and fontconfig in the design server image (#770)",
+        "at": "2026-10-12T08:20:25+01:00",
+        "author": "Yuri Schimke",
+        "previewIds": [],
+        "components": []
+      },
       {
         "sha": "ded16dbe9fb5874d4e4fda09832facff4f397b55",
         "subject": "feat: bundle UI Builder in the design server and seed card designs from schemas (#769)",
@@ -442,46 +482,6 @@
         "sha": "7bff59c501a0fb62706eb5f997c5164e5041c894",
         "subject": "fix: render and validate distinct UID themes (#713)",
         "at": "2026-10-10T19:54:32+01:00",
-        "author": "Yuri Schimke",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "6c923b01187320d6aecdee0a382b740bb361b717",
-        "subject": "feat: publish desktop installers with application releases (#712)",
-        "at": "2026-10-10T19:42:36+01:00",
-        "author": "Yuri Schimke",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "c162bae9c328f326af79eb1c9554a5978f074766",
-        "subject": "chore(deps): update yschimke/compose-ai-tools digest to d4c376d (#711)",
-        "at": "2026-10-10T19:42:24+01:00",
-        "author": "renovate[bot]",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "03ebb5bdc5e2a764f3da21bbed77d64ae218cf83",
-        "subject": "chore(deps): update compose-ai-tools (#710)",
-        "at": "2026-10-10T17:40:49Z",
-        "author": "renovate[bot]",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "5923e55a0e4782d3de6a538515f05ceefff6957a",
-        "subject": "feat: add shared Terrazzo UI with desktop and Wasm hosts (#701)",
-        "at": "2026-10-10T18:10:34+01:00",
-        "author": "Yuri Schimke",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "1c3118453d406f92cfd6d825dddacb1d6635ba81",
-        "subject": "ci: retire CMP Wasm exceptions that now render (#709)",
-        "at": "2026-10-10T17:42:18+01:00",
         "author": "Yuri Schimke",
         "previewIds": [],
         "components": []

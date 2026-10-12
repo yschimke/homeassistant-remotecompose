@@ -3102,6 +3102,201 @@
             "overloads": []
         },
         {
+            "canonicalId": "previews/ee.schimke.ha.previews.Tier2CardPreviewsKt.Tier2Host",
+            "componentIds": [],
+            "symbol": {
+                "jvmOwner": "ee.schimke.ha.previews.Tier2CardPreviewsKt",
+                "callable": "ee.schimke.ha.previews.Tier2Host",
+                "name": "Tier2Host",
+                "origin": "PROJECT",
+                "jvmName": "Tier2Host",
+                "descriptor": "(Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;I)V",
+                "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/Tier2CardPreviews.kt",
+                "docs": "unavailable",
+                "receiver": null
+            },
+            "parameters": [
+                {
+                    "name": "content",
+                    "type": "(Modifier) -> Unit",
+                    "typeFqn": "kotlin.Function1",
+                    "hasDefault": false,
+                    "composableSlot": true,
+                    "composableSlotReceiver": null,
+                    "nullable": false,
+                    "noArgConstructible": false,
+                    "noArgFactory": null,
+                    "scopeDslReceiver": null,
+                    "lambdaReturnTypeFqn": "kotlin.Unit"
+                }
+            ],
+            "slots": [
+                {
+                    "name": "content",
+                    "required": true,
+                    "receiverScope": null
+                }
+            ],
+            "bindings": [
+                {
+                    "previewId": "ee.schimke.ha.previews.Tier2CardPreviewsKt.Tier2_AlarmPanelWide_tier2_alarm-panel_wide",
+                    "componentId": null,
+                    "group": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.Tier2CardPreviewsKt.Tier2_AlarmPanel_tier2_alarm-panel",
+                    "componentId": null,
+                    "group": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.Tier2CardPreviewsKt.Tier2_Area_tier2_area",
+                    "componentId": null,
+                    "group": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.Tier2CardPreviewsKt.Tier2_BambuAms_tier2_bambu_ams",
+                    "componentId": null,
+                    "group": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.Tier2CardPreviewsKt.Tier2_BambuPrintControl_tier2_bambu_print-control",
+                    "componentId": null,
+                    "group": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.Tier2CardPreviewsKt.Tier2_BambuPrintStatus_tier2_bambu_print-status",
+                    "componentId": null,
+                    "group": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.Tier2CardPreviewsKt.Tier2_BambuSpool_tier2_bambu_spool",
+                    "componentId": null,
+                    "group": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.Tier2CardPreviewsKt.Tier2_Calendar_tier2_calendar",
+                    "componentId": null,
+                    "group": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.Tier2CardPreviewsKt.Tier2_Clock_tier2_clock",
+                    "componentId": null,
+                    "group": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.Tier2CardPreviewsKt.Tier2_GaugeStacked_tier2_gauge_stacked",
+                    "componentId": null,
+                    "group": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.Tier2CardPreviewsKt.Tier2_GaugeWide_tier2_gauge_wide",
+                    "componentId": null,
+                    "group": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.Tier2CardPreviewsKt.Tier2_Gauge_tier2_gauge",
+                    "componentId": null,
+                    "group": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.Tier2CardPreviewsKt.Tier2_HistoryGraph_tier2_history-graph",
+                    "componentId": null,
+                    "group": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.Tier2CardPreviewsKt.Tier2_HumidifierWide_tier2_humidifier_wide",
+                    "componentId": null,
+                    "group": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.Tier2CardPreviewsKt.Tier2_Logbook_tier2_logbook",
+                    "componentId": null,
+                    "group": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.Tier2CardPreviewsKt.Tier2_MediaControlWide_tier2_media-control_wide",
+                    "componentId": null,
+                    "group": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.Tier2CardPreviewsKt.Tier2_MediaControl_tier2_media-control",
+                    "componentId": null,
+                    "group": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.Tier2CardPreviewsKt.Tier2_PictureElements_tier2_picture-elements",
+                    "componentId": null,
+                    "group": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.Tier2CardPreviewsKt.Tier2_PictureEntity_tier2_picture-entity",
+                    "componentId": null,
+                    "group": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.Tier2CardPreviewsKt.Tier2_PictureGlance_tier2_picture-glance",
+                    "componentId": null,
+                    "group": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.Tier2CardPreviewsKt.Tier2_Picture_tier2_picture",
+                    "componentId": null,
+                    "group": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.Tier2CardPreviewsKt.Tier2_Sensor_tier2_sensor",
+                    "componentId": null,
+                    "group": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.Tier2CardPreviewsKt.Tier2_Statistic_tier2_statistic",
+                    "componentId": null,
+                    "group": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.Tier2CardPreviewsKt.Tier2_StatisticsGraph_tier2_statistics-graph",
+                    "componentId": null,
+                    "group": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.Tier2CardPreviewsKt.Tier2_Thermostat_tier2_thermostat",
+                    "componentId": null,
+                    "group": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.Tier2CardPreviewsKt.Tier2_TodoList_tier2_todo-list",
+                    "componentId": null,
+                    "group": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.Tier2CardPreviewsKt.Tier2_WeatherForecastWide_tier2_weather-forecast_wide",
+                    "componentId": null,
+                    "group": null
+                },
+                {
+                    "previewId": "ee.schimke.ha.previews.Tier2CardPreviewsKt.Tier2_WeatherForecast_tier2_weather-forecast",
+                    "componentId": null,
+                    "group": null
+                }
+            ],
+            "code": {
+                "call": null,
+                "imports": [],
+                "refusedReason": "not public or internal, so a generated file cannot call it",
+                "requiredOptIns": [],
+                "androidxOptIns": []
+            },
+            "signatureKnown": true,
+            "callableFromAnotherFile": false,
+            "hasTypeParameters": false,
+            "hasContextReceivers": false,
+            "overloadsCollided": false,
+            "builder": null,
+            "requiredOptIns": [],
+            "androidxOptIns": [],
+            "overloads": []
+        },
+        {
             "canonicalId": "previews/ee.schimke.ha.previews.TileCardPreviewsKt.TileHost",
             "componentIds": [],
             "symbol": {
