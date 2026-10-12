@@ -156,6 +156,24 @@ object HaCardsSeed {
     )
 
   /**
+   * A gauge's unit: the card's own `unit` (blank hides it), else what follows the number in the
+   * entity's formatted state (`46 %` → `%`), which is where `unit_of_measurement` lands in a
+   * [CardSchema].
+   */
+  internal fun gaugeUnit(card: JsonObject?, formattedState: String?): String? {
+    // A configured unit wins outright, as in GaugeCardConverter: `""` hides the entity's unit.
+    (card?.get("unit") as? JsonPrimitive)
+      ?.takeIf { it.isString }
+      ?.let {
+        return it.content.trim().takeIf(String::isNotEmpty)
+      }
+    val match =
+      Regex("""^\s*-?[0-9]+(?:[.,][0-9]+)?\s*([^0-9.,\s].*?)\s*$""")
+        .find(formattedState ?: return null)
+    return match?.groupValues?.get(1)?.takeIf(String::isNotEmpty)
+  }
+
+  /**
    * [schema] as the `ha-cards` Home Assistant component for its card type, in [target]'s root: a
    * `tile` for a tile card, a `gauge` for a gauge, a `button` for a button, and otherwise one
    * `entity-row` per slot (up to [Target.maxRows]) under an optional `heading`.
@@ -194,7 +212,9 @@ object HaCardsSeed {
                 put("value", float(value))
                 (card?.get("min") as? JsonPrimitive)?.doubleOrNull?.let { put("min", float(it)) }
                 (card?.get("max") as? JsonPrimitive)?.doubleOrNull?.let { put("max", float(it)) }
-                text("${first.slot}.unit")?.let { put("unit", UiBuilderSeed.string(it)) }
+                gaugeUnit(card, text("${first.slot}.state"))?.let {
+                  put("unit", UiBuilderSeed.string(it))
+                }
                 first.entity?.let { put("entityId", UiBuilderSeed.string(it)) }
               },
           )

@@ -55,6 +55,10 @@
           "type": "float",
           "value": 100.0
         },
+        "unit": {
+          "type": "string",
+          "value": "%"
+        },
         "entityId": {
           "type": "string",
           "value": "sensor.humidity"
