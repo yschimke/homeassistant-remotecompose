@@ -14,7 +14,8 @@ object WidgetImages {
 
   /**
    * [url] on [baseUrl] as PNG bytes scaled to fit [maxPx], halved again until they fit [maxBytes];
-   * null when it can't be fetched or made small enough.
+   * null when it can't be fetched or made small enough. [fresh] skips cached copies, for a periodic
+   * refresh of a URL whose image changes in place.
    */
   suspend fun png(
     context: Context,
@@ -22,11 +23,12 @@ object WidgetImages {
     url: String,
     maxPx: Int,
     maxBytes: Int = Int.MAX_VALUE,
+    fresh: Boolean = false,
   ): ByteArray? {
     val stack = (context.terrazzoGraph() as? ee.schimke.terrazzo.di.AppGraph)?.haImageStack
     stack ?: return null
     stack.ensureBaseUrl(baseUrl)
-    val bitmap = stack.resolve(url) ?: return null
+    val bitmap = stack.resolve(url, fresh) ?: return null
     return encode(bitmap, maxPx, maxBytes)
   }
 

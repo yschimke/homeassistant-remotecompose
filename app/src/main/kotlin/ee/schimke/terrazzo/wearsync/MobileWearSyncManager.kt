@@ -87,7 +87,15 @@ class MobileWearSyncManager(
   private val statsStore: MobileSyncStatsStore,
   /** [url] on `baseUrl` as a Wear widget picture: PNG small enough for one DataItem. */
   private val fetchPicture: suspend (baseUrl: String, url: String) -> ByteArray? = { baseUrl, url ->
-    WidgetImages.png(context, baseUrl, url, WEAR_PICTURE_MAX_PX, WEAR_PICTURE_MAX_BYTES)
+    // Fresh: a camera's picture changes behind a URL that may not.
+    WidgetImages.png(
+      context,
+      baseUrl,
+      url,
+      WEAR_PICTURE_MAX_PX,
+      WEAR_PICTURE_MAX_BYTES,
+      fresh = true,
+    )
   },
 ) : WearSyncManager {
 

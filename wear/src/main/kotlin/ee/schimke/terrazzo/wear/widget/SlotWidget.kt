@@ -21,6 +21,7 @@ import androidx.glance.wear.core.WearWidgetParams
 import androidx.glance.wear.core.WearWidgetRawContent
 import androidx.wear.compose.remote.material3.RemoteColorScheme
 import androidx.wear.compose.remote.material3.RemoteMaterialTheme
+import ee.schimke.ha.design.CardDesignSlots
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HaSnapshot
@@ -45,6 +46,7 @@ import ee.schimke.ha.rc.components.asHaTheme
 import ee.schimke.ha.rc.converterFor
 import ee.schimke.terrazzo.wear.data.WearPrefs
 import ee.schimke.terrazzo.wear.sync.WearOfflineStore
+import ee.schimke.terrazzo.wear.sync.syncPicturesFromDataLayer
 import ee.schimke.terrazzo.wear.ui.terrazzoWearColorScheme
 import ee.schimke.terrazzo.wearsync.proto.EntityValue
 import ee.schimke.terrazzo.wearsync.proto.LiveValues
@@ -99,6 +101,15 @@ abstract class SlotWidget(internal val slotIndex: Int) : GlanceWearWidget() {
 
     val card = pinned?.card?.rawJson?.takeIf { it.isNotEmpty() }?.toCardConfigOrNull()
     val snapshot = store.readValues().toSnapshot()
+    // The card's pictures, from the Data Layer: the watch app may not have been running to store
+    // them as they arrived.
+    card?.let { c ->
+      val pictured =
+        CardDesignSlots.slotEntities(c).orEmpty().filter {
+          snapshot.states[it]?.attributes?.containsKey("entity_picture") == true
+        }
+      syncPicturesFromDataLayer(app, store, pictured)
+    }
 
     val style = WearPrefs(app).themeStyle.first()
     val registry = defaultRegistry().withEnhancedShutter()
