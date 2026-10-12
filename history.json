@@ -1,6 +1,6 @@
 {
     "formatVersion": "compose-preview-history/v1",
-    "generatedFrom": "1d07d77215ed1736e14230dd6fee8b2f9d84b196",
+    "generatedFrom": "9811aeeb4ed4c750fc0b6727f97edf8161880880",
     "previews": {
         "app/ee.schimke.terrazzo.previews.CardDebugPreviewsKt.CardFlashPreview_Card flash on data change": {
             "path": "renders/app/CardFlashPreview_Card_flash_on_data_change-44b71c2b.gif",
@@ -4829,6 +4829,13 @@
             "path": "renders/previews/DashboardClimateTablet_dashboard_climate_tablet-456c7098.png",
             "versions": [
                 {
+                    "blob": "a332aec1ae1dcdaffbd98e01e4fdcc568c7e9cf3",
+                    "commit": "9811aeeb4ed4c750fc0b6727f97edf8161880880",
+                    "date": "2026-10-12T07:12:07Z",
+                    "sourceSha": "ded16dbe",
+                    "commits": 1
+                },
+                {
                     "blob": "4075682c443cba001241009415dbe8ffa879afbd",
                     "commit": "3a94102fd4406a90dbfdc1b09c8433058688f3d5",
                     "date": "2026-10-11T14:02:07Z",
@@ -4864,7 +4871,7 @@
                     "commits": 1
                 }
             ],
-            "observations": 5,
+            "observations": 6,
             "unstable": false,
             "flapCount": 0
         },
@@ -4930,6 +4937,13 @@
             "path": "renders/previews/DashboardGithubMobile_dashboard_github_mobile-8f04a7c1.png",
             "versions": [
                 {
+                    "blob": "56061229fe8e31fcf52e60f61b75829422dd10db",
+                    "commit": "9811aeeb4ed4c750fc0b6727f97edf8161880880",
+                    "date": "2026-10-12T07:12:07Z",
+                    "sourceSha": "ded16dbe",
+                    "commits": 1
+                },
+                {
                     "blob": "3e0ab7d826ed885fd6488001a1bd902e9e76719c",
                     "commit": "90e6093afe8b3d76719f9b41ccb254e3e4ebf733",
                     "date": "2026-10-12T03:41:32Z",
@@ -4976,7 +4990,7 @@
                     "commits": 1
                 }
             ],
-            "observations": 9,
+            "observations": 10,
             "unstable": true,
             "flapCount": 3
         },
