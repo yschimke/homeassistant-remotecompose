@@ -1,10 +1,16 @@
 # Accessibility Report
 
-_Auto-generated from `compose-preview/a11y/pr`. 1 preview(s) across 1 module(s) · 52 error(s) · 9 warning(s) · 3 info._
+_Auto-generated from `compose-preview/a11y/pr`. 2 preview(s) across 1 module(s) · 52 error(s) · 9 warning(s) · 3 info._
 
 Browse inline; image URLs are pinned to the commit SHA on the baseline branch so links keep resolving after merge.
 
 ## previews
+
+### `Dashboard3dPrintingTablet`
+
+<img src="https://raw.githubusercontent.com/yschimke/homeassistant-remotecompose/compose-preview/a11y/pr/renders/previews/Dashboard3dPrintingTablet_dashboard_3d_printing_tablet-d15705fe.png" width="400" />
+
+_No findings._
 
 ### `DashboardGithubTablet`
 
