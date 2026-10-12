@@ -21,13 +21,19 @@ import androidx.compose.remote.creation.compose.state.rsp
 import androidx.compose.remote.creation.compose.text.RemoteTextStyle
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.font.FontWeight
+import ee.schimke.ha.design.CardDesignSlots
+import ee.schimke.ha.design.DesignProperties
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.CardConverter
+import ee.schimke.ha.rc.CardSnapshotBindings
+import ee.schimke.ha.rc.DesignTemplateInput
 import ee.schimke.ha.rc.cardDataSignature
 import ee.schimke.ha.rc.cardEntityIds
 import ee.schimke.ha.rc.components.cardChrome
+import ee.schimke.ha.rc.components.cardText
+import ee.schimke.ha.rc.components.cardTitle
 import ee.schimke.ha.rc.components.currentRemoteHaTheme
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
@@ -58,6 +64,58 @@ class MapCardConverter : CardConverter {
     return title + 24 + 28 * entities.size.coerceAtLeast(1)
   }
 
+  /**
+   * A map renders from a card design: per row, the entity's domain (its slot); the title and each
+   * row's name and position are bindings (`card.row.<i>.*`).
+   */
+  override fun designProperties(card: CardConfig, snapshot: HaSnapshot): DesignProperties? {
+    if (
+      !setOf("type", "title", "entities", "default_zoom", "hours_to_show")
+        .containsAll(card.raw.keys)
+    )
+      return null
+    val ids = entityIds(card)
+    if (ids.size != (card.raw["entities"] as? JsonArray)?.size) return null
+    return DesignProperties.build {
+      enum("has_title", if (card.raw["title"] != null) 1 else 0)
+      enum("count", ids.size)
+      ids.forEachIndexed { i, id -> string("e$i.domain", CardDesignSlots.domainOf(id)) }
+    }
+  }
+
+  override fun designTemplate(properties: DesignProperties): DesignTemplateInput? {
+    val count = properties["count"]?.toIntOrNull() ?: return null
+    val slots =
+      (0 until count).map { i ->
+        CardDesignSlots.slotId(properties["e$i.domain"] ?: return null, i)
+      }
+    val card =
+      CardConfig(
+        type = cardType,
+        raw =
+          kotlinx.serialization.json.buildJsonObject {
+            put("type", JsonPrimitive(cardType))
+            if (properties["has_title"] == "1") put("title", JsonPrimitive("Title"))
+            put("entities", JsonArray(slots.map { JsonPrimitive(it) }))
+          },
+      )
+    return DesignTemplateInput(card, HaSnapshot())
+  }
+
+  override fun designBindings(card: CardConfig, snapshot: HaSnapshot): CardSnapshotBindings =
+    CardSnapshotBindings(
+      buildMap {
+        entityIds(card).forEachIndexed { i, id ->
+          val (name, where) = rowText(id, snapshot)
+          put("card.row.$i.name", name)
+          put("card.row.$i.where", where)
+        }
+      },
+      emptyMap(),
+      emptyMap(),
+      emptyMap(),
+    )
+
   @Composable
   override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
     val theme = currentRemoteHaTheme()
@@ -74,7 +132,7 @@ class MapCardConverter : CardConverter {
       RemoteColumn(verticalArrangement = RemoteArrangement.spacedBy(6.rdp)) {
         if (title != null) {
           RemoteText(
-            text = title.rs,
+            text = cardTitle(title),
             color = theme.primaryText,
             fontSize = 15.rsp,
             fontWeight = FontWeight.Medium,
@@ -89,20 +147,17 @@ class MapCardConverter : CardConverter {
             style = RemoteTextStyle.Default,
           )
         } else {
-          entities.forEach { id -> EntityRow(id, snapshot) }
+          entities.forEachIndexed { i, id -> EntityRow(i, id, snapshot) }
         }
       }
     }
   }
 
   @Composable
-  private fun EntityRow(entityId: String, snapshot: HaSnapshot) {
+  private fun EntityRow(index: Int, entityId: String, snapshot: HaSnapshot) {
     val theme = currentRemoteHaTheme()
     val state = snapshot.states[entityId]
-    val name = state?.attributes?.get("friendly_name")?.jsonPrimitive?.content ?: entityId
-    val lat = state?.attributes?.get("latitude")?.jsonPrimitive?.content
-    val lon = state?.attributes?.get("longitude")?.jsonPrimitive?.content
-    val coords = if (lat != null && lon != null) "$lat, $lon" else (state?.state ?: "—")
+    val (name, coords) = rowText(entityId, snapshot)
 
     RemoteRow(
       verticalAlignment = RemoteAlignment.CenterVertically,
@@ -113,13 +168,13 @@ class MapCardConverter : CardConverter {
           RemoteModifier.size(8.rdp).clip(RemoteCircleShape).background(theme.placeholderAccent)
       )
       RemoteText(
-        text = name.rs,
+        text = cardText("row.$index.name", name),
         color = theme.primaryText,
         fontSize = 13.rsp,
         style = RemoteTextStyle.Default,
       )
       RemoteText(
-        text = coords.rs,
+        text = cardText("row.$index.where", coords),
         color = theme.secondaryText,
         fontSize = 12.rsp,
         style = RemoteTextStyle.Default,
@@ -137,4 +192,14 @@ private fun entityIds(card: CardConfig): List<String> {
       else -> null
     }
   }
+}
+
+/** A row's name and position text for [entityId]. */
+private fun rowText(entityId: String, snapshot: HaSnapshot): Pair<String, String> {
+  val state = snapshot.states[entityId]
+  val name = state?.attributes?.get("friendly_name")?.jsonPrimitive?.content ?: entityId
+  val lat = state?.attributes?.get("latitude")?.jsonPrimitive?.content
+  val lon = state?.attributes?.get("longitude")?.jsonPrimitive?.content
+  val coords = if (lat != null && lon != null) "$lat, $lon" else (state?.state ?: "—")
+  return name to coords
 }

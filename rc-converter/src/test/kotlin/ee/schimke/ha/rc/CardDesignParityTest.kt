@@ -124,6 +124,8 @@ class CardDesignParityTest {
       androidx.compose.remote.player.core.platform.BitmapLoader.UNSUPPORTED,
     history: Map<String, List<ee.schimke.ha.model.HistoryPoint>> = emptyMap(),
     statistics: Map<String, List<ee.schimke.ha.model.StatisticPoint>> = emptyMap(),
+    /** A colour both renders must show before capture: an image that loads asynchronously. */
+    awaitColor: androidx.compose.ui.graphics.Color? = null,
   ) {
     val snapshot =
       HaSnapshot(
@@ -168,9 +170,11 @@ class CardDesignParityTest {
       }
     }
     compose.waitForIdle()
+    awaitColor?.let { awaitPixel(it) }
     val direct = capture("direct-$name")
     compose.runOnIdle { useTemplate = true }
     compose.waitForIdle()
+    awaitColor?.let { awaitPixel(it) }
     val templated = capture("template-$name")
 
     assertEquals(direct.width, templated.width, "$name width")
@@ -183,6 +187,14 @@ class CardDesignParityTest {
     }
     assertTrue(colors.size > 2, "$name: the direct capture must draw real content")
     assertEquals(0, differing, "$name: pixels differing between direct and template render")
+  }
+
+  /** Waits until the card shows [color] somewhere: the bitmap loader runs off the main thread. */
+  private fun awaitPixel(color: androidx.compose.ui.graphics.Color) {
+    compose.waitUntil(timeoutMillis = 10_000) {
+      val pixels = compose.onNodeWithTag("card").captureToImage().toPixelMap()
+      (0 until pixels.height).any { y -> (0 until pixels.width).any { x -> pixels[x, y] == color } }
+    }
   }
 
   private fun capture(name: String) =
@@ -534,6 +546,7 @@ class CardDesignParityTest {
       ),
       dark = false,
       bitmapLoader = loaderFor(url),
+      awaitColor = androidx.compose.ui.graphics.Color.Yellow,
     )
   }
 
@@ -1016,5 +1029,29 @@ class CardDesignParityTest {
         "media_title" to "Podcast",
       ),
       dark = true,
+    )
+
+  @Test
+  fun map() =
+    assertParity(
+      "map",
+      card("map") {
+        put("title", "Family")
+        putJsonArray("entities") {
+          add("person.alex")
+          add("device_tracker.car")
+        }
+      },
+      listOf(
+        entity(
+          "person.alex",
+          "home",
+          "friendly_name" to "Alex",
+          "latitude" to "59.43",
+          "longitude" to "24.75",
+        ),
+        entity("device_tracker.car", "away", "friendly_name" to "Car"),
+      ),
+      dark = false,
     )
 }
