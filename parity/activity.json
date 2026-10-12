@@ -1,11 +1,19 @@
 {
   "schema": "compose-preview-activity/v1",
-  "generatedAt": "2026-10-12T10:53:47.584Z",
+  "generatedAt": "2026-10-12T12:09:39.859Z",
   "windowDays": 30,
   "code": {
     "repo": "yschimke/homeassistant-remotecompose",
     "ref": "main",
     "events": [
+      {
+        "sha": "49a0569ff2e9c1efd1531638aabde88e1c7c8c1e",
+        "subject": "fix(deps): update compose-ai-tools (#767)",
+        "at": "2026-10-12T11:42:24Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
       {
         "sha": "0d7bba77cc05252effff5e75973c091bef908c83",
         "subject": "feat(rc-components-ui): plain-data wrappers for every card (#774)",
@@ -474,14 +482,6 @@
         "sha": "3f132a5c6ff6a12d4be4bf767216ef72ba954241",
         "subject": "fix: keep manual release builds from publishing desktop assets (#714)",
         "at": "2026-10-10T20:12:30+01:00",
-        "author": "Yuri Schimke",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "7bff59c501a0fb62706eb5f997c5164e5041c894",
-        "subject": "fix: render and validate distinct UID themes (#713)",
-        "at": "2026-10-10T19:54:32+01:00",
         "author": "Yuri Schimke",
         "previewIds": [],
         "components": []

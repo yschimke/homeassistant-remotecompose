@@ -4,16 +4,16 @@
   "label": "Compose",
   "source": {
     "repo": "yschimke/homeassistant-remotecompose",
-    "ref": "0d7bba77cc05252effff5e75973c091bef908c83",
+    "ref": "49a0569ff2e9c1efd1531638aabde88e1c7c8c1e",
     "module": ":previews"
   },
-  "generatedAt": "2026-10-12T10:53:45.612Z",
+  "generatedAt": "2026-10-12T12:09:36.402Z",
   "mappings": [
     {
       "componentId": "Theme/Material3-Light",
       "figmaLayerName": "Theme/Material3-Light",
       "componentName": "ThemeShowcase",
-      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/0d7bba77cc05252effff5e75973c091bef908c83/previews/src/main/kotlin/ee/schimke/ha/previews/ThemePreviews.kt",
+      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/49a0569ff2e9c1efd1531638aabde88e1c7c8c1e/previews/src/main/kotlin/ee/schimke/ha/previews/ThemePreviews.kt",
       "label": "Compose",
       "confidence": "HIGH",
       "previewName": "Theme_Material3_Light",
@@ -48,13 +48,14 @@
           "scopeDslReceiver": null,
           "lambdaReturnTypeFqn": null
         }
-      ]
+      ],
+      "figmaSvg": "figma/theme-material3-light.svg"
     },
     {
       "componentId": "Theme/Material3-Dark",
       "figmaLayerName": "Theme/Material3-Dark",
       "componentName": "ThemeShowcase",
-      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/0d7bba77cc05252effff5e75973c091bef908c83/previews/src/main/kotlin/ee/schimke/ha/previews/ThemePreviews.kt",
+      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/49a0569ff2e9c1efd1531638aabde88e1c7c8c1e/previews/src/main/kotlin/ee/schimke/ha/previews/ThemePreviews.kt",
       "label": "Compose",
       "confidence": "HIGH",
       "previewName": "Theme_Material3_Dark",
@@ -89,13 +90,14 @@
           "scopeDslReceiver": null,
           "lambdaReturnTypeFqn": null
         }
-      ]
+      ],
+      "figmaSvg": "figma/theme-material3-dark.svg"
     },
     {
       "componentId": "Theme/Home-Light",
       "figmaLayerName": "Theme/Home-Light",
       "componentName": "ThemeShowcase",
-      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/0d7bba77cc05252effff5e75973c091bef908c83/previews/src/main/kotlin/ee/schimke/ha/previews/ThemePreviews.kt",
+      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/49a0569ff2e9c1efd1531638aabde88e1c7c8c1e/previews/src/main/kotlin/ee/schimke/ha/previews/ThemePreviews.kt",
       "label": "Compose",
       "confidence": "HIGH",
       "previewName": "Theme_Home_Light",
@@ -130,13 +132,14 @@
           "scopeDslReceiver": null,
           "lambdaReturnTypeFqn": null
         }
-      ]
+      ],
+      "figmaSvg": "figma/theme-home-light.svg"
     },
     {
       "componentId": "Theme/Home-Dark",
       "figmaLayerName": "Theme/Home-Dark",
       "componentName": "ThemeShowcase",
-      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/0d7bba77cc05252effff5e75973c091bef908c83/previews/src/main/kotlin/ee/schimke/ha/previews/ThemePreviews.kt",
+      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/49a0569ff2e9c1efd1531638aabde88e1c7c8c1e/previews/src/main/kotlin/ee/schimke/ha/previews/ThemePreviews.kt",
       "label": "Compose",
       "confidence": "HIGH",
       "previewName": "Theme_Home_Dark",
@@ -171,13 +174,14 @@
           "scopeDslReceiver": null,
           "lambdaReturnTypeFqn": null
         }
-      ]
+      ],
+      "figmaSvg": "figma/theme-home-dark.svg"
     },
     {
       "componentId": "Theme/Mushroom-Light",
       "figmaLayerName": "Theme/Mushroom-Light",
       "componentName": "ThemeShowcase",
-      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/0d7bba77cc05252effff5e75973c091bef908c83/previews/src/main/kotlin/ee/schimke/ha/previews/ThemePreviews.kt",
+      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/49a0569ff2e9c1efd1531638aabde88e1c7c8c1e/previews/src/main/kotlin/ee/schimke/ha/previews/ThemePreviews.kt",
       "label": "Compose",
       "confidence": "HIGH",
       "previewName": "Theme_Mushroom_Light",
@@ -212,13 +216,14 @@
           "scopeDslReceiver": null,
           "lambdaReturnTypeFqn": null
         }
-      ]
+      ],
+      "figmaSvg": "figma/theme-mushroom-light.svg"
     },
     {
       "componentId": "Theme/Mushroom-Dark",
       "figmaLayerName": "Theme/Mushroom-Dark",
       "componentName": "ThemeShowcase",
-      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/0d7bba77cc05252effff5e75973c091bef908c83/previews/src/main/kotlin/ee/schimke/ha/previews/ThemePreviews.kt",
+      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/49a0569ff2e9c1efd1531638aabde88e1c7c8c1e/previews/src/main/kotlin/ee/schimke/ha/previews/ThemePreviews.kt",
       "label": "Compose",
       "confidence": "HIGH",
       "previewName": "Theme_Mushroom_Dark",
@@ -253,13 +258,14 @@
           "scopeDslReceiver": null,
           "lambdaReturnTypeFqn": null
         }
-      ]
+      ],
+      "figmaSvg": "figma/theme-mushroom-dark.svg"
     },
     {
       "componentId": "Theme/Minimalist-Light",
       "figmaLayerName": "Theme/Minimalist-Light",
       "componentName": "ThemeShowcase",
-      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/0d7bba77cc05252effff5e75973c091bef908c83/previews/src/main/kotlin/ee/schimke/ha/previews/ThemePreviews.kt",
+      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/49a0569ff2e9c1efd1531638aabde88e1c7c8c1e/previews/src/main/kotlin/ee/schimke/ha/previews/ThemePreviews.kt",
       "label": "Compose",
       "confidence": "HIGH",
       "previewName": "Theme_Minimalist_Light",
@@ -294,13 +300,14 @@
           "scopeDslReceiver": null,
           "lambdaReturnTypeFqn": null
         }
-      ]
+      ],
+      "figmaSvg": "figma/theme-minimalist-light.svg"
     },
     {
       "componentId": "Theme/Minimalist-Dark",
       "figmaLayerName": "Theme/Minimalist-Dark",
       "componentName": "ThemeShowcase",
-      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/0d7bba77cc05252effff5e75973c091bef908c83/previews/src/main/kotlin/ee/schimke/ha/previews/ThemePreviews.kt",
+      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/49a0569ff2e9c1efd1531638aabde88e1c7c8c1e/previews/src/main/kotlin/ee/schimke/ha/previews/ThemePreviews.kt",
       "label": "Compose",
       "confidence": "HIGH",
       "previewName": "Theme_Minimalist_Dark",
@@ -335,13 +342,14 @@
           "scopeDslReceiver": null,
           "lambdaReturnTypeFqn": null
         }
-      ]
+      ],
+      "figmaSvg": "figma/theme-minimalist-dark.svg"
     },
     {
       "componentId": "Theme/Kiosk-Light",
       "figmaLayerName": "Theme/Kiosk-Light",
       "componentName": "ThemeShowcase",
-      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/0d7bba77cc05252effff5e75973c091bef908c83/previews/src/main/kotlin/ee/schimke/ha/previews/ThemePreviews.kt",
+      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/49a0569ff2e9c1efd1531638aabde88e1c7c8c1e/previews/src/main/kotlin/ee/schimke/ha/previews/ThemePreviews.kt",
       "label": "Compose",
       "confidence": "HIGH",
       "previewName": "Theme_Kiosk_Light",
@@ -376,13 +384,14 @@
           "scopeDslReceiver": null,
           "lambdaReturnTypeFqn": null
         }
-      ]
+      ],
+      "figmaSvg": "figma/theme-kiosk-light.svg"
     },
     {
       "componentId": "Theme/Kiosk-Dark",
       "figmaLayerName": "Theme/Kiosk-Dark",
       "componentName": "ThemeShowcase",
-      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/0d7bba77cc05252effff5e75973c091bef908c83/previews/src/main/kotlin/ee/schimke/ha/previews/ThemePreviews.kt",
+      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/49a0569ff2e9c1efd1531638aabde88e1c7c8c1e/previews/src/main/kotlin/ee/schimke/ha/previews/ThemePreviews.kt",
       "label": "Compose",
       "confidence": "HIGH",
       "previewName": "Theme_Kiosk_Dark",
@@ -417,13 +426,14 @@
           "scopeDslReceiver": null,
           "lambdaReturnTypeFqn": null
         }
-      ]
+      ],
+      "figmaSvg": "figma/theme-kiosk-dark.svg"
     },
     {
       "componentId": "Card/Button-Light",
       "figmaLayerName": "Card/Button-Light",
       "componentName": "CardHost",
-      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/0d7bba77cc05252effff5e75973c091bef908c83/previews/src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
+      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/49a0569ff2e9c1efd1531638aabde88e1c7c8c1e/previews/src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
       "label": "Compose",
       "confidence": "HIGH",
       "previewName": "Button_On_Light",
@@ -458,13 +468,14 @@
           "scopeDslReceiver": null,
           "lambdaReturnTypeFqn": "kotlin.Unit"
         }
-      ]
+      ],
+      "figmaSvg": "figma/card-button-light.svg"
     },
     {
       "componentId": "Card/Button-Dark",
       "figmaLayerName": "Card/Button-Dark",
       "componentName": "CardHost",
-      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/0d7bba77cc05252effff5e75973c091bef908c83/previews/src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
+      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/49a0569ff2e9c1efd1531638aabde88e1c7c8c1e/previews/src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
       "label": "Compose",
       "confidence": "HIGH",
       "previewName": "Button_On_Dark",
@@ -499,13 +510,14 @@
           "scopeDslReceiver": null,
           "lambdaReturnTypeFqn": "kotlin.Unit"
         }
-      ]
+      ],
+      "figmaSvg": "figma/card-button-dark.svg"
     },
     {
       "componentId": "Card/Entity-Light",
       "figmaLayerName": "Card/Entity-Light",
       "componentName": "CardHost",
-      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/0d7bba77cc05252effff5e75973c091bef908c83/previews/src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
+      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/49a0569ff2e9c1efd1531638aabde88e1c7c8c1e/previews/src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
       "label": "Compose",
       "confidence": "HIGH",
       "previewName": "Entity_Light",
@@ -540,13 +552,14 @@
           "scopeDslReceiver": null,
           "lambdaReturnTypeFqn": "kotlin.Unit"
         }
-      ]
+      ],
+      "figmaSvg": "figma/card-entity-light.svg"
     },
     {
       "componentId": "Card/Entity-Dark",
       "figmaLayerName": "Card/Entity-Dark",
       "componentName": "CardHost",
-      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/0d7bba77cc05252effff5e75973c091bef908c83/previews/src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
+      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/49a0569ff2e9c1efd1531638aabde88e1c7c8c1e/previews/src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
       "label": "Compose",
       "confidence": "HIGH",
       "previewName": "Entity_Dark",
@@ -581,13 +594,14 @@
           "scopeDslReceiver": null,
           "lambdaReturnTypeFqn": "kotlin.Unit"
         }
-      ]
+      ],
+      "figmaSvg": "figma/card-entity-dark.svg"
     },
     {
       "componentId": "Card/Entities-Light",
       "figmaLayerName": "Card/Entities-Light",
       "componentName": "CardHost",
-      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/0d7bba77cc05252effff5e75973c091bef908c83/previews/src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
+      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/49a0569ff2e9c1efd1531638aabde88e1c7c8c1e/previews/src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
       "label": "Compose",
       "confidence": "HIGH",
       "previewName": "Entities_Light",
@@ -622,13 +636,14 @@
           "scopeDslReceiver": null,
           "lambdaReturnTypeFqn": "kotlin.Unit"
         }
-      ]
+      ],
+      "figmaSvg": "figma/card-entities-light.svg"
     },
     {
       "componentId": "Card/Entities-Dark",
       "figmaLayerName": "Card/Entities-Dark",
       "componentName": "CardHost",
-      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/0d7bba77cc05252effff5e75973c091bef908c83/previews/src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
+      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/49a0569ff2e9c1efd1531638aabde88e1c7c8c1e/previews/src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
       "label": "Compose",
       "confidence": "HIGH",
       "previewName": "Entities_Dark",
@@ -663,13 +678,14 @@
           "scopeDslReceiver": null,
           "lambdaReturnTypeFqn": "kotlin.Unit"
         }
-      ]
+      ],
+      "figmaSvg": "figma/card-entities-dark.svg"
     },
     {
       "componentId": "Card/Glance-Light",
       "figmaLayerName": "Card/Glance-Light",
       "componentName": "CardHost",
-      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/0d7bba77cc05252effff5e75973c091bef908c83/previews/src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
+      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/49a0569ff2e9c1efd1531638aabde88e1c7c8c1e/previews/src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
       "label": "Compose",
       "confidence": "HIGH",
       "previewName": "Glance_Light",
@@ -704,13 +720,14 @@
           "scopeDslReceiver": null,
           "lambdaReturnTypeFqn": "kotlin.Unit"
         }
-      ]
+      ],
+      "figmaSvg": "figma/card-glance-light.svg"
     },
     {
       "componentId": "Card/Glance-Dark",
       "figmaLayerName": "Card/Glance-Dark",
       "componentName": "CardHost",
-      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/0d7bba77cc05252effff5e75973c091bef908c83/previews/src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
+      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/49a0569ff2e9c1efd1531638aabde88e1c7c8c1e/previews/src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
       "label": "Compose",
       "confidence": "HIGH",
       "previewName": "Glance_Dark",
@@ -745,13 +762,14 @@
           "scopeDslReceiver": null,
           "lambdaReturnTypeFqn": "kotlin.Unit"
         }
-      ]
+      ],
+      "figmaSvg": "figma/card-glance-dark.svg"
     },
     {
       "componentId": "Card/Tile-Light",
       "figmaLayerName": "Card/Tile-Light",
       "componentName": "TileHost",
-      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/0d7bba77cc05252effff5e75973c091bef908c83/previews/src/main/kotlin/ee/schimke/ha/previews/TileCardPreviews.kt",
+      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/49a0569ff2e9c1efd1531638aabde88e1c7c8c1e/previews/src/main/kotlin/ee/schimke/ha/previews/TileCardPreviews.kt",
       "label": "Compose",
       "confidence": "HIGH",
       "previewName": "Tile_LightOn",
@@ -786,13 +804,14 @@
           "scopeDslReceiver": null,
           "lambdaReturnTypeFqn": "kotlin.Unit"
         }
-      ]
+      ],
+      "figmaSvg": "figma/card-tile-light.svg"
     },
     {
       "componentId": "Card/Tile-Dark",
       "figmaLayerName": "Card/Tile-Dark",
       "componentName": "TileHost",
-      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/0d7bba77cc05252effff5e75973c091bef908c83/previews/src/main/kotlin/ee/schimke/ha/previews/TileCardPreviews.kt",
+      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/49a0569ff2e9c1efd1531638aabde88e1c7c8c1e/previews/src/main/kotlin/ee/schimke/ha/previews/TileCardPreviews.kt",
       "label": "Compose",
       "confidence": "HIGH",
       "previewName": "Tile_LightOn_Dark",
@@ -827,13 +846,14 @@
           "scopeDslReceiver": null,
           "lambdaReturnTypeFqn": "kotlin.Unit"
         }
-      ]
+      ],
+      "figmaSvg": "figma/card-tile-dark.svg"
     },
     {
       "componentId": "Card/Light-Light",
       "figmaLayerName": "Card/Light-Light",
       "componentName": "CardHost",
-      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/0d7bba77cc05252effff5e75973c091bef908c83/previews/src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
+      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/49a0569ff2e9c1efd1531638aabde88e1c7c8c1e/previews/src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
       "label": "Compose",
       "confidence": "HIGH",
       "previewName": "LightCard_Light",
@@ -868,13 +888,14 @@
           "scopeDslReceiver": null,
           "lambdaReturnTypeFqn": "kotlin.Unit"
         }
-      ]
+      ],
+      "figmaSvg": "figma/card-light-light.svg"
     },
     {
       "componentId": "Card/Light-Dark",
       "figmaLayerName": "Card/Light-Dark",
       "componentName": "CardHost",
-      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/0d7bba77cc05252effff5e75973c091bef908c83/previews/src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
+      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/49a0569ff2e9c1efd1531638aabde88e1c7c8c1e/previews/src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
       "label": "Compose",
       "confidence": "HIGH",
       "previewName": "LightCard_Dark",
@@ -909,13 +930,14 @@
           "scopeDslReceiver": null,
           "lambdaReturnTypeFqn": "kotlin.Unit"
         }
-      ]
+      ],
+      "figmaSvg": "figma/card-light-dark.svg"
     },
     {
       "componentId": "Card/Thermostat-Light",
       "figmaLayerName": "Card/Thermostat-Light",
       "componentName": "CardHost",
-      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/0d7bba77cc05252effff5e75973c091bef908c83/previews/src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
+      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/49a0569ff2e9c1efd1531638aabde88e1c7c8c1e/previews/src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
       "label": "Compose",
       "confidence": "HIGH",
       "previewName": "Thermostat_Light",
@@ -950,13 +972,14 @@
           "scopeDslReceiver": null,
           "lambdaReturnTypeFqn": "kotlin.Unit"
         }
-      ]
+      ],
+      "figmaSvg": "figma/card-thermostat-light.svg"
     },
     {
       "componentId": "Card/Thermostat-Dark",
       "figmaLayerName": "Card/Thermostat-Dark",
       "componentName": "CardHost",
-      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/0d7bba77cc05252effff5e75973c091bef908c83/previews/src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
+      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/49a0569ff2e9c1efd1531638aabde88e1c7c8c1e/previews/src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
       "label": "Compose",
       "confidence": "HIGH",
       "previewName": "Thermostat_Dark",
@@ -991,13 +1014,14 @@
           "scopeDslReceiver": null,
           "lambdaReturnTypeFqn": "kotlin.Unit"
         }
-      ]
+      ],
+      "figmaSvg": "figma/card-thermostat-dark.svg"
     },
     {
       "componentId": "Card/Gauge-Light",
       "figmaLayerName": "Card/Gauge-Light",
       "componentName": "CardHost",
-      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/0d7bba77cc05252effff5e75973c091bef908c83/previews/src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
+      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/49a0569ff2e9c1efd1531638aabde88e1c7c8c1e/previews/src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
       "label": "Compose",
       "confidence": "HIGH",
       "previewName": "Gauge_Light",
@@ -1032,13 +1056,14 @@
           "scopeDslReceiver": null,
           "lambdaReturnTypeFqn": "kotlin.Unit"
         }
-      ]
+      ],
+      "figmaSvg": "figma/card-gauge-light.svg"
     },
     {
       "componentId": "Card/Gauge-Dark",
       "figmaLayerName": "Card/Gauge-Dark",
       "componentName": "CardHost",
-      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/0d7bba77cc05252effff5e75973c091bef908c83/previews/src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
+      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/49a0569ff2e9c1efd1531638aabde88e1c7c8c1e/previews/src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
       "label": "Compose",
       "confidence": "HIGH",
       "previewName": "Gauge_Dark",
@@ -1073,13 +1098,14 @@
           "scopeDslReceiver": null,
           "lambdaReturnTypeFqn": "kotlin.Unit"
         }
-      ]
+      ],
+      "figmaSvg": "figma/card-gauge-dark.svg"
     },
     {
       "componentId": "Card/Weather-Light",
       "figmaLayerName": "Card/Weather-Light",
       "componentName": "CardHost",
-      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/0d7bba77cc05252effff5e75973c091bef908c83/previews/src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
+      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/49a0569ff2e9c1efd1531638aabde88e1c7c8c1e/previews/src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
       "label": "Compose",
       "confidence": "HIGH",
       "previewName": "WeatherForecast_Light",
@@ -1114,13 +1140,14 @@
           "scopeDslReceiver": null,
           "lambdaReturnTypeFqn": "kotlin.Unit"
         }
-      ]
+      ],
+      "figmaSvg": "figma/card-weather-light.svg"
     },
     {
       "componentId": "Card/Weather-Dark",
       "figmaLayerName": "Card/Weather-Dark",
       "componentName": "CardHost",
-      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/0d7bba77cc05252effff5e75973c091bef908c83/previews/src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
+      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/49a0569ff2e9c1efd1531638aabde88e1c7c8c1e/previews/src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
       "label": "Compose",
       "confidence": "HIGH",
       "previewName": "WeatherForecast_Dark",
@@ -1155,13 +1182,14 @@
           "scopeDslReceiver": null,
           "lambdaReturnTypeFqn": "kotlin.Unit"
         }
-      ]
+      ],
+      "figmaSvg": "figma/card-weather-dark.svg"
     },
     {
       "componentId": "Card/Media-Light",
       "figmaLayerName": "Card/Media-Light",
       "componentName": "CardHost",
-      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/0d7bba77cc05252effff5e75973c091bef908c83/previews/src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
+      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/49a0569ff2e9c1efd1531638aabde88e1c7c8c1e/previews/src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
       "label": "Compose",
       "confidence": "HIGH",
       "previewName": "MediaControl_Light",
@@ -1196,13 +1224,14 @@
           "scopeDslReceiver": null,
           "lambdaReturnTypeFqn": "kotlin.Unit"
         }
-      ]
+      ],
+      "figmaSvg": "figma/card-media-light.svg"
     },
     {
       "componentId": "Card/Media-Dark",
       "figmaLayerName": "Card/Media-Dark",
       "componentName": "CardHost",
-      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/0d7bba77cc05252effff5e75973c091bef908c83/previews/src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
+      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/49a0569ff2e9c1efd1531638aabde88e1c7c8c1e/previews/src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
       "label": "Compose",
       "confidence": "HIGH",
       "previewName": "MediaControl_Dark",
@@ -1237,13 +1266,14 @@
           "scopeDslReceiver": null,
           "lambdaReturnTypeFqn": "kotlin.Unit"
         }
-      ]
+      ],
+      "figmaSvg": "figma/card-media-dark.svg"
     },
     {
       "componentId": "Card/Alarm-Light",
       "figmaLayerName": "Card/Alarm-Light",
       "componentName": "CardHost",
-      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/0d7bba77cc05252effff5e75973c091bef908c83/previews/src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
+      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/49a0569ff2e9c1efd1531638aabde88e1c7c8c1e/previews/src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
       "label": "Compose",
       "confidence": "HIGH",
       "previewName": "AlarmPanel_Light",
@@ -1278,13 +1308,14 @@
           "scopeDslReceiver": null,
           "lambdaReturnTypeFqn": "kotlin.Unit"
         }
-      ]
+      ],
+      "figmaSvg": "figma/card-alarm-light.svg"
     },
     {
       "componentId": "Card/Alarm-Dark",
       "figmaLayerName": "Card/Alarm-Dark",
       "componentName": "CardHost",
-      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/0d7bba77cc05252effff5e75973c091bef908c83/previews/src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
+      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/49a0569ff2e9c1efd1531638aabde88e1c7c8c1e/previews/src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
       "label": "Compose",
       "confidence": "HIGH",
       "previewName": "AlarmPanel_Dark",
@@ -1319,13 +1350,14 @@
           "scopeDslReceiver": null,
           "lambdaReturnTypeFqn": "kotlin.Unit"
         }
-      ]
+      ],
+      "figmaSvg": "figma/card-alarm-dark.svg"
     },
     {
       "componentId": "Card/Todo-Light",
       "figmaLayerName": "Card/Todo-Light",
       "componentName": "CardHost",
-      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/0d7bba77cc05252effff5e75973c091bef908c83/previews/src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
+      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/49a0569ff2e9c1efd1531638aabde88e1c7c8c1e/previews/src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
       "label": "Compose",
       "confidence": "HIGH",
       "previewName": "TodoList_Light",
@@ -1360,13 +1392,14 @@
           "scopeDslReceiver": null,
           "lambdaReturnTypeFqn": "kotlin.Unit"
         }
-      ]
+      ],
+      "figmaSvg": "figma/card-todo-light.svg"
     },
     {
       "componentId": "Card/Todo-Dark",
       "figmaLayerName": "Card/Todo-Dark",
       "componentName": "CardHost",
-      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/0d7bba77cc05252effff5e75973c091bef908c83/previews/src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
+      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/49a0569ff2e9c1efd1531638aabde88e1c7c8c1e/previews/src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
       "label": "Compose",
       "confidence": "HIGH",
       "previewName": "TodoList_Dark",
@@ -1401,13 +1434,14 @@
           "scopeDslReceiver": null,
           "lambdaReturnTypeFqn": "kotlin.Unit"
         }
-      ]
+      ],
+      "figmaSvg": "figma/card-todo-dark.svg"
     },
     {
       "componentId": "Card/Calendar-Light",
       "figmaLayerName": "Card/Calendar-Light",
       "componentName": "CardHost",
-      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/0d7bba77cc05252effff5e75973c091bef908c83/previews/src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
+      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/49a0569ff2e9c1efd1531638aabde88e1c7c8c1e/previews/src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
       "label": "Compose",
       "confidence": "HIGH",
       "previewName": "Calendar_Light",
@@ -1442,13 +1476,14 @@
           "scopeDslReceiver": null,
           "lambdaReturnTypeFqn": "kotlin.Unit"
         }
-      ]
+      ],
+      "figmaSvg": "figma/card-calendar-light.svg"
     },
     {
       "componentId": "Card/Calendar-Dark",
       "figmaLayerName": "Card/Calendar-Dark",
       "componentName": "CardHost",
-      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/0d7bba77cc05252effff5e75973c091bef908c83/previews/src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
+      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/49a0569ff2e9c1efd1531638aabde88e1c7c8c1e/previews/src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
       "label": "Compose",
       "confidence": "HIGH",
       "previewName": "Calendar_Dark",
@@ -1483,13 +1518,14 @@
           "scopeDslReceiver": null,
           "lambdaReturnTypeFqn": "kotlin.Unit"
         }
-      ]
+      ],
+      "figmaSvg": "figma/card-calendar-dark.svg"
     },
     {
       "componentId": "Card/Area-Light",
       "figmaLayerName": "Card/Area-Light",
       "componentName": "CardHost",
-      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/0d7bba77cc05252effff5e75973c091bef908c83/previews/src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
+      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/49a0569ff2e9c1efd1531638aabde88e1c7c8c1e/previews/src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
       "label": "Compose",
       "confidence": "HIGH",
       "previewName": "Area_Light",
@@ -1524,13 +1560,14 @@
           "scopeDslReceiver": null,
           "lambdaReturnTypeFqn": "kotlin.Unit"
         }
-      ]
+      ],
+      "figmaSvg": "figma/card-area-light.svg"
     },
     {
       "componentId": "Card/Area-Dark",
       "figmaLayerName": "Card/Area-Dark",
       "componentName": "CardHost",
-      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/0d7bba77cc05252effff5e75973c091bef908c83/previews/src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
+      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/49a0569ff2e9c1efd1531638aabde88e1c7c8c1e/previews/src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
       "label": "Compose",
       "confidence": "HIGH",
       "previewName": "Area_Dark",
@@ -1565,13 +1602,14 @@
           "scopeDslReceiver": null,
           "lambdaReturnTypeFqn": "kotlin.Unit"
         }
-      ]
+      ],
+      "figmaSvg": "figma/card-area-dark.svg"
     },
     {
       "componentId": "Card/Sensor-Light",
       "figmaLayerName": "Card/Sensor-Light",
       "componentName": "CardHost",
-      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/0d7bba77cc05252effff5e75973c091bef908c83/previews/src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
+      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/49a0569ff2e9c1efd1531638aabde88e1c7c8c1e/previews/src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
       "label": "Compose",
       "confidence": "HIGH",
       "previewName": "Sensor_Light",
@@ -1606,13 +1644,14 @@
           "scopeDslReceiver": null,
           "lambdaReturnTypeFqn": "kotlin.Unit"
         }
-      ]
+      ],
+      "figmaSvg": "figma/card-sensor-light.svg"
     },
     {
       "componentId": "Card/Sensor-Dark",
       "figmaLayerName": "Card/Sensor-Dark",
       "componentName": "CardHost",
-      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/0d7bba77cc05252effff5e75973c091bef908c83/previews/src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
+      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/49a0569ff2e9c1efd1531638aabde88e1c7c8c1e/previews/src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
       "label": "Compose",
       "confidence": "HIGH",
       "previewName": "Sensor_Dark",
@@ -1647,13 +1686,14 @@
           "scopeDslReceiver": null,
           "lambdaReturnTypeFqn": "kotlin.Unit"
         }
-      ]
+      ],
+      "figmaSvg": "figma/card-sensor-dark.svg"
     },
     {
       "componentId": "Card/Statistic-Light",
       "figmaLayerName": "Card/Statistic-Light",
       "componentName": "CardHost",
-      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/0d7bba77cc05252effff5e75973c091bef908c83/previews/src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
+      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/49a0569ff2e9c1efd1531638aabde88e1c7c8c1e/previews/src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
       "label": "Compose",
       "confidence": "HIGH",
       "previewName": "Statistic_Light",
@@ -1688,13 +1728,14 @@
           "scopeDslReceiver": null,
           "lambdaReturnTypeFqn": "kotlin.Unit"
         }
-      ]
+      ],
+      "figmaSvg": "figma/card-statistic-light.svg"
     },
     {
       "componentId": "Card/Statistic-Dark",
       "figmaLayerName": "Card/Statistic-Dark",
       "componentName": "CardHost",
-      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/0d7bba77cc05252effff5e75973c091bef908c83/previews/src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
+      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/49a0569ff2e9c1efd1531638aabde88e1c7c8c1e/previews/src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
       "label": "Compose",
       "confidence": "HIGH",
       "previewName": "Statistic_Dark",
@@ -1729,13 +1770,14 @@
           "scopeDslReceiver": null,
           "lambdaReturnTypeFqn": "kotlin.Unit"
         }
-      ]
+      ],
+      "figmaSvg": "figma/card-statistic-dark.svg"
     },
     {
       "componentId": "Card/Markdown-Light",
       "figmaLayerName": "Card/Markdown-Light",
       "componentName": "CardHost",
-      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/0d7bba77cc05252effff5e75973c091bef908c83/previews/src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
+      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/49a0569ff2e9c1efd1531638aabde88e1c7c8c1e/previews/src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
       "label": "Compose",
       "confidence": "HIGH",
       "previewName": "Markdown_Light",
@@ -1770,13 +1812,14 @@
           "scopeDslReceiver": null,
           "lambdaReturnTypeFqn": "kotlin.Unit"
         }
-      ]
+      ],
+      "figmaSvg": "figma/card-markdown-light.svg"
     },
     {
       "componentId": "Card/Markdown-Dark",
       "figmaLayerName": "Card/Markdown-Dark",
       "componentName": "CardHost",
-      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/0d7bba77cc05252effff5e75973c091bef908c83/previews/src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
+      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/49a0569ff2e9c1efd1531638aabde88e1c7c8c1e/previews/src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
       "label": "Compose",
       "confidence": "HIGH",
       "previewName": "Markdown_Dark",
@@ -1811,13 +1854,14 @@
           "scopeDslReceiver": null,
           "lambdaReturnTypeFqn": "kotlin.Unit"
         }
-      ]
+      ],
+      "figmaSvg": "figma/card-markdown-dark.svg"
     },
     {
       "componentId": "Card/Clock-Light",
       "figmaLayerName": "Card/Clock-Light",
       "componentName": "CardHost",
-      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/0d7bba77cc05252effff5e75973c091bef908c83/previews/src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
+      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/49a0569ff2e9c1efd1531638aabde88e1c7c8c1e/previews/src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
       "label": "Compose",
       "confidence": "HIGH",
       "previewName": "Clock_Light",
@@ -1852,13 +1896,14 @@
           "scopeDslReceiver": null,
           "lambdaReturnTypeFqn": "kotlin.Unit"
         }
-      ]
+      ],
+      "figmaSvg": "figma/card-clock-light.svg"
     },
     {
       "componentId": "Card/Clock-Dark",
       "figmaLayerName": "Card/Clock-Dark",
       "componentName": "CardHost",
-      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/0d7bba77cc05252effff5e75973c091bef908c83/previews/src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
+      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/49a0569ff2e9c1efd1531638aabde88e1c7c8c1e/previews/src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
       "label": "Compose",
       "confidence": "HIGH",
       "previewName": "Clock_Dark",
@@ -1893,13 +1938,14 @@
           "scopeDslReceiver": null,
           "lambdaReturnTypeFqn": "kotlin.Unit"
         }
-      ]
+      ],
+      "figmaSvg": "figma/card-clock-dark.svg"
     },
     {
       "componentId": "Layout/VerticalStack-Light",
       "figmaLayerName": "Layout/VerticalStack-Light",
       "componentName": "CardHost",
-      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/0d7bba77cc05252effff5e75973c091bef908c83/previews/src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
+      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/49a0569ff2e9c1efd1531638aabde88e1c7c8c1e/previews/src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
       "label": "Compose",
       "confidence": "HIGH",
       "previewName": "VerticalStack_Light",
@@ -1934,13 +1980,14 @@
           "scopeDslReceiver": null,
           "lambdaReturnTypeFqn": "kotlin.Unit"
         }
-      ]
+      ],
+      "figmaSvg": "figma/layout-verticalstack-light.svg"
     },
     {
       "componentId": "Layout/VerticalStack-Dark",
       "figmaLayerName": "Layout/VerticalStack-Dark",
       "componentName": "CardHost",
-      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/0d7bba77cc05252effff5e75973c091bef908c83/previews/src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
+      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/49a0569ff2e9c1efd1531638aabde88e1c7c8c1e/previews/src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
       "label": "Compose",
       "confidence": "HIGH",
       "previewName": "VerticalStack_Dark",
@@ -1975,13 +2022,14 @@
           "scopeDslReceiver": null,
           "lambdaReturnTypeFqn": "kotlin.Unit"
         }
-      ]
+      ],
+      "figmaSvg": "figma/layout-verticalstack-dark.svg"
     },
     {
       "componentId": "Layout/HorizontalStack-Light",
       "figmaLayerName": "Layout/HorizontalStack-Light",
       "componentName": "CardHost",
-      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/0d7bba77cc05252effff5e75973c091bef908c83/previews/src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
+      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/49a0569ff2e9c1efd1531638aabde88e1c7c8c1e/previews/src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
       "label": "Compose",
       "confidence": "HIGH",
       "previewName": "HorizontalStack_Light",
@@ -2016,13 +2064,14 @@
           "scopeDslReceiver": null,
           "lambdaReturnTypeFqn": "kotlin.Unit"
         }
-      ]
+      ],
+      "figmaSvg": "figma/layout-horizontalstack-light.svg"
     },
     {
       "componentId": "Layout/HorizontalStack-Dark",
       "figmaLayerName": "Layout/HorizontalStack-Dark",
       "componentName": "CardHost",
-      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/0d7bba77cc05252effff5e75973c091bef908c83/previews/src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
+      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/49a0569ff2e9c1efd1531638aabde88e1c7c8c1e/previews/src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
       "label": "Compose",
       "confidence": "HIGH",
       "previewName": "HorizontalStack_Dark",
@@ -2057,13 +2106,14 @@
           "scopeDslReceiver": null,
           "lambdaReturnTypeFqn": "kotlin.Unit"
         }
-      ]
+      ],
+      "figmaSvg": "figma/layout-horizontalstack-dark.svg"
     },
     {
       "componentId": "Layout/Grid-Light",
       "figmaLayerName": "Layout/Grid-Light",
       "componentName": "CardHost",
-      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/0d7bba77cc05252effff5e75973c091bef908c83/previews/src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
+      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/49a0569ff2e9c1efd1531638aabde88e1c7c8c1e/previews/src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
       "label": "Compose",
       "confidence": "HIGH",
       "previewName": "Grid_Light",
@@ -2098,13 +2148,14 @@
           "scopeDslReceiver": null,
           "lambdaReturnTypeFqn": "kotlin.Unit"
         }
-      ]
+      ],
+      "figmaSvg": "figma/layout-grid-light.svg"
     },
     {
       "componentId": "Layout/Grid-Dark",
       "figmaLayerName": "Layout/Grid-Dark",
       "componentName": "CardHost",
-      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/0d7bba77cc05252effff5e75973c091bef908c83/previews/src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
+      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/49a0569ff2e9c1efd1531638aabde88e1c7c8c1e/previews/src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
       "label": "Compose",
       "confidence": "HIGH",
       "previewName": "Grid_Dark",
@@ -2139,13 +2190,14 @@
           "scopeDslReceiver": null,
           "lambdaReturnTypeFqn": "kotlin.Unit"
         }
-      ]
+      ],
+      "figmaSvg": "figma/layout-grid-dark.svg"
     },
     {
       "componentId": "Layout/Heading-Light",
       "figmaLayerName": "Layout/Heading-Light",
       "componentName": "CardHost",
-      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/0d7bba77cc05252effff5e75973c091bef908c83/previews/src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
+      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/49a0569ff2e9c1efd1531638aabde88e1c7c8c1e/previews/src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
       "label": "Compose",
       "confidence": "HIGH",
       "previewName": "Heading_Light",
@@ -2180,13 +2232,14 @@
           "scopeDslReceiver": null,
           "lambdaReturnTypeFqn": "kotlin.Unit"
         }
-      ]
+      ],
+      "figmaSvg": "https://preview.coo.ee/homeassistant-remotecompose/render/layout-heading-light__ideal__default__light__compact.svg"
     },
     {
       "componentId": "Layout/Heading-Dark",
       "figmaLayerName": "Layout/Heading-Dark",
       "componentName": "CardHost",
-      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/0d7bba77cc05252effff5e75973c091bef908c83/previews/src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
+      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/49a0569ff2e9c1efd1531638aabde88e1c7c8c1e/previews/src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
       "label": "Compose",
       "confidence": "HIGH",
       "previewName": "Heading_Dark",
@@ -2221,13 +2274,14 @@
           "scopeDslReceiver": null,
           "lambdaReturnTypeFqn": "kotlin.Unit"
         }
-      ]
+      ],
+      "figmaSvg": "https://preview.coo.ee/homeassistant-remotecompose/render/layout-heading-dark__ideal__default__dark__compact.svg"
     },
     {
       "componentId": "Card/Shutter-Light",
       "figmaLayerName": "Card/Shutter-Light",
       "componentName": "ShutterHost",
-      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/0d7bba77cc05252effff5e75973c091bef908c83/previews/src/main/kotlin/ee/schimke/ha/previews/ShutterCardPreviews.kt",
+      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/49a0569ff2e9c1efd1531638aabde88e1c7c8c1e/previews/src/main/kotlin/ee/schimke/ha/previews/ShutterCardPreviews.kt",
       "label": "Compose",
       "confidence": "HIGH",
       "previewName": "Shutter_Light",
@@ -2262,13 +2316,14 @@
           "scopeDslReceiver": null,
           "lambdaReturnTypeFqn": "kotlin.Unit"
         }
-      ]
+      ],
+      "figmaSvg": "figma/card-shutter-light.svg"
     },
     {
       "componentId": "Card/Shutter-Dark",
       "figmaLayerName": "Card/Shutter-Dark",
       "componentName": "ShutterHost",
-      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/0d7bba77cc05252effff5e75973c091bef908c83/previews/src/main/kotlin/ee/schimke/ha/previews/ShutterCardPreviews.kt",
+      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/49a0569ff2e9c1efd1531638aabde88e1c7c8c1e/previews/src/main/kotlin/ee/schimke/ha/previews/ShutterCardPreviews.kt",
       "label": "Compose",
       "confidence": "HIGH",
       "previewName": "Shutter_Dark",
@@ -2303,13 +2358,14 @@
           "scopeDslReceiver": null,
           "lambdaReturnTypeFqn": "kotlin.Unit"
         }
-      ]
+      ],
+      "figmaSvg": "figma/card-shutter-dark.svg"
     },
     {
       "componentId": "Card/Garage-Light",
       "figmaLayerName": "Card/Garage-Light",
       "componentName": "GarageHost",
-      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/0d7bba77cc05252effff5e75973c091bef908c83/previews/src/main/kotlin/ee/schimke/ha/previews/GarageShutterCardPreviews.kt",
+      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/49a0569ff2e9c1efd1531638aabde88e1c7c8c1e/previews/src/main/kotlin/ee/schimke/ha/previews/GarageShutterCardPreviews.kt",
       "label": "Compose",
       "confidence": "HIGH",
       "previewName": "Garage_TwoEntities_Light",
@@ -2344,13 +2400,14 @@
           "scopeDslReceiver": null,
           "lambdaReturnTypeFqn": "kotlin.Unit"
         }
-      ]
+      ],
+      "figmaSvg": "figma/card-garage-light.svg"
     },
     {
       "componentId": "Card/Garage-Dark",
       "figmaLayerName": "Card/Garage-Dark",
       "componentName": "GarageHost",
-      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/0d7bba77cc05252effff5e75973c091bef908c83/previews/src/main/kotlin/ee/schimke/ha/previews/GarageShutterCardPreviews.kt",
+      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/49a0569ff2e9c1efd1531638aabde88e1c7c8c1e/previews/src/main/kotlin/ee/schimke/ha/previews/GarageShutterCardPreviews.kt",
       "label": "Compose",
       "confidence": "HIGH",
       "previewName": "Garage_TwoEntities_Dark",
@@ -2385,13 +2442,14 @@
           "scopeDslReceiver": null,
           "lambdaReturnTypeFqn": "kotlin.Unit"
         }
-      ]
+      ],
+      "figmaSvg": "figma/card-garage-dark.svg"
     },
     {
       "componentId": "Dashboard/Light",
       "figmaLayerName": "Dashboard/Light",
       "componentName": "DashboardHost",
-      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/0d7bba77cc05252effff5e75973c091bef908c83/previews/src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
+      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/49a0569ff2e9c1efd1531638aabde88e1c7c8c1e/previews/src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
       "label": "Compose",
       "confidence": "HIGH",
       "previewName": "Dashboard_Light",
@@ -2413,13 +2471,14 @@
           "scopeDslReceiver": null,
           "lambdaReturnTypeFqn": null
         }
-      ]
+      ],
+      "figmaSvg": "figma/dashboard-light.svg"
     },
     {
       "componentId": "Dashboard/Dark",
       "figmaLayerName": "Dashboard/Dark",
       "componentName": "DashboardHost",
-      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/0d7bba77cc05252effff5e75973c091bef908c83/previews/src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
+      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/49a0569ff2e9c1efd1531638aabde88e1c7c8c1e/previews/src/main/kotlin/ee/schimke/ha/previews/CardPreviews.kt",
       "label": "Compose",
       "confidence": "HIGH",
       "previewName": "Dashboard_Dark",
@@ -2441,13 +2500,14 @@
           "scopeDslReceiver": null,
           "lambdaReturnTypeFqn": null
         }
-      ]
+      ],
+      "figmaSvg": "figma/dashboard-dark.svg"
     },
     {
       "componentId": "Brand/AppIcon-Light",
       "figmaLayerName": "Brand/AppIcon-Light",
       "componentName": "AppIconShowcase",
-      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/0d7bba77cc05252effff5e75973c091bef908c83/previews/src/main/kotlin/ee/schimke/ha/previews/AppIconPreviews.kt",
+      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/49a0569ff2e9c1efd1531638aabde88e1c7c8c1e/previews/src/main/kotlin/ee/schimke/ha/previews/AppIconPreviews.kt",
       "label": "Compose",
       "confidence": "HIGH",
       "previewName": "AppIcon_Light",
@@ -2469,13 +2529,14 @@
           "scopeDslReceiver": null,
           "lambdaReturnTypeFqn": null
         }
-      ]
+      ],
+      "figmaSvg": "figma/brand-appicon-light.svg"
     },
     {
       "componentId": "Brand/AppIcon-Dark",
       "figmaLayerName": "Brand/AppIcon-Dark",
       "componentName": "AppIconShowcase",
-      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/0d7bba77cc05252effff5e75973c091bef908c83/previews/src/main/kotlin/ee/schimke/ha/previews/AppIconPreviews.kt",
+      "source": "https://github.com/yschimke/homeassistant-remotecompose/blob/49a0569ff2e9c1efd1531638aabde88e1c7c8c1e/previews/src/main/kotlin/ee/schimke/ha/previews/AppIconPreviews.kt",
       "label": "Compose",
       "confidence": "HIGH",
       "previewName": "AppIcon_Dark",
@@ -2497,7 +2558,8 @@
           "scopeDslReceiver": null,
           "lambdaReturnTypeFqn": null
         }
-      ]
+      ],
+      "figmaSvg": "figma/brand-appicon-dark.svg"
     }
   ]
 }

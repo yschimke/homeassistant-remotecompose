@@ -9183,7 +9183,8 @@
           "size": "compact",
           "livePreview": "https://preview.coo.ee/homeassistant-remotecompose/p/layout-heading-light__ideal__default__light__compact",
           "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Heading_Light_heading__light_",
-          "density": 2.625
+          "density": 2.625,
+          "figmaSvg": "https://preview.coo.ee/homeassistant-remotecompose/render/layout-heading-light__ideal__default__light__compact.svg"
         }
       ],
       "greenlines": [],
@@ -9237,7 +9238,8 @@
           "size": "compact",
           "livePreview": "https://preview.coo.ee/homeassistant-remotecompose/p/layout-heading-dark__ideal__default__dark__compact",
           "previewId": "ee.schimke.ha.previews.CardPreviewsKt.Heading_Dark_heading__dark_",
-          "density": 2.625
+          "density": 2.625,
+          "figmaSvg": "https://preview.coo.ee/homeassistant-remotecompose/render/layout-heading-dark__ideal__default__dark__compact.svg"
         }
       ],
       "greenlines": [],
@@ -12043,8 +12045,8 @@
     "androidx.compose.remote:remote-player-compose (RemoteCompose)",
     "ee.schimke.ha:rc-components (Terrazzo themes)"
   ],
-  "renderer": "compose-preview 2.52.0",
-  "generatedAt": "2026-10-12T10:53:43.762Z",
+  "renderer": "compose-preview 2.53.0",
+  "generatedAt": "2026-10-12T12:09:33.087Z",
   "display": {
     "hero": "Dashboard/Light"
   },
@@ -12063,7 +12065,7 @@
   "componentsFile": "components.json",
   "source": {
     "repo": "yschimke/homeassistant-remotecompose",
-    "ref": "0d7bba77cc05252effff5e75973c091bef908c83",
+    "ref": "49a0569ff2e9c1efd1531638aabde88e1c7c8c1e",
     "module": ":previews"
   }
 }

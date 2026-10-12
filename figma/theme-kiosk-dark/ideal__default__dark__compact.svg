@@ -1,0 +1,152 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="945" height="1260" viewBox="0 0 945 1260" text-rendering="geometricPrecision" font-family="Atkinson Hyperlegible">
+<defs><style>@font-face{font-family:'Atkinson Hyperlegible';font-style:normal;font-weight:400;src:url(data:font/ttf;base64,AAEAAAAKAIAAAwAgT1MvMl2xWbMAAACsAAAATmNtYXADRQK/AAAA/AAAAHRnbHlmz74b2QAAAXAAABxkaGVhZB0R+bIAAB3UAAAANmhoZWEIiQMnAAAeDAAAACRobXR4wOoQmwAAHjAAAAGEbG9jYQAFj8wAAB+0AAABiG1heHAAbwCuAAAhPAAAACBuYW1lKzZDCQAAIVwAAAH6cG9zdAl5CeYAACNYAAAA5AAAAhYBkAAFAAACigK7AAAAjAKKArsAAAHfADEBAgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABOT05FAMAAIACwA7b+3gAAA7YBIgAAAAAAAQADAAEAAAAMAAQAaAAAABYAEAADAAYAIAAvADkAOwBAAFoAYAB6AH4AsP//AAAAIAAhADAAOgA8AEEAWwBhAHsAsP///+EALf/SAAwABf/L/+3/xf/i/5AAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABQAyAAAB3QK8AAMABgAJAAwADwAAMxEhEQMTIQERAwMTAxMhAzIBq9a6/o0Be7XNtLQIAXK5Arz9RAFzATX9hwJd/tL+0wEtASz9iwE0AAADADz/9AJMAqgACwATABwAAAUiJjU0NjMyFhUUBjc2NTQmIyIHEzI3AQYGFRQWAUSBh4eBgYeHGxFVWEEqa0Uq/vgKClUMs6insrKnqLPKPFWDjCj+CC0Bex9MLIOOAAABACoAAAEwApwACQAAMxEjNTI2NjczEdyyMFM9DjgB+EMOKin9ZAAAAQAiAAACAwKoABoAADM1PgI1NCYjIgYHJzY2MzIWFhUUDgIHIRUidqdZQjsvUQxUEnhYPl83OGJ+RgFwS1eSfzs0QDM9GElVKU44Om9pZzNNAAAAAQAq//QCAgKoAC4AAAUiJiYnNxYWMzI2NTQuAyM1Mj4CNTQmIyIGByc2NjMyFhYVFAYHFhYVFAYGARBDXzgMUwtJQEJVIDI5MxAcQTslTTU9SApSEnVcOmI8ODVLNURuDCxKLRg0QUM+JjEaDAJMBhUtJzY3PjIYR1chSz4zUhYXWzVDWSwAAAIAJgAAAkACnAAKAA0AACE1ITUBMxEzFSMVJTMRAXL+tAFLVXp6/rvxpU8BqP5YT6X0ATUAAAAAAQA2//QCCQKcACMAAAUiJiYnNxYWMzI2NjU0JiYjIgYHJxMhFSEHNjYzMhYWFRQGBgEcQ144DVIMR0EoRCktRSQ0QgtSKQF//sUXGk0pO2M9Q2wMLEotGDc+JkgzOEYhMRkYAVRRuxoYNmZKTGg0AAIAPP/0AhoCqAAcACgAAAUiJjU0PgIzMhYXByYmIyIGBzY2MzIWFhUUBgYnMjY1NCYjIgYVFBYBL312Gz1kSUpcFlUPOihOUwMXVkM+YTg6aUhCT09CQ09PDKiaR4RpPj4tGR0hjnQnNjpmQz5pP0dXRUVXV0VFVwAAAAABAA8AAAHcApwABgAAMwEhNSEVAV0BIv6QAc3+6gJLUVH9tQADADz/9AIrAqgAGwAnADMAAAUiJiY1NDY3JiY1NDY2MzIWFhUUBgcWFhUUBgYDMjY1NCYjIgYVFBYTMjY1NCYjIgYVFBYBM0VwQkQ3Gh8xUjIzUjEfGjhDQnBGLD8/LCw/PyxIVVVIR1VVDC9ZQEFbFhlEKDJSMTFSMihEGRZbQUBZLwGTPy4sPj4sLj/+t0Q6O0ZGOzpEAAIAPAAAAhoCpwAaACoAADMwPgI3BiMiJiY1NDY2MzIWFhUUBw4DBwMyNjY1NCYmIyIGBhUUFhbVGyswFRkcQW1BQG1CRWw+EgUkN0UmEitGKipGKypGKSlGJj5JIgZBbUJCbEBBbUIuLQxFYnE4AR8qRioqRikpRioqRioAAAAAAgAKAAACaAKdAAcACgAAMxMzEyMnIQc3MwMK+2n6ZDP+0DNQ9nsCnf1jkpLjAVsAAwBMAAACRQKcABAAGgAlAAAzESEyFhYVFAYHFhYVFAYGIwMzMjY1NCYmIyMRMzI2NjU0JiYjI0wBDUlbKyQiMjExYkm/uTMzFy0iucklMhoZMybIApwwSysoTh0aWTAwWDgBfkAmGjAf/gIiNR0dMyEAAAABADL/9AJqAqgAHQAABSImJjU0NjYzMhYXByYmIyIGBhUUFhYzMjY3FwYGAWFfiEhNjF5UhyJSFllBO184NmE+QVkXUiSMDFmcZmibVk5JHi05PHdXVHhAOC4eSk0AAAACAEwAAAJvApwADAAZAAAzETMyHgIVFA4CIyczMj4CNTQuAiMjTLZQhWI2NmKFUFhWNGFNLS1NYTRWApwhTIFfYIFNIU8RM2dVVWUzEQAAAAEATAAAAhECnAALAAAzESEVIRUhFSEVIRVMAcX+mQEJ/vcBZwKcUctR3lEAAQBMAAAB/gKcAAkAADMRIRUhFSEVIRFMAbL+rAFU/qwCnFHLUf7RAAEAMv/0AoICqAAlAAAFIiYmNTQ2NjMyFhcHJiYjIgYGFRQWFjMyPgI1NSM1IREjJwYGAWBgh0dNjF5UhyNTFllBO184NV8+IUY6JMMBHDYZIG8MWZxmaJtWTkkeLTk8d1dUeEAQJ0Q0FlH+p1QzLQABAEwAAAJmApwACwAAMxEzESERMxEjESERTF4BXl5e/qICnP7kARz9ZAEv/tEAAAABAEIAAAFcApwACwAAMzUzESM1IRUjETMVQl5eARpeXkoCCEpK/fhKAAAAAAEAD//0AbICnAAQAAAXIiYnNwYWMzI2NjURMxEUBuBebgVXAkoyGzYjXnAMZWQZTEkYQDwBx/44bXMAAAEATAAAAmkCnAALAAAzETMRATMDASMDBxVMXgEtdf8BHHPoZAKc/rABUP7p/nsBQG7SAAABAEwAAAIRApwABQAAMxEzESEVTF4BZwKc/bVRAAAAAAEATAAAAugCnAAMAAAzETMTEzMRIxEDIwMRTJyyspxewV3CApz93gIi/WQCOv3GAjr9xgABAEwAAAJlApwACQAAMxEzAREzESMBEUyLATBeiv7PApz9yAI4/WQCO/3FAAIAMv/0AqUCqAAPAB8AAAUiJiY1NDY2MzIWFhUUBgYnMjY2NTQmJiMiBgYVFBYWAWtgjE1NjGBhjE1NjGE9Yzo6Yz08Yzo6YwxZnWVlm1lZm2VlnVlPPndXVnc9PXdWV3c+AAACAEwAAQIzApwADAAXAAA3ETMyFhYVFAYGIyMRETMyNjY1NCYmIyNM0VJ9R0d9UnN7MU4vL04xewECmyBXU1JXH/73AVoOMzY3NBAAAgAy/9QC8QKoABQAKAAABScGBiMiJiY1NDY2MzIWFhUUBgcXJTI3JzcXNjY1NCYmIyIGBhUUFhYCsXUnakBgjE1NjGBhjE0YF3v+elg5s0CmCws6Yz08Yzo6YyxtJShZnWVlm1lZm2U4YylzKzuoRJwbQSVWdz09d1ZXdz4AAAACAEwAAAJMApwADwAaAAAzETMyFhYVFAYGBxMjAyMRETMyNjY1NCYmIyNM1FJ9RxxPTs9zy2R9MU8vL08xfQKcHVNQLU42C/7gARn+5wFoDjEzNDAPAAAAAQAo//QCLAKoADIAAAUiJiYnNx4CMzI2NjU0JicnLgI1NDY2MzIWFhcHJiYjIgYGFRQWFhcXHgIVFA4CASg3aE8SVww2RyQoSC08SlUuWTlHcT0vW0kVVhNVLiRCKidBJ0kzWjgsSl0MIkY2GiQvFho1KCkwExMMKEo+OVAqGzcrGSMkFy4jISgXCRAMKkxALkkxGgAAAAABAAoAAAIkApwABwAAMxEjNSEVIxHo3gIa3gJLUVH9tQAAAAABAEz/9AJmApwAEQAABSImNREzERQWMzI2NREzERQGAVmRfF5PYGBPXnsMkZIBhf50Y2hoYwGM/nuSkQABAAoAAAJDApwABgAAMwMzExMzA+/lZ7W2Z+YCnP3SAi79ZAABAAoAAAM+ApwADAAAMwMzExMzExMzAyMDA7KoZ4J6bnqCZ6dygYECnP3YAij92AIo/WQCKP3YAAEACgAAAmUCnAALAAAzEwMzFzczAxMjAwMK9edwr69x5/VxvbwBWAFE9fX+vP6oAQn+9wABAAoAAAJJApwACAAAMxEDMxMTMwMR+/Fnubhn8AEDAZn+vQFD/mf+/QAAAAEALAAAAjMCnAAJAAAzNQEhNSEVASEVLAGK/oUB6f54AZdRAfpRUf4GUQAAAgAm//QB2wH4AB0AKQAAFyImJjU0NjY3NiYjIgYHJzY2MzIWFRUUFhcjJwYGJzI2NjU1DgIVFBbRL04uU5dlAjY8LTkIURRnQ2dfCgdNFBZSLydGLExwPTMMIkAtO0QlCz9EKSQYOT9haHQ+WiNEJStDHEM6HwgXKSIjKwAAAAACAEb/9AIQApwAEgAeAAAFIiYnByMRMxU2NjMyFhYVFAYGJzI2NTQmIyIGFRQWATs6UBcWPlQXUDo5YTs7YU9ATU1AQE1NDC8oSwKc+icvPXNSUnM9SGJYWWFhWVhiAAABACb/9AHTAfgAHQAABSImJjU0NjYzMhYXByYmIyIGBhUUFhYzMjY3FwYGAQ1HaDg7bElDYBhNED4mJUIoKUElKT0QTRxoDEN0S0p1Q0IuHB4kJ1E/PlMoJRwcMD8AAAACACb/9AIBApwAFQAhAAAXIiYmNTQ2NjMyFhc1MxEUFhcjJwYGJzI2NTQmIyIGFRQW+zhiOztiODtQFlQEDU8WFlAlQE1NQEBNTQw9c1JScz0vJ/r+HxlhQUsoL0hiWFlhYVlYYgAAAAIAJv/0AgIB+AAYACEAAAUiJiY1NDY2MzIeAgchHgIzMjY3FwYGAyE0JiYjIgYGARlObDlAbUQ7WjsbBP6CAjNGHio5EVEbZN4BJCM/LCVCKwxFdUlPcz8vT2Q1PkgdGxYYKzgBMCNAKRw+AAEADwAAAR4CwgAUAAAzESM1MzU0NjYzMxUjIgYVFTMVIxFjVFQUOjc2NCATZ2cBrUNKMzwZRxomS0P+UwAAAAACACb/QAHqAfgAHwAtAAAFIiYmJzcWFjMyNjU1BgYjIiYmNTQ2NjMyFhc3MxEUBgMyNjY1NCYmIyIGFRQWARIoTz0NVA5AH003F0w7N2A7O2A3O0wXFz1ffiY/Jyc/Jj1PT8AXNCkXJxpKSEInLjlvT1BuOi8nTv4/dnkBDyROPz9OI1tVVVwAAQBGAAAB3gKcABQAADMRMxU2NjMyFhURIxE0JiYjIgYVEUZUFUw/WkpUDi8wPUYCnPcjMGlV/sYBISZBKFNQ/vMAAAACAC0AAADbAssACwARAAATIiY1NDYzMhYVFAYDESM1MxGcGSUlGRolJURFmQJOJRoaJCQaGiX9sgGtQ/4QAAAAAv/G/18AwgLLAAsAGQAAEyImNTQ2MzIWFRQGAyc1FzI2NjURMxEUBgaEGiUlGhokJKE3LyosD1QfTQJOJRoaJCQaGiX9EQJJAQ8qKgHk/hdASR8AAQBGAAAB4AKcAAsAADMRMxE3MwcTIycHFUZUyGW71GelOgKc/nXfzf7d5T+mAAAAAQBGAAAA4AKbAAwAADMiJiY1ETMRFBYzMxW7LzMTVBAjExM2MwIf/e8mGkoAAAAAAQBGAAADBQH4ACQAADMRMxc2NjMyFhc2NjMyFhURIxE0JiYjIgYVESMRNCYmIyIGFRFGPhYVSTc5RhAeVTRWSlQPLS42QVQPLS42QgHwSyMwLikuKWlV/sYBISZBKFNQ/vMBISZBKFNQ/vMAAQBGAAAB3gH4ABQAADMRMxc2NjMyFhURIxE0JiYjIgYVEUY+FhVMP1pKVA4vMD1GAfBLIzBpVf7GASEmQShTUP7zAAACACb/9AICAfgAEwAjAAAFIi4CNTQ+AjMyHgIVFA4CJzI2NjU0JiYjIgYGFRQWFgEUK1RFKipFVCsrVUUpKUVVKyRELCxEJCNFLCxFDB4/YkNDYj8eHj9iQ0NiPx5KJ1FAQFEnJ1FAQFEnAAACAEb/XwIQAfgAEgAeAAAXETMXNjYzMhYWFRQGBiMiJicVNzI2NTQmIyIGFRQWRj0XF1A6OWE7O2E5OlAXi0BNTUBATU2hApFOJy89c1JRdD0vKOzdYlhZYWFZWGIAAAACACb/UwJ0AfgAHgAqAAAFIiYmNTUGBiMiJiY1NDY2MzIWFzczERQWMzI3FQYGJTI2NTQmIyIGFRQWAh8iPCUWUTs4YTs7YTg7URYXPSEmGiMTLP7cQE1NQEBOTq0aPzlmKC89dFFScz0vJ079+BsrDU4GCOliWFlhYVlYYgAAAAEARgAAAU8B+AAOAAAzETMXNjYzFSIiBwYGFRVGPRsaWT4HDwdVQwHwXC03VwEHaFzVAAABAB//9AG5AfkALQAAFyImJic3FhYzMjY2NTQmJycuAjU0NjYzMhYXByYmIyIGFRQWFxceAhUUBgbvK1NBEVELSykeNSJBLUUkPiY4VzA7aRZPDUEjJj41J0EoSC46XAwbNyoeLCcSIhYpIgkOCB02LS09IDE0HR4dIiAgHQgNCB47NS9CIwAAAQAUAAABHAJtABQAADMiJiY1ESM1MzUzFTMVIxEUFjMzFd0vMxNUVFRgYA8kLRM2MwExQ319Q/7dJhpKAAAAAAEARP/0AdIB8QAVAAAXIiYmNREzERQWFjMyNjURMxEjJwYG4zpGH1QaLx87Q1Q/FRVIDDFXOAE9/tc3PBdTTwER/g9IJDAAAAEAAAAAAbkB8AAGAAAzAzMTEzMDsbFbgoFbsQHw/n4Bgv4QAAEAAAAAAo4B8AAMAAAzAzMTEzMTEzMDIwMDj49aX2NXYl9ajk1sbAHw/pEBb/6RAW/+EAGP/nEAAQAAAAABzQHwAAsAADE3JzMXNzMHFyMnB7WsY3p7Y6y1Y4SD//GsrPH/ubkAAAAAAQAA/18BrQHvABAAABc1MzI2NjcDMxMTMwMOAiMlIiQmFwuzXXp6XLASJT44oUoLJSYB8P6CAX79+zU9GQAAAAEAKAAAAa4B8AAJAAAzNQEhNSEVASEVKAEd/uwBc/7jASdKAVxKSv6kSgAAAgAoAZgBOAKoAA8AGwAAEyImJjU0NjYzMhYWFRQGBicyNjU0JiMiBhUUFrAlPiUlPiUmPSUlPSYfKiofHisrAZglPiUmPSUlPSYlPiU/Kx4fKiofHisAAAEAKAAAAgEB8AAGAAAhJTUlFQUFAgH+JwHZ/pABcNVG1VqengAAAAACADUAeQIlAYIAAwAHAAATNSEVBTUhFTUB8P4QAfABM09Puk9PAAAAAQAoAAACAQHwAAYAADM1JSU1BRUoAXD+kAHZWp6eWtVGAAAAAgAo//QB1gKoACAALAAANzU0NjY3NjY1NCYjIgYGByc2NjMyFhYVFAYGBw4CFRUHIiY1NDYzMhYVFAa2GTMmJDJGNy04HQVSD3lVNGA9JDkgHCIPKRkoJhsbJSa+JSc1LBgXOigwNiEyGhdIVCNIOStGNhUSHCAaIsokHBsmJxoaJgAAAgAy//QC2gKoAEAATgAABSIuAjU0PgIzMh4CFRQGBiMiJicGBiMiJiY1NDY2MzIWFxUUFjMyNjY1NC4CIyIOAhUUHgIzMjcVBgYnMjY1NSYmIyIGBhUUFgGOQn1jOjZffUg5dWM9L0clIjoKGD0fI0AoOFkyHj0cGRIfKRUqS2I5OmdPLC9QZjdIQCBEPx01ChcMGTAfKQwyW4BOR31fNilRdUtNXSkgGh0dJUk1TFglCwniFhYnPyMzW0YoLE1nO0BpTCkkRQ4O8Tc2ZwICFDk3KykAAAAAAgAm//QApwH4AAsAFwAAEyImNTQ2MzIWFRQGAyImNTQ2MzIWFRQGZhomJhobJiYbGiYmGhsmJgF3JhsaJiYaGyb+fSYaGyYmGxomAAIAJv97AKcB+AALABkAABMiJjU0NjMyFhUUBgM3JiY1NDYzMhYVFAcHZhomJhobJiZULxcfJhobJgU+AXcmGxomJhobJv4EegQkGBomJhoMDaEAAAEATP9fARoCnAAHAAAXETMVIxEzFUzOfX2hAz1K/VdKAAAAAAEADwAAAWoCnAADAAAhATMBARP+/FcBBAKc/WQAAAAAAQAh/18A7wKcAAcAABc1MxEjNTMRIX19zqFKAqlK/MMAAAAAAQA1ATcB8wKcAAYAABMTMxMjAwM1uUy5WYaGATcBZf6bAQL+/gAAAAEACv+xAYIAAAADAAAXNSEVCgF4T09PAAEANQI7ANcCwwANAAATJiYnJiY1NDYzMhYXF5ETKg4KBxYQCBAHXQI7ECMOCw8HEBYGCXkAAAAAAgBM//QAzQKcAAUAEQAANwM1MxUDByImNTQ2MzIWFRQGchJZEhsaJiYaGyYmwwEtrKz+088mGhsmJhsaJgAAAAIAKAG/AQUCnAADAAcAABMnMwcjJzMHww5QDsEOUA4Bv93d3d0AAAACACYAAAJpApwAGwAfAAAzNyM3MzcjNzM3MwczNzMHMwcjBzMHIwcjNyMHNzM3I4kZfAt8F3wLfBhSGHsYUhh7C3wWewt8GFIYexgkexZ7rFGiUaysrKxRolGsrKz9ogADACj/qQIqAuYAKAAxADgAAAU1JiYnNxYXNScuAjU0PgI3NTMVFhYXByYmJxUXHgMVFAYGBxUDNQ4CFRQWFxM2NjU0JicBC1Z0GVciaiQuVDYnQU0nMkNvHFYTQiMMJk9DKUJsPzIaOig/LkFDSU4+V0wIUkMaWQ7vBwkrSzgsQiwYAz8/BTw7GSAhBNUDChoqQjM+WC8DSwHlygIVKCIsMQn+swQ+LjQzDgAABQAm//QDeQKoAA8AEwAfAC8AOwAAEyImJjU0NjYzMhYWFRQGBgMBMwEDMjY1NCYjIgYVFBYBIiYmNTQ2NjMyFhYVFAYGJzI2NTQmIyIGFRQW3DJTMTFTMjJSMTFSVAHUWP4sNiw/PywtP0ACFDJTMTFTMjJSMTFSMiw/PywtPz8BPTFSMjNSMTFSMzJSMf7DApz9ZAGHPywtPz8tLD/+bTFTMjJTMTFTMjJTMUpALCw/PywsQAAAAAMAJv/0ArcCqAAhAC4AOQAABSImJjU0NjcmJjU0NjMyFhYVFAYHFzY2NzMGBgcXIycGBgM2NjU0JiMiBhUUFhYDMjY3JwYGFRQWFgEHRWU3Xk0iKGdPKVA1Tj6IDRIDVwQfG5V3Uit0IzE8NSUlOSElIDVaIrU8RyY+DDRYN01lGiZKJ0FNGz82P1QakB9HKDZpLZ1XLjUBqxI6KCkiICIbNSb+mConvxVGOCY5HgAAAQAoAb8AeAKcAAMAABMnMwc2DlAOAb/d3QAAAAEAMv9fAQkCnAANAAAXJiY1NDY3MwYGFRQWF71FRjc3SzE+QUyhYuN0ZsZYRsx0beNnAAABACP/XwD6ApwADQAAFzY2NTQmJzMWFhUUBgcjTEI9Mks4NUZEoWfkbXPMRljGZXXjYgAAAQBEAYQBawKcAA4AABMnNyc3FzUzFTcXBxcHJ5kuPmUSZTllEmY/Lj8BhCJWIDchamohNyBWIlYAAAAAAQA1AAACJQHwAAsAACE1IzUzNTMVMxUjFQEF0NBQ0NDQUNDQUNAAAAEAJv97AKcAdQANAAAXNyYmNTQ2MzIWFRQHBy0vFx8mGhsmBT6FegQkGBomJhoMDaEAAAABACYA0AFKASEAAwAANzUhFSYBJNBRUQABACb/9ACnAHUACwAAFyImNTQ2MzIWFRQGZhomJhobJiYMJhobJiYbGiYAAAEADwAAAWoCnAADAAAzATMBDwEEV/78Apz9ZAABACb/XwEdApwAJQAAFyImJjU1NCYjNTI2NTU0NjYzMxUjIgYVFRQGBxUWFhUVFBYzMxXyODoUFy8vFxQ6OCsqIRIrJCYpEiEqoRk8M5YrNEM0K5Y0OxlHGiaZPzUKAQo2PpknGUcAAAEATP9fAJ0CnAADAAAXETMRTFGhAz38wwAAAAABACL/XwEZApwAJQAAFzUzMjY1NTQ2NzUmJjU1NCYjIzUzMhYWFRUUFjMVIgYVFRQGBiMiKiESKiUkKxIhKis4OhQYLi4YFDo4oUcZJ5k+NgoBCjU/mSYaRxk7NJYrNEM0K5YzPBkAAAEAKADDAgMBQwAVAAAlIiYmIyIGByc2NjMyFhYzMjY3FwYGAXskRUEeGSIFSwtINipHPhoXIwVKC0jDGxsZGRYuOBscGhkWLjgAAAABAAAAAQGJDNzghV8PPPUADwPoAAAAANxtzzUAAAAA3LDlkv/G/wYFCgN4AAAABgACAAEAAAAAAAEAAAO2/t4AAAUw/8b+twUKAAEAAAAAAAAAAAAAAAAAAABhAg8AMgEYAAACiAA8AZIAKgIlACICPgAqAmYAJgJHADYCVgA8Af4ADwJnADwCVgA8AnIACgJrAEwCkAAyAqEATAI3AEwCJABMAsYAMgKyAEwBngBCAf4ADwJzAEwCGwBMAzQATAKxAEwC1wAyAlkATALxADICagBMAlQAKAIuAAoCsgBMAk0ACgNIAAoCbwAKAlMACgJfACwCDgAmAjYARgH0ACYCNAAmAhsAJgE3AA8CMAAmAiIARgEWAC0A/v/GAeoARgDvAEYDSQBGAiIARgIoACYCNgBGAkAAJgFUAEYB1wAfAUQAFAIYAEQBuQAAAo4AAAHNAAABrQAAAcwAKAFgACgCKQAoAloANQIpACgCCAAoAwwAMgDNACYAzQAmATsATAF5AA8BOwAhAigANQGMAAoBDAA1ARkATAEtACgCjwAmAlIAKAOfACYCwQAmAKAAKAEsADIBLAAjAbEARAJaADUAzQAmAXAAJgDNACYBeQAPAT8AJgDpAEwBPwAiAisAKAAAAAAAAABQAAAAUAAAALAAAADYAAABLAAAAbQAAAHsAAACXAAAAtgAAAL8AAADlAAABBQAAAREAAAEuAAABRgAAAVoAAAFlAAABbwAAAYsAAAGXAAABogAAAbEAAAG+AAABxgAAAdMAAAHeAAAB9wAAAgoAAAIqAAACQAAAAmYAAAJvAAACfgAAAocAAAKVAAACogAAAq0AAAK4AAAC2AAAAvAAAAMIAAADIgAAAz0AAANNAAADbwAAA4AAAAOQAAADpQAAA7EAAAO9AAAD2AAAA+kAAAQEAAAEHAAABDwAAARJAAAEawAABHsAAASNAAAElgAABKQAAASwAAAEwAAABMsAAAThAAAE6wAABPUAAAT+AAAFHwAABVUAAAVoAAAFfQAABYYAAAWOAAAFlwAABaEAAAWnAAAFtQAABcUAAAXPAAAF5wAABhIAAAZAAAAGbAAABnMAAAaAAAAGjQAABpwAAAamAAAGswAABrkAAAbEAAAGywAABuUAAAbsAAAHBgAABxkAAEAAABhAFgABwBUAAQAAQAAAAAAAAAAAAAAAAACAAEAAAAHAFoAAwABBAkAAABiAAAAAwABBAkAAQAqAGIAAwABBAkAAgAOAIwAAwABBAkAAwBOAJoAAwABBAkABAA6AOgAAwABBAkABQBGASIAAwABBAkABgA4AWgAQwBvAHAAeQByAGkAZwBoAHQAIAAyADAAMgAwACAAQgByAGEAaQBsAGwAZQAgAEkAbgBzAHQAaQB0AHUAdABlACAAbwBmACAAQQBtAGUAcgBpAGMAYQAsACAASQBuAGMALgBBAHQAawBpAG4AcwBvAG4AIABIAHkAcABlAHIAbABlAGcAaQBiAGwAZQBSAGUAZwB1AGwAYQByADEALgAwADAANgA7AE4ATwBOAEUAOwBBAHQAawBpAG4AcwBvAG4ASAB5AHAAZQByAGwAZQBnAGkAYgBsAGUALQBSAGUAZwB1AGwAYQByAEEAdABrAGkAbgBzAG8AbgAgAEgAeQBwAGUAcgBsAGUAZwBpAGIAbABlACAAUgBlAGcAdQBsAGEAcgBWAGUAcgBzAGkAbwBuACAAMQAuADAAMAA2ADsAIAB0AHQAZgBhAHUAdABvAGgAaQBuAHQAIAAoAHYAMQAuADgALgAzACkAQQB0AGsAaQBuAHMAbwBuAEgAeQBwAGUAcgBsAGUAZwBpAGIAbABlAC0AUgBlAGcAdQBsAGEAcgAAAAIAAAAAAAD/sgA5AAAAAAAAAAAAAAAAAAAAAAAAAAAAYQAAAAMAEwAUABUAFgAXABgAGQAaABsAHAAkACUAJgAnACgAKQAqACsALAAtAC4ALwAwADEAMgAzADQANQA2ADcAOAA5ADoAOwA8AD0ARABFAEYARwBIAEkASgBLAEwATQBOAE8AUABRAFIAUwBUAFUAVgBXAFgAWQBaAFsAXABdAIMAHwAgACEAIgAjAB0AHgA+AD8AQABBAEIAQwAEAAUABgAHAAgACQAKAAsADAANAA4ADwAQABEAEgBeAF8AYABh) format('truetype');}</style></defs>
+<g transform="translate(0, 0)">
+  <g id="Root">
+    <g id="ReusableComposeNode">
+        <rect x="0" y="0" width="945" height="1260" fill="#091613"/>
+      <g id="ReusableComposeNode">
+        <g id="ReusableComposeNode">
+          <g id="ReusableComposeNode">
+            <text x="42" y="98.67" font-size="57.75" font-family="Atkinson Hyperlegible" font-weight="400" fill="#AFFFF0">Kiosk</text>
+          </g>
+          <g id="ReusableComposeNode">
+            <text x="42" y="147.86" font-size="31.5" font-family="Atkinson Hyperlegible" font-weight="500" letter-spacing="1.31" fill="#FFFFFF">Dark · teal · Atkinson Hyperlegible</text>
+          </g>
+        </g>
+        <g id="ReusableComposeNode">
+          <g id="ReusableComposeNode">
+            <rect x="42" y="190" width="126" height="95" rx="15.75" ry="15.75" fill="#AFFFF0"/>
+            <g id="ReusableComposeNode">
+              <text x="53" y="231.96" font-size="28.88" font-family="Atkinson Hyperlegible" font-weight="500" letter-spacing="1.31" fill="#000000">P</text>
+            </g>
+          </g>
+          <g id="ReusableComposeNode">
+            <rect x="184" y="190" width="126" height="95" rx="15.75" ry="15.75" fill="#00DAC5"/>
+            <g id="ReusableComposeNode">
+              <text x="195" y="231.96" font-size="28.88" font-family="Atkinson Hyperlegible" font-weight="500" letter-spacing="1.31" fill="#000E0B">PC</text>
+            </g>
+          </g>
+          <g id="ReusableComposeNode">
+            <rect x="326" y="190" width="126" height="95" rx="15.75" ry="15.75" fill="#C9F9FC"/>
+            <g id="ReusableComposeNode">
+              <text x="337" y="231.96" font-size="28.88" font-family="Atkinson Hyperlegible" font-weight="500" letter-spacing="1.31" fill="#000000">S</text>
+            </g>
+          </g>
+          <g id="ReusableComposeNode">
+            <rect x="468" y="190" width="126" height="95" rx="15.75" ry="15.75" fill="#D8F5FF"/>
+            <g id="ReusableComposeNode">
+              <text x="479" y="231.96" font-size="28.88" font-family="Atkinson Hyperlegible" font-weight="500" letter-spacing="1.31" fill="#000000">T</text>
+            </g>
+          </g>
+          <g id="ReusableComposeNode">
+            <rect x="610" y="190" width="126" height="95" rx="15.75" ry="15.75" fill="#394A47"/>
+            <g id="ReusableComposeNode">
+              <text x="621" y="231.96" font-size="28.88" font-family="Atkinson Hyperlegible" font-weight="500" letter-spacing="1.31" fill="#FFFFFF">Sv</text>
+            </g>
+          </g>
+          <g id="ReusableComposeNode">
+            <rect x="752" y="190" width="126" height="95" rx="15.75" ry="15.75" fill="#E1F4EF"/>
+            <g id="ReusableComposeNode">
+              <text x="763" y="231.96" font-size="28.88" font-family="Atkinson Hyperlegible" font-weight="500" letter-spacing="1.31" fill="#FFFFFF">O</text>
+            </g>
+          </g>
+        </g>
+        <g id="ReusableComposeNode">
+          <g id="ReusableComposeNode">
+            <rect x="42" y="317" width="135" height="84" rx="15.75" ry="15.75" fill="#091613"/>
+            <g id="ReusableComposeNode">
+              <text x="53" y="352.96" font-size="28.88" font-family="Atkinson Hyperlegible" font-weight="500" letter-spacing="1.31" fill="#FFFFFF">surface</text>
+            </g>
+          </g>
+          <g id="ReusableComposeNode">
+            <rect x="188" y="317" width="135" height="84" rx="15.75" ry="15.75" fill="#000000"/>
+            <g id="ReusableComposeNode">
+              <text x="199" y="352.96" font-size="28.88" font-family="Atkinson Hyperlegible" font-weight="500" letter-spacing="1.31" fill="#FFFFFF">Lo-</text>
+            </g>
+          </g>
+          <g id="ReusableComposeNode">
+            <rect x="334" y="317" width="134" height="84" rx="15.75" ry="15.75" fill="#152220"/>
+            <g id="ReusableComposeNode">
+              <text x="345" y="352.96" font-size="28.88" font-family="Atkinson Hyperlegible" font-weight="500" letter-spacing="1.31" fill="#FFFFFF">Lo</text>
+            </g>
+          </g>
+          <g id="ReusableComposeNode">
+            <rect x="480" y="318" width="132" height="82" rx="14.75" ry="14.75" fill="#263330" stroke="#E1F4EF" stroke-width="2.62"/>
+            <g id="ReusableComposeNode">
+              <text x="490" y="352.96" font-size="28.88" font-family="Atkinson Hyperlegible" font-weight="500" letter-spacing="1.31" fill="#FFFFFF">Cn</text>
+            </g>
+          </g>
+          <g id="ReusableComposeNode">
+            <rect x="625" y="318" width="132" height="82" rx="14.75" ry="14.75" fill="#313E3B" stroke="#E1F4EF" stroke-width="2.62"/>
+            <g id="ReusableComposeNode">
+              <text x="635" y="352.96" font-size="28.88" font-family="Atkinson Hyperlegible" font-weight="500" letter-spacing="1.31" fill="#FFFFFF">Hi</text>
+            </g>
+          </g>
+          <g id="ReusableComposeNode">
+            <rect x="769" y="317" width="134" height="84" rx="15.75" ry="15.75" fill="#3C4947"/>
+            <g id="ReusableComposeNode">
+              <text x="780" y="352.96" font-size="28.88" font-family="Atkinson Hyperlegible" font-weight="500" letter-spacing="1.31" fill="#FFFFFF">Hi+</text>
+            </g>
+          </g>
+        </g>
+        <g id="ReusableComposeNode">
+            <rect x="42" y="433" width="861" height="462" rx="52.5" ry="52.5" fill="#263330"/>
+          <clipPath id="clip-0"><rect x="63" y="454" width="819" height="147" rx="31.5" ry="31.5"/></clipPath>
+          <g id="ReusableComposeNode">
+              <rect x="63" y="454" width="819" height="147" rx="31.5" ry="31.5" fill="#313E3B"/>
+            <g clip-path="url(#clip-0)">
+              <clipPath id="clip-1"><rect x="95" y="475" width="756" height="74" rx="31.5" ry="31.5"/></clipPath>
+              <g id="Box">
+                <image href="ideal__default__dark__compact.figma-raster/9448.png" x="63" y="454" width="819" height="116"/>
+                <g clip-path="url(#clip-1)">
+                  <g id="Row">
+                    <g id="Spacer">
+                      <image href="ideal__default__dark__compact.figma-raster/9455.png" x="95" y="481" width="63" height="63"/>
+                    </g>
+                    <g id="Column">
+                      <g id="Empty">
+                        <text x="184" y="506.77" font-size="34.13" font-family="&apos;Atkinson Hyperlegible&apos;, sans-serif" font-weight="500" fill="#FFFFFF">Living Room</text>
+                      </g>
+                      <g id="Empty">
+                        <text x="184" y="541.96" font-size="28.88" font-family="&apos;Atkinson Hyperlegible&apos;, sans-serif" font-weight="400" fill="#FFFFFF">21.4 °C</text>
+                      </g>
+                    </g>
+                  </g>
+                </g>
+              </g>
+            </g>
+          </g>
+          <clipPath id="clip-2"><rect x="63" y="622" width="819" height="252" rx="31.5" ry="31.5"/></clipPath>
+          <g id="ReusableComposeNode">
+              <rect x="63" y="622" width="819" height="252" rx="31.5" ry="31.5" fill="#313E3B"/>
+            <g clip-path="url(#clip-2)">
+              <clipPath id="clip-3"><rect x="95" y="643" width="756" height="84" rx="31.5" ry="31.5"/></clipPath>
+              <g id="Box">
+                <image href="ideal__default__dark__compact.figma-raster/9512.png" x="63" y="622" width="819" height="126"/>
+                <g clip-path="url(#clip-3)">
+                  <g id="Row">
+                    <g id="Box">
+                      <image href="ideal__default__dark__compact.figma-raster/9516.png" x="95" y="643" width="84" height="84"/>
+                      <g id="Spacer">
+                        <image href="ideal__default__dark__compact.figma-raster/9521.png" x="111" y="659" width="53" height="53"/>
+                      </g>
+                    </g>
+                    <g id="Column">
+                      <g id="Empty">
+                        <text x="205" y="679.77" font-size="34.13" font-family="&apos;Atkinson Hyperlegible&apos;, sans-serif" font-weight="500" fill="#FFFFFF">Kitchen</text>
+                      </g>
+                      <g id="Empty">
+                        <text x="205" y="714.96" font-size="28.88" font-family="&apos;Atkinson Hyperlegible&apos;, sans-serif" font-weight="400" fill="#FFFFFF">On</text>
+                      </g>
+                    </g>
+                  </g>
+                </g>
+              </g>
+            </g>
+          </g>
+        </g>
+      </g>
+    </g>
+  </g>
+</g>
+</svg>
