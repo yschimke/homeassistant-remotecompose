@@ -1628,7 +1628,7 @@
     "functionName": "DashboardGithubMobile",
     "module": "previews",
     "renderBasename": "DashboardGithubMobile_dashboard_github_mobile-8f04a7c1.png",
-    "sha256": "267ab52623f7b0bb97824725d541591572ceadad44341223d783ff8395eb5ef0",
+    "sha256": "1d44541a27768f2f50a04662c9abe994c4e8dbaa99e771d08922bea8b9bd494a",
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/DashboardPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.DashboardPreviewsKt.DashboardGithubTablet_dashboard github \u2014 tablet": {
