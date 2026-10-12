@@ -159,8 +159,10 @@ Deliberate spike limits, each owned by a milestone below:
   can't fetch a picture, so the phone does: for every entity a widget slot card binds that has an
   `entity_picture`, `MobileWearSyncManager` sends a downscaled PNG (`WearPicture`,
   `/wear/picture/<entityId>`, at most every 5 min, skipping the image cache, and only when it
-  changed), and baking embeds it. The widget reads its card's pictures from the Data Layer when it
-  renders, so they arrive whether or not the watch app was running.
+  changed), and baking embeds it. The widget reads its slots, pinned cards, values and pictures
+  from the Data Layer when it renders, so they arrive whether or not the watch app was running;
+  the phone writes the values DataItem whenever the app isn't open (its live stream only reaches a
+  running app).
   Until one has synced, the card keeps the direct capture, which shows the card's icon
   (`SlotWidgetDesignTest`, `WearPictureSyncTest`).
 - **Launcher widgets are baked** (S1, `LauncherDesigns`): a launcher can't receive bindings, so

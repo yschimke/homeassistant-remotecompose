@@ -47,6 +47,7 @@ import ee.schimke.ha.rc.converterFor
 import ee.schimke.terrazzo.wear.data.WearPrefs
 import ee.schimke.terrazzo.wear.sync.WearOfflineStore
 import ee.schimke.terrazzo.wear.sync.syncPicturesFromDataLayer
+import ee.schimke.terrazzo.wear.sync.syncWidgetStateFromDataLayer
 import ee.schimke.terrazzo.wear.ui.terrazzoWearColorScheme
 import ee.schimke.terrazzo.wearsync.proto.EntityValue
 import ee.schimke.terrazzo.wearsync.proto.LiveValues
@@ -92,6 +93,9 @@ abstract class SlotWidget(internal val slotIndex: Int) : GlanceWearWidget() {
   ): WearWidgetData {
     val app = context.applicationContext
     val store = WearOfflineStore(app)
+    // Slots, pins and values from the Data Layer: the watch app may not have been running to store
+    // them as they arrived.
+    syncWidgetStateFromDataLayer(app, store)
     val slot = store.readSlots()?.slots?.firstOrNull { it.slotIndex == slotIndex }
     val pinned =
       slot

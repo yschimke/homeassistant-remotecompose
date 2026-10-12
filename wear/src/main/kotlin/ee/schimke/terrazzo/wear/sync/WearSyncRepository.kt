@@ -206,11 +206,23 @@ class WearSyncRepository(context: Context, private val scope: CoroutineScope) {
 }
 
 /**
- * Copies [entityIds]' pictures from the Data Layer into [store]. The Wear widgets call this when
- * they render: [WearSyncRepository] only listens while the watch app runs, and a DataItem persists
- * in the Data Layer whether or not anything was listening when it arrived. The newest of a
- * picture's copies (one per sending node) wins.
+ * Copies the widget slots, pinned cards and entity values from the Data Layer into [store], where
+ * newer. The Wear widgets call this when they render: [WearSyncRepository] only listens while the
+ * watch app runs, and a DataItem persists in the Data Layer whether or not anything was listening
+ * when it arrived.
  */
+internal suspend fun syncWidgetStateFromDataLayer(context: Context, store: WearOfflineStore) {
+  val client = Wearable.getDataClient(context)
+  newerThan(dataItem(client, WearSyncPaths.SLOTS), store.readSlots(), WearWidgetSlots::updatedAtMs)
+    ?.let(store::writeSlots)
+  newerThan(dataItem(client, WearSyncPaths.PINNED), store.readPinned(), PinnedCardSet::updatedAtMs)
+    ?.let(store::writePinned)
+  // Stream deltas the running app merged carry their own capture time, so the newer one wins.
+  newerThan(dataItem(client, WearSyncPaths.VALUES), store.readValues(), LiveValues::capturedAtMs)
+    ?.let(store::writeValues)
+}
+
+/** Copies [entityIds]' pictures from the Data Layer into [store], where newer: see above. */
 internal suspend fun syncPicturesFromDataLayer(
   context: Context,
   store: WearOfflineStore,
@@ -219,28 +231,35 @@ internal suspend fun syncPicturesFromDataLayer(
   if (entityIds.isEmpty()) return
   val client = Wearable.getDataClient(context)
   for (entityId in entityIds) {
-    val uri =
-      android.net.Uri.Builder()
-        .scheme(PutDataRequest.WEAR_URI_SCHEME)
-        .path(WearSyncPaths.picturePath(entityId))
-        .build()
-    val buffer = runCatching { client.getDataItems(uri).await() }.getOrNull() ?: continue
-    try {
-      val newest =
-        buffer
-          .mapNotNull { item ->
-            DataMapItem.fromDataItem(item).dataMap.getByteArray(WearSyncRepository.KEY_PROTO)?.let {
-              decodeProto<WearPicture>(it)
-            }
-          }
-          .maxByOrNull { it.updatedAtMs }
-      val stored = store.readPicture(entityId)
-      if (newest != null && (stored == null || newest.updatedAtMs > stored.updatedAtMs)) {
-        store.writePicture(newest)
+    val synced = dataItem<WearPicture>(client, WearSyncPaths.picturePath(entityId))
+    newerThan(synced, store.readPicture(entityId), WearPicture::updatedAtMs)
+      ?.let(store::writePicture)
+  }
+}
+
+/** [candidate] when it is newer by [time] than [stored] (or nothing is stored), else null. */
+internal fun <T : Any> newerThan(candidate: T?, stored: T?, time: (T) -> Long): T? =
+  candidate?.takeIf {
+    stored == null || time(it) > time(stored)
+  }
+
+/**
+ * A DataItem at [path]. Each sending node keeps its own copy; the phone is the only sender, so the
+ * last one decoded stands.
+ */
+private suspend inline fun <reified T> dataItem(client: DataClient, path: String): T? {
+  val uri = android.net.Uri.Builder().scheme(PutDataRequest.WEAR_URI_SCHEME).path(path).build()
+  val buffer = runCatching { client.getDataItems(uri).await() }.getOrNull() ?: return null
+  return try {
+    buffer
+      .mapNotNull { item ->
+        DataMapItem.fromDataItem(item).dataMap.getByteArray(WearSyncRepository.KEY_PROTO)?.let {
+          decodeProto<T>(it)
+        }
       }
-    } finally {
-      buffer.release()
-    }
+      .lastOrNull()
+  } finally {
+    buffer.release()
   }
 }
 
