@@ -1,6 +1,6 @@
 {
     "formatVersion": "compose-preview-history/v1",
-    "generatedFrom": "05bf33d071572a8f2c5757967a0d554e449d5438",
+    "generatedFrom": "aa94b442a2305e0a7ee03b691c969c2b009aba83",
     "previews": {
         "app/ee.schimke.terrazzo.previews.CardDebugPreviewsKt.CardFlashPreview_Card flash on data change": {
             "path": "renders/app/CardFlashPreview_Card_flash_on_data_change-44b71c2b.gif",
@@ -4703,6 +4703,13 @@
             "path": "renders/previews/Dashboard3dPrintingMobile_dashboard_3d_printing_mobile-2701c9cf.png",
             "versions": [
                 {
+                    "blob": "eba01f7588dfe0ba5d3c8248f39160cb8f7da0c5",
+                    "commit": "aa94b442a2305e0a7ee03b691c969c2b009aba83",
+                    "date": "2026-10-12T15:23:16Z",
+                    "sourceSha": "1fbe4f49",
+                    "commits": 1
+                },
+                {
                     "blob": "cfe250107a11aab6f15a1addc74ab2a75047304a",
                     "commit": "05bf33d071572a8f2c5757967a0d554e449d5438",
                     "date": "2026-10-12T14:58:32Z",
@@ -4731,9 +4738,9 @@
                     "commits": 1
                 }
             ],
-            "observations": 4,
+            "observations": 5,
             "unstable": false,
-            "flapCount": 0
+            "flapCount": 1
         },
         "previews/ee.schimke.ha.previews.DashboardPreviewsKt.Dashboard3dPrintingTablet_dashboard 3d-printing — tablet": {
             "path": "renders/previews/Dashboard3dPrintingTablet_dashboard_3d_printing_tablet-d15705fe.png",
