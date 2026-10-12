@@ -155,8 +155,10 @@ Deliberate spike limits, each owned by a milestone below:
   references (R1, R2, M2b).
 - **Wear widgets are baked too** (`SlotWidget`): Glance Wear captures the slot's template itself
   (its own op set and canvas, keyed by card shape, theme, container and size) and
-  `LauncherDesigns.bakeValues` writes the card's values in. The Wear widget has no taps; a slot
-  picture can't be fetched on the watch yet, so such a card keeps the direct capture.
+  `LauncherDesigns.bakeValues` writes the card's values in. The Wear widget has no taps. The watch
+  has no Home Assistant connection or image loader, so a picture renders as its card's icon in
+  both the direct and the template capture, and picture cards bake like any other
+  (`SlotWidgetDesignTest`: pixel parity with direct captures).
 - **Launcher widgets are baked** (S1, `LauncherDesigns`): a launcher can't receive bindings, so
   the widget's launcher template — keyed by size (`variant = <w>x<h>`) and widget theme, captured
   from the same tree as a live widget (`LauncherWidgetContent`) — gets the card's values written

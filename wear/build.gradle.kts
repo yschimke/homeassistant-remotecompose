@@ -38,6 +38,7 @@ android {
     targetCompatibility = JavaVersion.toVersion(libs.versions.java.get())
   }
   kotlin { jvmToolchain(libs.versions.java.get().toInt()) }
+  testOptions { unitTests.isIncludeAndroidResources = true }
   lint {
     // Compose Preview plugin generates preview parameter providers under
     // build/generated that can reference @RestrictTo APIs from Glance Wear.
@@ -45,6 +46,28 @@ android {
     // source lint checks for this module.
     checkGeneratedSources = false
   }
+}
+
+// Robolectric's SDK jar, resolved by Gradle (offline at test time) — same setup as
+// `:rc-converter`. Used by the Wear widget design test, which captures real Glance Wear documents.
+val robolectricSdk by configurations.creating {
+  isCanBeConsumed = false
+  isTransitive = false
+}
+val prepareRobolectricSdk by
+  tasks.registering(Sync::class) {
+    from(robolectricSdk)
+    into(layout.buildDirectory.dir("robolectric-sdk"))
+  }
+
+tasks.withType<Test>().configureEach {
+  inputs.files(robolectricSdk)
+  dependsOn(prepareRobolectricSdk)
+  systemProperty("robolectric.offline", "true")
+  systemProperty(
+    "robolectric.dependency.dir",
+    layout.buildDirectory.dir("robolectric-sdk").get().asFile.absolutePath,
+  )
 }
 
 play {
@@ -114,6 +137,14 @@ dependencies {
 
   implementation(libs.kotlinx.coroutines.core)
   implementation(libs.kotlinx.serialization.json)
+
+  testImplementation(libs.kotlin.test)
+  testImplementation(libs.kotlin.test.junit)
+  testImplementation(libs.kotlinx.coroutines.test)
+  testImplementation("org.robolectric:robolectric:4.17")
+  testImplementation(libs.compose.ui.test.junit4)
+  testImplementation(libs.rc.player.edit)
+  robolectricSdk("org.robolectric:android-all-instrumented:15-robolectric-13954326-i7")
 
   androidTestImplementation(libs.androidx.test.ext.junit)
   androidTestImplementation(libs.androidx.test.runner)
