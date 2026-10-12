@@ -5,6 +5,7 @@ import ee.schimke.terrazzo.wearsync.proto.DashboardData
 import ee.schimke.terrazzo.wearsync.proto.LiveValues
 import ee.schimke.terrazzo.wearsync.proto.PinnedCardSet
 import ee.schimke.terrazzo.wearsync.proto.PinnedSectionSet
+import ee.schimke.terrazzo.wearsync.proto.WearPicture
 import ee.schimke.terrazzo.wearsync.proto.WearSettings
 import ee.schimke.terrazzo.wearsync.proto.WearWidgetSlots
 import ee.schimke.terrazzo.wearsync.proto.decodeProto
@@ -25,6 +26,7 @@ import java.io.File
  *   slots.pb           — WearWidgetSlots
  *   values.pb          — LiveValues  (last full snapshot or merged stream)
  *   dashboards/<file>  — DashboardData per `urlPath`
+ *   pictures/<file>    — WearPicture per entity (Wear widget pictures)
  * ```
  *
  * Files are proto wire bytes (the same encoding the wear data layer itself uses), written via
@@ -34,6 +36,7 @@ class WearOfflineStore(context: Context) {
 
   private val root: File = File(context.filesDir, "terrazzo/wear").apply { mkdirs() }
   private val dashboardsDir: File = File(root, "dashboards").apply { mkdirs() }
+  private val picturesDir: File = File(root, "pictures").apply { mkdirs() }
 
   fun readSettings(): WearSettings? =
     File(root, "settings.pb").readBytesOrNull()?.let { decodeProto<WearSettings>(it) }
@@ -76,6 +79,18 @@ class WearOfflineStore(context: Context) {
       .listFiles { f -> f.isFile && f.name.endsWith(".pb") }
       .orEmpty()
       .mapNotNull { f -> f.readBytesOrNull()?.let { decodeProto<DashboardData>(it) } }
+
+  /** [entityId]'s last synced picture, or null. */
+  fun readPicture(entityId: String): WearPicture? =
+    pictureFile(entityId).readBytesOrNull()?.let { decodeProto<WearPicture>(it) }
+
+  fun writePicture(value: WearPicture) {
+    if (value.entityId.isEmpty()) return
+    pictureFile(value.entityId).atomicWriteBytes(encodeProto(value))
+  }
+
+  private fun pictureFile(entityId: String): File =
+    File(picturesDir, entityId.replace(Regex("[^A-Za-z0-9._-]"), "_") + ".pb")
 
   fun writeDashboard(value: DashboardData) {
     val name = (value.urlPath.takeIf { it.isNotEmpty() }?.replace('/', '_') ?: "_default") + ".pb"

@@ -10,8 +10,10 @@ import com.google.android.gms.wearable.NodeClient
 import com.google.android.gms.wearable.PutDataMapRequest
 import com.google.android.gms.wearable.Wearable
 import com.google.android.horologist.data.WearDataLayerRegistry
+import ee.schimke.ha.design.CardDesignSlots
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.EntityState
+import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.terrazzo.core.pin.MobilePinnedCard
 import ee.schimke.terrazzo.core.pin.MobilePinnedSection
 import ee.schimke.terrazzo.core.pin.PinStore
@@ -33,12 +35,14 @@ import ee.schimke.terrazzo.wearsync.proto.PinnedSection
 import ee.schimke.terrazzo.wearsync.proto.PinnedSectionSet
 import ee.schimke.terrazzo.wearsync.proto.StreamUpdate
 import ee.schimke.terrazzo.wearsync.proto.WearLease
+import ee.schimke.terrazzo.wearsync.proto.WearPicture
 import ee.schimke.terrazzo.wearsync.proto.WearSettings
 import ee.schimke.terrazzo.wearsync.proto.WearSyncPaths
 import ee.schimke.terrazzo.wearsync.proto.WearWidgetSlots
 import ee.schimke.terrazzo.wearsync.proto.WidgetSlot
 import ee.schimke.terrazzo.wearsync.proto.decodeProto
 import ee.schimke.terrazzo.wearsync.proto.encodeProto
+import ee.schimke.terrazzo.widget.WidgetImages
 import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -81,6 +85,18 @@ import kotlinx.serialization.json.jsonPrimitive
 class MobileWearSyncManager(
   private val context: Context,
   private val statsStore: MobileSyncStatsStore,
+  /** [url] on `baseUrl` as a Wear widget picture: PNG small enough for one DataItem. */
+  private val fetchPicture: suspend (baseUrl: String, url: String) -> ByteArray? = { baseUrl, url ->
+    // Fresh: a camera's picture changes behind a URL that may not.
+    WidgetImages.png(
+      context,
+      baseUrl,
+      url,
+      WEAR_PICTURE_MAX_PX,
+      WEAR_PICTURE_MAX_BYTES,
+      fresh = true,
+    )
+  },
 ) : WearSyncManager {
 
   private val dataClient: DataClient by lazy { Wearable.getDataClient(context) }
@@ -104,6 +120,12 @@ class MobileWearSyncManager(
   private var streamJob: Job? = null
   private var recoveryJob: Job? = null
   private var lastSnapshot: Map<String, EntityValue> = emptyMap()
+
+  /** The cards in assigned Wear widget slots: whose pictures the watch needs. */
+  private val wearSlotCards: MutableStateFlow<List<CardConfig>> = MutableStateFlow(emptyList())
+
+  /** Per entity: the picture URL last pushed, its PNG's hash, and when. */
+  private val pushedPictures = HashMap<String, PushedPicture>()
 
   private val leaseListener = MessageClient.OnMessageReceivedListener { event ->
     if (event.path != WearSyncPaths.LEASE_MESSAGE) return@OnMessageReceivedListener
@@ -190,6 +212,18 @@ class MobileWearSyncManager(
         .collect { writeDataItem(WearSyncPaths.SLOTS, encodeProto(it)) }
     }
 
+    // Wear widget slot cards → whose pictures [pushPictures] sends.
+    scope.launch {
+      combine(slotsStore.slots, pinStore.cards) { slots, cards ->
+          val byKey = cards.associateBy { it.key }
+          slots
+            .filter { it.isAssigned }
+            .mapNotNull { slot -> byKey[slot.cardKey]?.card?.rawJson?.toCardConfigOrNull() }
+        }
+        .distinctUntilChanged()
+        .collect { wearSlotCards.value = it }
+    }
+
     // Session snapshot pump. Re-driven on every session change so the
     // demo session and live session each get their own loop. The
     // streaming-vs-batched decision now keys off the unified pin set
@@ -261,8 +295,9 @@ class MobileWearSyncManager(
    */
   private suspend fun sessionPump(session: HaSession, hasPinned: Boolean) {
     val cadence = session.refreshIntervalMillis ?: 30_000L
-    // Reset snapshot baseline so the first push is a full set.
+    // Reset snapshot baseline so the first push is a full set, and resend this session's pictures.
     lastSnapshot = emptyMap()
+    pushedPictures.clear()
     session.connectionStatus.first { it == SessionConnectionStatus.Connected }
     while (true) {
       // Suspend (rather than exit) when the wear API isn't usable
@@ -278,6 +313,7 @@ class MobileWearSyncManager(
         val current = snapshot.states.mapValues { (_, state) -> state.toEntityValue() }
         val streaming = hasPinned || isLeaseFresh(leaseState.value)
         if (streaming) pushStream(current) else pushDataItem(current)
+        pushPictures(session.baseUrl, snapshot)
       }
       delay(cadence)
     }
@@ -311,6 +347,30 @@ class MobileWearSyncManager(
         handleFailure("pushStream", it)
       }
     lastSnapshot = values
+  }
+
+  /**
+   * Wear widgets can't fetch pictures, so the phone sends one per pictured entity in a widget slot
+   * card ([WearPicture], `/wear/picture/<entityId>`): when its URL changes, at most every
+   * [PICTURE_REFRESH_MS], and only when the PNG differs from the one last sent.
+   */
+  private suspend fun pushPictures(baseUrl: String, snapshot: HaSnapshot) {
+    if (!wearableAvailableState.value) return
+    val now = System.currentTimeMillis()
+    for ((entityId, url) in wearPictureUrls(wearSlotCards.value, snapshot)) {
+      val last = pushedPictures[entityId]
+      if (last != null && now - last.atMs < PICTURE_REFRESH_MS) continue
+      val png =
+        runCatching { fetchPicture(baseUrl, url) }
+          .onFailure { if (it is CancellationException) throw it }
+          .getOrNull() ?: continue
+      val hash = png.contentHashCode()
+      if (last == null || last.url != url || last.pngHash != hash) {
+        val picture = WearPicture(entityId = entityId, url = url, png = png, updatedAtMs = now)
+        writeDataItem(WearSyncPaths.picturePath(entityId), encodeProto(picture))
+      }
+      pushedPictures[entityId] = PushedPicture(url, hash, now)
+    }
   }
 
   private suspend fun writeDataItem(path: String, bytes: ByteArray) {
@@ -378,6 +438,11 @@ class MobileWearSyncManager(
     const val KEY_PROTO: String = "proto"
     const val KEY_TS: String = "ts"
     private const val RECOVERY_PROBE_INTERVAL_MS = 60_000L
+
+    /** Wear widget pictures: the long edge, and one DataItem's size limit with headroom. */
+    const val WEAR_PICTURE_MAX_PX = 384
+    const val WEAR_PICTURE_MAX_BYTES = 90_000
+    private const val PICTURE_REFRESH_MS = 5 * 60_000L
   }
 }
 
@@ -388,8 +453,33 @@ private fun EntityState.toEntityValue(): EntityValue {
     friendlyName = attrs["friendly_name"]?.jsonPrimitive?.contentOrNull.orEmpty(),
     unit = attrs["unit_of_measurement"]?.jsonPrimitive?.contentOrNull.orEmpty(),
     deviceClass = attrs["device_class"]?.jsonPrimitive?.contentOrNull.orEmpty(),
+    entityPicture = attrs["entity_picture"]?.jsonPrimitive?.contentOrNull.orEmpty(),
   )
 }
+
+/**
+ * The pictures Wear widgets need: `entity_picture` by entity, for every entity the slot [cards]
+ * bind (stacks and grids included) that has one in [snapshot].
+ */
+internal fun wearPictureUrls(cards: List<CardConfig>, snapshot: HaSnapshot): Map<String, String> =
+  cards
+    .flatMap { CardDesignSlots.slotEntities(it).orEmpty() }
+    .distinct()
+    .mapNotNull { entityId ->
+      val url =
+        snapshot.states[entityId]?.attributes?.get("entity_picture")?.jsonPrimitive?.contentOrNull
+      url?.let { entityId to it }
+    }
+    .toMap()
+
+private class PushedPicture(val url: String, val pngHash: Int, val atMs: Long)
+
+private fun String.toCardConfigOrNull(): CardConfig? = runCatching {
+  val raw = json.parseToJsonElement(this) as JsonObject
+  val type = raw["type"]?.jsonPrimitive?.contentOrNull ?: return@runCatching null
+  CardConfig(type = type, raw = raw)
+}
+  .getOrNull()
 
 private fun CardConfig.toSummary(states: Map<String, EntityState> = emptyMap()): CardSummary {
   val raw = this.raw

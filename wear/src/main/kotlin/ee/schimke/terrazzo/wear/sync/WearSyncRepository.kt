@@ -8,6 +8,7 @@ import com.google.android.gms.wearable.DataEventBuffer
 import com.google.android.gms.wearable.DataMapItem
 import com.google.android.gms.wearable.MessageClient
 import com.google.android.gms.wearable.NodeClient
+import com.google.android.gms.wearable.PutDataRequest
 import com.google.android.gms.wearable.Wearable
 import com.google.android.horologist.annotations.ExperimentalHorologistApi
 import com.google.android.horologist.data.WearDataLayerRegistry
@@ -18,6 +19,7 @@ import ee.schimke.terrazzo.wearsync.proto.PinnedCardSet
 import ee.schimke.terrazzo.wearsync.proto.PinnedSectionSet
 import ee.schimke.terrazzo.wearsync.proto.StreamUpdate
 import ee.schimke.terrazzo.wearsync.proto.WearLease
+import ee.schimke.terrazzo.wearsync.proto.WearPicture
 import ee.schimke.terrazzo.wearsync.proto.WearSettings
 import ee.schimke.terrazzo.wearsync.proto.WearSyncPaths
 import ee.schimke.terrazzo.wearsync.proto.WearWidgetSlots
@@ -183,6 +185,9 @@ class WearSyncRepository(context: Context, private val scope: CoroutineScope) {
           _values.value = live.values
           offline.writeValues(live)
         }
+      // Read straight from disk by the Wear widgets when they bake.
+      path.startsWith(WearSyncPaths.PICTURE_PREFIX) ->
+        decodeProto<WearPicture>(bytes)?.let { offline.writePicture(it) }
       path.startsWith(WearSyncPaths.DASHBOARD_PREFIX) ->
         decodeProto<DashboardData>(bytes)?.let { dashboard ->
           val current = _dashboards.value.toMutableList()
@@ -197,6 +202,45 @@ class WearSyncRepository(context: Context, private val scope: CoroutineScope) {
   companion object {
     private const val TAG = "WearSync"
     const val KEY_PROTO: String = "proto"
+  }
+}
+
+/**
+ * Copies [entityIds]' pictures from the Data Layer into [store]. The Wear widgets call this when
+ * they render: [WearSyncRepository] only listens while the watch app runs, and a DataItem persists
+ * in the Data Layer whether or not anything was listening when it arrived. The newest of a
+ * picture's copies (one per sending node) wins.
+ */
+internal suspend fun syncPicturesFromDataLayer(
+  context: Context,
+  store: WearOfflineStore,
+  entityIds: Collection<String>,
+) {
+  if (entityIds.isEmpty()) return
+  val client = Wearable.getDataClient(context)
+  for (entityId in entityIds) {
+    val uri =
+      android.net.Uri.Builder()
+        .scheme(PutDataRequest.WEAR_URI_SCHEME)
+        .path(WearSyncPaths.picturePath(entityId))
+        .build()
+    val buffer = runCatching { client.getDataItems(uri).await() }.getOrNull() ?: continue
+    try {
+      val newest =
+        buffer
+          .mapNotNull { item ->
+            DataMapItem.fromDataItem(item).dataMap.getByteArray(WearSyncRepository.KEY_PROTO)?.let {
+              decodeProto<WearPicture>(it)
+            }
+          }
+          .maxByOrNull { it.updatedAtMs }
+      val stored = store.readPicture(entityId)
+      if (newest != null && (stored == null || newest.updatedAtMs > stored.updatedAtMs)) {
+        store.writePicture(newest)
+      }
+    } finally {
+      buffer.release()
+    }
   }
 }
 

@@ -15,6 +15,7 @@ import coil3.fetch.Fetcher
 import coil3.fetch.ImageFetchResult
 import coil3.fetch.SourceFetchResult
 import coil3.network.okhttp.OkHttpNetworkFetcherFactory
+import coil3.request.CachePolicy
 import coil3.request.ErrorResult
 import coil3.request.ImageRequest
 import coil3.request.Options
@@ -115,12 +116,24 @@ class HaImageStack(private val context: Context, private val lanPolicy: LanConne
   /**
    * Pre-fetch the image at [url] to an Android [Bitmap]. Used by widget capture, which must bake
    * the bytes into the doc because widget runtime has no `BitmapLoader`. Returns `null` on fetch /
-   * decode failure so callers can fall back to an icon path.
+   * decode failure so callers can fall back to an icon path. With [fresh], cached copies are
+   * skipped (the result is still cached): for a periodic refresh of a URL whose image changes in
+   * place, such as a camera proxy.
    */
-  suspend fun resolve(url: String): Bitmap? {
+  suspend fun resolve(url: String, fresh: Boolean = false): Bitmap? {
     val resolved = resolveAgainstBase(url)
-    Log.d(TAG, "resolve request input=$url resolved=$resolved")
-    val request = ImageRequest.Builder(context).data(resolved).allowHardware(false).build()
+    Log.d(TAG, "resolve request input=$url resolved=$resolved fresh=$fresh")
+    val request =
+      ImageRequest.Builder(context)
+        .data(resolved)
+        .allowHardware(false)
+        .apply {
+          if (fresh) {
+            memoryCachePolicy(CachePolicy.WRITE_ONLY)
+            diskCachePolicy(CachePolicy.WRITE_ONLY)
+          }
+        }
+        .build()
     return when (val result = imageLoader.execute(request)) {
       is SuccessResult -> {
         val img = result.image
