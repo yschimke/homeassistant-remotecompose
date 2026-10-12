@@ -1,11 +1,19 @@
 {
   "schema": "compose-preview-activity/v1",
-  "generatedAt": "2026-10-12T15:52:57.967Z",
+  "generatedAt": "2026-10-12T16:22:53.073Z",
   "windowDays": 30,
   "code": {
     "repo": "yschimke/homeassistant-remotecompose",
     "ref": "main",
     "events": [
+      {
+        "sha": "9390cd95fc981e35618c7eda2ed855fe9d7017ba",
+        "subject": "chore(deps): update yschimke/compose-ai-tools digest to 7a14996 (#777)",
+        "at": "2026-10-12T15:43:07Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
       {
         "sha": "1fbe4f491d207daebdddfe20c04a525d0e295c0b",
         "subject": "fix(deps): update dependency ee.schimke.composeai:rc-player-compose to v2.10.0 (#776)",
@@ -475,14 +483,6 @@
         "subject": "fix: pin desktop build checkouts to immutable commits (#718)",
         "at": "2026-10-10T21:46:49+01:00",
         "author": "Yuri Schimke",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "2bd596e2cd6cfaa43e037f4c944c54f067bf1415",
-        "subject": "chore(main): release 0.1.38 (#407)",
-        "at": "2026-10-10T21:21:50+01:00",
-        "author": "github-actions[bot]",
         "previewIds": [],
         "components": []
       }
