@@ -289,7 +289,7 @@ object Pages {
         "<p class=\"muted\">The card's data contract — its slots and every binding with an example " +
           "value — as <a href=\"/api/designs/${design.id}/schema\">JSON</a>.</p>"
       )
-      designButton(editor, "design", design.id)
+      designButton(editor, "design", design.id, CardSchema.fromDesign(library, design))
       append("<p class=\"muted\"><a href=\"/api/designs/${design.id}\">JSON</a></p>")
     }
   }
@@ -316,11 +316,12 @@ object Pages {
       if (error != null) append("<p class=\"error\">${esc(error)}</p>")
       if (schema != null) {
         schemaTables(schema)
-        designButton(editor, "card", input.orEmpty())
+        designButton(editor, "card", input.orEmpty(), schema)
       }
     }
 
   private fun StringBuilder.schemaTables(schema: CardSchema) {
+    for (note in schema.notes) append("<p class=\"muted\">${esc(note)}</p>")
     append("<h2>Slots <span>${schema.slots.size}</span></h2>")
     if (schema.slots.isEmpty())
       append("<p class=\"muted\">No entities: only card-level bindings.</p>")
@@ -335,15 +336,24 @@ object Pages {
       "<h2>Bindings <span>${schema.bindings.size}</span></h2><table><tr><th>Name</th><th>Type</th><th>Example</th></tr>"
     )
     for (b in schema.bindings) {
+      val type =
+        b.type.name.lowercase() +
+          if (UiBuilderSeed.supports(b.type)) ""
+          else " <span class=\"muted\">(not in UI Builder yet)</span>"
       append(
-        "<tr><td><code>${esc(b.name)}</code></td><td>${b.type.name.lowercase()}</td><td>${esc(b.example?.content ?: "")}</td></tr>"
+        "<tr><td><code>${esc(b.name)}</code></td><td>$type</td><td>${esc(b.example?.content ?: "")}</td></tr>"
       )
     }
     append("</table>")
   }
 
   /** "Design in UI Builder" for a library design or a card: a form that seeds and opens one. */
-  private fun StringBuilder.designButton(editor: EditorState, field: String, value: String) {
+  private fun StringBuilder.designButton(
+    editor: EditorState,
+    field: String,
+    value: String,
+    schema: CardSchema,
+  ) {
     when {
       !editor.enabled ->
         append(
@@ -360,6 +370,15 @@ object Pages {
         append(
           "<span class=\"muted\">Seeds an adaptive RemoteCompose layout bound to these values.</span></form>"
         )
+        val unsupported = UiBuilderSeed.unsupported(schema)
+        if (unsupported.isNotEmpty())
+          append(
+            "<p class=\"muted\">Left out of the design: UI Builder has no state for " +
+              unsupported.joinToString {
+                "<code>${esc(it.name)}</code> (${it.type.name.lowercase()})"
+              } +
+              ", so nothing in it can bind them yet.</p>"
+          )
       }
     }
   }

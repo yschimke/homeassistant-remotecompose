@@ -66,7 +66,7 @@ data class UiBuilderConfig(val apiUrl: String, val browserUrl: String, val token
           )
         val config =
           UiBuilderConfig(
-            apiUrl = "http://127.0.0.1:$port",
+            apiUrl = "http://${connectHost(host)}:$port",
             browserUrl = env["UI_BUILDER_BROWSER_URL"] ?: "http://localhost:$port",
             token = token,
           )
@@ -78,6 +78,20 @@ data class UiBuilderConfig(val apiUrl: String, val browserUrl: String, val token
           "UI_BUILDER_URL needs UI_BUILDER_TOKEN, the UI Builder's operator token"
         }
       return UiBuilderConfig(url, env["UI_BUILDER_BROWSER_URL"] ?: url, token) to null
+    }
+
+    /**
+     * Where the design server reaches a child bound to [bindHost]: the address itself, except a
+     * wildcard bind (all interfaces), which is reached on loopback. IPv6 literals are bracketed.
+     */
+    fun connectHost(bindHost: String): String {
+      val host = bindHost.trim().removePrefix("[").removeSuffix("]")
+      return when {
+        host.isEmpty() || host == "0.0.0.0" -> "127.0.0.1"
+        host == "::" || host == "0:0:0:0:0:0:0:0" -> "[::1]"
+        ':' in host -> "[$host]"
+        else -> host
+      }
     }
 
     fun randomToken(): String =
@@ -285,6 +299,17 @@ object UiBuilderSeed {
     val type = schema.cardType.lowercase().replace(Regex("[^a-z0-9]+"), "-").trim('-').take(40)
     return "card-$type-${System.currentTimeMillis().toString(36)}"
   }
+
+  /** Whether UI Builder has a state type for [type]: colours and images have none yet. */
+  fun supports(type: BindingType): Boolean = type != BindingType.Color && type != BindingType.Image
+
+  /**
+   * The bindings of [schema] a seeded design leaves out, because UI Builder has no state type for
+   * them. Shown beside "Design in UI Builder" so a designer knows before they start, rather than
+   * finding a binding missing from the design.
+   */
+  fun unsupported(schema: CardSchema): List<BindingSchema> =
+    schema.bindings.filterNot { supports(it.type) }
 
   /** A binding as a UI Builder state variable; null for kinds it has no state type for. */
   private fun stateVariable(binding: BindingSchema): JsonObject? {

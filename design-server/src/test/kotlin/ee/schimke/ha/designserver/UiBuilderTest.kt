@@ -289,6 +289,64 @@ class UiBuilderTest {
     assertTrue("sensor.s1.name" in created!!["stateVariables"]!!.jsonObject)
   }
 
+  @Test
+  fun aPastedCardTakesItsCardSpecificBindingsFromTheClosestTemplate() {
+    val library = DesignLibrary.load(library())
+    val tile = buildJsonObject {
+      put("type", "tile")
+      put("entity", "light.hall")
+    }
+    val schema = CardSchema.fromCard(tile, library = library)
+    assertEquals(DesignLibrary.idOf(key), schema.template)
+    // Every binding the template declares is in the schema, with the template example's value
+    // where the card itself has none.
+    val names = schema.bindings.map { it.name }.toSet()
+    assertTrue(library.decode(library.designs.single()).bindings.all { it.name in names })
+
+    // No template of the type: said, not silently incomplete.
+    val unknown = CardSchema.fromCard(entitiesCard, library = library)
+    assertEquals(null, unknown.template)
+    assertTrue(unknown.notes.single().startsWith("No library template for `entities`"))
+  }
+
+  @Test
+  fun colourAndImageBindingsAreReportedNotDropped() {
+    val schema =
+      CardSchema(
+        cardType = "picture-entity",
+        source = "test",
+        bindings =
+          listOf(
+            BindingSchema("camera.s0.image", BindingType.Image),
+            BindingSchema("camera.s0.name", BindingType.Text, JsonPrimitive("Door")),
+          ),
+      )
+    assertEquals(listOf("camera.s0.image"), UiBuilderSeed.unsupported(schema).map { it.name })
+    val state = UiBuilderSeed.document(schema, "d", "t")["stateVariables"]!!.jsonObject
+    assertEquals(setOf("camera.s0.name"), state.keys)
+  }
+
+  @Test
+  fun theBundledBuilderIsReachedWhereItIsBound() {
+    assertEquals("127.0.0.1", UiBuilderConfig.connectHost("0.0.0.0"))
+    assertEquals("[::1]", UiBuilderConfig.connectHost("::"))
+    assertEquals("10.0.0.5", UiBuilderConfig.connectHost("10.0.0.5"))
+    assertEquals("[fd00::5]", UiBuilderConfig.connectHost("fd00::5"))
+    val (config, _) =
+      UiBuilderConfig.fromEnvironment(
+        mapOf("UI_BUILDER_BINARY" to "/bin/true", "UI_BUILDER_HOST" to "10.0.0.5")
+      )!!
+    assertEquals("http://10.0.0.5:8724", config.apiUrl)
+  }
+
+  @Test
+  fun aLoadedLibraryServesItsBlobsAfterTheDirectoryIsReplaced() {
+    val dir = library()
+    val loaded = DesignLibrary.load(dir)
+    File(dir, "blobs").deleteRecursively()
+    assertNotNull(loaded.blob(loaded.designs.single().entry.sha256))
+  }
+
   private fun attrs(vararg pairs: Pair<String, String>) =
     JsonObject(pairs.associate { (k, v) -> k to JsonPrimitive(v) })
 }
