@@ -1,151 +1,6 @@
 {
   "entries": [
     {
-      "annotatedBasename": "DashboardClimateTablet_dashboard_climate_tablet-456c7098.a11y.png",
-      "cleanBasename": "DashboardClimateTablet_dashboard_climate_tablet-456c7098.png",
-      "findings": [
-        {
-          "boundsInScreen": "85,765,971,881",
-          "level": "ERROR",
-          "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View"
-        },
-        {
-          "boundsInScreen": "85,881,971,997",
-          "level": "ERROR",
-          "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View"
-        },
-        {
-          "boundsInScreen": "85,997,971,1113",
-          "level": "ERROR",
-          "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View"
-        },
-        {
-          "boundsInScreen": "85,1113,971,1229",
-          "level": "ERROR",
-          "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View"
-        },
-        {
-          "boundsInScreen": "85,1229,971,1345",
-          "level": "ERROR",
-          "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View"
-        },
-        {
-          "boundsInScreen": "85,1345,971,1461",
-          "level": "ERROR",
-          "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View"
-        },
-        {
-          "boundsInScreen": "85,1461,971,1577",
-          "level": "ERROR",
-          "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View"
-        },
-        {
-          "boundsInScreen": "1130,1781,2016,1897",
-          "level": "ERROR",
-          "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View"
-        },
-        {
-          "boundsInScreen": "1130,1897,2016,2013",
-          "level": "ERROR",
-          "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View"
-        },
-        {
-          "boundsInScreen": "1130,2013,2016,2129",
-          "level": "ERROR",
-          "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View"
-        },
-        {
-          "boundsInScreen": "1130,2129,2016,2245",
-          "level": "ERROR",
-          "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View"
-        },
-        {
-          "boundsInScreen": "1130,2245,2016,2361",
-          "level": "ERROR",
-          "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View"
-        },
-        {
-          "boundsInScreen": "1130,3926,2016,4042",
-          "level": "ERROR",
-          "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View"
-        },
-        {
-          "boundsInScreen": "1130,4042,2016,4158",
-          "level": "ERROR",
-          "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View"
-        },
-        {
-          "boundsInScreen": "1130,4158,2016,4274",
-          "level": "ERROR",
-          "message": "This item's height is 44dp. Consider making the height of this touch target 48dp or larger.",
-          "type": "TouchTargetSizeCheck",
-          "viewDescription": "android.view.View"
-        },
-        {
-          "boundsInScreen": "1135,2826,1284,2860",
-          "level": "INFO",
-          "message": "This non-clickable item's speakable text: \"No samples\" is identical to that of 7 other item(s).",
-          "type": "DuplicateSpeakableTextCheck",
-          "viewDescription": "android.widget.TextView"
-        },
-        {
-          "boundsInScreen": "1135,2723,1242,2757",
-          "level": "INFO",
-          "message": "This non-clickable item's speakable text: \"Last 48h\" is identical to that of 1 other item(s).",
-          "type": "DuplicateSpeakableTextCheck",
-          "viewDescription": "android.widget.TextView"
-        },
-        {
-          "boundsInScreen": "148,667,252,697",
-          "level": "INFO",
-          "message": "This non-clickable item's speakable text: \"Humidity\" is identical to that of 1 other item(s).",
-          "type": "DuplicateSpeakableTextCheck",
-          "viewDescription": "android.widget.TextView"
-        },
-        {
-          "boundsInScreen": "1917,2775,2010,2809",
-          "level": "INFO",
-          "message": "This non-clickable item's speakable text: \"no data\" is identical to that of 7 other item(s).",
-          "type": "DuplicateSpeakableTextCheck",
-          "viewDescription": "android.widget.TextView"
-        }
-      ],
-      "functionName": "DashboardClimateTablet",
-      "module": "previews",
-      "previewId": "ee.schimke.ha.previews.DashboardPreviewsKt.DashboardClimateTablet_dashboard climate \u2014 tablet",
-      "rendersDir": "previews",
-      "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/DashboardPreviews.kt",
-      "variant": ""
-    },
-    {
       "annotatedBasename": "DashboardGithubMobile_dashboard_github_mobile-8f04a7c1.a11y.png",
       "cleanBasename": "DashboardGithubMobile_dashboard_github_mobile-8f04a7c1.png",
       "findings": [
@@ -901,6 +756,10 @@
     {
       "module": "previews",
       "previewId": "ee.schimke.ha.previews.DashboardPreviewsKt.DashboardClimateMobile_dashboard climate \u2014 mobile"
+    },
+    {
+      "module": "previews",
+      "previewId": "ee.schimke.ha.previews.DashboardPreviewsKt.DashboardClimateTablet_dashboard climate \u2014 tablet"
     },
     {
       "module": "previews",
