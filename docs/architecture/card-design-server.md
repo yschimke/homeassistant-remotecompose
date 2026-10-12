@@ -47,8 +47,11 @@ values**. The client fills those bindings from its own HA connection.
 ## Spike status
 
 A first end-to-end slice is in the codebase, with **one rendering path**: every templatable card
-(today: tile, entity, button, heading, glance, entities, alarm panel, gauge, clock and the
-unsupported placeholder) renders from a card design. The design comes from the server when one is
+(today: tile, entity, button, heading, glance, entities, alarm panel, gauge, clock, area, picture-entity,
+sensor, history-graph, statistic, line statistics-graph, thermostat, humidifier, vertical / horizontal stacks, grids,
+conditional and entity-filter cards, markdown, picture, picture-glance, logbook, calendar,
+to-do list, weather forecast, light, media control, map, picture-elements, bar statistics graphs, the Bambu Lab cards and the
+unsupported placeholder) — every built-in card type renders from a card design. The design comes from the server when one is
 cached for the card's key, and from the **local design library** otherwise. The library captures
 the same template from the app's own converters on first use and keeps it for the process, so with
 no server configured (the default) cards still take the design path, just with built-in designs.
@@ -88,6 +91,42 @@ Deliberate spike limits, each owned by a milestone below:
   The clock is keyed on which lines show and its time format; the date line is `card.date` and
   another zone's offset `card.zone_offset_minutes`, so neither DST nor midnight changes its
   structure. The unsupported placeholder shows only its type, which is already in the key.
+  The area card is keyed per row on domain and `device_class`, its name is `card.name`. A
+  picture-entity template carries `rc-slot://<slot>/entity_picture` in place of the image URL;
+  playback resolves it to the card's own entity's picture and refuses every other URL a
+  template names (`CardTemplatePlayback.bitmapUrl`).
+  Sparklines (sensor, history-graph) always draw `SPARKLINE_SAMPLES` resampled points, so the
+  history length is never structure: the samples are `<slot>.numeric.<i>`, the y-range
+  `<slot>.series_min` / `series_span`, a history graph's per-row summary `<slot>.summary`, and
+  the only property the data decides is whether a row has a line at all (`has_data`).
+  The arc dials (thermostat, humidifier) already read `value_fraction`, `target_fraction` and
+  their label attributes as bindings; the client now pushes them, a state-picked accent is an
+  index into the card's own palette (`<slot>.accent_index`, selected in-document), and a
+  stepper tap is matched against the template's own steppers and rebuilt from the live target.
+  A container (stack, grid) is templated from its children (`CompositeDesign`): each child's
+  type and properties under `c<k>.`, one slot sequence over all children (child templates are
+  renumbered), child k's card-level bindings under `card.c<k>.` (`ProvideChildCardBindings`),
+  and a tap resolved by the tapped child's own playback.
+  Conditional and entity-filter cards render as the card they currently show
+  (`CardConverter.designDelegate`, resolved by `CardDesignTemplates.designCard`): the client
+  evaluates the conditions or the filter on live data and keys, binds and taps that card.
+  Markdown renders its content (tokens and Jinja alike) on the client; the template is keyed
+  on the rendered block structure and each block's text is `card.md.<i>`. Blocks with links or
+  images keep the converter, since their URLs can't be in a template.
+  List cards (logbook, calendar, to-do, weather) key on their row counts and each row's discrete
+  look (an entity's icon, a calendar's colour, a forecast day's condition group) and bind every
+  row's text (`card.row.<i>.*`, `card.day.<i>.*`, …); a to-do tap is matched against the
+  template's own items and rebuilt from the live item at that position.
+  A light and a media player key on a discrete state index (on, playing) that decides their
+  controls; brightness, progress and every label are bindings, and their taps are matched
+  against the template's own controls and rebuilt for the live entity.
+  Picture-elements key on each element's type, its position in whole dp on the card's canvas
+  and its entity's properties; every template element taps as `#el-<k>`, and playback runs
+  element k's own configured tap (a slot-less tap reaches `designAction` with `NO_SLOT`).
+  The Bambu Lab cards find their printer's entities by prefix, so a template names them with a
+  placeholder prefix (`entity_prefix: rcslot`) the client renames its printer onto; a spool's
+  colour is `<id>.color.r/g/b/a` floats composed in-document (`entityColor`), and a control tap
+  presses only the client's printer's own pause / resume / stop button.
 - **Generation properties** (`EntityDesign`) are what changes the look, per bound entity:
   `domain` (icon family, toggle chrome), `device_class` for sensors and binary sensors (icon,
   colour), the `icon` attribute and a config `icon` (`card_icon`). List cards prefix them with the
@@ -111,9 +150,26 @@ Deliberate spike limits, each owned by a milestone below:
   accent switches in-document from `is_on`. Binding them instead of keying on them is M1.
 - **No manifest signature** yet: the app accepts unsigned manifests (`allowUnsigned`). M4 adds
   signing, and the client already reserves `signature` and checks `serial` and expiry.
-- **The library is captured at runtime**, not shipped as assets, and covers the dashboard only;
-  launcher and Wear still capture directly (S1, M5, M6). No published host (M4), no UI Builder
+- **The library is captured at runtime**, not shipped as assets. It covers the dashboard,
+  launcher widgets and Wear widgets. No published host (M4), no UI Builder
   references (R1, R2, M2b).
+- **Wear widgets are baked too** (`SlotWidget`): Glance Wear captures the slot's template itself
+  (its own op set and canvas, keyed by card shape, theme, container and size) and
+  `LauncherDesigns.bakeValues` writes the card's values in. The Wear widget has no taps. The watch
+  has no Home Assistant connection or image loader, so a picture renders as its card's icon in
+  both the direct and the template capture, and picture cards bake like any other
+  (`SlotWidgetDesignTest`: pixel parity with direct captures).
+- **Launcher widgets are baked** (S1, `LauncherDesigns`): a launcher can't receive bindings, so
+  the widget's launcher template — keyed by size (`variant = <w>x<h>`) and widget theme, captured
+  from the same tree as a live widget (`LauncherWidgetContent`) — gets the card's values written
+  in on the device with `rc-player-edit` (`hardcodeNamedValues`, then
+  `collapseConstantStateLayouts` and `optimize`). Its host actions keep their ids; each
+  PendingIntent carries the card-local action the template's payload resolves to
+  (`resolved_action`, which the receiver prefers over the document's slot-named metadata). A
+  template's slot pictures are resolved to the card's own entity pictures, fetched through the
+  app's image stack and embedded (`embedBitmapUrls`); a PIN typed into the widget arrives as an
+  `AlarmPin` on the real panel with the digits from the tap's metadata. Live widgets read the
+  full-state snapshot the app's session keeps on disk (`OfflineCache`).
 
 To try it, generate the host files and serve them from any static host, then paste the URL into
 the setting:

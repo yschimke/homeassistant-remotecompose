@@ -34,12 +34,29 @@ object CardDesignSlots {
   data class SlotEntry(val entityId: String, val name: String?)
 
   /**
-   * The entities [card] binds, in slot order: its `entity:` (named by the card's `name:`), or else
-   * each `entities:` row — a bare entity id or `{ entity, name? }`. Null when it binds none.
+   * The entities [card] binds, in slot order: its `entity:` (named by the card's `name:`), or its
+   * children's (`cards:`), or else each `entities:` row — a bare entity id or `{ entity, name? }`.
+   * Null when it binds none.
    */
   fun slotEntries(card: CardConfig): List<SlotEntry>? {
     card.raw["entity"]?.jsonPrimitive?.contentOrNull?.let { id ->
       return listOf(SlotEntry(id, card.raw["name"]?.jsonPrimitive?.contentOrNull))
+    }
+    // A container (stack, grid) binds its children's entities, in order, as one slot sequence.
+    (card.raw["cards"] as? JsonArray)?.let { children ->
+      return children.flatMap { child ->
+        val obj = child as? JsonObject ?: return@flatMap emptyList()
+        val type = obj["type"]?.jsonPrimitive?.contentOrNull ?: return@flatMap emptyList()
+        slotEntries(CardConfig(type = type, raw = obj)).orEmpty()
+      }
+    }
+    // Picture elements bind each element's entity, in order.
+    (card.raw["elements"] as? JsonArray)?.let { elements ->
+      return elements.mapNotNull { el ->
+        (el as? JsonObject)?.get("entity")?.jsonPrimitive?.contentOrNull?.let {
+          SlotEntry(it, null)
+        }
+      }
     }
     val rows = card.raw["entities"] as? JsonArray ?: return null
     return rows.mapNotNull { row ->
@@ -140,6 +157,38 @@ object CardDesignSlots {
   const val STATUS_UNAVAILABLE: Int = 1
   const val STATUS_UNKNOWN: Int = 2
   const val STATUS_MISSING: Int = 3
+
+  /**
+   * The image URL a template carries for [slotId]'s `entity_picture`, in place of the real one.
+   * Playback resolves it against the card's own entity ([resolvePictureUrl]); a template can never
+   * make the client fetch any other URL.
+   */
+  fun pictureUrl(slotId: String): String = "$SLOT_URL_SCHEME$slotId/$ENTITY_PICTURE"
+
+  /**
+   * The real `entity_picture` for a template URL from [pictureUrl], looking the slot up in [card]'s
+   * own entities and [snapshot]; null for any URL that isn't a slot picture of this card.
+   */
+  fun resolvePictureUrl(url: String, card: CardConfig, snapshot: HaSnapshot?): String? {
+    if (!url.startsWith(SLOT_URL_SCHEME)) return null
+    val (slot, attribute) =
+      url.removePrefix(SLOT_URL_SCHEME).split('/', limit = 2).takeIf { it.size == 2 } ?: return null
+    if (attribute != ENTITY_PICTURE) return null
+    // By position, not through slotMap: a card can show the same entity in several slots.
+    val index = slot.substringAfter('.', "").removePrefix("s").toIntOrNull() ?: return null
+    val entityId = slotEntries(card)?.getOrNull(index)?.entityId ?: return null
+    if (slotId(domainOf(entityId), index) != slot) return null
+    return snapshot
+      ?.states
+      ?.get(entityId)
+      ?.attributes
+      ?.get(ENTITY_PICTURE)
+      ?.jsonPrimitive
+      ?.contentOrNull
+  }
+
+  private const val SLOT_URL_SCHEME = "rc-slot://"
+  private const val ENTITY_PICTURE = "entity_picture"
 
   /** Card-level title binding; matches `CARD_TITLE_BINDING` in rc-components. */
   const val CARD_TITLE: String = "card.title"

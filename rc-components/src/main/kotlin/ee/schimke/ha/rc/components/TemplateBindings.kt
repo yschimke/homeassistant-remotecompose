@@ -2,12 +2,18 @@
 
 package ee.schimke.ha.rc.components
 
+import androidx.compose.remote.creation.compose.state.RemoteColor
 import androidx.compose.remote.creation.compose.state.RemoteFloat
+import androidx.compose.remote.creation.compose.state.RemoteInt
 import androidx.compose.remote.creation.compose.state.RemoteString
+import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rf
+import androidx.compose.remote.creation.compose.state.ri
 import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.ui.graphics.Color
 
 /**
  * Bindings for **card design templates** (`docs/architecture/card-design-server.md`): text and
@@ -24,6 +30,7 @@ val LocalTemplateBindings = staticCompositionLocalOf<TemplateBindings?> { null }
 class TemplateBindings {
   internal val strings = mutableMapOf<String, RemoteString>()
   internal val floats = mutableMapOf<String, RemoteFloat>()
+  internal val ints = mutableMapOf<String, RemoteInt>()
 }
 
 /**
@@ -44,13 +51,30 @@ fun entityName(entityId: String?, name: String): RemoteString {
  */
 @Composable fun cardTitle(title: String): RemoteString = cardText("title", title)
 
+/**
+ * The prefix of card-level bindings for the card being captured: `card` for a top-level card, and
+ * `card.c<k>` for the k-th child of a container, so two children's `title`s are two bindings.
+ */
+val LocalCardBindingPrefix = staticCompositionLocalOf { CARD_BINDING_PREFIX }
+
+/** Captures [content] as the [index]-th child of the current card: see [LocalCardBindingPrefix]. */
+@Composable
+fun ProvideChildCardBindings(index: Int, content: @Composable () -> Unit) {
+  CompositionLocalProvider(
+    LocalCardBindingPrefix provides childCardBindingPrefix(LocalCardBindingPrefix.current, index),
+    content = content,
+  )
+}
+
+/** The card-level binding prefix of child [index] under [parent]. */
+fun childCardBindingPrefix(parent: String, index: Int): String = "$parent.c$index"
+
 /** Card-level text `card.<field>`: a binding inside a template capture, else [value] literally. */
 @Composable
 fun cardText(field: String, value: String): RemoteString {
   val bindings = LocalTemplateBindings.current ?: return value.rs
-  return bindings.strings.getOrPut("$CARD_BINDING_PREFIX.$field") {
-    LiveValues.named(CARD_BINDING_PREFIX, field, value)
-  }
+  val prefix = LocalCardBindingPrefix.current
+  return bindings.strings.getOrPut("$prefix.$field") { LiveValues.named(prefix, field, value) }
 }
 
 /**
@@ -61,9 +85,59 @@ fun cardText(field: String, value: String): RemoteString {
 @Composable
 fun cardFloat(field: String, value: Float): RemoteFloat {
   val bindings = LocalTemplateBindings.current ?: return value.rf
-  return bindings.floats.getOrPut("$CARD_BINDING_PREFIX.$field") {
-    LiveValues.namedFloat(CARD_BINDING_PREFIX, field, value)
+  val prefix = LocalCardBindingPrefix.current
+  return bindings.floats.getOrPut("$prefix.$field") { LiveValues.namedFloat(prefix, field, value) }
+}
+
+/**
+ * Text derived from [entityId]'s data that a live capture bakes (a unit, an aggregate):
+ * `<entityId>.<field>` inside a template capture, otherwise [value] as a literal.
+ */
+@Composable
+fun entityText(entityId: String?, field: String, value: String): RemoteString {
+  val bindings = LocalTemplateBindings.current ?: return value.rs
+  if (entityId == null) return value.rs
+  return bindings.strings.getOrPut("$entityId.$field") { LiveValues.named(entityId, field, value) }
+}
+
+/**
+ * A number derived from [entityId]'s data that a live capture bakes (a sparkline's y-range):
+ * `<entityId>.<field>` as a named float inside a template capture, otherwise the constant [value].
+ */
+@Composable
+fun entityFloat(entityId: String?, field: String, value: Float): RemoteFloat {
+  val bindings = LocalTemplateBindings.current ?: return value.rf
+  if (entityId == null) return value.rf
+  return bindings.floats.getOrPut("$entityId.$field") {
+    LiveValues.namedFloat(entityId, field, value)
   }
+}
+
+/**
+ * An index derived from [entityId]'s state that a live capture bakes (which accent a state picks):
+ * `<entityId>.<field>` as a named int inside a template capture, otherwise the constant [value].
+ */
+@Composable
+fun entityInt(entityId: String?, field: String, value: Int): RemoteInt {
+  val bindings = LocalTemplateBindings.current ?: return value.ri
+  if (entityId == null) return value.ri
+  return bindings.ints.getOrPut("$entityId.$field") { LiveValues.namedInt(entityId, field, value) }
+}
+
+/**
+ * A colour taken from [entityId]'s data (a filament spool's swatch): the constant [color] in a live
+ * capture; in a design template, `<entityId>.<field>.r` / `.g` / `.b` / `.a` floats composed
+ * in-document, so the colour is a value the client pushes, never part of the template.
+ */
+@Composable
+fun entityColor(entityId: String?, field: String, color: Color): RemoteColor {
+  if (LocalTemplateBindings.current == null || entityId == null) return color.rc
+  return RemoteColor.rgb(
+    entityFloat(entityId, "$field.r", color.red),
+    entityFloat(entityId, "$field.g", color.green),
+    entityFloat(entityId, "$field.b", color.blue),
+    entityFloat(entityId, "$field.a", color.alpha),
+  )
 }
 
 /** Binding-name prefix for card-level (not per-entity) bindings: `card.title`, … */

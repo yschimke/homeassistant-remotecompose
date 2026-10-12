@@ -49,7 +49,7 @@ fun RemoteHaMarkdown(data: HaMarkdownData, modifier: RemoteModifier = RemoteModi
     RemoteColumn {
       if (data.title != null) {
         RemoteText(
-          text = data.title.rs,
+          text = cardTitle(data.title),
           color = theme.primaryText,
           fontSize = adaptiveTitleSizeSp(data.title).rsp,
           fontWeight = FontWeight.Medium,
@@ -131,7 +131,7 @@ fun RemoteHaMarkdownIdentity(data: HaMarkdownData, modifier: RemoteModifier = Re
     ) {
       if (data.title != null) {
         RemoteText(
-          text = data.title.rs,
+          text = cardTitle(data.title),
           color = theme.primaryText,
           fontSize = 16.rsp,
           fontWeight = FontWeight.SemiBold,

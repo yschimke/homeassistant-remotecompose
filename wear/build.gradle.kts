@@ -38,6 +38,7 @@ android {
     targetCompatibility = JavaVersion.toVersion(libs.versions.java.get())
   }
   kotlin { jvmToolchain(libs.versions.java.get().toInt()) }
+  testOptions { unitTests.isIncludeAndroidResources = true }
   lint {
     // Compose Preview plugin generates preview parameter providers under
     // build/generated that can reference @RestrictTo APIs from Glance Wear.
@@ -46,6 +47,33 @@ android {
     checkGeneratedSources = false
   }
 }
+
+// Robolectric's SDK jar, resolved by Gradle (offline at test time) — same setup as
+// `:rc-converter`. Used by the Wear widget design test, which captures real Glance Wear documents.
+val robolectricSdk by configurations.creating {
+  isCanBeConsumed = false
+  isTransitive = false
+}
+val prepareRobolectricSdk by
+  tasks.registering(Sync::class) {
+    from(robolectricSdk)
+    into(layout.buildDirectory.dir("robolectric-sdk"))
+  }
+
+// Unit tests only: the Compose Preview renderer (`composePreviewRender`) is a Test task too, and
+// resolves its own Robolectric SDK.
+tasks
+  .withType<Test>()
+  .matching { it.name.endsWith("UnitTest") }
+  .configureEach {
+    inputs.files(robolectricSdk)
+    dependsOn(prepareRobolectricSdk)
+    systemProperty("robolectric.offline", "true")
+    systemProperty(
+      "robolectric.dependency.dir",
+      layout.buildDirectory.dir("robolectric-sdk").get().asFile.absolutePath,
+    )
+  }
 
 play {
   // First Wear rollout uses Play internal testing for watch-only QA.
@@ -114,6 +142,14 @@ dependencies {
 
   implementation(libs.kotlinx.coroutines.core)
   implementation(libs.kotlinx.serialization.json)
+
+  testImplementation(libs.kotlin.test)
+  testImplementation(libs.kotlin.test.junit)
+  testImplementation(libs.kotlinx.coroutines.test)
+  testImplementation("org.robolectric:robolectric:4.17")
+  testImplementation(libs.compose.ui.test.junit4)
+  testImplementation(libs.rc.player.edit)
+  robolectricSdk("org.robolectric:android-all-instrumented:15-robolectric-13954326-i7")
 
   androidTestImplementation(libs.androidx.test.ext.junit)
   androidTestImplementation(libs.androidx.test.runner)

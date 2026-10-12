@@ -5,10 +5,13 @@ import androidx.compose.material.icons.filled.Lightbulb
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import ee.schimke.ha.design.DesignProperties
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.CardConverter
+import ee.schimke.ha.rc.CardSnapshotBindings
+import ee.schimke.ha.rc.DesignTemplateInput
 import ee.schimke.ha.rc.cardDataSignature
 import ee.schimke.ha.rc.cardEntityIds
 import ee.schimke.ha.rc.components.HaAction
@@ -39,58 +42,95 @@ class LightCardConverter : CardConverter {
 
   override fun naturalHeightDp(card: CardConfig, snapshot: HaSnapshot): Int = 250
 
+  /**
+   * A light renders from a card design. Its steppers, accent and labels follow whether it is on — a
+   * discrete state the client keys on (`on`); brightness and labels are bindings ([DialCard]).
+   */
+  override fun designProperties(card: CardConfig, snapshot: HaSnapshot): DesignProperties? =
+    dial.properties(card, snapshot)
+
+  override fun designTemplate(properties: DesignProperties): DesignTemplateInput? =
+    dial.template(properties)
+
+  override fun designBindings(card: CardConfig, snapshot: HaSnapshot): CardSnapshotBindings =
+    dial.bindings(card, snapshot)
+
+  override fun designAction(
+    card: CardConfig,
+    snapshot: HaSnapshot?,
+    slot: Int,
+    templateAction: HaAction,
+  ): HaAction? = dial.action(card, snapshot, templateAction)
+
   @Composable
   override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
-    val entityId = card.raw["entity"]?.jsonPrimitive?.content
-    val entity = entityId?.let { snapshot.states[it] }
-    val attrs = entity?.attributes ?: JsonObject(emptyMap())
-    val name =
-      card.raw["name"]?.jsonPrimitive?.content
-        ?: attrs["friendly_name"]?.jsonPrimitive?.content
-        ?: entityId
-        ?: "Light"
-    val isOn = entity?.state == "on"
-    val brightness = attrs["brightness"]?.jsonPrimitive?.content?.toFloatOrNull()
-    val fraction = if (isOn) (brightness ?: 255f) / 255f else 0f
-    val accent = if (isOn) Color(0xFFFFBE3E) else Color(0xFFB0B0B0)
-    val centerLabel = if (isOn) "${(fraction * 100f).toInt()}%" else "Off"
-    // Static chip (not Toggle): a `RemoteStateLayout`-backed Toggle
-    // chip nested inside the Fixed-mode `RenderArcDial` breakpoint
-    // collapses to its captured branch (#224), painting "Off" over
-    // the bulb on the full tier. Thermostat / humidifier use a Static
-    // chip for the same reason; the on/off label is baked at capture
-    // and refreshed on re-encode like every other arc-dial label.
-    val modeChip =
-      HaModeChip.Static(
-        entityId = entityId,
-        attribute = "is_on_label",
-        initial = if (isOn) "On" else "Off",
-      )
-
-    val tap = entityId?.let { HaAction.Toggle(it) } ?: HaAction.None
-    val (inc, dec) = brightnessSteppers(entityId, isOn, brightness)
-
-    RenderArcDial(
-      HaArcDialData(
-        entityId = entityId,
-        name = name,
-        valueFraction = fraction,
-        targetFraction = null,
-        centerLabel = centerLabel,
-        centerLabelAttribute = "brightness_pct",
-        supportingLabel = null,
-        supportingLabelAttribute = null,
-        modeChip = modeChip,
-        accent = accent,
-        showSteppers = isOn,
-        centerIcon = Icons.Filled.Lightbulb,
-        tapAction = tap,
-        incrementAction = inc,
-        decrementAction = dec,
-      ),
-      modifier = modifier,
-    )
+    RenderArcDial(lightDial(card, snapshot), modifier = modifier)
   }
+
+  private val dial =
+    DialCard(
+      cardType = cardType,
+      domain = "light",
+      configKeys = setOf("type", "entity", "name"),
+      placeholder = { properties ->
+        if (properties["on"] == "1") "on" to mapOf("brightness" to "128") else "off" to emptyMap()
+      },
+      data = ::lightDial,
+      structure = { card, snapshot, _ ->
+        val id = card.raw["entity"]?.jsonPrimitive?.content
+        mapOf("on" to if (id != null && snapshot.states[id]?.state == "on") 1 else 0)
+      },
+    )
+}
+
+/** The light's dial for [card] and [snapshot]: what it draws, and what a template binds. */
+internal fun lightDial(card: CardConfig, snapshot: HaSnapshot): HaArcDialData {
+  val entityId = card.raw["entity"]?.jsonPrimitive?.content
+  val entity = entityId?.let { snapshot.states[it] }
+  val attrs = entity?.attributes ?: JsonObject(emptyMap())
+  val name =
+    card.raw["name"]?.jsonPrimitive?.content
+      ?: attrs["friendly_name"]?.jsonPrimitive?.content
+      ?: entityId
+      ?: "Light"
+  val isOn = entity?.state == "on"
+  val brightness = attrs["brightness"]?.jsonPrimitive?.content?.toFloatOrNull()
+  val fraction = if (isOn) (brightness ?: 255f) / 255f else 0f
+  val accent = if (isOn) Color(0xFFFFBE3E) else Color(0xFFB0B0B0)
+  val centerLabel = if (isOn) "${(fraction * 100f).toInt()}%" else "Off"
+  // Static chip (not Toggle): a `RemoteStateLayout`-backed Toggle
+  // chip nested inside the Fixed-mode `RenderArcDial` breakpoint
+  // collapses to its captured branch (#224), painting "Off" over
+  // the bulb on the full tier. Thermostat / humidifier use a Static
+  // chip for the same reason; the on/off label is baked at capture
+  // and refreshed on re-encode like every other arc-dial label.
+  val modeChip =
+    HaModeChip.Static(
+      entityId = entityId,
+      attribute = "is_on_label",
+      initial = if (isOn) "On" else "Off",
+    )
+
+  val tap = entityId?.let { HaAction.Toggle(it) } ?: HaAction.None
+  val (inc, dec) = brightnessSteppers(entityId, isOn, brightness)
+
+  return HaArcDialData(
+    entityId = entityId,
+    name = name,
+    valueFraction = fraction,
+    targetFraction = null,
+    centerLabel = centerLabel,
+    centerLabelAttribute = "brightness_pct",
+    supportingLabel = null,
+    supportingLabelAttribute = null,
+    modeChip = modeChip,
+    accent = accent,
+    showSteppers = isOn,
+    centerIcon = Icons.Filled.Lightbulb,
+    tapAction = tap,
+    incrementAction = inc,
+    decrementAction = dec,
+  )
 }
 
 private fun brightnessSteppers(

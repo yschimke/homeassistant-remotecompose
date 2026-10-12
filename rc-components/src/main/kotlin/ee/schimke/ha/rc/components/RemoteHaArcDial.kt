@@ -28,12 +28,14 @@ import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.modifier.size
 import androidx.compose.remote.creation.compose.shapes.RemoteCircleShape
+import androidx.compose.remote.creation.compose.state.RemoteColor
 import androidx.compose.remote.creation.compose.state.RemoteFloat
 import androidx.compose.remote.creation.compose.state.RemoteString
 import androidx.compose.remote.creation.compose.state.asRemotePaint
 import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rf
+import androidx.compose.remote.creation.compose.state.ri
 import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.remote.creation.compose.state.rsp
 import androidx.compose.remote.creation.compose.text.RemoteTextStyle
@@ -85,7 +87,7 @@ fun RemoteHaArcDial(data: HaArcDialData, modifier: RemoteModifier = RemoteModifi
       verticalArrangement = RemoteArrangement.spacedBy(4.rdp),
     ) {
       RemoteText(
-        text = data.name.rs,
+        text = entityName(data.entityId, data.name),
         color = theme.primaryText,
         fontSize = 14.rsp,
         fontWeight = FontWeight.Medium,
@@ -95,7 +97,7 @@ fun RemoteHaArcDial(data: HaArcDialData, modifier: RemoteModifier = RemoteModifi
       )
       DialBody(data, theme)
       if (data.showSteppers) {
-        Steppers(data.accent, data.incrementAction, data.decrementAction, theme)
+        Steppers(dialAccent(data), data.incrementAction, data.decrementAction, theme)
       }
     }
   }
@@ -149,7 +151,7 @@ fun RemoteHaArcDialWide(data: HaArcDialData, modifier: RemoteModifier = RemoteMo
       verticalArrangement = RemoteArrangement.Center,
       horizontalAlignment = RemoteAlignment.Start,
     ) {
-      ModeChip(data.modeChip, data.accent)
+      ModeChip(data.modeChip, dialAccent(data))
       RemoteText(
         text = LiveValues.attribute(data.entityId, data.centerLabelAttribute, data.centerLabel),
         color = theme.primaryText,
@@ -167,7 +169,7 @@ fun RemoteHaArcDialWide(data: HaArcDialData, modifier: RemoteModifier = RemoteMo
               data.supportingLabelAttribute,
               data.supportingLabel,
             ),
-          color = data.accent.rc,
+          color = dialAccent(data),
           fontSize = 12.rsp,
           style = RemoteTextStyle.Default,
           maxLines = 1,
@@ -196,12 +198,12 @@ private fun DialBody(data: HaArcDialData, theme: RemoteHaTheme) {
       if (data.centerIcon != null) {
         RemoteIcon(
           imageVector = data.centerIcon.toRemoteImageVector(),
-          contentDescription = data.name.rs,
+          contentDescription = entityName(data.entityId, data.name),
           modifier = RemoteModifier.size(40.rdp),
-          tint = data.accent.rc,
+          tint = dialAccent(data),
         )
       }
-      ModeChip(data.modeChip, data.accent)
+      ModeChip(data.modeChip, dialAccent(data))
       RemoteText(
         text = LiveValues.attribute(data.entityId, data.centerLabelAttribute, data.centerLabel),
         color = theme.primaryText,
@@ -219,7 +221,7 @@ private fun DialBody(data: HaArcDialData, theme: RemoteHaTheme) {
               data.supportingLabelAttribute,
               data.supportingLabel,
             ),
-          color = data.accent.rc,
+          color = dialAccent(data),
           fontSize = 12.rsp,
           style = RemoteTextStyle.Default,
           maxLines = 1,
@@ -231,7 +233,7 @@ private fun DialBody(data: HaArcDialData, theme: RemoteHaTheme) {
 
 @Composable
 @RemoteComposable
-private fun ModeChip(chip: HaModeChip?, accent: Color) {
+private fun ModeChip(chip: HaModeChip?, accent: RemoteColor) {
   if (chip == null) return
   when (chip) {
     is HaModeChip.Static ->
@@ -256,10 +258,10 @@ private fun ModeChip(chip: HaModeChip?, accent: Color) {
 
 @Composable
 @RemoteComposable
-private fun ChipText(text: RemoteString, accent: Color) {
+private fun ChipText(text: RemoteString, accent: RemoteColor) {
   RemoteText(
     text = text,
-    color = accent.rc,
+    color = accent,
     fontSize = 12.rsp,
     fontWeight = FontWeight.Medium,
     style = RemoteTextStyle.Default,
@@ -296,6 +298,7 @@ private fun ArcCanvas(
     if (rawTargetFraction != null) animateRemoteFloat(rawTargetFraction, DialAnimationSeconds)
     else null
   val animatedMarkerAngle = animatedTargetFraction?.let { 135f.rf + it * 270f.rf }
+  val accent = dialAccent(data)
 
   RemoteCanvas(modifier = RemoteModifier.fillMaxSize()) {
     val w = width
@@ -329,9 +332,9 @@ private fun ArcCanvas(
           style = AndroidPaint.Style.STROKE
           strokeWidth = fillStrokePx
           strokeCap = AndroidPaint.Cap.ROUND
-          color = data.accent.toArgb()
         }
         .asRemotePaint()
+        .apply { color = accent }
     drawArc(fill, 135f.rf, animatedSweep, false, topLeft, arcSize)
 
     if (animatedMarkerAngle != null) {
@@ -354,7 +357,7 @@ private const val DialAnimationSeconds = 0.45f
 
 @Composable
 private fun Steppers(
-  accent: Color,
+  accent: RemoteColor,
   incrementAction: HaAction,
   decrementAction: HaAction,
   theme: RemoteHaTheme,
@@ -372,7 +375,7 @@ private fun Steppers(
 private fun StepperButton(
   icon: androidx.compose.ui.graphics.vector.ImageVector,
   action: HaAction,
-  accent: Color,
+  accent: RemoteColor,
   theme: RemoteHaTheme,
 ) {
   val click = action.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
@@ -388,7 +391,7 @@ private fun StepperButton(
       imageVector = icon.toRemoteImageVector(),
       contentDescription = "stepper".rs,
       modifier = RemoteModifier.size(20.rdp),
-      tint = accent.rc,
+      tint = accent,
     )
   }
 }
@@ -400,3 +403,22 @@ private fun Color.toArgb(): Int =
     (green * 255f).toInt(),
     (blue * 255f).toInt(),
   )
+
+/**
+ * The dial's accent. A live capture paints [HaArcDialData.accent]. A design template whose card
+ * picks its accent from the entity's state ([HaArcDialData.accentChoices]) selects among the
+ * choices in-document by `<entityId>.accent_index`, so the state never decides a colour at capture
+ * time.
+ */
+@Composable
+private fun dialAccent(data: HaArcDialData): RemoteColor {
+  val choices = data.accentChoices
+  if (choices.isNullOrEmpty() || LocalTemplateBindings.current == null) return data.accent.rc
+  val index =
+    entityInt(data.entityId, "accent_index", choices.indexOf(data.accent).coerceAtLeast(0))
+  var color = choices.last().rc
+  for (i in choices.indices.reversed().drop(1)) {
+    color = index.isEqualTo(i.ri).select(choices[i].rc, color)
+  }
+  return color
+}

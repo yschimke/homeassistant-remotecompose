@@ -50,7 +50,7 @@ fun RemoteHaLogbook(data: HaLogbookData, modifier: RemoteModifier = RemoteModifi
     RemoteColumn(verticalArrangement = RemoteArrangement.spacedBy(8.rdp)) {
       if (data.title != null) {
         RemoteText(
-          text = data.title.rs,
+          text = cardTitle(data.title),
           color = theme.primaryText,
           fontSize = 15.rsp,
           fontWeight = FontWeight.Medium,
@@ -67,7 +67,7 @@ fun RemoteHaLogbook(data: HaLogbookData, modifier: RemoteModifier = RemoteModifi
           style = RemoteTextStyle.Default,
         )
       } else {
-        data.entries.forEach { entry -> Entry(entry, theme) }
+        data.entries.forEachIndexed { i, entry -> Entry(i, entry, theme) }
       }
     }
   }
@@ -138,20 +138,21 @@ fun RemoteHaLogbookIdentity(data: HaLogbookData, modifier: RemoteModifier = Remo
 }
 
 @Composable
-private fun Entry(entry: HaLogbookEntry, theme: RemoteHaTheme) {
+private fun Entry(index: Int, entry: HaLogbookEntry, theme: RemoteHaTheme) {
+  val name = cardText("row.$index.name", entry.name)
   RemoteRow(
     modifier = RemoteModifier.fillMaxWidth(),
     verticalAlignment = RemoteAlignment.CenterVertically,
   ) {
     RemoteIcon(
       imageVector = entry.icon.toRemoteImageVector(),
-      contentDescription = entry.name.rs,
+      contentDescription = name,
       modifier = RemoteModifier.size(16.rdp),
       tint = theme.secondaryText,
     )
     RemoteColumn(modifier = RemoteModifier.weight(1f).padding(start = 10.rdp)) {
       RemoteText(
-        text = entry.name.rs,
+        text = name,
         color = theme.primaryText,
         fontSize = 13.rsp,
         fontWeight = FontWeight.Medium,
@@ -160,7 +161,7 @@ private fun Entry(entry: HaLogbookEntry, theme: RemoteHaTheme) {
         overflow = TextOverflow.Ellipsis,
       )
       RemoteText(
-        text = entry.message.rs,
+        text = cardText("row.$index.message", entry.message),
         color = theme.secondaryText,
         fontSize = 12.rsp,
         style = RemoteTextStyle.Default,
@@ -169,7 +170,7 @@ private fun Entry(entry: HaLogbookEntry, theme: RemoteHaTheme) {
       )
     }
     RemoteText(
-      text = entry.whenText.rs,
+      text = cardText("row.$index.when", entry.whenText),
       color = theme.secondaryText,
       fontSize = 11.rsp,
       style = RemoteTextStyle.Default,

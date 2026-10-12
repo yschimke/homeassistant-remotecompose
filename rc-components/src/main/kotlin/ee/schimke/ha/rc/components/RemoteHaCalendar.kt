@@ -49,7 +49,7 @@ fun RemoteHaCalendar(data: HaCalendarData, modifier: RemoteModifier = RemoteModi
         verticalAlignment = RemoteAlignment.CenterVertically,
       ) {
         RemoteText(
-          text = data.title.rs,
+          text = cardTitle(data.title),
           color = theme.primaryText,
           fontSize = 16.rsp,
           fontWeight = FontWeight.Medium,
@@ -58,7 +58,7 @@ fun RemoteHaCalendar(data: HaCalendarData, modifier: RemoteModifier = RemoteModi
           overflow = TextOverflow.Ellipsis,
         )
         RemoteText(
-          text = data.rangeLabel.rs,
+          text = cardText("range", data.rangeLabel),
           color = theme.secondaryText,
           fontSize = 11.rsp,
           style = RemoteTextStyle.Default,
@@ -73,7 +73,7 @@ fun RemoteHaCalendar(data: HaCalendarData, modifier: RemoteModifier = RemoteModi
           style = RemoteTextStyle.Default,
         )
       } else {
-        data.events.forEach { Event(it, theme) }
+        data.events.forEachIndexed { i, event -> Event(i, event, theme) }
       }
     }
   }
@@ -147,7 +147,7 @@ fun RemoteHaCalendarIdentity(data: HaCalendarData, modifier: RemoteModifier = Re
 }
 
 @Composable
-private fun Event(event: HaCalendarEvent, theme: RemoteHaTheme) {
+private fun Event(index: Int, event: HaCalendarEvent, theme: RemoteHaTheme) {
   RemoteRow(
     modifier = RemoteModifier.fillMaxWidth().padding(vertical = 2.rdp),
     verticalAlignment = RemoteAlignment.CenterVertically,
@@ -157,13 +157,13 @@ private fun Event(event: HaCalendarEvent, theme: RemoteHaTheme) {
     )
     RemoteColumn(modifier = RemoteModifier.padding(start = 10.rdp)) {
       RemoteText(
-        text = event.whenLabel.rs,
+        text = cardText("row.$index.when", event.whenLabel),
         color = theme.secondaryText,
         fontSize = 11.rsp,
         style = RemoteTextStyle.Default,
       )
       RemoteText(
-        text = event.summary.rs,
+        text = cardText("row.$index.summary", event.summary),
         color = theme.primaryText,
         fontSize = 13.rsp,
         fontWeight = FontWeight.Medium,

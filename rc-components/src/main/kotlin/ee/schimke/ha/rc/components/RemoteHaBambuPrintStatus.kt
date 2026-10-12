@@ -21,7 +21,6 @@ import androidx.compose.remote.creation.compose.modifier.size
 import androidx.compose.remote.creation.compose.state.asRemotePaint
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rf
-import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.remote.creation.compose.state.rsp
 import androidx.compose.remote.creation.compose.text.RemoteTextStyle
 import androidx.compose.runtime.Composable
@@ -62,7 +61,7 @@ fun RemoteHaBambuPrintStatus(
   ) {
     RemoteColumn(verticalArrangement = RemoteArrangement.spacedBy(8.rdp)) {
       RemoteText(
-        text = data.printerName.rs,
+        text = cardText("printer", data.printerName),
         color = theme.secondaryText,
         fontSize = 11.rsp,
         style = RemoteTextStyle.Default,
@@ -73,7 +72,7 @@ fun RemoteHaBambuPrintStatus(
         modifier = RemoteModifier.fillMaxWidth(),
         verticalAlignment = RemoteAlignment.CenterVertically,
       ) {
-        ProgressRing(data.progressFraction, data.accent, theme)
+        ProgressRing(data.progressEntityId, data.progressFraction, data.accent, theme)
         RemoteColumn(
           modifier = RemoteModifier.padding(start = 14.rdp),
           verticalArrangement = RemoteArrangement.spacedBy(2.rdp),
@@ -145,8 +144,16 @@ fun RemoteHaBambuPrintStatus(
 }
 
 @Composable
-private fun ProgressRing(fraction: Float, accent: Color, theme: RemoteHaTheme) {
+private fun ProgressRing(
+  entityId: String?,
+  fraction: Float,
+  accent: Color,
+  theme: RemoteHaTheme,
+) {
   val sweep = (fraction.coerceIn(0f, 1f) * 360f)
+  // `<entityId>.progress_fraction`: constant in a live capture, bound in a design template. Whether
+  // the arc exists at all stays structure (a template keys on it).
+  val sweepRf = entityFloat(entityId, "progress_fraction", fraction.coerceIn(0f, 1f)) * 360f.rf
   RemoteBox(modifier = RemoteModifier.size(64.rdp)) {
     RemoteCanvas(modifier = RemoteModifier.size(64.rdp)) {
       val w = width
@@ -180,7 +187,7 @@ private fun ProgressRing(fraction: Float, accent: Color, theme: RemoteHaTheme) {
             }
             .asRemotePaint()
         // Start at 12 o'clock (Android draws 0° at 3 o'clock).
-        drawArc(progress, (-90f).rf, sweep.rf, false, topLeft, arcSize)
+        drawArc(progress, (-90f).rf, sweepRf, false, topLeft, arcSize)
       }
     }
   }

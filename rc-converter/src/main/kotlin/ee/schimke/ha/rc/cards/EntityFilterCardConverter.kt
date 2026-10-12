@@ -25,24 +25,18 @@ class EntityFilterCardConverter : CardConverter {
 
   override fun naturalHeightDp(card: CardConfig, snapshot: HaSnapshot): Int = 150
 
+  /**
+   * An entity filter renders as the card it builds over the matching entities: the client filters
+   * on live data, and the result keys, binds and taps as that card does.
+   */
+  override fun designDelegate(card: CardConfig, snapshot: HaSnapshot): CardConfig =
+    filteredCard(card, snapshot)
+
   @Composable
   override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
-    val ids = filteredEntities(card, snapshot)
-    val cardCfg = card.raw["card"] as? JsonObject
-    val targetType = cardCfg?.get("type")?.jsonPrimitive?.content ?: "glance"
-    val title = cardCfg?.get("title")?.jsonPrimitive?.content ?: "Entity filter"
-    val mergedRaw = buildJsonObject {
-      put("type", JsonPrimitive(targetType))
-      put("title", JsonPrimitive(title))
-      put("entities", buildJsonArray { ids.forEach { add(JsonPrimitive(it)) } })
-      cardCfg?.entries?.forEach { (k, v) ->
-        if (k != "type" && k != "title" && k != "entities") put(k, v)
-      }
-    }
-    val sub = ee.schimke.ha.model.CardConfig(type = targetType, raw = mergedRaw)
+    val sub = filteredCard(card, snapshot)
     val converter: CardConverter =
-      when (targetType) {
-        "glance" -> GlanceCardConverter()
+      when (sub.type) {
         "entities" -> EntitiesCardConverter()
         "tile" -> TileCardConverter()
         else -> GlanceCardConverter()
@@ -102,4 +96,25 @@ private fun matches(state: String, filter: kotlinx.serialization.json.JsonElemen
     }
     else -> false
   }
+}
+
+/**
+ * The card an entity filter shows: its `card:` (a glance by default) over the matching entities.
+ */
+private fun filteredCard(card: CardConfig, snapshot: HaSnapshot): CardConfig {
+  val ids = filteredEntities(card, snapshot)
+  val cardCfg = card.raw["card"] as? JsonObject
+  val requested = cardCfg?.get("type")?.jsonPrimitive?.content ?: "glance"
+  // Only these render the filtered rows; anything else falls back to a glance, as Render does.
+  val targetType = if (requested in setOf("glance", "entities", "tile")) requested else "glance"
+  val title = cardCfg?.get("title")?.jsonPrimitive?.content ?: "Entity filter"
+  val mergedRaw = buildJsonObject {
+    put("type", JsonPrimitive(targetType))
+    put("title", JsonPrimitive(title))
+    put("entities", buildJsonArray { ids.forEach { add(JsonPrimitive(it)) } })
+    cardCfg?.entries?.forEach { (k, v) ->
+      if (k != "type" && k != "title" && k != "entities") put(k, v)
+    }
+  }
+  return CardConfig(type = targetType, raw = mergedRaw)
 }

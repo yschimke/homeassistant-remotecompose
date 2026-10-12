@@ -129,7 +129,7 @@ private fun CurrentRow(data: HaWeatherForecastData, theme: RemoteHaTheme) {
           )
         } else {
           RemoteText(
-            text = data.name.rs,
+            text = entityName(data.entityId, data.name),
             color = theme.secondaryText,
             fontSize = 12.rsp,
             style = RemoteTextStyle.Default,
@@ -151,7 +151,7 @@ private fun CurrentRow(data: HaWeatherForecastData, theme: RemoteHaTheme) {
       )
       if (data.highLow != null) {
         RemoteText(
-          text = data.highLow.rs,
+          text = cardText("high_low", data.highLow),
           color = theme.secondaryText,
           fontSize = 13.rsp,
           style = RemoteTextStyle.Default,
@@ -175,7 +175,7 @@ private fun ExtraInfoRow(extras: List<HaWeatherExtra>, theme: RemoteHaTheme) {
     horizontalArrangement = RemoteArrangement.spacedBy(8.rdp),
     verticalAlignment = RemoteAlignment.CenterVertically,
   ) {
-    extras.forEach { extra ->
+    extras.forEachIndexed { i, extra ->
       RemoteColumn(
         modifier =
           RemoteModifier.weight(1f)
@@ -192,7 +192,7 @@ private fun ExtraInfoRow(extras: List<HaWeatherExtra>, theme: RemoteHaTheme) {
           tint = theme.secondaryText,
         )
         RemoteText(
-          text = extra.value.rs,
+          text = cardText("extra.$i", extra.value),
           color = theme.primaryText,
           fontSize = 13.rsp,
           fontWeight = FontWeight.Medium,
@@ -253,7 +253,7 @@ fun RemoteHaWeatherForecastWide(
         overflow = TextOverflow.Ellipsis,
       )
       RemoteText(
-        text = (data.supportingLine ?: data.name).rs,
+        text = data.supportingLine?.rs ?: entityName(data.entityId, data.name),
         color = theme.secondaryText,
         fontSize = 11.rsp,
         style = RemoteTextStyle.Default,
@@ -285,7 +285,8 @@ private fun ForecastStrip(
     horizontalArrangement = RemoteArrangement.SpaceBetween,
     verticalAlignment = RemoteAlignment.CenterVertically,
   ) {
-    days.forEach { day ->
+    days.forEachIndexed { i, day ->
+      val label = cardText("day.$i.label", day.label)
       RemoteColumn(
         modifier =
           if (fill) RemoteModifier.weight(1f).fillMaxHeight() else RemoteModifier.weight(1f),
@@ -294,7 +295,7 @@ private fun ForecastStrip(
           if (fill) RemoteArrangement.SpaceEvenly else RemoteArrangement.spacedBy(2.rdp),
       ) {
         RemoteText(
-          text = day.label.rs,
+          text = label,
           color = theme.secondaryText,
           fontSize = if (fill) 13.rsp else 11.rsp,
           style = RemoteTextStyle.Default,
@@ -302,12 +303,12 @@ private fun ForecastStrip(
         )
         RemoteIcon(
           imageVector = day.icon.toRemoteImageVector(),
-          contentDescription = day.label.rs,
+          contentDescription = label,
           modifier = RemoteModifier.size(if (fill) 32.rdp else 20.rdp),
           tint = theme.primaryText,
         )
         RemoteText(
-          text = day.high.rs,
+          text = cardText("day.$i.high", day.high),
           color = theme.primaryText,
           fontSize = if (fill) 15.rsp else 12.rsp,
           fontWeight = FontWeight.Medium,
@@ -315,7 +316,7 @@ private fun ForecastStrip(
           maxLines = 1,
         )
         RemoteText(
-          text = day.low.rs,
+          text = cardText("day.$i.low", day.low),
           color = theme.secondaryText,
           fontSize = if (fill) 13.rsp else 11.rsp,
           style = RemoteTextStyle.Default,

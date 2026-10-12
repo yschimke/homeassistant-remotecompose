@@ -3,12 +3,16 @@ package ee.schimke.ha.rc.cards
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.runtime.Composable
+import ee.schimke.ha.design.CardDesignSlots
+import ee.schimke.ha.design.DesignProperties
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.BreakpointAxis
 import ee.schimke.ha.rc.CardConverter
 import ee.schimke.ha.rc.CardSizeMode
+import ee.schimke.ha.rc.CardSnapshotBindings
+import ee.schimke.ha.rc.DesignTemplateInput
 import ee.schimke.ha.rc.LocalCardSizeMode
 import ee.schimke.ha.rc.RemoteSizeBreakpoint
 import ee.schimke.ha.rc.cardDataSignature
@@ -21,8 +25,10 @@ import ee.schimke.ha.rc.components.RemoteHaTodoListIdentity
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.addJsonObject
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.put
 
 /**
  * `todo-list` card. HA carries todo items in the entity's `items` attribute (each item: {summary,
@@ -41,30 +47,100 @@ class TodoListCardConverter : CardConverter {
 
   override fun naturalHeightDp(card: CardConfig, snapshot: HaSnapshot): Int = 220
 
+  /**
+   * A to-do list renders from a card design: how many items are active and completed is the
+   * structure; the title and every summary are bindings (`card.active.<i>.summary`,
+   * `card.done.<i>.summary`). A tap on an item is matched against the template's own items and
+   * rebuilt from the live item at that position.
+   */
+  override fun designProperties(card: CardConfig, snapshot: HaSnapshot): DesignProperties? {
+    if (!setOf("type", "entity", "title").containsAll(card.raw.keys)) return null
+    val entityId = card.raw["entity"]?.jsonPrimitive?.content ?: return null
+    if (CardDesignSlots.domainOf(entityId) != "todo" || entityId !in snapshot.states) return null
+    val data = todoData(card, snapshot)
+    return DesignProperties.build {
+      enum("active", data.activeItems.size)
+      enum("done", data.completedItems.size)
+    }
+  }
+
+  override fun designTemplate(properties: DesignProperties): DesignTemplateInput? {
+    val active = properties["active"]?.toIntOrNull() ?: return null
+    val done = properties["done"]?.toIntOrNull() ?: return null
+    val slot = CardDesignSlots.slotId("todo", 0)
+    val items =
+      kotlinx.serialization.json.buildJsonArray {
+        repeat(active) { i ->
+          addJsonObject {
+            put("summary", "Item a$i")
+            put("status", "needs_action")
+          }
+        }
+        repeat(done) { i ->
+          addJsonObject {
+            put("summary", "Item d$i")
+            put("status", "completed")
+          }
+        }
+      }
+    val entity =
+      CardDesignSlots.templateEntity(slot, placeholderState = "0").let {
+        it.copy(attributes = JsonObject(it.attributes + ("items" to items)))
+      }
+    val card =
+      CardConfig(
+        type = cardType,
+        raw =
+          buildJsonObject {
+            put("type", cardType)
+            put("entity", slot)
+          },
+      )
+    return DesignTemplateInput(card, HaSnapshot(states = mapOf(slot to entity)))
+  }
+
+  override fun designBindings(card: CardConfig, snapshot: HaSnapshot): CardSnapshotBindings {
+    val data = todoData(card, snapshot)
+    return CardSnapshotBindings(
+      buildMap {
+        put("card.title", data.title)
+        data.activeItems.forEachIndexed { i, item -> put("card.active.$i.summary", item.summary) }
+        data.completedItems.forEachIndexed { i, item -> put("card.done.$i.summary", item.summary) }
+      },
+      emptyMap(),
+      emptyMap(),
+      emptyMap(),
+    )
+  }
+
+  override fun designAction(
+    card: CardConfig,
+    snapshot: HaSnapshot?,
+    slot: Int,
+    templateAction: HaAction,
+  ): HaAction? {
+    snapshot ?: return null
+    val input = designTemplate(designProperties(card, snapshot) ?: return null) ?: return null
+    val placeholder = todoData(input.card, input.snapshot)
+    val live = todoData(card, snapshot)
+    placeholder.activeItems
+      .indexOfFirst { it.tapAction == templateAction }
+      .takeIf { it >= 0 }
+      ?.let {
+        return live.activeItems.getOrNull(it)?.tapAction
+      }
+    placeholder.completedItems
+      .indexOfFirst { it.tapAction == templateAction }
+      .takeIf { it >= 0 }
+      ?.let {
+        return live.completedItems.getOrNull(it)?.tapAction
+      }
+    return null
+  }
+
   @Composable
   override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
-    val entityId = card.raw["entity"]?.jsonPrimitive?.content
-    val entity = entityId?.let { snapshot.states[it] }
-    val title =
-      card.raw["title"]?.jsonPrimitive?.content
-        ?: entity?.attributes?.get("friendly_name")?.jsonPrimitive?.content
-        ?: entityId
-        ?: "To-do list"
-
-    val items = entity?.attributes?.get("items") as? JsonArray ?: JsonArray(emptyList())
-    val active = mutableListOf<HaTodoItem>()
-    val completed = mutableListOf<HaTodoItem>()
-    items.forEach { el ->
-      val obj = el as? JsonObject ?: return@forEach
-      val summary = obj["summary"]?.jsonPrimitive?.content ?: return@forEach
-      val status = obj["status"]?.jsonPrimitive?.content
-      val isCompleted = status == "completed"
-      val tap = updateItemAction(entityId, summary, isCompleted)
-      val item = HaTodoItem(summary = summary, tapAction = tap)
-      if (isCompleted) completed += item else active += item
-    }
-
-    val data = HaTodoListData(title = title, activeItems = active, completedItems = completed)
+    val data = todoData(card, snapshot)
 
     when (LocalCardSizeMode.current) {
       CardSizeMode.Wrap -> RemoteHaTodoList(data, modifier = modifier)
@@ -113,4 +189,29 @@ private fun updateItemAction(
         put("status", JsonPrimitive(newStatus))
       },
   )
+}
+
+/** The list's data for [card] and [snapshot]: what it draws, and what a template binds. */
+private fun todoData(card: CardConfig, snapshot: HaSnapshot): HaTodoListData {
+  val entityId = card.raw["entity"]?.jsonPrimitive?.content
+  val entity = entityId?.let { snapshot.states[it] }
+  val title =
+    card.raw["title"]?.jsonPrimitive?.content
+      ?: entity?.attributes?.get("friendly_name")?.jsonPrimitive?.content
+      ?: entityId
+      ?: "To-do list"
+
+  val items = entity?.attributes?.get("items") as? JsonArray ?: JsonArray(emptyList())
+  val active = mutableListOf<HaTodoItem>()
+  val completed = mutableListOf<HaTodoItem>()
+  items.forEach { el ->
+    val obj = el as? JsonObject ?: return@forEach
+    val summary = obj["summary"]?.jsonPrimitive?.content ?: return@forEach
+    val status = obj["status"]?.jsonPrimitive?.content
+    val isCompleted = status == "completed"
+    val tap = updateItemAction(entityId, summary, isCompleted)
+    val item = HaTodoItem(summary = summary, tapAction = tap)
+    if (isCompleted) completed += item else active += item
+  }
+  return HaTodoListData(title = title, activeItems = active, completedItems = completed)
 }

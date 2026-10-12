@@ -84,4 +84,33 @@ class HaActionDispatcherTest {
     NoOpHaActionDispatcher.dispatch(HaAction.Toggle("light.x"))
     NoOpHaActionDispatcher.dispatch(HaAction.None)
   }
+
+  @Test
+  fun templateWidgetPinTakesTheResolvedEntityAndTheTypedDigits() {
+    val resolved = encodeHaAction(HaAction.AlarmPin("alarm_control_panel.home", ""))
+    val typed = encodeHaAction(HaAction.AlarmPin("alarm_control_panel.s0", "1234"))
+    assertEquals(
+      HaAction.AlarmPin("alarm_control_panel.home", "1234"),
+      decodeDeliveredWidgetAction(typed, fallbackPayload = null, resolvedAction = resolved),
+    )
+    // No digits forwarded: fail closed rather than arm or disarm with an empty code.
+    assertEquals(
+      null,
+      decodeDeliveredWidgetAction(null, fallbackPayload = null, resolvedAction = resolved),
+    )
+  }
+
+  @Test
+  fun resolvedActionWinsOverTheDocumentsSlotPayload() {
+    val resolved = encodeHaAction(HaAction.Toggle("light.kitchen"))
+    val slotPayload = encodeHaAction(HaAction.Toggle("light.s0"))
+    assertEquals(
+      HaAction.Toggle("light.kitchen"),
+      decodeDeliveredWidgetAction(
+        slotPayload,
+        fallbackPayload = slotPayload,
+        resolvedAction = resolved,
+      ),
+    )
+  }
 }

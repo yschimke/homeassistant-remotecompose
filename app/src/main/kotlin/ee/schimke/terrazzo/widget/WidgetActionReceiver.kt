@@ -44,7 +44,12 @@ class WidgetActionReceiver : BroadcastReceiver() {
     // fixed actions working on platform versions whose RemoteViews bridge drops the metadata
     // callback. Dynamic PINs deliberately fail closed because their capture-time fallback cannot
     // contain the digits entered later in the player.
-    val action = decodeDeliveredWidgetAction(remoteComposeMetadata, fallbackPayload)
+    val action =
+      decodeDeliveredWidgetAction(
+        remoteComposeMetadata,
+        fallbackPayload,
+        intent.getStringExtra(EXTRA_RESOLVED_ACTION),
+      )
     if (action == null) {
       Log.w(
         TAG,
@@ -81,6 +86,12 @@ class WidgetActionReceiver : BroadcastReceiver() {
     const val EXTRA_ACTION_ID = "action_id"
     const val EXTRA_ACTION_PAYLOAD = "action_payload"
 
+    /**
+     * The card-local action a design-template widget resolved for this tap. The document's own
+     * payload names template slots, never real entities, so this one wins when present.
+     */
+    const val EXTRA_RESOLVED_ACTION = "resolved_action"
+
     /** Hard-coded by the platform RemoteViews RemoteCompose bridge; no public constant exists. */
     const val EXTRA_REMOTE_COMPOSE_METADATA = "remotecompose_metadata"
 
@@ -93,7 +104,18 @@ class WidgetActionReceiver : BroadcastReceiver() {
 internal fun decodeDeliveredWidgetAction(
   remoteComposeMetadata: String?,
   fallbackPayload: String?,
+  resolvedAction: String? = null,
 ): HaAction? {
+  resolvedAction?.let { resolved ->
+    val action = decodeHaAction(resolved) ?: return null
+    if (action !is HaAction.AlarmPin || action.pin.isNotEmpty()) return action
+    // A design-template widget's PIN: the entity is the resolved one, the digits are what the
+    // document accumulated (its own payload names a template slot, never the real entity).
+    val typed =
+      decodeHaAction(decodeWidgetActionMetadata(remoteComposeMetadata)?.actionPayload)
+        as? HaAction.AlarmPin
+    return typed?.pin?.takeIf { it.isNotEmpty() }?.let { action.copy(pin = it) }
+  }
   val payload = decodeWidgetActionMetadata(remoteComposeMetadata)?.actionPayload ?: fallbackPayload
   val action = decodeHaAction(payload) ?: return null
   return action.takeUnless { it is HaAction.AlarmPin && it.pin.isEmpty() }

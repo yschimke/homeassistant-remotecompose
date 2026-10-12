@@ -7,6 +7,7 @@ import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.creation.compose.state.RemoteString
 import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.runtime.Composable
+import ee.schimke.ha.design.DesignProperties
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.HaSnapshot
@@ -15,18 +16,31 @@ import ee.schimke.ha.model.TemplateBindings
 import ee.schimke.ha.rc.BreakpointAxis
 import ee.schimke.ha.rc.CardConverter
 import ee.schimke.ha.rc.CardSizeMode
+import ee.schimke.ha.rc.CardSnapshotBindings
+import ee.schimke.ha.rc.DesignTemplateInput
 import ee.schimke.ha.rc.LocalCardSizeMode
 import ee.schimke.ha.rc.RemoteSizeBreakpoint
 import ee.schimke.ha.rc.components.HaMarkdownData
 import ee.schimke.ha.rc.components.LiveValues
+import ee.schimke.ha.rc.components.LocalTemplateBindings
 import ee.schimke.ha.rc.components.Markdown
 import ee.schimke.ha.rc.components.MarkdownBlock
 import ee.schimke.ha.rc.components.MarkdownInline
 import ee.schimke.ha.rc.components.RemoteHaMarkdown
 import ee.schimke.ha.rc.components.RemoteHaMarkdownIdentity
+import ee.schimke.ha.rc.components.cardText
+import ee.schimke.ha.rc.components.placeholderTitle
+import ee.schimke.ha.rc.components.titleSizeBucket
+import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.put
 
 class MarkdownCardConverter : CardConverter {
+  private companion object {
+    const val TITLE_SIZE = "title_size"
+    const val BLOCKS = "blocks"
+  }
+
   override val cardType: String = CardTypes.MARKDOWN
 
   override fun naturalHeightDp(card: CardConfig, snapshot: HaSnapshot): Int {
@@ -47,6 +61,85 @@ class MarkdownCardConverter : CardConverter {
     val title = if (card.raw["title"] != null) 32 else 0
     return title + 16 + 24 * lines // rough heuristic; title + top-pad + per-line.
   }
+
+  /**
+   * A markdown card of plain blocks renders from a card design. The client renders the content —
+   * `{{ states() }}` tokens and full Jinja alike — on live data; the template is keyed on the
+   * rendered block structure (kind and heading level per block, plus the title's size bucket) and
+   * each block's text is the `card.md.<i>` binding. Links and images keep the converter: their URLs
+   * can't be part of a template.
+   */
+  override fun designProperties(card: CardConfig, snapshot: HaSnapshot): DesignProperties? {
+    if (!setOf("type", "title", "content").containsAll(card.raw.keys)) return null
+    val blocks = renderedBlocks(card, snapshot) ?: return null
+    if (blocks.any { it.hasInlineMarkup }) return null
+    return DesignProperties.build {
+      card.raw["title"]?.jsonPrimitive?.content?.let { enum(TITLE_SIZE, titleSizeBucket(it)) }
+      string(BLOCKS, blocks.joinToString(",") { signature(it) })
+    }
+  }
+
+  override fun designTemplate(properties: DesignProperties): DesignTemplateInput? {
+    val signatures = properties[BLOCKS]?.split(',')?.filter { it.isNotEmpty() } ?: return null
+    val source = buildString {
+      signatures.forEachIndexed { i, sig ->
+        val previousBullet = i > 0 && signatures[i - 1] == "B"
+        if (sig != "B" && previousBullet) append('\n')
+        when {
+          sig.startsWith("H") -> append("#".repeat(sig.drop(1).toIntOrNull() ?: 1) + " H\n\n")
+          sig == "P" -> append("P\n\n")
+          sig == "B" -> append("- B\n")
+          sig == "D" -> append("---\n\n")
+          else -> return null
+        }
+      }
+    }
+    // The synthetic source must parse back to exactly the keyed structure.
+    if (Markdown.parse(source).joinToString(",") { signature(it) } != properties[BLOCKS])
+      return null
+    val card =
+      CardConfig(
+        type = cardType,
+        raw =
+          buildJsonObject {
+            put("type", cardType)
+            properties[TITLE_SIZE]?.toIntOrNull()?.let { put("title", placeholderTitle(it)) }
+            put("content", source)
+          },
+      )
+    return DesignTemplateInput(card, HaSnapshot())
+  }
+
+  override fun designBindings(card: CardConfig, snapshot: HaSnapshot): CardSnapshotBindings {
+    val blocks = renderedBlocks(card, snapshot).orEmpty()
+    return CardSnapshotBindings(
+      blocks.withIndex().associate { (i, block) -> "card.md.$i" to block.text },
+      emptyMap(),
+      emptyMap(),
+      emptyMap(),
+    )
+  }
+
+  /**
+   * The content rendered on [snapshot] and parsed, as the client shows it; null if unrenderable.
+   */
+  private fun renderedBlocks(card: CardConfig, snapshot: HaSnapshot): List<MarkdownBlock>? {
+    val content = card.raw["content"]?.jsonPrimitive?.content ?: ""
+    if (TemplateBindings.needsTemplateRender(content)) {
+      return JinjaTemplate.render(content, snapshot)?.let { Markdown.parse(it) }
+    }
+    val template = MarkdownTemplateBindings.from(content, snapshot)
+    // Parse with the tokens in place, as Render does, then show each block's values.
+    return Markdown.parse(template.rendered).map { it.copy(text = template.plain(it.text)) }
+  }
+
+  private fun signature(block: MarkdownBlock): String =
+    when (block.kind) {
+      MarkdownBlock.Kind.Heading -> "H${block.level}"
+      MarkdownBlock.Kind.Paragraph -> "P"
+      MarkdownBlock.Kind.Bullet -> "B"
+      MarkdownBlock.Kind.Divider -> "D"
+    }
 
   @Composable
   override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
@@ -83,7 +176,17 @@ class MarkdownCardConverter : CardConverter {
    * wider ones render the full body. Single width gate (#224).
    */
   @Composable
-  private fun RenderSized(data: HaMarkdownData, modifier: RemoteModifier) {
+  private fun RenderSized(source: HaMarkdownData, modifier: RemoteModifier) {
+    // A design template binds each block's text (`card.md.<i>`), which the client renders.
+    val data =
+      if (LocalTemplateBindings.current == null) source
+      else
+        source.copy(
+          blocks =
+            source.blocks.mapIndexed { i, block ->
+              block.copy(boundText = cardText("md.$i", block.text))
+            }
+        )
     when (LocalCardSizeMode.current) {
       CardSizeMode.Wrap -> RemoteHaMarkdown(data, modifier = modifier)
       CardSizeMode.Fixed ->
@@ -145,6 +248,12 @@ class MarkdownCardConverter : CardConverter {
       if (cursor < text.length) expr += text.substring(cursor)
       return expr
     }
+
+    /** [text] with each binding token replaced by its value, as [bind] draws it. */
+    fun plain(text: String): String =
+      EXPR_TOKEN_REGEX.replace(text) { match ->
+        bindings.firstOrNull { it.token == match.value }?.initial ?: match.value
+      }
 
     companion object {
       fun from(content: String, snapshot: HaSnapshot): MarkdownTemplateBindings {

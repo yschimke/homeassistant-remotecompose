@@ -90,3 +90,11 @@ fun CardRegistry.cardDataSignature(card: CardConfig, snapshot: HaSnapshot): Stri
   get(card.type)?.dataSignature(card, snapshot)
 
 internal const val UNSUPPORTED_CARD_TYPE = "__unsupported__"
+
+/**
+ * The converter that renders cards of [type]: its own, or the unsupported placeholder for a type
+ * nothing registers (a custom card). The design path keys and captures through the same lookup, so
+ * a custom card renders its placeholder from a design too.
+ */
+fun CardRegistry.converterFor(type: String): CardConverter? =
+  get(type) ?: get(UNSUPPORTED_CARD_TYPE)

@@ -14,22 +14,14 @@ import android.widget.RemoteViews
 import androidx.annotation.RequiresApi
 import androidx.compose.remote.creation.compose.capture.RemoteCreationDisplayInfo
 import androidx.compose.remote.creation.compose.capture.captureSingleRemoteDocument
-import androidx.compose.remote.creation.compose.modifier.RemoteModifier
-import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import ee.schimke.ha.model.HaSnapshot
-import ee.schimke.ha.rc.CardSizeMode
-import ee.schimke.ha.rc.ProvideCardRegistry
-import ee.schimke.ha.rc.ProvideCardSizeMode
-import ee.schimke.ha.rc.RenderChild
+import ee.schimke.ha.rc.LauncherDesigns
+import ee.schimke.ha.rc.LauncherWidgetContent
 import ee.schimke.ha.rc.cardHeightDp
 import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.cards.shutter.withEnhancedShutter
-import ee.schimke.ha.rc.components.HaTheme
-import ee.schimke.ha.rc.components.ProvideCardChrome
-import ee.schimke.ha.rc.components.ProvideSystemHaTheme
-import ee.schimke.ha.rc.components.ProvideWidgetActionRegistry
-import ee.schimke.ha.rc.components.RemoteHaWidgetSurface
 import ee.schimke.ha.rc.components.WidgetActionRegistry
+import ee.schimke.ha.rc.encodeHaAction
 import ee.schimke.ha.rc.formatState
 import ee.schimke.ha.rc.systemThemedWidgetsProfile
 import ee.schimke.ha.rc.widgetsProfile
@@ -121,7 +113,11 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
       // the row.
       return
     }
-    val snapshot = if (DemoData.isDemo(entry.baseUrl)) DemoData.snapshot() else EMPTY_SNAPSHOT
+    // Live instances read the snapshot the app's live session keeps on disk (every entity, not
+    // just one dashboard's), refreshed while a session is bound.
+    val snapshot =
+      if (DemoData.isDemo(entry.baseUrl)) DemoData.snapshot()
+      else context.terrazzoGraph().offlineCache.snapshot(entry.baseUrl, null) ?: EMPTY_SNAPSHOT
     val registry = defaultRegistry().withEnhancedShutter()
 
     val targetSizeDp =
@@ -133,8 +129,6 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
     val widthPx = WidgetSizing.dpToPx(context, targetSizeDp.widthDp)
     val heightPx = WidgetSizing.dpToPx(context, targetSizeDp.heightDp)
     val densityDpi = context.resources.configuration.densityDpi
-    val widgetActions =
-      WidgetActionRegistry(snapshot.states.mapValues { (_, entity) -> formatState(entity) })
     val captureProfile =
       if (Build.VERSION.SDK_INT >= SYSTEM_THEME_MIN_HOST_API) {
         systemThemedWidgetsProfile
@@ -142,6 +136,73 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
         widgetsProfile
       }
 
+    val dark =
+      context.resources.configuration.uiMode and
+        android.content.res.Configuration.UI_MODE_NIGHT_MASK ==
+        android.content.res.Configuration.UI_MODE_NIGHT_YES
+
+    // Design first: the card's launcher template with its values baked in. Cards with no design,
+    // or one that can't be baked, capture directly.
+    val baked = runCatching {
+      LauncherDesigns.render(
+        context = context,
+        card = entry.card,
+        snapshot = snapshot,
+        widthDp = targetSizeDp.widthDp,
+        heightDp = targetSizeDp.heightDp,
+        densityDpi = densityDpi,
+        dark = dark,
+        systemTheme = captureProfile === systemThemedWidgetsProfile,
+        registry = registry,
+        fetchImage = { url -> fetchWidgetImage(context, entry.baseUrl, url) },
+      )
+    }
+      .onFailure { Log.w(TAG, "launcher design failed for id=$widgetId", it) }
+      .getOrNull()
+    val remoteViews =
+      if (baked != null) {
+        RemoteViews(RemoteViews.DrawInstructions.Builder(listOf(baked.bytes)).build()).also { views
+          ->
+          baked.actions.forEach { (actionId, action) ->
+            val payload = encodeHaAction(action)
+            views.setOnClickPendingIntent(
+              actionId,
+              widgetActionPendingIntent(context, widgetId, actionId, payload, resolved = true),
+            )
+          }
+        }
+      } else {
+        captureDirect(
+          context,
+          widgetId,
+          entry.card,
+          snapshot,
+          registry,
+          widthPx,
+          heightPx,
+          densityDpi,
+          captureProfile,
+          dark,
+        ) ?: return
+      }
+    appWidgetManager.updateAppWidget(widgetId, remoteViews)
+  }
+
+  @RequiresApi(Build.VERSION_CODES.VANILLA_ICE_CREAM)
+  private fun captureDirect(
+    context: Context,
+    widgetId: Int,
+    card: ee.schimke.ha.model.CardConfig,
+    snapshot: HaSnapshot,
+    registry: ee.schimke.ha.rc.CardRegistry,
+    widthPx: Int,
+    heightPx: Int,
+    densityDpi: Int,
+    captureProfile: androidx.compose.remote.creation.profile.Profile,
+    dark: Boolean,
+  ): RemoteViews? {
+    val widgetActions =
+      WidgetActionRegistry(snapshot.states.mapValues { (_, entity) -> formatState(entity) })
     val captured = runCatching {
       runBlocking {
         captureSingleRemoteDocument(
@@ -149,50 +210,18 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
           creationDisplayInfo = RemoteCreationDisplayInfo(widthPx, heightPx, densityDpi),
           profile = captureProfile,
         ) {
-          ProvideCardRegistry(registry) {
-            ProvideSystemHaTheme(
-              profile = captureProfile,
-              fallbackTheme =
-                if (
-                  context.resources.configuration.uiMode and
-                    android.content.res.Configuration.UI_MODE_NIGHT_MASK ==
-                    android.content.res.Configuration.UI_MODE_NIGHT_YES
-                ) {
-                  HaTheme.Dark
-                } else {
-                  HaTheme.Light
-                },
-            ) {
-              ProvideCardSizeMode(CardSizeMode.Fixed) {
-                // The widget surface paints the themed
-                // card background across the whole
-                // capture canvas, so the launcher cell is
-                // fully covered even when the card's
-                // content is shorter than the slot.
-                // Suppress the inner card's own chrome so
-                // it doesn't draw a second frame inside.
-                ProvideCardChrome(enabled = false) {
-                  ProvideWidgetActionRegistry(widgetActions) {
-                    RemoteHaWidgetSurface {
-                      RenderChild(entry.card, snapshot, RemoteModifier.fillMaxWidth())
-                    }
-                  }
-                }
-              }
-            }
-          }
+          LauncherWidgetContent(registry, captureProfile, dark, widgetActions, card, snapshot)
         }
       }
     }
       .getOrElse {
         // The widgets profile rejects ops outside the launcher's vocabulary —
         // log and skip rather than crashing the host process.
-        Log.w(TAG, "widgets-profile capture failed for id=$widgetId type=${entry.card.type}", it)
-        return
+        Log.w(TAG, "widgets-profile capture failed for id=$widgetId type=${card.type}", it)
+        return null
       }
-
-    val instructions = RemoteViews.DrawInstructions.Builder(listOf(captured.bytes)).build()
-    val remoteViews = RemoteViews(instructions)
+    val remoteViews =
+      RemoteViews(RemoteViews.DrawInstructions.Builder(listOf(captured.bytes)).build())
     widgetActions.entries.forEach { (actionId, payload) ->
       // The RC document emits HostActionMetadata(actionId, payload). Android's launcher-widget
       // bridge adds that payload to the PendingIntent's fill-in Intent as
@@ -203,7 +232,34 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
         widgetActionPendingIntent(context, widgetId, actionId, payload),
       )
     }
-    appWidgetManager.updateAppWidget(widgetId, remoteViews)
+    return remoteViews
+  }
+
+  /**
+   * The bytes of [url] for a baked widget (the launcher can't fetch it): fetched through the app's
+   * image stack, scaled to fit the slot pictures are captured for, as PNG.
+   */
+  private fun fetchWidgetImage(context: Context, baseUrl: String, url: String): ByteArray? {
+    val stack =
+      (context.terrazzoGraph() as? ee.schimke.terrazzo.di.AppGraph)?.haImageStack ?: return null
+    stack.ensureBaseUrl(baseUrl)
+    val bitmap = runBlocking { stack.resolve(url) } ?: return null
+    val scale = minOf(1f, WIDGET_IMAGE_MAX_PX.toFloat() / maxOf(bitmap.width, bitmap.height))
+    val sized =
+      if (scale < 1f) {
+        android.graphics.Bitmap.createScaledBitmap(
+          bitmap,
+          (bitmap.width * scale).toInt().coerceAtLeast(1),
+          (bitmap.height * scale).toInt().coerceAtLeast(1),
+          true,
+        )
+      } else {
+        bitmap
+      }
+    return java.io
+      .ByteArrayOutputStream()
+      .also { sized.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it) }
+      .toByteArray()
   }
 
   private fun widgetActionPendingIntent(
@@ -211,6 +267,7 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
     widgetId: Int,
     actionId: Int,
     payload: String,
+    resolved: Boolean = false,
   ): PendingIntent {
     val intent =
       Intent(context, WidgetActionReceiver::class.java).apply {
@@ -221,6 +278,7 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
         putExtra(WidgetActionReceiver.EXTRA_WIDGET_ID, widgetId)
         putExtra(WidgetActionReceiver.EXTRA_ACTION_ID, actionId)
         putExtra(WidgetActionReceiver.EXTRA_ACTION_PAYLOAD, payload)
+        if (resolved) putExtra(WidgetActionReceiver.EXTRA_RESOLVED_ACTION, payload)
       }
     return PendingIntent.getBroadcast(
       context,
@@ -239,6 +297,9 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
     const val SYSTEM_THEME_MIN_HOST_API = 37
     val EMPTY_SNAPSHOT = HaSnapshot()
     const val TAG = "TerrazzoWidgetProvider"
+
+    /** Matches the picture slot templates capture (`PictureImageStrategy.DefaultAppUrl`). */
+    const val WIDGET_IMAGE_MAX_PX = 512
   }
 }
 

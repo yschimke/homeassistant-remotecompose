@@ -119,7 +119,7 @@ fun RemoteHaPictureEntity(
           if (rb != null) {
             RemoteImage(
               remoteBitmap = rb,
-              contentDescription = data.name.rs,
+              contentDescription = entityName(data.entityId, data.name),
               modifier = RemoteModifier.fillMaxSize(),
               // Fill-crop, not letterbox: the image owns the
               // whole cell at any aspect (HA's `cover`).
@@ -131,7 +131,7 @@ fun RemoteHaPictureEntity(
             // tile renders something instead of a hole.
             RemoteIcon(
               imageVector = data.icon.toRemoteImageVector(),
-              contentDescription = data.name.rs,
+              contentDescription = entityName(data.entityId, data.name),
               modifier = RemoteModifier.size(40.rdp),
               tint = accent.copy(alpha = accent.alpha * 0.55f.rf),
             )
@@ -139,7 +139,7 @@ fun RemoteHaPictureEntity(
         } else {
           RemoteIcon(
             imageVector = data.icon.toRemoteImageVector(),
-            contentDescription = data.name.rs,
+            contentDescription = entityName(data.entityId, data.name),
             modifier = RemoteModifier.size(40.rdp),
             tint = accent.copy(alpha = accent.alpha * 0.55f.rf),
           )
@@ -172,7 +172,7 @@ fun RemoteHaPictureEntity(
           horizontalArrangement = RemoteArrangement.SpaceBetween,
         ) {
           RemoteText(
-            text = (if (data.showName) data.name else "").rs,
+            text = if (data.showName) entityName(data.entityId, data.name) else "".rs,
             color = theme.primaryText,
             fontSize = 13.rsp,
             fontWeight = FontWeight.Medium,

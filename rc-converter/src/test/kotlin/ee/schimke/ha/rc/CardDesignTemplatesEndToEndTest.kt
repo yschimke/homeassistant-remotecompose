@@ -277,6 +277,365 @@ class CardDesignTemplatesEndToEndTest {
     )
   }
 
+  @Test
+  fun templateImagesResolveOnlyToTheCardsOwnPicture() {
+    val camera =
+      CardConfig(
+        type = "picture-entity",
+        raw =
+          buildJsonObject {
+            put("type", "picture-entity")
+            put("entity", "camera.driveway")
+          },
+      )
+    val snapshot =
+      HaSnapshot(
+        states =
+          mapOf(
+            "camera.driveway" to
+              EntityState(
+                "camera.driveway",
+                "idle",
+                kotlinx.serialization.json.JsonObject(
+                  mapOf("entity_picture" to kotlinx.serialization.json.JsonPrimitive("/cam?t=1"))
+                ),
+              )
+          )
+      )
+    val playback = CardDesignTemplates.playback(camera, ByteArray(0))
+    assertEquals("/cam?t=1", playback.bitmapUrl(CardDesignSlots.pictureUrl("camera.s0"), snapshot))
+    // Another slot, another attribute, or a URL of the template's own choosing: never fetched.
+    for (url in
+      listOf(
+        CardDesignSlots.pictureUrl("camera.s1"),
+        "rc-slot://camera.s0/token",
+        "https://tracker.test/pixel.png",
+      )) {
+      assertEquals(null, playback.bitmapUrl(url, snapshot), url)
+    }
+  }
+
+  @Test
+  fun thermostatStepperIsRebuiltFromTheLiveTarget() {
+    val card =
+      CardConfig(
+        type = "thermostat",
+        raw =
+          buildJsonObject {
+            put("type", "thermostat")
+            put("entity", "climate.office")
+          },
+      )
+    val snapshot =
+      HaSnapshot(
+        states =
+          mapOf(
+            "climate.office" to
+              EntityState(
+                "climate.office",
+                "heat",
+                kotlinx.serialization.json.JsonObject(
+                  mapOf(
+                    "temperature" to kotlinx.serialization.json.JsonPrimitive("21"),
+                    "target_temp_step" to kotlinx.serialization.json.JsonPrimitive("1"),
+                  )
+                ),
+              )
+          )
+      )
+    val registry = CardDesignTemplates.defaultTemplateRegistry
+    val converter = registry.get("thermostat")!!
+    val input = converter.designTemplate(converter.designProperties(card, snapshot)!!)!!
+    // The steppers the template itself renders, against its placeholder slot.
+    val templateDial = ee.schimke.ha.rc.cards.thermostatDial(input.card, input.snapshot)
+    val liveDial = ee.schimke.ha.rc.cards.thermostatDial(card, snapshot)
+    val playback = CardDesignTemplates.playback(card, ByteArray(0))
+    assertEquals(
+      liveDial.incrementAction,
+      playback.resolveTap(templateDial.incrementAction, snapshot),
+    )
+    assertEquals(
+      liveDial.decrementAction,
+      playback.resolveTap(templateDial.decrementAction, snapshot),
+    )
+    // A set_temperature of the template's own choosing never runs.
+    val forged =
+      ee.schimke.ha.rc.components.HaAction.CallService(
+        "climate",
+        "set_temperature",
+        "climate.s0",
+        kotlinx.serialization.json.JsonObject(
+          mapOf("temperature" to kotlinx.serialization.json.JsonPrimitive(35))
+        ),
+      )
+    assertEquals(playback.slotTapActions[0], playback.resolveTap(forged, snapshot))
+  }
+
+  @Test
+  fun containerTapsResolveThroughTheTappedChild() {
+    val glance = buildJsonObject {
+      put("type", "glance")
+      put(
+        "entities",
+        kotlinx.serialization.json.buildJsonArray {
+          add(kotlinx.serialization.json.JsonPrimitive("switch.fan"))
+          add(
+            buildJsonObject {
+              put("entity", "sensor.temp")
+              put("tap_action", buildJsonObject { put("action", "none") })
+            }
+          )
+        },
+      )
+    }
+    val stack =
+      CardConfig(
+        type = "vertical-stack",
+        raw =
+          buildJsonObject {
+            put("type", "vertical-stack")
+            put(
+              "cards",
+              kotlinx.serialization.json.buildJsonArray {
+                add(card.raw)
+                add(glance)
+              },
+            )
+          },
+      )
+    val playback = CardDesignTemplates.playback(stack, ByteArray(0))
+    // Slot 0 is the tile's light; slots 1 and 2 are the glance rows.
+    assertEquals(
+      defaultTapActionFor("light.kitchen"),
+      playback.resolveTap(ee.schimke.ha.rc.components.HaAction.Toggle("light.s0"), snapshot),
+    )
+    assertEquals(
+      defaultTapActionFor("switch.fan"),
+      playback.resolveTap(ee.schimke.ha.rc.components.HaAction.Toggle("switch.s1"), snapshot),
+    )
+    assertEquals(
+      ee.schimke.ha.rc.components.HaAction.None,
+      playback.resolveTap(ee.schimke.ha.rc.components.HaAction.MoreInfo("sensor.s2"), snapshot),
+    )
+    // Children's card-level bindings are namespaced per child; slots are one sequence.
+    val bindings = playback.bindings(snapshot)
+    assertEquals("Kitchen", bindings.strings["light.s0.name"])
+    assertTrue("switch.s1.state" in bindings.strings)
+  }
+
+  @Test
+  fun todoTapRunsTheLiveItemAtTheTappedPosition() {
+    val todo =
+      CardConfig(
+        type = "todo-list",
+        raw =
+          buildJsonObject {
+            put("type", "todo-list")
+            put("entity", "todo.shopping")
+          },
+      )
+    fun item(summary: String, status: String) = buildJsonObject {
+      put("summary", summary)
+      put("status", status)
+    }
+    val snapshot =
+      HaSnapshot(
+        states =
+          mapOf(
+            "todo.shopping" to
+              EntityState(
+                "todo.shopping",
+                "1",
+                kotlinx.serialization.json.JsonObject(
+                  mapOf(
+                    "items" to
+                      kotlinx.serialization.json.JsonArray(
+                        listOf(item("Milk", "needs_action"), item("Eggs", "completed"))
+                      )
+                  )
+                ),
+              )
+          )
+      )
+    val playback = CardDesignTemplates.playback(todo, ByteArray(0))
+    fun update(entity: String, summary: String, status: String) =
+      ee.schimke.ha.rc.components.HaAction.CallService(
+        "todo",
+        "update_item",
+        entity,
+        buildJsonObject {
+          put("item", summary)
+          put("status", status)
+        },
+      )
+    // The template's first active item completes the live first active item.
+    assertEquals(
+      update("todo.shopping", "Milk", "completed"),
+      playback.resolveTap(update("todo.s0", "Item a0", "completed"), snapshot),
+    )
+    assertEquals(
+      update("todo.shopping", "Eggs", "needs_action"),
+      playback.resolveTap(update("todo.s0", "Item d0", "needs_action"), snapshot),
+    )
+    // An item the template names itself never reaches Home Assistant.
+    assertEquals(
+      playback.slotTapActions[0],
+      playback.resolveTap(update("todo.s0", "Buy a boat", "completed"), snapshot),
+    )
+  }
+
+  @Test
+  fun pictureElementTapsRunTheElementsOwnConfig() {
+    val card =
+      CardConfig(
+        type = "picture-elements",
+        raw =
+          buildJsonObject {
+            put("type", "picture-elements")
+            put(
+              "elements",
+              kotlinx.serialization.json.buildJsonArray {
+                add(
+                  buildJsonObject {
+                    put("type", "service-button")
+                    put("title", "All off")
+                    put(
+                      "tap_action",
+                      buildJsonObject {
+                        put("action", "navigate")
+                        put("navigation_path", "/lovelace/1")
+                      },
+                    )
+                  }
+                )
+              },
+            )
+          },
+      )
+    val playback = CardDesignTemplates.playback(card, ByteArray(0))
+    assertEquals(
+      ee.schimke.ha.rc.components.HaAction.Navigate("/lovelace/1"),
+      playback.resolveTap(ee.schimke.ha.rc.components.HaAction.Navigate("#el-0"), snapshot),
+    )
+    // A navigation of the template's own choosing goes nowhere new.
+    assertEquals(
+      playback.tapAction,
+      playback.resolveTap(ee.schimke.ha.rc.components.HaAction.Navigate("/admin"), snapshot),
+    )
+  }
+
+  @Test
+  fun bambuControlTapPressesTheClientsPrinterButton() {
+    val card =
+      CardConfig(
+        type = "custom:ha-bambulab-print_control-card",
+        raw =
+          buildJsonObject {
+            put("type", "custom:ha-bambulab-print_control-card")
+            put("entity_prefix", "x1c")
+          },
+      )
+    val snapshot =
+      HaSnapshot(
+        states =
+          mapOf(
+            "button.x1c_pause_printing" to EntityState("button.x1c_pause_printing", "unknown"),
+            "button.x1c_stop_printing" to EntityState("button.x1c_stop_printing", "unknown"),
+          )
+      )
+    val playback = CardDesignTemplates.playback(card, ByteArray(0))
+    fun press(entity: String) =
+      ee.schimke.ha.rc.components.HaAction.CallService(
+        "button",
+        "press",
+        entity,
+        kotlinx.serialization.json.JsonObject(emptyMap()),
+      )
+    assertEquals(
+      press("button.x1c_pause_printing"),
+      playback.resolveTap(press("button.rcslot_pause_printing"), snapshot),
+    )
+    // A button this printer doesn't have, or any other entity, is never pressed.
+    assertEquals(
+      playback.tapAction,
+      playback.resolveTap(press("button.rcslot_resume_printing"), snapshot),
+    )
+    assertEquals(
+      playback.tapAction,
+      playback.resolveTap(press("button.garage_door_open"), snapshot),
+    )
+  }
+
+  @Test
+  fun pictureCardTapRunsItsOwnConfiguredTap() {
+    val picture =
+      CardConfig(
+        type = "picture",
+        raw =
+          buildJsonObject {
+            put("type", "picture")
+            put("image", "/local/a.png")
+            put(
+              "tap_action",
+              buildJsonObject {
+                put("action", "navigate")
+                put("navigation_path", "/lovelace/cameras")
+              },
+            )
+          },
+      )
+    val converter = CardDesignTemplates.defaultTemplateRegistry.get("picture")!!
+    val input = converter.designTemplate(converter.designProperties(picture, HaSnapshot())!!)!!
+    // The template carries a tap marker, so it is clickable at all.
+    assertTrue(input.card.raw["tap_action"] != null)
+    val playback = CardDesignTemplates.playback(picture, ByteArray(0))
+    assertEquals(
+      ee.schimke.ha.rc.components.HaAction.Navigate("/lovelace/cameras"),
+      playback.resolveTap(ee.schimke.ha.rc.components.HaAction.Navigate("#card"), snapshot),
+    )
+  }
+
+  @Test
+  fun repeatedPicturesInAStackEachResolve() {
+    fun camera() = buildJsonObject {
+      put("type", "picture-entity")
+      put("entity", "camera.driveway")
+    }
+    val stack =
+      CardConfig(
+        type = "vertical-stack",
+        raw =
+          buildJsonObject {
+            put("type", "vertical-stack")
+            put(
+              "cards",
+              kotlinx.serialization.json.buildJsonArray {
+                add(camera())
+                add(camera())
+              },
+            )
+          },
+      )
+    val snapshot =
+      HaSnapshot(
+        states =
+          mapOf(
+            "camera.driveway" to
+              EntityState(
+                "camera.driveway",
+                "idle",
+                kotlinx.serialization.json.JsonObject(
+                  mapOf("entity_picture" to kotlinx.serialization.json.JsonPrimitive("/cam"))
+                ),
+              )
+          )
+      )
+    val playback = CardDesignTemplates.playback(stack, ByteArray(0))
+    assertEquals("/cam", playback.bitmapUrl(CardDesignSlots.pictureUrl("camera.s0"), snapshot))
+    assertEquals("/cam", playback.bitmapUrl(CardDesignSlots.pictureUrl("camera.s1"), snapshot))
+    assertEquals(null, playback.bitmapUrl(CardDesignSlots.pictureUrl("light.s1"), snapshot))
+  }
+
   /**
    * With `-PcardDesignsOut=<dir>`, writes every spike design as the files a static host serves.
    * Skipped otherwise.

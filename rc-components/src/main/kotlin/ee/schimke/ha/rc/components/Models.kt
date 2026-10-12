@@ -278,6 +278,8 @@ data class HaBambuSpoolSlot(
   val color: Color,
   val remainPercent: Int?,
   val active: Boolean,
+  /** What [material] shows, as text: the value a design template's binding is given. */
+  val materialText: String = "",
 )
 
 /**
@@ -342,6 +344,12 @@ data class HaArcDialData(
   val tapAction: HaAction = HaAction.None,
   val incrementAction: HaAction = HaAction.None,
   val decrementAction: HaAction = HaAction.None,
+  /**
+   * Every accent this card can pick from its entity's state, when it picks one ([accent] is among
+   * them). A design template selects in-document by `<entityId>.accent_index`; null means the
+   * accent never depends on the state.
+   */
+  val accentChoices: List<Color>? = null,
 )
 
 /**
