@@ -242,7 +242,7 @@ fun Tier2_Sensor() = Tier2Host {
 
 // ——— logbook / calendar / todo ———
 
-@Preview(name = "tier2 logbook", showBackground = false, widthDp = 381, heightDp = 150)
+@Preview(name = "tier2 logbook", showBackground = false, widthDp = 381, heightDp = 165)
 @Composable
 fun Tier2_Logbook() = Tier2Host {
   HaLogbook(
@@ -494,7 +494,7 @@ private val amsSlots =
     HaBambuSpoolSlotUiData("A4", "TPU", Color(0xFF212121), 12, active = false),
   )
 
-@Preview(name = "tier2 bambu print-status", showBackground = false, widthDp = 381, heightDp = 168)
+@Preview(name = "tier2 bambu print-status", showBackground = false, widthDp = 381, heightDp = 186)
 @Composable
 fun Tier2_BambuPrintStatus() = Tier2Host {
   HaBambuPrintStatus(
