@@ -1,11 +1,43 @@
 {
   "schema": "compose-preview-activity/v1",
-  "generatedAt": "2026-10-12T03:51:57.911Z",
+  "generatedAt": "2026-10-12T04:29:46.097Z",
   "windowDays": 30,
   "code": {
     "repo": "yschimke/homeassistant-remotecompose",
     "ref": "main",
     "events": [
+      {
+        "sha": "027565ba9bb6cf8d0e433afdc20d4de89923727e",
+        "subject": "chore(deps): update compose-ai-tools (#750)",
+        "at": "2026-10-12T04:00:16Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "cf6f57722a396f0f9d8b6a51b373170bbe0917cd",
+        "subject": "chore(deps): update dependency python to v3.15.0 (#764)",
+        "at": "2026-10-12T03:28:20Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "7bb97871d97dda3ed2c9f7383682c9a65459ce24",
+        "subject": "fix: keep Wear widgets current while the watch app is closed (#765)",
+        "at": "2026-10-12T04:26:04+01:00",
+        "author": "Yuri Schimke",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "54b56d1eb709f972c0865c90fd81c307c03080a2",
+        "subject": "feat: sync entity pictures to the watch and bake them into Wear widgets (#763)",
+        "at": "2026-10-12T04:06:50+01:00",
+        "author": "Yuri Schimke",
+        "previewIds": [],
+        "components": []
+      },
       {
         "sha": "e482a749f982f6d0da1e5989df67fcf05af424d6",
         "subject": "chore(deps): pin dependencies (#755)",
@@ -450,38 +482,6 @@
         "sha": "fbe50a2888a8ac1c5e5c7a537031c21b7e491e32",
         "subject": "ci: install the published Android 37.0 platform (#707)",
         "at": "2026-10-10T16:37:00+01:00",
-        "author": "Yuri Schimke",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "3d73cc68782b8892ab627950445b12f14731742a",
-        "subject": "chore(deps): update yschimke/compose-ai-tools action to v2.42.0 (#706)",
-        "at": "2026-10-10T16:31:47+01:00",
-        "author": "renovate[bot]",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "81f6043b733ca35d67b89d0267fde56b7d162ab1",
-        "subject": "feat: add an opt-in typed UI builder catalog for Home Assistant (#705)",
-        "at": "2026-10-10T16:11:12+01:00",
-        "author": "Yuri Schimke",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "ff8944a81e735dfe41b2fd336b7ae67b4a56bad3",
-        "subject": "fix: restore colors in native iOS cards (#669)",
-        "at": "2026-10-10T15:15:45+01:00",
-        "author": "Yuri Schimke",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "5ea0ba7e8fe812d23667ff7aef50b1b4ee22f5b6",
-        "subject": "feat: add adaptive dashboard browser UID pilot (#700)",
-        "at": "2026-10-10T15:12:36+01:00",
         "author": "Yuri Schimke",
         "previewIds": [],
         "components": []
