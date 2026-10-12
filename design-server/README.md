@@ -11,6 +11,9 @@ design-server/build/install/design-server/bin/design-server card-designs/build/c
 - Browser: `http://localhost:8080/`
 - App setting ("card design server"): `http://<host>:8080/designs/v1`
 - JSON: `/api/designs`, `/api/designs/<id>`
+- Card embed: `/embed/v1/ha-card.js` (a `<ha-card>` for any web page, signed in to the viewer's own
+  Home Assistant), its player `/embed/v1/rc-player.js` and a demo at `/embed/v1/demo.html` — see
+  [`card-embedding.md`](../docs/architecture/card-embedding.md)
 
 - Card schema: a design's page, `/api/designs/<id>/schema`; any card's JSON at `/schema` or
   `POST /api/schema`

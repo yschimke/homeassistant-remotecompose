@@ -96,6 +96,9 @@ cmp-navigation3-runtime = "1.2.0"
 cmp-icons = "1.7.3"
 cmp-adaptive = "1.3.0"
 rc-player = "2.10.0"
+# The TypeScript Remote Compose player the card embed loads (`design-server` serves it). Released
+# separately from the Kotlin player, so its versions do not line up with `rc-player`.
+rc-player-js = "2.11.0"
 compose-multiplatform = "1.13.0-alpha02"
 cmp-material3 = "1.13.0-alpha02"
 
@@ -107,6 +110,7 @@ cmp-navigation3-ui = { module = "org.jetbrains.androidx.navigation3:navigation3-
 cmp-adaptive = { module = "org.jetbrains.compose.material3.adaptive:adaptive", version.ref = "cmp-adaptive" }
 rc-player-compose = { module = "ee.schimke.composeai:rc-player-compose", version.ref = "rc-player" }
 rc-player-edit = { module = "ee.schimke.composeai:rc-player-edit", version.ref = "rc-player" }
+rc-player-js-dist = { module = "ee.schimke.composeai:remote-compose-player-js-dist", version.ref = "rc-player-js" }
 cmp-runtime = { module = "org.jetbrains.compose.runtime:runtime", version.ref = "compose-multiplatform" }
 cmp-foundation = { module = "org.jetbrains.compose.foundation:foundation", version.ref = "compose-multiplatform" }
 cmp-ui = { module = "org.jetbrains.compose.ui:ui", version.ref = "compose-multiplatform" }

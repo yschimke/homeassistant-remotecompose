@@ -9,6 +9,7 @@ on:
     paths: &paths
       - card-designs/**
       - design-server/**
+      - embed/**
       - rc-converter/src/main/**
       - rc-components/src/main/**
       - ha-model/src/**
@@ -40,6 +41,14 @@ jobs:
       - uses: ./.github/actions/android-sdk
       - name: Generate the library and test the server
         run: ./gradlew :card-designs:generateCardDesigns :design-server:test :design-server:installDist --stacktrace
+      - name: Test the card embed
+        # The binding port against the Kotlin golden, tap resolution, and a headless-Chromium run
+        # of <ha-card> with the real player and a stubbed Home Assistant. The player comes from
+        # :design-server:embedResources, which the test task above already ran.
+        run: |
+          npm install --no-save --prefix embed playwright@1.56.1
+          npx --prefix embed playwright install --with-deps chromium
+          EMBED_SMOKE_REQUIRED=1 node --test embed/test/*.test.mjs
       - name: Serve the library
         run: |
           DESIGN_LIBRARY=card-designs/build/card-designs PORT=8080 \
@@ -48,6 +57,7 @@ jobs:
           curl -sf localhost:8080/designs/v1/manifest.json | python3 -c \
             'import json,sys; m=json.load(sys.stdin); assert m["designs"], "empty library"; print(len(m["designs"]), "designs")'
           curl -sf "localhost:8080/?style=all&mode=all" | grep -q "card types"
+          curl -sf localhost:8080/embed/v1/ha-card.js | grep -q "customElements.define('ha-card'"
       - name: Build the container image
         run: docker build -f design-server/Dockerfile -t card-design-server .
       - name: Run the image with UI Builder and seed a design
