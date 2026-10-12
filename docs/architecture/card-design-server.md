@@ -150,9 +150,13 @@ Deliberate spike limits, each owned by a milestone below:
   accent switches in-document from `is_on`. Binding them instead of keying on them is M1.
 - **No manifest signature** yet: the app accepts unsigned manifests (`allowUnsigned`). M4 adds
   signing, and the client already reserves `signature` and checks `serial` and expiry.
-- **The library is captured at runtime**, not shipped as assets. It covers the dashboard and
-  launcher widgets; Wear still captures directly (M6). No published host (M4), no UI Builder
+- **The library is captured at runtime**, not shipped as assets. It covers the dashboard,
+  launcher widgets and Wear widgets. No published host (M4), no UI Builder
   references (R1, R2, M2b).
+- **Wear widgets are baked too** (`SlotWidget`): Glance Wear captures the slot's template itself
+  (its own op set and canvas, keyed by card shape, theme, container and size) and
+  `LauncherDesigns.bakeValues` writes the card's values in. The Wear widget has no taps; a slot
+  picture can't be fetched on the watch yet, so such a card keeps the direct capture.
 - **Launcher widgets are baked** (S1, `LauncherDesigns`): a launcher can't receive bindings, so
   the widget's launcher template — keyed by size (`variant = <w>x<h>`) and widget theme, captured
   from the same tree as a live widget (`LauncherWidgetContent`) — gets the card's values written

@@ -10,6 +10,7 @@ import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.glance.wear.AssociateWithGlanceWearWidget
 import androidx.glance.wear.GlanceWearWidget
 import androidx.glance.wear.GlanceWearWidgetService
@@ -17,22 +18,28 @@ import androidx.glance.wear.WearWidgetBrush
 import androidx.glance.wear.WearWidgetData
 import androidx.glance.wear.WearWidgetDocument
 import androidx.glance.wear.core.WearWidgetParams
+import androidx.glance.wear.core.WearWidgetRawContent
 import androidx.wear.compose.remote.material3.RemoteColorScheme
 import androidx.wear.compose.remote.material3.RemoteMaterialTheme
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HaSnapshot
+import ee.schimke.ha.rc.CardDesignTemplates
 import ee.schimke.ha.rc.CardSizeMode
+import ee.schimke.ha.rc.LauncherDesigns
 import ee.schimke.ha.rc.ProvideCardRegistry
 import ee.schimke.ha.rc.ProvideCardSizeMode
 import ee.schimke.ha.rc.RenderChild
 import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.cards.shutter.withEnhancedShutter
+import ee.schimke.ha.rc.components.LocalTemplateBindings
 import ee.schimke.ha.rc.components.ProvideCardChrome
 import ee.schimke.ha.rc.components.ProvideFlowLayoutSupport
 import ee.schimke.ha.rc.components.RemoteHaTheme
+import ee.schimke.ha.rc.components.TemplateBindings
 import ee.schimke.ha.rc.components.ThemeStyle
 import ee.schimke.ha.rc.components.asHaTheme
+import ee.schimke.ha.rc.converterFor
 import ee.schimke.terrazzo.wear.data.WearPrefs
 import ee.schimke.terrazzo.wear.sync.WearOfflineStore
 import ee.schimke.terrazzo.wear.ui.terrazzoWearColorScheme
@@ -98,11 +105,88 @@ abstract class SlotWidget(internal val slotIndex: Int) : GlanceWearWidget() {
     val updatedColors =
       wearColors.copy(tertiary = wearColors.primary, secondary = wearColors.onSurfaceVariant)
 
-    return WearWidgetDocument(
-      background = WearWidgetBrush.Companion,
-      content = {
+    val direct = slotDocument(registry, updatedColors, card, snapshot, slotIndex)
+    if (card == null) return direct
+    // Design first: the card's Wear template, captured by Glance Wear itself (its profile and
+    // canvas) and baked with the card's values — a Wear widget can't receive bindings. Cards with
+    // no
+    // design, or one that can't be baked, keep the direct document.
+    val design = CardDesignTemplates.designCard(card, snapshot, registry)
+    val converter = registry.converterFor(design.type) ?: return direct
+    val properties = converter.designProperties(design, snapshot) ?: return direct
+    val input = converter.designTemplate(properties) ?: return direct
+    return object : WearWidgetData {
+      override suspend fun captureRawContent(
+        context: Context,
+        params: WearWidgetParams,
+        isPreview: Boolean,
+      ): WearWidgetRawContent {
+        val key =
+          WearTemplateKey(
+            cardType = design.type,
+            shape = properties.shape,
+            style = style,
+            containerType = params.containerType,
+            widthDp = params.widthDp,
+            heightDp = params.heightDp,
+            renderer = params.rendererVersion.toString(),
+          )
+        val template =
+          wearTemplates[key]
+            ?: slotDocument(
+                registry,
+                updatedColors,
+                input.card,
+                input.snapshot,
+                slotIndex,
+                template = true,
+              )
+              .captureRawContent(context, params, isPreview)
+              .also { wearTemplates[key] = it }
+        val playback = CardDesignTemplates.playback(design, template.rcDocument, registry)
+        val baked =
+          LauncherDesigns.bakeValues(template.rcDocument, playback, snapshot)
+            ?: return direct.captureRawContent(context, params, isPreview)
+        return WearWidgetRawContent(baked, template.extras, template.widgetTitle)
+      }
+    }
+  }
+}
+
+/** One captured Wear template per card shape, theme and container: see [SlotWidget]. */
+private data class WearTemplateKey(
+  val cardType: String,
+  val shape: String,
+  val style: ThemeStyle,
+  val containerType: Int,
+  val widthDp: Float,
+  val heightDp: Float,
+  val renderer: String,
+)
+
+private val wearTemplates =
+  java.util.concurrent.ConcurrentHashMap<WearTemplateKey, WearWidgetRawContent>()
+
+/**
+ * A slot's widget document: [card] under the Wear theme, Fixed size mode, without the card's own
+ * chrome. With [template] it is captured as a design template: names and titles bound, not baked.
+ */
+private fun slotDocument(
+  registry: ee.schimke.ha.rc.CardRegistry,
+  colors: RemoteColorScheme,
+  card: CardConfig?,
+  snapshot: HaSnapshot,
+  slotIndex: Int,
+  template: Boolean = false,
+): WearWidgetDocument =
+  WearWidgetDocument(
+    background = WearWidgetBrush.Companion,
+    content = {
+      CompositionLocalProvider(
+        LocalTemplateBindings provides if (template) TemplateBindings() else null
+      ) {
         ProvideCardRegistry(registry) {
-          RemoteMaterialTheme(colorScheme = updatedColors) {
+          RemoteMaterialTheme(colorScheme = colors) {
             val theme = RemoteMaterialTheme.colorScheme.asHaTheme()
             ProvideCardSizeMode(CardSizeMode.Fixed) {
               // The Glance Wear container already supplies its
@@ -128,10 +212,9 @@ abstract class SlotWidget(internal val slotIndex: Int) : GlanceWearWidget() {
             }
           }
         }
-      },
-    )
-  }
-}
+      }
+    },
+  )
 
 /**
  * Tiny placeholder rendered when a slot has no assigned card or its `rawJson` failed to decode.

@@ -163,31 +163,7 @@ object LauncherDesigns {
     fetchImage: (url: String) -> ByteArray? = { null },
   ): Baked? {
     val playback = CardDesignTemplates.playback(card, template.bytes, registry)
-    val bindings = playback.bindings(snapshot)
-    val values = buildMap {
-      for ((name, v) in bindings.strings) put(name, RcHardcodedValue.Text(v))
-      for ((name, v) in bindings.booleans) put(name, RcHardcodedValue.BooleanValue(v))
-      for ((name, v) in bindings.ints) put(name, RcHardcodedValue.Integer(v))
-      for ((name, v) in bindings.floats) put(name, RcHardcodedValue.FloatValue(v))
-    }
-    val bytes = runCatching {
-      val document = RcDocumentCodec.decode(template.bytes, RcWireLimits())
-      // A launcher can't load an image URL, so each one is fetched and embedded. A template's URLs
-      // are slot pictures (`rc-slot://…`), resolved through the card's own entities; a picture that
-      // can't be resolved or fetched keeps the direct capture.
-      val images =
-        document.bitmapUrls.associateWith { url ->
-          val real = playback.bitmapUrl(url, snapshot) ?: return null
-          fetchImage(real) ?: return null
-        }
-      val embedded = if (images.isEmpty()) document else document.embedBitmapUrls(images)
-      RcDocumentCodec.encode(
-        embedded.hardcodeNamedValues(values).collapseConstantStateLayouts().optimize()
-      )
-    }
-      .getOrElse {
-        return null
-      }
+    val bytes = bakeValues(template.bytes, playback, snapshot, fetchImage) ?: return null
     val templateActions = template.actions.mapValues { (_, payload) -> decodeHaAction(payload) }
     // Each host action the template registered runs the card's own action for it. A PIN typed into
     // the widget resolves to an empty AlarmPin on the real entity; the receiver takes the digits
@@ -222,6 +198,42 @@ object LauncherDesigns {
       registry,
       fetchImage,
     )
+  }
+
+  /**
+   * [templateBytes] with [playback]'s bindings for [snapshot] written in, its slot pictures fetched
+   * and embedded, its now-constant state layouts collapsed and the document optimised; null when it
+   * can't be (a picture that can't be resolved or fetched, a binding the document can't hold as a
+   * constant). For any host that can't receive bindings: launcher widgets, Wear widgets.
+   */
+  fun bakeValues(
+    templateBytes: ByteArray,
+    playback: CardTemplatePlayback,
+    snapshot: HaSnapshot,
+    fetchImage: (url: String) -> ByteArray? = { null },
+  ): ByteArray? {
+    val bindings = playback.bindings(snapshot)
+    val values = buildMap {
+      for ((name, v) in bindings.strings) put(name, RcHardcodedValue.Text(v))
+      for ((name, v) in bindings.booleans) put(name, RcHardcodedValue.BooleanValue(v))
+      for ((name, v) in bindings.ints) put(name, RcHardcodedValue.Integer(v))
+      for ((name, v) in bindings.floats) put(name, RcHardcodedValue.FloatValue(v))
+    }
+    return runCatching {
+      val document = RcDocumentCodec.decode(templateBytes, RcWireLimits())
+      // Such a host can't load an image URL, so each one is fetched and embedded. A template's
+      // URLs are slot pictures (`rc-slot://…`), resolved through the card's own entities.
+      val images =
+        document.bitmapUrls.associateWith { url ->
+          val real = playback.bitmapUrl(url, snapshot) ?: return null
+          fetchImage(real) ?: return null
+        }
+      val embedded = if (images.isEmpty()) document else document.embedBitmapUrls(images)
+      RcDocumentCodec.encode(
+        embedded.hardcodeNamedValues(values).collapseConstantStateLayouts().optimize()
+      )
+    }
+      .getOrNull()
   }
 
   private val library = ConcurrentHashMap<Pair<DesignKey, Int>, Template>()
