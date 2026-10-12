@@ -12043,8 +12043,8 @@
     "androidx.compose.remote:remote-player-compose (RemoteCompose)",
     "ee.schimke.ha:rc-components (Terrazzo themes)"
   ],
-  "renderer": "compose-preview 2.51.0",
-  "generatedAt": "2026-10-12T04:29:42.829Z",
+  "renderer": "compose-preview 2.52.0",
+  "generatedAt": "2026-10-12T05:51:00.290Z",
   "display": {
     "hero": "Dashboard/Light"
   },
@@ -12063,7 +12063,7 @@
   "componentsFile": "components.json",
   "source": {
     "repo": "yschimke/homeassistant-remotecompose",
-    "ref": "027565ba9bb6cf8d0e433afdc20d4de89923727e",
+    "ref": "bfc5a1319a7d8f50b7aa32f40690396d40236b0f",
     "module": ":previews"
   }
 }
