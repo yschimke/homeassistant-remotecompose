@@ -21,12 +21,15 @@ import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.creation.compose.modifier.height
 import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.modifier.width
+import androidx.compose.remote.creation.compose.state.RemoteColor
 import androidx.compose.remote.creation.compose.state.RemoteFloat
 import androidx.compose.remote.creation.compose.state.asRemotePaint
+import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rf
-import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.remote.creation.compose.state.rsp
+import androidx.compose.remote.creation.compose.state.selectIfGe
+import androidx.compose.remote.creation.compose.state.selectIfLt
 import androidx.compose.remote.creation.compose.text.RemoteTextStyle
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
@@ -46,8 +49,8 @@ import androidx.compose.ui.text.style.TextOverflow
  *
  * The arc sweep is derived from the named `<entityId>.numeric_state` binding (animated through
  * [animateRemoteFloat]) so live value updates tween without re-encoding. Severity bands tint the
- * value arc green / yellow / red (matching HA's `gauge.severity` config); the active band's colour
- * is baked at encode time, so a host re-encodes when the value crosses a band boundary.
+ * value arc green / yellow / red (matching HA's `gauge.severity` config); the document picks the
+ * active band from the live value, so a reading crossing a band needs no re-encode.
  */
 @Composable
 @RemoteComposable
@@ -56,28 +59,10 @@ fun RemoteHaGauge(data: HaGaugeData, modifier: RemoteModifier = RemoteModifier) 
   val clickable =
     data.tapAction.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
 
-  val span = (data.max - data.min).coerceAtLeast(0.0001)
-
   // Live numeric value from the entity binding, animated so each host
-  // update tweens between successive values instead of snapping. When
-  // there's no entityId we get a constant RemoteFloat — animation is
-  // a no-op since the input never changes.
-  val animatedValue: RemoteFloat =
-    animateRemoteFloat(
-      data.value,
-      durationSeconds = GaugeAnimationSeconds,
-      easing = RcEasing.Standard,
-    )
-  val animatedFraction: RemoteFloat = (animatedValue - data.min.toFloat().rf) / span.toFloat().rf
-  val animatedSweep: RemoteFloat = animatedFraction * 180f.rf
-
-  val severityColor =
-    when (data.severity) {
-      HaGaugeSeverity.None -> Color(0xFF03A9F4)
-      HaGaugeSeverity.Normal -> Color(0xFF43A047)
-      HaGaugeSeverity.Warning -> Color(0xFFFFA000)
-      HaGaugeSeverity.Critical -> Color(0xFFE53935)
-    }
+  // update tweens between successive values instead of snapping.
+  val animatedSweep = animatedGaugeSweep(data)
+  val severityColor = gaugeSeverityColor(data)
 
   RemoteBox(
     modifier =
@@ -122,9 +107,9 @@ fun RemoteHaGauge(data: HaGaugeData, modifier: RemoteModifier = RemoteModifier) 
               style = AndroidPaint.Style.STROKE
               strokeWidth = 10f
               strokeCap = AndroidPaint.Cap.ROUND
-              color = severityColor.toArgb()
             }
             .asRemotePaint()
+            .apply { color = severityColor }
         drawArc(value, 180f.rf, animatedSweep, false, topLeft, arcSize)
       }
 
@@ -138,7 +123,7 @@ fun RemoteHaGauge(data: HaGaugeData, modifier: RemoteModifier = RemoteModifier) 
         overflow = TextOverflow.Ellipsis,
       )
       RemoteText(
-        text = data.name.rs,
+        text = entityName(data.entityId, data.name),
         color = theme.secondaryText,
         fontSize = 13.rsp,
         style = RemoteTextStyle.Default,
@@ -147,7 +132,7 @@ fun RemoteHaGauge(data: HaGaugeData, modifier: RemoteModifier = RemoteModifier) 
       )
       if (data.unit != null) {
         RemoteText(
-          text = "${formatRange(data.min)} – ${formatRange(data.max)} ${data.unit}".rs,
+          text = cardText("range", gaugeRangeText(data.min, data.max, data.unit)),
           color = theme.secondaryText,
           fontSize = 11.rsp,
           style = RemoteTextStyle.Default,
@@ -174,7 +159,7 @@ private const val GaugeAnimationSeconds = 0.45f
 fun RemoteHaGaugeStacked(data: HaGaugeData, modifier: RemoteModifier = RemoteModifier) {
   val theme = haTheme()
   val animatedSweep = animatedGaugeSweep(data)
-  val severityColor = severityColorFor(data.severity)
+  val severityColor = gaugeSeverityColor(data)
   val clickable =
     data.tapAction.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
 
@@ -220,9 +205,9 @@ fun RemoteHaGaugeStacked(data: HaGaugeData, modifier: RemoteModifier = RemoteMod
             style = AndroidPaint.Style.STROKE
             strokeWidth = 8f
             strokeCap = AndroidPaint.Cap.ROUND
-            color = severityColor.toArgb()
           }
           .asRemotePaint()
+          .apply { color = severityColor }
       drawArc(value, 180f.rf, animatedSweep, false, topLeft, arcSize)
     }
     RemoteColumn(
@@ -240,7 +225,7 @@ fun RemoteHaGaugeStacked(data: HaGaugeData, modifier: RemoteModifier = RemoteMod
         overflow = TextOverflow.Ellipsis,
       )
       RemoteText(
-        text = data.name.rs,
+        text = entityName(data.entityId, data.name),
         color = theme.secondaryText,
         fontSize = 12.rsp,
         style = RemoteTextStyle.Default,
@@ -249,7 +234,7 @@ fun RemoteHaGaugeStacked(data: HaGaugeData, modifier: RemoteModifier = RemoteMod
       )
       if (data.unit != null) {
         RemoteText(
-          text = "${formatRange(data.min)} – ${formatRange(data.max)} ${data.unit}".rs,
+          text = cardText("range", gaugeRangeText(data.min, data.max, data.unit)),
           color = theme.secondaryText,
           fontSize = 10.rsp,
           style = RemoteTextStyle.Default,
@@ -271,7 +256,7 @@ fun RemoteHaGaugeStacked(data: HaGaugeData, modifier: RemoteModifier = RemoteMod
 fun RemoteHaGaugeWide(data: HaGaugeData, modifier: RemoteModifier = RemoteModifier) {
   val theme = haTheme()
   val animatedSweep = animatedGaugeSweep(data)
-  val severityColor = severityColorFor(data.severity)
+  val severityColor = gaugeSeverityColor(data)
   val clickable =
     data.tapAction.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
 
@@ -320,9 +305,9 @@ fun RemoteHaGaugeWide(data: HaGaugeData, modifier: RemoteModifier = RemoteModifi
             style = AndroidPaint.Style.STROKE
             strokeWidth = 6f
             strokeCap = AndroidPaint.Cap.ROUND
-            color = severityColor.toArgb()
           }
           .asRemotePaint()
+          .apply { color = severityColor }
       drawArc(value, 180f.rf, animatedSweep, false, topLeft, arcSize)
     }
     RemoteColumn(
@@ -340,7 +325,7 @@ fun RemoteHaGaugeWide(data: HaGaugeData, modifier: RemoteModifier = RemoteModifi
         overflow = TextOverflow.Ellipsis,
       )
       RemoteText(
-        text = data.name.rs,
+        text = entityName(data.entityId, data.name),
         color = theme.secondaryText,
         fontSize = 11.rsp,
         style = RemoteTextStyle.Default,
@@ -353,32 +338,62 @@ fun RemoteHaGaugeWide(data: HaGaugeData, modifier: RemoteModifier = RemoteModifi
 
 @Composable
 private fun animatedGaugeSweep(data: HaGaugeData): RemoteFloat {
-  val span = (data.max - data.min).coerceAtLeast(0.0001)
+  val min = cardFloat("min", data.min.toFloat())
+  val max = cardFloat("max", data.max.toFloat())
+  // Same floor on the span as before, now evaluated in-document.
+  val span = (max - min).let { selectIfLt(it, 0.0001f.rf, 0.0001f.rf, it) }
   val animatedValue: RemoteFloat =
     animateRemoteFloat(
       data.value,
       durationSeconds = GaugeAnimationSeconds,
       easing = RcEasing.Standard,
     )
-  val animatedFraction: RemoteFloat = (animatedValue - data.min.toFloat().rf) / span.toFloat().rf
-  return animatedFraction * 180f.rf
+  return (animatedValue - min) / span * 180f.rf
 }
 
-private fun severityColorFor(severity: HaGaugeSeverity): Color =
-  when (severity) {
-    HaGaugeSeverity.None -> Color(0xFF03A9F4)
-    HaGaugeSeverity.Normal -> Color(0xFF43A047)
-    HaGaugeSeverity.Warning -> Color(0xFFFFA000)
-    HaGaugeSeverity.Critical -> Color(0xFFE53935)
-  }
+/**
+ * The value arc's colour, picked in-document from the live value: the band whose threshold is the
+ * highest one the value reaches ([HaGaugeBands]), or the no-severity blue when it reaches none. An
+ * unset threshold is [UnsetThreshold], which no value reaches.
+ */
+@Composable
+private fun gaugeSeverityColor(data: HaGaugeData): RemoteColor {
+  val bands = data.severity
+  val value = data.value
+  val green = cardFloat("severity_green", bands.green?.toFloat() ?: UnsetThreshold)
+  val yellow = cardFloat("severity_yellow", bands.yellow?.toFloat() ?: UnsetThreshold)
+  val red = cardFloat("severity_red", bands.red?.toFloat() ?: UnsetThreshold)
+  val below = (-UnsetThreshold).rf
+  // reached(t) is t when the value reaches it, else far below every threshold.
+  fun reached(t: RemoteFloat) = selectIfGe(value, t, t, below)
+  val top = maxOf(maxOf(reached(green), reached(yellow)), reached(red))
+  // Equal thresholds resolve red, then yellow, then green, as the converter always did.
+  return top
+    .isEqualTo(red)
+    .select(
+      SeverityCritical.rc,
+      top
+        .isEqualTo(yellow)
+        .select(
+          SeverityWarning.rc,
+          top.isEqualTo(green).select(SeverityNormal.rc, SeverityNone.rc),
+        ),
+    )
+}
+
+private fun maxOf(a: RemoteFloat, b: RemoteFloat): RemoteFloat = -((-a).min(-b))
+
+/** Threshold for a severity band the card doesn't set: no reading reaches it. */
+private const val UnsetThreshold = 1e30f
+
+private val SeverityNone = Color(0xFF03A9F4)
+private val SeverityNormal = Color(0xFF43A047)
+private val SeverityWarning = Color(0xFFFFA000)
+private val SeverityCritical = Color(0xFFE53935)
+
+/** The gauge's range line, e.g. `0 – 100 °C`. */
+fun gaugeRangeText(min: Double, max: Double, unit: String?): String =
+  "${formatRange(min)} – ${formatRange(max)} ${unit.orEmpty()}"
 
 private fun formatRange(d: Double): String =
   if (d == d.toLong().toDouble()) d.toLong().toString() else "%.1f".format(d)
-
-private fun Color.toArgb(): Int =
-  android.graphics.Color.argb(
-    (alpha * 255f).toInt(),
-    (red * 255f).toInt(),
-    (green * 255f).toInt(),
-    (blue * 255f).toInt(),
-  )

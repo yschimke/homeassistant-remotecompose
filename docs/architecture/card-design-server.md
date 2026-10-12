@@ -47,7 +47,8 @@ values**. The client fills those bindings from its own HA connection.
 ## Spike status
 
 A first end-to-end slice is in the codebase, with **one rendering path**: every templatable card
-(today: tile, entity, button, heading, glance, entities and alarm panel) renders from a card design. The design comes from the server when one is
+(today: tile, entity, button, heading, glance, entities, alarm panel, gauge, clock and the
+unsupported placeholder) renders from a card design. The design comes from the server when one is
 cached for the card's key, and from the **local design library** otherwise. The library captures
 the same template from the app's own converters on first use and keeps it for the process, so with
 no server configured (the default) cards still take the design path, just with built-in designs.
@@ -79,6 +80,14 @@ Deliberate spike limits, each owned by a milestone below:
   `sensor` or `binary_sensor`, on the mobile app surface. Any other config has no shape and stays
   local. The alarm panel is keyed on its ARM buttons (`states`) and `show_keypad`; its status
   variants already switch in-document on `<slot>.state_int`.
+  The gauge's properties are its entity's domain (which names the slot) and whether its range
+  line shows (`has_unit`): `min`, `max` and the
+  severity thresholds are card-level float bindings (`card.min`, `card.severity_red`, …), the
+  range text is `card.range`, and the document picks the band from the live value
+  (`CardConverter.designBindings` supplies the card-level values).
+  The clock is keyed on which lines show and its time format; the date line is `card.date` and
+  another zone's offset `card.zone_offset_minutes`, so neither DST nor midnight changes its
+  structure. The unsupported placeholder shows only its type, which is already in the key.
 - **Generation properties** (`EntityDesign`) are what changes the look, per bound entity:
   `domain` (icon family, toggle chrome), `device_class` for sensors and binary sensors (icon,
   colour), the `icon` attribute and a config `icon` (`card_icon`). List cards prefix them with the

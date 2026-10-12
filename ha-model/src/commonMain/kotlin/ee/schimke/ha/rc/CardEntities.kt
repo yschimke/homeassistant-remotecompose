@@ -85,7 +85,16 @@ data class CardSnapshotBindings(
   val booleans: Map<String, Boolean>,
   val ints: Map<String, Int>,
   val floats: Map<String, Float>,
-)
+) {
+  /** These bindings with [other]'s on top: a name in both takes [other]'s value. */
+  operator fun plus(other: CardSnapshotBindings): CardSnapshotBindings =
+    CardSnapshotBindings(
+      strings + other.strings,
+      booleans + other.booleans,
+      ints + other.ints,
+      floats + other.floats,
+    )
+}
 
 fun cardSnapshotBindings(entityIds: Set<String>, snapshot: HaSnapshot): CardSnapshotBindings {
   if (entityIds.isEmpty()) {

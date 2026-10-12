@@ -17,6 +17,7 @@ import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.components.LocalTemplateBindings
 import ee.schimke.ha.rc.components.ProvideHaTheme
+import ee.schimke.ha.rc.components.TemplateBindings
 import ee.schimke.ha.rc.components.ThemeStyle
 import ee.schimke.ha.rc.components.haThemeFor
 import kotlinx.coroutines.runBlocking
@@ -84,7 +85,10 @@ object CardDesignTemplates {
       }
     return CardTemplatePlayback(
       bytes = bytes,
-      bindings = { snapshot -> CardDesignSlots.slotBindings(card, snapshot) },
+      bindings = { snapshot ->
+        val slots = CardDesignSlots.slotBindings(card, snapshot)
+        converter?.designBindings(card, snapshot)?.let { slots + it } ?: slots
+      },
       tapAction = tapActionOf(card.raw["tap_action"] as? JsonObject, entityId),
       slotTapActions = slotTaps,
       slotAction = { snapshot, slot, action ->
@@ -144,7 +148,7 @@ object CardDesignTemplates {
     val bytes = runBlocking {
       captureSingleRemoteDocument(context = context, profile = androidXExperimentalWrap) {
           // Bound name / title text instead of literals: see LocalTemplateBindings.
-          CompositionLocalProvider(LocalTemplateBindings provides mutableMapOf()) {
+          CompositionLocalProvider(LocalTemplateBindings provides TemplateBindings()) {
             ProvideCardRegistry(registry) {
               ProvideHaTheme(theme) { RenderChild(card, snapshot, RemoteModifier.fillMaxWidth()) }
             }

@@ -90,7 +90,7 @@ expressed as a binding.
 
 - **Binding (path 1):** sensor, entity, glance, tile, area, entities,
   button, picture-entity, alarm-panel (`state_int`), gauge
-  (`numeric_state`), markdown (`.state` tokens + Jinja `templateValues`).
+  (`numeric_state`; the severity band is picked in-document), markdown (`.state` tokens + Jinja `templateValues`).
 - **Re-encode (path 2):** calendar, logbook, to-do, history-graph,
   statistics-graph, statistic, map, weather-forecast, thermostat /
   humidifier / light (arc fill + labels), media-control, Bambu (AMS /

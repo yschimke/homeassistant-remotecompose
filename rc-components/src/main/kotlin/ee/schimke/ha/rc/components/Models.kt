@@ -126,17 +126,22 @@ data class HaGaugeData(
   val value: RemoteFloat,
   val min: Double,
   val max: Double,
-  /** Severity bands sampled at the value position: green / yellow / red. */
-  val severity: HaGaugeSeverity = HaGaugeSeverity.None,
+  /** HA `severity:` thresholds; the band is picked in-document from the live value. */
+  val severity: HaGaugeBands = HaGaugeBands(),
   val tapAction: HaAction = HaAction.None,
 )
 
-enum class HaGaugeSeverity {
-  None,
-  Normal,
-  Warning,
-  Critical,
-}
+/**
+ * A gauge's `severity:` thresholds (`green` / `yellow` / `red`), each optional. The active band is
+ * the one with the highest threshold the value reaches, whatever the order HA was given them in
+ * ("green=60, yellow=30, red=0" and "red=50, yellow=10, green=0" both occur). The document picks it
+ * from the live value at playback, so a reading crossing a band never needs a re-encode.
+ */
+data class HaGaugeBands(
+  val green: Double? = null,
+  val yellow: Double? = null,
+  val red: Double? = null,
+)
 
 /** `weather-forecast` card model. */
 data class HaWeatherForecastData(
@@ -382,6 +387,11 @@ data class HaClockData(
   val use24Hour: Boolean,
   val zoneOffsetMinutes: Int = 0,
   val showSeconds: Boolean = false,
+  /**
+   * The card shows another time zone: the time is shifted in-document by `card.zone_offset_minutes`
+   * (constant [zoneOffsetMinutes] in a live capture, a binding in a design template).
+   */
+  val zoned: Boolean = zoneOffsetMinutes != 0,
 )
 
 /**

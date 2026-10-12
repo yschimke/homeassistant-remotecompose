@@ -57,7 +57,7 @@ fun RemoteHaClock(data: HaClockData, modifier: RemoteModifier = RemoteModifier) 
     ) {
       if (data.title != null) {
         RemoteText(
-          text = data.title.rs,
+          text = cardTitle(data.title),
           color = theme.secondaryText,
           fontSize = 12.rsp,
           style = RemoteTextStyle.Default,
@@ -67,9 +67,11 @@ fun RemoteHaClock(data: HaClockData, modifier: RemoteModifier = RemoteModifier) 
       }
       val timeText: RemoteString =
         data.staticTimeLabel?.rs
-          ?: if (data.zoneOffsetMinutes != 0 || data.showSeconds) {
+          ?: if (data.zoned || data.showSeconds) {
             liveClockTimeString(
-              zoneOffsetMinutes = data.zoneOffsetMinutes,
+              zoneOffsetMinutes =
+                if (data.zoned) cardFloat("zone_offset_minutes", data.zoneOffsetMinutes.toFloat())
+                else null,
               showSeconds = data.showSeconds,
               use24Hour = data.use24Hour,
             )
@@ -89,7 +91,7 @@ fun RemoteHaClock(data: HaClockData, modifier: RemoteModifier = RemoteModifier) 
       )
       if (data.secondaryLabel != null) {
         RemoteText(
-          text = data.secondaryLabel.rs,
+          text = cardText("date", data.secondaryLabel),
           color = theme.secondaryText,
           fontSize = 12.rsp,
           style = RemoteTextStyle.Default,
@@ -111,11 +113,11 @@ private val oneDigit = DecimalFormat("0")
  *
  * `RemoteContext.FLOAT_TIME_IN_HR` is hour-of-day; `FLOAT_TIME_IN_MIN` and `FLOAT_TIME_IN_SEC` are
  * minute / second since midnight, so the `% 60` reduces them to minute/second-of-the-current-unit.
- * To shift into [zoneOffsetMinutes] (target zone − host zone) we recompose minute-of-day, add the
- * offset, mod 1440, and re-split into hours and minutes.
+ * To shift into [zoneOffsetMinutes] (target zone − host zone; null for none) we recompose
+ * minute-of-day, add the offset, mod 1440, and re-split into hours and minutes.
  */
 private fun liveClockTimeString(
-  zoneOffsetMinutes: Int,
+  zoneOffsetMinutes: RemoteFloat?,
   showSeconds: Boolean,
   use24Hour: Boolean,
 ): RemoteString {
@@ -124,13 +126,12 @@ private fun liveClockTimeString(
   val sec = RemoteFloat(RemoteContext.FLOAT_TIME_IN_SEC).rem(60f)
 
   val (hour24, minute) =
-    if (zoneOffsetMinutes == 0) {
+    if (zoneOffsetMinutes == null) {
       hostHour to hostMin
     } else {
       // +1_440_000 keeps the modulo argument positive across any plausible
       // zone offset before we wrap to minutes-of-day.
-      val totalMin =
-        (hostHour * 60f + hostMin + (zoneOffsetMinutes + 1_440_000).toFloat()).rem(1440f)
+      val totalMin = (hostHour * 60f + hostMin + zoneOffsetMinutes + 1_440_000f.rf).rem(1440f)
       floor(totalMin / 60f) to totalMin.rem(60f)
     }
 

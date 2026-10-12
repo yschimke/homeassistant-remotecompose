@@ -351,4 +351,114 @@ class CardDesignParityTest {
       entity("alarm_control_panel.home", "triggered"),
       dark = true,
     )
+
+  private fun gauge(block: kotlinx.serialization.json.JsonObjectBuilder.() -> Unit = {}) =
+    card("gauge") {
+      put("entity", "sensor.cpu")
+      block()
+    }
+
+  private val cpu =
+    entity("sensor.cpu", "64", "friendly_name" to "CPU", "unit_of_measurement" to "%")
+
+  @Test
+  fun gaugeWarningBand() =
+    assertParity(
+      "gauge-warning",
+      gauge {
+        put(
+          "severity",
+          buildJsonObject {
+            put("green", 0)
+            put("yellow", 50)
+            put("red", 80)
+          },
+        )
+      },
+      cpu,
+      dark = false,
+    )
+
+  @Test
+  fun gaugeDescendingBandsCustomRangeDark() =
+    assertParity(
+      "gauge-descending-dark",
+      gauge {
+        put("min", 20)
+        put("max", 90)
+        put("name", "Processor")
+        put(
+          "severity",
+          buildJsonObject {
+            put("green", 60)
+            put("yellow", 30)
+            put("red", 0)
+          },
+        )
+      },
+      cpu,
+      dark = true,
+    )
+
+  @Test
+  fun gaugeNoSeverityNoUnit() =
+    assertParity(
+      "gauge-plain",
+      gauge(),
+      entity("sensor.cpu", "37", "friendly_name" to "Load"),
+      dark = false,
+    )
+
+  @Test
+  fun gaugeUnavailable() =
+    assertParity(
+      "gauge-unavailable",
+      gauge { put("severity", buildJsonObject { put("red", 10) }) },
+      entity("sensor.cpu", "unavailable", "friendly_name" to "CPU", "unit_of_measurement" to "%"),
+      dark = false,
+    )
+
+  @Test
+  fun clockWithTitleAndDate() =
+    assertParity(
+      "clock-title-date",
+      card("clock") { put("title", "Kitchen clock") },
+      emptyList(),
+      dark = false,
+    )
+
+  @Test
+  fun clockZoned12hLargeDark() =
+    assertParity(
+      "clock-zoned-dark",
+      card("clock") {
+        put("time_zone", "Asia/Tokyo")
+        put("time_format", "12")
+        put("clock_size", "large")
+        put("display", "time")
+      },
+      emptyList(),
+      dark = true,
+    )
+
+  @Test
+  fun iframePlaceholder() =
+    assertParity(
+      "iframe",
+      card("iframe") { put("url", "https://example.com") },
+      emptyList(),
+      dark = false,
+    )
+
+  @Test
+  fun gaugeInputNumber() =
+    assertParity(
+      "gauge-input-number",
+      card("gauge") {
+        put("entity", "input_number.volume")
+        put("max", 10)
+      },
+      entity("input_number.volume", "7", "friendly_name" to "Volume"),
+      dark = false,
+    )
 }
