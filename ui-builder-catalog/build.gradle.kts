@@ -43,6 +43,8 @@ dependencies {
   implementation(libs.compose.ui)
   implementation(libs.compose.foundation)
   implementation(libs.compose.material3)
+  // The catalog's closed icon set resolves keys to the Material glyphs the cards draw.
+  implementation(libs.compose.material.icons.extended)
   implementation(libs.kotlinx.serialization.json)
   testImplementation("ee.schimke.composeai:preview-discovery:0.0.0")
   testImplementation(libs.kotlin.test.junit)

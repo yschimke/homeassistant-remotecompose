@@ -52,19 +52,12 @@ class ExternalAndroidCatalogEndToEndTest {
       policy.getValue("catalog").jsonObject.getValue("id").jsonPrimitive.content,
     )
     val ids = policy.getValue("statusSemantics").jsonObject.getValue("components").jsonObject.keys
-    assertEquals(
-      setOf(
-        "homeassistant-remotecompose/heading",
-        "homeassistant-remotecompose/tile",
-        "homeassistant-remotecompose/button",
-        "homeassistant-remotecompose/entity-row",
-        "homeassistant-remotecompose/entities",
-        "homeassistant-remotecompose/glance",
-        "homeassistant-remotecompose/vertical-stack",
-        "homeassistant-remotecompose/horizontal-stack",
-      ),
-      ids,
-    )
+    // Every Tier-2 card composable, adapted directly; the host knows none of them.
+    assertEquals(36, ids.size)
+    assertTrue(ids.all { it.startsWith("homeassistant-remotecompose/") })
+    for (id in listOf("heading", "tile", "vertical-stack", "horizontal-stack", "gauge", "grid")) {
+      assertTrue("homeassistant-remotecompose/$id" in ids, id)
+    }
     val host = javaClass.classLoader
     for (record in records.components) {
       assertNull(
@@ -163,13 +156,15 @@ class ExternalAndroidCatalogEndToEndTest {
                   heading.copy(
                     properties =
                       buildJsonObject {
-                        put(
-                          "title",
-                          buildJsonObject {
-                            put("type", "string")
-                            put("value", "Living room")
-                          },
-                        )
+                        putJsonObject("data") {
+                          put("type", "object")
+                          putJsonObject("fields") {
+                            putJsonObject("title") {
+                              put("type", "string")
+                              put("value", "Living room")
+                            }
+                          }
+                        }
                       }
                   )),
           )
@@ -194,6 +189,10 @@ class ExternalAndroidCatalogEndToEndTest {
           reopened.nodes
             .getValue("heading")
             .properties
+            .getValue("data")
+            .jsonObject
+            .getValue("fields")
+            .jsonObject
             .getValue("title")
             .jsonObject
             .getValue("value")
