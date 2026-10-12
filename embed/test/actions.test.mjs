@@ -42,10 +42,18 @@ test('a template cannot reach another entity or another domain', () => {
     resolveTap(card, action('CallService', { domain: 'lock', service: 'unlock', entityId: 'light.s0' })),
     { kind: 'Toggle', entityId: 'light.kitchen' },
   );
-  // Its own domain's service is fine.
+  // Even its own domain's service: the template only picks the slot, never the service or data.
   assert.deepEqual(
     resolveTap(card, action('CallService', { domain: 'light', service: 'turn_on', entityId: 'light.s0', serviceData: { brightness: 10 } })),
-    { kind: 'CallService', domain: 'light', service: 'turn_on', entityId: 'light.kitchen', serviceData: { brightness: 10 } },
+    { kind: 'Toggle', entityId: 'light.kitchen' },
+  );
+  // So a harmless default can't become a disarm.
+  assert.deepEqual(
+    resolveTap(
+      { type: 'tile', entity: 'alarm_control_panel.home' },
+      action('CallService', { domain: 'alarm_control_panel', service: 'alarm_disarm', entityId: 'alarm_control_panel.s0', serviceData: { code: '1234' } }),
+    ),
+    { kind: 'MoreInfo', entityId: 'alarm_control_panel.home' },
   );
   // A URL in a template is never followed.
   assert.deepEqual(resolveTap(card, action('Url', { url: 'https://evil.example' })), { kind: 'Toggle', entityId: 'light.kitchen' });

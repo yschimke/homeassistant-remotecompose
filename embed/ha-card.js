@@ -339,10 +339,10 @@ const SLOT_ENTITY = /^[a-z0-9_]+\.s(\d+)$/;
 
 /**
  * The card-local action for a tap whose template-encoded action is [value], the counterpart of
- * `CardTemplatePlayback.resolveTap`. A template is remote content, so what it encodes is never run
- * as is: a tap on slot N runs that slot's own `tap_action`, or else the template's kind of action
- * rebound to the slot's real entity — and only actions on that entity (its own domain's services,
- * a toggle, more-info). Anything else runs the card's own `tap_action` or its domain default.
+ * `CardTemplatePlayback.resolveTap`. A template is remote content, so what it encodes only picks a
+ * slot: a tap on slot N runs that slot's own `tap_action`, or else its entity's domain default.
+ * The template's action kind, service and service data are never run. Anything else runs the
+ * card's own `tap_action` or its domain default.
  */
 export function resolveTap(card, value) {
   const entries = slotEntries(card) ?? [];
@@ -358,25 +358,7 @@ export function resolveTap(card, value) {
   if (!entry || slotId(domainOf(entry.entityId), index) !== templateAction.entityId) return cardAction();
   const real = entry.entityId;
   const configured = entry.config ? parseLovelaceAction(entry.config.tap_action, real) : null;
-  if (configured) return configured;
-  switch (templateAction.kind) {
-    case 'Toggle':
-      return { kind: 'Toggle', entityId: real };
-    case 'MoreInfo':
-      return { kind: 'MoreInfo', entityId: real };
-    case 'CallService': {
-      const domain = content(templateAction.domain);
-      const service = content(templateAction.service);
-      if (domain === domainOf(real) && service && /^[a-z0-9_]+$/.test(service)) {
-        const serviceData = isObject(templateAction.serviceData) ? templateAction.serviceData : {};
-        return { kind: 'CallService', domain, service, entityId: real, serviceData };
-      }
-      return defaultTapActionFor(real);
-    }
-    default:
-      // Alarm keypad actions need the app's keypad coordinator; not in this slice.
-      return defaultTapActionFor(real);
-  }
+  return configured ?? defaultTapActionFor(real);
 }
 
 /** The `call_service` message for [action], or null when it is not a service call. */
@@ -841,6 +823,8 @@ export class HaCardElement extends BaseElement {
   /** Render from these states instead of a Home Assistant: entity id → `{ state, attributes }`. */
   setStates(states) {
     this.localStates = states;
+    // Without any Home Assistant: no more events over these states, and no service calls.
+    this.detachHass();
     this.states = { ...states };
     this.render();
   }
@@ -856,12 +840,20 @@ export class HaCardElement extends BaseElement {
 
   stop() {
     this.generation++;
+    this.detachHass();
+    if (this.player) this.player.destroy();
+    this.player = null;
+  }
+
+  /** Drop this card's subscription, connection listener, pending retry and session. */
+  detachHass() {
+    if (this.retryTimer) clearTimeout(this.retryTimer);
+    this.retryTimer = null;
     if (this.unsubscribe) this.unsubscribe();
     this.unsubscribe = null;
     if (this.stateListener && this.session) this.session.connection.listeners.delete(this.stateListener);
     this.stateListener = null;
-    if (this.player) this.player.destroy();
-    this.player = null;
+    this.session = null;
   }
 
   setStatus(status, message = '', action = null) {
@@ -928,7 +920,9 @@ export class HaCardElement extends BaseElement {
     this.render();
   }
 
-  async connectHass(card, current) {
+  async connectHass(card, started) {
+    // Live while this start is current and nobody has switched the card to local states.
+    const current = () => started() && !this.localStates;
     const hass = this.getAttribute('hass');
     if (!hass) return this.setStatus('error', 'ha-card: set hass to your Home Assistant URL.');
     let hassUrl;
@@ -960,8 +954,19 @@ export class HaCardElement extends BaseElement {
       else this.setStatus(state);
     };
     session.connection.listeners.add(this.stateListener);
+    await this.subscribe(session, card, current, 1000);
+  }
+
+  /**
+   * Subscribe to the card's entities, retrying a failed first connection with backoff; once
+   * connected, [HaConnection] reconnects and resubscribes by itself.
+   */
+  async subscribe(session, card, current, delay) {
+    const entityIds = cardEntityIds(card);
+    // Home Assistant reads an empty `entity_ids` as no filter, which would stream every entity.
+    if (entityIds.length === 0) return this.setStatus('live');
     try {
-      const unsubscribe = await session.connection.subscribeEntities(cardEntityIds(card), (event) => {
+      const unsubscribe = await session.connection.subscribeEntities(entityIds, (event) => {
         if (!current()) return;
         applyEntitiesEvent(this.states, event);
         this.render();
@@ -971,8 +976,12 @@ export class HaCardElement extends BaseElement {
       this.setStatus('live');
     } catch (e) {
       if (!current()) return;
-      if (e instanceof AuthError) this.start();
-      else this.setStatus('error', `ha-card: ${e.message}`);
+      if (e instanceof AuthError) return this.start();
+      this.setStatus('reconnecting', `ha-card: ${e.message}; retrying in ${Math.round(delay / 1000)} s`);
+      this.retryTimer = setTimeout(() => {
+        this.retryTimer = null;
+        if (current()) this.subscribe(session, card, current, Math.min(delay * 2, 30_000));
+      }, delay);
     }
   }
 

@@ -133,9 +133,10 @@ never run as is. It only picks which of the card's own actions runs:
 
 1. A tap that names slot N (`light.s0`) of this card runs that slot's own `tap_action` from the
    card config (the row's, the child card's, or the card's).
-2. With none configured, it runs the template's kind of action **rebound to the slot's real
-   entity**: a toggle, more-info, or a service of the entity's own domain (a `lock.unlock` can't be
-   aimed at a light). Anything else falls back to HA's domain default (`defaultTapActionFor`).
+2. With none configured, it runs HA's default for the slot's real entity
+   (`defaultTapActionFor`: a toggle for toggleable domains, more-info otherwise). The template's
+   action kind, service and service data are never run, so a crafted template can't turn a tap
+   into `alarm_disarm` or pass its own parameters.
 3. A tap that names no slot, or a slot this card doesn't have, runs the card's own `tap_action`
    or its first entity's default. A URL or navigation path in a template is never followed. Only
    the card config can supply one.

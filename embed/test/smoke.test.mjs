@@ -34,7 +34,7 @@ const HASS = 'https://ha.test';
 const card = { type: 'tile', entity: 'light.kitchen' };
 
 /** A page on page.test embedding the card, with scripts and blobs from designs.test. */
-async function openPage(browser, { tokens, url = PAGE, setup } = {}) {
+async function openPage(browser, { tokens, url = PAGE, setup, cardConfig = card, failFirst = 0 } = {}) {
   const page = await browser.newPage({ deviceScaleFactor: 1, viewport: { width: 480, height: 320 } });
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
@@ -46,7 +46,7 @@ async function openPage(browser, { tokens, url = PAGE, setup } = {}) {
       contentType: 'text/html',
       body: `<!doctype html><body style="margin:0"><script type="module" src="https://designs.test/embed/v1/ha-card.js"></script>
         <ha-card style="width:400px" hass="${HASS}" design="${sha}" library="https://designs.test/designs/v1/"
-                 card='${JSON.stringify(card)}'></ha-card></body>`,
+                 card='${JSON.stringify(cardConfig)}'></ha-card></body>`,
     }),
   );
   await page.route('https://designs.test/**', (route) => {
@@ -68,16 +68,18 @@ async function openPage(browser, { tokens, url = PAGE, setup } = {}) {
       JSON.stringify(tokens),
     ]);
   }
-  const ha = await stubHomeAssistant(page);
+  const ha = await stubHomeAssistant(page, failFirst);
   if (setup) await setup(page);
   await page.goto(url);
   return { page, ha, errors };
 }
 
 /** Home Assistant's WebSocket API, as far as the card uses it; records what the card sends. */
-async function stubHomeAssistant(page) {
-  const ha = { sent: [], socket: null, subscription: null };
+async function stubHomeAssistant(page, failFirst = 0) {
+  const ha = { sent: [], socket: null, subscription: null, connections: 0 };
   await page.routeWebSocket('wss://ha.test/api/websocket', (ws) => {
+    // The first [failFirst] connections are refused, as by a Home Assistant still starting.
+    if (++ha.connections <= failFirst) return ws.close();
     ha.socket = ws;
     ws.send(JSON.stringify({ type: 'auth_required', ha_version: '2026.10.0' }));
     ws.onMessage((raw) => {
@@ -191,6 +193,56 @@ test('a signed-out viewer is offered sign-in, and the OAuth callback signs them 
     assert.equal(tokenRequest.get('code'), 'the-code');
     assert.equal(tokenRequest.get('client_id'), 'https://page.test/');
     assert.equal(back.page.url(), PAGE, 'the callback parameters are cleared');
+  } finally {
+    await browser.close();
+  }
+});
+
+test('a card with no entities subscribes to nothing', { skip }, async () => {
+  const browser = await chromium.launch();
+  try {
+    // Home Assistant reads an empty entity_ids as no filter, i.e. every entity.
+    const { page, ha } = await openPage(browser, { tokens: liveTokens, cardConfig: { type: 'tile' } });
+    await page.waitForFunction(() => document.querySelector('ha-card')?.dataset.status === 'live');
+    await page.waitForTimeout(300);
+    assert.equal(ha.sent.find((m) => m.type === 'subscribe_entities'), undefined);
+  } finally {
+    await browser.close();
+  }
+});
+
+test('Home Assistant unreachable at load is retried', { skip }, async () => {
+  const browser = await chromium.launch();
+  try {
+    const { page, ha } = await openPage(browser, { tokens: liveTokens, failFirst: 1 });
+    await page.waitForFunction(() => document.querySelector('ha-card')?.dataset.status === 'reconnecting');
+    await page.waitForFunction(() => document.querySelector('ha-card').dataset.status === 'live', null, { timeout: 5000 });
+    assert.equal(ha.connections, 2);
+    assert.deepEqual(ha.sent.find((m) => m.type === 'subscribe_entities').entity_ids, ['light.kitchen']);
+  } finally {
+    await browser.close();
+  }
+});
+
+test('local states detach the card from Home Assistant', { skip }, async () => {
+  const browser = await chromium.launch();
+  try {
+    const { page, ha } = await openPage(browser, { tokens: liveTokens });
+    await page.waitForFunction(() => document.querySelector('ha-card')?.dataset.status === 'live');
+    await page.waitForFunction(() => document.querySelector('ha-card').states['light.kitchen']);
+    await page.evaluate(() =>
+      document.querySelector('ha-card').setStates({ 'light.kitchen': { state: 'off', attributes: { friendly_name: 'Local' } } }),
+    );
+    // Home Assistant's later events no longer reach the card…
+    ha.socket.send(JSON.stringify({ id: ha.subscription, type: 'event', event: { c: { 'light.kitchen': { '+': { s: 'on' } } } } }));
+    await page.waitForTimeout(300);
+    assert.equal(await page.evaluate(() => document.querySelector('ha-card').states['light.kitchen'].state), 'off');
+    assert.ok(ha.sent.some((m) => m.type === 'unsubscribe_events' && m.subscription === ha.subscription));
+    // …and a tap calls no service.
+    const box = await page.locator('ha-card canvas').boundingBox();
+    await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+    await page.waitForTimeout(300);
+    assert.equal(ha.sent.find((m) => m.type === 'call_service'), undefined);
   } finally {
     await browser.close();
   }
