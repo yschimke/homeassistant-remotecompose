@@ -152,6 +152,23 @@ class HaCardsTemplatesTest {
     )
 
   @Test
+  fun gaugeUnitComesFromTheCardOrTheFormattedState() {
+    assertEquals("%", HaCardsSeed.gaugeUnit(null, "46 %"))
+    assertEquals("°C", HaCardsSeed.gaugeUnit(null, "21.5 °C"))
+    assertEquals("kWh", HaCardsSeed.gaugeUnit(buildJsonObject { put("unit", "kWh") }, "46 %"))
+    assertEquals(null, HaCardsSeed.gaugeUnit(null, "46"))
+    assertEquals(null, HaCardsSeed.gaugeUnit(null, "unavailable"))
+    assertEquals(null, HaCardsSeed.gaugeUnit(null, null))
+  }
+
+  @Test
+  fun theGaugeTemplateCarriesItsUnit() {
+    val gauge = templates.getValue("card-gauge")["nodes"]!!.jsonObject["gauge"]!!.jsonObject
+    val unit = gauge["properties"]!!.jsonObject["unit"]?.jsonObject?.get("value")
+    assertEquals("%", unit?.jsonPrimitive?.content)
+  }
+
+  @Test
   fun templatesMatchTheSeed() {
     val stale = mutableListOf<String>()
     for ((id, document) in templates) {
