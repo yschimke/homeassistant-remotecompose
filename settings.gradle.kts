@@ -78,6 +78,8 @@ include(
   ":tv",
   ":integration",
   ":addon-server",
+  ":card-designs",
+  ":design-server",
   ":app-ui",
   ":rc-player-ui",
 )

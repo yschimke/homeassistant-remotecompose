@@ -1,0 +1,56 @@
+name: Card design server
+
+# Generates the card design library (`:card-designs`), tests the design server on it, and builds
+# its container image. Nothing is published or deployed: the library is uploaded as an artifact
+# (`card-design-library`) for anyone to serve with `design-server`.
+on:
+  push:
+    branches: [main]
+    paths: &paths
+      - card-designs/**
+      - design-server/**
+      - rc-converter/src/main/**
+      - rc-components/src/main/**
+      - ha-model/src/**
+      - ha-client/src/**
+      - previews/src/main/**
+      - gradle/libs.versions.toml
+      - .github/workflows/design-server.yml
+  pull_request:
+    branches: [main]
+    paths: *paths
+  workflow_dispatch:
+
+concurrency:
+  group: design-server-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  library:
+    name: Library and server
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-java@v6.0.1
+        with:
+          distribution: temurin
+          java-version: 21.0.12+101.0.LTS
+      - uses: gradle/actions/setup-gradle@v6.4.0
+      - uses: ./.github/actions/android-sdk
+      - name: Generate the library and test the server
+        run: ./gradlew :card-designs:generateCardDesigns :design-server:test :design-server:installDist --stacktrace
+      - name: Serve the library
+        run: |
+          DESIGN_LIBRARY=card-designs/build/card-designs PORT=8080 \
+            java -cp "design-server/build/install/design-server/lib/*" ee.schimke.ha.designserver.MainKt &
+          for i in $(seq 1 30); do curl -sf localhost:8080/healthz && break; sleep 1; done
+          curl -sf localhost:8080/designs/v1/manifest.json | python3 -c \
+            'import json,sys; m=json.load(sys.stdin); assert m["designs"], "empty library"; print(len(m["designs"]), "designs")'
+          curl -sf "localhost:8080/?style=all&mode=all" | grep -q "card types"
+      - name: Build the container image
+        run: docker build -f design-server/Dockerfile -t card-design-server .
+      - uses: actions/upload-artifact@v7.0.2
+        with:
+          name: card-design-library
+          path: card-designs/build/card-designs

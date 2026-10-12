@@ -151,8 +151,11 @@ Deliberate spike limits, each owned by a milestone below:
 - **No manifest signature** yet: the app accepts unsigned manifests (`allowUnsigned`). M4 adds
   signing, and the client already reserves `signature` and checks `serial` and expiry.
 - **The library is captured at runtime**, not shipped as assets. It covers the dashboard,
-  launcher widgets and Wear widgets. No published host (M4), no UI Builder
-  references (R1, R2, M2b).
+  launcher widgets and Wear widgets. No UI Builder references (R1, R2, M2b), and no public
+  deployment of the server yet (M4).
+- **The server and its library exist** ([below](#the-server-design-server)):
+  `:card-designs:generateCardDesigns` builds the mobile-app library, and `:design-server` hosts it
+  for the app with a browser of its templates.
 - **Wear widgets are baked too** (`SlotWidget`): Glance Wear captures the slot's template itself
   (its own op set and canvas, keyed by card shape, theme, container and size) and
   `LauncherDesigns.bakeValues` writes the card's values in. The Wear widget has no taps. The watch
@@ -177,13 +180,12 @@ Deliberate spike limits, each owned by a milestone below:
   `AlarmPin` on the real panel with the digits from the tap's metadata. Live widgets read the
   full-state snapshot the app's session keeps on disk (`OfflineCache`).
 
-To try it, generate the host files and serve them from any static host, then paste the URL into
-the setting:
+To try it, generate the library, run the server, and paste `http://<host>:8080/designs/v1` into
+the app's "card design server" setting:
 
 ```sh
-./gradlew :rc-converter:testDebugUnitTest \
-  --tests '*CardDesignTemplatesEndToEndTest.publishSpikeDesigns' \
-  -PcardDesignsOut=build/card-designs
+./gradlew :card-designs:generateCardDesigns :design-server:installDist
+design-server/build/install/design-server/bin/design-server card-designs/build/card-designs
 ```
 
 ## Where we are today
@@ -509,6 +511,38 @@ host can serve them:
 A dynamic Ktor service only becomes worthwhile for on-demand
 combinations we don't want to pre-build. It would need the JVM capture
 path from `addon-server/PLAN.md` (option A, `remote-creation-jvm`).
+
+### The server (`design-server`)
+
+The server stays static in what it serves — a library generated at build time, nothing captured
+per request — but adds what a static host can't: verification, a template browser and hot reload.
+
+- **Library** (`:card-designs:generateCardDesigns`, a Robolectric test; output in
+  `card-designs/build/card-designs/`). Its source cards are the curated `LibraryFixtures` (one per
+  card type and shape the parity tests cover) and every card in the bundled demo dashboards,
+  nested cards included. Each card's generation properties give a key; each key is captured for
+  every theme style, light and dark (mobile-app surface, the one the client fetches). Output:
+  `manifest.json` and `blobs/` (written by `DesignPublisher`, the client's format), plus
+  `catalog.json` (`DesignCatalog`: an example card and preview paths per design) and `previews/`
+  (each design rendered bound to its example's values, and as published with its placeholders).
+- **Client protocol.** `GET /designs/v1/manifest.json` (ETag = its SHA-256, `no-cache`, `304` on
+  `If-None-Match`) and `GET /designs/v1/blobs/<sha256>.rc` (immutable). Only names the manifest
+  lists are served. Loading verifies every blob's size and hash against the manifest and refuses a
+  library that doesn't match. `ClientCompatibilityTest` runs the app's `DesignRepository` against
+  it.
+- **Template browser.** `/` lists designs with their previews, filtered by card type, theme,
+  mode, a search over type and properties, and example-or-placeholder preview (by default, the
+  first theme in light: each shape once). `/designs/<id>` shows a design's key and generation
+  properties, both previews, its other themes, the bindings decoded from the template
+  (`rc-player-edit`: names and types a client pushes), op count and bytes by operation, the
+  mobile-app op-set validation, and its example card. `/api/designs[/<id>]` serves the same as
+  JSON. Server-rendered HTML, no scripts.
+- **Hot reload.** A regenerated library goes live when `manifest.json` changes (checked at most
+  every 5 s); one that fails to load keeps the previous one serving.
+- **Running.** `DESIGN_LIBRARY` (or the first argument), `PORT` (8080), `HOST`.
+  `design-server/Dockerfile` bakes a library into a distroless JRE image.
+  `.github/workflows/design-server.yml` generates the library, tests and smoke-tests the server,
+  builds the image and uploads the library as an artifact; it deploys nothing yet (M4).
 
 ## Client
 
