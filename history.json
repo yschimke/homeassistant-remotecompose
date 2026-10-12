@@ -1,6 +1,6 @@
 {
     "formatVersion": "compose-preview-history/v1",
-    "generatedFrom": "434d4b0611af54c42a1cb3a1d96f131564f1af13",
+    "generatedFrom": "74e647314bfab82e280ceddc08b901e82dea6c73",
     "previews": {
         "app/ee.schimke.terrazzo.previews.CardDebugPreviewsKt.CardFlashPreview_Card flash on data change": {
             "path": "renders/app/CardFlashPreview_Card_flash_on_data_change-44b71c2b.gif",
@@ -6981,6 +6981,426 @@
                 }
             ],
             "observations": 2,
+            "unstable": false,
+            "flapCount": 0
+        },
+        "previews/ee.schimke.ha.previews.Tier2CardPreviewsKt.Tier2_AlarmPanelWide_tier2 alarm-panel wide": {
+            "path": "renders/previews/Tier2_AlarmPanelWide_tier2_alarm_panel_wide-ad999af0.png",
+            "versions": [
+                {
+                    "blob": "06f09746b6dbc3ce492fae0abad5dca7eebfc9c5",
+                    "commit": "74e647314bfab82e280ceddc08b901e82dea6c73",
+                    "date": "2026-10-12T10:30:57Z",
+                    "sourceSha": "0d7bba77",
+                    "commits": 1
+                }
+            ],
+            "observations": 1,
+            "unstable": false,
+            "flapCount": 0
+        },
+        "previews/ee.schimke.ha.previews.Tier2CardPreviewsKt.Tier2_AlarmPanel_tier2 alarm-panel": {
+            "path": "renders/previews/Tier2_AlarmPanel_tier2_alarm_panel-97d5ae15.png",
+            "versions": [
+                {
+                    "blob": "b5ddcdf497f6427306d73c6c533f6119154dc05a",
+                    "commit": "74e647314bfab82e280ceddc08b901e82dea6c73",
+                    "date": "2026-10-12T10:30:57Z",
+                    "sourceSha": "0d7bba77",
+                    "commits": 1
+                }
+            ],
+            "observations": 1,
+            "unstable": false,
+            "flapCount": 0
+        },
+        "previews/ee.schimke.ha.previews.Tier2CardPreviewsKt.Tier2_Area_tier2 area": {
+            "path": "renders/previews/Tier2_Area_tier2_area-cb997f39.png",
+            "versions": [
+                {
+                    "blob": "deea7568ed298c28a738a89a98997d6982f8d203",
+                    "commit": "74e647314bfab82e280ceddc08b901e82dea6c73",
+                    "date": "2026-10-12T10:30:57Z",
+                    "sourceSha": "0d7bba77",
+                    "commits": 1
+                }
+            ],
+            "observations": 1,
+            "unstable": false,
+            "flapCount": 0
+        },
+        "previews/ee.schimke.ha.previews.Tier2CardPreviewsKt.Tier2_BambuAms_tier2 bambu ams": {
+            "path": "renders/previews/Tier2_BambuAms_tier2_bambu_ams-2f772471.png",
+            "versions": [
+                {
+                    "blob": "155a35ab821248652d96f19d229d5f25a1d7f284",
+                    "commit": "74e647314bfab82e280ceddc08b901e82dea6c73",
+                    "date": "2026-10-12T10:30:57Z",
+                    "sourceSha": "0d7bba77",
+                    "commits": 1
+                }
+            ],
+            "observations": 1,
+            "unstable": false,
+            "flapCount": 0
+        },
+        "previews/ee.schimke.ha.previews.Tier2CardPreviewsKt.Tier2_BambuPrintControl_tier2 bambu print-control": {
+            "path": "renders/previews/Tier2_BambuPrintControl_tier2_bambu_print_control-45a12bbb.png",
+            "versions": [
+                {
+                    "blob": "c56b5e25859a5b3c3a0a3375a062701bcc1a9fed",
+                    "commit": "74e647314bfab82e280ceddc08b901e82dea6c73",
+                    "date": "2026-10-12T10:30:57Z",
+                    "sourceSha": "0d7bba77",
+                    "commits": 1
+                }
+            ],
+            "observations": 1,
+            "unstable": false,
+            "flapCount": 0
+        },
+        "previews/ee.schimke.ha.previews.Tier2CardPreviewsKt.Tier2_BambuPrintStatus_tier2 bambu print-status": {
+            "path": "renders/previews/Tier2_BambuPrintStatus_tier2_bambu_print_status-b88a37bb.png",
+            "versions": [
+                {
+                    "blob": "048fec670906fca250f672185cf84d2061293596",
+                    "commit": "74e647314bfab82e280ceddc08b901e82dea6c73",
+                    "date": "2026-10-12T10:30:57Z",
+                    "sourceSha": "0d7bba77",
+                    "commits": 1
+                }
+            ],
+            "observations": 1,
+            "unstable": false,
+            "flapCount": 0
+        },
+        "previews/ee.schimke.ha.previews.Tier2CardPreviewsKt.Tier2_BambuSpool_tier2 bambu spool": {
+            "path": "renders/previews/Tier2_BambuSpool_tier2_bambu_spool-b1240e69.png",
+            "versions": [
+                {
+                    "blob": "85406192494b2c06ed0ffb97a91c9259af73db69",
+                    "commit": "74e647314bfab82e280ceddc08b901e82dea6c73",
+                    "date": "2026-10-12T10:30:57Z",
+                    "sourceSha": "0d7bba77",
+                    "commits": 1
+                }
+            ],
+            "observations": 1,
+            "unstable": false,
+            "flapCount": 0
+        },
+        "previews/ee.schimke.ha.previews.Tier2CardPreviewsKt.Tier2_Calendar_tier2 calendar": {
+            "path": "renders/previews/Tier2_Calendar_tier2_calendar-b7246f1d.png",
+            "versions": [
+                {
+                    "blob": "42aab237e9e1c63bf50ae01c18c2f0405017133a",
+                    "commit": "74e647314bfab82e280ceddc08b901e82dea6c73",
+                    "date": "2026-10-12T10:30:57Z",
+                    "sourceSha": "0d7bba77",
+                    "commits": 1
+                }
+            ],
+            "observations": 1,
+            "unstable": false,
+            "flapCount": 0
+        },
+        "previews/ee.schimke.ha.previews.Tier2CardPreviewsKt.Tier2_Clock_tier2 clock": {
+            "path": "renders/previews/Tier2_Clock_tier2_clock-746ea851.png",
+            "versions": [
+                {
+                    "blob": "166e78bb2640c081fbdf9c4497036b467d05b3c8",
+                    "commit": "74e647314bfab82e280ceddc08b901e82dea6c73",
+                    "date": "2026-10-12T10:30:57Z",
+                    "sourceSha": "0d7bba77",
+                    "commits": 1
+                }
+            ],
+            "observations": 1,
+            "unstable": false,
+            "flapCount": 0
+        },
+        "previews/ee.schimke.ha.previews.Tier2CardPreviewsKt.Tier2_GaugeStacked_tier2 gauge stacked": {
+            "path": "renders/previews/Tier2_GaugeStacked_tier2_gauge_stacked-02e3a260.png",
+            "versions": [
+                {
+                    "blob": "f8dc10cac481cab0ac6d51f128e7a3df1bce6f31",
+                    "commit": "74e647314bfab82e280ceddc08b901e82dea6c73",
+                    "date": "2026-10-12T10:30:57Z",
+                    "sourceSha": "0d7bba77",
+                    "commits": 1
+                }
+            ],
+            "observations": 1,
+            "unstable": false,
+            "flapCount": 0
+        },
+        "previews/ee.schimke.ha.previews.Tier2CardPreviewsKt.Tier2_GaugeWide_tier2 gauge wide": {
+            "path": "renders/previews/Tier2_GaugeWide_tier2_gauge_wide-db66c9d2.png",
+            "versions": [
+                {
+                    "blob": "a8b55d2bae371067fa0d3c3894166f8b586ed7af",
+                    "commit": "74e647314bfab82e280ceddc08b901e82dea6c73",
+                    "date": "2026-10-12T10:30:57Z",
+                    "sourceSha": "0d7bba77",
+                    "commits": 1
+                }
+            ],
+            "observations": 1,
+            "unstable": false,
+            "flapCount": 0
+        },
+        "previews/ee.schimke.ha.previews.Tier2CardPreviewsKt.Tier2_Gauge_tier2 gauge": {
+            "path": "renders/previews/Tier2_Gauge_tier2_gauge-d4ac9a70.png",
+            "versions": [
+                {
+                    "blob": "8b92d3190368522a7c4cd5728508234332332c27",
+                    "commit": "74e647314bfab82e280ceddc08b901e82dea6c73",
+                    "date": "2026-10-12T10:30:57Z",
+                    "sourceSha": "0d7bba77",
+                    "commits": 1
+                }
+            ],
+            "observations": 1,
+            "unstable": false,
+            "flapCount": 0
+        },
+        "previews/ee.schimke.ha.previews.Tier2CardPreviewsKt.Tier2_HistoryGraph_tier2 history-graph": {
+            "path": "renders/previews/Tier2_HistoryGraph_tier2_history_graph-4d8fecec.png",
+            "versions": [
+                {
+                    "blob": "75186c93b09a0f7f442f198e7b07a0e9418cd012",
+                    "commit": "74e647314bfab82e280ceddc08b901e82dea6c73",
+                    "date": "2026-10-12T10:30:57Z",
+                    "sourceSha": "0d7bba77",
+                    "commits": 1
+                }
+            ],
+            "observations": 1,
+            "unstable": false,
+            "flapCount": 0
+        },
+        "previews/ee.schimke.ha.previews.Tier2CardPreviewsKt.Tier2_HumidifierWide_tier2 humidifier wide": {
+            "path": "renders/previews/Tier2_HumidifierWide_tier2_humidifier_wide-4add3d8f.png",
+            "versions": [
+                {
+                    "blob": "6c2ec51a9a43e5040fa007a5179aad0e7213e47a",
+                    "commit": "74e647314bfab82e280ceddc08b901e82dea6c73",
+                    "date": "2026-10-12T10:30:57Z",
+                    "sourceSha": "0d7bba77",
+                    "commits": 1
+                }
+            ],
+            "observations": 1,
+            "unstable": false,
+            "flapCount": 0
+        },
+        "previews/ee.schimke.ha.previews.Tier2CardPreviewsKt.Tier2_Logbook_tier2 logbook": {
+            "path": "renders/previews/Tier2_Logbook_tier2_logbook-41f90425.png",
+            "versions": [
+                {
+                    "blob": "2ff231850d91d36088371f22b69a5f70b3aa3656",
+                    "commit": "74e647314bfab82e280ceddc08b901e82dea6c73",
+                    "date": "2026-10-12T10:30:57Z",
+                    "sourceSha": "0d7bba77",
+                    "commits": 1
+                }
+            ],
+            "observations": 1,
+            "unstable": false,
+            "flapCount": 0
+        },
+        "previews/ee.schimke.ha.previews.Tier2CardPreviewsKt.Tier2_MediaControlWide_tier2 media-control wide": {
+            "path": "renders/previews/Tier2_MediaControlWide_tier2_media_control_wide-c7b5a9ba.png",
+            "versions": [
+                {
+                    "blob": "651327d0aed7f2c456f684f750f0627d3a4aa50c",
+                    "commit": "74e647314bfab82e280ceddc08b901e82dea6c73",
+                    "date": "2026-10-12T10:30:57Z",
+                    "sourceSha": "0d7bba77",
+                    "commits": 1
+                }
+            ],
+            "observations": 1,
+            "unstable": false,
+            "flapCount": 0
+        },
+        "previews/ee.schimke.ha.previews.Tier2CardPreviewsKt.Tier2_MediaControl_tier2 media-control": {
+            "path": "renders/previews/Tier2_MediaControl_tier2_media_control-ba0838d0.png",
+            "versions": [
+                {
+                    "blob": "9a55930c8d91eba1a39c2058e2a2ad08ff55d602",
+                    "commit": "74e647314bfab82e280ceddc08b901e82dea6c73",
+                    "date": "2026-10-12T10:30:57Z",
+                    "sourceSha": "0d7bba77",
+                    "commits": 1
+                }
+            ],
+            "observations": 1,
+            "unstable": false,
+            "flapCount": 0
+        },
+        "previews/ee.schimke.ha.previews.Tier2CardPreviewsKt.Tier2_PictureElements_tier2 picture-elements": {
+            "path": "renders/previews/Tier2_PictureElements_tier2_picture_elements-323bdc5f.png",
+            "versions": [
+                {
+                    "blob": "7648ec192338e784b61c0ed961679c344367b319",
+                    "commit": "74e647314bfab82e280ceddc08b901e82dea6c73",
+                    "date": "2026-10-12T10:30:57Z",
+                    "sourceSha": "0d7bba77",
+                    "commits": 1
+                }
+            ],
+            "observations": 1,
+            "unstable": false,
+            "flapCount": 0
+        },
+        "previews/ee.schimke.ha.previews.Tier2CardPreviewsKt.Tier2_PictureEntity_tier2 picture-entity": {
+            "path": "renders/previews/Tier2_PictureEntity_tier2_picture_entity-6d0f0968.png",
+            "versions": [
+                {
+                    "blob": "4da875cb4a046363a140efdcd4c005ff7cc101e6",
+                    "commit": "74e647314bfab82e280ceddc08b901e82dea6c73",
+                    "date": "2026-10-12T10:30:57Z",
+                    "sourceSha": "0d7bba77",
+                    "commits": 1
+                }
+            ],
+            "observations": 1,
+            "unstable": false,
+            "flapCount": 0
+        },
+        "previews/ee.schimke.ha.previews.Tier2CardPreviewsKt.Tier2_PictureGlance_tier2 picture-glance": {
+            "path": "renders/previews/Tier2_PictureGlance_tier2_picture_glance-98b40a4e.png",
+            "versions": [
+                {
+                    "blob": "7597a1f70839a99f7a324052cfcd8d912339c3b7",
+                    "commit": "74e647314bfab82e280ceddc08b901e82dea6c73",
+                    "date": "2026-10-12T10:30:57Z",
+                    "sourceSha": "0d7bba77",
+                    "commits": 1
+                }
+            ],
+            "observations": 1,
+            "unstable": false,
+            "flapCount": 0
+        },
+        "previews/ee.schimke.ha.previews.Tier2CardPreviewsKt.Tier2_Picture_tier2 picture": {
+            "path": "renders/previews/Tier2_Picture_tier2_picture-397a45f7.png",
+            "versions": [
+                {
+                    "blob": "a50e722d545b83e358ed2bb6280f33d149104c1a",
+                    "commit": "74e647314bfab82e280ceddc08b901e82dea6c73",
+                    "date": "2026-10-12T10:30:57Z",
+                    "sourceSha": "0d7bba77",
+                    "commits": 1
+                }
+            ],
+            "observations": 1,
+            "unstable": false,
+            "flapCount": 0
+        },
+        "previews/ee.schimke.ha.previews.Tier2CardPreviewsKt.Tier2_Sensor_tier2 sensor": {
+            "path": "renders/previews/Tier2_Sensor_tier2_sensor-f8cf3b93.png",
+            "versions": [
+                {
+                    "blob": "bdd19800bfa0136733898241327dbb15a7efa979",
+                    "commit": "74e647314bfab82e280ceddc08b901e82dea6c73",
+                    "date": "2026-10-12T10:30:57Z",
+                    "sourceSha": "0d7bba77",
+                    "commits": 1
+                }
+            ],
+            "observations": 1,
+            "unstable": false,
+            "flapCount": 0
+        },
+        "previews/ee.schimke.ha.previews.Tier2CardPreviewsKt.Tier2_Statistic_tier2 statistic": {
+            "path": "renders/previews/Tier2_Statistic_tier2_statistic-cfb81392.png",
+            "versions": [
+                {
+                    "blob": "e9b13fbecb65bde46c67a1bc38669003a219a304",
+                    "commit": "74e647314bfab82e280ceddc08b901e82dea6c73",
+                    "date": "2026-10-12T10:30:57Z",
+                    "sourceSha": "0d7bba77",
+                    "commits": 1
+                }
+            ],
+            "observations": 1,
+            "unstable": false,
+            "flapCount": 0
+        },
+        "previews/ee.schimke.ha.previews.Tier2CardPreviewsKt.Tier2_StatisticsGraph_tier2 statistics-graph": {
+            "path": "renders/previews/Tier2_StatisticsGraph_tier2_statistics_graph-4fde2946.png",
+            "versions": [
+                {
+                    "blob": "d0ffce317b79a6dffcb9565d0ecbd8fbd1d2d6c1",
+                    "commit": "74e647314bfab82e280ceddc08b901e82dea6c73",
+                    "date": "2026-10-12T10:30:57Z",
+                    "sourceSha": "0d7bba77",
+                    "commits": 1
+                }
+            ],
+            "observations": 1,
+            "unstable": false,
+            "flapCount": 0
+        },
+        "previews/ee.schimke.ha.previews.Tier2CardPreviewsKt.Tier2_Thermostat_tier2 thermostat": {
+            "path": "renders/previews/Tier2_Thermostat_tier2_thermostat-9781988f.png",
+            "versions": [
+                {
+                    "blob": "d39ac37e4431f8275a4f31a5f922336ba9914b39",
+                    "commit": "74e647314bfab82e280ceddc08b901e82dea6c73",
+                    "date": "2026-10-12T10:30:57Z",
+                    "sourceSha": "0d7bba77",
+                    "commits": 1
+                }
+            ],
+            "observations": 1,
+            "unstable": false,
+            "flapCount": 0
+        },
+        "previews/ee.schimke.ha.previews.Tier2CardPreviewsKt.Tier2_TodoList_tier2 todo-list": {
+            "path": "renders/previews/Tier2_TodoList_tier2_todo_list-6563176c.png",
+            "versions": [
+                {
+                    "blob": "83ed5b013a492f7eb756f2d5c5df478ab6b3c7ef",
+                    "commit": "74e647314bfab82e280ceddc08b901e82dea6c73",
+                    "date": "2026-10-12T10:30:57Z",
+                    "sourceSha": "0d7bba77",
+                    "commits": 1
+                }
+            ],
+            "observations": 1,
+            "unstable": false,
+            "flapCount": 0
+        },
+        "previews/ee.schimke.ha.previews.Tier2CardPreviewsKt.Tier2_WeatherForecastWide_tier2 weather-forecast wide": {
+            "path": "renders/previews/Tier2_WeatherForecastWide_tier2_weather_forecast_wide-15a2211c.png",
+            "versions": [
+                {
+                    "blob": "9ffb2179f9cc20b4477d6ef9cf731b00d0dd7980",
+                    "commit": "74e647314bfab82e280ceddc08b901e82dea6c73",
+                    "date": "2026-10-12T10:30:57Z",
+                    "sourceSha": "0d7bba77",
+                    "commits": 1
+                }
+            ],
+            "observations": 1,
+            "unstable": false,
+            "flapCount": 0
+        },
+        "previews/ee.schimke.ha.previews.Tier2CardPreviewsKt.Tier2_WeatherForecast_tier2 weather-forecast": {
+            "path": "renders/previews/Tier2_WeatherForecast_tier2_weather_forecast-83bc205c.png",
+            "versions": [
+                {
+                    "blob": "062e9809a2231dbd0f45e21cc272a071b089afce",
+                    "commit": "74e647314bfab82e280ceddc08b901e82dea6c73",
+                    "date": "2026-10-12T10:30:57Z",
+                    "sourceSha": "0d7bba77",
+                    "commits": 1
+                }
+            ],
+            "observations": 1,
             "unstable": false,
             "flapCount": 0
         },
