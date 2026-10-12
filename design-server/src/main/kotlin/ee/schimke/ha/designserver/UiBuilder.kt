@@ -1,14 +1,17 @@
 package ee.schimke.ha.designserver
 
 import io.ktor.client.HttpClient
+import io.ktor.client.request.forms.submitForm
 import io.ktor.client.request.header
 import io.ktor.client.request.put
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.http.isSuccess
+import io.ktor.http.parameters
 import java.io.File
 import java.net.URLEncoder
 import java.security.SecureRandom
@@ -34,8 +37,10 @@ import kotlinx.serialization.json.putJsonObject
  */
 data class UiBuilderConfig(val apiUrl: String, val browserUrl: String, val token: String) {
   /** The editor for [designId], ready to open: UI Builder reads its operator token from the URL. */
-  fun editorUrl(designId: String): String =
-    "${browserUrl.trimEnd('/')}/ui-builder/${enc(designId)}?token=${enc(token)}"
+  fun editorUrl(designId: String): String = "${designUrl(designId)}?token=${enc(token)}"
+
+  /** The editor for [designId] without the operator token: for a person signed in to UI Builder. */
+  fun designUrl(designId: String): String = "${browserUrl.trimEnd('/')}/ui-builder/${enc(designId)}"
 
   companion object {
     /**
@@ -44,7 +49,8 @@ data class UiBuilderConfig(val apiUrl: String, val browserUrl: String, val token
      *   someone else runs.
      * - `UI_BUILDER_BINARY`: run one ([UiBuilderProcess]), with `UI_BUILDER_PORT` (8724),
      *   `UI_BUILDER_HOST` (127.0.0.1), `UI_BUILDER_BROWSER_URL` (`http://localhost:<port>`),
-     *   `UI_BUILDER_STATE_DIR` and `UI_BUILDER_TOKEN` (random when unset).
+     *   `UI_BUILDER_STATE_DIR`, `UI_BUILDER_TOKEN` (random when unset) and `UI_BUILDER_ARGS`: more
+     *   `serve` flags, space-separated — its GitHub sign-in, for one (see design-server's README).
      *
      * Null when neither is set: the design server runs without editing.
      */
@@ -63,6 +69,9 @@ data class UiBuilderConfig(val apiUrl: String, val browserUrl: String, val token
             port = port,
             token = token,
             stateDir = File(env["UI_BUILDER_STATE_DIR"] ?: "ui-builder-state"),
+            extraArgs =
+              githubArgs(env) +
+                env["UI_BUILDER_ARGS"].orEmpty().split(Regex("\\s+")).filter { it.isNotEmpty() },
           )
         val config =
           UiBuilderConfig(
@@ -78,6 +87,40 @@ data class UiBuilderConfig(val apiUrl: String, val browserUrl: String, val token
           "UI_BUILDER_URL needs UI_BUILDER_TOKEN, the UI Builder's operator token"
         }
       return UiBuilderConfig(url, env["UI_BUILDER_BROWSER_URL"] ?: url, token) to null
+    }
+
+    /**
+     * The bundled UI Builder's own GitHub sign-in, from `UI_BUILDER_GITHUB_CLIENT_ID`,
+     * `UI_BUILDER_GITHUB_CLIENT_SECRET` and `UI_BUILDER_COOKIE_SECRET`, with its callback at
+     * `UI_BUILDER_BROWSER_URL`. People who design cards sign in to it as themselves, so it admits
+     * any GitHub account (`--github-auth-open-ui-builder`) and keeps each design private to its
+     * owner and whoever it is shared with — the design server shares each one with its designer.
+     * `UI_BUILDER_GITHUB_REPO` is the repository its sign-in is checked against (this one by
+     * default); access to it is not needed to design. Empty when the client id is unset.
+     */
+    fun githubArgs(env: Map<String, String>): List<String> {
+      val clientId =
+        env["UI_BUILDER_GITHUB_CLIENT_ID"]?.takeIf { it.isNotBlank() } ?: return emptyList()
+      fun required(name: String) =
+        requireNotNull(env[name]?.takeIf { it.isNotBlank() }) {
+          "UI_BUILDER_GITHUB_CLIENT_ID is set, so $name is needed too"
+        }
+      return listOf(
+        "--github-auth-client-id",
+        clientId,
+        "--github-auth-client-secret",
+        required("UI_BUILDER_GITHUB_CLIENT_SECRET"),
+        "--github-auth-cookie-secret",
+        required("UI_BUILDER_COOKIE_SECRET"),
+        "--github-auth-repo",
+        env["UI_BUILDER_GITHUB_REPO"]?.takeIf { it.isNotBlank() }
+          ?: "yschimke/homeassistant-remotecompose",
+        "--github-auth-callback-base-url",
+        required("UI_BUILDER_BROWSER_URL"),
+        "--github-auth-open-ui-builder",
+        "--ui-builder-default-visibility",
+        "private",
+      )
     }
 
     /**
@@ -114,6 +157,7 @@ class UiBuilderProcess(
   private val port: Int,
   private val token: String,
   private val stateDir: File,
+  private val extraArgs: List<String> = emptyList(),
 ) {
   private var process: Process? = null
 
@@ -133,7 +177,7 @@ class UiBuilderProcess(
         token,
         "--ui-builder-state-dir",
         stateDir.absolutePath,
-      )
+      ) + extraArgs
     process = ProcessBuilder(command).inheritIO().start()
     Runtime.getRuntime().addShutdownHook(Thread { stop() })
   }
@@ -147,9 +191,12 @@ class UiBuilderProcess(
   }
 }
 
-/** Creates UI Builder designs over its REST API (`PUT /api/ui-builder/v1/designs/<id>`). */
+/**
+ * Creates UI Builder designs over its REST API (`PUT /api/ui-builder/v1/designs/<id>`) and shares
+ * them. [http] must not follow redirects (see [share]).
+ */
 class UiBuilderClient(private val config: UiBuilderConfig, private val http: HttpClient) {
-  /** Creates [document] (it carries its own id) and returns the editor URL for it. */
+  /** Creates [document] (it carries its own id) and returns its design id. */
   suspend fun create(document: JsonObject): String {
     val id = (document["id"] as JsonPrimitive).content
     val response =
@@ -164,7 +211,29 @@ class UiBuilderClient(private val config: UiBuilderConfig, private val http: Htt
     check(response.status.isSuccess()) {
       "UI Builder refused the design (${response.status}): ${response.bodyAsText().take(300)}"
     }
-    return config.editorUrl(id)
+    return id
+  }
+
+  /**
+   * Shares [designId] with [actorId] (`github:<login>`), as an editor or a viewer, through UI
+   * Builder's access route. The server creates designs with the operator token, so it owns them and
+   * may share them; neither role may share on.
+   */
+  suspend fun share(designId: String, actorId: String, editor: Boolean) {
+    val response =
+      http.submitForm(
+        "${config.apiUrl.trimEnd('/')}/ui-builder/${URLEncoder.encode(designId, Charsets.UTF_8)}" +
+          "/access?token=${URLEncoder.encode(config.token, Charsets.UTF_8)}",
+        parameters {
+          append("actorId", actorId)
+          append("role", if (editor) "editor" else "viewer")
+        },
+      )
+    // The route answers 303 to its access page when the change is made, and renders that page
+    // with a notice when it refuses one: so [http] must not follow redirects.
+    check(response.status == HttpStatusCode.SeeOther) {
+      "UI Builder did not share $designId with $actorId: ${response.bodyAsText().take(300)}"
+    }
   }
 }
 

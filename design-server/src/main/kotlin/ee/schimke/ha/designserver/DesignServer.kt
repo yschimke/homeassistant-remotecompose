@@ -77,7 +77,11 @@ class LibraryHolder(
  * - `/`, `/designs/<id>` — the template browser; `/api/designs[/<id>]` — the same as JSON.
  * - `/healthz`.
  */
-fun Application.designServer(holder: LibraryHolder, uiBuilder: UiBuilderIntegration? = null) {
+fun Application.designServer(
+  holder: LibraryHolder,
+  uiBuilder: UiBuilderIntegration? = null,
+  github: GithubAuth? = null,
+) {
   install(DefaultHeaders)
   install(AutoHeadResponse)
   install(StatusPages) {
@@ -150,7 +154,10 @@ fun Application.designServer(holder: LibraryHolder, uiBuilder: UiBuilderIntegrat
     get("/designs/{id}") {
       val library = holder.current()
       val design = library.design(call.parameters["id"].orEmpty()) ?: return@get call.notFound()
-      call.respondText(Pages.detail(library, design, call.editor(uiBuilder)), ContentType.Text.Html)
+      call.respondText(
+        Pages.detail(library, design, call.editor(uiBuilder, github)),
+        ContentType.Text.Html,
+      )
     }
 
     get("/api/designs/{id}/schema") {
@@ -182,7 +189,7 @@ fun Application.designServer(holder: LibraryHolder, uiBuilder: UiBuilderIntegrat
 
     get("/schema") {
       call.respondText(
-        Pages.schema(null, null, null, call.editor(uiBuilder)),
+        Pages.schema(null, null, null, call.editor(uiBuilder, github)),
         ContentType.Text.Html,
       )
     }
@@ -198,16 +205,20 @@ fun Application.designServer(holder: LibraryHolder, uiBuilder: UiBuilderIntegrat
           text,
           result.getOrNull(),
           result.exceptionOrNull()?.let { it.message ?: "not a card" },
-          call.editor(uiBuilder),
+          call.editor(uiBuilder, github),
         ),
         ContentType.Text.Html,
         status = if (result.isSuccess) HttpStatusCode.OK else HttpStatusCode.BadRequest,
       )
     }
 
-    // Unlocks editing for this browser: the link the server prints at startup.
+    github?.routes(this)
+
+    // Unlocks editing for this browser: the link the server prints at startup. Only without
+    // GitHub sign-in: with it, editing is per person, and a shared link would be nobody.
     get("/edit") {
       val integration = uiBuilder ?: return@get call.notFound()
+      if (github != null) return@get call.notFound()
       if (call.request.queryParameters["token"] != integration.config.token) {
         return@get call.respondText("wrong edit token", status = HttpStatusCode.Forbidden)
       }
@@ -227,9 +238,11 @@ fun Application.designServer(holder: LibraryHolder, uiBuilder: UiBuilderIntegrat
     // opens it in the editor.
     post("/ui-builder/designs") {
       val integration = uiBuilder ?: return@post call.notFound()
-      if (!call.editor(uiBuilder).authorized) {
+      val editor = call.editor(uiBuilder, github)
+      if (!editor.authorized) {
         return@post call.respondText(
-          "editing needs the edit link the server printed at startup",
+          if (github != null) "sign in with GitHub to design cards"
+          else "editing needs the edit link the server printed at startup",
           status = HttpStatusCode.Forbidden,
         )
       }
@@ -257,8 +270,16 @@ fun Application.designServer(holder: LibraryHolder, uiBuilder: UiBuilderIntegrat
             status = HttpStatusCode.BadRequest,
           )
       val document = UiBuilderSeed.document(schema, UiBuilderSeed.designId(schema), title)
-      val editor = runCatching {
-        integration.client.create(document)
+      val location = runCatching {
+        val designId = integration.client.create(document)
+        val login = editor.login
+        if (login == null) integration.config.editorUrl(designId)
+        else {
+          // Created by the server, then handed to the person who asked: they edit it signed in to
+          // UI Builder as themselves, and nobody else sees it.
+          integration.client.share(designId, "github:$login", editor = true)
+          integration.config.designUrl(designId)
+        }
       }
         .getOrElse {
           return@post call.respondText(
@@ -266,7 +287,7 @@ fun Application.designServer(holder: LibraryHolder, uiBuilder: UiBuilderIntegrat
             status = HttpStatusCode.BadGateway,
           )
         }
-      call.respondRedirect(editor)
+      call.respondRedirect(location)
     }
   }
 }
@@ -274,8 +295,17 @@ fun Application.designServer(holder: LibraryHolder, uiBuilder: UiBuilderIntegrat
 /** UI Builder for the server: where it is, and the client that creates designs there. */
 class UiBuilderIntegration(val config: UiBuilderConfig, val client: UiBuilderClient)
 
-/** Whether pages offer editing, and whether this browser may use it. */
-data class EditorState(val enabled: Boolean, val authorized: Boolean) {
+/**
+ * Whether pages offer editing, and whether this browser may use it.
+ * - [login]: the GitHub login it is signed in as, with GitHub sign-in.
+ * - [signInPath]: where to sign in, with GitHub sign-in and nobody signed in.
+ */
+data class EditorState(
+  val enabled: Boolean,
+  val authorized: Boolean,
+  val login: String? = null,
+  val signInPath: String? = null,
+) {
   companion object {
     val Off = EditorState(enabled = false, authorized = false)
   }
@@ -283,10 +313,27 @@ data class EditorState(val enabled: Boolean, val authorized: Boolean) {
 
 private const val EDIT_COOKIE = "design-server-edit"
 
-private fun ApplicationCall.editor(uiBuilder: UiBuilderIntegration?): EditorState =
-  if (uiBuilder == null) EditorState.Off
-  else
-    EditorState(enabled = true, authorized = request.cookies[EDIT_COOKIE] == uiBuilder.config.token)
+private fun ApplicationCall.editor(
+  uiBuilder: UiBuilderIntegration?,
+  github: GithubAuth?,
+): EditorState =
+  when {
+    uiBuilder == null -> EditorState.Off
+    github != null -> {
+      val login = github.login(this)
+      EditorState(
+        enabled = true,
+        authorized = login != null,
+        login = login,
+        signInPath = if (login == null) github.signInPath(request.local.uri) else null,
+      )
+    }
+    else ->
+      EditorState(
+        enabled = true,
+        authorized = request.cookies[EDIT_COOKIE] == uiBuilder.config.token,
+      )
+  }
 
 /** The client protocol's base path: the app's design server URL is `<host>$API_BASE`. */
 const val API_BASE = "/designs/v1"

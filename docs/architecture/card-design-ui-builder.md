@@ -20,6 +20,12 @@ content, and what is missing between that design and a template the
   container image does this by default); `UI_BUILDER_URL` + `UI_BUILDER_TOKEN` point it at one
   that runs elsewhere. Browsing stays public. Editing needs the edit link the server prints at
   startup, which sets a cookie; UI Builder itself is gated by the same token.
+- **Per person, with GitHub sign-in.** On a public server (`ha.coo.ee`), people sign in with
+  GitHub instead. The server creates each seeded design with its operator token, shares it with
+  `github:<login>` as editor, and sends them to it in a UI Builder that signs them in with GitHub
+  too, where designs are private by default. So a fork or a design for a missing card is theirs
+  alone. Settings and the deployment are in
+  [`design-server/README.md`](../../design-server/README.md#signing-in-with-github).
 - **Seeding** (`UiBuilderSeed`). "Design in UI Builder", on a design's page or the schema page,
   creates a `remote-m3` design (`PUT /api/ui-builder/v1/designs/<id>`, create-only) and opens it
   in the editor:
@@ -109,4 +115,5 @@ UI_BUILDER_BINARY=<compose-preview-server>/bin/compose-preview-server \
 ```
 
 Open the printed edit link, then a design's page (or `/schema`) and "Design in UI Builder". The
-container image bundles UI Builder at port 8724; see `design-server/Dockerfile`.
+container image bundles UI Builder at port 8724; see `design-server/Dockerfile`, and
+`design-server/README.md` for GitHub sign-in and the `ha.coo.ee` deployment.

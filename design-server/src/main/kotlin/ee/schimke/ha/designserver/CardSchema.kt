@@ -92,21 +92,29 @@ data class CardSchema(
       }
       // A converter adds card-specific bindings (a sensor's range, a markdown card's content, …)
       // that only it can compute, and it runs on Android. The library's templates were captured
-      // from those converters, so the closest template of the same card type declares them, and
-      // its catalog example has a value for each.
+      // from those converters, so its templates of this card type with exactly these slots declare
+      // them. Slots don't pin a shape (every markdown card has none), so only the bindings all of
+      // those templates declare are added: those are pushed whichever shape this card is.
       val slotIds = slotsOf(bindings.map { it.name }, card).map { it.slot }
-      val template = library?.let { closestTemplate(it, type, slotIds) }
       val known = bindings.map { it.name }.toSet()
+      val matching = library?.let { templatesWithSlots(it, type, slotIds) }.orEmpty()
+      val shapes = matching.map { it.key.shape }.distinct()
       val added =
-        if (library == null || template == null) emptyList()
+        if (library == null || matching.isEmpty()) emptyList()
         else {
-          val example = template.catalog?.example?.bindings.orEmpty()
+          val common =
+            matching
+              .map { design -> library.decode(design).bindings.map { it.name }.toSet() }
+              .reduce { a, b -> a intersect b }
+          val first = matching.first()
+          val example = first.catalog?.example?.bindings.orEmpty()
           library
-            .decode(template)
+            .decode(first)
             .bindings
-            .filter { it.name !in known }
+            .filter { it.name !in known && it.name in common }
             .map { BindingSchema(it.name, bindingType(it.name, it.type), example[it.name]) }
         }
+      val template = matching.firstOrNull()?.takeIf { shapes.size == 1 }
       val all = (bindings + added).sortedBy { it.name }
       return CardSchema(
         cardType = type,
@@ -117,16 +125,24 @@ data class CardSchema(
         template = template?.id,
         notes =
           buildList {
-            if (template == null)
-              add(
-                "No library template for `$type`: only the slot bindings are listed. Values " +
-                  "its converter adds (ranges, history, content) are missing."
-              )
-            else if (added.isNotEmpty())
-              add(
-                "${added.size} card-specific bindings come from library design ${template.id}, " +
-                  "with its example's values."
-              )
+            when {
+              matching.isEmpty() ->
+                add(
+                  "No library template of `$type` has these slots: only the slot bindings are " +
+                    "listed. Values its converter adds (ranges, history, content) are missing."
+                )
+              shapes.size > 1 ->
+                add(
+                  "${shapes.size} library shapes of `$type` have these slots, and the card's " +
+                    "shape can't be told from here: only the ${added.size} card-specific " +
+                    "bindings all of them push are listed. A shape's own are left out."
+                )
+              template != null && added.isNotEmpty() ->
+                add(
+                  "${added.size} card-specific bindings come from library design " +
+                    "${template.id}, with its example's values."
+                )
+            }
           },
       )
     }
@@ -154,30 +170,21 @@ data class CardSchema(
       return card to states
     }
 
-    /**
-     * The library design of [cardType] whose slots best match [slotIds]: the same slots in order
-     * first, then the most in common. Null when the library has none of that type.
-     */
-    private fun closestTemplate(
+    /** The library designs of [cardType] whose slots are exactly [slotIds], in order. */
+    private fun templatesWithSlots(
       library: DesignLibrary,
       cardType: String,
       slotIds: List<String>,
-    ): LibraryDesign? {
-      val candidates = library.designs.filter { it.key.cardType == cardType }
-      if (candidates.isEmpty()) return null
-      fun slotsOf(design: LibraryDesign) =
-        library
-          .decode(design)
-          .bindings
-          .mapNotNull { SLOT.find(it.name)?.value?.removeSuffix(".") }
-          .distinct()
-          .sortedBy { it.substringAfterLast(".s").toIntOrNull() ?: 0 }
-      return candidates.maxBy { design ->
-        val slots = slotsOf(design)
-        val exact = if (slots == slotIds) 1_000 else 0
-        exact + slots.count { it in slotIds } - slots.count { it !in slotIds }
+    ): List<LibraryDesign> =
+      library.designs.filter { design ->
+        design.key.cardType == cardType &&
+          library
+            .decode(design)
+            .bindings
+            .mapNotNull { SLOT.find(it.name)?.value?.removeSuffix(".") }
+            .distinct()
+            .sortedBy { it.substringAfterLast(".s").toIntOrNull() ?: 0 } == slotIds
       }
-    }
 
     /** The template's value type, refined: an `is_on` int is a boolean to a designer. */
     private fun bindingType(name: String, decoded: String): BindingType =
