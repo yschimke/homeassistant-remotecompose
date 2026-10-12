@@ -1,6 +1,6 @@
 {
     "formatVersion": "compose-preview-history/v1",
-    "generatedFrom": "461c6032ff19e075511bbef7c9962aad465af193",
+    "generatedFrom": "90e6093afe8b3d76719f9b41ccb254e3e4ebf733",
     "previews": {
         "app/ee.schimke.terrazzo.previews.CardDebugPreviewsKt.CardFlashPreview_Card flash on data change": {
             "path": "renders/app/CardFlashPreview_Card_flash_on_data_change-44b71c2b.gif",
@@ -4930,20 +4930,20 @@
             "path": "renders/previews/DashboardGithubMobile_dashboard_github_mobile-8f04a7c1.png",
             "versions": [
                 {
+                    "blob": "3e0ab7d826ed885fd6488001a1bd902e9e76719c",
+                    "commit": "90e6093afe8b3d76719f9b41ccb254e3e4ebf733",
+                    "date": "2026-10-12T03:41:32Z",
+                    "sourceSha": "cf6f5772",
+                    "sinceCommit": "2fde5cc2cf93899f1c9dfe93de1eca2d4df38200",
+                    "commits": 3,
+                    "occurrences": 3
+                },
+                {
                     "blob": "006abf710e675bd02f2b62e32a9b1b5baf637369",
                     "commit": "461c6032ff19e075511bbef7c9962aad465af193",
                     "date": "2026-10-12T03:34:26Z",
                     "sourceSha": "7bb97871",
                     "commits": 1
-                },
-                {
-                    "blob": "3e0ab7d826ed885fd6488001a1bd902e9e76719c",
-                    "commit": "ecfe549a327e710e2011071e45c1e90c73cf9d00",
-                    "date": "2026-10-11T14:21:41Z",
-                    "sourceSha": "a0f67b3e",
-                    "sinceCommit": "2fde5cc2cf93899f1c9dfe93de1eca2d4df38200",
-                    "commits": 2,
-                    "occurrences": 2
                 },
                 {
                     "blob": "0113d6436ff4970912c90d361ee258b8d80aee16",
@@ -4976,9 +4976,9 @@
                     "commits": 1
                 }
             ],
-            "observations": 8,
+            "observations": 9,
             "unstable": true,
-            "flapCount": 2
+            "flapCount": 3
         },
         "previews/ee.schimke.ha.previews.DashboardPreviewsKt.DashboardGithubTablet_dashboard github — tablet": {
             "path": "renders/previews/DashboardGithubTablet_dashboard_github_tablet-89194c99.png",
