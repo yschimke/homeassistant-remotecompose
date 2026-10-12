@@ -1,6 +1,6 @@
 {
     "formatVersion": "compose-preview-history/v1",
-    "generatedFrom": "74e647314bfab82e280ceddc08b901e82dea6c73",
+    "generatedFrom": "41089606808bd77db56202cb94dfdd2fe7885dc3",
     "previews": {
         "app/ee.schimke.terrazzo.previews.CardDebugPreviewsKt.CardFlashPreview_Card flash on data change": {
             "path": "renders/app/CardFlashPreview_Card_flash_on_data_change-44b71c2b.gif",
@@ -4732,6 +4732,13 @@
             "path": "renders/previews/Dashboard3dPrintingTablet_dashboard_3d_printing_tablet-d15705fe.png",
             "versions": [
                 {
+                    "blob": "c013e7ce277288c373fb550e7889cb18e04ebe26",
+                    "commit": "41089606808bd77db56202cb94dfdd2fe7885dc3",
+                    "date": "2026-10-12T11:49:45Z",
+                    "sourceSha": "49a0569f",
+                    "commits": 1
+                },
+                {
                     "blob": "b667946afe97587515aff8e3c91223d795a6d87f",
                     "commit": "461c6032ff19e075511bbef7c9962aad465af193",
                     "date": "2026-10-12T03:34:26Z",
@@ -4764,7 +4771,7 @@
                     "commits": 1
                 }
             ],
-            "observations": 7,
+            "observations": 8,
             "unstable": true,
             "flapCount": 3
         },
