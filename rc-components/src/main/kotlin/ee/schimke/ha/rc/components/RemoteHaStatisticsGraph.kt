@@ -20,6 +20,7 @@ import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.creation.compose.modifier.height
 import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.shapes.RemoteRoundedCornerShape
+import androidx.compose.remote.creation.compose.state.RemoteFloat
 import androidx.compose.remote.creation.compose.state.asRemotePaint
 import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
@@ -69,7 +70,7 @@ fun RemoteHaStatisticsGraph(
     RemoteColumn(verticalArrangement = RemoteArrangement.spacedBy(6.rdp)) {
       if (data.title != null) {
         RemoteText(
-          text = data.title.rs,
+          text = cardTitle(data.title),
           color = theme.primaryText,
           fontSize = 15.rsp,
           fontWeight = FontWeight.Medium,
@@ -79,7 +80,7 @@ fun RemoteHaStatisticsGraph(
         )
       }
       RemoteText(
-        text = data.rangeLabel.rs,
+        text = cardText("range", data.rangeLabel),
         color = theme.secondaryText,
         fontSize = 11.rsp,
         style = RemoteTextStyle.Default,
@@ -109,7 +110,7 @@ private fun BarRow(row: HaHistoryGraphRow, theme: RemoteHaTheme) {
     horizontalArrangement = RemoteArrangement.SpaceBetween,
   ) {
     RemoteText(
-      text = row.name.rs,
+      text = entityName(row.entityId, row.name),
       color = theme.primaryText,
       fontSize = 12.rsp,
       fontWeight = FontWeight.Medium,
@@ -134,7 +135,7 @@ private fun BarRow(row: HaHistoryGraphRow, theme: RemoteHaTheme) {
       style = RemoteTextStyle.Default,
     )
   } else {
-    Bars(row.points, row.accent, theme)
+    Bars(row.entityId, row.points, row.accent, theme)
   }
 }
 
@@ -157,7 +158,7 @@ private fun Legend(row: HaHistoryGraphRow, theme: RemoteHaTheme) {
             .padding(horizontal = 5.rdp)
       ) {}
       RemoteText(
-        text = row.name.rs,
+        text = entityName(row.entityId, row.name),
         color = theme.primaryText,
         fontSize = 11.rsp,
         style = RemoteTextStyle.Default,
@@ -177,14 +178,14 @@ private fun Legend(row: HaHistoryGraphRow, theme: RemoteHaTheme) {
 }
 
 @Composable
-private fun Bars(points: List<Float>, accent: Color, theme: RemoteHaTheme) {
-  val minP = points.min()
-  val maxP = points.max()
-  // Anchor bars to zero when all values are non-negative; otherwise
-  // anchor at the row minimum so negative-only series still fill the
-  // canvas instead of collapsing to a single line.
-  val base = if (minP >= 0f) 0f else minP
-  val span = (maxP - base).takeIf { it > 0f } ?: 1f
+private fun Bars(entityId: String?, points: List<Float>, accent: Color, theme: RemoteHaTheme) {
+  // One bar per bucket; the count is structure, every value and the axis are
+  // `<entityId>.bar.<i>` / `bar_base` / `bar_span` — constants in a live capture,
+  // bindings in a design template.
+  val range = barRange(points)
+  val base = entityFloat(entityId, "bar_base", range.min)
+  val span = entityFloat(entityId, "bar_span", range.span)
+  val values = points.mapIndexed { i, v -> entityFloat(entityId, "bar.$i", v) }
   val n = points.size
   RemoteCanvas(modifier = RemoteModifier.fillMaxWidth().height(28.rdp)) {
     val w = width
@@ -219,7 +220,7 @@ private fun Bars(points: List<Float>, accent: Color, theme: RemoteHaTheme) {
     val gap = (slot - barWidth) * 0.5f.rf
     for (i in 0 until n) {
       val x0 = padX + slot * i.toFloat().rf + gap
-      val barHeight = drawH * ((points[i] - base) / span).rf
+      val barHeight = drawH * ((values[i] - base) / span)
       val y0 = padY + drawH - barHeight
       drawRect(fill, RemoteOffset(x0, y0), RemoteSize(barWidth, barHeight))
     }
@@ -229,12 +230,12 @@ private fun Bars(points: List<Float>, accent: Color, theme: RemoteHaTheme) {
 @Composable
 private fun StackedBars(rows: List<HaHistoryGraphRow>, theme: RemoteHaTheme) {
   val n = rows.maxOf { it.points.size }
-  val totals = FloatArray(n)
-  for (i in 0 until n) {
-    totals[i] =
-      rows.sumOf { row -> (row.points.getOrNull(i) ?: 0f).coerceAtLeast(0f).toDouble() }.toFloat()
+  // Each segment is `<entityId>.stack.<i>` (its value clamped at zero) and the axis
+  // `card.stack_max`; a zero segment draws nothing, in-document.
+  val maxTotal = cardFloat("stack_max", stackMax(rows.map { it.points }))
+  val segments = rows.map { row ->
+    List(n) { i -> entityFloat(row.entityId, "stack.$i", stackValue(row.points, i)) }
   }
-  val maxTotal = totals.maxOrNull()?.takeIf { it > 0f } ?: 1f
 
   RemoteCanvas(modifier = RemoteModifier.fillMaxWidth().height(64.rdp)) {
     val w = width
@@ -261,12 +262,11 @@ private fun StackedBars(rows: List<HaHistoryGraphRow>, theme: RemoteHaTheme) {
 
     for (i in 0 until n) {
       val x0 = padX + slot * i.toFloat().rf + gap
-      var cumulative = 0f
-      for (row in rows) {
-        val v = (row.points.getOrNull(i) ?: 0f).coerceAtLeast(0f)
-        if (v <= 0f) continue
-        val segTop = padY + drawH * (1f - (cumulative + v) / maxTotal).rf
-        val segHeight = drawH * (v / maxTotal).rf
+      var cumulative: RemoteFloat = 0f.rf
+      rows.forEachIndexed { r, row ->
+        val v = segments[r][i]
+        val segTop = padY + drawH * (1f.rf - (cumulative + v) / maxTotal)
+        val segHeight = drawH * (v / maxTotal)
         val fill =
           AndroidPaint()
             .apply {
@@ -280,6 +280,28 @@ private fun StackedBars(rows: List<HaHistoryGraphRow>, theme: RemoteHaTheme) {
       }
     }
   }
+}
+
+/**
+ * A bar row's axis: anchored at zero when every value is non-negative, otherwise at the lowest so
+ * negative-only series still fill the canvas; the span above it (1 when flat).
+ */
+fun barRange(points: List<Float>): SparklineRange {
+  if (points.isEmpty()) return SparklineRange(0f, 1f)
+  val minP = points.min()
+  val base = if (minP >= 0f) 0f else minP
+  return SparklineRange(base, (points.max() - base).takeIf { it > 0f } ?: 1f)
+}
+
+/** Bucket [i] of a stacked series: its value clamped at zero, 0 when the row has no such bucket. */
+fun stackValue(points: List<Float>, i: Int): Float = (points.getOrNull(i) ?: 0f).coerceAtLeast(0f)
+
+/** The tallest stack across [rows]' buckets (1 when every bucket is empty). */
+fun stackMax(rows: List<List<Float>>): Float {
+  val n = rows.maxOfOrNull { it.size } ?: 0
+  return (0 until n)
+    .maxOfOrNull { i -> rows.sumOf { stackValue(it, i).toDouble() }.toFloat() }
+    ?.takeIf { it > 0f } ?: 1f
 }
 
 private fun Color.toArgb(): Int =

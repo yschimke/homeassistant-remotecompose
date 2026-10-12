@@ -1094,4 +1094,47 @@ class CardDesignParityTest {
       listStates,
       dark = false,
     )
+
+  @Test
+  fun statisticsGraphBars() =
+    assertParity(
+      "statistics-bars",
+      card("statistics-graph") {
+        put("title", "Energy")
+        put("chart_type", "bar")
+        putJsonArray("entities") { add("sensor.temp") }
+      },
+      listOf(listStates[1]),
+      dark = false,
+      statistics = mapOf("sensor.temp" to stats(3.0, 5.5, 2.0, 7.25, 4.0)),
+    )
+
+  @Test
+  fun statisticsGraphStackedDark() =
+    assertParity(
+      "statistics-stacked-dark",
+      card("statistics-graph") {
+        put("chart_type", "bar")
+        put("stack", true)
+        putJsonArray("entities") {
+          add("sensor.temp")
+          add("sensor.humidity")
+        }
+      },
+      listOf(
+        listStates[1],
+        entity(
+          "sensor.humidity",
+          "48",
+          "friendly_name" to "Humidity",
+          "device_class" to "humidity",
+        ),
+      ),
+      dark = true,
+      statistics =
+        mapOf(
+          "sensor.temp" to stats(3.0, 5.5, 2.0, 7.0),
+          "sensor.humidity" to stats(1.0, -2.0, 4.0),
+        ),
+    )
 }

@@ -18,7 +18,10 @@ import ee.schimke.ha.rc.components.HaHistoryGraphRow
 import ee.schimke.ha.rc.components.HaStatisticsGraphData
 import ee.schimke.ha.rc.components.LiveValues
 import ee.schimke.ha.rc.components.RemoteHaStatisticsGraph
+import ee.schimke.ha.rc.components.barRange
 import ee.schimke.ha.rc.components.placeholderTitle
+import ee.schimke.ha.rc.components.stackMax
+import ee.schimke.ha.rc.components.stackValue
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -61,7 +64,8 @@ class StatisticsGraphCardConverter : CardConverter {
    */
   override fun designProperties(card: CardConfig, snapshot: HaSnapshot): DesignProperties? {
     if (!TEMPLATE_CONFIG_KEYS.containsAll(card.raw.keys)) return null
-    if ((card.raw["chart_type"]?.jsonPrimitive?.content ?: "line") != "line") return null
+    val chart = card.raw["chart_type"]?.jsonPrimitive?.content ?: "line"
+    if (chart != "line" && chart != "bar") return null
     if (statTypes(card).size != 1) return null
     val ids = entityIds(card)
     if (ids.isEmpty() || ids.size != (card.raw["entities"] as? JsonArray)?.size) return null
@@ -70,10 +74,16 @@ class StatisticsGraphCardConverter : CardConverter {
     val properties = DesignProperties.build {
       enum(HAS_TITLE, if (card.raw["title"] != null) 1 else 0)
       enum(EntityDesign.COUNT, ids.size)
+      // A bar chart draws one bar per bucket, so each row's bucket count is structure.
+      if (chart == "bar") {
+        string(CHART, chart)
+        enum(STACKED, if (isStacked(card)) 1 else 0)
+      }
       ids.forEachIndexed { i, id ->
         with(EntityDesign) { if (!entity("e$i.", id, null, snapshot)) ok = false }
         val points = statisticPoints(snapshot, id, statType)
-        enum("e$i.${SeriesDesign.HAS_DATA}", if (points.size >= 2) 1 else 0)
+        if (chart == "bar") enum("e$i.$BARS", points.size)
+        else enum("e$i.${SeriesDesign.HAS_DATA}", if (points.size >= 2) 1 else 0)
       }
     }
     return properties.takeIf { ok }
@@ -91,18 +101,22 @@ class StatisticsGraphCardConverter : CardConverter {
             put("type", cardType)
             if (properties[HAS_TITLE] == "1") put("title", placeholderTitle(0))
             putJsonArray("entities") { entities.forEach { add(it.entityId) } }
+            properties[CHART]?.let { put("chart_type", it) }
+            if (properties[STACKED] == "1") put("stack", true)
           },
       )
     val statistics =
       entities.withIndex().associate { (i, e) ->
-        val line = properties["e$i.${SeriesDesign.HAS_DATA}"] == "1"
+        val count =
+          properties["e$i.$BARS"]?.toIntOrNull()
+            ?: if (properties["e$i.${SeriesDesign.HAS_DATA}"] == "1") 2 else 0
         e.entityId to
-          if (!line) emptyList()
-          else
-            listOf(
-              StatisticPoint(kotlin.time.Instant.fromEpochMilliseconds(0), mean = 0.0),
-              StatisticPoint(kotlin.time.Instant.fromEpochMilliseconds(3_600_000), mean = 1.0),
+          List(count) { k ->
+            StatisticPoint(
+              kotlin.time.Instant.fromEpochMilliseconds(k * 3_600_000L),
+              mean = k + 1.0,
             )
+          }
       }
     return DesignTemplateInput(
       card,
@@ -124,12 +138,30 @@ class StatisticsGraphCardConverter : CardConverter {
         )
       }
     }
-    return CardSnapshotBindings(
-      strings,
-      emptyMap(),
-      emptyMap(),
-      SeriesDesign.slotBindings(ids, snapshot) { statisticPoints(snapshot, it, statType) },
-    )
+    val series = ids.map { statisticPoints(snapshot, it, statType) }
+    val floats =
+      if ((card.raw["chart_type"]?.jsonPrimitive?.content ?: "line") != "bar") {
+        SeriesDesign.slotBindings(ids, snapshot) { statisticPoints(snapshot, it, statType) }
+      } else {
+        buildMap {
+          val stacked = isStacked(card)
+          if (stacked) put("card.stack_max", stackMax(series))
+          val buckets = series.maxOfOrNull { it.size } ?: 0
+          ids.forEachIndexed { i, id ->
+            val slot = CardDesignSlots.slotId(CardDesignSlots.domainOf(id), i)
+            val points = series[i]
+            if (stacked) {
+              repeat(buckets) { k -> put("$slot.stack.$k", stackValue(points, k)) }
+            } else {
+              val range = barRange(points)
+              put("$slot.bar_base", range.min)
+              put("$slot.bar_span", range.span)
+              points.forEachIndexed { k, v -> put("$slot.bar.$k", v) }
+            }
+          }
+        }
+      }
+    return CardSnapshotBindings(strings, emptyMap(), emptyMap(), floats)
   }
 
   @Composable
@@ -138,7 +170,7 @@ class StatisticsGraphCardConverter : CardConverter {
     val ids = entityIds(card)
     val stats = statTypes(card)
     val chartType = card.raw["chart_type"]?.jsonPrimitive?.content ?: "line"
-    val stacked = card.raw["stack"]?.jsonPrimitive?.booleanOrNull == true && chartType == "bar"
+    val stacked = isStacked(card)
 
     val rows = ids.flatMap { id ->
       val entity = snapshot.states[id]
@@ -211,7 +243,15 @@ private fun entityIds(card: CardConfig): List<String> {
 }
 
 private val TEMPLATE_CONFIG_KEYS =
-  setOf("type", "title", "entities", "period", "stat_types", "chart_type", "days_to_show")
+  setOf("type", "title", "entities", "period", "stat_types", "chart_type", "days_to_show", "stack")
+private const val CHART = "chart"
+private const val STACKED = "stacked"
+private const val BARS = "bars"
+
+private fun isStacked(card: CardConfig): Boolean =
+  card.raw["stack"]?.jsonPrimitive?.booleanOrNull == true &&
+    (card.raw["chart_type"]?.jsonPrimitive?.content ?: "line") == "bar"
+
 private const val HAS_TITLE = "has_title"
 
 private fun periodLabel(card: CardConfig): String =
