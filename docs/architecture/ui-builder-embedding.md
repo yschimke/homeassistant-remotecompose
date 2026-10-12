@@ -80,9 +80,9 @@ host needs to hand over a whole **contract** once and have the design pin to it:
   "inputs": {
     "card.title":       {"type": "string", "maxLength": 40},
     "light.s0.name":    {"type": "string"},
-    "light.s0.state":   {"type": "string"},
+    "light.s0.state":   {"type": "string", "form": "formatted"},   // formatState(entity)
     "light.s0.is_on":   {"type": "bool"},
-    "sensor.s1.numeric_state": {"type": "float", "unit": "°C"},
+    "sensor.s1.numeric_state": {"type": "float", "form": "raw", "unit": "°C"},
     "light.s0.icon":    {"type": "image"},
     "theme.primary":    {"type": "color", "role": "primary"}
   },
@@ -129,14 +129,18 @@ needs **host actions** from the contract:
 
 ```jsonc
 "onCheckedChange": {"type": "hostAction", "action": "toggle", "args": {"slot": "light.s0"},
-                    "optimistic": {"light.s0.is_on": {"not": "light.s0.is_on"}}}
+                    "optimistic": {"override": "light.s0.is_on", "value": {"not": "light.s0.is_on"}}}
 ```
 
 - **Exported as RemoteCompose `HostAction`s** carrying the action name and its args as metadata.
   This is what our `HaAction` already serialises, and what `TerrazzoWidgetProvider` and the
   playback path resolve.
-- **An optional optimistic update** to a local value, so the toggle moves before the host
-  round-trip comes back.
+- **An optional optimistic update**, so the toggle moves before the host round-trip comes back.
+  Inputs stay read-only. The update writes a design-local **override** that shadows the input, and
+  every read of the input sees the override while it is set. The host's next push of that input
+  clears the override, so the host stays authoritative. An override can also time out, so a lost
+  push doesn't leave the design showing a value the host never confirmed. The exporter compiles
+  this to a local named value plus a conditional read.
 - **The canvas logs each invocation** (action and payload) and can apply a scripted response from
   the example dataset. A designer sees what fires.
 - **Every interactive component takes an action** (`onClick`, `onLongClick`, `onCheckedChange`,
@@ -144,9 +148,18 @@ needs **host actions** from the contract:
 
 ### 4. Bind everything, and compute in the document
 
-A host should push **raw** values and let the document format them. Otherwise it has to
-reimplement the design's formatting, which breaks the "host-reproducible" rule in
-[live-card-updates.md](live-card-updates.md).
+Each input in the contract declares whether the host pushes it **raw** (a number, a bool, an enum
+value) or already **formatted** (display text the host produces). Whichever it declares, the host
+must reproduce the value exactly, the "host-reproducible" rule in
+[live-card-updates.md](live-card-updates.md). Example datasets hold the same form, so the preview
+matches what runs. A design formats raw inputs itself, so the host never reimplements a design's
+formatting. Formatted inputs it shows as they are.
+
+Here, `<slot>.state` stays formatted: it is `formatState(entity)`, with locale, units and
+`On`/`Off` capitalisation, and both hosts already push it. `numeric_state`, `is_on` and
+`state_int` are raw. A design that wants its own number format reads `numeric_state`; it never
+reformats `state`. Moving a binding from formatted to raw is a contract revision: it migrates both
+hosts and every design.
 
 - **Every visual property can be bound**:
   - colours: `color: string` can't be bound in `remote-m3` today;
@@ -232,7 +245,7 @@ An agent working in a user's design session then has the same picture as the des
 | 1 | `export.rc` with named values + manifest | any design reaching a host at all |
 | 2 | Host contract: read-only inputs, examples, target | seeding without hand-made state, contract checks |
 | 3 | Host actions with optimistic updates | interactive cards and widgets |
-| 4 | Bind colours, images and visibility; expressions; predicates | real cards (formatting, states, icons) |
+| 4 | Bind colours (needed for the first slice), then images and visibility; expressions; predicates | real cards (formatting, states, icons) |
 | 6 | Target and contract validation | publishing without a person checking bytes |
 | 9 | Scoped links, webhooks, embed mode | the app entry point, per-user forks |
 | 5 | Host lists | variable-length cards |
@@ -240,6 +253,7 @@ An agent working in a user's design session then has the same picture as the des
 | 8 | Host catalogs | phone-card primitives |
 | 10 | Agent tools | agent sessions on a user's design |
 
-The first three are enough for a vertical slice: the design server seeds from a contract, a person
-binds a tile's text, colour and toggle, and the exported `.rc` publishes as a library variant the
+The first three, plus colour binding from item 4, are enough for a vertical slice: the design
+server seeds from a contract, a person binds a tile's text, colour and toggle, and the exported
+`.rc` publishes as a library variant the
 app plays live. Everything after that widens what can be designed rather than whether it ships.
