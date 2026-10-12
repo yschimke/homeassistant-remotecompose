@@ -12,5 +12,12 @@ design-server/build/install/design-server/bin/design-server card-designs/build/c
 - App setting ("card design server"): `http://<host>:8080/designs/v1`
 - JSON: `/api/designs`, `/api/designs/<id>`
 
-Environment: `DESIGN_LIBRARY` (or the first argument), `PORT` (default 8080), `HOST`. A container
-image with the library baked in: see `Dockerfile`.
+- Card schema: a design's page, `/api/designs/<id>/schema`; any card's JSON at `/schema` or
+  `POST /api/schema`
+- UI Builder: set `UI_BUILDER_BINARY` (the bundled `compose-preview-server`) or `UI_BUILDER_URL` +
+  `UI_BUILDER_TOKEN`, open the printed edit link, then "Design in UI Builder" — see
+  [`card-design-ui-builder.md`](../docs/architecture/card-design-ui-builder.md)
+
+Environment: `DESIGN_LIBRARY` (or the first argument), `PORT` (default 8080), `HOST`, and the
+`UI_BUILDER_*` settings above. A container image with the library baked in and UI Builder bundled:
+see `Dockerfile`.

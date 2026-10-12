@@ -50,6 +50,22 @@ jobs:
           curl -sf "localhost:8080/?style=all&mode=all" | grep -q "card types"
       - name: Build the container image
         run: docker build -f design-server/Dockerfile -t card-design-server .
+      - name: Run the image with UI Builder and seed a design
+        run: |
+          docker run -d --name designs -p 8081:8080 -p 8724:8724 -e UI_BUILDER_TOKEN=ci-token card-design-server
+          for i in $(seq 1 60); do curl -sf localhost:8081/healthz >/dev/null && break; sleep 2; done
+          for i in $(seq 1 90); do curl -sf -o /dev/null "localhost:8724/ui-builder/remote-m3/?token=ci-token" && break; sleep 2; done
+          curl -sf -c cookies.txt -o /dev/null "localhost:8081/edit?token=ci-token"
+          location=$(curl -s -b cookies.txt -o /dev/null -w '%{redirect_url}' -X POST localhost:8081/ui-builder/designs \
+            --data-urlencode 'card={"type":"entities","title":"Living room","entities":["light.kitchen","sensor.temp"]}')
+          echo "editor: $location"
+          id=$(echo "$location" | sed -E 's#.*/ui-builder/([^?]+)\?.*#\1#')
+          test -n "$id"
+          curl -sf -o seeded.png "localhost:8724/api/ui-builder/v1/designs/$id/export.png?token=ci-token"
+          file seeded.png | grep -q PNG
+      - name: Container logs
+        if: always()
+        run: docker logs designs 2>&1 | tail -100 || true
       - uses: actions/upload-artifact@v7.0.2
         with:
           name: card-design-library

@@ -25,6 +25,10 @@ dependencies {
   implementation(libs.ktor.server.auto.head.response)
   implementation(libs.ktor.server.status.pages)
 
+  // Creates designs on UI Builder (`UiBuilderClient`).
+  implementation(libs.ktor.client.core)
+  implementation(libs.ktor.client.cio)
+
   implementation(libs.kotlinx.coroutines.core)
   implementation(libs.kotlinx.serialization.json)
 
