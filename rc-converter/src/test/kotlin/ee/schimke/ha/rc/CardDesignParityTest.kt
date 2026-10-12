@@ -1137,4 +1137,76 @@ class CardDesignParityTest {
           "sensor.humidity" to stats(1.0, -2.0, 4.0),
         ),
     )
+
+  private val printer =
+    listOf(
+      entity(
+        "sensor.x1c_ams_1_tray_1",
+        "Bambu PLA Basic",
+        "color" to "#F2C200FF",
+        "remain" to "80",
+        "active" to "true",
+      ),
+      entity(
+        "sensor.x1c_ams_1_tray_2",
+        "Generic PETG",
+        "color" to "#1E5AA8FF",
+        "remain" to "35",
+        "active" to "false",
+      ),
+      entity(
+        "sensor.x1c_ams_1_tray_3",
+        "unknown",
+        "remain_enabled" to "false",
+        "active" to "false",
+      ),
+      entity("sensor.x1c_print_progress", "42", "friendly_name" to "X1C Print progress"),
+      entity("sensor.x1c_current_stage", "printing"),
+      entity("sensor.x1c_current_layer", "120"),
+      entity("sensor.x1c_total_layer_count", "300"),
+      entity("sensor.x1c_remaining_time", "95"),
+      entity("sensor.x1c_nozzle_temperature", "219.5", "unit_of_measurement" to "°C"),
+      entity("sensor.x1c_target_nozzle_temperature", "220"),
+      entity("button.x1c_pause_printing", "unknown"),
+      entity("button.x1c_stop_printing", "unknown"),
+    )
+
+  @Test
+  fun bambuAms() =
+    assertParity(
+      "bambu-ams",
+      card("custom:ha-bambulab-ams-card") { put("entity_prefix", "x1c") },
+      printer,
+      dark = false,
+    )
+
+  @Test
+  fun bambuSpoolDark() =
+    assertParity(
+      "bambu-spool-dark",
+      card("custom:ha-bambulab-spool-card") {
+        put("entity_prefix", "x1c")
+        put("slot", 2)
+      },
+      printer,
+      dark = true,
+    )
+
+  @Test
+  fun bambuPrintStatus() =
+    assertParity(
+      "bambu-print-status",
+      card("custom:ha-bambulab-print_status-card") { put("entity_prefix", "x1c") },
+      printer,
+      dark = false,
+    )
+
+  @Test
+  fun bambuPrintControl() =
+    assertParity(
+      "bambu-print-control",
+      card("custom:ha-bambulab-print_control-card") { put("entity_prefix", "x1c") },
+      printer,
+      dark = false,
+    )
 }

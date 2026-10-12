@@ -524,6 +524,48 @@ class CardDesignTemplatesEndToEndTest {
     )
   }
 
+  @Test
+  fun bambuControlTapPressesTheClientsPrinterButton() {
+    val card =
+      CardConfig(
+        type = "custom:ha-bambulab-print_control-card",
+        raw =
+          buildJsonObject {
+            put("type", "custom:ha-bambulab-print_control-card")
+            put("entity_prefix", "x1c")
+          },
+      )
+    val snapshot =
+      HaSnapshot(
+        states =
+          mapOf(
+            "button.x1c_pause_printing" to EntityState("button.x1c_pause_printing", "unknown"),
+            "button.x1c_stop_printing" to EntityState("button.x1c_stop_printing", "unknown"),
+          )
+      )
+    val playback = CardDesignTemplates.playback(card, ByteArray(0))
+    fun press(entity: String) =
+      ee.schimke.ha.rc.components.HaAction.CallService(
+        "button",
+        "press",
+        entity,
+        kotlinx.serialization.json.JsonObject(emptyMap()),
+      )
+    assertEquals(
+      press("button.x1c_pause_printing"),
+      playback.resolveTap(press("button.rcslot_pause_printing"), snapshot),
+    )
+    // A button this printer doesn't have, or any other entity, is never pressed.
+    assertEquals(
+      playback.tapAction,
+      playback.resolveTap(press("button.rcslot_resume_printing"), snapshot),
+    )
+    assertEquals(
+      playback.tapAction,
+      playback.resolveTap(press("button.garage_door_open"), snapshot),
+    )
+  }
+
   /**
    * With `-PcardDesignsOut=<dir>`, writes every spike design as the files a static host serves.
    * Skipped otherwise.

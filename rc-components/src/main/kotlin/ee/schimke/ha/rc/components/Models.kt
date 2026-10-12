@@ -278,6 +278,8 @@ data class HaBambuSpoolSlot(
   val color: Color,
   val remainPercent: Int?,
   val active: Boolean,
+  /** What [material] shows, as text: the value a design template's binding is given. */
+  val materialText: String = "",
 )
 
 /**

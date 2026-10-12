@@ -48,7 +48,7 @@ fun RemoteHaBambuPrintControl(
   ) {
     RemoteColumn(verticalArrangement = RemoteArrangement.spacedBy(8.rdp)) {
       RemoteText(
-        text = data.printerName.rs,
+        text = cardText("printer", data.printerName),
         color = theme.secondaryText,
         fontSize = 11.rsp,
         style = RemoteTextStyle.Default,

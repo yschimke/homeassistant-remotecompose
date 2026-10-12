@@ -50,8 +50,8 @@ A first end-to-end slice is in the codebase, with **one rendering path**: every 
 (today: tile, entity, button, heading, glance, entities, alarm panel, gauge, clock, area, picture-entity,
 sensor, history-graph, statistic, line statistics-graph, thermostat, humidifier, vertical / horizontal stacks, grids,
 conditional and entity-filter cards, markdown, picture, picture-glance, logbook, calendar,
-to-do list, weather forecast, light, media control, map, picture-elements and the unsupported
-placeholder) renders from a card design. The design comes from the server when one is
+to-do list, weather forecast, light, media control, map, picture-elements, bar statistics graphs, the Bambu Lab cards and the
+unsupported placeholder) — every built-in card type renders from a card design. The design comes from the server when one is
 cached for the card's key, and from the **local design library** otherwise. The library captures
 the same template from the app's own converters on first use and keeps it for the process, so with
 no server configured (the default) cards still take the design path, just with built-in designs.
@@ -123,6 +123,10 @@ Deliberate spike limits, each owned by a milestone below:
   Picture-elements key on each element's type, its position in whole dp on the card's canvas
   and its entity's properties; every template element taps as `#el-<k>`, and playback runs
   element k's own configured tap (a slot-less tap reaches `designAction` with `NO_SLOT`).
+  The Bambu Lab cards find their printer's entities by prefix, so a template names them with a
+  placeholder prefix (`entity_prefix: rcslot`) the client renames its printer onto; a spool's
+  colour is `<id>.color.r/g/b/a` floats composed in-document (`entityColor`), and a control tap
+  presses only the client's printer's own pause / resume / stop button.
 - **Generation properties** (`EntityDesign`) are what changes the look, per bound entity:
   `domain` (icon family, toggle chrome), `device_class` for sensors and binary sensors (icon,
   colour), the `icon` attribute and a config `icon` (`card_icon`). List cards prefix them with the

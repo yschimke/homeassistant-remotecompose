@@ -17,7 +17,6 @@ import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.modifier.size
 import androidx.compose.remote.creation.compose.shapes.RemoteRoundedCornerShape
-import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.remote.creation.compose.state.rsp
@@ -85,7 +84,7 @@ fun RemoteHaBambuSpool(data: HaBambuSpoolDetail, modifier: RemoteModifier = Remo
       SpoolSwatch(data.slot, big = true, theme = theme)
       RemoteColumn(modifier = RemoteModifier.padding(start = 14.rdp)) {
         RemoteText(
-          text = data.slot.slotLabel.rs,
+          text = cardText("slot_label", data.slot.slotLabel),
           color = theme.secondaryText,
           fontSize = 11.rsp,
           style = RemoteTextStyle.Default,
@@ -148,7 +147,8 @@ private fun SpoolSlot(slot: HaBambuSpoolSlot, theme: RemoteHaTheme, big: Boolean
 private fun SpoolSwatch(slot: HaBambuSpoolSlot, big: Boolean, theme: RemoteHaTheme) {
   val outerSize = if (big) 56.rdp else 36.rdp
   val innerSize = if (big) 44.rdp else 28.rdp
-  val outline = if (slot.active) slot.color.rc else theme.divider
+  val swatch = entityColor(slot.entityId, "color", slot.color)
+  val outline = if (slot.active) swatch else theme.divider
   RemoteBox(
     modifier =
       RemoteModifier.size(outerSize)
@@ -165,7 +165,7 @@ private fun SpoolSwatch(slot: HaBambuSpoolSlot, big: Boolean, theme: RemoteHaThe
       modifier =
         RemoteModifier.size(innerSize)
           .clip(RemoteRoundedCornerShape(if (big) 12.rdp else 8.rdp))
-          .background(slot.color.rc)
+          .background(swatch)
     )
   }
 }

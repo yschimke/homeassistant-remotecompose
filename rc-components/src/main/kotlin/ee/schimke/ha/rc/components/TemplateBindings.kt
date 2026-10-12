@@ -2,15 +2,18 @@
 
 package ee.schimke.ha.rc.components
 
+import androidx.compose.remote.creation.compose.state.RemoteColor
 import androidx.compose.remote.creation.compose.state.RemoteFloat
 import androidx.compose.remote.creation.compose.state.RemoteInt
 import androidx.compose.remote.creation.compose.state.RemoteString
+import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rf
 import androidx.compose.remote.creation.compose.state.ri
 import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.ui.graphics.Color
 
 /**
  * Bindings for **card design templates** (`docs/architecture/card-design-server.md`): text and
@@ -119,6 +122,22 @@ fun entityInt(entityId: String?, field: String, value: Int): RemoteInt {
   val bindings = LocalTemplateBindings.current ?: return value.ri
   if (entityId == null) return value.ri
   return bindings.ints.getOrPut("$entityId.$field") { LiveValues.namedInt(entityId, field, value) }
+}
+
+/**
+ * A colour taken from [entityId]'s data (a filament spool's swatch): the constant [color] in a live
+ * capture; in a design template, `<entityId>.<field>.r` / `.g` / `.b` / `.a` floats composed
+ * in-document, so the colour is a value the client pushes, never part of the template.
+ */
+@Composable
+fun entityColor(entityId: String?, field: String, color: Color): RemoteColor {
+  if (LocalTemplateBindings.current == null || entityId == null) return color.rc
+  return RemoteColor.rgb(
+    entityFloat(entityId, "$field.r", color.red),
+    entityFloat(entityId, "$field.g", color.green),
+    entityFloat(entityId, "$field.b", color.blue),
+    entityFloat(entityId, "$field.a", color.alpha),
+  )
 }
 
 /** Binding-name prefix for card-level (not per-entity) bindings: `card.title`, … */
