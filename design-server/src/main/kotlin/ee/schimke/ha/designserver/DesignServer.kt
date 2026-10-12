@@ -57,7 +57,15 @@ class LibraryHolder(
     return library
   }
 
-  private fun manifestModified(): Long = File(dir, DesignLibrary.MANIFEST).lastModified()
+  /**
+   * The library's version on disk: the manifest's and the catalog's times, so a catalog written
+   * after its manifest is still picked up. The generator replaces the whole directory at once.
+   */
+  private fun manifestModified(): Long =
+    maxOf(
+      File(dir, DesignLibrary.MANIFEST).lastModified(),
+      File(dir, DesignCatalog.PATH).lastModified(),
+    )
 }
 
 /**
@@ -158,7 +166,7 @@ fun Application.designServer(holder: LibraryHolder, uiBuilder: UiBuilderIntegrat
     post("/api/schema") {
       val schema = runCatching {
         val (card, states) = CardSchema.parseRequest(Json.parseToJsonElement(call.receiveText()))
-        CardSchema.fromCard(card, states)
+        CardSchema.fromCard(card, states, holder.current())
       }
         .getOrElse {
           return@post call.respondText(
@@ -183,7 +191,7 @@ fun Application.designServer(holder: LibraryHolder, uiBuilder: UiBuilderIntegrat
       val text = call.receiveParameters()["card"].orEmpty()
       val result = runCatching {
         val (card, states) = CardSchema.parseRequest(Json.parseToJsonElement(text))
-        CardSchema.fromCard(card, states)
+        CardSchema.fromCard(card, states, holder.current())
       }
       call.respondText(
         Pages.schema(
@@ -242,7 +250,7 @@ fun Application.designServer(holder: LibraryHolder, uiBuilder: UiBuilderIntegrat
                     status = HttpStatusCode.BadRequest,
                   )
                 }
-            CardSchema.fromCard(card, states).let { it to it.cardType }
+            CardSchema.fromCard(card, states, holder.current()).let { it to it.cardType }
           }
           ?: return@post call.respondText(
             "needs design or card",

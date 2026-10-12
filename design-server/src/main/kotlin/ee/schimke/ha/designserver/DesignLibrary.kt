@@ -33,6 +33,12 @@ private constructor(
   /** `manifest.json` exactly as published: its bytes are what clients hash and cache. */
   val manifestBytes: ByteArray,
   val catalog: DesignCatalog?,
+  /**
+   * Every blob's bytes, read and verified when the library loads. Templates are small (a few MB for
+   * the whole library), and holding them means a loaded library never reads a blob a regenerated
+   * one has since replaced on disk: it serves its own manifest's blobs until it is swapped out.
+   */
+  private val blobBytes: Map<String, ByteArray>,
 ) {
   /** Every design, in manifest order, with its catalog entry when there is one. */
   val designs: List<LibraryDesign>
@@ -61,10 +67,7 @@ private constructor(
   fun design(id: String): LibraryDesign? = byId[id]
 
   /** A blob's bytes, or null when [sha256] isn't one of this library's designs. */
-  fun blob(sha256: String): ByteArray? {
-    if (sha256 !in blobs) return null
-    return File(dir, DesignManifest.blobPath(sha256)).takeIf { it.isFile }?.readBytes()
-  }
+  fun blob(sha256: String): ByteArray? = blobBytes[sha256]
 
   /** A catalog preview's bytes, or null when [path] isn't one the catalog names. */
   fun preview(path: String): ByteArray? {
@@ -132,19 +135,23 @@ private constructor(
       val manifestBytes = manifestFile.readBytes()
       val manifest =
         json.decodeFromString(DesignManifest.serializer(), manifestBytes.decodeToString())
-      for (entry in manifest.designs.distinctBy { it.sha256 }) {
-        val blob = File(dir, DesignManifest.blobPath(entry.sha256))
-        check(blob.isFile) { "missing blob ${blob.name}" }
-        val bytes = blob.readBytes()
-        check(bytes.size == entry.bytes && Sha256.hex(bytes) == entry.sha256) {
-          "blob ${blob.name} doesn't match the manifest"
-        }
-      }
+      val blobBytes =
+        manifest.designs
+          .distinctBy { it.sha256 }
+          .associate { entry ->
+            val blob = File(dir, DesignManifest.blobPath(entry.sha256))
+            check(blob.isFile) { "missing blob ${blob.name}" }
+            val bytes = blob.readBytes()
+            check(bytes.size == entry.bytes && Sha256.hex(bytes) == entry.sha256) {
+              "blob ${blob.name} doesn't match the manifest"
+            }
+            entry.sha256 to bytes
+          }
       val catalog =
         File(dir, DesignCatalog.PATH)
           .takeIf { it.isFile }
           ?.let { json.decodeFromString(DesignCatalog.serializer(), it.readText()) }
-      return DesignLibrary(dir, manifest, manifestBytes, catalog)
+      return DesignLibrary(dir, manifest, manifestBytes, catalog, blobBytes)
     }
 
     const val MANIFEST = "manifest.json"

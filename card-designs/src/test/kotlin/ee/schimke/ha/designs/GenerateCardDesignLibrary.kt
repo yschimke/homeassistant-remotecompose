@@ -70,7 +70,10 @@ class GenerateCardDesignLibrary {
 
   @Test
   fun generate() {
-    val out = File(requireNotNull(System.getProperty("cardDesignsOut")) { "no cardDesignsOut" })
+    val target = File(requireNotNull(System.getProperty("cardDesignsOut")) { "no cardDesignsOut" })
+    // Built beside the target and swapped in whole once every file is written (see publishTo), so
+    // a design server serving the target never sees a half-written library.
+    val out = File(target.parentFile, ".${target.name}.staging")
     out.deleteRecursively()
     val context = RuntimeEnvironment.getApplication()
 
@@ -95,10 +98,11 @@ class GenerateCardDesignLibrary {
     val built = examples.keys.map { CardDesignTemplates.capture(context, it) }
     val now = System.currentTimeMillis()
     val output = DesignPublisher.publish(built, serial = now, nowEpochMs = now)
-    for ((path, bytes) in output.files) out
-      .resolve(path)
-      .also { it.parentFile.mkdirs() }
-      .writeBytes(bytes)
+    // The manifest is written last, after its blobs, previews and catalog.
+    for ((path, bytes) in output.files) {
+      if (path == MANIFEST_PATH) continue
+      out.resolve(path).also { it.parentFile.mkdirs() }.writeBytes(bytes)
+    }
 
     val entries = built.mapIndexed { i, design ->
       val example = examples.getValue(design.key)
@@ -141,7 +145,22 @@ class GenerateCardDesignLibrary {
     out
       .resolve(DesignCatalog.PATH)
       .writeText(json.encodeToString(DesignCatalog.serializer(), catalog))
-    println("card designs: ${built.size} designs, ${output.files.size - 1} files in $out")
+    out.resolve(MANIFEST_PATH).writeBytes(output.files.getValue(MANIFEST_PATH))
+    publishTo(out, target)
+    println("card designs: ${built.size} designs, ${output.files.size - 1} files in $target")
+  }
+
+  /**
+   * Replaces [target] with the complete library in [staging]: the old directory moves aside, the
+   * new one takes its name, then the old one is deleted. A server that loaded the old library keeps
+   * its blobs in memory, and reloads when the new manifest appears.
+   */
+  private fun publishTo(staging: File, target: File) {
+    val old = File(target.parentFile, ".${target.name}.old")
+    old.deleteRecursively()
+    if (target.exists()) check(target.renameTo(old)) { "couldn't move $target aside" }
+    check(staging.renameTo(target)) { "couldn't move $staging to $target" }
+    old.deleteRecursively()
   }
 
   /** The values [playback] pushes for [example]: its preview's bindings, for the catalog. */
@@ -235,3 +254,6 @@ class GenerateCardDesignLibrary {
           .flatMap { it.withNested() }
   }
 }
+
+/** `DesignPublisher`'s manifest, which a client reads first: written after everything it names. */
+private const val MANIFEST_PATH = "manifest.json"
