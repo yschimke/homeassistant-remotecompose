@@ -1,11 +1,51 @@
 {
   "schema": "compose-preview-activity/v1",
-  "generatedAt": "2026-10-12T03:08:49.774Z",
+  "generatedAt": "2026-10-12T03:51:57.911Z",
   "windowDays": 30,
   "code": {
     "repo": "yschimke/homeassistant-remotecompose",
     "ref": "main",
     "events": [
+      {
+        "sha": "e482a749f982f6d0da1e5989df67fcf05af424d6",
+        "subject": "chore(deps): pin dependencies (#755)",
+        "at": "2026-10-12T02:56:07Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "6419ad4e1b556690c59112d95cb77c2409db992e",
+        "subject": "feat: render every card from designs, and bake launcher and Wear widgets with rc-player-edit (#760)",
+        "at": "2026-10-12T03:17:08+01:00",
+        "author": "Yuri Schimke",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "f45a5299415047ab409590bc6be4291e80087ad7",
+        "subject": "chore(deps): update github-actions (major) (#761)",
+        "at": "2026-10-12T02:06:56Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "e3b24432e430fe0b77fd1660fb22dddbb805b345",
+        "subject": "fix(deps): update dependency androidx.compose.material3:material3 to v1.5.0-beta01 (#758)",
+        "at": "2026-10-12T00:54:52Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
+      {
+        "sha": "13f267df40356acf426afc45d4d22e834f031c36",
+        "subject": "fix(deps): update androidx-wear to v1.7.1 (#757)",
+        "at": "2026-10-12T00:31:59Z",
+        "author": "renovate[bot]",
+        "previewIds": [],
+        "components": []
+      },
       {
         "sha": "f1e447dd4b77928656bcdc3a1d7bfd21a246de6d",
         "subject": "chore(deps): update gradle to v9.8.1 (#756)",
@@ -443,46 +483,6 @@
         "subject": "feat: add adaptive dashboard browser UID pilot (#700)",
         "at": "2026-10-10T15:12:36+01:00",
         "author": "Yuri Schimke",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "e7b7eae467426bbe97dda7319b585b5508600af7",
-        "subject": "docs: require explicit user requests for merging PRs (#703)",
-        "at": "2026-10-10T15:12:22+01:00",
-        "author": "Yuri Schimke",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "de7106357e1195194bbcde9c2881d623154e4327",
-        "subject": "chore(deps): update yschimke/compose-ai-tools action to v2.41.0 (#702)",
-        "at": "2026-10-10T12:50:45Z",
-        "author": "renovate[bot]",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "55e30bb9ece4ffae7a287ae5c5ba133a04d14964",
-        "subject": "fix(deps): update compose-ai-tools (#699)",
-        "at": "2026-10-10T12:18:45Z",
-        "author": "renovate[bot]",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "34b59e446ee11ccc10caee1fc5e2f72740eb7fb3",
-        "subject": "fix(deps): update compose-ai-tools (#698)",
-        "at": "2026-10-10T11:02:10Z",
-        "author": "renovate[bot]",
-        "previewIds": [],
-        "components": []
-      },
-      {
-        "sha": "f49ddd3cdf24144c97b399a7d501b78fdbc60c27",
-        "subject": "chore(deps): update compose-ai-tools (#696)",
-        "at": "2026-10-10T04:50:10Z",
-        "author": "renovate[bot]",
         "previewIds": [],
         "components": []
       }
