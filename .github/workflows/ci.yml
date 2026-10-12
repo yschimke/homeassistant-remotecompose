@@ -102,7 +102,7 @@ jobs:
       - run: ./gradlew test --stacktrace
       - name: Upload test reports
         if: always()
-        uses: actions/upload-artifact@v7.0.1
+        uses: actions/upload-artifact@v7.0.2
         with:
           name: test-reports
           path: |
@@ -131,7 +131,7 @@ jobs:
       - run: ./gradlew lintDebug --stacktrace
       - name: Upload lint reports
         if: always()
-        uses: actions/upload-artifact@v7.0.1
+        uses: actions/upload-artifact@v7.0.2
         with:
           name: lint-reports
           path: |
@@ -211,7 +211,7 @@ jobs:
 
       - name: Upload instrumented test reports
         if: always() && env.RUN_HEAVY == 'true'
-        uses: actions/upload-artifact@v7.0.1
+        uses: actions/upload-artifact@v7.0.2
         with:
           name: android-test-reports
           path: |
