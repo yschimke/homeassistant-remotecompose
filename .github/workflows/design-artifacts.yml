@@ -3,8 +3,10 @@ name: Design Artifacts
 # Render the Terrazzo / HA-RemoteCompose design catalog (:previews @Preview
 # sticker sheet) and publish its importable bundle (catalog.json + DTCG tokens +
 # Figma variables + PNGs + the per-preview `.rc` documents) to a clean
-# `design-artifacts/homeassistant-remotecompose` branch. The public preview
-# server (preview.coo.ee) fetches that branch and serves it at
+# `design-artifacts/homeassistant-remotecompose` branch in the public output
+# repository yschimke/homeassistant-remotecompose-out, so the generated history
+# never lands in this source repository. The public preview server
+# (preview.coo.ee) fetches that branch and serves it at
 # /homeassistant-remotecompose/.
 #
 # The pipeline itself lives in compose-ai-tools as a reusable workflow — the
@@ -88,14 +90,25 @@ jobs:
   generate:
     needs: uid-references
     name: homeassistant-remotecompose
-    # Don't run on forks — the publish step pushes a branch into this repo.
+    # Don't run on forks — the publish step pushes to the output repository with
+    # ARTIFACTS_TOKEN, which a fork has neither the secret nor the right to use.
     if: ${{ github.repository == 'yschimke/homeassistant-remotecompose' }}
     permissions:
-      # Widened here (workflow default is read-only) for the branch force-push.
+      # Widened here (workflow default is read-only). The delivery branch itself
+      # is pushed to the output repository with ARTIFACTS_TOKEN; this job's
+      # GITHUB_TOKEN still writes the source provenance marker
+      # `refs/design-artifacts/source/homeassistant-remotecompose` here, which
+      # has to stay in this repository (it points at a source commit).
       contents: write
     uses: yschimke/compose-ai-tools/.github/workflows/design-artifacts-reusable.yml@8f5c801144a7f482b44afb8e9f3e34a4871b9d7e
     with:
       system: homeassistant-remotecompose
+      # Generated branches (design-artifacts/homeassistant-remotecompose and any
+      # design-parity/<system> board) live in the public output repository. The
+      # render jobs read it anonymously; only the publish job gets the
+      # artifacts_token below. See compose-ai-tools
+      # docs/design/OUTPUT_REPOSITORIES.md.
+      artifact-repository: yschimke/homeassistant-remotecompose-out
       ref: ${{ github.sha }}
       catalog-section-artifact: adaptive-uid-catalog
       catalog-section: Screens
@@ -157,3 +170,6 @@ jobs:
       # measurement — the first run that exercises all three lanes is the one that produces a real
       # number, and this should come back down to fit it once it has.
       timeout-minutes: 120
+    secrets:
+      # Contents write on yschimke/homeassistant-remotecompose-out only.
+      artifacts_token: ${{ secrets.ARTIFACTS_TOKEN }}

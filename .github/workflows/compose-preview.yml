@@ -15,7 +15,8 @@ permissions:
 
 concurrency:
   # `push` to main / `workflow_dispatch` end with a `git push` to the shared
-  # `compose-preview/main` branch — don't cancel those mid-flight (a cancel
+  # `compose-preview/main` branch (in the -out repository, see the apply step
+  # below) — don't cancel those mid-flight (a cancel
   # between commit-tree and push can leave the remote half-advanced). PRs
   # are safe to cancel; the comment composite handles being interrupted.
   group: compose-preview-${{ github.event.pull_request.number || github.ref }}
@@ -33,8 +34,11 @@ jobs:
     permissions:
       # The composite action either pushes to compose-preview/main (baseline
       # mode) or appends to compose-preview/pr + posts a sticky PR comment
-      # (comment mode). Both paths need write contents; comment mode also
-      # needs pull-requests write.
+      # (comment mode). Those generated branches live in
+      # yschimke/homeassistant-remotecompose-out and are pushed with
+      # ARTIFACTS_TOKEN, not this job's GITHUB_TOKEN; contents write is kept
+      # for the action's same-repository fallback (an unset secret), and
+      # comment mode needs pull-requests write for the sticky comment.
       contents: write
       pull-requests: write
     steps:
@@ -49,6 +53,18 @@ jobs:
           cache-read-only: ${{ github.event_name == 'pull_request' && 'true' || 'false' }}
       - uses: yschimke/compose-ai-tools/.github/actions/apply@v2.54.0
         with:
+          # Generated branches (compose-preview/main, compose-preview/pr and the
+          # a11y / resources pairs) go to the public output repository so this
+          # source repository stops accumulating generated PNG history. The
+          # comment's raw image links and the comment-mode baseline fetch follow
+          # the same repository. ARTIFACTS_TOKEN has contents write on -out only.
+          #
+          # Fork PRs get no secrets, so the token is empty there and the action
+          # falls back to this job's GITHUB_TOKEN: the baseline fetch still works
+          # (-out is public), and the push fails exactly as it did before this
+          # move, when a fork's read-only token could not push here either.
+          artifact-repository: yschimke/homeassistant-remotecompose-out
+          artifacts-token: ${{ secrets.ARTIFACTS_TOKEN }}
           cli-version: catalog
           catalog-key: compose-preview-plugin
           # One known preview cannot render, and it is one nobody wrote:
