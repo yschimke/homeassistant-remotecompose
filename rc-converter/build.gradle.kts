@@ -77,6 +77,8 @@ dependencies {
   implementation(libs.remote.material3)
   // Compose Multiplatform player — the default for every card host (see `CardPlayback`).
   api(libs.rc.player.compose)
+  // Bakes launcher-widget designs: writes a card's values into a values-free template.
+  implementation(libs.rc.player.edit)
 
   testImplementation(libs.kotlin.test)
   testImplementation(libs.kotlin.test.junit)

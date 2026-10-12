@@ -48,6 +48,10 @@ private val haActionJson = Json { ignoreUnknownKeys = true }
  * Public so test surfaces in downstream modules can assert the encode → decode contract; production
  * callers should usually go through [LocalHaActionDispatcher] instead.
  */
+/** The JSON form [decodeHaAction] reads: what a widget's PendingIntent carries. */
+fun encodeHaAction(action: HaAction): String =
+  haActionJson.encodeToString(HaAction.serializer(), action)
+
 fun decodeHaAction(value: Any?): HaAction? {
   val text = value as? String ?: return null
   return runCatching { haActionJson.decodeFromString(HaAction.serializer(), text) }.getOrNull()
