@@ -6,6 +6,7 @@ import android.graphics.Bitmap
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -114,6 +115,24 @@ class SlotWidgetDesignTest {
   }
 
   @Test
+  fun bakingLeavesTheCachedTemplateUnchanged() {
+    val card = card("picture-entity", "camera.driveway")
+    val snapshot =
+      HaSnapshot(
+        states =
+          mapOf(
+            "camera.driveway" to entity("camera.driveway", "idle", "friendly_name" to "Driveway")
+          )
+      )
+    val first = capture(data(card, snapshot))
+    val second = capture(data(card, snapshot))
+    assertTrue(
+      first.contentEquals(second),
+      "a second bake of the cached template matches the first",
+    )
+  }
+
+  @Test
   fun tileBakesItsValues() =
     assertBaked(
       card("tile", "light.kitchen"),
@@ -190,16 +209,19 @@ class SlotWidgetDesignTest {
     var bytes by mutableStateOf(direct)
     compose.setContent {
       Box(Modifier.size(params.widthDp.dp, params.heightDp.dp).testTag("widget")) {
-        CachedCardPreview(
-          // One cache entry per document: the player keeps a document's text state by key.
-          cacheKey = "wear-$name-${bytes.contentHashCode()}",
-          template =
-            CardTemplatePlayback(
-              bytes,
-              { CardSnapshotBindings(emptyMap(), emptyMap(), emptyMap(), emptyMap()) },
-              HaAction.None,
-            ),
-        ) {}
+        // A fresh player per document: a player handed a new document in place keeps the old
+        // one's text state, which a widget host never does.
+        key(bytes) {
+          CachedCardPreview(
+            cacheKey = "wear-$name-${bytes.contentHashCode()}",
+            template =
+              CardTemplatePlayback(
+                bytes,
+                { CardSnapshotBindings(emptyMap(), emptyMap(), emptyMap(), emptyMap()) },
+                HaAction.None,
+              ),
+          ) {}
+        }
       }
     }
     compose.waitForIdle()

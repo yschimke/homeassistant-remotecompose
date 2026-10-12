@@ -60,15 +60,20 @@ val prepareRobolectricSdk by
     into(layout.buildDirectory.dir("robolectric-sdk"))
   }
 
-tasks.withType<Test>().configureEach {
-  inputs.files(robolectricSdk)
-  dependsOn(prepareRobolectricSdk)
-  systemProperty("robolectric.offline", "true")
-  systemProperty(
-    "robolectric.dependency.dir",
-    layout.buildDirectory.dir("robolectric-sdk").get().asFile.absolutePath,
-  )
-}
+// Unit tests only: the Compose Preview renderer (`composePreviewRender`) is a Test task too, and
+// resolves its own Robolectric SDK.
+tasks
+  .withType<Test>()
+  .matching { it.name.endsWith("UnitTest") }
+  .configureEach {
+    inputs.files(robolectricSdk)
+    dependsOn(prepareRobolectricSdk)
+    systemProperty("robolectric.offline", "true")
+    systemProperty(
+      "robolectric.dependency.dir",
+      layout.buildDirectory.dir("robolectric-sdk").get().asFile.absolutePath,
+    )
+  }
 
 play {
   // First Wear rollout uses Play internal testing for watch-only QA.
