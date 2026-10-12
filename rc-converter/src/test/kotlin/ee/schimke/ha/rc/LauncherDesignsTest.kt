@@ -16,6 +16,7 @@ import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.unit.dp
+import ee.schimke.composeai.rcplayer.edit.bitmapUrls
 import ee.schimke.composeai.rcplayer.edit.namedVariables
 import ee.schimke.composeai.rcplayer.protocol.RcDocumentCodec
 import ee.schimke.composeai.rcplayer.protocol.RcWireLimits
@@ -146,6 +147,88 @@ class LauncherDesignsTest {
         entity("sensor.cpu", "86", "friendly_name" to "CPU", "unit_of_measurement" to "%")
       ),
     )
+
+  @Test
+  fun alarmWidgetWithATypedPinResolvesToTheRealPanel() {
+    val card =
+      CardConfig(
+        type = "alarm-panel",
+        raw =
+          buildJsonObject {
+            put("type", "alarm-panel")
+            put("entity", "alarm_control_panel.home")
+            put("code_length", 4)
+          },
+      )
+    val snapshot =
+      snapshotOf(entity("alarm_control_panel.home", "armed_away", "friendly_name" to "Home"))
+    val baked = bake(card, snapshot)
+    val pins = baked.actions.values.filterIsInstance<HaAction.AlarmPin>()
+    assertTrue(pins.isNotEmpty(), "the widget accumulates the PIN in-document")
+    assertTrue(pins.all { it == HaAction.AlarmPin("alarm_control_panel.home", "") })
+    assertTrue(
+      baked.actions.values.none { "alarm_control_panel.s0" in it.toString() },
+      "no action names the template's slot",
+    )
+  }
+
+  @Test
+  fun bakedPictureWidgetEmbedsTheEntitysOwnImage() {
+    val url = "/api/camera_proxy/camera.driveway?token=abc"
+    val card = card("picture-entity", "camera.driveway")
+    val snapshot =
+      snapshotOf(
+        entity("camera.driveway", "idle", "friendly_name" to "Driveway", "entity_picture" to url)
+      )
+    val png =
+      Bitmap.createBitmap(64, 48, Bitmap.Config.ARGB_8888).let { bitmap ->
+        android.graphics.Canvas(bitmap).drawColor(android.graphics.Color.YELLOW)
+        java.io
+          .ByteArrayOutputStream()
+          .also { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
+          .toByteArray()
+      }
+    val fetched = mutableListOf<String>()
+    val context = org.robolectric.RuntimeEnvironment.getApplication()
+    val baked =
+      assertNotNull(
+        LauncherDesigns.render(
+          context,
+          card,
+          snapshot,
+          widthDp,
+          heightDp,
+          density,
+          dark = false,
+          systemTheme = false,
+          registry = registry,
+          fetchImage = {
+            fetched += it
+            if (it == url) png else null
+          },
+        )
+      )
+    // Only the card's own picture was fetched, and the widget no longer names any URL.
+    assertEquals(listOf(url), fetched)
+    val document = RcDocumentCodec.decode(baked.bytes, RcWireLimits())
+    assertEquals(emptyList(), document.bitmapUrls)
+    // Without the picture there is nothing to embed: the direct capture is kept.
+    assertEquals(
+      null,
+      LauncherDesigns.render(
+        context,
+        card,
+        snapshot,
+        widthDp,
+        heightDp,
+        density,
+        dark = false,
+        systemTheme = false,
+        registry = registry,
+        fetchImage = { null },
+      ),
+    )
+  }
 
   private fun assertWidgetParity(name: String, card: CardConfig, snapshot: HaSnapshot) {
     val context = org.robolectric.RuntimeEnvironment.getApplication()

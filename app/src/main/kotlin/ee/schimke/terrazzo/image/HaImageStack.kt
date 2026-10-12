@@ -69,6 +69,15 @@ class HaImageStack(private val context: Context, private val lanPolicy: LanConne
     this.accessToken = accessToken
   }
 
+  /**
+   * Point relative URLs at [baseUrl] when no session has set it yet (a widget update in a process
+   * whose UI never ran). Leaves an existing session's base and token alone. Signed `entity_picture`
+   * / `camera_proxy` URLs carry their own token, so they need no bearer.
+   */
+  fun ensureBaseUrl(baseUrl: String) {
+    if (this.baseUrl == null) setAuth(baseUrl, accessToken)
+  }
+
   private val diskCache: DiskCache by lazy {
     // Pin sane bounds explicitly so the cache behaves predictably on
     // every device: at least 10 MB even when free space is tight, no

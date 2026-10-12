@@ -113,7 +113,11 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
       // the row.
       return
     }
-    val snapshot = if (DemoData.isDemo(entry.baseUrl)) DemoData.snapshot() else EMPTY_SNAPSHOT
+    // Live instances read the snapshot the app's live session keeps on disk (every entity, not
+    // just one dashboard's), refreshed while a session is bound.
+    val snapshot =
+      if (DemoData.isDemo(entry.baseUrl)) DemoData.snapshot()
+      else context.terrazzoGraph().offlineCache.snapshot(entry.baseUrl, null) ?: EMPTY_SNAPSHOT
     val registry = defaultRegistry().withEnhancedShutter()
 
     val targetSizeDp =
@@ -150,6 +154,7 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
         dark = dark,
         systemTheme = captureProfile === systemThemedWidgetsProfile,
         registry = registry,
+        fetchImage = { url -> fetchWidgetImage(context, entry.baseUrl, url) },
       )
     }
       .onFailure { Log.w(TAG, "launcher design failed for id=$widgetId", it) }
@@ -230,6 +235,33 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
     return remoteViews
   }
 
+  /**
+   * The bytes of [url] for a baked widget (the launcher can't fetch it): fetched through the app's
+   * image stack, scaled to fit the slot pictures are captured for, as PNG.
+   */
+  private fun fetchWidgetImage(context: Context, baseUrl: String, url: String): ByteArray? {
+    val stack =
+      (context.terrazzoGraph() as? ee.schimke.terrazzo.di.AppGraph)?.haImageStack ?: return null
+    stack.ensureBaseUrl(baseUrl)
+    val bitmap = runBlocking { stack.resolve(url) } ?: return null
+    val scale = minOf(1f, WIDGET_IMAGE_MAX_PX.toFloat() / maxOf(bitmap.width, bitmap.height))
+    val sized =
+      if (scale < 1f) {
+        android.graphics.Bitmap.createScaledBitmap(
+          bitmap,
+          (bitmap.width * scale).toInt().coerceAtLeast(1),
+          (bitmap.height * scale).toInt().coerceAtLeast(1),
+          true,
+        )
+      } else {
+        bitmap
+      }
+    return java.io
+      .ByteArrayOutputStream()
+      .also { sized.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it) }
+      .toByteArray()
+  }
+
   private fun widgetActionPendingIntent(
     context: Context,
     widgetId: Int,
@@ -265,6 +297,9 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
     const val SYSTEM_THEME_MIN_HOST_API = 37
     val EMPTY_SNAPSHOT = HaSnapshot()
     const val TAG = "TerrazzoWidgetProvider"
+
+    /** Matches the picture slot templates capture (`PictureImageStrategy.DefaultAppUrl`). */
+    const val WIDGET_IMAGE_MAX_PX = 512
   }
 }
 

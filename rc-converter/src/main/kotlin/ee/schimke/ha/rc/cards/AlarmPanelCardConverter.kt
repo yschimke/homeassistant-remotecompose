@@ -68,9 +68,12 @@ class AlarmPanelCardConverter : CardConverter {
     if (entityId !in snapshot.states) return null
     val states = armStates(card)
     if (states.any { ',' in it || ';' in it }) return null
+    // A launcher widget accumulates a known-length PIN in the document; that length is structure.
+    val pinLength = codeLengthFor(card, snapshot.states[entityId])?.takeIf { it in 1..9 } ?: 0
     return DesignProperties.build {
       string(STATES, states.joinToString(","))
       enum(SHOW_KEYPAD, if (showKeypad(card)) 1 else 0)
+      enum(PIN_LENGTH, pinLength)
     }
   }
 
@@ -86,6 +89,7 @@ class AlarmPanelCardConverter : CardConverter {
             put("entity", slot)
             putJsonArray("states") { states.forEach { add(it) } }
             if (properties[SHOW_KEYPAD] == "0") put("show_keypad", false)
+            properties[PIN_LENGTH]?.toIntOrNull()?.takeIf { it > 0 }?.let { put("code_length", it) }
           },
       )
     val entity = CardDesignSlots.templateEntity(slot, placeholderState = "disarmed")
@@ -112,6 +116,11 @@ class AlarmPanelCardConverter : CardConverter {
           ?.let {
             HaAction.AlarmIntent(entityId, it, codeLengthFor(card, snapshot?.states?.get(entityId)))
           }
+      // A PIN typed into a launcher widget: the digits arrive with the tap, the entity is ours.
+      is HaAction.AlarmPin ->
+        HaAction.AlarmPin(entityId, "").takeIf {
+          showKeypad(card) && (codeLengthFor(card, snapshot?.states?.get(entityId)) ?: 0) in 1..9
+        }
       is HaAction.AlarmKey ->
         templateAction.key
           .takeIf { showKeypad(card) && it in KEYPAD_KEYS }
@@ -182,6 +191,7 @@ class AlarmPanelCardConverter : CardConverter {
 private const val DOMAIN = "alarm_control_panel"
 private const val STATES = "states"
 private const val SHOW_KEYPAD = "show_keypad"
+private const val PIN_LENGTH = "pin_length"
 private val TEMPLATE_CONFIG_KEYS =
   setOf("type", "entity", "name", "states", "show_keypad", "code_length")
 private val KEYPAD_KEYS = (0..9).map { it.toString() }.toSet() + setOf("backspace", "clear")

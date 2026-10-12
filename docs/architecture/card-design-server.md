@@ -159,8 +159,11 @@ Deliberate spike limits, each owned by a milestone below:
   in on the device with `rc-player-edit` (`hardcodeNamedValues`, then
   `collapseConstantStateLayouts` and `optimize`). Its host actions keep their ids; each
   PendingIntent carries the card-local action the template's payload resolves to
-  (`resolved_action`, which the receiver prefers over the document's slot-named metadata). A design
-  with an image URL, or a PIN typed into the widget, keeps the direct capture.
+  (`resolved_action`, which the receiver prefers over the document's slot-named metadata). A
+  template's slot pictures are resolved to the card's own entity pictures, fetched through the
+  app's image stack and embedded (`embedBitmapUrls`); a PIN typed into the widget arrives as an
+  `AlarmPin` on the real panel with the digits from the tap's metadata. Live widgets read the
+  full-state snapshot the app's session keeps on disk (`OfflineCache`).
 
 To try it, generate the host files and serve them from any static host, then paste the URL into
 the setting:

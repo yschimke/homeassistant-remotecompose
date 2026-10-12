@@ -13,6 +13,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import ee.schimke.composeai.rcplayer.edit.RcHardcodedValue
 import ee.schimke.composeai.rcplayer.edit.bitmapUrls
 import ee.schimke.composeai.rcplayer.edit.collapseConstantStateLayouts
+import ee.schimke.composeai.rcplayer.edit.embedBitmapUrls
 import ee.schimke.composeai.rcplayer.edit.hardcodeNamedValues
 import ee.schimke.composeai.rcplayer.edit.optimize
 import ee.schimke.composeai.rcplayer.protocol.RcDocumentCodec
@@ -159,6 +160,7 @@ object LauncherDesigns {
     card: CardConfig,
     snapshot: HaSnapshot,
     registry: CardRegistry = CardDesignTemplates.defaultTemplateRegistry,
+    fetchImage: (url: String) -> ByteArray? = { null },
   ): Baked? {
     val playback = CardDesignTemplates.playback(card, template.bytes, registry)
     val bindings = playback.bindings(snapshot)
@@ -170,19 +172,26 @@ object LauncherDesigns {
     }
     val bytes = runCatching {
       val document = RcDocumentCodec.decode(template.bytes, RcWireLimits())
-      // A launcher can't load an image URL; a design with one keeps the direct capture.
-      if (document.bitmapUrls.isNotEmpty()) return null
+      // A launcher can't load an image URL, so each one is fetched and embedded. A template's URLs
+      // are slot pictures (`rc-slot://…`), resolved through the card's own entities; a picture that
+      // can't be resolved or fetched keeps the direct capture.
+      val images =
+        document.bitmapUrls.associateWith { url ->
+          val real = playback.bitmapUrl(url, snapshot) ?: return null
+          fetchImage(real) ?: return null
+        }
+      val embedded = if (images.isEmpty()) document else document.embedBitmapUrls(images)
       RcDocumentCodec.encode(
-        document.hardcodeNamedValues(values).collapseConstantStateLayouts().optimize()
+        embedded.hardcodeNamedValues(values).collapseConstantStateLayouts().optimize()
       )
     }
       .getOrElse {
         return null
       }
     val templateActions = template.actions.mapValues { (_, payload) -> decodeHaAction(payload) }
-    // A PIN typed into the widget lives only in the document's metadata; keep the direct capture.
-    if (templateActions.values.any { it is HaAction.AlarmPin }) return null
-    // Each host action the template registered runs the card's own action for it.
+    // Each host action the template registered runs the card's own action for it. A PIN typed into
+    // the widget resolves to an empty AlarmPin on the real entity; the receiver takes the digits
+    // from the tap's metadata.
     val actions = templateActions.mapValues { (_, action) -> playback.resolveTap(action, snapshot) }
     return Baked(bytes, actions)
   }
@@ -201,6 +210,7 @@ object LauncherDesigns {
     dark: Boolean,
     systemTheme: Boolean,
     registry: CardRegistry = CardDesignTemplates.defaultTemplateRegistry,
+    fetchImage: (url: String) -> ByteArray? = { null },
   ): Baked? {
     val key = keyFor(card, snapshot, widthDp, heightDp, dark, systemTheme, registry) ?: return null
     val template =
@@ -210,6 +220,7 @@ object LauncherDesigns {
       CardDesignTemplates.designCard(card, snapshot, registry),
       snapshot,
       registry,
+      fetchImage,
     )
   }
 

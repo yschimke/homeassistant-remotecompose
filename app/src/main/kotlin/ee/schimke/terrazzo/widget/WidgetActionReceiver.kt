@@ -106,8 +106,15 @@ internal fun decodeDeliveredWidgetAction(
   fallbackPayload: String?,
   resolvedAction: String? = null,
 ): HaAction? {
-  resolvedAction?.let {
-    return decodeHaAction(it)
+  resolvedAction?.let { resolved ->
+    val action = decodeHaAction(resolved) ?: return null
+    if (action !is HaAction.AlarmPin || action.pin.isNotEmpty()) return action
+    // A design-template widget's PIN: the entity is the resolved one, the digits are what the
+    // document accumulated (its own payload names a template slot, never the real entity).
+    val typed =
+      decodeHaAction(decodeWidgetActionMetadata(remoteComposeMetadata)?.actionPayload)
+        as? HaAction.AlarmPin
+    return typed?.pin?.takeIf { it.isNotEmpty() }?.let { action.copy(pin = it) }
   }
   val payload = decodeWidgetActionMetadata(remoteComposeMetadata)?.actionPayload ?: fallbackPayload
   val action = decodeHaAction(payload) ?: return null
