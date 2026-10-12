@@ -14,12 +14,17 @@ import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
+import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.parameters
 import io.ktor.server.request.header
+import io.ktor.server.request.receiveParameters
 import io.ktor.server.request.receiveText
+import io.ktor.server.response.respond
 import io.ktor.server.response.respondText
+import io.ktor.server.routing.get
+import io.ktor.server.routing.post
 import io.ktor.server.routing.put
 import io.ktor.server.routing.routing
 import io.ktor.server.testing.testApplication
@@ -306,7 +311,16 @@ class UiBuilderTest {
     // No template of the type: said, not silently incomplete.
     val unknown = CardSchema.fromCard(entitiesCard, library = library)
     assertEquals(null, unknown.template)
-    assertTrue(unknown.notes.single().startsWith("No library template for `entities`"))
+    assertTrue(unknown.notes.single().startsWith("No library template of `entities`"))
+
+    // A tile with other slots: nothing borrowed from a template whose slots differ.
+    val sensorTile = buildJsonObject {
+      put("type", "tile")
+      put("entity", "sensor.temp")
+    }
+    val other = CardSchema.fromCard(sensorTile, library = library)
+    assertEquals(null, other.template)
+    assertTrue(other.bindings.none { it.name.startsWith("light.") })
   }
 
   @Test
@@ -346,6 +360,149 @@ class UiBuilderTest {
     File(dir, "blobs").deleteRecursively()
     assertNotNull(loaded.blob(loaded.designs.single().entry.sha256))
   }
+
+  @Test
+  fun githubSignInSeedsADesignSharedWithItsDesigner() = testApplication {
+    var shared: Map<String, String>? = null
+    externalServices {
+      hosts("http://uib") {
+        routing {
+          put("/api/ui-builder/v1/designs/{id}") {
+            call.respondText("created", status = HttpStatusCode.Created)
+          }
+          post("/ui-builder/{id}/access") {
+            assertEquals("secret", call.request.queryParameters["token"])
+            shared = call.receiveParameters().entries().associate { it.key to it.value.single() }
+            call.response.headers.append(HttpHeaders.Location, "/ui-builder/x/access")
+            call.respond(HttpStatusCode.SeeOther)
+          }
+        }
+      }
+      hosts("http://gh") {
+        routing {
+          post("/token") {
+            val form = call.receiveParameters()
+            assertEquals("the-code", form["code"])
+            assertEquals("client-secret", form["client_secret"])
+            call.respondText("""{"access_token":"gho_x"}""", ContentType.Application.Json)
+          }
+          get("/user") {
+            assertEquals("Bearer gho_x", call.request.headers[HttpHeaders.Authorization])
+            call.respondText("""{"login":"octocat"}""", ContentType.Application.Json)
+          }
+        }
+      }
+    }
+    val http = createClient { followRedirects = false }
+    val config =
+      UiBuilderConfig(
+        apiUrl = "http://uib",
+        browserUrl = "https://builder.example",
+        token = "secret",
+      )
+    val github =
+      GithubAuth(
+        clientId = "client-id",
+        clientSecret = "client-secret",
+        publicUrl = "https://ha.example",
+        sessionSecret = "session-secret",
+        http = http,
+        tokenUrl = "http://gh/token",
+        userUrl = "http://gh/user",
+      )
+    application {
+      designServer(
+        LibraryHolder(library()),
+        UiBuilderIntegration(config, UiBuilderClient(config, http)),
+        github,
+      )
+    }
+    val browser = createClient { followRedirects = false }
+    val id = DesignLibrary.idOf(key)
+
+    // Signed out: offered sign-in, refused editing, and no shared edit link.
+    assertTrue("Sign in with GitHub" in browser.get("/designs/$id").bodyAsText())
+    assertEquals(
+      HttpStatusCode.Forbidden,
+      browser.submitForm("/ui-builder/designs", parameters { append("design", id) }).status,
+    )
+    assertEquals(HttpStatusCode.NotFound, browser.get("/edit?token=secret").status)
+
+    // Sign in: GitHub's authorize page, back with the state this browser was given.
+    val start = browser.get(GithubAuth.START_PATH + "?return=/designs/$id")
+    val authorize = assertNotNull(start.headers[HttpHeaders.Location])
+    assertTrue(authorize.startsWith("https://github.com/login/oauth/authorize?client_id=client-id"))
+    val state = authorize.substringAfter("state=").substringBefore('&')
+    val stateCookie = cookieOf(start)
+    // A callback this browser didn't start is refused.
+    assertEquals(
+      HttpStatusCode.BadRequest,
+      browser.get("${GithubAuth.CALLBACK_PATH}?code=the-code&state=$state").status,
+    )
+    val callback =
+      browser.get("${GithubAuth.CALLBACK_PATH}?code=the-code&state=$state") {
+        header(HttpHeaders.Cookie, stateCookie)
+      }
+    assertEquals("/designs/$id", callback.headers[HttpHeaders.Location])
+    val session =
+      callback.headers
+        .getAll(HttpHeaders.SetCookie)!!
+        .first { it.startsWith("design-server-session=") }
+        .substringBefore(';')
+    assertTrue(
+      "as <b>octocat</b>" in
+        browser.get("/designs/$id") { header(HttpHeaders.Cookie, session) }.bodyAsText()
+    )
+
+    // Seeded, then shared with the designer as an editor; the editor link carries no token.
+    val seeded =
+      browser.submitForm("/ui-builder/designs", parameters { append("design", id) }) {
+        header(HttpHeaders.Cookie, session)
+      }
+    assertEquals(HttpStatusCode.Found, seeded.status)
+    val location = assertNotNull(seeded.headers[HttpHeaders.Location])
+    assertTrue(location.startsWith("https://builder.example/ui-builder/card-tile-"), location)
+    assertFalse("token" in location)
+    assertEquals(mapOf("actorId" to "github:octocat", "role" to "editor"), shared)
+
+    // A tampered session is nobody.
+    val forged = session.dropLast(2) + "xx"
+    assertTrue(
+      "Sign in with GitHub" in
+        browser.get("/designs/$id") { header(HttpHeaders.Cookie, forged) }.bodyAsText()
+    )
+  }
+
+  @Test
+  fun theBundledBuilderSignsPeopleInWithGithubToo() {
+    assertEquals(emptyList(), UiBuilderConfig.githubArgs(emptyMap()))
+    val args =
+      UiBuilderConfig.githubArgs(
+        mapOf(
+          "UI_BUILDER_GITHUB_CLIENT_ID" to "id",
+          "UI_BUILDER_GITHUB_CLIENT_SECRET" to "secret",
+          "UI_BUILDER_COOKIE_SECRET" to "cookie",
+          "UI_BUILDER_BROWSER_URL" to "https://builder.ha.coo.ee",
+        )
+      )
+    assertEquals(
+      "https://builder.ha.coo.ee",
+      args[args.indexOf("--github-auth-callback-base-url") + 1],
+    )
+    assertTrue("--github-auth-open-ui-builder" in args)
+    assertEquals("private", args[args.indexOf("--ui-builder-default-visibility") + 1])
+  }
+
+  @Test
+  fun signInOnlyReturnsToAPathOnThisSite() {
+    assertEquals("/designs/x", GithubAuth.safeReturn("/designs/x"))
+    assertEquals("/", GithubAuth.safeReturn("https://evil.example/"))
+    assertEquals("/", GithubAuth.safeReturn("//evil.example/"))
+    assertEquals("/", GithubAuth.safeReturn(null))
+  }
+
+  private fun cookieOf(response: io.ktor.client.statement.HttpResponse): String =
+    assertNotNull(response.headers[HttpHeaders.SetCookie]).substringBefore(';')
 
   private fun attrs(vararg pairs: Pair<String, String>) =
     JsonObject(pairs.associate { (k, v) -> k to JsonPrimitive(v) })

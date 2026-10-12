@@ -11,6 +11,8 @@
 # - UI Builder: the server prints an edit link at startup; open it to seed UI Builder designs from
 #   card schemas. Set UI_BUILDER_TOKEN for a stable link, UI_BUILDER_BROWSER_URL when the builder
 #   isn't at http://localhost:8724 for the browser, and UI_BUILDER_BINARY= (empty) to leave it out.
+# - A public server: sign people in with GitHub (GITHUB_CLIENT_ID, …, UI_BUILDER_GITHUB_CLIENT_ID,
+#   …); see design-server/README.md, which also covers deploying at ha.coo.ee.
 # - Another library: mount it and set DESIGN_LIBRARY.
 ARG UI_BUILDER_VERSION=3.121.0
 

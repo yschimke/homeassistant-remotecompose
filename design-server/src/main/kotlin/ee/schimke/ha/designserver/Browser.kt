@@ -359,6 +359,12 @@ object Pages {
         append(
           "<p class=\"muted\">Run the server with UI Builder (<code>UI_BUILDER_BINARY</code> or <code>UI_BUILDER_URL</code>) to design this card's content there.</p>"
         )
+      !editor.authorized && editor.signInPath != null ->
+        append(
+          "<p><a href=\"${esc(editor.signInPath)}\">Sign in with GitHub</a> " +
+            "<span class=\"muted\">to design this card in UI Builder. Your designs are yours: " +
+            "shared with your GitHub account and nobody else.</span></p>"
+        )
       !editor.authorized ->
         append(
           "<p class=\"muted\">UI Builder is available: open the edit link the server printed at startup to design this card there.</p>"
@@ -367,9 +373,19 @@ object Pages {
         append("<form method=\"post\" action=\"/ui-builder/designs\">")
         append("<input type=\"hidden\" name=\"$field\" value=\"${esc(value)}\">")
         append("<button type=\"submit\">Design in UI Builder</button> ")
+        editor.login?.let {
+          append(
+            "<span class=\"muted\">as <b>${esc(it)}</b> · <button form=\"sign-out\" " +
+              "class=\"link\" type=\"submit\">sign out</button></span> "
+          )
+        }
         append(
           "<span class=\"muted\">Seeds an adaptive RemoteCompose layout bound to these values.</span></form>"
         )
+        if (editor.login != null)
+          append(
+            "<form id=\"sign-out\" method=\"post\" action=\"${GithubAuth.SIGN_OUT_PATH}\"></form>"
+          )
         val unsupported = UiBuilderSeed.unsupported(schema)
         if (unsupported.isNotEmpty())
           append(
@@ -487,6 +503,7 @@ h1{margin:0 0 4px;font-size:26px}h2{margin:28px 0 10px;font-size:18px}h2 span{co
 .filters{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:end;margin:18px 0 6px;padding:12px;background:var(--card);border:1px solid var(--line);border-radius:10px}
 .filters label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted)}select,input,button{font:inherit;padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--fg)}
 button{background:var(--accent);border-color:var(--accent);color:#fff;cursor:pointer}
+button.link{background:none;border:none;color:var(--accent);padding:0;text-decoration:underline}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;align-items:start}.grid.small{grid-template-columns:repeat(auto-fill,minmax(170px,1fr))}
 .tile{display:flex;flex-direction:column;background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden;color:inherit}.tile:hover{border-color:var(--accent);text-decoration:none}
 .tile img{display:block;width:100%;height:auto;background:repeating-conic-gradient(var(--chip) 0 25%,transparent 0 50%) 0 0/16px 16px}
