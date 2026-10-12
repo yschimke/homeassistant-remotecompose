@@ -1604,7 +1604,7 @@
     "functionName": "DashboardClimateTablet",
     "module": "previews",
     "renderBasename": "DashboardClimateTablet_dashboard_climate_tablet-456c7098.png",
-    "sha256": "db1160c3e600976e48a546ae6b54cfd82129344e615e5de6e308e31e0820dcfb",
+    "sha256": "e8475ad012fcae444026bec242b9a23e26d6dc4baffb20f9f4a7f2ac5cb12f69",
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/DashboardPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.DashboardPreviewsKt.DashboardEnergyMobile_dashboard energy \u2014 mobile": {
@@ -1628,7 +1628,7 @@
     "functionName": "DashboardGithubMobile",
     "module": "previews",
     "renderBasename": "DashboardGithubMobile_dashboard_github_mobile-8f04a7c1.png",
-    "sha256": "3006083d015943e69a79b53c7324772bc3e78d7ce56b1ca0e4c80a4cdd388e73",
+    "sha256": "1d44541a27768f2f50a04662c9abe994c4e8dbaa99e771d08922bea8b9bd494a",
     "sourceFile": "src/main/kotlin/ee/schimke/ha/previews/DashboardPreviews.kt"
   },
   "previews/ee.schimke.ha.previews.DashboardPreviewsKt.DashboardGithubTablet_dashboard github \u2014 tablet": {
