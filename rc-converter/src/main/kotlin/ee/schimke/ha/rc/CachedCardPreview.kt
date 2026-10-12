@@ -406,9 +406,17 @@ class CardTemplatePlayback(
   /** The card-local action for a tap whose template-encoded action is [templateAction]. */
   fun resolveTap(templateAction: HaAction?, snapshot: HaSnapshot? = null): HaAction {
     if (templateAction == null) return tapAction
-    val slot = actionEntityId(templateAction)?.let(::slotIndexOf) ?: return tapAction
+    // A tap on no slot (a card-level control) may still pick one of the card's own actions.
+    val slot =
+      actionEntityId(templateAction)?.let(::slotIndexOf)
+        ?: return slotAction(snapshot, NO_SLOT, templateAction) ?: tapAction
     if (slot !in slotTapActions.indices) return tapAction
     return slotAction(snapshot, slot, templateAction) ?: slotTapActions[slot]
+  }
+
+  companion object {
+    /** The slot passed to [slotAction] for a tap that names no slot entity. */
+    const val NO_SLOT: Int = -1
   }
 
   private fun slotIndexOf(entityId: String): Int? =

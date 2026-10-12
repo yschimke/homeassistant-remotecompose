@@ -50,6 +50,14 @@ object CardDesignSlots {
         slotEntries(CardConfig(type = type, raw = obj)).orEmpty()
       }
     }
+    // Picture elements bind each element's entity, in order.
+    (card.raw["elements"] as? JsonArray)?.let { elements ->
+      return elements.mapNotNull { el ->
+        (el as? JsonObject)?.get("entity")?.jsonPrimitive?.contentOrNull?.let {
+          SlotEntry(it, null)
+        }
+      }
+    }
     val rows = card.raw["entities"] as? JsonArray ?: return null
     return rows.mapNotNull { row ->
       when (row) {

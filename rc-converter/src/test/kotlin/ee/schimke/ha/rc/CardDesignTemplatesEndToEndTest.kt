@@ -484,6 +484,46 @@ class CardDesignTemplatesEndToEndTest {
     )
   }
 
+  @Test
+  fun pictureElementTapsRunTheElementsOwnConfig() {
+    val card =
+      CardConfig(
+        type = "picture-elements",
+        raw =
+          buildJsonObject {
+            put("type", "picture-elements")
+            put(
+              "elements",
+              kotlinx.serialization.json.buildJsonArray {
+                add(
+                  buildJsonObject {
+                    put("type", "service-button")
+                    put("title", "All off")
+                    put(
+                      "tap_action",
+                      buildJsonObject {
+                        put("action", "navigate")
+                        put("navigation_path", "/lovelace/1")
+                      },
+                    )
+                  }
+                )
+              },
+            )
+          },
+      )
+    val playback = CardDesignTemplates.playback(card, ByteArray(0))
+    assertEquals(
+      ee.schimke.ha.rc.components.HaAction.Navigate("/lovelace/1"),
+      playback.resolveTap(ee.schimke.ha.rc.components.HaAction.Navigate("#el-0"), snapshot),
+    )
+    // A navigation of the template's own choosing goes nowhere new.
+    assertEquals(
+      playback.tapAction,
+      playback.resolveTap(ee.schimke.ha.rc.components.HaAction.Navigate("/admin"), snapshot),
+    )
+  }
+
   /**
    * With `-PcardDesignsOut=<dir>`, writes every spike design as the files a static host serves.
    * Skipped otherwise.

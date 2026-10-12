@@ -133,6 +133,8 @@ internal object CompositeDesign {
 
   /** A tap on container slot [slot]: what the owning child's own playback runs for it. */
   fun action(card: CardConfig, snapshot: HaSnapshot?, slot: Int, action: HaAction): HaAction? {
+    // A container can't tell which child a slot-less tap came from.
+    if (slot < 0) return null
     var offset = 0
     for (child in children(card)) {
       val slots = CardDesignSlots.slotEntities(child)?.size ?: 0

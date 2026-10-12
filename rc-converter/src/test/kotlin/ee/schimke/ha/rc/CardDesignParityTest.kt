@@ -1054,4 +1054,44 @@ class CardDesignParityTest {
       ),
       dark = false,
     )
+
+  @Test
+  fun pictureElements() =
+    assertParity(
+      "picture-elements",
+      card("picture-elements") {
+        put("image", "/local/floorplan.png")
+        putJsonArray("elements") {
+          addJsonObject {
+            put("type", "state-icon")
+            put("entity", "light.kitchen")
+            put(
+              "style",
+              buildJsonObject {
+                put("left", "20%")
+                put("top", "30%")
+              },
+            )
+          }
+          addJsonObject {
+            put("type", "state-label")
+            put("entity", "sensor.temp")
+            put(
+              "style",
+              buildJsonObject {
+                put("left", "55%")
+                put("top", "40%")
+              },
+            )
+          }
+          addJsonObject {
+            put("type", "service-button")
+            put("title", "All off")
+            put("service", "light.turn_off")
+          }
+        }
+      },
+      listStates,
+      dark = false,
+    )
 }
