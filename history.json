@@ -1,6 +1,6 @@
 {
     "formatVersion": "compose-preview-history/v1",
-    "generatedFrom": "e63db2aa91951e3b4f64236e1dcf0d69026f7647",
+    "generatedFrom": "1d07d77215ed1736e14230dd6fee8b2f9d84b196",
     "previews": {
         "app/ee.schimke.terrazzo.previews.CardDebugPreviewsKt.CardFlashPreview_Card flash on data change": {
             "path": "renders/app/CardFlashPreview_Card_flash_on_data_change-44b71c2b.gif",
@@ -4984,20 +4984,20 @@
             "path": "renders/previews/DashboardGithubTablet_dashboard_github_tablet-89194c99.png",
             "versions": [
                 {
+                    "blob": "1bb334e6fa2193b604918489f37971b21e7903a7",
+                    "commit": "1d07d77215ed1736e14230dd6fee8b2f9d84b196",
+                    "date": "2026-10-12T06:44:40Z",
+                    "sourceSha": "6012b7cb",
+                    "sinceCommit": "2fde5cc2cf93899f1c9dfe93de1eca2d4df38200",
+                    "commits": 8,
+                    "occurrences": 8
+                },
+                {
                     "blob": "dc7ad08e0ae22539ae28bccdaa18c77a6b3eedb5",
                     "commit": "e63db2aa91951e3b4f64236e1dcf0d69026f7647",
                     "date": "2026-10-12T05:30:48Z",
                     "sourceSha": "bfc5a131",
                     "commits": 1
-                },
-                {
-                    "blob": "1bb334e6fa2193b604918489f37971b21e7903a7",
-                    "commit": "461c6032ff19e075511bbef7c9962aad465af193",
-                    "date": "2026-10-12T03:34:26Z",
-                    "sourceSha": "7bb97871",
-                    "sinceCommit": "2fde5cc2cf93899f1c9dfe93de1eca2d4df38200",
-                    "commits": 7,
-                    "occurrences": 7
                 },
                 {
                     "blob": "757cbef805bc28b8a826aafa9df34c29036597c7",
@@ -5062,9 +5062,9 @@
                     "commits": 1
                 }
             ],
-            "observations": 20,
+            "observations": 21,
             "unstable": true,
-            "flapCount": 10
+            "flapCount": 11
         },
         "previews/ee.schimke.ha.previews.DashboardPreviewsKt.DashboardMeshcoreMobile_dashboard meshcore — mobile": {
             "path": "renders/previews/DashboardMeshcoreMobile_dashboard_meshcore_mobile-30d7121c.png",
