@@ -2,6 +2,7 @@ package ee.schimke.ha.designserver
 
 import ee.schimke.ha.design.DesignCatalog
 import io.ktor.http.ContentType
+import io.ktor.http.Cookie
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
@@ -11,10 +12,14 @@ import io.ktor.server.plugins.autohead.AutoHeadResponse
 import io.ktor.server.plugins.defaultheaders.DefaultHeaders
 import io.ktor.server.plugins.statuspages.StatusPages
 import io.ktor.server.request.header
+import io.ktor.server.request.receiveParameters
+import io.ktor.server.request.receiveText
 import io.ktor.server.response.header
 import io.ktor.server.response.respondBytes
+import io.ktor.server.response.respondRedirect
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.get
+import io.ktor.server.routing.post
 import io.ktor.server.routing.routing
 import java.io.File
 import kotlinx.serialization.json.Json
@@ -64,7 +69,7 @@ class LibraryHolder(
  * - `/`, `/designs/<id>` — the template browser; `/api/designs[/<id>]` — the same as JSON.
  * - `/healthz`.
  */
-fun Application.designServer(holder: LibraryHolder) {
+fun Application.designServer(holder: LibraryHolder, uiBuilder: UiBuilderIntegration? = null) {
   install(DefaultHeaders)
   install(AutoHeadResponse)
   install(StatusPages) {
@@ -137,10 +142,143 @@ fun Application.designServer(holder: LibraryHolder) {
     get("/designs/{id}") {
       val library = holder.current()
       val design = library.design(call.parameters["id"].orEmpty()) ?: return@get call.notFound()
-      call.respondText(Pages.detail(library, design), ContentType.Text.Html)
+      call.respondText(Pages.detail(library, design, call.editor(uiBuilder)), ContentType.Text.Html)
+    }
+
+    get("/api/designs/{id}/schema") {
+      val library = holder.current()
+      val design = library.design(call.parameters["id"].orEmpty()) ?: return@get call.notFound()
+      call.respondText(
+        json.encodeToString(CardSchema.serializer(), CardSchema.fromDesign(library, design)),
+        ContentType.Application.Json,
+      )
+    }
+
+    // Any card's schema, from its Lovelace config (and optionally its entities' states).
+    post("/api/schema") {
+      val schema = runCatching {
+        val (card, states) = CardSchema.parseRequest(Json.parseToJsonElement(call.receiveText()))
+        CardSchema.fromCard(card, states)
+      }
+        .getOrElse {
+          return@post call.respondText(
+            "not a card: ${it.message}",
+            status = HttpStatusCode.BadRequest,
+          )
+        }
+      call.respondText(
+        json.encodeToString(CardSchema.serializer(), schema),
+        ContentType.Application.Json,
+      )
+    }
+
+    get("/schema") {
+      call.respondText(
+        Pages.schema(null, null, null, call.editor(uiBuilder)),
+        ContentType.Text.Html,
+      )
+    }
+
+    post("/schema") {
+      val text = call.receiveParameters()["card"].orEmpty()
+      val result = runCatching {
+        val (card, states) = CardSchema.parseRequest(Json.parseToJsonElement(text))
+        CardSchema.fromCard(card, states)
+      }
+      call.respondText(
+        Pages.schema(
+          text,
+          result.getOrNull(),
+          result.exceptionOrNull()?.let { it.message ?: "not a card" },
+          call.editor(uiBuilder),
+        ),
+        ContentType.Text.Html,
+        status = if (result.isSuccess) HttpStatusCode.OK else HttpStatusCode.BadRequest,
+      )
+    }
+
+    // Unlocks editing for this browser: the link the server prints at startup.
+    get("/edit") {
+      val integration = uiBuilder ?: return@get call.notFound()
+      if (call.request.queryParameters["token"] != integration.config.token) {
+        return@get call.respondText("wrong edit token", status = HttpStatusCode.Forbidden)
+      }
+      call.response.cookies.append(
+        Cookie(
+          EDIT_COOKIE,
+          integration.config.token,
+          httpOnly = true,
+          path = "/",
+          extensions = mapOf("SameSite" to "Lax"),
+        )
+      )
+      call.respondRedirect("/")
+    }
+
+    // Seeds a UI Builder design from a library design (`design`) or a card's JSON (`card`), then
+    // opens it in the editor.
+    post("/ui-builder/designs") {
+      val integration = uiBuilder ?: return@post call.notFound()
+      if (!call.editor(uiBuilder).authorized) {
+        return@post call.respondText(
+          "editing needs the edit link the server printed at startup",
+          status = HttpStatusCode.Forbidden,
+        )
+      }
+      val params = call.receiveParameters()
+      val library = holder.current()
+      val (schema, title) =
+        params["design"]?.let { id ->
+          val design = library.design(id) ?: return@post call.notFound()
+          CardSchema.fromDesign(library, design) to
+            "${design.key.cardType} · library design ${design.id}"
+        }
+          ?: params["card"]?.let { text ->
+            val (card, states) =
+              runCatching { CardSchema.parseRequest(Json.parseToJsonElement(text)) }
+                .getOrElse {
+                  return@post call.respondText(
+                    "not a card: ${it.message}",
+                    status = HttpStatusCode.BadRequest,
+                  )
+                }
+            CardSchema.fromCard(card, states).let { it to it.cardType }
+          }
+          ?: return@post call.respondText(
+            "needs design or card",
+            status = HttpStatusCode.BadRequest,
+          )
+      val document = UiBuilderSeed.document(schema, UiBuilderSeed.designId(schema), title)
+      val editor = runCatching {
+        integration.client.create(document)
+      }
+        .getOrElse {
+          return@post call.respondText(
+            "UI Builder: ${it.message}",
+            status = HttpStatusCode.BadGateway,
+          )
+        }
+      call.respondRedirect(editor)
     }
   }
 }
+
+/** UI Builder for the server: where it is, and the client that creates designs there. */
+class UiBuilderIntegration(val config: UiBuilderConfig, val client: UiBuilderClient)
+
+/** Whether pages offer editing, and whether this browser may use it. */
+data class EditorState(val enabled: Boolean, val authorized: Boolean) {
+  companion object {
+    val Off = EditorState(enabled = false, authorized = false)
+  }
+}
+
+private const val EDIT_COOKIE = "design-server-edit"
+
+private fun ApplicationCall.editor(uiBuilder: UiBuilderIntegration?): EditorState =
+  if (uiBuilder == null) EditorState.Off
+  else
+    EditorState(enabled = true, authorized = request.cookies[EDIT_COOKIE] == uiBuilder.config.token)
 
 /** The client protocol's base path: the app's design server URL is `<host>$API_BASE`. */
 const val API_BASE = "/designs/v1"

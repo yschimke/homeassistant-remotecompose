@@ -539,8 +539,13 @@ per request — but adds what a static host can't: verification, a template brow
   JSON. Server-rendered HTML, no scripts.
 - **Hot reload.** A regenerated library goes live when `manifest.json` changes (checked at most
   every 5 s); one that fails to load keeps the previous one serving.
+- **Designing in UI Builder.** A design's page and `/schema` (paste a card's JSON) show the
+  card's schema — slots and bindings with example values (`/api/designs/<id>/schema`,
+  `POST /api/schema`) — and, with UI Builder bundled (`UI_BUILDER_BINARY`) or configured
+  (`UI_BUILDER_URL`), seed a UI Builder design from it. What that does, what the spike found and
+  what a full pipeline still needs: [card-design-ui-builder.md](card-design-ui-builder.md).
 - **Running.** `DESIGN_LIBRARY` (or the first argument), `PORT` (8080), `HOST`.
-  `design-server/Dockerfile` bakes a library into a distroless JRE image.
+  `design-server/Dockerfile` bakes a library into a JRE image with UI Builder bundled.
   `.github/workflows/design-server.yml` generates the library, tests and smoke-tests the server,
   builds the image and uploads the library as an artifact; it deploys nothing yet (M4).
 

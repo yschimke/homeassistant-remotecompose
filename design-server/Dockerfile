@@ -1,18 +1,39 @@
-# The card design server with its library baked in. Build both first — generating the library
-# needs Android (Robolectric), so it doesn't run in this image — then build from the repo root:
+# The card design server with its library baked in, and UI Builder bundled beside it. Build the
+# server and the library first — generating the library needs Android (Robolectric), so it doesn't
+# run in this image — then build from the repo root:
 #
 #   ./gradlew :card-designs:generateCardDesigns :design-server:installDist
 #   docker build -f design-server/Dockerfile -t card-design-server .
-#   docker run -p 8080:8080 card-design-server
+#   docker run -p 8080:8080 -p 8724:8724 -v card-designs-data:/data card-design-server
 #
-# Point the app's design server setting at http://<host>:8080/designs/v1; browse the templates at
-# http://<host>:8080/. To serve another library, mount it and set DESIGN_LIBRARY.
-ARG RUN_FROM=gcr.io/distroless/java21-debian12:nonroot
-FROM ${RUN_FROM}
-WORKDIR /app
+# - Templates: http://<host>:8080/ (point the app's design server setting at
+#   http://<host>:8080/designs/v1).
+# - UI Builder: the server prints an edit link at startup; open it to seed UI Builder designs from
+#   card schemas. Set UI_BUILDER_TOKEN for a stable link, UI_BUILDER_BROWSER_URL when the builder
+#   isn't at http://localhost:8724 for the browser, and UI_BUILDER_BINARY= (empty) to leave it out.
+# - Another library: mount it and set DESIGN_LIBRARY.
+ARG UI_BUILDER_VERSION=3.121.0
+
+FROM eclipse-temurin:21-jre AS ui-builder
+ARG UI_BUILDER_VERSION
+ADD https://github.com/yschimke/compose-preview-server/releases/download/v${UI_BUILDER_VERSION}/compose-preview-server-${UI_BUILDER_VERSION}.tar.gz /tmp/ui-builder.tar.gz
+RUN mkdir -p /opt && tar xzf /tmp/ui-builder.tar.gz -C /opt \
+  && mv /opt/compose-preview-server-${UI_BUILDER_VERSION} /opt/compose-preview-server
+
+# UI Builder's launcher is a shell script, so a JRE with a shell rather than distroless.
+FROM eclipse-temurin:21-jre
+RUN useradd --create-home --home-dir /data --uid 10001 designs
+COPY --from=ui-builder /opt/compose-preview-server /opt/compose-preview-server
 COPY design-server/build/install/design-server/lib /app/lib
 COPY card-designs/build/card-designs /library
-ENV DESIGN_LIBRARY=/library PORT=8080
-EXPOSE 8080
-# Distroless has no shell for the Gradle start script; run the JVM directly.
+ENV DESIGN_LIBRARY=/library \
+    PORT=8080 \
+    UI_BUILDER_BINARY=/opt/compose-preview-server/bin/compose-preview-server \
+    UI_BUILDER_HOST=0.0.0.0 \
+    UI_BUILDER_PORT=8724 \
+    UI_BUILDER_STATE_DIR=/data/ui-builder
+USER designs
+WORKDIR /data
+VOLUME /data
+EXPOSE 8080 8724
 ENTRYPOINT ["java", "-cp", "/app/lib/*", "ee.schimke.ha.designserver.MainKt"]

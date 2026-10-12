@@ -2,6 +2,7 @@ package ee.schimke.ha.design
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 
 /**
  * The browsable side of a design library, published next to the [DesignManifest]: for each design,
@@ -46,6 +47,8 @@ data class DesignExample(
   val source: String,
   /** The card's Lovelace config. */
   val card: JsonObject,
+  /** The values the design is bound to for this card, by binding name: what its preview shows. */
+  val bindings: Map<String, JsonPrimitive> = emptyMap(),
 )
 
 @Serializable

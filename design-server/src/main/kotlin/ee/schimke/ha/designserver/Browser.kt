@@ -167,7 +167,8 @@ object Pages {
         "serial ${library.manifest.serial} · generated ${date(library.manifest.generatedAtEpochMs)}"
       )
       append(
-        "</p><p class=\"hint\">App design server URL: <code>&lt;this host&gt;$API_BASE</code></p></header>"
+        "</p><p class=\"hint\">App design server URL: <code>&lt;this host&gt;$API_BASE</code> · " +
+          "<a href=\"/schema\">Schema from a card's JSON</a></p></header>"
       )
 
       append("<form class=\"filters\" method=\"get\" action=\"/\">")
@@ -194,7 +195,11 @@ object Pages {
     }
   }
 
-  fun detail(library: DesignLibrary, design: LibraryDesign): String {
+  fun detail(
+    library: DesignLibrary,
+    design: LibraryDesign,
+    editor: EditorState = EditorState.Off,
+  ): String {
     val decoded = library.decode(design)
     val key = design.key
     val theme = ThemeParts.of(key)
@@ -279,7 +284,83 @@ object Pages {
           "<pre>${esc(prettyJson.encodeToString(JsonObject.serializer(), example.card))}</pre>"
         )
       }
+      append("<h2>Design it</h2>")
+      append(
+        "<p class=\"muted\">The card's data contract — its slots and every binding with an example " +
+          "value — as <a href=\"/api/designs/${design.id}/schema\">JSON</a>.</p>"
+      )
+      designButton(editor, "design", design.id)
       append("<p class=\"muted\"><a href=\"/api/designs/${design.id}\">JSON</a></p>")
+    }
+  }
+
+  /**
+   * The schema page: paste a card's Lovelace config (optionally with its entities' states) and see
+   * its data contract, then seed a UI Builder design from it.
+   */
+  fun schema(input: String?, schema: CardSchema?, error: String?, editor: EditorState): String =
+    page("Card schema") {
+      append("<nav><a href=\"/\">← Card designs</a></nav><h1>Card schema</h1>")
+      append(
+        "<p class=\"muted\">Paste a card's Lovelace config, or <code>{\"card\": {…}, \"states\": " +
+          "{\"light.kitchen\": {\"state\": \"on\", \"attributes\": {…}}}}</code>. The schema is what a " +
+          "design for it can bind: one slot per entity, named by position, and the values a client " +
+          "pushes for each.</p>"
+      )
+      append("<form method=\"post\" action=\"/schema\" class=\"stack\">")
+      append(
+        "<textarea name=\"card\" rows=\"10\" spellcheck=\"false\" placeholder=\"{&quot;type&quot;: &quot;entities&quot;, &quot;entities&quot;: [&quot;light.kitchen&quot;]}\">"
+      )
+      append(esc(input.orEmpty()))
+      append("</textarea><button type=\"submit\">Show schema</button></form>")
+      if (error != null) append("<p class=\"error\">${esc(error)}</p>")
+      if (schema != null) {
+        schemaTables(schema)
+        designButton(editor, "card", input.orEmpty())
+      }
+    }
+
+  private fun StringBuilder.schemaTables(schema: CardSchema) {
+    append("<h2>Slots <span>${schema.slots.size}</span></h2>")
+    if (schema.slots.isEmpty())
+      append("<p class=\"muted\">No entities: only card-level bindings.</p>")
+    else {
+      append("<table><tr><th>Slot</th><th>Entity</th></tr>")
+      for (slot in schema.slots) append(
+        "<tr><td><code>${esc(slot.slot)}</code></td><td>${esc(slot.entity ?: "")}${slot.name?.let { " · " + esc(it) } ?: ""}</td></tr>"
+      )
+      append("</table>")
+    }
+    append(
+      "<h2>Bindings <span>${schema.bindings.size}</span></h2><table><tr><th>Name</th><th>Type</th><th>Example</th></tr>"
+    )
+    for (b in schema.bindings) {
+      append(
+        "<tr><td><code>${esc(b.name)}</code></td><td>${b.type.name.lowercase()}</td><td>${esc(b.example?.content ?: "")}</td></tr>"
+      )
+    }
+    append("</table>")
+  }
+
+  /** "Design in UI Builder" for a library design or a card: a form that seeds and opens one. */
+  private fun StringBuilder.designButton(editor: EditorState, field: String, value: String) {
+    when {
+      !editor.enabled ->
+        append(
+          "<p class=\"muted\">Run the server with UI Builder (<code>UI_BUILDER_BINARY</code> or <code>UI_BUILDER_URL</code>) to design this card's content there.</p>"
+        )
+      !editor.authorized ->
+        append(
+          "<p class=\"muted\">UI Builder is available: open the edit link the server printed at startup to design this card there.</p>"
+        )
+      else -> {
+        append("<form method=\"post\" action=\"/ui-builder/designs\">")
+        append("<input type=\"hidden\" name=\"$field\" value=\"${esc(value)}\">")
+        append("<button type=\"submit\">Design in UI Builder</button> ")
+        append(
+          "<span class=\"muted\">Seeds an adaptive RemoteCompose layout bound to these values.</span></form>"
+        )
+      }
     }
   }
 
@@ -395,6 +476,7 @@ button{background:var(--accent);border-color:var(--accent);color:#fff;cursor:poi
 .previews{display:flex;flex-wrap:wrap;gap:16px;margin:16px 0}figure{margin:0;max-width:380px;width:100%}figure img{width:100%;border:1px solid var(--line);border-radius:10px;background:repeating-conic-gradient(var(--chip) 0 25%,transparent 0 50%) 0 0/16px 16px}
 figcaption{font-size:12px;color:var(--muted);margin-top:4px}table{border-collapse:collapse;width:100%;background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden}
 th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--line);vertical-align:top}th{width:220px;color:var(--muted);font-weight:500}
+textarea{width:100%;font:13px ui-monospace,SFMono-Regular,Menlo,monospace;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--fg)}.stack{display:flex;flex-direction:column;gap:8px;align-items:flex-start}
 pre{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px;overflow:auto;font-size:13px}.error{color:var(--err)}nav{margin-bottom:8px}details{margin-top:10px}
 @media (max-width:600px){th{width:auto}.grid{grid-template-columns:1fr}}
 """

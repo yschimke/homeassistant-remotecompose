@@ -38,6 +38,7 @@ import kotlin.test.assertTrue
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonPrimitive
 import org.junit.Rule
@@ -107,13 +108,15 @@ class GenerateCardDesignLibrary {
           example = DesignCatalog.previewPath(id, "example"),
           template = DesignCatalog.previewPath(id, "template"),
         )
-      render(
-        out.resolve(previews.example!!),
-        // Bound to the example card's values, as the app plays it.
+      val playback =
         CardDesignTemplates.playback(
           CardDesignTemplates.designCard(example.card, example.snapshot),
           design.bytes,
-        ),
+        )
+      render(
+        out.resolve(previews.example!!),
+        // Bound to the example card's values, as the app plays it.
+        playback,
         card = example.card,
         snapshot = example.snapshot,
       )
@@ -128,7 +131,8 @@ class GenerateCardDesignLibrary {
         id = id,
         sha256 = output.manifest.designs[i].sha256,
         key = design.key,
-        example = DesignExample(example.source, example.card.raw),
+        example =
+          DesignExample(example.source, example.card.raw, exampleBindings(playback, example)),
         previews = previews,
       )
     }
@@ -139,6 +143,18 @@ class GenerateCardDesignLibrary {
       .writeText(json.encodeToString(DesignCatalog.serializer(), catalog))
     println("card designs: ${built.size} designs, ${output.files.size - 1} files in $out")
   }
+
+  /** The values [playback] pushes for [example]: its preview's bindings, for the catalog. */
+  private fun exampleBindings(playback: CardTemplatePlayback, example: Example) =
+    playback.bindings(example.snapshot).let { b ->
+      buildMap<String, JsonPrimitive> {
+        b.strings.forEach { (k, v) -> put(k, JsonPrimitive(v)) }
+        b.booleans.forEach { (k, v) -> put(k, JsonPrimitive(v)) }
+        b.ints.forEach { (k, v) -> put(k, JsonPrimitive(v)) }
+        // NaN (no numeric value) isn't JSON: leave it out.
+        b.floats.forEach { (k, v) -> if (v.isFinite()) put(k, JsonPrimitive(v)) }
+      }
+    }
 
   private class Render(
     val template: CardTemplatePlayback,
