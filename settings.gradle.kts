@@ -85,15 +85,20 @@ include(
   ":ha-cards-catalog",
 )
 
-// Unreleased typed catalog API: opt in explicitly and build against pinned source checkouts.
-if (providers.gradleProperty("typedAdapterCatalog").orNull == "true") {
-  require(providers.gradleProperty("localBuilds").orNull?.split(",")?.contains("tools") == true) {
-    "typedAdapterCatalog requires -PlocalBuilds=tools"
-  }
+// The renderer SDK is source-only. The reusable publisher supplies a release checkout via
+// composeUiBuilderDir; local validation can use uiBuilderSource instead.
+if (
+  providers.gradleProperty("typedAdapterCatalog").orNull == "true" ||
+    providers.gradleProperty("composeUiBuilderDir").isPresent
+) {
   val builderSource =
-    providers.gradleProperty("uiBuilderSource").orElse("../compose-ui-builder").get()
+    providers
+      .gradleProperty("composeUiBuilderDir")
+      .orElse(providers.gradleProperty("uiBuilderSource"))
+      .orElse("../compose-ui-builder")
+      .get()
   require(file(builderSource).resolve("settings.gradle.kts").isFile) {
-    "uiBuilderSource must point to the matching compose-ui-builder checkout"
+    "composeUiBuilderDir (or uiBuilderSource) must point to a compose-ui-builder checkout"
   }
   includeBuild(builderSource)
   include(":ui-builder-catalog", ":ui-builder-catalog-host")

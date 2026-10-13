@@ -121,6 +121,16 @@ class HaCardsTemplatesTest {
           "Gauge",
           HaCardsSeed.card("card-gauge", heightDp = 220),
         ),
+      "card-sensor-metric" to
+        HaCardsSeed.metric(
+          "card-sensor-metric",
+          "Sensor metric",
+          HaCardsSeed.card("card-sensor-metric", heightDp = 120),
+          label = "Living room",
+          value = "21.5",
+          unit = "°C",
+          entityId = "sensor.living_room_temperature",
+        ),
       "wear-light-small" to
         UiBuilderSeed.document(
           lightTile,

@@ -121,6 +121,20 @@ private fun parityCases(): Map<String, ParityCase> {
           tapAction = HaAction.Toggle("switch.porch"),
         )
       },
+    "metric" to
+      case(
+        "metric",
+        200,
+        110,
+        buildJsonObject {
+          put("label", string("Humidity"))
+          put("value", string("46"))
+          put("unit", string("%"))
+          put("valueColor", string("#FF141414"))
+        },
+      ) {
+        HaMetric("Humidity", "46", "%")
+      },
     "gauge" to
       case(
         "gauge",
@@ -401,4 +415,27 @@ class CatalogSlotTest {
 
   @Test
   fun `actual app grid receives catalog slot children`() = assertSlot({ it.grid.id }, "Grid child")
+
+  @Test
+  fun `editing a metric recaptures its native Remote Compose content`() {
+    val catalog = HomeAssistantCatalog(discoverCatalogComponents())
+    val adapter = requireNotNull(catalog.registry()[catalog.metric.id])
+    var reading by mutableStateOf("21.5")
+    compose.setContent {
+      Box(Modifier.size(200.dp, 110.dp).testTag("metric")) {
+        adapter(canvasScope(catalog.metric.id, buildJsonObject { put("value", string(reading)) }))
+      }
+    }
+    compose.waitForIdle()
+    val before = compose.onNodeWithTag("metric").captureToImage().toPixelMap()
+    compose.runOnIdle { reading = "35.7" }
+    compose.waitForIdle()
+    val after = compose.onNodeWithTag("metric").captureToImage().toPixelMap()
+    assertTrue(
+      (0 until before.height).any { y ->
+        (0 until before.width).any { x -> before[x, y] != after[x, y] }
+      },
+      "editing the value should recapture and redraw the actual metric",
+    )
+  }
 }

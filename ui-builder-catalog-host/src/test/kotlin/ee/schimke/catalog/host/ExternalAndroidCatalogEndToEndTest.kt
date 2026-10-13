@@ -53,7 +53,7 @@ class ExternalAndroidCatalogEndToEndTest {
     )
     val ids = policy.getValue("statusSemantics").jsonObject.getValue("components").jsonObject.keys
     // Every Tier-2 card composable, adapted directly; the host knows none of them.
-    assertEquals(36, ids.size)
+    assertEquals(37, ids.size)
     assertTrue(ids.all { it.startsWith("homeassistant-remotecompose/") })
     for (id in listOf("heading", "tile", "vertical-stack", "horizontal-stack", "gauge", "grid")) {
       assertTrue("homeassistant-remotecompose/$id" in ids, id)

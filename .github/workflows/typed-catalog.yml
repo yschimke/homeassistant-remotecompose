@@ -61,19 +61,17 @@ jobs:
         with:
           path: homeassistant-remotecompose
           persist-credentials: false
-      # Coordinated, immutable sources until the typed API and renderer SDK are released.
+      # Release source checkouts keep the source-only renderer SDK reproducible.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: yschimke/compose-ai-tools
-          # main: Long/Double/parsed/nullable/union values and payload callbacks (compose-ai-tools#5914).
-          ref: c71c627de9d42b308b3b023a59cd4342cf89ce39
+          ref: v2.54.0
           path: compose-ai-tools
           persist-credentials: false
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: yschimke/compose-ui-builder
-          # agent/typed-value-types: edits sealed, nullable and formatted values, payload callbacks.
-          ref: e0f9a1229e647e9bc8a3bfcc53d65682c36a7007
+          ref: v3.111.0
           path: compose-ui-builder
           persist-credentials: false
       - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
@@ -136,15 +134,13 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: yschimke/compose-ai-tools
-          # main: Long/Double/parsed/nullable/union values and payload callbacks (compose-ai-tools#5914).
-          ref: c71c627de9d42b308b3b023a59cd4342cf89ce39
+          ref: v2.54.0
           path: compose-ai-tools
           persist-credentials: false
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: yschimke/compose-ui-builder
-          # agent/typed-value-types: edits sealed, nullable and formatted values, payload callbacks.
-          ref: e0f9a1229e647e9bc8a3bfcc53d65682c36a7007
+          ref: v3.111.0
           path: compose-ui-builder
           persist-credentials: false
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093

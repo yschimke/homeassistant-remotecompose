@@ -1,15 +1,17 @@
 # Home Assistant typed component catalog
 
-This opt-in module wires the real Home Assistant Tier-2 card composables (`rc-components-ui`) into
-the typed UI-builder adapter API. It is excluded from normal application builds while the API and
-bridge are unreleased. Each definition publishes its own ID and properties/slots, and the registry
-invokes the actual component with compiled calls: there are no catalog-side wrapper composables.
+This module wires real Home Assistant Compose UI components (`rc-components-ui`) into the typed
+UI-builder adapter API. The native catalog runs on Android and is built during design-artifact
+publication. Its renderer SDK still comes from the pinned compose-ui-builder release checkout.
+Each definition publishes its own ID and properties/slots, and the registry invokes the actual
+component with compiled calls.
 A card adapter has one `data` property whose object codec names the card's own `*UiData` model and
 decodes straight into it, so the registry calls `HaTile(data = value(tile.data), modifier)`.
 
 | Component ID (`homeassistant-remotecompose/…`) | Real composable | Typed surface |
 | --- | --- | --- |
 | `heading` | `HaHeading` | `data: HaHeadingUiData` |
+| `metric` | `HaMetric` | `label`, `value`, `unit`, `valueColor` |
 | `tile` | `HaTile` | `data: HaTileUiData` |
 | `button` | `HaButton` | `data: HaButtonUiData` |
 | `toggle-button` | `HaToggleButton` | `data: HaButtonUiData` |
@@ -46,7 +48,7 @@ decodes straight into it, so the registry calls `HaTile(data = value(tile.data),
 | `horizontal-stack` | `HaHorizontalStack` | `content` slot |
 | `grid` | `HaGrid` | `content` slot |
 
-Coverage: 36 of the 36 public Tier-2 composables in `rc-components-ui` (100%). Not counted, as
+Coverage: 37 of the 37 public Tier-2 composables in `rc-components-ui` (100%). Not counted, as
 infrastructure rather than cards: `HaUiHost` (internal) and `HaEmbeddedPlayer` (the document
 player every card draws through, whose `content` is a Remote Compose lambda). The insertion default
 of every card is the plain data its `previews/…/Tier2CardPreviews.kt` preview draws
@@ -162,8 +164,8 @@ packaged. The independent Android host below now proves executable delivery; a g
 its live preview bundles are not replaced by this opt-in proof. General event capabilities and
 omitted-property default/export parity retain the limits documented in the authoring API.
 
-The committed `evidence/` images show the direct native call and the typed adapter from the heading
-parity test; every other card's pair (`native-<card>.png` / `typed-<card>.png`) is in the CI render
+The committed `evidence/` images show the direct native call and the typed adapter for the heading
+and metric parity tests; every other card's pair (`native-<card>.png` / `typed-<card>.png`) is in the CI render
 artifact. Regenerate them from `build/renders` after component changes; CI uploads current renders.
 
 ## Independent Android host and public publication

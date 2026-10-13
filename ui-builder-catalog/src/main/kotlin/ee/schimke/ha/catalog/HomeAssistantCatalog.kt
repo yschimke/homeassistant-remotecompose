@@ -36,6 +36,7 @@ import ee.schimke.ha.rc.ui.HaHorizontalStack
 import ee.schimke.ha.rc.ui.HaLogbook
 import ee.schimke.ha.rc.ui.HaMarkdown
 import ee.schimke.ha.rc.ui.HaMediaControl
+import ee.schimke.ha.rc.ui.HaMetric
 import ee.schimke.ha.rc.ui.HaPicture
 import ee.schimke.ha.rc.ui.HaPictureElements
 import ee.schimke.ha.rc.ui.HaPictureEntity
@@ -101,6 +102,22 @@ class ToggleSwitchAdapter(record: ComponentRecord) :
     property(ToggleSwitchProps::tapAction, HaActionCodec, HaAction.Toggle("switch.kitchen"))
 }
 
+/** A metric exposes each editable part directly in the inspector. */
+data class MetricProps(
+  val label: String,
+  val value: String,
+  val unit: String,
+  val valueColor: Color,
+)
+
+class MetricAdapter(record: ComponentRecord) :
+  TypedComponentAdapter<MetricProps>("homeassistant-remotecompose/metric", record) {
+  val label = property(MetricProps::label, AdapterValueCodecs.String, "Living room")
+  val value = property(MetricProps::value, AdapterValueCodecs.String, "21.5")
+  val unit = property(MetricProps::unit, AdapterValueCodecs.String, "°C")
+  val valueColor = property(MetricProps::valueColor, ColorCodec, Color(0xFF141414))
+}
+
 /** A layout composable with one `content` slot: the vertical and horizontal stacks and the grid. */
 class StackAdapter(id: String, record: ComponentRecord) : TypedComponentAdapter<Unit>(id, record) {
   val content = slot("content")
@@ -148,6 +165,7 @@ class HomeAssistantCatalog(records: ComponentRecordFile) {
   val markdown = card("HaMarkdown", "markdown", MarkdownCodec, d.markdown)
   val unsupported = card("HaUnsupported", "unsupported", UnsupportedCodec, d.unsupported)
   val toggleSwitch = ToggleSwitchAdapter(record("HaToggleSwitch"))
+  val metric = MetricAdapter(record("HaMetric"))
   val gauge =
     styled("HaGauge", "gauge", GaugeCodec, d.gauge, "style", GaugeStyleCodec, HaGaugeStyle.Standard)
   val arcDial =
@@ -229,6 +247,7 @@ class HomeAssistantCatalog(records: ComponentRecordFile) {
       markdown,
       unsupported,
       toggleSwitch,
+      metric,
       gauge,
       arcDial,
       historyGraph,
@@ -311,6 +330,13 @@ class HomeAssistantCatalog(records: ComponentRecordFile) {
           tapAction = tap,
         )
       }
+    }
+    register(metric) {
+      val label = value(metric.label)
+      val reading = value(metric.value)
+      val unit = value(metric.unit)
+      val color = value(metric.valueColor)
+      key(label, reading, unit, color) { HaMetric(label, reading, unit, color, modifier) }
     }
     register(gauge) { styled(gauge.data, gauge.style) { d, s -> HaGauge(d, modifier, s) } }
     register(arcDial) { styled(arcDial.data, arcDial.style) { d, s -> HaArcDial(d, modifier, s) } }

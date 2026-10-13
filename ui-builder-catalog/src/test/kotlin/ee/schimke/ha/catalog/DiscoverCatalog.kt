@@ -19,6 +19,7 @@ val catalogCallables: Map<String, String> =
     "HaMarkdown" to "HaMarkdownKt",
     "HaUnsupported" to "HaUnsupportedKt",
     "HaToggleSwitch" to "HaToggleSwitchKt",
+    "HaMetric" to "HaMetricKt",
     "HaGauge" to "HaGaugeKt",
     "HaArcDial" to "HaArcDialKt",
     "HaHistoryGraph" to "HaGraphsKt",
@@ -50,7 +51,33 @@ val catalogCallables: Map<String, String> =
  * JVM names of the entry points whose `Color` (an inline value class) parameters mangle them; the
  * suffix is the compiler's hash of the signature, so a changed signature fails discovery loudly.
  */
-private val mangledJvmNames = mapOf("HaToggleSwitch" to "HaToggleSwitch-DTcfvLk")
+private val mangledJvmNames =
+  mapOf("HaToggleSwitch" to "HaToggleSwitch-DTcfvLk", "HaMetric" to "HaMetric-uDo3WH8")
+
+private val cardParts =
+  setOf(
+    "HaHeading",
+    "HaTile",
+    "HaButton",
+    "HaToggleButton",
+    "HaEntityRow",
+    "HaGlanceCell",
+    "HaToggleSwitch",
+    "HaMetric",
+  )
+
+private val layouts = setOf("HaVerticalStack", "HaHorizontalStack", "HaGrid")
+
+private fun groupFor(name: String) =
+  when (name) {
+    in cardParts -> "Card building blocks"
+    in layouts -> "Layout"
+    "HaUnsupported" -> "Fallback"
+    else -> "Complete cards"
+  }
+
+private fun labelFor(name: String) =
+  name.removePrefix("Ha").replace(Regex("([a-z])([A-Z])"), "$1 $2")
 
 /**
  * Current compiled signatures of the real Tier-2 cards, with explicit native-only platform claims.
@@ -72,7 +99,13 @@ fun discoverCatalogComponents(): ComponentRecordFile =
               c.newBuilder()
                 .also {
                   it.builder =
-                    BuilderPolicy.Builder().also { policy -> policy.nativeOnly = true }.build()
+                    BuilderPolicy.Builder()
+                      .also { policy ->
+                        policy.nativeOnly = true
+                        policy.group = groupFor(c.symbol.name)
+                        policy.displayName = labelFor(c.symbol.name)
+                      }
+                      .build()
                 }
                 .build()
             }

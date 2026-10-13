@@ -30,6 +30,7 @@ val ADAPTER_IDS =
     "markdown",
     "unsupported",
     "toggle-switch",
+    "metric",
     "gauge",
     "arc-dial",
     "history-graph",
@@ -74,6 +75,13 @@ class CatalogContractTest {
     assertEquals(
       ADAPTER_IDS.map { "homeassistant-remotecompose/$it" }.toSet(),
       pair.catalog.statusSemantics.components.keys,
+    )
+    val metric =
+      pair.catalog.statusSemantics.components.getValue("homeassistant-remotecompose/metric")
+    assertEquals("Metric", metric.displayName)
+    assertEquals(
+      "Card building blocks",
+      pair.record.components.single { it.symbol.name == "HaMetric" }.builder?.group,
     )
     assertTrue(pair.catalog.diagnostics.isEmpty())
     val json = Json { encodeDefaults = true }
