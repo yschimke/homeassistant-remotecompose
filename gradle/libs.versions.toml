@@ -41,6 +41,9 @@ kotlinx-coroutines = "1.11.0"
 kotlinx-datetime = "0.8.0"
 logback = "1.6.5"
 junit = "4.13.2"
+# Robolectric 4.17's exact API 35 provider jar. Android-all versions identify platform images,
+# not interchangeable library releases; change this together with the tests' @Config(sdk = [35]).
+robolectric-sdk35 = "15-robolectric-13954326-i7"
 mockserver = "8.0.0"
 indriya = "2.2.4"
 
@@ -259,6 +262,7 @@ kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotl
 kotlin-test-junit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlin" }
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinx-coroutines" }
 junit = { module = "junit:junit", version.ref = "junit" }
+robolectric-sdk35 = { module = "org.robolectric:android-all-instrumented", version.ref = "robolectric-sdk35" }
 mockserver-netty = { module = "org.mock-server:mockserver-netty", version.ref = "mockserver" }
 mockserver-client-java = { module = "org.mock-server:mockserver-client-java", version.ref = "mockserver" }
 
