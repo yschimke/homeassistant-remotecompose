@@ -12,7 +12,7 @@ try {
   // Local runs may omit browser dependencies; CI makes missing prerequisites a failure.
 }
 const skip = !base ? 'STUDIO_SERVER_URL is unset' : !chromium ? 'playwright is unavailable' : false;
-if (skip && process.env.STUDIO_SMOKE_REQUIRED) throw new Error(skip);
+if (skip && (process.env.STUDIO_SMOKE_REQUIRED || process.env.STUDIO_RENDER_SMOKE_REQUIRED)) throw new Error(skip);
 if (process.env.STUDIO_RENDER_SMOKE_REQUIRED && !process.env.STUDIO_OPERATOR_TOKEN) {
   throw new Error('Rendered preview checks require STUDIO_OPERATOR_TOKEN');
 }
