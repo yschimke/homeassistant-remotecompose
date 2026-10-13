@@ -43,6 +43,19 @@ on:
     types: [opened, synchronize, reopened, edited]
   push:
     branches: [main]
+  workflow_dispatch:
+    inputs:
+      pr:
+        description: Number of a pull request a workflow opened, checked on its head branch
+        required: true
+        type: number
+
+# `workflow_dispatch` is for pull requests a workflow opened (release-please, the asset syncs).
+# GitHub starts no workflow for anything done with GITHUB_TOKEN, so such a PR never gets the
+# `pull_request` run this check is required from, and its auto-merge waits forever. The workflow
+# that opens it dispatches this one on the PR's branch with the PR's number instead; the run
+# reports the same check name on the branch head, which is the commit the ruleset reads. It refuses
+# when the PR's head is not that commit, so it never certifies a commit the PR no longer has.
 
 permissions:
   contents: read
@@ -71,7 +84,7 @@ jobs:
 
   co-authors:
     name: Scan commits and PR body
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -86,9 +99,24 @@ jobs:
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
           PR_BODY: ${{ github.event.pull_request.body }}
           PR_TITLE: ${{ github.event.pull_request.title }}
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          PR: ${{ github.event.pull_request.number || inputs.pr }}
+          RUN_SHA: ${{ github.sha }}
         run: |
           set -uo pipefail
 
+          pr="$(gh pr view "$PR" --json headRefOid,baseRefOid,title,body)" || exit 1
+          if [ "$GITHUB_EVENT_NAME" = workflow_dispatch ]; then
+            HEAD_SHA="$(jq -r .headRefOid <<<"$pr")"
+            BASE_SHA="$(jq -r .baseRefOid <<<"$pr")"
+            if [ "$HEAD_SHA" != "$RUN_SHA" ]; then
+              echo "::error::PR head has moved; dispatch on its current branch"
+              exit 1
+            fi
+          fi
+          PR_TITLE="$(jq -r .title <<<"$pr")"
+          PR_BODY="$(jq -r '.body // ""' <<<"$pr")"
           git fetch --no-tags --prune origin "+$BASE_SHA" "+$HEAD_SHA" || true
 
           # The squash commit is built from the PR title + body, so they are

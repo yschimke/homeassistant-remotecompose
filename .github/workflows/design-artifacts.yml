@@ -104,9 +104,12 @@ jobs:
       # `refs/design-artifacts/source/homeassistant-remotecompose` here, which
       # has to stay in this repository (it points at a source commit).
       contents: write
-    uses: yschimke/compose-ai-tools/.github/workflows/design-artifacts-reusable.yml@ec08b1b9e927e555a0fdc8d3e2be685e459ce705 # v2.56.0
+    uses: yschimke/compose-ai-tools/.github/workflows/design-artifacts-reusable.yml@2581e77e27f94d6b0ae3e150700084aa158d5972 # v2.57.0
     with:
       system: homeassistant-remotecompose
+      ui-builder-catalog-task: ':ui-builder-catalog:exportTypedCatalog'
+      ui-builder-catalog-dir: ui-builder-catalog/build/catalog/testDebugUnitTest
+      ui-builder-runtime-source-ref: v3.111.0
       # Generated branches (design-artifacts/homeassistant-remotecompose and any
       # design-parity/<system> board) live in the public output repository. The
       # render jobs read it anonymously; only the publish job gets the
@@ -120,11 +123,6 @@ jobs:
       upload-out: true
       spec: catalog.spec.json
       module: ':previews'
-      # The native typed catalog is built from this source revision's Android components.
-      ui-builder-catalog-task: ':ui-builder-catalog:exportTypedCatalog'
-      ui-builder-catalog-dir: ui-builder-catalog/build/catalog/testDebugUnitTest
-      # ui-builder-renderer-sdk is source-only at v3.111.0.
-      ui-builder-runtime-source-ref: v3.111.0
       # `:previews` has the plugin AUTO-injected (via --init-script), so keep the
       # CLI synchronized with the catalog plugin. Resolved FROM the catalog rather
       # than hardcoded here: a literal version is still a pin, but a second one,

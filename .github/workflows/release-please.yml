@@ -46,3 +46,27 @@ jobs:
     permissions:
       contents: write
       packages: write
+
+  release-pr-policy:
+    needs: release-please
+    if: ${{ !cancelled() && needs.release-please.result == 'success' }}
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+      pull-requests: read
+    steps:
+      - name: Run required policy checks on the current release PR
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          pr="$(gh pr list --state open --limit 100 --json number,headRefName --jq '[.[] | select(.headRefName | startswith("release-please--branches--")) | select(.headRefName | endswith("--release-notes") | not)][0] // empty')"
+          if [ -z "$pr" ]; then
+            echo "no open release PR; nothing to dispatch"
+            exit 0
+          fi
+          number="$(jq -r .number <<<"$pr")"
+          branch="$(jq -r .headRefName <<<"$pr")"
+          gh workflow run pr-title.yml --ref "$branch" -f pr="$number"
+          gh workflow run no-ai-coauthors.yml --ref "$branch" -f pr="$number"

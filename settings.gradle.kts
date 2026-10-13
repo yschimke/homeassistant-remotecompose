@@ -6,7 +6,13 @@ pluginManagement {
   includeBuild("build-logic")
   repositories {
     gradlePluginPortal()
-    google()
+    google {
+      mavenContent {
+        includeGroupAndSubgroups("androidx")
+        includeGroupAndSubgroups("com.android")
+        includeGroupAndSubgroups("com.google")
+      }
+    }
     mavenCentral()
   }
 }
@@ -30,7 +36,13 @@ dependencyResolutionManagement {
     // repository, so nothing in the build depends on a post-submit build id
     // that ages out. The three groups still have to stay in lockstep; see the
     // note on `remote-compose` in `gradle/libs.versions.toml`.
-    google()
+    google {
+      mavenContent {
+        includeGroupAndSubgroups("androidx")
+        includeGroupAndSubgroups("com.android")
+        includeGroupAndSubgroups("com.google")
+      }
+    }
     mavenCentral()
     // Kotlin's browser toolchain adds temporary project repositories. Keep resolution
     // centralized here, including the Node and Yarn distributions it needs.
@@ -85,23 +97,21 @@ include(
   ":ha-cards-catalog",
 )
 
-// The renderer SDK is source-only. The reusable publisher supplies a release checkout via
-// composeUiBuilderDir; local validation can use uiBuilderSource instead.
-if (
-  providers.gradleProperty("typedAdapterCatalog").orNull == "true" ||
-    providers.gradleProperty("composeUiBuilderDir").isPresent
-) {
-  val builderSource =
-    providers
-      .gradleProperty("composeUiBuilderDir")
-      .orElse(providers.gradleProperty("uiBuilderSource"))
-      .orElse("../compose-ui-builder")
-      .get()
-  require(file(builderSource).resolve("settings.gradle.kts").isFile) {
-    "composeUiBuilderDir (or uiBuilderSource) must point to a compose-ui-builder checkout"
+// The typed discovery API is released; the renderer SDK still uses a pinned source checkout.
+val builderSource =
+  providers
+    .gradleProperty("composeUiBuilderDir")
+    .orElse(providers.gradleProperty("uiBuilderSource"))
+
+if (builderSource.isPresent || providers.gradleProperty("typedAdapterCatalog").orNull == "true") {
+  require(builderSource.isPresent) {
+    "Catalog tasks require -PcomposeUiBuilderDir=<pinned checkout>"
   }
-  includeBuild(builderSource)
-  include(":ui-builder-catalog", ":ui-builder-catalog-host")
+  require(file(builderSource.get()).resolve("settings.gradle.kts").isFile) {
+    "composeUiBuilderDir must point to a compose-ui-builder checkout"
+  }
+  includeBuild(builderSource.get())
+  include(":ui-builder-catalog", ":ui-builder-catalog-host", ":ui-builder-catalog-consumer")
 }
 
 // Repository-owned UI Builder screen pilot; excluded from default catalog publication.

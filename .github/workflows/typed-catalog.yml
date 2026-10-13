@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - 'ui-builder-catalog/**'
+      - 'ui-builder-catalog-consumer/**'
       - 'ui-builder-catalog-host/**'
       - 'scripts/validate-typed-catalog.sh'
       - 'scripts/publish-typed-catalog.sh'
@@ -18,6 +19,7 @@ on:
     branches: [main]
     paths:
       - 'ui-builder-catalog/**'
+      - 'ui-builder-catalog-consumer/**'
       - 'ui-builder-catalog-host/**'
       - 'scripts/validate-typed-catalog.sh'
       - 'scripts/publish-typed-catalog.sh'
@@ -28,15 +30,6 @@ on:
       - 'rc-components/**'
       - 'rc-converter/**'
   workflow_dispatch:
-    inputs:
-      publish:
-        description: Publish this validated generation as an experimental catalog prerelease
-        type: boolean
-        default: false
-      validated_run_id:
-        description: Optional successful catalog validation run to publish without rebuilding
-        type: string
-        default: ''
 
 permissions:
   contents: read
@@ -47,10 +40,10 @@ concurrency:
 
 jobs:
   catalog:
-    # Also skip on release-please PRs: they only bump the manifest, CHANGELOG and
+    # Skip on release-please PRs: they only bump the manifest, CHANGELOG and
     # version lines, all of which main's push CI already built. Matches the
     # bot-authored PR (or a bot dispatch); humans and main always run it.
-    if: ${{ inputs.validated_run_id == '' && !(startsWith(github.head_ref || github.ref_name, 'release-please--') && (github.event.pull_request.user.login || github.actor) == 'github-actions[bot]') }}
+    if: ${{ !(startsWith(github.head_ref || github.ref_name, 'release-please--') && (github.event.pull_request.user.login || github.actor) == 'github-actions[bot]') }}
     runs-on: ubuntu-latest
     timeout-minutes: 45
     defaults:
@@ -61,13 +54,7 @@ jobs:
         with:
           path: homeassistant-remotecompose
           persist-credentials: false
-      # Release source checkouts keep the source-only renderer SDK reproducible.
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          repository: yschimke/compose-ai-tools
-          ref: v2.54.0
-          path: compose-ai-tools
-          persist-credentials: false
+      # The renderer SDK is source-only; preview discovery comes from released tools.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: yschimke/compose-ui-builder
@@ -86,12 +73,13 @@ jobs:
       - name: Install Android platform used by the app
         uses: ./homeassistant-remotecompose/.github/actions/android-sdk
       - name: Generate, render and validate in a separate catalog consumer
-        run: scripts/validate-typed-catalog.sh "$GITHUB_WORKSPACE/compose-ai-tools" "$GITHUB_WORKSPACE/compose-ui-builder"
+        run: scripts/validate-typed-catalog.sh "$GITHUB_WORKSPACE/compose-ui-builder"
       - if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: homeassistant-remotecompose-typed-catalog
           path: |
+            homeassistant-remotecompose/ui-builder-catalog-consumer/build/test-results
             homeassistant-remotecompose/ui-builder-catalog/build/catalog
             homeassistant-remotecompose/ui-builder-catalog/build/renders
             homeassistant-remotecompose/ui-builder-catalog/build/test-results
@@ -100,56 +88,3 @@ jobs:
             homeassistant-remotecompose/ui-builder-catalog-host/build/test-results
             compose-ui-builder/ui-builder-runtime/build/test-results/test
           if-no-files-found: warn
-
-  publish:
-    if: always() && github.event_name == 'workflow_dispatch' && inputs.publish && (needs.catalog.result == 'success' || inputs.validated_run_id != '')
-    needs: catalog
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      actions: read
-    steps:
-      - name: Resolve and verify the validated generation
-        id: validated
-        env:
-          GH_TOKEN: ${{ github.token }}
-          VALIDATED_RUN_ID: ${{ inputs.validated_run_id || github.run_id }}
-        run: |
-          [[ "$VALIDATED_RUN_ID" =~ ^[0-9]+$ ]]
-          run=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$VALIDATED_RUN_ID")
-          jq -e '.path == ".github/workflows/typed-catalog.yml"' <<< "$run"
-          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$VALIDATED_RUN_ID/jobs?per_page=100" \
-            | jq -e 'any(.jobs[]; .name == "catalog" and .status == "completed" and .conclusion == "success")'
-          echo "source_sha=$(jq -r .head_sha <<< "$run")" >> "$GITHUB_OUTPUT"
-          echo "run_id=$VALIDATED_RUN_ID" >> "$GITHUB_OUTPUT"
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          path: publisher
-          persist-credentials: false
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          path: homeassistant-remotecompose
-          ref: ${{ steps.validated.outputs.source_sha }}
-          persist-credentials: false
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          repository: yschimke/compose-ai-tools
-          ref: v2.54.0
-          path: compose-ai-tools
-          persist-credentials: false
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          repository: yschimke/compose-ui-builder
-          ref: v3.111.0
-          path: compose-ui-builder
-          persist-credentials: false
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
-        with:
-          name: homeassistant-remotecompose-typed-catalog
-          path: ${{ github.workspace }}
-          run-id: ${{ steps.validated.outputs.run_id }}
-          github-token: ${{ github.token }}
-      - name: Publish the tested artifact without rebuilding it
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: publisher/scripts/publish-typed-catalog.sh "$GITHUB_WORKSPACE/compose-ai-tools" "$GITHUB_WORKSPACE/compose-ui-builder" "$GITHUB_WORKSPACE/homeassistant-remotecompose"
