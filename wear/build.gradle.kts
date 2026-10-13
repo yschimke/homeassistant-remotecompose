@@ -149,7 +149,7 @@ dependencies {
   testImplementation("org.robolectric:robolectric:4.17")
   testImplementation(libs.compose.ui.test.junit4)
   testImplementation(libs.rc.player.edit)
-  robolectricSdk("org.robolectric:android-all-instrumented:15-robolectric-13954326-i7")
+  robolectricSdk("org.robolectric:android-all-instrumented:17-robolectric-15733970-i7")
 
   androidTestImplementation(libs.androidx.test.ext.junit)
   androidTestImplementation(libs.androidx.test.runner)
