@@ -51,6 +51,9 @@ dependencies {
   api(project(":rc-components"))
   // The sticker host: the capture profile and the Compose Multiplatform player `:previews` uses.
   implementation(project(":rc-converter"))
+  // `formatValueWithUnit`: the host's canonical state formatter, so a bound reading's seed is what
+  // the first live `<id>.state` push writes.
+  implementation(project(":ha-model"))
 
   implementation(platform(libs.compose.bom))
   implementation(libs.compose.ui)

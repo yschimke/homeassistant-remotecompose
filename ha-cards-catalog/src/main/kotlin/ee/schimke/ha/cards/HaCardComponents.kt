@@ -61,6 +61,7 @@ import ee.schimke.ha.rc.components.RemoteHaToggleSwitch
 import ee.schimke.ha.rc.components.cardChrome
 import ee.schimke.ha.rc.components.currentRemoteHaTheme
 import ee.schimke.ha.rc.components.fraction
+import ee.schimke.ha.rc.formatValueWithUnit
 
 // ---------------------------------------------------------------------------------------------
 // The `ha-cards` palette's Home Assistant components.
@@ -463,7 +464,9 @@ private fun reading(
   return HaReading.live(
     entityId = entityId.entityOrNull(),
     name = name,
-    formatted = HaReading.formatReading(value, u),
+    // The host's canonical formatter, so an entity-bound seed reads exactly what the first live
+    // `<id>.state` push will (21.555 → 21.56 °C), and a static one reads like Home Assistant.
+    formatted = formatValueWithUnit(value.toString(), u),
     numeric = value,
     unit = u,
     kind = kind,
