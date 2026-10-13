@@ -3,6 +3,11 @@
   "extends": ["github>yschimke/renovate-config"],
   "packageRules": [
     {
+      "description": "Offline Robolectric tests select API 35 with @Config. android-all-instrumented is an exact platform/provider image, not a library upgrade: replacing Android 15's jar with Android 17 removes the SDK Robolectric requests. Keep the catalog's SDK 35 pin until the test SDK and Robolectric provider change together.",
+      "matchPackageNames": ["org.robolectric:android-all-instrumented"],
+      "enabled": false
+    },
+    {
       "description": "Remote Compose, its Wear widget layer and Glance Wear resolve from Google Maven releases (the androidx.dev snapshot repository is gone). The three groups must move together — `remote-material3` and `glance-wear` both declare `androidx.compose.remote:remote-creation*` in their POMs, and a skewed set has produced runtime NoClassDefFoundErrors in the wear components — so group them into ONE PR. Alphas only: these artifacts have no stable line yet, and each alpha changes API, so the PR needs a real build, not an automerge.",
       "groupName": "remote-compose",
       "matchPackageNames": [
