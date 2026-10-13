@@ -6,12 +6,15 @@ import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
 import ee.schimke.terrazzo.shared.TerrazzoMultiplatformApp
 
-fun main() = application {
-  Window(
-    onCloseRequest = ::exitApplication,
-    title = "Terrazzo",
-    state = rememberWindowState(width = 1200.dp, height = 850.dp),
-  ) {
-    TerrazzoMultiplatformApp()
+fun main() {
+  Runtime.getRuntime().addShutdownHook(Thread { dev.datlag.kcef.KCEF.disposeBlocking() })
+  application {
+    Window(
+      onCloseRequest = ::exitApplication,
+      title = "Terrazzo",
+      state = rememberWindowState(width = 1200.dp, height = 850.dp),
+    ) {
+      TerrazzoMultiplatformApp()
+    }
   }
 }

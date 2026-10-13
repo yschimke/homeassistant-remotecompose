@@ -61,6 +61,7 @@ import ee.schimke.terrazzo.core.session.HaSession
 import ee.schimke.terrazzo.core.session.SessionConnectionStatus
 import ee.schimke.terrazzo.dashboard.CardDesignSync
 import ee.schimke.terrazzo.dashboard.CardHistoryScreen
+import ee.schimke.terrazzo.dashboard.CardPreviewCard
 import ee.schimke.terrazzo.dashboard.DashboardListState
 import ee.schimke.terrazzo.dashboard.DashboardPickerScreen
 import ee.schimke.terrazzo.dashboard.DashboardSelectionScreen
@@ -73,6 +74,7 @@ import ee.schimke.terrazzo.dashboard.rememberSelectedDashboardListState
 import ee.schimke.terrazzo.discovery.DiscoveryScreen
 import ee.schimke.terrazzo.notifications.NotificationBell
 import ee.schimke.terrazzo.shared.AppScreen
+import ee.schimke.terrazzo.shared.CardStudioScreen
 import ee.schimke.terrazzo.shared.TerrazzoNavigation
 import ee.schimke.terrazzo.ui.statusColors
 import ee.schimke.terrazzo.wearsync.WearWidgetsScreen
@@ -499,12 +501,17 @@ private fun DashboardsRoot(
   // links). Holds the pressed card plus the snapshot it was pressed
   // against, so the preview at the top matches the dashboard frame.
   var historyTarget by remember { mutableStateOf<Pair<CardConfig, HaSnapshot>?>(null) }
+  var studioTarget by remember { mutableStateOf<Pair<CardConfig, HaSnapshot>?>(null) }
+  val studioServer by
+    graph.preferencesStore.designServerUrl.collectAsState(initial = "https://ha.coo.ee/designs/v1")
   val openedValue = opened
 
   // System-back: history → dashboard, then view → picker; on the picker
   // the platform handles it. The history overlay takes precedence, so
   // the dashboard's view→picker handler stays disabled while it's up.
-  BackHandler(enabled = historyTarget == null && openedValue != DASHBOARD_UNSET) {
+  BackHandler(
+    enabled = historyTarget == null && studioTarget == null && openedValue != DASHBOARD_UNSET
+  ) {
     opened = DASHBOARD_UNSET
   }
 
@@ -593,7 +600,24 @@ private fun DashboardsRoot(
   }
 
   val historyOverlay = historyTarget
-  if (historyOverlay != null) {
+  val studioOverlay = studioTarget
+  if (studioOverlay != null) {
+    val (card, snapshot) = studioOverlay
+    BackHandler { studioTarget = null }
+    CardStudioScreen(
+      card,
+      snapshot,
+      onBack = { studioTarget = null },
+      initialServerUrl = studioServer.ifBlank { "https://ha.coo.ee" },
+      refreshSnapshot = {
+        val current = session.loadDashboard(openedValue.takeIf { it != DASHBOARD_UNSET }).second
+        studioTarget = card to current
+        current
+      },
+    ) {
+      CardPreviewCard(session, card, snapshot)
+    }
+  } else if (historyOverlay != null) {
     val (historyCard, historySnapshot) = historyOverlay
     BackHandler { historyTarget = null }
     CardHistoryScreen(
@@ -602,6 +626,7 @@ private fun DashboardsRoot(
       snapshot = historySnapshot,
       onBack = { historyTarget = null },
       onAddToHomeScreen = { installPending = historyCard to historySnapshot },
+      onDesignCard = { studioTarget = historyCard to historySnapshot },
     )
   } else {
     Scaffold(

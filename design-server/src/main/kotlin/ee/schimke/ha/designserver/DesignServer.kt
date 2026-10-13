@@ -95,6 +95,7 @@ fun Application.designServer(
     }
   }
   routing {
+    cardStudioRoutes(holder, uiBuilder, github)
     get("/healthz") { call.respondText("ok") }
 
     get("$API_BASE/manifest.json") {
@@ -329,7 +330,7 @@ data class EditorState(
 
 private const val EDIT_COOKIE = "design-server-edit"
 
-private fun ApplicationCall.editor(
+internal fun ApplicationCall.editor(
   uiBuilder: UiBuilderIntegration?,
   github: GithubAuth?,
 ): EditorState =

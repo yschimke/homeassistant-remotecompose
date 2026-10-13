@@ -181,6 +181,7 @@ private fun DashboardShell(connection: AppConnection, onSignOut: () -> Unit) {
   val stack = remember { mutableStateListOf<NavKey>(DashboardDestination(null)) }
   var snapshot by remember(connection) { mutableStateOf(HaSnapshot()) }
   var connectionError by remember(connection) { mutableStateOf<String?>(null) }
+  var designServer by remember { mutableStateOf("https://ha.coo.ee") }
   // One subscription per connection, surviving navigation between dashboard views.
   LaunchedEffect(connection) {
     while (true) {
@@ -266,6 +267,12 @@ private fun DashboardShell(connection: AppConnection, onSignOut: () -> Unit) {
               ) {
                 Text(connection.config.baseUrl, style = MaterialTheme.typography.titleMedium)
                 Text("Access tokens are kept only for this session.")
+                OutlinedTextField(
+                  designServer,
+                  { designServer = it },
+                  label = { Text("Card design server") },
+                  singleLine = true,
+                )
                 Button(onClick = onSignOut) { Text("Sign out") }
               }
             }
@@ -290,6 +297,7 @@ private fun DashboardShell(connection: AppConnection, onSignOut: () -> Unit) {
                 snapshot,
                 connectionError,
                 Modifier.fillMaxSize().padding(padding),
+                designServer,
               )
             }
           }
@@ -305,7 +313,9 @@ private fun LiveDashboard(
   snapshot: HaSnapshot,
   connectionError: String?,
   modifier: Modifier,
+  designServer: String,
 ) {
+  var designCard by remember(connection, path) { mutableStateOf<CardConfig?>(null) }
   var dashboard by remember(connection, path) { mutableStateOf<Dashboard?>(null) }
   var error by remember(connection, path) { mutableStateOf<String?>(null) }
   val scope = rememberCoroutineScope()
@@ -334,6 +344,18 @@ private fun LiveDashboard(
       }
     }
   }
+  val editing = designCard
+  if (editing != null) {
+    CardStudioScreen(
+      editing,
+      snapshot,
+      onBack = { designCard = null },
+      initialServerUrl = designServer,
+    ) {
+      NativeCard(editing, snapshot) {}
+    }
+    return
+  }
   val current = dashboard
   Column(modifier) {
     (error ?: connectionError)?.let {
@@ -343,14 +365,17 @@ private fun LiveDashboard(
       CircularProgressIndicator(Modifier.padding(24.dp))
     } else
       DashboardContent(current, path, snapshot, Modifier.weight(1f)) { _, card ->
-        NativeCard(card, snapshot) { entityId ->
-          dispatch(
-            buildJsonObject {
-              put("type", "ee.schimke.ha.rc.components.HaAction.Toggle")
-              put("entityId", entityId)
-            }
-              .toString()
-          )
+        Column {
+          NativeCard(card, snapshot) { entityId ->
+            dispatch(
+              buildJsonObject {
+                put("type", "ee.schimke.ha.rc.components.HaAction.Toggle")
+                put("entityId", entityId)
+              }
+                .toString()
+            )
+          }
+          TextButton(onClick = { designCard = card }) { Text("Design or fix this card") }
         }
       }
   }
