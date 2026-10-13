@@ -61,19 +61,17 @@ jobs:
         with:
           path: homeassistant-remotecompose
           persist-credentials: false
-      # Coordinated, immutable sources until the typed API and renderer SDK are released.
+      # Release source checkouts keep the source-only renderer SDK reproducible.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: yschimke/compose-ai-tools
-          # v2.49.0: list and object properties for typed adapters (compose-ai-tools#5865).
-          ref: 9513e93ceade788e05aa200466c87656e589f046
+          ref: v2.54.0
           path: compose-ai-tools
           persist-credentials: false
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: yschimke/compose-ui-builder
-          # v3.108.0: renders, edits and validates list and object properties (compose-ui-builder#717).
-          ref: 5ac712cbd69f6ed86bd1f8e470dedc4d4189b233
+          ref: v3.111.0
           path: compose-ui-builder
           persist-credentials: false
       - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
@@ -136,15 +134,13 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: yschimke/compose-ai-tools
-          # v2.49.0: list and object properties for typed adapters (compose-ai-tools#5865).
-          ref: 9513e93ceade788e05aa200466c87656e589f046
+          ref: v2.54.0
           path: compose-ai-tools
           persist-credentials: false
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: yschimke/compose-ui-builder
-          # v3.108.0: renders, edits and validates list and object properties (compose-ui-builder#717).
-          ref: 5ac712cbd69f6ed86bd1f8e470dedc4d4189b233
+          ref: v3.111.0
           path: compose-ui-builder
           persist-credentials: false
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093

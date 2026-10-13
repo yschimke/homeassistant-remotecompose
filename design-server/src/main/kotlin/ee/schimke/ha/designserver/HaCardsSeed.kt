@@ -46,6 +46,7 @@ object HaCardsSeed {
   const val TILE = "ha-cards/tile"
   const val ENTITY_ROW = "ha-cards/entity-row"
   const val GAUGE = "ha-cards/gauge"
+  const val METRIC = "ha-cards/metric"
   const val BUTTON = "ha-cards/button"
 
   /** HA's default dark card background: a Wear widget's own background. */
@@ -154,6 +155,47 @@ object HaCardsSeed {
       switches = false,
       background = LAUNCHER_BACKGROUND,
     )
+
+  /** An editable sensor card made from the metric building block. */
+  fun metric(
+    designId: String,
+    title: String,
+    target: Target,
+    label: String,
+    value: String,
+    unit: String,
+    entityId: String,
+  ): JsonObject {
+    val nodes = linkedMapOf<String, JsonObject>()
+    nodes["root"] =
+      node(
+        "root",
+        target.rootComponent,
+        properties = target.rootProperties,
+        modifiers = target.rootModifiers,
+        slots = mapOf(target.rootSlot to listOf("metric")),
+      )
+    nodes["metric"] =
+      node(
+        "metric",
+        METRIC,
+        properties =
+          mapOf(
+            "label" to UiBuilderSeed.string(label),
+            "value" to UiBuilderSeed.string(value),
+            "unit" to UiBuilderSeed.string(unit),
+            "entityId" to UiBuilderSeed.string(entityId),
+          ),
+      )
+    return UiBuilderSeed.envelope(
+      target,
+      designId,
+      title,
+      heightDp = target.heightDp ?: 120,
+      stateVariables = emptyList(),
+      nodes = nodes,
+    )
+  }
 
   /**
    * A gauge's unit: the card's own `unit` (blank hides it), else what follows the number in the

@@ -1061,6 +1061,108 @@
     "ha-cards/ha-card-sticker": {
       "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardStickerKt.HaCardSticker",
       "excluded": "The sticker frame every preview in this module renders through, not a component."
+    },
+    "ha-cards/metric": {
+      "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardComponentsKt.HaCardMetric",
+      "displayName": "Metric · label and value",
+      "group": "Home Assistant",
+      "insertContent": {
+        "properties": {
+          "label": {
+            "type": "string",
+            "value": "Living room"
+          },
+          "value": {
+            "type": "string",
+            "value": "21.5"
+          },
+          "unit": {
+            "type": "string",
+            "value": "°C"
+          }
+        }
+      },
+      "propertyCapabilities": [
+        {
+          "name": "label",
+          "jsonType": "string",
+          "required": true,
+          "notes": "A short label above the reading."
+        },
+        {
+          "name": "value",
+          "jsonType": "string",
+          "required": true,
+          "notes": "The sensor state. With entityId set, this uses the live <entityId>.state binding."
+        },
+        {
+          "name": "unit",
+          "jsonType": "string",
+          "required": false,
+          "notes": "A separate unit placed beside the reading, such as °C or %."
+        },
+        {
+          "name": "entityId",
+          "jsonType": "string",
+          "required": false,
+          "notes": "The Home Assistant sensor to follow live. Leave blank for a static value."
+        },
+        {
+          "name": "valueColor",
+          "jsonType": "string",
+          "required": false,
+          "notes": "A #AARRGGBB text color. Unset follows the current Home Assistant theme."
+        }
+      ]
+    },
+    "ha-cards/status-chip": {
+      "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardComponentsKt.HaCardStatusChip",
+      "displayName": "Status chip",
+      "group": "Home Assistant",
+      "insertContent": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "value": "On"
+          },
+          "isOn": {
+            "type": "bool",
+            "value": true
+          }
+        }
+      },
+      "propertyCapabilities": [
+        {
+          "name": "status",
+          "jsonType": "string",
+          "required": true,
+          "notes": "Short state text. With entityId set, it follows the live <entityId>.state binding."
+        },
+        {
+          "name": "entityId",
+          "jsonType": "string",
+          "required": false,
+          "notes": "The entity whose state text and is_on flag update this chip."
+        },
+        {
+          "name": "isOn",
+          "jsonType": "boolean",
+          "required": false,
+          "notes": "The initial active state, or the static state when no entity is bound."
+        },
+        {
+          "name": "activeColor",
+          "jsonType": "string",
+          "required": false,
+          "notes": "A #AARRGGBB color for active state; default HA amber."
+        },
+        {
+          "name": "inactiveColor",
+          "jsonType": "string",
+          "required": false,
+          "notes": "A #AARRGGBB color for inactive state; default HA grey."
+        }
+      ]
     }
   },
   "$comment_templates": "Generated, not hand-written: :design-server's HaCardsTemplatesTest seeds each from a card schema (CardSchema.fromCard) with HaCardsSeed — the design server's UiBuilderSeed retargeted to this catalog — and fails when a committed template drifts. `-PhaCardsTemplates.update=true` rewrites them.",
@@ -1091,11 +1193,19 @@
       "supportingText": "HA's gauge card for a humidity sensor, 0 to 100 %."
     },
     {
+      "path": "ui-builder/designs/card-sensor-metric.json",
+      "id": "card-sensor-metric",
+      "label": "Sensor metric",
+      "group": "Dashboard card",
+      "order": 4,
+      "supportingText": "An editable label, live sensor value, and separate unit. Change the entity and styling to make a new sensor card."
+    },
+    {
       "path": "ui-builder/designs/wear-light-small.json",
       "id": "wear-light-small",
       "label": "Light · Small",
       "group": "Wear widget",
-      "order": 4,
+      "order": 5,
       "supportingText": "One light's name, state and switch in the Small Wear widget container (216×76dp)."
     },
     {
@@ -1103,7 +1213,7 @@
       "id": "wear-entities-large",
       "label": "Entities · Large",
       "group": "Wear widget",
-      "order": 5,
+      "order": 6,
       "supportingText": "A room's title and two entities in the Large Wear widget container (216×124dp)."
     },
     {
@@ -1111,7 +1221,7 @@
       "id": "launcher-fan-2x2",
       "label": "Fan button · 2x2",
       "group": "Launcher widget",
-      "order": 6,
+      "order": 7,
       "supportingText": "HA's button card for a fan as a 2x2 phone launcher widget; a tap toggles the fan."
     },
     {
@@ -1119,14 +1229,13 @@
       "id": "launcher-entities-4x2",
       "label": "Entities · 4x2",
       "group": "Launcher widget",
-      "order": 7,
+      "order": 8,
       "supportingText": "A room's entity rows as a 4x2 phone launcher widget, each bound to its entity."
     }
   ],
-  "$comment_newDesign": "The chooser card (compose-ui-builder#781): `label`, a `description` subtitle, and `primary` to sit in the \"What are you designing?\" row. The templates name three groups, so the chooser offers Dashboard card / Wear widget / Launcher widget as the type cards. compose-ai-tools' generator (UiBuilderCatalogs.newDesignSemantics, v2.54.0) publishes `label` and `order` only, so `description` and `primary` reach ui-builder.json once it passes them through.",
+  "$comment_newDesign": "The catalog label appears in the New design chooser. The three template groups offer Dashboard card, Wear widget and Launcher widget starters.",
   "newDesign": {
     "label": "Home Assistant",
-    "description": "Home Assistant cards for dashboards, Wear widgets and phone launcher widgets.",
-    "primary": true
+    "order": 0
   }
 }

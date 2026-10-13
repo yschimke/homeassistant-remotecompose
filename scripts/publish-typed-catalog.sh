@@ -10,15 +10,15 @@ for source in "$publisher_root" "$app_root" "$tools_root" "$builder_root"; do
   git -C "$source" diff --cached --quiet
 done
 source_sha=$(git -C "$app_root" rev-parse HEAD)
-tools_sha=$(git -C "$tools_root" rev-parse HEAD)
-builder_sha=$(git -C "$builder_root" rev-parse HEAD)
+tools_tag=$(git -C "$tools_root" describe --tags --exact-match HEAD)
+builder_tag=$(git -C "$builder_root" describe --tags --exact-match HEAD)
 repo=${GITHUB_REPOSITORY:-$(gh repo view --json nameWithOwner --jq .nameWithOwner)}
 tag="typed-catalog-preview-${source_sha}"
-python3 - "$app_root/.github/workflows/typed-catalog.yml" "$tools_sha" "$builder_sha" <<'PYTHON'
+python3 - "$app_root/.github/workflows/typed-catalog.yml" "$tools_tag" "$builder_tag" <<'PYTHON'
 import pathlib, re, sys
-refs = set(re.findall(r'^\s*ref:\s*([a-f0-9]{40})\s*$', pathlib.Path(sys.argv[1]).read_text(), re.MULTILINE))
+refs = set(re.findall(r'^\s*ref:\s*(v[0-9]+\.[0-9]+\.[0-9]+)\s*$', pathlib.Path(sys.argv[1]).read_text(), re.MULTILINE))
 if not set(sys.argv[2:]).issubset(refs):
-    sys.exit('Dependency revision differs from the validated source workflow')
+    sys.exit('Dependency release differs from the validated source workflow')
 PYTHON
 release_target=(--target "$source_sha")
 if tag_sha=$(gh api "repos/$repo/git/ref/tags/$tag" --jq .object.sha 2>/dev/null); then

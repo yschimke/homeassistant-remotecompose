@@ -26,9 +26,14 @@
       "id": "heading",
       "componentId": "homeassistant-remotecompose/heading",
       "properties": {
-        "title": {
-          "type": "string",
-          "value": "Kitchen"
+        "data": {
+          "type": "object",
+          "fields": {
+            "title": {
+              "type": "string",
+              "value": "Kitchen"
+            }
+          }
         }
       },
       "modifiers": [
@@ -61,13 +66,49 @@
       "id": "tile",
       "componentId": "homeassistant-remotecompose/tile",
       "properties": {
-        "name": {
-          "type": "string",
-          "value": "Kitchen light"
-        },
-        "state": {
-          "type": "string",
-          "value": "On"
+        "data": {
+          "type": "object",
+          "fields": {
+            "name": {
+              "type": "string",
+              "value": "Kitchen light"
+            },
+            "state": {
+              "type": "string",
+              "value": "On"
+            },
+            "icon": {
+              "type": "string",
+              "value": "filled/lightbulb"
+            },
+            "accent": {
+              "type": "object",
+              "fields": {
+                "activeAccent": {
+                  "type": "string",
+                  "value": "#FFFFC107"
+                },
+                "inactiveAccent": {
+                  "type": "string",
+                  "value": "#FF8F8F8F"
+                },
+                "isOn": {
+                  "type": "bool",
+                  "value": true
+                }
+              }
+            },
+            "tapAction": {
+              "type": "union",
+              "case": "toggle",
+              "fields": {
+                "entityId": {
+                  "type": "string",
+                  "value": "light.kitchen"
+                }
+              }
+            }
+          }
         }
       },
       "modifiers": [

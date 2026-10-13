@@ -17,6 +17,7 @@ import java.text.DecimalFormat
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.jsonObject
 
 /**
  * User-intent abstractions mirroring Home Assistant's Lovelace tap/hold/ double-tap action model
@@ -82,6 +83,13 @@ sealed interface HaAction {
 
   @Serializable data object None : HaAction
 }
+
+/**
+ * [HaAction.CallService.serviceData] from its JSON text, e.g. `{"brightness_pct": 40}`. Throws
+ * [IllegalArgumentException] for malformed JSON or anything but an object; used where service data
+ * is authored as text, such as the UI-builder catalog.
+ */
+fun haServiceData(json: String): JsonObject = Json.parseToJsonElement(json).jsonObject
 
 /**
  * Host-side action name. The playback path in `:rc-converter` listens for `HostAction`s under this
