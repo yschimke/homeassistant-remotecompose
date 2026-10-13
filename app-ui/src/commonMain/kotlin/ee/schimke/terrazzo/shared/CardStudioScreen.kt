@@ -26,6 +26,7 @@ fun CardStudioScreen(
   snapshot: HaSnapshot,
   onBack: () -> Unit,
   initialServerUrl: String = "https://ha.coo.ee",
+  refreshSnapshot: (suspend () -> HaSnapshot)? = null,
   preview: @Composable () -> Unit,
 ) {
   var server by remember { mutableStateOf(initialServerUrl) }
@@ -43,28 +44,42 @@ fun CardStudioScreen(
   val scope = rememberCoroutineScope()
   val uriHandler = LocalUriHandler.current
   val latestSnapshot by rememberUpdatedState(snapshot)
-  fun run(generate: Boolean) {
+  fun run(generate: Boolean, refresh: Boolean = false) {
+    if (busy) return
+    busy = true
     job = scope.launch {
-      busy = true
       message = null
       var studio: CardStudioClient? = null
       var agent: AgentCardDesigner? = null
       try {
         studio = CardStudioClient(server)
-        val seed = draft ?: studio.seed(card, latestSnapshot)
-        if (generate) {
+        val currentSnapshot =
+          if ((refresh || draft == null || !generate) && refreshSnapshot != null) {
+            refreshSnapshot()
+          } else latestSnapshot
+        val seed =
+          if (refresh) {
+            val fresh = studio.seed(card, currentSnapshot)
+            draft?.let { refreshCardDraft(it, fresh) } ?: fresh
+          } else draft ?: studio.seed(card, currentSnapshot)
+        if (refresh) {
+          draft = seed
+          message = "Preview data refreshed. Your design edits are kept."
+        } else if (generate) {
           agent = AgentCardDesigner()
           draft = agent.design(provider, apiKey, model, instruction, seed, endpoint)
           message = "Draft ready. Open it in UI Builder to review the design."
         } else {
-          draft = seed
-          editorUrl = studio.handoff(seed)
+          val handoff = studio.openDraft(seed, card, currentSnapshot)
+          draft = handoff.document
+          editorUrl = handoff.url
         }
       } catch (e: CancellationException) {
         throw e
       } catch (e: Exception) {
         message =
-          if (e is IllegalArgumentException)
+          if (e is CardStudioException) e.message
+          else if (e is IllegalArgumentException)
             "The draft or connection settings are invalid. Check the HTTPS address and try again."
           else
             "Could not complete the request. Check the server, provider key, model, and network, then try again."
@@ -122,6 +137,9 @@ fun CardStudioScreen(
         Button(onClick = { run(false) }, enabled = !busy && server.isNotBlank()) {
           Text(if (draft == null) "Design in UI Builder" else "Preview draft in UI Builder")
         }
+        TextButton(onClick = { run(false, refresh = true) }, enabled = !busy) {
+          Text("Refresh preview data")
+        }
         HorizontalDivider()
         Text("Connect an agent", style = MaterialTheme.typography.titleMedium)
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -129,9 +147,11 @@ fun CardStudioScreen(
             FilterChip(
               provider == option,
               {
-                provider = option
-                apiKey = ""
-                model = ""
+                if (provider != option) {
+                  provider = option
+                  apiKey = ""
+                  model = ""
+                }
               },
               label = { Text(option.label) },
               enabled = !busy,

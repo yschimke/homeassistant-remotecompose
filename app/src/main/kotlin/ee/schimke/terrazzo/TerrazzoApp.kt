@@ -609,6 +609,11 @@ private fun DashboardsRoot(
       snapshot,
       onBack = { studioTarget = null },
       initialServerUrl = studioServer.ifBlank { "https://ha.coo.ee" },
+      refreshSnapshot = {
+        val current = session.loadDashboard(openedValue.takeIf { it != DASHBOARD_UNSET }).second
+        studioTarget = card to current
+        current
+      },
     ) {
       CardPreviewCard(session, card, snapshot)
     }

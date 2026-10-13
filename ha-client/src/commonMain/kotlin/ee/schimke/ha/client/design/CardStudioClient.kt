@@ -10,6 +10,7 @@ import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
+import io.ktor.http.HttpStatusCode
 import io.ktor.http.URLProtocol
 import io.ktor.http.Url
 import io.ktor.http.contentType
@@ -33,19 +34,70 @@ class CardStudioClient(serverUrl: String, engine: HttpClientEngine? = null) {
     return base + path
   }
 
+  /** Recover an expired preview contract without losing the person's design edits. */
+  suspend fun openDraft(
+    document: JsonObject,
+    card: CardConfig,
+    snapshot: HaSnapshot,
+  ): CardStudioHandoff {
+    try {
+      return CardStudioHandoff(document, handoff(document))
+    } catch (e: CardStudioException) {
+      if (e.status != HttpStatusCode.Gone.value) throw e
+    }
+    val refreshed = refreshCardDraft(document, seed(card, snapshot))
+    return CardStudioHandoff(refreshed, handoff(refreshed))
+  }
+
   private suspend fun request(path: String, body: JsonObject): JsonObject {
     val response =
       http.post(base + path) {
         contentType(ContentType.Application.Json)
         setBody(body.toString())
       }
-    check(response.status.isSuccess()) {
-      "Design server request failed (${response.status.value})."
-    }
+    if (!response.status.isSuccess()) throw CardStudioException(response.status.value)
     return Json.parseToJsonElement(response.bodyAsText()).jsonObject
   }
 
   fun close() = http.close()
+}
+
+data class CardStudioHandoff(val document: JsonObject, val url: String)
+
+/** Safe, actionable errors; server response bodies may contain private preview text. */
+class CardStudioException(val status: Int) :
+  IllegalStateException(
+    when (status) {
+      404 -> "This design server does not support Card Studio. Update it or choose another server."
+      410 -> "This preview expired. Refresh preview data and try again."
+      429 -> "Too many pending previews. Wait a little and try again."
+      503 -> "UI Builder is not configured on this design server."
+      400 -> "The card draft was rejected. Reset the draft and try again."
+      else -> "Design server request failed ($status). Check server access and try again."
+    }
+  )
+
+/** Replace preview values and the expiring id while preserving all design/layout edits. */
+fun refreshCardDraft(document: JsonObject, freshSeed: JsonObject): JsonObject {
+  val oldState = document["stateVariables"]!!.jsonObject
+  val freshState = freshSeed["stateVariables"]!!.jsonObject
+  require(
+    oldState.keys == freshState.keys &&
+      oldState.all { (name, value) ->
+        value.jsonObject - "initialValue" == freshState[name]!!.jsonObject - "initialValue"
+      }
+  ) {
+    "The card's bindings changed. Reset the draft to use its new contract."
+  }
+  require(
+    document["schema"] == freshSeed["schema"] && document["catalogPin"] == freshSeed["catalogPin"]
+  ) {
+    "The card's catalog changed. Reset the draft to use the new catalog."
+  }
+  val refreshed =
+    JsonObject(document + mapOf("id" to freshSeed["id"]!!, "stateVariables" to freshState))
+  validateCardDraft(freshSeed, refreshed)
+  return refreshed
 }
 
 private fun io.ktor.client.HttpClientConfig<*>.configure() {
@@ -56,6 +108,7 @@ private fun io.ktor.client.HttpClientConfig<*>.configure() {
 /** Settings also accept the existing library URL, which ends in /designs/v1. */
 fun studioServerUrl(value: String): String {
   val base = value.trim().trimEnd('/').removeSuffix("/designs/v1")
+  require(!base.any(Char::isWhitespace)) { "The design server URL must not contain whitespace." }
   val url = Url(base)
   require(
     url.protocol == URLProtocol.HTTPS &&

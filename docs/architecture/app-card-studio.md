@@ -12,7 +12,8 @@ next step. The shared provider client and draft gate are independent of the edit
 
 `CardStudioClient` uses the app's selected card and current `HaSnapshot`. Desktop
 continues to observe the live snapshot while the studio controls are open; Android
-uses the snapshot captured when opening the card, as its history preview already does.
+starts with the snapshot captured when opening the card, then fetches a new snapshot
+for seeding, refreshing or opening a draft. Refresh also updates the mobile card preview.
 The editor gets the values captured when the draft is seeded; it does not stream the
 whole home or keep updating its saved example data.
 
@@ -36,10 +37,20 @@ The design server adds three routes:
 Seed and handoff documents live in separate bounded, in-memory stores of 128 entries
 each and expire after ten minutes. Responses containing drafts use `no-store`; the
 handoff page escapes source text, sends no referrer, and contains no script. A handoff
-is consumed only after a successful builder create/share operation.
+is consumed only after a successful builder create/share operation. Opening a handoff
+claims it atomically: a second concurrent request receives 409 instead of creating a
+second design. Failures and cancellation release the claim so the person can retry.
 
 The app accepts the existing design-library setting ending in `/designs/v1` as well
-as the design server's base URL. Both the design server and UI Builder must be deployed
+as the design server's base URL. The app offers **Refresh preview data** while keeping
+layout edits. If a handoff reports an expired seed, the client fetches a new seed,
+rebases the draft's id and initial values, validates that its binding types and catalog
+are unchanged, and retries once. A changed contract requires resetting the draft;
+repeated expiry never causes an unbounded retry loop. Missing routes, unavailable
+builders and full preview stores produce actionable messages without echoing server
+response bodies.
+
+Both the design server and UI Builder must be deployed
 with the new routes and the published `ha-cards` catalog before this app flow works.
 
 ## Calling a provider
@@ -52,7 +63,8 @@ explicit HTTPS OpenAI-compatible chat-completions URL and its own bearer key.
 
 The request includes the seeded document, its bindings and example values, and the
 user's instruction. It asks for a complete JSON document. Requests have a 90-second
-timeout and can be cancelled. This is a single-turn draft generator, not a resumable
+timeout and can be cancelled. Truncated replies and requests for tool execution are
+rejected; malformed JSON diagnostics do not echo private preview text. This is a single-turn draft generator, not a resumable
 coding-agent session or a general tool execution environment.
 
 The local and server draft gates preserve the schema, catalog pin, id, state variables,

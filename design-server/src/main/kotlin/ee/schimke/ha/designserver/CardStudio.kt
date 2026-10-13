@@ -18,7 +18,11 @@ import kotlinx.serialization.json.*
  * Bounded, expiring app-to-browser handoffs. Nothing is persisted or added to the public library.
  */
 class CardStudioDrafts(private val clock: () -> Long = System::currentTimeMillis) {
-  private data class Entry(val document: JsonObject, val expiresAt: Long)
+  private data class Entry(
+    val document: JsonObject,
+    val expiresAt: Long,
+    var claimed: Boolean = false,
+  )
 
   private val entries = LinkedHashMap<String, Entry>()
 
@@ -35,6 +39,28 @@ class CardStudioDrafts(private val clock: () -> Long = System::currentTimeMillis
   fun get(token: String): JsonObject? {
     expire()
     return entries[token]?.document
+  }
+
+  sealed interface Claim {
+    data class Ready(val document: JsonObject) : Claim
+
+    data object Busy : Claim
+
+    data object Missing : Claim
+  }
+
+  @Synchronized
+  fun claim(token: String): Claim {
+    expire()
+    val entry = entries[token] ?: return Claim.Missing
+    if (entry.claimed) return Claim.Busy
+    entry.claimed = true
+    return Claim.Ready(entry.document)
+  }
+
+  @Synchronized
+  fun release(token: String) {
+    entries[token]?.claimed = false
   }
 
   @Synchronized
@@ -181,8 +207,16 @@ fun Route.cardStudioRoutes(
       return@post call.respondText("Sign in to design this card", status = HttpStatusCode.Forbidden)
     val token = call.parameters["token"].orEmpty()
     val document =
-      handoffs.get(token)
-        ?: return@post call.respondText("Preview expired", status = HttpStatusCode.Gone)
+      when (val claim = handoffs.claim(token)) {
+        is CardStudioDrafts.Claim.Ready -> claim.document
+        CardStudioDrafts.Claim.Busy ->
+          return@post call.respondText(
+            "This draft is already opening",
+            status = HttpStatusCode.Conflict,
+          )
+        CardStudioDrafts.Claim.Missing ->
+          return@post call.respondText("Preview expired", status = HttpStatusCode.Gone)
+      }
     val location =
       try {
         // New id on every attempt: no existing design can be overwritten, including retries.
@@ -191,19 +225,24 @@ fun Route.cardStudioRoutes(
             document + ("id" to JsonPrimitive("card-${UiBuilderConfig.randomToken()}")) - "template"
           )
         val id = builder.client.create(draft)
-        if (editor.login == null) builder.config.editorUrl(id)
-        else {
-          builder.client.share(id, "github:${editor.login}", editor = true)
-          builder.config.designUrl(id)
-        }
+        val url =
+          if (editor.login == null) builder.config.editorUrl(id)
+          else {
+            builder.client.share(id, "github:${editor.login}", editor = true)
+            builder.config.designUrl(id)
+          }
+        handoffs.remove(token)
+        url
       } catch (e: Exception) {
         if (e is CancellationException) throw e
         return@post call.respondText(
           "UI Builder could not open this draft. Check the catalog and try again.",
           status = HttpStatusCode.BadGateway,
         )
+      } finally {
+        // Failures and cancellation leave the handoff available for a deliberate retry.
+        handoffs.release(token)
       }
-    handoffs.remove(token)
     call.response.header(HttpHeaders.CacheControl, "no-store")
     call.respondRedirect(location)
   }

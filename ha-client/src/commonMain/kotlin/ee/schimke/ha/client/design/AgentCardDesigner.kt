@@ -90,11 +90,16 @@ class AgentCardDesigner(engine: HttpClientEngine? = null) {
     check(response.status.isSuccess()) {
       "Agent request failed (${response.status.value}). Check the key, model, and provider."
     }
-    val envelope = Json.parseToJsonElement(response.bodyAsText()).jsonObject
+    val envelope =
+      parseAgentObject(response.bodyAsText(), "The agent returned an invalid response.")
     val output =
       if (claude) {
         check(envelope["stop_reason"]?.jsonPrimitive?.content != "max_tokens") {
           "Agent response was truncated. Try a smaller change."
+        }
+        val reason = envelope["stop_reason"]?.jsonPrimitive?.contentOrNull
+        check(reason == null || reason in setOf("end_turn", "stop_sequence")) {
+          "The agent requested tools instead of returning a finished card document."
         }
         envelope["content"]
           ?.jsonArray
@@ -105,22 +110,32 @@ class AgentCardDesigner(engine: HttpClientEngine? = null) {
         check(choice?.get("finish_reason")?.jsonPrimitive?.content != "length") {
           "Agent response was truncated. Try a smaller change."
         }
+        val reason = choice?.get("finish_reason")?.jsonPrimitive?.contentOrNull
+        check(reason == null || reason == "stop") { "The agent did not finish the card document." }
         choice?.get("message")?.jsonObject?.get("content")?.jsonPrimitive?.contentOrNull
       }
     require(!output.isNullOrBlank() && output.length <= 128_000) {
       "Agent did not return a complete card document."
     }
     val candidate =
-      Json.parseToJsonElement(
-          output.trim().removePrefix("```json").removePrefix("```").removeSuffix("```").trim()
-        )
-        .jsonObject
+      parseAgentObject(
+        output.trim().removePrefix("```json").removePrefix("```").removeSuffix("```").trim(),
+        "The agent did not return a valid JSON card document.",
+      )
     validateCardDraft(document, candidate)
     return candidate
   }
 
   fun close() = http.close()
 }
+
+private fun parseAgentObject(text: String, message: String): JsonObject =
+  try {
+    Json.parseToJsonElement(text).jsonObject
+  } catch (e: IllegalArgumentException) {
+    // A parser's diagnostic may echo private preview text; keep it out of user-facing errors.
+    throw IllegalArgumentException(message)
+  }
 
 private fun io.ktor.client.HttpClientConfig<*>.configureAgent() {
   followRedirects = false
