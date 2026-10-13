@@ -1,0 +1,9 @@
+{
+  "catalogs": [{ "system": "ha-cards", "repo": "yschimke/homeassistant-remotecompose-out" }],
+  "uiBuilder": {
+    "catalogs": {
+      "ha-cards": { "serve": true, "published": true, "owned": true },
+      "remote-m3": { "serve": true }
+    }
+  }
+}

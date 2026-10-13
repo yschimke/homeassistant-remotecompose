@@ -52,6 +52,17 @@ response bodies.
 
 Both the design server and UI Builder must be deployed
 with the new routes and the published `ha-cards` catalog before this app flow works.
+The container includes `design-server/catalogs.json` and loads that catalog by default.
+If you override `UI_BUILDER_ARGS`, retain `--catalogs-file /app/catalogs.json`
+and `--ui-builder-catalogs remote-m3,ha-cards` alongside your other flags.
+The authorized browser handoff resolves the catalog revision and native runtime from
+UI Builder's v1 catalog listing before creating the design. The draft's initial
+`candidate` revision is not a published revision. Missing catalogs or failed lookups
+refuse creation and leave the handoff available for retry; layouts and bindings stay intact.
+Anonymous seed and handoff JSON APIs permit cross-origin browser calls without cookies;
+the browser's authorized editor routes remain same-origin.
+The preview page's `form-action` policy permits its own origin and the configured
+builder origin, so browsers can follow the authorized form's redirect to a separate host.
 
 ## Calling a provider
 

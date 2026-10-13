@@ -42,7 +42,7 @@ in the builder.
 | `UI_BUILDER_COOKIE_SECRET` | Signs UI Builder's session cookie |
 | `UI_BUILDER_BROWSER_URL` | Where browsers reach UI Builder, e.g. `https://builder.ha.coo.ee` |
 | `UI_BUILDER_TOKEN` | The operator token the server creates and shares designs with. Set it, keep it secret |
-| `UI_BUILDER_ARGS` | Optional: more `compose-preview-server serve` flags for the bundled builder |
+| `UI_BUILDER_ARGS` | Optional: more `compose-preview-server serve` flags for the bundled builder. The image defaults load `/app/catalogs.json` with `remote-m3,ha-cards`; retain those flags when overriding this value. |
 
 You need two OAuth Apps because a GitHub OAuth App has one callback host. A GitHub App with both
 callback URLs also works.

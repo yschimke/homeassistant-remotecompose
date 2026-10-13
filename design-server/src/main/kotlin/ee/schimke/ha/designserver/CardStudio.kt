@@ -10,7 +10,9 @@ import io.ktor.server.response.respondRedirect
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
+import io.ktor.server.routing.options
 import io.ktor.server.routing.post
+import java.net.URI
 import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.json.*
 
@@ -80,7 +82,18 @@ fun Route.cardStudioRoutes(
   seeds: CardStudioDrafts = CardStudioDrafts(),
   handoffs: CardStudioDrafts = CardStudioDrafts(),
 ) {
+  // The Pages/Wasm app calls these anonymous JSON APIs from a different origin.
+  // Browser-authorized create/share routes below deliberately remain same-origin.
+  for (path in listOf("/api/studio/seed", "/api/studio/handoffs")) {
+    options(path) {
+      call.response.header(HttpHeaders.AccessControlAllowOrigin, "*")
+      call.response.header(HttpHeaders.AccessControlAllowMethods, "POST, OPTIONS")
+      call.response.header(HttpHeaders.AccessControlAllowHeaders, "Content-Type")
+      call.respondText("", status = HttpStatusCode.NoContent)
+    }
+  }
   post("/api/studio/seed") {
+    call.response.header(HttpHeaders.AccessControlAllowOrigin, "*")
     if (integration == null)
       return@post call.respondText(
         "UI Builder is not configured",
@@ -120,6 +133,7 @@ fun Route.cardStudioRoutes(
   }
 
   post("/api/studio/handoffs") {
+    call.response.header(HttpHeaders.AccessControlAllowOrigin, "*")
     if (integration == null)
       return@post call.respondText(
         "UI Builder is not configured",
@@ -171,9 +185,20 @@ fun Route.cardStudioRoutes(
     call.response.header(HttpHeaders.CacheControl, "no-store")
     call.response.header("Referrer-Policy", "no-referrer")
     call.response.header("X-Robots-Tag", "noindex, nofollow")
+    // Chromium applies form-action to the redirect too, including a separately hosted builder.
+    val builderOrigin =
+      integration
+        ?.config
+        ?.browserUrl
+        ?.let { url ->
+          val uri = URI(url)
+          require(uri.scheme in setOf("http", "https") && uri.host != null)
+          URI(uri.scheme, null, uri.host, uri.port, null, null, null).toASCIIString()
+        }
+        .orEmpty()
     call.response.header(
       "Content-Security-Policy",
-      "default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; frame-ancestors 'self'",
+      "default-src 'none'; style-src 'unsafe-inline'; form-action 'self' $builderOrigin; frame-ancestors 'self'",
     )
     val action =
       when {
@@ -224,7 +249,7 @@ fun Route.cardStudioRoutes(
           JsonObject(
             document + ("id" to JsonPrimitive("card-${UiBuilderConfig.randomToken()}")) - "template"
           )
-        val id = builder.client.create(draft)
+        val id = builder.client.create(draft, resolveCatalog = true)
         val url =
           if (editor.login == null) builder.config.editorUrl(id)
           else {
