@@ -45,6 +45,7 @@ class CardStudioTest {
     externalServices {
       hosts("https://builder.test") {
         routing {
+          studioCatalogFixture()
           put("/api/ui-builder/v1/designs/{id}") {
             assertEquals("*", call.request.headers[HttpHeaders.IfNoneMatch])
             created = Json.parseToJsonElement(call.receiveText()).jsonObject
@@ -78,6 +79,11 @@ class CardStudioTest {
       val path =
         Json.parseToJsonElement(handoff.bodyAsText()).jsonObject["path"]!!.jsonPrimitive.content
       val page = client.get(path)
+      assertTrue(
+        page.headers["Content-Security-Policy"]!!.contains(
+          "form-action 'self' https://builder.test;"
+        )
+      )
       assertEquals("no-store", page.headers[HttpHeaders.CacheControl])
       assertFalse(page.bodyAsText().contains("<script>bad</script>"))
       assertTrue(page.bodyAsText().contains("&lt;script&gt;"))
@@ -98,6 +104,13 @@ class CardStudioTest {
       assertEquals(HttpStatusCode.Found, opened.status)
       assertNotNull(created)
       assertNotEquals(document["id"], created!!["id"])
+      assertEquals(
+        Json.parseToJsonElement(
+          """{"systemId":"ha-cards","catalogRevision":"sha256:published","capabilityDigest":"candidate","nativeRuntimeId":"published-runtime"}"""
+        ),
+        created!!["catalogPin"],
+      )
+      assertEquals(document["nodes"], created!!["nodes"])
       assertEquals(document["stateVariables"], created!!["stateVariables"])
       assertNull(created!!["template"])
       assertTrue(

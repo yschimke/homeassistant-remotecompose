@@ -7,6 +7,7 @@ import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HaSnapshot
 import io.ktor.client.request.get
 import io.ktor.client.request.header
+import io.ktor.client.request.options
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
@@ -91,6 +92,7 @@ class CardStudioLifecycleTest {
     externalServices {
       hosts("https://builder.test") {
         routing {
+          studioCatalogFixture()
           put("/api/ui-builder/v1/designs/{id}") {
             creates.incrementAndGet()
             entered.complete(Unit)
@@ -144,6 +146,7 @@ class CardStudioLifecycleTest {
     externalServices {
       hosts("https://builder.test") {
         routing {
+          studioCatalogFixture(failFirstLookup = true)
           put("/api/ui-builder/v1/designs/{id}") {
             val status =
               if (creates.incrementAndGet() == 1) HttpStatusCode.ServiceUnavailable
@@ -165,6 +168,13 @@ class CardStudioLifecycleTest {
       val failed = browser.post(link) { header(HttpHeaders.Cookie, "design-server-edit=operator") }
       assertEquals(HttpStatusCode.BadGateway, failed.status)
       assertFalse(failed.bodyAsText().contains("operator-private-preview"))
+      assertFalse(failed.bodyAsText().contains("private catalog error"))
+      assertEquals(0, creates.get())
+      assertEquals(
+        HttpStatusCode.BadGateway,
+        browser.post(link) { header(HttpHeaders.Cookie, "design-server-edit=operator") }.status,
+      )
+      assertEquals(1, creates.get())
       assertEquals(HttpStatusCode.OK, browser.get(link).status)
       assertEquals(
         HttpStatusCode.Found,
@@ -213,6 +223,75 @@ class CardStudioLifecycleTest {
         client.post("/api/studio/handoffs") { setBody("{}") }.status,
       )
     } finally {
+      dir.deleteRecursively()
+    }
+  }
+
+  @Test
+  fun crossOriginWasmCanPreflightAndCreateAStudioHandoff() = testApplication {
+    val dir = library()
+    val http = createClient { followRedirects = false }
+    val config = UiBuilderConfig("https://builder.test", "https://builder.test", "operator")
+    application {
+      designServer(LibraryHolder(dir), UiBuilderIntegration(config, UiBuilderClient(config, http)))
+    }
+    val origin = "https://yschimke.github.io"
+    try {
+      for (path in listOf("/api/studio/seed", "/api/studio/handoffs")) {
+        val preflight =
+          client.options(path) {
+            header(HttpHeaders.Origin, origin)
+            header(HttpHeaders.AccessControlRequestMethod, "POST")
+            header(HttpHeaders.AccessControlRequestHeaders, "content-type")
+          }
+        assertEquals(HttpStatusCode.NoContent, preflight.status)
+        assertEquals("*", preflight.headers[HttpHeaders.AccessControlAllowOrigin])
+        assertTrue(preflight.headers[HttpHeaders.AccessControlAllowMethods]!!.contains("POST"))
+        assertEquals("Content-Type", preflight.headers[HttpHeaders.AccessControlAllowHeaders])
+        assertNull(preflight.headers[HttpHeaders.AccessControlAllowCredentials])
+      }
+      val seed =
+        client.post("/api/studio/seed") {
+          header(HttpHeaders.Origin, origin)
+          header(HttpHeaders.ContentType, "application/json")
+          setBody("""{"type":"entities","entities":["sensor.temp"]}""")
+        }
+      assertEquals(HttpStatusCode.OK, seed.status)
+      assertEquals("*", seed.headers[HttpHeaders.AccessControlAllowOrigin])
+      val handoff =
+        client.post("/api/studio/handoffs") {
+          header(HttpHeaders.Origin, origin)
+          header(HttpHeaders.ContentType, "application/json")
+          setBody(seed.bodyAsText())
+        }
+      assertEquals(HttpStatusCode.OK, handoff.status)
+      assertEquals("*", handoff.headers[HttpHeaders.AccessControlAllowOrigin])
+      val path =
+        Json.parseToJsonElement(handoff.bodyAsText()).jsonObject["path"]!!.jsonPrimitive.content
+      assertNull(
+        client
+          .options(path) { header(HttpHeaders.Origin, origin) }
+          .headers[HttpHeaders.AccessControlAllowOrigin]
+      )
+      assertNull(
+        client
+          .get(path) { header(HttpHeaders.Origin, origin) }
+          .headers[HttpHeaders.AccessControlAllowOrigin]
+      )
+      assertNull(
+        client
+          .post(path) { header(HttpHeaders.Origin, origin) }
+          .headers[HttpHeaders.AccessControlAllowOrigin]
+      )
+      val rejected =
+        client.post("/api/studio/handoffs") {
+          header(HttpHeaders.Origin, origin)
+          setBody("not JSON")
+        }
+      assertEquals(HttpStatusCode.BadRequest, rejected.status)
+      assertEquals("*", rejected.headers[HttpHeaders.AccessControlAllowOrigin])
+    } finally {
+      http.close()
       dir.deleteRecursively()
     }
   }
