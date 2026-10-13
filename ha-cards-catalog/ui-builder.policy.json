@@ -1099,7 +1099,7 @@
           "name": "unit",
           "jsonType": "string",
           "required": false,
-          "notes": "A separate unit placed beside the reading, such as °C or %."
+          "notes": "A separate unit for static readings, such as °C or %. For a bound entity it seeds the initial numeric preview; live formatted state already includes the unit."
         },
         {
           "name": "entityId",

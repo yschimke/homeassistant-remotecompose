@@ -101,12 +101,6 @@ expressed as a binding.
 
 ## Known follow-ups
 
-- The add-on `StreamRoute` still pushes the **raw** `<id>.state`, while
-  the in-process host pushes `formatState(entity)`. The documents bake
-  the formatted string, so add-on clients should run the same formatter
-  before applying. `formatState` lives in the Android `rc-converter`
-  module; sharing it with the JVM add-on (a common, multiplatform-safe
-  formatter in `ha-model`) is the proper fix.
 - History sparkline points (`<id>.numeric.<index>`) are baked at capture
   and refreshed by re-encode; a windowed live push would need history in
   the binding contract.

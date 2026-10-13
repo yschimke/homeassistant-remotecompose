@@ -2,7 +2,9 @@ package ee.schimke.ha.addon.routes
 
 import ee.schimke.ha.addon.bridge.HaEvent
 import ee.schimke.ha.addon.bridge.HaSupervisorBridge
+import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HaLiveBindings
+import ee.schimke.ha.rc.formatState
 import io.ktor.server.routing.Routing
 import io.ktor.server.websocket.webSocket
 import io.ktor.websocket.Frame
@@ -11,6 +13,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonObjectBuilder
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.contentOrNull
@@ -56,26 +59,7 @@ fun Routing.streamRoute(bridge: HaSupervisorBridge) {
               put("type", "state")
               put(
                 "bindings",
-                buildJsonObject {
-                  // NB: `.state` is the raw HA state here; the in-process app host pushes the
-                  // *formatted* form (see `cardSnapshotBindings`). Documents bake the formatted
-                  // string, so addon clients should run the same formatter before applying —
-                  // tracked as a follow-up (formatState lives in the Android `rc-converter`).
-                  put("${state.entityId}.state", JsonPrimitive(state.state))
-                  // `is_on` is the only typed binding the
-                  // client knows by default; emitting it
-                  // for everything is harmless — clients
-                  // ignore unknown names.
-                  put(
-                    "${state.entityId}.is_on",
-                    JsonPrimitive(HaLiveBindings.isOn(state.entityId, state.state)),
-                  )
-                  // Domain-specific int / parsed-numeric keys so `RemoteStateLayout(RemoteInt, …)`
-                  // chrome and gauge sweeps flip without a re-encode. Same harmless-extra policy as
-                  // `is_on`.
-                  putStateInt(state.entityId, state.state)
-                  putNumericState(state.entityId, state.state)
-                },
+                buildJsonObject { putStateBindings(state) },
               )
             }
             send(Frame.Text(msg.toString()))
@@ -129,20 +113,14 @@ private suspend fun handleClientFrame(
       // Hydrate: send current state for newly-subscribed entities so
       // the client doesn't have to wait for the next `state_changed`
       // before its document looks right.
-      val bindings = entities.mapNotNull { entityId ->
-        val s = bridge.cache.get(entityId) ?: return@mapNotNull null
-        entityId to s
-      }
+      val bindings = entities.mapNotNull(bridge.cache::get)
       buildJsonObject {
         put("type", "state")
         put(
           "bindings",
           buildJsonObject {
-            for ((entityId, state) in bindings) {
-              put("$entityId.state", JsonPrimitive(state.state))
-              put("$entityId.is_on", JsonPrimitive(HaLiveBindings.isOn(entityId, state.state)))
-              putStateInt(entityId, state.state)
-              putNumericState(entityId, state.state)
+            for (state in bindings) {
+              putStateBindings(state)
             }
           },
         )
@@ -171,6 +149,15 @@ private suspend fun handleClientFrame(
     }
     else -> errorReply(id, "unknown type=$type")
   }
+}
+
+/** Keep hydration and live events aligned with the document's formatted state binding. */
+internal fun JsonObjectBuilder.putStateBindings(state: EntityState) {
+  val entityId = state.entityId
+  put("$entityId.state", JsonPrimitive(formatState(state)))
+  put("$entityId.is_on", JsonPrimitive(HaLiveBindings.isOn(entityId, state.state)))
+  putStateInt(entityId, state.state)
+  putNumericState(entityId, state.state)
 }
 
 private fun errorReply(id: Int?, message: String): JsonObject = buildJsonObject {
