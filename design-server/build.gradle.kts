@@ -12,6 +12,46 @@ kotlin { jvmToolchain(libs.versions.java.get().toInt()) }
 
 application { mainClass.set("ee.schimke.ha.designserver.MainKt") }
 
+// The card embed (docs/architecture/card-embedding.md): `embed/ha-card.js` and the TypeScript
+// player it loads, served at `/embed/v1/` from the classpath.
+val embedPlayer = configurations.create("embedPlayer") { isTransitive = false }
+val embedPlayerArchive = embedPlayer.incoming.artifacts.resolvedArtifacts.map { it.single().file }
+
+val embedResources by
+  tasks.registering(Sync::class) {
+    from(files(rootProject.file("embed/ha-card.js"), rootProject.file("embed/demo.html"))) {
+      into("embed/v1")
+    }
+    from(zipTree(embedPlayerArchive)) {
+      include("bundle.js")
+      rename { "rc-player.js" }
+      into("embed/v1")
+    }
+    into(layout.buildDirectory.dir("generated/embed"))
+  }
+
+sourceSets.main { resources.srcDir(embedResources) }
+
+tasks.test {
+  // Pins the embed's binding port to ha-model; see EmbedBindingsGoldenTest.
+  val golden = rootProject.file("embed/test/bindings-golden.json")
+  inputs.file(golden)
+  systemProperty("embed.golden", golden.path)
+  providers.gradleProperty("embed.golden.update").orNull?.let {
+    systemProperty("embed.golden.update", it)
+  }
+  // The `ha-cards` catalog's starting templates, generated from card schemas by
+  // HaCardsTemplatesTest; `-PhaCardsTemplates.update=true` rewrites them.
+  val haCards = rootProject.file("ha-cards-catalog")
+  inputs.file(haCards.resolve("ui-builder.policy.json"))
+  inputs.dir(haCards.resolve("ui-builder/designs"))
+  systemProperty("haCards.dir", haCards.path)
+  providers.gradleProperty("haCardsTemplates.update").orNull?.let {
+    systemProperty("haCards.update", it)
+    outputs.upToDateWhen { false }
+  }
+}
+
 dependencies {
   implementation(project(":ha-model"))
   implementation(project(":ha-client"))
@@ -33,6 +73,12 @@ dependencies {
   implementation(libs.kotlinx.serialization.json)
 
   runtimeOnly(libs.logback.classic)
+
+  embedPlayer(
+    libs.rc.player.js.dist.get().let {
+      "${it.module}:${it.versionConstraint.requiredVersion}:dist@zip"
+    }
+  )
 
   testImplementation(libs.kotlin.test)
   testImplementation(libs.kotlin.test.junit)

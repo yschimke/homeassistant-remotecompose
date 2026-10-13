@@ -1,0 +1,72 @@
+{
+  "schema": "compose-ui-builder-document/v1-candidate",
+  "id": "launcher-fan-2x2",
+  "title": "Fan button · launcher 2x2",
+  "revision": 0,
+  "template": "launcher-fan-2x2",
+  "catalogPin": {
+    "systemId": "ha-cards",
+    "catalogRevision": "candidate",
+    "capabilityDigest": "candidate",
+    "nativeRuntimeId": "candidate"
+  },
+  "environment": {
+    "widthDp": 130,
+    "heightDp": 220,
+    "density": 2,
+    "theme": "light",
+    "locale": "en-US",
+    "fontScale": 1,
+    "layoutDirection": "ltr"
+  },
+  "stateVariables": {},
+  "roots": [
+    "root"
+  ],
+  "nodes": {
+    "root": {
+      "id": "root",
+      "componentId": "remote-widgets/launcher-widget",
+      "properties": {
+        "background": {
+          "type": "string",
+          "value": "#FFFFFFFF"
+        }
+      },
+      "modifiers": [],
+      "slots": {
+        "content": [
+          "button"
+        ]
+      }
+    },
+    "button": {
+      "id": "button",
+      "componentId": "ha-cards/button",
+      "properties": {
+        "name": {
+          "type": "string",
+          "value": "Fan"
+        },
+        "entityId": {
+          "type": "string",
+          "value": "switch.fan"
+        },
+        "icon": {
+          "type": "string",
+          "value": "switch"
+        },
+        "toggleable": {
+          "type": "bool",
+          "value": true
+        },
+        "isOn": {
+          "type": "bool",
+          "value": true
+        }
+      },
+      "modifiers": [],
+      "slots": {}
+    }
+  }
+}

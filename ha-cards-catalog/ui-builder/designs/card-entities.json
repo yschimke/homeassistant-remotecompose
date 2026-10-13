@@ -1,0 +1,554 @@
+{
+  "schema": "compose-ui-builder-document/v1-candidate",
+  "id": "card-entities",
+  "title": "Entities",
+  "revision": 0,
+  "template": "card-entities",
+  "catalogPin": {
+    "systemId": "ha-cards",
+    "catalogRevision": "candidate",
+    "capabilityDigest": "candidate",
+    "nativeRuntimeId": "candidate"
+  },
+  "environment": {
+    "widthDp": 360,
+    "heightDp": 352,
+    "density": 2,
+    "theme": "light",
+    "locale": "en-US",
+    "fontScale": 1,
+    "layoutDirection": "ltr"
+  },
+  "stateVariables": {
+    "card.title": {
+      "type": "text",
+      "valueType": "string",
+      "initialValue": "Living room",
+      "persistence": "design"
+    },
+    "light.s0.is_on": {
+      "type": "value",
+      "valueType": "bool",
+      "initialValue": true,
+      "persistence": "design"
+    },
+    "light.s0.name": {
+      "type": "text",
+      "valueType": "string",
+      "initialValue": "Ceiling light",
+      "persistence": "design"
+    },
+    "light.s0.numeric_state": {
+      "type": "value",
+      "valueType": "float",
+      "initialValue": 0.0,
+      "persistence": "design"
+    },
+    "light.s0.state": {
+      "type": "text",
+      "valueType": "string",
+      "initialValue": "On",
+      "persistence": "design"
+    },
+    "light.s0.state_int": {
+      "type": "value",
+      "valueType": "int",
+      "initialValue": -1,
+      "persistence": "design"
+    },
+    "light.s0.status": {
+      "type": "value",
+      "valueType": "int",
+      "initialValue": 0,
+      "persistence": "design"
+    },
+    "sensor.s2.is_on": {
+      "type": "value",
+      "valueType": "bool",
+      "initialValue": false,
+      "persistence": "design"
+    },
+    "sensor.s2.name": {
+      "type": "text",
+      "valueType": "string",
+      "initialValue": "Temperature",
+      "persistence": "design"
+    },
+    "sensor.s2.numeric_state": {
+      "type": "value",
+      "valueType": "float",
+      "initialValue": 21.5,
+      "persistence": "design"
+    },
+    "sensor.s2.state": {
+      "type": "text",
+      "valueType": "string",
+      "initialValue": "21.5 °C",
+      "persistence": "design"
+    },
+    "sensor.s2.state_int": {
+      "type": "value",
+      "valueType": "int",
+      "initialValue": -1,
+      "persistence": "design"
+    },
+    "sensor.s2.status": {
+      "type": "value",
+      "valueType": "int",
+      "initialValue": 0,
+      "persistence": "design"
+    },
+    "switch.s1.is_on": {
+      "type": "value",
+      "valueType": "bool",
+      "initialValue": false,
+      "persistence": "design"
+    },
+    "switch.s1.name": {
+      "type": "text",
+      "valueType": "string",
+      "initialValue": "Fan",
+      "persistence": "design"
+    },
+    "switch.s1.numeric_state": {
+      "type": "value",
+      "valueType": "float",
+      "initialValue": 0.0,
+      "persistence": "design"
+    },
+    "switch.s1.state": {
+      "type": "text",
+      "valueType": "string",
+      "initialValue": "Off",
+      "persistence": "design"
+    },
+    "switch.s1.state_int": {
+      "type": "value",
+      "valueType": "int",
+      "initialValue": -1,
+      "persistence": "design"
+    },
+    "switch.s1.status": {
+      "type": "value",
+      "valueType": "int",
+      "initialValue": 0,
+      "persistence": "design"
+    }
+  },
+  "roots": [
+    "root"
+  ],
+  "nodes": {
+    "title": {
+      "id": "title",
+      "componentId": "ha-cards/remote-text",
+      "properties": {
+        "text": {
+          "type": "state",
+          "variable": "card.title"
+        },
+        "fontSize": {
+          "type": "float",
+          "value": 18.0
+        },
+        "color": {
+          "type": "string",
+          "value": "#FF141414"
+        },
+        "maxLines": {
+          "type": "int",
+          "value": 1
+        }
+      },
+      "modifiers": [],
+      "slots": {}
+    },
+    "name0": {
+      "id": "name0",
+      "componentId": "ha-cards/remote-text",
+      "properties": {
+        "text": {
+          "type": "state",
+          "variable": "light.s0.name"
+        },
+        "fontSize": {
+          "type": "float",
+          "value": 15.0
+        },
+        "color": {
+          "type": "string",
+          "value": "#FF141414"
+        },
+        "maxLines": {
+          "type": "int",
+          "value": 1
+        }
+      },
+      "modifiers": [],
+      "slots": {}
+    },
+    "state0": {
+      "id": "state0",
+      "componentId": "ha-cards/remote-text",
+      "properties": {
+        "text": {
+          "type": "state",
+          "variable": "light.s0.state"
+        },
+        "fontSize": {
+          "type": "float",
+          "value": 13.0
+        },
+        "color": {
+          "type": "string",
+          "value": "#FF8F8F8F"
+        },
+        "maxLines": {
+          "type": "int",
+          "value": 1
+        }
+      },
+      "modifiers": [],
+      "slots": {}
+    },
+    "text0": {
+      "id": "text0",
+      "componentId": "layout/column",
+      "properties": {
+        "weight": {
+          "type": "float",
+          "value": 1.0
+        }
+      },
+      "modifiers": [],
+      "slots": {
+        "children": [
+          "name0",
+          "state0"
+        ]
+      }
+    },
+    "switch-label0": {
+      "id": "switch-label0",
+      "componentId": "ha-cards/remote-text",
+      "properties": {
+        "text": {
+          "type": "state",
+          "variable": "light.s0.state"
+        },
+        "fontSize": {
+          "type": "float",
+          "value": 12.0
+        },
+        "color": {
+          "type": "string",
+          "value": "#FF8F8F8F"
+        },
+        "maxLines": {
+          "type": "int",
+          "value": 1
+        }
+      },
+      "modifiers": [],
+      "slots": {}
+    },
+    "switch0": {
+      "id": "switch0",
+      "componentId": "ha-cards/remote-switch-button",
+      "properties": {
+        "checked": {
+          "type": "state",
+          "variable": "light.s0.is_on"
+        }
+      },
+      "modifiers": [],
+      "slots": {
+        "label": [
+          "switch-label0"
+        ],
+        "icon": [],
+        "secondaryLabel": []
+      }
+    },
+    "row0": {
+      "id": "row0",
+      "componentId": "layout/collapsible-row",
+      "properties": {
+        "horizontalSpacingDp": {
+          "type": "float",
+          "value": 12.0
+        },
+        "verticalAlignment": {
+          "type": "enum",
+          "value": "center"
+        }
+      },
+      "modifiers": [
+        {
+          "type": "fillMaxWidth"
+        }
+      ],
+      "slots": {
+        "children": [
+          "text0",
+          "switch0"
+        ]
+      }
+    },
+    "name1": {
+      "id": "name1",
+      "componentId": "ha-cards/remote-text",
+      "properties": {
+        "text": {
+          "type": "state",
+          "variable": "switch.s1.name"
+        },
+        "fontSize": {
+          "type": "float",
+          "value": 15.0
+        },
+        "color": {
+          "type": "string",
+          "value": "#FF141414"
+        },
+        "maxLines": {
+          "type": "int",
+          "value": 1
+        }
+      },
+      "modifiers": [],
+      "slots": {}
+    },
+    "state1": {
+      "id": "state1",
+      "componentId": "ha-cards/remote-text",
+      "properties": {
+        "text": {
+          "type": "state",
+          "variable": "switch.s1.state"
+        },
+        "fontSize": {
+          "type": "float",
+          "value": 13.0
+        },
+        "color": {
+          "type": "string",
+          "value": "#FF8F8F8F"
+        },
+        "maxLines": {
+          "type": "int",
+          "value": 1
+        }
+      },
+      "modifiers": [],
+      "slots": {}
+    },
+    "text1": {
+      "id": "text1",
+      "componentId": "layout/column",
+      "properties": {
+        "weight": {
+          "type": "float",
+          "value": 1.0
+        }
+      },
+      "modifiers": [],
+      "slots": {
+        "children": [
+          "name1",
+          "state1"
+        ]
+      }
+    },
+    "switch-label1": {
+      "id": "switch-label1",
+      "componentId": "ha-cards/remote-text",
+      "properties": {
+        "text": {
+          "type": "state",
+          "variable": "switch.s1.state"
+        },
+        "fontSize": {
+          "type": "float",
+          "value": 12.0
+        },
+        "color": {
+          "type": "string",
+          "value": "#FF8F8F8F"
+        },
+        "maxLines": {
+          "type": "int",
+          "value": 1
+        }
+      },
+      "modifiers": [],
+      "slots": {}
+    },
+    "switch1": {
+      "id": "switch1",
+      "componentId": "ha-cards/remote-switch-button",
+      "properties": {
+        "checked": {
+          "type": "state",
+          "variable": "switch.s1.is_on"
+        }
+      },
+      "modifiers": [],
+      "slots": {
+        "label": [
+          "switch-label1"
+        ],
+        "icon": [],
+        "secondaryLabel": []
+      }
+    },
+    "row1": {
+      "id": "row1",
+      "componentId": "layout/collapsible-row",
+      "properties": {
+        "horizontalSpacingDp": {
+          "type": "float",
+          "value": 12.0
+        },
+        "verticalAlignment": {
+          "type": "enum",
+          "value": "center"
+        }
+      },
+      "modifiers": [
+        {
+          "type": "fillMaxWidth"
+        }
+      ],
+      "slots": {
+        "children": [
+          "text1",
+          "switch1"
+        ]
+      }
+    },
+    "name2": {
+      "id": "name2",
+      "componentId": "ha-cards/remote-text",
+      "properties": {
+        "text": {
+          "type": "state",
+          "variable": "sensor.s2.name"
+        },
+        "fontSize": {
+          "type": "float",
+          "value": 15.0
+        },
+        "color": {
+          "type": "string",
+          "value": "#FF141414"
+        },
+        "maxLines": {
+          "type": "int",
+          "value": 1
+        }
+      },
+      "modifiers": [],
+      "slots": {}
+    },
+    "state2": {
+      "id": "state2",
+      "componentId": "ha-cards/remote-text",
+      "properties": {
+        "text": {
+          "type": "state",
+          "variable": "sensor.s2.state"
+        },
+        "fontSize": {
+          "type": "float",
+          "value": 13.0
+        },
+        "color": {
+          "type": "string",
+          "value": "#FF8F8F8F"
+        },
+        "maxLines": {
+          "type": "int",
+          "value": 1
+        }
+      },
+      "modifiers": [],
+      "slots": {}
+    },
+    "text2": {
+      "id": "text2",
+      "componentId": "layout/column",
+      "properties": {
+        "weight": {
+          "type": "float",
+          "value": 1.0
+        }
+      },
+      "modifiers": [],
+      "slots": {
+        "children": [
+          "name2",
+          "state2"
+        ]
+      }
+    },
+    "row2": {
+      "id": "row2",
+      "componentId": "layout/collapsible-row",
+      "properties": {
+        "horizontalSpacingDp": {
+          "type": "float",
+          "value": 12.0
+        },
+        "verticalAlignment": {
+          "type": "enum",
+          "value": "center"
+        }
+      },
+      "modifiers": [
+        {
+          "type": "fillMaxWidth"
+        }
+      ],
+      "slots": {
+        "children": [
+          "text2"
+        ]
+      }
+    },
+    "column": {
+      "id": "column",
+      "componentId": "layout/collapsible-column",
+      "properties": {
+        "verticalSpacingDp": {
+          "type": "float",
+          "value": 8.0
+        }
+      },
+      "modifiers": [
+        {
+          "type": "fillMaxWidth"
+        }
+      ],
+      "slots": {
+        "children": [
+          "title",
+          "row0",
+          "row1",
+          "row2"
+        ]
+      }
+    },
+    "root": {
+      "id": "root",
+      "componentId": "ha-cards/dashboard-card",
+      "properties": {},
+      "modifiers": [],
+      "slots": {
+        "content": [
+          "column"
+        ]
+      }
+    }
+  }
+}

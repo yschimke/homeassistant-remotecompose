@@ -238,12 +238,17 @@ class UiBuilderClient(private val config: UiBuilderConfig, private val http: Htt
 }
 
 /**
- * A UI Builder design seeded from a [CardSchema]: a `remote-m3` (RemoteCompose Material 3) document
- * whose state variables are the card's bindings, with their example values, and a starting layout
- * that already reads them — a header for the card's title, and a row per slot with its name and
- * state, and a switch bound to `is_on` for toggleable domains. The layout is adaptive: rows are
+ * A UI Builder design seeded from a [CardSchema]: a Remote Compose document whose state variables
+ * are the card's bindings, with their example values, and a starting layout that already reads them
+ * — a header for the card's title, and a row per slot with its name and state, and a switch bound
+ * to `is_on` for toggleable domains. On a card ([Target.adaptive]) the layout is adaptive: rows are
  * `collapsible-row`s in a `collapsible-column`, so content drops out rather than overflowing as the
  * card shrinks.
+ *
+ * Which catalog the document is pinned to, the component ids it is written in and the root it sits
+ * in are the [Target]'s: [Target.RemoteM3Card], the design server's own seed, is a `remote-m3`
+ * (RemoteCompose Material 3) card; [HaCardsSeed] retargets the same layout to the `ha-cards`
+ * catalog's dashboard card, Wear widget and launcher widget roots.
  *
  * The designer takes it from there in the editor. Binding names stay the template's binding names,
  * so what they design keeps reading the same values a client pushes.
@@ -256,25 +261,88 @@ object UiBuilderSeed {
   private val TOGGLEABLE =
     setOf("light", "switch", "fan", "input_boolean", "automation", "siren", "humidifier")
 
-  fun document(schema: CardSchema, designId: String, title: String): JsonObject {
+  /** Whether an entity of [domain] has an on/off a switch can show. */
+  fun toggleable(domain: String): Boolean = domain in TOGGLEABLE
+
+  /** The type roles the seed sets text in, largest first. */
+  enum class TextRole(val m3Style: String) {
+    Title("titleLarge"),
+    Name("titleMedium"),
+    State("bodyMedium"),
+    Label("labelMedium"),
+  }
+
+  /**
+   * Where a seeded document goes: its catalog, the ids of the text and switch it writes, the root
+   * it sits in, and how much of the card fits.
+   *
+   * @param textStyle the properties that set a [TextRole] on [textComponent]: a type role in
+   *   `remote-m3`, a size where the text has no theme type scale.
+   * @param rootSlot the root's slot the layout goes in.
+   * @param adaptive collapsible rows and column (a card) rather than plain ones (a widget, whose
+   *   profile has no collapsible layouts).
+   * @param maxRows how many slots get a row.
+   * @param title whether the card's title gets a header.
+   * @param widthDp the environment's width; null is a 360dp card.
+   * @param heightDp the environment's height; null grows with the rows.
+   * @param template the template marker a published starting design carries; null for a design.
+   */
+  class Target(
+    val systemId: String,
+    val catalogRevision: String,
+    val textComponent: String,
+    val textStyle: (TextRole) -> Map<String, JsonObject>,
+    val switchComponent: String?,
+    val rootComponent: String,
+    val rootSlot: String,
+    val rootProperties: Map<String, JsonObject> = emptyMap(),
+    val rootModifiers: List<JsonObject> = emptyList(),
+    val adaptive: Boolean = true,
+    val maxRows: Int = MAX_ROWS,
+    val title: Boolean = true,
+    val widthDp: Int? = null,
+    val heightDp: Int? = null,
+    val template: String? = null,
+  ) {
+    companion object {
+      /** The design server's seed: a `remote-m3` card, text set by type role. */
+      val RemoteM3Card =
+        Target(
+          systemId = CATALOG,
+          catalogRevision = CATALOG_REVISION,
+          textComponent = "remote-m3/remote-text",
+          textStyle = { mapOf("style" to enum(it.m3Style)) },
+          switchComponent = "remote-m3/remote-switch-button",
+          rootComponent = "remote-m3/remote-card",
+          rootSlot = "content",
+          rootModifiers = listOf(fillMaxWidth()),
+        )
+    }
+  }
+
+  fun document(schema: CardSchema, designId: String, title: String): JsonObject =
+    document(schema, designId, title, Target.RemoteM3Card)
+
+  fun document(schema: CardSchema, designId: String, title: String, target: Target): JsonObject {
     val byName = schema.bindings.associateBy { it.name }
     val nodes = LinkedHashMap<String, JsonObject>()
     val children = mutableListOf<String>()
 
-    val titleBinding = listOf("card.title", "card.name").firstOrNull { it in byName }
+    val titleBinding =
+      listOf("card.title", "card.name").firstOrNull { it in byName }.takeIf { target.title }
     if (titleBinding != null) {
-      nodes["title"] = text("title", titleBinding, "titleLarge")
+      nodes["title"] = text(target, "title", titleBinding, TextRole.Title)
       children += "title"
     }
-    for (slot in schema.slots.take(MAX_ROWS)) {
+    for (slot in schema.slots.take(target.maxRows)) {
       val i = slot.index
       val name = "${slot.slot}.name".takeIf { it in byName }
       val state = "${slot.slot}.state".takeIf { it in byName }
       val rowChildren = mutableListOf<String>()
       val texts =
         listOfNotNull(
-          name?.let { "name$i" to text("name$i", it, "titleMedium") },
-          state?.let { "state$i" to text("state$i", it, "bodyMedium") },
+          name?.let { "name$i" to text(target, "name$i", it, TextRole.Name) },
+          state?.let { "state$i" to text(target, "state$i", it, TextRole.State) },
         )
       if (texts.isNotEmpty()) {
         texts.forEach { (id, node) -> nodes[id] = node }
@@ -288,15 +356,17 @@ object UiBuilderSeed {
         rowChildren += "text$i"
       }
       val isOn = "${slot.slot}.is_on"
-      if (slot.domain in TOGGLEABLE && byName[isOn]?.type == BindingType.Bool) {
+      val switch = target.switchComponent
+      if (switch != null && toggleable(slot.domain) && byName[isOn]?.type == BindingType.Bool) {
         // The switch's label is the state text. A template that only binds `is_on` leaves it
         // unlabelled: the row already shows the name, and the boolean itself is no label.
         val label = state
-        if (label != null) nodes["switch-label$i"] = text("switch-label$i", label, "labelMedium")
+        if (label != null)
+          nodes["switch-label$i"] = text(target, "switch-label$i", label, TextRole.Label)
         nodes["switch$i"] =
           node(
             "switch$i",
-            "remote-m3/remote-switch-button",
+            switch,
             properties = mapOf("checked" to stateValue(isOn)),
             slots =
               mapOf(
@@ -311,7 +381,7 @@ object UiBuilderSeed {
       nodes["row$i"] =
         node(
           "row$i",
-          "layout/collapsible-row",
+          if (target.adaptive) "layout/collapsible-row" else "layout/row",
           properties =
             mapOf("horizontalSpacingDp" to float(12.0), "verticalAlignment" to enum("center")),
           modifiers = listOf(fillMaxWidth()),
@@ -322,45 +392,65 @@ object UiBuilderSeed {
     nodes["column"] =
       node(
         "column",
-        "layout/collapsible-column",
-        properties = mapOf("verticalSpacingDp" to float(8.0)),
+        if (target.adaptive) "layout/collapsible-column" else "layout/column",
+        properties = mapOf("verticalSpacingDp" to float(if (target.adaptive) 8.0 else 4.0)),
         modifiers = listOf(fillMaxWidth()),
         slots = mapOf("children" to children),
       )
     nodes["root"] =
       node(
         "root",
-        "remote-m3/remote-card",
-        modifiers = listOf(fillMaxWidth()),
-        slots = mapOf("content" to listOf("column")),
+        target.rootComponent,
+        properties = target.rootProperties,
+        modifiers = target.rootModifiers,
+        slots = mapOf(target.rootSlot to listOf("column")),
       )
 
-    return buildJsonObject {
-      put("schema", "compose-ui-builder-document/v1-candidate")
-      put("id", designId)
-      put("title", title)
-      put("revision", 0)
-      putJsonObject("catalogPin") {
-        put("systemId", CATALOG)
-        put("catalogRevision", CATALOG_REVISION)
-        put("capabilityDigest", "candidate")
-        put("nativeRuntimeId", "candidate")
-      }
-      putJsonObject("environment") {
-        put("widthDp", 360)
-        put("heightDp", 96 + 64 * (children.size.coerceAtLeast(1)))
-        put("density", 2)
-        put("theme", "light")
-        put("locale", "en-US")
-        put("fontScale", 1)
-        put("layoutDirection", "ltr")
-      }
-      putJsonObject("stateVariables") {
-        for (binding in schema.bindings) stateVariable(binding)?.let { put(binding.name, it) }
-      }
-      putJsonArray("roots") { add(JsonPrimitive("root")) }
-      putJsonObject("nodes") { nodes.forEach { (id, node) -> put(id, node) } }
+    return envelope(
+      target,
+      designId,
+      title,
+      heightDp = target.heightDp ?: (96 + 64 * (children.size.coerceAtLeast(1))),
+      stateVariables = schema.bindings.mapNotNull { b -> stateVariable(b)?.let { b.name to it } },
+      nodes = nodes,
+    )
+  }
+
+  /**
+   * A document pinned to [target]'s catalog, holding [nodes] under the single root `root`: what
+   * every seeded design shares, whatever its layout.
+   */
+  fun envelope(
+    target: Target,
+    designId: String,
+    title: String,
+    heightDp: Int,
+    stateVariables: List<Pair<String, JsonObject>>,
+    nodes: Map<String, JsonObject>,
+  ): JsonObject = buildJsonObject {
+    put("schema", "compose-ui-builder-document/v1-candidate")
+    put("id", designId)
+    put("title", title)
+    put("revision", 0)
+    target.template?.let { put("template", it) }
+    putJsonObject("catalogPin") {
+      put("systemId", target.systemId)
+      put("catalogRevision", target.catalogRevision)
+      put("capabilityDigest", "candidate")
+      put("nativeRuntimeId", "candidate")
     }
+    putJsonObject("environment") {
+      put("widthDp", target.widthDp ?: 360)
+      put("heightDp", heightDp)
+      put("density", 2)
+      put("theme", "light")
+      put("locale", "en-US")
+      put("fontScale", 1)
+      put("layoutDirection", "ltr")
+    }
+    putJsonObject("stateVariables") { stateVariables.forEach { (name, v) -> put(name, v) } }
+    putJsonArray("roots") { add(JsonPrimitive("root")) }
+    putJsonObject("nodes") { nodes.forEach { (id, node) -> put(id, node) } }
   }
 
   /** A path-safe design id for [schema], unique per call. */
@@ -399,15 +489,15 @@ object UiBuilderSeed {
     }
   }
 
-  private fun text(id: String, variable: String, style: String) =
+  private fun text(target: Target, id: String, variable: String, role: TextRole) =
     node(
       id,
-      "remote-m3/remote-text",
+      target.textComponent,
       properties =
-        mapOf("text" to stateValue(variable), "style" to enum(style), "maxLines" to int(1)),
+        mapOf("text" to stateValue(variable)) + target.textStyle(role) + ("maxLines" to int(1)),
     )
 
-  private fun node(
+  fun node(
     id: String,
     componentId: String,
     properties: Map<String, JsonObject> = emptyMap(),
@@ -423,25 +513,30 @@ object UiBuilderSeed {
     }
   }
 
-  private fun stateValue(variable: String) = buildJsonObject {
+  fun stateValue(variable: String) = buildJsonObject {
     put("type", "state")
     put("variable", variable)
   }
 
-  private fun enum(value: String) = buildJsonObject {
+  fun string(value: String) = buildJsonObject {
+    put("type", "string")
+    put("value", value)
+  }
+
+  fun enum(value: String) = buildJsonObject {
     put("type", "enum")
     put("value", value)
   }
 
-  private fun float(value: Double) = buildJsonObject {
+  fun float(value: Double) = buildJsonObject {
     put("type", "float")
     put("value", value)
   }
 
-  private fun int(value: Int) = buildJsonObject {
+  fun int(value: Int) = buildJsonObject {
     put("type", "int")
     put("value", value)
   }
 
-  private fun fillMaxWidth() = buildJsonObject { put("type", "fillMaxWidth") }
+  fun fillMaxWidth() = buildJsonObject { put("type", "fillMaxWidth") }
 }

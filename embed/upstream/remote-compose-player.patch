@@ -1,0 +1,194 @@
+--- a/players/typescript/src/core/operations/layout/modifiers/ActionOperations.ts
++++ b/players/typescript/src/core/operations/layout/modifiers/ActionOperations.ts
+@@ -1,5 +1,5 @@
+ // ActionOperations: action modifier operations that execute on click/touch events.
+-// Port of Java HostActionOperation, HostNamedActionOperation,
++// Port of Java HostActionOperation, HostNamedActionOperation, HostActionMetadataOperation,
+ // ValueIntegerChangeAction, ValueStringChangeAction, ValueFloatChangeAction.
+ 
+ import { Operation } from '../../../Operation';
+@@ -86,6 +86,48 @@
+     }
+ }
+ 
++// ── HostActionMetadataOperation (216): INT actionId, INT metadataId ───
++/**
++ * A numeric host action that also hands the host a string: the text `metadataId` names,
++ * resolved **when the action runs**, so a dynamic string (a merge of named variables, a
++ * formatted float) carries its current value rather than the one it had at load.
++ *
++ * Mirrors the Java reference: `apply` outside a click does nothing, a missing text is
++ * the empty string, and the host sees it through the same `runAction(id, metadata)`
++ * channel as {@link HostActionOperation} — `CoreDocument.addIdActionListener`.
++ */
++export class HostActionMetadataOperation extends Operation {
++    static readonly OP_CODE = 216;
++    private mActionId: number;
++    private mMetadataId: number;
++
++    constructor(actionId: number, metadataId: number) {
++        super();
++        this.mActionId = actionId;
++        this.mMetadataId = metadataId;
++    }
++
++    getActionId(): number { return this.mActionId; }
++    getMetadataId(): number { return this.mMetadataId; }
++
++    write(_buffer: WireBuffer): void { /* stub */ }
++
++    // Action operations run from their click modifier's list, which calls apply().
++    apply(context: RemoteContext): void {
++        context.runAction(this.mActionId, context.getText(this.mMetadataId) ?? '');
++    }
++
++    deepToString(indent: string): string {
++        return `${indent}HostActionMetadataOperation(${this.mActionId}, ${this.mMetadataId})`;
++    }
++
++    static read(buffer: WireBuffer, operations: Operation[]): void {
++        const actionId = buffer.readId();
++        const metadataId = buffer.readId();
++        operations.push(new HostActionMetadataOperation(actionId, metadataId));
++    }
++}
++
+ // ── ValueIntegerChangeAction (212): INT valueId, INT value ────────────
+ export class ValueIntegerChangeAction extends Operation {
+     static readonly OP_CODE = 212;
+--- a/players/typescript/src/core/operations/StubOperations.ts
++++ b/players/typescript/src/core/operations/StubOperations.ts
+@@ -144,20 +144,6 @@
+     }
+ }
+ 
+-// ── HostActionMetadataOperation (216) ───────────────────────────────
+-export class HostActionMetadataOperation extends Operation {
+-    static readonly OP_CODE = 216;
+-    constructor() { super(); }
+-    write(_buffer: WireBuffer): void { /* stub */ }
+-    apply(_context: RemoteContext): void { /* stub */ }
+-    deepToString(indent: string): string { return `${indent}HostActionMetadataOperation`; }
+-    static read(buffer: WireBuffer, operations: Operation[]): void {
+-        buffer.readInt(); // actionId
+-        buffer.readInt(); // metadataId
+-        operations.push(new HostActionMetadataOperation());
+-    }
+-}
+-
+ // ── RunActionOperation (236): container — children are action operations ──
+ /**
+  * Runs its child actions **as part of painting**, once per frame.
+--- a/players/typescript/src/core/Operations.ts
++++ b/players/typescript/src/core/Operations.ts
+@@ -93,7 +93,7 @@
+ import {
+     ImpulseOperation, ImpulseProcess,
+     DebugMessage,
+-    HostActionMetadataOperation, RunActionOperation,
++    RunActionOperation,
+     ValueFloatExpressionChangeAction,
+     PathTween, HapticFeedback, WakeIn, TimeAttribute
+ } from './operations/StubOperations';
+@@ -115,7 +115,7 @@
+ import { ImageLayout } from './operations/layout/managers/ImageLayout';
+ import { StateLayout } from './operations/layout/managers/StateLayout';
+ import {
+-    HostActionOperation, HostNamedActionOperation,
++    HostActionOperation, HostNamedActionOperation, HostActionMetadataOperation,
+     ValueIntegerChangeAction, ValueStringChangeAction,
+     ValueIntegerExpressionChangeAction, ValueFloatChangeAction
+ } from './operations/layout/modifiers/ActionOperations';
+--- a/players/typescript/src/web/WebRemoteContext.ts
++++ b/players/typescript/src/web/WebRemoteContext.ts
+@@ -17,6 +17,8 @@
+     private namedBooleanOverrides = new Map<string, boolean>();
+     private namedIntegerOverrides = new Map<string, number>();
+     private namedFloatOverrides = new Map<string, number>();
++    // Text ids a named string override holds, and their values.
++    private textOverrides = new Map<number, string>();
+ 
+     constructor(paintContext: CanvasPaintContext, clock: RemoteClock = SYSTEM_CLOCK) {
+         super(clock);
+@@ -77,13 +79,20 @@
+     setNamedStringOverride(stringName: string, value: string): void {
+         this.namedStringOverrides.set(stringName, value);
+         const v = this.namedVariables.get(stringName);
+-        if (v) this.mRemoteComposeState.overrideData(v.id, value);
++        if (!v) return;
++        // Text is drawn from the paint context's cache, so it takes the value first: the
++        // override notifies listeners (CoreText), which read it back through getText.
++        this.textOverrides.set(v.id, value);
++        this.canvasPaintContext.loadText(v.id, value);
++        this.mRemoteComposeState.overrideData(v.id, value);
+     }
+ 
+     clearNamedStringOverride(stringName: string): void {
+         this.namedStringOverrides.delete(stringName);
+         const v = this.namedVariables.get(stringName);
+-        if (v) this.mRemoteComposeState.clearDataOverride(v.id);
++        if (!v) return;
++        this.textOverrides.delete(v.id);
++        this.mRemoteComposeState.clearDataOverride(v.id);
+     }
+ 
+     // --- Boolean ---
+@@ -186,6 +195,9 @@
+     // --- Text ---
+ 
+     loadText(id: number, text: string): void {
++        // An overridden id keeps its override: the document re-applies its TextData on
++        // later passes, and would otherwise put the authored text back.
++        if (this.textOverrides.has(id)) return;
+         this.mRemoteComposeState.cacheDataWithId(id, text);
+         this.canvasPaintContext.loadText(id, text);
+     }
+--- /dev/null
++++ b/players/typescript/src/host-action.test.ts
+@@ -0,0 +1,46 @@
++import assert from 'node:assert/strict';
++import { Operations } from './core/Operations';
++import { WireBuffer } from './core/WireBuffer';
++import { HostActionMetadataOperation } from './core/operations/layout/modifiers/ActionOperations';
++import { WebRemoteContext } from './web/WebRemoteContext';
++
++// HostActionMetadataOperation (216): the reader takes both ids, and the action hands the host the
++// metadata text as it is when the action runs — through the id-action channel.
++{
++    const data = new DataView(new ArrayBuffer(8));
++    data.setInt32(0, 7);
++    data.setInt32(4, 42);
++    const ops: any[] = [];
++    Operations.getReader(HostActionMetadataOperation.OP_CODE)!(WireBuffer.fromArrayBuffer(data.buffer), ops);
++    const op = ops[0] as HostActionMetadataOperation;
++    assert.ok(op instanceof HostActionMetadataOperation, '216 decodes to a real operation, not a stub');
++    assert.equal(op.getActionId(), 7);
++    assert.equal(op.getMetadataId(), 42);
++
++    const texts = new Map<number, string>([[42, '{"entityId":"light.kitchen"}']]);
++    const runs: Array<[number, string]> = [];
++    const ctx: any = { getText: (id: number) => texts.get(id) ?? null, runAction: (id: number, m: string) => runs.push([id, m]) };
++    op.apply(ctx);
++    texts.set(42, 'changed');
++    op.apply(ctx);
++    new HostActionMetadataOperation(8, 99).apply(ctx);
++    assert.deepEqual(runs, [[7, '{"entityId":"light.kitchen"}'], [7, 'changed'], [8, '']]);
++    console.log('host action metadata ok');
++}
++
++// A named string override is what text draws: it reaches the paint cache, and the document's own
++// TextData, re-applied on a later pass, does not put the authored text back.
++{
++    const cache = new Map<number, string>();
++    const paint: any = { loadText: (id: number, t: string) => cache.set(id, t), getText: (id: number) => cache.get(id) ?? null };
++    const ctx = new WebRemoteContext(paint);
++    ctx.loadText(59, 'Name');
++    ctx.loadVariableName('USER:light.s0.name', 59, 0);
++    ctx.setNamedStringOverride('USER:light.s0.name', 'Kitchen');
++    assert.equal(ctx.getText(59), 'Kitchen', 'the override is drawn');
++    ctx.loadText(59, 'Name');
++    assert.equal(ctx.getText(59), 'Kitchen', 'a re-applied TextData keeps the override');
++    ctx.loadText(60, 'Other');
++    assert.equal(ctx.getText(60), 'Other', 'other text still loads');
++    console.log('named string override ok');
++}

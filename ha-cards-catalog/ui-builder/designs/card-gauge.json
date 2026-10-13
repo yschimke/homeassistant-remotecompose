@@ -1,0 +1,71 @@
+{
+  "schema": "compose-ui-builder-document/v1-candidate",
+  "id": "card-gauge",
+  "title": "Gauge",
+  "revision": 0,
+  "template": "card-gauge",
+  "catalogPin": {
+    "systemId": "ha-cards",
+    "catalogRevision": "candidate",
+    "capabilityDigest": "candidate",
+    "nativeRuntimeId": "candidate"
+  },
+  "environment": {
+    "widthDp": 360,
+    "heightDp": 220,
+    "density": 2,
+    "theme": "light",
+    "locale": "en-US",
+    "fontScale": 1,
+    "layoutDirection": "ltr"
+  },
+  "stateVariables": {},
+  "roots": [
+    "root"
+  ],
+  "nodes": {
+    "root": {
+      "id": "root",
+      "componentId": "ha-cards/dashboard-card",
+      "properties": {},
+      "modifiers": [],
+      "slots": {
+        "content": [
+          "gauge"
+        ]
+      }
+    },
+    "gauge": {
+      "id": "gauge",
+      "componentId": "ha-cards/gauge",
+      "properties": {
+        "name": {
+          "type": "string",
+          "value": "Humidity"
+        },
+        "value": {
+          "type": "float",
+          "value": 46.0
+        },
+        "min": {
+          "type": "float",
+          "value": 0.0
+        },
+        "max": {
+          "type": "float",
+          "value": 100.0
+        },
+        "unit": {
+          "type": "string",
+          "value": "%"
+        },
+        "entityId": {
+          "type": "string",
+          "value": "sensor.humidity"
+        }
+      },
+      "modifiers": [],
+      "slots": {}
+    }
+  }
+}

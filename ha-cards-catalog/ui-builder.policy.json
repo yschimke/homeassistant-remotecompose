@@ -1,0 +1,1132 @@
+{
+  "$schema": "https://raw.githubusercontent.com/yschimke/compose-ai-tools/main/scripts/design-artifacts/ui-builder.policy.schema.json",
+  "$comment": "Catalog-level UI builder policy for :ha-cards-catalog, the `ha-cards` system: Home Assistant cards in Remote Compose, the palette of the white-labelled builder on ha.coo.ee. Modelled on yschimke/remote-m3-catalog's two policies (remote-catalog's `remote-m3`, widget-catalog's `remote-widgets`). The palette is the HA card components (scalar wrappers over :rc-components' RemoteHa*, HaCardComponents.kt) plus a core of Remote Material 3 re-declared under `ha-cards/` (a catalog cannot extend another). Three design targets share it, told apart by a design's ROOT: the `ha-cards/dashboard-card` builtin (a dashboard card), the Wear widget containers, and the launcher widget. Per-component policy is here rather than on @BuilderComponent stickers, so this file and the templates are one review.",
+  "schema": "compose-ui-builder-policy/v1",
+  "platform": "remote-compose",
+  "platformLabel": "RemoteCompose · Home Assistant cards",
+  "previewSurfaces": {
+    "native": {
+      "fidelity": "authoritative",
+      "backend": "android",
+      "reason": "The generated Remote Compose Kotlin compiled against this module's own classpath (:rc-components and the alpha Remote Compose + remote-material3 the app ships) and rasterised by the real player — the lane every sticker in this catalog renders through."
+    }
+  },
+  "$comment_previewSurfaces": "No `wasm` surface. The HA components are Android Remote Compose wrappers with no Compose Multiplatform stand-in, so in the browser's Visual Editor they draw as native placeholders (`component.canvas.unclaimed`) until a Wasm runtime for them exists; the Remote Material 3 entries and the heading borrow wear-m3's canvases as remote-m3 does.",
+  "frame": {
+    "$comment_adapter": "One frame per catalog, so one adapter for three targets: `frame/widget-host`, remote-m3's — a design is drawn into a host rectangle of a fixed size, which is what a dashboard card slot, a Wear widget container and a launcher cell all are. The sizes list all three; each template sets its own environment size, and the root decides the export (RecordFreeExport: Wear widget container → GlanceWearWidget, `remote-widgets/launcher-widget` → RemoteComposeWidget, else inline RemoteContent).",
+    "adapter": "frame/widget-host",
+    "geometry": {
+      "$comment": "Dashboard cards at the single-column phone width the :previews sheet uses (360dp), short to tall; the two Wear widget containers WearWidgetContainer declares (200x60 and 200x108dp of content plus 8dp padding); and the launcher grid sizes remote-widgets documents, (73n - 16) x (118m - 16) dp.",
+      "sizesDp": [
+        {
+          "widthDp": 360,
+          "heightDp": 96,
+          "label": "Card · 360×96"
+        },
+        {
+          "widthDp": 360,
+          "heightDp": 200,
+          "label": "Card · 360×200"
+        },
+        {
+          "widthDp": 360,
+          "heightDp": 320,
+          "label": "Card · 360×320"
+        },
+        {
+          "widthDp": 216,
+          "heightDp": 76,
+          "label": "Wear · Small"
+        },
+        {
+          "widthDp": 216,
+          "heightDp": 124,
+          "label": "Wear · Large"
+        },
+        {
+          "widthDp": 130,
+          "heightDp": 102,
+          "label": "2x1"
+        },
+        {
+          "widthDp": 130,
+          "heightDp": 220,
+          "label": "2x2"
+        },
+        {
+          "widthDp": 203,
+          "heightDp": 102,
+          "label": "3x1"
+        },
+        {
+          "widthDp": 203,
+          "heightDp": 220,
+          "label": "3x2"
+        },
+        {
+          "widthDp": 276,
+          "heightDp": 102,
+          "label": "4x1"
+        },
+        {
+          "widthDp": 276,
+          "heightDp": 220,
+          "label": "4x2"
+        }
+      ]
+    }
+  },
+  "$comment_composeSourceExport": "The generic Remote Compose emitter, which dispatches on a design's root: a Wear widget container (WEAR_WIDGET_CONTAINER_IDS) exports through WearWidgetCodeExporter, `remote-widgets/launcher-widget` (LauncherWidgetCodeExporter.ROOT) through LauncherWidgetCodeExporter, and anything else — the dashboard card — as inline RemoteContent. Not `remote-compose-launcher-widget`, which would refuse every root but the launcher's.",
+  "composeSourceExport": {
+    "adapter": "remote-compose",
+    "version": 1
+  },
+  "menu": {
+    "$comment": "This catalog's groups. The three roots lead, then the HA components, then the Remote Material 3 core.",
+    "groupOrder": [
+      "Dashboard card",
+      "Wear widget",
+      "Launcher widget",
+      "Home Assistant",
+      "Containment",
+      "Buttons",
+      "Selection buttons",
+      "Text",
+      "Iconography"
+    ]
+  },
+  "$comment_builtins": "The three design roots, none with a call site of its own. `ha-cards/dashboard-card` exports as HaCardSurface (its `implementation`), which draws the HA card chrome and turns the chrome of the RemoteHa* cards inside it off. The Wear widget containers keep remote-m3's ids and the launcher root remote-widgets' id because the export dispatches on those exact ids; nothing checks a builtin's id against this catalog's `ha-cards/` prefix, so they are declared here under their own.",
+  "builtins": {
+    "ha-cards/dashboard-card": {
+      "role": "screen-root",
+      "displayName": "Dashboard card",
+      "group": "Dashboard card",
+      "canvas": "layout/box",
+      "traits": [
+        "ScreenContent",
+        "RemoteContentHost"
+      ],
+      "slots": {
+        "content": {
+          "acceptedRoles": [
+            "Scaffold",
+            "Container",
+            "Leaf"
+          ],
+          "acceptedTraits": [
+            "RemoteAuthorable"
+          ],
+          "max": 1
+        }
+      },
+      "implementation": "ha-cards-catalog/ee.schimke.ha.cards.HaCardComponentsKt.HaCardSurface",
+      "properties": [],
+      "modifierCapabilities": []
+    },
+    "remote-m3/widget-container-small": {
+      "role": "screen-root",
+      "displayName": "Wear widget · Small (216×76dp)",
+      "group": "Wear widget",
+      "canvas": "widget-container",
+      "traits": [
+        "ScreenContent",
+        "WearWidgetHost",
+        "RemoteContentHost"
+      ],
+      "slots": {
+        "background": {
+          "acceptedRoles": [
+            "Leaf"
+          ],
+          "acceptedTraits": [
+            "DrawLayer",
+            "ImageContent"
+          ]
+        },
+        "content": {
+          "acceptedRoles": [
+            "Scaffold",
+            "Container",
+            "Leaf"
+          ],
+          "acceptedTraits": [
+            "RemoteAuthorable"
+          ],
+          "max": 1
+        }
+      },
+      "properties": [
+        {
+          "name": "background",
+          "jsonType": "string",
+          "required": false,
+          "notes": "The widget's own background, painted by the host inside the frame it draws: a `#AARRGGBB` literal. Unset is #FF272430, the colour WearWidgetContainer gives a widget that declares none. Padding and corner radius are the host's (WearWidgetParams), so the root never authors them."
+        }
+      ],
+      "modifierCapabilities": []
+    },
+    "remote-m3/widget-container-large": {
+      "role": "screen-root",
+      "displayName": "Wear widget · Large (216×124dp)",
+      "group": "Wear widget",
+      "canvas": "widget-container",
+      "traits": [
+        "ScreenContent",
+        "WearWidgetHost",
+        "RemoteContentHost"
+      ],
+      "slots": {
+        "background": {
+          "acceptedRoles": [
+            "Leaf"
+          ],
+          "acceptedTraits": [
+            "DrawLayer",
+            "ImageContent"
+          ]
+        },
+        "content": {
+          "acceptedRoles": [
+            "Scaffold",
+            "Container",
+            "Leaf"
+          ],
+          "acceptedTraits": [
+            "RemoteAuthorable"
+          ],
+          "max": 1
+        }
+      },
+      "properties": [
+        {
+          "name": "background",
+          "jsonType": "string",
+          "required": false,
+          "notes": "The widget's own background, painted by the host inside the frame it draws: a `#AARRGGBB` literal. Unset is #FF272430, the colour WearWidgetContainer gives a widget that declares none. Padding and corner radius are the host's (WearWidgetParams), so the root never authors them."
+        }
+      ],
+      "modifierCapabilities": []
+    },
+    "remote-widgets/launcher-widget": {
+      "role": "screen-root",
+      "displayName": "Launcher widget",
+      "group": "Launcher widget",
+      "canvas": "layout/box",
+      "traits": [
+        "ScreenContent",
+        "LauncherWidgetHost",
+        "RemoteContentHost"
+      ],
+      "slots": {
+        "content": {
+          "acceptedRoles": [
+            "Scaffold",
+            "Container",
+            "Leaf"
+          ],
+          "acceptedTraits": [
+            "RemoteAuthorable"
+          ],
+          "max": 1
+        }
+      },
+      "properties": [
+        {
+          "name": "background",
+          "jsonType": "string",
+          "required": false,
+          "notes": "The widget's background, filling the cell the launcher gives it: a `#AARRGGBB` literal, written `RemoteModifier.background(Color(0x…).rc)`. Unset leaves the widget transparent over the wallpaper. The corner radius is the launcher's."
+        }
+      ],
+      "modifierCapabilities": []
+    }
+  },
+  "$comment_components": "Each `record` names the discovered call (module-relative FQN). The HA components draw as placeholders in the browser canvas (see $comment_previewSurfaces); `icon` keys are HaCardIcons' and HaCardIconsTest holds the two lists together. The Remote Material 3 entries are remote-m3's, minus what only remote-m3's id-keyed emitter can write: text is set by size (no `style` role) and the icon is HA's keyed one rather than RemoteIcon's ImageVector.",
+  "components": {
+    "ha-cards/tile": {
+      "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardComponentsKt.HaCardTile",
+      "displayName": "Tile",
+      "group": "Home Assistant",
+      "insertContent": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "value": "Kitchen"
+          },
+          "state": {
+            "type": "string",
+            "value": "On"
+          }
+        }
+      },
+      "propertyCapabilities": [
+        {
+          "name": "name",
+          "jsonType": "string",
+          "required": true,
+          "notes": "The entity's friendly name."
+        },
+        {
+          "name": "state",
+          "jsonType": "string",
+          "required": true,
+          "notes": "The state as HA shows it (`On`, `21.5 °C`)."
+        },
+        {
+          "name": "entityId",
+          "jsonType": "string",
+          "required": false,
+          "notes": "The Home Assistant entity this card shows (`light.kitchen`). Set, the name/state/on values become the entity's named bindings (`<entityId>.state`, `<entityId>.is_on`) so the exported card keeps up with Home Assistant, and a tap toggles a toggleable entity or opens its more-info. Blank, the values are constants."
+        },
+        {
+          "name": "icon",
+          "jsonType": "string",
+          "required": false,
+          "allowedValues": [
+            "home",
+            "light",
+            "switch",
+            "climate",
+            "sensor",
+            "fan",
+            "lock",
+            "door",
+            "power",
+            "water",
+            "media",
+            "alert"
+          ],
+          "notes": "An entity icon by key, drawn by HaCardIcons: the Remote icon is an ImageVector a design cannot spell, so it names one. Unset is `light`."
+        },
+        {
+          "name": "toggleable",
+          "jsonType": "boolean",
+          "required": false,
+          "notes": "Whether the entity has an on/off the accent follows (a light, a switch). Bound to an entity, the accent then tracks `<entityId>.is_on`."
+        },
+        {
+          "name": "isOn",
+          "jsonType": "boolean",
+          "required": false,
+          "notes": "The on/off value at capture: the accent when no entity is bound, and the binding's seed when one is."
+        },
+        {
+          "name": "activeColor",
+          "jsonType": "string",
+          "required": false,
+          "notes": "A `#AARRGGBB` literal, written `Color(0x…).rc`. Unset is HA's light-on amber, #FFFFC107."
+        },
+        {
+          "name": "inactiveColor",
+          "jsonType": "string",
+          "required": false,
+          "notes": "A `#AARRGGBB` literal, written `Color(0x…).rc`. Unset is HA's inactive grey, #FF8F8F8F."
+        }
+      ]
+    },
+    "ha-cards/entity-row": {
+      "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardComponentsKt.HaCardEntityRow",
+      "displayName": "Entity row",
+      "group": "Home Assistant",
+      "insertContent": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "value": "Kitchen"
+          },
+          "state": {
+            "type": "string",
+            "value": "On"
+          }
+        }
+      },
+      "propertyCapabilities": [
+        {
+          "name": "name",
+          "jsonType": "string",
+          "required": true,
+          "notes": "The entity's friendly name."
+        },
+        {
+          "name": "state",
+          "jsonType": "string",
+          "required": true,
+          "notes": "The state as HA shows it."
+        },
+        {
+          "name": "entityId",
+          "jsonType": "string",
+          "required": false,
+          "notes": "The Home Assistant entity this card shows (`light.kitchen`). Set, the name/state/on values become the entity's named bindings (`<entityId>.state`, `<entityId>.is_on`) so the exported card keeps up with Home Assistant, and a tap toggles a toggleable entity or opens its more-info. Blank, the values are constants."
+        },
+        {
+          "name": "icon",
+          "jsonType": "string",
+          "required": false,
+          "allowedValues": [
+            "home",
+            "light",
+            "switch",
+            "climate",
+            "sensor",
+            "fan",
+            "lock",
+            "door",
+            "power",
+            "water",
+            "media",
+            "alert"
+          ],
+          "notes": "An entity icon by key, drawn by HaCardIcons: the Remote icon is an ImageVector a design cannot spell, so it names one. Unset is `light`."
+        },
+        {
+          "name": "toggleable",
+          "jsonType": "boolean",
+          "required": false,
+          "notes": "Whether the entity has an on/off the accent follows (a light, a switch). Bound to an entity, the accent then tracks `<entityId>.is_on`."
+        },
+        {
+          "name": "isOn",
+          "jsonType": "boolean",
+          "required": false,
+          "notes": "The on/off value at capture: the accent when no entity is bound, and the binding's seed when one is."
+        },
+        {
+          "name": "activeColor",
+          "jsonType": "string",
+          "required": false,
+          "notes": "A `#AARRGGBB` literal, written `Color(0x…).rc`. Unset is HA's light-on amber, #FFFFC107."
+        },
+        {
+          "name": "inactiveColor",
+          "jsonType": "string",
+          "required": false,
+          "notes": "A `#AARRGGBB` literal, written `Color(0x…).rc`. Unset is HA's inactive grey, #FF8F8F8F."
+        }
+      ]
+    },
+    "ha-cards/entities": {
+      "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardComponentsKt.HaCardEntities",
+      "displayName": "Entities (simple)",
+      "group": "Home Assistant",
+      "insertContent": {
+        "properties": {
+          "title": {
+            "type": "string",
+            "value": "Living room"
+          },
+          "row1Name": {
+            "type": "string",
+            "value": "Ceiling light"
+          },
+          "row1State": {
+            "type": "string",
+            "value": "On"
+          }
+        }
+      },
+      "propertyCapabilities": [
+        {
+          "name": "title",
+          "jsonType": "string",
+          "required": true,
+          "notes": "The card's title. Blank draws no header."
+        },
+        {
+          "name": "row1Name",
+          "jsonType": "string",
+          "required": false,
+          "notes": "Row 1's name. Blank leaves the row out."
+        },
+        {
+          "name": "row1State",
+          "jsonType": "string",
+          "required": false,
+          "notes": "Row 1's state, as shown."
+        },
+        {
+          "name": "row1Icon",
+          "jsonType": "string",
+          "required": false,
+          "allowedValues": [
+            "home",
+            "light",
+            "switch",
+            "climate",
+            "sensor",
+            "fan",
+            "lock",
+            "door",
+            "power",
+            "water",
+            "media",
+            "alert"
+          ],
+          "notes": "An entity icon by key, drawn by HaCardIcons: the Remote icon is an ImageVector a design cannot spell, so it names one. Unset is `light`."
+        },
+        {
+          "name": "row2Name",
+          "jsonType": "string",
+          "required": false,
+          "notes": "Row 2's name. Blank leaves the row out."
+        },
+        {
+          "name": "row2State",
+          "jsonType": "string",
+          "required": false,
+          "notes": "Row 2's state, as shown."
+        },
+        {
+          "name": "row2Icon",
+          "jsonType": "string",
+          "required": false,
+          "allowedValues": [
+            "home",
+            "light",
+            "switch",
+            "climate",
+            "sensor",
+            "fan",
+            "lock",
+            "door",
+            "power",
+            "water",
+            "media",
+            "alert"
+          ],
+          "notes": "An entity icon by key, drawn by HaCardIcons: the Remote icon is an ImageVector a design cannot spell, so it names one. Unset is `light`."
+        },
+        {
+          "name": "row3Name",
+          "jsonType": "string",
+          "required": false,
+          "notes": "Row 3's name. Blank leaves the row out."
+        },
+        {
+          "name": "row3State",
+          "jsonType": "string",
+          "required": false,
+          "notes": "Row 3's state, as shown."
+        },
+        {
+          "name": "row3Icon",
+          "jsonType": "string",
+          "required": false,
+          "allowedValues": [
+            "home",
+            "light",
+            "switch",
+            "climate",
+            "sensor",
+            "fan",
+            "lock",
+            "door",
+            "power",
+            "water",
+            "media",
+            "alert"
+          ],
+          "notes": "An entity icon by key, drawn by HaCardIcons: the Remote icon is an ImageVector a design cannot spell, so it names one. Unset is `light`."
+        }
+      ]
+    },
+    "ha-cards/gauge": {
+      "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardComponentsKt.HaCardGauge",
+      "displayName": "Gauge",
+      "group": "Home Assistant",
+      "insertContent": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "value": "Humidity"
+          },
+          "value": {
+            "type": "float",
+            "value": 46
+          }
+        }
+      },
+      "propertyCapabilities": [
+        {
+          "name": "name",
+          "jsonType": "string",
+          "required": true,
+          "notes": "The entity's friendly name."
+        },
+        {
+          "name": "value",
+          "jsonType": "number",
+          "required": true,
+          "notes": "The reading, clamped to min..max on the dial."
+        },
+        {
+          "name": "min",
+          "jsonType": "number",
+          "required": false,
+          "notes": "The dial's minimum; 0 when unset."
+        },
+        {
+          "name": "max",
+          "jsonType": "number",
+          "required": false,
+          "notes": "The dial's maximum; 100 when unset."
+        },
+        {
+          "name": "unit",
+          "jsonType": "string",
+          "required": false,
+          "notes": "The unit after the reading (`%`, `°C`)."
+        },
+        {
+          "name": "entityId",
+          "jsonType": "string",
+          "required": false,
+          "notes": "The Home Assistant entity this card shows (`light.kitchen`). Set, the name/state/on values become the entity's named bindings (`<entityId>.state`, `<entityId>.is_on`) so the exported card keeps up with Home Assistant, and a tap toggles a toggleable entity or opens its more-info. Blank, the values are constants."
+        }
+      ]
+    },
+    "ha-cards/glance": {
+      "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardComponentsKt.HaCardGlance",
+      "displayName": "Glance",
+      "group": "Home Assistant",
+      "insertContent": {
+        "properties": {
+          "title": {
+            "type": "string",
+            "value": "At a glance"
+          },
+          "cell1Name": {
+            "type": "string",
+            "value": "Hall"
+          },
+          "cell1State": {
+            "type": "string",
+            "value": "Off"
+          }
+        }
+      },
+      "propertyCapabilities": [
+        {
+          "name": "title",
+          "jsonType": "string",
+          "required": true,
+          "notes": "The card's title. Blank draws no header."
+        },
+        {
+          "name": "cell1Name",
+          "jsonType": "string",
+          "required": false,
+          "notes": "Cell 1's name. Blank leaves the cell out."
+        },
+        {
+          "name": "cell1State",
+          "jsonType": "string",
+          "required": false,
+          "notes": "Cell 1's state, as shown."
+        },
+        {
+          "name": "cell1Icon",
+          "jsonType": "string",
+          "required": false,
+          "allowedValues": [
+            "home",
+            "light",
+            "switch",
+            "climate",
+            "sensor",
+            "fan",
+            "lock",
+            "door",
+            "power",
+            "water",
+            "media",
+            "alert"
+          ],
+          "notes": "An entity icon by key, drawn by HaCardIcons: the Remote icon is an ImageVector a design cannot spell, so it names one. Unset is `light`."
+        },
+        {
+          "name": "cell2Name",
+          "jsonType": "string",
+          "required": false,
+          "notes": "Cell 2's name. Blank leaves the cell out."
+        },
+        {
+          "name": "cell2State",
+          "jsonType": "string",
+          "required": false,
+          "notes": "Cell 2's state, as shown."
+        },
+        {
+          "name": "cell2Icon",
+          "jsonType": "string",
+          "required": false,
+          "allowedValues": [
+            "home",
+            "light",
+            "switch",
+            "climate",
+            "sensor",
+            "fan",
+            "lock",
+            "door",
+            "power",
+            "water",
+            "media",
+            "alert"
+          ],
+          "notes": "An entity icon by key, drawn by HaCardIcons: the Remote icon is an ImageVector a design cannot spell, so it names one. Unset is `light`."
+        },
+        {
+          "name": "cell3Name",
+          "jsonType": "string",
+          "required": false,
+          "notes": "Cell 3's name. Blank leaves the cell out."
+        },
+        {
+          "name": "cell3State",
+          "jsonType": "string",
+          "required": false,
+          "notes": "Cell 3's state, as shown."
+        },
+        {
+          "name": "cell3Icon",
+          "jsonType": "string",
+          "required": false,
+          "allowedValues": [
+            "home",
+            "light",
+            "switch",
+            "climate",
+            "sensor",
+            "fan",
+            "lock",
+            "door",
+            "power",
+            "water",
+            "media",
+            "alert"
+          ],
+          "notes": "An entity icon by key, drawn by HaCardIcons: the Remote icon is an ImageVector a design cannot spell, so it names one. Unset is `light`."
+        }
+      ]
+    },
+    "ha-cards/heading": {
+      "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardComponentsKt.HaCardHeading",
+      "displayName": "Heading",
+      "group": "Home Assistant",
+      "canvas": "wear-m3/text",
+      "canvasMapping": {
+        "properties": {
+          "text": "title"
+        }
+      },
+      "insertContent": {
+        "properties": {
+          "title": {
+            "type": "string",
+            "value": "Living room"
+          }
+        }
+      },
+      "propertyCapabilities": [
+        {
+          "name": "title",
+          "jsonType": "string",
+          "required": true,
+          "notes": "The heading's text."
+        },
+        {
+          "name": "subtitle",
+          "jsonType": "boolean",
+          "required": false,
+          "notes": "The smaller subtitle style rather than the section title."
+        }
+      ]
+    },
+    "ha-cards/button": {
+      "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardComponentsKt.HaCardButton",
+      "displayName": "Button",
+      "group": "Home Assistant",
+      "insertContent": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "value": "Fan"
+          },
+          "icon": {
+            "type": "string",
+            "value": "fan"
+          }
+        }
+      },
+      "propertyCapabilities": [
+        {
+          "name": "name",
+          "jsonType": "string",
+          "required": true,
+          "notes": "The entity's friendly name, under the icon."
+        },
+        {
+          "name": "entityId",
+          "jsonType": "string",
+          "required": false,
+          "notes": "The Home Assistant entity this card shows (`light.kitchen`). Set, the name/state/on values become the entity's named bindings (`<entityId>.state`, `<entityId>.is_on`) so the exported card keeps up with Home Assistant, and a tap toggles a toggleable entity or opens its more-info. Blank, the values are constants."
+        },
+        {
+          "name": "icon",
+          "jsonType": "string",
+          "required": false,
+          "allowedValues": [
+            "home",
+            "light",
+            "switch",
+            "climate",
+            "sensor",
+            "fan",
+            "lock",
+            "door",
+            "power",
+            "water",
+            "media",
+            "alert"
+          ],
+          "notes": "An entity icon by key, drawn by HaCardIcons: the Remote icon is an ImageVector a design cannot spell, so it names one. Unset is `light`."
+        },
+        {
+          "name": "showName",
+          "jsonType": "boolean",
+          "required": false,
+          "notes": "Whether the name is drawn; true when unset."
+        },
+        {
+          "name": "toggleable",
+          "jsonType": "boolean",
+          "required": false,
+          "notes": "Whether the entity has an on/off the accent follows (a light, a switch). Bound to an entity, the accent then tracks `<entityId>.is_on`."
+        },
+        {
+          "name": "isOn",
+          "jsonType": "boolean",
+          "required": false,
+          "notes": "The on/off value at capture: the accent when no entity is bound, and the binding's seed when one is."
+        },
+        {
+          "name": "activeColor",
+          "jsonType": "string",
+          "required": false,
+          "notes": "A `#AARRGGBB` literal, written `Color(0x…).rc`. Unset is HA's light-on amber, #FFFFC107."
+        },
+        {
+          "name": "inactiveColor",
+          "jsonType": "string",
+          "required": false,
+          "notes": "A `#AARRGGBB` literal, written `Color(0x…).rc`. Unset is HA's inactive grey, #FF8F8F8F."
+        }
+      ]
+    },
+    "ha-cards/toggle": {
+      "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardComponentsKt.HaCardToggle",
+      "displayName": "Toggle",
+      "group": "Home Assistant",
+      "insertContent": {
+        "properties": {
+          "isOn": {
+            "type": "bool",
+            "value": true
+          }
+        }
+      },
+      "propertyCapabilities": [
+        {
+          "name": "isOn",
+          "jsonType": "boolean",
+          "required": true,
+          "notes": "On or off at capture; the binding's seed when an entity is bound."
+        },
+        {
+          "name": "entityId",
+          "jsonType": "string",
+          "required": false,
+          "notes": "The Home Assistant entity this card shows (`light.kitchen`). Set, the name/state/on values become the entity's named bindings (`<entityId>.state`, `<entityId>.is_on`) so the exported card keeps up with Home Assistant, and a tap toggles a toggleable entity or opens its more-info. Blank, the values are constants."
+        },
+        {
+          "name": "activeColor",
+          "jsonType": "string",
+          "required": false,
+          "notes": "A `#AARRGGBB` literal, written `Color(0x…).rc`. Unset is HA's light-on amber, #FFFFC107."
+        },
+        {
+          "name": "inactiveColor",
+          "jsonType": "string",
+          "required": false,
+          "notes": "A `#AARRGGBB` literal, written `Color(0x…).rc`. Unset is HA's inactive grey, #FF8F8F8F."
+        }
+      ]
+    },
+    "ha-cards/icon": {
+      "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardComponentsKt.HaCardIcon",
+      "displayName": "Entity icon",
+      "group": "Iconography",
+      "insertContent": {
+        "properties": {
+          "icon": {
+            "type": "string",
+            "value": "light"
+          }
+        }
+      },
+      "propertyCapabilities": [
+        {
+          "name": "icon",
+          "jsonType": "string",
+          "required": true,
+          "allowedValues": [
+            "home",
+            "light",
+            "switch",
+            "climate",
+            "sensor",
+            "fan",
+            "lock",
+            "door",
+            "power",
+            "water",
+            "media",
+            "alert"
+          ],
+          "notes": "An entity icon by key, drawn by HaCardIcons: the Remote icon is an ImageVector a design cannot spell, so it names one. Unset is `light`."
+        },
+        {
+          "name": "color",
+          "jsonType": "string",
+          "required": false,
+          "notes": "A `#AARRGGBB` literal, written `Color(0x…).rc`. Unset is HA's light-on amber, #FFFFC107."
+        },
+        {
+          "name": "sizeDp",
+          "jsonType": "integer",
+          "required": false,
+          "notes": "The icon's size in dp; 24 when unset."
+        }
+      ]
+    },
+    "ha-cards/card-surface": {
+      "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardComponentsKt.HaCardSurface",
+      "displayName": "Card surface",
+      "group": "Containment",
+      "canvas": "layout/box",
+      "canvasMapping": {
+        "slots": {
+          "children": "content"
+        }
+      }
+    },
+    "ha-cards/remote-text": {
+      "record": "ha-cards-catalog/androidx.wear.compose.remote.material3.RemoteTextKt.RemoteText",
+      "displayName": "Text",
+      "group": "Text",
+      "canvas": "wear-m3/text",
+      "canvasMapping": {
+        "properties": {
+          "fontSizeSp": "fontSize"
+        }
+      },
+      "insertContent": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "value": "Text"
+          }
+        }
+      },
+      "propertyCapabilities": [
+        {
+          "name": "text",
+          "jsonType": [
+            "string",
+            "object"
+          ],
+          "required": true,
+          "notes": "The string drawn. `RemoteText` takes a `RemoteString`, so a plain string is written `\"…\".rs` and a state value as the remote expression it names — how the templates bind a card's values."
+        },
+        {
+          "name": "fontSize",
+          "jsonType": "number",
+          "required": false,
+          "notes": "Size in sp, written `<n>.rsp`. Set by size: unlike remote-m3's own text, this catalog's text is written by the record-driven emitter, which has no spelling for a type role."
+        },
+        {
+          "name": "color",
+          "jsonType": "string",
+          "required": false,
+          "notes": "A `#AARRGGBB` literal, written `Color(0x…).rc`. Unset inherits the theme's content colour."
+        },
+        {
+          "name": "maxLines",
+          "jsonType": "integer",
+          "required": false,
+          "notes": "The most lines the text wraps to."
+        }
+      ]
+    },
+    "ha-cards/remote-button": {
+      "record": "ha-cards-catalog/androidx.wear.compose.remote.material3.RemoteButtonKt.RemoteButton",
+      "displayName": "Button (Material)",
+      "group": "Buttons",
+      "canvas": "wear-m3/button",
+      "canvasMapping": {
+        "defaults": {
+          "variant": {
+            "type": "enum",
+            "value": "filled"
+          }
+        }
+      },
+      "insertContent": {
+        "slots": {
+          "content": [
+            {
+              "componentId": "ha-cards/remote-text",
+              "properties": {
+                "text": {
+                  "type": "string",
+                  "value": "Button"
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "ha-cards/remote-switch-button": {
+      "record": "ha-cards-catalog/androidx.wear.compose.remote.material3.RemoteSwitchButtonKt.RemoteSwitchButton",
+      "displayName": "Switch button",
+      "group": "Selection buttons",
+      "canvas": "wear-m3/switch-button",
+      "insertContent": {
+        "properties": {
+          "checked": {
+            "type": "bool",
+            "value": true
+          }
+        },
+        "slots": {
+          "label": [
+            {
+              "componentId": "ha-cards/remote-text",
+              "properties": {
+                "text": {
+                  "type": "string",
+                  "value": "Switch"
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "ha-cards/remote-card": {
+      "record": "ha-cards-catalog/androidx.wear.compose.remote.material3.RemoteCardKt.RemoteCard",
+      "displayName": "Card (Material)",
+      "group": "Containment",
+      "canvas": "wear-m3/card",
+      "canvasMapping": {
+        "defaults": {
+          "variant": {
+            "type": "enum",
+            "value": "filled"
+          }
+        }
+      },
+      "insertContent": {
+        "slots": {
+          "content": [
+            {
+              "componentId": "ha-cards/remote-text",
+              "properties": {
+                "text": {
+                  "type": "string",
+                  "value": "Card"
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "ha-cards/remote-icon": {
+      "record": "ha-cards-catalog/androidx.wear.compose.remote.material3.RemoteIconKt.RemoteIcon",
+      "excluded": "Recorded only because HaCardIcon calls it. RemoteIcon takes a captured ImageVector no design value can spell; place `ha-cards/icon`, which names one by key."
+    },
+    "ha-cards/ha-card-sticker": {
+      "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardStickerKt.HaCardSticker",
+      "excluded": "The sticker frame every preview in this module renders through, not a component."
+    }
+  },
+  "$comment_templates": "Generated, not hand-written: :design-server's HaCardsTemplatesTest seeds each from a card schema (CardSchema.fromCard) with HaCardsSeed — the design server's UiBuilderSeed retargeted to this catalog — and fails when a committed template drifts. `-PhaCardsTemplates.update=true` rewrites them.",
+  "templates": [
+    {
+      "path": "ui-builder/designs/card-light-tile.json",
+      "id": "card-light-tile",
+      "label": "Light tile",
+      "group": "Dashboard card",
+      "order": 1,
+      "default": true,
+      "supportingText": "HA's tile card for a kitchen light, bound to light.kitchen so it follows the light and toggles it."
+    },
+    {
+      "path": "ui-builder/designs/card-entities.json",
+      "id": "card-entities",
+      "label": "Entities",
+      "group": "Dashboard card",
+      "order": 2,
+      "supportingText": "A living-room entities card laid out in text and switches bound to the card's state values, collapsing as the card shrinks."
+    },
+    {
+      "path": "ui-builder/designs/card-gauge.json",
+      "id": "card-gauge",
+      "label": "Gauge",
+      "group": "Dashboard card",
+      "order": 3,
+      "supportingText": "HA's gauge card for a humidity sensor, 0 to 100 %."
+    },
+    {
+      "path": "ui-builder/designs/wear-light-small.json",
+      "id": "wear-light-small",
+      "label": "Light · Small",
+      "group": "Wear widget",
+      "order": 4,
+      "supportingText": "One light's name, state and switch in the Small Wear widget container (216×76dp)."
+    },
+    {
+      "path": "ui-builder/designs/wear-entities-large.json",
+      "id": "wear-entities-large",
+      "label": "Entities · Large",
+      "group": "Wear widget",
+      "order": 5,
+      "supportingText": "A room's title and two entities in the Large Wear widget container (216×124dp)."
+    },
+    {
+      "path": "ui-builder/designs/launcher-fan-2x2.json",
+      "id": "launcher-fan-2x2",
+      "label": "Fan button · 2x2",
+      "group": "Launcher widget",
+      "order": 6,
+      "supportingText": "HA's button card for a fan as a 2x2 phone launcher widget; a tap toggles the fan."
+    },
+    {
+      "path": "ui-builder/designs/launcher-entities-4x2.json",
+      "id": "launcher-entities-4x2",
+      "label": "Entities · 4x2",
+      "group": "Launcher widget",
+      "order": 7,
+      "supportingText": "A room's entity rows as a 4x2 phone launcher widget, each bound to its entity."
+    }
+  ],
+  "$comment_newDesign": "The chooser card (compose-ui-builder#781): `label`, a `description` subtitle, and `primary` to sit in the \"What are you designing?\" row. The templates name three groups, so the chooser offers Dashboard card / Wear widget / Launcher widget as the type cards. compose-ai-tools' generator (UiBuilderCatalogs.newDesignSemantics, v2.54.0) publishes `label` and `order` only, so `description` and `primary` reach ui-builder.json once it passes them through.",
+  "newDesign": {
+    "label": "Home Assistant",
+    "description": "Home Assistant cards for dashboards, Wear widgets and phone launcher widgets.",
+    "primary": true
+  }
+}

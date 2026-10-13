@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Home Assistant card embed</title>
+  <style>
+    :root { color-scheme: light dark; --fg: #1d1b20; --muted: #5f5b66; --bg: #fdf8fd; --line: #d9d3dd; }
+    @media (prefers-color-scheme: dark) { :root { --fg: #e6e0e9; --muted: #b0a9b8; --bg: #141218; --line: #3b3740; } }
+    body { margin: 0; font: 15px/1.5 system-ui, sans-serif; color: var(--fg); background: var(--bg); }
+    main { max-width: 720px; margin: 0 auto; padding: 24px 16px 48px; }
+    h1 { font-size: 22px; margin: 0 0 4px; }
+    p { color: var(--muted); margin: 0 0 16px; }
+    label { display: block; font-weight: 600; margin: 12px 0 4px; }
+    select, input, textarea { box-sizing: border-box; width: 100%; font: 14px ui-monospace, monospace; padding: 6px 8px;
+      border: 1px solid var(--line); border-radius: 6px; background: transparent; color: inherit; }
+    textarea { min-height: 72px; }
+    .stage { margin: 20px 0; padding: 16px; border: 1px dashed var(--line); border-radius: 12px; }
+    pre { overflow-x: auto; padding: 12px; border: 1px solid var(--line); border-radius: 8px; font-size: 13px; }
+    .log { font: 13px ui-monospace, monospace; color: var(--muted); min-height: 1.5em; }
+  </style>
+  <script type="module" src="./ha-card.js"></script>
+</head>
+<body>
+<main>
+  <h1>A Home Assistant card on any page</h1>
+  <p>Pick a card design from this library. With no Home Assistant URL, the card plays sample states and taps
+    flip them here. With one, you sign in to your own Home Assistant and the card is live; nothing about it
+    reaches this server.</p>
+
+  <label for="design">Design</label>
+  <select id="design"></select>
+  <label for="card">Card config (JSON)</label>
+  <textarea id="card" spellcheck="false"></textarea>
+  <label for="hass">Your Home Assistant URL (optional)</label>
+  <input id="hass" placeholder="https://homeassistant.local:8123" autocomplete="url">
+
+  <div class="stage"><ha-card id="embed"></ha-card></div>
+  <div class="log" id="log"></div>
+
+  <label>Embed code</label>
+  <pre id="snippet"></pre>
+</main>
+<script type="module">
+  const $ = (id) => document.getElementById(id);
+  const embed = $('embed');
+  const scriptUrl = new URL('./ha-card.js', location.href).toString();
+  const library = new URL('../../designs/v1/', location.href);
+  const SHOWN = new Set(['tile', 'button', 'entity', 'entities', 'glance', 'heading']);
+  let preview = null;
+
+  function sampleState(entityId) {
+    const domain = entityId.split('.')[0];
+    if (domain === 'sensor') return { state: '21.5', attributes: { unit_of_measurement: '°C' } };
+    if (domain === 'binary_sensor') return { state: 'off', attributes: {} };
+    return { state: 'on', attributes: {} };
+  }
+
+  function entitiesOf(card) {
+    if (typeof card.entity === 'string') return [card.entity];
+    if (Array.isArray(card.cards)) return card.cards.flatMap(entitiesOf);
+    return (card.entities ?? []).map((r) => (typeof r === 'string' ? r : r.entity)).filter(Boolean);
+  }
+
+  function update() {
+    let card;
+    try { card = JSON.parse($('card').value); } catch { $('log').textContent = 'The card config is not JSON.'; return; }
+    const hass = $('hass').value.trim();
+    embed.setAttribute('design', $('design').value);
+    embed.setAttribute('card', JSON.stringify(card));
+    if (hass) {
+      preview = null;
+      embed.localStates = null;
+      embed.setAttribute('hass', hass);
+    } else {
+      embed.removeAttribute('hass');
+      preview = Object.fromEntries(entitiesOf(card).map((id) => [id, sampleState(id)]));
+      embed.setStates(preview);
+    }
+    $('snippet').textContent =
+      `<script type="module" src="${scriptUrl}"><\/script>\n` +
+      `<ha-card hass="${hass || 'https://your-home-assistant:8123'}"\n` +
+      `         design="${$('design').value}"\n` +
+      `         card='${JSON.stringify(card)}'></ha-card>`;
+  }
+
+  embed.addEventListener('ha-card-action', (e) => {
+    $('log').textContent = `tap: ${JSON.stringify(e.detail)}`;
+    if (!preview) return;
+    e.preventDefault();
+    const id = e.detail.entityId;
+    if (e.detail.kind === 'Toggle' && preview[id]) {
+      preview[id] = { ...preview[id], state: preview[id].state === 'on' ? 'off' : 'on' };
+      embed.setStates(preview);
+    }
+  });
+
+  const catalog = await (await fetch(new URL('catalog.json', library))).json();
+  const entries = catalog.entries.filter((e) =>
+    e.example && SHOWN.has(e.key.cardType) && e.key.theme === 'baked:Material3:light');
+  for (const entry of entries) {
+    const option = new Option(`${entry.key.cardType} · ${entry.key.shape}`, entry.sha256);
+    option.dataset.card = JSON.stringify(entry.example.card, null, 2);
+    $('design').add(option);
+  }
+  $('design').addEventListener('change', () => {
+    $('card').value = $('design').selectedOptions[0].dataset.card;
+    update();
+  });
+  $('card').addEventListener('change', update);
+  $('hass').addEventListener('change', update);
+  if (entries.length) {
+    $('card').value = $('design').selectedOptions[0].dataset.card;
+    update();
+  }
+</script>
+</body>
+</html>
