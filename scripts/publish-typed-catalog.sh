@@ -10,6 +10,8 @@ for source in "$publisher_root" "$app_root" "$tools_root" "$builder_root"; do
   git -C "$source" diff --cached --quiet
 done
 source_sha=$(git -C "$app_root" rev-parse HEAD)
+tools_sha=$(git -C "$tools_root" rev-parse HEAD)
+builder_sha=$(git -C "$builder_root" rev-parse HEAD)
 tools_tag=$(git -C "$tools_root" describe --tags --exact-match HEAD)
 builder_tag=$(git -C "$builder_root" describe --tags --exact-match HEAD)
 repo=${GITHUB_REPOSITORY:-$(gh repo view --json nameWithOwner --jq .nameWithOwner)}

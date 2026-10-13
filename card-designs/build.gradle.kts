@@ -81,5 +81,5 @@ dependencies {
   testImplementation(libs.kotlin.test.junit)
   testImplementation(libs.kotlinx.serialization.json)
   testImplementation("org.robolectric:robolectric:4.17")
-  robolectricSdk("org.robolectric:android-all-instrumented:15-robolectric-13954326-i7")
+  robolectricSdk(libs.robolectric.sdk35)
 }

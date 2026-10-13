@@ -46,6 +46,9 @@ kotlin {
     jvmMain.dependencies {
       implementation(compose.desktop.currentOs)
       implementation(libs.kotlinx.coroutines.swing)
+      implementation(libs.compose.webview)
+      runtimeOnly(libs.jogl.runtime)
+      runtimeOnly(libs.gluegen.runtime)
     }
     commonTest.dependencies {
       implementation(libs.kotlin.test)
@@ -77,6 +80,18 @@ val installerVersion = desktopVersion.split(".").let { "${it[0].toInt() + 1}.${i
 compose.desktop {
   application {
     mainClass = "ee.schimke.terrazzo.desktop.MainKt"
+    jvmArgs +=
+      listOf(
+        "--add-opens=java.desktop/sun.awt=ALL-UNNAMED",
+        "--add-opens=java.desktop/java.awt.peer=ALL-UNNAMED",
+      )
+    if (System.getProperty("os.name").contains("Mac")) {
+      jvmArgs +=
+        listOf(
+          "--add-opens=java.desktop/sun.lwawt=ALL-UNNAMED",
+          "--add-opens=java.desktop/sun.lwawt.macosx=ALL-UNNAMED",
+        )
+    }
     nativeDistributions {
       targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
       packageName = "Terrazzo"

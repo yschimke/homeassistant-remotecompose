@@ -32,12 +32,14 @@ RUN useradd --create-home --home-dir /data --uid 10001 designs
 COPY --from=ui-builder /opt/compose-preview-server /opt/compose-preview-server
 COPY design-server/build/install/design-server/lib /app/lib
 COPY card-designs/build/card-designs /library
+COPY design-server/catalogs.json /app/catalogs.json
 ENV DESIGN_LIBRARY=/library \
     PORT=8080 \
     UI_BUILDER_BINARY=/opt/compose-preview-server/bin/compose-preview-server \
     UI_BUILDER_HOST=0.0.0.0 \
     UI_BUILDER_PORT=8724 \
-    UI_BUILDER_STATE_DIR=/data/ui-builder
+    UI_BUILDER_STATE_DIR=/data/ui-builder \
+    UI_BUILDER_ARGS="--catalogs-file /app/catalogs.json --catalog-cache-dir /data/catalog-cache --ui-builder-catalogs remote-m3,ha-cards"
 USER designs
 WORKDIR /data
 VOLUME /data

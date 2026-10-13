@@ -54,13 +54,7 @@ jobs:
         with:
           path: homeassistant-remotecompose
           persist-credentials: false
-      # The SDK is source-only; the discovery source pin carries #5935 until tools 2.56.1 ships.
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          repository: yschimke/compose-ai-tools
-          ref: 4f6e22594ac77f753b37c1dd24377b3ba1c203e6 # JVM-default codec fix (#5935)
-          path: compose-ai-tools
-          persist-credentials: false
+      # The renderer SDK is source-only; preview discovery comes from released tools.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: yschimke/compose-ui-builder
@@ -79,7 +73,7 @@ jobs:
       - name: Install Android platform used by the app
         uses: ./homeassistant-remotecompose/.github/actions/android-sdk
       - name: Generate, render and validate in a separate catalog consumer
-        run: scripts/validate-typed-catalog.sh "$GITHUB_WORKSPACE/compose-ai-tools" "$GITHUB_WORKSPACE/compose-ui-builder"
+        run: scripts/validate-typed-catalog.sh "$GITHUB_WORKSPACE/compose-ui-builder"
       - if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:

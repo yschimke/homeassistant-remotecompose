@@ -135,6 +135,7 @@ fun CardHistoryScreen(
   // synchronously-computed series so the render shows the settled chart on the first frame rather
   // than racing the async fetch and capturing the spinner (the #409 flaky-render investigation).
   initialHistory: Map<String, List<HistoryPoint>>? = null,
+  onDesignCard: (() -> Unit)? = null,
 ) {
   val entityIds = remember(card) { card.historyEntityIds() }
   var hours by remember { mutableIntStateOf(24) }
@@ -163,6 +164,9 @@ fun CardHistoryScreen(
       verticalArrangement = Arrangement.spacedBy(20.dp),
     ) {
       CardPreviewCard(session = session, card = card, snapshot = snapshot)
+      onDesignCard?.let { action ->
+        androidx.compose.material3.Button(onClick = action) { Text("Design or fix this card") }
+      }
 
       if (entityIds.isEmpty()) {
         Text(
@@ -198,7 +202,7 @@ fun CardHistoryScreen(
  * home-screen position.
  */
 @Composable
-private fun CardPreviewCard(session: HaSession, card: CardConfig, snapshot: HaSnapshot) {
+internal fun CardPreviewCard(session: HaSession, card: CardConfig, snapshot: HaSnapshot) {
   OutlinedCard(modifier = Modifier.fillMaxWidth()) {
     Box(modifier = Modifier.fillMaxWidth().padding(12.dp), contentAlignment = Alignment.Center) {
       ResizableLauncherPreview(session = session, card = card, snapshot = snapshot)

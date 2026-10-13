@@ -60,6 +60,10 @@ on:
       - '**/build.gradle.kts'
       - 'catalog.spec.json'
       - 'adaptive-uid-pilot/**'
+      - 'ui-builder-catalog/**'
+      - 'rc-components-ui/**'
+      - 'rc-components/**'
+      - 'rc-converter/**'
       - 'build-logic/**'
       - '.github/workflows/adaptive-uid-*.yml'
       # Same class as catalog.spec.json: config that changes what the run publishes. An
@@ -100,7 +104,7 @@ jobs:
       # `refs/design-artifacts/source/homeassistant-remotecompose` here, which
       # has to stay in this repository (it points at a source commit).
       contents: write
-    uses: yschimke/compose-ai-tools/.github/workflows/design-artifacts-reusable.yml@ec08b1b9e927e555a0fdc8d3e2be685e459ce705 # v2.56.0
+    uses: yschimke/compose-ai-tools/.github/workflows/design-artifacts-reusable.yml@2581e77e27f94d6b0ae3e150700084aa158d5972 # v2.57.0
     with:
       system: homeassistant-remotecompose
       ui-builder-catalog-task: ':ui-builder-catalog:exportTypedCatalog'

@@ -30,7 +30,7 @@ val prepareRobolectricSdk by
 
 dependencies {
   // Matches Robolectric 4.17's SDK 35 provider; resolve with Gradle, not a hidden test download.
-  robolectricSdk("org.robolectric:android-all-instrumented:15-robolectric-13954326-i7")
+  robolectricSdk(libs.robolectric.sdk35)
   // SDK bytecode is portable Compose; use this app's Android Compose runtime, not Desktop jars.
   implementation("ee.schimke.composeai:ui-builder-renderer-sdk:0.0.0") {
     exclude(group = "org.jetbrains.compose.runtime")

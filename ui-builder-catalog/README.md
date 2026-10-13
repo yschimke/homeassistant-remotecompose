@@ -121,15 +121,15 @@ old literals (`title`, `name`, `state`, `showName`, the `rows` / `cells` lists o
 insertion default, so it still renders what it said. The published catalog no longer offers those
 properties; editing such a node in the builder writes `data`.
 
-Check out compose-ai-tools and compose-ui-builder beside this repository at the immutable revisions
-in `.github/workflows/typed-catalog.yml`. The workflow validates the same source integration on
-catalog/component/dependency changes. Existing public preview publication remains on released tools.
+Check out compose-ui-builder v3.111.0 beside this repository. The workflow validates the same
+source-only renderer SDK on catalog/component/dependency changes; preview discovery and the CLI
+come from the released tools version in `gradle/libs.versions.toml`.
 
 ```sh
 scripts/validate-typed-catalog.sh
 ```
 
-The script accepts optional tools and builder checkout paths. It scans current compiled app classes,
+The script accepts an optional builder checkout path. It scans current compiled app classes,
 generates only explicitly selected records, checks JSON readback and stale-record refusal, then
 compares every actual Android Remote Compose card with its typed adapter pixel for pixel
 (`CatalogRenderTest`, one case per card plus an omitted-property default and two first-catalog
@@ -142,8 +142,7 @@ under `ui-builder-catalog/build/renders`; neither rendering test connects to a r
 To generate the standard pair directly:
 
 ```sh
-./gradlew -PtypedAdapterCatalog=true -PlocalBuilds=tools \
-  -PlocalBuild.tools=../compose-ai-tools -PuiBuilderSource=../compose-ui-builder \
+./gradlew -PtypedAdapterCatalog=true -PuiBuilderSource=../compose-ui-builder \
   :ui-builder-catalog:exportTypedCatalog
 ```
 
@@ -173,8 +172,7 @@ artifact. Regenerate them from `build/renders` after component changes; CI uploa
 The initial catalog can be packaged without converting the app components into desktop replicas:
 
 ```sh
-./gradlew -PtypedAdapterCatalog=true -PlocalBuilds=tools \
-  -PlocalBuild.tools=../compose-ai-tools -PuiBuilderSource=../compose-ui-builder \
+./gradlew -PtypedAdapterCatalog=true -PuiBuilderSource=../compose-ui-builder \
   :ui-builder-catalog:unpackAndroidCatalogBundle
 ```
 
@@ -202,7 +200,5 @@ remains a CI validation artifact for installed native hosts.
 `typed-catalog.yml` validates the source pin and native bundle rather than publishing a second
 experimental prerelease.
 
-Publication requires tools **2.56.1**, which contains #5935's JVM-default interface fix. The
-validation workflow temporarily pins the source commit containing that fix; remove the tools
-composite when the release is available. This catalog is native-only: its Android Remote Compose
+Publication uses tools **2.57.0**, which contains #5935's JVM-default interface fix. This catalog is native-only: its Android Remote Compose
 capture and player remain real Android implementations, and no Wasm stand-in is published.

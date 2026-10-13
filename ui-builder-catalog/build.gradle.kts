@@ -30,7 +30,7 @@ val prepareRobolectricSdk by
 
 dependencies {
   // Matches Robolectric 4.17's SDK 35 provider; resolve with Gradle, not a hidden test download.
-  robolectricSdk("org.robolectric:android-all-instrumented:15-robolectric-13954326-i7")
+  robolectricSdk(libs.robolectric.sdk35)
   implementation(project(":rc-components-ui"))
   // SDK bytecode is portable Compose; use this app's Android Compose runtime, not Desktop jars.
   implementation("ee.schimke.composeai:ui-builder-renderer-sdk:0.0.0") {
@@ -46,7 +46,7 @@ dependencies {
   // The catalog's closed icon set resolves keys to the Material glyphs the cards draw.
   implementation(libs.compose.material.icons.extended)
   implementation(libs.kotlinx.serialization.json)
-  testImplementation("ee.schimke.composeai:preview-discovery:2.56.1")
+  testImplementation("ee.schimke.composeai:preview-discovery:2.57.0")
   testImplementation(libs.kotlin.test.junit)
   testImplementation("org.robolectric:robolectric:4.17")
   testImplementation(libs.compose.ui.test.junit4)

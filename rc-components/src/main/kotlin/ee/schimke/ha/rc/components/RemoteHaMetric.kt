@@ -29,6 +29,15 @@ fun RemoteHaMetric(
   modifier: RemoteModifier = RemoteModifier,
 ) {
   val theme = haTheme()
+  val boundEntityId = entityId?.takeIf { it.isNotBlank() }
+  // The host pushes formatState(entity) into <entityId>.state, including its unit. Seed that same
+  // shape and do not draw a second unit next to a bound value after the first live update.
+  val initialValue =
+    if (boundEntityId != null && unit.isNotBlank() && value.trim().toDoubleOrNull() != null) {
+      "$value $unit"
+    } else {
+      value
+    }
   RemoteColumn(modifier = modifier.padding(horizontal = 8.rdp, vertical = 6.rdp)) {
     RemoteText(
       text = entityName(entityId, label),
@@ -40,7 +49,7 @@ fun RemoteHaMetric(
     )
     RemoteRow {
       RemoteText(
-        text = LiveValues.state(entityId, value),
+        text = LiveValues.state(boundEntityId, initialValue),
         color = valueColor ?: theme.primaryText,
         fontSize = 24.rsp,
         fontWeight = FontWeight.Medium,
@@ -48,7 +57,7 @@ fun RemoteHaMetric(
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
       )
-      if (unit.isNotBlank()) {
+      if (boundEntityId == null && unit.isNotBlank()) {
         RemoteText(
           text = unit.rs,
           modifier = RemoteModifier.padding(start = 4.rdp, top = 7.rdp),

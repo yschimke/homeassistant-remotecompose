@@ -3,6 +3,7 @@ package ee.schimke.ha.designserver
 import io.ktor.client.HttpClient
 import io.ktor.client.request.forms.submitForm
 import io.ktor.client.request.header
+import io.ktor.client.request.post
 import io.ktor.client.request.put
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
@@ -22,6 +23,9 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
 import kotlinx.serialization.json.putJsonObject
@@ -197,7 +201,8 @@ class UiBuilderProcess(
  */
 class UiBuilderClient(private val config: UiBuilderConfig, private val http: HttpClient) {
   /** Creates [document] (it carries its own id) and returns its design id. */
-  suspend fun create(document: JsonObject): String {
+  suspend fun create(document: JsonObject, resolveCatalog: Boolean = false): String {
+    val pinned = if (resolveCatalog) pinToServedCatalog(document) else document
     val id = (document["id"] as JsonPrimitive).content
     val response =
       http.put(
@@ -206,12 +211,48 @@ class UiBuilderClient(private val config: UiBuilderConfig, private val http: Htt
         // The route creates and never replaces: a clash is a refusal, not an overwrite.
         header(HttpHeaders.IfNoneMatch, "*")
         contentType(ContentType.Application.Json)
-        setBody(Json.encodeToString(JsonObject.serializer(), document))
+        setBody(Json.encodeToString(JsonObject.serializer(), pinned))
       }
     check(response.status.isSuccess()) {
       "UI Builder refused the design (${response.status}): ${response.bodyAsText().take(300)}"
     }
     return id
+  }
+
+  /** Resolve the published revision on the host that will validate and render this draft. */
+  private suspend fun pinToServedCatalog(document: JsonObject): JsonObject {
+    val system = document.getValue("catalogPin").jsonObject.getValue("systemId")
+    val response =
+      http.post("${config.apiUrl.trimEnd('/')}/api/ui-builder/v1/requests?token=${config.token}") {
+        contentType(ContentType.Application.Json)
+        setBody(
+          buildJsonObject {
+            put("schemaVersion", 1)
+            put("requestId", UiBuilderConfig.randomToken())
+            put("actorId", "operator")
+            putJsonObject("request") { put("type", "listCatalogs") }
+          }
+            .toString()
+        )
+      }
+    check(response.status.isSuccess()) { "UI Builder catalog lookup failed" }
+    val payload =
+      Json.parseToJsonElement(response.bodyAsText()).jsonObject.getValue("response").jsonObject
+    check(payload["type"] == JsonPrimitive("catalogs")) { "UI Builder did not list catalogs" }
+    val benchmark =
+      payload
+        .getValue("catalogs")
+        .jsonArray
+        .map { it.jsonObject.getValue("benchmark").jsonObject }
+        .single { it["catalogSystemId"] == system }
+    val pin = buildJsonObject {
+      put("systemId", system)
+      put("catalogRevision", benchmark.getValue("catalogRevision").jsonPrimitive)
+      // The v1 service uses this frozen digest; its catalog wire shape has no digest field.
+      put("capabilityDigest", "candidate")
+      put("nativeRuntimeId", benchmark.getValue("nativeRuntimeId").jsonPrimitive)
+    }
+    return JsonObject(document + ("catalogPin" to pin))
   }
 
   /**
