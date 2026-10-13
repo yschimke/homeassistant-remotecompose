@@ -282,7 +282,14 @@ class HomeAssistantCatalog(records: ComponentRecordFile) {
         "homeassistant-remotecompose",
         "Home Assistant native components",
       ),
-      UiBuilderPolicyFile.Builder(UI_BUILDER_POLICY_SCHEMA, "mobile").build(),
+      kotlinx.serialization.json.Json.decodeFromString(
+        UiBuilderPolicyFile.serializer(),
+        """{
+          "schema":"$UI_BUILDER_POLICY_SCHEMA","platform":"mobile",
+          "templates":[{"path":"ui-builder/designs/heading.json","id":"heading","label":"Home Assistant cards","default":true}],
+          "builtins":{"m3/text":{"role":"decoration","canvas":"m3/text","properties":[{"name":"text","jsonType":["string","object"]}]}}
+        }""",
+      ),
       definitions,
     )
 

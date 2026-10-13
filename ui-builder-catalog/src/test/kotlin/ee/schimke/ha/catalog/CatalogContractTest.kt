@@ -94,6 +94,8 @@ class CatalogContractTest {
     val destination = Path.of(requireNotNull(System.getProperty("typedCatalogOutput")))
     destination.toFile().deleteRecursively()
     pair.writeTo(destination)
+    val seeds = Files.createDirectories(destination.resolve("ui-builder/designs"))
+    Files.copy(Path.of("fixtures/heading.uid"), seeds.resolve("heading.json"))
     assertEquals(
       pair.record,
       json.decodeFromString(

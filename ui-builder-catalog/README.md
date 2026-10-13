@@ -189,29 +189,20 @@ visible stack child and tile, changes the title, saves/reopens, and compares the
 keyed on its decoded model, so a changed title recaptures the Remote Compose document and edits
 appear immediately. The generic renderer is UI Builder's existing document host and registry interpreter.
 
-Publish after validation using the explicit manual workflow input:
+The independent host validation remains part of `typed-catalog.yml`. Production catalog metadata
+and seeds now travel through `design-artifacts.yml` to the output repository; the older experimental
+prerelease publisher is no longer a second workflow publication path. The Android JAR/AAR bundle
+remains a CI validation artifact for installed native hosts.
 
-```sh
-gh workflow run typed-catalog.yml --ref YOUR_SOURCE_BRANCH -f publish=true
-```
+## Catalog delivery
 
-A separate job publishes the tested CI artifact as `typed-catalog-preview-FULL_SOURCE_SHA`, with
-standard catalog files, checksums and full app/tools/builder provenance. Existing generations are
-never replaced; ordinary PR runs remain read-only and production delivery remains unchanged.
+`design-artifacts.yml` publishes the typed metadata pair and the heading/stack/tile seed to
+`homeassistant-remotecompose-out`. The renderer SDK remains a source dependency pinned to builder
+`v3.111.0`; supply `-PcomposeUiBuilderDir=/path/to/compose-ui-builder` for catalog tasks.
+`typed-catalog.yml` validates the source pin and native bundle rather than publishing a second
+experimental prerelease.
 
-To retry publication after fixing the publisher, pass `-f validated_run_id=RUN_ID` to that manual
-workflow. It verifies that the original run's catalog job succeeded, checks out that run's exact
-source, checks the dependency pins, and downloads its existing artifact without rebuilding. A
-pre-existing preview tag must point directly at that source commit; publication verifies it and
-omits the commit-target field that can otherwise require GitHub workflow permissions.
-
-From the matching UI Builder checkout, fetch and verify the public artifact:
-
-```sh
-scripts/download-typed-catalog.sh yschimke/homeassistant-remotecompose FULL_SOURCE_SHA android /tmp/published-ha
-```
-
-Then run the independent host with `-PtypedCatalogAndroidBundle=/tmp/published-ha` and
-`:ui-builder-catalog-host:testDebugUnitTest`. Passing an external directory does not build or
-package app libraries. The install directory must be new; the downloader refuses a wrong source,
-runtime, checksum or JSON pair. Executable bundles require explicit trust in the publisher.
+Publication requires tools **2.56.1**, which contains #5935's JVM-default interface fix. The
+validation workflow temporarily pins the source commit containing that fix; remove the tools
+composite when the release is available. This catalog is native-only: its Android Remote Compose
+capture and player remain real Android implementations, and no Wasm stand-in is published.
