@@ -400,3 +400,24 @@ fun HaCardArcMeterSticker() = HaCardSticker {
 fun HaCardBarMeterSticker() = HaCardSticker {
   HaCardBarMeter(value = 62f, modifier = RemoteModifier.fillMaxWidth().height(10.rdp))
 }
+
+@CatalogComponent(
+  id = "HaCard/UberTheme",
+  group = "Containment",
+  noReference = NO_KIT,
+  caption =
+    "An uber theme around a card: here the LCD look — segment-drawn thermometer and battery in " +
+      "one ink, monospace text and a square bezel — over the same components as everywhere else.",
+)
+@Preview(widthDp = CARD_WIDTH_DP, heightDp = 150)
+@Composable
+fun HaCardUberThemeSticker() = HaCardSticker {
+  HaCardUberTheme(theme = "lcd") {
+    HaCardSurface {
+      RemoteColumn(RemoteModifier.fillMaxWidth(), horizontalAlignment = RemoteAlignment.Start) {
+        HaCardThermometer(name = "Living room", value = 21.5f, presentation = "compact")
+        HaCardBattery(name = "Front door lock", value = 64f, presentation = "compact")
+      }
+    }
+  }
+}

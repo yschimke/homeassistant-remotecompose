@@ -41,8 +41,10 @@ import ee.schimke.ha.rc.components.HaReading
 import ee.schimke.ha.rc.components.HaStatusColors
 import ee.schimke.ha.rc.components.HaTileData
 import ee.schimke.ha.rc.components.HaToggleAccent
+import ee.schimke.ha.rc.components.HaUberTheme
 import ee.schimke.ha.rc.components.LiveValues
 import ee.schimke.ha.rc.components.ProvideCardChrome
+import ee.schimke.ha.rc.components.ProvideHaUberTheme
 import ee.schimke.ha.rc.components.RemoteHaArcMeter
 import ee.schimke.ha.rc.components.RemoteHaBarMeter
 import ee.schimke.ha.rc.components.RemoteHaButton
@@ -587,3 +589,24 @@ fun HaCardBarMeter(
   val reading = reading("", value, "", entityId, HaMeasureKind.Generic, min, max)
   RemoteHaBarMeter(reading.fraction(), color, modifier, vertical = vertical)
 }
+
+/**
+ * An uber theme (card-component-system.md §6) for everything inside: the palette, card shape,
+ * typeface, meter form and ink of [theme] — one of [HaUberTheme.all]'s ids — in light or [dark]
+ * mode. A theme with only one mode uses it either way.
+ */
+@Composable
+@RemoteComposable
+fun HaCardUberTheme(
+  theme: String,
+  modifier: RemoteModifier = RemoteModifier,
+  dark: Boolean = false,
+  content: @Composable @RemoteComposable () -> Unit,
+) {
+  ProvideHaUberTheme(HaUberTheme.byId(theme), dark) {
+    RemoteBox(modifier = modifier, content = content)
+  }
+}
+
+/** Every `theme` a design may write: [HaUberTheme.all]'s ids. */
+val HaCardUberThemes: List<String> = HaUberTheme.all.map { it.id }

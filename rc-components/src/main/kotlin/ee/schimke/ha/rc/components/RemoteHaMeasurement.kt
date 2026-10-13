@@ -17,9 +17,7 @@ import androidx.compose.remote.creation.compose.modifier.height
 import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.modifier.size
 import androidx.compose.remote.creation.compose.state.rdp
-import androidx.compose.remote.creation.compose.text.RemoteTextStyle
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 
 // ---------------------------------------------------------------------------------------------
@@ -169,8 +167,8 @@ private fun SideBySide(reading: HaReading, presentation: HaPresentation, modifie
           text = reading.text,
           color = theme.primaryText,
           fontSize = if (compact) HaType.ValueSmall else HaType.Value,
-          fontWeight = FontWeight.SemiBold,
-          style = RemoteTextStyle.Default,
+          fontWeight = haValueWeight(),
+          style = haTextStyle(),
           maxLines = 1,
           overflow = TextOverflow.Ellipsis,
         )
@@ -178,7 +176,7 @@ private fun SideBySide(reading: HaReading, presentation: HaPresentation, modifie
           text = reading.nameText(),
           color = theme.secondaryText,
           fontSize = if (compact) HaType.Caption else HaType.Label,
-          style = RemoteTextStyle.Default,
+          style = haTextStyle(),
           maxLines = 1,
           overflow = TextOverflow.Ellipsis,
         )
@@ -200,8 +198,8 @@ private fun Chip(reading: HaReading, modifier: RemoteModifier) {
       text = reading.text,
       color = haTheme().primaryText,
       fontSize = HaType.ValueSmall,
-      fontWeight = FontWeight.SemiBold,
-      style = RemoteTextStyle.Default,
+      fontWeight = haValueWeight(),
+      style = haTextStyle(),
       maxLines = 1,
       overflow = TextOverflow.Ellipsis,
     )
@@ -224,7 +222,7 @@ private fun Expanded(reading: HaReading, modifier: RemoteModifier) {
       text = reading.nameText(),
       color = theme.secondaryText,
       fontSize = HaType.Body,
-      style = RemoteTextStyle.Default,
+      style = haTextStyle(),
       maxLines = 1,
       overflow = TextOverflow.Ellipsis,
     )
@@ -242,8 +240,8 @@ private fun Expanded(reading: HaReading, modifier: RemoteModifier) {
       text = reading.text,
       color = theme.primaryText,
       fontSize = HaType.ValueLarge,
-      fontWeight = FontWeight.SemiBold,
-      style = RemoteTextStyle.Default,
+      fontWeight = haValueWeight(),
+      style = haTextStyle(),
       maxLines = 1,
       overflow = TextOverflow.Ellipsis,
     )
@@ -251,7 +249,7 @@ private fun Expanded(reading: HaReading, modifier: RemoteModifier) {
       text = reading.rangeText(),
       color = theme.secondaryText,
       fontSize = HaType.Caption,
-      style = RemoteTextStyle.Default,
+      style = haTextStyle(),
       maxLines = 1,
       overflow = TextOverflow.Ellipsis,
     )

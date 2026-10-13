@@ -27,7 +27,6 @@ import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rf
 import androidx.compose.remote.creation.compose.state.rs
-import androidx.compose.remote.creation.compose.text.RemoteTextStyle
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -76,7 +75,7 @@ fun RemoteHaPicture(
           color = theme.primaryText,
           fontSize = HaType.Body,
           fontWeight = FontWeight.Medium,
-          style = RemoteTextStyle.Default,
+          style = haTextStyle(),
           maxLines = 1,
           overflow = TextOverflow.Ellipsis,
         )
@@ -94,7 +93,7 @@ fun RemoteHaPicture(
           text = cardText("image", data.captionUrl),
           color = theme.secondaryText,
           fontSize = HaType.Micro,
-          style = RemoteTextStyle.Default,
+          style = haTextStyle(),
           maxLines = 1,
           overflow = TextOverflow.Ellipsis,
         )
@@ -138,7 +137,7 @@ fun RemoteHaPictureGlance(data: HaPictureGlanceData, modifier: RemoteModifier = 
             color = theme.primaryText,
             fontSize = HaType.Body,
             fontWeight = FontWeight.Medium,
-            style = RemoteTextStyle.Default,
+            style = haTextStyle(),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
           )
@@ -289,7 +288,7 @@ private fun Element(
         text = element.text,
         color = theme.primaryText,
         fontSize = HaType.Label,
-        style = RemoteTextStyle.Default,
+        style = haTextStyle(),
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
         modifier = modifier,
@@ -312,7 +311,7 @@ private fun Element(
           color = accent,
           fontSize = HaType.Caption,
           fontWeight = FontWeight.Medium,
-          style = RemoteTextStyle.Default,
+          style = haTextStyle(),
           maxLines = 1,
         )
       }

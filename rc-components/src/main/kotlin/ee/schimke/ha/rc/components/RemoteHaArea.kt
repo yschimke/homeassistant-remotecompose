@@ -23,7 +23,6 @@ import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rf
 import androidx.compose.remote.creation.compose.state.rs
-import androidx.compose.remote.creation.compose.text.RemoteTextStyle
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -51,7 +50,7 @@ fun RemoteHaArea(data: HaAreaCardData, modifier: RemoteModifier = RemoteModifier
         color = theme.primaryText,
         fontSize = HaType.Title,
         fontWeight = FontWeight.Medium,
-        style = RemoteTextStyle.Default,
+        style = haTextStyle(),
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
       )
@@ -90,7 +89,7 @@ private fun Stat(stat: HaAreaStat, theme: RemoteHaTheme) {
         text = stat.label,
         color = theme.secondaryText,
         fontSize = HaType.Label,
-        style = RemoteTextStyle.Default,
+        style = haTextStyle(),
         maxLines = 1,
       )
     }

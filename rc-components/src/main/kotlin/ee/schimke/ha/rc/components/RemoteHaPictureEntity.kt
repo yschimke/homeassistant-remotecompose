@@ -22,7 +22,6 @@ import androidx.compose.remote.creation.compose.modifier.size
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rf
 import androidx.compose.remote.creation.compose.state.rs
-import androidx.compose.remote.creation.compose.text.RemoteTextStyle
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
@@ -154,7 +153,7 @@ fun RemoteHaPictureEntity(
               text = data.frameStamp.rs,
               color = theme.secondaryText,
               fontSize = HaType.Micro,
-              style = RemoteTextStyle.Default,
+              style = haTextStyle(),
               maxLines = 1,
             )
           }
@@ -175,7 +174,7 @@ fun RemoteHaPictureEntity(
             color = theme.primaryText,
             fontSize = HaType.Body,
             fontWeight = FontWeight.Medium,
-            style = RemoteTextStyle.Default,
+            style = haTextStyle(),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
           )
@@ -184,7 +183,7 @@ fun RemoteHaPictureEntity(
               text = data.state,
               color = theme.secondaryText,
               fontSize = HaType.Label,
-              style = RemoteTextStyle.Default,
+              style = haTextStyle(),
               maxLines = 1,
               overflow = TextOverflow.Ellipsis,
             )

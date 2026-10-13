@@ -11,9 +11,7 @@ import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.state.RemoteColor
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rs
-import androidx.compose.remote.creation.compose.text.RemoteTextStyle
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 
 /** A small metric block for assembling sensor cards and widget summaries. */
@@ -42,7 +40,7 @@ fun RemoteHaMetric(
       text = entityName(entityId, label),
       color = theme.secondaryText,
       fontSize = HaType.Label,
-      style = RemoteTextStyle.Default,
+      style = haTextStyle(),
       maxLines = 1,
       overflow = TextOverflow.Ellipsis,
     )
@@ -51,8 +49,8 @@ fun RemoteHaMetric(
         text = LiveValues.state(boundEntityId, initialValue),
         color = valueColor ?: theme.primaryText,
         fontSize = HaType.Value,
-        fontWeight = FontWeight.Medium,
-        style = RemoteTextStyle.Default,
+        fontWeight = haValueWeight(),
+        style = haTextStyle(),
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
       )
@@ -62,7 +60,7 @@ fun RemoteHaMetric(
           modifier = RemoteModifier.padding(start = 4.rdp, top = 7.rdp),
           color = theme.secondaryText,
           fontSize = HaType.Label,
-          style = RemoteTextStyle.Default,
+          style = haTextStyle(),
         )
       }
     }

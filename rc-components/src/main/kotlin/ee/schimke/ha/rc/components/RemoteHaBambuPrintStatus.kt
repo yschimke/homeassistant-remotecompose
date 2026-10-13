@@ -21,10 +21,8 @@ import androidx.compose.remote.creation.compose.modifier.size
 import androidx.compose.remote.creation.compose.state.asRemotePaint
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rf
-import androidx.compose.remote.creation.compose.text.RemoteTextStyle
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 
 /**
@@ -63,7 +61,7 @@ fun RemoteHaBambuPrintStatus(
         text = cardText("printer", data.printerName),
         color = theme.secondaryText,
         fontSize = HaType.Caption,
-        style = RemoteTextStyle.Default,
+        style = haTextStyle(),
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
       )
@@ -81,15 +79,15 @@ fun RemoteHaBambuPrintStatus(
               LiveValues.attribute(data.progressEntityId, "progress_label", data.progressLabel),
             color = theme.primaryText,
             fontSize = HaType.Value,
-            fontWeight = FontWeight.SemiBold,
-            style = RemoteTextStyle.Default,
+            fontWeight = haValueWeight(),
+            style = haTextStyle(),
             maxLines = 1,
           )
           RemoteText(
             text = LiveValues.attribute(data.stageEntityId, "stage_label", data.stage),
             color = theme.secondaryText,
             fontSize = HaType.Body,
-            style = RemoteTextStyle.Default,
+            style = haTextStyle(),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
           )
@@ -100,7 +98,7 @@ fun RemoteHaBambuPrintStatus(
           text = LiveValues.attribute(data.layerEntityId, "layer_line", it),
           color = theme.secondaryText,
           fontSize = HaType.Label,
-          style = RemoteTextStyle.Default,
+          style = haTextStyle(),
           maxLines = 1,
         )
       }
@@ -109,7 +107,7 @@ fun RemoteHaBambuPrintStatus(
           text = LiveValues.attribute(data.remainingEntityId, "remaining_line", it),
           color = theme.secondaryText,
           fontSize = HaType.Label,
-          style = RemoteTextStyle.Default,
+          style = haTextStyle(),
           maxLines = 1,
         )
       }
@@ -123,7 +121,7 @@ fun RemoteHaBambuPrintStatus(
               text = LiveValues.attribute(data.nozzleEntityId, "nozzle_line", it),
               color = theme.secondaryText,
               fontSize = HaType.Label,
-              style = RemoteTextStyle.Default,
+              style = haTextStyle(),
               maxLines = 1,
             )
           }
@@ -132,7 +130,7 @@ fun RemoteHaBambuPrintStatus(
               text = LiveValues.attribute(data.bedEntityId, "bed_line", it),
               color = theme.secondaryText,
               fontSize = HaType.Label,
-              style = RemoteTextStyle.Default,
+              style = haTextStyle(),
               maxLines = 1,
             )
           }

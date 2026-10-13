@@ -23,7 +23,6 @@ import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rf
 import androidx.compose.remote.creation.compose.state.selectIfGe
-import androidx.compose.remote.creation.compose.text.RemoteTextStyle
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -80,8 +79,8 @@ fun RemoteHaGauge(data: HaGaugeData, modifier: RemoteModifier = RemoteModifier) 
         text = data.valueText,
         color = theme.primaryText,
         fontSize = HaType.Value,
-        fontWeight = FontWeight.SemiBold,
-        style = RemoteTextStyle.Default,
+        fontWeight = haValueWeight(),
+        style = haTextStyle(),
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
       )
@@ -89,7 +88,7 @@ fun RemoteHaGauge(data: HaGaugeData, modifier: RemoteModifier = RemoteModifier) 
         text = entityName(data.entityId, data.name),
         color = theme.secondaryText,
         fontSize = HaType.Body,
-        style = RemoteTextStyle.Default,
+        style = haTextStyle(),
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
       )
@@ -98,7 +97,7 @@ fun RemoteHaGauge(data: HaGaugeData, modifier: RemoteModifier = RemoteModifier) 
           text = cardText("range", gaugeRangeText(data.min, data.max, data.unit)),
           color = theme.secondaryText,
           fontSize = HaType.Caption,
-          style = RemoteTextStyle.Default,
+          style = haTextStyle(),
           maxLines = 1,
           overflow = TextOverflow.Ellipsis,
         )
@@ -151,8 +150,8 @@ fun RemoteHaGaugeStacked(data: HaGaugeData, modifier: RemoteModifier = RemoteMod
         text = data.valueText,
         color = theme.primaryText,
         fontSize = HaType.ValueSmall,
-        fontWeight = FontWeight.SemiBold,
-        style = RemoteTextStyle.Default,
+        fontWeight = haValueWeight(),
+        style = haTextStyle(),
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
       )
@@ -160,7 +159,7 @@ fun RemoteHaGaugeStacked(data: HaGaugeData, modifier: RemoteModifier = RemoteMod
         text = entityName(data.entityId, data.name),
         color = theme.secondaryText,
         fontSize = HaType.Label,
-        style = RemoteTextStyle.Default,
+        style = haTextStyle(),
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
       )
@@ -169,7 +168,7 @@ fun RemoteHaGaugeStacked(data: HaGaugeData, modifier: RemoteModifier = RemoteMod
           text = cardText("range", gaugeRangeText(data.min, data.max, data.unit)),
           color = theme.secondaryText,
           fontSize = HaType.Micro,
-          style = RemoteTextStyle.Default,
+          style = haTextStyle(),
           maxLines = 1,
           overflow = TextOverflow.Ellipsis,
         )
@@ -221,7 +220,7 @@ fun RemoteHaGaugeWide(data: HaGaugeData, modifier: RemoteModifier = RemoteModifi
         color = theme.primaryText,
         fontSize = HaType.Title,
         fontWeight = FontWeight.SemiBold,
-        style = RemoteTextStyle.Default,
+        style = haTextStyle(),
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
       )
@@ -229,7 +228,7 @@ fun RemoteHaGaugeWide(data: HaGaugeData, modifier: RemoteModifier = RemoteModifi
         text = entityName(data.entityId, data.name),
         color = theme.secondaryText,
         fontSize = HaType.Caption,
-        style = RemoteTextStyle.Default,
+        style = haTextStyle(),
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
       )

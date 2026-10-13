@@ -5,6 +5,10 @@ the three-layer data hierarchy from a raw reading to a typed visual, and the pre
 that lets one part (a thermometer, say) grow, shrink and change what it shows with the cell it is
 played in.
 
+It also covers the **uber themes** (§5): whole looks such as Material 3 Expressive, a Sony-style
+Trinitron, a segment LCD, Braun and Nixie, which change shape, type and meter drawing as well as
+colour.
+
 It sits between three other documents and leans on them rather than repeating them:
 
 - [`design/STYLE_GUIDE.md`](../../design/STYLE_GUIDE.md) — the palettes and the theme roles.
@@ -167,17 +171,60 @@ Every measurement takes `presentation`: one of the five rungs, or `adaptive`. Th
 templates: `card-thermometer` (a dashboard card at `standard`) and `launcher-thermometer-2x2`
 (`adaptive`, so it plays expanded at 2×2 and compact when resized smaller).
 
-## 5. Adoption checklist
+## 5. Uber themes
+
+A palette (`ThemeStyle`, `HaTheme`) recolours the chrome. An **uber theme**
+([`HaUberTheme`](../../rc-components/src/main/kotlin/ee/schimke/ha/rc/components/HaUberTheme.kt))
+is a whole look: palette, card shape, typeface, and **how meters are drawn**. A monochrome theme
+can also ink every reading in one colour. Every part reads it through `LocalHaUberTheme`. Hosts
+provide it with `ProvideHaUberTheme(theme, darkTheme)`, which also provides the palette.
+
+| Theme | Palette | Card | Type | Meters | Ink |
+|---|---|---|---|---|---|
+| `classic` (default) | HA light / dark | 12 dp, 1 dp border | default | smooth | semantic |
+| `expressive`: Material 3 Expressive | M3 Expressive tonal (`PaletteStyle.Expressive`) | 28 dp, no border | default, bold readings | smooth, ×1.6 strokes, **track gap + stop dot** | semantic |
+| `trinitron`: techy Sony | graphite, dark only | 2 dp, hairline | monospace, +1.2 sp tracking | **36-tick scale** | semantic |
+| `lcd` | reflective green-grey; dark mode = Indiglo backlight | 4 dp, 2 dp bezel | monospace, bold | **10 chunky segments with ghosts** | dark ink / cyan |
+| `braun`: Dieter Rams, 1962 | warm off-white / Braun black | 18 dp, no border | sans-serif, medium | smooth hairlines (×0.55) | semantic |
+| `nixie` | black glass, dark only | 14 dp | sans-serif, light | thin filaments **with a glow halo** | orange |
+
+How each part takes it:
+
+- **Meters** (`MeterLook` in `RemoteHaMeters.kt`) draw the theme's `HaMeterForm`. `Smooth` is the
+  continuous fill. `Segmented(count, gap, ghostAlpha)` lights segment *i* when the live fraction
+  passes its midpoint, as an in-document select, so a segmented meter stays live. Unlit segments
+  are the track, or the ink at `ghostAlpha`, which gives an LCD its ghosts. `strokeScale`,
+  `trackGap` and `glow` change the stroke, add Expressive's gap and stop dot, and draw Nixie's
+  halo. A glyph caps its segments at 12, and a coarse battery draws a phone's five bars.
+- **Card chrome**: `cardChrome` takes its corner and border from the theme's `HaCardShapeStyle`.
+- **Text**: every `RemoteHa*` text takes `style = haTextStyle()`, the theme's font family and
+  tracking. Readings take `fontWeight = haValueWeight()`.
+- **Ink** replaces rule 2's semantic data colours. It is only for themes that are monochrome by
+  nature (LCD, Nixie), and the reading's state still shows in fill level and segment count.
+
+`classic` is exactly the look the cards had before uber themes (`HaUberThemeTest` pins it), so
+nothing changes until a host provides another. In the builder, `ha-cards/uber-theme` is a
+container that takes a `theme` and `dark`; `HaCardMeasurementsTest` keeps the policy's values in
+step with `HaUberTheme.all`. The showcase previews are `Uber_*` in
+[`UberThemePreviews.kt`](../../previews/src/main/kotlin/ee/schimke/ha/previews/UberThemePreviews.kt).
+
+**Not yet themed:** entity icons, icon chips and toggle switches keep their semantic state
+colours, even under the monochrome themes. The arc-dial controls (thermostat, humidifier, light) and the history /
+statistics graphs draw their own canvases, and the app's Settings picker still offers palettes
+only. Both are follow-ups.
+
+## 6. Adoption checklist
 
 When you add or change a part or a card:
 
 1. No colour literals for chrome, only `haTheme()` roles. Data colours come from `HaStateColor`,
    `HaStatusColors` or a `HaMeterColor` rule.
-2. No `N.rsp`: pick the `HaType` role for what the text is.
+2. No `N.rsp`: pick the `HaType` role for what the text is. Use `style = haTextStyle()` and,
+   for readings, `fontWeight = haValueWeight()`, so uber themes reach the text.
 3. A numeric reading is a `HaReading` built with `haReading(…)`, so its bindings are the hosts'
    and its derived values are computed in-document.
 4. Draw with an existing Layer 2 meter before writing a new canvas. A new visual is a meter, not
-   a card-private canvas.
+   a card-private canvas, and it reads `meterLook` so it takes the uber theme's form and ink.
 5. Give a measurement a presentation, or `RemoteHaAdaptiveMeasurement` in a Fixed-mode cell, and
    check the smallest and largest cells against adaptive-card-layouts.md's design-review checklist.
 6. A new part that the builder should offer gets a `ha-cards` wrapper (scalar arguments only), a

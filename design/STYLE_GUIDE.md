@@ -180,7 +180,9 @@ M3 roles onto the HA vocabulary:
 
 Card parts follow the five theming rules and the `HaType` / `HaSpace` / `HaShape` scales in
 [`card-component-system.md`](../docs/architecture/card-component-system.md) (tokens in
-[`HaTokens.kt`](../rc-components/src/main/kotlin/ee/schimke/ha/rc/components/HaTokens.kt)).
+[`HaTokens.kt`](../rc-components/src/main/kotlin/ee/schimke/ha/rc/components/HaTokens.kt)). Beyond palettes, card parts also
+take an **uber theme** (`HaUberTheme`: Material 3 Expressive, Trinitron, LCD, Braun, Nixie) that
+changes card shape, typeface and how meters are drawn; see §5 of that document.
 
 - **Never hardcode `Color(0xFF…)` in a screen.** If a role is missing,
   extend `HaTheme` or the Material 3 `ColorScheme` — don't paint

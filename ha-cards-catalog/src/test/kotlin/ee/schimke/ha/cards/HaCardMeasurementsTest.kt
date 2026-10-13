@@ -40,4 +40,9 @@ class HaCardMeasurementsTest {
     assertTrue(lists.isNotEmpty())
     lists.forEach { assertEquals(HaCardMeasureKinds, it) }
   }
+
+  @Test
+  fun uberThemesMatchThePresets() {
+    assertEquals(listOf(HaCardUberThemes), allowed("theme"))
+  }
 }

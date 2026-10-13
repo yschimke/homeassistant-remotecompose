@@ -31,7 +31,6 @@ import androidx.compose.remote.creation.compose.state.rememberMutableRemoteInt
 import androidx.compose.remote.creation.compose.state.rf
 import androidx.compose.remote.creation.compose.state.ri
 import androidx.compose.remote.creation.compose.state.rs
-import androidx.compose.remote.creation.compose.text.RemoteTextStyle
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -153,7 +152,7 @@ fun RemoteHaAlarmPanelWide(data: HaAlarmPanelData, modifier: RemoteModifier = Re
             color = theme.primaryText,
             fontSize = HaType.BodyLarge,
             fontWeight = FontWeight.Medium,
-            style = RemoteTextStyle.Default,
+            style = haTextStyle(),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
           )
@@ -161,7 +160,7 @@ fun RemoteHaAlarmPanelWide(data: HaAlarmPanelData, modifier: RemoteModifier = Re
             text = status.label.rs,
             color = status.accent.rc,
             fontSize = HaType.Label,
-            style = RemoteTextStyle.Default,
+            style = haTextStyle(),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
           )
@@ -194,7 +193,7 @@ private fun StatusRow(
           color = theme.primaryText,
           fontSize = HaType.Title,
           fontWeight = FontWeight.Medium,
-          style = RemoteTextStyle.Default,
+          style = haTextStyle(),
           maxLines = 1,
           overflow = TextOverflow.Ellipsis,
         )
@@ -202,7 +201,7 @@ private fun StatusRow(
           text = status.label.rs,
           color = status.accent.rc,
           fontSize = HaType.Label,
-          style = RemoteTextStyle.Default,
+          style = haTextStyle(),
           maxLines = 1,
         )
       }
@@ -243,7 +242,7 @@ private fun ActionPill(action: HaAlarmAction, theme: RemoteHaTheme) {
       color = accent,
       fontSize = HaType.Label,
       fontWeight = FontWeight.Medium,
-      style = RemoteTextStyle.Default,
+      style = haTextStyle(),
       maxLines = 1,
     )
   }
@@ -387,7 +386,7 @@ private fun KeypadKey(
       color = accent.rc,
       fontSize = HaType.Title,
       fontWeight = FontWeight.Medium,
-      style = RemoteTextStyle.Default,
+      style = haTextStyle(),
       maxLines = 1,
     )
   }

@@ -20,7 +20,6 @@ import androidx.compose.remote.creation.compose.shapes.RemoteCircleShape
 import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rs
-import androidx.compose.remote.creation.compose.text.RemoteTextStyle
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -52,7 +51,7 @@ fun RemoteHaCalendar(data: HaCalendarData, modifier: RemoteModifier = RemoteModi
           color = theme.primaryText,
           fontSize = HaType.Title,
           fontWeight = FontWeight.Medium,
-          style = RemoteTextStyle.Default,
+          style = haTextStyle(),
           maxLines = 1,
           overflow = TextOverflow.Ellipsis,
         )
@@ -60,7 +59,7 @@ fun RemoteHaCalendar(data: HaCalendarData, modifier: RemoteModifier = RemoteModi
           text = cardText("range", data.rangeLabel),
           color = theme.secondaryText,
           fontSize = HaType.Caption,
-          style = RemoteTextStyle.Default,
+          style = haTextStyle(),
           maxLines = 1,
         )
       }
@@ -69,7 +68,7 @@ fun RemoteHaCalendar(data: HaCalendarData, modifier: RemoteModifier = RemoteModi
           text = "No upcoming events".rs,
           color = theme.secondaryText,
           fontSize = HaType.Label,
-          style = RemoteTextStyle.Default,
+          style = haTextStyle(),
         )
       } else {
         data.events.forEachIndexed { i, event -> Event(i, event, theme) }
@@ -106,7 +105,7 @@ fun RemoteHaCalendarIdentity(data: HaCalendarData, modifier: RemoteModifier = Re
         text = data.title.rs,
         color = theme.secondaryText,
         fontSize = HaType.Caption,
-        style = RemoteTextStyle.Default,
+        style = haTextStyle(),
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
       )
@@ -119,7 +118,7 @@ fun RemoteHaCalendarIdentity(data: HaCalendarData, modifier: RemoteModifier = Re
             text = next.whenLabel.rs,
             color = theme.secondaryText,
             fontSize = HaType.Label,
-            style = RemoteTextStyle.Default,
+            style = haTextStyle(),
             maxLines = 1,
             modifier = RemoteModifier.padding(start = 8.rdp),
           )
@@ -129,7 +128,7 @@ fun RemoteHaCalendarIdentity(data: HaCalendarData, modifier: RemoteModifier = Re
           color = theme.primaryText,
           fontSize = HaType.Title,
           fontWeight = FontWeight.SemiBold,
-          style = RemoteTextStyle.Default,
+          style = haTextStyle(),
           maxLines = 2,
           overflow = TextOverflow.Ellipsis,
         )
@@ -138,7 +137,7 @@ fun RemoteHaCalendarIdentity(data: HaCalendarData, modifier: RemoteModifier = Re
           text = "No upcoming events".rs,
           color = theme.secondaryText,
           fontSize = HaType.Body,
-          style = RemoteTextStyle.Default,
+          style = haTextStyle(),
         )
       }
     }
@@ -159,14 +158,14 @@ private fun Event(index: Int, event: HaCalendarEvent, theme: RemoteHaTheme) {
         text = cardText("row.$index.when", event.whenLabel),
         color = theme.secondaryText,
         fontSize = HaType.Caption,
-        style = RemoteTextStyle.Default,
+        style = haTextStyle(),
       )
       RemoteText(
         text = cardText("row.$index.summary", event.summary),
         color = theme.primaryText,
         fontSize = HaType.Body,
         fontWeight = FontWeight.Medium,
-        style = RemoteTextStyle.Default,
+        style = haTextStyle(),
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
       )

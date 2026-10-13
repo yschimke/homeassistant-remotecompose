@@ -22,7 +22,6 @@ import androidx.compose.remote.creation.compose.modifier.width
 import androidx.compose.remote.creation.compose.state.RemoteTextUnit
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rs
-import androidx.compose.remote.creation.compose.text.RemoteTextStyle
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
@@ -53,7 +52,7 @@ fun RemoteHaMarkdown(data: HaMarkdownData, modifier: RemoteModifier = RemoteModi
           color = theme.primaryText,
           fontSize = adaptiveTitleSize(data.title),
           fontWeight = FontWeight.Medium,
-          style = RemoteTextStyle.Default,
+          style = haTextStyle(),
           maxLines = 1,
           overflow = TextOverflow.Ellipsis,
         )
@@ -135,7 +134,7 @@ fun RemoteHaMarkdownIdentity(data: HaMarkdownData, modifier: RemoteModifier = Re
           color = theme.primaryText,
           fontSize = HaType.Title,
           fontWeight = FontWeight.SemiBold,
-          style = RemoteTextStyle.Default,
+          style = haTextStyle(),
           maxLines = 1,
           overflow = TextOverflow.Ellipsis,
         )
@@ -145,7 +144,7 @@ fun RemoteHaMarkdownIdentity(data: HaMarkdownData, modifier: RemoteModifier = Re
           text = firstLine.boundText ?: firstLine.text.rs,
           color = theme.secondaryText,
           fontSize = HaType.Body,
-          style = RemoteTextStyle.Default,
+          style = haTextStyle(),
           maxLines = if (data.title != null) 2 else 3,
           overflow = TextOverflow.Ellipsis,
         )
@@ -176,7 +175,7 @@ private fun MarkdownLine(
       color = primary,
       fontSize = fontSize,
       fontWeight = fontWeight,
-      style = RemoteTextStyle.Default,
+      style = haTextStyle(),
     )
     return
   }
@@ -189,7 +188,7 @@ private fun MarkdownLine(
         color = primary,
         fontSize = fontSize,
         fontWeight = fontWeight,
-        style = RemoteTextStyle.Default,
+        style = haTextStyle(),
       )
     }
     block.inlines.forEach { inline ->
@@ -204,7 +203,7 @@ private fun MarkdownLine(
               color = primary,
               fontSize = fontSize,
               fontWeight = fontWeight,
-              style = RemoteTextStyle.Default,
+              style = haTextStyle(),
             )
           } else {
             // Split into words so the flow row can wrap between
@@ -219,7 +218,7 @@ private fun MarkdownLine(
                   color = primary,
                   fontSize = fontSize,
                   fontWeight = fontWeight,
-                  style = RemoteTextStyle.Default,
+                  style = haTextStyle(),
                 )
               }
           }
@@ -230,7 +229,7 @@ private fun MarkdownLine(
             color = link,
             fontSize = fontSize,
             fontWeight = fontWeight,
-            style = RemoteTextStyle.Default,
+            style = haTextStyle(),
             modifier = click?.let { RemoteModifier.clickable(it) } ?: RemoteModifier,
           )
         }

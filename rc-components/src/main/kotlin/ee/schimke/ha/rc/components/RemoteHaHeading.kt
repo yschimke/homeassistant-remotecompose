@@ -8,7 +8,6 @@ import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.state.RemoteTextUnit
 import androidx.compose.remote.creation.compose.state.rdp
-import androidx.compose.remote.creation.compose.text.RemoteTextStyle
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.font.FontWeight
 
@@ -23,7 +22,7 @@ fun RemoteHaHeading(data: HaHeadingData, modifier: RemoteModifier = RemoteModifi
     color = theme.primaryText,
     fontSize = data.style.textSize,
     fontWeight = data.style.weight,
-    style = RemoteTextStyle.Default,
+    style = haTextStyle(),
   )
 }
 
