@@ -53,6 +53,11 @@ response bodies.
 Both the design server and UI Builder must be deployed
 with the new routes and the published `ha-cards` catalog before this app flow works.
 The container includes `design-server/catalogs.json` and loads that catalog by default.
+UI Builder 3.138.0 or newer passes the served catalog to its packaged renderer; older
+bundles can export an "Unsupported component" image for `ha-cards/dashboard-card`.
+Republish `ha-cards` when deploying the updated image: dashboard and launcher roots
+use the Scaffold canvas adapter, whose `content` slot matches their declared slot.
+Box reads `children` and would leave those roots empty.
 If you override `UI_BUILDER_ARGS`, retain `--catalogs-file /app/catalogs.json`
 and `--ui-builder-catalogs remote-m3,ha-cards` alongside your other flags.
 The authorized browser handoff resolves the catalog revision and native runtime from
@@ -63,6 +68,14 @@ Anonymous seed and handoff JSON APIs permit cross-origin browser calls without c
 the browser's authorized editor routes remain same-origin.
 The preview page's `form-action` policy permits its own origin and the configured
 builder origin, so browsers can follow the authorized form's redirect to a separate host.
+
+For a matching staged or published catalog, set `STUDIO_RENDER_SMOKE_REQUIRED=1`
+alongside `STUDIO_SERVER_URL` and `STUDIO_OPERATOR_TOKEN` when running
+`node --test design-server/test/studio-browser.test.mjs`. This exports the same card
+with two different light states and compares decoded pixels. A blank canvas or a
+successful PNG containing an unsupported-component message fails the check.
+The default CI handoff test uses the shared published catalog, which can still carry
+the previous main policy while a catalog change is under review.
 
 ## Calling a provider
 

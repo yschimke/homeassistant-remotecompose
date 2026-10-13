@@ -30,6 +30,18 @@ import kotlinx.serialization.json.put
  * vocabulary), with icon keys the `icon` property allows.
  */
 class HaCardsTemplatesTest {
+  @Test
+  fun cardCanvasesConsumeTheirContentSlot() {
+    val policy =
+      Json.parseToJsonElement(File(catalogDir, "ui-builder.policy.json").readText()).jsonObject
+    val builtins = policy.getValue("builtins").jsonObject
+    for (id in listOf(HaCardsSeed.DASHBOARD_CARD, HaCardsSeed.LAUNCHER_WIDGET)) {
+      val component = builtins.getValue(id).jsonObject
+      assertEquals(JsonPrimitive("layout/scaffold"), component["canvas"])
+      assertTrue("content" in component.getValue("slots").jsonObject)
+    }
+  }
+
   private val catalogDir = File(System.getProperty("haCards.dir") ?: "../ha-cards-catalog")
   private val update = System.getProperty("haCards.update") == "true"
   private val json = Json {
