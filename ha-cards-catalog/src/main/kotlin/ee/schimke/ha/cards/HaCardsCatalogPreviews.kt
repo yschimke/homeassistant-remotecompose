@@ -75,6 +75,35 @@ fun HaCardEntityRowSticker() = HaCardSticker {
 }
 
 @CatalogComponent(
+  id = "HaCard/Metric",
+  group = "Home Assistant",
+  noReference = NO_KIT,
+  caption = "A reusable sensor reading with a live value, a separate unit and a custom text color.",
+)
+@Preview(widthDp = 168, heightDp = 88)
+@Composable
+fun HaCardMetricSticker() = HaCardSticker {
+  HaCardMetric(
+    label = "Living room",
+    value = "21.5",
+    unit = "°C",
+    entityId = "sensor.living_room_temperature",
+  )
+}
+
+@CatalogComponent(
+  id = "HaCard/StatusChip",
+  group = "Home Assistant",
+  noReference = NO_KIT,
+  caption = "A small colored status indicator whose text and active state can follow an entity.",
+)
+@Preview(widthDp = 160, heightDp = 52)
+@Composable
+fun HaCardStatusChipSticker() = HaCardSticker {
+  HaCardStatusChip(status = "On", entityId = "light.kitchen", isOn = true)
+}
+
+@CatalogComponent(
   id = "HaCard/Entities",
   group = "Home Assistant",
   noReference = NO_KIT,

@@ -1,0 +1,63 @@
+{
+  "schema": "compose-ui-builder-document/v1-candidate",
+  "id": "card-sensor-metric",
+  "title": "Sensor metric",
+  "revision": 0,
+  "template": "card-sensor-metric",
+  "catalogPin": {
+    "systemId": "ha-cards",
+    "catalogRevision": "candidate",
+    "capabilityDigest": "candidate",
+    "nativeRuntimeId": "candidate"
+  },
+  "environment": {
+    "widthDp": 360,
+    "heightDp": 120,
+    "density": 2,
+    "theme": "light",
+    "locale": "en-US",
+    "fontScale": 1,
+    "layoutDirection": "ltr"
+  },
+  "stateVariables": {},
+  "roots": [
+    "root"
+  ],
+  "nodes": {
+    "root": {
+      "id": "root",
+      "componentId": "ha-cards/dashboard-card",
+      "properties": {},
+      "modifiers": [],
+      "slots": {
+        "content": [
+          "metric"
+        ]
+      }
+    },
+    "metric": {
+      "id": "metric",
+      "componentId": "ha-cards/metric",
+      "properties": {
+        "label": {
+          "type": "string",
+          "value": "Living room"
+        },
+        "value": {
+          "type": "string",
+          "value": "21.5"
+        },
+        "unit": {
+          "type": "string",
+          "value": "°C"
+        },
+        "entityId": {
+          "type": "string",
+          "value": "sensor.living_room_temperature"
+        }
+      },
+      "modifiers": [],
+      "slots": {}
+    }
+  }
+}

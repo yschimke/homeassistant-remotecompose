@@ -42,6 +42,8 @@ dependencies {
   implementation(libs.compose.ui)
   implementation(libs.compose.foundation)
   implementation(libs.compose.material3)
+  // A standard Compose library, like the engines: the catalog's icon keys resolve to its glyphs.
+  implementation(libs.compose.material.icons.extended)
   implementation(libs.kotlinx.serialization.json)
   // Runtime engines are supplied by the host. No Home Assistant classes enter this classpath.
   implementation(libs.remote.creation.compose)

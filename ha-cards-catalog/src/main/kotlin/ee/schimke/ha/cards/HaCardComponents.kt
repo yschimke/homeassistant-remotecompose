@@ -3,17 +3,25 @@
 package ee.schimke.ha.cards
 
 import androidx.compose.remote.creation.compose.capture.toRemoteImageVector
+import androidx.compose.remote.creation.compose.layout.RemoteAlignment
 import androidx.compose.remote.creation.compose.layout.RemoteBox
 import androidx.compose.remote.creation.compose.layout.RemoteComposable
+import androidx.compose.remote.creation.compose.layout.RemoteRow
+import androidx.compose.remote.creation.compose.layout.RemoteText
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
+import androidx.compose.remote.creation.compose.modifier.background
+import androidx.compose.remote.creation.compose.modifier.clip
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.modifier.size
+import androidx.compose.remote.creation.compose.shapes.RemoteCircleShape
 import androidx.compose.remote.creation.compose.state.RemoteBoolean
 import androidx.compose.remote.creation.compose.state.RemoteColor
 import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rs
+import androidx.compose.remote.creation.compose.state.rsp
+import androidx.compose.remote.creation.compose.text.RemoteTextStyle
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.wear.compose.remote.material3.RemoteIcon
@@ -36,6 +44,7 @@ import ee.schimke.ha.rc.components.RemoteHaEntityRow
 import ee.schimke.ha.rc.components.RemoteHaGauge
 import ee.schimke.ha.rc.components.RemoteHaGlance
 import ee.schimke.ha.rc.components.RemoteHaHeading
+import ee.schimke.ha.rc.components.RemoteHaMetric
 import ee.schimke.ha.rc.components.RemoteHaTile
 import ee.schimke.ha.rc.components.RemoteHaToggleButton
 import ee.schimke.ha.rc.components.RemoteHaToggleSwitch
@@ -364,4 +373,47 @@ fun HaCardIcon(
     modifier = modifier.size(sizeDp.rdp),
     tint = color,
   )
+}
+
+/** A sensor value with a compact label and unit, bound to an entity when supplied. */
+@Composable
+@RemoteComposable
+fun HaCardMetric(
+  label: String,
+  value: String,
+  modifier: RemoteModifier = RemoteModifier,
+  unit: String = "",
+  entityId: String = "",
+  valueColor: RemoteColor? = null,
+) {
+  RemoteHaMetric(label, value, unit, entityId.entityOrNull(), valueColor, modifier)
+}
+
+/** A compact live status label for a row, card header or widget summary. */
+@Composable
+@RemoteComposable
+fun HaCardStatusChip(
+  status: String,
+  modifier: RemoteModifier = RemoteModifier,
+  entityId: String = "",
+  isOn: Boolean = false,
+  activeColor: RemoteColor = HaCardColors.Active,
+  inactiveColor: RemoteColor = HaCardColors.Inactive,
+) {
+  val entity = entityId.entityOrNull()
+  val color =
+    (LiveValues.isOn(entity, isOn) ?: RemoteBoolean(isOn)).select(activeColor, inactiveColor)
+  RemoteRow(
+    modifier = modifier.padding(horizontal = 8.rdp, vertical = 4.rdp),
+    verticalAlignment = RemoteAlignment.CenterVertically,
+  ) {
+    RemoteBox(modifier = RemoteModifier.size(8.rdp).clip(RemoteCircleShape).background(color))
+    RemoteText(
+      text = LiveValues.state(entity, status),
+      modifier = RemoteModifier.padding(start = 6.rdp),
+      color = color,
+      fontSize = 12.rsp,
+      style = RemoteTextStyle.Default,
+    )
+  }
 }

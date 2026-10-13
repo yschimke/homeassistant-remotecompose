@@ -53,7 +53,7 @@ indriya = "2.2.4"
 # of the plugin marker. The preview-baselines / preview-comment GitHub
 # Actions read this key (`catalog-key: compose-preview-plugin`) to pin
 # the CLI release they install on the runner.
-compose-preview-plugin = "2.54.0"
+compose-preview-plugin = "2.55.0"
 # The `ee.schimke.composeai:*-core` protocol artifacts are versioned on their
 # own 2.x line, NOT with the plugin. Tying `data-render-core` to
 # `compose-preview-plugin` is what pinned this repo at 1.47.0: that is the last
@@ -95,7 +95,7 @@ cmp-navigation3 = "1.2.0-rc01"
 cmp-navigation3-runtime = "1.2.0"
 cmp-icons = "1.7.3"
 cmp-adaptive = "1.3.0"
-rc-player = "2.10.0"
+rc-player = "2.12.0"
 compose-webview = "2.0.3"
 # KCEF requests 2.5.0, which was not published to Central. Keep both halves on the
 # supported 2.6.0 release from Central, including the native libraries for desktop.

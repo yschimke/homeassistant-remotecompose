@@ -60,6 +60,10 @@ on:
       - '**/build.gradle.kts'
       - 'catalog.spec.json'
       - 'adaptive-uid-pilot/**'
+      - 'ui-builder-catalog/**'
+      - 'rc-components-ui/**'
+      - 'rc-components/**'
+      - 'rc-converter/**'
       - 'build-logic/**'
       - '.github/workflows/adaptive-uid-*.yml'
       # Same class as catalog.spec.json: config that changes what the run publishes. An
@@ -100,7 +104,7 @@ jobs:
       # `refs/design-artifacts/source/homeassistant-remotecompose` here, which
       # has to stay in this repository (it points at a source commit).
       contents: write
-    uses: yschimke/compose-ai-tools/.github/workflows/design-artifacts-reusable.yml@8f5c801144a7f482b44afb8e9f3e34a4871b9d7e
+    uses: yschimke/compose-ai-tools/.github/workflows/design-artifacts-reusable.yml@ec08b1b9e927e555a0fdc8d3e2be685e459ce705 # v2.56.0
     with:
       system: homeassistant-remotecompose
       # Generated branches (design-artifacts/homeassistant-remotecompose and any
@@ -116,6 +120,11 @@ jobs:
       upload-out: true
       spec: catalog.spec.json
       module: ':previews'
+      # The native typed catalog is built from this source revision's Android components.
+      ui-builder-catalog-task: ':ui-builder-catalog:exportTypedCatalog'
+      ui-builder-catalog-dir: ui-builder-catalog/build/catalog/testDebugUnitTest
+      # ui-builder-renderer-sdk is source-only at v3.111.0.
+      ui-builder-runtime-source-ref: v3.111.0
       # `:previews` has the plugin AUTO-injected (via --init-script), so keep the
       # CLI synchronized with the catalog plugin. Resolved FROM the catalog rather
       # than hardcoded here: a literal version is still a pin, but a second one,
