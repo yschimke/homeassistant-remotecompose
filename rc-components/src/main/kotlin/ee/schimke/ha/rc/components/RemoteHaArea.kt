@@ -23,7 +23,6 @@ import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rf
 import androidx.compose.remote.creation.compose.state.rs
-import androidx.compose.remote.creation.compose.state.rsp
 import androidx.compose.remote.creation.compose.text.RemoteTextStyle
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.font.FontWeight
@@ -50,7 +49,7 @@ fun RemoteHaArea(data: HaAreaCardData, modifier: RemoteModifier = RemoteModifier
       RemoteText(
         text = cardText("name", data.name),
         color = theme.primaryText,
-        fontSize = 16.rsp,
+        fontSize = HaType.Title,
         fontWeight = FontWeight.Medium,
         style = RemoteTextStyle.Default,
         maxLines = 1,
@@ -90,7 +89,7 @@ private fun Stat(stat: HaAreaStat, theme: RemoteHaTheme) {
       RemoteText(
         text = stat.label,
         color = theme.secondaryText,
-        fontSize = 12.rsp,
+        fontSize = HaType.Label,
         style = RemoteTextStyle.Default,
         maxLines = 1,
       )

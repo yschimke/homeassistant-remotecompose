@@ -47,6 +47,7 @@ object HaCardsSeed {
   const val ENTITY_ROW = "ha-cards/entity-row"
   const val GAUGE = "ha-cards/gauge"
   const val METRIC = "ha-cards/metric"
+  const val THERMOMETER = "ha-cards/thermometer"
   const val BUTTON = "ha-cards/button"
 
   /** HA's default dark card background: a Wear widget's own background. */
@@ -185,6 +186,52 @@ object HaCardsSeed {
             "value" to UiBuilderSeed.string(value),
             "unit" to UiBuilderSeed.string(unit),
             "entityId" to UiBuilderSeed.string(entityId),
+          ),
+      )
+    return UiBuilderSeed.envelope(
+      target,
+      designId,
+      title,
+      heightDp = target.heightDp ?: 120,
+      stateVariables = emptyList(),
+      nodes = nodes,
+    )
+  }
+
+  /**
+   * A typed measurement ([THERMOMETER] by default) alone in [target]'s root, at [presentation]:
+   * `standard` for a dashboard card, `adaptive` for a widget cell, where it plays compact or
+   * expanded by the cell's live size (card-component-system.md).
+   */
+  fun measurement(
+    designId: String,
+    title: String,
+    target: Target,
+    name: String,
+    value: Double,
+    entityId: String,
+    presentation: String,
+    componentId: String = THERMOMETER,
+  ): JsonObject {
+    val nodes = linkedMapOf<String, JsonObject>()
+    nodes["root"] =
+      node(
+        "root",
+        target.rootComponent,
+        properties = target.rootProperties,
+        modifiers = target.rootModifiers,
+        slots = mapOf(target.rootSlot to listOf("measurement")),
+      )
+    nodes["measurement"] =
+      node(
+        "measurement",
+        componentId,
+        properties =
+          mapOf(
+            "name" to UiBuilderSeed.string(name),
+            "value" to float(value),
+            "entityId" to UiBuilderSeed.string(entityId),
+            "presentation" to UiBuilderSeed.string(presentation),
           ),
       )
     return UiBuilderSeed.envelope(

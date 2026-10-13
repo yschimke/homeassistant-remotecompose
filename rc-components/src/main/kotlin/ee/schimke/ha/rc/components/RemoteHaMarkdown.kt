@@ -19,9 +19,9 @@ import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.creation.compose.modifier.height
 import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.modifier.width
+import androidx.compose.remote.creation.compose.state.RemoteTextUnit
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rs
-import androidx.compose.remote.creation.compose.state.rsp
 import androidx.compose.remote.creation.compose.text.RemoteTextStyle
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.layout.ContentScale
@@ -51,7 +51,7 @@ fun RemoteHaMarkdown(data: HaMarkdownData, modifier: RemoteModifier = RemoteModi
         RemoteText(
           text = cardTitle(data.title),
           color = theme.primaryText,
-          fontSize = adaptiveTitleSizeSp(data.title).rsp,
+          fontSize = adaptiveTitleSize(data.title),
           fontWeight = FontWeight.Medium,
           style = RemoteTextStyle.Default,
           maxLines = 1,
@@ -64,10 +64,10 @@ fun RemoteHaMarkdown(data: HaMarkdownData, modifier: RemoteModifier = RemoteModi
           MarkdownBlock.Kind.Heading -> {
             val size =
               when (block.level) {
-                1 -> 16
-                2 -> 15
-                3 -> 14
-                else -> 13
+                1 -> HaType.Title
+                2,
+                3 -> HaType.BodyLarge
+                else -> HaType.Body
               }
             MarkdownLine(
               block = block,
@@ -80,7 +80,7 @@ fun RemoteHaMarkdown(data: HaMarkdownData, modifier: RemoteModifier = RemoteModi
             MarkdownLine(
               block = block,
               theme = theme,
-              fontSize = 13,
+              fontSize = HaType.Body,
               fontWeight = FontWeight.Normal,
               bullet = true,
             )
@@ -97,7 +97,7 @@ fun RemoteHaMarkdown(data: HaMarkdownData, modifier: RemoteModifier = RemoteModi
             MarkdownLine(
               block = block,
               theme = theme,
-              fontSize = 13,
+              fontSize = HaType.Body,
               fontWeight = FontWeight.Normal,
             )
         }
@@ -133,7 +133,7 @@ fun RemoteHaMarkdownIdentity(data: HaMarkdownData, modifier: RemoteModifier = Re
         RemoteText(
           text = cardTitle(data.title),
           color = theme.primaryText,
-          fontSize = 16.rsp,
+          fontSize = HaType.Title,
           fontWeight = FontWeight.SemiBold,
           style = RemoteTextStyle.Default,
           maxLines = 1,
@@ -144,7 +144,7 @@ fun RemoteHaMarkdownIdentity(data: HaMarkdownData, modifier: RemoteModifier = Re
         RemoteText(
           text = firstLine.boundText ?: firstLine.text.rs,
           color = theme.secondaryText,
-          fontSize = 13.rsp,
+          fontSize = HaType.Body,
           style = RemoteTextStyle.Default,
           maxLines = if (data.title != null) 2 else 3,
           overflow = TextOverflow.Ellipsis,
@@ -164,7 +164,7 @@ fun RemoteHaMarkdownIdentity(data: HaMarkdownData, modifier: RemoteModifier = Re
 private fun MarkdownLine(
   block: MarkdownBlock,
   theme: RemoteHaTheme,
-  fontSize: Int,
+  fontSize: RemoteTextUnit,
   fontWeight: FontWeight,
   bullet: Boolean = false,
 ) {
@@ -174,7 +174,7 @@ private fun MarkdownLine(
     RemoteText(
       text = if (bullet) "• ".rs + text else text,
       color = primary,
-      fontSize = fontSize.rsp,
+      fontSize = fontSize,
       fontWeight = fontWeight,
       style = RemoteTextStyle.Default,
     )
@@ -187,7 +187,7 @@ private fun MarkdownLine(
       RemoteText(
         text = "• ".rs,
         color = primary,
-        fontSize = fontSize.rsp,
+        fontSize = fontSize,
         fontWeight = fontWeight,
         style = RemoteTextStyle.Default,
       )
@@ -202,7 +202,7 @@ private fun MarkdownLine(
             RemoteText(
               text = inline.boundText,
               color = primary,
-              fontSize = fontSize.rsp,
+              fontSize = fontSize,
               fontWeight = fontWeight,
               style = RemoteTextStyle.Default,
             )
@@ -217,7 +217,7 @@ private fun MarkdownLine(
                 RemoteText(
                   text = word.rs,
                   color = primary,
-                  fontSize = fontSize.rsp,
+                  fontSize = fontSize,
                   fontWeight = fontWeight,
                   style = RemoteTextStyle.Default,
                 )
@@ -228,7 +228,7 @@ private fun MarkdownLine(
           RemoteText(
             text = inline.boundText ?: inline.text.rs,
             color = link,
-            fontSize = fontSize.rsp,
+            fontSize = fontSize,
             fontWeight = fontWeight,
             style = RemoteTextStyle.Default,
             modifier = click?.let { RemoteModifier.clickable(it) } ?: RemoteModifier,

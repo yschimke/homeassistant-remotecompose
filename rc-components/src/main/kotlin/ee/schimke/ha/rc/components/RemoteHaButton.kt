@@ -19,7 +19,6 @@ import androidx.compose.remote.creation.compose.state.RemoteColor
 import androidx.compose.remote.creation.compose.state.RemoteString
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rf
-import androidx.compose.remote.creation.compose.state.rsp
 import androidx.compose.remote.creation.compose.state.tween
 import androidx.compose.remote.creation.compose.text.RemoteTextStyle
 import androidx.compose.runtime.Composable
@@ -161,7 +160,7 @@ private fun ButtonBody(
   // space. 15sp + 6dp vertical padding still clears the shortest
   // icon+name cell (`2×1`, 84dp) without clipping. Wrap mode keeps 13sp
   // so the dashboard pixel-diff references are unchanged.
-  val nameSizeSp = if (compact) 15 else 13
+  val nameSize = if (compact) HaType.BodyLarge else HaType.Body
   // Not using `fillMaxWidth()` by default: buttons placed in a grid or
   // horizontal-stack should wrap-content so the flow layout can pack
   // multiple across the row. Standalone / Fixed-mode callers pass an
@@ -181,7 +180,7 @@ private fun ButtonBody(
           RemoteText(
             text = entityName(data.entityId, data.name),
             color = theme.primaryText,
-            fontSize = nameSizeSp.rsp,
+            fontSize = nameSize,
             fontWeight = FontWeight.Medium,
             style = RemoteTextStyle.Default,
             maxLines = 1,

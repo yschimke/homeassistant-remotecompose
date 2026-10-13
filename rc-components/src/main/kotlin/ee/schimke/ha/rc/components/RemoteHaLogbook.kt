@@ -17,7 +17,6 @@ import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.modifier.size
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rs
-import androidx.compose.remote.creation.compose.state.rsp
 import androidx.compose.remote.creation.compose.text.RemoteTextStyle
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.font.FontWeight
@@ -52,7 +51,7 @@ fun RemoteHaLogbook(data: HaLogbookData, modifier: RemoteModifier = RemoteModifi
         RemoteText(
           text = cardTitle(data.title),
           color = theme.primaryText,
-          fontSize = 15.rsp,
+          fontSize = HaType.Title,
           fontWeight = FontWeight.Medium,
           style = RemoteTextStyle.Default,
           maxLines = 1,
@@ -63,7 +62,7 @@ fun RemoteHaLogbook(data: HaLogbookData, modifier: RemoteModifier = RemoteModifi
         RemoteText(
           text = "No recent activity".rs,
           color = theme.secondaryText,
-          fontSize = 12.rsp,
+          fontSize = HaType.Label,
           style = RemoteTextStyle.Default,
         )
       } else {
@@ -96,7 +95,7 @@ fun RemoteHaLogbookIdentity(data: HaLogbookData, modifier: RemoteModifier = Remo
       RemoteText(
         text = "No recent activity".rs,
         color = theme.secondaryText,
-        fontSize = 13.rsp,
+        fontSize = HaType.Body,
         style = RemoteTextStyle.Default,
       )
     } else {
@@ -117,7 +116,7 @@ fun RemoteHaLogbookIdentity(data: HaLogbookData, modifier: RemoteModifier = Remo
           RemoteText(
             text = latest.name.rs,
             color = theme.primaryText,
-            fontSize = 15.rsp,
+            fontSize = HaType.Title,
             fontWeight = FontWeight.SemiBold,
             style = RemoteTextStyle.Default,
             maxLines = 1,
@@ -126,7 +125,7 @@ fun RemoteHaLogbookIdentity(data: HaLogbookData, modifier: RemoteModifier = Remo
           RemoteText(
             text = latest.message.rs,
             color = theme.secondaryText,
-            fontSize = 12.rsp,
+            fontSize = HaType.Label,
             style = RemoteTextStyle.Default,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
@@ -154,7 +153,7 @@ private fun Entry(index: Int, entry: HaLogbookEntry, theme: RemoteHaTheme) {
       RemoteText(
         text = name,
         color = theme.primaryText,
-        fontSize = 13.rsp,
+        fontSize = HaType.Body,
         fontWeight = FontWeight.Medium,
         style = RemoteTextStyle.Default,
         maxLines = 1,
@@ -163,7 +162,7 @@ private fun Entry(index: Int, entry: HaLogbookEntry, theme: RemoteHaTheme) {
       RemoteText(
         text = cardText("row.$index.message", entry.message),
         color = theme.secondaryText,
-        fontSize = 12.rsp,
+        fontSize = HaType.Label,
         style = RemoteTextStyle.Default,
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
@@ -172,7 +171,7 @@ private fun Entry(index: Int, entry: HaLogbookEntry, theme: RemoteHaTheme) {
     RemoteText(
       text = cardText("row.$index.when", entry.whenText),
       color = theme.secondaryText,
-      fontSize = 11.rsp,
+      fontSize = HaType.Caption,
       style = RemoteTextStyle.Default,
       maxLines = 1,
     )

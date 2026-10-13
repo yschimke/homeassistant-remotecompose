@@ -19,7 +19,6 @@ import androidx.compose.remote.creation.compose.modifier.size
 import androidx.compose.remote.creation.compose.shapes.RemoteRoundedCornerShape
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rs
-import androidx.compose.remote.creation.compose.state.rsp
 import androidx.compose.remote.creation.compose.text.RemoteTextStyle
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.font.FontWeight
@@ -53,7 +52,7 @@ fun RemoteHaBambuAms(data: HaBambuAmsData, modifier: RemoteModifier = RemoteModi
       RemoteText(
         text = data.title.rs,
         color = theme.primaryText,
-        fontSize = 14.rsp,
+        fontSize = HaType.BodyLarge,
         fontWeight = FontWeight.Medium,
         style = RemoteTextStyle.Default,
       )
@@ -86,13 +85,13 @@ fun RemoteHaBambuSpool(data: HaBambuSpoolDetail, modifier: RemoteModifier = Remo
         RemoteText(
           text = cardText("slot_label", data.slot.slotLabel),
           color = theme.secondaryText,
-          fontSize = 11.rsp,
+          fontSize = HaType.Caption,
           style = RemoteTextStyle.Default,
         )
         RemoteText(
           text = data.slot.material,
           color = theme.primaryText,
-          fontSize = 16.rsp,
+          fontSize = HaType.Title,
           fontWeight = FontWeight.Medium,
           style = RemoteTextStyle.Default,
           maxLines = 1,
@@ -106,7 +105,7 @@ fun RemoteHaBambuSpool(data: HaBambuSpoolDetail, modifier: RemoteModifier = Remo
               data.slot.remainPercent?.let { "$it %" } ?: "—",
             ),
           color = theme.secondaryText,
-          fontSize = 13.rsp,
+          fontSize = HaType.Body,
           style = RemoteTextStyle.Default,
         )
       }
@@ -122,7 +121,7 @@ private fun SpoolSlot(slot: HaBambuSpoolSlot, theme: RemoteHaTheme, big: Boolean
       RemoteText(
         text = slot.material,
         color = theme.primaryText,
-        fontSize = 11.rsp,
+        fontSize = HaType.Caption,
         fontWeight = FontWeight.Medium,
         style = RemoteTextStyle.Default,
         maxLines = 1,
@@ -137,7 +136,7 @@ private fun SpoolSlot(slot: HaBambuSpoolSlot, theme: RemoteHaTheme, big: Boolean
           slot.remainPercent?.let { "$it %" } ?: "—",
         ),
       color = theme.secondaryText,
-      fontSize = 11.rsp,
+      fontSize = HaType.Caption,
       style = RemoteTextStyle.Default,
     )
   }

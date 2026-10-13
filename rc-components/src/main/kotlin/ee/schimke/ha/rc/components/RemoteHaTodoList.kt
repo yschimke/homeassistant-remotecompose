@@ -21,7 +21,6 @@ import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.modifier.size
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rs
-import androidx.compose.remote.creation.compose.state.rsp
 import androidx.compose.remote.creation.compose.text.RemoteTextStyle
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.font.FontWeight
@@ -48,7 +47,7 @@ fun RemoteHaTodoList(data: HaTodoListData, modifier: RemoteModifier = RemoteModi
       RemoteText(
         text = cardTitle(data.title),
         color = theme.primaryText,
-        fontSize = 16.rsp,
+        fontSize = HaType.Title,
         fontWeight = FontWeight.Medium,
         style = RemoteTextStyle.Default,
         maxLines = 1,
@@ -72,7 +71,7 @@ fun RemoteHaTodoList(data: HaTodoListData, modifier: RemoteModifier = RemoteModi
         RemoteText(
           text = "No items".rs,
           color = theme.secondaryText,
-          fontSize = 12.rsp,
+          fontSize = HaType.Label,
           style = RemoteTextStyle.Default,
         )
       }
@@ -106,7 +105,7 @@ fun RemoteHaTodoListIdentity(data: HaTodoListData, modifier: RemoteModifier = Re
       RemoteText(
         text = data.title.rs,
         color = theme.secondaryText,
-        fontSize = 12.rsp,
+        fontSize = HaType.Label,
         style = RemoteTextStyle.Default,
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
@@ -114,7 +113,7 @@ fun RemoteHaTodoListIdentity(data: HaTodoListData, modifier: RemoteModifier = Re
       RemoteText(
         text = (if (remaining == 0) "All done" else "$remaining left").rs,
         color = theme.primaryText,
-        fontSize = 24.rsp,
+        fontSize = HaType.Value,
         fontWeight = FontWeight.SemiBold,
         style = RemoteTextStyle.Default,
         maxLines = 1,
@@ -129,7 +128,7 @@ private fun Section(label: String, theme: RemoteHaTheme) {
   RemoteText(
     text = label.rs,
     color = theme.secondaryText,
-    fontSize = 11.rsp,
+    fontSize = HaType.Caption,
     fontWeight = FontWeight.Medium,
     style = RemoteTextStyle.Default,
   )
@@ -156,7 +155,7 @@ private fun Row(key: String, item: HaTodoItem, completed: Boolean, theme: Remote
       RemoteText(
         text = summary,
         color = if (completed) theme.secondaryText else theme.primaryText,
-        fontSize = 13.rsp,
+        fontSize = HaType.Body,
         style = RemoteTextStyle.Default,
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,

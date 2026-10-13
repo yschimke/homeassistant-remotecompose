@@ -37,7 +37,6 @@ import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rf
 import androidx.compose.remote.creation.compose.state.ri
 import androidx.compose.remote.creation.compose.state.rs
-import androidx.compose.remote.creation.compose.state.rsp
 import androidx.compose.remote.creation.compose.text.RemoteTextStyle
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
@@ -89,7 +88,7 @@ fun RemoteHaArcDial(data: HaArcDialData, modifier: RemoteModifier = RemoteModifi
       RemoteText(
         text = entityName(data.entityId, data.name),
         color = theme.primaryText,
-        fontSize = 14.rsp,
+        fontSize = HaType.BodyLarge,
         fontWeight = FontWeight.Medium,
         style = RemoteTextStyle.Default,
         maxLines = 1,
@@ -155,7 +154,7 @@ fun RemoteHaArcDialWide(data: HaArcDialData, modifier: RemoteModifier = RemoteMo
       RemoteText(
         text = LiveValues.attribute(data.entityId, data.centerLabelAttribute, data.centerLabel),
         color = theme.primaryText,
-        fontSize = 18.rsp,
+        fontSize = HaType.ValueSmall,
         fontWeight = FontWeight.SemiBold,
         style = RemoteTextStyle.Default,
         maxLines = 1,
@@ -170,7 +169,7 @@ fun RemoteHaArcDialWide(data: HaArcDialData, modifier: RemoteModifier = RemoteMo
               data.supportingLabel,
             ),
           color = dialAccent(data),
-          fontSize = 12.rsp,
+          fontSize = HaType.Label,
           style = RemoteTextStyle.Default,
           maxLines = 1,
           overflow = TextOverflow.Ellipsis,
@@ -207,7 +206,7 @@ private fun DialBody(data: HaArcDialData, theme: RemoteHaTheme) {
       RemoteText(
         text = LiveValues.attribute(data.entityId, data.centerLabelAttribute, data.centerLabel),
         color = theme.primaryText,
-        fontSize = 26.rsp,
+        fontSize = HaType.ValueLarge,
         fontWeight = FontWeight.SemiBold,
         style = RemoteTextStyle.Default,
         maxLines = 1,
@@ -222,7 +221,7 @@ private fun DialBody(data: HaArcDialData, theme: RemoteHaTheme) {
               data.supportingLabel,
             ),
           color = dialAccent(data),
-          fontSize = 12.rsp,
+          fontSize = HaType.Label,
           style = RemoteTextStyle.Default,
           maxLines = 1,
         )
@@ -262,7 +261,7 @@ private fun ChipText(text: RemoteString, accent: RemoteColor) {
   RemoteText(
     text = text,
     color = accent,
-    fontSize = 12.rsp,
+    fontSize = HaType.Label,
     fontWeight = FontWeight.Medium,
     style = RemoteTextStyle.Default,
     maxLines = 1,

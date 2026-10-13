@@ -131,6 +131,16 @@ class HaCardsTemplatesTest {
           unit = "°C",
           entityId = "sensor.living_room_temperature",
         ),
+      "card-thermometer" to
+        HaCardsSeed.measurement(
+          "card-thermometer",
+          "Thermometer",
+          HaCardsSeed.card("card-thermometer", heightDp = 112),
+          name = "Living room",
+          value = 21.5,
+          entityId = "sensor.living_room_temperature",
+          presentation = "standard",
+        ),
       "wear-light-small" to
         UiBuilderSeed.document(
           lightTile,
@@ -158,6 +168,16 @@ class HaCardsTemplatesTest {
           "launcher-entities-4x2",
           "Entities · launcher 4x2",
           HaCardsSeed.launcher("launcher-entities-4x2", widthDp = 276, heightDp = 220),
+        ),
+      "launcher-thermometer-2x2" to
+        HaCardsSeed.measurement(
+          "launcher-thermometer-2x2",
+          "Thermometer · launcher 2x2",
+          HaCardsSeed.launcher("launcher-thermometer-2x2", widthDp = 130, heightDp = 220),
+          name = "Bedroom",
+          value = 19.0,
+          entityId = "sensor.bedroom_temperature",
+          presentation = "adaptive",
         ),
     )
 

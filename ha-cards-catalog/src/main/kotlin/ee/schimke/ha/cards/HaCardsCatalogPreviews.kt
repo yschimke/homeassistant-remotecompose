@@ -7,8 +7,10 @@ import androidx.compose.remote.creation.compose.layout.RemoteAlignment
 import androidx.compose.remote.creation.compose.layout.RemoteColumn
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
+import androidx.compose.remote.creation.compose.modifier.height
 import androidx.compose.remote.creation.compose.state.rb
 import androidx.compose.remote.creation.compose.state.rc
+import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.remote.creation.compose.state.rsp
 import androidx.compose.runtime.Composable
@@ -283,4 +285,118 @@ fun RemoteSwitchButtonSticker() = HaCardSticker {
 @Composable
 fun RemoteTextSticker() = HaCardSticker {
   RemoteText("Living room".rs, color = HaPrimaryText, fontSize = 18.rsp)
+}
+
+// ── Measurements ────────────────────────────────────────────────────────────────────────────────
+
+@CatalogComponent(
+  id = "HaCard/Thermometer",
+  group = "Measurements",
+  noReference = NO_KIT,
+  caption =
+    "A temperature as a thermometer, standard presentation: the glyph fills along HA's comfort " +
+      "ramp and follows `<entityId>.numeric_state` live.",
+)
+@Preview(widthDp = CARD_WIDTH_DP, heightDp = 96)
+@Composable
+fun HaCardThermometerSticker() = HaCardSticker {
+  HaCardThermometer(
+    name = "Living room",
+    value = 21.5f,
+    entityId = "sensor.living_room_temperature",
+  )
+}
+
+@CatalogComponent(
+  id = "HaCard/Thermometer-Adaptive-Tall",
+  group = "Measurements",
+  noReference = NO_KIT,
+  caption =
+    "The adaptive thermometer in a tall cell: expanded, the tube grows with the cell and the " +
+      "range appears under a promoted reading.",
+)
+@Preview(widthDp = 160, heightDp = 240)
+@Composable
+fun HaCardThermometerTallSticker() = HaCardSticker {
+  HaCardThermometer(name = "Bedroom", value = 27f, presentation = ADAPTIVE)
+}
+
+@CatalogComponent(
+  id = "HaCard/Thermometer-Adaptive-Short",
+  group = "Measurements",
+  noReference = NO_KIT,
+  caption =
+    "The same adaptive thermometer in a Wear Small–shaped cell: compact, the glyph beside the " +
+      "reading and name.",
+)
+@Preview(widthDp = 216, heightDp = 76)
+@Composable
+fun HaCardThermometerShortSticker() = HaCardSticker {
+  HaCardThermometer(name = "Bedroom", value = 27f, presentation = ADAPTIVE)
+}
+
+@CatalogComponent(
+  id = "HaCard/Thermometer-Chip",
+  group = "Measurements",
+  noReference = NO_KIT,
+  caption = "The chip rung, for a 1×1 launcher cell: the thermometer over its reading, no name.",
+)
+@Preview(widthDp = 72, heightDp = 110)
+@Composable
+fun HaCardThermometerChipSticker() = HaCardSticker {
+  HaCardThermometer(name = "Outside", value = 4f, presentation = "chip")
+}
+
+@CatalogComponent(
+  id = "HaCard/Battery",
+  group = "Measurements",
+  noReference = NO_KIT,
+  caption = "A battery level as a battery; below 30 % it turns amber, below 15 % red.",
+)
+@Preview(widthDp = CARD_WIDTH_DP, heightDp = 80)
+@Composable
+fun HaCardBatterySticker() = HaCardSticker {
+  HaCardBattery(name = "Front door lock", value = 22f, entityId = "sensor.front_door_battery")
+}
+
+@CatalogComponent(
+  id = "HaCard/Measurement",
+  group = "Measurements",
+  noReference = NO_KIT,
+  caption = "A reading drawn by its kind — humidity, on an arc — at the compact presentation.",
+)
+@Preview(widthDp = 216, heightDp = 76)
+@Composable
+fun HaCardMeasurementSticker() = HaCardSticker {
+  HaCardMeasurement(
+    name = "Bathroom",
+    value = 64f,
+    unit = "%",
+    kind = "humidity",
+    presentation = "compact",
+  )
+}
+
+@CatalogComponent(
+  id = "HaCard/ArcMeter",
+  group = "Measurements",
+  noReference = NO_KIT,
+  caption = "A bare arc meter: a value on its scale, no text, for building a card of your own.",
+)
+@Preview(widthDp = 160, heightDp = 96)
+@Composable
+fun HaCardArcMeterSticker() = HaCardSticker {
+  HaCardArcMeter(value = 62f, modifier = RemoteModifier.fillMaxWidth().height(72.rdp))
+}
+
+@CatalogComponent(
+  id = "HaCard/BarMeter",
+  group = "Measurements",
+  noReference = NO_KIT,
+  caption = "A bare bar meter: a value on its scale as a rounded bar.",
+)
+@Preview(widthDp = 200, heightDp = 40)
+@Composable
+fun HaCardBarMeterSticker() = HaCardSticker {
+  HaCardBarMeter(value = 62f, modifier = RemoteModifier.fillMaxWidth().height(10.rdp))
 }

@@ -14,6 +14,9 @@
   a new card keeps up with Home Assistant without going stale, and a
   screenshot test (one frozen frame) does **not** prove that — check each
   dynamic value against the contract.
+- **Card parts follow the component system.** Theme roles for chrome, `HaType` for text sizes,
+  `HaReading` for numeric values, Layer 2 meters before a new canvas: see
+  [`docs/architecture/card-component-system.md`](docs/architecture/card-component-system.md).
 - Do not exceed 1800px in any dimension when capturing or generating images (screenshots, previews, diffs). Downscale before returning or attaching them.
 - Use `agent/...` for branch names, never `claude/...` or `copilot/...`
   (enforced by `.github/workflows/no-ai-coauthors.yml`).

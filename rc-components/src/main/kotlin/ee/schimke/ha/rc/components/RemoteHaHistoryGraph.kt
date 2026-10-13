@@ -22,7 +22,6 @@ import androidx.compose.remote.creation.compose.state.asRemotePaint
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rf
 import androidx.compose.remote.creation.compose.state.rs
-import androidx.compose.remote.creation.compose.state.rsp
 import androidx.compose.remote.creation.compose.text.RemoteTextStyle
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
@@ -62,7 +61,7 @@ fun RemoteHaHistoryGraph(data: HaHistoryGraphData, modifier: RemoteModifier = Re
         RemoteText(
           text = cardTitle(data.title),
           color = theme.primaryText,
-          fontSize = 15.rsp,
+          fontSize = HaType.Title,
           fontWeight = FontWeight.Medium,
           style = RemoteTextStyle.Default,
           maxLines = 1,
@@ -72,14 +71,14 @@ fun RemoteHaHistoryGraph(data: HaHistoryGraphData, modifier: RemoteModifier = Re
       RemoteText(
         text = cardText("range", data.rangeLabel),
         color = theme.secondaryText,
-        fontSize = 11.rsp,
+        fontSize = HaType.Caption,
         style = RemoteTextStyle.Default,
       )
       if (data.rows.isEmpty()) {
         RemoteText(
           text = "No entities".rs,
           color = theme.secondaryText,
-          fontSize = 13.rsp,
+          fontSize = HaType.Body,
           style = RemoteTextStyle.Default,
         )
       } else {
@@ -120,7 +119,7 @@ fun RemoteHaHistoryGraphIdentity(
         text =
           if (row != null) entityName(row.entityId, row.name) else (data.title ?: "History").rs,
         color = theme.secondaryText,
-        fontSize = 11.rsp,
+        fontSize = HaType.Caption,
         style = RemoteTextStyle.Default,
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
@@ -129,7 +128,7 @@ fun RemoteHaHistoryGraphIdentity(
         RemoteText(
           text = row.summary,
           color = theme.primaryText,
-          fontSize = 22.rsp,
+          fontSize = HaType.Value,
           fontWeight = FontWeight.SemiBold,
           style = RemoteTextStyle.Default,
           maxLines = 1,
@@ -142,7 +141,7 @@ fun RemoteHaHistoryGraphIdentity(
         RemoteText(
           text = "No data".rs,
           color = theme.secondaryText,
-          fontSize = 13.rsp,
+          fontSize = HaType.Body,
           style = RemoteTextStyle.Default,
         )
       }
@@ -160,7 +159,7 @@ private fun Row(row: HaHistoryGraphRow, theme: RemoteHaTheme) {
     RemoteText(
       text = entityName(row.entityId, row.name),
       color = theme.primaryText,
-      fontSize = 12.rsp,
+      fontSize = HaType.Label,
       fontWeight = FontWeight.Medium,
       style = RemoteTextStyle.Default,
       maxLines = 1,
@@ -170,7 +169,7 @@ private fun Row(row: HaHistoryGraphRow, theme: RemoteHaTheme) {
     RemoteText(
       text = row.summary,
       color = theme.secondaryText,
-      fontSize = 11.rsp,
+      fontSize = HaType.Caption,
       style = RemoteTextStyle.Default,
       maxLines = 1,
     )
@@ -181,7 +180,7 @@ private fun Row(row: HaHistoryGraphRow, theme: RemoteHaTheme) {
     RemoteText(
       text = "No samples".rs,
       color = theme.secondaryText,
-      fontSize = 11.rsp,
+      fontSize = HaType.Caption,
       style = RemoteTextStyle.Default,
     )
   }

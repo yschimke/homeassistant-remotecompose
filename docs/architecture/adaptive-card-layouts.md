@@ -537,6 +537,16 @@ clean Wide-row↔Full-card transition with the dial retained at every size;
 rather than a hand-rolled `RemoteStateLayout`. The open work is bringing
 the other families up to that bar — see the per-family issues.
 
+### Typed measurements (thermometer, battery, …)
+
+The reading → meter → typed-measurement hierarchy in
+[card-component-system.md](card-component-system.md) implements this ladder once for every
+measurement kind (`HaPresentation`: `Glyph` → `Chip` → `Compact` → `Standard` → `Expanded`).
+`RemoteHaAdaptiveMeasurement` picks `Compact` ↔ `Expanded` with one 2-D gate
+(`RemoteMinSizeGate`, 120 × 132 dp), and the visual itself is drawn from the live canvas size, so
+it scales continuously inside either tier. The sensor card's narrow Fixed tier uses `Chip` for a
+temperature or battery sensor: the thermometer is the identity, not a generic tinted icon.
+
 ## Anti-patterns
 
 - **Defaulting to text.** Never the first move; rarely the right

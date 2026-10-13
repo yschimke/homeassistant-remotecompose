@@ -59,7 +59,7 @@ fun RemoteHaClock(data: HaClockData, modifier: RemoteModifier = RemoteModifier) 
         RemoteText(
           text = cardTitle(data.title),
           color = theme.secondaryText,
-          fontSize = 12.rsp,
+          fontSize = HaType.Label,
           style = RemoteTextStyle.Default,
           maxLines = 1,
           overflow = TextOverflow.Ellipsis,
@@ -93,7 +93,7 @@ fun RemoteHaClock(data: HaClockData, modifier: RemoteModifier = RemoteModifier) 
         RemoteText(
           text = cardText("date", data.secondaryLabel),
           color = theme.secondaryText,
-          fontSize = 12.rsp,
+          fontSize = HaType.Label,
           style = RemoteTextStyle.Default,
           maxLines = 1,
           overflow = TextOverflow.Ellipsis,

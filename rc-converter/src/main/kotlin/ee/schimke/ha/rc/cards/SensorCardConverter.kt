@@ -18,13 +18,17 @@ import ee.schimke.ha.rc.DesignTemplateInput
 import ee.schimke.ha.rc.HaStateColor
 import ee.schimke.ha.rc.LocalCardSizeMode
 import ee.schimke.ha.rc.RemoteSizeBreakpoint
+import ee.schimke.ha.rc.components.HaMeasureVisual
+import ee.schimke.ha.rc.components.HaPresentation
 import ee.schimke.ha.rc.components.HaSensorCardData
 import ee.schimke.ha.rc.components.HaTileData
 import ee.schimke.ha.rc.components.HaToggleAccent
 import ee.schimke.ha.rc.components.LiveValues
 import ee.schimke.ha.rc.components.RemoteHaIconChip
+import ee.schimke.ha.rc.components.RemoteHaMeasurement
 import ee.schimke.ha.rc.components.RemoteHaSensorCard
 import ee.schimke.ha.rc.formatState
+import ee.schimke.ha.rc.haReading
 import ee.schimke.ha.rc.icons.HaIconMap
 import kotlinx.serialization.json.jsonPrimitive
 
@@ -34,11 +38,11 @@ import kotlinx.serialization.json.jsonPrimitive
  * tile.
  *
  * In [CardSizeMode.Fixed] the converter runs the shared icon-+-state ladder
- * (adaptive-card-layouts.md §"Icon + state row/tile"): a narrow cell drops to the
- * [RemoteHaIconChip] identity tier (tinted icon + value, sparkline + name dropped — the sparkline
- * is the card's P5, so it's the first thing to go), while the full [RemoteHaSensorCard] promotes
- * the sparkline back on cells with the width to host it, and is [CenteredCell]-wrapped so a tall
- * cell fills rather than top-glues.
+ * (adaptive-card-layouts.md §"Icon + state row/tile"): a narrow cell drops to the identity tier
+ * (tinted icon + value, or the typed measurement visual for a temperature or battery — see
+ * [IdentityTier]; sparkline + name dropped — the sparkline is the card's P5, so it's the first
+ * thing to go), while the full [RemoteHaSensorCard] promotes the sparkline back on cells with the
+ * width to host it, and is [CenteredCell]-wrapped so a tall cell fills rather than top-glues.
  */
 class SensorCardConverter : CardConverter {
   override val cardType: String = CardTypes.SENSOR
@@ -81,10 +85,31 @@ class SensorCardConverter : CardConverter {
         RemoteSizeBreakpoint(thresholdsDp = intArrayOf(120), modifier = modifier.fillMaxSize()) {
           tier ->
           when (tier) {
-            0 -> RemoteHaIconChip(iconChipData(card, snapshot), RemoteModifier.fillMaxSize())
+            0 -> IdentityTier(card, snapshot)
             else -> CenteredCell { FullSensor(card, snapshot, RemoteModifier.fillMaxWidth()) }
           }
         }
+    }
+  }
+
+  /**
+   * The narrow-cell identity tier. A sensor whose kind has its own visual (a temperature's
+   * thermometer, a battery's battery) shows that visual over its value ([HaPresentation.Chip]): the
+   * pictogram says what kind of reading it is, where a generic tinted icon only says "sensor".
+   * Every other sensor keeps the shared [RemoteHaIconChip].
+   */
+  @Composable
+  private fun IdentityTier(card: CardConfig, snapshot: HaSnapshot) {
+    val entityId = card.raw["entity"]?.jsonPrimitive?.content
+    val reading =
+      haReading(entityId, entityId?.let { snapshot.states[it] }, nameFor(card, snapshot))
+    when (reading.kind.visual) {
+      HaMeasureVisual.Thermometer,
+      HaMeasureVisual.Battery ->
+        RemoteHaMeasurement(reading, HaPresentation.Chip, RemoteModifier.fillMaxSize())
+      HaMeasureVisual.Arc,
+      HaMeasureVisual.Bar ->
+        RemoteHaIconChip(iconChipData(card, snapshot), RemoteModifier.fillMaxSize())
     }
   }
 

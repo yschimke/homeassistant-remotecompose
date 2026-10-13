@@ -2,9 +2,15 @@
 
 package ee.schimke.ha.rc.components
 
-internal fun adaptiveTitleSizeSp(title: String, baseSp: Int = 15): Int =
+import androidx.compose.remote.creation.compose.state.RemoteTextUnit
+
+/**
+ * A card title's size: [HaType.Title], stepping down the scale for long titles so they fit one line
+ * ([HaType.BodyLarge] past 24 characters, [HaType.Body] past 36).
+ */
+internal fun adaptiveTitleSize(title: String): RemoteTextUnit =
   when {
-    title.length > 36 -> baseSp - 2
-    title.length > 24 -> baseSp - 1
-    else -> baseSp
+    title.length > 36 -> HaType.Body
+    title.length > 24 -> HaType.BodyLarge
+    else -> HaType.Title
   }

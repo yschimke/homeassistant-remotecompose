@@ -26,7 +26,6 @@ import androidx.compose.remote.creation.compose.state.asRemoteDp
 import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rf
-import androidx.compose.remote.creation.compose.state.rsp
 import androidx.compose.remote.creation.compose.state.tween
 import androidx.compose.remote.creation.compose.text.RemoteTextStyle
 import androidx.compose.runtime.Composable
@@ -71,7 +70,7 @@ fun RemoteHaEntityRow(data: HaEntityRowData, modifier: RemoteModifier = RemoteMo
         RemoteText(
           text = entityName(data.entityId, data.name),
           color = theme.primaryText,
-          fontSize = 13.rsp,
+          fontSize = HaType.Body,
           style = RemoteTextStyle.Default,
           maxLines = 1,
           overflow = TextOverflow.Ellipsis,
@@ -89,7 +88,7 @@ fun RemoteHaEntityRow(data: HaEntityRowData, modifier: RemoteModifier = RemoteMo
       RemoteText(
         text = data.state,
         color = theme.secondaryText,
-        fontSize = 13.rsp,
+        fontSize = HaType.Body,
         style = RemoteTextStyle.Default,
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,

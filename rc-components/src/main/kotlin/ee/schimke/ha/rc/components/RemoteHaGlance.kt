@@ -20,7 +20,6 @@ import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.modifier.size
 import androidx.compose.remote.creation.compose.state.RemoteColor
 import androidx.compose.remote.creation.compose.state.rdp
-import androidx.compose.remote.creation.compose.state.rsp
 import androidx.compose.remote.creation.compose.text.RemoteTextStyle
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.font.FontWeight
@@ -69,7 +68,7 @@ fun RemoteHaGlance(
         RemoteText(
           text = cardTitle(data.title),
           color = theme.primaryText,
-          fontSize = adaptiveTitleSizeSp(data.title).rsp,
+          fontSize = adaptiveTitleSize(data.title),
           fontWeight = FontWeight.Medium,
           style = RemoteTextStyle.Default,
           maxLines = 1,
@@ -152,7 +151,7 @@ fun RemoteHaGlanceCell(data: HaGlanceCellData, modifier: RemoteModifier = Remote
     RemoteText(
       text = entityName(data.entityId, data.name),
       color = theme.primaryText,
-      fontSize = 12.rsp,
+      fontSize = HaType.Label,
       style = RemoteTextStyle.Default,
     )
     RemoteBox(modifier = RemoteModifier.padding(vertical = 4.rdp)) {
@@ -166,7 +165,7 @@ fun RemoteHaGlanceCell(data: HaGlanceCellData, modifier: RemoteModifier = Remote
     RemoteText(
       text = data.state,
       color = theme.secondaryText,
-      fontSize = 11.rsp,
+      fontSize = HaType.Caption,
       style = RemoteTextStyle.Default,
     )
   }

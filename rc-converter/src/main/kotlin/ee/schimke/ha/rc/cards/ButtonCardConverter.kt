@@ -2,19 +2,10 @@
 
 package ee.schimke.ha.rc.cards
 
-import androidx.compose.remote.creation.compose.layout.RemoteBox
-import androidx.compose.remote.creation.compose.layout.RemoteStateLayout
-import androidx.compose.remote.creation.compose.layout.RemoteText
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.fillMaxSize
-import androidx.compose.remote.creation.compose.state.RemoteFloat
-import androidx.compose.remote.creation.compose.state.RemoteState
 import androidx.compose.remote.creation.compose.state.rc
-import androidx.compose.remote.creation.compose.state.rdp
-import androidx.compose.remote.creation.compose.state.rf
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
-import androidx.compose.ui.graphics.Color
 import ee.schimke.ha.design.DesignProperties
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
@@ -26,6 +17,7 @@ import ee.schimke.ha.rc.CardWidthClass
 import ee.schimke.ha.rc.DesignTemplateInput
 import ee.schimke.ha.rc.HaStateColor
 import ee.schimke.ha.rc.LocalCardSizeMode
+import ee.schimke.ha.rc.RemoteMinSizeGate
 import ee.schimke.ha.rc.components.HaButtonData
 import ee.schimke.ha.rc.components.HaToggleAccent
 import ee.schimke.ha.rc.components.RemoteHaButton
@@ -34,8 +26,6 @@ import ee.schimke.ha.rc.components.RemoteHaToggleButton
 import ee.schimke.ha.rc.defaultTapActionFor
 import ee.schimke.ha.rc.icons.HaIconMap
 import ee.schimke.ha.rc.parseHaAction
-import java.text.DecimalFormat
-import java.util.UUID
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
@@ -95,26 +85,15 @@ class ButtonCardConverter : CardConverter {
 
   @Composable
   private fun AdaptiveButton(data: HaButtonData, modifier: RemoteModifier) {
-    val gateName = remember { "__button_gate_${UUID.randomUUID()}" }
-    // ratio = minW/minH, so `h · ratio ≥ minW` ⇔ `h ≥ minH`.
-    val ratio = MinIconNameWidthDp.toFloat() / MinIconNameHeightDp.toFloat()
-    val gate =
-      RemoteFloat.createNamedRemoteFloatExpression(gateName, RemoteState.Domain.User) {
-        componentWidth().min(componentHeight() * ratio.rf)
-      }
-    val hasRoomForName = gate.isGreaterThanOrEqualTo(MinIconNameWidthDp.rdp.toPx())
-
-    RemoteBox(modifier = modifier.fillMaxSize()) {
-      // Materialise the gate expression in the document — the
-      // state-layout reads it via a derived boolean, which alone
-      // doesn't pull the named float into the capture (#224).
-      RemoteText(text = gate.toRemoteString(IntFormat), color = Color.Transparent.rc)
-      RemoteStateLayout(hasRoomForName) { roomy ->
-        if (roomy) {
-          RenderButton(data, RemoteModifier.fillMaxSize(), compact = true)
-        } else {
-          RemoteHaButtonIcon(data, RemoteModifier.fillMaxSize())
-        }
+    RemoteMinSizeGate(
+      minWidthDp = MinIconNameWidthDp,
+      minHeightDp = MinIconNameHeightDp,
+      modifier = modifier.fillMaxSize(),
+    ) { roomy ->
+      if (roomy) {
+        RenderButton(data, RemoteModifier.fillMaxSize(), compact = true)
+      } else {
+        RemoteHaButtonIcon(data, RemoteModifier.fillMaxSize())
       }
     }
   }
@@ -176,5 +155,3 @@ private fun buttonData(card: CardConfig, snapshot: HaSnapshot): HaButtonData {
 
 private fun showName(card: CardConfig): Boolean =
   card.raw["show_name"]?.jsonPrimitive?.content?.toBooleanStrictOrNull() ?: true
-
-private val IntFormat = DecimalFormat("0")
