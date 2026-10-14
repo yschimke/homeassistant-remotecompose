@@ -15,8 +15,6 @@ import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.modifier.size
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rs
-import androidx.compose.remote.creation.compose.state.rsp
-import androidx.compose.remote.creation.compose.text.RemoteTextStyle
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.font.FontWeight
 import androidx.wear.compose.remote.material3.RemoteIcon
@@ -47,16 +45,16 @@ fun RemoteHaUnsupported(data: HaUnsupportedData, modifier: RemoteModifier = Remo
         RemoteText(
           text = "Not yet supported".rs,
           color = theme.primaryText,
-          fontSize = 14.rsp,
+          fontSize = HaType.BodyLarge,
           fontWeight = FontWeight.Medium,
-          style = RemoteTextStyle.Default,
+          style = haTextStyle(),
         )
       }
       RemoteText(
         text = data.cardType.rs,
         color = theme.secondaryText,
-        fontSize = 12.rsp,
-        style = RemoteTextStyle.Default,
+        fontSize = HaType.Label,
+        style = haTextStyle(),
       )
     }
   }

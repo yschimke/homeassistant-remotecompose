@@ -20,8 +20,6 @@ import androidx.compose.remote.creation.compose.shapes.RemoteCircleShape
 import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rs
-import androidx.compose.remote.creation.compose.state.rsp
-import androidx.compose.remote.creation.compose.text.RemoteTextStyle
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -51,17 +49,17 @@ fun RemoteHaCalendar(data: HaCalendarData, modifier: RemoteModifier = RemoteModi
         RemoteText(
           text = cardTitle(data.title),
           color = theme.primaryText,
-          fontSize = 16.rsp,
+          fontSize = HaType.Title,
           fontWeight = FontWeight.Medium,
-          style = RemoteTextStyle.Default,
+          style = haTextStyle(),
           maxLines = 1,
           overflow = TextOverflow.Ellipsis,
         )
         RemoteText(
           text = cardText("range", data.rangeLabel),
           color = theme.secondaryText,
-          fontSize = 11.rsp,
-          style = RemoteTextStyle.Default,
+          fontSize = HaType.Caption,
+          style = haTextStyle(),
           maxLines = 1,
         )
       }
@@ -69,8 +67,8 @@ fun RemoteHaCalendar(data: HaCalendarData, modifier: RemoteModifier = RemoteModi
         RemoteText(
           text = "No upcoming events".rs,
           color = theme.secondaryText,
-          fontSize = 12.rsp,
-          style = RemoteTextStyle.Default,
+          fontSize = HaType.Label,
+          style = haTextStyle(),
         )
       } else {
         data.events.forEachIndexed { i, event -> Event(i, event, theme) }
@@ -106,8 +104,8 @@ fun RemoteHaCalendarIdentity(data: HaCalendarData, modifier: RemoteModifier = Re
       RemoteText(
         text = data.title.rs,
         color = theme.secondaryText,
-        fontSize = 11.rsp,
-        style = RemoteTextStyle.Default,
+        fontSize = HaType.Caption,
+        style = haTextStyle(),
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
       )
@@ -119,8 +117,8 @@ fun RemoteHaCalendarIdentity(data: HaCalendarData, modifier: RemoteModifier = Re
           RemoteText(
             text = next.whenLabel.rs,
             color = theme.secondaryText,
-            fontSize = 12.rsp,
-            style = RemoteTextStyle.Default,
+            fontSize = HaType.Label,
+            style = haTextStyle(),
             maxLines = 1,
             modifier = RemoteModifier.padding(start = 8.rdp),
           )
@@ -128,9 +126,9 @@ fun RemoteHaCalendarIdentity(data: HaCalendarData, modifier: RemoteModifier = Re
         RemoteText(
           text = next.summary.rs,
           color = theme.primaryText,
-          fontSize = 17.rsp,
+          fontSize = HaType.Title,
           fontWeight = FontWeight.SemiBold,
-          style = RemoteTextStyle.Default,
+          style = haTextStyle(),
           maxLines = 2,
           overflow = TextOverflow.Ellipsis,
         )
@@ -138,8 +136,8 @@ fun RemoteHaCalendarIdentity(data: HaCalendarData, modifier: RemoteModifier = Re
         RemoteText(
           text = "No upcoming events".rs,
           color = theme.secondaryText,
-          fontSize = 13.rsp,
-          style = RemoteTextStyle.Default,
+          fontSize = HaType.Body,
+          style = haTextStyle(),
         )
       }
     }
@@ -159,15 +157,15 @@ private fun Event(index: Int, event: HaCalendarEvent, theme: RemoteHaTheme) {
       RemoteText(
         text = cardText("row.$index.when", event.whenLabel),
         color = theme.secondaryText,
-        fontSize = 11.rsp,
-        style = RemoteTextStyle.Default,
+        fontSize = HaType.Caption,
+        style = haTextStyle(),
       )
       RemoteText(
         text = cardText("row.$index.summary", event.summary),
         color = theme.primaryText,
-        fontSize = 13.rsp,
+        fontSize = HaType.Body,
         fontWeight = FontWeight.Medium,
-        style = RemoteTextStyle.Default,
+        style = haTextStyle(),
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
       )

@@ -14,8 +14,6 @@ import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
-import androidx.compose.remote.creation.compose.state.rsp
-import androidx.compose.remote.creation.compose.text.RemoteTextStyle
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -39,9 +37,9 @@ fun RemoteHaStatisticCard(data: HaStatisticCardData, modifier: RemoteModifier = 
       RemoteText(
         text = entityName(data.entityId, data.name),
         color = theme.secondaryText,
-        fontSize = 12.rsp,
+        fontSize = HaType.Label,
         fontWeight = FontWeight.Medium,
-        style = RemoteTextStyle.Default,
+        style = haTextStyle(),
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
       )
@@ -49,9 +47,9 @@ fun RemoteHaStatisticCard(data: HaStatisticCardData, modifier: RemoteModifier = 
         RemoteText(
           text = data.valueLabel,
           color = theme.primaryText,
-          fontSize = 32.rsp,
-          fontWeight = FontWeight.SemiBold,
-          style = RemoteTextStyle.Default,
+          fontSize = HaType.Display,
+          fontWeight = haValueWeight(),
+          style = haTextStyle(),
           maxLines = 1,
         )
         if (data.unit != null) {
@@ -59,8 +57,8 @@ fun RemoteHaStatisticCard(data: HaStatisticCardData, modifier: RemoteModifier = 
             RemoteText(
               text = entityText(data.entityId, "unit", data.unit),
               color = theme.secondaryText,
-              fontSize = 14.rsp,
-              style = RemoteTextStyle.Default,
+              fontSize = HaType.BodyLarge,
+              style = haTextStyle(),
               maxLines = 1,
             )
           }
@@ -70,8 +68,8 @@ fun RemoteHaStatisticCard(data: HaStatisticCardData, modifier: RemoteModifier = 
         RemoteText(
           text = cardText("period", data.periodLabel),
           color = data.accent.rc,
-          fontSize = 11.rsp,
-          style = RemoteTextStyle.Default,
+          fontSize = HaType.Caption,
+          style = haTextStyle(),
           maxLines = 1,
         )
       }

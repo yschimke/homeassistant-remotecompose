@@ -25,6 +25,7 @@ import androidx.compose.remote.creation.compose.text.RemoteTextStyle
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.wear.compose.remote.material3.RemoteIcon
+import ee.schimke.ha.rc.RemoteHaAdaptiveMeasurement
 import ee.schimke.ha.rc.components.HaAction
 import ee.schimke.ha.rc.components.HaButtonData
 import ee.schimke.ha.rc.components.HaEntitiesData
@@ -34,22 +35,33 @@ import ee.schimke.ha.rc.components.HaGlanceCellData
 import ee.schimke.ha.rc.components.HaGlanceData
 import ee.schimke.ha.rc.components.HaHeadingData
 import ee.schimke.ha.rc.components.HaHeadingStyle
+import ee.schimke.ha.rc.components.HaMeasureKind
+import ee.schimke.ha.rc.components.HaPresentation
+import ee.schimke.ha.rc.components.HaReading
+import ee.schimke.ha.rc.components.HaStatusColors
 import ee.schimke.ha.rc.components.HaTileData
 import ee.schimke.ha.rc.components.HaToggleAccent
+import ee.schimke.ha.rc.components.HaUberTheme
 import ee.schimke.ha.rc.components.LiveValues
 import ee.schimke.ha.rc.components.ProvideCardChrome
+import ee.schimke.ha.rc.components.ProvideHaUberTheme
+import ee.schimke.ha.rc.components.RemoteHaArcMeter
+import ee.schimke.ha.rc.components.RemoteHaBarMeter
 import ee.schimke.ha.rc.components.RemoteHaButton
 import ee.schimke.ha.rc.components.RemoteHaEntities
 import ee.schimke.ha.rc.components.RemoteHaEntityRow
 import ee.schimke.ha.rc.components.RemoteHaGauge
 import ee.schimke.ha.rc.components.RemoteHaGlance
 import ee.schimke.ha.rc.components.RemoteHaHeading
+import ee.schimke.ha.rc.components.RemoteHaMeasurement
 import ee.schimke.ha.rc.components.RemoteHaMetric
 import ee.schimke.ha.rc.components.RemoteHaTile
 import ee.schimke.ha.rc.components.RemoteHaToggleButton
 import ee.schimke.ha.rc.components.RemoteHaToggleSwitch
 import ee.schimke.ha.rc.components.cardChrome
 import ee.schimke.ha.rc.components.currentRemoteHaTheme
+import ee.schimke.ha.rc.components.fraction
+import ee.schimke.ha.rc.formatValueWithUnit
 
 // ---------------------------------------------------------------------------------------------
 // The `ha-cards` palette's Home Assistant components.
@@ -417,3 +429,187 @@ fun HaCardStatusChip(
     )
   }
 }
+
+// ── Measurements: the reading → meter → typed-measurement hierarchy ────────────────────────────
+//
+// card-component-system.md's three layers, one builder entry per rung:
+//
+// - `ha-cards/arc-meter`, `ha-cards/bar-meter` — Layer 2 visual meters: a value on a scale, no
+//   text, for composing a card of your own.
+// - `ha-cards/thermometer`, `ha-cards/battery` — Layer 3 typed measurements.
+// - `ha-cards/measurement` — Layer 3 picked by kind (`auto` reads the unit), the one to reach for
+//   when a design shows "some sensor".
+//
+// Every measurement takes a `presentation`: one of the ladder's rungs (`glyph`, `chip`, `compact`,
+// `standard`, `expanded`) or `adaptive`, which picks compact or expanded from the cell the widget
+// is played in and lets the visual grow with it.
+
+/**
+ * The design spelling of "use the kind's typical scale": `min` equal to `max` (both 0 by default).
+ */
+private fun rangeOrNull(min: Float, max: Float): Pair<Double?, Double?> =
+  if (min == max) null to null else min.toDouble() to max.toDouble()
+
+private fun reading(
+  name: String,
+  value: Float,
+  unit: String,
+  entityId: String,
+  kind: HaMeasureKind,
+  min: Float,
+  max: Float,
+): HaReading {
+  val (lower, upper) = rangeOrNull(min, max)
+  val u = unit.ifBlank { null }
+  return HaReading.live(
+    entityId = entityId.entityOrNull(),
+    name = name,
+    // The host's canonical formatter, so an entity-bound seed reads exactly what the first live
+    // `<id>.state` push will (21.555 → 21.56 °C), and a static one reads like Home Assistant.
+    formatted = formatValueWithUnit(value.toString(), u),
+    numeric = value,
+    unit = u,
+    kind = kind,
+    min = lower,
+    max = upper,
+  )
+}
+
+@Composable
+private fun Measurement(reading: HaReading, presentation: String, modifier: RemoteModifier) {
+  val tap = tapAction(reading.entityId, toggleable = false)
+  if (presentation.trim().equals(ADAPTIVE, ignoreCase = true)) {
+    RemoteHaAdaptiveMeasurement(reading, modifier, tap)
+  } else {
+    RemoteHaMeasurement(reading, HaPresentation.parse(presentation), modifier, tap)
+  }
+}
+
+/** The `presentation` value that picks a rung from the cell's live size. */
+const val ADAPTIVE = "adaptive"
+
+/** Every `presentation` a design may write: the ladder's rungs, lower-case, then [ADAPTIVE]. */
+val HaCardPresentations: List<String> =
+  HaPresentation.entries.map { it.name.lowercase() } + ADAPTIVE
+
+/** Every `kind` a design may write: `auto` (classify by unit) then each [HaMeasureKind]. */
+val HaCardMeasureKinds: List<String> =
+  listOf("auto") + HaMeasureKind.entries.map { it.name.lowercase() }
+
+/**
+ * A sensor reading drawn the way its kind deserves: a temperature as a thermometer, a battery as a
+ * battery, a percentage as a bar, anything else on an arc. `kind = "auto"` classifies by [unit].
+ */
+@Composable
+@RemoteComposable
+fun HaCardMeasurement(
+  name: String,
+  value: Float,
+  modifier: RemoteModifier = RemoteModifier,
+  unit: String = "",
+  entityId: String = "",
+  kind: String = "auto",
+  presentation: String = HaCardPresentationDefault,
+  min: Float = 0f,
+  max: Float = 0f,
+) {
+  val measureKind =
+    if (kind.trim().equals("auto", ignoreCase = true)) HaMeasureKind.of(null, unit.ifBlank { null })
+    else HaMeasureKind.parse(kind)
+  Measurement(reading(name, value, unit, entityId, measureKind, min, max), presentation, modifier)
+}
+
+/** A temperature as a thermometer, filled blue → green → red along HA's comfort ramp. */
+@Composable
+@RemoteComposable
+fun HaCardThermometer(
+  name: String,
+  value: Float,
+  modifier: RemoteModifier = RemoteModifier,
+  unit: String = "°C",
+  entityId: String = "",
+  presentation: String = HaCardPresentationDefault,
+  min: Float = 0f,
+  max: Float = 0f,
+) {
+  Measurement(
+    reading(name, value, unit, entityId, HaMeasureKind.Temperature, min, max),
+    presentation,
+    modifier,
+  )
+}
+
+/** A battery level as a battery, green above 30 %, amber below, red below 15 %. */
+@Composable
+@RemoteComposable
+fun HaCardBattery(
+  name: String,
+  value: Float,
+  modifier: RemoteModifier = RemoteModifier,
+  entityId: String = "",
+  presentation: String = HaCardPresentationDefault,
+) {
+  Measurement(
+    reading(name, value, "%", entityId, HaMeasureKind.Battery, 0f, 0f),
+    presentation,
+    modifier,
+  )
+}
+
+/** The `presentation` a measurement starts at in a design. */
+const val HaCardPresentationDefault = "standard"
+
+/**
+ * A bare half-circle meter: [value] on [min]..[max], no text. Bound to an entity it follows
+ * `<entityId>.numeric_state`. Size it with the modifier; it keeps its 2 : 1 shape inside.
+ */
+@Composable
+@RemoteComposable
+fun HaCardArcMeter(
+  value: Float,
+  modifier: RemoteModifier = RemoteModifier,
+  min: Float = 0f,
+  max: Float = 100f,
+  entityId: String = "",
+  color: RemoteColor = HaStatusColors.None.rc,
+) {
+  val reading = reading("", value, "", entityId, HaMeasureKind.Generic, min, max)
+  RemoteHaArcMeter(reading.fraction(), color, modifier)
+}
+
+/** A bare bar meter: [value] on [min]..[max], horizontal or [vertical], no text. */
+@Composable
+@RemoteComposable
+fun HaCardBarMeter(
+  value: Float,
+  modifier: RemoteModifier = RemoteModifier,
+  min: Float = 0f,
+  max: Float = 100f,
+  entityId: String = "",
+  vertical: Boolean = false,
+  color: RemoteColor = HaStatusColors.None.rc,
+) {
+  val reading = reading("", value, "", entityId, HaMeasureKind.Generic, min, max)
+  RemoteHaBarMeter(reading.fraction(), color, modifier, vertical = vertical)
+}
+
+/**
+ * An uber theme (card-component-system.md §6) for everything inside: the palette, card shape,
+ * typeface, meter form and ink of [theme] — one of [HaUberTheme.all]'s ids — in light or [dark]
+ * mode. A theme with only one mode uses it either way.
+ */
+@Composable
+@RemoteComposable
+fun HaCardUberTheme(
+  theme: String,
+  modifier: RemoteModifier = RemoteModifier,
+  dark: Boolean = false,
+  content: @Composable @RemoteComposable () -> Unit,
+) {
+  ProvideHaUberTheme(HaUberTheme.byId(theme), dark) {
+    RemoteBox(modifier = modifier, content = content)
+  }
+}
+
+/** Every `theme` a design may write: [HaUberTheme.all]'s ids. */
+val HaCardUberThemes: List<String> = HaUberTheme.all.map { it.id }

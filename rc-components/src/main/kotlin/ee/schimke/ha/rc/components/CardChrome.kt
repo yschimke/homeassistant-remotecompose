@@ -36,17 +36,22 @@ fun ProvideCardChrome(enabled: Boolean, content: @Composable () -> Unit) {
  * provides the shape).
  *
  * Apply via `.then(cardChrome(...))` at the top-level card box, before its `.padding(...)`. The
- * default 12.rdp corner and 1.rdp border match the shape every built-in HA card draws today.
+ * corner and border default to the active uber theme's card shape ([LocalHaUberTheme]): 12dp and
+ * 1dp for [HaUberTheme.Classic], the shape every built-in HA card has always drawn. A border of 0
+ * draws none.
  */
 @Composable
 @ReadOnlyComposable
 fun cardChrome(
   background: RemoteColor,
   border: RemoteColor,
-  cornerRadiusDp: Int = 12,
-  borderWidthDp: Int = 1,
+  cornerRadiusDp: Int? = null,
+  borderWidthDp: Int? = null,
 ): RemoteModifier {
   if (!LocalCardChromeEnabled.current) return RemoteModifier
-  val shape = RemoteRoundedCornerShape(cornerRadiusDp.rdp)
-  return RemoteModifier.clip(shape).background(background).border(borderWidthDp.rdp, border, shape)
+  val style = LocalHaUberTheme.current.theme.shape
+  val shape = RemoteRoundedCornerShape((cornerRadiusDp ?: style.cornerDp).rdp)
+  val clipped = RemoteModifier.clip(shape).background(background)
+  val borderDp = borderWidthDp ?: style.borderDp
+  return if (borderDp > 0) clipped.border(borderDp.rdp, border, shape) else clipped
 }

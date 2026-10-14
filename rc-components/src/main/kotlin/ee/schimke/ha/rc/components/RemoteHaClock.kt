@@ -20,7 +20,6 @@ import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rf
 import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.remote.creation.compose.state.rsp
-import androidx.compose.remote.creation.compose.text.RemoteTextStyle
 import androidx.compose.remote.creation.compose.text.RemoteTimeDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.font.FontWeight
@@ -59,8 +58,8 @@ fun RemoteHaClock(data: HaClockData, modifier: RemoteModifier = RemoteModifier) 
         RemoteText(
           text = cardTitle(data.title),
           color = theme.secondaryText,
-          fontSize = 12.rsp,
-          style = RemoteTextStyle.Default,
+          fontSize = HaType.Label,
+          style = haTextStyle(),
           maxLines = 1,
           overflow = TextOverflow.Ellipsis,
         )
@@ -86,15 +85,15 @@ fun RemoteHaClock(data: HaClockData, modifier: RemoteModifier = RemoteModifier) 
         color = theme.primaryText,
         fontSize = timeSize.rsp,
         fontWeight = FontWeight.Light,
-        style = RemoteTextStyle.Default,
+        style = haTextStyle(),
         maxLines = 1,
       )
       if (data.secondaryLabel != null) {
         RemoteText(
           text = cardText("date", data.secondaryLabel),
           color = theme.secondaryText,
-          fontSize = 12.rsp,
-          style = RemoteTextStyle.Default,
+          fontSize = HaType.Label,
+          style = haTextStyle(),
           maxLines = 1,
           overflow = TextOverflow.Ellipsis,
         )

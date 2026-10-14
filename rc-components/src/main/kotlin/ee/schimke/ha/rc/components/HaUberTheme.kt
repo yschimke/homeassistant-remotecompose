@@ -1,0 +1,359 @@
+@file:Suppress("RestrictedApi")
+
+package ee.schimke.ha.rc.components
+
+import androidx.compose.remote.creation.compose.state.rsp
+import androidx.compose.remote.creation.compose.text.RemoteFontFamily
+import androidx.compose.remote.creation.compose.text.RemoteTextStyle
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.ReadOnlyComposable
+import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import com.materialkolor.PaletteStyle
+import com.materialkolor.dynamicColorScheme
+
+// ---------------------------------------------------------------------------------------------
+// Uber themes: a whole look, not a palette. A palette (ThemeStyle / HaTheme) recolours the chrome;
+// an uber theme also decides the shape of a card, the typeface, and *how a meter is drawn* —
+// smooth or segmented, hairline or chunky, glowing, with M3 Expressive's track gap — and may ink
+// every reading in one colour, as a segment LCD or a Nixie tube does.
+//
+// Every part reads the active uber theme through [LocalHaUberTheme]; [HaUberTheme.Classic] (the
+// default) is exactly the look the cards had before uber themes, so nothing changes until a host
+// provides another one. See docs/architecture/card-component-system.md §6.
+// ---------------------------------------------------------------------------------------------
+
+/** How a meter (Layer 2) draws its value. */
+sealed interface HaMeterForm {
+  /** One continuous fill. */
+  data object Smooth : HaMeterForm
+
+  /**
+   * [count] discrete segments, each lit when the value passes its midpoint. [gap] is the share of
+   * each segment's pitch left empty (0.5 reads as ticks, 0.15 as LCD blocks). Unlit segments draw
+   * in the track colour, or in the ink at [ghostAlpha] when the theme has an ink: an LCD's ghost
+   * segments.
+   */
+  data class Segmented(val count: Int, val gap: Float, val ghostAlpha: Float = 0.12f) :
+    HaMeterForm {
+    init {
+      require(count >= 2) { "a segmented meter needs at least two segments" }
+      require(gap in 0f..0.9f) { "gap is a share of the segment pitch" }
+    }
+  }
+}
+
+/**
+ * Meter drawing style.
+ *
+ * @property strokeScale multiplies every stroke and tube width (Expressive's chunky 1.6, Braun's
+ *   hairline 0.55).
+ * @property trackGap M3 Expressive's indicator: a gap between value and track, and a stop dot at
+ *   the track's end.
+ * @property glow draws a soft halo under the value (Nixie).
+ */
+data class HaMeterStyle(
+  val form: HaMeterForm = HaMeterForm.Smooth,
+  val strokeScale: Float = 1f,
+  val trackGap: Boolean = false,
+  val glow: Boolean = false,
+)
+
+/** Card shape. Corners and border in dp; a border of 0 draws none. */
+data class HaCardShapeStyle(val cornerDp: Int = HaShape.Card, val borderDp: Int = 1)
+
+/**
+ * One uber theme.
+ *
+ * @property light the palette in light mode, or null for a dark-only theme.
+ * @property dark the palette in dark mode, or null for a light-only theme.
+ * @property ink one colour every reading is drawn in, replacing the semantic data colours (rule 2
+ *   of the theming rules). Only for themes that are monochrome by nature — the reading's state is
+ *   still carried by fill level and segment count.
+ * @property fontFamily the typeface every card text uses.
+ * @property letterSpacingSp extra tracking, in sp, for every card text.
+ * @property valueWeight the weight of readings (`HaType.Value*`).
+ */
+data class HaUberTheme(
+  val id: String,
+  val displayName: String,
+  val light: HaTheme?,
+  val dark: HaTheme?,
+  val shape: HaCardShapeStyle = HaCardShapeStyle(),
+  val meter: HaMeterStyle = HaMeterStyle(),
+  val ink: Color? = null,
+  val darkInk: Color? = ink,
+  val fontFamily: RemoteFontFamily = RemoteFontFamily.Default,
+  val letterSpacingSp: Float = 0f,
+  val valueWeight: FontWeight = FontWeight.SemiBold,
+) {
+  init {
+    require(light != null || dark != null) { "$id needs a light or a dark palette" }
+  }
+
+  /** The palette for [darkTheme], falling back to the one the theme has. */
+  fun palette(darkTheme: Boolean): HaTheme = (if (darkTheme) dark ?: light else light ?: dark)!!
+
+  /** The ink for [darkTheme], or null to keep the semantic data colours. */
+  fun inkFor(darkTheme: Boolean): Color? = if (darkTheme) darkInk else ink
+
+  companion object {
+    /** The cards' own look: HA's palette, 12dp cards, smooth meters. The default. */
+    val Classic =
+      HaUberTheme(
+        id = "classic",
+        displayName = "Classic",
+        light = HaTheme.Light,
+        dark = HaTheme.Dark,
+      )
+
+    /**
+     * **Material 3 Expressive.** Big 28dp corners with no border, the Expressive tonal palette,
+     * chunky round strokes with the track gap and stop dot of M3E's progress indicators, and bold
+     * numerals.
+     */
+    val Expressive =
+      HaUberTheme(
+        id = "expressive",
+        displayName = "Material 3 Expressive",
+        light = expressivePalette(dark = false),
+        dark = expressivePalette(dark = true),
+        shape = HaCardShapeStyle(cornerDp = 28, borderDp = 0),
+        meter = HaMeterStyle(strokeScale = 1.6f, trackGap = true),
+        valueWeight = FontWeight.Bold,
+      )
+
+    /**
+     * **Trinitron** — the techy Sony look: graphite and hairlines, monospace with wide tracking,
+     * and meters as fine tick scales like a hi-fi deck's level meter. Dark only.
+     */
+    val Trinitron =
+      HaUberTheme(
+        id = "trinitron",
+        displayName = "Trinitron",
+        light = null,
+        dark =
+          HaTheme(
+            cardBackground = Color(0xFF17181B),
+            dashboardBackground = Color(0xFF0B0C0E),
+            sectionBackground = Color(0xFF0B0C0E),
+            primaryText = Color(0xFFEDEEF0),
+            secondaryText = Color(0xFF8A8F98),
+            linkText = Color(0xFF4FC3F7),
+            divider = Color(0xFF2E3137),
+            placeholderAccent = Color(0xFF4FC3F7),
+            placeholderBackground = Color(0xFF1E2126),
+            unknownAccent = Color(0xFF8A8F98),
+            isDark = true,
+          ),
+        shape = HaCardShapeStyle(cornerDp = 2, borderDp = 1),
+        meter = HaMeterStyle(form = HaMeterForm.Segmented(count = 36, gap = 0.5f)),
+        fontFamily = RemoteFontFamily.Monospace,
+        letterSpacingSp = 1.2f,
+        valueWeight = FontWeight.Normal,
+      )
+
+    /**
+     * **LCD** — a reflective segment display: green-grey glass and dark ink, chunky segments with
+     * their unlit ghosts showing. Dark mode is the Indiglo backlight: cyan ink on a deep blue
+     * panel.
+     */
+    val Lcd =
+      HaUberTheme(
+        id = "lcd",
+        displayName = "LCD",
+        light =
+          HaTheme(
+            cardBackground = Color(0xFFB9C3A2),
+            dashboardBackground = Color(0xFF8E9878),
+            sectionBackground = Color(0xFF8E9878),
+            primaryText = Color(0xFF1C2416),
+            secondaryText = Color(0xFF46503A),
+            linkText = Color(0xFF1C2416),
+            divider = Color(0xFF9EA889),
+            placeholderAccent = Color(0xFF46503A),
+            placeholderBackground = Color(0xFFA9B391),
+            unknownAccent = Color(0xFF46503A),
+            isDark = false,
+          ),
+        dark =
+          HaTheme(
+            cardBackground = Color(0xFF07263A),
+            dashboardBackground = Color(0xFF02121C),
+            sectionBackground = Color(0xFF02121C),
+            primaryText = Color(0xFF8AF4FF),
+            secondaryText = Color(0xFF3FA9B8),
+            linkText = Color(0xFF8AF4FF),
+            divider = Color(0xFF0E3A52),
+            placeholderAccent = Color(0xFF3FA9B8),
+            placeholderBackground = Color(0xFF0B3147),
+            unknownAccent = Color(0xFF3FA9B8),
+            isDark = true,
+          ),
+        shape = HaCardShapeStyle(cornerDp = 4, borderDp = 2),
+        meter =
+          HaMeterStyle(
+            form = HaMeterForm.Segmented(count = 10, gap = 0.18f, ghostAlpha = 0.12f),
+            strokeScale = 1.5f,
+          ),
+        ink = Color(0xFF1C2416),
+        darkInk = Color(0xFF8AF4FF),
+        fontFamily = RemoteFontFamily.Monospace,
+        valueWeight = FontWeight.Bold,
+      )
+
+    /**
+     * **Braun** — Dieter Rams, 1962: warm off-white (or Braun black), soft corners, no border,
+     * hairline strokes; the semantic colours stay, because Rams let colour mean something.
+     */
+    val Braun =
+      HaUberTheme(
+        id = "braun",
+        displayName = "Braun",
+        light =
+          HaTheme(
+            cardBackground = Color(0xFFF8F6F0),
+            dashboardBackground = Color(0xFFE9E5DB),
+            sectionBackground = Color(0xFFE9E5DB),
+            primaryText = Color(0xFF262624),
+            secondaryText = Color(0xFF7A766E),
+            linkText = Color(0xFFD9541E),
+            divider = Color(0xFFDAD5C9),
+            placeholderAccent = Color(0xFFD9541E),
+            placeholderBackground = Color(0xFFEFEBE2),
+            unknownAccent = Color(0xFF7A766E),
+            isDark = false,
+          ),
+        dark =
+          HaTheme(
+            cardBackground = Color(0xFF2B2A27),
+            dashboardBackground = Color(0xFF1B1A18),
+            sectionBackground = Color(0xFF1B1A18),
+            primaryText = Color(0xFFEFECE4),
+            secondaryText = Color(0xFF9A968D),
+            linkText = Color(0xFFF07A3C),
+            divider = Color(0xFF45433E),
+            placeholderAccent = Color(0xFFF07A3C),
+            placeholderBackground = Color(0xFF34322E),
+            unknownAccent = Color(0xFF9A968D),
+            isDark = true,
+          ),
+        shape = HaCardShapeStyle(cornerDp = 18, borderDp = 0),
+        meter = HaMeterStyle(strokeScale = 0.55f),
+        fontFamily = RemoteFontFamily.SansSerif,
+        valueWeight = FontWeight.Medium,
+      )
+
+    /**
+     * **Nixie** — black glass and glowing orange: every reading is a lit filament with a halo,
+     * numerals light-weight like a tube's wire digits. Dark only.
+     */
+    val Nixie =
+      HaUberTheme(
+        id = "nixie",
+        displayName = "Nixie",
+        light = null,
+        dark =
+          HaTheme(
+            cardBackground = Color(0xFF15100C),
+            dashboardBackground = Color(0xFF080604),
+            sectionBackground = Color(0xFF080604),
+            primaryText = Color(0xFFFFA24D),
+            secondaryText = Color(0xFF9C5A2A),
+            linkText = Color(0xFFFFA24D),
+            divider = Color(0xFF2D2018),
+            placeholderAccent = Color(0xFF9C5A2A),
+            placeholderBackground = Color(0xFF221810),
+            unknownAccent = Color(0xFF9C5A2A),
+            isDark = true,
+          ),
+        shape = HaCardShapeStyle(cornerDp = 14, borderDp = 1),
+        meter = HaMeterStyle(strokeScale = 0.5f, glow = true),
+        ink = Color(0xFFFF8A2A),
+        fontFamily = RemoteFontFamily.SansSerif,
+        letterSpacingSp = 0.4f,
+        valueWeight = FontWeight.Light,
+      )
+
+    /** Every uber theme, [Classic] first. */
+    val all: List<HaUberTheme> = listOf(Classic, Expressive, Trinitron, Lcd, Braun, Nixie)
+
+    /** The theme with [id], or [Classic]. */
+    fun byId(id: String): HaUberTheme =
+      all.firstOrNull { it.id.equals(id.trim(), ignoreCase = true) } ?: Classic
+  }
+}
+
+/** The Expressive tonal palette: M3's baseline purple through materialkolor's Expressive style. */
+private fun expressivePalette(dark: Boolean): HaTheme {
+  val m3 =
+    dynamicColorScheme(
+      seedColor = Color(0xFF6750A4),
+      isDark = dark,
+      isAmoled = false,
+      style = PaletteStyle.Expressive,
+    )
+  return HaTheme(
+    cardBackground = m3.surfaceContainerHigh,
+    dashboardBackground = m3.surface,
+    sectionBackground = m3.surfaceContainer,
+    primaryText = m3.onSurface,
+    secondaryText = m3.onSurfaceVariant,
+    linkText = m3.primary,
+    divider = m3.surfaceContainerHighest,
+    placeholderAccent = m3.primary,
+    placeholderBackground = m3.primaryContainer,
+    unknownAccent = m3.tertiary,
+    isDark = dark,
+  )
+}
+
+/** The active uber theme and mode. */
+data class HaActiveUberTheme(val theme: HaUberTheme, val darkTheme: Boolean) {
+  /** The ink readings are drawn in, or null for the semantic colours. */
+  val ink: Color?
+    get() = theme.inkFor(darkTheme)
+}
+
+val LocalHaUberTheme = staticCompositionLocalOf {
+  HaActiveUberTheme(HaUberTheme.Classic, darkTheme = false)
+}
+
+/**
+ * Provide [theme] to every card part in [content]: its palette (through [ProvideHaTheme]), shape,
+ * meter style, ink and typeface.
+ */
+@Composable
+fun ProvideHaUberTheme(theme: HaUberTheme, darkTheme: Boolean, content: @Composable () -> Unit) {
+  CompositionLocalProvider(LocalHaUberTheme provides HaActiveUberTheme(theme, darkTheme)) {
+    ProvideHaTheme(theme.palette(darkTheme), content)
+  }
+}
+
+/** The active uber theme. */
+@Composable
+@ReadOnlyComposable
+fun currentHaUberTheme(): HaActiveUberTheme = LocalHaUberTheme.current
+
+/**
+ * The text style every card text uses: the uber theme's typeface and tracking over Remote Compose's
+ * default. Pass as `style =` wherever a card used `RemoteTextStyle.Default`.
+ */
+@Composable
+@ReadOnlyComposable
+fun haTextStyle(): RemoteTextStyle {
+  val theme = LocalHaUberTheme.current.theme
+  if (theme.fontFamily == RemoteFontFamily.Default && theme.letterSpacingSp == 0f) {
+    return RemoteTextStyle.Default
+  }
+  return RemoteTextStyle.Default.merge(
+    RemoteTextStyle(fontFamily = theme.fontFamily, letterSpacing = theme.letterSpacingSp.rsp)
+  )
+}
+
+/** The weight readings are set in under the active uber theme. */
+@Composable
+@ReadOnlyComposable
+fun haValueWeight(): FontWeight = LocalHaUberTheme.current.theme.valueWeight

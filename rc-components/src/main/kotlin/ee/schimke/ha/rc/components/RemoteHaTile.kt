@@ -22,8 +22,6 @@ import androidx.compose.remote.creation.compose.shapes.RemoteCircleShape
 import androidx.compose.remote.creation.compose.state.RemoteColor
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rf
-import androidx.compose.remote.creation.compose.state.rsp
-import androidx.compose.remote.creation.compose.text.RemoteTextStyle
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -90,17 +88,17 @@ fun RemoteHaTile(data: HaTileData, modifier: RemoteModifier = RemoteModifier) {
         RemoteText(
           text = entityName(data.entityId, data.name),
           color = theme.primaryText,
-          fontSize = 13.rsp,
+          fontSize = HaType.Body,
           fontWeight = FontWeight.Medium,
-          style = RemoteTextStyle.Default,
+          style = haTextStyle(),
           maxLines = 1,
           overflow = TextOverflow.Ellipsis,
         )
         RemoteText(
           text = data.state,
           color = theme.secondaryText,
-          fontSize = 11.rsp,
-          style = RemoteTextStyle.Default,
+          fontSize = HaType.Caption,
+          style = haTextStyle(),
           maxLines = 1,
           overflow = TextOverflow.Ellipsis,
         )
@@ -166,8 +164,8 @@ fun RemoteHaIconChip(data: HaTileData, modifier: RemoteModifier = RemoteModifier
       RemoteText(
         text = data.state,
         color = theme.secondaryText,
-        fontSize = 11.rsp,
-        style = RemoteTextStyle.Default,
+        fontSize = HaType.Caption,
+        style = haTextStyle(),
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
       )

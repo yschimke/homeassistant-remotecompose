@@ -22,8 +22,6 @@ import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rf
 import androidx.compose.remote.creation.compose.state.rs
-import androidx.compose.remote.creation.compose.state.rsp
-import androidx.compose.remote.creation.compose.text.RemoteTextStyle
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.font.FontWeight
 import androidx.wear.compose.remote.material3.RemoteIcon
@@ -50,8 +48,8 @@ fun RemoteHaBambuPrintControl(
       RemoteText(
         text = cardText("printer", data.printerName),
         color = theme.secondaryText,
-        fontSize = 11.rsp,
-        style = RemoteTextStyle.Default,
+        fontSize = HaType.Caption,
+        style = haTextStyle(),
       )
       RemoteRow(
         modifier = RemoteModifier.fillMaxWidth(),
@@ -91,9 +89,9 @@ private fun Button(button: HaBambuControlButton, theme: RemoteHaTheme) {
       RemoteText(
         text = button.label.rs,
         color = theme.primaryText,
-        fontSize = 12.rsp,
+        fontSize = HaType.Label,
         fontWeight = FontWeight.Medium,
-        style = RemoteTextStyle.Default,
+        style = haTextStyle(),
       )
     }
   }

@@ -31,8 +31,6 @@ import androidx.compose.remote.creation.compose.state.rememberMutableRemoteInt
 import androidx.compose.remote.creation.compose.state.rf
 import androidx.compose.remote.creation.compose.state.ri
 import androidx.compose.remote.creation.compose.state.rs
-import androidx.compose.remote.creation.compose.state.rsp
-import androidx.compose.remote.creation.compose.text.RemoteTextStyle
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -152,17 +150,17 @@ fun RemoteHaAlarmPanelWide(data: HaAlarmPanelData, modifier: RemoteModifier = Re
           RemoteText(
             text = entityName(data.entityId, data.title),
             color = theme.primaryText,
-            fontSize = 14.rsp,
+            fontSize = HaType.BodyLarge,
             fontWeight = FontWeight.Medium,
-            style = RemoteTextStyle.Default,
+            style = haTextStyle(),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
           )
           RemoteText(
             text = status.label.rs,
             color = status.accent.rc,
-            fontSize = 12.rsp,
-            style = RemoteTextStyle.Default,
+            fontSize = HaType.Label,
+            style = haTextStyle(),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
           )
@@ -193,17 +191,17 @@ private fun StatusRow(
         RemoteText(
           text = entityName(data.entityId, data.title),
           color = theme.primaryText,
-          fontSize = 16.rsp,
+          fontSize = HaType.Title,
           fontWeight = FontWeight.Medium,
-          style = RemoteTextStyle.Default,
+          style = haTextStyle(),
           maxLines = 1,
           overflow = TextOverflow.Ellipsis,
         )
         RemoteText(
           text = status.label.rs,
           color = status.accent.rc,
-          fontSize = 12.rsp,
-          style = RemoteTextStyle.Default,
+          fontSize = HaType.Label,
+          style = haTextStyle(),
           maxLines = 1,
         )
       }
@@ -242,9 +240,9 @@ private fun ActionPill(action: HaAlarmAction, theme: RemoteHaTheme) {
     RemoteText(
       text = action.label.rs,
       color = accent,
-      fontSize = 12.rsp,
+      fontSize = HaType.Label,
       fontWeight = FontWeight.Medium,
-      style = RemoteTextStyle.Default,
+      style = haTextStyle(),
       maxLines = 1,
     )
   }
@@ -386,9 +384,9 @@ private fun KeypadKey(
     RemoteText(
       text = label.rs,
       color = accent.rc,
-      fontSize = 16.rsp,
+      fontSize = HaType.Title,
       fontWeight = FontWeight.Medium,
-      style = RemoteTextStyle.Default,
+      style = haTextStyle(),
       maxLines = 1,
     )
   }

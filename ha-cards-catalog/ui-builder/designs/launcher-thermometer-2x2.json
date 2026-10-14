@@ -1,0 +1,68 @@
+{
+  "schema": "compose-ui-builder-document/v1-candidate",
+  "id": "launcher-thermometer-2x2",
+  "title": "Thermometer · launcher 2x2",
+  "revision": 0,
+  "template": "launcher-thermometer-2x2",
+  "catalogPin": {
+    "systemId": "ha-cards",
+    "catalogRevision": "candidate",
+    "capabilityDigest": "candidate",
+    "nativeRuntimeId": "candidate"
+  },
+  "environment": {
+    "widthDp": 130,
+    "heightDp": 220,
+    "density": 2,
+    "theme": "light",
+    "locale": "en-US",
+    "fontScale": 1,
+    "layoutDirection": "ltr"
+  },
+  "stateVariables": {},
+  "roots": [
+    "root"
+  ],
+  "nodes": {
+    "root": {
+      "id": "root",
+      "componentId": "remote-widgets/launcher-widget",
+      "properties": {
+        "background": {
+          "type": "string",
+          "value": "#FFFFFFFF"
+        }
+      },
+      "modifiers": [],
+      "slots": {
+        "content": [
+          "measurement"
+        ]
+      }
+    },
+    "measurement": {
+      "id": "measurement",
+      "componentId": "ha-cards/thermometer",
+      "properties": {
+        "name": {
+          "type": "string",
+          "value": "Bedroom"
+        },
+        "value": {
+          "type": "float",
+          "value": 19.0
+        },
+        "entityId": {
+          "type": "string",
+          "value": "sensor.bedroom_temperature"
+        },
+        "presentation": {
+          "type": "string",
+          "value": "adaptive"
+        }
+      },
+      "modifiers": [],
+      "slots": {}
+    }
+  }
+}

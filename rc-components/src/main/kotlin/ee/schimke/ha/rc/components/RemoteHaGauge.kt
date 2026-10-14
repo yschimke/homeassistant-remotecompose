@@ -2,16 +2,12 @@
 
 package ee.schimke.ha.rc.components
 
-import android.graphics.Paint as AndroidPaint
 import androidx.compose.remote.creation.compose.layout.RemoteAlignment
 import androidx.compose.remote.creation.compose.layout.RemoteArrangement
 import androidx.compose.remote.creation.compose.layout.RemoteBox
-import androidx.compose.remote.creation.compose.layout.RemoteCanvas
 import androidx.compose.remote.creation.compose.layout.RemoteColumn
 import androidx.compose.remote.creation.compose.layout.RemoteComposable
-import androidx.compose.remote.creation.compose.layout.RemoteOffset
 import androidx.compose.remote.creation.compose.layout.RemoteRow
-import androidx.compose.remote.creation.compose.layout.RemoteSize
 import androidx.compose.remote.creation.compose.layout.RemoteText
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.clickable
@@ -23,16 +19,11 @@ import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.modifier.width
 import androidx.compose.remote.creation.compose.state.RemoteColor
 import androidx.compose.remote.creation.compose.state.RemoteFloat
-import androidx.compose.remote.creation.compose.state.asRemotePaint
 import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rf
-import androidx.compose.remote.creation.compose.state.rsp
 import androidx.compose.remote.creation.compose.state.selectIfGe
-import androidx.compose.remote.creation.compose.state.selectIfLt
-import androidx.compose.remote.creation.compose.text.RemoteTextStyle
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 
@@ -61,7 +52,7 @@ fun RemoteHaGauge(data: HaGaugeData, modifier: RemoteModifier = RemoteModifier) 
 
   // Live numeric value from the entity binding, animated so each host
   // update tweens between successive values instead of snapping.
-  val animatedSweep = animatedGaugeSweep(data)
+  val fraction = animatedGaugeFraction(data)
   val severityColor = gaugeSeverityColor(data)
 
   RemoteBox(
@@ -77,56 +68,27 @@ fun RemoteHaGauge(data: HaGaugeData, modifier: RemoteModifier = RemoteModifier) 
       verticalArrangement = RemoteArrangement.spacedBy(4.rdp),
       horizontalAlignment = RemoteAlignment.CenterHorizontally,
     ) {
-      RemoteCanvas(modifier = RemoteModifier.fillMaxWidth().height(72.rdp)) {
-        val w = width
-        val h = height
-        val stroke = 10f.rf
-        val pad = (stroke / 2f.rf) + 2f.rf
-        val diameter = (h - pad) * 2f.rf
-        val left = (w - diameter) / 2f.rf
-        val top = h - (diameter / 2f.rf)
-        val topLeft = RemoteOffset(left, top)
-        val arcSize = RemoteSize(diameter, diameter)
-
-        val track =
-          AndroidPaint()
-            .apply {
-              isAntiAlias = true
-              style = AndroidPaint.Style.STROKE
-              strokeWidth = 10f
-              strokeCap = AndroidPaint.Cap.ROUND
-            }
-            .asRemotePaint()
-            .apply { color = theme.divider }
-        drawArc(track, 180f.rf, 180f.rf, false, topLeft, arcSize)
-
-        val value =
-          AndroidPaint()
-            .apply {
-              isAntiAlias = true
-              style = AndroidPaint.Style.STROKE
-              strokeWidth = 10f
-              strokeCap = AndroidPaint.Cap.ROUND
-            }
-            .asRemotePaint()
-            .apply { color = severityColor }
-        drawArc(value, 180f.rf, animatedSweep, false, topLeft, arcSize)
-      }
+      RemoteHaArcMeter(
+        fraction,
+        severityColor,
+        RemoteModifier.fillMaxWidth().height(72.rdp),
+        strokeWidthPx = 10f,
+      )
 
       RemoteText(
         text = data.valueText,
         color = theme.primaryText,
-        fontSize = 22.rsp,
-        fontWeight = FontWeight.SemiBold,
-        style = RemoteTextStyle.Default,
+        fontSize = HaType.Value,
+        fontWeight = haValueWeight(),
+        style = haTextStyle(),
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
       )
       RemoteText(
         text = entityName(data.entityId, data.name),
         color = theme.secondaryText,
-        fontSize = 13.rsp,
-        style = RemoteTextStyle.Default,
+        fontSize = HaType.Body,
+        style = haTextStyle(),
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
       )
@@ -134,8 +96,8 @@ fun RemoteHaGauge(data: HaGaugeData, modifier: RemoteModifier = RemoteModifier) 
         RemoteText(
           text = cardText("range", gaugeRangeText(data.min, data.max, data.unit)),
           color = theme.secondaryText,
-          fontSize = 11.rsp,
-          style = RemoteTextStyle.Default,
+          fontSize = HaType.Caption,
+          style = haTextStyle(),
           maxLines = 1,
           overflow = TextOverflow.Ellipsis,
         )
@@ -158,7 +120,7 @@ private const val GaugeAnimationSeconds = 0.45f
 @RemoteComposable
 fun RemoteHaGaugeStacked(data: HaGaugeData, modifier: RemoteModifier = RemoteModifier) {
   val theme = haTheme()
-  val animatedSweep = animatedGaugeSweep(data)
+  val fraction = animatedGaugeFraction(data)
   val severityColor = gaugeSeverityColor(data)
   val clickable =
     data.tapAction.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
@@ -172,44 +134,13 @@ fun RemoteHaGaugeStacked(data: HaGaugeData, modifier: RemoteModifier = RemoteMod
     // visible half (= diameter / 2) only reaches ~60 % of the
     // cell height. That leaves the lower ~40 % for the text
     // overlay regardless of the cell's aspect ratio.
-    RemoteCanvas(modifier = RemoteModifier.fillMaxSize()) {
-      val w = width
-      val h = height
-      val stroke = 8f.rf
-      val pad = (stroke / 2f.rf) + 2f.rf
-      val arcBottomY = h * 0.6f.rf
-      val byHeight = (arcBottomY - pad) * 2f.rf
-      val byWidth = w - pad * 2f.rf
-      val diameter = byHeight.min(byWidth)
-      val left = (w - diameter) / 2f.rf
-      val top = arcBottomY - (diameter / 2f.rf)
-      val topLeft = RemoteOffset(left, top)
-      val arcSize = RemoteSize(diameter, diameter)
-
-      val track =
-        AndroidPaint()
-          .apply {
-            isAntiAlias = true
-            style = AndroidPaint.Style.STROKE
-            strokeWidth = 8f
-            strokeCap = AndroidPaint.Cap.ROUND
-          }
-          .asRemotePaint()
-          .apply { color = theme.divider }
-      drawArc(track, 180f.rf, 180f.rf, false, topLeft, arcSize)
-
-      val value =
-        AndroidPaint()
-          .apply {
-            isAntiAlias = true
-            style = AndroidPaint.Style.STROKE
-            strokeWidth = 8f
-            strokeCap = AndroidPaint.Cap.ROUND
-          }
-          .asRemotePaint()
-          .apply { color = severityColor }
-      drawArc(value, 180f.rf, animatedSweep, false, topLeft, arcSize)
-    }
+    RemoteHaArcMeter(
+      fraction,
+      severityColor,
+      RemoteModifier.fillMaxSize(),
+      strokeWidthPx = 8f,
+      baseline = 0.6f,
+    )
     RemoteColumn(
       modifier = RemoteModifier.fillMaxWidth(),
       verticalArrangement = RemoteArrangement.spacedBy(2.rdp),
@@ -218,17 +149,17 @@ fun RemoteHaGaugeStacked(data: HaGaugeData, modifier: RemoteModifier = RemoteMod
       RemoteText(
         text = data.valueText,
         color = theme.primaryText,
-        fontSize = 18.rsp,
-        fontWeight = FontWeight.SemiBold,
-        style = RemoteTextStyle.Default,
+        fontSize = HaType.ValueSmall,
+        fontWeight = haValueWeight(),
+        style = haTextStyle(),
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
       )
       RemoteText(
         text = entityName(data.entityId, data.name),
         color = theme.secondaryText,
-        fontSize = 12.rsp,
-        style = RemoteTextStyle.Default,
+        fontSize = HaType.Label,
+        style = haTextStyle(),
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
       )
@@ -236,8 +167,8 @@ fun RemoteHaGaugeStacked(data: HaGaugeData, modifier: RemoteModifier = RemoteMod
         RemoteText(
           text = cardText("range", gaugeRangeText(data.min, data.max, data.unit)),
           color = theme.secondaryText,
-          fontSize = 10.rsp,
-          style = RemoteTextStyle.Default,
+          fontSize = HaType.Micro,
+          style = haTextStyle(),
           maxLines = 1,
           overflow = TextOverflow.Ellipsis,
         )
@@ -255,7 +186,7 @@ fun RemoteHaGaugeStacked(data: HaGaugeData, modifier: RemoteModifier = RemoteMod
 @RemoteComposable
 fun RemoteHaGaugeWide(data: HaGaugeData, modifier: RemoteModifier = RemoteModifier) {
   val theme = haTheme()
-  val animatedSweep = animatedGaugeSweep(data)
+  val fraction = animatedGaugeFraction(data)
   val severityColor = gaugeSeverityColor(data)
   val clickable =
     data.tapAction.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
@@ -273,43 +204,12 @@ fun RemoteHaGaugeWide(data: HaGaugeData, modifier: RemoteModifier = RemoteModifi
     // with taller cells (Wear L vs Wear S). The text column gets
     // the rest of the width via `weight()` so value / name aren't
     // clipped on narrower 2×1 chips.
-    RemoteCanvas(modifier = RemoteModifier.fillMaxHeight().width(72.rdp)) {
-      val w = width
-      val h = height
-      val stroke = 6f.rf
-      val pad = stroke / 2f.rf
-      val byHeight = (h - pad) * 2f.rf
-      val byWidth = w - pad * 2f.rf
-      val diameter = byHeight.min(byWidth)
-      val left = (w - diameter) / 2f.rf
-      val arcTop = h - (diameter / 2f.rf) - pad
-      val topLeft = RemoteOffset(left, arcTop)
-      val arcSize = RemoteSize(diameter, diameter)
-
-      val track =
-        AndroidPaint()
-          .apply {
-            isAntiAlias = true
-            style = AndroidPaint.Style.STROKE
-            strokeWidth = 6f
-            strokeCap = AndroidPaint.Cap.ROUND
-          }
-          .asRemotePaint()
-          .apply { color = theme.divider }
-      drawArc(track, 180f.rf, 180f.rf, false, topLeft, arcSize)
-
-      val value =
-        AndroidPaint()
-          .apply {
-            isAntiAlias = true
-            style = AndroidPaint.Style.STROKE
-            strokeWidth = 6f
-            strokeCap = AndroidPaint.Cap.ROUND
-          }
-          .asRemotePaint()
-          .apply { color = severityColor }
-      drawArc(value, 180f.rf, animatedSweep, false, topLeft, arcSize)
-    }
+    RemoteHaArcMeter(
+      fraction,
+      severityColor,
+      RemoteModifier.fillMaxHeight().width(72.rdp),
+      strokeWidthPx = 6f,
+    )
     RemoteColumn(
       modifier = RemoteModifier.weight(1f).padding(bottom = 4.rdp),
       verticalArrangement = RemoteArrangement.Center,
@@ -318,17 +218,17 @@ fun RemoteHaGaugeWide(data: HaGaugeData, modifier: RemoteModifier = RemoteModifi
       RemoteText(
         text = data.valueText,
         color = theme.primaryText,
-        fontSize = 16.rsp,
+        fontSize = HaType.Title,
         fontWeight = FontWeight.SemiBold,
-        style = RemoteTextStyle.Default,
+        style = haTextStyle(),
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
       )
       RemoteText(
         text = entityName(data.entityId, data.name),
         color = theme.secondaryText,
-        fontSize = 11.rsp,
-        style = RemoteTextStyle.Default,
+        fontSize = HaType.Caption,
+        style = haTextStyle(),
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
       )
@@ -337,18 +237,17 @@ fun RemoteHaGaugeWide(data: HaGaugeData, modifier: RemoteModifier = RemoteModifi
 }
 
 @Composable
-private fun animatedGaugeSweep(data: HaGaugeData): RemoteFloat {
+private fun animatedGaugeFraction(data: HaGaugeData): RemoteFloat {
+  // min / max are template bindings (card.min / card.max), so the fraction is computed in-document.
   val min = cardFloat("min", data.min.toFloat())
   val max = cardFloat("max", data.max.toFloat())
-  // Same floor on the span as before, now evaluated in-document.
-  val span = (max - min).let { selectIfLt(it, 0.0001f.rf, 0.0001f.rf, it) }
   val animatedValue: RemoteFloat =
     animateRemoteFloat(
       data.value,
       durationSeconds = GaugeAnimationSeconds,
       easing = RcEasing.Standard,
     )
-  return (animatedValue - min) / span * 180f.rf
+  return normalizedFraction(animatedValue, min, max)
 }
 
 /**
@@ -386,10 +285,10 @@ private fun maxOf(a: RemoteFloat, b: RemoteFloat): RemoteFloat = -((-a).min(-b))
 /** Threshold for a severity band the card doesn't set: no reading reaches it. */
 private const val UnsetThreshold = 1e30f
 
-private val SeverityNone = Color(0xFF03A9F4)
-private val SeverityNormal = Color(0xFF43A047)
-private val SeverityWarning = Color(0xFFFFA000)
-private val SeverityCritical = Color(0xFFE53935)
+private val SeverityNone = HaStatusColors.None
+private val SeverityNormal = HaStatusColors.Normal
+private val SeverityWarning = HaStatusColors.Warning
+private val SeverityCritical = HaStatusColors.Critical
 
 /** The gauge's range line, e.g. `0 – 100 °C`. */
 fun gaugeRangeText(min: Double, max: Double, unit: String?): String =

@@ -11,8 +11,6 @@ import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.state.rdp
-import androidx.compose.remote.creation.compose.state.rsp
-import androidx.compose.remote.creation.compose.text.RemoteTextStyle
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -37,9 +35,9 @@ fun RemoteHaEntities(data: HaEntitiesData, modifier: RemoteModifier = RemoteModi
         RemoteText(
           text = cardTitle(data.title),
           color = theme.primaryText,
-          fontSize = adaptiveTitleSizeSp(data.title).rsp,
+          fontSize = adaptiveTitleSize(data.title),
           fontWeight = FontWeight.Medium,
-          style = RemoteTextStyle.Default,
+          style = haTextStyle(),
           maxLines = 1,
           overflow = TextOverflow.Ellipsis,
         )

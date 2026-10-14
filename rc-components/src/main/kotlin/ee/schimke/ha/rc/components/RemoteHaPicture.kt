@@ -27,8 +27,6 @@ import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rf
 import androidx.compose.remote.creation.compose.state.rs
-import androidx.compose.remote.creation.compose.state.rsp
-import androidx.compose.remote.creation.compose.text.RemoteTextStyle
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -75,9 +73,9 @@ fun RemoteHaPicture(
         RemoteText(
           text = cardText("name", data.name),
           color = theme.primaryText,
-          fontSize = 13.rsp,
+          fontSize = HaType.Body,
           fontWeight = FontWeight.Medium,
-          style = RemoteTextStyle.Default,
+          style = haTextStyle(),
           maxLines = 1,
           overflow = TextOverflow.Ellipsis,
         )
@@ -94,8 +92,8 @@ fun RemoteHaPicture(
         RemoteText(
           text = cardText("image", data.captionUrl),
           color = theme.secondaryText,
-          fontSize = 9.rsp,
-          style = RemoteTextStyle.Default,
+          fontSize = HaType.Micro,
+          style = haTextStyle(),
           maxLines = 1,
           overflow = TextOverflow.Ellipsis,
         )
@@ -137,9 +135,9 @@ fun RemoteHaPictureGlance(data: HaPictureGlanceData, modifier: RemoteModifier = 
           RemoteText(
             text = cardTitle(data.title),
             color = theme.primaryText,
-            fontSize = 13.rsp,
+            fontSize = HaType.Body,
             fontWeight = FontWeight.Medium,
-            style = RemoteTextStyle.Default,
+            style = haTextStyle(),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
           )
@@ -289,8 +287,8 @@ private fun Element(
       RemoteText(
         text = element.text,
         color = theme.primaryText,
-        fontSize = 12.rsp,
-        style = RemoteTextStyle.Default,
+        fontSize = HaType.Label,
+        style = haTextStyle(),
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
         modifier = modifier,
@@ -311,9 +309,9 @@ private fun Element(
         RemoteText(
           text = cardText("el.$index.label", element.label),
           color = accent,
-          fontSize = 11.rsp,
+          fontSize = HaType.Caption,
           fontWeight = FontWeight.Medium,
-          style = RemoteTextStyle.Default,
+          style = haTextStyle(),
           maxLines = 1,
         )
       }

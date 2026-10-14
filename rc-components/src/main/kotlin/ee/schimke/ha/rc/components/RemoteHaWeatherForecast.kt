@@ -21,8 +21,6 @@ import androidx.compose.remote.creation.compose.modifier.size
 import androidx.compose.remote.creation.compose.shapes.RemoteRoundedCornerShape
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rs
-import androidx.compose.remote.creation.compose.state.rsp
-import androidx.compose.remote.creation.compose.text.RemoteTextStyle
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -112,9 +110,9 @@ private fun CurrentRow(data: HaWeatherForecastData, theme: RemoteHaTheme) {
         RemoteText(
           text = data.condition,
           color = theme.primaryText,
-          fontSize = 16.rsp,
+          fontSize = HaType.Title,
           fontWeight = FontWeight.Medium,
-          style = RemoteTextStyle.Default,
+          style = haTextStyle(),
           maxLines = 1,
           overflow = TextOverflow.Ellipsis,
         )
@@ -122,8 +120,8 @@ private fun CurrentRow(data: HaWeatherForecastData, theme: RemoteHaTheme) {
           RemoteText(
             text = data.supportingLine.rs,
             color = theme.secondaryText,
-            fontSize = 12.rsp,
-            style = RemoteTextStyle.Default,
+            fontSize = HaType.Label,
+            style = haTextStyle(),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
           )
@@ -131,8 +129,8 @@ private fun CurrentRow(data: HaWeatherForecastData, theme: RemoteHaTheme) {
           RemoteText(
             text = entityName(data.entityId, data.name),
             color = theme.secondaryText,
-            fontSize = 12.rsp,
-            style = RemoteTextStyle.Default,
+            fontSize = HaType.Label,
+            style = haTextStyle(),
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
           )
@@ -143,9 +141,9 @@ private fun CurrentRow(data: HaWeatherForecastData, theme: RemoteHaTheme) {
       RemoteText(
         text = LiveValues.attribute(data.entityId, "temperature_label", data.temperature),
         color = theme.primaryText,
-        fontSize = 28.rsp,
-        fontWeight = FontWeight.Light,
-        style = RemoteTextStyle.Default,
+        fontSize = HaType.ValueLarge,
+        fontWeight = haValueWeight(),
+        style = haTextStyle(),
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
       )
@@ -153,8 +151,8 @@ private fun CurrentRow(data: HaWeatherForecastData, theme: RemoteHaTheme) {
         RemoteText(
           text = cardText("high_low", data.highLow),
           color = theme.secondaryText,
-          fontSize = 13.rsp,
-          style = RemoteTextStyle.Default,
+          fontSize = HaType.Body,
+          style = haTextStyle(),
           maxLines = 1,
           overflow = TextOverflow.Ellipsis,
         )
@@ -194,17 +192,17 @@ private fun ExtraInfoRow(extras: List<HaWeatherExtra>, theme: RemoteHaTheme) {
         RemoteText(
           text = cardText("extra.$i", extra.value),
           color = theme.primaryText,
-          fontSize = 13.rsp,
+          fontSize = HaType.Body,
           fontWeight = FontWeight.Medium,
-          style = RemoteTextStyle.Default,
+          style = haTextStyle(),
           maxLines = 1,
           overflow = TextOverflow.Ellipsis,
         )
         RemoteText(
           text = extra.label.rs,
           color = theme.secondaryText,
-          fontSize = 10.rsp,
-          style = RemoteTextStyle.Default,
+          fontSize = HaType.Micro,
+          style = haTextStyle(),
           maxLines = 1,
           overflow = TextOverflow.Ellipsis,
         )
@@ -246,17 +244,17 @@ fun RemoteHaWeatherForecastWide(
       RemoteText(
         text = data.condition,
         color = theme.primaryText,
-        fontSize = 13.rsp,
+        fontSize = HaType.Body,
         fontWeight = FontWeight.Medium,
-        style = RemoteTextStyle.Default,
+        style = haTextStyle(),
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
       )
       RemoteText(
         text = data.supportingLine?.rs ?: entityName(data.entityId, data.name),
         color = theme.secondaryText,
-        fontSize = 11.rsp,
-        style = RemoteTextStyle.Default,
+        fontSize = HaType.Caption,
+        style = haTextStyle(),
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
       )
@@ -264,9 +262,9 @@ fun RemoteHaWeatherForecastWide(
     RemoteText(
       text = LiveValues.attribute(data.entityId, "temperature_label", data.temperature),
       color = theme.primaryText,
-      fontSize = 20.rsp,
-      fontWeight = FontWeight.Light,
-      style = RemoteTextStyle.Default,
+      fontSize = HaType.ValueSmall,
+      fontWeight = haValueWeight(),
+      style = haTextStyle(),
       maxLines = 1,
       overflow = TextOverflow.Ellipsis,
     )
@@ -297,8 +295,8 @@ private fun ForecastStrip(
         RemoteText(
           text = label,
           color = theme.secondaryText,
-          fontSize = if (fill) 13.rsp else 11.rsp,
-          style = RemoteTextStyle.Default,
+          fontSize = if (fill) HaType.Body else HaType.Caption,
+          style = haTextStyle(),
           maxLines = 1,
         )
         RemoteIcon(
@@ -310,16 +308,16 @@ private fun ForecastStrip(
         RemoteText(
           text = cardText("day.$i.high", day.high),
           color = theme.primaryText,
-          fontSize = if (fill) 15.rsp else 12.rsp,
+          fontSize = if (fill) HaType.BodyLarge else HaType.Label,
           fontWeight = FontWeight.Medium,
-          style = RemoteTextStyle.Default,
+          style = haTextStyle(),
           maxLines = 1,
         )
         RemoteText(
           text = cardText("day.$i.low", day.low),
           color = theme.secondaryText,
-          fontSize = if (fill) 13.rsp else 11.rsp,
-          style = RemoteTextStyle.Default,
+          fontSize = if (fill) HaType.Body else HaType.Caption,
+          style = haTextStyle(),
           maxLines = 1,
         )
       }

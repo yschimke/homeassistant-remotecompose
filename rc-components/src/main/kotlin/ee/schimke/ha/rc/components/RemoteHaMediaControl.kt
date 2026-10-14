@@ -32,8 +32,6 @@ import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rf
 import androidx.compose.remote.creation.compose.state.rs
-import androidx.compose.remote.creation.compose.state.rsp
-import androidx.compose.remote.creation.compose.text.RemoteTextStyle
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -112,18 +110,18 @@ private fun TitleBlock(data: HaMediaControlData, theme: RemoteHaTheme) {
   RemoteText(
     text = entityName(data.entityId, data.playerName),
     color = data.accent.rc,
-    fontSize = 11.rsp,
+    fontSize = HaType.Caption,
     fontWeight = FontWeight.Medium,
-    style = RemoteTextStyle.Default,
+    style = haTextStyle(),
     maxLines = 1,
     overflow = TextOverflow.Ellipsis,
   )
   RemoteText(
     text = LiveValues.attribute(data.entityId, "media_title", data.title),
     color = theme.primaryText,
-    fontSize = 16.rsp,
+    fontSize = HaType.Title,
     fontWeight = FontWeight.Medium,
-    style = RemoteTextStyle.Default,
+    style = haTextStyle(),
     maxLines = 1,
     overflow = TextOverflow.Ellipsis,
   )
@@ -131,8 +129,8 @@ private fun TitleBlock(data: HaMediaControlData, theme: RemoteHaTheme) {
     RemoteText(
       text = LiveValues.attribute(data.entityId, "media_artist", data.artist),
       color = theme.secondaryText,
-      fontSize = 12.rsp,
-      style = RemoteTextStyle.Default,
+      fontSize = HaType.Label,
+      style = haTextStyle(),
       maxLines = 1,
       overflow = TextOverflow.Ellipsis,
     )
@@ -168,14 +166,14 @@ private fun SeekBlock(data: HaMediaControlData, theme: RemoteHaTheme) {
       RemoteText(
         text = LiveValues.attribute(data.entityId, "media_position_label", data.positionLabel),
         color = theme.secondaryText,
-        fontSize = 11.rsp,
-        style = RemoteTextStyle.Default,
+        fontSize = HaType.Caption,
+        style = haTextStyle(),
       )
       RemoteText(
         text = LiveValues.attribute(data.entityId, "media_duration_label", data.durationLabel),
         color = theme.secondaryText,
-        fontSize = 11.rsp,
-        style = RemoteTextStyle.Default,
+        fontSize = HaType.Caption,
+        style = haTextStyle(),
       )
     }
   }
@@ -221,17 +219,17 @@ fun RemoteHaMediaControlWide(data: HaMediaControlData, modifier: RemoteModifier 
       RemoteText(
         text = LiveValues.attribute(data.entityId, "media_title", data.title),
         color = theme.primaryText,
-        fontSize = 14.rsp,
+        fontSize = HaType.BodyLarge,
         fontWeight = FontWeight.Medium,
-        style = RemoteTextStyle.Default,
+        style = haTextStyle(),
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
       )
       RemoteText(
         text = entityName(data.entityId, data.playerName),
         color = theme.secondaryText,
-        fontSize = 11.rsp,
-        style = RemoteTextStyle.Default,
+        fontSize = HaType.Caption,
+        style = haTextStyle(),
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
       )
