@@ -6,8 +6,8 @@ that lets one part (a thermometer, say) grow, shrink and change what it shows wi
 played in.
 
 It also covers the **uber themes** (§5): whole looks such as Material 3 Expressive, a Sony-style
-Trinitron, a segment LCD, Braun and Nixie, which change shape, type and meter drawing as well as
-colour.
+Trinitron, a segment LCD, Braun, Nixie and a skeuomorphic studio Console, which change shape,
+type and meter drawing as well as colour.
 
 It sits between three other documents and leans on them rather than repeating them:
 
@@ -189,6 +189,7 @@ needle, and a Braun thermometer has no fill. Every part reads the theme through
 | `lcd`: segment display | 12 blocks with ghosts | **framed column of bars**, no bulb, **hot bars in a red ink** | **phone battery**, four bars, red when low | chunky segments | value in a **recessed screen** | 4 dp bezel · square block switch |
 | `braun`: Dieter Rams | half-circle dial, index ticks, **orange pointer** on a black hub | **tuning scale**: spine, ticks, orange pointer, red ticks past hot | hairline, softly rounded | tuning scale | plain | 18 dp, borderless |
 | `nixie` | glowing filament over electrode dots | **IN-9 bargraph tube** in its socket | horizontal tube | tube | plain | 14 dp · 4 dp |
+| `console`: skeuomorphic studio desk | **backlit VU meter** behind glass: cream face, the standard VU scale, red from 0 VU, needle and pivot bridge | **fader**: metal cap in a lit slot beside a silkscreen scale, red marks past hot | **lamp in a metal bezel**, red when low | fader | ruled plate | 6 dp **painted-metal panel** (sheen) · metal cap in a recessed slot; dials are a **knob in a lamp ring** |
 
 How each part takes it:
 
@@ -203,7 +204,17 @@ How each part takes it:
   ticks (Braun).
 - **Readout** (`HaReadoutStyle`) sets the value: plain, a tonal pill, a ruled plate, or a screen.
 - **Card chrome and controls**: `cardChrome` takes the theme's corner and border, and the toggle
-  switch takes its corner and square or round knob (`HaCardShapeStyle`).
+  switch takes its corner and square or round knob (`HaCardShapeStyle`). `HaSurfaceMaterial` says
+  what they are made of: `Flat`, or Console's `PaintedMetal`, where `cardChrome` lays a fixed
+  top-lit sheen over the card colour (so a live background still shows) and the switch knob is a
+  machined cap (a gradient brush) in a recessed slot.
+- **Skeuomorphism stays live and original.** Console draws light and material with gradient
+  shaders (`RemoteBrush` linear and radial gradients, applied to a paint) and shadows as offset
+  translucent shapes — all vectors, sized from the canvas at playback, with the needle, fader cap
+  and lamps moved by the live fraction. It is an original drawing of the 1970s-console genre; the
+  only borrowed thing is the VU scale itself (ANSI C16.5), which is a standard. Don't trace a
+  product's artwork: raster knobs from a CC-licensed gallery would also be legal with attribution,
+  but they neither scale nor follow live values, so vectors are the rule.
 - **Text**: every `RemoteHa*` text takes `style = haTextStyle()`, the theme's font family and
   tracking. Readings take `fontWeight = haValueWeight()`.
 - **Ink** replaces rule 2's semantic data colours on themes that are monochrome by nature (LCD,
@@ -225,8 +236,20 @@ In the builder, `ha-cards/uber-theme` is a container that takes a `theme` and `d
 previews are `Uber_*` in
 [`UberThemePreviews.kt`](../../previews/src/main/kotlin/ee/schimke/ha/previews/UberThemePreviews.kt).
 
-**Not yet themed:** the arc-dial controls (thermostat, humidifier, light), the history and
-statistics graphs, Wear and the TV app.
+**Not yet themed:** the arc-dial controls (thermostat, humidifier, light) except under Console,
+the history and statistics graphs, Wear and the TV app.
+
+**Feel and sound.** The app adds feedback for card actions on the host side, not in the
+document: `rememberDashboardActionDispatcher(feedback = …)` cues each action that changes
+something (`feedbackCueFor`: toggle on / off — read from the entity's current state — a key tap,
+a confirm for an alarm, a reject when read-only mode drops an action or the call fails) and
+plays it as a `HapticFeedbackConstants` haptic and, if the user turned **Interface sounds** on, a
+quiet synthesised sound in the card style's voice (`SoundVoice`: a mechanical switch for Console,
+a beep for LCD and Trinitron, a soft tick otherwise). The sounds are generated from code
+(`FeedbackSynth.kt`), so there are no audio files to license. Navigation taps get nothing: their
+ripple is enough. Remote Compose and the player also support in-document `HapticFeedback` and
+`PlaySound` operations; a later step could let a card carry its own cue, which would reach
+launcher widgets too.
 
 ## 6. Adoption checklist
 

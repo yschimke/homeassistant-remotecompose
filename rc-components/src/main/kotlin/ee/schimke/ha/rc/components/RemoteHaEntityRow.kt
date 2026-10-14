@@ -17,6 +17,8 @@ import androidx.compose.remote.creation.compose.modifier.clip
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.modifier.size
+import androidx.compose.remote.creation.compose.shaders.RemoteBrush
+import androidx.compose.remote.creation.compose.shaders.verticalGradient
 import androidx.compose.remote.creation.compose.shapes.RemoteCircleShape
 import androidx.compose.remote.creation.compose.shapes.RemoteRoundedCornerShape
 import androidx.compose.remote.creation.compose.state.RemoteBoolean
@@ -185,10 +187,19 @@ fun RemoteHaToggleSwitchByProgress(
   val uber = currentHaUberTheme()
   val ink = uber.ink
   val shape = uber.theme.shape
+  val metal = shape.material == HaSurfaceMaterial.PaintedMetal
   val trackColor: RemoteColor =
-    if (ink != null) tween(ink.copy(alpha = 0.35f).rc, ink.rc, progress)
-    else tween(inactiveAccent, activeAccent, progress)
+    when {
+      ink != null -> tween(ink.copy(alpha = 0.35f).rc, ink.rc, progress)
+      // Painted metal: off is the bare recessed slot, on lights it in the accent.
+      metal -> tween(ConsoleSlot.rc, activeAccent, progress)
+      else -> tween(inactiveAccent, activeAccent, progress)
+    }
   val knobColor = if (ink != null) haTheme().cardBackground else Color.White.rc
+  // A machined cap, lit from above, in place of a flat knob.
+  val knobFill =
+    if (metal) RemoteModifier.background(RemoteBrush.verticalGradient(ConsoleMetal.map { it.rc }))
+    else RemoteModifier.background(knobColor)
   val startPaddingDp = (KnobInsetDp.rf + progress * KnobTravelDp.rf).asRemoteDp()
 
   RemoteBox(
@@ -207,7 +218,7 @@ fun RemoteHaToggleSwitchByProgress(
             if (shape.squareKnob) RemoteRoundedCornerShape((shape.controlCornerDp / 2).rdp)
             else RemoteCircleShape
           )
-          .background(knobColor)
+          .then(knobFill)
     )
   }
 }

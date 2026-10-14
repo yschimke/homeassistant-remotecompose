@@ -845,6 +845,8 @@ internal fun SettingsScreen(
   val logsViewEnabled by graph.preferencesStore.logsViewEnabled.collectAsState(initial = false)
   val flashOnDataChange by graph.preferencesStore.flashOnDataChange.collectAsState(initial = false)
   val dataGridOverlay by graph.preferencesStore.dataGridOverlay.collectAsState(initial = false)
+  val hapticsEnabled by graph.preferencesStore.haptics.collectAsState(initial = true)
+  val soundsEnabled by graph.preferencesStore.interfaceSounds.collectAsState(initial = false)
   val designServerUrl by graph.preferencesStore.designServerUrl.collectAsState(initial = "")
   val permanentWriteEnabled by
     graph.preferencesStore.permanentWriteMode.collectAsState(initial = false)
@@ -941,6 +943,49 @@ internal fun SettingsScreen(
         selected = cardStylePref,
         onSelect = { pref -> scope.launch { graph.preferencesStore.setCardStyle(pref) } },
       )
+
+      Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+      ) {
+        Column(modifier = Modifier.weight(1f)) {
+          Text("Haptics", style = MaterialTheme.typography.titleMedium)
+          Text(
+            "A tick when a card switches something on or off, a tap per keypad " +
+              "key, and a buzz when an action is dropped or fails.",
+            style = MaterialTheme.typography.bodySmall,
+          )
+        }
+        Switch(
+          checked = hapticsEnabled,
+          onCheckedChange = { enabled ->
+            scope.launch { graph.preferencesStore.setHaptics(enabled) }
+          },
+        )
+      }
+
+      Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+      ) {
+        Column(modifier = Modifier.weight(1f)) {
+          Text("Interface sounds", style = MaterialTheme.typography.titleMedium)
+          Text(
+            "Quiet sounds for the same moments, voiced to the card style: a " +
+              "mechanical switch for Console, a beep for LCD and Trinitron, a soft " +
+              "tick otherwise. Silent while the ringer is on vibrate or silent.",
+            style = MaterialTheme.typography.bodySmall,
+          )
+        }
+        Switch(
+          checked = soundsEnabled,
+          onCheckedChange = { enabled ->
+            scope.launch { graph.preferencesStore.setInterfaceSounds(enabled) }
+          },
+        )
+      }
 
       Row(
         modifier = Modifier.fillMaxWidth(),
@@ -1179,6 +1224,7 @@ private fun cardStyleTagline(pref: CardStylePref): String =
     CardStylePref.Lcd -> "Segment LCD · bar graphs with ghost segments"
     CardStylePref.Braun -> "Dieter Rams · dials and tuning scales"
     CardStylePref.Nixie -> "Glowing tubes · black glass, orange filaments"
+    CardStylePref.Console -> "Skeuomorphic studio desk · VU meters, faders, knobs"
   }
 
 @Composable

@@ -169,3 +169,42 @@ fun Uber_Braun_Dark() = UberShowcase(HaUberTheme.Braun, darkTheme = true)
 @Preview(name = "uber: Nixie", widthDp = 360, heightDp = 640)
 @Composable
 fun Uber_Nixie() = UberShowcase(HaUberTheme.Nixie, darkTheme = true)
+
+@Preview(name = "uber: Console", widthDp = 360, heightDp = 640)
+@Composable
+fun Uber_Console() = UberShowcase(HaUberTheme.Console, darkTheme = true)
+
+/** Console's rotary controls: a thermostat as a knob in a lamp ring, beside a VU-meter gauge. */
+@Preview(name = "uber: Console (desk)", widthDp = 360, heightDp = 420)
+@Composable
+fun Uber_Console_Desk() {
+  val theme = HaUberTheme.Console
+  Box(Modifier.uiFillMaxSize().background(theme.palette(true).dashboardBackground).padding(8.dp)) {
+    CapturingRemoteContentPreview(profile = androidXExperimental) {
+      CompositionLocalProvider(LocalHaClock provides FixedHaClock(PreviewNow)) {
+        ProvideCardRegistry(defaultRegistry()) {
+          ProvideHaUberTheme(theme, darkTheme = true) {
+            RemoteColumn(
+              modifier = RemoteModifier.fillMaxWidth(),
+              verticalArrangement = RemoteArrangement.spacedBy(HaSpace.M.rdp),
+            ) {
+              RenderChild(
+                card("""{"type":"thermostat","entity":"climate.living_room"}"""),
+                Fixtures.thermostat,
+                RemoteModifier.fillMaxWidth(),
+              )
+              RenderChild(
+                card(
+                  """{"type":"gauge","entity":"sensor.repeater_battery","name":"Level",
+                      "min":0,"max":100,"severity":{"green":0,"yellow":60,"red":80}}"""
+                ),
+                Fixtures.battery,
+                RemoteModifier.fillMaxWidth(),
+              )
+            }
+          }
+        }
+      }
+    }
+  }
+}

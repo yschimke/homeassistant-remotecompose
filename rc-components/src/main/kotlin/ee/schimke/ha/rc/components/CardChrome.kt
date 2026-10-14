@@ -6,13 +6,17 @@ import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.background
 import androidx.compose.remote.creation.compose.modifier.border
 import androidx.compose.remote.creation.compose.modifier.clip
+import androidx.compose.remote.creation.compose.shaders.RemoteBrush
+import androidx.compose.remote.creation.compose.shaders.verticalGradient
 import androidx.compose.remote.creation.compose.shapes.RemoteRoundedCornerShape
 import androidx.compose.remote.creation.compose.state.RemoteColor
+import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.ui.graphics.Color
 
 /**
  * Whether HA card components should draw their own outer chrome — the rounded-corner clip, themed
@@ -51,7 +55,23 @@ fun cardChrome(
   if (!LocalCardChromeEnabled.current) return RemoteModifier
   val style = LocalHaUberTheme.current.theme.shape
   val shape = RemoteRoundedCornerShape((cornerRadiusDp ?: style.cornerDp).rdp)
-  val clipped = RemoteModifier.clip(shape).background(background)
+  val filled = RemoteModifier.clip(shape).background(background)
+  // A painted-metal panel is lit from above: a sheen over whatever colour the card is, falling
+  // into shade at the bottom edge. It is a fixed overlay, so a live background still shows through.
+  val clipped =
+    if (style.material == HaSurfaceMaterial.PaintedMetal) filled.background(panelSheen())
+    else filled
   val borderDp = borderWidthDp ?: style.borderDp
   return if (borderDp > 0) clipped.border(borderDp.rdp, border, shape) else clipped
 }
+
+/** The light falling across a painted-metal panel: highlight at the top, shade at the bottom. */
+private fun panelSheen(): RemoteBrush =
+  RemoteBrush.verticalGradient(
+    listOf(
+      Color.White.copy(alpha = 0.10f).rc,
+      Color.White.copy(alpha = 0.02f).rc,
+      Color.Black.copy(alpha = 0.08f).rc,
+      Color.Black.copy(alpha = 0.24f).rc,
+    )
+  )

@@ -29,7 +29,8 @@ import androidx.compose.runtime.Composable
 /**
  * A half-circle meter — a dial — its base at [baseline] of the canvas height (1 = the bottom edge)
  * and its diameter the largest that fits. Classic sweeps an arc `fraction × 180°`; Trinitron swings
- * a VU needle, Braun a pointer over index ticks, LCD lights blocks, Nixie glows.
+ * a VU needle, Braun a pointer over index ticks, LCD lights blocks, Nixie glows, Console is a
+ * backlit VU meter.
  *
  * @param strokeWidthPx the arc's stroke, in document pixels (fixed at capture).
  * @param zones the scale's hot zone, drawn as a red zone or hot segments.
@@ -55,6 +56,7 @@ fun RemoteHaArcMeter(
       HaVisualFamily.Lcd -> lcdArc(look, fraction, strokeWidthPx, baseline, zones)
       HaVisualFamily.Braun -> braunArc(look, fraction, baseline)
       HaVisualFamily.Nixie -> nixieArc(look, fraction, strokeWidthPx, baseline)
+      HaVisualFamily.Console -> consoleArc(look, fraction, baseline, zones)
     }
   }
 }
@@ -84,6 +86,7 @@ fun RemoteHaBarMeter(
       HaVisualFamily.Lcd -> lcdBar(look, fraction, vertical, zones)
       HaVisualFamily.Braun -> braunBar(look, fraction, vertical)
       HaVisualFamily.Nixie -> nixieBar(look, fraction, vertical)
+      HaVisualFamily.Console -> consoleBar(look, fraction, vertical)
     }
   }
 }
@@ -112,6 +115,7 @@ fun RemoteHaThermometerGlyph(
       HaVisualFamily.Lcd -> lcdThermometer(look, fraction, zones)
       HaVisualFamily.Braun -> braunThermometer(look, fraction, zones)
       HaVisualFamily.Nixie -> nixieThermometer(look, fraction)
+      HaVisualFamily.Console -> consoleThermometer(look, fraction, zones)
     }
   }
 }
@@ -139,6 +143,7 @@ fun RemoteHaBatteryGlyph(
       HaVisualFamily.Lcd -> lcdBattery(look, fraction, zones)
       HaVisualFamily.Braun -> braunBattery(look, fraction)
       HaVisualFamily.Nixie -> nixieBattery(look, fraction)
+      HaVisualFamily.Console -> consoleBattery(look, fraction, zones)
     }
   }
 }
