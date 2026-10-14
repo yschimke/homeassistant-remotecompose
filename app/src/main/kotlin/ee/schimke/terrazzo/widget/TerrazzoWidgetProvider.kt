@@ -23,6 +23,7 @@ import ee.schimke.ha.rc.cards.shutter.withEnhancedShutter
 import ee.schimke.ha.rc.components.WidgetActionRegistry
 import ee.schimke.ha.rc.encodeHaAction
 import ee.schimke.ha.rc.formatState
+import ee.schimke.ha.rc.platformWidgetDocument
 import ee.schimke.ha.rc.systemThemedWidgetsProfile
 import ee.schimke.ha.rc.widgetsProfile
 import ee.schimke.terrazzo.core.session.DemoData
@@ -176,18 +177,21 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
       .getOrNull()
     val remoteViews =
       if (baked != null) {
-        RemoteViews(RemoteViews.DrawInstructions.Builder(listOf(baked.bytes)).build()).also { views
-          ->
-          baked.actions
-            .filterKeys { widgetId != AppWidgetManager.INVALID_APPWIDGET_ID }
-            .forEach { (actionId, action) ->
-              val payload = encodeHaAction(action)
-              views.setOnClickPendingIntent(
-                actionId,
-                widgetActionPendingIntent(context, widgetId, actionId, payload, resolved = true),
-              )
-            }
-        }
+        RemoteViews(
+            RemoteViews.DrawInstructions.Builder(listOf(platformWidgetDocument(baked.bytes)))
+              .build()
+          )
+          .also { views ->
+            baked.actions
+              .filterKeys { widgetId != AppWidgetManager.INVALID_APPWIDGET_ID }
+              .forEach { (actionId, action) ->
+                val payload = encodeHaAction(action)
+                views.setOnClickPendingIntent(
+                  actionId,
+                  widgetActionPendingIntent(context, widgetId, actionId, payload, resolved = true),
+                )
+              }
+          }
       } else {
         captureDirect(
           context,
@@ -238,7 +242,9 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
         return null
       }
     val remoteViews =
-      RemoteViews(RemoteViews.DrawInstructions.Builder(listOf(captured.bytes)).build())
+      RemoteViews(
+        RemoteViews.DrawInstructions.Builder(listOf(platformWidgetDocument(captured.bytes))).build()
+      )
     widgetActions.entries
       .filterKeys { widgetId != AppWidgetManager.INVALID_APPWIDGET_ID }
       .forEach { (actionId, payload) ->

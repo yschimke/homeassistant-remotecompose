@@ -29,6 +29,10 @@ identical cards on different Home Assistant instances.
 - Android 15's original DrawInstructions decoder has no layout-widget support.
   The app still runs on Android 15, but providers stay out of its widget picker
   and preparation explains that home screen widgets require Android 16.
+- AndroidX alpha21 also emits wire version 1.1 for API-7 captures. Android 16
+  rejects it despite recognizing the layout operations, and its player then
+  crashes while mapping colors. Final platform-bound documents retain the tagged header and
+  advertise compatible version 1.0 after the AndroidX baking/codec passes; tests cover both capture and baked output.
 - Preview capture coalesces rapid typing/resize events and runs away from the UI
   thread; cancellation cannot publish an older card over a newer edit.
 - The install sheet had one fixed-size, hard-coded light preview. It now uses

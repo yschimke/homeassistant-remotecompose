@@ -75,3 +75,15 @@ val widgetsProfile: Profile = createWidgetsProfile(supportsColorTheme = false)
 
 /** API 37+ widget host profile, including host-resolved ColorTheme values. */
 val systemThemedWidgetsProfile: Profile = createWidgetsProfile(supportsColorTheme = true)
+
+/** Downlevel only the final platform-bound document, after the AndroidX baking/codec passes. */
+fun platformWidgetDocument(bytes: ByteArray): ByteArray {
+  require(bytes.size >= 13 && bytes[0].toInt() == Operations.HEADER) {
+    "Expected an uncompressed RemoteCompose widget header"
+  }
+  return bytes.copyOf().also { compatible ->
+    // alpha21 writes 1.1 even for API-7 documents; Android 16 supports wire 1.0.
+    // Preserve the tagged major version and all layout/data/profile fields.
+    compatible.fill(0, fromIndex = 5, toIndex = 9)
+  }
+}

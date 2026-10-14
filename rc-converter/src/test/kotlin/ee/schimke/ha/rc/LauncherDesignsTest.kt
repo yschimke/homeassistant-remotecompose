@@ -5,6 +5,8 @@ import android.widget.FrameLayout
 import android.widget.RemoteViews
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
+import androidx.compose.remote.core.CoreDocument
+import androidx.compose.remote.core.RemoteComposeBuffer
 import androidx.compose.remote.creation.compose.capture.RemoteCreationDisplayInfo
 import androidx.compose.remote.creation.compose.capture.captureSingleRemoteDocument
 import androidx.compose.runtime.getValue
@@ -62,6 +64,18 @@ class LauncherDesignsTest {
     // Android 15 has DrawInstructions but only its original canvas operations, without
     // layout widgets or the V7 header. The phone host must require Android 16 for widgets.
     assertFailsWith<RuntimeException> { views.apply(context, FrameLayout(context)) }
+  }
+
+  @Test
+  fun bakedWidgetKeepsAndroid16CompatibleHeader() {
+    val baked = bake(card("tile", "light.kitchen"), snapshotOf(entity("light.kitchen", "on")))
+    val document =
+      CoreDocument().apply {
+        initFromBuffer(
+          RemoteComposeBuffer.fromInputStream(platformWidgetDocument(baked.bytes).inputStream())
+        )
+      }
+    assertTrue(document.canBeDisplayed(1, 0, 0L))
   }
 
   @get:Rule val compose = createComposeRule()
