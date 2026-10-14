@@ -35,7 +35,11 @@ class WidgetInstaller(private val context: Context) {
    * Returns true when the request was accepted by Android (not necessarily that the user confirmed
    * — the success signal comes later via [WidgetInstallReceiver]).
    */
-  fun requestPin(baseUrl: String, card: CardConfig): Boolean {
+  fun requestPin(
+    baseUrl: String,
+    card: CardConfig,
+    preview: android.widget.RemoteViews? = null,
+  ): Boolean {
     val appWidgetManager = AppWidgetManager.getInstance(context)
     if (!appWidgetManager.isRequestPinAppWidgetSupported) return false
 
@@ -52,6 +56,8 @@ class WidgetInstaller(private val context: Context) {
     val callback =
       Intent(context, WidgetInstallReceiver::class.java).apply {
         action = WidgetInstallReceiver.ACTION_PIN_CONFIRMED
+        // PendingIntent identity must distinguish concurrent installs, including identical cards.
+        data = android.net.Uri.parse("terrazzo-widget://pin/${java.util.UUID.randomUUID()}")
         putExtra(WidgetInstallReceiver.EXTRA_BASE_URL, baseUrl)
         putExtra(WidgetInstallReceiver.EXTRA_CARD_TYPE, card.type)
         putExtra(
@@ -66,7 +72,13 @@ class WidgetInstaller(private val context: Context) {
         callback,
         PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE,
       )
-    return appWidgetManager.requestPinAppWidget(provider, /* extras= */ null, pendingIntent)
+    val extras =
+      android.os.Bundle().apply {
+        preview?.let { putParcelable(AppWidgetManager.EXTRA_APPWIDGET_PREVIEW, it) }
+      }
+    return runCatching { appWidgetManager.requestPinAppWidget(provider, extras, pendingIntent) }
+      .onFailure { android.util.Log.w("WidgetInstaller", "Launcher rejected widget preview", it) }
+      .getOrDefault(false)
   }
 
   private companion object {

@@ -164,6 +164,12 @@ fun CardHistoryScreen(
       verticalArrangement = Arrangement.spacedBy(20.dp),
     ) {
       CardPreviewCard(session = session, card = card, snapshot = snapshot)
+      androidx.compose.material3.Button(
+        onClick = onAddToHomeScreen,
+        modifier = Modifier.fillMaxWidth(),
+      ) {
+        Text("Prepare a home screen widget")
+      }
       onDesignCard?.let { action ->
         androidx.compose.material3.Button(onClick = action) { Text("Design or fix this card") }
       }

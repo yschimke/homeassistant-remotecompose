@@ -126,6 +126,21 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
         widgetId = widgetId,
         cardHeightDp = registry.cardHeightDp(entry.card, snapshot),
       )
+    val remoteViews =
+      renderPreview(context, entry.baseUrl, entry.card, snapshot, targetSizeDp, widgetId) ?: return
+    appWidgetManager.updateAppWidget(widgetId, remoteViews)
+  }
+
+  /** The install preview and the installed widget share the exact same capture and theme. */
+  internal fun renderPreview(
+    context: Context,
+    baseUrl: String,
+    card: ee.schimke.ha.model.CardConfig,
+    snapshot: HaSnapshot,
+    targetSizeDp: WidgetSizeDp,
+    widgetId: Int = AppWidgetManager.INVALID_APPWIDGET_ID,
+  ): RemoteViews? {
+    val registry = defaultRegistry().withEnhancedShutter()
     val widthPx = WidgetSizing.dpToPx(context, targetSizeDp.widthDp)
     val heightPx = WidgetSizing.dpToPx(context, targetSizeDp.heightDp)
     val densityDpi = context.resources.configuration.densityDpi
@@ -146,7 +161,7 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
     val baked = runCatching {
       LauncherDesigns.render(
         context = context,
-        card = entry.card,
+        card = card,
         snapshot = snapshot,
         widthDp = targetSizeDp.widthDp,
         heightDp = targetSizeDp.heightDp,
@@ -154,7 +169,7 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
         dark = dark,
         systemTheme = captureProfile === systemThemedWidgetsProfile,
         registry = registry,
-        fetchImage = { url -> fetchWidgetImage(context, entry.baseUrl, url) },
+        fetchImage = { url -> fetchWidgetImage(context, baseUrl, url) },
       )
     }
       .onFailure { Log.w(TAG, "launcher design failed for id=$widgetId", it) }
@@ -163,19 +178,21 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
       if (baked != null) {
         RemoteViews(RemoteViews.DrawInstructions.Builder(listOf(baked.bytes)).build()).also { views
           ->
-          baked.actions.forEach { (actionId, action) ->
-            val payload = encodeHaAction(action)
-            views.setOnClickPendingIntent(
-              actionId,
-              widgetActionPendingIntent(context, widgetId, actionId, payload, resolved = true),
-            )
-          }
+          baked.actions
+            .filterKeys { widgetId != AppWidgetManager.INVALID_APPWIDGET_ID }
+            .forEach { (actionId, action) ->
+              val payload = encodeHaAction(action)
+              views.setOnClickPendingIntent(
+                actionId,
+                widgetActionPendingIntent(context, widgetId, actionId, payload, resolved = true),
+              )
+            }
         }
       } else {
         captureDirect(
           context,
           widgetId,
-          entry.card,
+          card,
           snapshot,
           registry,
           widthPx,
@@ -183,9 +200,9 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
           densityDpi,
           captureProfile,
           dark,
-        ) ?: return
+        ) ?: return null
       }
-    appWidgetManager.updateAppWidget(widgetId, remoteViews)
+    return remoteViews
   }
 
   @RequiresApi(Build.VERSION_CODES.VANILLA_ICE_CREAM)
@@ -222,16 +239,18 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
       }
     val remoteViews =
       RemoteViews(RemoteViews.DrawInstructions.Builder(listOf(captured.bytes)).build())
-    widgetActions.entries.forEach { (actionId, payload) ->
-      // The RC document emits HostActionMetadata(actionId, payload). Android's launcher-widget
-      // bridge adds that payload to the PendingIntent's fill-in Intent as
-      // "remotecompose_metadata". Keep a static copy too: it lets the receiver log whether the
-      // platform forwarded metadata and remains a fallback on platform builds that omit it.
-      remoteViews.setOnClickPendingIntent(
-        actionId,
-        widgetActionPendingIntent(context, widgetId, actionId, payload),
-      )
-    }
+    widgetActions.entries
+      .filterKeys { widgetId != AppWidgetManager.INVALID_APPWIDGET_ID }
+      .forEach { (actionId, payload) ->
+        // The RC document emits HostActionMetadata(actionId, payload). Android's launcher-widget
+        // bridge adds that payload to the PendingIntent's fill-in Intent as
+        // "remotecompose_metadata". Keep a static copy too: it lets the receiver log whether the
+        // platform forwarded metadata and remains a fallback on platform builds that omit it.
+        remoteViews.setOnClickPendingIntent(
+          actionId,
+          widgetActionPendingIntent(context, widgetId, actionId, payload),
+        )
+      }
     return remoteViews
   }
 
