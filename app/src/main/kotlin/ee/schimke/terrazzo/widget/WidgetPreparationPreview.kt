@@ -136,32 +136,36 @@ internal fun WidgetPreparationPreview(
     val current = views
     if (current != null) {
       key(current) {
-        AndroidView(
-          factory = { ctx ->
-            runCatching { inflateWidgetPreview(ctx, current) }
-              .getOrElse { failure ->
-                android.util.Log.e(
-                  "WidgetPreparationPreview",
-                  "Could not inflate launcher preview",
-                  failure,
-                )
-                views = null
-                failed = true
-                latestOnPreview(null)
-                FrameLayout(ctx)
-              }
-              .also { frame ->
-                // Expose a read-only description through Compose, not inactive virtual click
-                // targets.
-                frame.importantForAccessibility =
-                  android.view.View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS
-              }
-          },
+        Box(
           modifier =
             Modifier.fillMaxSize().testTag("widget-render").semantics {
               contentDescription = "$label preview, $stateLabel, $width by $height cells"
+            }
+        ) {
+          AndroidView(
+            factory = { ctx ->
+              runCatching { inflateWidgetPreview(ctx, current) }
+                .getOrElse { failure ->
+                  android.util.Log.e(
+                    "WidgetPreparationPreview",
+                    "Could not inflate launcher preview",
+                    failure,
+                  )
+                  views = null
+                  failed = true
+                  latestOnPreview(null)
+                  FrameLayout(ctx)
+                }
+                .also { frame ->
+                  // Expose a read-only description through Compose, not inactive virtual click
+                  // targets.
+                  frame.importantForAccessibility =
+                    android.view.View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS
+                }
             },
-        )
+            modifier = Modifier.fillMaxSize(),
+          )
+        }
       }
     } else if (failed) {
       Text(

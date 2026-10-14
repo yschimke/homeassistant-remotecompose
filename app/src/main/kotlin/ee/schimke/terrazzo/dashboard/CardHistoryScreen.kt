@@ -195,6 +195,10 @@ internal fun CardPreviewCard(session: HaSession, card: CardConfig, snapshot: HaS
 
 @Composable
 private fun ResizableLauncherPreview(session: HaSession, card: CardConfig, snapshot: HaSnapshot) {
+  if (android.os.Build.VERSION.SDK_INT < ee.schimke.terrazzo.widget.WidgetInstaller.MIN_HOST_API) {
+    LegacyCardPreview(session, card, snapshot)
+    return
+  }
   Column(
     horizontalAlignment = Alignment.CenterHorizontally,
     verticalArrangement = Arrangement.spacedBy(10.dp),
