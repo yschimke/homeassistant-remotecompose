@@ -32,6 +32,8 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.unit.dp
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
@@ -59,6 +61,8 @@ fun WidgetInstallSheet(
   refreshSnapshot: (suspend () -> HaSnapshot)? = null,
 ) {
   val context = LocalContext.current
+  val focusManager = LocalFocusManager.current
+  val keyboard = LocalSoftwareKeyboardController.current
   val installer = remember { WidgetInstaller(context.applicationContext) }
   val store = LocalTerrazzoGraph.current.widgetStore
   val pinStore = LocalTerrazzoGraph.current.pinStore
@@ -195,6 +199,8 @@ fun WidgetInstallSheet(
       }
       Button(
         onClick = {
+          focusManager.clearFocus()
+          keyboard?.hide()
           if (installer.requestPin(baseUrl, editedCard, renderedPreview)) {
             requestedIds = installed.map { it.widgetId }.toSet()
           } else installError = "Your launcher could not start installation. Try again."

@@ -33,6 +33,13 @@ identical cards on different Home Assistant instances.
   rejects it despite recognizing the layout operations, and its player then
   crashes while mapping colors. Final platform-bound documents retain the tagged header and
   advertise compatible version 1.0 after the AndroidX baking/codec passes; tests cover both capture and baked output.
+- Android 16 also drops newer expression/resource operations nested in layout
+  components. The final platform document lifts those definitions before the
+  layout while retaining component values and actions in place. This fixes the
+  missing invisible-width text that otherwise makes adaptive widgets show the
+  platform's warning icon.
+- Editing and size selection no longer leave the keyboard covering the preview
+  or launcher confirmation.
 - Preview capture coalesces rapid typing/resize events and runs away from the UI
   thread; cancellation cannot publish an older card over a newer edit.
 - The install sheet had one fixed-size, hard-coded light preview. It now uses
@@ -74,7 +81,7 @@ home screen after installation.
 `WidgetPreparationTest` runs on an Android 16 emulator with a pin-capable launcher.
 It checks that actual rendered pixels are non-empty, change with light state,
 and remain non-empty at Compact and Roomy sizes. It edits a name, requests a pin,
-cancels, confirms another pin and verifies the persisted edited card. It also
+cancels, confirms another pin and verifies the persisted edited card. Screenshots are retained through MediaStore so CI cleanup cannot erase the evidence. It also
 exercises the provider's launcher size options after installation.
 
 ```sh

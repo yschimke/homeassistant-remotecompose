@@ -9,6 +9,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -37,6 +39,8 @@ internal fun WidgetPreparationPreview(
   onPreview: (RemoteViews?) -> Unit,
 ) {
   val context = LocalContext.current
+  val focusManager = LocalFocusManager.current
+  val keyboard = LocalSoftwareKeyboardController.current
   val entityId = card.raw["entity"]?.jsonPrimitive?.contentOrNull
   val entity = snapshot.states[entityId]
   val label =
@@ -106,6 +110,8 @@ internal fun WidgetPreparationPreview(
         FilterChip(
           selected = width == w && height == h,
           onClick = {
+            focusManager.clearFocus()
+            keyboard?.hide()
             width = w
             height = h
           },

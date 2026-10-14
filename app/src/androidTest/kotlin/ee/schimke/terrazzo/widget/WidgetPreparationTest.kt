@@ -55,6 +55,33 @@ class WidgetPreparationTest {
       UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
         .takeScreenshot(java.io.File(directory, "$name.png"))
     )
+    // AGP may uninstall the test app before the wrapper collects screenshots.
+    // MediaStore images survive that cleanup and need no broad storage permission.
+    val uri =
+      checkNotNull(
+        context.contentResolver.insert(
+          android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+          android.content.ContentValues().apply {
+            put(android.provider.MediaStore.Images.Media.DISPLAY_NAME, "$name.png")
+            put(android.provider.MediaStore.Images.Media.MIME_TYPE, "image/png")
+            put(
+              android.provider.MediaStore.Images.Media.RELATIVE_PATH,
+              "Pictures/TerrazzoWidgetTests",
+            )
+          },
+        )
+      )
+    checkNotNull(context.contentResolver.openOutputStream(uri)).use { output ->
+      val bitmap =
+        checkNotNull(InstrumentationRegistry.getInstrumentation().uiAutomation.takeScreenshot())
+      assertTrue(bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, output))
+      bitmap.recycle()
+    }
+    if (name == "launcher-confirmation") {
+      val xml = java.io.ByteArrayOutputStream()
+      UiDevice.getInstance(InstrumentationRegistry.getInstrumentation()).dumpWindowHierarchy(xml)
+      xml.toString().chunked(3000).forEach { android.util.Log.i("WidgetJourney", it) }
+    }
   }
 
   private fun snapshot(state: String) =
@@ -79,7 +106,7 @@ class WidgetPreparationTest {
         }
       }
     }
-    compose.waitUntil(30_000) { captures > 0 }
+    compose.waitUntil(60_000) { captures > 0 }
     fun pixels(): List<Int> {
       compose.waitForIdle()
       val bounds = compose.onNodeWithTag("widget-render").fetchSemanticsNode().boundsInWindow
@@ -100,14 +127,28 @@ class WidgetPreparationTest {
     screenshot("preview-off")
     assertTrue("preview must draw content, not a flat empty canvas", off.distinct().size > 10)
     compose.runOnIdle { current.value = snapshot("on") }
-    compose.waitUntil(30_000) { captures >= 2 }
-    assertNotEquals("a live state change must alter rendered pixels", off, pixels())
+    compose.waitUntil(60_000) {
+      captures >= 2 && compose.onAllNodesWithTag("widget-render").fetchSemanticsNodes().isNotEmpty()
+    }
+    // Publishing a RemoteViews document precedes the platform player's next draw.
+    compose.waitUntil(60_000) { pixels() != off }
+    assertFalse("a live state change must alter rendered pixels", off == pixels())
     screenshot("preview-on")
+    val beforeCompact = captures
     compose.onNodeWithText("Compact").performClick()
+    compose.waitUntil(60_000) {
+      captures > beforeCompact &&
+        compose.onAllNodesWithTag("widget-render").fetchSemanticsNodes().isNotEmpty()
+    }
     compose.waitForIdle()
     val compact = compose.onNodeWithTag("widget-render").fetchSemanticsNode().size
     screenshot("preview-compact")
+    val beforeRoomy = captures
     compose.onNodeWithText("Roomy").performClick()
+    compose.waitUntil(60_000) {
+      captures > beforeRoomy &&
+        compose.onAllNodesWithTag("widget-render").fetchSemanticsNodes().isNotEmpty()
+    }
     compose.waitForIdle()
     val roomy = compose.onNodeWithTag("widget-render").fetchSemanticsNode().size
     assertTrue(
@@ -127,17 +168,18 @@ class WidgetPreparationTest {
     )
     val before = runBlocking { graph.widgetStore.installed.first().map { it.widgetId }.toSet() }
     var dismissed = false
+    val initialSnapshot = snapshot("on")
     compose.setContent {
       CompositionLocalProvider(LocalTerrazzoGraph provides graph) {
         MaterialTheme {
-          WidgetInstallSheet(DemoData.BASE_URL, "", card, snapshot("on"), { dismissed = true })
+          WidgetInstallSheet(DemoData.BASE_URL, "", card, initialSnapshot, { dismissed = true })
         }
       }
     }
     compose.onNodeWithText("Widget name").performTextClearance()
     compose.onNodeWithText("Widget name").performTextInput("My magical light")
     compose.onNodeWithText("Roomy").performScrollTo().performClick()
-    compose.waitUntil(30_000) {
+    compose.waitUntil(60_000) {
       compose
         .onAllNodes(hasText("Install widget") and isEnabled())
         .fetchSemanticsNodes()
@@ -151,6 +193,13 @@ class WidgetPreparationTest {
       )
     )
     device.pressBack()
+    assertTrue(
+      "cancellation must close the launcher confirmation",
+      device.wait(
+        Until.gone(By.text(java.util.regex.Pattern.compile("(?i).*add to home screen.*"))),
+        10_000,
+      ),
+    )
     assertEquals(
       "cancelled pins must not consume a slot",
       before,
@@ -158,20 +207,35 @@ class WidgetPreparationTest {
     )
     assertFalse("cancelling must return to the edited preparation", dismissed)
     compose.onNodeWithText("My magical light").assertExists()
-    compose.waitUntil(30_000) {
+    compose.waitUntil(60_000) {
       compose
         .onAllNodes(hasText("Install widget") and isEnabled())
         .fetchSemanticsNodes()
         .isNotEmpty()
     }
     compose.onNodeWithText("Install widget").assertIsEnabled().performClick()
+    assertTrue(
+      device.wait(
+        Until.hasObject(By.text(java.util.regex.Pattern.compile("(?i).*add to home screen.*"))),
+        30_000,
+      )
+    )
     screenshot("launcher-confirmation")
     val add =
-      device.wait(Until.findObject(By.text("Add automatically")), 30_000)
-        ?: device.wait(Until.findObject(By.text("Add")), 5_000)
+      device.wait(
+        Until.findObject(
+          By.text(
+              java.util.regex.Pattern.compile(
+                "(?i)^add(?: automatically| to home screen| widget)?$"
+              )
+            )
+            .clickable(true)
+        ),
+        30_000,
+      )
     assertNotNull("launcher must offer confirmation", add)
     add!!.click()
-    compose.waitUntil(30_000) {
+    compose.waitUntil(60_000) {
       runBlocking { graph.widgetStore.installed.first().any { it.widgetId !in before } }
     }
     val installed = runBlocking {

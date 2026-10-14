@@ -6,6 +6,7 @@ import android.widget.RemoteViews
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.remote.core.CoreDocument
+import androidx.compose.remote.core.Operation
 import androidx.compose.remote.core.RemoteComposeBuffer
 import androidx.compose.remote.creation.compose.capture.RemoteCreationDisplayInfo
 import androidx.compose.remote.creation.compose.capture.captureSingleRemoteDocument
@@ -76,6 +77,25 @@ class LauncherDesignsTest {
         )
       }
     assertTrue(document.canBeDisplayed(1, 0, 0L))
+  }
+
+  @Test
+  fun adaptiveWidgetDefinesTextResourcesBeforePlatformLayout() {
+    val baked = bake(card("tile", "light.kitchen"), snapshotOf(entity("light.kitchen", "on")))
+    val operations = arrayListOf<Operation>()
+    RemoteComposeBuffer.fromInputStream(platformWidgetDocument(baked.bytes).inputStream())
+      .inflateFromBuffer(operations)
+    val firstLayout = operations.indexOfFirst { it.javaClass.simpleName == "RootLayoutComponent" }
+    assertTrue(firstLayout > 0)
+    val textOperations =
+      operations.withIndex().filter {
+        it.value.javaClass.simpleName in setOf("TextData", "TextFromFloat", "TextMerge")
+      }
+    assertTrue(textOperations.isNotEmpty())
+    assertTrue(
+      textOperations.all { it.index < firstLayout },
+      "Android 16 must load text expressions before inflating adaptive layouts",
+    )
   }
 
   @get:Rule val compose = createComposeRule()
