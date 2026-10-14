@@ -68,6 +68,9 @@ data class BrowserFilter(
   companion object {
     const val ALL = "all"
 
+    /** The query keys the browser reads. */
+    val KEYS = setOf("type", "style", "mode", "q", "preview")
+
     fun from(params: Parameters, library: DesignLibrary, defaults: Boolean): BrowserFilter {
       fun param(name: String, default: String?): String? =
         when (val value = params[name]?.trim()) {

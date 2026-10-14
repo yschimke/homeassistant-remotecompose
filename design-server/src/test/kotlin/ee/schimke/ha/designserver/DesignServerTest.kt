@@ -223,6 +223,9 @@ class DesignServerTest {
       val response = noFollow.get("/?type=tile&style=all")
       assertEquals(HttpStatusCode.MovedPermanently, response.status)
       assertEquals("/designs?type=tile&style=all", response.headers[HttpHeaders.Location])
+      val campaign = noFollow.get("/?utm_source=readme")
+      assertEquals(HttpStatusCode.OK, campaign.status, "other queries stay on the front page")
+      assertTrue("<h1>Terrazzo</h1>" in campaign.bodyAsText())
     }
 
   @Test

@@ -166,8 +166,9 @@ fun Application.designServer(
     }
 
     get("/") {
-      // The browser lived here, and its filter links still arrive with a query.
-      if (!call.request.queryParameters.isEmpty()) {
+      // The browser lived here, and its filter links still arrive with its query keys; any other
+      // query (`?utm_source=…`) is the front page's.
+      if (call.request.queryParameters.names().any { it in BrowserFilter.KEYS }) {
         return@get call.respondRedirect("/designs?${call.request.queryString()}", permanent = true)
       }
       call.respondText(Landing.page(holder.current(), site), ContentType.Text.Html)
