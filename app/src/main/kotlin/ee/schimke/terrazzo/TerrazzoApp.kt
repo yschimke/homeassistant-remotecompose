@@ -60,6 +60,7 @@ import ee.schimke.terrazzo.core.prefs.ThemePref
 import ee.schimke.terrazzo.core.session.DemoHaSession
 import ee.schimke.terrazzo.core.session.HaSession
 import ee.schimke.terrazzo.core.session.SessionConnectionStatus
+import ee.schimke.terrazzo.dashboard.CardActionsSheet
 import ee.schimke.terrazzo.dashboard.CardDesignSync
 import ee.schimke.terrazzo.dashboard.CardHistoryScreen
 import ee.schimke.terrazzo.dashboard.CardPreviewCard
@@ -70,6 +71,7 @@ import ee.schimke.terrazzo.dashboard.DashboardSwitcher
 import ee.schimke.terrazzo.dashboard.DashboardViewScreen
 import ee.schimke.terrazzo.dashboard.ManagePinnedScreen
 import ee.schimke.terrazzo.dashboard.TopBarOverflowMenu
+import ee.schimke.terrazzo.dashboard.historyTitle
 import ee.schimke.terrazzo.dashboard.rememberDashboardListState
 import ee.schimke.terrazzo.dashboard.rememberSelectedDashboardListState
 import ee.schimke.terrazzo.discovery.DiscoveryScreen
@@ -503,6 +505,8 @@ private fun DashboardsRoot(
   // links). Holds the pressed card plus the snapshot it was pressed
   // against, so the preview at the top matches the dashboard frame.
   var historyTarget by remember { mutableStateOf<Pair<CardConfig, HaSnapshot>?>(null) }
+  // Long-press first offers a menu (CardActionsSheet): fork, home screen, or history.
+  var actionsTarget by remember { mutableStateOf<Pair<CardConfig, HaSnapshot>?>(null) }
   var studioTarget by remember { mutableStateOf<Pair<CardConfig, HaSnapshot>?>(null) }
   val studioServer by
     graph.preferencesStore.designServerUrl.collectAsState(initial = "https://ha.coo.ee/designs/v1")
@@ -725,15 +729,25 @@ private fun DashboardsRoot(
             session = session,
             urlPath = openedValue,
             readOnly = readOnly,
-            // Long-press opens the card-history screen, handed the
-            // live snapshot the card was pressed against so the
-            // preview at the top matches the dashboard frame.
-            onCardLongPress = { card, snapshot -> historyTarget = card to snapshot },
+            // Long-press opens the card's actions, handed the live
+            // snapshot the card was pressed against so a fork or the
+            // history preview matches the dashboard frame.
+            onCardLongPress = { card, snapshot -> actionsTarget = card to snapshot },
             contentPadding = padding,
           )
         }
       }
     }
+  }
+
+  actionsTarget?.let { target ->
+    CardActionsSheet(
+      title = target.first.historyTitle(),
+      onFork = { studioTarget = target },
+      onAddToHomeScreen = { installPending = target },
+      onShowDetails = { historyTarget = target },
+      onDismiss = { actionsTarget = null },
+    )
   }
 
   val monitorContext = LocalContext.current

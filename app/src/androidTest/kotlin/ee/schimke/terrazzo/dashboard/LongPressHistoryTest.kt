@@ -81,6 +81,15 @@ class LongPressHistoryTest {
     // `viewConfiguration.longPressTimeoutMillis` measures against.
     card.longClick()
 
+    // Long-press offers the card's actions first: fork, home screen, history.
+    val forkAction = device.wait(Until.findObject(By.text("Fork in card designer")), 10_000)
+    assertNotNull(
+      "card actions did not surface after long-press — long-press is being swallowed by the " +
+        "RC player again, see Modifier.longPressBeforeChild",
+      forkAction,
+    )
+    device.findObject(By.text("History and details"))!!.click()
+
     // The primary action is above history. The old assertion looked for "Other actions"
     // below the fold and misdiagnosed a correctly opened details screen as a lost long-press.
     val historyVisible =

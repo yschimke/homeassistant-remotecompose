@@ -206,6 +206,17 @@ fun Screen_Discovery() = PhoneHost { DiscoveryScreen(onInstancePicked = {}, onDe
 fun Screen_Discovery_ThemeStyle(@PreviewParameter(ThemeStyleProvider::class) style: ThemeStyle) =
   PhoneHost(style = style) { DiscoveryScreen(onInstancePicked = {}, onDemoSelected = {}) }
 
+@Preview(name = "card actions", showBackground = false, widthDp = PHONE_WIDTH_DP)
+@Composable
+fun Screen_CardActions() = PhoneHost {
+  ee.schimke.terrazzo.dashboard.CardActions(
+    title = "Kitchen",
+    onFork = {},
+    onAddToHomeScreen = {},
+    onShowDetails = {},
+  )
+}
+
 @Preview(
   name = "widgets",
   showBackground = false,
