@@ -21,6 +21,10 @@ import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.cards.shutter.withEnhancedShutter
 import ee.schimke.ha.rc.formatState
 import ee.schimke.terrazzo.dashboard.LauncherGrid
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonPrimitive
 
@@ -40,6 +44,10 @@ internal fun WidgetPreparationPreview(
       ?: entity?.attributes?.get("friendly_name")?.jsonPrimitive?.contentOrNull
       ?: "${card.type} widget"
   val stateLabel = entity?.let { formatState(it) }.orEmpty()
+  if (android.os.Build.VERSION.SDK_INT < WidgetInstaller.MIN_HOST_API) {
+    Text("$label · $stateLabel", style = MaterialTheme.typography.titleMedium)
+    return
+  }
   val registry = remember { defaultRegistry().withEnhancedShutter() }
   val bounds =
     remember(card) {
@@ -56,24 +64,36 @@ internal fun WidgetPreparationPreview(
     views = null
     latestOnPreview(null)
     failed = false
+    // Coalesce typing/drag steps and keep capture/image loading off the UI thread.
+    delay(100)
     views =
-      runCatching {
-        TerrazzoWidgetProvider()
-          .renderPreview(
-            context,
-            baseUrl,
-            card,
-            snapshot,
-            WidgetSizeDp(width * LAUNCHER_CELL_WIDTH_DP, height * LAUNCHER_CELL_HEIGHT_DP),
-          )
+      try {
+        withContext(Dispatchers.Default) {
+          TerrazzoWidgetProvider()
+            .renderPreview(
+              context,
+              baseUrl,
+              card,
+              snapshot,
+              WidgetSizeDp(width * LAUNCHER_CELL_WIDTH_DP, height * LAUNCHER_CELL_HEIGHT_DP),
+            )
+        }
+      } catch (cancelled: CancellationException) {
+        throw cancelled
+      } catch (failure: Exception) {
+        android.util.Log.e(
+          "WidgetPreparationPreview",
+          "Could not capture launcher preview",
+          failure,
+        )
+        null
       }
-        .getOrNull()
     failed = views == null
     latestOnPreview(views)
   }
   Text("Try it on your home screen", style = MaterialTheme.typography.titleMedium)
   Text(
-    "Adaptive layout · drag the corner or try a size. Your launcher chooses the final position.",
+    "Adaptive layout · drag the corner or try a size. New widgets start at Default; resize them on the home screen.",
     style = MaterialTheme.typography.bodySmall,
   )
   Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {

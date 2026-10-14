@@ -22,6 +22,15 @@ identical cards on different Home Assistant instances.
 
 - Installation was buried beneath history: a primary preparation action now
   appears immediately after the card preview.
+- Real platform inflation rejected CoreText operation 239, admitted by AndroidX's
+  experimental widget profile. Widget capture now excludes the new text/style
+  operations and uses the writer's legacy TextLayout fallback, preserving data
+  bindings and compatibility with Android 16.
+- Android 15's original DrawInstructions decoder has no layout-widget support.
+  The app still runs on Android 15, but providers stay out of its widget picker
+  and preparation explains that home screen widgets require Android 16.
+- Preview capture coalesces rapid typing/resize events and runs away from the UI
+  thread; cancellation cannot publish an older card over a newer edit.
 - The install sheet had one fixed-size, hard-coded light preview. It now uses
   the installed widget's template/direct capture, system theme, image handling
   and RemoteViews playback. Every preview size recaptures the document exactly

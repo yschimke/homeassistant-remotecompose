@@ -73,6 +73,7 @@
         -->
         <receiver
             android:name=".widget.TerrazzoWidgetProvider"
+            android:enabled="@bool/supports_native_widgets"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
@@ -90,6 +91,7 @@
         -->
         <receiver
             android:name=".widget.TerrazzoWidgetProviderSmall"
+            android:enabled="@bool/supports_native_widgets"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
@@ -101,6 +103,7 @@
 
         <receiver
             android:name=".widget.TerrazzoWidgetProviderTall"
+            android:enabled="@bool/supports_native_widgets"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />

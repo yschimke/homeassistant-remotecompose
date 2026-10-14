@@ -48,9 +48,9 @@ import kotlinx.coroutines.runBlocking
  * the current [DemoData] snapshot so values are non-empty. Live-mode widgets use the empty default
  * until a future background worker writes a fresh snapshot.
  *
- * API floor: VANILLA_ICE_CREAM (Android 15 / API 35) — needed for `RemoteViews.DrawInstructions`.
- * The app's minSdk of 36 already satisfies this; the `@RequiresApi` is here only to keep lint
- * quiet.
+ * API floor: Android 16 / API 36 — its platform player supports layout documents in
+ * `RemoteViews.DrawInstructions`. The app also runs on API 35; providers are disabled there because
+ * the original player lacks layouts. The `@RequiresApi` is here to keep lint quiet.
  */
 open class TerrazzoWidgetProvider : AppWidgetProvider() {
 
@@ -60,7 +60,7 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
     appWidgetIds: IntArray,
   ) {
     super.onUpdate(context, appWidgetManager, appWidgetIds)
-    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.VANILLA_ICE_CREAM) return
+    if (Build.VERSION.SDK_INT < WidgetInstaller.MIN_HOST_API) return
     for (id in appWidgetIds) {
       renderAndPublish(context, appWidgetManager, id)
     }
@@ -81,7 +81,7 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
     newOptions: android.os.Bundle,
   ) {
     super.onAppWidgetOptionsChanged(context, appWidgetManager, appWidgetId, newOptions)
-    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.VANILLA_ICE_CREAM) return
+    if (Build.VERSION.SDK_INT < WidgetInstaller.MIN_HOST_API) return
     renderAndPublish(context, appWidgetManager, appWidgetId)
   }
 

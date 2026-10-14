@@ -1,6 +1,8 @@
 package ee.schimke.ha.rc
 
 import android.graphics.Bitmap
+import android.widget.FrameLayout
+import android.widget.RemoteViews
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.remote.creation.compose.capture.RemoteCreationDisplayInfo
@@ -28,6 +30,7 @@ import ee.schimke.ha.rc.components.WidgetActionRegistry
 import java.io.File
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import kotlinx.coroutines.runBlocking
@@ -50,6 +53,16 @@ import org.robolectric.annotation.GraphicsMode
 @Config(sdk = [35])
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 class LauncherDesignsTest {
+
+  @Test
+  fun android15PlatformDoesNotSupportLayoutWidgetDocuments() {
+    val context = org.robolectric.RuntimeEnvironment.getApplication()
+    val document = bake(card("tile", "light.kitchen"), snapshotOf(entity("light.kitchen", "on")))
+    val views = RemoteViews(RemoteViews.DrawInstructions.Builder(listOf(document.bytes)).build())
+    // Android 15 has DrawInstructions but only its original canvas operations, without
+    // layout widgets or the V7 header. The phone host must require Android 16 for widgets.
+    assertFailsWith<RuntimeException> { views.apply(context, FrameLayout(context)) }
+  }
 
   @get:Rule val compose = createComposeRule()
 

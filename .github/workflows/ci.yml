@@ -207,17 +207,11 @@ jobs:
           disable-animations: true
           # The Wear app requires the com.google.android.wearable shared library and cannot be
           # installed on this default phone image. Its connected tests need a Wear OS system image.
-          script: ./gradlew connectedDebugAndroidTest -x :wear:connectedDebugAndroidTest --stacktrace
+          script: bash scripts/run-connected-tests.sh
 
       - name: Show instrumented test failures
         if: failure() && env.RUN_HEAVY == 'true'
         run: python3 scripts/summarize-android-test-failures.py
-
-      - name: Collect widget journey screenshots
-        if: always() && env.RUN_HEAVY == 'true'
-        run: |
-          mkdir -p build/widget-test-screenshots
-          adb pull /sdcard/Android/data/ee.schimke.harc/files/widget-test-screenshots build/widget-test-screenshots || true
 
       - name: Upload instrumented test reports
         if: always() && env.RUN_HEAVY == 'true'

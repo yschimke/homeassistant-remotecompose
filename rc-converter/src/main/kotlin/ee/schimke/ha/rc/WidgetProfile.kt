@@ -45,7 +45,13 @@ private const val WIDGETS_API_LEVEL = 7
 private const val WIDGETS_OPERATIONS = RcProfiles.PROFILE_WIDGETS or RcProfiles.PROFILE_EXPERIMENTAL
 
 private val widgetOperations =
-  requireNotNull(Operations.getOperations(WIDGETS_API_LEVEL, WIDGETS_OPERATIONS)).keySet().toSet()
+  requireNotNull(Operations.getOperations(WIDGETS_API_LEVEL, WIDGETS_OPERATIONS)).keySet().toSet() -
+    setOf(Operations.CORE_TEXT, Operations.TEXT_STYLE)
+
+// AndroidX alpha21 admits CoreText (239) as an experimental V7 widget operation, but the
+// Android 16 platform decoder does not implement it. Excluding it makes the writer use
+// its supported TextLayout fallback (208), retaining text/color bindings. Keep this
+// compatibility path on newer hosts too; system color support is selected independently.
 
 private fun createWidgetsProfile(supportsColorTheme: Boolean): Profile =
   Profile(
@@ -64,7 +70,7 @@ private fun createWidgetsProfile(supportsColorTheme: Boolean): Profile =
     )
   }
 
-/** Android 15/16 widget host profile; excludes ColorTheme (wire op 196). */
+/** Android 16 widget host profile; excludes ColorTheme (wire op 196). */
 val widgetsProfile: Profile = createWidgetsProfile(supportsColorTheme = false)
 
 /** API 37+ widget host profile, including host-resolved ColorTheme values. */

@@ -146,8 +146,10 @@ fun WidgetInstallSheet(
 
         if (!pinSupported) {
           Text(
-            "Your launcher doesn't support widget pinning. Install a widget " +
-              "from the system widget picker instead.",
+            if (android.os.Build.VERSION.SDK_INT < WidgetInstaller.MIN_HOST_API)
+              "Home screen widgets need Android 16 or later. You can still use this card in the app or on Wear."
+            else
+              "Your launcher doesn't support widget pinning. Install a widget from the system widget picker instead.",
             style = MaterialTheme.typography.bodySmall,
           )
         }

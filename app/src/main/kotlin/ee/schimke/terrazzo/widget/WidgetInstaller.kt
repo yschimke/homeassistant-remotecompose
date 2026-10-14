@@ -29,7 +29,9 @@ import kotlinx.serialization.json.JsonObject
  */
 class WidgetInstaller(private val context: Context) {
 
-  fun isSupported(): Boolean = AppWidgetManager.getInstance(context).isRequestPinAppWidgetSupported
+  fun isSupported(): Boolean =
+    android.os.Build.VERSION.SDK_INT >= MIN_HOST_API &&
+      AppWidgetManager.getInstance(context).isRequestPinAppWidgetSupported
 
   /**
    * Returns true when the request was accepted by Android (not necessarily that the user confirmed
@@ -41,7 +43,7 @@ class WidgetInstaller(private val context: Context) {
     preview: android.widget.RemoteViews? = null,
   ): Boolean {
     val appWidgetManager = AppWidgetManager.getInstance(context)
-    if (!appWidgetManager.isRequestPinAppWidgetSupported) return false
+    if (!isSupported()) return false
 
     // Pick the provider variant whose appwidget-provider metadata
     // matches the card's supported-size band, so the launcher offers
@@ -81,7 +83,9 @@ class WidgetInstaller(private val context: Context) {
       .getOrDefault(false)
   }
 
-  private companion object {
-    val json = Json { ignoreUnknownKeys = true }
+  companion object {
+    // API 35 has DrawInstructions but predates the layout document/header used by our widgets.
+    const val MIN_HOST_API = 36
+    private val json = Json { ignoreUnknownKeys = true }
   }
 }
