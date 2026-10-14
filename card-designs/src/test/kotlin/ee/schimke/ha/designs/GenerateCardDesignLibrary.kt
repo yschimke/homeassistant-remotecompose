@@ -31,6 +31,7 @@ import ee.schimke.ha.rc.CardSnapshotBindings
 import ee.schimke.ha.rc.CardTemplatePlayback
 import ee.schimke.ha.rc.androidXExperimentalWrap
 import ee.schimke.ha.rc.components.HaAction
+import ee.schimke.ha.rc.components.HaUberTheme
 import ee.schimke.ha.rc.components.ThemeStyle
 import java.io.File
 import kotlin.test.Test
@@ -55,9 +56,10 @@ import org.robolectric.annotation.GraphicsMode
  *
  * Its designs are every mobile-app template shape its source cards produce — the curated
  * [LibraryFixtures] and the bundled demo dashboards (their cards and the cards nested in them) —
- * for each theme style, light and dark. A design is keyed by its card's generation properties, so
- * the library holds no dashboard's values; the catalog keeps one demo card per design as its
- * example.
+ * for each theme style, light and dark, and for each other card style in each mode it has (those
+ * bring their own palette, so the theme style doesn't change them). A design is keyed by its card's
+ * generation properties, so the library holds no dashboard's values; the catalog keeps one demo
+ * card per design as its example.
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35], qualifiers = "xhdpi")
@@ -91,6 +93,21 @@ class GenerateCardDesignLibrary {
       for (style in ThemeStyle.entries) for (dark in listOf(false, true)) {
         val key = CardDesignTemplates.keyFor(source.card, source.snapshot, style, dark) ?: continue
         examples.getOrPut(key) { source }
+      }
+      // Every other card style brings its own palette, so it is captured once per mode it has.
+      for (cardStyle in HaUberTheme.all) {
+        if (cardStyle.id == HaUberTheme.Classic.id) continue
+        for (dark in CardDesignTemplates.modesOf(cardStyle)) {
+          val key =
+            CardDesignTemplates.keyFor(
+              source.card,
+              source.snapshot,
+              ThemeStyle.entries.first(),
+              dark,
+              cardStyle = cardStyle,
+            ) ?: continue
+          examples.getOrPut(key) { source }
+        }
       }
     }
     assertTrue(examples.isNotEmpty(), "the demo dashboards produce designs")

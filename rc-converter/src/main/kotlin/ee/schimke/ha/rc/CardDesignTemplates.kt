@@ -63,14 +63,26 @@ object CardDesignTemplates {
   }
 
   /**
-   * The `theme` of a design key: `baked:<palette>:<mode>`, plus `:<card style>` for an uber theme
-   * other than [HaUberTheme.Classic]. Classic keys are unchanged, so the design server's keys still
-   * match; an uber-styled card has no server design and captures from the local library.
+   * The `theme` of a design key. Classic is baked in the app palette, `baked:<palette>:<mode>`. Any
+   * other card style brings its own palette ([cardPalette]), so its theme names only the style and
+   * the mode it is drawn in, `style:<id>:<mode>`: one design per shape whichever app palette is
+   * picked, and a style with a single mode has one design in either.
    */
-  fun bakedTheme(style: ThemeStyle, dark: Boolean, cardStyle: HaUberTheme): String {
-    val base = DesignKey.bakedTheme(style.name, dark)
-    return if (cardStyle.id == HaUberTheme.Classic.id) base else "$base:${cardStyle.id}"
-  }
+  fun bakedTheme(style: ThemeStyle, dark: Boolean, cardStyle: HaUberTheme): String =
+    if (cardStyle.id == HaUberTheme.Classic.id) DesignKey.bakedTheme(style.name, dark)
+    else DesignKey.styledTheme(cardStyle.id, drawnDark(cardStyle, dark))
+
+  /** The mode [cardStyle] draws in when the host asks for [dark]: its only one, if it has one. */
+  private fun drawnDark(cardStyle: HaUberTheme, dark: Boolean): Boolean =
+    when {
+      cardStyle.light == null -> true
+      cardStyle.dark == null -> false
+      else -> dark
+    }
+
+  /** The modes [cardStyle] draws in, as `dark` flags: what a library captures it in. */
+  fun modesOf(cardStyle: HaUberTheme): List<Boolean> =
+    listOf(false, true).map { drawnDark(cardStyle, it) }.distinct()
 
   /**
    * The card whose design [card] renders as for [snapshot]: [card] itself, or the card its
@@ -219,6 +231,10 @@ object CardDesignTemplates {
 
   private fun parseBakedTheme(theme: String): Triple<ThemeStyle, Boolean, HaUberTheme> {
     val parts = theme.split(':')
+    // A card style's own palette: the app palette doesn't change it, so any will do.
+    if (parts.size == 3 && parts[0] == "style") {
+      return Triple(ThemeStyle.entries.first(), parts[2] == "dark", HaUberTheme.byId(parts[1]))
+    }
     require(parts.size in 3..4 && parts[0] == "baked") { "not a baked theme: $theme" }
     val cardStyle = parts.getOrNull(3)?.let(HaUberTheme::byId) ?: HaUberTheme.Classic
     return Triple(ThemeStyle.valueOf(parts[1]), parts[2] == "dark", cardStyle)

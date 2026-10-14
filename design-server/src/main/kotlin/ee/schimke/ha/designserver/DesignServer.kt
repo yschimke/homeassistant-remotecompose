@@ -1,6 +1,8 @@
 package ee.schimke.ha.designserver
 
 import ee.schimke.ha.design.DesignCatalog
+import ee.schimke.ha.design.DesignQuery
+import ee.schimke.ha.design.DesignQueryResult
 import io.ktor.http.ContentType
 import io.ktor.http.Cookie
 import io.ktor.http.HttpHeaders
@@ -74,6 +76,9 @@ class LibraryHolder(
  * - `/designs/v1/manifest.json`, `/designs/v1/blobs/<sha256>.rc` — the client protocol
  *   (`DesignRepository`): point the app's design server URL at `<host>/designs/v1`. The manifest
  *   revalidates by ETag; blobs are content-addressed and immutable.
+ * - `/designs/v1/designs?cardType=&style=&variant=&author=` (and `surface`, `shape`, `theme`) — the
+ *   designs matching those tags ([DesignQuery]) and every tag's values, so a client can fetch what
+ *   it needs instead of the whole manifest.
  * - `/designs/v1/catalog.json`, `/designs/v1/previews/...` — the browser's data.
  * - `/` — the app's front page ([Landing]); `/site/<name>` — its pictures.
  * - `/designs`, `/designs/<id>` — the template browser; `/api/designs[/<id>]` — the same as JSON.
@@ -114,6 +119,23 @@ fun Application.designServer(
       } else {
         call.respondBytes(library.manifestBytes, ContentType.Application.Json)
       }
+    }
+
+    get("$API_BASE/designs") {
+      val library = holder.current()
+      val query =
+        DesignQuery.of { call.request.queryParameters[it] }
+          ?: return@get call.respondText(
+            "unknown surface",
+            status = HttpStatusCode.BadRequest,
+          )
+      call.allowAnyOrigin()
+      // Answered from the loaded library, so it changes exactly when the manifest does.
+      call.response.header(HttpHeaders.CacheControl, "no-cache")
+      call.respondText(
+        json.encodeToString(DesignQueryResult.serializer(), library.query(query)),
+        ContentType.Application.Json,
+      )
     }
 
     get("$API_BASE/blobs/{name}") {

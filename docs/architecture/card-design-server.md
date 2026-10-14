@@ -143,8 +143,10 @@ Deliberate spike limits, each owned by a milestone below:
 - **One known difference:** templates are captured with a placeholder `off` state, so an
   unavailable light or switch keeps its toggle chip (inactive colour) where the converter drew a
   plain grey icon. `<slot>.status` is bound, and moving that visual in-document is M1.
-- **Baked themes.** Designs are keyed `baked:<ThemeStyle>:<light|dark>`, so the matrix has one
-  template per theme. `theme.*` bindings (S2) replace this.
+- **Baked themes.** Classic designs are keyed `baked:<ThemeStyle>:<light|dark>`, so the matrix has
+  one template per theme. Every other card style brings its own palette, so its designs are keyed
+  `style:<card style>:<light|dark>`, once per mode the style has. `theme.*` bindings (S2) replace
+  the baked palettes.
 - **Still decided at capture:** the tile icon and accent colours, from the shape (domain,
   `device_class`, `icon`). They don't depend on the state for the templated domains; the on/off
   accent switches in-document from `is_on`. Binding them instead of keying on them is M1.
@@ -467,7 +469,22 @@ GET /designs/v1/manifest.json
       signature }
 
 GET /designs/v1/blobs/<sha256>.rc     (immutable, Cache-Control: max-age=31536000, immutable)
+
+GET /designs/v1/designs?cardType=&style=&variant=&author=[&surface=&shape=&theme=]
+  → { serial, designs: [ DesignEntry … ],
+      tags: { cardType: { "<value>": <count> }, style: {…}, variant: {…}, author: {…} } }
 ```
+
+**Tags.** A design is found by four tags: its **card type**, its **style** (the card style it is
+drawn in, `DesignKey.cardStyle`: `classic` for a design baked in an app palette), its **variant**
+and its **author** (`DesignEntry.author`: `terrazzo` for the library generated from the app's own
+converters, `github:<login>` for one published from UI Builder). The lookup (`DesignQuery`) takes
+any of them, compared without case, and narrows by `surface`, `shape` or `theme` when a client knows
+its exact key. It answers the matching entries, revoked ones included so a client can drop them, and
+every value each tag takes across the library with its count (`DesignTags`), which is what a
+picker offers. An unknown `surface` is a `400`, never a match for everything. The lookup lets a
+client fetch the designs it needs as it needs them rather than the whole manifest, which grows with
+every style, variant and author.
 
 - One manifest lists every target. The client filters it to the
   surfaces it serves. The manifest is small, and a single file keeps
@@ -522,13 +539,14 @@ per request — but adds what a static host can't: verification, a template brow
   `card-designs/build/card-designs/`). Its source cards are the curated `LibraryFixtures` (one per
   card type and shape the parity tests cover) and every card in the bundled demo dashboards,
   nested cards included. Each card's generation properties give a key; each key is captured for
-  every theme style, light and dark (mobile-app surface, the one the client fetches). Output:
+  every theme style, light and dark, and for every other card style in each mode it has
+  (mobile-app surface, the one the client fetches). Output:
   `manifest.json` and `blobs/` (written by `DesignPublisher`, the client's format), plus
   `catalog.json` (`DesignCatalog`: an example card and preview paths per design) and `previews/`
   (each design rendered bound to its example's values, and as published with its placeholders).
 - **Client protocol.** `GET /designs/v1/manifest.json` (ETag = its SHA-256, `no-cache`, `304` on
-  `If-None-Match`) and `GET /designs/v1/blobs/<sha256>.rc` (immutable). Only names the manifest
-  lists are served. Loading verifies every blob's size and hash against the manifest and refuses a
+  `If-None-Match`) and `GET /designs/v1/blobs/<sha256>.rc` (immutable), and the lookup by tag,
+  `GET /designs/v1/designs` (above). Only names the manifest lists are served. Loading verifies every blob's size and hash against the manifest and refuses a
   library that doesn't match. `ClientCompatibilityTest` runs the app's `DesignRepository` against
   it.
 - **Template browser.** `/` lists designs with their previews, filtered by card type, theme,

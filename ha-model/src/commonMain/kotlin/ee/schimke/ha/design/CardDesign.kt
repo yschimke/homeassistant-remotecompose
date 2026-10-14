@@ -29,9 +29,10 @@ enum class DesignSurface(val wire: String) {
  * Everything that picks one design document. Two cards that resolve to equal keys can share bytes.
  *
  * @property shape the card's generation properties ([DesignProperties.shape]). Never a value.
- * @property theme how colours are resolved. The spike only produces baked themes
- *   (`baked:<ThemeStyle>:<light|dark>`); `host` is reserved for designs whose colours come from
- *   `theme.*` bindings, `ColorTheme` or `WearM3`.
+ * @property theme how colours are resolved. Classic cards are baked in an app palette
+ *   (`baked:<ThemeStyle>:<light|dark>`); a card style with its own palette is `style:<id>:<mode>`
+ *   ([styledTheme]), since the app palette doesn't change it. `host` is reserved for designs whose
+ *   colours come from `theme.*` bindings, `ColorTheme` or `WearM3`.
  */
 @Serializable
 data class DesignKey(
@@ -43,12 +44,36 @@ data class DesignKey(
   val theme: String,
   val schema: Int = BINDING_SCHEMA_VERSION,
 ) {
+  /**
+   * The card style (uber theme id) this design is drawn in: the `style` tag. [CLASSIC_STYLE] for a
+   * design baked in an app palette. A legacy `baked:<palette>:<mode>:<id>` theme names it last.
+   */
+  val cardStyle: String
+    get() {
+      val parts = theme.split(':')
+      return when {
+        parts.size == 3 && parts[0] == STYLED -> parts[1]
+        parts.size == 4 && parts[0] == BAKED -> parts[3]
+        else -> CLASSIC_STYLE
+      }
+    }
+
   companion object {
     const val DEFAULT_VARIANT: String = "default"
     const val BINDING_SCHEMA_VERSION: Int = 1
 
+    /** The card style of every design baked in an app palette. */
+    const val CLASSIC_STYLE: String = "classic"
+
+    private const val BAKED = "baked"
+    private const val STYLED = "style"
+
     fun bakedTheme(style: String, dark: Boolean): String =
-      "baked:$style:${if (dark) "dark" else "light"}"
+      "$BAKED:$style:${if (dark) "dark" else "light"}"
+
+    /** The theme of a design in card style [cardStyle], which brings its own palette. */
+    fun styledTheme(cardStyle: String, dark: Boolean): String =
+      "$STYLED:$cardStyle:${if (dark) "dark" else "light"}"
   }
 }
 
@@ -61,7 +86,16 @@ data class DesignEntry(
   /** Slot count the template binds (`<domain>.s0` … `<domain>.s<n-1>`). */
   val slots: Int,
   val revoked: Boolean = false,
-)
+  /**
+   * Who made the design: [BUILTIN_AUTHOR] for the library generated from the app's own converters,
+   * a person's id (`github:<login>`) for one published from UI Builder. The `author` tag.
+   */
+  val author: String = BUILTIN_AUTHOR,
+) {
+  companion object {
+    const val BUILTIN_AUTHOR: String = "terrazzo"
+  }
+}
 
 /**
  * The index a client fetches. Blobs live at `blobs/<sha256>.rc` next to it and never change.

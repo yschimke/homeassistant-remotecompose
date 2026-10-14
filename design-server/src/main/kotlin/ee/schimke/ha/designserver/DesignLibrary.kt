@@ -14,6 +14,9 @@ import ee.schimke.ha.design.DesignEntry
 import ee.schimke.ha.design.DesignKey
 import ee.schimke.ha.design.DesignManifest
 import ee.schimke.ha.design.DesignProperties
+import ee.schimke.ha.design.DesignQuery
+import ee.schimke.ha.design.DesignQueryResult
+import ee.schimke.ha.design.DesignTags
 import java.io.File
 import java.util.concurrent.ConcurrentHashMap
 import kotlinx.serialization.json.Json
@@ -109,6 +112,17 @@ private constructor(
       }
         .getOrElse { DecodedTemplate.Missing.copy(error = it.message ?: it.javaClass.simpleName) }
     }
+
+  /** Every value of each tag, over the whole library: what [query] reports beside its matches. */
+  val tags: DesignTags = DesignTags.of(manifest.designs)
+
+  /** The designs [query] matches, in manifest order, with the library's [tags]. */
+  fun query(query: DesignQuery): DesignQueryResult =
+    DesignQueryResult(
+      serial = manifest.serial,
+      designs = manifest.designs.filter(query::matches),
+      tags = tags,
+    )
 
   /** Designs with the same card type and shape as [design], in its other themes. */
   fun siblings(design: LibraryDesign): List<LibraryDesign> = designs.filter {

@@ -7,9 +7,11 @@ import ee.schimke.ha.client.design.DesignSourceKind
 import ee.schimke.ha.client.design.InMemoryDesignStore
 import ee.schimke.ha.client.design.RefreshResult
 import ee.schimke.ha.design.CardDesignSlots
+import ee.schimke.ha.design.DesignKey
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HaSnapshot
+import ee.schimke.ha.rc.components.HaUberTheme
 import ee.schimke.ha.rc.components.ThemeStyle
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
@@ -51,6 +53,32 @@ class CardDesignTemplatesEndToEndTest {
     )
   private val snapshot =
     HaSnapshot(states = mapOf("light.kitchen" to EntityState("light.kitchen", "on")))
+
+  @Test
+  fun aCardStyleIsKeyedByItsOwnPaletteAndCaptures() {
+    fun key(style: ThemeStyle, dark: Boolean, cardStyle: HaUberTheme) =
+      assertNotNull(CardDesignTemplates.keyFor(card, snapshot, style, dark, cardStyle = cardStyle))
+
+    // Its own palette: the app palette doesn't change the design, so the key doesn't name it.
+    val lcd = key(ThemeStyle.TerrazzoHome, dark = true, HaUberTheme.Lcd)
+    assertEquals(DesignKey.styledTheme(HaUberTheme.Lcd.id, dark = true), lcd.theme)
+    assertEquals(lcd, key(ThemeStyle.Material3, dark = true, HaUberTheme.Lcd))
+    assertEquals(HaUberTheme.Lcd.id, lcd.cardStyle)
+    // Console is dark only, so light and dark ask for the same design.
+    assertEquals(
+      key(ThemeStyle.Material3, dark = false, HaUberTheme.Console),
+      key(ThemeStyle.Material3, dark = true, HaUberTheme.Console),
+    )
+    assertEquals(listOf(true), CardDesignTemplates.modesOf(HaUberTheme.Console))
+    // Classic keeps its baked app palette.
+    assertEquals(
+      DesignKey.bakedTheme(ThemeStyle.Material3.name, dark = false),
+      key(ThemeStyle.Material3, dark = false, HaUberTheme.Classic).theme,
+    )
+
+    val context = org.robolectric.RuntimeEnvironment.getApplication()
+    assertTrue(CardDesignTemplates.capture(context, lcd).bytes.isNotEmpty())
+  }
 
   @Test
   fun templateIsValuesFree_publishedFetchedAndBound() = runTest {
