@@ -281,8 +281,10 @@ fun HaCardGauge(
  * Live through host-pushed bindings (live-card-updates.md, path 1): with [entityId] set, the
  * temperatures bind `<entityId>.current_temperature` and `<entityId>.target_temperature`, the fill
  * and marker fractions and both labels are computed from them in-document, and the chip binds
- * `<entityId>.state`. The accent stays the designed [mode]'s. A tap opens more-info; there are no
- * steppers, since a set-temperature action carries an absolute temperature a design can't compute.
+ * `<entityId>.state`. A temperature the entity stops reporting (a thermostat switched off drops its
+ * set point) shows as a dash, with no marker. The accent stays the designed [mode]'s. A tap opens
+ * more-info; there are no steppers, since a set-temperature action carries an absolute temperature
+ * a design can't compute.
  */
 @Composable
 @RemoteComposable
@@ -305,6 +307,10 @@ fun HaCardThermostat(
     if (hasTarget) LiveValues.namedFloat(entity, HaLiveBindings.TARGET_TEMPERATURE, target)
     else null
   val modeLabel = mode.replace('_', ' ').replaceFirstChar { it.uppercaseChar() }
+  // A host pushes HaLiveBindings.ABSENT for a temperature the entity doesn't report: show a dash
+  // and hide the marker rather than a stale value.
+  val currentPresent = currentLive.isGreaterThan(PresentAbove.rf)
+  val targetPresent = targetLive?.isGreaterThan(PresentAbove.rf)
   RemoteHaArcDial(
     HaArcDialData(
       entityId = entity,
@@ -322,17 +328,24 @@ fun HaCardThermostat(
       tapAction = tapAction(entity, toggleable = false),
       live =
         HaArcDialLive(
-          valueFraction = unitFraction(currentLive, min, span),
+          valueFraction = currentPresent.select(unitFraction(currentLive, min, span), 0f.rf),
           targetFraction = targetLive?.let { unitFraction(it, min, span) },
-          centerLabel = currentLive.toRemoteString(TemperatureFormat) + unit,
+          centerLabel =
+            currentPresent.select(currentLive.toRemoteString(TemperatureFormat) + unit, "—".rs),
           supportingLabel =
-            targetLive?.let { "↑ ".rs + it.toRemoteString(TemperatureFormat) + unit },
+            targetLive?.let {
+              targetPresent!!.select("↑ ".rs + it.toRemoteString(TemperatureFormat) + unit, "".rs)
+            },
           modeLabel = LiveValues.state(entity, modeLabel),
+          targetVisible = targetPresent,
         ),
     ),
     modifier,
   )
 }
+
+/** A pushed temperature above this is real; [HaLiveBindings.ABSENT] is far below it. */
+private const val PresentAbove = -1000f
 
 /** One decimal at most, as HA shows a temperature: `21`, `21.5`. */
 private val TemperatureFormat = DecimalFormat("0.#")

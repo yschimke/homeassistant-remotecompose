@@ -310,7 +310,15 @@ private fun ArcCanvas(
     val arcSize = RemoteSize(side, side)
     // A skeuomorphic theme turns the dial into a rotary control: a knob inside a lamp ring.
     if (family == HaVisualFamily.Console) {
-      consoleDial(accent, animatedValueFraction, animatedTargetFraction, left, top, side)
+      consoleDial(
+        accent,
+        animatedValueFraction,
+        animatedTargetFraction,
+        left,
+        top,
+        side,
+        data.live?.targetVisible,
+      )
       return@RemoteCanvas
     }
 
@@ -348,7 +356,11 @@ private fun ArcCanvas(
             strokeCap = AndroidPaint.Cap.ROUND
           }
           .asRemotePaint()
-          .apply { color = theme.primaryText }
+          .apply {
+            color =
+              data.live?.targetVisible?.select(theme.primaryText, Color.Transparent.rc)
+                ?: theme.primaryText
+          }
       drawArc(marker, animatedMarkerAngle, 0.1f.rf, false, topLeft, arcSize)
     }
   }

@@ -28,7 +28,7 @@ derived by `HaLiveBindings` / `cardSnapshotBindings` (the host):
 | `<id>.is_on` | bool | `HaLiveBindings.isOn(id, state)`: the typed `HaEntity.isActive` (climate `heat`/`cool`/…, cover `open`/`opening`/`closing`, lock `locked`, media `playing`, …), else `state == "on"` or `"open"`. Converters seed `LiveValues.isOn` from the same function. |
 | `<id>.numeric_state` | float | parsed numeric state (gauges/arcs derive their sweep in-document) |
 | `<id>.state_int` | int | domain-keyed variant (alarm panel today) |
-| `<id>.current_temperature`, `<id>.target_temperature` | float | `HaLiveBindings.attributeFloats`: a climate entity's `current_temperature` and `temperature` attributes (its state is the mode, so it has no `numeric_state`); the `ha-cards/thermostat` builder dial computes its fractions and labels from them in-document |
+| `<id>.current_temperature`, `<id>.target_temperature` | float | `HaLiveBindings.attributeFloats`: a climate entity's `current_temperature` and `temperature` attributes (its state is the mode, so it has no `numeric_state`). A missing attribute — a thermostat switched off has no set point — is pushed as `HaLiveBindings.ABSENT` (−9999, not NaN), so the document clears it instead of keeping a stale value. The `ha-cards/thermostat` builder dial computes its fractions and labels from them in-document |
 
 The golden rule: **a binding's value must be reproducible by the host
 from the entity state alone, identically to what the converter bakes.**

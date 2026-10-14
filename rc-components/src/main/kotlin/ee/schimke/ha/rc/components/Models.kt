@@ -1,5 +1,6 @@
 package ee.schimke.ha.rc.components
 
+import androidx.compose.remote.creation.compose.state.RemoteBoolean
 import androidx.compose.remote.creation.compose.state.RemoteColor
 import androidx.compose.remote.creation.compose.state.RemoteFloat
 import androidx.compose.remote.creation.compose.state.RemoteString
@@ -368,6 +369,8 @@ data class HaArcDialLive(
   val centerLabel: RemoteString,
   val supportingLabel: RemoteString?,
   val modeLabel: RemoteString?,
+  /** Whether the target marker shows: false while the entity has no set point. Null, always. */
+  val targetVisible: RemoteBoolean? = null,
 )
 
 /**

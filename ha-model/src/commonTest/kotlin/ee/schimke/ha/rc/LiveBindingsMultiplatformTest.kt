@@ -21,10 +21,11 @@ class LiveBindingsMultiplatformTest {
     val floats = cardSnapshotBindings(setOf(id), snapshot).floats
     assertEquals(21.5f, floats["$id.current_temperature"])
     assertEquals(22f, floats["$id.target_temperature"])
-    // A missing set point has no binding, and other domains publish no attribute floats.
+    // A missing set point (a thermostat switched off) is pushed as ABSENT, clearing the marker;
+    // other domains publish no attribute floats.
     val noTarget = buildJsonObject { put("current_temperature", 19) }
     assertEquals(
-      mapOf("current_temperature" to 19f),
+      mapOf("current_temperature" to 19f, "target_temperature" to HaLiveBindings.ABSENT),
       HaLiveBindings.attributeFloats(id, noTarget),
     )
     assertEquals(emptyMap(), HaLiveBindings.attributeFloats("sensor.temp", attributes))

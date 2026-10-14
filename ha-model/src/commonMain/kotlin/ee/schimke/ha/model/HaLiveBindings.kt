@@ -69,7 +69,7 @@ object HaLiveBindings {
     return buildMap {
       for ((suffix, attribute) in keys) {
         val value = (attributes[attribute] as? JsonPrimitive)?.contentOrNull?.toFloatOrNull()
-        if (value != null && value.isFinite()) put(suffix, value)
+        put(suffix, value?.takeIf { it.isFinite() } ?: ABSENT)
       }
     }
   }
@@ -83,6 +83,13 @@ object HaLiveBindings {
           TARGET_TEMPERATURE to "temperature",
         )
     )
+
+  /**
+   * The value [attributeFloats] pushes for an attribute the entity doesn't have: far below any
+   * temperature (absolute zero is −273 °C), so a document tests `value > -1000` for presence. Not
+   * NaN, which Remote Compose reserves for variable references.
+   */
+  const val ABSENT: Float = -9999f
 
   /** `<climate>.current_temperature`: the room temperature a thermostat reads. */
   const val CURRENT_TEMPERATURE: String = "current_temperature"
