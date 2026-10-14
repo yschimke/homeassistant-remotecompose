@@ -94,7 +94,7 @@ class WidgetPreparationTest {
     )
 
   @Test
-  fun realWidgetPreviewRendersResizesAndTracksState() {
+  fun adaptiveWidgetPreviewRendersResizesAndTracksState() {
     val current = mutableStateOf(snapshot("off"))
     var captures = 0
     compose.setContent {

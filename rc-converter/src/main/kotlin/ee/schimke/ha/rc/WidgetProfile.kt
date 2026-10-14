@@ -23,6 +23,7 @@ import androidx.compose.remote.core.operations.TextLength
 import androidx.compose.remote.core.operations.TextLookup
 import androidx.compose.remote.core.operations.TextLookupInt
 import androidx.compose.remote.core.operations.TextMerge
+import androidx.compose.remote.core.operations.layout.CanvasContent
 import androidx.compose.remote.core.operations.layout.CanvasOperations
 import androidx.compose.remote.core.operations.layout.Component
 import androidx.compose.remote.core.operations.layout.Container
@@ -128,7 +129,8 @@ fun platformWidgetDocument(bytes: ByteArray): ByteArray {
       else -> body.add(op)
     }
     when (op) {
-      is Container -> containerStack.addLast(inCanvas || op is CanvasOperations)
+      is Container ->
+        containerStack.addLast(inCanvas || op is CanvasOperations || op is CanvasContent)
       is ContainerEnd -> containerStack.removeLast()
     }
   }

@@ -93,6 +93,12 @@ class LauncherDesignsTest {
       }
     assertTrue(textOperations.isNotEmpty())
     assertTrue(
+      operations.drop(firstLayout).any {
+        it is androidx.compose.remote.core.operations.FloatExpression
+      },
+      "Canvas expressions must stay local rather than evaluate unmeasured inactive dimensions",
+    )
+    assertTrue(
       textOperations.all { it.index < firstLayout },
       "Android 16 must load text expressions before inflating adaptive layouts",
     )
