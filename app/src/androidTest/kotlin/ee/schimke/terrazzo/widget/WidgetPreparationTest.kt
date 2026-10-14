@@ -176,6 +176,9 @@ class WidgetPreparationTest {
       "The emulator launcher must support widget pinning",
       WidgetInstaller(context).isSupported(),
     )
+    // A reset launcher can leave stale rows until the preparation sheet heals them.
+    // Compare cancellation with the reconciled baseline, not those removed rows.
+    runBlocking { WidgetSync.reconcile(context) }
     val before = runBlocking { graph.widgetStore.installed.first().map { it.widgetId }.toSet() }
     var dismissed = false
     val initialSnapshot = snapshot("on")
