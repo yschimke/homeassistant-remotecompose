@@ -35,7 +35,12 @@ class HaCardsTemplatesTest {
     val policy =
       Json.parseToJsonElement(File(catalogDir, "ui-builder.policy.json").readText()).jsonObject
     val builtins = policy.getValue("builtins").jsonObject
-    for (id in listOf(HaCardsSeed.DASHBOARD_CARD, HaCardsSeed.LAUNCHER_WIDGET)) {
+    for (id in
+      listOf(
+        HaCardsSeed.DASHBOARD_CARD,
+        HaCardsSeed.DASHBOARD_SECTION,
+        HaCardsSeed.LAUNCHER_WIDGET,
+      )) {
       val component = builtins.getValue(id).jsonObject
       assertEquals(JsonPrimitive("layout/scaffold"), component["canvas"])
       assertTrue("content" in component.getValue("slots").jsonObject)
@@ -130,7 +135,7 @@ class HaCardsTemplatesTest {
         HaCardsSeed.section(
           "section-living-room",
           "Living room",
-          HaCardsSeed.card("section-living-room", heightDp = 480),
+          HaCardsSeed.section("section-living-room", heightDp = 480),
           heading = "Living room",
           cards =
             listOf(
@@ -148,7 +153,7 @@ class HaCardsTemplatesTest {
         HaCardsSeed.section(
           "section-climate",
           "Climate",
-          HaCardsSeed.card("section-climate", heightDp = 420),
+          HaCardsSeed.section("section-climate", heightDp = 420),
           heading = "Climate",
           cards =
             listOf(
@@ -223,15 +228,31 @@ class HaCardsTemplatesTest {
   @Test
   fun aSectionStacksItsCardsUnderAHeading() {
     val section = templates.getValue("section-living-room")["nodes"]!!.jsonObject
-    val children =
-      section.getValue("section").jsonObject["slots"]!!.jsonObject["children"]!!.jsonArray.map {
+    fun component(id: String) =
+      section.getValue(id).jsonObject["componentId"]!!.jsonPrimitive.content
+    fun slot(id: String, name: String) =
+      section.getValue(id).jsonObject["slots"]!!.jsonObject[name]!!.jsonArray.map {
         it.jsonPrimitive.content
       }
-    assertEquals(listOf("heading", "card0-tile", "card1-column", "card2-measurement"), children)
-    for (id in children) assertTrue(id in section, "$id is a node")
-    val rows =
-      section.getValue("card1-column").jsonObject["slots"]!!.jsonObject["children"]!!.jsonArray
-    assertTrue(rows.all { it.jsonPrimitive.content.startsWith("card1-row") }, "rows keep a prefix")
+    assertEquals(HaCardsSeed.DASHBOARD_SECTION, component("root"), "the root draws no surface")
+    assertEquals(
+      listOf("heading", "card0-surface", "card1-surface", "card2-surface"),
+      slot("section", "children"),
+    )
+    // Each card keeps a surface of its own, around its own body.
+    for ((surface, body) in
+      listOf(
+        "card0-surface" to "card0-tile",
+        "card1-surface" to "card1-column",
+        "card2-surface" to "card2-measurement",
+      )) {
+      assertEquals(HaCardsSeed.CARD_SURFACE, component(surface))
+      assertEquals(listOf(body), slot(surface, "content"))
+    }
+    assertTrue(
+      slot("card1-column", "children").all { it.startsWith("card1-row") },
+      "rows keep a prefix",
+    )
     assertTrue("card1-heading" !in section, "a card in a section leaves its own heading out")
   }
 

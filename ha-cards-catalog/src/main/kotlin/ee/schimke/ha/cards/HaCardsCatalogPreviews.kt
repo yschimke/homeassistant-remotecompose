@@ -227,6 +227,26 @@ fun HaCardSurfaceSticker() = HaCardSticker {
 }
 
 @CatalogComponent(
+  id = "HaCard/DashboardSection",
+  group = "Containment",
+  noReference = NO_KIT,
+  caption =
+    "A dashboard section: a heading over cards, each on its own surface, as HA's sections view " +
+      "stacks them. The Dashboard section root exports as this.",
+)
+@Preview(widthDp = CARD_WIDTH_DP, heightDp = 200)
+@Composable
+fun HaDashboardSectionSticker() = HaCardSticker {
+  HaDashboardSection {
+    RemoteColumn(RemoteModifier.fillMaxWidth(), horizontalAlignment = RemoteAlignment.Start) {
+      HaCardHeading(title = "Kitchen")
+      HaCardSurface { HaCardTile(name = "Ceiling", state = "On", icon = "light") }
+      HaCardSurface { HaCardThermometer(name = "Kitchen", value = 21.5f, presentation = "compact") }
+    }
+  }
+}
+
+@CatalogComponent(
   id = "Remote/Card",
   group = "Containment",
   noReference = NO_KIT,

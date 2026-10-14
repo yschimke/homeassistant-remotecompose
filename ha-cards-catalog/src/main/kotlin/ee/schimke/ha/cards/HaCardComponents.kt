@@ -140,6 +140,21 @@ fun HaCardSurface(
   }
 }
 
+/**
+ * A dashboard section: cards stacked under a heading, as HA's sections view lays them out. Unlike
+ * [HaCardSurface] it draws no surface and leaves the cards' chrome on, so each card in it, on its
+ * own [HaCardSurface], stays a card of its own. The `ha-cards/dashboard-section` root exports as
+ * this.
+ */
+@Composable
+@RemoteComposable
+fun HaDashboardSection(
+  modifier: RemoteModifier = RemoteModifier,
+  content: @Composable @RemoteComposable () -> Unit,
+) {
+  RemoteBox(modifier = modifier.fillMaxWidth()) { content() }
+}
+
 /** HA `tile` card: an icon (in a chip when toggleable) beside the entity's name and state. */
 @Composable
 @RemoteComposable

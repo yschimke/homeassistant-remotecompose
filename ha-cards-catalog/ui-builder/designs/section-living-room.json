@@ -26,7 +26,7 @@
   "nodes": {
     "root": {
       "id": "root",
-      "componentId": "ha-cards/dashboard-card",
+      "componentId": "ha-cards/dashboard-section",
       "properties": {},
       "modifiers": [],
       "slots": {
@@ -52,8 +52,41 @@
       "slots": {
         "children": [
           "heading",
-          "card0-tile",
-          "card1-column",
+          "card0-surface",
+          "card1-surface",
+          "card2-surface"
+        ]
+      }
+    },
+    "card0-surface": {
+      "id": "card0-surface",
+      "componentId": "ha-cards/card-surface",
+      "properties": {},
+      "modifiers": [],
+      "slots": {
+        "content": [
+          "card0-tile"
+        ]
+      }
+    },
+    "card1-surface": {
+      "id": "card1-surface",
+      "componentId": "ha-cards/card-surface",
+      "properties": {},
+      "modifiers": [],
+      "slots": {
+        "content": [
+          "card1-column"
+        ]
+      }
+    },
+    "card2-surface": {
+      "id": "card2-surface",
+      "componentId": "ha-cards/card-surface",
+      "properties": {},
+      "modifiers": [],
+      "slots": {
+        "content": [
           "card2-measurement"
         ]
       }

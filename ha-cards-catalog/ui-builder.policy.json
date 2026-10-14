@@ -84,6 +84,7 @@
   "menu": {
     "$comment": "This catalog's groups. The three roots lead, then the HA components and the measurement hierarchy (meters and typed readings, card-component-system.md), then the Remote Material 3 core.",
     "groupOrder": [
+      "Dashboard section",
       "Dashboard card",
       "Wear widget",
       "Launcher widget",
@@ -96,7 +97,7 @@
       "Iconography"
     ]
   },
-  "$comment_builtins": "The three design roots, none with a call site of its own. `ha-cards/dashboard-card` exports as HaCardSurface (its `implementation`), which draws the HA card chrome and turns the chrome of the RemoteHa* cards inside it off. The Wear widget containers keep remote-m3's ids and the launcher root remote-widgets' id because the export dispatches on those exact ids; nothing checks a builtin's id against this catalog's `ha-cards/` prefix, so they are declared here under their own.",
+  "$comment_builtins": "The design roots, none with a call site of its own. `ha-cards/dashboard-card` exports as HaCardSurface (its `implementation`), which draws the HA card chrome and turns the chrome of the RemoteHa* cards inside it off. `ha-cards/dashboard-section` exports as HaDashboardSection, which draws nothing of its own: the cards under its heading each sit on their own `ha-cards/card-surface`, so they stay separate cards. The Wear widget containers keep remote-m3's ids and the launcher root remote-widgets' id because the export dispatches on those exact ids; nothing checks a builtin's id against this catalog's `ha-cards/` prefix, so they are declared here under their own.",
   "$comment_root_canvas": "Dashboard and launcher roots use layout/scaffold because their slot is content. layout/box reads children and would draw these roots empty; builtins cannot declare canvasMapping. This canvas choice does not change their Remote Compose implementation or export target.",
   "builtins": {
     "ha-cards/dashboard-card": {
@@ -122,6 +123,32 @@
         }
       },
       "implementation": "ha-cards-catalog/ee.schimke.ha.cards.HaCardComponentsKt.HaCardSurface",
+      "properties": [],
+      "modifierCapabilities": []
+    },
+    "ha-cards/dashboard-section": {
+      "role": "screen-root",
+      "displayName": "Dashboard section",
+      "group": "Dashboard section",
+      "canvas": "layout/scaffold",
+      "traits": [
+        "ScreenContent",
+        "RemoteContentHost"
+      ],
+      "slots": {
+        "content": {
+          "acceptedRoles": [
+            "Scaffold",
+            "Container",
+            "Leaf"
+          ],
+          "acceptedTraits": [
+            "RemoteAuthorable"
+          ],
+          "max": 1
+        }
+      },
+      "implementation": "ha-cards-catalog/ee.schimke.ha.cards.HaCardComponentsKt.HaDashboardSection",
       "properties": [],
       "modifierCapabilities": []
     },

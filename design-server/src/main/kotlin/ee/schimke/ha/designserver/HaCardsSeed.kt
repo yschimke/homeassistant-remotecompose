@@ -41,6 +41,8 @@ object HaCardsSeed {
   private const val REVISION = "candidate"
 
   const val DASHBOARD_CARD = "ha-cards/dashboard-card"
+  const val DASHBOARD_SECTION = "ha-cards/dashboard-section"
+  const val CARD_SURFACE = "ha-cards/card-surface"
   const val WEAR_SMALL = "remote-m3/widget-container-small"
   const val WEAR_LARGE = "remote-m3/widget-container-large"
   const val LAUNCHER_WIDGET = "remote-widgets/launcher-widget"
@@ -114,6 +116,10 @@ object HaCardsSeed {
       template = template,
     )
 
+  /** A dashboard section's root, 360dp wide: its cards each sit on their own surface. */
+  fun section(template: String, heightDp: Int? = null) =
+    target(template, DASHBOARD_SECTION, widthDp = 360, heightDp = heightDp, adaptive = true)
+
   /**
    * A dashboard card, 360dp wide, growing with its rows; adaptive like the design server's. Without
    * [title] an entities card leaves its heading out, as one inside a [section] does.
@@ -174,8 +180,10 @@ object HaCardsSeed {
   /**
    * A dashboard section: a [heading] over [cards] in a column, the way Home Assistant's sections
    * view stacks a heading card and the cards under it. Each of [cards] is a document these seeds
-   * wrote ([haCard], [measurement], [metric]); its body moves into the section with its node ids
-   * prefixed, so two cards may share an id.
+   * wrote ([haCard], [measurement], [metric]); its body moves into the section on a [CARD_SURFACE]
+   * of its own, with its node ids prefixed so two cards may share an id. [target] is a
+   * [DASHBOARD_SECTION] root ([section] with a template id), which draws no surface, so each card
+   * stays a card.
    */
   fun section(
     designId: String,
@@ -194,8 +202,9 @@ object HaCardsSeed {
         slots = mapOf(target.rootSlot to listOf("section")),
       )
     val children = mutableListOf("heading")
-    val body = linkedMapOf<String, JsonObject>()
-    body["heading"] =
+    val surfaces = linkedMapOf<String, JsonObject>()
+    val parts = linkedMapOf<String, JsonObject>()
+    parts["heading"] =
       node(
         "heading",
         "ha-cards/heading",
@@ -204,16 +213,16 @@ object HaCardsSeed {
     cards.forEachIndexed { index, card ->
       val prefix = "card$index-"
       val cardNodes = card.getValue("nodes").jsonObject
-      val root = cardNodes.getValue("root").jsonObject
-      root
-        .getValue("slots")
-        .jsonObject
-        .values
-        .flatMap { it.jsonArray }
-        .forEach { children += prefix + it.jsonPrimitive.content }
+      val body =
+        cardNodes.getValue("root").jsonObject.getValue("slots").jsonObject.values.flatMap {
+          it.jsonArray.map { id -> prefix + id.jsonPrimitive.content }
+        }
+      val surface = "${prefix}surface"
+      surfaces[surface] = node(surface, CARD_SURFACE, slots = mapOf("content" to body))
+      children += surface
       for ((id, cardNode) in cardNodes) {
         if (id == "root") continue
-        body[prefix + id] = prefixed(cardNode.jsonObject, prefix)
+        parts[prefix + id] = prefixed(cardNode.jsonObject, prefix)
       }
     }
     nodes["section"] =
@@ -224,7 +233,8 @@ object HaCardsSeed {
         modifiers = listOf(UiBuilderSeed.fillMaxWidth()),
         slots = mapOf("children" to children),
       )
-    nodes.putAll(body)
+    nodes.putAll(surfaces)
+    nodes.putAll(parts)
     return UiBuilderSeed.envelope(
       target,
       designId,
