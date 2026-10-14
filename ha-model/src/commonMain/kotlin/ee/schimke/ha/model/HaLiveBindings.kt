@@ -1,5 +1,9 @@
 package ee.schimke.ha.model
 
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.contentOrNull
+
 /**
  * Host-side derivations for the live named-binding wire contract.
  *
@@ -51,4 +55,45 @@ object HaLiveBindings {
       "alarm_control_panel" -> alarmStateIntFromRaw(state)
       else -> null
     }
+
+  /**
+   * Numeric attributes a domain publishes as their own float bindings, by binding suffix:
+   * `<entityId>.<suffix>`. A climate entity's state is its mode (`heat`), so a thermostat dial
+   * can't sweep on `numeric_state`; it binds `current_temperature` and `target_temperature` instead
+   * and computes its fraction and labels in-document. Attributes that are missing or not numeric
+   * have no binding.
+   */
+  fun attributeFloats(entityId: String, attributes: JsonObject): Map<String, Float> {
+    val keys = AttributeFloats[entityId.substringBefore('.', missingDelimiterValue = "")]
+    if (keys.isNullOrEmpty()) return emptyMap()
+    return buildMap {
+      for ((suffix, attribute) in keys) {
+        val value = (attributes[attribute] as? JsonPrimitive)?.contentOrNull?.toFloatOrNull()
+        put(suffix, value?.takeIf { it.isFinite() } ?: ABSENT)
+      }
+    }
+  }
+
+  /** Binding suffix → attribute, per domain, for [attributeFloats]. */
+  private val AttributeFloats: Map<String, Map<String, String>> =
+    mapOf(
+      "climate" to
+        mapOf(
+          CURRENT_TEMPERATURE to "current_temperature",
+          TARGET_TEMPERATURE to "temperature",
+        )
+    )
+
+  /**
+   * The value [attributeFloats] pushes for an attribute the entity doesn't have: far below any
+   * temperature (absolute zero is −273 °C), so a document tests `value > -1000` for presence. Not
+   * NaN, which Remote Compose reserves for variable references.
+   */
+  const val ABSENT: Float = -9999f
+
+  /** `<climate>.current_temperature`: the room temperature a thermostat reads. */
+  const val CURRENT_TEMPERATURE: String = "current_temperature"
+
+  /** `<climate>.target_temperature`: the set point (HA's `temperature` attribute). */
+  const val TARGET_TEMPERATURE: String = "target_temperature"
 }

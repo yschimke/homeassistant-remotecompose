@@ -139,6 +139,20 @@ fun HaCardEntitiesSticker() = HaCardSticker {
 fun HaCardGaugeSticker() = HaCardSticker { HaCardGauge(name = "Humidity", value = 46f, unit = "%") }
 
 @CatalogComponent(
+  id = "HaCard/Thermostat",
+  group = "Home Assistant",
+  noReference = NO_KIT,
+  caption =
+    "HA's thermostat card: the room temperature on a 270° dial, the set point marked on it and " +
+      "the HVAC mode above.",
+)
+@Preview(widthDp = CARD_WIDTH_DP, heightDp = 250)
+@Composable
+fun HaCardThermostatSticker() = HaCardSticker {
+  HaCardThermostat(name = "Living room", current = 21.5f, target = 22f)
+}
+
+@CatalogComponent(
   id = "HaCard/Glance",
   group = "Home Assistant",
   noReference = NO_KIT,
@@ -417,6 +431,31 @@ fun HaCardUberThemeSticker() = HaCardSticker {
       RemoteColumn(RemoteModifier.fillMaxWidth(), horizontalAlignment = RemoteAlignment.Start) {
         HaCardThermometer(name = "Living room", value = 21.5f, presentation = "compact")
         HaCardBattery(name = "Front door lock", value = 64f, presentation = "compact")
+      }
+    }
+  }
+}
+
+@CatalogComponent(
+  id = "HaCard/UberThemeConsole",
+  group = "Containment",
+  noReference = NO_KIT,
+  caption =
+    "The `console` uber theme: a skeuomorphic studio desk. The thermostat is a knurled knob in a " +
+      "ring of lamps, the gauge a backlit VU meter, the thermometer a fader, all on a lit metal panel.",
+)
+@Preview(widthDp = CARD_WIDTH_DP, heightDp = 560)
+@Composable
+fun HaCardUberThemeConsoleSticker() = HaCardSticker {
+  HaCardUberTheme(theme = "console", dark = true) {
+    RemoteColumn(RemoteModifier.fillMaxWidth(), horizontalAlignment = RemoteAlignment.Start) {
+      HaCardThermostat(name = "Living room", current = 21.5f, target = 22f)
+      HaCardGauge(name = "Level", value = 62f, unit = "%")
+      HaCardSurface {
+        RemoteColumn(RemoteModifier.fillMaxWidth(), horizontalAlignment = RemoteAlignment.Start) {
+          HaCardThermometer(name = "Outside", value = 31f, presentation = "compact")
+          HaCardEntityRow(name = "Kitchen", state = "On", toggleable = true, isOn = true)
+        }
       }
     }
   }

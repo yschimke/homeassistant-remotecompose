@@ -587,6 +587,86 @@
         }
       ]
     },
+    "ha-cards/thermostat": {
+      "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardComponentsKt.HaCardThermostat",
+      "displayName": "Thermostat",
+      "group": "Home Assistant",
+      "insertContent": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "value": "Living room"
+          },
+          "current": {
+            "type": "float",
+            "value": 21.5
+          },
+          "target": {
+            "type": "float",
+            "value": 22
+          }
+        }
+      },
+      "propertyCapabilities": [
+        {
+          "name": "name",
+          "jsonType": "string",
+          "required": true,
+          "notes": "The thermostat's friendly name."
+        },
+        {
+          "name": "current",
+          "jsonType": "number",
+          "required": true,
+          "notes": "The room temperature: the arc's fill and the centre reading."
+        },
+        {
+          "name": "target",
+          "jsonType": "number",
+          "required": false,
+          "notes": "The set point, marked on the arc and shown under the reading. Negative (the default) draws none."
+        },
+        {
+          "name": "min",
+          "jsonType": "number",
+          "required": false,
+          "notes": "The dial's lowest temperature; 7 when unset (HA's climate default)."
+        },
+        {
+          "name": "max",
+          "jsonType": "number",
+          "required": false,
+          "notes": "The dial's highest temperature; 35 when unset."
+        },
+        {
+          "name": "unit",
+          "jsonType": "string",
+          "required": false,
+          "notes": "The unit after each reading; `°C` when unset."
+        },
+        {
+          "name": "mode",
+          "jsonType": "string",
+          "required": false,
+          "allowedValues": [
+            "heat",
+            "cool",
+            "heat_cool",
+            "auto",
+            "dry",
+            "fan_only",
+            "off"
+          ],
+          "notes": "The HVAC mode: names the chip above the reading and picks the dial's accent. `heat` when unset."
+        },
+        {
+          "name": "entityId",
+          "jsonType": "string",
+          "required": false,
+          "notes": "The climate entity (`climate.living_room`). Set, the temperatures bind `<entityId>.current_temperature` and `<entityId>.target_temperature` and the chip binds `<entityId>.state`, so the dial and both readings keep up with Home Assistant; a tap opens its more-info. The accent stays the designed mode's. Blank, the values are constants."
+        }
+      ]
+    },
     "ha-cards/glance": {
       "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardComponentsKt.HaCardGlance",
       "displayName": "Glance",

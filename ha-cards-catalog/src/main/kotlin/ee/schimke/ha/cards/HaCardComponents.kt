@@ -17,16 +17,22 @@ import androidx.compose.remote.creation.compose.modifier.size
 import androidx.compose.remote.creation.compose.shapes.RemoteCircleShape
 import androidx.compose.remote.creation.compose.state.RemoteBoolean
 import androidx.compose.remote.creation.compose.state.RemoteColor
+import androidx.compose.remote.creation.compose.state.RemoteFloat
 import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
+import androidx.compose.remote.creation.compose.state.rf
 import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.remote.creation.compose.state.rsp
 import androidx.compose.remote.creation.compose.text.RemoteTextStyle
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.wear.compose.remote.material3.RemoteIcon
+import ee.schimke.ha.model.HaLiveBindings
 import ee.schimke.ha.rc.RemoteHaAdaptiveMeasurement
+import ee.schimke.ha.rc.cards.climateAccent
 import ee.schimke.ha.rc.components.HaAction
+import ee.schimke.ha.rc.components.HaArcDialData
+import ee.schimke.ha.rc.components.HaArcDialLive
 import ee.schimke.ha.rc.components.HaButtonData
 import ee.schimke.ha.rc.components.HaEntitiesData
 import ee.schimke.ha.rc.components.HaEntityRowData
@@ -45,6 +51,7 @@ import ee.schimke.ha.rc.components.HaUberTheme
 import ee.schimke.ha.rc.components.LiveValues
 import ee.schimke.ha.rc.components.ProvideCardChrome
 import ee.schimke.ha.rc.components.ProvideHaUberTheme
+import ee.schimke.ha.rc.components.RemoteHaArcDial
 import ee.schimke.ha.rc.components.RemoteHaArcMeter
 import ee.schimke.ha.rc.components.RemoteHaBarMeter
 import ee.schimke.ha.rc.components.RemoteHaButton
@@ -62,6 +69,7 @@ import ee.schimke.ha.rc.components.cardChrome
 import ee.schimke.ha.rc.components.currentRemoteHaTheme
 import ee.schimke.ha.rc.components.fraction
 import ee.schimke.ha.rc.formatValueWithUnit
+import java.text.DecimalFormat
 
 // ---------------------------------------------------------------------------------------------
 // The `ha-cards` palette's Home Assistant components.
@@ -261,6 +269,91 @@ fun HaCardGauge(
     ),
     modifier,
   )
+}
+
+/**
+ * HA `thermostat` card: a climate entity as a 270° dial, the room temperature [current] on the arc
+ * and the set point [target] marked on it, between [min] and [max]. [mode] is the HVAC mode
+ * (`heat`, `cool`, `heat_cool`, `auto`, `dry`, `fan_only`, `off`): it names the chip and picks the
+ * accent. A negative [target] draws no set point. Under the `console` uber theme the dial is a
+ * knurled knob in a ring of lamps.
+ *
+ * Live through host-pushed bindings (live-card-updates.md, path 1): with [entityId] set, the
+ * temperatures bind `<entityId>.current_temperature` and `<entityId>.target_temperature`, the fill
+ * and marker fractions and both labels are computed from them in-document, and the chip binds
+ * `<entityId>.state`. A temperature the entity stops reporting (a thermostat switched off drops its
+ * set point) shows as a dash, with no marker. The accent stays the designed [mode]'s. A tap opens
+ * more-info; there are no steppers, since a set-temperature action carries an absolute temperature
+ * a design can't compute.
+ */
+@Composable
+@RemoteComposable
+fun HaCardThermostat(
+  name: String,
+  current: Float,
+  modifier: RemoteModifier = RemoteModifier,
+  target: Float = -1f,
+  min: Float = 7f,
+  max: Float = 35f,
+  unit: String = "°C",
+  mode: String = "heat",
+  entityId: String = "",
+) {
+  val entity = entityId.entityOrNull()
+  val hasTarget = target >= 0f
+  val span = (max - min).coerceAtLeast(0.0001f)
+  val currentLive = LiveValues.namedFloat(entity, HaLiveBindings.CURRENT_TEMPERATURE, current)
+  val targetLive =
+    if (hasTarget) LiveValues.namedFloat(entity, HaLiveBindings.TARGET_TEMPERATURE, target)
+    else null
+  val modeLabel = mode.replace('_', ' ').replaceFirstChar { it.uppercaseChar() }
+  // A host pushes HaLiveBindings.ABSENT for a temperature the entity doesn't report: show a dash
+  // and hide the marker rather than a stale value.
+  val currentPresent = currentLive.isGreaterThan(PresentAbove.rf)
+  val targetPresent = targetLive?.isGreaterThan(PresentAbove.rf)
+  RemoteHaArcDial(
+    HaArcDialData(
+      entityId = entity,
+      name = name,
+      valueFraction = ((current - min) / span).coerceIn(0f, 1f),
+      targetFraction = if (hasTarget) ((target - min) / span).coerceIn(0f, 1f) else null,
+      centerLabel = "${current.reading()}$unit",
+      centerLabelAttribute = "current_temperature_label",
+      supportingLabel = if (hasTarget) "↑ ${target.reading()}$unit" else null,
+      supportingLabelAttribute = null,
+      modeChip = null,
+      accent = climateAccent(mode),
+      showSteppers = false,
+      centerIcon = null,
+      tapAction = tapAction(entity, toggleable = false),
+      live =
+        HaArcDialLive(
+          valueFraction = currentPresent.select(unitFraction(currentLive, min, span), 0f.rf),
+          targetFraction = targetLive?.let { unitFraction(it, min, span) },
+          centerLabel =
+            currentPresent.select(currentLive.toRemoteString(TemperatureFormat) + unit, "—".rs),
+          supportingLabel =
+            targetLive?.let {
+              targetPresent!!.select("↑ ".rs + it.toRemoteString(TemperatureFormat) + unit, "".rs)
+            },
+          modeLabel = LiveValues.state(entity, modeLabel),
+          targetVisible = targetPresent,
+        ),
+    ),
+    modifier,
+  )
+}
+
+/** A pushed temperature above this is real; [HaLiveBindings.ABSENT] is far below it. */
+private const val PresentAbove = -1000f
+
+/** One decimal at most, as HA shows a temperature: `21`, `21.5`. */
+private val TemperatureFormat = DecimalFormat("0.#")
+
+/** ([value] − [min]) ÷ [span], clamped to 0..1, in-document. */
+private fun unitFraction(value: RemoteFloat, min: Float, span: Float): RemoteFloat {
+  val f = (value - min.rf) / span.rf
+  return -((-f.min(1f.rf)).min(0f.rf))
 }
 
 /**

@@ -149,9 +149,9 @@ fun RemoteHaArcDialWide(data: HaArcDialData, modifier: RemoteModifier = RemoteMo
       verticalArrangement = RemoteArrangement.Center,
       horizontalAlignment = RemoteAlignment.Start,
     ) {
-      ModeChip(data.modeChip, dialAccent(data))
+      ModeChip(data, dialAccent(data))
       RemoteText(
-        text = LiveValues.attribute(data.entityId, data.centerLabelAttribute, data.centerLabel),
+        text = centerText(data),
         color = theme.primaryText,
         fontSize = HaType.ValueSmall,
         fontWeight = haValueWeight(),
@@ -159,14 +159,9 @@ fun RemoteHaArcDialWide(data: HaArcDialData, modifier: RemoteModifier = RemoteMo
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
       )
-      if (data.supportingLabel != null && data.supportingLabelAttribute != null) {
+      supportingText(data)?.let { supporting ->
         RemoteText(
-          text =
-            LiveValues.attribute(
-              data.entityId,
-              data.supportingLabelAttribute,
-              data.supportingLabel,
-            ),
+          text = supporting,
           color = dialAccent(data),
           fontSize = HaType.Label,
           style = haTextStyle(),
@@ -201,9 +196,9 @@ private fun DialBody(data: HaArcDialData, theme: RemoteHaTheme) {
           tint = dialAccent(data),
         )
       }
-      ModeChip(data.modeChip, dialAccent(data))
+      ModeChip(data, dialAccent(data))
       RemoteText(
-        text = LiveValues.attribute(data.entityId, data.centerLabelAttribute, data.centerLabel),
+        text = centerText(data),
         color = theme.primaryText,
         fontSize = HaType.ValueLarge,
         fontWeight = haValueWeight(),
@@ -211,14 +206,9 @@ private fun DialBody(data: HaArcDialData, theme: RemoteHaTheme) {
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
       )
-      if (data.supportingLabel != null && data.supportingLabelAttribute != null) {
+      supportingText(data)?.let { supporting ->
         RemoteText(
-          text =
-            LiveValues.attribute(
-              data.entityId,
-              data.supportingLabelAttribute,
-              data.supportingLabel,
-            ),
+          text = supporting,
           color = dialAccent(data),
           fontSize = HaType.Label,
           style = haTextStyle(),
@@ -231,8 +221,12 @@ private fun DialBody(data: HaArcDialData, theme: RemoteHaTheme) {
 
 @Composable
 @RemoteComposable
-private fun ModeChip(chip: HaModeChip?, accent: RemoteColor) {
-  if (chip == null) return
+private fun ModeChip(data: HaArcDialData, accent: RemoteColor) {
+  data.live?.modeLabel?.let {
+    ChipText(it, accent)
+    return
+  }
+  val chip = data.modeChip ?: return
   when (chip) {
     is HaModeChip.Static ->
       ChipText(LiveValues.attribute(chip.entityId, chip.attribute, chip.initial), accent)
@@ -283,13 +277,16 @@ private fun ArcCanvas(
   paddingPx: Float,
 ) {
   val v = data.valueFraction.coerceIn(0f, 1f)
-  val rawValueFraction = LiveValues.namedFloat(data.entityId, "value_fraction", v)
+  val rawValueFraction =
+    data.live?.valueFraction ?: LiveValues.namedFloat(data.entityId, "value_fraction", v)
   val animatedValueFraction = animateRemoteFloat(rawValueFraction, DialAnimationSeconds)
   val animatedSweep: RemoteFloat = animatedValueFraction * 270f.rf
 
   val target = data.targetFraction
   val rawTargetFraction =
-    if (target != null) {
+    if (data.live != null) {
+      data.live.targetFraction
+    } else if (target != null) {
       LiveValues.namedFloat(data.entityId, "target_fraction", target.coerceIn(0f, 1f))
     } else null
   val animatedTargetFraction =
@@ -313,7 +310,15 @@ private fun ArcCanvas(
     val arcSize = RemoteSize(side, side)
     // A skeuomorphic theme turns the dial into a rotary control: a knob inside a lamp ring.
     if (family == HaVisualFamily.Console) {
-      consoleDial(accent, animatedValueFraction, animatedTargetFraction, left, top, side)
+      consoleDial(
+        accent,
+        animatedValueFraction,
+        animatedTargetFraction,
+        left,
+        top,
+        side,
+        data.live?.targetVisible,
+      )
       return@RemoteCanvas
     }
 
@@ -351,13 +356,32 @@ private fun ArcCanvas(
             strokeCap = AndroidPaint.Cap.ROUND
           }
           .asRemotePaint()
-          .apply { color = theme.primaryText }
+          .apply {
+            color =
+              data.live?.targetVisible?.select(theme.primaryText, Color.Transparent.rc)
+                ?: theme.primaryText
+          }
       drawArc(marker, animatedMarkerAngle, 0.1f.rf, false, topLeft, arcSize)
     }
   }
 }
 
 private const val DialAnimationSeconds = 0.45f
+
+/** The centre readout: the live expression, else `<entityId>.attributes.<centerLabelAttribute>`. */
+private fun centerText(data: HaArcDialData): RemoteString =
+  data.live?.centerLabel
+    ?: LiveValues.attribute(data.entityId, data.centerLabelAttribute, data.centerLabel)
+
+/** The supporting readout (the target), or null when the dial shows none. */
+private fun supportingText(data: HaArcDialData): RemoteString? {
+  data.live?.let {
+    return it.supportingLabel
+  }
+  val label = data.supportingLabel ?: return null
+  val attribute = data.supportingLabelAttribute ?: return null
+  return LiveValues.attribute(data.entityId, attribute, label)
+}
 
 @Composable
 private fun Steppers(

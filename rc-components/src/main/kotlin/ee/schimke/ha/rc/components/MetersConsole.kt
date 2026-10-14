@@ -10,6 +10,7 @@ import androidx.compose.remote.creation.compose.shaders.RemoteBrush
 import androidx.compose.remote.creation.compose.shaders.RemoteShaderBrush
 import androidx.compose.remote.creation.compose.shaders.linearGradient
 import androidx.compose.remote.creation.compose.shaders.radialGradient
+import androidx.compose.remote.creation.compose.state.RemoteBoolean
 import androidx.compose.remote.creation.compose.state.RemoteColor
 import androidx.compose.remote.creation.compose.state.RemoteFloat
 import androidx.compose.remote.creation.compose.state.RemotePaint
@@ -342,7 +343,8 @@ internal fun RemoteDrawScope.consoleBattery(
 /**
  * A rotary control's face for a 270° dial (thermostat, light) fitting [side] at ([left], [top]): a
  * dark knurled knob with a lamp ring of [LampCount] dots round it, lit in [accent] up to
- * [fraction], and a red index lamp at [target]. The centre is left for the dial's text.
+ * [fraction], and a red index lamp at [target], dark while [targetVisible] is false. The centre is
+ * left for the dial's text.
  */
 internal fun RemoteDrawScope.consoleDial(
   accent: RemoteColor,
@@ -351,6 +353,7 @@ internal fun RemoteDrawScope.consoleDial(
   left: RemoteFloat,
   top: RemoteFloat,
   side: RemoteFloat,
+  targetVisible: RemoteBoolean? = null,
 ) {
   val r = side / 2f.rf
   val cx = left + r
@@ -368,7 +371,8 @@ internal fun RemoteDrawScope.consoleDial(
   if (target != null) {
     // The index lamp rides the ring at the target; drawn at 135° and swung by the target.
     rotate(target * 270f.rf, RemoteOffset(cx, cy)) {
-      drawCircle(fillPaint(ScaleRed.rc), lampR * 1.5f.rf, polar(cx, cy, 135f, ringR))
+      val lamp = targetVisible?.select(ScaleRed.rc, Color.Transparent.rc) ?: ScaleRed.rc
+      drawCircle(fillPaint(lamp), lampR * 1.5f.rf, polar(cx, cy, 135f, ringR))
     }
   }
   // The knob: a soft drop shadow, a knurled metal skirt, and a dark cap lit from the top left.
