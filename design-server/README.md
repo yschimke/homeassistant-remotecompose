@@ -49,13 +49,22 @@ callback URLs also works.
 
 ### Deploying at `ha.coo.ee`
 
-It runs on the same box as `preview.coo.ee`, behind the same TLS proxy, as two names for one
-container:
+`ha.coo.ee` is served from the same box as `preview.coo.ee`, by compose-preview-server's
+deploy (`deploy/image/docker-compose.yml`, the `ha-designs` service, and the `{$HA_DOMAIN}` block
+of its `Caddyfile`). `.github/workflows/design-server.yml` publishes this image as
+`ghcr.io/yschimke/ha-card-design-server` on every push to `main`. One hostname, split by path:
 
-- `ha.coo.ee` → port 8080: the template browser, the schema page, sign-in, and the library the app
-  reads (`https://ha.coo.ee/designs/v1` is the app's card design server setting).
-- `builder.ha.coo.ee` → port 8724: the bundled UI Builder, where people edit the designs shared
-  with them.
+- `/`, `/designs*`, `/site/*`, `/schema`, `/embed/*`, `/studio/*`, `/api/designs*`, `/api/schema`,
+  `/api/studio*` and the library at `/designs/v1` (the app's card design server setting) go to
+  this server.
+- The card designer (`/ui-builder/*`, `/api/ui-builder/*`, `/auth/*`, `/mcp`) and the catalog
+  (`/homeassistant-remotecompose/*` and the routes its pages load) go to the preview server, whose
+  builder profile white-labels them as the Home Assistant card designer.
+
+There it runs without its bundled UI Builder (`UI_BUILDER_BINARY` empty): `UI_BUILDER_URL` and
+`UI_BUILDER_TOKEN` point it at the preview box's builder instead.
+
+Run on its own, with the builder bundled:
 
 ```sh
 docker run -d --name ha-designs -p 8080:8080 -p 8724:8724 -v ha-designs:/data \
@@ -63,9 +72,9 @@ docker run -d --name ha-designs -p 8080:8080 -p 8724:8724 -v ha-designs:/data \
   -e GITHUB_CLIENT_ID=… -e GITHUB_CLIENT_SECRET=… -e SESSION_SECRET=… \
   -e UI_BUILDER_GITHUB_CLIENT_ID=… -e UI_BUILDER_GITHUB_CLIENT_SECRET=… \
   -e UI_BUILDER_COOKIE_SECRET=… -e UI_BUILDER_TOKEN=… \
-  card-design-server
+  ghcr.io/yschimke/ha-card-design-server
 ```
 
-The builder is its own instance rather than `preview.coo.ee`'s. That box restricts who is a
+Run that way, the bundled builder is its own instance rather than `preview.coo.ee`'s. That box restricts who is a
 member, and a guest there can only read a design shared with it, while anyone designing a card
 here has to edit. Its state lives in the `/data` volume.
