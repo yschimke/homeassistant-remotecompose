@@ -50,8 +50,8 @@ fun RemoteHaEntityRow(data: HaEntityRowData, modifier: RemoteModifier = RemoteMo
   val isOnBinding =
     if (data.accent.toggleable) LiveValues.isOn(data.entityId, data.accent.initiallyOn) else null
   val accent: RemoteColor =
-    isOnBinding?.select(data.accent.activeAccent, data.accent.inactiveAccent)
-      ?: data.accent.activeAccent
+    isOnBinding?.select(data.accent.themed().activeAccent, data.accent.themed().inactiveAccent)
+      ?: data.accent.themed().activeAccent
 
   RemoteRow(
     modifier = modifier.then(clickable).fillMaxWidth().padding(vertical = 6.rdp),
@@ -79,8 +79,8 @@ fun RemoteHaEntityRow(data: HaEntityRowData, modifier: RemoteModifier = RemoteMo
     if (isOnBinding != null) {
       RemoteHaToggleSwitch(
         isOn = isOnBinding,
-        activeAccent = data.accent.activeAccent,
-        inactiveAccent = data.accent.inactiveAccent,
+        activeAccent = data.accent.themed().activeAccent,
+        inactiveAccent = data.accent.themed().inactiveAccent,
         tapAction = data.tapAction,
       )
     } else {
@@ -180,14 +180,22 @@ fun RemoteHaToggleSwitchByProgress(
   modifier: RemoteModifier = RemoteModifier,
   clickable: RemoteModifier = RemoteModifier,
 ) {
-  val trackColor: RemoteColor = tween(inactiveAccent, activeAccent, progress)
+  // The uber theme's control shape and ink: an LCD switch is a square-knobbed block printed in its
+  // ink, a Trinitron one a hairline-cornered slider.
+  val uber = currentHaUberTheme()
+  val ink = uber.ink
+  val shape = uber.theme.shape
+  val trackColor: RemoteColor =
+    if (ink != null) tween(ink.copy(alpha = 0.35f).rc, ink.rc, progress)
+    else tween(inactiveAccent, activeAccent, progress)
+  val knobColor = if (ink != null) haTheme().cardBackground else Color.White.rc
   val startPaddingDp = (KnobInsetDp.rf + progress * KnobTravelDp.rf).asRemoteDp()
 
   RemoteBox(
     modifier =
       modifier
         .size(width = TrackWidth, height = TrackHeight)
-        .clip(RemoteRoundedCornerShape(11.rdp))
+        .clip(RemoteRoundedCornerShape(shape.controlCornerDp.rdp))
         .background(trackColor)
         .then(clickable)
   ) {
@@ -195,8 +203,11 @@ fun RemoteHaToggleSwitchByProgress(
       modifier =
         RemoteModifier.padding(start = startPaddingDp, top = KnobInset)
           .size(KnobSize)
-          .clip(RemoteCircleShape)
-          .background(Color.White.rc)
+          .clip(
+            if (shape.squareKnob) RemoteRoundedCornerShape((shape.controlCornerDp / 2).rdp)
+            else RemoteCircleShape
+          )
+          .background(knobColor)
     )
   }
 }

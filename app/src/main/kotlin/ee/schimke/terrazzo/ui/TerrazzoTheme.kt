@@ -5,9 +5,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.staticCompositionLocalOf
+import ee.schimke.ha.rc.components.HaUberTheme
 import ee.schimke.ha.rc.components.ThemeStyle
 import ee.schimke.ha.rc.components.terrazzoColorScheme
 import ee.schimke.ha.rc.components.terrazzoTypographyFor
+import ee.schimke.terrazzo.core.prefs.CardStylePref
 import ee.schimke.terrazzo.core.prefs.DarkModePref
 import ee.schimke.terrazzo.core.prefs.ThemePref
 
@@ -26,6 +28,13 @@ val LocalThemeStyle = staticCompositionLocalOf { ThemeStyle.TerrazzoHome }
 val LocalIsDarkTheme = staticCompositionLocalOf { false }
 
 /**
+ * The card style ([HaUberTheme]) dashboard cards draw in, from the user's [CardStylePref]. Card
+ * hosts read it with [LocalThemeStyle] and [LocalIsDarkTheme]: `cardStyle.cardPalette(style, dark)`
+ * for the palette, then `ProvideCardStyle(…)` around the card.
+ */
+val LocalCardStyle = staticCompositionLocalOf { HaUberTheme.Classic }
+
+/**
  * App-level Material 3 theme. Reads the user-selected [ThemeStyle] and [DarkModePref] from the
  * store (wired via [TerrazzoThemeController] one level up) and composes:
  *
@@ -37,7 +46,12 @@ val LocalIsDarkTheme = staticCompositionLocalOf { false }
  *   pairing for the palette.
  */
 @Composable
-fun TerrazzoTheme(style: ThemeStyle, darkMode: DarkModePref, content: @Composable () -> Unit) {
+fun TerrazzoTheme(
+  style: ThemeStyle,
+  darkMode: DarkModePref,
+  cardStyle: HaUberTheme = HaUberTheme.Classic,
+  content: @Composable () -> Unit,
+) {
   val systemDark = isSystemInDarkTheme()
   val darkTheme =
     when (darkMode) {
@@ -49,7 +63,11 @@ fun TerrazzoTheme(style: ThemeStyle, darkMode: DarkModePref, content: @Composabl
   val wallpaperSeed = if (style == ThemeStyle.Material3) rememberWallpaperSeedColor() else null
   val colors = terrazzoColorScheme(style, darkTheme, seedOverride = wallpaperSeed)
 
-  CompositionLocalProvider(LocalThemeStyle provides style, LocalIsDarkTheme provides darkTheme) {
+  CompositionLocalProvider(
+    LocalThemeStyle provides style,
+    LocalIsDarkTheme provides darkTheme,
+    LocalCardStyle provides cardStyle,
+  ) {
     MaterialTheme(
       colorScheme = colors,
       typography = terrazzoTypographyFor(style),
@@ -67,3 +85,6 @@ fun ThemePref.toThemeStyle(): ThemeStyle =
     ThemePref.TerrazzoMinimalist -> ThemeStyle.TerrazzoMinimalist
     ThemePref.TerrazzoKiosk -> ThemeStyle.TerrazzoKiosk
   }
+
+/** The [HaUberTheme] a [CardStylePref] names. */
+fun CardStylePref.toUberTheme(): HaUberTheme = HaUberTheme.byId(id)

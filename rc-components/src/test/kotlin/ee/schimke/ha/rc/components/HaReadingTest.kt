@@ -56,4 +56,14 @@ class HaReadingTest {
     assertEquals(HaPresentation.Standard, HaPresentation.parse("nonsense"))
     assertEquals(HaMeasureKind.Generic, HaMeasureKind.parse("nonsense"))
   }
+
+  @Test
+  fun zonesMarkTheHotEndAndTheCriticalLevel() {
+    val hot = HaReading.static("t", 20f, "°C", HaMeasureKind.Temperature).zones()
+    // 30 °C on the default −10…40 °C scale.
+    assertEquals(0.8f, hot.hotFrom!!, 0.0001f)
+    val low = HaReading.static("b", 50f, "%", HaMeasureKind.Battery).zones()
+    assertEquals(0.15f, low.lowBelow!!, 0.0001f)
+    assertEquals(HaMeterZones(), HaReading.static("g", 1f, null).zones())
+  }
 }

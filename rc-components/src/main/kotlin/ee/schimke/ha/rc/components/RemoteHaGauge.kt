@@ -69,9 +69,10 @@ fun RemoteHaGauge(data: HaGaugeData, modifier: RemoteModifier = RemoteModifier) 
       horizontalAlignment = RemoteAlignment.CenterHorizontally,
     ) {
       RemoteHaArcMeter(
-        fraction,
-        severityColor,
-        RemoteModifier.fillMaxWidth().height(72.rdp),
+        zones = gaugeZones(data),
+        fraction = fraction,
+        color = severityColor,
+        modifier = RemoteModifier.fillMaxWidth().height(72.rdp),
         strokeWidthPx = 10f,
       )
 
@@ -135,9 +136,10 @@ fun RemoteHaGaugeStacked(data: HaGaugeData, modifier: RemoteModifier = RemoteMod
     // cell height. That leaves the lower ~40 % for the text
     // overlay regardless of the cell's aspect ratio.
     RemoteHaArcMeter(
-      fraction,
-      severityColor,
-      RemoteModifier.fillMaxSize(),
+      zones = gaugeZones(data),
+      fraction = fraction,
+      color = severityColor,
+      modifier = RemoteModifier.fillMaxSize(),
       strokeWidthPx = 8f,
       baseline = 0.6f,
     )
@@ -205,9 +207,10 @@ fun RemoteHaGaugeWide(data: HaGaugeData, modifier: RemoteModifier = RemoteModifi
     // the rest of the width via `weight()` so value / name aren't
     // clipped on narrower 2×1 chips.
     RemoteHaArcMeter(
-      fraction,
-      severityColor,
-      RemoteModifier.fillMaxHeight().width(72.rdp),
+      zones = gaugeZones(data),
+      fraction = fraction,
+      color = severityColor,
+      modifier = RemoteModifier.fillMaxHeight().width(72.rdp),
       strokeWidthPx = 6f,
     )
     RemoteColumn(
@@ -296,3 +299,25 @@ fun gaugeRangeText(min: Double, max: Double, unit: String?): String =
 
 private fun formatRange(d: Double): String =
   if (d == d.toLong().toDouble()) d.toLong().toString() else "%.1f".format(d)
+
+/**
+ * The gauge's hot zone for the visual families that draw one (a Trinitron red peak zone, LCD hot
+ * segments): from the red band's threshold, when red is the band at the top of the scale. Computed
+ * in-document from the same `card.*` floats [gaugeSeverityColor] reads, because a templated gauge
+ * is captured without its severity config and receives it as bindings at playback.
+ */
+@Composable
+private fun gaugeZones(data: HaGaugeData): HaMeterZones {
+  val bands = data.severity
+  val min = cardFloat("min", data.min.toFloat())
+  val max = cardFloat("max", data.max.toFloat())
+  val green = cardFloat("severity_green", bands.green?.toFloat() ?: UnsetThreshold)
+  val yellow = cardFloat("severity_yellow", bands.yellow?.toFloat() ?: UnsetThreshold)
+  val red = cardFloat("severity_red", bands.red?.toFloat() ?: UnsetThreshold)
+  // An unset band is UnsetThreshold (above every value); count it as below red here.
+  fun setOrLow(t: RemoteFloat) = selectIfGe(t, (UnsetThreshold / 10f).rf, (-UnsetThreshold).rf, t)
+  val others = maxOf(setOrLow(green), setOrLow(yellow))
+  // Red lower than another band (low is bad) or unset (clamps to 1) marks no hot end.
+  val hotFrom = selectIfGe(others, red, 1f.rf, normalizedFraction(red, min, max))
+  return HaMeterZones(hotFromLive = hotFrom)
+}

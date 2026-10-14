@@ -89,9 +89,9 @@ fun RemoteHaToggleButton(
     if (isOnBinding != null) {
       val accentProgress =
         animateRemoteFloat(isOnBinding.select(1f.rf, 0f.rf), durationSeconds = 0.20f)
-      tween(data.accent.inactiveAccent, data.accent.activeAccent, accentProgress)
+      tween(data.accent.themed().inactiveAccent, data.accent.themed().activeAccent, accentProgress)
     } else {
-      data.accent.activeAccent
+      data.accent.themed().activeAccent
     }
 
   ButtonBody(data, accent, modifier, compact)
@@ -125,7 +125,8 @@ fun RemoteHaButtonIcon(data: HaButtonData, modifier: RemoteModifier = RemoteModi
 @Composable
 private fun HaButtonData.staticAccent(): RemoteColor {
   val isOnBinding = if (accent.toggleable) LiveValues.isOn(entityId, accent.initiallyOn) else null
-  return isOnBinding?.select(accent.activeAccent, accent.inactiveAccent) ?: accent.activeAccent
+  val themed = accent.themed()
+  return isOnBinding?.select(themed.activeAccent, themed.inactiveAccent) ?: themed.activeAccent
 }
 
 /**

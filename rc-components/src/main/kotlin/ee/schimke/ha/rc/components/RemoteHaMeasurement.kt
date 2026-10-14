@@ -10,12 +10,16 @@ import androidx.compose.remote.creation.compose.layout.RemoteComposable
 import androidx.compose.remote.creation.compose.layout.RemoteRow
 import androidx.compose.remote.creation.compose.layout.RemoteText
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
+import androidx.compose.remote.creation.compose.modifier.background
 import androidx.compose.remote.creation.compose.modifier.clickable
+import androidx.compose.remote.creation.compose.modifier.clip
 import androidx.compose.remote.creation.compose.modifier.fillMaxSize
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.creation.compose.modifier.height
 import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.modifier.size
+import androidx.compose.remote.creation.compose.shapes.RemoteRoundedCornerShape
+import androidx.compose.remote.creation.compose.state.RemoteTextUnit
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.style.TextOverflow
@@ -86,11 +90,13 @@ internal fun HaMeasureVisual.glyphSizeDp(presentation: HaPresentation): Pair<Int
 fun RemoteHaMeasurementGlyph(reading: HaReading, modifier: RemoteModifier = RemoteModifier) {
   val fraction = reading.fraction()
   val color = reading.color()
+  val zones = reading.zones()
   when (reading.kind.visual) {
-    HaMeasureVisual.Thermometer -> RemoteHaThermometerGlyph(fraction, color, modifier)
-    HaMeasureVisual.Battery -> RemoteHaBatteryGlyph(fraction, color, modifier)
-    HaMeasureVisual.Arc -> RemoteHaArcMeter(fraction, color, modifier)
-    HaMeasureVisual.Bar -> RemoteHaBarMeter(fraction, color, modifier)
+    HaMeasureVisual.Thermometer ->
+      RemoteHaThermometerGlyph(fraction, color, modifier, zones = zones)
+    HaMeasureVisual.Battery -> RemoteHaBatteryGlyph(fraction, color, modifier, zones = zones)
+    HaMeasureVisual.Arc -> RemoteHaArcMeter(fraction, color, modifier, zones = zones)
+    HaMeasureVisual.Bar -> RemoteHaBarMeter(fraction, color, modifier, zones = zones)
   }
 }
 
@@ -149,9 +155,11 @@ fun RemoteHaBattery(
 /** Compact and Standard: the visual beside value over name. */
 @Composable
 private fun SideBySide(reading: HaReading, presentation: HaPresentation, modifier: RemoteModifier) {
-  val theme = haTheme()
   val compact = presentation == HaPresentation.Compact
+  val plate = currentHaUberTheme().theme.readout == HaReadoutStyle.Plate
   val (glyphW, glyphH) = reading.kind.visual.glyphSizeDp(presentation)
+  val valueSize = if (compact) HaType.ValueSmall else HaType.Value
+  val nameSize = if (compact) HaType.Caption else HaType.Label
   // Column → Row, never a bare Row root: a row directly under a breakpoint's wrap-content box
   // captures blank (adaptive-card-layouts.md, Known gaps #9).
   RemoteColumn(modifier = modifier, verticalArrangement = RemoteArrangement.Center) {
@@ -162,24 +170,18 @@ private fun SideBySide(reading: HaReading, presentation: HaPresentation, modifie
         RemoteArrangement.spacedBy((if (compact) HaSpace.M else HaSpace.L).rdp),
     ) {
       RemoteHaMeasurementGlyph(reading, RemoteModifier.size(glyphW.rdp, glyphH.rdp))
-      RemoteColumn(modifier = RemoteModifier.weight(1f)) {
-        RemoteText(
-          text = reading.text,
-          color = theme.primaryText,
-          fontSize = if (compact) HaType.ValueSmall else HaType.Value,
-          fontWeight = haValueWeight(),
-          style = haTextStyle(),
-          maxLines = 1,
-          overflow = TextOverflow.Ellipsis,
-        )
-        RemoteText(
-          text = reading.nameText(),
-          color = theme.secondaryText,
-          fontSize = if (compact) HaType.Caption else HaType.Label,
-          style = haTextStyle(),
-          maxLines = 1,
-          overflow = TextOverflow.Ellipsis,
-        )
+      RemoteColumn(
+        modifier = RemoteModifier.weight(1f),
+        verticalArrangement = RemoteArrangement.spacedBy(HaSpace.XXS.rdp),
+      ) {
+        if (plate) {
+          // A tracked label ruled off above the reading, like a hi-fi front panel.
+          NameLabel(reading, nameSize, ruled = true)
+          ValueReadout(reading, valueSize)
+        } else {
+          ValueReadout(reading, valueSize)
+          NameLabel(reading, nameSize)
+        }
       }
     }
   }
@@ -194,15 +196,7 @@ private fun Chip(reading: HaReading, modifier: RemoteModifier) {
     verticalArrangement = RemoteArrangement.spacedBy(HaSpace.XS.rdp),
   ) {
     RemoteHaMeasurementGlyph(reading, RemoteModifier.fillMaxWidth().weight(1f))
-    RemoteText(
-      text = reading.text,
-      color = haTheme().primaryText,
-      fontSize = HaType.ValueSmall,
-      fontWeight = haValueWeight(),
-      style = haTextStyle(),
-      maxLines = 1,
-      overflow = TextOverflow.Ellipsis,
-    )
+    ValueReadout(reading, HaType.ValueSmall)
   }
 }
 
@@ -213,19 +207,13 @@ private fun Chip(reading: HaReading, modifier: RemoteModifier) {
 @Composable
 private fun Expanded(reading: HaReading, modifier: RemoteModifier) {
   val theme = haTheme()
+  val plate = currentHaUberTheme().theme.readout == HaReadoutStyle.Plate
   RemoteColumn(
     modifier = modifier.fillMaxSize().padding(HaSpace.M.rdp),
     horizontalAlignment = RemoteAlignment.CenterHorizontally,
     verticalArrangement = RemoteArrangement.spacedBy(HaSpace.XS.rdp),
   ) {
-    RemoteText(
-      text = reading.nameText(),
-      color = theme.secondaryText,
-      fontSize = HaType.Body,
-      style = haTextStyle(),
-      maxLines = 1,
-      overflow = TextOverflow.Ellipsis,
-    )
+    NameLabel(reading, HaType.Body, ruled = plate)
     if (reading.kind.visual == HaMeasureVisual.Bar) {
       // A bar keeps its thickness; the spare height centres it rather than fattening it.
       RemoteColumn(modifier = RemoteModifier.fillMaxWidth().weight(1f)) {
@@ -236,15 +224,7 @@ private fun Expanded(reading: HaReading, modifier: RemoteModifier) {
     } else {
       RemoteHaMeasurementGlyph(reading, RemoteModifier.fillMaxWidth().weight(1f))
     }
-    RemoteText(
-      text = reading.text,
-      color = theme.primaryText,
-      fontSize = HaType.ValueLarge,
-      fontWeight = haValueWeight(),
-      style = haTextStyle(),
-      maxLines = 1,
-      overflow = TextOverflow.Ellipsis,
-    )
+    ValueReadout(reading, HaType.ValueLarge)
     RemoteText(
       text = reading.rangeText(),
       color = theme.secondaryText,
@@ -253,5 +233,72 @@ private fun Expanded(reading: HaReading, modifier: RemoteModifier) {
       maxLines = 1,
       overflow = TextOverflow.Ellipsis,
     )
+  }
+}
+
+/**
+ * The reading's value, set the uber theme's way ([HaReadoutStyle]): plain, on a tonal pill
+ * (Expressive), or in a recessed screen panel (LCD).
+ */
+@Composable
+private fun ValueReadout(reading: HaReading, size: RemoteTextUnit) {
+  val theme = haTheme()
+  val value: @Composable () -> Unit = {
+    RemoteText(
+      text = reading.text,
+      color = theme.primaryText,
+      fontSize = size,
+      fontWeight = haValueWeight(),
+      style = haTextStyle(),
+      maxLines = 1,
+      overflow = TextOverflow.Ellipsis,
+    )
+  }
+  when (currentHaUberTheme().theme.readout) {
+    HaReadoutStyle.Plain,
+    HaReadoutStyle.Plate -> value()
+    HaReadoutStyle.TonalPill ->
+      RemoteBox(
+        modifier =
+          RemoteModifier.clip(RemoteRoundedCornerShape((HaShape.Chip * 2).rdp))
+            .background(theme.placeholderBackground)
+            .padding(horizontal = HaSpace.L.rdp, vertical = HaSpace.XXS.rdp)
+      ) {
+        value()
+      }
+    HaReadoutStyle.Screen ->
+      RemoteBox(
+        modifier =
+          RemoteModifier.clip(RemoteRoundedCornerShape(HaSpace.XXS.rdp))
+            .background(theme.dashboardBackground)
+            .padding(horizontal = HaSpace.S.rdp, vertical = HaSpace.Hairline.rdp)
+      ) {
+        value()
+      }
+  }
+}
+
+/** The reading's name in the theme's secondary text; [ruled] adds a hairline under it. */
+@Composable
+private fun NameLabel(reading: HaReading, size: RemoteTextUnit, ruled: Boolean = false) {
+  val theme = haTheme()
+  RemoteColumn {
+    RemoteText(
+      text = reading.nameText(),
+      color = theme.secondaryText,
+      fontSize = size,
+      style = haTextStyle(),
+      maxLines = 1,
+      overflow = TextOverflow.Ellipsis,
+    )
+    if (ruled) {
+      RemoteBox(
+        modifier =
+          RemoteModifier.padding(top = HaSpace.XXS.rdp)
+            .fillMaxWidth()
+            .height(HaSpace.Hairline.rdp)
+            .background(theme.divider)
+      )
+    }
   }
 }

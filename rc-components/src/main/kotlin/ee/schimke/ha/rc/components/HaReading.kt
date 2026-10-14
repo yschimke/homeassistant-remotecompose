@@ -230,6 +230,21 @@ fun meterColor(value: RemoteFloat, rule: HaMeterColor): RemoteColor =
         )
   }
 
+/**
+ * The zones a visual marks on this reading's scale: a temperature's hot end (from the comfort
+ * ramp's last stop, 30 °C / 86 °F) and a battery's critical level, as fractions of the scale.
+ */
+fun HaReading.zones(): HaMeterZones {
+  val span = (max - min).takeIf { it > 0.0 } ?: return HaMeterZones()
+  fun at(v: Float) = ((v - min) / span).toFloat().coerceIn(0f, 1f)
+  return when (val rule = kind.colorRule(unit)) {
+    is HaMeterColor.Ramp ->
+      HaMeterZones(hotFrom = rule.stops.maxByOrNull { it.first }?.first?.let(::at))
+    is HaMeterColor.LowIsBad -> HaMeterZones(lowBelow = at(rule.criticalBelow))
+    is HaMeterColor.Fixed -> HaMeterZones()
+  }
+}
+
 /** This reading's colour under its kind's rule. */
 fun HaReading.color(): RemoteColor = meterColor(value, kind.colorRule(unit))
 
