@@ -52,10 +52,9 @@ class WidgetPreparationTest {
   private fun screenshot(name: String) {
     val directory =
       java.io.File(context.getExternalFilesDir(null), "widget-test-screenshots").apply { mkdirs() }
-    assertTrue(
-      UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
-        .takeScreenshot(java.io.File(directory, "$name.png"))
-    )
+    val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+    val scale = minOf(1f, 1800f / maxOf(device.displayWidth, device.displayHeight))
+    assertTrue(device.takeScreenshot(java.io.File(directory, "$name.png"), scale, 100))
     // AGP may uninstall the test app before the wrapper collects screenshots.
     // MediaStore images survive that cleanup and need no broad storage permission.
     val uri =
@@ -73,8 +72,20 @@ class WidgetPreparationTest {
         )
       )
     checkNotNull(context.contentResolver.openOutputStream(uri)).use { output ->
-      val bitmap =
+      val original =
         checkNotNull(InstrumentationRegistry.getInstrumentation().uiAutomation.takeScreenshot())
+      val longest = maxOf(original.width, original.height)
+      val bitmap =
+        if (longest > 1800) {
+          val factor = 1800f / longest
+          android.graphics.Bitmap.createScaledBitmap(
+              original,
+              (original.width * factor).toInt().coerceAtLeast(1),
+              (original.height * factor).toInt().coerceAtLeast(1),
+              true,
+            )
+            .also { original.recycle() }
+        } else original
       assertTrue(bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, output))
       bitmap.recycle()
     }
