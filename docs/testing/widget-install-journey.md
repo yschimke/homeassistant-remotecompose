@@ -15,6 +15,11 @@ identical cards on different Home Assistant instances.
 
 ## Review findings and changes
 
+- The actual dashboard journey exposed a startup `NoSuchMethodError`: Android
+  and shared UI generated the same `DashboardListStateKt` file facade. The
+  Android helper file now has a distinct name, keeping both implementations in
+  the APK. The resumed journey test protects the real entry point.
+
 - Installation was buried beneath history: a primary preparation action now
   appears immediately after the card preview.
 - The install sheet had one fixed-size, hard-coded light preview. It now uses

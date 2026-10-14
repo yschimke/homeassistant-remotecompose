@@ -213,6 +213,12 @@ jobs:
         if: failure() && env.RUN_HEAVY == 'true'
         run: python3 scripts/summarize-android-test-failures.py
 
+      - name: Collect widget journey screenshots
+        if: always() && env.RUN_HEAVY == 'true'
+        run: |
+          mkdir -p build/widget-test-screenshots
+          adb pull /sdcard/Android/data/ee.schimke.harc/files/widget-test-screenshots build/widget-test-screenshots || true
+
       - name: Upload instrumented test reports
         if: always() && env.RUN_HEAVY == 'true'
         uses: actions/upload-artifact@v7.0.2
@@ -221,4 +227,5 @@ jobs:
           path: |
             **/build/reports/androidTests/**
             **/build/outputs/androidTest-results/**
+            build/widget-test-screenshots/**
           if-no-files-found: ignore

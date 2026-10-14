@@ -43,13 +43,28 @@ class WidgetPreparationTest {
       "tile",
       buildJsonObject {
         put("type", "tile")
-        put("entity", "light.living_room")
+        put("entity", "light.garage_door_garage_door_light")
         put("name", "Studio light")
       },
     )
 
+  private fun screenshot(name: String) {
+    val directory =
+      java.io.File(context.getExternalFilesDir(null), "widget-test-screenshots").apply { mkdirs() }
+    assertTrue(
+      UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+        .takeScreenshot(java.io.File(directory, "$name.png"))
+    )
+  }
+
   private fun snapshot(state: String) =
-    HaSnapshot(states = mapOf("light.living_room" to EntityState("light.living_room", state)))
+    HaSnapshot(
+      states =
+        mapOf(
+          "light.garage_door_garage_door_light" to
+            EntityState("light.garage_door_garage_door_light", state)
+        )
+    )
 
   @Test
   fun realWidgetPreviewRendersResizesAndTracksState() {
@@ -82,13 +97,16 @@ class WidgetPreparationTest {
       return (0 until p.height).flatMap { y -> (0 until p.width).map { x -> p[x, y].hashCode() } }
     }
     val off = pixels()
+    screenshot("preview-off")
     assertTrue("preview must draw content, not a flat empty canvas", off.distinct().size > 10)
     compose.runOnIdle { current.value = snapshot("on") }
     compose.waitUntil(30_000) { captures >= 2 }
     assertNotEquals("a live state change must alter rendered pixels", off, pixels())
+    screenshot("preview-on")
     compose.onNodeWithText("Compact").performClick()
     compose.waitForIdle()
     val compact = compose.onNodeWithTag("widget-render").fetchSemanticsNode().size
+    screenshot("preview-compact")
     compose.onNodeWithText("Roomy").performClick()
     compose.waitForIdle()
     val roomy = compose.onNodeWithTag("widget-render").fetchSemanticsNode().size
@@ -97,6 +115,7 @@ class WidgetPreparationTest {
       roomy.width > compact.width || roomy.height > compact.height,
     )
     assertTrue("resized widget must still render content", pixels().distinct().size > 10)
+    screenshot("preview-roomy")
   }
 
   @Test
@@ -146,6 +165,7 @@ class WidgetPreparationTest {
         .isNotEmpty()
     }
     compose.onNodeWithText("Install widget").assertIsEnabled().performClick()
+    screenshot("launcher-confirmation")
     val add =
       device.wait(Until.findObject(By.text("Add automatically")), 30_000)
         ?: device.wait(Until.findObject(By.text("Add")), 5_000)
@@ -158,6 +178,9 @@ class WidgetPreparationTest {
       graph.widgetStore.installed.first().first { it.widgetId !in before }
     }
     assertEquals("My magical light", installed.card.raw["name"]?.jsonPrimitive?.content)
+    device.pressHome()
+    device.waitForIdle()
+    screenshot("installed-widget")
     val manager = AppWidgetManager.getInstance(context)
     val small =
       Bundle().apply {
