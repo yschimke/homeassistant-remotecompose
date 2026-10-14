@@ -38,6 +38,13 @@ identical cards on different Home Assistant instances.
   layout while retaining component values and actions in place. This fixes the
   missing invisible-width text that otherwise makes adaptive widgets show the
   platform's warning icon.
+- Android 16 kept the size-predicate layout on its narrow branch. Launcher captures
+  now select the matching tier from the requested size; the existing options-change
+  callback recaptures on every launcher resize. Tests check that wide tiles include
+  name and state rather than simply enlarging the icon.
+- Widget updates and size changes used synchronous data loading/capture on the
+  broadcast UI thread. The provider now uses a serialized background job held by
+  `goAsync`, avoiding UI stalls and out-of-order updates.
 - Editing and size selection no longer leave the keyboard covering the preview
   or launcher confirmation.
 - Preview capture coalesces rapid typing/resize events and runs away from the UI
@@ -80,8 +87,8 @@ home screen after installation.
 
 `WidgetPreparationTest` runs on an Android 16 emulator with a pin-capable launcher.
 It checks that actual rendered pixels are non-empty, change with light state,
-and remain non-empty at Compact and Roomy sizes. It edits a name, requests a pin,
-cancels, confirms another pin and verifies the persisted edited card. Screenshots are retained through MediaStore so CI cleanup cannot erase the evidence. It also
+and remain non-empty at Compact and Roomy sizes. Roomy must reveal more content, not just enlarge the canvas. It edits a name, requests a pin,
+cancels, confirms another pin and verifies the persisted edited card. Screenshots are retained through MediaStore so CI cleanup cannot erase the evidence. The install screenshot waits for actual content inside launcher widget bounds. It also
 exercises the provider's launcher size options after installation.
 
 ```sh

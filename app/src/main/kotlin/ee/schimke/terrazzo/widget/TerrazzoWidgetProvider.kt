@@ -17,6 +17,7 @@ import androidx.compose.remote.creation.compose.capture.captureSingleRemoteDocum
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.LauncherDesigns
 import ee.schimke.ha.rc.LauncherWidgetContent
+import ee.schimke.ha.rc.WidgetCaptureSizeDp
 import ee.schimke.ha.rc.cardHeightDp
 import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.cards.shutter.withEnhancedShutter
@@ -28,7 +29,14 @@ import ee.schimke.ha.rc.systemThemedWidgetsProfile
 import ee.schimke.ha.rc.widgetsProfile
 import ee.schimke.terrazzo.core.session.DemoData
 import ee.schimke.terrazzo.terrazzoGraph
+import kotlin.math.roundToInt
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 /**
  * Per-card home-screen widget. Extends [AppWidgetProvider] directly rather than RemoteCompose's
@@ -54,6 +62,24 @@ import kotlinx.coroutines.runBlocking
  * the original player lacks layouts. The `@RequiresApi` is here to keep lint quiet.
  */
 open class TerrazzoWidgetProvider : AppWidgetProvider() {
+  override fun onReceive(context: Context, intent: Intent) {
+    if (
+      Build.VERSION.SDK_INT < WidgetInstaller.MIN_HOST_API || intent.action !in asyncWidgetActions
+    ) {
+      super.onReceive(context, intent)
+      return
+    }
+    val result = goAsync()
+    widgetUpdateScope.launch {
+      try {
+        widgetUpdateMutex.withLock { super.onReceive(context, intent) }
+      } catch (failure: Exception) {
+        Log.e(TAG, "Widget broadcast failed: ${intent.action}", failure)
+      } finally {
+        result.finish()
+      }
+    }
+  }
 
   override fun onUpdate(
     context: Context,
@@ -231,7 +257,18 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
           creationDisplayInfo = RemoteCreationDisplayInfo(widthPx, heightPx, densityDpi),
           profile = captureProfile,
         ) {
-          LauncherWidgetContent(registry, captureProfile, dark, widgetActions, card, snapshot)
+          LauncherWidgetContent(
+            registry,
+            captureProfile,
+            dark,
+            widgetActions,
+            card,
+            snapshot,
+            WidgetCaptureSizeDp(
+              (widthPx * 160f / densityDpi).roundToInt(),
+              (heightPx * 160f / densityDpi).roundToInt(),
+            ),
+          )
         }
       }
     }
@@ -299,6 +336,15 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
   }
 
   private companion object {
+    private val widgetUpdateScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private val widgetUpdateMutex = Mutex()
+    private val asyncWidgetActions =
+      setOf(
+        AppWidgetManager.ACTION_APPWIDGET_UPDATE,
+        AppWidgetManager.ACTION_APPWIDGET_OPTIONS_CHANGED,
+        AppWidgetManager.ACTION_APPWIDGET_DELETED,
+      )
+
     // ColorTheme (wire op 196) is not understood by Android 16's platform
     // Remote Compose player. API 37 adds the host-side implementation.
     const val SYSTEM_THEME_MIN_HOST_API = 37

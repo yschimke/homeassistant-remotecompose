@@ -104,6 +104,23 @@ class LauncherDesignsTest {
     )
   }
 
+  @Test
+  fun resizeSelectsTheFullLayoutRatherThanOnlyStretchingTheIcon() {
+    val card = card("tile", "light.kitchen")
+    val snapshot = snapshotOf(entity("light.kitchen", "on"))
+    fun textLayouts(width: Int): Int {
+      val document = bake(card, snapshot, width, 168)
+      val operations = arrayListOf<Operation>()
+      RemoteComposeBuffer.fromInputStream(platformWidgetDocument(document.bytes).inputStream())
+        .inflateFromBuffer(operations)
+      return operations.count {
+        it is androidx.compose.remote.core.operations.layout.managers.TextLayout
+      }
+    }
+    assertEquals(1, textLayouts(72), "Compact shows the state beneath the icon")
+    assertEquals(2, textLayouts(144), "Wide widgets show both the editable name and state")
+  }
+
   @get:Rule val compose = createComposeRule()
 
   private val registry = CardDesignTemplates.defaultTemplateRegistry
@@ -127,7 +144,12 @@ class LauncherDesignsTest {
   private fun entity(id: String, state: String, vararg attrs: Pair<String, String>) =
     EntityState(id, state, JsonObject(attrs.associate { (k, v) -> k to JsonPrimitive(v) }))
 
-  private fun bake(card: CardConfig, snapshot: HaSnapshot): LauncherDesigns.Baked {
+  private fun bake(
+    card: CardConfig,
+    snapshot: HaSnapshot,
+    widthDp: Int = this.widthDp,
+    heightDp: Int = this.heightDp,
+  ): LauncherDesigns.Baked {
     val context = org.robolectric.RuntimeEnvironment.getApplication()
     return assertNotNull(
       LauncherDesigns.render(
@@ -215,7 +237,7 @@ class LauncherDesignsTest {
       )
     val snapshot =
       snapshotOf(entity("alarm_control_panel.home", "armed_away", "friendly_name" to "Home"))
-    val baked = bake(card, snapshot)
+    val baked = bake(card, snapshot, widthDp = 360, heightDp = 400)
     val pins = baked.actions.values.filterIsInstance<HaAction.AlarmPin>()
     assertTrue(pins.isNotEmpty(), "the widget accumulates the PIN in-document")
     assertTrue(pins.all { it == HaAction.AlarmPin("alarm_control_panel.home", "") })
@@ -302,6 +324,7 @@ class LauncherDesignsTest {
             WidgetActionRegistry(snapshot.states.mapValues { (_, e) -> formatState(e) }),
             card,
             snapshot,
+            captureSizeDp = WidgetCaptureSizeDp(widthDp, heightDp),
           )
         }
         .bytes

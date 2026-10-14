@@ -34,6 +34,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
+@org.junit.FixMethodOrder(org.junit.runners.MethodSorters.NAME_ASCENDING)
 class WidgetPreparationTest {
   @get:Rule val compose = createComposeRule()
   private val context = ApplicationProvider.getApplicationContext<Context>()
@@ -142,6 +143,11 @@ class WidgetPreparationTest {
     }
     compose.waitForIdle()
     val compact = compose.onNodeWithTag("widget-render").fetchSemanticsNode().size
+    fun ink(pixels: List<Int>): Int {
+      val background = pixels.groupingBy { it }.eachCount().maxBy { it.value }.key
+      return pixels.count { it != background }
+    }
+    val compactInk = ink(pixels())
     screenshot("preview-compact")
     val beforeRoomy = captures
     compose.onNodeWithText("Roomy").performClick()
@@ -156,6 +162,10 @@ class WidgetPreparationTest {
       roomy.width > compact.width || roomy.height > compact.height,
     )
     assertTrue("resized widget must still render content", pixels().distinct().size > 10)
+    assertTrue(
+      "Roomy must reveal the fuller layout, not just stretch the icon",
+      ink(pixels()) > compactInk * 1.2,
+    )
     screenshot("preview-roomy")
   }
 
@@ -244,6 +254,43 @@ class WidgetPreparationTest {
     assertEquals("My magical light", installed.card.raw["name"]?.jsonPrimitive?.content)
     device.pressHome()
     device.waitForIdle()
+    val hostSelector = By.clazz(java.util.regex.Pattern.compile(".*AppWidgetHostView"))
+    if (!device.wait(Until.hasObject(hostSelector), 10_000)) {
+      device.swipe(
+        device.displayWidth - 30,
+        device.displayHeight / 2,
+        30,
+        device.displayHeight / 2,
+        20,
+      )
+    }
+    compose.waitUntil(180_000) {
+      val hosts = device.findObjects(hostSelector)
+      if (hosts.isEmpty()) false
+      else {
+        val bitmap =
+          checkNotNull(InstrumentationRegistry.getInstrumentation().uiAutomation.takeScreenshot())
+        try {
+          hosts.all { host ->
+            val bounds = host.visibleBounds
+            bounds.inset(bounds.width() / 8, bounds.height() / 8)
+            val p = IntArray(bounds.width() * bounds.height())
+            bitmap.getPixels(
+              p,
+              0,
+              bounds.width(),
+              bounds.left,
+              bounds.top,
+              bounds.width(),
+              bounds.height(),
+            )
+            p.distinct().size > 10
+          }
+        } finally {
+          bitmap.recycle()
+        }
+      }
+    }
     screenshot("installed-widget")
     val manager = AppWidgetManager.getInstance(context)
     val small =
