@@ -9,8 +9,9 @@ import ee.schimke.ha.design.DesignExample
 import ee.schimke.ha.design.DesignKey
 import ee.schimke.ha.design.DesignManifest
 import ee.schimke.ha.design.DesignPreviews
-import ee.schimke.ha.design.DesignQueryResult
+import ee.schimke.ha.design.DesignQuery
 import ee.schimke.ha.design.DesignSurface
+import ee.schimke.ha.design.DesignTags
 import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.statement.bodyAsBytes
@@ -129,36 +130,22 @@ class DesignServerTest {
     }
 
   @Test
-  fun answersALookupByTagWithTheLibrarysTags() {
+  fun manifestCarriesEveryTagAClientFiltersBy() {
     val console = key(DesignKey.styledTheme("console", dark = true)).copy(cardType = "gauge")
     serve(library(extra = listOf(BuiltDesign(console, 1, template)))) {
-      suspend fun lookup(query: String): DesignQueryResult =
+      val manifest =
         Json.decodeFromString(
-          DesignQueryResult.serializer(),
-          client.get("$API_BASE/designs$query").bodyAsText(),
+          DesignManifest.serializer(),
+          client.get("$API_BASE/manifest.json").bodyAsText(),
         )
-
-      val all = lookup("")
-      assertEquals(3, all.designs.size)
-      assertEquals(1L, all.serial)
-      assertEquals(mapOf("classic" to 2, "console" to 1), all.tags.style)
-      assertEquals(mapOf("gauge" to 1, "tile" to 2), all.tags.cardType)
-      assertEquals(mapOf(DesignEntry.BUILTIN_AUTHOR to 3), all.tags.author)
-
-      assertEquals(listOf(console), lookup("?style=Console").designs.map { it.key })
+      val tags = DesignTags.of(manifest.designs)
+      assertEquals(mapOf("classic" to 2, "console" to 1), tags.style)
+      assertEquals(mapOf("gauge" to 1, "tile" to 2), tags.cardType)
+      assertEquals(mapOf(DesignEntry.BUILTIN_AUTHOR to 3), tags.author)
       assertEquals(
-        listOf(light, dark),
-        lookup("?cardType=tile&variant=default").designs.map { it.key },
+        listOf(console),
+        manifest.designs.filter(DesignQuery(style = "Console")::matches).map { it.key },
       )
-      assertEquals(listOf(dark), lookup("?theme=${dark.theme}").designs.map { it.key })
-      // Nothing matches, but the tags still say what there is.
-      val none = lookup("?author=github:nobody")
-      assertTrue(none.designs.isEmpty())
-      assertEquals(all.tags, none.tags)
-
-      val response = client.get("$API_BASE/designs")
-      assertEquals("*", response.headers[HttpHeaders.AccessControlAllowOrigin])
-      assertEquals(HttpStatusCode.BadRequest, client.get("$API_BASE/designs?surface=fridge").status)
     }
   }
 

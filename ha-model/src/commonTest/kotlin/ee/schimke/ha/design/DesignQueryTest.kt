@@ -65,7 +65,7 @@ class DesignQueryTest {
   }
 
   @Test
-  fun tagsCountTheLibrary() {
+  fun tagsCountTheManifest() {
     val tags =
       DesignTags.of(
         listOf(

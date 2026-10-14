@@ -463,28 +463,23 @@ read-only, cacheable and content-addressed.
 ```
 GET /designs/v1/manifest.json
   → { schema: 1, serial, generatedAt, expiresAt, minClient, ttlSeconds,
-      designs: [ { key: DesignKey, sha256, bytes, slots, sizeRange,
+      designs: [ { key: DesignKey, sha256, bytes, slots, author, sizeRange,
                    catalogId, deprecated? } … ],
       variants: { "<surface>": ["default", "material", "modern"] },
       signature }
 
 GET /designs/v1/blobs/<sha256>.rc     (immutable, Cache-Control: max-age=31536000, immutable)
 
-GET /designs/v1/designs?cardType=&style=&variant=&author=[&surface=&shape=&theme=]
-  → { serial, designs: [ DesignEntry … ],
-      tags: { cardType: { "<value>": <count> }, style: {…}, variant: {…}, author: {…} } }
 ```
 
-**Tags.** A design is found by four tags: its **card type**, its **style** (the card style it is
+**Tags.** A design is chosen by four tags: its **card type**, its **style** (the card style it is
 drawn in, `DesignKey.cardStyle`: `classic` for a design baked in an app palette), its **variant**
 and its **author** (`DesignEntry.author`: `terrazzo` for the library generated from the app's own
-converters, `github:<login>` for one published from UI Builder). The lookup (`DesignQuery`) takes
-any of them, compared without case, and narrows by `surface`, `shape` or `theme` when a client knows
-its exact key. It answers the matching entries, revoked ones included so a client can drop them, and
-every value each tag takes across the library with its count (`DesignTags`), which is what a
-picker offers. An unknown `surface` is a `400`, never a match for everything. The lookup lets a
-client fetch the designs it needs as it needs them rather than the whole manifest, which grows with
-every style, variant and author.
+converters, `github:<login>` for one published from UI Builder). Every manifest entry carries
+them, so the client chooses on its own copy of the manifest (`DesignQuery`, compared without case)
+and works out what a picker offers from it (`DesignTags`: every value with its count). There is no
+lookup endpoint: the server only ever sees a manifest fetch and the blobs a client's choice of tags
+matches, never which cards it renders.
 
 - One manifest lists every target. The client filters it to the
   surfaces it serves. The manifest is small, and a single file keeps
@@ -545,8 +540,8 @@ per request — but adds what a static host can't: verification, a template brow
   `catalog.json` (`DesignCatalog`: an example card and preview paths per design) and `previews/`
   (each design rendered bound to its example's values, and as published with its placeholders).
 - **Client protocol.** `GET /designs/v1/manifest.json` (ETag = its SHA-256, `no-cache`, `304` on
-  `If-None-Match`) and `GET /designs/v1/blobs/<sha256>.rc` (immutable), and the lookup by tag,
-  `GET /designs/v1/designs` (above). Only names the manifest lists are served. Loading verifies every blob's size and hash against the manifest and refuses a
+  `If-None-Match`) and `GET /designs/v1/blobs/<sha256>.rc` (immutable). Only names the manifest
+  lists are served. Loading verifies every blob's size and hash against the manifest and refuses a
   library that doesn't match. `ClientCompatibilityTest` runs the app's `DesignRepository` against
   it.
 - **Template browser.** `/` lists designs with their previews, filtered by card type, theme,

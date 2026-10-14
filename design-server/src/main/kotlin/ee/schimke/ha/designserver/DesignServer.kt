@@ -1,8 +1,6 @@
 package ee.schimke.ha.designserver
 
 import ee.schimke.ha.design.DesignCatalog
-import ee.schimke.ha.design.DesignQuery
-import ee.schimke.ha.design.DesignQueryResult
 import io.ktor.http.ContentType
 import io.ktor.http.Cookie
 import io.ktor.http.HttpHeaders
@@ -119,23 +117,6 @@ fun Application.designServer(
       } else {
         call.respondBytes(library.manifestBytes, ContentType.Application.Json)
       }
-    }
-
-    get("$API_BASE/designs") {
-      val library = holder.current()
-      val query =
-        DesignQuery.of { call.request.queryParameters[it] }
-          ?: return@get call.respondText(
-            "unknown surface",
-            status = HttpStatusCode.BadRequest,
-          )
-      call.allowAnyOrigin()
-      // Answered from the loaded library, so it changes exactly when the manifest does.
-      call.response.header(HttpHeaders.CacheControl, "no-cache")
-      call.respondText(
-        json.encodeToString(DesignQueryResult.serializer(), library.query(query)),
-        ContentType.Application.Json,
-      )
     }
 
     get("$API_BASE/blobs/{name}") {

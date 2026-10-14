@@ -3,10 +3,10 @@ package ee.schimke.ha.design
 import kotlinx.serialization.Serializable
 
 /**
- * A lookup by tag: the designs whose card type, card style, variant and author match, narrowed by
- * surface, shape or theme when a client knows its exact key. Unset fields match anything; tags
- * compare without case. What `GET /designs/v1/designs` takes as query parameters, so a client can
- * fetch the designs it needs instead of the whole [DesignManifest].
+ * A choice of designs by tag: those whose card type, card style, variant and author match, narrowed
+ * by surface, shape or theme when the exact key is known. Unset fields match anything; tags compare
+ * without case. A client filters the whole [DesignManifest] with it — the server never learns which
+ * designs a client wanted — and downloads only the blobs its choice matches.
  */
 @Serializable
 data class DesignQuery(
@@ -30,7 +30,9 @@ data class DesignQuery(
       (theme == null || theme == key.theme)
   }
 
-  /** The query as `name=value` pairs, in a stable order: unset fields are left out. */
+  /**
+   * The choice as `name=value` pairs (a setting, a link), in a stable order; unset ones left out.
+   */
   fun parameters(): List<Pair<String, String>> =
     listOfNotNull(
       cardType?.let { CARD_TYPE to it },
@@ -77,18 +79,9 @@ data class DesignQuery(
   }
 }
 
-/** What `GET /designs/v1/designs` answers: the matching designs, and every tag the library has. */
-@Serializable
-data class DesignQueryResult(
-  /** The [DesignManifest.serial] of the library that answered. */
-  val serial: Long,
-  val designs: List<DesignEntry>,
-  val tags: DesignTags,
-)
-
 /**
- * Every value each tag takes across a library, with how many designs carry it: what a picker
- * offers. Counted over the whole library, not the query, so a narrowed lookup still lists them.
+ * Every value each tag takes across a manifest, with how many designs carry it: what a picker
+ * offers, worked out on the client from the manifest it already has.
  */
 @Serializable
 data class DesignTags(
