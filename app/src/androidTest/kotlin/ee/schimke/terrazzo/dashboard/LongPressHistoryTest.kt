@@ -6,6 +6,7 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
+import androidx.test.uiautomator.Direction
 import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.UiObject2
 import androidx.test.uiautomator.Until
@@ -90,10 +91,12 @@ class LongPressHistoryTest {
     )
     device.findObject(By.text("History and details"))!!.click()
 
-    // The primary action is above history. The old assertion looked for "Other actions"
-    // below the fold and misdiagnosed a correctly opened details screen as a lost long-press.
-    val historyVisible =
-      device.wait(Until.hasObject(By.text("Prepare a home screen widget")), 10_000)
+    // The details screen's top bar is the signal that it opened: everything below it scrolls, and
+    // the launcher preview at the top is tall enough to push the widget button below the fold on
+    // a phone-sized emulator, where uiautomator's By.text matches only what is on screen. Looking
+    // for that button without scrolling misdiagnosed a correctly opened screen as a lost
+    // long-press.
+    val historyVisible = device.wait(Until.hasObject(By.desc("Back")), 10_000)
     assertTrue(
       "card-history screen did not surface after long-press — long-press " +
         "is being swallowed by the RC player again, see " +
@@ -106,8 +109,14 @@ class LongPressHistoryTest {
       device.wait(Until.hasObject(By.descContains(" preview,")), 15_000),
     )
 
-    // The "Add to Home Screen" link opens the existing install sheet.
-    val installLink = device.wait(Until.findObject(By.text("Prepare a home screen widget")), 5_000)
+    // The "Prepare a home screen widget" button opens the existing install sheet. The screen's
+    // column is the tallest scrollable; the launcher grid inside it scrolls only sideways.
+    val installLink =
+      device.findObject(By.text("Prepare a home screen widget"))
+        ?: device
+          .findObjects(By.scrollable(true))
+          .maxByOrNull { it.visibleBounds.height() }
+          ?.scrollUntil(Direction.DOWN, Until.findObject(By.text("Prepare a home screen widget")))
     assertNotNull("history screen missing the Add to Home Screen link", installLink)
     installLink!!.click()
 
