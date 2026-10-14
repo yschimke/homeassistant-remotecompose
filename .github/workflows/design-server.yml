@@ -17,6 +17,8 @@ on:
       - ha-model/src/**
       - ha-client/src/**
       - previews/src/main/**
+      # The front page's screenshots, bundled into the image by :design-server:siteResources.
+      - app/src/main/play/listings/en-GB/graphics/phone-screenshots/**
       - gradle/libs.versions.toml
       - .github/workflows/design-server.yml
   pull_request:
