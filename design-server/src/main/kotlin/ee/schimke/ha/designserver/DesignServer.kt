@@ -12,6 +12,7 @@ import io.ktor.server.plugins.autohead.AutoHeadResponse
 import io.ktor.server.plugins.defaultheaders.DefaultHeaders
 import io.ktor.server.plugins.statuspages.StatusPages
 import io.ktor.server.request.header
+import io.ktor.server.request.queryString
 import io.ktor.server.request.receiveParameters
 import io.ktor.server.request.receiveText
 import io.ktor.server.response.header
@@ -74,7 +75,8 @@ class LibraryHolder(
  *   (`DesignRepository`): point the app's design server URL at `<host>/designs/v1`. The manifest
  *   revalidates by ETag; blobs are content-addressed and immutable.
  * - `/designs/v1/catalog.json`, `/designs/v1/previews/...` — the browser's data.
- * - `/`, `/designs/<id>` — the template browser; `/api/designs[/<id>]` — the same as JSON.
+ * - `/` — the app's front page ([Landing]); `/site/<name>` — its pictures.
+ * - `/designs`, `/designs/<id>` — the template browser; `/api/designs[/<id>]` — the same as JSON.
  * - `/embed/v1/ha-card.js`, `/embed/v1/rc-player.js` — the card embed and its player;
  *   `/embed/v1/demo.html` — its demo page (docs/architecture/card-embedding.md). The embed reads
  *   the manifest and blobs from other origins, so those, like the scripts, allow any origin: they
@@ -85,6 +87,7 @@ fun Application.designServer(
   holder: LibraryHolder,
   uiBuilder: UiBuilderIntegration? = null,
   github: GithubAuth? = null,
+  site: SiteConfig = SiteConfig(),
 ) {
   install(DefaultHeaders)
   install(AutoHeadResponse)
@@ -163,6 +166,23 @@ fun Application.designServer(
     }
 
     get("/") {
+      // The browser lived here, and its filter links still arrive with its query keys; any other
+      // query (`?utm_source=…`) is the front page's.
+      if (call.request.queryParameters.names().any { it in BrowserFilter.KEYS }) {
+        return@get call.respondRedirect("/designs?${call.request.queryString()}", permanent = true)
+      }
+      call.respondText(Landing.page(holder.current(), site), ContentType.Text.Html)
+    }
+
+    get("/site/{name}") {
+      val name = call.parameters["name"].orEmpty()
+      if (name !in Landing.SCREENSHOTS.map { it.file }) return@get call.notFound()
+      val bytes = embedResource("site/$name") ?: return@get call.notFound()
+      call.response.header(HttpHeaders.CacheControl, "public, max-age=3600")
+      call.respondBytes(bytes, ContentType.Image.PNG)
+    }
+
+    get("/designs") {
       val library = holder.current()
       val filter = BrowserFilter.from(call.request.queryParameters, library, defaults = true)
       call.respondText(Pages.browser(library, filter), ContentType.Text.Html)
@@ -248,7 +268,7 @@ fun Application.designServer(
           extensions = mapOf("SameSite" to "Lax"),
         )
       )
-      call.respondRedirect("/")
+      call.respondRedirect("/designs")
     }
 
     // Seeds a UI Builder design from a library design (`design`) or a card's JSON (`card`), then
