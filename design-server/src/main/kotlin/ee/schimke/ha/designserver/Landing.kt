@@ -3,21 +3,27 @@ package ee.schimke.ha.designserver
 import ee.schimke.ha.designserver.Pages.esc
 
 /**
- * What the front page links to.
- * - [designerUrl]: the card designer, the HA-branded catalog and UI Builder.
+ * What the front page links to. Both defaults are paths on ha.coo.ee, whose edge sends them to the
+ * preview box that serves the card designer and the catalog. They are absolute so the links work
+ * from a server running anywhere else, which has no such routes.
+ * - [designerUrl]: the card designer, the HA-branded UI Builder.
+ * - [catalogUrl]: every HA card and component, in the catalog.
  * - [storeUrl]: where to get the app; without one the page points at the source instead.
  */
 data class SiteConfig(
   val designerUrl: String = DEFAULT_DESIGNER_URL,
+  val catalogUrl: String = DEFAULT_CATALOG_URL,
   val storeUrl: String? = null,
 ) {
   companion object {
-    const val DEFAULT_DESIGNER_URL = "https://ha.preview.coo.ee/"
+    const val DEFAULT_DESIGNER_URL = "https://ha.coo.ee/ui-builder/"
+    const val DEFAULT_CATALOG_URL = "https://ha.coo.ee/homeassistant-remotecompose/"
 
-    /** `DESIGNER_URL` and `STORE_URL`. */
+    /** `DESIGNER_URL`, `CATALOG_URL` and `STORE_URL`. */
     fun fromEnvironment(env: Map<String, String> = System.getenv()): SiteConfig =
       SiteConfig(
         designerUrl = env["DESIGNER_URL"]?.takeIf { it.isNotBlank() } ?: DEFAULT_DESIGNER_URL,
+        catalogUrl = env["CATALOG_URL"]?.takeIf { it.isNotBlank() } ?: DEFAULT_CATALOG_URL,
         storeUrl = env["STORE_URL"]?.takeIf { it.isNotBlank() },
       )
   }
@@ -120,7 +126,9 @@ object Landing {
     }
     append("<div class=\"actions\">")
     append("<a class=\"button\" href=\"${esc(site.designerUrl)}\">Open the card designer</a>")
-    append("<a class=\"button quiet\" href=\"/designs\">Browse card templates</a>")
+    append(
+      "<a class=\"button quiet\" href=\"${esc(site.catalogUrl)}\">Browse cards and components</a>"
+    )
     append("</div></section>")
 
     append("<footer>")

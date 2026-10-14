@@ -202,6 +202,7 @@ class DesignServerTest {
       val page = client.get("/").bodyAsText()
       assertTrue("<h1>Terrazzo</h1>" in page)
       assertTrue("href=\"${SiteConfig.DEFAULT_DESIGNER_URL}\"" in page, "links the card designer")
+      assertTrue("href=\"${SiteConfig.DEFAULT_CATALOG_URL}\"" in page, "links the catalog")
       assertTrue("href=\"/designs\"" in page, "links the template browser")
       assertTrue("$API_BASE/previews/" in page, "teases with the library's cards")
       assertEquals(

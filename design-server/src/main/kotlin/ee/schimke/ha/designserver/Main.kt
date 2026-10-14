@@ -19,7 +19,8 @@ import java.io.File
  * - Who may: with `GITHUB_CLIENT_ID` (+ `GITHUB_CLIENT_SECRET`, `PUBLIC_URL`, `SESSION_SECRET`,
  *   optional `GITHUB_USERS`), anyone who signs in with GitHub, each design shared with its designer
  *   ([GithubAuth]); without it, a browser that opened the edit link the server prints.
- * - The front page's links: `DESIGNER_URL`, `STORE_URL` ([SiteConfig.fromEnvironment]).
+ * - The front page's links: `DESIGNER_URL`, `CATALOG_URL`, `STORE_URL`
+ *   ([SiteConfig.fromEnvironment]).
  */
 fun main(args: Array<String>) {
   val dir = File(args.firstOrNull() ?: System.getenv("DESIGN_LIBRARY") ?: "card-designs")
