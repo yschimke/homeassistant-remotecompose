@@ -138,22 +138,24 @@ internal fun WidgetPreparationPreview(
       key(current) {
         AndroidView(
           factory = { ctx ->
-            FrameLayout(ctx).apply {
-              // Expose a read-only description through Compose, not inactive virtual click targets.
-              importantForAccessibility =
-                android.view.View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS
-              runCatching { addView(current.apply(ctx, this), FrameLayout.LayoutParams(-1, -1)) }
-                .onFailure {
-                  android.util.Log.e(
-                    "WidgetPreparationPreview",
-                    "Could not inflate launcher preview",
-                    it,
-                  )
-                  views = null
-                  failed = true
-                  latestOnPreview(null)
-                }
-            }
+            runCatching { inflateWidgetPreview(ctx, current) }
+              .getOrElse { failure ->
+                android.util.Log.e(
+                  "WidgetPreparationPreview",
+                  "Could not inflate launcher preview",
+                  failure,
+                )
+                views = null
+                failed = true
+                latestOnPreview(null)
+                FrameLayout(ctx)
+              }
+              .also { frame ->
+                // Expose a read-only description through Compose, not inactive virtual click
+                // targets.
+                frame.importantForAccessibility =
+                  android.view.View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS
+              }
           },
           modifier =
             Modifier.fillMaxSize().testTag("widget-render").semantics {
@@ -169,3 +171,12 @@ internal fun WidgetPreparationPreview(
     } else CircularProgressIndicator(modifier = Modifier.padding(12.dp))
   }
 }
+
+/** Native RemoteViews inflation, shared by both in-app previews and the launcher-parity test. */
+internal fun inflateWidgetPreview(
+  context: android.content.Context,
+  views: RemoteViews,
+): FrameLayout =
+  FrameLayout(context).apply {
+    addView(views.apply(context, this), FrameLayout.LayoutParams(-1, -1))
+  }
