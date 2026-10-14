@@ -1,9 +1,9 @@
 {
   "schema": "compose-ui-builder-document/v1-candidate",
-  "id": "launcher-thermometer-2x2",
-  "title": "Thermometer · launcher 2x2",
+  "id": "component-thermometer",
+  "title": "Thermometer",
   "revision": 0,
-  "template": "launcher-thermometer-2x2",
+  "template": "component-thermometer",
   "catalogPin": {
     "systemId": "ha-cards",
     "catalogRevision": "candidate",
@@ -11,8 +11,8 @@
     "nativeRuntimeId": "candidate"
   },
   "environment": {
-    "widthDp": 130,
-    "heightDp": 220,
+    "widthDp": 360,
+    "heightDp": 112,
     "density": 2,
     "theme": "light",
     "locale": "en-US",
@@ -26,13 +26,8 @@
   "nodes": {
     "root": {
       "id": "root",
-      "componentId": "remote-widgets/launcher-widget",
-      "properties": {
-        "background": {
-          "type": "string",
-          "value": "#FFFFFFFF"
-        }
-      },
+      "componentId": "ha-cards/dashboard-card",
+      "properties": {},
       "modifiers": [],
       "slots": {
         "content": [
@@ -46,19 +41,19 @@
       "properties": {
         "name": {
           "type": "string",
-          "value": "Bedroom"
+          "value": "Living room"
         },
         "value": {
           "type": "float",
-          "value": 19.0
+          "value": 21.5
         },
         "entityId": {
           "type": "string",
-          "value": "sensor.bedroom_temperature"
+          "value": "sensor.living_room_temperature"
         },
         "presentation": {
           "type": "string",
-          "value": "adaptive"
+          "value": "standard"
         }
       },
       "modifiers": [],

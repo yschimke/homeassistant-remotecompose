@@ -1,9 +1,9 @@
 {
   "schema": "compose-ui-builder-document/v1-candidate",
-  "id": "card-sensor-metric",
+  "id": "component-sensor-metric",
   "title": "Sensor metric",
   "revision": 0,
-  "template": "card-sensor-metric",
+  "template": "component-sensor-metric",
   "catalogPin": {
     "systemId": "ha-cards",
     "catalogRevision": "candidate",

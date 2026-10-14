@@ -4,12 +4,16 @@ import ee.schimke.ha.designserver.UiBuilderSeed.Target
 import ee.schimke.ha.designserver.UiBuilderSeed.TextRole
 import ee.schimke.ha.designserver.UiBuilderSeed.float
 import ee.schimke.ha.designserver.UiBuilderSeed.node
+import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.doubleOrNull
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 
 /**
@@ -110,9 +114,19 @@ object HaCardsSeed {
       template = template,
     )
 
-  /** A dashboard card, 360dp wide, growing with its rows; adaptive like the design server's. */
-  fun card(template: String, heightDp: Int? = null) =
-    target(template, DASHBOARD_CARD, widthDp = 360, heightDp = heightDp, adaptive = true)
+  /**
+   * A dashboard card, 360dp wide, growing with its rows; adaptive like the design server's. Without
+   * [title] an entities card leaves its heading out, as one inside a [section] does.
+   */
+  fun card(template: String, heightDp: Int? = null, title: Boolean = true) =
+    target(
+      template,
+      DASHBOARD_CARD,
+      widthDp = 360,
+      heightDp = heightDp,
+      adaptive = true,
+      title = title,
+    )
 
   /** The Small Wear widget container, 216×76dp: room for one row and no title. */
   fun wearSmall(template: String) =
@@ -155,6 +169,87 @@ object HaCardsSeed {
       adaptive = false,
       switches = false,
       background = LAUNCHER_BACKGROUND,
+    )
+
+  /**
+   * A dashboard section: a [heading] over [cards] in a column, the way Home Assistant's sections
+   * view stacks a heading card and the cards under it. Each of [cards] is a document these seeds
+   * wrote ([haCard], [measurement], [metric]); its body moves into the section with its node ids
+   * prefixed, so two cards may share an id.
+   */
+  fun section(
+    designId: String,
+    title: String,
+    target: Target,
+    heading: String,
+    cards: List<JsonObject>,
+  ): JsonObject {
+    val nodes = linkedMapOf<String, JsonObject>()
+    nodes["root"] =
+      node(
+        "root",
+        target.rootComponent,
+        properties = target.rootProperties,
+        modifiers = target.rootModifiers,
+        slots = mapOf(target.rootSlot to listOf("section")),
+      )
+    val children = mutableListOf("heading")
+    val body = linkedMapOf<String, JsonObject>()
+    body["heading"] =
+      node(
+        "heading",
+        "ha-cards/heading",
+        properties = mapOf("title" to UiBuilderSeed.string(heading)),
+      )
+    cards.forEachIndexed { index, card ->
+      val prefix = "card$index-"
+      val cardNodes = card.getValue("nodes").jsonObject
+      val root = cardNodes.getValue("root").jsonObject
+      root
+        .getValue("slots")
+        .jsonObject
+        .values
+        .flatMap { it.jsonArray }
+        .forEach { children += prefix + it.jsonPrimitive.content }
+      for ((id, cardNode) in cardNodes) {
+        if (id == "root") continue
+        body[prefix + id] = prefixed(cardNode.jsonObject, prefix)
+      }
+    }
+    nodes["section"] =
+      node(
+        "section",
+        "layout/column",
+        properties = mapOf("verticalSpacingDp" to float(8.0)),
+        modifiers = listOf(UiBuilderSeed.fillMaxWidth()),
+        slots = mapOf("children" to children),
+      )
+    nodes.putAll(body)
+    return UiBuilderSeed.envelope(
+      target,
+      designId,
+      title,
+      heightDp = target.heightDp ?: 480,
+      stateVariables = emptyList(),
+      nodes = nodes,
+    )
+  }
+
+  /** [node] with its own id and every child id it names prefixed with [prefix]. */
+  private fun prefixed(node: JsonObject, prefix: String): JsonObject =
+    JsonObject(
+      node.mapValues { (key, value) ->
+        when (key) {
+          "id" -> JsonPrimitive(prefix + value.jsonPrimitive.content)
+          "slots" ->
+            JsonObject(
+              value.jsonObject.mapValues { (_, ids) ->
+                JsonArray(ids.jsonArray.map { JsonPrimitive(prefix + it.jsonPrimitive.content) })
+              }
+            )
+          else -> value
+        }
+      }
     )
 
   /** An editable sensor card made from the metric building block. */

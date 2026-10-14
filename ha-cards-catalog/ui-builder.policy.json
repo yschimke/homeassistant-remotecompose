@@ -1520,88 +1520,72 @@
   "$comment_templates": "Generated, not hand-written: :design-server's HaCardsTemplatesTest seeds each from a card schema (CardSchema.fromCard) with HaCardsSeed — the design server's UiBuilderSeed retargeted to this catalog — and fails when a committed template drifts. `-PhaCardsTemplates.update=true` rewrites them.",
   "templates": [
     {
+      "path": "ui-builder/designs/section-living-room.json",
+      "id": "section-living-room",
+      "label": "Living room",
+      "group": "Dashboard section",
+      "order": 1,
+      "default": true,
+      "supportingText": "A section the way Home Assistant's sections view lays one out: a heading over a light tile, the room's entities and its temperature."
+    },
+    {
+      "path": "ui-builder/designs/section-climate.json",
+      "id": "section-climate",
+      "label": "Climate",
+      "group": "Dashboard section",
+      "order": 2,
+      "supportingText": "A heading over a humidity gauge and a thermometer: start here for a section of readings."
+    },
+    {
       "path": "ui-builder/designs/card-light-tile.json",
       "id": "card-light-tile",
       "label": "Light tile",
-      "group": "Dashboard card",
-      "order": 1,
-      "default": true,
+      "group": "Card",
+      "order": 3,
       "supportingText": "HA's tile card for a kitchen light, bound to light.kitchen so it follows the light and toggles it."
     },
     {
       "path": "ui-builder/designs/card-entities.json",
       "id": "card-entities",
       "label": "Entities",
-      "group": "Dashboard card",
-      "order": 2,
+      "group": "Card",
+      "order": 4,
       "supportingText": "A living-room entities card laid out in text and switches bound to the card's state values, collapsing as the card shrinks."
     },
     {
       "path": "ui-builder/designs/card-gauge.json",
       "id": "card-gauge",
       "label": "Gauge",
-      "group": "Dashboard card",
-      "order": 3,
+      "group": "Card",
+      "order": 5,
       "supportingText": "HA's gauge card for a humidity sensor, 0 to 100 %."
     },
     {
-      "path": "ui-builder/designs/card-sensor-metric.json",
-      "id": "card-sensor-metric",
+      "path": "ui-builder/designs/card-button.json",
+      "id": "card-button",
+      "label": "Button",
+      "group": "Card",
+      "order": 6,
+      "supportingText": "HA's button card for a fan; a tap toggles it."
+    },
+    {
+      "path": "ui-builder/designs/component-sensor-metric.json",
+      "id": "component-sensor-metric",
       "label": "Sensor metric",
-      "group": "Dashboard card",
-      "order": 4,
+      "group": "Component",
+      "order": 7,
       "supportingText": "An editable label, live sensor value, and separate unit. Change the entity and styling to make a new sensor card."
     },
     {
-      "path": "ui-builder/designs/card-thermometer.json",
-      "id": "card-thermometer",
+      "path": "ui-builder/designs/component-thermometer.json",
+      "id": "component-thermometer",
       "label": "Thermometer",
-      "group": "Dashboard card",
-      "order": 5,
-      "supportingText": "A living-room temperature as a thermometer, bound to its sensor: the tube fills and recolours along HA's comfort ramp as the reading changes."
-    },
-    {
-      "path": "ui-builder/designs/wear-light-small.json",
-      "id": "wear-light-small",
-      "label": "Light · Small",
-      "group": "Wear widget",
-      "order": 6,
-      "supportingText": "One light's name, state and switch in the Small Wear widget container (216×76dp)."
-    },
-    {
-      "path": "ui-builder/designs/wear-entities-large.json",
-      "id": "wear-entities-large",
-      "label": "Entities · Large",
-      "group": "Wear widget",
-      "order": 7,
-      "supportingText": "A room's title and two entities in the Large Wear widget container (216×124dp)."
-    },
-    {
-      "path": "ui-builder/designs/launcher-fan-2x2.json",
-      "id": "launcher-fan-2x2",
-      "label": "Fan button · 2x2",
-      "group": "Launcher widget",
+      "group": "Component",
       "order": 8,
-      "supportingText": "HA's button card for a fan as a 2x2 phone launcher widget; a tap toggles the fan."
-    },
-    {
-      "path": "ui-builder/designs/launcher-entities-4x2.json",
-      "id": "launcher-entities-4x2",
-      "label": "Entities · 4x2",
-      "group": "Launcher widget",
-      "order": 9,
-      "supportingText": "A room's entity rows as a 4x2 phone launcher widget, each bound to its entity."
-    },
-    {
-      "path": "ui-builder/designs/launcher-thermometer-2x2.json",
-      "id": "launcher-thermometer-2x2",
-      "label": "Thermometer · 2x2",
-      "group": "Launcher widget",
-      "order": 10,
-      "supportingText": "An adaptive thermometer as a 2x2 phone launcher widget: expanded at this size, it drops to the compact row when the widget is resized smaller."
+      "supportingText": "A living-room temperature as a thermometer, bound to its sensor: the tube fills and recolours along HA's comfort ramp as the reading changes."
     }
   ],
-  "$comment_newDesign": "The catalog label appears in the New design chooser. The three template groups offer Dashboard card, Wear widget and Launcher widget starters.",
+  "$comment_newDesign": "The catalog label appears in the New design chooser. Its templates come in three groups, which a host offering only this catalog shows as the choices: Dashboard section (a heading over several cards), Card (one Home Assistant card) and Component (a building block cards are made of). Wear and launcher widgets are sizes and roots a design can take, not starting points, so no template asks.",
   "newDesign": {
     "label": "Home Assistant",
     "order": 0
