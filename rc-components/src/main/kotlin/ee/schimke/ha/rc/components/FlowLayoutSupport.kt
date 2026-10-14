@@ -15,16 +15,26 @@ import androidx.compose.runtime.staticCompositionLocalOf
  * Set to `false` on surfaces whose capture writer is fixed to a stable profile — notably the Glance
  * Wear `WearWidgetDocument` capture path, which is owned by AndroidX and rejects experimental ops.
  * HA card components that use `RemoteFlowRow` (`RemoteHaGlance`, `RemoteHaGrid`) read this local
- * and degrade to a non-wrapping `RemoteRow` when it is `false`, so cards capture instead of
- * throwing.
+ * and use compatible rows when it is `false`, so cards capture instead of throwing.
  */
 val LocalSupportsFlowLayout = staticCompositionLocalOf { true }
 
+/** Wear's deliberately shortened entity strip, independent of the host's supported operations. */
+val LocalCompactEntityLayout = staticCompositionLocalOf { false }
+
 /**
  * Wrap [content] so HA card components know whether they can emit `RemoteFlowRow`. Pass `false` on
- * Glance Wear slot surfaces.
+ * Glance Wear slot surfaces, with [compactEntities] to deliberately limit their entity strip.
  */
 @Composable
-fun ProvideFlowLayoutSupport(enabled: Boolean, content: @Composable () -> Unit) {
-  CompositionLocalProvider(LocalSupportsFlowLayout provides enabled, content = content)
+fun ProvideFlowLayoutSupport(
+  enabled: Boolean,
+  compactEntities: Boolean = false,
+  content: @Composable () -> Unit,
+) {
+  CompositionLocalProvider(
+    LocalSupportsFlowLayout provides enabled,
+    LocalCompactEntityLayout provides compactEntities,
+    content = content,
+  )
 }

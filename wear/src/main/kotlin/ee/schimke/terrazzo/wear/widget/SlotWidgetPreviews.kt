@@ -82,7 +82,7 @@ internal class PreviewSlotWidget(
                 // since Glance Wear's capture profile rejects
                 // FlowLayout (op 240).
                 ProvideCardChrome(enabled = false) {
-                  ProvideFlowLayoutSupport(enabled = false) {
+                  ProvideFlowLayoutSupport(enabled = false, compactEntities = true) {
                     if (card != null) {
                       RenderChild(card, snapshot, RemoteModifier.fillMaxWidth())
                     } else {

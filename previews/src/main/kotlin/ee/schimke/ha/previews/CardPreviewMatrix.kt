@@ -396,7 +396,7 @@ private fun WatchFaceCell(
                   // non-wrapping compact path here too,
                   // so the matrix wear cells show what
                   // the watch actually draws.
-                  ProvideFlowLayoutSupport(enabled = false) {
+                  ProvideFlowLayoutSupport(enabled = false, compactEntities = true) {
                     RemoteHaWidgetSurface {
                       WithImageStrategy(imageStrategy) {
                         RenderChild(card, snapshot, RemoteModifier.rcFillMaxWidth())

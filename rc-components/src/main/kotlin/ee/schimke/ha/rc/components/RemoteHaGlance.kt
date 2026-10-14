@@ -26,11 +26,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.wear.compose.remote.material3.RemoteIcon
 
 /**
- * Maximum number of cells the non-wrapping fallback row keeps. On surfaces whose capture profile
- * rejects `FlowLayout` (Glance Wear) the cells can't wrap, so packing every entity into one row
- * overflows the narrow watch slot — names collide and the last cell spills off the edge. Cap to the
- * first few that fit cleanly; the watch slot's job is a deliberate compact glance, not the whole
- * list.
+ * Cells per compatible row. Compact Wear slots keep only this many cells; launcher widgets retain
+ * every cell across multiple rows, even when their decoder cannot read FlowLayout.
  */
 private const val CompactRowMaxCells = 3
 
@@ -53,7 +50,8 @@ fun RemoteHaGlance(
 ) {
   val theme = haTheme()
   val supportsFlow = LocalSupportsFlowLayout.current
-  val cells = if (supportsFlow) data.cells else data.cells.take(CompactRowMaxCells)
+  val cells =
+    if (LocalCompactEntityLayout.current) data.cells.take(CompactRowMaxCells) else data.cells
   RemoteBox(
     modifier =
       modifier
@@ -102,9 +100,8 @@ fun RemoteHaGlance(
  * The row/grid of glance cells. HA's glance spaces cells evenly across the card width.
  * [RemoteFlowRow] handles wrapping when more cells arrive than fit the row; within each row, cells
  * are distributed [SpaceEvenly][RemoteArrangement.SpaceEvenly] rather than packed to the start. On
- * surfaces whose capture profile rejects FlowLayout (Glance Wear), fall back to a non-wrapping
- * [RemoteRow] — the caller has already capped the cell count there so it reads as a tidy compact
- * strip instead of overflowing the slot.
+ * surfaces whose capture profile rejects FlowLayout, use a column of ordinary [RemoteRow]s. Wear
+ * callers explicitly cap the cell count; launcher callers retain all rows.
  */
 @Composable
 @RemoteComposable
@@ -118,12 +115,19 @@ private fun CellGrid(supportsFlow: Boolean, cells: List<HaGlanceCellData>) {
       cells.forEach { cell -> RemoteHaGlanceCell(cell) }
     }
   } else {
-    RemoteRow(
+    RemoteColumn(
       modifier = RemoteModifier.fillMaxWidth(),
-      horizontalArrangement = RemoteArrangement.SpaceEvenly,
-      verticalAlignment = RemoteAlignment.CenterVertically,
+      verticalArrangement = RemoteArrangement.spacedBy(6.rdp),
     ) {
-      cells.forEach { cell -> RemoteHaGlanceCell(cell) }
+      cells.chunked(CompactRowMaxCells).forEach { row ->
+        RemoteRow(
+          modifier = RemoteModifier.fillMaxWidth(),
+          horizontalArrangement = RemoteArrangement.SpaceEvenly,
+          verticalAlignment = RemoteAlignment.CenterVertically,
+        ) {
+          row.forEach { cell -> RemoteHaGlanceCell(cell) }
+        }
+      }
     }
   }
 }

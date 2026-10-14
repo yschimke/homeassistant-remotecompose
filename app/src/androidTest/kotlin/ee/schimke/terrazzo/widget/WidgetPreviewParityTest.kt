@@ -24,6 +24,59 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class WidgetPreviewParityTest {
   @Test
+  fun multiEntityWidgetsKeepAndUpdateTheFifthEntity() {
+    val context = ApplicationProvider.getApplicationContext<Context>()
+    val entities = (1..5).map { "sensor.room_$it" }
+    for (type in listOf("glance", "entities")) {
+      val raw =
+        kotlinx.serialization.json.Json.parseToJsonElement(
+          """{"type":"$type","entities":[${entities.joinToString { "\"$it\"" }}]}"""
+        ) as kotlinx.serialization.json.JsonObject
+      val card = CardConfig(type, raw)
+      fun pixels(lastValue: String): IntArray {
+        val snapshot =
+          HaSnapshot(
+            states =
+              entities.associateWith {
+                EntityState(it, if (it == entities.last()) lastValue else "12")
+              }
+          )
+        val views =
+          checkNotNull(
+            TerrazzoWidgetProvider()
+              .renderPreview(
+                context,
+                DemoData.BASE_URL,
+                card,
+                snapshot,
+                WidgetSizeDp(288, 336),
+              )
+          )
+        val w = WidgetSizing.dpToPx(context, 288)
+        val h = WidgetSizing.dpToPx(context, 336)
+        val pixels = IntArray(w * h)
+        InstrumentationRegistry.getInstrumentation().runOnMainSync {
+          val preview = inflateWidgetPreview(context, views)
+          preview.measure(
+            View.MeasureSpec.makeMeasureSpec(w, View.MeasureSpec.EXACTLY),
+            View.MeasureSpec.makeMeasureSpec(h, View.MeasureSpec.EXACTLY),
+          )
+          preview.layout(0, 0, w, h)
+          val bitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
+          preview.draw(Canvas(bitmap))
+          bitmap.getPixels(pixels, 0, w, 0, 0, w, h)
+          bitmap.recycle()
+        }
+        return pixels
+      }
+      assertFalse(
+        "$type must display changes after its third entity",
+        pixels("12").contentEquals(pixels("89")),
+      )
+    }
+  }
+
+  @Test
   fun boilerCardVariantsRenderOnThePlatform() {
     val context = ApplicationProvider.getApplicationContext<Context>()
     val snapshot =

@@ -114,10 +114,9 @@ class WidgetPreparationTest {
       requests.add(size)
       when (attempts.incrementAndGet()) {
         1 -> null
-        2 ->
-          android.widget.RemoteViews(
-            android.widget.RemoteViews.DrawInstructions.Builder(listOf(byteArrayOf(127))).build()
-          )
+        // A missing native layout reliably fails RemoteViews.apply. An incomplete drawing
+        // buffer can instead be accepted as an empty document by the platform decoder.
+        2 -> android.widget.RemoteViews(ctx.packageName, 0)
         else -> TerrazzoWidgetProvider().renderPreview(ctx, url, cfg, state, size)
       }
     }
