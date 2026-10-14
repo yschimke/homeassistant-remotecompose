@@ -367,6 +367,27 @@ class Slot4SmallWidget : SlotWidget(slotIndex = 4)
 class Slot4LargeWidget : SlotWidget(slotIndex = 4)
 
 /**
+ * Ask the host to re-render every placed slot widget, after a change that only the next render
+ * reads — the watch theme or card style. Each render reads the preferences afresh, and the template
+ * cache is keyed by both, so the widgets come back in the new look.
+ */
+suspend fun refreshAllSlotWidgets(context: Context) {
+  listOf(
+      Slot0SmallWidget(),
+      Slot0LargeWidget(),
+      Slot1SmallWidget(),
+      Slot1LargeWidget(),
+      Slot2SmallWidget(),
+      Slot2LargeWidget(),
+      Slot3SmallWidget(),
+      Slot3LargeWidget(),
+      Slot4SmallWidget(),
+      Slot4LargeWidget(),
+    )
+    .forEach { widget -> runCatching { widget.triggerUpdateAll(context) } }
+}
+
+/**
  * One [GlanceWearWidgetService] per (slot, size) pair. The system binds these via
  * `androidx.glance.wear.action.BIND_WIDGET_PROVIDER` (or the legacy
  * `androidx.wear.tiles.action.BIND_TILE_PROVIDER` for tile-compat surfaces). The `widget` property
