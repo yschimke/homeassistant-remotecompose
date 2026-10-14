@@ -3,6 +3,7 @@
 package ee.schimke.terrazzo.dashboard
 
 import android.util.Log
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -70,6 +71,7 @@ import ee.schimke.ha.rc.cardWidthClass
 import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.cards.shutter.withEnhancedShutter
 import ee.schimke.ha.rc.components.HaTheme
+import ee.schimke.ha.rc.components.HaUberTheme
 import ee.schimke.ha.rc.components.ProvideCardStyle
 import ee.schimke.ha.rc.components.ThemeStyle
 import ee.schimke.ha.rc.components.cardPalette
@@ -309,7 +311,12 @@ private fun DashboardList(
   val cardStyle = LocalCardStyle.current
   val haTheme = remember(style, dark, cardStyle) { cardStyle.cardPalette(style, dark) }
 
-  Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
+  // An uber card style paints the whole dashboard in its own background, so a dark-only style
+  // (Nixie, Trinitron) never sits in light gutters; Classic keeps the app's surface as before.
+  val dashboardModifier =
+    if (cardStyle.id == HaUberTheme.Classic.id) Modifier.fillMaxSize()
+    else Modifier.fillMaxSize().background(haTheme.dashboardBackground)
+  Box(modifier = dashboardModifier, contentAlignment = Alignment.TopCenter) {
     val cardDesigns = rememberCardDesigns(context, designServerUrl)
     CompositionLocalProvider(
       LocalFlashOnDataChange provides flashOnDataChange,

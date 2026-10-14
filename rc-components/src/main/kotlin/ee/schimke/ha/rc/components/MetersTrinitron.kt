@@ -6,6 +6,7 @@ import androidx.compose.remote.creation.compose.layout.RemoteDrawScope
 import androidx.compose.remote.creation.compose.layout.RemoteOffset
 import androidx.compose.remote.creation.compose.state.RemoteFloat
 import androidx.compose.remote.creation.compose.state.rf
+import androidx.compose.remote.creation.compose.state.selectIfGe
 
 // Trinitron: Sony hi-fi instruments. A dial is a VU meter — a hairline scale, index ticks, a red
 // peak zone and a swinging needle. A thermometer is an LED level column beside a tick scale, a bar
@@ -21,20 +22,25 @@ internal fun RemoteDrawScope.trinitronArc(
   zones: HaMeterZones,
 ) {
   val arc = ArcBox(width, height, 4f, baseline)
-  val peak = (zones.hotFrom ?: PeakFrom).coerceIn(0.05f, 1f)
+  // The peak zone starts at the live mark when the card binds one, else at the static one.
+  val peak: RemoteFloat =
+    // A VU meter always has a peak zone: a live mark of 1 (no hot end) falls back to PeakFrom.
+    zones.hotFromLive?.let {
+      selectIfGe(it, 0.999f.rf, PeakFrom.rf, remoteMax(it, 0.05f.rf).min(1f.rf))
+    } ?: (zones.hotFrom ?: PeakFrom).coerceIn(0.05f, 1f).rf
   // Scale: a hairline to the peak zone, then a heavier red band to the end.
   drawArc(
     strokePaint(2f, look.muted, round = false),
     180f.rf,
-    (peak * 180f).rf,
+    peak * 180f.rf,
     false,
     arc.topLeft,
     arc.size,
   )
   drawArc(
     strokePaint(6f, look.hot, round = false),
-    (180f + peak * 180f).rf,
-    ((1f - peak) * 180f).rf,
+    180f.rf + peak * 180f.rf,
+    (1f.rf - peak) * 180f.rf,
     false,
     arc.topLeft,
     arc.size,
@@ -92,7 +98,8 @@ internal fun RemoteDrawScope.trinitronBar(
   vertical: Boolean,
   zones: HaMeterZones,
 ) {
-  val peakZones = zones.copy(hotFrom = zones.hotFrom ?: PeakFrom)
+  val peakZones =
+    if (zones.hotFromLive != null) zones else zones.copy(hotFrom = zones.hotFrom ?: PeakFrom)
   if (vertical) ledRun(look, fraction, peakZones, 24, true, 0f.rf, height, 0f.rf, width)
   else ledRun(look, fraction, peakZones, 24, false, 0f.rf, width, 0f.rf, height)
 }
@@ -118,7 +125,7 @@ internal fun RemoteDrawScope.trinitronThermometer(
   ledRun(
     look,
     fraction,
-    zones.copy(hotFrom = zones.hotFrom ?: PeakFrom),
+    if (zones.hotFromLive != null) zones else zones.copy(hotFrom = zones.hotFrom ?: PeakFrom),
     20,
     true,
     box.top,

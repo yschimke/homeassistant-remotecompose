@@ -302,12 +302,22 @@ private fun formatRange(d: Double): String =
 
 /**
  * The gauge's hot zone for the visual families that draw one (a Trinitron red peak zone, LCD hot
- * segments): from the red band's threshold, when red is the band at the top of the scale.
+ * segments): from the red band's threshold, when red is the band at the top of the scale. Computed
+ * in-document from the same `card.*` floats [gaugeSeverityColor] reads, because a templated gauge
+ * is captured without its severity config and receives it as bindings at playback.
  */
+@Composable
 private fun gaugeZones(data: HaGaugeData): HaMeterZones {
-  val red = data.severity.red ?: return HaMeterZones()
-  val others = listOfNotNull(data.severity.green, data.severity.yellow)
-  val span = data.max - data.min
-  if (span <= 0.0 || others.any { it > red }) return HaMeterZones()
-  return HaMeterZones(hotFrom = ((red - data.min) / span).toFloat().coerceIn(0f, 1f))
+  val bands = data.severity
+  val min = cardFloat("min", data.min.toFloat())
+  val max = cardFloat("max", data.max.toFloat())
+  val green = cardFloat("severity_green", bands.green?.toFloat() ?: UnsetThreshold)
+  val yellow = cardFloat("severity_yellow", bands.yellow?.toFloat() ?: UnsetThreshold)
+  val red = cardFloat("severity_red", bands.red?.toFloat() ?: UnsetThreshold)
+  // An unset band is UnsetThreshold (above every value); count it as below red here.
+  fun setOrLow(t: RemoteFloat) = selectIfGe(t, (UnsetThreshold / 10f).rf, (-UnsetThreshold).rf, t)
+  val others = maxOf(setOrLow(green), setOrLow(yellow))
+  // Red lower than another band (low is bad) or unset (clamps to 1) marks no hot end.
+  val hotFrom = selectIfGe(others, red, 1f.rf, normalizedFraction(red, min, max))
+  return HaMeterZones(hotFromLive = hotFrom)
 }

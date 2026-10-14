@@ -27,8 +27,16 @@ import kotlin.math.sin
  * temperature past 30 °C, a gauge's red band), and below [lowBelow] is "low" (a battery past
  * critical). Families that segment their scale light those segments in the hot colour; others draw
  * a red zone. Null is none.
+ *
+ * [hotFromLive] is the same hot mark as a document expression, for a card whose threshold is a
+ * template binding (a gauge's `card.severity_red`): the zone then follows the bound value at
+ * playback instead of whatever the template was captured with. It wins over [hotFrom].
  */
-data class HaMeterZones(val hotFrom: Float? = null, val lowBelow: Float? = null)
+data class HaMeterZones(
+  val hotFrom: Float? = null,
+  val lowBelow: Float? = null,
+  val hotFromLive: RemoteFloat? = null,
+)
 
 /** The colours one meter draws with, resolved from the active uber theme once per meter. */
 internal class MeterLook(
@@ -68,6 +76,8 @@ internal class MeterLook(
     val litFrom = if (fromStart) index.toFloat() / count + 0.001f else mid
     val litColor =
       when {
+        zones.hotFromLive != null ->
+          mid.rf.isGreaterThanOrEqualTo(zones.hotFromLive).select(hot, value)
         zones.hotFrom != null && mid >= zones.hotFrom -> hot
         zones.lowBelow != null ->
           fraction.isGreaterThanOrEqualTo(zones.lowBelow.rf).select(value, hot)
