@@ -3,8 +3,9 @@ package ee.schimke.ha.designserver
 import ee.schimke.ha.designserver.Pages.esc
 
 /**
- * What the front page links to. Both defaults are paths on this host: ha.coo.ee's edge sends them
- * to the preview box that serves the card designer and the catalog.
+ * What the front page links to. Both defaults are paths on ha.coo.ee, whose edge sends them to the
+ * preview box that serves the card designer and the catalog. They are absolute so the links work
+ * from a server running anywhere else, which has no such routes.
  * - [designerUrl]: the card designer, the HA-branded UI Builder.
  * - [catalogUrl]: every HA card and component, in the catalog.
  * - [storeUrl]: where to get the app; without one the page points at the source instead.
@@ -15,8 +16,8 @@ data class SiteConfig(
   val storeUrl: String? = null,
 ) {
   companion object {
-    const val DEFAULT_DESIGNER_URL = "/ui-builder/"
-    const val DEFAULT_CATALOG_URL = "/homeassistant-remotecompose/"
+    const val DEFAULT_DESIGNER_URL = "https://ha.coo.ee/ui-builder/"
+    const val DEFAULT_CATALOG_URL = "https://ha.coo.ee/homeassistant-remotecompose/"
 
     /** `DESIGNER_URL`, `CATALOG_URL` and `STORE_URL`. */
     fun fromEnvironment(env: Map<String, String> = System.getenv()): SiteConfig =
