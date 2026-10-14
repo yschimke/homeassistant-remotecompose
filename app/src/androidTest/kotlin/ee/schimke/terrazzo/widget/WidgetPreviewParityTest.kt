@@ -59,27 +59,18 @@ class WidgetPreviewParityTest {
       rendered.await(30, java.util.concurrent.TimeUnit.SECONDS),
     )
     return onMain {
-      fun diagnose(node: View) {
-        if (node.javaClass.name.endsWith("RemoteComposeCanvas")) {
-          fun field(name: String): Any? =
-            node.javaClass.getDeclaredField(name).apply { isAccessible = true }.get(node)
-          if (field("mDisable") == true) {
-            val document = checkNotNull(field("mDocument"))
-            try {
-              document.javaClass.methods
-                .first { it.name == "paint" }
-                .invoke(document, field("mARContext"), field("mTheme"))
-            } catch (failure: java.lang.reflect.InvocationTargetException) {
-              throw AssertionError("Native document paint failed", failure.targetException)
-            }
-            throw AssertionError("Native renderer disabled the document after a paint failure")
-          }
-        }
-        if (node is android.view.ViewGroup)
-          for (i in 0 until node.childCount) diagnose(node.getChildAt(i))
+      Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888).also { bitmap ->
+        view.draw(Canvas(bitmap))
+        // Android's player can swallow paint failures and replace the card with a black/red
+        // warning surface. These fixtures use a white or dark-grey card background.
+        val pixels = IntArray(width * height)
+        bitmap.getPixels(pixels, 0, width, 0, 0, width, height)
+        assertFalse(
+          "Native widget must not display the platform rendering-error surface",
+          pixels.count { it == android.graphics.Color.BLACK } > pixels.size * 3 / 4 &&
+            pixels.any { it == android.graphics.Color.RED },
+        )
       }
-      diagnose(view)
-      Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888).also { view.draw(Canvas(it)) }
     }
   }
 
