@@ -209,6 +209,10 @@ jobs:
           # installed on this default phone image. Its connected tests need a Wear OS system image.
           script: ./gradlew connectedDebugAndroidTest -x :wear:connectedDebugAndroidTest --stacktrace
 
+      - name: Show instrumented test failures
+        if: failure() && env.RUN_HEAVY == 'true'
+        run: python3 scripts/summarize-android-test-failures.py
+
       - name: Upload instrumented test reports
         if: always() && env.RUN_HEAVY == 'true'
         uses: actions/upload-artifact@v7.0.2
