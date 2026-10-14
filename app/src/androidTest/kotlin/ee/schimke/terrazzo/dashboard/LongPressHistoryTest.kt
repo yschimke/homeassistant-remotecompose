@@ -14,7 +14,6 @@ import org.junit.After
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 
@@ -70,14 +69,6 @@ class LongPressHistoryTest {
   }
 
   @Test
-  @Ignore(
-    "Quarantined: regressed since #364 (CardHistoryScreen launcher preview) and " +
-      "fails the same way on every CI run — the card-history screen doesn't surface " +
-      "after long-press. #391 and #394 hardened the preview's capture fallback without " +
-      "clearing it, so the crash is elsewhere (player render / gridBounds) or the " +
-      "long-press is genuinely swallowed. Needs logcat from a real device to pinpoint. " +
-      "Tracking: https://github.com/yschimke/homeassistant-remotecompose/issues/396"
-  )
   fun longPressOnDashboardCard_opensHistoryThenInstallSheet() {
     // Demo mode lands directly on the "Security" dashboard (the
     // first board in `DemoData.BOARDS`, exposed as HA's default
@@ -90,8 +81,10 @@ class LongPressHistoryTest {
     // `viewConfiguration.longPressTimeoutMillis` measures against.
     card.longClick()
 
-    // CardHistoryScreen renders an "Other actions" links section.
-    val historyVisible = device.wait(Until.hasObject(By.text("Other actions")), 5_000)
+    // The primary action is above history. The old assertion looked for "Other actions"
+    // below the fold and misdiagnosed a correctly opened details screen as a lost long-press.
+    val historyVisible =
+      device.wait(Until.hasObject(By.text("Prepare a home screen widget")), 10_000)
     assertTrue(
       "card-history screen did not surface after long-press — long-press " +
         "is being swallowed by the RC player again, see " +
@@ -100,13 +93,12 @@ class LongPressHistoryTest {
     )
 
     // The "Add to Home Screen" link opens the existing install sheet.
-    val installLink = device.wait(Until.findObject(By.textContains("Add to Home Screen")), 5_000)
+    val installLink = device.wait(Until.findObject(By.text("Prepare a home screen widget")), 5_000)
     assertNotNull("history screen missing the Add to Home Screen link", installLink)
     installLink!!.click()
 
     // WidgetInstallSheet.kt opens with this descriptive line.
-    val sheetVisible =
-      device.wait(Until.hasObject(By.textContains("keep itself up to date")), 5_000)
+    val sheetVisible = device.wait(Until.hasObject(By.text("Make it yours")), 10_000)
     assertTrue("install sheet did not surface from the history screen", sheetVisible)
   }
 

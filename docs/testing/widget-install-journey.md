@@ -66,5 +66,6 @@ exercises the provider's launcher size options after installation.
 
 Use a disposable emulator; the install test leaves its widget installed for visual inspection. Separately test the real dashboard entry point and
 launcher resize handles; programmatic option updates alone do not prove the
-launcher resize gesture works. Existing long-press regression coverage is
-quarantined under issue #396 and must not be counted as passing journey coverage.
+launcher resize gesture works. The long-press regression now checks the visible preparation action above history,
+rather than looking for the old link below the fold. It exercises the dashboard
+entry point separately from the isolated render/install tests.

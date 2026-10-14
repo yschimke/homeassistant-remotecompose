@@ -10,6 +10,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import ee.schimke.ha.model.CardConfig
@@ -17,7 +19,10 @@ import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.cardSizeConstraints
 import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.cards.shutter.withEnhancedShutter
+import ee.schimke.ha.rc.formatState
 import ee.schimke.terrazzo.dashboard.LauncherGrid
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.jsonPrimitive
 
 /** Renders the actual launcher document, recaptured at each selected size. */
 @Composable
@@ -28,6 +33,13 @@ internal fun WidgetPreparationPreview(
   onPreview: (RemoteViews?) -> Unit,
 ) {
   val context = LocalContext.current
+  val entityId = card.raw["entity"]?.jsonPrimitive?.contentOrNull
+  val entity = snapshot.states[entityId]
+  val label =
+    card.raw["name"]?.jsonPrimitive?.contentOrNull
+      ?: entity?.attributes?.get("friendly_name")?.jsonPrimitive?.contentOrNull
+      ?: "${card.type} widget"
+  val stateLabel = entity?.let { formatState(it) }.orEmpty()
   val registry = remember { defaultRegistry().withEnhancedShutter() }
   val bounds =
     remember(card) {
@@ -101,15 +113,26 @@ internal fun WidgetPreparationPreview(
         AndroidView(
           factory = { ctx ->
             FrameLayout(ctx).apply {
+              // Expose a read-only description through Compose, not inactive virtual click targets.
+              importantForAccessibility =
+                android.view.View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS
               runCatching { addView(current.apply(ctx, this), FrameLayout.LayoutParams(-1, -1)) }
                 .onFailure {
+                  android.util.Log.e(
+                    "WidgetPreparationPreview",
+                    "Could not inflate launcher preview",
+                    it,
+                  )
                   views = null
                   failed = true
                   latestOnPreview(null)
                 }
             }
           },
-          modifier = Modifier.fillMaxSize().testTag("widget-render"),
+          modifier =
+            Modifier.fillMaxSize().testTag("widget-render").semantics {
+              contentDescription = "$label preview, $stateLabel, $width by $height cells"
+            },
         )
       }
     } else if (failed) {

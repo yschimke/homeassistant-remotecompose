@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -65,7 +66,19 @@ class WidgetPreparationTest {
     }
     compose.waitUntil(30_000) { captures > 0 }
     fun pixels(): List<Int> {
-      val p = compose.onNodeWithTag("widget-render").captureToImage().toPixelMap()
+      compose.waitForIdle()
+      val bounds = compose.onNodeWithTag("widget-render").fetchSemanticsNode().boundsInWindow
+      val screenshot =
+        checkNotNull(InstrumentationRegistry.getInstrumentation().uiAutomation.takeScreenshot())
+      val bitmap =
+        android.graphics.Bitmap.createBitmap(
+          screenshot,
+          bounds.left.toInt(),
+          bounds.top.toInt(),
+          bounds.width.toInt(),
+          bounds.height.toInt(),
+        )
+      val p = bitmap.asImageBitmap().toPixelMap()
       return (0 until p.height).flatMap { y -> (0 until p.width).map { x -> p[x, y].hashCode() } }
     }
     val off = pixels()
@@ -89,6 +102,10 @@ class WidgetPreparationTest {
   @Test
   fun editPreviewCancelThenConfirmInstallationPersistsEditedCard() {
     val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+    assertTrue(
+      "The emulator launcher must support widget pinning",
+      WidgetInstaller(context).isSupported(),
+    )
     val before = runBlocking { graph.widgetStore.installed.first().map { it.widgetId }.toSet() }
     var dismissed = false
     compose.setContent {
@@ -101,8 +118,19 @@ class WidgetPreparationTest {
     compose.onNodeWithText("Widget name").performTextClearance()
     compose.onNodeWithText("Widget name").performTextInput("My magical light")
     compose.onNodeWithText("Roomy").performScrollTo().performClick()
+    compose.waitUntil(30_000) {
+      compose
+        .onAllNodes(hasText("Install widget") and isEnabled())
+        .fetchSemanticsNodes()
+        .isNotEmpty()
+    }
     compose.onNodeWithText("Install widget").assertIsEnabled().performClick()
-    assertTrue(device.wait(Until.hasObject(By.textContains("Add to home screen")), 30_000))
+    assertTrue(
+      device.wait(
+        Until.hasObject(By.text(java.util.regex.Pattern.compile("(?i).*add to home screen.*"))),
+        30_000,
+      )
+    )
     device.pressBack()
     assertEquals(
       "cancelled pins must not consume a slot",
@@ -111,6 +139,12 @@ class WidgetPreparationTest {
     )
     assertFalse("cancelling must return to the edited preparation", dismissed)
     compose.onNodeWithText("My magical light").assertExists()
+    compose.waitUntil(30_000) {
+      compose
+        .onAllNodes(hasText("Install widget") and isEnabled())
+        .fetchSemanticsNodes()
+        .isNotEmpty()
+    }
     compose.onNodeWithText("Install widget").assertIsEnabled().performClick()
     val add =
       device.wait(Until.findObject(By.text("Add automatically")), 30_000)
