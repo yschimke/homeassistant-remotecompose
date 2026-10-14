@@ -213,7 +213,11 @@ private val AccentOff = Color(0xFF9E9E9E)
 private val ClimateAccents =
   listOf(AccentHeat, AccentCool, AccentDry, AccentFan, AccentAuto, AccentOff)
 
-private fun climateAccent(mode: String, hvacAction: String?): Color =
+/**
+ * The accent a thermostat dial draws in for HVAC [mode] (`heat`, `cool`, …) and the entity's live
+ * [hvacAction], which wins when it says the system is running.
+ */
+fun climateAccent(mode: String, hvacAction: String? = null): Color =
   when {
     hvacAction == "heating" || mode == "heat" -> AccentHeat
     hvacAction == "cooling" || mode == "cool" -> AccentCool

@@ -28,6 +28,7 @@ derived by `HaLiveBindings` / `cardSnapshotBindings` (the host):
 | `<id>.is_on` | bool | `HaLiveBindings.isOn(id, state)`: the typed `HaEntity.isActive` (climate `heat`/`cool`/…, cover `open`/`opening`/`closing`, lock `locked`, media `playing`, …), else `state == "on"` or `"open"`. Converters seed `LiveValues.isOn` from the same function. |
 | `<id>.numeric_state` | float | parsed numeric state (gauges/arcs derive their sweep in-document) |
 | `<id>.state_int` | int | domain-keyed variant (alarm panel today) |
+| `<id>.current_temperature`, `<id>.target_temperature` | float | `HaLiveBindings.attributeFloats`: a climate entity's `current_temperature` and `temperature` attributes (its state is the mode, so it has no `numeric_state`); the `ha-cards/thermostat` builder dial computes its fractions and labels from them in-document |
 
 The golden rule: **a binding's value must be reproducible by the host
 from the entity state alone, identically to what the converter bakes.**
@@ -93,7 +94,9 @@ expressed as a binding.
   (`numeric_state`; the severity band is picked in-document), markdown (`.state` tokens + Jinja `templateValues`).
   Every typed measurement (thermometer, battery, arc / bar meters) is path 1 by construction:
   `HaReading` binds `<id>.state` and `<id>.numeric_state`, and the fill fraction and band colour
-  are computed in-document ([card-component-system.md](card-component-system.md)).
+  are computed in-document ([card-component-system.md](card-component-system.md)). The
+  `ha-cards/thermostat` builder component is path 1 as well, through the climate temperature
+  floats; the `thermostat` *converter* still re-encodes (its accent follows `hvac_action`).
 - **Re-encode (path 2):** calendar, logbook, to-do, history-graph,
   statistics-graph, statistic, map, weather-forecast, thermostat /
   humidifier / light (arc fill + labels), media-control, Bambu (AMS /

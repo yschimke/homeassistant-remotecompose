@@ -70,6 +70,8 @@ private fun addEntityId(value: JsonPrimitive, out: MutableSet<String>) {
  *   ([HaLiveBindings.stateInt]); used by alarm-panel chrome.
  * - `<id>.numeric_state` (float) — parsed numeric state ([HaLiveBindings.numericState]); used by
  *   gauges / arcs that derive their sweep in-document.
+ * - `<id>.<suffix>` (float) — a domain's numeric attributes ([HaLiveBindings.attributeFloats]): a
+ *   climate entity's `current_temperature` and `target_temperature`, for thermostat dials.
  *
  * This is the value side of the live-binding contract: every binding here is host-reproducible from
  * the snapshot alone. Bindings whose value is formatted per-card, derived, or structural (forecast
@@ -110,6 +112,9 @@ fun cardSnapshotBindings(entityIds: Set<String>, snapshot: HaSnapshot): CardSnap
     booleans["$id.is_on"] = HaLiveBindings.isOn(id, state.state)
     HaLiveBindings.stateInt(id, state.state)?.let { ints["$id.state_int"] = it }
     HaLiveBindings.numericState(state.state)?.let { floats["$id.numeric_state"] = it }
+    HaLiveBindings.attributeFloats(id, state.attributes).forEach { (suffix, value) ->
+      floats["$id.$suffix"] = value
+    }
   }
   return CardSnapshotBindings(strings, booleans, ints, floats)
 }

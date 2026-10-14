@@ -165,6 +165,7 @@ The [`ha-cards` catalog](../../ha-cards-catalog/) offers each layer as a builder
 | `ha-cards/arc-meter`, `ha-cards/bar-meter` | 2 | bare meters for composing a card of your own; `entityId` binds the value |
 | `ha-cards/thermometer`, `ha-cards/battery` | 3 | typed |
 | `ha-cards/measurement` | 3 | `kind` picks the visual, and `auto` reads the unit |
+| `ha-cards/thermostat` | 3 | a climate entity's 270° dial; live through `<id>.current_temperature` / `<id>.target_temperature`; a knob in a lamp ring under `console` |
 
 Every measurement takes `presentation`: one of the five rungs, or `adaptive`. The policy's
 `allowedValues` are held to the code by `HaCardMeasurementsTest`. There are two starter
@@ -233,7 +234,8 @@ keep following the launcher's system colours.
 
 In the builder, `ha-cards/uber-theme` is a container that takes a `theme` and `dark`.
 `HaCardMeasurementsTest` keeps the policy's values in step with `HaUberTheme.all`. The showcase
-previews are `Uber_*` in
+previews are `Uber_*` in the `:previews` sheet, and the builder catalog shows Console itself in
+`HaCard/UberThemeConsole`; the rest of the `:previews` showcases are in
 [`UberThemePreviews.kt`](../../previews/src/main/kotlin/ee/schimke/ha/previews/UberThemePreviews.kt).
 
 **Not yet themed:** the arc-dial controls (thermostat, humidifier, light) except under Console,

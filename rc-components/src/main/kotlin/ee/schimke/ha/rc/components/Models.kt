@@ -350,6 +350,24 @@ data class HaArcDialData(
    * accent never depends on the state.
    */
   val accentChoices: List<Color>? = null,
+  /**
+   * Live values computed in-document from host-pushed bindings, for a dial with no per-card
+   * template bindings (a UI-builder design). Set, they win over [valueFraction], [targetFraction],
+   * the label attributes and [modeChip].
+   */
+  val live: HaArcDialLive? = null,
+)
+
+/**
+ * An arc dial's live values as document expressions: the fill and target fractions, the centre and
+ * supporting labels, and the mode chip's text. See [HaArcDialData.live].
+ */
+data class HaArcDialLive(
+  val valueFraction: RemoteFloat,
+  val targetFraction: RemoteFloat?,
+  val centerLabel: RemoteString,
+  val supportingLabel: RemoteString?,
+  val modeLabel: RemoteString?,
 )
 
 /**

@@ -10,6 +10,27 @@ import kotlinx.serialization.json.put
 
 class LiveBindingsMultiplatformTest {
   @Test
+  fun climateTemperaturesAreFloatBindings() {
+    val id = "climate.living_room"
+    val attributes = buildJsonObject {
+      put("current_temperature", 21.5)
+      put("temperature", "22")
+      put("hvac_action", "heating")
+    }
+    val snapshot = HaSnapshot(states = mapOf(id to EntityState(id, "heat", attributes)))
+    val floats = cardSnapshotBindings(setOf(id), snapshot).floats
+    assertEquals(21.5f, floats["$id.current_temperature"])
+    assertEquals(22f, floats["$id.target_temperature"])
+    // A missing set point has no binding, and other domains publish no attribute floats.
+    val noTarget = buildJsonObject { put("current_temperature", 19) }
+    assertEquals(
+      mapOf("current_temperature" to 19f),
+      HaLiveBindings.attributeFloats(id, noTarget),
+    )
+    assertEquals(emptyMap(), HaLiveBindings.attributeFloats("sensor.temp", attributes))
+  }
+
+  @Test
   fun isOnFollowsTheActiveStateConvertersBake() {
     val cases =
       mapOf(

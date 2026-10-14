@@ -158,6 +158,9 @@ internal fun JsonObjectBuilder.putStateBindings(state: EntityState) {
   put("$entityId.is_on", JsonPrimitive(HaLiveBindings.isOn(entityId, state.state)))
   putStateInt(entityId, state.state)
   putNumericState(entityId, state.state)
+  HaLiveBindings.attributeFloats(entityId, state.attributes).forEach { (suffix, value) ->
+    put("$entityId.$suffix", JsonPrimitive(value))
+  }
 }
 
 private fun errorReply(id: Int?, message: String): JsonObject = buildJsonObject {
