@@ -18,7 +18,6 @@ import androidx.compose.remote.creation.compose.modifier.fillMaxSize
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.modifier.size
-import androidx.compose.remote.creation.compose.shapes.RemoteRoundedCornerShape
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.runtime.Composable
@@ -177,7 +176,7 @@ private fun ExtraInfoRow(extras: List<HaWeatherExtra>, theme: RemoteHaTheme) {
       RemoteColumn(
         modifier =
           RemoteModifier.weight(1f)
-            .clip(RemoteRoundedCornerShape(10.rdp))
+            .clip(haControlShape(10))
             .background(theme.divider)
             .padding(horizontal = 4.rdp, vertical = 8.rdp),
         horizontalAlignment = RemoteAlignment.CenterHorizontally,

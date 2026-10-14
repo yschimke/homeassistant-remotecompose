@@ -67,7 +67,7 @@ fun RemoteHaStatisticCard(data: HaStatisticCardData, modifier: RemoteModifier = 
       if (data.periodLabel != null) {
         RemoteText(
           text = cardText("period", data.periodLabel),
-          color = data.accent.rc,
+          color = haInk(data.accent.rc),
           fontSize = HaType.Caption,
           style = haTextStyle(),
           maxLines = 1,

@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -22,7 +23,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import ee.schimke.ha.rc.components.HaUberTheme
 import ee.schimke.ha.rc.components.ThemeStyle
 import kotlinx.coroutines.delay
 
@@ -46,8 +50,17 @@ fun TvKioskPreview(
   demoMode: Boolean,
   modifier: Modifier = Modifier,
   frozenNowMs: Long? = null,
+  cardStyle: HaUberTheme = HaUberTheme.Classic,
 ) {
-  val cs = MaterialTheme.colorScheme
+  // Classic draws in the theme's Material roles. Any other card style re-skins the kiosk in its
+  // own palette (dark: a TV is), corners and reading weight, and inks its readings when it is
+  // monochrome — the same look its dashboard cards have.
+  val cs = MaterialTheme.colorScheme.withCardStyle(cardStyle)
+  val shape = if (cardStyle.id == HaUberTheme.Classic.id) null else cardStyle.shape
+  val tileCorner = shape?.cornerDp?.dp ?: 20.dp
+  val chipCorner = shape?.let { (it.cornerDp * 0.7f).dp } ?: 14.dp
+  val valueWeight = if (shape == null) null else cardStyle.valueWeight
+  val ink = if (shape == null) null else cardStyle.inkFor(darkTheme = true)
 
   var nowMs by remember { mutableLongStateOf(frozenNowMs ?: System.currentTimeMillis()) }
   LaunchedEffect(demoMode, frozenNowMs) {
@@ -70,7 +83,7 @@ fun TvKioskPreview(
     modifier =
       modifier
         .fillMaxHeight()
-        .clip(RoundedCornerShape(24.dp))
+        .clip(RoundedCornerShape(if (shape == null) 24.dp else (shape.cornerDp * 1.5f).dp))
         .background(cs.surfaceContainerLow)
         .padding(28.dp),
     verticalArrangement = Arrangement.spacedBy(20.dp),
@@ -113,6 +126,9 @@ fun TvKioskPreview(
           container = container,
           onContainer = onContainer,
           modifier = Modifier.width(220.dp),
+          corner = tileCorner,
+          valueColor = ink ?: onContainer,
+          valueWeight = valueWeight,
         )
       }
     }
@@ -121,7 +137,7 @@ fun TvKioskPreview(
         tiles.drop(3).forEach { tile ->
           Box(
             modifier =
-              Modifier.clip(RoundedCornerShape(14.dp))
+              Modifier.clip(RoundedCornerShape(chipCorner))
                 .background(cs.surfaceContainerHigh)
                 .padding(horizontal = 14.dp, vertical = 10.dp)
           ) {
@@ -134,7 +150,8 @@ fun TvKioskPreview(
               Text(
                 text = tile.value,
                 style = MaterialTheme.typography.bodyLarge,
-                color = cs.onSurface,
+                color = ink ?: cs.onSurface,
+                fontWeight = valueWeight,
               )
             }
           }
@@ -169,11 +186,14 @@ private fun Tile(
   container: Color,
   onContainer: Color,
   modifier: Modifier = Modifier,
+  corner: Dp = 20.dp,
+  valueColor: Color = onContainer,
+  valueWeight: FontWeight? = null,
 ) {
   Column(
     modifier =
       modifier
-        .clip(RoundedCornerShape(20.dp))
+        .clip(RoundedCornerShape(corner))
         .background(container)
         .padding(horizontal = 20.dp, vertical = 18.dp),
     verticalArrangement = Arrangement.spacedBy(6.dp),
@@ -183,8 +203,36 @@ private fun Tile(
       style = MaterialTheme.typography.labelLarge,
       color = onContainer.copy(alpha = 0.8f),
     )
-    Text(text = value, style = MaterialTheme.typography.headlineSmall, color = onContainer)
+    Text(
+      text = value,
+      style = MaterialTheme.typography.headlineSmall,
+      color = valueColor,
+      fontWeight = valueWeight,
+    )
   }
+}
+
+/**
+ * These roles re-skinned in [style]'s own dark palette, for every style but Classic (which keeps
+ * them): surfaces from its dashboard and card backgrounds, text from its text roles, and the three
+ * tile containers from its card surface — a styled kiosk's tiles are its cards.
+ */
+private fun ColorScheme.withCardStyle(style: HaUberTheme): ColorScheme {
+  if (style.id == HaUberTheme.Classic.id) return this
+  val p = style.palette(darkTheme = true)
+  return copy(
+    surfaceContainerLow = p.dashboardBackground,
+    surfaceContainerHigh = p.cardBackground,
+    onSurface = p.primaryText,
+    onSurfaceVariant = p.secondaryText,
+    primaryContainer = p.cardBackground,
+    onPrimaryContainer = p.primaryText,
+    secondaryContainer = p.cardBackground,
+    onSecondaryContainer = p.primaryText,
+    tertiaryContainer = p.cardBackground,
+    onTertiaryContainer = p.primaryText,
+    tertiary = p.linkText,
+  )
 }
 
 @Composable

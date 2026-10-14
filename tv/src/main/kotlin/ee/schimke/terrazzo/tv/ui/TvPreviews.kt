@@ -10,6 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import ee.schimke.ha.rc.components.HaUberTheme
 import ee.schimke.ha.rc.components.ThemeStyle
 import ee.schimke.ha.rc.components.terrazzoColorScheme
 import ee.schimke.ha.rc.components.terrazzoTypographyFor
@@ -67,5 +68,38 @@ private fun TvPreviewFrame(style: ThemeStyle, content: @Composable () -> Unit) {
     Box(modifier = Modifier.fillMaxSize().background(colors.background).padding(20.dp)) {
       Column(modifier = Modifier.fillMaxSize()) { content() }
     }
+  }
+}
+
+@Preview(
+  name = "TV: kiosk (Console card style)",
+  widthDp = 680,
+  heightDp = 384,
+  showBackground = true,
+)
+@Composable
+fun TvKioskPreview_Console() {
+  TvPreviewFrame(style = ThemeStyle.TerrazzoKiosk) {
+    TvKioskPreview(
+      style = ThemeStyle.TerrazzoKiosk,
+      demoMode = true,
+      modifier = Modifier.fillMaxSize(),
+      frozenNowMs = TV_PREVIEW_NOW_MS,
+      cardStyle = HaUberTheme.Console,
+    )
+  }
+}
+
+@Preview(name = "TV: kiosk (LCD card style)", widthDp = 680, heightDp = 384, showBackground = true)
+@Composable
+fun TvKioskPreview_Lcd() {
+  TvPreviewFrame(style = ThemeStyle.TerrazzoKiosk) {
+    TvKioskPreview(
+      style = ThemeStyle.TerrazzoKiosk,
+      demoMode = true,
+      modifier = Modifier.fillMaxSize(),
+      frozenNowMs = TV_PREVIEW_NOW_MS,
+      cardStyle = HaUberTheme.Lcd,
+    )
   }
 }

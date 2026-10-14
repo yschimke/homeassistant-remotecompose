@@ -184,49 +184,20 @@ private fun Bars(entityId: String?, points: List<Float>, accent: Color, theme: R
   val base = entityFloat(entityId, "bar_base", range.min)
   val span = entityFloat(entityId, "bar_span", range.span)
   val values = points.mapIndexed { i, v -> entityFloat(entityId, "bar.$i", v) }
-  val n = points.size
+  val look = meterLook(accent.rc, theme.divider)
+  val family = visualFamily()
   RemoteCanvas(modifier = RemoteModifier.fillMaxWidth().height(28.rdp)) {
-    val w = width
-    val h = height
-    val padX = 2f.rf
-    val padY = 3f.rf
-    val drawW = w - padX * 2f.rf
-    val drawH = h - padY * 2f.rf
-
-    val baseline =
-      AndroidPaint()
-        .apply {
-          isAntiAlias = true
-          style = AndroidPaint.Style.STROKE
-          strokeWidth = 1f
-        }
-        .asRemotePaint()
-        .apply { color = theme.divider }
-    drawLine(baseline, RemoteOffset(padX, padY + drawH), RemoteOffset(padX + drawW, padY + drawH))
-
-    val fill =
-      AndroidPaint()
-        .apply {
-          isAntiAlias = true
-          style = AndroidPaint.Style.FILL
-          color = accent.toArgb()
-        }
-        .asRemotePaint()
-
-    val slot = drawW / n.toFloat().rf
-    val barWidth = slot * 0.7f.rf
-    val gap = (slot - barWidth) * 0.5f.rf
-    for (i in 0 until n) {
-      val x0 = padX + slot * i.toFloat().rf + gap
-      val barHeight = drawH * ((values[i] - base) / span)
-      val y0 = padY + drawH - barHeight
-      drawRect(fill, RemoteOffset(x0, y0), RemoteSize(barWidth, barHeight))
-    }
+    familyBars(family, look, values, base, span)
   }
 }
 
 @Composable
 private fun StackedBars(rows: List<HaHistoryGraphRow>, theme: RemoteHaTheme) {
+  // A monochrome theme prints every row in its ink, told apart by strength.
+  val ink = currentHaUberTheme().ink
+  val rowColors = rows.mapIndexed { r, row ->
+    ink?.copy(alpha = 1f - 0.6f * r / rows.size.coerceAtLeast(1)) ?: row.accent
+  }
   val n = rows.maxOf { it.points.size }
   // Each segment is `<entityId>.stack.<i>` (its value clamped at zero) and the axis
   // `card.stack_max`; a zero segment draws nothing, in-document.
@@ -270,7 +241,7 @@ private fun StackedBars(rows: List<HaHistoryGraphRow>, theme: RemoteHaTheme) {
             .apply {
               isAntiAlias = true
               style = AndroidPaint.Style.FILL
-              color = row.accent.toArgb()
+              color = rowColors[r].toArgb()
             }
             .asRemotePaint()
         drawRect(fill, RemoteOffset(x0, segTop), RemoteSize(barWidth, segHeight))

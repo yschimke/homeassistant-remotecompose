@@ -28,6 +28,17 @@ class WearPrefs(private val context: Context) {
   }
 
   /**
+   * The card style slot widgets are drawn in: an `HaUberTheme` id (`classic`, `console`, …). The
+   * watch keeps its own palette ([themeStyle]); the style brings the instruments, type and shapes.
+   */
+  val cardStyle: Flow<String> =
+    context.store.data.map { prefs -> prefs[CARD_STYLE_KEY] ?: "classic" }
+
+  suspend fun setCardStyle(id: String) {
+    context.store.edit { it[CARD_STYLE_KEY] = id }
+  }
+
+  /**
    * Off-by-default developer flag that enables the slot-preview PNG capture path in
    * [ee.schimke.terrazzo.wear.widget.WearSlotPreviewCapturer]. The path runs end-to-end (virtual
    * display + bitmap encode + write to internal storage) but the resulting PNG isn't yet surfaced
@@ -45,6 +56,7 @@ class WearPrefs(private val context: Context) {
   companion object {
     private val Context.store by preferencesDataStore(name = "terrazzo_wear_prefs")
     private val THEME_KEY = stringPreferencesKey("theme_style")
+    private val CARD_STYLE_KEY = stringPreferencesKey("card_style")
     private val PREVIEW_CAPTURE_KEY = booleanPreferencesKey("preview_capture_enabled")
   }
 }

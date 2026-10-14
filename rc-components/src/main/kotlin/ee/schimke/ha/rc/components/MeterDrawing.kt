@@ -145,6 +145,12 @@ internal class ArcBox(w: RemoteFloat, h: RemoteFloat, pad: Float, baseline: Floa
     baseY + r * sin(Math.toRadians((180f + degrees).toDouble())).toFloat().rf
 }
 
+/** A point at canvas angle [degrees] (0 = +x, clockwise) at [r] from ([cx], [cy]). */
+internal fun polar(cx: RemoteFloat, cy: RemoteFloat, degrees: Float, r: RemoteFloat): RemoteOffset {
+  val rad = Math.toRadians(degrees.toDouble())
+  return RemoteOffset(cx + r * cos(rad).toFloat().rf, cy + r * sin(rad).toFloat().rf)
+}
+
 internal fun remoteMax(a: RemoteFloat, b: RemoteFloat): RemoteFloat = -((-a).min(-b))
 
 internal fun RemoteDrawScope.fillCircle(

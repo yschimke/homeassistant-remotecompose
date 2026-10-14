@@ -14,7 +14,6 @@ import androidx.compose.remote.creation.compose.modifier.clickable
 import androidx.compose.remote.creation.compose.modifier.clip
 import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.modifier.size
-import androidx.compose.remote.creation.compose.shapes.RemoteCircleShape
 import androidx.compose.remote.creation.compose.state.RemoteColor
 import androidx.compose.remote.creation.compose.state.RemoteString
 import androidx.compose.remote.creation.compose.state.rdp
@@ -205,7 +204,7 @@ private fun ButtonIconChip(
   RemoteBox(
     modifier =
       RemoteModifier.size(chipDp.rdp)
-        .clip(RemoteCircleShape)
+        .clip(haControlShape(20, round = true))
         .background(accent.copy(alpha = accent.alpha * 0.2f.rf)),
     contentAlignment = RemoteAlignment.Center,
   ) {

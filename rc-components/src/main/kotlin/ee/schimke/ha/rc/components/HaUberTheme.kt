@@ -2,7 +2,12 @@
 
 package ee.schimke.ha.rc.components
 
+import androidx.compose.remote.creation.compose.shapes.RemoteCircleShape
+import androidx.compose.remote.creation.compose.shapes.RemoteRoundedCornerShape
+import androidx.compose.remote.creation.compose.shapes.RemoteShape
+import androidx.compose.remote.creation.compose.state.RemoteColor
 import androidx.compose.remote.creation.compose.state.rc
+import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rsp
 import androidx.compose.remote.creation.compose.text.RemoteFontFamily
 import androidx.compose.remote.creation.compose.text.RemoteTextStyle
@@ -472,4 +477,47 @@ fun ProvideCardStyle(
   content: @Composable () -> Unit,
 ) {
   ProvideHaUberTheme(theme.copy(light = palette, dark = palette), darkTheme, content)
+}
+
+/**
+ * [color] as the active uber theme prints it: the theme's ink for a monochrome theme (LCD, Nixie),
+ * else [color] unchanged — for an accent that marks something (a calendar dot, a keypad ring, a
+ * media control) rather than a semantic band a meter reads.
+ */
+@Composable
+@ReadOnlyComposable
+fun haInk(color: RemoteColor): RemoteColor = LocalHaUberTheme.current.ink?.rc ?: color
+
+/**
+ * The shape of a control inside a card (a key, button, chip or badge) under the active uber theme.
+ * Classic keeps its own: [classicDp] corners, or a circle when [round]. A square-cornered theme
+ * (Trinitron, LCD, Console — `squareKnob`) squares every control off at its control corner; the
+ * soft ones keep circles round and round their corners at least to their control corner
+ * (Expressive's 16dp).
+ */
+@Composable
+@ReadOnlyComposable
+fun haControlShape(classicDp: Int, round: Boolean = false): RemoteShape {
+  val theme = LocalHaUberTheme.current.theme
+  val shape = theme.shape
+  return when {
+    theme.id == HaUberTheme.Classic.id ->
+      if (round) RemoteCircleShape else RemoteRoundedCornerShape(classicDp.rdp)
+    shape.squareKnob -> RemoteRoundedCornerShape(shape.controlCornerDp.rdp)
+    round -> RemoteCircleShape
+    else -> RemoteRoundedCornerShape(maxOf(classicDp, shape.controlCornerDp).rdp)
+  }
+}
+
+/**
+ * Provide [theme]'s design to every card part in [content] — meter family, readout, shapes,
+ * typeface and ink — while keeping the palette the host already provides. For a host with colours
+ * of its own that the user picked separately, such as a Wear watch face's Material You scheme.
+ */
+@Composable
+fun ProvideHaUberStyle(theme: HaUberTheme, darkTheme: Boolean, content: @Composable () -> Unit) {
+  CompositionLocalProvider(
+    LocalHaUberTheme provides HaActiveUberTheme(theme, darkTheme),
+    content = content,
+  )
 }

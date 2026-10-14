@@ -32,6 +32,7 @@ import ee.schimke.terrazzo.wear.ui.WearTopLevelScreen
 import ee.schimke.terrazzo.wear.ui.terrazzoWearColorScheme
 import ee.schimke.terrazzo.wear.ui.wearTypographyFor
 import ee.schimke.terrazzo.wear.widget.WearSlotPreviewCapturer
+import ee.schimke.terrazzo.wear.widget.refreshAllSlotWidgets
 import ee.schimke.terrazzo.wearsync.proto.DashboardData
 import ee.schimke.terrazzo.wearsync.proto.PinnedCardSet
 import ee.schimke.terrazzo.wearsync.proto.PinnedSectionSet
@@ -99,6 +100,7 @@ private fun WearApp(repo: WearSyncRepository) {
   val prefs = remember(context) { WearPrefs(context.applicationContext) }
   val scope = rememberCoroutineScope()
   val style by prefs.themeStyle.collectAsState(initial = ThemeStyle.TerrazzoHome)
+  val cardStyle by prefs.cardStyle.collectAsState(initial = "classic")
   val settings: WearSettings by repo.settings.collectAsState()
   val pinned: PinnedCardSet by repo.pinned.collectAsState()
   val sections: PinnedSectionSet by repo.sections.collectAsState()
@@ -176,9 +178,21 @@ private fun WearApp(repo: WearSyncRepository) {
             WearSettingsScreen(
               selected = style,
               settings = settings,
-              onSelectTheme = { picked -> scope.launch { prefs.setThemeStyle(picked) } },
+              onSelectTheme = { picked ->
+                scope.launch {
+                  prefs.setThemeStyle(picked)
+                  refreshAllSlotWidgets(context.applicationContext)
+                }
+              },
               onBack = { screen = WearScreen.TopLevel },
               modifier = Modifier.fillMaxSize(),
+              cardStyle = cardStyle,
+              onSelectCardStyle = { picked ->
+                scope.launch {
+                  prefs.setCardStyle(picked)
+                  refreshAllSlotWidgets(context.applicationContext)
+                }
+              },
             )
         }
       }

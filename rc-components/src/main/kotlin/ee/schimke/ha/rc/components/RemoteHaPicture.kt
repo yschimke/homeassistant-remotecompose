@@ -20,7 +20,6 @@ import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.creation.compose.modifier.height
 import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.modifier.size
-import androidx.compose.remote.creation.compose.shapes.RemoteCircleShape
 import androidx.compose.remote.creation.compose.shapes.RemoteRoundedCornerShape
 import androidx.compose.remote.creation.compose.state.RemoteColor
 import androidx.compose.remote.creation.compose.state.rc
@@ -152,7 +151,7 @@ fun RemoteHaPictureGlance(data: HaPictureGlanceData, modifier: RemoteModifier = 
 private fun Cell(cell: HaPictureGlanceCell, theme: RemoteHaTheme) {
   val click =
     cell.tapAction.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
-  val accent = cell.accent.rc
+  val accent = haInk(cell.accent.rc)
   val activeBg: RemoteColor = accent.copy(alpha = accent.alpha * 0.18f.rf)
   val inactiveBg: RemoteColor = theme.divider.copy(alpha = theme.divider.alpha * 0.5f.rf)
 
@@ -167,7 +166,8 @@ private fun Cell(cell: HaPictureGlanceCell, theme: RemoteHaTheme) {
       ?: if (cell.initiallyActive) accent else theme.secondaryText
 
   RemoteBox(
-    modifier = RemoteModifier.then(click).size(32.rdp).clip(RemoteCircleShape).background(bg),
+    modifier =
+      RemoteModifier.then(click).size(32.rdp).clip(haControlShape(16, round = true)).background(bg),
     contentAlignment = RemoteAlignment.Center,
   ) {
     RemoteIcon(
@@ -257,7 +257,7 @@ private fun Element(
     is HaPictureElement.StateIcon -> {
       val click =
         element.tapAction.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
-      val accent = element.accent.rc
+      val accent = haInk(element.accent.rc)
       val activeBg: RemoteColor = accent.copy(alpha = accent.alpha * 0.18f.rf)
       val inactiveBg: RemoteColor = theme.divider.copy(alpha = theme.divider.alpha * 0.5f.rf)
 
@@ -272,7 +272,8 @@ private fun Element(
           ?: if (element.initiallyActive) accent else theme.secondaryText
 
       RemoteBox(
-        modifier = modifier.then(click).size(28.rdp).clip(RemoteCircleShape).background(bg),
+        modifier =
+          modifier.then(click).size(28.rdp).clip(haControlShape(14, round = true)).background(bg),
         contentAlignment = RemoteAlignment.Center,
       ) {
         RemoteIcon(
@@ -297,13 +298,13 @@ private fun Element(
     is HaPictureElement.ServiceButton -> {
       val click =
         element.tapAction.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
-      val accent = element.accent.rc
+      val accent = haInk(element.accent.rc)
       RemoteBox(
         modifier =
           modifier
             .then(click)
-            .clip(RemoteRoundedCornerShape(6.rdp))
-            .border(1.rdp, accent, RemoteRoundedCornerShape(6.rdp))
+            .clip(haControlShape(6))
+            .border(1.rdp, accent, haControlShape(6))
             .padding(horizontal = 10.rdp, vertical = 6.rdp)
       ) {
         RemoteText(
