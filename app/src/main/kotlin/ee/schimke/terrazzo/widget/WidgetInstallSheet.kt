@@ -4,10 +4,14 @@ package ee.schimke.terrazzo.widget
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PushPin
@@ -34,6 +38,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
@@ -135,10 +140,21 @@ fun WidgetInstallSheet(
 
         OutlinedTextField(
           value = name,
-          onValueChange = { name = it },
+          onValueChange = {
+            name = it
+            installError = null
+          },
           label = { Text("Widget name") },
           placeholder = { Text("Keep the original name") },
           singleLine = true,
+          keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+          keyboardActions =
+            KeyboardActions(
+              onDone = {
+                focusManager.clearFocus()
+                keyboard?.hide()
+              }
+            ),
           modifier = Modifier.fillMaxWidth(),
         )
         WidgetPreparationPreview(baseUrl, editedCard, liveSnapshot) { renderedPreview = it }
@@ -182,7 +198,8 @@ fun WidgetInstallSheet(
             imageVector = if (isCardPinned) Icons.Filled.PushPin else Icons.Outlined.PushPin,
             contentDescription = null,
           )
-          Text(text = if (isCardPinned) "  Unpin from Wear" else "  Pin to Wear")
+          Spacer(Modifier.width(8.dp))
+          Text(text = if (isCardPinned) "Unpin from Wear" else "Pin to Wear")
         }
 
         onMonitor?.let { start ->

@@ -9,6 +9,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -42,6 +43,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
@@ -62,6 +64,12 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.CustomAccessibilityAction
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.customActions
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -238,107 +246,156 @@ internal fun LauncherGrid(
   // recaptured at each slot size, selecting the same adaptive layout as the launcher.
   val currentWidthDp = (cellsW * LAUNCHER_CELL_WIDTH_DP).dp
   val currentHeightDp = (cellsH * LAUNCHER_CELL_HEIGHT_DP).dp
+  val scroll = rememberScrollState()
+  LaunchedEffect(cellsW) {
+    // A smaller preset must not leave its card off-screen after panning a wide preview.
+    if (scroll.value > ((cellsW - 1) * cellWpx).toInt()) scroll.scrollTo(0)
+  }
 
-  Box(modifier = Modifier.size(gridWidthDp, gridHeightDp)) {
-    // Backdrop: cell grid + smallest/largest size outlines.
-    Canvas(modifier = Modifier.matchParentSize()) {
-      val dash = PathEffect.dashPathEffect(floatArrayOf(10f, 8f))
-      for (i in 0..bounds.maxCellsW) {
-        val x = (i * cellWpx).coerceAtMost(size.width)
-        drawLine(gridColor, Offset(x, 0f), Offset(x, size.height), 1.dp.toPx())
-      }
-      for (j in 0..bounds.maxCellsH) {
-        val y = (j * cellHpx).coerceAtMost(size.height)
-        drawLine(gridColor, Offset(0f, y), Offset(size.width, y), 1.dp.toPx())
-      }
-      // Largest size = the whole grid; smallest = top-left block.
-      drawRect(
-        color = largestColor,
-        topLeft = Offset.Zero,
-        size = Size(size.width, size.height),
-        style = Stroke(width = 2.dp.toPx(), pathEffect = dash),
-      )
-      drawRect(
-        color = smallestColor,
-        topLeft = Offset.Zero,
-        size = Size(bounds.minCellsW * cellWpx, bounds.minCellsH * cellHpx),
-        style = Stroke(width = 2.dp.toPx(), pathEffect = dash),
-      )
-    }
-
-    // The card at its current slot, anchored top-left so it grows
-    // toward the handle.
+  Box(Modifier.horizontalScroll(scroll).testTag("widget-grid-viewport")) {
     Box(
       modifier =
-        Modifier.align(Alignment.TopStart)
-          .size(currentWidthDp, currentHeightDp)
-          .border(2.dp, currentColor)
+        Modifier.padding(end = HANDLE_TOUCH_SIZE_DP.dp / 2, bottom = HANDLE_TOUCH_SIZE_DP.dp / 2)
+          .size(gridWidthDp, gridHeightDp)
     ) {
-      content()
-    }
+      // Backdrop: cell grid + smallest/largest size outlines.
+      Canvas(modifier = Modifier.matchParentSize()) {
+        val dash = PathEffect.dashPathEffect(floatArrayOf(10f, 8f))
+        for (i in 0..bounds.maxCellsW) {
+          val x = (i * cellWpx).coerceAtMost(size.width)
+          drawLine(gridColor, Offset(x, 0f), Offset(x, size.height), 1.dp.toPx())
+        }
+        for (j in 0..bounds.maxCellsH) {
+          val y = (j * cellHpx).coerceAtMost(size.height)
+          drawLine(gridColor, Offset(0f, y), Offset(size.width, y), 1.dp.toPx())
+        }
+        // Largest size = the whole grid; smallest = top-left block.
+        drawRect(
+          color = largestColor,
+          topLeft = Offset.Zero,
+          size = Size(size.width, size.height),
+          style = Stroke(width = 2.dp.toPx(), pathEffect = dash),
+        )
+        drawRect(
+          color = smallestColor,
+          topLeft = Offset.Zero,
+          size = Size(bounds.minCellsW * cellWpx, bounds.minCellsH * cellHpx),
+          style = Stroke(width = 2.dp.toPx(), pathEffect = dash),
+        )
+      }
 
-    // Resize handle at the current slot's bottom-right corner. A
-    // drag of one cell's width / height steps the slot by one cell,
-    // clamped to the size class's min/max range.
-    Box(
-      modifier =
-        Modifier.align(Alignment.TopStart)
-          .offset(
-            x = currentWidthDp - HANDLE_SIZE_DP.dp / 2,
-            y = currentHeightDp - HANDLE_SIZE_DP.dp / 2,
-          )
-          .size(HANDLE_SIZE_DP.dp)
-          .clip(CircleShape)
-          .background(currentColor)
-          .pointerInput(bounds) {
-            detectDragGestures(
-              onDragEnd = {
-                dragX = 0f
-                dragY = 0f
-              },
-              onDragCancel = {
-                dragX = 0f
-                dragY = 0f
-              },
-            ) { change, drag ->
-              change.consume()
-              dragX += drag.x
-              dragY += drag.y
-              var w = cellsW
-              var h = cellsH
-              while (dragX >= cellWpx && w < bounds.maxCellsW) {
-                w++
-                dragX -= cellWpx
+      // The card at its current slot, anchored top-left so it grows
+      // toward the handle.
+      Box(
+        modifier =
+          Modifier.align(Alignment.TopStart)
+            .size(currentWidthDp, currentHeightDp)
+            .border(2.dp, currentColor)
+      ) {
+        content()
+      }
+
+      // Resize handle at the current slot's bottom-right corner. A
+      // drag of one cell's width / height steps the slot by one cell,
+      // clamped to the size class's min/max range.
+      Box(
+        modifier =
+          Modifier.align(Alignment.TopStart)
+            .offset(
+              x = currentWidthDp - HANDLE_TOUCH_SIZE_DP.dp / 2,
+              y = currentHeightDp - HANDLE_TOUCH_SIZE_DP.dp / 2,
+            )
+            .size(HANDLE_TOUCH_SIZE_DP.dp)
+            .testTag("widget-resize-handle")
+            .semantics {
+              contentDescription = "Resize widget preview"
+              stateDescription = "$cellsW by $cellsH cells"
+              customActions = buildList {
+                if (cellsW < bounds.maxCellsW)
+                  add(
+                    CustomAccessibilityAction("Make wider") {
+                      onResize(cellsW + 1, cellsH)
+                      true
+                    }
+                  )
+                if (cellsW > bounds.minCellsW)
+                  add(
+                    CustomAccessibilityAction("Make narrower") {
+                      onResize(cellsW - 1, cellsH)
+                      true
+                    }
+                  )
+                if (cellsH < bounds.maxCellsH)
+                  add(
+                    CustomAccessibilityAction("Make taller") {
+                      onResize(cellsW, cellsH + 1)
+                      true
+                    }
+                  )
+                if (cellsH > bounds.minCellsH)
+                  add(
+                    CustomAccessibilityAction("Make shorter") {
+                      onResize(cellsW, cellsH - 1)
+                      true
+                    }
+                  )
               }
-              while (dragX <= -cellWpx && w > bounds.minCellsW) {
-                w--
-                dragX += cellWpx
-              }
-              while (dragY >= cellHpx && h < bounds.maxCellsH) {
-                h++
-                dragY -= cellHpx
-              }
-              while (dragY <= -cellHpx && h > bounds.minCellsH) {
-                h--
-                dragY += cellHpx
-              }
-              // Don't bank drag past the clamp, or the user
-              // has to "unwind" it before the slot moves back.
-              if (w == bounds.maxCellsW) dragX = dragX.coerceAtMost(0f)
-              if (w == bounds.minCellsW) dragX = dragX.coerceAtLeast(0f)
-              if (h == bounds.maxCellsH) dragY = dragY.coerceAtMost(0f)
-              if (h == bounds.minCellsH) dragY = dragY.coerceAtLeast(0f)
-              if (w != cellsW || h != cellsH) onResize(w, h)
             }
-          },
-      contentAlignment = Alignment.Center,
-    ) {
-      Icon(
-        Icons.Filled.OpenInFull,
-        contentDescription = "Resize widget preview",
-        tint = MaterialTheme.colorScheme.onPrimary,
-        modifier = Modifier.size(16.dp),
-      )
+            .pointerInput(bounds) {
+              detectDragGestures(
+                onDragEnd = {
+                  dragX = 0f
+                  dragY = 0f
+                },
+                onDragCancel = {
+                  dragX = 0f
+                  dragY = 0f
+                },
+              ) { change, drag ->
+                change.consume()
+                dragX += drag.x
+                dragY += drag.y
+                var w = cellsW
+                var h = cellsH
+                while (dragX >= cellWpx && w < bounds.maxCellsW) {
+                  w++
+                  dragX -= cellWpx
+                }
+                while (dragX <= -cellWpx && w > bounds.minCellsW) {
+                  w--
+                  dragX += cellWpx
+                }
+                while (dragY >= cellHpx && h < bounds.maxCellsH) {
+                  h++
+                  dragY -= cellHpx
+                }
+                while (dragY <= -cellHpx && h > bounds.minCellsH) {
+                  h--
+                  dragY += cellHpx
+                }
+                // Don't bank drag past the clamp, or the user
+                // has to "unwind" it before the slot moves back.
+                if (w == bounds.maxCellsW) dragX = dragX.coerceAtMost(0f)
+                if (w == bounds.minCellsW) dragX = dragX.coerceAtLeast(0f)
+                if (h == bounds.maxCellsH) dragY = dragY.coerceAtMost(0f)
+                if (h == bounds.minCellsH) dragY = dragY.coerceAtLeast(0f)
+                if (w != cellsW || h != cellsH) onResize(w, h)
+              }
+            },
+        contentAlignment = Alignment.Center,
+      ) {
+        Box(
+          Modifier.size(HANDLE_SIZE_DP.dp).clip(CircleShape).background(currentColor),
+          contentAlignment = Alignment.Center,
+        ) {
+          Icon(
+            Icons.Filled.OpenInFull,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onPrimary,
+            modifier = Modifier.size(16.dp),
+          )
+        }
+      }
     }
   }
 }
@@ -382,6 +439,7 @@ private fun LegendSwatch(color: Color, label: String) {
 }
 
 private const val HANDLE_SIZE_DP = 28
+private const val HANDLE_TOUCH_SIZE_DP = 48
 
 /** Middle region: range chips + one chart block per entity. */
 @Composable
