@@ -46,8 +46,8 @@ fun RemoteHaTile(data: HaTileData, modifier: RemoteModifier = RemoteModifier) {
   val isOnBinding =
     if (data.accent.toggleable) LiveValues.isOn(data.entityId, data.accent.initiallyOn) else null
   val accent: RemoteColor =
-    isOnBinding?.select(data.accent.activeAccent, data.accent.inactiveAccent)
-      ?: data.accent.activeAccent
+    isOnBinding?.select(data.accent.themed().activeAccent, data.accent.themed().inactiveAccent)
+      ?: data.accent.themed().activeAccent
   // Toggleable entities always get the chip (color varies with isOn);
   // read-only entities (no isOn binding) render icon plain.
   val renderChip = isOnBinding != null
@@ -146,8 +146,8 @@ fun RemoteHaIconChip(data: HaTileData, modifier: RemoteModifier = RemoteModifier
   val clickable =
     data.tapAction.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
   val accent: RemoteColor =
-    if (data.accent.toggleable && !data.accent.initiallyOn) data.accent.inactiveAccent
-    else data.accent.activeAccent
+    if (data.accent.toggleable && !data.accent.initiallyOn) data.accent.themed().inactiveAccent
+    else data.accent.themed().activeAccent
 
   RemoteColumn(
     modifier = modifier.then(clickable).fillMaxSize().padding(4.rdp),

@@ -62,8 +62,8 @@ fun RemoteHaPictureEntity(
   val isOnBinding =
     if (data.accent.toggleable) LiveValues.isOn(data.entityId, data.accent.initiallyOn) else null
   val accent =
-    isOnBinding?.select(data.accent.activeAccent, data.accent.inactiveAccent)
-      ?: data.accent.activeAccent
+    isOnBinding?.select(data.accent.themed().activeAccent, data.accent.themed().inactiveAccent)
+      ?: data.accent.themed().activeAccent
   val clickable =
     data.tapAction.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
   val showStrip = data.showName || data.showState

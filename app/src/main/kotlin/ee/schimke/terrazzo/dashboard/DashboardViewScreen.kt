@@ -70,9 +70,9 @@ import ee.schimke.ha.rc.cardWidthClass
 import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.cards.shutter.withEnhancedShutter
 import ee.schimke.ha.rc.components.HaTheme
-import ee.schimke.ha.rc.components.ProvideHaTheme
+import ee.schimke.ha.rc.components.ProvideCardStyle
 import ee.schimke.ha.rc.components.ThemeStyle
-import ee.schimke.ha.rc.components.haThemeFor
+import ee.schimke.ha.rc.components.cardPalette
 import ee.schimke.ha.rc.converterFor
 import ee.schimke.ha.rc.image.CoilBitmapLoader
 import ee.schimke.terrazzo.LocalHaImageStack
@@ -84,6 +84,7 @@ import ee.schimke.terrazzo.core.pin.PinnedCardData
 import ee.schimke.terrazzo.core.session.DemoHaSession
 import ee.schimke.terrazzo.core.session.HaSession
 import ee.schimke.terrazzo.ui.LayoutConfig
+import ee.schimke.terrazzo.ui.LocalCardStyle
 import ee.schimke.terrazzo.ui.LocalIsDarkTheme
 import ee.schimke.terrazzo.ui.LocalThemeStyle
 import ee.schimke.terrazzo.ui.rememberLayoutConfig
@@ -303,7 +304,10 @@ private fun DashboardList(
   // Same haTheme each card resolves; computed once here so the
   // section-group surface upstairs and the per-card paint downstairs
   // are derived from a single source.
-  val haTheme = remember(style, dark) { haThemeFor(style, dark) }
+  // The user's card style brings its own palette (Classic follows the app palette), so section
+  // surfaces match the cards drawn on them.
+  val cardStyle = LocalCardStyle.current
+  val haTheme = remember(style, dark, cardStyle) { cardStyle.cardPalette(style, dark) }
 
   Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
     val cardDesigns = rememberCardDesigns(context, designServerUrl)
@@ -906,7 +910,8 @@ private fun CardSlot(
   // (see LiveValues in rc-components). [captureEpoch] is the
   // exception: hosts that mutate state out-of-band (demo mode taps)
   // bump it to force a re-encode on the next composition.
-  val haTheme = remember(style, dark) { haThemeFor(style, dark) }
+  val cardStyle = LocalCardStyle.current
+  val haTheme = remember(style, dark, cardStyle) { cardStyle.cardPalette(style, dark) }
   // Markdown templates are evaluated in-process and baked into the
   // document (full markdown fidelity), so unlike entity state they DO
   // belong in the cache key: when the rendered text changes, the key
@@ -927,8 +932,8 @@ private fun CardSlot(
   // per-card-formatted bake isn't clobbered by a raw value.
   val dataSignature = remember(card, snapshot) { registry.cardDataSignature(card, snapshot) }
   val cacheKey =
-    remember(card, style, dark, captureEpoch, templateValues, dataSignature) {
-      CardSlotCacheKey(card, style, dark, captureEpoch, templateValues, dataSignature)
+    remember(card, style, dark, cardStyle, captureEpoch, templateValues, dataSignature) {
+      CardSlotCacheKey(card, style, dark, cardStyle.id, captureEpoch, templateValues, dataSignature)
     }
   val context = androidx.compose.ui.platform.LocalContext.current
   // Templatable cards always render from a card design: the design server's when one is cached for
@@ -939,8 +944,8 @@ private fun CardSlot(
   val designCard = CardDesignTemplates.designCard(card, snapshot, registry)
   val designShape = registry.converterFor(designCard.type)?.designProperties(designCard, snapshot)
   val template =
-    remember(designCard, designShape, cardDesigns, style, dark) {
-      cardTemplateFor(context, designCard, snapshot, cardDesigns, style, dark, registry)
+    remember(designCard, designShape, cardDesigns, style, dark, cardStyle) {
+      cardTemplateFor(context, designCard, snapshot, cardDesigns, style, dark, registry, cardStyle)
     }
   val bitmapLoader =
     remember(context, baseUrl, imageLoader) {
@@ -973,7 +978,9 @@ private fun CardSlot(
       template = template,
     ) {
       ProvideCardRegistry(registry) {
-        ProvideHaTheme(haTheme) { RenderChild(card, snapshot, RemoteModifier.fillMaxWidth()) }
+        ProvideCardStyle(cardStyle, haTheme, dark) {
+          RenderChild(card, snapshot, RemoteModifier.fillMaxWidth())
+        }
       }
     }
     if (flashSignature != null) {
@@ -986,6 +993,7 @@ private data class CardSlotCacheKey(
   val card: CardConfig,
   val style: ThemeStyle,
   val dark: Boolean,
+  val cardStyle: String,
   val captureEpoch: Long,
   val templateValues: Map<String, String?>,
   val dataSignature: String?,

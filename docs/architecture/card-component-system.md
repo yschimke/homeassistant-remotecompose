@@ -175,43 +175,58 @@ templates: `card-thermometer` (a dashboard card at `standard`) and `launcher-the
 
 A palette (`ThemeStyle`, `HaTheme`) recolours the chrome. An **uber theme**
 ([`HaUberTheme`](../../rc-components/src/main/kotlin/ee/schimke/ha/rc/components/HaUberTheme.kt))
-is a whole look: palette, card shape, typeface, and **how meters are drawn**. A monochrome theme
-can also ink every reading in one colour. Every part reads it through `LocalHaUberTheme`. Hosts
-provide it with `ProvideHaUberTheme(theme, darkTheme)`, which also provides the palette.
+is a whole design: palette, card and control shape, typeface, how a value is set, and its own
+**family of instruments** (`HaVisualFamily`). A family is a different *design* of each Layer 2
+visual, not a restyle of one drawing. An LCD thermometer has no bulb, a Trinitron gauge has a
+needle, and a Braun thermometer has no fill. Every part reads the theme through
+`LocalHaUberTheme`, and hosts provide it with `ProvideCardStyle(theme, palette, dark)`.
 
-| Theme | Palette | Card | Type | Meters | Ink |
-|---|---|---|---|---|---|
-| `classic` (default) | HA light / dark | 12 dp, 1 dp border | default | smooth | semantic |
-| `expressive`: Material 3 Expressive | M3 Expressive tonal (`PaletteStyle.Expressive`) | 28 dp, no border | default, bold readings | smooth, ×1.6 strokes, **track gap + stop dot** | semantic |
-| `trinitron`: techy Sony | graphite, dark only | 2 dp, hairline | monospace, +1.2 sp tracking | **36-tick scale** | semantic |
-| `lcd` | reflective green-grey; dark mode = Indiglo backlight | 4 dp, 2 dp bezel | monospace, bold | **10 chunky segments with ghosts** | dark ink / cyan |
-| `braun`: Dieter Rams, 1962 | warm off-white / Braun black | 18 dp, no border | sans-serif, medium | smooth hairlines (×0.55) | semantic |
-| `nixie` | black glass, dark only | 14 dp | sans-serif, light | thin filaments **with a glow halo** | orange |
+| Theme | Dial (gauge, arc) | Thermometer | Battery | Bar | Readout | Card · controls |
+|---|---|---|---|---|---|---|
+| `classic` (default) | smooth arc | liquid tube over a bulb | outlined, filled | rounded bar | plain | 12 dp, border · pill switch |
+| `expressive`: Material 3 Expressive | thick arc, **track gap + stop dot** | **fat capsule**, gap and stop dot, no bulb | pill with gap and dot | capsule with gap | value on a **tonal pill** | 28 dp, borderless · 16 dp |
+| `trinitron`: techy Sony | **VU meter**: hairline scale, index ticks, red peak zone, swinging needle | **LED level column** beside a tick scale, red past the peak | hairline frame of LED cells | LED strip | **tracked label ruled off above** the value | 2 dp, hairline · square knob |
+| `lcd`: segment display | 12 blocks with ghosts | **framed column of bars**, no bulb, **hot bars in a red ink** | **phone battery**, four bars, red when low | chunky segments | value in a **recessed screen** | 4 dp bezel · square block switch |
+| `braun`: Dieter Rams | half-circle dial, index ticks, **orange pointer** on a black hub | **tuning scale**: spine, ticks, orange pointer, red ticks past hot | hairline, softly rounded | tuning scale | plain | 18 dp, borderless |
+| `nixie` | glowing filament over electrode dots | **IN-9 bargraph tube** in its socket | horizontal tube | tube | plain | 14 dp · 4 dp |
 
 How each part takes it:
 
-- **Meters** (`MeterLook` in `RemoteHaMeters.kt`) draw the theme's `HaMeterForm`. `Smooth` is the
-  continuous fill. `Segmented(count, gap, ghostAlpha)` lights segment *i* when the live fraction
-  passes its midpoint, as an in-document select, so a segmented meter stays live. Unlit segments
-  are the track, or the ink at `ghostAlpha`, which gives an LCD its ghosts. `strokeScale`,
-  `trackGap` and `glow` change the stroke, add Expressive's gap and stop dot, and draw Nixie's
-  halo. A glyph caps its segments at 12, and a coarse battery draws a phone's five bars.
-- **Card chrome**: `cardChrome` takes its corner and border from the theme's `HaCardShapeStyle`.
+- **Meters**: `RemoteHaMeters.kt` dispatches each visual to the family's drawing in
+  `Meters<Family>.kt`, which draws from the shared kit in `MeterDrawing.kt` (`MeterLook` colours,
+  `FitBox`, `ArcBox`). Every family stays live. Fills grow with the fraction, and needles and
+  pointers are `rotate`d or placed by it. Segments light when the fraction passes their midpoint,
+  as an in-document select.
+- **Zones** (`HaMeterZones`) mark where a scale turns noteworthy. A reading gives its own: the
+  temperature ramp's 30 °C hot end, and a battery's 15 % critical level. A gauge passes its red
+  severity band. Families draw a zone as hot segments (LCD), a red peak zone (Trinitron) or red
+  ticks (Braun).
+- **Readout** (`HaReadoutStyle`) sets the value: plain, a tonal pill, a ruled plate, or a screen.
+- **Card chrome and controls**: `cardChrome` takes the theme's corner and border, and the toggle
+  switch takes its corner and square or round knob (`HaCardShapeStyle`).
 - **Text**: every `RemoteHa*` text takes `style = haTextStyle()`, the theme's font family and
   tracking. Readings take `fontWeight = haValueWeight()`.
-- **Ink** replaces rule 2's semantic data colours. It is only for themes that are monochrome by
-  nature (LCD, Nixie), and the reading's state still shows in fill level and segment count.
+- **Ink** replaces rule 2's semantic data colours on themes that are monochrome by nature (LCD,
+  Nixie): readings, and entity icons and switches (`HaToggleAccent.themed()`). Such a theme keeps a
+  second **hot ink** for its hot and low segments, the way real LCDs had coloured overlay segments.
 
 `classic` is exactly the look the cards had before uber themes (`HaUberThemeTest` pins it), so
-nothing changes until a host provides another. In the builder, `ha-cards/uber-theme` is a
-container that takes a `theme` and `dark`; `HaCardMeasurementsTest` keeps the policy's values in
-step with `HaUberTheme.all`. The showcase previews are `Uber_*` in
+nothing changes until a host provides another.
+
+**In the app**, Settings has a **Card style** picker (`CardStylePref`, beside the palette).
+Classic follows the app palette (`cardPalette` → `haThemeFor`), and every other style brings its
+own. Dashboard cards and their section surfaces take it. It is part of the card's cache key, and
+of its design key, as a fourth `baked:<palette>:<mode>:<style>` part, so an uber-styled card
+captures its template locally while classic keys still match the design server. Launcher widgets
+keep following the launcher's system colours.
+
+In the builder, `ha-cards/uber-theme` is a container that takes a `theme` and `dark`.
+`HaCardMeasurementsTest` keeps the policy's values in step with `HaUberTheme.all`. The showcase
+previews are `Uber_*` in
 [`UberThemePreviews.kt`](../../previews/src/main/kotlin/ee/schimke/ha/previews/UberThemePreviews.kt).
 
-**Not yet themed:** entity icons, icon chips and toggle switches keep their semantic state
-colours, even under the monochrome themes. The arc-dial controls (thermostat, humidifier, light) and the history /
-statistics graphs draw their own canvases, and the app's Settings picker still offers palettes
-only. Both are follow-ups.
+**Not yet themed:** the arc-dial controls (thermostat, humidifier, light), the history and
+statistics graphs, Wear and the TV app.
 
 ## 6. Adoption checklist
 
@@ -224,7 +239,8 @@ When you add or change a part or a card:
 3. A numeric reading is a `HaReading` built with `haReading(…)`, so its bindings are the hosts'
    and its derived values are computed in-document.
 4. Draw with an existing Layer 2 meter before writing a new canvas. A new visual is a meter, not
-   a card-private canvas, and it reads `meterLook` so it takes the uber theme's form and ink.
+   a card-private canvas, with a drawing for every `HaVisualFamily`, so each uber theme has its
+   own design of it.
 5. Give a measurement a presentation, or `RemoteHaAdaptiveMeasurement` in a Fixed-mode cell, and
    check the smallest and largest cells against adaptive-card-layouts.md's design-review checklist.
 6. A new part that the builder should offer gets a `ha-cards` wrapper (scalar arguments only), a

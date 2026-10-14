@@ -20,7 +20,8 @@ class HaUberThemeTest {
     assertEquals(HaTheme.Light, classic.palette(darkTheme = false))
     assertEquals(HaTheme.Dark, classic.palette(darkTheme = true))
     assertEquals(HaCardShapeStyle(cornerDp = 12, borderDp = 1), classic.shape)
-    assertEquals(HaMeterStyle(), classic.meter)
+    assertEquals(HaVisualFamily.Classic, classic.visuals)
+    assertEquals(HaReadoutStyle.Plain, classic.readout)
     assertNull(classic.inkFor(darkTheme = false))
   }
 
@@ -42,5 +43,19 @@ class HaUberThemeTest {
   fun lcdInksPerMode() {
     assertEquals(HaUberTheme.Lcd.light!!.primaryText, HaUberTheme.Lcd.inkFor(darkTheme = false))
     assertEquals(HaUberTheme.Lcd.dark!!.primaryText, HaUberTheme.Lcd.inkFor(darkTheme = true))
+  }
+
+  @Test
+  fun everyThemeDrawsItsOwnVisuals() {
+    // Each uber theme is its own design, not a restyle of another's.
+    val families = HaUberTheme.all.map { it.visuals }
+    assertEquals(families.toSet().size, families.size)
+  }
+
+  @Test
+  fun lcdHasAHotInkPerMode() {
+    assertTrue(HaUberTheme.Lcd.hotInkFor(darkTheme = false) != null)
+    assertTrue(HaUberTheme.Lcd.hotInkFor(darkTheme = true) != null)
+    assertNull(HaUberTheme.Classic.hotInkFor(darkTheme = false))
   }
 }

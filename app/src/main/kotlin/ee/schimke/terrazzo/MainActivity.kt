@@ -7,11 +7,13 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import ee.schimke.terrazzo.core.prefs.CardStylePref
 import ee.schimke.terrazzo.core.prefs.DarkModePref
 import ee.schimke.terrazzo.core.prefs.ThemePref
 import ee.schimke.terrazzo.di.AppGraph
 import ee.schimke.terrazzo.ui.TerrazzoTheme
 import ee.schimke.terrazzo.ui.toThemeStyle
+import ee.schimke.terrazzo.ui.toUberTheme
 import kotlinx.coroutines.runBlocking
 
 class MainActivity : ComponentActivity() {
@@ -73,7 +75,13 @@ class MainActivity : ComponentActivity() {
           graph.preferencesStore.themeStyle.collectAsState(initial = ThemePref.TerrazzoHome)
         val darkPref by
           graph.preferencesStore.darkMode.collectAsState(initial = DarkModePref.Follow)
-        TerrazzoTheme(style = themePref.toThemeStyle(), darkMode = darkPref) {
+        val cardStylePref by
+          graph.preferencesStore.cardStyle.collectAsState(initial = CardStylePref.Classic)
+        TerrazzoTheme(
+          style = themePref.toThemeStyle(),
+          darkMode = darkPref,
+          cardStyle = cardStylePref.toUberTheme(),
+        ) {
           TerrazzoApp(initialDashboard = initialDashboard, initialSession = initialSession)
         }
       }

@@ -69,9 +69,10 @@ fun RemoteHaGauge(data: HaGaugeData, modifier: RemoteModifier = RemoteModifier) 
       horizontalAlignment = RemoteAlignment.CenterHorizontally,
     ) {
       RemoteHaArcMeter(
-        fraction,
-        severityColor,
-        RemoteModifier.fillMaxWidth().height(72.rdp),
+        zones = gaugeZones(data),
+        fraction = fraction,
+        color = severityColor,
+        modifier = RemoteModifier.fillMaxWidth().height(72.rdp),
         strokeWidthPx = 10f,
       )
 
@@ -135,9 +136,10 @@ fun RemoteHaGaugeStacked(data: HaGaugeData, modifier: RemoteModifier = RemoteMod
     // cell height. That leaves the lower ~40 % for the text
     // overlay regardless of the cell's aspect ratio.
     RemoteHaArcMeter(
-      fraction,
-      severityColor,
-      RemoteModifier.fillMaxSize(),
+      zones = gaugeZones(data),
+      fraction = fraction,
+      color = severityColor,
+      modifier = RemoteModifier.fillMaxSize(),
       strokeWidthPx = 8f,
       baseline = 0.6f,
     )
@@ -205,9 +207,10 @@ fun RemoteHaGaugeWide(data: HaGaugeData, modifier: RemoteModifier = RemoteModifi
     // the rest of the width via `weight()` so value / name aren't
     // clipped on narrower 2×1 chips.
     RemoteHaArcMeter(
-      fraction,
-      severityColor,
-      RemoteModifier.fillMaxHeight().width(72.rdp),
+      zones = gaugeZones(data),
+      fraction = fraction,
+      color = severityColor,
+      modifier = RemoteModifier.fillMaxHeight().width(72.rdp),
       strokeWidthPx = 6f,
     )
     RemoteColumn(
@@ -296,3 +299,15 @@ fun gaugeRangeText(min: Double, max: Double, unit: String?): String =
 
 private fun formatRange(d: Double): String =
   if (d == d.toLong().toDouble()) d.toLong().toString() else "%.1f".format(d)
+
+/**
+ * The gauge's hot zone for the visual families that draw one (a Trinitron red peak zone, LCD hot
+ * segments): from the red band's threshold, when red is the band at the top of the scale.
+ */
+private fun gaugeZones(data: HaGaugeData): HaMeterZones {
+  val red = data.severity.red ?: return HaMeterZones()
+  val others = listOfNotNull(data.severity.green, data.severity.yellow)
+  val span = data.max - data.min
+  if (span <= 0.0 || others.any { it > red }) return HaMeterZones()
+  return HaMeterZones(hotFrom = ((red - data.min) / span).toFloat().coerceIn(0f, 1f))
+}

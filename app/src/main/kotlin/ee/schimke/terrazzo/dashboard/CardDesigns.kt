@@ -17,6 +17,7 @@ import ee.schimke.ha.rc.CardDesignLibrary
 import ee.schimke.ha.rc.CardDesignTemplates
 import ee.schimke.ha.rc.CardRegistry
 import ee.schimke.ha.rc.CardTemplatePlayback
+import ee.schimke.ha.rc.components.HaUberTheme
 import ee.schimke.ha.rc.components.ThemeStyle
 import java.io.File
 import kotlinx.coroutines.Dispatchers
@@ -58,8 +59,11 @@ fun cardTemplateFor(
   style: ThemeStyle,
   dark: Boolean,
   registry: CardRegistry,
+  cardStyle: HaUberTheme = HaUberTheme.Classic,
 ): CardTemplatePlayback? {
-  val key = CardDesignTemplates.keyFor(card, snapshot, style, dark, registry) ?: return null
+  val key =
+    CardDesignTemplates.keyFor(card, snapshot, style, dark, registry, cardStyle = cardStyle)
+      ?: return null
   val bytes = serverDesigns[key] ?: CardDesignLibrary.template(context, key, registry)
   return CardDesignTemplates.playback(card, bytes, registry)
 }

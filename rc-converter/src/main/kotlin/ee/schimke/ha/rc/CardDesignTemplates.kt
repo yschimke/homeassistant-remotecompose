@@ -16,11 +16,12 @@ import ee.schimke.ha.design.DesignSurface
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.components.HaAction
+import ee.schimke.ha.rc.components.HaUberTheme
 import ee.schimke.ha.rc.components.LocalTemplateBindings
-import ee.schimke.ha.rc.components.ProvideHaTheme
+import ee.schimke.ha.rc.components.ProvideCardStyle
 import ee.schimke.ha.rc.components.TemplateBindings
 import ee.schimke.ha.rc.components.ThemeStyle
-import ee.schimke.ha.rc.components.haThemeFor
+import ee.schimke.ha.rc.components.cardPalette
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
@@ -46,6 +47,7 @@ object CardDesignTemplates {
     dark: Boolean,
     registry: CardRegistry = defaultTemplateRegistry,
     surface: DesignSurface = DesignSurface.MobileApp,
+    cardStyle: HaUberTheme = HaUberTheme.Classic,
   ): DesignKey? {
     if (surface != DesignSurface.MobileApp) return null
     val design = designCard(card, snapshot, registry)
@@ -56,8 +58,18 @@ object CardDesignTemplates {
       surface = surface,
       rcApiLevel = MOBILE_APP_API_LEVEL,
       shape = shape,
-      theme = DesignKey.bakedTheme(style.name, dark),
+      theme = bakedTheme(style, dark, cardStyle),
     )
+  }
+
+  /**
+   * The `theme` of a design key: `baked:<palette>:<mode>`, plus `:<card style>` for an uber theme
+   * other than [HaUberTheme.Classic]. Classic keys are unchanged, so the design server's keys still
+   * match; an uber-styled card has no server design and captures from the local library.
+   */
+  fun bakedTheme(style: ThemeStyle, dark: Boolean, cardStyle: HaUberTheme): String {
+    val base = DesignKey.bakedTheme(style.name, dark)
+    return if (cardStyle.id == HaUberTheme.Classic.id) base else "$base:${cardStyle.id}"
   }
 
   /**
@@ -165,7 +177,7 @@ object CardDesignTemplates {
     registry: CardRegistry = defaultTemplateRegistry,
   ): BuiltDesign {
     require(key.surface == DesignSurface.MobileApp) { "spike only builds mobile-app templates" }
-    val (style, dark) = parseBakedTheme(key.theme)
+    val (style, dark, cardStyle) = parseBakedTheme(key.theme)
     val converter =
       requireNotNull(registry.converterFor(key.cardType)) { "no converter: ${key.cardType}" }
     val (card, snapshot) =
@@ -176,13 +188,15 @@ object CardDesignTemplates {
         .let {
           if (it.card.type == key.cardType) it else it.copy(card = it.card.ofType(key.cardType))
         }
-    val theme = haThemeFor(style, dark)
+    val palette = cardStyle.cardPalette(style, dark)
     val bytes = runBlocking {
       captureSingleRemoteDocument(context = context, profile = androidXExperimentalWrap) {
           // Bound name / title text instead of literals: see LocalTemplateBindings.
           CompositionLocalProvider(LocalTemplateBindings provides TemplateBindings()) {
             ProvideCardRegistry(registry) {
-              ProvideHaTheme(theme) { RenderChild(card, snapshot, RemoteModifier.fillMaxWidth()) }
+              ProvideCardStyle(cardStyle, palette, dark) {
+                RenderChild(card, snapshot, RemoteModifier.fillMaxWidth())
+              }
             }
           }
         }
@@ -203,10 +217,11 @@ object CardDesignTemplates {
     ee.schimke.ha.rc.cards.defaultRegistry()
   }
 
-  private fun parseBakedTheme(theme: String): Pair<ThemeStyle, Boolean> {
+  private fun parseBakedTheme(theme: String): Triple<ThemeStyle, Boolean, HaUberTheme> {
     val parts = theme.split(':')
-    require(parts.size == 3 && parts[0] == "baked") { "not a baked theme: $theme" }
-    return ThemeStyle.valueOf(parts[1]) to (parts[2] == "dark")
+    require(parts.size in 3..4 && parts[0] == "baked") { "not a baked theme: $theme" }
+    val cardStyle = parts.getOrNull(3)?.let(HaUberTheme::byId) ?: HaUberTheme.Classic
+    return Triple(ThemeStyle.valueOf(parts[1]), parts[2] == "dark", cardStyle)
   }
 }
 

@@ -141,8 +141,8 @@ fun RemoteHaGlanceCell(data: HaGlanceCellData, modifier: RemoteModifier = Remote
   val isOnBinding =
     if (data.accent.toggleable) LiveValues.isOn(data.entityId, data.accent.initiallyOn) else null
   val accent: RemoteColor =
-    isOnBinding?.select(data.accent.activeAccent, data.accent.inactiveAccent)
-      ?: data.accent.activeAccent
+    isOnBinding?.select(data.accent.themed().activeAccent, data.accent.themed().inactiveAccent)
+      ?: data.accent.themed().activeAccent
   RemoteColumn(
     modifier = modifier.then(clickable).padding(vertical = 4.rdp),
     horizontalAlignment = RemoteAlignment.CenterHorizontally,

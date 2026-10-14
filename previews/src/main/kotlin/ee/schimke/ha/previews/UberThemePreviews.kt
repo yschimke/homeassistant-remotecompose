@@ -84,7 +84,7 @@ private fun UberShowcase(theme: HaUberTheme, darkTheme: Boolean) {
                 ) {
                   MeasurementCard(RemoteModifier.fillMaxWidth()) {
                     RemoteHaMeasurement(
-                      HaReading.static("Lock", 22f, "%", HaMeasureKind.Battery),
+                      HaReading.static("Lock", 12f, "%", HaMeasureKind.Battery),
                       HaPresentation.Compact,
                     )
                   }
@@ -96,7 +96,7 @@ private fun UberShowcase(theme: HaUberTheme, darkTheme: Boolean) {
                   }
                   MeasurementCard(RemoteModifier.fillMaxWidth()) {
                     RemoteHaMeasurement(
-                      HaReading.static("Outside", 31f, "°C", HaMeasureKind.Temperature),
+                      HaReading.static("Outside", 36f, "°C", HaMeasureKind.Temperature),
                       HaPresentation.Compact,
                     )
                   }

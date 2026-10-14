@@ -37,6 +37,20 @@ enum class ThemePref {
 }
 
 /**
+ * How dashboard cards are drawn, on top of the palette: [Classic] keeps the cards' own look in the
+ * chosen [ThemePref] palette; the others are uber themes (`HaUberTheme` in rc-components, matched
+ * by [id]) that bring their own palette, shapes, typeface and instrument designs.
+ */
+enum class CardStylePref(val id: String) {
+  Classic("classic"),
+  Expressive("expressive"),
+  Trinitron("trinitron"),
+  Lcd("lcd"),
+  Braun("braun"),
+  Nixie("nixie"),
+}
+
+/**
  * Small app-level preferences. Demo-mode flag plus theme choice (Material 3 vs one of four Terrazzo
  * palettes) and dark-mode preference. Reads are `Flow`s so the UI recomposes when the user flips a
  * switch in Settings; widget refresh takes a one-shot read at update time.
@@ -65,6 +79,17 @@ class PreferencesStore(private val context: Context) {
 
   suspend fun setThemeStyle(style: ThemePref) {
     context.store.edit { it[THEME_KEY] = style.name }
+  }
+
+  val cardStyle: Flow<CardStylePref>
+    get() =
+      context.store.data.map { prefs ->
+        prefs[CARD_STYLE_KEY]?.let { runCatching { CardStylePref.valueOf(it) }.getOrNull() }
+          ?: CardStylePref.Classic
+      }
+
+  suspend fun setCardStyle(style: CardStylePref) {
+    context.store.edit { it[CARD_STYLE_KEY] = style.name }
   }
 
   val darkMode: Flow<DarkModePref>
@@ -250,6 +275,7 @@ class PreferencesStore(private val context: Context) {
     private val DEMO_KEY = booleanPreferencesKey("demo_mode")
     private val THEME_KEY = stringPreferencesKey("theme_style")
     private val DARK_KEY = stringPreferencesKey("dark_mode")
+    private val CARD_STYLE_KEY = stringPreferencesKey("card_style")
     private val LAST_VIEWED_KEY = stringPreferencesKey("last_viewed_dashboard")
     private val GRID_LAYOUT_KEY = booleanPreferencesKey("experimental_grid_layout")
     private val COLLAPSED_MODE_KEY = booleanPreferencesKey("collapsed_mode")

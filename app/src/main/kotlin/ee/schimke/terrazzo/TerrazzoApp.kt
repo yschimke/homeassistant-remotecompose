@@ -53,6 +53,7 @@ import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.terrazzo.auth.rememberLoginController
 import ee.schimke.terrazzo.core.network.LanConnectionPolicy
+import ee.schimke.terrazzo.core.prefs.CardStylePref
 import ee.schimke.terrazzo.core.prefs.DarkModePref
 import ee.schimke.terrazzo.core.prefs.PreferencesStore
 import ee.schimke.terrazzo.core.prefs.ThemePref
@@ -77,6 +78,7 @@ import ee.schimke.terrazzo.shared.AppScreen
 import ee.schimke.terrazzo.shared.CardStudioScreen
 import ee.schimke.terrazzo.shared.TerrazzoNavigation
 import ee.schimke.terrazzo.ui.statusColors
+import ee.schimke.terrazzo.ui.toUberTheme
 import ee.schimke.terrazzo.wearsync.WearWidgetsScreen
 import ee.schimke.terrazzo.widget.WidgetInstallSheet
 import ee.schimke.terrazzo.widget.WidgetRefreshScheduler
@@ -835,6 +837,8 @@ internal fun SettingsScreen(
   val themePref by
     graph.preferencesStore.themeStyle.collectAsState(initial = ThemePref.TerrazzoHome)
   val darkPref by graph.preferencesStore.darkMode.collectAsState(initial = DarkModePref.Follow)
+  val cardStylePref by
+    graph.preferencesStore.cardStyle.collectAsState(initial = CardStylePref.Classic)
   val gridLayoutEnabled by
     graph.preferencesStore.experimentalGridLayout.collectAsState(initial = false)
   val collapsedModeEnabled by graph.preferencesStore.collapsedMode.collectAsState(initial = true)
@@ -931,6 +935,11 @@ internal fun SettingsScreen(
             widgetRefresh.refreshAllNow()
           }
         },
+      )
+
+      CardStyleSection(
+        selected = cardStylePref,
+        onSelect = { pref -> scope.launch { graph.preferencesStore.setCardStyle(pref) } },
       )
 
       Row(
@@ -1130,6 +1139,47 @@ private fun ThemeSection(
     }
   }
 }
+
+/**
+ * The card style: how dashboard cards are drawn. Classic keeps the cards' own look in the chosen
+ * palette; each uber theme brings its own palette, shapes, type and instrument designs (an LCD's
+ * segment bars, a Trinitron VU needle). Dashboard cards only — launcher widgets keep following the
+ * launcher's system colours, and the app's own screens keep the palette above.
+ */
+@Composable
+private fun CardStyleSection(selected: CardStylePref, onSelect: (CardStylePref) -> Unit) {
+  Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    Text("Card style", style = MaterialTheme.typography.titleMedium)
+    Text(
+      "How dashboard cards are drawn. Classic follows the theme above; the others are complete " +
+        "looks with their own colours, shapes and gauges.",
+      style = MaterialTheme.typography.bodySmall,
+    )
+    CardStylePref.entries.forEach { pref ->
+      Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+      ) {
+        RadioButton(selected = pref == selected, onClick = { onSelect(pref) })
+        Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+          Text(pref.toUberTheme().displayName, style = MaterialTheme.typography.bodyLarge)
+          Text(cardStyleTagline(pref), style = MaterialTheme.typography.bodySmall)
+        }
+      }
+    }
+  }
+}
+
+private fun cardStyleTagline(pref: CardStylePref): String =
+  when (pref) {
+    CardStylePref.Classic -> "The cards' own look, in your theme's palette"
+    CardStylePref.Expressive -> "Material 3 Expressive · big shapes, capsule meters"
+    CardStylePref.Trinitron -> "Graphite hi-fi · VU needles, LED level meters"
+    CardStylePref.Lcd -> "Segment LCD · bar graphs with ghost segments"
+    CardStylePref.Braun -> "Dieter Rams · dials and tuning scales"
+    CardStylePref.Nixie -> "Glowing tubes · black glass, orange filaments"
+  }
 
 @Composable
 private fun ThemeRow(pref: ThemePref, selected: Boolean, onClick: () -> Unit) {
