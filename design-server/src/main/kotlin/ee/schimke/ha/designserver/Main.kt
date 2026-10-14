@@ -19,6 +19,7 @@ import java.io.File
  * - Who may: with `GITHUB_CLIENT_ID` (+ `GITHUB_CLIENT_SECRET`, `PUBLIC_URL`, `SESSION_SECRET`,
  *   optional `GITHUB_USERS`), anyone who signs in with GitHub, each design shared with its designer
  *   ([GithubAuth]); without it, a browser that opened the edit link the server prints.
+ * - The front page's links: `DESIGNER_URL`, `STORE_URL` ([SiteConfig.fromEnvironment]).
  */
 fun main(args: Array<String>) {
   val dir = File(args.firstOrNull() ?: System.getenv("DESIGN_LIBRARY") ?: "card-designs")
@@ -48,7 +49,7 @@ fun main(args: Array<String>) {
     }
   embeddedServer(CIO, port = port, host = host) {
       install(CallLogging)
-      designServer(holder, uiBuilder, github)
+      designServer(holder, uiBuilder, github, SiteConfig.fromEnvironment())
     }
     .start(wait = true)
 }

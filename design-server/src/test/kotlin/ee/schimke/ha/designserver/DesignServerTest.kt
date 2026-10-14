@@ -173,7 +173,7 @@ class DesignServerTest {
   @Test
   fun browserListsDesignsAndEscapesExamples() =
     serve(library()) {
-      val page = client.get("/?style=all&mode=all").bodyAsText()
+      val page = client.get("/designs?style=all&mode=all").bodyAsText()
       assertTrue("2 designs" in page, "stats")
       assertTrue(page.contains("domain</b> light"), "properties show as chips")
       assertTrue("$API_BASE/previews/" in page, "previews link to the library")
@@ -191,9 +191,38 @@ class DesignServerTest {
   fun browserDefaultsToOneThemeAndFilters() =
     serve(library()) {
       // Unfiltered, the first page shows each shape once: the first theme, light.
-      assertTrue("1 shown" in client.get("/").bodyAsText())
-      assertTrue("2 shown" in client.get("/?style=all&mode=all").bodyAsText())
-      assertTrue("0 shown" in client.get("/?type=gauge").bodyAsText())
+      assertTrue("1 shown" in client.get("/designs").bodyAsText())
+      assertTrue("2 shown" in client.get("/designs?style=all&mode=all").bodyAsText())
+      assertTrue("0 shown" in client.get("/designs?type=gauge").bodyAsText())
+    }
+
+  @Test
+  fun frontPageSellsTheAppAndLinksTheDesigner() =
+    serve(library()) {
+      val page = client.get("/").bodyAsText()
+      assertTrue("<h1>Terrazzo</h1>" in page)
+      assertTrue("href=\"${SiteConfig.DEFAULT_DESIGNER_URL}\"" in page, "links the card designer")
+      assertTrue("href=\"/designs\"" in page, "links the template browser")
+      assertTrue("$API_BASE/previews/" in page, "teases with the library's cards")
+      assertEquals(
+        listOf(light.theme),
+        Landing.teaser(DesignLibrary.load(library())).map { it.key.theme },
+        "one design per card type, in light",
+      )
+
+      val shot = client.get("/site/${Landing.SCREENSHOTS.first().file}")
+      assertEquals(HttpStatusCode.OK, shot.status)
+      assertContentEquals(png, shot.bodyAsBytes().copyOf(png.size), "a bundled PNG")
+      assertEquals(HttpStatusCode.NotFound, client.get("/site/feature.png").status)
+    }
+
+  @Test
+  fun oldBrowserLinksRedirect() =
+    serve(library()) {
+      val noFollow = createClient { followRedirects = false }
+      val response = noFollow.get("/?type=tile&style=all")
+      assertEquals(HttpStatusCode.MovedPermanently, response.status)
+      assertEquals("/designs?type=tile&style=all", response.headers[HttpHeaders.Location])
     }
 
   @Test

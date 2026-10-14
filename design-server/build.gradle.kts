@@ -30,7 +30,20 @@ val embedResources by
     into(layout.buildDirectory.dir("generated/embed"))
   }
 
-sourceSets.main { resources.srcDir(embedResources) }
+// The front page's screenshots: the Play listing's, served at `/site/` from the classpath.
+val siteResources by
+  tasks.registering(Sync::class) {
+    from(rootProject.file("app/src/main/play/listings/en-GB/graphics/phone-screenshots")) {
+      include("01-home-light.png", "02-home-dark.png")
+      into("site")
+    }
+    into(layout.buildDirectory.dir("generated/site"))
+  }
+
+sourceSets.main {
+  resources.srcDir(embedResources)
+  resources.srcDir(siteResources)
+}
 
 tasks.test {
   // Pins the embed's binding port to ha-model; see EmbedBindingsGoldenTest.

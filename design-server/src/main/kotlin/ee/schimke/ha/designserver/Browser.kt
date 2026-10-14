@@ -158,7 +158,9 @@ object Pages {
     val modes = all.mapNotNull { ThemeParts.of(it.key).mode }.distinct()
     val shapes = all.map { it.key.cardType to it.key.shape }.distinct().size
     return page("Card designs") {
-      append("<header><h1>Card designs</h1><p class=\"stats\">")
+      append(
+        "<nav><a href=\"/\">← Terrazzo</a></nav><header><h1>Card designs</h1><p class=\"stats\">"
+      )
       append("${all.size} designs · $shapes shapes · ${types.size} card types · ")
       append(
         "${all.map { it.entry.sha256 }.distinct().size} blobs (${kib(library.totalBlobBytes)}) · "
@@ -171,7 +173,7 @@ object Pages {
           "<a href=\"/schema\">Schema from a card's JSON</a></p></header>"
       )
 
-      append("<form class=\"filters\" method=\"get\" action=\"/\">")
+      append("<form class=\"filters\" method=\"get\" action=\"/designs\">")
       select("type", "Card", types, filter.cardType)
       select("style", "Theme", styles, filter.style)
       select("mode", "Mode", modes, filter.mode)
@@ -205,7 +207,7 @@ object Pages {
     val theme = ThemeParts.of(key)
     return page("${key.cardType} · card design") {
       append(
-        "<nav><a href=\"/?type=${enc(key.cardType)}&style=all&mode=all\">← ${esc(key.cardType)} designs</a></nav>"
+        "<nav><a href=\"/designs?type=${enc(key.cardType)}&style=all&mode=all\">← ${esc(key.cardType)} designs</a></nav>"
       )
       append("<h1>${esc(key.cardType)}</h1>")
       append("<p class=\"chips\">")
@@ -300,7 +302,7 @@ object Pages {
    */
   fun schema(input: String?, schema: CardSchema?, error: String?, editor: EditorState): String =
     page("Card schema") {
-      append("<nav><a href=\"/\">← Card designs</a></nav><h1>Card schema</h1>")
+      append("<nav><a href=\"/designs\">← Card designs</a></nav><h1>Card schema</h1>")
       append(
         "<p class=\"muted\">Paste a card's Lovelace config, or <code>{\"card\": {…}, \"states\": " +
           "{\"light.kitchen\": {\"state\": \"on\", \"attributes\": {…}}}}</code>. The schema is what a " +
