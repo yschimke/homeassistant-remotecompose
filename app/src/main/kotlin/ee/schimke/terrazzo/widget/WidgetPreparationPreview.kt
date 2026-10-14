@@ -107,7 +107,7 @@ internal fun WidgetPreparationPreview(
     "Adaptive layout · drag the corner or try a size. New widgets start at Default; resize them on the home screen.",
     style = MaterialTheme.typography.bodySmall,
   )
-  Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+  FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
     listOf(
         Triple("Compact", bounds.minCellsW, bounds.minCellsH),
         Triple("Default", bounds.defaultCellsW, bounds.defaultCellsH),

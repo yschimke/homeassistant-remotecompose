@@ -202,6 +202,7 @@ class WidgetPreparationTest {
     }
     compose.onNodeWithText("Widget name").performTextClearance()
     compose.onNodeWithText("Widget name").performTextInput("My magical light")
+    compose.onNodeWithText("Widget name").performImeAction()
     compose.onNodeWithText("Roomy").performScrollTo().performClick()
     compose.waitUntil(60_000) {
       compose

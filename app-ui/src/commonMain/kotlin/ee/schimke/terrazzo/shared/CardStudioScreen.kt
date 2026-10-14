@@ -10,6 +10,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import ee.schimke.ha.client.design.*
 import ee.schimke.ha.model.CardConfig
@@ -40,12 +41,16 @@ fun CardStudioScreen(
   var externalUrl by remember(editorUrl) { mutableStateOf<String?>(null) }
   var message by remember { mutableStateOf<String?>(null) }
   var busy by remember { mutableStateOf(false) }
+  var agentRequest by remember { mutableStateOf(false) }
+  var requestFailed by remember { mutableStateOf(false) }
   var job by remember { mutableStateOf<Job?>(null) }
   val scope = rememberCoroutineScope()
   val uriHandler = LocalUriHandler.current
   val latestSnapshot by rememberUpdatedState(snapshot)
   fun run(generate: Boolean, refresh: Boolean = false) {
     if (busy) return
+    agentRequest = generate
+    requestFailed = false
     busy = true
     job = scope.launch {
       message = null
@@ -77,6 +82,7 @@ fun CardStudioScreen(
       } catch (e: CancellationException) {
         throw e
       } catch (e: Exception) {
+        requestFailed = true
         message =
           if (e is CardStudioException) e.message
           else if (e is IllegalArgumentException)
@@ -94,7 +100,7 @@ fun CardStudioScreen(
   Scaffold(
     topBar = {
       TopAppBar(
-        title = { Text("Design or fix this card") },
+        title = { Text("Design or fix this card", maxLines = 1, overflow = TextOverflow.Ellipsis) },
         navigationIcon = { TextButton(onClick = onBack) { Text("Back") } },
       )
     }
@@ -102,7 +108,7 @@ fun CardStudioScreen(
     val url = editorUrl
     if (url != null) {
       Column(Modifier.fillMaxSize().padding(padding)) {
-        Row(
+        FlowRow(
           Modifier.fillMaxWidth().padding(8.dp),
           horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
@@ -128,6 +134,7 @@ fun CardStudioScreen(
           {
             server = it
             draft = null
+            message = null
           },
           label = { Text("Design server") },
           singleLine = true,
@@ -137,9 +144,16 @@ fun CardStudioScreen(
         Button(onClick = { run(false) }, enabled = !busy && server.isNotBlank()) {
           Text(if (draft == null) "Design in UI Builder" else "Preview draft in UI Builder")
         }
-        TextButton(onClick = { run(false, refresh = true) }, enabled = !busy) {
-          Text("Refresh preview data")
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+          TextButton(
+            onClick = { run(false, refresh = true) },
+            enabled = !busy && server.isNotBlank(),
+          ) {
+            Text("Refresh preview data")
+          }
+          if (busy && !agentRequest) TextButton(onClick = { job?.cancel() }) { Text("Cancel") }
         }
+        if (!agentRequest) StudioRequestFeedback(busy, message, requestFailed)
         HorizontalDivider()
         Text("Connect an agent", style = MaterialTheme.typography.titleMedium)
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -198,7 +212,7 @@ fun CardStudioScreen(
           "Sending shares the selected card's display text and current values with ${provider.label}. Other entities, Home Assistant tokens and entity-picture URLs stay on this device.",
           style = MaterialTheme.typography.bodySmall,
         )
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
           Button(
             onClick = { run(true) },
             enabled =
@@ -209,10 +223,11 @@ fun CardStudioScreen(
                 server.isNotBlank() &&
                 (provider != CardAgentProvider.Agent || endpoint.isNotBlank()),
           ) {
-            Text(if (busy) "Working…" else "Generate or fix draft")
+            Text(if (busy && agentRequest) "Working…" else "Generate or fix draft")
           }
-          if (busy) TextButton(onClick = { job?.cancel() }) { Text("Cancel") }
-          if (draft != null && !busy)
+          if (busy && agentRequest) TextButton(onClick = { job?.cancel() }) { Text("Cancel") }
+          if (draft != null && !busy) {
+            TextButton(onClick = { run(false) }) { Text("Review draft") }
             TextButton(
               onClick = {
                 draft = null
@@ -221,14 +236,26 @@ fun CardStudioScreen(
             ) {
               Text("Reset draft")
             }
+          }
         }
-        message?.let { Text(it) }
+        if (agentRequest) StudioRequestFeedback(busy, message, requestFailed)
         Text(
           "Designs remain drafts. Saving in UI Builder does not change your Home Assistant dashboard.",
           style = MaterialTheme.typography.bodySmall,
         )
       }
     }
+  }
+}
+
+@Composable
+private fun StudioRequestFeedback(busy: Boolean, message: String?, failed: Boolean) {
+  if (busy) LinearProgressIndicator(Modifier.fillMaxWidth())
+  message?.let {
+    Text(
+      it,
+      color = if (failed) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface,
+    )
   }
 }
 
