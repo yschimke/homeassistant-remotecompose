@@ -238,8 +238,35 @@ previews are `Uber_*` in the `:previews` sheet, and the builder catalog shows Co
 `HaCard/UberThemeConsole`; the rest of the `:previews` showcases are in
 [`UberThemePreviews.kt`](../../previews/src/main/kotlin/ee/schimke/ha/previews/UberThemePreviews.kt).
 
-**Not yet themed:** the arc-dial controls (thermostat, humidifier, light) except under Console,
-the history and statistics graphs, Wear and the TV app.
+**Control dials and graphs.** The 270° dial of the thermostat, humidifier and light cards is
+drawn per family too (`Dials.kt`; Console's knob in `MetersConsole.kt`), and so are graph rows
+(`Charts.kt`): history sparklines and statistics bars.
+
+| Theme | Control dial | Sparkline | Bars |
+|---|---|---|---|
+| `classic` | round arc, dot at target | 2 px line on a hairline baseline | flat bars |
+| `expressive` | fat arc, gap, stop dot, ringed target | thick line over a soft area in the track tone | capsules |
+| `trinitron` | ring of 36 LED cells inside a ticked scale, white index | hairline trace on a dotted graticule, newest sample marked | stacked LED cells |
+| `lcd` | 15 chunky blocks with ghosts, pointer bar | bar graph of segments with ghosts | chunky segments with ghosts |
+| `braun` | hairline scale with ticks, pointer bar in the accent | hairline trace, the latest reading an orange dot | thin bars |
+| `nixie` | electrode dots and a glowing filament, a lit bead at target | glowing filament | glowing columns |
+| `console` | knurled knob in a lamp ring | trace in a recessed screen | lamp-lit columns in a recessed screen |
+
+**Controls and ink inside cards.** `haControlShape(classicDp, round)` gives a key, button, chip or
+badge its shape under the theme: Classic keeps its own; the square-cornered themes (Trinitron,
+LCD, Console) square controls off at their control corner; the soft ones keep circles and round
+corners up to theirs. `haInk(color)` prints a marking accent (a calendar dot, the alarm keypad and
+status ring, media controls, a dial's chip) in a monochrome theme's ink. The alarm panel, media
+control, calendar, area, picture, Bambu, weather and statistic cards take both.
+
+**Wear and TV.** The Wear app has a **Card style** setting of its own (`WearPrefs.cardStyle`).
+Slot widgets apply it with `ProvideHaUberStyle`, which brings the instruments, type, shapes and
+ink but keeps the watch's palette (the WearM3 colours its host updates). The TV kiosk has a card
+style picker too (`TvPrefs.cardStyle`): a style other than Classic re-skins the kiosk in its own
+dark palette, corners, reading weight and ink.
+
+**Still to do:** the TV kiosk is a Compose mock-up rather than RemoteCompose cards, so it shows a
+style's palette and shape, not its instruments.
 
 **Feel and sound.** The app adds feedback for card actions on the host side, not in the
 document: `rememberDashboardActionDispatcher(feedback = …)` cues each action that changes

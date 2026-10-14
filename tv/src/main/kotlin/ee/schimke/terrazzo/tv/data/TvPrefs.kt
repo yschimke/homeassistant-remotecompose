@@ -29,6 +29,17 @@ class TvPrefs(private val context: Context) {
   }
 
   /**
+   * The card style the kiosk is drawn in: an `HaUberTheme` id (`classic`, `console`, …). Classic
+   * follows [themeStyle]'s palette; the others bring their own palette, corners and type weight.
+   */
+  val cardStyle: Flow<String> =
+    context.store.data.map { prefs -> prefs[CARD_STYLE_KEY] ?: "classic" }
+
+  suspend fun setCardStyle(id: String) {
+    context.store.edit { it[CARD_STYLE_KEY] = id }
+  }
+
+  /**
    * Demo-mode toggle. When on, the kiosk preview pulls from `DemoData` instead of the
    * (not-yet-wired) live HA session, so the room sees animated values without a working HA
    * instance.
@@ -42,6 +53,7 @@ class TvPrefs(private val context: Context) {
   companion object {
     private val Context.store by preferencesDataStore(name = "terrazzo_tv_prefs")
     private val THEME_KEY = stringPreferencesKey("theme_style")
+    private val CARD_STYLE_KEY = stringPreferencesKey("card_style")
     private val DEMO_KEY = booleanPreferencesKey("demo_mode")
   }
 }

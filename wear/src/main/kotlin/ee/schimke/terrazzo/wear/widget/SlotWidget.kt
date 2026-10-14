@@ -34,11 +34,13 @@ import ee.schimke.ha.rc.ProvideCardSizeMode
 import ee.schimke.ha.rc.RenderChild
 import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.cards.shutter.withEnhancedShutter
+import ee.schimke.ha.rc.components.HaUberTheme
 import ee.schimke.ha.rc.components.LocalPictureImageStrategy
 import ee.schimke.ha.rc.components.LocalTemplateBindings
 import ee.schimke.ha.rc.components.PictureImageStrategy
 import ee.schimke.ha.rc.components.ProvideCardChrome
 import ee.schimke.ha.rc.components.ProvideFlowLayoutSupport
+import ee.schimke.ha.rc.components.ProvideHaUberStyle
 import ee.schimke.ha.rc.components.RemoteHaTheme
 import ee.schimke.ha.rc.components.TemplateBindings
 import ee.schimke.ha.rc.components.ThemeStyle
@@ -116,6 +118,7 @@ abstract class SlotWidget(internal val slotIndex: Int) : GlanceWearWidget() {
     }
 
     val style = WearPrefs(app).themeStyle.first()
+    val cardStyle = HaUberTheme.byId(WearPrefs(app).cardStyle.first())
     val registry = defaultRegistry().withEnhancedShutter()
     val wearColors = RemoteColorScheme(terrazzoWearColorScheme(style))
     // Keep Remote Material's WearM3.* named states, but define the two HA-specific semantic slots:
@@ -123,7 +126,15 @@ abstract class SlotWidget(internal val slotIndex: Int) : GlanceWearWidget() {
     val updatedColors =
       wearColors.copy(tertiary = wearColors.primary, secondary = wearColors.onSurfaceVariant)
 
-    return slotWidgetData(registry, updatedColors, style, card, snapshot, slotIndex) { url ->
+    return slotWidgetData(
+      registry,
+      updatedColors,
+      style to cardStyle.id,
+      card,
+      snapshot,
+      slotIndex,
+      cardStyle,
+    ) { url ->
       syncedPicture(store, snapshot, url)
     }
   }
@@ -143,9 +154,10 @@ internal fun slotWidgetData(
   card: CardConfig?,
   snapshot: HaSnapshot,
   slotIndex: Int,
+  cardStyle: HaUberTheme = HaUberTheme.Classic,
   fetchImage: (url: String) -> ByteArray? = { null },
 ): WearWidgetData {
-  val direct = slotDocument(registry, colors, card, snapshot, slotIndex)
+  val direct = slotDocument(registry, colors, card, snapshot, slotIndex, cardStyle = cardStyle)
   if (card == null) return direct
   val design = CardDesignTemplates.designCard(card, snapshot, registry)
   val converter = registry.converterFor(design.type) ?: return direct
@@ -169,7 +181,15 @@ internal fun slotWidgetData(
         )
       val template =
         wearTemplates[key]
-          ?: slotDocument(registry, colors, input.card, input.snapshot, slotIndex, template = true)
+          ?: slotDocument(
+              registry,
+              colors,
+              input.card,
+              input.snapshot,
+              slotIndex,
+              template = true,
+              cardStyle = cardStyle,
+            )
             .captureRawContent(context, params, isPreview)
             .also { wearTemplates[key] = it }
       val playback = CardDesignTemplates.playback(design, template.rcDocument, registry)
@@ -229,6 +249,7 @@ private fun slotDocument(
   snapshot: HaSnapshot,
   slotIndex: Int,
   template: Boolean = false,
+  cardStyle: HaUberTheme = HaUberTheme.Classic,
 ): WearWidgetDocument =
   WearWidgetDocument(
     background = WearWidgetBrush.Companion,
@@ -244,24 +265,28 @@ private fun slotDocument(
         ProvideCardRegistry(registry) {
           RemoteMaterialTheme(colorScheme = colors) {
             val theme = RemoteMaterialTheme.colorScheme.asHaTheme()
-            ProvideCardSizeMode(CardSizeMode.Fixed) {
-              // The Glance Wear container already supplies its
-              // own shape + brush via WearWidgetBrush, so
-              // suppress the per-card rounded clip + divider
-              // border that would otherwise double up.
-              //
-              // Glance Wear's capture profile is fixed by
-              // AndroidX to a stable op set that rejects
-              // FlowLayout (op 240). Tell HA card components
-              // to use a non-wrapping row fallback so cards
-              // that lean on `RemoteFlowRow` (glance / grid /
-              // entity-filter) capture instead of throwing.
-              ProvideCardChrome(enabled = false) {
-                ProvideFlowLayoutSupport(enabled = false) {
-                  if (card != null) {
-                    RenderChild(card, snapshot, RemoteModifier.fillMaxWidth())
-                  } else {
-                    EmptySlotPlaceholder(slotIndex, theme)
+            // The user's card style brings its instruments, type and shapes; the watch keeps
+            // its own palette (the WearM3 colours the widget host updates).
+            ProvideHaUberStyle(cardStyle, darkTheme = true) {
+              ProvideCardSizeMode(CardSizeMode.Fixed) {
+                // The Glance Wear container already supplies its
+                // own shape + brush via WearWidgetBrush, so
+                // suppress the per-card rounded clip + divider
+                // border that would otherwise double up.
+                //
+                // Glance Wear's capture profile is fixed by
+                // AndroidX to a stable op set that rejects
+                // FlowLayout (op 240). Tell HA card components
+                // to use a non-wrapping row fallback so cards
+                // that lean on `RemoteFlowRow` (glance / grid /
+                // entity-filter) capture instead of throwing.
+                ProvideCardChrome(enabled = false) {
+                  ProvideFlowLayoutSupport(enabled = false) {
+                    if (card != null) {
+                      RenderChild(card, snapshot, RemoteModifier.fillMaxWidth())
+                    } else {
+                      EmptySlotPlaceholder(slotIndex, theme)
+                    }
                   }
                 }
               }

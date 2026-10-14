@@ -2,14 +2,12 @@
 
 package ee.schimke.ha.rc.components
 
-import android.graphics.Paint as AndroidPaint
 import androidx.compose.remote.creation.compose.layout.RemoteAlignment
 import androidx.compose.remote.creation.compose.layout.RemoteArrangement
 import androidx.compose.remote.creation.compose.layout.RemoteBox
 import androidx.compose.remote.creation.compose.layout.RemoteCanvas
 import androidx.compose.remote.creation.compose.layout.RemoteColumn
 import androidx.compose.remote.creation.compose.layout.RemoteComposable
-import androidx.compose.remote.creation.compose.layout.RemoteOffset
 import androidx.compose.remote.creation.compose.layout.RemoteRow
 import androidx.compose.remote.creation.compose.layout.RemoteText
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
@@ -18,9 +16,8 @@ import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.creation.compose.modifier.height
 import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.state.RemoteFloat
-import androidx.compose.remote.creation.compose.state.asRemotePaint
+import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
-import androidx.compose.remote.creation.compose.state.rf
 import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
@@ -196,47 +193,12 @@ private fun Sparkline(entityId: String?, points: List<Float>, accent: Color, the
   val bound: List<RemoteFloat> = LiveValues.numericPoints(entityId, samples)
   val minRf = entityFloat(entityId, "series_min", range.min)
   val spanRf = entityFloat(entityId, "series_span", range.span)
+  // The row's design is the uber theme's family (Charts.kt); its colour the theme's ink, else the
+  // row's accent.
+  val look = meterLook(accent.rc, theme.divider)
+  val family = visualFamily()
   RemoteCanvas(modifier = RemoteModifier.fillMaxWidth().height(28.rdp)) {
-    val w = width
-    val h = height
-    val padX = 2f.rf
-    val padY = 3f.rf
-    val drawW = w - padX * 2f.rf
-    val drawH = h - padY * 2f.rf
-
-    // Faint baseline so an empty/flat row still shows the row's
-    // vertical extent.
-    val baseline =
-      AndroidPaint()
-        .apply {
-          isAntiAlias = true
-          style = AndroidPaint.Style.STROKE
-          strokeWidth = 1f
-        }
-        .asRemotePaint()
-        .apply { color = theme.divider }
-    drawLine(baseline, RemoteOffset(padX, padY + drawH), RemoteOffset(padX + drawW, padY + drawH))
-
-    val stroke =
-      AndroidPaint()
-        .apply {
-          isAntiAlias = true
-          style = AndroidPaint.Style.STROKE
-          strokeWidth = 2f
-          strokeCap = AndroidPaint.Cap.ROUND
-          strokeJoin = AndroidPaint.Join.ROUND
-          color = accent.toArgb()
-        }
-        .asRemotePaint()
-
-    val n = bound.size
-    for (i in 0 until n - 1) {
-      val x0 = padX + drawW * (i.toFloat() / (n - 1).toFloat()).rf
-      val x1 = padX + drawW * ((i + 1).toFloat() / (n - 1).toFloat()).rf
-      val y0 = padY + drawH * (1f.rf - (bound[i] - minRf) / spanRf)
-      val y1 = padY + drawH * (1f.rf - (bound[i + 1] - minRf) / spanRf)
-      drawLine(stroke, RemoteOffset(x0, y0), RemoteOffset(x1, y1))
-    }
+    familySparkline(family, look, bound, minRf, spanRf)
   }
 }
 

@@ -16,7 +16,6 @@ import androidx.compose.remote.creation.compose.modifier.clip
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.modifier.size
-import androidx.compose.remote.creation.compose.shapes.RemoteRoundedCornerShape
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.runtime.Composable
@@ -150,20 +149,18 @@ private fun SpoolSwatch(slot: HaBambuSpoolSlot, big: Boolean, theme: RemoteHaThe
   RemoteBox(
     modifier =
       RemoteModifier.size(outerSize)
-        .clip(RemoteRoundedCornerShape(if (big) 16.rdp else 10.rdp))
+        .clip(haControlShape(if (big) 16 else 10))
         .background(theme.cardBackground)
         .border(
           if (slot.active) 2.rdp else 1.rdp,
           outline,
-          RemoteRoundedCornerShape(if (big) 16.rdp else 10.rdp),
+          haControlShape(if (big) 16 else 10),
         ),
     contentAlignment = RemoteAlignment.Center,
   ) {
     RemoteBox(
       modifier =
-        RemoteModifier.size(innerSize)
-          .clip(RemoteRoundedCornerShape(if (big) 12.rdp else 8.rdp))
-          .background(swatch)
+        RemoteModifier.size(innerSize).clip(haControlShape(if (big) 12 else 8)).background(swatch)
     )
   }
 }

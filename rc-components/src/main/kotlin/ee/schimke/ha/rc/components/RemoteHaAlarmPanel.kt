@@ -23,8 +23,6 @@ import androidx.compose.remote.creation.compose.modifier.fillMaxSize
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.modifier.size
-import androidx.compose.remote.creation.compose.shapes.RemoteCircleShape
-import androidx.compose.remote.creation.compose.shapes.RemoteRoundedCornerShape
 import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rememberMutableRemoteInt
@@ -132,15 +130,15 @@ fun RemoteHaAlarmPanelWide(data: HaAlarmPanelData, modifier: RemoteModifier = Re
         RemoteBox(
           modifier =
             RemoteModifier.size(40.rdp)
-              .clip(RemoteCircleShape)
-              .border(2.rdp, status.accent.rc, RemoteCircleShape),
+              .clip(haControlShape(20, round = true))
+              .border(2.rdp, haInk(status.accent.rc), haControlShape(20, round = true)),
           contentAlignment = RemoteAlignment.Center,
         ) {
           RemoteIcon(
             imageVector = status.icon.toRemoteImageVector(),
             contentDescription = status.label.rs,
             modifier = RemoteModifier.size(22.rdp),
-            tint = status.accent.rc,
+            tint = haInk(status.accent.rc),
           )
         }
         RemoteColumn(
@@ -158,7 +156,7 @@ fun RemoteHaAlarmPanelWide(data: HaAlarmPanelData, modifier: RemoteModifier = Re
           )
           RemoteText(
             text = status.label.rs,
-            color = status.accent.rc,
+            color = haInk(status.accent.rc),
             fontSize = HaType.Label,
             style = haTextStyle(),
             maxLines = 1,
@@ -199,7 +197,7 @@ private fun StatusRow(
         )
         RemoteText(
           text = status.label.rs,
-          color = status.accent.rc,
+          color = haInk(status.accent.rc),
           fontSize = HaType.Label,
           style = haTextStyle(),
           maxLines = 1,
@@ -208,15 +206,15 @@ private fun StatusRow(
       RemoteBox(
         modifier =
           RemoteModifier.size(40.rdp)
-            .clip(RemoteCircleShape)
-            .border(2.rdp, status.accent.rc, RemoteCircleShape),
+            .clip(haControlShape(20, round = true))
+            .border(2.rdp, haInk(status.accent.rc), haControlShape(20, round = true)),
         contentAlignment = RemoteAlignment.Center,
       ) {
         RemoteIcon(
           imageVector = status.icon.toRemoteImageVector(),
           contentDescription = status.label.rs,
           modifier = RemoteModifier.size(22.rdp),
-          tint = status.accent.rc,
+          tint = haInk(status.accent.rc),
         )
       }
     }
@@ -227,13 +225,13 @@ private fun StatusRow(
 private fun ActionPill(action: HaAlarmAction, theme: RemoteHaTheme) {
   val click =
     action.tapAction.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
-  val accent = action.accent.rc
+  val accent = haInk(action.accent.rc)
   RemoteBox(
     modifier =
       RemoteModifier.then(click)
-        .clip(RemoteRoundedCornerShape(6.rdp))
+        .clip(haControlShape(6))
         .background(accent.copy(alpha = accent.alpha * 0.0f.rf))
-        .border(1.rdp, accent, RemoteRoundedCornerShape(6.rdp))
+        .border(1.rdp, accent, haControlShape(6))
         .padding(horizontal = 14.rdp, vertical = 8.rdp),
     contentAlignment = RemoteAlignment.Center,
   ) {
@@ -377,13 +375,13 @@ private fun KeypadKey(
     modifier =
       RemoteModifier.then(click)
         .size(48.rdp)
-        .clip(RemoteRoundedCornerShape(6.rdp))
-        .border(1.rdp, accent.rc, RemoteRoundedCornerShape(6.rdp)),
+        .clip(haControlShape(6))
+        .border(1.rdp, haInk(accent.rc), haControlShape(6)),
     contentAlignment = RemoteAlignment.Center,
   ) {
     RemoteText(
       text = label.rs,
-      color = accent.rc,
+      color = haInk(accent.rc),
       fontSize = HaType.Title,
       fontWeight = FontWeight.Medium,
       style = haTextStyle(),

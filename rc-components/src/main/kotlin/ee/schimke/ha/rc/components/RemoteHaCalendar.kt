@@ -16,7 +16,6 @@ import androidx.compose.remote.creation.compose.modifier.fillMaxSize
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.modifier.size
-import androidx.compose.remote.creation.compose.shapes.RemoteCircleShape
 import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rs
@@ -112,7 +111,10 @@ fun RemoteHaCalendarIdentity(data: HaCalendarData, modifier: RemoteModifier = Re
       if (next != null) {
         RemoteRow(verticalAlignment = RemoteAlignment.CenterVertically) {
           RemoteBox(
-            modifier = RemoteModifier.size(8.rdp).clip(RemoteCircleShape).background(next.accent.rc)
+            modifier =
+              RemoteModifier.size(8.rdp)
+                .clip(haControlShape(4, round = true))
+                .background(haInk(next.accent.rc))
           )
           RemoteText(
             text = next.whenLabel.rs,
@@ -151,7 +153,10 @@ private fun Event(index: Int, event: HaCalendarEvent, theme: RemoteHaTheme) {
     verticalAlignment = RemoteAlignment.CenterVertically,
   ) {
     RemoteBox(
-      modifier = RemoteModifier.size(8.rdp).clip(RemoteCircleShape).background(event.accent.rc)
+      modifier =
+        RemoteModifier.size(8.rdp)
+          .clip(haControlShape(4, round = true))
+          .background(haInk(event.accent.rc))
     )
     RemoteColumn(modifier = RemoteModifier.padding(start = 10.rdp)) {
       RemoteText(

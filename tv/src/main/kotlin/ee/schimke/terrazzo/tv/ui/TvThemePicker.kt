@@ -25,6 +25,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import ee.schimke.ha.rc.components.HaUberTheme
 import ee.schimke.ha.rc.components.ThemeStyle
 
 /**
@@ -47,8 +48,9 @@ fun TvThemePicker(
     val firstFocus = remember { FocusRequester() }
     LaunchedEffect(Unit) { runCatching { firstFocus.requestFocus() } }
     ThemeStyle.entries.forEachIndexed { index, style ->
-      ThemePickerRow(
-        style = style,
+      PickerRow(
+        title = style.displayName,
+        subtitle = style.tagline,
         selected = style == selected,
         onSelect = { onSelect(style) },
         modifier = if (index == 0) Modifier.focusRequester(firstFocus) else Modifier,
@@ -57,9 +59,37 @@ fun TvThemePicker(
   }
 }
 
+/**
+ * TV-side card style picker: the uber themes (`HaUberTheme.all`), in the same focusable rows as
+ * [TvThemePicker]. Classic keeps the theme's palette; every other style brings its own look.
+ */
 @Composable
-private fun ThemePickerRow(
-  style: ThemeStyle,
+fun TvCardStylePicker(
+  selected: String,
+  onSelect: (String) -> Unit,
+  modifier: Modifier = Modifier,
+) {
+  Column(modifier = modifier.width(360.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    Text(
+      text = "Card style",
+      style = MaterialTheme.typography.titleLarge,
+      color = MaterialTheme.colorScheme.onBackground,
+    )
+    HaUberTheme.all.forEach { uber ->
+      PickerRow(
+        title = uber.displayName,
+        subtitle = if (uber.id == HaUberTheme.Classic.id) "Follows the theme's palette" else null,
+        selected = uber.id == selected,
+        onSelect = { onSelect(uber.id) },
+      )
+    }
+  }
+}
+
+@Composable
+private fun PickerRow(
+  title: String,
+  subtitle: String?,
   selected: Boolean,
   onSelect: () -> Unit,
   modifier: Modifier = Modifier,
@@ -91,16 +121,18 @@ private fun ThemePickerRow(
   ) {
     Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
       Text(
-        text = style.displayName,
+        text = title,
         style = MaterialTheme.typography.titleMedium,
         color = contentColor,
         fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
       )
-      Text(
-        text = style.tagline,
-        style = MaterialTheme.typography.labelMedium,
-        color = contentColor.copy(alpha = 0.75f),
-      )
+      if (subtitle != null) {
+        Text(
+          text = subtitle,
+          style = MaterialTheme.typography.labelMedium,
+          color = contentColor.copy(alpha = 0.75f),
+        )
+      }
     }
   }
 }

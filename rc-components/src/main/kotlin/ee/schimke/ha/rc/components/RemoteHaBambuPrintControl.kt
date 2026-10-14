@@ -17,7 +17,6 @@ import androidx.compose.remote.creation.compose.modifier.clip
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.modifier.size
-import androidx.compose.remote.creation.compose.shapes.RemoteCircleShape
 import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rf
@@ -70,11 +69,11 @@ private fun Button(button: HaBambuControlButton, theme: RemoteHaTheme) {
     modifier = RemoteModifier.then(click),
     horizontalAlignment = RemoteAlignment.CenterHorizontally,
   ) {
-    val accent = button.accent.rc
+    val accent = haInk(button.accent.rc)
     RemoteBox(
       modifier =
         RemoteModifier.size(48.rdp)
-          .clip(RemoteCircleShape)
+          .clip(haControlShape(24, round = true))
           .background(accent.copy(alpha = accent.alpha * 0.18f.rf)),
       contentAlignment = RemoteAlignment.Center,
     ) {

@@ -27,7 +27,6 @@ import androidx.compose.remote.creation.compose.modifier.fillMaxSize
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.modifier.size
-import androidx.compose.remote.creation.compose.shapes.RemoteCircleShape
 import androidx.compose.remote.creation.compose.state.RemoteColor
 import androidx.compose.remote.creation.compose.state.RemoteFloat
 import androidx.compose.remote.creation.compose.state.RemoteString
@@ -295,6 +294,7 @@ private fun ArcCanvas(
   val animatedMarkerAngle = animatedTargetFraction?.let { 135f.rf + it * 270f.rf }
   val accent = dialAccent(data)
   val family = visualFamily()
+  val look = meterLook(accent, theme.divider)
 
   RemoteCanvas(modifier = RemoteModifier.fillMaxSize()) {
     val w = width
@@ -318,6 +318,19 @@ private fun ArcCanvas(
         top,
         side,
         data.live?.targetVisible,
+      )
+      return@RemoteCanvas
+    }
+    // Every other family but Classic draws its own instrument (Dials.kt).
+    if (family != HaVisualFamily.Classic) {
+      familyDial(
+        family,
+        look,
+        animatedValueFraction,
+        animatedTargetFraction,
+        data.live?.targetVisible,
+        DialBox(left, top, side),
+        trackStrokePx,
       )
       return@RemoteCanvas
     }
@@ -411,8 +424,8 @@ private fun StepperButton(
     modifier =
       RemoteModifier.then(click)
         .size(36.rdp)
-        .clip(RemoteCircleShape)
-        .border(1.rdp, theme.divider, RemoteCircleShape),
+        .clip(haControlShape(18, round = true))
+        .border(1.rdp, theme.divider, haControlShape(18, round = true)),
     contentAlignment = RemoteAlignment.Center,
   ) {
     RemoteIcon(
@@ -441,12 +454,12 @@ private fun Color.toArgb(): Int =
 @Composable
 private fun dialAccent(data: HaArcDialData): RemoteColor {
   val choices = data.accentChoices
-  if (choices.isNullOrEmpty() || LocalTemplateBindings.current == null) return data.accent.rc
+  if (choices.isNullOrEmpty() || LocalTemplateBindings.current == null) return haInk(data.accent.rc)
   val index =
     entityInt(data.entityId, "accent_index", choices.indexOf(data.accent).coerceAtLeast(0))
   var color = choices.last().rc
   for (i in choices.indices.reversed().drop(1)) {
     color = index.isEqualTo(i.ri).select(choices[i].rc, color)
   }
-  return color
+  return haInk(color)
 }

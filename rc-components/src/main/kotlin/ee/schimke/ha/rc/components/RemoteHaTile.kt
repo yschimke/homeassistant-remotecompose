@@ -18,7 +18,6 @@ import androidx.compose.remote.creation.compose.modifier.fillMaxSize
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.modifier.size
-import androidx.compose.remote.creation.compose.shapes.RemoteCircleShape
 import androidx.compose.remote.creation.compose.state.RemoteColor
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rf
@@ -65,7 +64,7 @@ fun RemoteHaTile(data: HaTileData, modifier: RemoteModifier = RemoteModifier) {
         RemoteBox(
           modifier =
             RemoteModifier.size(32.rdp)
-              .clip(RemoteCircleShape)
+              .clip(haControlShape(18, round = true))
               .background(accent.copy(alpha = accent.alpha * 0.2f.rf)),
           contentAlignment = RemoteAlignment.Center,
         ) {

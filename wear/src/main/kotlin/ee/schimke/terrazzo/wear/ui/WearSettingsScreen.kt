@@ -19,13 +19,14 @@ import androidx.wear.compose.material3.ListHeader
 import androidx.wear.compose.material3.MaterialTheme
 import androidx.wear.compose.material3.RadioButton
 import androidx.wear.compose.material3.Text
+import ee.schimke.ha.rc.components.HaUberTheme
 import ee.schimke.ha.rc.components.ThemeStyle
 import ee.schimke.terrazzo.wearsync.proto.WearSettings
 
 /**
- * Wear settings — theme picker plus a small "About" footer that shows what phone the watch is
- * paired with (and whether phone has demo mode enabled). Demo mode itself is phone-driven; there's
- * no toggle here.
+ * Wear settings — theme and card style pickers plus a small "About" footer that shows what phone
+ * the watch is paired with (and whether phone has demo mode enabled). Demo mode itself is
+ * phone-driven; there's no toggle here.
  */
 @Composable
 fun WearSettingsScreen(
@@ -34,6 +35,8 @@ fun WearSettingsScreen(
   onSelectTheme: (ThemeStyle) -> Unit,
   onBack: () -> Unit,
   modifier: Modifier = Modifier,
+  cardStyle: String = HaUberTheme.Classic.id,
+  onSelectCardStyle: (String) -> Unit = {},
 ) {
   val listState = rememberScalingLazyListState()
   ScalingLazyColumn(
@@ -61,6 +64,22 @@ fun WearSettingsScreen(
           Text(
             text = style.displayName,
             fontWeight = if (style == selected) FontWeight.SemiBold else FontWeight.Normal,
+          )
+        },
+        modifier = Modifier.fillMaxWidth(),
+      )
+    }
+
+    item { Spacer(Modifier.height(8.dp)) }
+    item { ListHeader { Text("Card style") } }
+    items(HaUberTheme.all) { uber ->
+      RadioButton(
+        selected = uber.id == cardStyle,
+        onSelect = { onSelectCardStyle(uber.id) },
+        label = {
+          Text(
+            text = uber.displayName,
+            fontWeight = if (uber.id == cardStyle) FontWeight.SemiBold else FontWeight.Normal,
           )
         },
         modifier = Modifier.fillMaxWidth(),

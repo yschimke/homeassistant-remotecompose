@@ -101,7 +101,8 @@ class SlotWidgetDesignTest {
     card: CardConfig,
     snapshot: HaSnapshot,
     fetchImage: (String) -> ByteArray? = { null },
-  ): WearWidgetData = slotWidgetData(registry, colors, style, card, snapshot, 0, fetchImage)
+  ): WearWidgetData =
+    slotWidgetData(registry, colors, style, card, snapshot, 0, fetchImage = fetchImage)
 
   private val cameraUrl = "/api/camera_proxy/camera.driveway?token=abc"
 

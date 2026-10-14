@@ -19,7 +19,6 @@ import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rf
 import androidx.compose.remote.creation.compose.state.selectIfGe
 import androidx.compose.ui.graphics.Color
-import kotlin.math.cos
 import kotlin.math.sin
 
 // Console: a 1970s broadcast desk, drawn skeuomorphically — light, depth and material, not flat
@@ -81,12 +80,6 @@ private fun RemoteDrawScope.metalPaint(y: RemoteFloat, h: RemoteFloat): RemotePa
     ),
     RemoteSize(width, height),
   )
-
-/** A point at canvas angle [degrees] (0 = +x, clockwise) at [r] from ([cx], [cy]). */
-private fun polar(cx: RemoteFloat, cy: RemoteFloat, degrees: Float, r: RemoteFloat): RemoteOffset {
-  val rad = Math.toRadians(degrees.toDouble())
-  return RemoteOffset(cx + r * cos(rad).toFloat().rf, cy + r * sin(rad).toFloat().rf)
-}
 
 /**
  * A VU meter filling the canvas down to [baseline]: a dark bezel, a backlit cream face, the
@@ -417,6 +410,9 @@ private const val LampCount = 21
 
 /** The metal colours a [HaSurfaceMaterial.PaintedMetal] control cap is machined in. */
 internal val ConsoleMetal: List<Color> = listOf(MetalLight, MetalMid, MetalDark)
+
+/** The lip round a recess: a graticule line on a Console screen. */
+internal val ConsoleSlotLip: Color = SlotLip
 
 /** The recess a painted-metal switch slides in. */
 internal val ConsoleSlot: Color = SlotDeep

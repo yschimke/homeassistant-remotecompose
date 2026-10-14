@@ -17,7 +17,6 @@ import androidx.compose.remote.creation.compose.modifier.clip
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.modifier.size
-import androidx.compose.remote.creation.compose.shapes.RemoteCircleShape
 import androidx.compose.remote.creation.compose.state.RemoteColor
 import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
@@ -100,7 +99,7 @@ private fun Stat(stat: HaAreaStat, theme: RemoteHaTheme) {
 private fun ActionChip(action: HaAreaAction, theme: RemoteHaTheme) {
   val click =
     action.tapAction.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
-  val accent = action.accent.rc
+  val accent = haInk(action.accent.rc)
   val activeBg: RemoteColor = accent.copy(alpha = accent.alpha * 0.18f.rf)
   val inactiveBg: RemoteColor = theme.divider.copy(alpha = theme.divider.alpha * 0.4f.rf)
   val activeTint: RemoteColor = accent
@@ -117,7 +116,8 @@ private fun ActionChip(action: HaAreaAction, theme: RemoteHaTheme) {
       ?: if (action.initiallyActive) activeTint else inactiveTint
 
   RemoteBox(
-    modifier = RemoteModifier.then(click).size(40.rdp).clip(RemoteCircleShape).background(bg),
+    modifier =
+      RemoteModifier.then(click).size(40.rdp).clip(haControlShape(20, round = true)).background(bg),
     contentAlignment = RemoteAlignment.Center,
   ) {
     RemoteIcon(

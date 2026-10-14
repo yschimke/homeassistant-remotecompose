@@ -10,6 +10,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -22,10 +24,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import ee.schimke.ha.rc.components.HaUberTheme
 import ee.schimke.ha.rc.components.ThemeStyle
 import ee.schimke.ha.rc.components.terrazzoColorScheme
 import ee.schimke.ha.rc.components.terrazzoTypographyFor
 import ee.schimke.terrazzo.tv.data.TvPrefs
+import ee.schimke.terrazzo.tv.ui.TvCardStylePicker
 import ee.schimke.terrazzo.tv.ui.TvKioskPreview
 import ee.schimke.terrazzo.tv.ui.TvThemePicker
 import kotlinx.coroutines.launch
@@ -50,6 +54,7 @@ private fun TvApp() {
   val scope = rememberCoroutineScope()
   val style by prefs.themeStyle.collectAsState(initial = ThemeStyle.TerrazzoKiosk)
   val demoMode by prefs.demoMode.collectAsState(initial = false)
+  val cardStyle by prefs.cardStyle.collectAsState(initial = HaUberTheme.Classic.id)
 
   val colors = terrazzoColorScheme(style, darkTheme = true)
   MaterialTheme(colorScheme = colors, typography = terrazzoTypographyFor(style)) {
@@ -60,14 +65,26 @@ private fun TvApp() {
           .padding(horizontal = 48.dp, vertical = 36.dp),
       horizontalArrangement = Arrangement.spacedBy(32.dp),
     ) {
-      Column(modifier = Modifier.width(360.dp), verticalArrangement = Arrangement.spacedBy(24.dp)) {
+      Column(
+        modifier = Modifier.width(360.dp).verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.spacedBy(24.dp),
+      ) {
         TvThemePicker(
           selected = style,
           onSelect = { picked -> scope.launch { prefs.setThemeStyle(picked) } },
         )
+        TvCardStylePicker(
+          selected = cardStyle,
+          onSelect = { picked -> scope.launch { prefs.setCardStyle(picked) } },
+        )
         TvDemoToggle(enabled = demoMode, onChange = { v -> scope.launch { prefs.setDemoMode(v) } })
       }
-      TvKioskPreview(style = style, demoMode = demoMode, modifier = Modifier.weight(1f))
+      TvKioskPreview(
+        style = style,
+        demoMode = demoMode,
+        modifier = Modifier.weight(1f),
+        cardStyle = HaUberTheme.byId(cardStyle),
+      )
     }
   }
 }

@@ -26,7 +26,6 @@ import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.creation.compose.modifier.height
 import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.modifier.size
-import androidx.compose.remote.creation.compose.shapes.RemoteCircleShape
 import androidx.compose.remote.creation.compose.shapes.RemoteRoundedCornerShape
 import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
@@ -89,15 +88,17 @@ fun RemoteHaMediaControl(
         RemoteBox(
           modifier =
             RemoteModifier.size(96.rdp)
-              .clip(RemoteRoundedCornerShape(8.rdp))
-              .background(data.accent.rc.copy(alpha = data.accent.rc.alpha * 0.15f.rf)),
+              .clip(haControlShape(8))
+              .background(
+                haInk(data.accent.rc).copy(alpha = haInk(data.accent.rc).alpha * 0.15f.rf)
+              ),
           contentAlignment = RemoteAlignment.Center,
         ) {
           RemoteIcon(
             imageVector = Icons.Filled.MusicNote.toRemoteImageVector(),
             contentDescription = LiveValues.attribute(data.entityId, "media_title", data.title),
             modifier = RemoteModifier.size(40.rdp),
-            tint = data.accent.rc,
+            tint = haInk(data.accent.rc),
           )
         }
       }
@@ -109,7 +110,7 @@ fun RemoteHaMediaControl(
 private fun TitleBlock(data: HaMediaControlData, theme: RemoteHaTheme) {
   RemoteText(
     text = entityName(data.entityId, data.playerName),
-    color = data.accent.rc,
+    color = haInk(data.accent.rc),
     fontSize = HaType.Caption,
     fontWeight = FontWeight.Medium,
     style = haTextStyle(),
@@ -201,15 +202,15 @@ fun RemoteHaMediaControlWide(data: HaMediaControlData, modifier: RemoteModifier 
     RemoteBox(
       modifier =
         RemoteModifier.size(40.rdp)
-          .clip(RemoteRoundedCornerShape(6.rdp))
-          .background(data.accent.rc.copy(alpha = data.accent.rc.alpha * 0.15f.rf)),
+          .clip(haControlShape(6))
+          .background(haInk(data.accent.rc).copy(alpha = haInk(data.accent.rc).alpha * 0.15f.rf)),
       contentAlignment = RemoteAlignment.Center,
     ) {
       RemoteIcon(
         imageVector = Icons.Filled.MusicNote.toRemoteImageVector(),
         contentDescription = LiveValues.attribute(data.entityId, "media_title", data.title),
         modifier = RemoteModifier.size(22.rdp),
-        tint = data.accent.rc,
+        tint = haInk(data.accent.rc),
       )
     }
     RemoteColumn(
@@ -243,7 +244,7 @@ fun RemoteHaMediaControlWide(data: HaMediaControlData, modifier: RemoteModifier 
         (if (data.isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow).toRemoteImageVector(),
       contentDescription = "play/pause".rs,
       modifier = RemoteModifier.size(22.rdp),
-      tint = data.accent.rc,
+      tint = haInk(data.accent.rc),
     )
   }
 }
@@ -259,14 +260,14 @@ private fun TransportButton(
   val size = if (big) 40.rdp else 32.rdp
   val iconSize = if (big) 22.rdp else 18.rdp
   RemoteBox(
-    modifier = RemoteModifier.then(click).size(size).clip(RemoteCircleShape),
+    modifier = RemoteModifier.then(click).size(size).clip(haControlShape(0, round = true)),
     contentAlignment = RemoteAlignment.Center,
   ) {
     RemoteIcon(
       imageVector = icon.toRemoteImageVector(),
       contentDescription = "transport".rs,
       modifier = RemoteModifier.size(iconSize),
-      tint = accent.rc,
+      tint = haInk(accent.rc),
     )
   }
 }
@@ -288,6 +289,6 @@ private fun ProgressBar(
         .clip(RemoteRoundedCornerShape(1.rdp))
         .background(theme.divider)
   ) {
-    RemoteBox(modifier = RemoteModifier.fillMaxWidth(f).height(3.rdp).background(accent.rc))
+    RemoteBox(modifier = RemoteModifier.fillMaxWidth(f).height(3.rdp).background(haInk(accent.rc)))
   }
 }
