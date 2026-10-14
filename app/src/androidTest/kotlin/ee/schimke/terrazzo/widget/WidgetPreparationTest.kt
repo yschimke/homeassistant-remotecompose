@@ -106,6 +106,55 @@ class WidgetPreparationTest {
     )
 
   @Test
+  fun failedPreviewHasRecoveryActionsWithoutAResizeGrid() {
+    val requests = java.util.concurrent.ConcurrentLinkedQueue<WidgetSizeDp>()
+    val attempts = java.util.concurrent.atomic.AtomicInteger()
+    val ready = java.util.concurrent.atomic.AtomicInteger()
+    val capture: WidgetPreviewCapture = { ctx, url, cfg, state, size ->
+      requests.add(size)
+      when (attempts.incrementAndGet()) {
+        1 -> null
+        2 ->
+          android.widget.RemoteViews(
+            android.widget.RemoteViews.DrawInstructions.Builder(listOf(byteArrayOf(127))).build()
+          )
+        else -> TerrazzoWidgetProvider().renderPreview(ctx, url, cfg, state, size)
+      }
+    }
+    compose.setContent {
+      MaterialTheme {
+        CompositionLocalProvider(LocalWidgetPreviewCapture provides capture) {
+          Column {
+            WidgetPreparationPreview(DemoData.BASE_URL, card, snapshot("on")) {
+              if (it != null) ready.incrementAndGet()
+            }
+          }
+        }
+      }
+    }
+    compose.waitUntil(60_000) {
+      compose.onAllNodesWithTag("widget-preview-error").fetchSemanticsNodes().isNotEmpty()
+    }
+    compose.onNodeWithTag("widget-grid-viewport").assertDoesNotExist()
+    compose.onNodeWithText("Retry preview").performClick()
+    compose.waitUntil(60_000) {
+      attempts.get() >= 2 &&
+        compose.onAllNodesWithTag("widget-preview-error").fetchSemanticsNodes().isNotEmpty()
+    }
+    compose.onNodeWithText("Try compact").performClick()
+    compose.waitUntil(60_000) {
+      compose.onAllNodesWithTag("widget-render").fetchSemanticsNodes().isNotEmpty()
+    }
+    compose.onNodeWithTag("widget-preview-error").assertDoesNotExist()
+    assertEquals(WidgetSizeDp(72, 84), requests.last())
+    assertEquals(
+      "Only a successfully inflated native preview may enable installation",
+      1,
+      ready.get(),
+    )
+  }
+
+  @Test
   fun adaptiveWidgetPreviewRendersResizesAndTracksState() {
     val current = mutableStateOf(snapshot("off"))
     var captures = 0

@@ -24,6 +24,65 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class WidgetPreviewParityTest {
   @Test
+  fun boilerCardVariantsRenderOnThePlatform() {
+    val context = ApplicationProvider.getApplicationContext<Context>()
+    val snapshot =
+      HaSnapshot(
+        states =
+          mapOf(
+            "switch.boiler" to EntityState("switch.boiler", "on"),
+            "sensor.boiler_power" to EntityState("sensor.boiler_power", "23.9"),
+          )
+      )
+    val configs =
+      listOf(
+        """{"type":"tile","entity":"switch.boiler","name":"Boiler"}""",
+        """{"type":"entity","entity":"switch.boiler","name":"Boiler"}""",
+        """{"type":"entities","entities":[{"entity":"switch.boiler","name":"Boiler"},{"entity":"sensor.boiler_power","name":"Power draw"}]}""",
+        """{"type":"history-graph","title":"Boiler power & status (48h)","entities":["sensor.boiler_power","switch.boiler"]}""",
+        """{"type":"vertical-stack","cards":[{"type":"tile","entity":"switch.boiler","name":"Boiler"},{"type":"tile","entity":"sensor.boiler_power","name":"Power draw"}]}""",
+        """{"type":"vertical-stack","cards":[{"type":"tile","entity":"switch.boiler","name":"Boiler"},{"type":"tile","entity":"sensor.boiler_power","name":"Power draw"},{"type":"history-graph","title":"Boiler power & status","entities":["sensor.boiler_power","switch.boiler"]}]}""",
+        """{"type":"markdown","content":"## Boiler\n**Boiler** is on. Power draw: **23.9 W**"}""",
+        """{"type":"glance","entities":["switch.boiler","sensor.boiler_power"]}""",
+        """{"type":"grid","columns":2,"cards":[{"type":"tile","entity":"switch.boiler","name":"Boiler"},{"type":"tile","entity":"sensor.boiler_power","name":"Power draw"}]}""",
+      )
+    configs.forEach { raw ->
+      val json =
+        kotlinx.serialization.json.Json.parseToJsonElement(raw)
+          as kotlinx.serialization.json.JsonObject
+      val card = CardConfig(json["type"]!!.toString().trim('"'), json)
+      val views =
+        checkNotNull(
+          TerrazzoWidgetProvider()
+            .renderPreview(context, DemoData.BASE_URL, card, snapshot, WidgetSizeDp(288, 252))
+        ) {
+          "${card.type} capture failed"
+        }
+      InstrumentationRegistry.getInstrumentation().runOnMainSync {
+        val preview =
+          try {
+            inflateWidgetPreview(context, views)
+          } catch (failure: RuntimeException) {
+            throw AssertionError("${card.type} must inflate on the launcher platform", failure)
+          }
+        val w = WidgetSizing.dpToPx(context, 288)
+        val h = WidgetSizing.dpToPx(context, 252)
+        preview.measure(
+          View.MeasureSpec.makeMeasureSpec(w, View.MeasureSpec.EXACTLY),
+          View.MeasureSpec.makeMeasureSpec(h, View.MeasureSpec.EXACTLY),
+        )
+        preview.layout(0, 0, w, h)
+        val bitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
+        preview.draw(Canvas(bitmap))
+        val pixels = IntArray(w * h)
+        bitmap.getPixels(pixels, 0, w, 0, 0, w, h)
+        assertTrue("${card.type} must draw widget content", pixels.distinct().size > 10)
+        bitmap.recycle()
+      }
+    }
+  }
+
+  @Test
   fun nativePreviewMatchesLauncherContentForSizeAndState() {
     val context = ApplicationProvider.getApplicationContext<Context>()
     val providerInfo =

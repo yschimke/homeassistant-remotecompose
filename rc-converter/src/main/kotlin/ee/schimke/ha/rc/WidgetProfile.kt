@@ -70,12 +70,14 @@ private const val WIDGETS_OPERATIONS = RcProfiles.PROFILE_WIDGETS or RcProfiles.
 
 private val widgetOperations =
   requireNotNull(Operations.getOperations(WIDGETS_API_LEVEL, WIDGETS_OPERATIONS)).keySet().toSet() -
-    setOf(Operations.CORE_TEXT, Operations.TEXT_STYLE)
+    setOf(Operations.CORE_TEXT, Operations.TEXT_STYLE, Operations.LAYOUT_FLOW)
 
 // AndroidX alpha21 admits CoreText (239) as an experimental V7 widget operation, but the
 // Android 16 platform decoder does not implement it. Excluding it makes the writer use
 // its supported TextLayout fallback (208), retaining text/color bindings. Keep this
 // compatibility path on newer hosts too; system color support is selected independently.
+// FlowLayout (240) is also experimental in AndroidX but absent from Android 16's decoder.
+// LauncherWidgetContent supplies the matching component capability so rows use their fallback.
 
 private fun createWidgetsProfile(supportsColorTheme: Boolean): Profile =
   Profile(

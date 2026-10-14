@@ -33,6 +33,16 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonPrimitive
 
+internal typealias WidgetPreviewCapture =
+  (android.content.Context, String, CardConfig, HaSnapshot, WidgetSizeDp) -> RemoteViews?
+
+internal val LocalWidgetPreviewCapture =
+  staticCompositionLocalOf<WidgetPreviewCapture> {
+    { context, baseUrl, card, snapshot, size ->
+      TerrazzoWidgetProvider().renderPreview(context, baseUrl, card, snapshot, size)
+    }
+  }
+
 /** Renders the actual launcher document, recaptured at each selected size. */
 @Composable
 internal fun WidgetPreparationPreview(
@@ -42,6 +52,7 @@ internal fun WidgetPreparationPreview(
   onPreview: (RemoteViews?) -> Unit,
 ) {
   val context = LocalContext.current
+  val capture = LocalWidgetPreviewCapture.current
   val focusManager = LocalFocusManager.current
   val keyboard = LocalSoftwareKeyboardController.current
   val entityId = card.raw["entity"]?.jsonPrimitive?.contentOrNull
@@ -69,9 +80,10 @@ internal fun WidgetPreparationPreview(
   var height by remember(bounds) { mutableIntStateOf(bounds.defaultCellsH) }
   var views by remember { mutableStateOf<RemoteViews?>(null) }
   var failed by remember { mutableStateOf(false) }
+  var attempt by remember { mutableIntStateOf(0) }
   // Do not keep an older card's document enabled while a new one is being captured.
   val latestOnPreview by rememberUpdatedState(onPreview)
-  LaunchedEffect(card, snapshot, width, height) {
+  LaunchedEffect(baseUrl, card, snapshot, width, height, attempt, capture) {
     views = null
     latestOnPreview(null)
     failed = false
@@ -80,14 +92,13 @@ internal fun WidgetPreparationPreview(
     views =
       try {
         withContext(Dispatchers.Default) {
-          TerrazzoWidgetProvider()
-            .renderPreview(
-              context,
-              baseUrl,
-              card,
-              snapshot,
-              WidgetSizeDp(width * LAUNCHER_CELL_WIDTH_DP, height * LAUNCHER_CELL_HEIGHT_DP),
-            )
+          capture(
+            context,
+            baseUrl,
+            card,
+            snapshot,
+            WidgetSizeDp(width * LAUNCHER_CELL_WIDTH_DP, height * LAUNCHER_CELL_HEIGHT_DP),
+          )
         }
       } catch (cancelled: CancellationException) {
         throw cancelled
@@ -100,7 +111,28 @@ internal fun WidgetPreparationPreview(
         null
       }
     failed = views == null
-    latestOnPreview(views)
+  }
+  if (failed) {
+    OutlinedCard(Modifier.fillMaxWidth().testTag("widget-preview-error")) {
+      Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Text("Couldn't prepare the widget preview", style = MaterialTheme.typography.titleMedium)
+        Text("Try again or use a smaller size. You can still design this card in Card Studio.")
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+          Button(onClick = { attempt++ }) { Text("Retry preview") }
+          if (width != bounds.minCellsW || height != bounds.minCellsH) {
+            OutlinedButton(
+              onClick = {
+                width = bounds.minCellsW
+                height = bounds.minCellsH
+              }
+            ) {
+              Text("Try compact")
+            }
+          }
+        }
+      }
+    }
+    return
   }
   Text("Try it on your home screen", style = MaterialTheme.typography.titleMedium)
   Text(
@@ -155,6 +187,7 @@ internal fun WidgetPreparationPreview(
           AndroidView(
             factory = { ctx ->
               runCatching { inflateWidgetPreview(ctx, current) }
+                .onSuccess { latestOnPreview(current) }
                 .getOrElse { failure ->
                   android.util.Log.e(
                     "WidgetPreparationPreview",
@@ -177,11 +210,6 @@ internal fun WidgetPreparationPreview(
           )
         }
       }
-    } else if (failed) {
-      Text(
-        "This card could not be rendered as a widget. Edit it or choose another card.",
-        modifier = Modifier.padding(12.dp),
-      )
     } else CircularProgressIndicator(modifier = Modifier.padding(12.dp))
   }
 }

@@ -9,8 +9,8 @@ import androidx.compose.runtime.staticCompositionLocalOf
 /**
  * Whether the current capture profile admits the experimental `FlowLayout` op (op 240) used by
  * `RemoteFlowRow`. Defaults to `true`: the in-app dashboard captures with
- * `androidXExperimentalWrap` and the launcher widget with `widgetsProfile`, both of which OR in
- * `PROFILE_EXPERIMENTAL`.
+ * `androidXExperimentalWrap`. Launcher captures override this from their restricted profile:
+ * Android 16 cannot decode FlowLayout, even though AndroidX admits it as experimental.
  *
  * Set to `false` on surfaces whose capture writer is fixed to a stable profile — notably the Glance
  * Wear `WearWidgetDocument` capture path, which is owned by AndroidX and rejects experimental ops.
