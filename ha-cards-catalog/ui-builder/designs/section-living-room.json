@@ -1,9 +1,9 @@
 {
   "schema": "compose-ui-builder-document/v1-candidate",
-  "id": "launcher-entities-4x2",
-  "title": "Entities · launcher 4x2",
+  "id": "section-living-room",
+  "title": "Living room",
   "revision": 0,
-  "template": "launcher-entities-4x2",
+  "template": "section-living-room",
   "catalogPin": {
     "systemId": "ha-cards",
     "catalogRevision": "candidate",
@@ -11,8 +11,8 @@
     "nativeRuntimeId": "candidate"
   },
   "environment": {
-    "widthDp": 276,
-    "heightDp": 220,
+    "widthDp": 360,
+    "heightDp": 480,
     "density": 2,
     "theme": "light",
     "locale": "en-US",
@@ -26,17 +26,68 @@
   "nodes": {
     "root": {
       "id": "root",
-      "componentId": "remote-widgets/launcher-widget",
-      "properties": {
-        "background": {
-          "type": "string",
-          "value": "#FFFFFFFF"
-        }
-      },
+      "componentId": "ha-cards/dashboard-section",
+      "properties": {},
       "modifiers": [],
       "slots": {
         "content": [
-          "column"
+          "section"
+        ]
+      }
+    },
+    "section": {
+      "id": "section",
+      "componentId": "layout/column",
+      "properties": {
+        "verticalSpacingDp": {
+          "type": "float",
+          "value": 8.0
+        }
+      },
+      "modifiers": [
+        {
+          "type": "fillMaxWidth"
+        }
+      ],
+      "slots": {
+        "children": [
+          "heading",
+          "card0-surface",
+          "card1-surface",
+          "card2-surface"
+        ]
+      }
+    },
+    "card0-surface": {
+      "id": "card0-surface",
+      "componentId": "ha-cards/card-surface",
+      "properties": {},
+      "modifiers": [],
+      "slots": {
+        "content": [
+          "card0-tile"
+        ]
+      }
+    },
+    "card1-surface": {
+      "id": "card1-surface",
+      "componentId": "ha-cards/card-surface",
+      "properties": {},
+      "modifiers": [],
+      "slots": {
+        "content": [
+          "card1-column"
+        ]
+      }
+    },
+    "card2-surface": {
+      "id": "card2-surface",
+      "componentId": "ha-cards/card-surface",
+      "properties": {},
+      "modifiers": [],
+      "slots": {
+        "content": [
+          "card2-measurement"
         ]
       }
     },
@@ -47,8 +98,36 @@
         "title": {
           "type": "string",
           "value": "Living room"
+        }
+      },
+      "modifiers": [],
+      "slots": {}
+    },
+    "card0-tile": {
+      "id": "card0-tile",
+      "componentId": "ha-cards/tile",
+      "properties": {
+        "name": {
+          "type": "string",
+          "value": "Kitchen"
         },
-        "subtitle": {
+        "state": {
+          "type": "string",
+          "value": "On"
+        },
+        "entityId": {
+          "type": "string",
+          "value": "light.kitchen"
+        },
+        "icon": {
+          "type": "string",
+          "value": "light"
+        },
+        "toggleable": {
+          "type": "bool",
+          "value": true
+        },
+        "isOn": {
           "type": "bool",
           "value": true
         }
@@ -56,8 +135,8 @@
       "modifiers": [],
       "slots": {}
     },
-    "row0": {
-      "id": "row0",
+    "card1-row0": {
+      "id": "card1-row0",
       "componentId": "ha-cards/entity-row",
       "properties": {
         "name": {
@@ -92,8 +171,8 @@
       ],
       "slots": {}
     },
-    "row1": {
-      "id": "row1",
+    "card1-row1": {
+      "id": "card1-row1",
       "componentId": "ha-cards/entity-row",
       "properties": {
         "name": {
@@ -128,8 +207,8 @@
       ],
       "slots": {}
     },
-    "row2": {
-      "id": "row2",
+    "card1-row2": {
+      "id": "card1-row2",
       "componentId": "ha-cards/entity-row",
       "properties": {
         "name": {
@@ -156,8 +235,8 @@
       ],
       "slots": {}
     },
-    "column": {
-      "id": "column",
+    "card1-column": {
+      "id": "card1-column",
       "componentId": "layout/column",
       "properties": {
         "verticalSpacingDp": {
@@ -172,12 +251,35 @@
       ],
       "slots": {
         "children": [
-          "heading",
-          "row0",
-          "row1",
-          "row2"
+          "card1-row0",
+          "card1-row1",
+          "card1-row2"
         ]
       }
+    },
+    "card2-measurement": {
+      "id": "card2-measurement",
+      "componentId": "ha-cards/thermometer",
+      "properties": {
+        "name": {
+          "type": "string",
+          "value": "Living room"
+        },
+        "value": {
+          "type": "float",
+          "value": 21.5
+        },
+        "entityId": {
+          "type": "string",
+          "value": "sensor.living_room_temperature"
+        },
+        "presentation": {
+          "type": "string",
+          "value": "standard"
+        }
+      },
+      "modifiers": [],
+      "slots": {}
     }
   }
 }

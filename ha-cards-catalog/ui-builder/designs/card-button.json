@@ -1,9 +1,9 @@
 {
   "schema": "compose-ui-builder-document/v1-candidate",
-  "id": "launcher-fan-2x2",
-  "title": "Fan button · launcher 2x2",
+  "id": "card-button",
+  "title": "Button",
   "revision": 0,
-  "template": "launcher-fan-2x2",
+  "template": "card-button",
   "catalogPin": {
     "systemId": "ha-cards",
     "catalogRevision": "candidate",
@@ -11,8 +11,8 @@
     "nativeRuntimeId": "candidate"
   },
   "environment": {
-    "widthDp": 130,
-    "heightDp": 220,
+    "widthDp": 360,
+    "heightDp": 120,
     "density": 2,
     "theme": "light",
     "locale": "en-US",
@@ -26,13 +26,8 @@
   "nodes": {
     "root": {
       "id": "root",
-      "componentId": "remote-widgets/launcher-widget",
-      "properties": {
-        "background": {
-          "type": "string",
-          "value": "#FFFFFFFF"
-        }
-      },
+      "componentId": "ha-cards/dashboard-card",
+      "properties": {},
       "modifiers": [],
       "slots": {
         "content": [

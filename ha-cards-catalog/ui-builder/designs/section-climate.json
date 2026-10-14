@@ -1,0 +1,151 @@
+{
+  "schema": "compose-ui-builder-document/v1-candidate",
+  "id": "section-climate",
+  "title": "Climate",
+  "revision": 0,
+  "template": "section-climate",
+  "catalogPin": {
+    "systemId": "ha-cards",
+    "catalogRevision": "candidate",
+    "capabilityDigest": "candidate",
+    "nativeRuntimeId": "candidate"
+  },
+  "environment": {
+    "widthDp": 360,
+    "heightDp": 420,
+    "density": 2,
+    "theme": "light",
+    "locale": "en-US",
+    "fontScale": 1,
+    "layoutDirection": "ltr"
+  },
+  "stateVariables": {},
+  "roots": [
+    "root"
+  ],
+  "nodes": {
+    "root": {
+      "id": "root",
+      "componentId": "ha-cards/dashboard-section",
+      "properties": {},
+      "modifiers": [],
+      "slots": {
+        "content": [
+          "section"
+        ]
+      }
+    },
+    "section": {
+      "id": "section",
+      "componentId": "layout/column",
+      "properties": {
+        "verticalSpacingDp": {
+          "type": "float",
+          "value": 8.0
+        }
+      },
+      "modifiers": [
+        {
+          "type": "fillMaxWidth"
+        }
+      ],
+      "slots": {
+        "children": [
+          "heading",
+          "card0-surface",
+          "card1-surface"
+        ]
+      }
+    },
+    "card0-surface": {
+      "id": "card0-surface",
+      "componentId": "ha-cards/card-surface",
+      "properties": {},
+      "modifiers": [],
+      "slots": {
+        "content": [
+          "card0-gauge"
+        ]
+      }
+    },
+    "card1-surface": {
+      "id": "card1-surface",
+      "componentId": "ha-cards/card-surface",
+      "properties": {},
+      "modifiers": [],
+      "slots": {
+        "content": [
+          "card1-measurement"
+        ]
+      }
+    },
+    "heading": {
+      "id": "heading",
+      "componentId": "ha-cards/heading",
+      "properties": {
+        "title": {
+          "type": "string",
+          "value": "Climate"
+        }
+      },
+      "modifiers": [],
+      "slots": {}
+    },
+    "card0-gauge": {
+      "id": "card0-gauge",
+      "componentId": "ha-cards/gauge",
+      "properties": {
+        "name": {
+          "type": "string",
+          "value": "Humidity"
+        },
+        "value": {
+          "type": "float",
+          "value": 46.0
+        },
+        "min": {
+          "type": "float",
+          "value": 0.0
+        },
+        "max": {
+          "type": "float",
+          "value": 100.0
+        },
+        "unit": {
+          "type": "string",
+          "value": "%"
+        },
+        "entityId": {
+          "type": "string",
+          "value": "sensor.humidity"
+        }
+      },
+      "modifiers": [],
+      "slots": {}
+    },
+    "card1-measurement": {
+      "id": "card1-measurement",
+      "componentId": "ha-cards/thermometer",
+      "properties": {
+        "name": {
+          "type": "string",
+          "value": "Living room"
+        },
+        "value": {
+          "type": "float",
+          "value": 21.5
+        },
+        "entityId": {
+          "type": "string",
+          "value": "sensor.living_room_temperature"
+        },
+        "presentation": {
+          "type": "string",
+          "value": "standard"
+        }
+      },
+      "modifiers": [],
+      "slots": {}
+    }
+  }
+}

@@ -35,7 +35,12 @@ class HaCardsTemplatesTest {
     val policy =
       Json.parseToJsonElement(File(catalogDir, "ui-builder.policy.json").readText()).jsonObject
     val builtins = policy.getValue("builtins").jsonObject
-    for (id in listOf(HaCardsSeed.DASHBOARD_CARD, HaCardsSeed.LAUNCHER_WIDGET)) {
+    for (id in
+      listOf(
+        HaCardsSeed.DASHBOARD_CARD,
+        HaCardsSeed.DASHBOARD_SECTION,
+        HaCardsSeed.LAUNCHER_WIDGET,
+      )) {
       val component = builtins.getValue(id).jsonObject
       assertEquals(JsonPrimitive("layout/scaffold"), component["canvas"])
       assertTrue("content" in component.getValue("slots").jsonObject)
@@ -109,9 +114,53 @@ class HaCardsTemplatesTest {
       mapOf(state("switch.fan", "on", "friendly_name" to "Fan")),
     )
 
-  /** Every template, by id, in the order the policy lists them. */
+  private fun thermometer(designId: String, title: String, target: UiBuilderSeed.Target) =
+    HaCardsSeed.measurement(
+      designId,
+      title,
+      target,
+      name = "Living room",
+      value = 21.5,
+      entityId = "sensor.living_room_temperature",
+      presentation = "standard",
+    )
+
+  /**
+   * Every template, by id, in the order the policy lists them: dashboard sections, cards, then the
+   * components cards are made of.
+   */
   private val templates: Map<String, JsonObject> =
     linkedMapOf(
+      "section-living-room" to
+        HaCardsSeed.section(
+          "section-living-room",
+          "Living room",
+          HaCardsSeed.section("section-living-room", heightDp = 480),
+          heading = "Living room",
+          cards =
+            listOf(
+              HaCardsSeed.haCard(lightTile, "tile", "Light tile", HaCardsSeed.card("tile")),
+              HaCardsSeed.haCard(
+                livingRoom,
+                "entities",
+                "Entities",
+                HaCardsSeed.card("entities", title = false),
+              ),
+              thermometer("thermometer", "Thermometer", HaCardsSeed.card("thermometer")),
+            ),
+        ),
+      "section-climate" to
+        HaCardsSeed.section(
+          "section-climate",
+          "Climate",
+          HaCardsSeed.section("section-climate", heightDp = 420),
+          heading = "Climate",
+          cards =
+            listOf(
+              HaCardsSeed.haCard(humidity, "gauge", "Gauge", HaCardsSeed.card("gauge")),
+              thermometer("thermometer", "Thermometer", HaCardsSeed.card("thermometer")),
+            ),
+        ),
       "card-light-tile" to
         HaCardsSeed.haCard(
           lightTile,
@@ -133,63 +182,28 @@ class HaCardsTemplatesTest {
           "Gauge",
           HaCardsSeed.card("card-gauge", heightDp = 220),
         ),
-      "card-sensor-metric" to
+      "card-button" to
+        HaCardsSeed.haCard(
+          fan,
+          "card-button",
+          "Button",
+          HaCardsSeed.card("card-button", heightDp = 120),
+        ),
+      "component-sensor-metric" to
         HaCardsSeed.metric(
-          "card-sensor-metric",
+          "component-sensor-metric",
           "Sensor metric",
-          HaCardsSeed.card("card-sensor-metric", heightDp = 120),
+          HaCardsSeed.card("component-sensor-metric", heightDp = 120),
           label = "Living room",
           value = "21.5",
           unit = "°C",
           entityId = "sensor.living_room_temperature",
         ),
-      "card-thermometer" to
-        HaCardsSeed.measurement(
-          "card-thermometer",
+      "component-thermometer" to
+        thermometer(
+          "component-thermometer",
           "Thermometer",
-          HaCardsSeed.card("card-thermometer", heightDp = 112),
-          name = "Living room",
-          value = 21.5,
-          entityId = "sensor.living_room_temperature",
-          presentation = "standard",
-        ),
-      "wear-light-small" to
-        UiBuilderSeed.document(
-          lightTile,
-          "wear-light-small",
-          "Light · Wear widget, Small",
-          HaCardsSeed.wearSmall("wear-light-small"),
-        ),
-      "wear-entities-large" to
-        UiBuilderSeed.document(
-          livingRoom,
-          "wear-entities-large",
-          "Entities · Wear widget, Large",
-          HaCardsSeed.wearLarge("wear-entities-large"),
-        ),
-      "launcher-fan-2x2" to
-        HaCardsSeed.haCard(
-          fan,
-          "launcher-fan-2x2",
-          "Fan button · launcher 2x2",
-          HaCardsSeed.launcher("launcher-fan-2x2", widthDp = 130, heightDp = 220),
-        ),
-      "launcher-entities-4x2" to
-        HaCardsSeed.haCard(
-          livingRoom,
-          "launcher-entities-4x2",
-          "Entities · launcher 4x2",
-          HaCardsSeed.launcher("launcher-entities-4x2", widthDp = 276, heightDp = 220),
-        ),
-      "launcher-thermometer-2x2" to
-        HaCardsSeed.measurement(
-          "launcher-thermometer-2x2",
-          "Thermometer · launcher 2x2",
-          HaCardsSeed.launcher("launcher-thermometer-2x2", widthDp = 130, heightDp = 220),
-          name = "Bedroom",
-          value = 19.0,
-          entityId = "sensor.bedroom_temperature",
-          presentation = "adaptive",
+          HaCardsSeed.card("component-thermometer", heightDp = 112),
         ),
     )
 
@@ -209,6 +223,37 @@ class HaCardsTemplatesTest {
     val gauge = templates.getValue("card-gauge")["nodes"]!!.jsonObject["gauge"]!!.jsonObject
     val unit = gauge["properties"]!!.jsonObject["unit"]?.jsonObject?.get("value")
     assertEquals("%", unit?.jsonPrimitive?.content)
+  }
+
+  @Test
+  fun aSectionStacksItsCardsUnderAHeading() {
+    val section = templates.getValue("section-living-room")["nodes"]!!.jsonObject
+    fun component(id: String) =
+      section.getValue(id).jsonObject["componentId"]!!.jsonPrimitive.content
+    fun slot(id: String, name: String) =
+      section.getValue(id).jsonObject["slots"]!!.jsonObject[name]!!.jsonArray.map {
+        it.jsonPrimitive.content
+      }
+    assertEquals(HaCardsSeed.DASHBOARD_SECTION, component("root"), "the root draws no surface")
+    assertEquals(
+      listOf("heading", "card0-surface", "card1-surface", "card2-surface"),
+      slot("section", "children"),
+    )
+    // Each card keeps a surface of its own, around its own body.
+    for ((surface, body) in
+      listOf(
+        "card0-surface" to "card0-tile",
+        "card1-surface" to "card1-column",
+        "card2-surface" to "card2-measurement",
+      )) {
+      assertEquals(HaCardsSeed.CARD_SURFACE, component(surface))
+      assertEquals(listOf(body), slot(surface, "content"))
+    }
+    assertTrue(
+      slot("card1-column", "children").all { it.startsWith("card1-row") },
+      "rows keep a prefix",
+    )
+    assertTrue("card1-heading" !in section, "a card in a section leaves its own heading out")
   }
 
   @Test

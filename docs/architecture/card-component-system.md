@@ -168,9 +168,9 @@ The [`ha-cards` catalog](../../ha-cards-catalog/) offers each layer as a builder
 | `ha-cards/thermostat` | 3 | a climate entity's 270° dial; live through `<id>.current_temperature` / `<id>.target_temperature`; a knob in a lamp ring under `console` |
 
 Every measurement takes `presentation`: one of the five rungs, or `adaptive`. The policy's
-`allowedValues` are held to the code by `HaCardMeasurementsTest`. There are two starter
-templates: `card-thermometer` (a dashboard card at `standard`) and `launcher-thermometer-2x2`
-(`adaptive`, so it plays expanded at 2×2 and compact when resized smaller).
+`allowedValues` are held to the code by `HaCardMeasurementsTest`. The starter templates use
+`standard`: `component-thermometer` on its own, and inside both dashboard sections. A widget cell
+wants `adaptive`, so it plays expanded at 2×2 and compact when resized smaller.
 
 ## 5. Uber themes
 

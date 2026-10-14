@@ -4,12 +4,16 @@ import ee.schimke.ha.designserver.UiBuilderSeed.Target
 import ee.schimke.ha.designserver.UiBuilderSeed.TextRole
 import ee.schimke.ha.designserver.UiBuilderSeed.float
 import ee.schimke.ha.designserver.UiBuilderSeed.node
+import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.doubleOrNull
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 
 /**
@@ -37,6 +41,8 @@ object HaCardsSeed {
   private const val REVISION = "candidate"
 
   const val DASHBOARD_CARD = "ha-cards/dashboard-card"
+  const val DASHBOARD_SECTION = "ha-cards/dashboard-section"
+  const val CARD_SURFACE = "ha-cards/card-surface"
   const val WEAR_SMALL = "remote-m3/widget-container-small"
   const val WEAR_LARGE = "remote-m3/widget-container-large"
   const val LAUNCHER_WIDGET = "remote-widgets/launcher-widget"
@@ -110,9 +116,23 @@ object HaCardsSeed {
       template = template,
     )
 
-  /** A dashboard card, 360dp wide, growing with its rows; adaptive like the design server's. */
-  fun card(template: String, heightDp: Int? = null) =
-    target(template, DASHBOARD_CARD, widthDp = 360, heightDp = heightDp, adaptive = true)
+  /** A dashboard section's root, 360dp wide: its cards each sit on their own surface. */
+  fun section(template: String, heightDp: Int? = null) =
+    target(template, DASHBOARD_SECTION, widthDp = 360, heightDp = heightDp, adaptive = true)
+
+  /**
+   * A dashboard card, 360dp wide, growing with its rows; adaptive like the design server's. Without
+   * [title] an entities card leaves its heading out, as one inside a [section] does.
+   */
+  fun card(template: String, heightDp: Int? = null, title: Boolean = true) =
+    target(
+      template,
+      DASHBOARD_CARD,
+      widthDp = 360,
+      heightDp = heightDp,
+      adaptive = true,
+      title = title,
+    )
 
   /** The Small Wear widget container, 216×76dp: room for one row and no title. */
   fun wearSmall(template: String) =
@@ -155,6 +175,91 @@ object HaCardsSeed {
       adaptive = false,
       switches = false,
       background = LAUNCHER_BACKGROUND,
+    )
+
+  /**
+   * A dashboard section: a [heading] over [cards] in a column, the way Home Assistant's sections
+   * view stacks a heading card and the cards under it. Each of [cards] is a document these seeds
+   * wrote ([haCard], [measurement], [metric]); its body moves into the section on a [CARD_SURFACE]
+   * of its own, with its node ids prefixed so two cards may share an id. [target] is a
+   * [DASHBOARD_SECTION] root ([section] with a template id), which draws no surface, so each card
+   * stays a card.
+   */
+  fun section(
+    designId: String,
+    title: String,
+    target: Target,
+    heading: String,
+    cards: List<JsonObject>,
+  ): JsonObject {
+    val nodes = linkedMapOf<String, JsonObject>()
+    nodes["root"] =
+      node(
+        "root",
+        target.rootComponent,
+        properties = target.rootProperties,
+        modifiers = target.rootModifiers,
+        slots = mapOf(target.rootSlot to listOf("section")),
+      )
+    val children = mutableListOf("heading")
+    val surfaces = linkedMapOf<String, JsonObject>()
+    val parts = linkedMapOf<String, JsonObject>()
+    parts["heading"] =
+      node(
+        "heading",
+        "ha-cards/heading",
+        properties = mapOf("title" to UiBuilderSeed.string(heading)),
+      )
+    cards.forEachIndexed { index, card ->
+      val prefix = "card$index-"
+      val cardNodes = card.getValue("nodes").jsonObject
+      val body =
+        cardNodes.getValue("root").jsonObject.getValue("slots").jsonObject.values.flatMap {
+          it.jsonArray.map { id -> prefix + id.jsonPrimitive.content }
+        }
+      val surface = "${prefix}surface"
+      surfaces[surface] = node(surface, CARD_SURFACE, slots = mapOf("content" to body))
+      children += surface
+      for ((id, cardNode) in cardNodes) {
+        if (id == "root") continue
+        parts[prefix + id] = prefixed(cardNode.jsonObject, prefix)
+      }
+    }
+    nodes["section"] =
+      node(
+        "section",
+        "layout/column",
+        properties = mapOf("verticalSpacingDp" to float(8.0)),
+        modifiers = listOf(UiBuilderSeed.fillMaxWidth()),
+        slots = mapOf("children" to children),
+      )
+    nodes.putAll(surfaces)
+    nodes.putAll(parts)
+    return UiBuilderSeed.envelope(
+      target,
+      designId,
+      title,
+      heightDp = target.heightDp ?: 480,
+      stateVariables = emptyList(),
+      nodes = nodes,
+    )
+  }
+
+  /** [node] with its own id and every child id it names prefixed with [prefix]. */
+  private fun prefixed(node: JsonObject, prefix: String): JsonObject =
+    JsonObject(
+      node.mapValues { (key, value) ->
+        when (key) {
+          "id" -> JsonPrimitive(prefix + value.jsonPrimitive.content)
+          "slots" ->
+            JsonObject(
+              value.jsonObject.mapValues { (_, ids) ->
+                JsonArray(ids.jsonArray.map { JsonPrimitive(prefix + it.jsonPrimitive.content) })
+              }
+            )
+          else -> value
+        }
+      }
     )
 
   /** An editable sensor card made from the metric building block. */
