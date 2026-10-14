@@ -30,9 +30,9 @@ import kotlinx.coroutines.delay
 /**
  * A miniature kiosk dashboard that re-skins itself live as the picker selection changes. Its
  * headline row is real Home Assistant cards ([TvKioskCards]) in the chosen card style. When
- * [demoMode] is on the tile values come from [TvDemoData] and tick on a 2 s cadence so the room
- * sees motion; when off, the tiles show a static "live data placeholder" until full HA wiring
- * lands.
+ * [demoMode] is on the values come from [TvDemoData] and tick on a 2 s cadence so the room sees
+ * motion; when off, the cards show their entities as unavailable and the tiles a static "—" until
+ * full HA wiring lands.
  *
  * [frozenNowMs] pins the clock to a fixed instant for `@Preview` renders so the PNG is byte-stable
  * — sine-driven values in `TvDemoData.tiles` would otherwise drift between runs. Production callers
@@ -107,7 +107,11 @@ fun TvKioskPreview(
 
     // The headline row is real HA cards in the card style (TvKioskCards); the rest of the
     // demo values sit in a secondary band below.
-    TvKioskCards(cardStyle = cardStyle, style = style, snapshot = TvDemoData.snapshot(nowMs))
+    TvKioskCards(
+      cardStyle = cardStyle,
+      style = style,
+      snapshot = if (demoMode) TvDemoData.snapshot(nowMs) else TvDemoData.placeholderSnapshot(),
+    )
     if (tiles.size > 3) {
       Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         tiles.drop(3).forEach { tile ->

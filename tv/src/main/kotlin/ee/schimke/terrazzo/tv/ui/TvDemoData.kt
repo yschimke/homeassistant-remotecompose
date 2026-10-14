@@ -87,6 +87,24 @@ object TvDemoData {
     )
   }
 
+  /**
+   * The same entities with no data: every one `unavailable`, for the kiosk outside demo mode, so it
+   * shows the cards without inventing readings.
+   */
+  fun placeholderSnapshot(): HaSnapshot =
+    HaSnapshot(
+      states =
+        listOf(LIGHT to "Lights", CLIMATE to "Climate", HUMIDITY to "Humidity").associate {
+          (id, name) ->
+          id to
+            EntityState(
+              entityId = id,
+              state = "unavailable",
+              attributes = JsonObject(mapOf("friendly_name" to JsonPrimitive(name))),
+            )
+        }
+    )
+
   const val LIGHT = "light.living_room"
   const val CLIMATE = "climate.living_room"
   const val HUMIDITY = "sensor.living_room_humidity"

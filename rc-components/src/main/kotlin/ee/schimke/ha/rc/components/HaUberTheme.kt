@@ -396,8 +396,15 @@ private fun expressivePalette(dark: Boolean): HaTheme {
   )
 }
 
-/** The active uber theme and mode. */
-data class HaActiveUberTheme(val theme: HaUberTheme, val darkTheme: Boolean) {
+/**
+ * The active uber theme and mode. [ownPalette] is false under [ProvideHaUberStyle], where the cards
+ * sit on the host's surfaces rather than [theme]'s.
+ */
+data class HaActiveUberTheme(
+  val theme: HaUberTheme,
+  val darkTheme: Boolean,
+  val ownPalette: Boolean = true,
+) {
   /** The ink readings are drawn in, or null for the semantic colours. */
   val ink: Color?
     get() = theme.inkFor(darkTheme)
@@ -502,18 +509,19 @@ fun haInk(color: Color): RemoteColor {
 }
 
 /**
- * [color] legible on the active card surface: unchanged under Classic (the cards' own look) and
- * whenever it already contrasts 3:1 with the card background — the WCAG minimum for graphics and
- * large text. Otherwise it is mixed toward the theme's primary text, a tenth at a time, until it
- * does: a green "Arm away" or a purple media accent on Console's blue panel lightens rather than
- * sinking into it, and keeps its hue.
+ * [color] legible on the active card surface: unchanged under Classic (the cards' own look), under
+ * [ProvideHaUberStyle] (the host's surfaces, which the accents already suit), and whenever it
+ * already contrasts 3:1 with the card background — the WCAG minimum for graphics and large text.
+ * Otherwise it is mixed toward the theme's primary text, a tenth at a time, until it does: a green
+ * "Arm away" or a purple media accent on Console's blue panel lightens rather than sinking into it,
+ * and keeps its hue.
  */
 @Composable
 @ReadOnlyComposable
 fun haLegible(color: Color): Color = legibleOn(LocalHaUberTheme.current, color)
 
 internal fun legibleOn(active: HaActiveUberTheme, color: Color): Color {
-  if (active.theme.id == HaUberTheme.Classic.id) return color
+  if (active.theme.id == HaUberTheme.Classic.id || !active.ownPalette) return color
   val palette = active.theme.palette(active.darkTheme)
   val surface = palette.cardBackground
   var mixed = color
@@ -563,7 +571,7 @@ fun haControlShape(classicDp: Int, round: Boolean = false): RemoteShape {
 @Composable
 fun ProvideHaUberStyle(theme: HaUberTheme, darkTheme: Boolean, content: @Composable () -> Unit) {
   CompositionLocalProvider(
-    LocalHaUberTheme provides HaActiveUberTheme(theme, darkTheme),
+    LocalHaUberTheme provides HaActiveUberTheme(theme, darkTheme, ownPalette = false),
     content = content,
   )
 }

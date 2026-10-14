@@ -76,6 +76,11 @@ class HaUberThemeTest {
     assertTrue(contrast(legibleOn(console, green), surface) >= 3f)
     // Classic keeps its own colours, and a legible accent is left alone.
     assertEquals(green, legibleOn(HaActiveUberTheme(HaUberTheme.Classic, false), green))
+    // Style only (Wear): the host's surface, not Console's, so the accent is left alone.
+    assertEquals(
+      green,
+      legibleOn(HaActiveUberTheme(HaUberTheme.Console, true, ownPalette = false), green),
+    )
     val white = androidx.compose.ui.graphics.Color.White
     assertEquals(white, legibleOn(console, white))
   }
