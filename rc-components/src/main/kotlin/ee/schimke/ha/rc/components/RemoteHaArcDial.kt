@@ -454,7 +454,7 @@ private fun Color.toArgb(): Int =
 @Composable
 private fun dialAccent(data: HaArcDialData): RemoteColor {
   val choices = data.accentChoices
-  if (choices.isNullOrEmpty() || LocalTemplateBindings.current == null) return haInk(data.accent.rc)
+  if (choices.isNullOrEmpty() || LocalTemplateBindings.current == null) return haInk(data.accent)
   val index =
     entityInt(data.entityId, "accent_index", choices.indexOf(data.accent).coerceAtLeast(0))
   var color = choices.last().rc

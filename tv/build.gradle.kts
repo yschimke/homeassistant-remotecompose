@@ -29,6 +29,12 @@ android {
 
 dependencies {
   implementation(project(":rc-components"))
+  // The kiosk's headline cards are real HA cards, converted and played like the dashboard's.
+  implementation(project(":rc-converter"))
+  implementation(project(":ha-model"))
+  implementation(libs.kotlinx.serialization.json)
+  implementation(libs.remote.creation.compose)
+  implementation(libs.remote.creation.core)
 
   implementation(platform(libs.compose.bom))
   implementation(libs.compose.ui)
