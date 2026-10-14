@@ -167,6 +167,23 @@ class LauncherDesignsTest {
   }
 
   @Test
+  fun launcherGlanceBakesEveryEntity() {
+    val entities = (1..5).map { entity("sensor.room_$it", "${it * 10 + 1}") }
+    val card =
+      CardConfig(
+        "glance",
+        kotlinx.serialization.json.Json.parseToJsonElement(
+          """{"type":"glance","entities":[${entities.joinToString { "\"${it.entityId}\"" }}]}"""
+        ) as JsonObject,
+      )
+    val baked = bake(card, snapshotOf(*entities.toTypedArray()), 288, 336)
+    val bytes = String(baked.bytes, Charsets.ISO_8859_1)
+    entities.forEach {
+      assertTrue(it.state in bytes, "${it.entityId} must remain in the baked document")
+    }
+  }
+
+  @Test
   fun bakedWidgetHoldsValuesNotBindings() {
     val card = card("tile", "light.kitchen")
     val snapshot = snapshotOf(entity("light.kitchen", "on", "friendly_name" to "Kitchen"))
