@@ -22,6 +22,9 @@ import ee.schimke.terrazzo.core.session.DemoData
 import ee.schimke.terrazzo.core.session.DemoHaSession
 import ee.schimke.terrazzo.core.session.HaSession
 import ee.schimke.terrazzo.core.session.demoCoverPositionPercent
+import ee.schimke.terrazzo.feedback.FeedbackCue
+import ee.schimke.terrazzo.feedback.InteractionFeedback
+import ee.schimke.terrazzo.feedback.feedbackCueFor
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -36,6 +39,11 @@ import kotlinx.coroutines.launch
  * - [HaAction.Navigate] / [HaAction.MoreInfo] → logged for now — these need in-app navigation that
  *   the dashboard doesn't expose yet.
  *
+ * With [feedback], every action that changes something is also felt (and, if the user turned sounds
+ * on, heard): a toggle-on / toggle-off for switches — [stateOf] tells which way a bare toggle flips
+ * — a key tap for keypads, a confirm for an alarm, and a reject when read-only mode drops an action
+ * or the service call fails.
+ *
  * In demo mode the dispatcher also evicts the [CardDocumentCache] so cards baking state into bytes
  * (e.g. the garage shutter card's `closedFraction`) re-encode against the new snapshot on the next
  * dashboard refresh — without that, toggles fire but the visual doesn't update.
@@ -44,6 +52,8 @@ import kotlinx.coroutines.launch
 fun rememberDashboardActionDispatcher(
   session: HaSession,
   readOnly: Boolean = true,
+  feedback: InteractionFeedback? = null,
+  stateOf: (String) -> String? = { null },
 ): HaActionDispatcher {
   val context = LocalContext.current
   val cache = LocalCardDocumentCache.current
@@ -52,7 +62,8 @@ fun rememberDashboardActionDispatcher(
   // Read fresh each dispatch so toggling the chip takes effect without
   // recreating the dispatcher (and losing AlarmKeypadCoordinator state).
   val readOnlyState = rememberUpdatedState(readOnly)
-  return remember(session, context, cache, scope, logStore) {
+  val stateOfState = rememberUpdatedState(stateOf)
+  return remember(session, context, cache, scope, logStore, feedback) {
     val core =
       DashboardActionDispatcher(
         context.applicationContext,
@@ -61,11 +72,24 @@ fun rememberDashboardActionDispatcher(
         scope,
         logStore,
         readOnly = { readOnlyState.value },
+        onFailure = { feedback?.play(FeedbackCue.Reject) },
       )
     // The keypad coordinator buffers per-key host actions and
     // translates ARM intents into a single `call_service` with the
     // entered code attached. Other action variants pass through.
-    AlarmKeypadCoordinator(core, scope)
+    val dispatcher = AlarmKeypadCoordinator(core, scope)
+    if (feedback == null) dispatcher
+    else
+      HaActionDispatcher { action ->
+        // Cue before dispatching: the feel belongs to the touch, not to the round trip.
+        feedbackCueFor(action) { stateOfState.value(it) }
+          ?.let { cue ->
+            // Read-only mode drops every write; a keypad key only fills the local buffer.
+            val dropped = readOnlyState.value && cue != FeedbackCue.Key
+            feedback.play(if (dropped) FeedbackCue.Reject else cue)
+          }
+        dispatcher.dispatch(action)
+      }
   }
 }
 
@@ -76,6 +100,7 @@ private class DashboardActionDispatcher(
   private val scope: CoroutineScope,
   private val logStore: LogStore,
   private val readOnly: () -> Boolean,
+  private val onFailure: () -> Unit = {},
 ) : HaActionDispatcher {
   override fun dispatch(action: HaAction) {
     // Log every dispatched action (before any network round-trip)
@@ -223,7 +248,10 @@ private class DashboardActionDispatcher(
           serviceData = serviceData,
         )
       }
-        .onFailure { e -> Log.w(TAG, "call_service $domain.$service failed for $entityId", e) }
+        .onFailure { e ->
+          Log.w(TAG, "call_service $domain.$service failed for $entityId", e)
+          onFailure()
+        }
     }
   }
 

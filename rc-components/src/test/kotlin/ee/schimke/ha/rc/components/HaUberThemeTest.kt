@@ -58,4 +58,12 @@ class HaUberThemeTest {
     assertTrue(HaUberTheme.Lcd.hotInkFor(darkTheme = true) != null)
     assertNull(HaUberTheme.Classic.hotInkFor(darkTheme = false))
   }
+
+  @Test
+  fun onlyConsoleIsPaintedMetal() {
+    // The skeuomorphic material is the Console's alone; every other theme stays flat.
+    val metal = HaUberTheme.all.filter { it.shape.material == HaSurfaceMaterial.PaintedMetal }
+    assertEquals(listOf(HaUberTheme.Console), metal)
+    assertEquals(HaVisualFamily.Console, HaUberTheme.Console.visuals)
+  }
 }

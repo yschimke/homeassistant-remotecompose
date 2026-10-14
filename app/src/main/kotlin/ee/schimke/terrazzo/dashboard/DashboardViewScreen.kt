@@ -42,6 +42,7 @@ import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.compose.ui.Alignment
@@ -85,6 +86,7 @@ import ee.schimke.terrazzo.core.pin.PinStore
 import ee.schimke.terrazzo.core.pin.PinnedCardData
 import ee.schimke.terrazzo.core.session.DemoHaSession
 import ee.schimke.terrazzo.core.session.HaSession
+import ee.schimke.terrazzo.feedback.rememberInteractionFeedback
 import ee.schimke.terrazzo.ui.LayoutConfig
 import ee.schimke.terrazzo.ui.LocalCardStyle
 import ee.schimke.terrazzo.ui.LocalIsDarkTheme
@@ -196,7 +198,17 @@ fun DashboardViewScreen(
       0L
     }
 
-  val actionDispatcher = rememberDashboardActionDispatcher(session, readOnly = readOnly)
+  val feedback = rememberInteractionFeedback()
+  val latestState = rememberUpdatedState(state)
+  val actionDispatcher =
+    rememberDashboardActionDispatcher(
+      session,
+      readOnly = readOnly,
+      feedback = feedback,
+      stateOf = { id ->
+        (latestState.value as? DashboardState.Ready)?.snapshot?.states?.get(id)?.state
+      },
+    )
 
   CompositionLocalProvider(
     LocalHaActionDispatcher provides actionDispatcher,

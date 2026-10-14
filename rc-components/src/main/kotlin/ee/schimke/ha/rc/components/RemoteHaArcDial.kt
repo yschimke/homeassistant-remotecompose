@@ -297,6 +297,7 @@ private fun ArcCanvas(
     else null
   val animatedMarkerAngle = animatedTargetFraction?.let { 135f.rf + it * 270f.rf }
   val accent = dialAccent(data)
+  val family = visualFamily()
 
   RemoteCanvas(modifier = RemoteModifier.fillMaxSize()) {
     val w = width
@@ -310,6 +311,11 @@ private fun ArcCanvas(
     val top = (h - side) / 2f.rf
     val topLeft = RemoteOffset(left, top)
     val arcSize = RemoteSize(side, side)
+    // A skeuomorphic theme turns the dial into a rotary control: a knob inside a lamp ring.
+    if (family == HaVisualFamily.Console) {
+      consoleDial(accent, animatedValueFraction, animatedTargetFraction, left, top, side)
+      return@RemoteCanvas
+    }
 
     val track =
       AndroidPaint()

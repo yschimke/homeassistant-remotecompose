@@ -45,6 +45,11 @@ enum class HaVisualFamily {
   Braun,
   /** Nixie: IN-9 bargraph tubes — glass capsules with a glowing column — and a glowing arc. */
   Nixie,
+  /**
+   * Console: a 1970s broadcast desk, drawn skeuomorphically — a backlit VU meter behind glass, a
+   * fader in a recessed slot, a lamp-lit battery in a metal bezel, a dotted lamp ring round a dial.
+   */
+  Console,
 }
 
 /** How a reading's value text is set in the measurement presentations. */
@@ -62,13 +67,26 @@ enum class HaReadoutStyle {
 /**
  * Card and control shape. Corners and border in dp; a border of 0 draws none. [controlCornerDp] is
  * the toggle switch's track corner, and [squareKnob] gives it a square knob instead of a round one.
+ * [material] is what the surfaces are made of.
  */
 data class HaCardShapeStyle(
   val cornerDp: Int = HaShape.Card,
   val borderDp: Int = 1,
   val controlCornerDp: Int = 11,
   val squareKnob: Boolean = false,
+  val material: HaSurfaceMaterial = HaSurfaceMaterial.Flat,
 )
+
+/** What a theme's card surfaces and controls are made of. */
+enum class HaSurfaceMaterial {
+  /** Flat colour: every theme but the skeuomorphic one. */
+  Flat,
+  /**
+   * Painted metal: a card is a lit panel — a sheen falling from the top edge into shade — and a
+   * switch knob is a machined metal cap in a recessed slot.
+   */
+  PaintedMetal,
+}
 
 /**
  * One uber theme.
@@ -296,8 +314,48 @@ data class HaUberTheme(
         valueWeight = FontWeight.Light,
       )
 
+    /**
+     * **Console** — a skeuomorphic 1970s broadcast desk: a hammertone blue-grey panel lit from
+     * above, cream silkscreen, a backlit VU meter behind glass, metal fader caps and dotted lamp
+     * rings. An original drawing of the genre — the VU scale is the ANSI C16.5 standard one — not a
+     * copy of any product's artwork. Dark only.
+     */
+    val Console =
+      HaUberTheme(
+        id = "console",
+        displayName = "Console",
+        light = null,
+        dark =
+          HaTheme(
+            cardBackground = Color(0xFF2F4A57),
+            dashboardBackground = Color(0xFF1A2A32),
+            sectionBackground = Color(0xFF1A2A32),
+            primaryText = Color(0xFFF1ECDD),
+            secondaryText = Color(0xFFB3C2C8),
+            linkText = Color(0xFFF2A93B),
+            divider = Color(0xFF1C2D35),
+            placeholderAccent = Color(0xFFF2A93B),
+            placeholderBackground = Color(0xFF26404C),
+            unknownAccent = Color(0xFFB3C2C8),
+            isDark = true,
+          ),
+        shape =
+          HaCardShapeStyle(
+            cornerDp = 6,
+            borderDp = 1,
+            controlCornerDp = 3,
+            squareKnob = true,
+            material = HaSurfaceMaterial.PaintedMetal,
+          ),
+        visuals = HaVisualFamily.Console,
+        readout = HaReadoutStyle.Plate,
+        fontFamily = RemoteFontFamily.SansSerif,
+        letterSpacingSp = 0.6f,
+        valueWeight = FontWeight.Medium,
+      )
+
     /** Every uber theme, [Classic] first. */
-    val all: List<HaUberTheme> = listOf(Classic, Expressive, Trinitron, Lcd, Braun, Nixie)
+    val all: List<HaUberTheme> = listOf(Classic, Expressive, Trinitron, Lcd, Braun, Nixie, Console)
 
     /** The theme with [id], or [Classic]. */
     fun byId(id: String): HaUberTheme =

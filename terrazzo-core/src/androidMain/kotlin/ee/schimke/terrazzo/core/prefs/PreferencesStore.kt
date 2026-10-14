@@ -48,6 +48,7 @@ enum class CardStylePref(val id: String) {
   Lcd("lcd"),
   Braun("braun"),
   Nixie("nixie"),
+  Console("console"),
 }
 
 /**
@@ -143,6 +144,30 @@ class PreferencesStore(private val context: Context) {
 
   suspend fun setLogsViewEnabled(enabled: Boolean) {
     context.store.edit { it[LOGS_VIEW_KEY] = enabled }
+  }
+
+  /**
+   * Haptic feedback when a card action is sent: a toggle-on / toggle-off tick for switches, a key
+   * tap for keypads, a reject buzz when an action is dropped or fails. On by default; the system's
+   * own "touch feedback" setting still applies on top.
+   */
+  val haptics: Flow<Boolean>
+    get() = context.store.data.map { it[HAPTICS_KEY] ?: true }
+
+  suspend fun setHaptics(enabled: Boolean) {
+    context.store.edit { it[HAPTICS_KEY] = enabled }
+  }
+
+  /**
+   * Quiet interface sounds for the same moments as [haptics], voiced to the card style (a
+   * mechanical switch for the Console desk, a digital beep for LCD and Trinitron, a soft tick
+   * otherwise). Off by default, and silent whenever the ringer is not in normal mode.
+   */
+  val interfaceSounds: Flow<Boolean>
+    get() = context.store.data.map { it[SOUNDS_KEY] ?: false }
+
+  suspend fun setInterfaceSounds(enabled: Boolean) {
+    context.store.edit { it[SOUNDS_KEY] = enabled }
   }
 
   /**
@@ -276,6 +301,8 @@ class PreferencesStore(private val context: Context) {
     private val THEME_KEY = stringPreferencesKey("theme_style")
     private val DARK_KEY = stringPreferencesKey("dark_mode")
     private val CARD_STYLE_KEY = stringPreferencesKey("card_style")
+    private val HAPTICS_KEY = booleanPreferencesKey("haptics")
+    private val SOUNDS_KEY = booleanPreferencesKey("interface_sounds")
     private val LAST_VIEWED_KEY = stringPreferencesKey("last_viewed_dashboard")
     private val GRID_LAYOUT_KEY = booleanPreferencesKey("experimental_grid_layout")
     private val COLLAPSED_MODE_KEY = booleanPreferencesKey("collapsed_mode")
