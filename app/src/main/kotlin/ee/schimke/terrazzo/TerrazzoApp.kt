@@ -744,6 +744,9 @@ private fun DashboardsRoot(
       card = card,
       snapshot = snapshot,
       onDismiss = { installPending = null },
+      refreshSnapshot = {
+        session.loadDashboard(openedValue.takeIf { it != DASHBOARD_UNSET }).second
+      },
       // Only offer monitoring in demo mode — the service pulls
       // state from DemoData today. Live mode needs a shared
       // non-UI HA session; landing in a follow-up.

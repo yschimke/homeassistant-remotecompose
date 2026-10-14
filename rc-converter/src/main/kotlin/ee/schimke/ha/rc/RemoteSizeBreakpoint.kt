@@ -12,6 +12,7 @@ import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 import ee.schimke.ha.rc.components.immediateSwap
 import java.text.DecimalFormat
@@ -70,6 +71,20 @@ fun RemoteSizeBreakpoint(
   val sortedAscending =
     (0 until thresholdsDp.size - 1).all { thresholdsDp[it] < thresholdsDp[it + 1] }
   require(sortedAscending) { "thresholdsDp must be strictly ascending: ${thresholdsDp.toList()}" }
+
+  // Launcher hosts recapture on every size-options change. Select the matching
+  // layout during capture: Android 16 does not reliably update state-layout
+  // predicates driven by component dimensions, so an encoded ladder stays narrow.
+  val widgetSize = LocalWidgetCaptureSizeDp.current
+  if (widgetSize != null) {
+    val dimension =
+      when (axis) {
+        BreakpointAxis.Width -> widgetSize.widthDp
+        BreakpointAxis.Height -> widgetSize.heightDp
+      }
+    RemoteBox(modifier = modifier) { content(thresholdsDp.count { dimension >= it }) }
+    return
+  }
 
   // Use a per-call-site unique name so each breakpoint registers its
   // own expression. Sharing a stable name across captures (the
@@ -172,3 +187,8 @@ private fun BreakpointTier(
 }
 
 private const val BreakpointExpressionPrefix = "__terrazzo_breakpoint_"
+
+/** The launcher's requested dimensions; selecting a layout is repeated on every resize. */
+data class WidgetCaptureSizeDp(val widthDp: Int, val heightDp: Int)
+
+internal val LocalWidgetCaptureSizeDp = staticCompositionLocalOf<WidgetCaptureSizeDp?> { null }

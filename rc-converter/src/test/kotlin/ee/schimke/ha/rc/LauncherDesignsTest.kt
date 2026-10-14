@@ -1,8 +1,13 @@
 package ee.schimke.ha.rc
 
 import android.graphics.Bitmap
+import android.widget.FrameLayout
+import android.widget.RemoteViews
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
+import androidx.compose.remote.core.CoreDocument
+import androidx.compose.remote.core.Operation
+import androidx.compose.remote.core.RemoteComposeBuffer
 import androidx.compose.remote.creation.compose.capture.RemoteCreationDisplayInfo
 import androidx.compose.remote.creation.compose.capture.captureSingleRemoteDocument
 import androidx.compose.runtime.getValue
@@ -28,6 +33,7 @@ import ee.schimke.ha.rc.components.WidgetActionRegistry
 import java.io.File
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import kotlinx.coroutines.runBlocking
@@ -50,6 +56,70 @@ import org.robolectric.annotation.GraphicsMode
 @Config(sdk = [35])
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 class LauncherDesignsTest {
+
+  @Test
+  fun android15PlatformDoesNotSupportLayoutWidgetDocuments() {
+    val context = org.robolectric.RuntimeEnvironment.getApplication()
+    val document = bake(card("tile", "light.kitchen"), snapshotOf(entity("light.kitchen", "on")))
+    val views = RemoteViews(RemoteViews.DrawInstructions.Builder(listOf(document.bytes)).build())
+    // Android 15 has DrawInstructions but only its original canvas operations, without
+    // layout widgets or the V7 header. The phone host must require Android 16 for widgets.
+    assertFailsWith<RuntimeException> { views.apply(context, FrameLayout(context)) }
+  }
+
+  @Test
+  fun bakedWidgetKeepsAndroid16CompatibleHeader() {
+    val baked = bake(card("tile", "light.kitchen"), snapshotOf(entity("light.kitchen", "on")))
+    val document =
+      CoreDocument().apply {
+        initFromBuffer(
+          RemoteComposeBuffer.fromInputStream(platformWidgetDocument(baked.bytes).inputStream())
+        )
+      }
+    assertTrue(document.canBeDisplayed(1, 0, 0L))
+  }
+
+  @Test
+  fun adaptiveWidgetDefinesTextResourcesBeforePlatformLayout() {
+    val baked = bake(card("tile", "light.kitchen"), snapshotOf(entity("light.kitchen", "on")))
+    val operations = arrayListOf<Operation>()
+    RemoteComposeBuffer.fromInputStream(platformWidgetDocument(baked.bytes).inputStream())
+      .inflateFromBuffer(operations)
+    val firstLayout = operations.indexOfFirst { it.javaClass.simpleName == "RootLayoutComponent" }
+    assertTrue(firstLayout > 0)
+    val textOperations =
+      operations.withIndex().filter {
+        it.value.javaClass.simpleName in setOf("TextData", "TextFromFloat", "TextMerge")
+      }
+    assertTrue(textOperations.isNotEmpty())
+    assertTrue(
+      operations.drop(firstLayout).any {
+        it is androidx.compose.remote.core.operations.FloatExpression
+      },
+      "Canvas expressions must stay local rather than evaluate unmeasured inactive dimensions",
+    )
+    assertTrue(
+      textOperations.all { it.index < firstLayout },
+      "Android 16 must load text expressions before inflating adaptive layouts",
+    )
+  }
+
+  @Test
+  fun resizeSelectsTheFullLayoutRatherThanOnlyStretchingTheIcon() {
+    val card = card("tile", "light.kitchen")
+    val snapshot = snapshotOf(entity("light.kitchen", "on"))
+    fun textLayouts(width: Int): Int {
+      val document = bake(card, snapshot, width, 168)
+      val operations = arrayListOf<Operation>()
+      RemoteComposeBuffer.fromInputStream(platformWidgetDocument(document.bytes).inputStream())
+        .inflateFromBuffer(operations)
+      return operations.count {
+        it is androidx.compose.remote.core.operations.layout.managers.TextLayout
+      }
+    }
+    assertEquals(1, textLayouts(72), "Compact shows the state beneath the icon")
+    assertEquals(2, textLayouts(144), "Wide widgets show both the editable name and state")
+  }
 
   @get:Rule val compose = createComposeRule()
 
@@ -74,7 +144,12 @@ class LauncherDesignsTest {
   private fun entity(id: String, state: String, vararg attrs: Pair<String, String>) =
     EntityState(id, state, JsonObject(attrs.associate { (k, v) -> k to JsonPrimitive(v) }))
 
-  private fun bake(card: CardConfig, snapshot: HaSnapshot): LauncherDesigns.Baked {
+  private fun bake(
+    card: CardConfig,
+    snapshot: HaSnapshot,
+    widthDp: Int = this.widthDp,
+    heightDp: Int = this.heightDp,
+  ): LauncherDesigns.Baked {
     val context = org.robolectric.RuntimeEnvironment.getApplication()
     return assertNotNull(
       LauncherDesigns.render(
@@ -162,7 +237,7 @@ class LauncherDesignsTest {
       )
     val snapshot =
       snapshotOf(entity("alarm_control_panel.home", "armed_away", "friendly_name" to "Home"))
-    val baked = bake(card, snapshot)
+    val baked = bake(card, snapshot, widthDp = 360, heightDp = 400)
     val pins = baked.actions.values.filterIsInstance<HaAction.AlarmPin>()
     assertTrue(pins.isNotEmpty(), "the widget accumulates the PIN in-document")
     assertTrue(pins.all { it == HaAction.AlarmPin("alarm_control_panel.home", "") })
@@ -249,6 +324,7 @@ class LauncherDesignsTest {
             WidgetActionRegistry(snapshot.states.mapValues { (_, e) -> formatState(e) }),
             card,
             snapshot,
+            captureSizeDp = WidgetCaptureSizeDp(widthDp, heightDp),
           )
         }
         .bytes

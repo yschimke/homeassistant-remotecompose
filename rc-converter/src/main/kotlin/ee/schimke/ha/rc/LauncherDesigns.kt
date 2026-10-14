@@ -48,16 +48,19 @@ fun LauncherWidgetContent(
   widgetActions: WidgetActionRegistry,
   card: CardConfig,
   snapshot: HaSnapshot,
+  captureSizeDp: WidgetCaptureSizeDp? = null,
 ) {
-  ProvideCardRegistry(registry) {
-    ProvideSystemHaTheme(
-      profile = profile,
-      fallbackTheme = if (dark) HaTheme.Dark else HaTheme.Light,
-    ) {
-      ProvideCardSizeMode(CardSizeMode.Fixed) {
-        ProvideCardChrome(enabled = false) {
-          ProvideWidgetActionRegistry(widgetActions) {
-            RemoteHaWidgetSurface { RenderChild(card, snapshot, RemoteModifier.fillMaxWidth()) }
+  CompositionLocalProvider(LocalWidgetCaptureSizeDp provides captureSizeDp) {
+    ProvideCardRegistry(registry) {
+      ProvideSystemHaTheme(
+        profile = profile,
+        fallbackTheme = if (dark) HaTheme.Dark else HaTheme.Light,
+      ) {
+        ProvideCardSizeMode(CardSizeMode.Fixed) {
+          ProvideCardChrome(enabled = false) {
+            ProvideWidgetActionRegistry(widgetActions) {
+              RemoteHaWidgetSurface { RenderChild(card, snapshot, RemoteModifier.fillMaxWidth()) }
+            }
           }
         }
       }
@@ -142,7 +145,15 @@ object LauncherDesigns {
           profile = profile,
         ) {
           CompositionLocalProvider(LocalTemplateBindings provides TemplateBindings()) {
-            LauncherWidgetContent(registry, profile, dark, actions, card, snapshot)
+            LauncherWidgetContent(
+              registry,
+              profile,
+              dark,
+              actions,
+              card,
+              snapshot,
+              WidgetCaptureSizeDp(widthDp, heightDp),
+            )
           }
         }
         .bytes

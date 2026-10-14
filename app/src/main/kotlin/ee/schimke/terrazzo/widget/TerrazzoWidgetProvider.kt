@@ -17,17 +17,26 @@ import androidx.compose.remote.creation.compose.capture.captureSingleRemoteDocum
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.LauncherDesigns
 import ee.schimke.ha.rc.LauncherWidgetContent
+import ee.schimke.ha.rc.WidgetCaptureSizeDp
 import ee.schimke.ha.rc.cardHeightDp
 import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.cards.shutter.withEnhancedShutter
 import ee.schimke.ha.rc.components.WidgetActionRegistry
 import ee.schimke.ha.rc.encodeHaAction
 import ee.schimke.ha.rc.formatState
+import ee.schimke.ha.rc.platformWidgetDocument
 import ee.schimke.ha.rc.systemThemedWidgetsProfile
 import ee.schimke.ha.rc.widgetsProfile
 import ee.schimke.terrazzo.core.session.DemoData
 import ee.schimke.terrazzo.terrazzoGraph
+import kotlin.math.roundToInt
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 /**
  * Per-card home-screen widget. Extends [AppWidgetProvider] directly rather than RemoteCompose's
@@ -48,11 +57,29 @@ import kotlinx.coroutines.runBlocking
  * the current [DemoData] snapshot so values are non-empty. Live-mode widgets use the empty default
  * until a future background worker writes a fresh snapshot.
  *
- * API floor: VANILLA_ICE_CREAM (Android 15 / API 35) — needed for `RemoteViews.DrawInstructions`.
- * The app's minSdk of 36 already satisfies this; the `@RequiresApi` is here only to keep lint
- * quiet.
+ * API floor: Android 16 / API 36 — its platform player supports layout documents in
+ * `RemoteViews.DrawInstructions`. The app also runs on API 35; providers are disabled there because
+ * the original player lacks layouts. The `@RequiresApi` is here to keep lint quiet.
  */
 open class TerrazzoWidgetProvider : AppWidgetProvider() {
+  override fun onReceive(context: Context, intent: Intent) {
+    if (
+      Build.VERSION.SDK_INT < WidgetInstaller.MIN_HOST_API || intent.action !in asyncWidgetActions
+    ) {
+      super.onReceive(context, intent)
+      return
+    }
+    val result = goAsync()
+    widgetUpdateScope.launch {
+      try {
+        widgetUpdateMutex.withLock { super.onReceive(context, intent) }
+      } catch (failure: Exception) {
+        Log.e(TAG, "Widget broadcast failed: ${intent.action}", failure)
+      } finally {
+        result.finish()
+      }
+    }
+  }
 
   override fun onUpdate(
     context: Context,
@@ -60,7 +87,7 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
     appWidgetIds: IntArray,
   ) {
     super.onUpdate(context, appWidgetManager, appWidgetIds)
-    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.VANILLA_ICE_CREAM) return
+    if (Build.VERSION.SDK_INT < WidgetInstaller.MIN_HOST_API) return
     for (id in appWidgetIds) {
       renderAndPublish(context, appWidgetManager, id)
     }
@@ -81,7 +108,7 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
     newOptions: android.os.Bundle,
   ) {
     super.onAppWidgetOptionsChanged(context, appWidgetManager, appWidgetId, newOptions)
-    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.VANILLA_ICE_CREAM) return
+    if (Build.VERSION.SDK_INT < WidgetInstaller.MIN_HOST_API) return
     renderAndPublish(context, appWidgetManager, appWidgetId)
   }
 
@@ -126,6 +153,21 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
         widgetId = widgetId,
         cardHeightDp = registry.cardHeightDp(entry.card, snapshot),
       )
+    val remoteViews =
+      renderPreview(context, entry.baseUrl, entry.card, snapshot, targetSizeDp, widgetId) ?: return
+    appWidgetManager.updateAppWidget(widgetId, remoteViews)
+  }
+
+  /** The install preview and the installed widget share the exact same capture and theme. */
+  internal fun renderPreview(
+    context: Context,
+    baseUrl: String,
+    card: ee.schimke.ha.model.CardConfig,
+    snapshot: HaSnapshot,
+    targetSizeDp: WidgetSizeDp,
+    widgetId: Int = AppWidgetManager.INVALID_APPWIDGET_ID,
+  ): RemoteViews? {
+    val registry = defaultRegistry().withEnhancedShutter()
     val widthPx = WidgetSizing.dpToPx(context, targetSizeDp.widthDp)
     val heightPx = WidgetSizing.dpToPx(context, targetSizeDp.heightDp)
     val densityDpi = context.resources.configuration.densityDpi
@@ -146,7 +188,7 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
     val baked = runCatching {
       LauncherDesigns.render(
         context = context,
-        card = entry.card,
+        card = card,
         snapshot = snapshot,
         widthDp = targetSizeDp.widthDp,
         heightDp = targetSizeDp.heightDp,
@@ -154,28 +196,33 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
         dark = dark,
         systemTheme = captureProfile === systemThemedWidgetsProfile,
         registry = registry,
-        fetchImage = { url -> fetchWidgetImage(context, entry.baseUrl, url) },
+        fetchImage = { url -> fetchWidgetImage(context, baseUrl, url) },
       )
     }
       .onFailure { Log.w(TAG, "launcher design failed for id=$widgetId", it) }
       .getOrNull()
     val remoteViews =
       if (baked != null) {
-        RemoteViews(RemoteViews.DrawInstructions.Builder(listOf(baked.bytes)).build()).also { views
-          ->
-          baked.actions.forEach { (actionId, action) ->
-            val payload = encodeHaAction(action)
-            views.setOnClickPendingIntent(
-              actionId,
-              widgetActionPendingIntent(context, widgetId, actionId, payload, resolved = true),
-            )
+        RemoteViews(
+            RemoteViews.DrawInstructions.Builder(listOf(platformWidgetDocument(baked.bytes)))
+              .build()
+          )
+          .also { views ->
+            baked.actions
+              .filterKeys { widgetId != AppWidgetManager.INVALID_APPWIDGET_ID }
+              .forEach { (actionId, action) ->
+                val payload = encodeHaAction(action)
+                views.setOnClickPendingIntent(
+                  actionId,
+                  widgetActionPendingIntent(context, widgetId, actionId, payload, resolved = true),
+                )
+              }
           }
-        }
       } else {
         captureDirect(
           context,
           widgetId,
-          entry.card,
+          card,
           snapshot,
           registry,
           widthPx,
@@ -183,9 +230,9 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
           densityDpi,
           captureProfile,
           dark,
-        ) ?: return
+        ) ?: return null
       }
-    appWidgetManager.updateAppWidget(widgetId, remoteViews)
+    return remoteViews
   }
 
   @RequiresApi(Build.VERSION_CODES.VANILLA_ICE_CREAM)
@@ -210,7 +257,18 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
           creationDisplayInfo = RemoteCreationDisplayInfo(widthPx, heightPx, densityDpi),
           profile = captureProfile,
         ) {
-          LauncherWidgetContent(registry, captureProfile, dark, widgetActions, card, snapshot)
+          LauncherWidgetContent(
+            registry,
+            captureProfile,
+            dark,
+            widgetActions,
+            card,
+            snapshot,
+            WidgetCaptureSizeDp(
+              (widthPx * 160f / densityDpi).roundToInt(),
+              (heightPx * 160f / densityDpi).roundToInt(),
+            ),
+          )
         }
       }
     }
@@ -221,17 +279,21 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
         return null
       }
     val remoteViews =
-      RemoteViews(RemoteViews.DrawInstructions.Builder(listOf(captured.bytes)).build())
-    widgetActions.entries.forEach { (actionId, payload) ->
-      // The RC document emits HostActionMetadata(actionId, payload). Android's launcher-widget
-      // bridge adds that payload to the PendingIntent's fill-in Intent as
-      // "remotecompose_metadata". Keep a static copy too: it lets the receiver log whether the
-      // platform forwarded metadata and remains a fallback on platform builds that omit it.
-      remoteViews.setOnClickPendingIntent(
-        actionId,
-        widgetActionPendingIntent(context, widgetId, actionId, payload),
+      RemoteViews(
+        RemoteViews.DrawInstructions.Builder(listOf(platformWidgetDocument(captured.bytes))).build()
       )
-    }
+    widgetActions.entries
+      .filterKeys { widgetId != AppWidgetManager.INVALID_APPWIDGET_ID }
+      .forEach { (actionId, payload) ->
+        // The RC document emits HostActionMetadata(actionId, payload). Android's launcher-widget
+        // bridge adds that payload to the PendingIntent's fill-in Intent as
+        // "remotecompose_metadata". Keep a static copy too: it lets the receiver log whether the
+        // platform forwarded metadata and remains a fallback on platform builds that omit it.
+        remoteViews.setOnClickPendingIntent(
+          actionId,
+          widgetActionPendingIntent(context, widgetId, actionId, payload),
+        )
+      }
     return remoteViews
   }
 
@@ -274,6 +336,15 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
   }
 
   private companion object {
+    private val widgetUpdateScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private val widgetUpdateMutex = Mutex()
+    private val asyncWidgetActions =
+      setOf(
+        AppWidgetManager.ACTION_APPWIDGET_UPDATE,
+        AppWidgetManager.ACTION_APPWIDGET_OPTIONS_CHANGED,
+        AppWidgetManager.ACTION_APPWIDGET_DELETED,
+      )
+
     // ColorTheme (wire op 196) is not understood by Android 16's platform
     // Remote Compose player. API 37 adds the host-side implementation.
     const val SYSTEM_THEME_MIN_HOST_API = 37
