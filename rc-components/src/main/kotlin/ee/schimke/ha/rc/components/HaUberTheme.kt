@@ -16,6 +16,8 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.text.font.FontWeight
 import com.materialkolor.PaletteStyle
 import com.materialkolor.dynamicColorScheme
@@ -487,6 +489,50 @@ fun ProvideCardStyle(
 @Composable
 @ReadOnlyComposable
 fun haInk(color: RemoteColor): RemoteColor = LocalHaUberTheme.current.ink?.rc ?: color
+
+/**
+ * A marking accent known at capture, as the active uber theme prints it: the theme's ink for a
+ * monochrome theme, else [color] made legible on the theme's card surface ([haLegible]).
+ */
+@Composable
+@ReadOnlyComposable
+fun haInk(color: Color): RemoteColor {
+  val active = LocalHaUberTheme.current
+  return (active.ink ?: legibleOn(active, color)).rc
+}
+
+/**
+ * [color] legible on the active card surface: unchanged under Classic (the cards' own look) and
+ * whenever it already contrasts 3:1 with the card background — the WCAG minimum for graphics and
+ * large text. Otherwise it is mixed toward the theme's primary text, a tenth at a time, until it
+ * does: a green "Arm away" or a purple media accent on Console's blue panel lightens rather than
+ * sinking into it, and keeps its hue.
+ */
+@Composable
+@ReadOnlyComposable
+fun haLegible(color: Color): Color = legibleOn(LocalHaUberTheme.current, color)
+
+internal fun legibleOn(active: HaActiveUberTheme, color: Color): Color {
+  if (active.theme.id == HaUberTheme.Classic.id) return color
+  val palette = active.theme.palette(active.darkTheme)
+  val surface = palette.cardBackground
+  var mixed = color
+  var t = 0f
+  while (contrast(mixed, surface) < MinAccentContrast && t < 1f) {
+    t += 0.1f
+    mixed = lerp(color, palette.primaryText, t)
+  }
+  return mixed
+}
+
+/** The WCAG contrast ratio between [a] and [b]. */
+internal fun contrast(a: Color, b: Color): Float {
+  val la = a.luminance()
+  val lb = b.luminance()
+  return (maxOf(la, lb) + 0.05f) / (minOf(la, lb) + 0.05f)
+}
+
+private const val MinAccentContrast = 3f
 
 /**
  * The shape of a control inside a card (a key, button, chip or badge) under the active uber theme.

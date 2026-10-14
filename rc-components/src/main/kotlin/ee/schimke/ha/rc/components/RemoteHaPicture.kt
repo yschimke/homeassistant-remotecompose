@@ -22,7 +22,6 @@ import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.modifier.size
 import androidx.compose.remote.creation.compose.shapes.RemoteRoundedCornerShape
 import androidx.compose.remote.creation.compose.state.RemoteColor
-import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rf
 import androidx.compose.remote.creation.compose.state.rs
@@ -151,7 +150,7 @@ fun RemoteHaPictureGlance(data: HaPictureGlanceData, modifier: RemoteModifier = 
 private fun Cell(cell: HaPictureGlanceCell, theme: RemoteHaTheme) {
   val click =
     cell.tapAction.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
-  val accent = haInk(cell.accent.rc)
+  val accent = haInk(cell.accent)
   val activeBg: RemoteColor = accent.copy(alpha = accent.alpha * 0.18f.rf)
   val inactiveBg: RemoteColor = theme.divider.copy(alpha = theme.divider.alpha * 0.5f.rf)
 
@@ -257,7 +256,7 @@ private fun Element(
     is HaPictureElement.StateIcon -> {
       val click =
         element.tapAction.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
-      val accent = haInk(element.accent.rc)
+      val accent = haInk(element.accent)
       val activeBg: RemoteColor = accent.copy(alpha = accent.alpha * 0.18f.rf)
       val inactiveBg: RemoteColor = theme.divider.copy(alpha = theme.divider.alpha * 0.5f.rf)
 
@@ -298,7 +297,7 @@ private fun Element(
     is HaPictureElement.ServiceButton -> {
       val click =
         element.tapAction.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
-      val accent = haInk(element.accent.rc)
+      val accent = haInk(element.accent)
       RemoteBox(
         modifier =
           modifier

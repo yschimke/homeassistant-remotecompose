@@ -22,16 +22,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import ee.schimke.ha.rc.components.HaUberTheme
 import ee.schimke.ha.rc.components.ThemeStyle
 import kotlinx.coroutines.delay
 
 /**
- * A miniature kiosk dashboard that re-skins itself live as the picker selection changes. When
+ * A miniature kiosk dashboard that re-skins itself live as the picker selection changes. Its
+ * headline row is real Home Assistant cards ([TvKioskCards]) in the chosen card style. When
  * [demoMode] is on the tile values come from [TvDemoData] and tick on a 2 s cadence so the room
  * sees motion; when off, the tiles show a static "live data placeholder" until full HA wiring
  * lands.
@@ -57,7 +55,6 @@ fun TvKioskPreview(
   // monochrome — the same look its dashboard cards have.
   val cs = MaterialTheme.colorScheme.withCardStyle(cardStyle)
   val shape = if (cardStyle.id == HaUberTheme.Classic.id) null else cardStyle.shape
-  val tileCorner = shape?.cornerDp?.dp ?: 20.dp
   val chipCorner = shape?.let { (it.cornerDp * 0.7f).dp } ?: 14.dp
   val valueWeight = if (shape == null) null else cardStyle.valueWeight
   val ink = if (shape == null) null else cardStyle.inkFor(darkTheme = true)
@@ -72,12 +69,6 @@ fun TvKioskPreview(
   }
 
   val tiles = if (demoMode) TvDemoData.tiles(nowMs) else PLACEHOLDER_TILES
-  val containers =
-    listOf(
-      cs.primaryContainer to cs.onPrimaryContainer,
-      cs.secondaryContainer to cs.onSecondaryContainer,
-      cs.tertiaryContainer to cs.onTertiaryContainer,
-    )
 
   Column(
     modifier =
@@ -114,24 +105,9 @@ fun TvKioskPreview(
       )
     }
 
-    // Take the first three tiles for the headline row; they exercise
-    // the primary / secondary / tertiary roles. Anything beyond
-    // sits in a secondary band below.
-    Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-      tiles.take(3).forEachIndexed { i, tile ->
-        val (container, onContainer) = containers[i % containers.size]
-        Tile(
-          label = tile.label,
-          value = tile.value,
-          container = container,
-          onContainer = onContainer,
-          modifier = Modifier.width(220.dp),
-          corner = tileCorner,
-          valueColor = ink ?: onContainer,
-          valueWeight = valueWeight,
-        )
-      }
-    }
+    // The headline row is real HA cards in the card style (TvKioskCards); the rest of the
+    // demo values sit in a secondary band below.
+    TvKioskCards(cardStyle = cardStyle, style = style, snapshot = TvDemoData.snapshot(nowMs))
     if (tiles.size > 3) {
       Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         tiles.drop(3).forEach { tile ->
@@ -178,39 +154,6 @@ private val PLACEHOLDER_TILES =
 // since the lights/media indices land on the same bucket that
 // production demo mode is most often in.
 internal const val TV_PREVIEW_NOW_MS: Long = 1_704_110_400_000L
-
-@Composable
-private fun Tile(
-  label: String,
-  value: String,
-  container: Color,
-  onContainer: Color,
-  modifier: Modifier = Modifier,
-  corner: Dp = 20.dp,
-  valueColor: Color = onContainer,
-  valueWeight: FontWeight? = null,
-) {
-  Column(
-    modifier =
-      modifier
-        .clip(RoundedCornerShape(corner))
-        .background(container)
-        .padding(horizontal = 20.dp, vertical = 18.dp),
-    verticalArrangement = Arrangement.spacedBy(6.dp),
-  ) {
-    Text(
-      text = label,
-      style = MaterialTheme.typography.labelLarge,
-      color = onContainer.copy(alpha = 0.8f),
-    )
-    Text(
-      text = value,
-      style = MaterialTheme.typography.headlineSmall,
-      color = valueColor,
-      fontWeight = valueWeight,
-    )
-  }
-}
 
 /**
  * These roles re-skinned in [style]'s own dark palette, for every style but Classic (which keeps

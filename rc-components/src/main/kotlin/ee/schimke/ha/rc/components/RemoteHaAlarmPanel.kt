@@ -23,7 +23,6 @@ import androidx.compose.remote.creation.compose.modifier.fillMaxSize
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.modifier.size
-import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rememberMutableRemoteInt
 import androidx.compose.remote.creation.compose.state.rf
@@ -131,14 +130,14 @@ fun RemoteHaAlarmPanelWide(data: HaAlarmPanelData, modifier: RemoteModifier = Re
           modifier =
             RemoteModifier.size(40.rdp)
               .clip(haControlShape(20, round = true))
-              .border(2.rdp, haInk(status.accent.rc), haControlShape(20, round = true)),
+              .border(2.rdp, haInk(status.accent), haControlShape(20, round = true)),
           contentAlignment = RemoteAlignment.Center,
         ) {
           RemoteIcon(
             imageVector = status.icon.toRemoteImageVector(),
             contentDescription = status.label.rs,
             modifier = RemoteModifier.size(22.rdp),
-            tint = haInk(status.accent.rc),
+            tint = haInk(status.accent),
           )
         }
         RemoteColumn(
@@ -156,7 +155,7 @@ fun RemoteHaAlarmPanelWide(data: HaAlarmPanelData, modifier: RemoteModifier = Re
           )
           RemoteText(
             text = status.label.rs,
-            color = haInk(status.accent.rc),
+            color = haInk(status.accent),
             fontSize = HaType.Label,
             style = haTextStyle(),
             maxLines = 1,
@@ -197,7 +196,7 @@ private fun StatusRow(
         )
         RemoteText(
           text = status.label.rs,
-          color = haInk(status.accent.rc),
+          color = haInk(status.accent),
           fontSize = HaType.Label,
           style = haTextStyle(),
           maxLines = 1,
@@ -207,14 +206,14 @@ private fun StatusRow(
         modifier =
           RemoteModifier.size(40.rdp)
             .clip(haControlShape(20, round = true))
-            .border(2.rdp, haInk(status.accent.rc), haControlShape(20, round = true)),
+            .border(2.rdp, haInk(status.accent), haControlShape(20, round = true)),
         contentAlignment = RemoteAlignment.Center,
       ) {
         RemoteIcon(
           imageVector = status.icon.toRemoteImageVector(),
           contentDescription = status.label.rs,
           modifier = RemoteModifier.size(22.rdp),
-          tint = haInk(status.accent.rc),
+          tint = haInk(status.accent),
         )
       }
     }
@@ -225,7 +224,7 @@ private fun StatusRow(
 private fun ActionPill(action: HaAlarmAction, theme: RemoteHaTheme) {
   val click =
     action.tapAction.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
-  val accent = haInk(action.accent.rc)
+  val accent = haInk(action.accent)
   RemoteBox(
     modifier =
       RemoteModifier.then(click)
@@ -376,12 +375,12 @@ private fun KeypadKey(
       RemoteModifier.then(click)
         .size(48.rdp)
         .clip(haControlShape(6))
-        .border(1.rdp, haInk(accent.rc), haControlShape(6)),
+        .border(1.rdp, haInk(accent), haControlShape(6)),
     contentAlignment = RemoteAlignment.Center,
   ) {
     RemoteText(
       text = label.rs,
-      color = haInk(accent.rc),
+      color = haInk(accent),
       fontSize = HaType.Title,
       fontWeight = FontWeight.Medium,
       style = haTextStyle(),

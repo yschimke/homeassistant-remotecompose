@@ -18,7 +18,6 @@ import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.modifier.size
 import androidx.compose.remote.creation.compose.state.RemoteColor
-import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rf
 import androidx.compose.remote.creation.compose.state.rs
@@ -99,7 +98,7 @@ private fun Stat(stat: HaAreaStat, theme: RemoteHaTheme) {
 private fun ActionChip(action: HaAreaAction, theme: RemoteHaTheme) {
   val click =
     action.tapAction.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
-  val accent = haInk(action.accent.rc)
+  val accent = haInk(action.accent)
   val activeBg: RemoteColor = accent.copy(alpha = accent.alpha * 0.18f.rf)
   val inactiveBg: RemoteColor = theme.divider.copy(alpha = theme.divider.alpha * 0.4f.rf)
   val activeTint: RemoteColor = accent

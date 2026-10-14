@@ -12,7 +12,6 @@ import androidx.compose.remote.creation.compose.layout.RemoteText
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.creation.compose.modifier.padding
-import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.font.FontWeight
@@ -67,7 +66,7 @@ fun RemoteHaStatisticCard(data: HaStatisticCardData, modifier: RemoteModifier = 
       if (data.periodLabel != null) {
         RemoteText(
           text = cardText("period", data.periodLabel),
-          color = haInk(data.accent.rc),
+          color = haInk(data.accent),
           fontSize = HaType.Caption,
           style = haTextStyle(),
           maxLines = 1,

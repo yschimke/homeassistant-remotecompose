@@ -66,4 +66,17 @@ class HaUberThemeTest {
     assertEquals(listOf(HaUberTheme.Console), metal)
     assertEquals(HaVisualFamily.Console, HaUberTheme.Console.visuals)
   }
+
+  @Test
+  fun accentsAreLegibleOnStyledCards() {
+    val green = androidx.compose.ui.graphics.Color(0xFF43A047)
+    val console = HaActiveUberTheme(HaUberTheme.Console, darkTheme = true)
+    val surface = HaUberTheme.Console.palette(darkTheme = true).cardBackground
+    assertTrue(contrast(green, surface) < 3f, "the fixture starts illegible")
+    assertTrue(contrast(legibleOn(console, green), surface) >= 3f)
+    // Classic keeps its own colours, and a legible accent is left alone.
+    assertEquals(green, legibleOn(HaActiveUberTheme(HaUberTheme.Classic, false), green))
+    val white = androidx.compose.ui.graphics.Color.White
+    assertEquals(white, legibleOn(console, white))
+  }
 }

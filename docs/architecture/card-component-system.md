@@ -256,17 +256,20 @@ drawn per family too (`Dials.kt`; Console's knob in `MetersConsole.kt`), and so 
 badge its shape under the theme: Classic keeps its own; the square-cornered themes (Trinitron,
 LCD, Console) square controls off at their control corner; the soft ones keep circles and round
 corners up to theirs. `haInk(color)` prints a marking accent (a calendar dot, the alarm keypad and
-status ring, media controls, a dial's chip) in a monochrome theme's ink. The alarm panel, media
+status ring, media controls, a dial's chip) in a monochrome theme's ink; given a capture-time
+`Color`, it also makes it legible (`haLegible`): under any style but Classic an accent that
+contrasts less than 3:1 with the card surface is mixed toward the primary text until it does, so a
+green "Arm away" or a purple media accent doesn't sink into Console's blue panel. The alarm panel, media
 control, calendar, area, picture, Bambu, weather and statistic cards take both.
 
 **Wear and TV.** The Wear app has a **Card style** setting of its own (`WearPrefs.cardStyle`).
 Slot widgets apply it with `ProvideHaUberStyle`, which brings the instruments, type, shapes and
-ink but keeps the watch's palette (the WearM3 colours its host updates). The TV kiosk has a card
-style picker too (`TvPrefs.cardStyle`): a style other than Classic re-skins the kiosk in its own
-dark palette, corners, reading weight and ink.
-
-**Still to do:** the TV kiosk is a Compose mock-up rather than RemoteCompose cards, so it shows a
-style's palette and shape, not its instruments.
+ink but keeps the watch's palette (the WearM3 colours its host updates); changing it (or the
+watch theme) re-renders placed widgets (`refreshAllSlotWidgets`). The TV kiosk has a card style
+picker too (`TvPrefs.cardStyle`): its headline row is real cards (`TvKioskCards` — a light tile,
+a thermostat and a humidity gauge from `TvDemoData.snapshot`), converted and played like the
+dashboard's, so each style shows its own dials and meters there; the rest of the kiosk takes the
+style's dark palette, corners, reading weight and ink.
 
 **Feel and sound.** The app adds feedback for card actions on the host side, not in the
 document: `rememberDashboardActionDispatcher(feedback = …)` cues each action that changes
