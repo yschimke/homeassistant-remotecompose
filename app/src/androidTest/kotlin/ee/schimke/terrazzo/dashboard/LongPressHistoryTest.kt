@@ -92,6 +92,11 @@ class LongPressHistoryTest {
       historyVisible,
     )
 
+    assertTrue(
+      "card details must render the native launcher preview before installation",
+      device.wait(Until.hasObject(By.descContains(" preview,")), 15_000),
+    )
+
     // The "Add to Home Screen" link opens the existing install sheet.
     val installLink = device.wait(Until.findObject(By.text("Prepare a home screen widget")), 5_000)
     assertNotNull("history screen missing the Add to Home Screen link", installLink)

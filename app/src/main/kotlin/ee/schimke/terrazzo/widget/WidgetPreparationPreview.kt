@@ -5,10 +5,13 @@ package ee.schimke.terrazzo.widget
 import android.widget.FrameLayout
 import android.widget.RemoteViews
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.testTag
@@ -52,6 +55,10 @@ internal fun WidgetPreparationPreview(
     Text("$label · $stateLabel", style = MaterialTheme.typography.titleMedium)
     return
   }
+  val cornerRadius =
+    with(LocalDensity.current) {
+      context.resources.getDimension(android.R.dimen.system_app_widget_background_radius).toDp()
+    }
   val registry = remember { defaultRegistry().withEnhancedShutter() }
   val bounds =
     remember(card) {
@@ -136,30 +143,39 @@ internal fun WidgetPreparationPreview(
     val current = views
     if (current != null) {
       key(current) {
-        AndroidView(
-          factory = { ctx ->
-            FrameLayout(ctx).apply {
-              // Expose a read-only description through Compose, not inactive virtual click targets.
-              importantForAccessibility =
-                android.view.View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS
-              runCatching { addView(current.apply(ctx, this), FrameLayout.LayoutParams(-1, -1)) }
-                .onFailure {
+        Box(
+          modifier =
+            Modifier.fillMaxSize()
+              .clip(RoundedCornerShape(cornerRadius))
+              .testTag("widget-render")
+              .semantics {
+                contentDescription = "$label preview, $stateLabel, $width by $height cells"
+              }
+        ) {
+          AndroidView(
+            factory = { ctx ->
+              runCatching { inflateWidgetPreview(ctx, current) }
+                .getOrElse { failure ->
                   android.util.Log.e(
                     "WidgetPreparationPreview",
                     "Could not inflate launcher preview",
-                    it,
+                    failure,
                   )
                   views = null
                   failed = true
                   latestOnPreview(null)
+                  FrameLayout(ctx)
                 }
-            }
-          },
-          modifier =
-            Modifier.fillMaxSize().testTag("widget-render").semantics {
-              contentDescription = "$label preview, $stateLabel, $width by $height cells"
+                .also { frame ->
+                  // Expose a read-only description through Compose, not inactive virtual click
+                  // targets.
+                  frame.importantForAccessibility =
+                    android.view.View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS
+                }
             },
-        )
+            modifier = Modifier.fillMaxSize(),
+          )
+        }
       }
     } else if (failed) {
       Text(
@@ -169,3 +185,12 @@ internal fun WidgetPreparationPreview(
     } else CircularProgressIndicator(modifier = Modifier.padding(12.dp))
   }
 }
+
+/** Native RemoteViews inflation, shared by both in-app previews and the launcher-parity test. */
+internal fun inflateWidgetPreview(
+  context: android.content.Context,
+  views: RemoteViews,
+): FrameLayout =
+  FrameLayout(context).apply {
+    addView(views.apply(context, this), FrameLayout.LayoutParams(-1, -1))
+  }
