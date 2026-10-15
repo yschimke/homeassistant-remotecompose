@@ -272,8 +272,10 @@ private fun DashboardList(
   // production renders are untouched; reads are cheap StateFlows.
   val flashOnDataChange by preferencesStore.flashOnDataChange.collectAsState(initial = false)
   val dataGridOverlay by preferencesStore.dataGridOverlay.collectAsState(initial = false)
-  // Experimental card design server; empty URL (the default) keeps it off and the map empty.
-  val designServerUrl by preferencesStore.designServerUrl.collectAsState(initial = "")
+  // The card designs the user's settings choose from the design server (off when its URL is empty).
+  val designChoice by
+    remember(preferencesStore) { CardDesignSync.choice(preferencesStore) }
+      .collectAsState(initial = null)
   // Pull the process-singleton image stack (a Metro AppScope binding —
   // see AppGraph.haImageStack). Coil documents that exactly one
   // DiskCache per directory is safe; the stack owns that single
@@ -329,7 +331,7 @@ private fun DashboardList(
     if (cardStyle.id == HaUberTheme.Classic.id) Modifier.fillMaxSize()
     else Modifier.fillMaxSize().background(haTheme.dashboardBackground)
   Box(modifier = dashboardModifier, contentAlignment = Alignment.TopCenter) {
-    val cardDesigns = rememberCardDesigns(context, designServerUrl)
+    val cardDesigns = designChoice?.let { rememberCardDesigns(context, it) } ?: CardDesigns()
     CompositionLocalProvider(
       LocalFlashOnDataChange provides flashOnDataChange,
       LocalCardDesigns provides cardDesigns,

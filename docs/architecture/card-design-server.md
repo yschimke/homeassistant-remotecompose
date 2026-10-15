@@ -57,9 +57,16 @@ the same template from the app's own converters on first use and keeps it for th
 no server configured (the default) cards still take the design path, just with built-in designs.
 Cards that have no template shape render through their converter as before.
 
-The server only overrides: the setting "Experimental: card design server" is empty by default,
-and with no URL nothing is fetched. A revoked server design falls back to the library's, never to
-nothing.
+The server overrides the library, and it is on by default: the "Card design server" setting
+starts at `https://ha.coo.ee/designs/v1`, and only an empty value someone saves turns it off (then
+nothing is fetched). The app keeps the designs its **choice** (`CardDesignChoice`) matches: the
+user's palette and card style in either mode, their preferred **variant** and **author** (both
+picked in Settings from the tags the cached manifest offers), and the `default` variant and the
+built-in author to fall back on. A sync downloads the whole manifest but only the blobs the choice
+matches, so the server learns the choice, never which cards a dashboard holds. A card plays the
+preferred variant's design for its key, then the `default` one, then the library's; between two
+authors' designs for one key, the preferred author's wins. A revoked server design falls back to the
+library's, never to nothing.
 
 | Piece | Where |
 | --- | --- |
@@ -67,11 +74,11 @@ nothing.
 | Slot mapping and slot bindings (with `status`, neutral defaults); `DesignProperties` | `ha-model/.../design/CardDesignSlots.kt`, `DesignProperties.kt` |
 | `CardConverter.designProperties` / `designTemplate`; shared entity properties (`EntityDesign`) | `rc-converter/.../CardConverter.kt`, `cards/EntityDesign.kt`, each `*CardConverter` |
 | Bound name and title text in templates (`LocalTemplateBindings`, `entityName`, `cardTitle`) | `rc-components/.../TemplateBindings.kt` |
-| Client: config (off by default), refresh rules, TTL, back-off, serial rollback check, expiry, sha256-verified blobs, stale and inbuilt fallback, revocation; `DesignPublisher` writes the static files | `ha-client/.../client/design/` |
+| Client: config (a choice of designs by tag; no URL is off), refresh rules, TTL, back-off, serial rollback check, expiry, sha256-verified blobs, stale and inbuilt fallback, revocation; `DesignPublisher` writes the static files | `ha-client/.../client/design/` |
 | Template capture, keys, spike key matrix, local design library (`CardDesignLibrary`) | `rc-converter/.../CardDesignTemplates.kt` |
 | Template playback: slot-binding push; a tap runs the card's own action for the tapped slot | `CachedCardPreview(template = …)`, `CardTemplatePlayback.resolveTap` |
-| App: URL setting, `FileDesignStore`, `LocalCardDesigns`, dashboard hook (reads the cache only) | `app/.../dashboard/CardDesigns.kt`, `PreferencesStore.designServerUrl` |
-| App: nightly sync while charging on unmetered network, plus one fetch when the URL changes | `app/.../dashboard/CardDesignSync.kt` |
+| App: server, variant and author settings, `CardDesignChoice`, `FileDesignStore`, `LocalCardDesigns`, dashboard hook (reads the cache only) | `app/.../dashboard/CardDesigns.kt`, `PreferencesStore.designServerUrl` / `designVariant` / `designAuthor` |
+| App: nightly manifest sync while charging on an unmetered network, plus one sync whenever the choice changes (and on start) that fetches only the blobs it lacks | `app/.../dashboard/CardDesignSync.kt` |
 | End-to-end test: capture → publish → fetch from a fake host → resolve → bind | `rc-converter/src/test/.../CardDesignTemplatesEndToEndTest.kt` |
 | Pixel parity: each card through its template and through its converter draws identical pixels | `rc-converter/src/test/.../CardDesignParityTest.kt` |
 
@@ -586,8 +593,13 @@ not cleared on sign-out (unlike `OfflineCache`). Writes are atomic
   reads the disk cache. The job is a no-op until the manifest is older
   than `ttlSeconds` (default 24h), and never runs two refreshes in
   parallel.
-- Run one extra fetch as soon as the user sets a new server URL, so the
-  setting takes effect without waiting for the night.
+- Run one extra sync whenever the design choice changes (server URL,
+  palette, card style, variant, author) and on start, so a setting takes
+  effect without waiting for the night. Within the manifest's TTL it only
+  downloads the chosen blobs the cache lacks, so it costs nothing when the
+  cache is complete.
+- Download only the blobs the choice matches (`DesignServerConfig.choice`),
+  never the whole library; the manifest itself is always whole.
 - Also refresh on app upgrade, and when a new surface is gated on (first
   widget installed, watch paired).
 - Stale-while-revalidate: always render with what is on disk, swap in

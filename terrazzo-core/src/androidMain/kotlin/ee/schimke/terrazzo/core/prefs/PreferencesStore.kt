@@ -284,15 +284,36 @@ class PreferencesStore(private val context: Context) {
   }
 
   /**
-   * Experimental card design server (`docs/architecture/card-design-server.md`): the base URL that
-   * serves `manifest.json` and `blobs/`. Empty — the default — switches the feature off: no network
-   * request is made and every card renders through the local converter.
+   * Card design server (`docs/architecture/card-design-server.md`): the base URL that serves
+   * `manifest.json` and `blobs/`. [DEFAULT_DESIGN_SERVER_URL] until the user sets one; an empty
+   * value they saved switches the server off, and every card renders from the app's own designs.
    */
   val designServerUrl: Flow<String>
-    get() = context.store.data.map { it[DESIGN_SERVER_URL_KEY] ?: "" }
+    get() = context.store.data.map { it[DESIGN_SERVER_URL_KEY] ?: DEFAULT_DESIGN_SERVER_URL }
 
   suspend fun setDesignServerUrl(url: String) {
     context.store.edit { it[DESIGN_SERVER_URL_KEY] = url.trim() }
+  }
+
+  /** The card design variant to prefer (`DesignKey.variant`); cards without one use `default`. */
+  val designVariant: Flow<String>
+    get() = context.store.data.map { it[DESIGN_VARIANT_KEY] ?: DEFAULT_DESIGN_VARIANT }
+
+  suspend fun setDesignVariant(variant: String) {
+    context.store.edit {
+      it[DESIGN_VARIANT_KEY] = variant.trim().ifEmpty { DEFAULT_DESIGN_VARIANT }
+    }
+  }
+
+  /**
+   * The card design author to prefer (`DesignEntry.author`), or empty for any: the app's own
+   * designs win then.
+   */
+  val designAuthor: Flow<String>
+    get() = context.store.data.map { it[DESIGN_AUTHOR_KEY] ?: "" }
+
+  suspend fun setDesignAuthor(author: String) {
+    context.store.edit { it[DESIGN_AUTHOR_KEY] = author.trim() }
   }
 
   companion object {
@@ -312,6 +333,13 @@ class PreferencesStore(private val context: Context) {
     private val PERMANENT_WRITE_KEY = booleanPreferencesKey("permanent_write_mode")
     private val SELECTED_DASHBOARDS_KEY = stringPreferencesKey("selected_dashboards")
     private val DESIGN_SERVER_URL_KEY = stringPreferencesKey("design_server_url")
+    private val DESIGN_VARIANT_KEY = stringPreferencesKey("design_variant")
+    private val DESIGN_AUTHOR_KEY = stringPreferencesKey("design_author")
+
+    /** The public card design server, on by default. */
+    const val DEFAULT_DESIGN_SERVER_URL: String = "https://ha.coo.ee/designs/v1"
+
+    const val DEFAULT_DESIGN_VARIANT: String = "default"
 
     /** Stored value for HA's default (unnamed) dashboard. */
     const val DEFAULT_DASHBOARD_SENTINEL: String = "__default__"

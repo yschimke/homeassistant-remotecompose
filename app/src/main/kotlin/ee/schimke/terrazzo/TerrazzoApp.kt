@@ -36,6 +36,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -49,6 +50,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
+import ee.schimke.ha.design.DesignEntry
+import ee.schimke.ha.design.DesignTags
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.terrazzo.auth.rememberLoginController
@@ -865,6 +868,11 @@ internal fun SettingsScreen(
   val hapticsEnabled by graph.preferencesStore.haptics.collectAsState(initial = true)
   val soundsEnabled by graph.preferencesStore.interfaceSounds.collectAsState(initial = false)
   val designServerUrl by graph.preferencesStore.designServerUrl.collectAsState(initial = "")
+  val designVariant by
+    graph.preferencesStore.designVariant.collectAsState(
+      initial = PreferencesStore.DEFAULT_DESIGN_VARIANT
+    )
+  val designAuthor by graph.preferencesStore.designAuthor.collectAsState(initial = "")
   val permanentWriteEnabled by
     graph.preferencesStore.permanentWriteMode.collectAsState(initial = false)
 
@@ -1114,14 +1122,15 @@ internal fun SettingsScreen(
         )
       }
 
+      // Saving a setting changes the design choice, which syncs the designs it needs (see
+      // TerrazzoApplication).
       DesignServerSetting(
         url = designServerUrl,
-        onUrlChange = { url ->
-          scope.launch {
-            graph.preferencesStore.setDesignServerUrl(url)
-            CardDesignSync.apply(context, url.trim(), syncNow = true)
-          }
-        },
+        variant = designVariant,
+        author = designAuthor,
+        onUrlChange = { url -> scope.launch { graph.preferencesStore.setDesignServerUrl(url) } },
+        onVariantChange = { scope.launch { graph.preferencesStore.setDesignVariant(it) } },
+        onAuthorChange = { scope.launch { graph.preferencesStore.setDesignAuthor(it) } },
       )
 
       Row(
@@ -1283,14 +1292,27 @@ private fun themePrefTagline(pref: ThemePref): String =
  * half-typed URL never triggers a fetch.
  */
 @Composable
-private fun DesignServerSetting(url: String, onUrlChange: (String) -> Unit) {
+private fun DesignServerSetting(
+  url: String,
+  variant: String,
+  author: String,
+  onUrlChange: (String) -> Unit,
+  onVariantChange: (String) -> Unit,
+  onAuthorChange: (String) -> Unit,
+) {
+  val context = LocalContext.current
   var draft by remember(url) { mutableStateOf(url) }
-  Column(modifier = Modifier.fillMaxWidth()) {
-    Text("Experimental: card design server", style = MaterialTheme.typography.titleMedium)
+  val revision by CardDesignSync.revision.collectAsState()
+  val tags by
+    produceState<DesignTags?>(initialValue = null, url, revision) {
+      value = CardDesignSync.tags(context, url)
+    }
+  Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Text("Card design server", style = MaterialTheme.typography.titleMedium)
     Text(
-      "Tiles always render from card designs. With a URL, designs from that server " +
-        "(manifest.json + blobs/) replace the built-in ones; it is checked nightly while " +
-        "charging. Leave empty to use only the built-in designs.",
+      "Card designs come from this server (manifest.json + blobs/), chosen by your palette, " +
+        "card style, variant and author; the app's own designs cover anything it lacks. The " +
+        "manifest is checked nightly while charging. Leave empty to use only the app's designs.",
       style = MaterialTheme.typography.bodySmall,
     )
     androidx.compose.material3.OutlinedTextField(
@@ -1309,5 +1331,48 @@ private fun DesignServerSetting(url: String, onUrlChange: (String) -> Unit) {
           if (!it.isFocused && draft != url) onUrlChange(draft)
         },
     )
+    tags?.let { tags ->
+      DesignTagPicker(
+        title = "Variant",
+        // The chosen variant stays listed even when this server has none of it yet.
+        options = (tags.variant.keys + variant).distinct().map { it to it },
+        selected = variant,
+        onSelect = onVariantChange,
+      )
+      DesignTagPicker(
+        title = "Author",
+        options =
+          listOf("" to "Built-in") +
+            (tags.author.keys - DesignEntry.BUILTIN_AUTHOR + author.ifBlank { null })
+              .filterNotNull()
+              .distinct()
+              .map { it to it.removePrefix("github:") },
+        selected = author,
+        onSelect = onAuthorChange,
+      )
+    }
+  }
+}
+
+/** One design tag's values as chips, [selected] checked; each option is a value and its label. */
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+@Composable
+private fun DesignTagPicker(
+  title: String,
+  options: List<Pair<String, String>>,
+  selected: String,
+  onSelect: (String) -> Unit,
+) {
+  Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+    Text(title, style = MaterialTheme.typography.labelLarge)
+    androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+      options.forEach { (value, label) ->
+        FilterChip(
+          selected = value == selected,
+          onClick = { onSelect(value) },
+          label = { Text(label) },
+        )
+      }
+    }
   }
 }
