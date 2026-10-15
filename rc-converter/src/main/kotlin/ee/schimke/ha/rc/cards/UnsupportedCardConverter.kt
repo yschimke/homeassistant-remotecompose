@@ -89,7 +89,8 @@ internal fun genericCard(card: CardConfig, snapshot: HaSnapshot): CardConfig? {
   // A single-entity card's `name` labels its row (see [rowOf]); otherwise it can title the list.
   val ownsEntity = card.raw["entity"] is JsonPrimitive
   val title =
-    (card.raw["title"] as? JsonPrimitive ?: (card.raw["name"] as? JsonPrimitive)?.takeIf { !ownsEntity })
+    (card.raw["title"] as? JsonPrimitive
+        ?: (card.raw["name"] as? JsonPrimitive)?.takeIf { !ownsEntity })
       ?.content
   val raw = buildJsonObject {
     put("type", CardTypes.ENTITIES)

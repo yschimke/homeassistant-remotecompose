@@ -39,9 +39,7 @@ class UnsupportedCardConverterTest {
   fun aSingleEntityCustomCardKeepsItsNameOnTheRow() {
     val generic =
       genericCard(
-        card(
-          """{"type":"custom:mushroom-light-card","entity":"light.kitchen","name":"Kitchen"}"""
-        ),
+        card("""{"type":"custom:mushroom-light-card","entity":"light.kitchen","name":"Kitchen"}"""),
         snapshot,
       )!!
     assertEquals("entities", generic.type)
@@ -75,9 +73,7 @@ class UnsupportedCardConverterTest {
   fun looseStringsCountOnlyWhenTheSnapshotKnowsThem() {
     val generic =
       genericCard(
-        card(
-          """{"type":"custom:template-card","content":"sun.sun","secondary":"not.an_entity"}"""
-        ),
+        card("""{"type":"custom:template-card","content":"sun.sun","secondary":"not.an_entity"}"""),
         snapshot,
       )!!
     assertEquals(listOf("sun.sun"), ids(generic))
@@ -85,7 +81,9 @@ class UnsupportedCardConverterTest {
 
   @Test
   fun aCardWithoutEntitiesKeepsThePlaceholder() {
-    assertNull(genericCard(card("""{"type":"custom:clock-weather-card","locale":"en"}"""), snapshot))
+    assertNull(
+      genericCard(card("""{"type":"custom:clock-weather-card","locale":"en"}"""), snapshot)
+    )
     assertNull(genericCard(card("""{"type":"iframe","url":"https://example.com"}"""), snapshot))
   }
 
