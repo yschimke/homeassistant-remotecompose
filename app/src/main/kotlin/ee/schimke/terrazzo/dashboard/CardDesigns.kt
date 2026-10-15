@@ -196,8 +196,10 @@ class FileLocalDesignStore(
     return File(scopeDir(), "$name.rc")
   }
 
-  override fun read(key: DesignKey): ByteArray? =
-    runCatching { file(key).takeIf { it.isFile }?.readBytes() }.getOrNull()
+  override fun read(key: DesignKey): ByteArray? = runCatching {
+    file(key).takeIf { it.isFile }?.readBytes()
+  }
+    .getOrNull()
 
   override fun write(key: DesignKey, bytes: ByteArray) {
     runCatching {
