@@ -9,6 +9,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
+import ee.schimke.ha.client.design.CardDesignOverrides
 import ee.schimke.ha.client.design.DesignStore
 import ee.schimke.ha.client.design.Sha256
 import ee.schimke.ha.client.design.StoredManifest
@@ -42,6 +43,8 @@ data class CardDesignChoice(
   val variant: String = DesignKey.DEFAULT_VARIANT,
   /** Preferred author, or blank for the built-in designs only. */
   val author: String = "",
+  /** The user's per-card and per-card-type departures, whose designs are fetched too. */
+  val overrides: CardDesignOverrides = CardDesignOverrides(),
 ) {
   val enabled: Boolean
     get() = serverUrl.isNotBlank()
@@ -52,9 +55,12 @@ data class CardDesignChoice(
   /** The designs to download: every theme this palette and style draw in, by variant and author. */
   val queries: List<DesignQuery>
     get() {
+      val cardStyles = listOf(cardStyle) + overrides.cardStyles.map(HaUberTheme::byId)
       val themes =
-        listOf(false, true).map { CardDesignTemplates.bakedTheme(style, it, cardStyle) }.distinct()
-      val variants = listOf(variant, DesignKey.DEFAULT_VARIANT).distinct()
+        cardStyles
+          .flatMap { s -> listOf(false, true).map { CardDesignTemplates.bakedTheme(style, it, s) } }
+          .distinct()
+      val variants = (listOf(variant) + overrides.variants + DesignKey.DEFAULT_VARIANT).distinct()
       return themes.flatMap { theme ->
         variants.flatMap { v ->
           authors.map { DesignQuery(variant = v, author = it, theme = theme) }
@@ -103,11 +109,14 @@ fun rememberCardDesigns(context: Context, choice: CardDesignChoice): CardDesigns
   return designs ?: CardDesigns(variant = choice.variant)
 }
 
+/** The user's per-card and per-card-type design overrides, kept on the device. */
+val LocalCardDesignOverrides = staticCompositionLocalOf { CardDesignOverrides() }
+
 /**
- * The design [card] renders with: the server's design for its key in the preferred variant, then in
- * the `default` variant, otherwise the local library's. Null only when the card has no template
- * shape (an unsupported type or config, or an entity not loaded yet); those cards capture through
- * their converter.
+ * The design [card] renders with: the server's design for its key in the preferred variant
+ * ([variant] when the card overrides it, else the choice's), then in the `default` variant,
+ * otherwise the local library's. Null only when the card has no template shape (an unsupported type
+ * or config, or an entity not loaded yet); those cards capture through their converter.
  */
 fun cardTemplateFor(
   context: Context,
@@ -118,11 +127,12 @@ fun cardTemplateFor(
   dark: Boolean,
   registry: CardRegistry,
   cardStyle: HaUberTheme = HaUberTheme.Classic,
+  variant: String? = null,
 ): CardTemplatePlayback? {
   val key =
     CardDesignTemplates.keyFor(card, snapshot, style, dark, registry, cardStyle = cardStyle)
       ?: return null
-  val server = designs.byKey[key.copy(variant = designs.variant)] ?: designs.byKey[key]
+  val server = designs.byKey[key.copy(variant = variant ?: designs.variant)] ?: designs.byKey[key]
   designs.loadedFor?.let { CardDesignSources.record(it, key, fromServer = server != null) }
   val bytes = server ?: CardDesignLibrary.template(context, key, registry)
   return CardDesignTemplates.playback(card, bytes, registry)
@@ -186,10 +196,8 @@ class FileLocalDesignStore(
     return File(scopeDir(), "$name.rc")
   }
 
-  override fun read(key: DesignKey): ByteArray? = runCatching {
-    file(key).takeIf { it.isFile }?.readBytes()
-  }
-    .getOrNull()
+  override fun read(key: DesignKey): ByteArray? =
+    runCatching { file(key).takeIf { it.isFile }?.readBytes() }.getOrNull()
 
   override fun write(key: DesignKey, bytes: ByteArray) {
     runCatching {

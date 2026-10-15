@@ -97,7 +97,6 @@ import kotlinx.coroutines.withContext
 
 /**
  * Root composable. Two phases:
- *
  * 1. **Unauthenticated**: discovery + login flow (one screen, no chrome). Completing login — or
  *    enabling demo mode — promotes to phase 2.
  * 2. **Authenticated**: a dashboard-first shell. The dashboard fills the screen; a small
@@ -826,7 +825,6 @@ private fun SessionConnectionStatus.toLogStatus():
 /**
  * Translate the persisted last-viewed-dashboard pref into the local `opened` sentinel/urlPath
  * encoding `DashboardsRoot` uses:
- *
  * - `null` (pref absent) → `null` (HA's default dashboard). First launch lands on the default
  *   dashboard rather than the picker; the picker stays reachable via system-back from a view.
  * - [PreferencesStore.DEFAULT_DASHBOARD_SENTINEL] → `null` (HA's default dashboard, whose `urlPath`
@@ -1364,7 +1362,9 @@ private fun DesignServerSetting(
 private fun DesignSourcesSummary() {
   // Only the current choice's record: until a dashboard loads a changed choice there is none.
   val prefs = LocalTerrazzoGraph.current.preferencesStore
-  val choice by remember(prefs) { CardDesignSync.choice(prefs) }.collectAsState(initial = null)
+  val context = LocalContext.current
+  val choice by
+    remember(prefs) { CardDesignSync.choice(context, prefs) }.collectAsState(initial = null)
   val summary = remember(choice) { CardDesignSources.summary(choice) }
   if (summary.server == 0 && summary.local.isEmpty()) return
   Text(

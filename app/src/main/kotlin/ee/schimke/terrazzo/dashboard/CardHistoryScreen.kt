@@ -93,7 +93,6 @@ import kotlinx.serialization.json.jsonPrimitive
 /**
  * Generic "more info" / history screen, opened by long-pressing any dashboard card. Three stacked
  * regions:
- *
  * 1. A native launcher-widget preview at the top, sharing the installation and provider capture
  *    path so layout, theme, images and platform compatibility match the home screen.
  * 2. A historical chart per entity the card references. Numeric entities (sensors) draw a line
@@ -158,6 +157,7 @@ fun CardHistoryScreen(
       onDesignCard?.let { action ->
         androidx.compose.material3.Button(onClick = action) { Text("Design or fix this card") }
       }
+      CardDesignOverrideSection(card)
 
       if (entityIds.isEmpty()) {
         Text(

@@ -51,17 +51,20 @@ object CardDesignSync {
     _revision.update { it + 1 }
   }
 
-  /** The user's [CardDesignChoice], from their settings. */
-  fun choice(prefs: PreferencesStore): Flow<CardDesignChoice> =
+  /** The user's [CardDesignChoice], from their settings and their card design overrides. */
+  fun choice(context: Context, prefs: PreferencesStore): Flow<CardDesignChoice> =
     combine(
-      prefs.designServerUrl,
-      prefs.themeStyle,
-      prefs.cardStyle,
-      prefs.designVariant,
-      prefs.designAuthor,
-    ) { url, theme, cardStyle, variant, author ->
-      CardDesignChoice(url.trim(), theme.toThemeStyle(), cardStyle.toUberTheme(), variant, author)
-    }
+        prefs.designServerUrl,
+        prefs.themeStyle,
+        prefs.cardStyle,
+        prefs.designVariant,
+        prefs.designAuthor,
+      ) { url, theme, cardStyle, variant, author ->
+        CardDesignChoice(url.trim(), theme.toThemeStyle(), cardStyle.toUberTheme(), variant, author)
+      }
+      .combine(CardDesignOverrideStore.of(context).overrides) { choice, overrides ->
+        choice.copy(overrides = overrides)
+      }
 
   /** Serializes refreshes across worker instances (WorkManager runs workers in-process). */
   internal val refreshLock = Mutex()
@@ -146,7 +149,9 @@ class CardDesignSyncWorker(context: Context, params: WorkerParameters) :
   CoroutineWorker(context, params) {
 
   override suspend fun doWork(): Result {
-    val choice = CardDesignSync.choice(applicationContext.terrazzoGraph().preferencesStore).first()
+    val choice =
+      CardDesignSync.choice(applicationContext, applicationContext.terrazzoGraph().preferencesStore)
+        .first()
     if (!choice.enabled) return Result.success()
     // `refresh` already respects the manifest TTL — within it, it only fetches designs the choice
     // needs and the cache lacks — and never throws for network trouble; a failed run just waits for

@@ -98,9 +98,11 @@ class TerrazzoApplication : Application() {
     // once whenever the design choice changes — on start too, which costs nothing while the cache
     // already holds every design the choice needs. Unique work, so re-applying is cheap.
     (ProcessLifecycleOwner.get().lifecycleScope + graph.logStore.coroutineExceptionHandler).launch {
-      CardDesignSync.choice(graph.preferencesStore).distinctUntilChanged().collect { choice ->
-        CardDesignSync.apply(applicationContext, choice.serverUrl, syncNow = true)
-      }
+      CardDesignSync.choice(applicationContext, graph.preferencesStore)
+        .distinctUntilChanged()
+        .collect { choice ->
+          CardDesignSync.apply(applicationContext, choice.serverUrl, syncNow = true)
+        }
     }
   }
 
