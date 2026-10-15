@@ -9,6 +9,7 @@ import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.CardConverter
 import ee.schimke.ha.rc.DesignTemplateInput
 import ee.schimke.ha.rc.UNSUPPORTED_CARD_TYPE
+import ee.schimke.ha.rc.cardEntityIds
 import ee.schimke.ha.rc.components.HaUnsupportedData
 import ee.schimke.ha.rc.components.RemoteHaUnsupported
 import kotlinx.serialization.json.JsonArray
@@ -35,14 +36,14 @@ class UnsupportedCardConverter(private val declaredType: String? = null) : CardC
   // room. The 160 dp default left ~70 dp of empty space below the
   // placeholder content in every dashboard slot.
   override fun naturalHeightDp(card: CardConfig, snapshot: HaSnapshot): Int =
-    genericCard(card, snapshot)?.let { ENTITIES.naturalHeightDp(it, snapshot) } ?: 96
+    genericCard(card)?.let { ENTITIES.naturalHeightDp(it, snapshot) } ?: 96
 
   /**
    * A card that names entities renders as the generic entities card over them: it keys, binds and
    * taps as that card does, so it keeps up with live data the same way.
    */
   override fun designDelegate(card: CardConfig, snapshot: HaSnapshot): CardConfig? =
-    genericCard(card, snapshot)
+    genericCard(card)
 
   /**
    * The placeholder renders from a card design: it shows nothing but the card's type, which is
@@ -59,7 +60,7 @@ class UnsupportedCardConverter(private val declaredType: String? = null) : CardC
 
   @Composable
   override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
-    val generic = genericCard(card, snapshot)
+    val generic = genericCard(card)
     if (generic != null) {
       ENTITIES.Render(generic, snapshot, modifier)
     } else {
@@ -75,16 +76,14 @@ class UnsupportedCardConverter(private val declaredType: String? = null) : CardC
 /** At most this many rows: a custom card's config can name far more entities than it shows. */
 private const val MAX_GENERIC_ROWS = 12
 
-private val ENTITY_ID = Regex("^[a-z_]+\\.[a-z0-9_]+$")
-
 /**
  * The generic `entities` card an unsupported [card] renders as, or null when its config names no
  * entities. Keeps the card's `title` (or `name`) and passes each row's `name`, `icon` and
  * `tap_action` through, so a custom card's own labels and taps survive.
  */
-internal fun genericCard(card: CardConfig, snapshot: HaSnapshot): CardConfig? {
+internal fun genericCard(card: CardConfig): CardConfig? {
   if (card.type == CardTypes.IFRAME) return null
-  val rows = genericRows(card.raw, snapshot)
+  val rows = genericRows(card)
   if (rows.isEmpty()) return null
   // A single-entity card's `name` labels its row (see [rowOf]); otherwise it can title the list.
   val ownsEntity = card.raw["entity"] is JsonPrimitive
@@ -101,41 +100,29 @@ internal fun genericCard(card: CardConfig, snapshot: HaSnapshot): CardConfig? {
 }
 
 /**
- * The entity rows named anywhere in [raw], in config order, de-duplicated. `entity`, `entity_id`
- * and `entities` are taken as written; any other string that looks like an entity id counts only
- * when [snapshot] knows it, so free text such as a `content: "sun.rising"` caption is not misread.
+ * The entity rows [card] names, in config order: exactly the entities [cardEntityIds] finds, which
+ * are the ones a host pushes live values for, so every row it renders keeps up with Home Assistant.
+ * Each row keeps the `name`, `icon` and `tap_action` of the first object that names its entity (an
+ * `entities` row, a nested card, or the card itself).
  */
-internal fun genericRows(raw: JsonObject, snapshot: HaSnapshot): List<JsonElement> {
-  val rows = LinkedHashMap<String, JsonElement>()
+internal fun genericRows(card: CardConfig): List<JsonElement> {
+  val objects = HashMap<String, JsonObject>()
 
-  fun addId(id: String, row: JsonElement = JsonPrimitive(id)) {
-    if (ENTITY_ID.matches(id) && id !in rows) rows[id] = row
-  }
-
-  fun visit(element: JsonElement, key: String?) {
+  fun visit(element: JsonElement) {
     when (element) {
-      is JsonPrimitive ->
-        if (element.isString) {
-          val id = element.content
-          if (key in NAMED_ENTITY_KEYS || id in snapshot.states) addId(id)
-        }
-      is JsonArray -> element.forEach { visit(it, key) }
       is JsonObject -> {
         val entity = (element["entity"] as? JsonPrimitive)?.takeIf { it.isString }?.content
-        // A row of an `entities` list, or the card's own entity: keep its label, icon and tap.
-        if (entity != null && (key == "entities" || element === raw)) {
-          addId(entity, rowOf(element, entity))
-        }
-        element.forEach { (k, v) -> if (k != "type") visit(v, k) }
+        if (entity != null && entity !in objects) objects[entity] = rowOf(element, entity)
+        element.values.forEach(::visit)
       }
+      is JsonArray -> element.forEach(::visit)
+      else -> {}
     }
   }
 
-  visit(raw, null)
-  return rows.values.take(MAX_GENERIC_ROWS)
+  visit(card.raw)
+  return cardEntityIds(card).take(MAX_GENERIC_ROWS).map { objects[it] ?: JsonPrimitive(it) }
 }
-
-private val NAMED_ENTITY_KEYS = setOf("entity", "entity_id", "entities")
 
 /** A row object the entities card understands: its entity plus the row-level fields it reads. */
 private fun rowOf(obj: JsonObject, entity: String): JsonObject = buildJsonObject {

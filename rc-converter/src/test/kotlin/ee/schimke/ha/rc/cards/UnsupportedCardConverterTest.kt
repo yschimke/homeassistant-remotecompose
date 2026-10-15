@@ -39,8 +39,7 @@ class UnsupportedCardConverterTest {
   fun aSingleEntityCustomCardKeepsItsNameOnTheRow() {
     val generic =
       genericCard(
-        card("""{"type":"custom:mushroom-light-card","entity":"light.kitchen","name":"Kitchen"}"""),
-        snapshot,
+        card("""{"type":"custom:mushroom-light-card","entity":"light.kitchen","name":"Kitchen"}""")
       )!!
     assertEquals("entities", generic.type)
     assertNull(generic.raw["title"])
@@ -62,29 +61,48 @@ class UnsupportedCardConverterTest {
              {"type":"custom:button-card","entity":"cover.garage"}
            ]}
           """
-        ),
-        snapshot,
+        )
       )!!
     assertEquals("Garage", generic.raw["title"]!!.jsonPrimitive.content)
     assertEquals(listOf("cover.garage", "sensor.temp", "light.kitchen"), ids(generic))
+    val lamp = (generic.raw["entities"] as JsonArray)[2].jsonObject
+    assertEquals("Lamp", lamp["name"]!!.jsonPrimitive.content)
   }
 
   @Test
-  fun looseStringsCountOnlyWhenTheSnapshotKnowsThem() {
+  fun aNestedCardKeepsItsNameIconAndTap() {
     val generic =
       genericCard(
-        card("""{"type":"custom:template-card","content":"sun.sun","secondary":"not.an_entity"}"""),
-        snapshot,
+        card(
+          """
+          {"type":"custom:stack-in-card","cards":[
+            {"type":"custom:button-card","entity":"cover.garage","name":"Door","icon":"mdi:garage",
+             "tap_action":{"action":"more-info"}}
+          ]}
+          """
+        )
       )!!
-    assertEquals(listOf("sun.sun"), ids(generic))
+    val row = (generic.raw["entities"] as JsonArray).single().jsonObject
+    assertEquals("Door", row["name"]!!.jsonPrimitive.content)
+    assertEquals("mdi:garage", row["icon"]!!.jsonPrimitive.content)
+    assertEquals("more-info", row["tap_action"]!!.jsonObject["action"]!!.jsonPrimitive.content)
+  }
+
+  @Test
+  fun onlyTheStandardEntityFieldsCount() {
+    // A host pushes live values only for `entity` / `entities` (cardEntityIds), so other
+    // entity-shaped strings must not become rows that would never update.
+    assertNull(
+      genericCard(
+        card("""{"type":"custom:template-card","entity_id":"sun.sun","content":"sun.sun"}""")
+      )
+    )
   }
 
   @Test
   fun aCardWithoutEntitiesKeepsThePlaceholder() {
-    assertNull(
-      genericCard(card("""{"type":"custom:clock-weather-card","locale":"en"}"""), snapshot)
-    )
-    assertNull(genericCard(card("""{"type":"iframe","url":"https://example.com"}"""), snapshot))
+    assertNull(genericCard(card("""{"type":"custom:clock-weather-card","locale":"en"}""")))
+    assertNull(genericCard(card("""{"type":"iframe","url":"https://example.com"}""")))
   }
 
   @Test
