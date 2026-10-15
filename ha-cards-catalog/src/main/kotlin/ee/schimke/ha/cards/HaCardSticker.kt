@@ -10,6 +10,7 @@ import androidx.compose.remote.creation.compose.layout.RemoteAlignment
 import androidx.compose.remote.creation.compose.layout.RemoteBox
 import androidx.compose.remote.creation.compose.layout.RemoteComposable
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
+import androidx.compose.remote.creation.compose.modifier.background
 import androidx.compose.remote.creation.compose.modifier.fillMaxSize
 import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.state.rdp
@@ -23,6 +24,7 @@ import ee.schimke.ha.rc.HaRcComposePlayer
 import ee.schimke.ha.rc.WrapAdaptiveRemoteDocumentPlayer
 import ee.schimke.ha.rc.androidXExperimental
 import ee.schimke.ha.rc.components.ProvideNamedHaTheme
+import ee.schimke.ha.rc.components.currentRemoteHaTheme
 import kotlinx.coroutines.runBlocking
 
 /**
@@ -51,8 +53,14 @@ fun HaCardSticker(content: @Composable @RemoteComposable () -> Unit) {
         runBlocking {
           captureSingleRemoteDocument(context = context, profile = androidXExperimental) {
               ProvideNamedHaTheme(theme) {
+                // The page backdrop is part of the document, as the named dashboard colour, so a
+                // replay is drawn on it and a theme recolours it: chrome-less stickers (heading,
+                // icon) otherwise replay over whatever the host draws.
                 RemoteBox(
-                  modifier = RemoteModifier.fillMaxSize().padding(8.rdp),
+                  modifier =
+                    RemoteModifier.fillMaxSize()
+                      .background(currentRemoteHaTheme().dashboardBackground)
+                      .padding(8.rdp),
                   contentAlignment = RemoteAlignment.Center,
                   content = content,
                 )
