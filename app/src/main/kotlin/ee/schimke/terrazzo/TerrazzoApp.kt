@@ -64,6 +64,7 @@ import ee.schimke.terrazzo.core.session.DemoHaSession
 import ee.schimke.terrazzo.core.session.HaSession
 import ee.schimke.terrazzo.core.session.SessionConnectionStatus
 import ee.schimke.terrazzo.dashboard.CardActionsSheet
+import ee.schimke.terrazzo.dashboard.CardDesignSources
 import ee.schimke.terrazzo.dashboard.CardDesignSync
 import ee.schimke.terrazzo.dashboard.CardHistoryScreen
 import ee.schimke.terrazzo.dashboard.DashboardListState
@@ -1331,6 +1332,7 @@ private fun DesignServerSetting(
           if (!it.isFocused && draft != url) onUrlChange(draft)
         },
     )
+    if (url.isNotBlank()) DesignSourcesSummary()
     tags?.let { tags ->
       DesignTagPicker(
         title = "Variant",
@@ -1353,6 +1355,42 @@ private fun DesignServerSetting(
     }
   }
 }
+
+/**
+ * Where this session's card designs came from, and the card types and shapes the server had no
+ * design for: the gaps it should fill. Read once when Settings opens.
+ */
+@Composable
+private fun DesignSourcesSummary() {
+  // Only the current choice's record: until a dashboard loads a changed choice there is none.
+  val prefs = LocalTerrazzoGraph.current.preferencesStore
+  val choice by remember(prefs) { CardDesignSync.choice(prefs) }.collectAsState(initial = null)
+  val summary = remember(choice) { CardDesignSources.summary(choice) }
+  if (summary.server == 0 && summary.local.isEmpty()) return
+  Text(
+    "This session: ${summary.server} card designs from the server, " +
+      "${summary.local.size} from the app.",
+    style = MaterialTheme.typography.bodySmall,
+  )
+  summary.local.take(MAX_LISTED_GAPS).forEach { key ->
+    Text(
+      "· ${key.cardType}" + key.shape.takeIf { it.isNotEmpty() }?.let { " ($it)" }.orEmpty(),
+      style = MaterialTheme.typography.bodySmall,
+      color = MaterialTheme.colorScheme.onSurfaceVariant,
+      maxLines = 1,
+      overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+    )
+  }
+  if (summary.local.size > MAX_LISTED_GAPS) {
+    Text(
+      "and ${summary.local.size - MAX_LISTED_GAPS} more",
+      style = MaterialTheme.typography.bodySmall,
+      color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+  }
+}
+
+private const val MAX_LISTED_GAPS = 8
 
 /** One design tag's values as chips, [selected] checked; each option is a value and its label. */
 @OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
