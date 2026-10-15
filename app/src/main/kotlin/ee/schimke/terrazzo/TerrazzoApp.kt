@@ -15,6 +15,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
@@ -35,6 +36,7 @@ import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
@@ -67,6 +69,7 @@ import ee.schimke.terrazzo.dashboard.CardActionsSheet
 import ee.schimke.terrazzo.dashboard.CardDesignSources
 import ee.schimke.terrazzo.dashboard.CardDesignSync
 import ee.schimke.terrazzo.dashboard.CardHistoryScreen
+import ee.schimke.terrazzo.dashboard.DashboardAgentScreen
 import ee.schimke.terrazzo.dashboard.DashboardListState
 import ee.schimke.terrazzo.dashboard.DashboardPickerScreen
 import ee.schimke.terrazzo.dashboard.DashboardSelectionScreen
@@ -511,6 +514,9 @@ private fun DashboardsRoot(
   // Long-press first offers a menu (CardActionsSheet): fork, home screen, or history.
   var actionsTarget by remember { mutableStateOf<Pair<CardConfig, HaSnapshot>?>(null) }
   var studioTarget by remember { mutableStateOf<Pair<CardConfig, HaSnapshot>?>(null) }
+  // "Edit with an agent" for the opened dashboard, and a count of saves that re-keys it to reload.
+  var agentOpen by remember { mutableStateOf(false) }
+  var dashboardSaves by remember { mutableIntStateOf(0) }
   val studioServer by
     graph.preferencesStore.designServerUrl.collectAsState(initial = "https://ha.coo.ee/designs/v1")
   val openedValue = opened
@@ -610,7 +616,16 @@ private fun DashboardsRoot(
 
   val historyOverlay = historyTarget
   val studioOverlay = studioTarget
-  if (studioOverlay != null) {
+  if (agentOpen && openedValue != DASHBOARD_UNSET) {
+    BackHandler { agentOpen = false }
+    DashboardAgentScreen(
+      session = session,
+      urlPath = openedValue,
+      title = readyDashboards.firstOrNull { it.urlPath == openedValue }?.title,
+      onBack = { agentOpen = false },
+      onSaved = { dashboardSaves++ },
+    )
+  } else if (studioOverlay != null) {
     val (card, snapshot) = studioOverlay
     BackHandler { studioTarget = null }
     CardStudioScreen(
@@ -656,6 +671,11 @@ private fun DashboardsRoot(
             }
           },
           actions = {
+            if (openedValue != DASHBOARD_UNSET && !readOnly) {
+              IconButton(onClick = { agentOpen = true }) {
+                Icon(Icons.Filled.AutoAwesome, contentDescription = "Edit with an agent")
+              }
+            }
             NotificationBell(
               notifications = notifications,
               onDismiss = { n ->
@@ -727,7 +747,7 @@ private fun DashboardsRoot(
         // keeps showing the previous dashboard's view until a
         // collapse/expand forces recreation. Re-seeding from the
         // offline cache makes the new dashboard paint immediately.
-        key(openedValue) {
+        key(openedValue, dashboardSaves) {
           DashboardViewScreen(
             session = session,
             urlPath = openedValue,
