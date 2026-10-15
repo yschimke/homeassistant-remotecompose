@@ -10,6 +10,7 @@ import androidx.compose.remote.creation.compose.layout.RemoteAlignment
 import androidx.compose.remote.creation.compose.layout.RemoteBox
 import androidx.compose.remote.creation.compose.layout.RemoteComposable
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
+import androidx.compose.remote.creation.compose.modifier.background
 import androidx.compose.remote.creation.compose.modifier.fillMaxSize
 import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.state.rdp
@@ -22,13 +23,14 @@ import ee.schimke.composeai.data.render.IrSidecarChannel
 import ee.schimke.ha.rc.HaRcComposePlayer
 import ee.schimke.ha.rc.WrapAdaptiveRemoteDocumentPlayer
 import ee.schimke.ha.rc.androidXExperimental
-import ee.schimke.ha.rc.components.HaTheme
-import ee.schimke.ha.rc.components.ProvideHaTheme
+import ee.schimke.ha.rc.components.ProvideNamedHaTheme
+import ee.schimke.ha.rc.components.currentRemoteHaTheme
 import kotlinx.coroutines.runBlocking
 
 /**
  * The frame every `ha-cards` sticker is captured through: a real `RemoteDocument`, recorded under
- * the app's AndroidX + experimental profile inside the Home Assistant light theme, played back with
+ * the app's AndroidX + experimental profile inside [LocalHaCatalogTheme] (Home Assistant's light
+ * theme unless a declared catalog theme, `HaThemeCatalogs.kt`, wraps the render), played back with
  * the Compose Multiplatform player `:previews` uses, and offered as the render's `.rc` sidecar so
  * the published catalog ships the document and not only its pixels.
  *
@@ -36,19 +38,29 @@ import kotlinx.coroutines.runBlocking
  * `RcDocumentCapture.kt` there for why not upstream's `RemoteContentPreview`), kept here so this
  * module depends on the shipped components and not on the preview module. Best-effort: a capture
  * the profile rejects draws an empty box rather than failing the render.
+ *
+ * The theme is captured as named `WearM3.<role>` colours ([ProvideNamedHaTheme]), so the preview
+ * server can apply a declared theme to the published document without recapturing it.
  */
 @Composable
 fun HaCardSticker(content: @Composable @RemoteComposable () -> Unit) {
   val context = LocalContext.current
   val density = context.resources.displayMetrics.density
+  val theme = LocalHaCatalogTheme.current
   val bytes: ByteArray? =
-    remember(content) {
+    remember(content, theme) {
       runCatching {
         runBlocking {
           captureSingleRemoteDocument(context = context, profile = androidXExperimental) {
-              ProvideHaTheme(HaTheme.Light) {
+              ProvideNamedHaTheme(theme) {
+                // The page backdrop is part of the document, as the named dashboard colour, so a
+                // replay is drawn on it and a theme recolours it: chrome-less stickers (heading,
+                // icon) otherwise replay over whatever the host draws.
                 RemoteBox(
-                  modifier = RemoteModifier.fillMaxSize().padding(8.rdp),
+                  modifier =
+                    RemoteModifier.fillMaxSize()
+                      .background(currentRemoteHaTheme().dashboardBackground)
+                      .padding(8.rdp),
                   contentAlignment = RemoteAlignment.Center,
                   content = content,
                 )
@@ -67,7 +79,7 @@ fun HaCardSticker(content: @Composable @RemoteComposable () -> Unit) {
       )
     }
   }
-  Box(Modifier.fillMaxSize().background(HaTheme.Light.dashboardBackground)) {
+  Box(Modifier.fillMaxSize().background(theme.dashboardBackground)) {
     if (bytes != null) {
       HaRcComposePlayer(
         documentBytes = bytes,
