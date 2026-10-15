@@ -72,6 +72,14 @@ private fun StyleRow(
   onPick: (CardDesignScope, String?) -> Unit,
 ) {
   val current = overrides.at(scope, card)?.cardStyle
+  // With no style of its own, a card follows its type's override when there is one; the user's
+  // own style is then one of the styles below, picked as an exception.
+  val inherited =
+    if (scope == CardDesignScope.Card) overrides.at(CardDesignScope.CardType, card)?.cardStyle
+    else null
+  val unsetLabel =
+    inherited?.let { "Same as every ${card.type} (${HaUberTheme.byId(it).displayName})" }
+      ?: "Your style"
   Text(label, style = MaterialTheme.typography.labelLarge)
   Row(
     modifier = Modifier.horizontalScroll(rememberScrollState()),
@@ -80,8 +88,8 @@ private fun StyleRow(
     FilterChip(
       selected = current == null,
       onClick = { onPick(scope, null) },
-      label = { Text("Your style") },
-      modifier = Modifier.semantics { contentDescription = "$label: your style" },
+      label = { Text(unsetLabel) },
+      modifier = Modifier.semantics { contentDescription = "$label: $unsetLabel" },
     )
     HaUberTheme.all.forEach { theme ->
       FilterChip(

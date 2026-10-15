@@ -98,7 +98,9 @@ fun cardFingerprint(card: CardConfig): String =
 
 private fun canonical(element: JsonElement): JsonElement =
   when (element) {
-    is JsonObject -> JsonObject(element.toSortedMap().mapValues { canonical(it.value) })
+    // Rebuilt in key order (a JsonObject keeps its map's order); common code has no sorted map.
+    is JsonObject ->
+      JsonObject(element.entries.sortedBy { it.key }.associate { it.key to canonical(it.value) })
     is JsonArray -> JsonArray(element.map(::canonical))
     else -> element
   }

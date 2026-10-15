@@ -11,6 +11,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 
 /**
@@ -21,14 +23,19 @@ import kotlinx.coroutines.withContext
 class CardDesignOverrideStore internal constructor(private val file: File) {
   private val _overrides = MutableStateFlow(read())
 
+  /** One update and its write at a time, so the file always ends up with the newest overrides. */
+  private val writes = Mutex()
+
   /** The current overrides; the dashboard and the design sync both follow it. */
   val overrides: StateFlow<CardDesignOverrides> = _overrides.asStateFlow()
 
   /** Sets [override] at [scope] for [card], or clears it when null or empty. */
   suspend fun set(scope: CardDesignScope, card: CardConfig, override: CardDesignOverride?) {
-    _overrides.update { it.with(scope, card, override) }
-    val text = _overrides.value.encode()
-    withContext(Dispatchers.IO) { write(text) }
+    writes.withLock {
+      _overrides.update { it.with(scope, card, override) }
+      val text = _overrides.value.encode()
+      withContext(Dispatchers.IO) { write(text) }
+    }
   }
 
   private fun read(): CardDesignOverrides =
