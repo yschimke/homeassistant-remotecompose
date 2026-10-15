@@ -1,5 +1,8 @@
 package ee.schimke.terrazzo.dashboard
 
+import ee.schimke.ha.client.design.CardDesignOverride
+import ee.schimke.ha.client.design.CardDesignOverrides
+import ee.schimke.ha.client.design.CardDesignScope
 import ee.schimke.ha.design.DesignEntry
 import ee.schimke.ha.design.DesignKey
 import ee.schimke.ha.design.DesignQuery
@@ -10,6 +13,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
+import kotlinx.serialization.json.JsonPrimitive
 
 /** What a design choice downloads from the manifest, and which author it prefers. */
 class CardDesignChoiceTest {
@@ -73,6 +77,30 @@ class CardDesignChoiceTest {
     val builtIn = choice.copy(author = "")
     assertFalse(builtIn.wants(entry(theme, author = "github:someone")))
     assertEquals(listOf(DesignQuery(author = "terrazzo")), builtIn.prefer)
+  }
+
+  @Test
+  fun overridesAlsoDownloadTheirStylesAndVariants() {
+    val card =
+      ee.schimke.ha.model.CardConfig(
+        type = "tile",
+        raw = kotlinx.serialization.json.buildJsonObject { put("type", JsonPrimitive("tile")) },
+      )
+    val overrides =
+      CardDesignOverrides()
+        .with(CardDesignScope.Card, card, CardDesignOverride(cardStyle = "console"))
+        .with(CardDesignScope.CardType, card, CardDesignOverride(variant = "garage"))
+    val choice =
+      CardDesignChoice(
+        "https://designs.test",
+        ThemeStyle.Material3,
+        HaUberTheme.Classic,
+        overrides = overrides,
+      )
+    assertTrue(choice.wants(entry(DesignKey.styledTheme("console", dark = true))))
+    assertTrue(choice.wants(entry(DesignKey.bakedTheme("Material3", dark = false))))
+    assertTrue(choice.wants(entry(DesignKey.bakedTheme("Material3", dark = false), "garage")))
+    assertFalse(choice.wants(entry(DesignKey.styledTheme("lcd", dark = false))))
   }
 
   @Test

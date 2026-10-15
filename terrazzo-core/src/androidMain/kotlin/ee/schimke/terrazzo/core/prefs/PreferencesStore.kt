@@ -316,6 +316,17 @@ class PreferencesStore(private val context: Context) {
     context.store.edit { it[DESIGN_AUTHOR_KEY] = author.trim() }
   }
 
+  /**
+   * The design server's device token (from its `/my` page): the manifest then also lists the
+   * person's own private designs. Blank for none.
+   */
+  val designToken: Flow<String>
+    get() = context.store.data.map { it[DESIGN_TOKEN_KEY] ?: "" }
+
+  suspend fun setDesignToken(token: String) {
+    context.store.edit { it[DESIGN_TOKEN_KEY] = token.trim() }
+  }
+
   companion object {
     private val Context.store by preferencesDataStore(name = "terrazzo_prefs")
     private val DEMO_KEY = booleanPreferencesKey("demo_mode")
@@ -335,6 +346,7 @@ class PreferencesStore(private val context: Context) {
     private val DESIGN_SERVER_URL_KEY = stringPreferencesKey("design_server_url")
     private val DESIGN_VARIANT_KEY = stringPreferencesKey("design_variant")
     private val DESIGN_AUTHOR_KEY = stringPreferencesKey("design_author")
+    private val DESIGN_TOKEN_KEY = stringPreferencesKey("design_token")
 
     /** The public card design server, on by default. */
     const val DEFAULT_DESIGN_SERVER_URL: String = "https://ha.coo.ee/designs/v1"

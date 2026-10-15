@@ -2,10 +2,12 @@ package ee.schimke.ha.designserver
 
 import io.ktor.client.HttpClient
 import io.ktor.client.request.forms.submitForm
+import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.put
 import io.ktor.client.request.setBody
+import io.ktor.client.statement.bodyAsBytes
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
@@ -217,6 +219,35 @@ class UiBuilderClient(private val config: UiBuilderConfig, private val http: Htt
       "UI Builder refused the design (${response.status}): ${response.bodyAsText().take(300)}"
     }
     return id
+  }
+
+  /**
+   * The Remote Compose document UI Builder compiles [designId] to (`export.rc`), at [revision] or
+   * its latest, with the revision it drew. A failure, saying why, when UI Builder has no such
+   * design or refuses to compile it.
+   */
+  suspend fun exportRc(designId: String, revision: Long? = null): Result<ExportedDocument> {
+    val id = URLEncoder.encode(designId, Charsets.UTF_8)
+    val response =
+      http.get(
+        "${config.apiUrl.trimEnd('/')}/api/ui-builder/v1/designs/$id/export.rc" +
+          "?token=${URLEncoder.encode(config.token, Charsets.UTF_8)}" +
+          (revision?.let { "&revision=$it" } ?: "")
+      )
+    if (!response.status.isSuccess()) {
+      return Result.failure(
+        IllegalStateException(
+          "UI Builder could not export $designId (${response.status}): " +
+            response.bodyAsText().take(300)
+        )
+      )
+    }
+    return Result.success(
+      ExportedDocument(
+        bytes = response.bodyAsBytes(),
+        revision = response.headers["X-UI-Builder-Revision"]?.toLongOrNull() ?: revision,
+      )
+    )
   }
 
   /** Resolve the published revision on the host that will validate and render this draft. */
@@ -581,3 +612,6 @@ object UiBuilderSeed {
 
   fun fillMaxWidth() = buildJsonObject { put("type", "fillMaxWidth") }
 }
+
+/** A design's Remote Compose bytes as UI Builder exported them, and the revision they are of. */
+class ExportedDocument(val bytes: ByteArray, val revision: Long?)

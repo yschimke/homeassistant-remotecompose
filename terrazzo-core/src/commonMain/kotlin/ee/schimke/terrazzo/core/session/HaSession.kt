@@ -87,6 +87,19 @@ interface HaSession {
   suspend fun loadDashboard(urlPath: String?): Pair<Dashboard, HaSnapshot>
 
   /**
+   * A dashboard's Lovelace config as Home Assistant stores it, for an agent to edit. Null for
+   * sessions that can't read it (demo, offline).
+   */
+  suspend fun fetchDashboardConfig(urlPath: String?): JsonObject? = null
+
+  /**
+   * Save [config] as a dashboard's Lovelace config in Home Assistant and return the config it
+   * replaced, for undo. Sessions that can't write to Home Assistant refuse.
+   */
+  suspend fun replaceDashboardConfig(urlPath: String?, config: JsonObject): JsonObject =
+    throw UnsupportedOperationException("This session can't save dashboards to Home Assistant.")
+
+  /**
    * Fetch HA's `get_config` payload — version + `internal_url` / `external_url`. Live sessions
    * round-trip the WebSocket; demo / offline sessions return null so callers can skip the
    * persist-public-URL side effect.
@@ -237,6 +250,12 @@ class LiveHaSession(
   }
 
   override suspend fun fetchInstanceConfig(): HaInstanceConfig = client.fetchConfig()
+
+  override suspend fun fetchDashboardConfig(urlPath: String?): JsonObject =
+    client.fetchDashboardConfig(urlPath)
+
+  override suspend fun replaceDashboardConfig(urlPath: String?, config: JsonObject): JsonObject =
+    client.replaceDashboardConfig(config, urlPath)
 
   override suspend fun callService(
     domain: String,

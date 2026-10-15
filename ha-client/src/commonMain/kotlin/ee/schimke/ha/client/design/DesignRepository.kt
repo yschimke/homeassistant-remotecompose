@@ -35,6 +35,11 @@ data class DesignServerConfig(
   val allowUnsigned: Boolean = false,
   val clientVersion: Int = 0,
   val choice: List<DesignQuery> = emptyList(),
+  /**
+   * A device token from the server's `/my` page, sent as `Authorization: Bearer` with the manifest
+   * request so it lists the signed-in person's private designs too. Blank for none.
+   */
+  val token: String = "",
 ) {
   val enabled: Boolean
     get() = !baseUrl.isNullOrBlank()
@@ -320,6 +325,9 @@ class DesignRepository(
     val response: HttpResponse =
       httpClient!!.get("$baseUrl/manifest.json") {
         stored?.etag?.let { header(HttpHeaders.IfNoneMatch, it) }
+        config.token
+          .takeIf { it.isNotBlank() }
+          ?.let { header(HttpHeaders.Authorization, "Bearer $it") }
       }
     if (response.status == HttpStatusCode.NotModified) {
       return if (stored != null && stored.manifest.expiresAtEpochMs > now) Fetch.NotModified

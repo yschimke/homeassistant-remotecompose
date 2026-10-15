@@ -15,6 +15,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
@@ -35,6 +36,7 @@ import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
@@ -67,6 +69,7 @@ import ee.schimke.terrazzo.dashboard.CardActionsSheet
 import ee.schimke.terrazzo.dashboard.CardDesignSources
 import ee.schimke.terrazzo.dashboard.CardDesignSync
 import ee.schimke.terrazzo.dashboard.CardHistoryScreen
+import ee.schimke.terrazzo.dashboard.DashboardAgentScreen
 import ee.schimke.terrazzo.dashboard.DashboardListState
 import ee.schimke.terrazzo.dashboard.DashboardPickerScreen
 import ee.schimke.terrazzo.dashboard.DashboardSelectionScreen
@@ -97,7 +100,6 @@ import kotlinx.coroutines.withContext
 
 /**
  * Root composable. Two phases:
- *
  * 1. **Unauthenticated**: discovery + login flow (one screen, no chrome). Completing login — or
  *    enabling demo mode — promotes to phase 2.
  * 2. **Authenticated**: a dashboard-first shell. The dashboard fills the screen; a small
@@ -512,6 +514,9 @@ private fun DashboardsRoot(
   // Long-press first offers a menu (CardActionsSheet): fork, home screen, or history.
   var actionsTarget by remember { mutableStateOf<Pair<CardConfig, HaSnapshot>?>(null) }
   var studioTarget by remember { mutableStateOf<Pair<CardConfig, HaSnapshot>?>(null) }
+  // "Edit with an agent" for the opened dashboard, and a count of saves that re-keys it to reload.
+  var agentOpen by remember { mutableStateOf(false) }
+  var dashboardSaves by remember { mutableIntStateOf(0) }
   val studioServer by
     graph.preferencesStore.designServerUrl.collectAsState(initial = "https://ha.coo.ee/designs/v1")
   val openedValue = opened
@@ -611,7 +616,16 @@ private fun DashboardsRoot(
 
   val historyOverlay = historyTarget
   val studioOverlay = studioTarget
-  if (studioOverlay != null) {
+  if (agentOpen && openedValue != DASHBOARD_UNSET) {
+    BackHandler { agentOpen = false }
+    DashboardAgentScreen(
+      session = session,
+      urlPath = openedValue,
+      title = readyDashboards.firstOrNull { it.urlPath == openedValue }?.title,
+      onBack = { agentOpen = false },
+      onSaved = { dashboardSaves++ },
+    )
+  } else if (studioOverlay != null) {
     val (card, snapshot) = studioOverlay
     BackHandler { studioTarget = null }
     CardStudioScreen(
@@ -657,6 +671,11 @@ private fun DashboardsRoot(
             }
           },
           actions = {
+            if (openedValue != DASHBOARD_UNSET && !readOnly) {
+              IconButton(onClick = { agentOpen = true }) {
+                Icon(Icons.Filled.AutoAwesome, contentDescription = "Edit with an agent")
+              }
+            }
             NotificationBell(
               notifications = notifications,
               onDismiss = { n ->
@@ -728,7 +747,7 @@ private fun DashboardsRoot(
         // keeps showing the previous dashboard's view until a
         // collapse/expand forces recreation. Re-seeding from the
         // offline cache makes the new dashboard paint immediately.
-        key(openedValue) {
+        key(openedValue, dashboardSaves) {
           DashboardViewScreen(
             session = session,
             urlPath = openedValue,
@@ -826,7 +845,6 @@ private fun SessionConnectionStatus.toLogStatus():
 /**
  * Translate the persisted last-viewed-dashboard pref into the local `opened` sentinel/urlPath
  * encoding `DashboardsRoot` uses:
- *
  * - `null` (pref absent) → `null` (HA's default dashboard). First launch lands on the default
  *   dashboard rather than the picker; the picker stays reachable via system-back from a view.
  * - [PreferencesStore.DEFAULT_DASHBOARD_SENTINEL] → `null` (HA's default dashboard, whose `urlPath`
@@ -874,6 +892,7 @@ internal fun SettingsScreen(
       initial = PreferencesStore.DEFAULT_DESIGN_VARIANT
     )
   val designAuthor by graph.preferencesStore.designAuthor.collectAsState(initial = "")
+  val designToken by graph.preferencesStore.designToken.collectAsState(initial = "")
   val permanentWriteEnabled by
     graph.preferencesStore.permanentWriteMode.collectAsState(initial = false)
 
@@ -1129,9 +1148,11 @@ internal fun SettingsScreen(
         url = designServerUrl,
         variant = designVariant,
         author = designAuthor,
+        token = designToken,
         onUrlChange = { url -> scope.launch { graph.preferencesStore.setDesignServerUrl(url) } },
         onVariantChange = { scope.launch { graph.preferencesStore.setDesignVariant(it) } },
         onAuthorChange = { scope.launch { graph.preferencesStore.setDesignAuthor(it) } },
+        onTokenChange = { scope.launch { graph.preferencesStore.setDesignToken(it) } },
       )
 
       Row(
@@ -1297,9 +1318,11 @@ private fun DesignServerSetting(
   url: String,
   variant: String,
   author: String,
+  token: String,
   onUrlChange: (String) -> Unit,
   onVariantChange: (String) -> Unit,
   onAuthorChange: (String) -> Unit,
+  onTokenChange: (String) -> Unit,
 ) {
   val context = LocalContext.current
   var draft by remember(url) { mutableStateOf(url) }
@@ -1332,7 +1355,10 @@ private fun DesignServerSetting(
           if (!it.isFocused && draft != url) onUrlChange(draft)
         },
     )
-    if (url.isNotBlank()) DesignSourcesSummary()
+    if (url.isNotBlank()) {
+      DesignTokenField(url, token, onTokenChange)
+      DesignSourcesSummary()
+    }
     tags?.let { tags ->
       DesignTagPicker(
         title = "Variant",
@@ -1357,6 +1383,34 @@ private fun DesignServerSetting(
 }
 
 /**
+ * The design server's device token: with it, the manifest also lists the designs this person
+ * published privately. Made on the server's `/my` page while signed in with GitHub.
+ */
+@Composable
+private fun DesignTokenField(url: String, token: String, onTokenChange: (String) -> Unit) {
+  var draft by remember(token) { mutableStateOf(token) }
+  val myPage = url.trimEnd('/').removeSuffix("/designs/v1") + "/my"
+  androidx.compose.material3.OutlinedTextField(
+    value = draft,
+    onValueChange = { draft = it },
+    singleLine = true,
+    label = { Text("Device token") },
+    supportingText = { Text("Shows your private designs. Create one at $myPage") },
+    visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
+    keyboardOptions =
+      androidx.compose.foundation.text.KeyboardOptions(
+        imeAction = androidx.compose.ui.text.input.ImeAction.Done
+      ),
+    keyboardActions =
+      androidx.compose.foundation.text.KeyboardActions(onDone = { onTokenChange(draft) }),
+    modifier =
+      Modifier.fillMaxWidth().onFocusChanged {
+        if (!it.isFocused && draft != token) onTokenChange(draft)
+      },
+  )
+}
+
+/**
  * Where this session's card designs came from, and the card types and shapes the server had no
  * design for: the gaps it should fill. Read once when Settings opens.
  */
@@ -1364,7 +1418,9 @@ private fun DesignServerSetting(
 private fun DesignSourcesSummary() {
   // Only the current choice's record: until a dashboard loads a changed choice there is none.
   val prefs = LocalTerrazzoGraph.current.preferencesStore
-  val choice by remember(prefs) { CardDesignSync.choice(prefs) }.collectAsState(initial = null)
+  val context = LocalContext.current
+  val choice by
+    remember(prefs) { CardDesignSync.choice(context, prefs) }.collectAsState(initial = null)
   val summary = remember(choice) { CardDesignSources.summary(choice) }
   if (summary.server == 0 && summary.local.isEmpty()) return
   Text(

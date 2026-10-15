@@ -108,7 +108,6 @@ import kotlinx.serialization.json.jsonPrimitive
  * not one giant document.
  *
  * Layout follows the dashboard's own structure as faithfully as the window allows:
- *
  * - **Wide (Expanded width, ≥2 sections)** — sections render side-by-side as columns, mirroring
  *   HA's modern dashboard. Up to 2 columns at 840 dp / 3 at 1200 dp. Section titles sit at the top
  *   of each column.
@@ -273,8 +272,9 @@ private fun DashboardList(
   val flashOnDataChange by preferencesStore.flashOnDataChange.collectAsState(initial = false)
   val dataGridOverlay by preferencesStore.dataGridOverlay.collectAsState(initial = false)
   // The card designs the user's settings choose from the design server (off when its URL is empty).
+  val designContext = androidx.compose.ui.platform.LocalContext.current
   val designChoice by
-    remember(preferencesStore) { CardDesignSync.choice(preferencesStore) }
+    remember(preferencesStore) { CardDesignSync.choice(designContext, preferencesStore) }
       .collectAsState(initial = null)
   // Pull the process-singleton image stack (a Metro AppScope binding —
   // see AppGraph.haImageStack). Coil documents that exactly one
@@ -332,9 +332,12 @@ private fun DashboardList(
     else Modifier.fillMaxSize().background(haTheme.dashboardBackground)
   Box(modifier = dashboardModifier, contentAlignment = Alignment.TopCenter) {
     val cardDesigns = designChoice?.let { rememberCardDesigns(context, it) } ?: CardDesigns()
+    val cardDesignOverrides by
+      remember(context) { CardDesignOverrideStore.of(context).overrides }.collectAsState()
     CompositionLocalProvider(
       LocalFlashOnDataChange provides flashOnDataChange,
       LocalCardDesigns provides cardDesigns,
+      LocalCardDesignOverrides provides cardDesignOverrides,
     ) {
       LazyColumn(
         modifier =
@@ -949,7 +952,9 @@ private fun CardSlot(
   // (see LiveValues in rc-components). [captureEpoch] is the
   // exception: hosts that mutate state out-of-band (demo mode taps)
   // bump it to force a re-encode on the next composition.
-  val cardStyle = LocalCardStyle.current
+  // The user's card style, unless they gave this card, or every card of its type, its own.
+  val override = LocalCardDesignOverrides.current.forCard(card)
+  val cardStyle = override?.cardStyle?.let(HaUberTheme::byId) ?: LocalCardStyle.current
   val haTheme = remember(style, dark, cardStyle) { cardStyle.cardPalette(style, dark) }
   // Markdown templates are evaluated in-process and baked into the
   // document (full markdown fidelity), so unlike entity state they DO
@@ -983,8 +988,18 @@ private fun CardSlot(
   val designCard = CardDesignTemplates.designCard(card, snapshot, registry)
   val designShape = registry.converterFor(designCard.type)?.designProperties(designCard, snapshot)
   val template =
-    remember(designCard, designShape, cardDesigns, style, dark, cardStyle) {
-      cardTemplateFor(context, designCard, snapshot, cardDesigns, style, dark, registry, cardStyle)
+    remember(designCard, designShape, cardDesigns, style, dark, cardStyle, override) {
+      cardTemplateFor(
+        context,
+        designCard,
+        snapshot,
+        cardDesigns,
+        style,
+        dark,
+        registry,
+        cardStyle,
+        variant = override?.variant,
+      )
     }
   val bitmapLoader =
     remember(context, baseUrl, imageLoader) {

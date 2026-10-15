@@ -170,6 +170,30 @@ class HaClient(private val config: HaConfig, engine: HttpClientEngine? = null) {
   }
 
   /**
+   * A dashboard's Lovelace config exactly as Home Assistant stores it (`lovelace/config`): what an
+   * agent edits and [replaceDashboardConfig] writes back. A null [urlPath] is the default
+   * dashboard.
+   */
+  suspend fun fetchDashboardConfig(urlPath: String? = null): JsonObject =
+    runCommand("lovelace/config") { if (urlPath != null) put("url_path", urlPath) }
+
+  /**
+   * Replace a dashboard's Lovelace config with [config] (`lovelace/config/save`) and return the
+   * config it replaced, so the caller can offer undo by saving that back. Home Assistant stays the
+   * source of truth: it refuses a YAML-mode dashboard or a user without admin rights, and its
+   * message comes back as the thrown error.
+   */
+  suspend fun replaceDashboardConfig(config: JsonObject, urlPath: String? = null): JsonObject {
+    val previous = fetchDashboardConfig(urlPath)
+    // The save answers with a null result, which runCommand would read as an object.
+    awaitCommand("lovelace/config/save") {
+      put("config", config)
+      if (urlPath != null) put("url_path", urlPath)
+    }
+    return previous
+  }
+
+  /**
    * Fetch the HA instance's `config` payload — same shape `GET /api/config` returns over REST,
    * exposed here over the already-open WebSocket so we don't pay a separate TCP/TLS handshake. Used
    * to pick up the user's configured `external_url` (Nabu Casa / reverse-proxy hostname) so the app
