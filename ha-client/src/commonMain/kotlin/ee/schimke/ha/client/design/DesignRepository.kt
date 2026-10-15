@@ -4,6 +4,7 @@ import ee.schimke.ha.design.DesignEntry
 import ee.schimke.ha.design.DesignKey
 import ee.schimke.ha.design.DesignManifest
 import ee.schimke.ha.design.DesignQuery
+import ee.schimke.ha.design.DeviceMatch
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
 import io.ktor.client.request.header
@@ -240,7 +241,8 @@ class DesignRepository(
       if (prefer.isEmpty()) 0 else prefer.indexOfFirst { it.matches(entry) }
     val resolved = LinkedHashMap<DesignKey, Pair<Int, ByteArray>>()
     for (entry in stored.manifest.designs) {
-      if (entry.revoked) continue
+      // Device-specific designs share their generic sibling's key: see resolveDeviceDesigns.
+      if (entry.revoked || entry.device != null) continue
       val rank = rank(entry)
       if (rank < 0) continue
       val current = resolved[entry.key]
@@ -250,6 +252,33 @@ class DesignRepository(
       resolved[entry.key] = rank to bytes
     }
     return resolved.mapValues { it.value.second }
+  }
+
+  /**
+   * The cached device-specific designs (entries with a [DesignEntry.device]) by key, the preferred
+   * author's first for each key and device match, as [resolveAll] ranks generic ones. A client
+   * picks among a key's candidates per card with [ee.schimke.ha.design.DeviceMatch.pick].
+   */
+  suspend fun resolveDeviceDesigns(
+    prefer: List<DesignQuery> = emptyList()
+  ): Map<DesignKey, List<Pair<DeviceMatch, ByteArray>>> {
+    val stored = store.readManifest() ?: return emptyMap()
+    fun rank(entry: DesignEntry): Int =
+      if (prefer.isEmpty()) 0 else prefer.indexOfFirst { it.matches(entry) }
+    val resolved = LinkedHashMap<Pair<DesignKey, DeviceMatch>, Pair<Int, ByteArray>>()
+    for (entry in stored.manifest.designs) {
+      val device = entry.device ?: continue
+      if (entry.revoked) continue
+      val rank = rank(entry)
+      if (rank < 0) continue
+      val slot = entry.key to device
+      val current = resolved[slot]
+      if (current != null && current.first <= rank) continue
+      val bytes =
+        store.readBlob(entry.sha256)?.takeIf { Sha256.hex(it) == entry.sha256 } ?: continue
+      resolved[slot] = rank to bytes
+    }
+    return resolved.entries.groupBy({ it.key.first }) { it.key.second to it.value.second }
   }
 
   /** Whether [entry] is a live design this client keeps. */

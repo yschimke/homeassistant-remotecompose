@@ -5,6 +5,7 @@ import ee.schimke.ha.design.DesignKey
 import ee.schimke.ha.design.DesignManifest
 import ee.schimke.ha.design.DesignQuery
 import ee.schimke.ha.design.DesignSurface
+import ee.schimke.ha.design.DeviceMatch
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
@@ -342,5 +343,35 @@ class DesignRepositoryTest {
       }
     assertEquals(RefreshResult.Filled, classic.refresh())
     assertEquals(setOf(key, consoleKey), classic.resolveAll().keys)
+  }
+
+  @Test
+  fun deviceDesignsResolveBesideTheGenericOneForTheirKey() = runTest {
+    val boiler = "boiler dial".encodeToByteArray()
+    val store = InMemoryDesignStore()
+    store.writeBlob(Sha256.hex(template), template)
+    store.writeBlob(Sha256.hex(boiler), boiler)
+    val match = DeviceMatch(integration = "vaillant")
+    store.writeManifest(
+      StoredManifest(
+        DesignManifest(
+          serial = 1,
+          generatedAtEpochMs = now,
+          expiresAtEpochMs = now + 1_000_000,
+          designs =
+            listOf(
+              DesignEntry(key, Sha256.hex(template), template.size, slots = 1),
+              DesignEntry(key, Sha256.hex(boiler), boiler.size, slots = 1, device = match),
+            ),
+        ),
+        fetchedAtEpochMs = now,
+      )
+    )
+    val repository = repo(null, store)
+    // The generic design keeps its key; the device design never displaces it.
+    assertContentEquals(template, repository.resolveAll()[key])
+    val forDevices = repository.resolveDeviceDesigns()[key].orEmpty()
+    assertEquals(listOf(match), forDevices.map { it.first })
+    assertContentEquals(boiler, forDevices.single().second)
   }
 }

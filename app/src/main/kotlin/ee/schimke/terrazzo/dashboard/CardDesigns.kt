@@ -16,6 +16,8 @@ import ee.schimke.ha.client.design.StoredManifest
 import ee.schimke.ha.design.DesignEntry
 import ee.schimke.ha.design.DesignKey
 import ee.schimke.ha.design.DesignQuery
+import ee.schimke.ha.design.DeviceInfo
+import ee.schimke.ha.design.DeviceMatch
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.CardDesignLibrary
@@ -23,6 +25,7 @@ import ee.schimke.ha.rc.CardDesignTemplates
 import ee.schimke.ha.rc.CardRegistry
 import ee.schimke.ha.rc.CardTemplatePlayback
 import ee.schimke.ha.rc.LocalDesignStore
+import ee.schimke.ha.rc.cardEntityIds
 import ee.schimke.ha.rc.components.HaUberTheme
 import ee.schimke.ha.rc.components.ThemeStyle
 import java.io.File
@@ -91,6 +94,11 @@ data class CardDesigns(
    * before the first read. Only then does a missing key mean the server lacks it.
    */
   val loadedFor: CardDesignChoice? = null,
+  /**
+   * Device-specific designs by key: a card whose entity's device matches one renders with it
+   * instead of the generic design for the same key ([DeviceMatch.pick]).
+   */
+  val deviceByKey: Map<DesignKey, List<Pair<DeviceMatch, ByteArray>>> = emptyMap(),
 )
 
 val LocalCardDesigns = staticCompositionLocalOf { CardDesigns() }
@@ -108,7 +116,13 @@ fun rememberCardDesigns(context: Context, choice: CardDesignChoice): CardDesigns
     remember(choice.serverUrl) { CardDesignSync.cachedRepository(context, choice.serverUrl) }
   var designs by remember(repository, choice) { mutableStateOf<CardDesigns?>(null) }
   LaunchedEffect(repository, choice, revision) {
-    designs = CardDesigns(repository.resolveAll(prefer = choice.prefer), choice.variant, choice)
+    designs =
+      CardDesigns(
+        repository.resolveAll(prefer = choice.prefer),
+        choice.variant,
+        choice,
+        repository.resolveDeviceDesigns(prefer = choice.prefer),
+      )
   }
   return designs ?: CardDesigns(variant = choice.variant)
 }
@@ -136,11 +150,25 @@ fun cardTemplateFor(
   val key =
     CardDesignTemplates.keyFor(card, snapshot, style, dark, registry, cardStyle = cardStyle)
       ?: return null
-  val server = designs.byKey[key.copy(variant = variant ?: designs.variant)] ?: designs.byKey[key]
+  val preferred = key.copy(variant = variant ?: designs.variant)
+  // A design made for this card's device wins over the generic one, in either variant.
+  val forDevice =
+    cardDevice(card, snapshot)?.let { device ->
+      DeviceMatch.pick(designs.deviceByKey[preferred].orEmpty(), device)
+        ?: DeviceMatch.pick(designs.deviceByKey[key].orEmpty(), device)
+    }
+  val server = forDevice ?: designs.byKey[preferred] ?: designs.byKey[key]
   designs.loadedFor?.let { CardDesignSources.record(it, key, fromServer = server != null) }
   val bytes = server ?: CardDesignLibrary.template(context, key, registry)
   return CardDesignTemplates.playback(card, bytes, registry)
 }
+
+/**
+ * The device behind [card]'s main entity (its `entity`, else its first listed one), as the
+ * snapshot's registries know it; null when unknown.
+ */
+internal fun cardDevice(card: CardConfig, snapshot: HaSnapshot): DeviceInfo? =
+  cardEntityIds(card).firstNotNullOfOrNull { snapshot.devices[it] }
 
 /**
  * Where this process's cards got their designs: the server, or the app's own library because the

@@ -18,10 +18,17 @@ data class DesignQuery(
   val surface: DesignSurface? = null,
   val shape: String? = null,
   val theme: String? = null,
+  /**
+   * A device to find designs for ("designs for my boiler"): when any of its fields is set, only
+   * device-specific designs whose [DesignEntry.device] matches it are chosen.
+   */
+  val device: DeviceInfo? = null,
 ) {
   fun matches(entry: DesignEntry): Boolean {
     val key = entry.key
-    return tag(cardType, key.cardType) &&
+    val forDevice = device?.takeIf { it != DeviceInfo() }
+    return (forDevice == null || entry.device?.matches(forDevice) == true) &&
+      tag(cardType, key.cardType) &&
       tag(style, key.cardStyle) &&
       tag(variant, key.variant) &&
       tag(author, entry.author) &&
@@ -42,6 +49,10 @@ data class DesignQuery(
       surface?.let { SURFACE to it.wire },
       shape?.let { SHAPE to it },
       theme?.let { THEME to it },
+      device?.integration?.let { INTEGRATION to it },
+      device?.manufacturer?.let { MANUFACTURER to it },
+      device?.model?.let { MODEL to it },
+      device?.translationKey?.let { TRANSLATION_KEY to it },
     )
 
   companion object {
@@ -52,6 +63,10 @@ data class DesignQuery(
     const val SURFACE = "surface"
     const val SHAPE = "shape"
     const val THEME = "theme"
+    const val INTEGRATION = "integration"
+    const val MANUFACTURER = "manufacturer"
+    const val MODEL = "model"
+    const val TRANSLATION_KEY = "translationKey"
 
     /**
      * The query [parameter] reads, or null when a value is unusable (an unknown surface): an
@@ -71,6 +86,14 @@ data class DesignQuery(
         surface = surface,
         shape = value(SHAPE),
         theme = value(THEME),
+        device =
+          DeviceInfo(
+              integration = value(INTEGRATION),
+              manufacturer = value(MANUFACTURER),
+              model = value(MODEL),
+              translationKey = value(TRANSLATION_KEY),
+            )
+            .takeIf { it != DeviceInfo() },
       )
     }
 
