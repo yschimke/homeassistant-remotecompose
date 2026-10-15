@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.1.41](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.40...v0.1.41) (2026-10-15)
+
+
+### Features
+
+* **app:** fetch card designs by style, variant and author, on by default ([#822](https://github.com/yschimke/homeassistant-remotecompose/issues/822)) ([639dcd8](https://github.com/yschimke/homeassistant-remotecompose/commit/639dcd873f3578c9c4e220b7cb9e454bd16ed3eb))
+* **app:** keep the app's own card designs on disk, and show what the server lacks ([#824](https://github.com/yschimke/homeassistant-remotecompose/issues/824)) ([d4885a4](https://github.com/yschimke/homeassistant-remotecompose/commit/d4885a4f94facdd558ff03f268e7ae79b2dad30d))
+* **ha-cards:** capture stickers in named WearM3 colours and declare the app's themes ([#821](https://github.com/yschimke/homeassistant-remotecompose/issues/821)) ([f223e36](https://github.com/yschimke/homeassistant-remotecompose/commit/f223e36f79a6634b87e36a41056a32366a47a9df))
+
 ## [0.1.40](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.39...v0.1.40) (2026-10-15)
 
 
