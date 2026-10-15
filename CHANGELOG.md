@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.1.40](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.39...v0.1.40) (2026-10-15)
+
+
+### Features
+
+* **design-server:** tag designs by card type, style, variant and author ([#819](https://github.com/yschimke/homeassistant-remotecompose/issues/819)) ([ce37e4a](https://github.com/yschimke/homeassistant-remotecompose/commit/ce37e4a42daed4cbd0ac0b6261c1cf7bbc9de357))
+
+
+### Bug Fixes
+
+* **deps:** update compose-ai-tools ([#811](https://github.com/yschimke/homeassistant-remotecompose/issues/811)) ([cfbad96](https://github.com/yschimke/homeassistant-remotecompose/commit/cfbad962d2d6919134519b8696ee2df89c735a11))
+* restore platform widget rendering and Card Studio previews ([#818](https://github.com/yschimke/homeassistant-remotecompose/issues/818)) ([7490ef1](https://github.com/yschimke/homeassistant-remotecompose/commit/7490ef121368a727e32f46da13bcaa12918616a0))
+
 ## [0.1.39](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.38...v0.1.39) (2026-10-14)
 
 
