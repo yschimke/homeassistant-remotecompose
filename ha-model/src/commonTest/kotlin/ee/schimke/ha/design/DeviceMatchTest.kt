@@ -52,4 +52,13 @@ class DeviceMatchTest {
     assertEquals("generic", DeviceMatch.pick(candidates, null))
     assertNull(DeviceMatch.pick(candidates.drop(1), DeviceInfo(integration = "mqtt")))
   }
+
+  @Test
+  fun matchesThatDifferOnlyInCaseNormalizeToTheSameMatch() {
+    assertEquals(
+      DeviceMatch(manufacturer = "vaillant", model = "ecotec*"),
+      DeviceMatch(manufacturer = " Vaillant ", model = "ecoTEC*", integration = " ").normalized(),
+    )
+    assertEquals(0, DeviceMatch(integration = "  ").normalized().specificity)
+  }
 }

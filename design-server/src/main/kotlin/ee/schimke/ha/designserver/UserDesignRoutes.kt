@@ -340,7 +340,7 @@ private suspend fun publish(
       "A variant is 1-40 lowercase letters, digits and dashes, and not \"default\".",
     )
   }
-  if (request.device != null && request.device.specificity == 0) {
+  if (request.device != null && request.device.normalized().specificity == 0) {
     return Published.Refused(HttpStatusCode.BadRequest, "A device match needs at least one field.")
   }
   if (request.designId.isBlank()) {
@@ -371,7 +371,8 @@ private suspend fun publish(
       slots = base.entry.slots,
       sourceDesignId = request.designId,
       revision = exported.revision,
-      device = request.device,
+      // Stored canonical, so a republish that only changes case replaces its earlier design.
+      device = request.device?.normalized(),
     )
   )
 }

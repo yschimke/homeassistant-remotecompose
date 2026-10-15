@@ -168,7 +168,8 @@ fun cardTemplateFor(
  * snapshot's registries know it; null when unknown.
  */
 internal fun cardDevice(card: CardConfig, snapshot: HaSnapshot): DeviceInfo? =
-  cardEntityIds(card).firstNotNullOfOrNull { snapshot.devices[it] }
+  // Only the main entity counts: a later entity's device must not restyle the whole card.
+  cardEntityIds(card).firstOrNull()?.let { snapshot.devices[it] }
 
 /**
  * Where this process's cards got their designs: the server, or the app's own library because the

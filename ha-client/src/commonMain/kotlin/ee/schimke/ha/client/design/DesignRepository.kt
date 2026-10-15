@@ -200,11 +200,13 @@ class DesignRepository(
         // download.
         if (manifest.designs.any { wanted(it) && store.readBlob(it.sha256) == null }) {
           if (stored != null) {
-            val revokedKeys = manifest.designs.filter { it.revoked }.map { it.key }.toSet()
-            if (revokedKeys.isNotEmpty()) {
+            // A design's slot is its key and device match: revoking a device design leaves its
+            // key's generic design and device siblings alone.
+            val revoked = manifest.designs.filter { it.revoked }.map { it.key to it.device }.toSet()
+            if (revoked.isNotEmpty()) {
               val designs =
                 stored.manifest.designs.map {
-                  if (it.key in revokedKeys) it.copy(revoked = true) else it
+                  if ((it.key to it.device) in revoked) it.copy(revoked = true) else it
                 }
               store.writeManifest(stored.copy(manifest = stored.manifest.copy(designs = designs)))
             }
@@ -300,7 +302,9 @@ class DesignRepository(
   suspend fun resolve(key: DesignKey): DesignBlob? {
     val stored = store.readManifest()
     if (stored != null) {
-      val entry = stored.manifest.designs.firstOrNull { it.key == key && !it.revoked }
+      // The generic design for the key: device-specific ones resolve through resolveDeviceDesigns.
+      val entry =
+        stored.manifest.designs.firstOrNull { it.key == key && it.device == null && !it.revoked }
       if (entry != null) {
         val bytes = store.readBlob(entry.sha256)
         if (bytes != null && Sha256.hex(bytes) == entry.sha256) {
@@ -310,7 +314,9 @@ class DesignRepository(
         }
       }
       // A revoked entry also blocks the inbuilt copy of the same key.
-      if (stored.manifest.designs.any { it.key == key && it.revoked }) return null
+      if (stored.manifest.designs.any { it.key == key && it.device == null && it.revoked }) {
+        return null
+      }
     }
     return inbuilt.find(key)?.let { (entry, bytes) ->
       DesignBlob(entry, bytes, DesignSourceKind.Inbuilt)

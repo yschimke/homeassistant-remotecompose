@@ -287,11 +287,20 @@ class UserDesignsTest {
     assertEquals(HttpStatusCode.Created, published.status)
     val design = json.decodeFromString(UserDesign.serializer(), published.bodyAsText())
     assertEquals(
-      ee.schimke.ha.design.DeviceMatch(integration = "vaillant", model = "ecoTEC*"),
+      ee.schimke.ha.design.DeviceMatch(integration = "vaillant", model = "ecotec*"),
       design.entry.device,
     )
     // A generic design for the same key sits beside it rather than replacing it.
     f.publish("good", variant = "boiler")
+    assertEquals(2, UserDesignStore(f.storeDir).designs("octocat").size)
+    // The same match in other letter case replaces it rather than adding a third.
+    val recased =
+      f.client.post("/api/my/designs") {
+        header(HttpHeaders.Cookie, f.cookie)
+        contentType(ContentType.Application.Json)
+        setBody(body.replace("vaillant", "Vaillant").replace("ecoTEC*", "ECOTEC*"))
+      }
+    assertEquals(HttpStatusCode.Created, recased.status)
     assertEquals(2, UserDesignStore(f.storeDir).designs("octocat").size)
     val empty =
       f.client.post("/api/my/designs") {

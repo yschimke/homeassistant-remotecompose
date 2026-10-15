@@ -31,6 +31,15 @@ data class DeviceMatch(
   val specificity: Int
     get() = listOfNotNull(integration, manufacturer, model, translationKey).size
 
+  /**
+   * This match in its canonical form: trimmed and lowercase, blank fields unset. Matching ignores
+   * case, so two matches that differ only in case are the same match once normalized.
+   */
+  fun normalized(): DeviceMatch {
+    fun norm(value: String?) = value?.trim()?.lowercase()?.takeIf { it.isNotEmpty() }
+    return DeviceMatch(norm(integration), norm(manufacturer), norm(model), norm(translationKey))
+  }
+
   /** Whether [device] satisfies every field this sets. An empty match matches nothing. */
   fun matches(device: DeviceInfo): Boolean =
     specificity > 0 &&
