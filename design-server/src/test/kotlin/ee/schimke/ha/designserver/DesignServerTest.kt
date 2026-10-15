@@ -4,11 +4,14 @@ import ee.schimke.ha.client.design.BuiltDesign
 import ee.schimke.ha.client.design.DesignPublisher
 import ee.schimke.ha.design.DesignCatalog
 import ee.schimke.ha.design.DesignCatalogEntry
+import ee.schimke.ha.design.DesignEntry
 import ee.schimke.ha.design.DesignExample
 import ee.schimke.ha.design.DesignKey
 import ee.schimke.ha.design.DesignManifest
 import ee.schimke.ha.design.DesignPreviews
+import ee.schimke.ha.design.DesignQuery
 import ee.schimke.ha.design.DesignSurface
+import ee.schimke.ha.design.DesignTags
 import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.statement.bodyAsBytes
@@ -53,12 +56,19 @@ class DesignServerTest {
       theme = theme,
     )
 
-  /** Writes a library to a temp dir: [catalog] adds catalog.json and previews. */
-  private fun library(catalog: Boolean = true, serial: Long = 1): File {
+  /**
+   * Writes a library to a temp dir: [catalog] adds catalog.json and previews, [extra] more designs
+   * (with no catalog entry).
+   */
+  private fun library(
+    catalog: Boolean = true,
+    serial: Long = 1,
+    extra: List<BuiltDesign> = emptyList(),
+  ): File {
     val dir = Files.createTempDirectory("designs").toFile()
     val output =
       DesignPublisher.publish(
-        listOf(BuiltDesign(light, 1, template), BuiltDesign(dark, 1, template)),
+        listOf(BuiltDesign(light, 1, template), BuiltDesign(dark, 1, template)) + extra,
         serial = serial,
         nowEpochMs = 1_000,
       )
@@ -118,6 +128,26 @@ class DesignServerTest {
       val again = client.get("$API_BASE/manifest.json") { header(HttpHeaders.IfNoneMatch, etag) }
       assertEquals(HttpStatusCode.NotModified, again.status)
     }
+
+  @Test
+  fun manifestCarriesEveryTagAClientFiltersBy() {
+    val console = key(DesignKey.styledTheme("console", dark = true)).copy(cardType = "gauge")
+    serve(library(extra = listOf(BuiltDesign(console, 1, template)))) {
+      val manifest =
+        Json.decodeFromString(
+          DesignManifest.serializer(),
+          client.get("$API_BASE/manifest.json").bodyAsText(),
+        )
+      val tags = DesignTags.of(manifest.designs)
+      assertEquals(mapOf("classic" to 2, "console" to 1), tags.style)
+      assertEquals(mapOf("gauge" to 1, "tile" to 2), tags.cardType)
+      assertEquals(mapOf(DesignEntry.BUILTIN_AUTHOR to 3), tags.author)
+      assertEquals(
+        listOf(console),
+        manifest.designs.filter(DesignQuery(style = "Console")::matches).map { it.key },
+      )
+    }
+  }
 
   @Test
   fun servesBlobsImmutablyAndNothingElse() =

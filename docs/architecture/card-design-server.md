@@ -143,8 +143,10 @@ Deliberate spike limits, each owned by a milestone below:
 - **One known difference:** templates are captured with a placeholder `off` state, so an
   unavailable light or switch keeps its toggle chip (inactive colour) where the converter drew a
   plain grey icon. `<slot>.status` is bound, and moving that visual in-document is M1.
-- **Baked themes.** Designs are keyed `baked:<ThemeStyle>:<light|dark>`, so the matrix has one
-  template per theme. `theme.*` bindings (S2) replace this.
+- **Baked themes.** Classic designs are keyed `baked:<ThemeStyle>:<light|dark>`, so the matrix has
+  one template per theme. Every other card style brings its own palette, so its designs are keyed
+  `style:<card style>:<light|dark>`, once per mode the style has. `theme.*` bindings (S2) replace
+  the baked palettes.
 - **Still decided at capture:** the tile icon and accent colours, from the shape (domain,
   `device_class`, `icon`). They don't depend on the state for the templated domains; the on/off
   accent switches in-document from `is_on`. Binding them instead of keying on them is M1.
@@ -461,13 +463,23 @@ read-only, cacheable and content-addressed.
 ```
 GET /designs/v1/manifest.json
   → { schema: 1, serial, generatedAt, expiresAt, minClient, ttlSeconds,
-      designs: [ { key: DesignKey, sha256, bytes, slots, sizeRange,
+      designs: [ { key: DesignKey, sha256, bytes, slots, author, sizeRange,
                    catalogId, deprecated? } … ],
       variants: { "<surface>": ["default", "material", "modern"] },
       signature }
 
 GET /designs/v1/blobs/<sha256>.rc     (immutable, Cache-Control: max-age=31536000, immutable)
+
 ```
+
+**Tags.** A design is chosen by four tags: its **card type**, its **style** (the card style it is
+drawn in, `DesignKey.cardStyle`: `classic` for a design baked in an app palette), its **variant**
+and its **author** (`DesignEntry.author`: `terrazzo` for the library generated from the app's own
+converters, `github:<login>` for one published from UI Builder). Every manifest entry carries
+them, so the client chooses on its own copy of the manifest (`DesignQuery`, compared without case)
+and works out what a picker offers from it (`DesignTags`: every value with its count). There is no
+lookup endpoint: the server only ever sees a manifest fetch and the blobs a client's choice of tags
+matches, never which cards it renders.
 
 - One manifest lists every target. The client filters it to the
   surfaces it serves. The manifest is small, and a single file keeps
@@ -522,7 +534,8 @@ per request — but adds what a static host can't: verification, a template brow
   `card-designs/build/card-designs/`). Its source cards are the curated `LibraryFixtures` (one per
   card type and shape the parity tests cover) and every card in the bundled demo dashboards,
   nested cards included. Each card's generation properties give a key; each key is captured for
-  every theme style, light and dark (mobile-app surface, the one the client fetches). Output:
+  every theme style, light and dark, and for every other card style in each mode it has
+  (mobile-app surface, the one the client fetches). Output:
   `manifest.json` and `blobs/` (written by `DesignPublisher`, the client's format), plus
   `catalog.json` (`DesignCatalog`: an example card and preview paths per design) and `previews/`
   (each design rendered bound to its example's values, and as published with its placeholders).

@@ -228,9 +228,10 @@ nothing changes until a host provides another.
 **In the app**, Settings has a **Card style** picker (`CardStylePref`, beside the palette).
 Classic follows the app palette (`cardPalette` → `haThemeFor`), and every other style brings its
 own. Dashboard cards and their section surfaces take it. It is part of the card's cache key, and
-of its design key, as a fourth `baked:<palette>:<mode>:<style>` part, so an uber-styled card
-captures its template locally while classic keys still match the design server. Launcher widgets
-keep following the launcher's system colours.
+of its design key: Classic is `baked:<palette>:<mode>`, any other style `style:<id>:<mode>`, since
+the app palette doesn't change it. The design server captures every style, and its manifest tags
+each design with it ([card-design-server.md](card-design-server.md#server-api)).
+Launcher widgets keep following the launcher's system colours.
 
 In the builder, `ha-cards/uber-theme` is a container that takes a `theme` and `dark`.
 `HaCardMeasurementsTest` keeps the policy's values in step with `HaUberTheme.all`. The showcase

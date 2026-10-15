@@ -12,12 +12,16 @@ import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
 import kotlinx.serialization.json.putJsonObject
 
-/** A design's theme, split: baked themes are `baked:<style>:<light|dark>`. */
+/**
+ * A design's theme, split: baked themes are `baked:<style>:<light|dark>`, card styles with their
+ * own palette `style:<card style>:<light|dark>`, which the browser lists as that style.
+ */
 data class ThemeParts(val style: String, val mode: String?) {
   companion object {
     fun of(key: DesignKey): ThemeParts {
       val parts = key.theme.split(':')
-      return if (parts.size == 3 && parts[0] == "baked") ThemeParts(parts[1], parts[2])
+      return if (parts.size == 3 && (parts[0] == "baked" || parts[0] == "style"))
+        ThemeParts(parts[1], parts[2])
       else ThemeParts(key.theme, null)
     }
   }
