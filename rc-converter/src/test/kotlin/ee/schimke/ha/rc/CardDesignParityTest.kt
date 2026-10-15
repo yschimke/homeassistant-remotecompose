@@ -1211,10 +1211,19 @@ class CardDesignParityTest {
     )
 
   @Test
-  fun customCardPlaceholder() =
+  fun customCardRendersItsEntities() =
     assertParity(
       "custom-card",
       card("custom:mushroom-light-card") { put("entity", "light.kitchen") },
+      listStates,
+      dark = false,
+    )
+
+  @Test
+  fun customCardPlaceholder() =
+    assertParity(
+      "custom-card-placeholder",
+      card("custom:clock-weather-card") { put("locale", "en") },
       listStates,
       dark = false,
     )
