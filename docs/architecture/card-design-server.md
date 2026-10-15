@@ -52,9 +52,14 @@ sensor, history-graph, statistic, line statistics-graph, thermostat, humidifier,
 conditional and entity-filter cards, markdown, picture, picture-glance, logbook, calendar,
 to-do list, weather forecast, light, media control, map, picture-elements, bar statistics graphs, the Bambu Lab cards and the
 unsupported placeholder) — every built-in card type renders from a card design. The design comes from the server when one is
-cached for the card's key, and from the **local design library** otherwise. The library captures
-the same template from the app's own converters on first use and keeps it for the process, so with
-no server configured (the default) cards still take the design path, just with built-in designs.
+cached for the card's key, and from the **local design library** otherwise: the fallback for a
+key the server lacks, or before the first sync. The library captures the same template from the
+app's own converters on first use and keeps it on disk (`FileLocalDesignStore`, scoped to the
+installed build and the display's density and font scale), so a key is captured once per build
+rather than on every start, and never once the server covers it. With no server cards still take
+the design path, just with built-in designs. Settings lists how many of a session's designs came
+from the server and the card types and shapes the server lacked (`CardDesignSources`, never sent
+anywhere): the shapes the library should cover next.
 Cards that have no template shape render through their converter as before.
 
 The server overrides the library, and it is on by default: the "Card design server" setting
@@ -159,8 +164,8 @@ Deliberate spike limits, each owned by a milestone below:
   accent switches in-document from `is_on`. Binding them instead of keying on them is M1.
 - **No manifest signature** yet: the app accepts unsigned manifests (`allowUnsigned`). M4 adds
   signing, and the client already reserves `signature` and checks `serial` and expiry.
-- **The library is captured at runtime**, not shipped as assets. It covers the dashboard,
-  launcher widgets and Wear widgets. No UI Builder references (R1, R2, M2b), and no public
+- **The library is captured at runtime**, not shipped as assets, and kept on disk per build. It
+  covers the dashboard, launcher widgets and Wear widgets. No UI Builder references (R1, R2, M2b), and no public
   deployment of the server yet (M4).
 - **The server and its library exist** ([below](#the-server-design-server)):
   `:card-designs:generateCardDesigns` builds the mobile-app library, and `:design-server` hosts it

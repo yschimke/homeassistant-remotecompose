@@ -242,22 +242,39 @@ object CardDesignTemplates {
 }
 
 /**
- * The local design library: every template the app can build from its own converters, captured on
- * first use and kept for the process. It is the fallback under the design server: a card renders
- * from the server's design when one is cached for its key, and from this library otherwise. Both
- * are the same kind of document played the same way, so there is one rendering path.
+ * The local design library: every template the app can build from its own converters. It is the
+ * fallback under the design server: a card renders from the server's design when one is cached for
+ * its key, and from this library otherwise. Both are the same kind of document played the same way,
+ * so there is one rendering path.
  *
- * Capture runs on the calling thread, like any local card capture.
+ * A template is captured on first use, on the calling thread like any local card capture, and kept
+ * for the process. With a [store] it is also kept on disk, so a key is captured once per store
+ * rather than on every start: the host scopes the store to what a capture depends on (this build of
+ * the app, the display's density and font scale).
  */
 object CardDesignLibrary {
   private val templates = java.util.concurrent.ConcurrentHashMap<DesignKey, ByteArray>()
+
+  /** Where captured templates persist, or null to keep them for the process only. */
+  @Volatile var store: LocalDesignStore? = null
 
   fun template(
     context: Context,
     key: DesignKey,
     registry: CardRegistry = CardDesignTemplates.defaultTemplateRegistry,
   ): ByteArray =
-    templates.getOrPut(key) { CardDesignTemplates.capture(context, key, registry).bytes }
+    templates.getOrPut(key) {
+      val store = store
+      store?.read(key)
+        ?: CardDesignTemplates.capture(context, key, registry).bytes.also { store?.write(key, it) }
+    }
+}
+
+/** Persisted [CardDesignLibrary] templates. Reads and writes must not throw. */
+interface LocalDesignStore {
+  fun read(key: DesignKey): ByteArray?
+
+  fun write(key: DesignKey, bytes: ByteArray)
 }
 
 /** This card as [type]: its config's `type:` and its [CardConfig.type] both. */

@@ -8,17 +8,20 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import dev.zacsweers.metro.createGraphFactory
+import ee.schimke.ha.rc.CardDesignLibrary
 import ee.schimke.ha.rc.components.enableRemoteImageUrls
 import ee.schimke.ha.rc.enableRemoteComposeWrapContent
 import ee.schimke.terrazzo.core.di.TerrazzoGraph
 import ee.schimke.terrazzo.core.monitor.CardMonitor
 import ee.schimke.terrazzo.crash.CrashReporter
 import ee.schimke.terrazzo.dashboard.CardDesignSync
+import ee.schimke.terrazzo.dashboard.FileLocalDesignStore
 import ee.schimke.terrazzo.di.AppGraph
 import ee.schimke.terrazzo.image.HaImageStack
 import ee.schimke.terrazzo.monitor.createMonitor
 import ee.schimke.terrazzo.wearsync.MobileSyncStatsStore
 import ee.schimke.terrazzo.wearsync.MobileWearSyncManager
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.plus
@@ -84,6 +87,12 @@ class TerrazzoApplication : Application() {
       pinStore = graph.pinStore,
       slotsStore = graph.wearWidgetSlotsStore,
     )
+    // Designs the server lacks are captured from the app's own converters once and kept on disk
+    // (the library's store), instead of on every start; stale ones from an earlier build go.
+    FileLocalDesignStore.of(applicationContext).also { store ->
+      CardDesignLibrary.store = store
+      (ProcessLifecycleOwner.get().lifecycleScope + Dispatchers.IO).launch { store.prune() }
+    }
     // Keep the card design sync scheduled for the server (cancelled when its URL is blank), and
     // sync
     // once whenever the design choice changes — on start too, which costs nothing while the cache

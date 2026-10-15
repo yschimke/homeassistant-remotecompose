@@ -81,6 +81,34 @@ class CardDesignTemplatesEndToEndTest {
   }
 
   @Test
+  fun theLibraryReadsItsStoreBeforeCapturing_andWritesWhatItCaptures() {
+    val context = org.robolectric.RuntimeEnvironment.getApplication()
+    val stored = key(ThemeStyle.Material3, HaUberTheme.Braun, dark = false)
+    val captured = key(ThemeStyle.Material3, HaUberTheme.Braun, dark = true)
+    val written = HashMap<DesignKey, ByteArray>()
+    val marker = "a template from the store".encodeToByteArray()
+    CardDesignLibrary.store =
+      object : LocalDesignStore {
+        override fun read(key: DesignKey) = if (key == stored) marker else null
+
+        override fun write(key: DesignKey, bytes: ByteArray) {
+          written[key] = bytes
+        }
+      }
+    try {
+      assertContentEquals(marker, CardDesignLibrary.template(context, stored))
+      assertFalse(stored in written, "a stored template isn't captured again")
+      val bytes = CardDesignLibrary.template(context, captured)
+      assertContentEquals(bytes, written[captured])
+    } finally {
+      CardDesignLibrary.store = null
+    }
+  }
+
+  private fun key(style: ThemeStyle, cardStyle: HaUberTheme, dark: Boolean) =
+    assertNotNull(CardDesignTemplates.keyFor(card, snapshot, style, dark, cardStyle = cardStyle))
+
+  @Test
   fun templateIsValuesFree_publishedFetchedAndBound() = runTest {
     val context = org.robolectric.RuntimeEnvironment.getApplication()
     val key =
