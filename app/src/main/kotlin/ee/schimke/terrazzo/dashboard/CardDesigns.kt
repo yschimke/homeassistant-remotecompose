@@ -3,6 +3,7 @@ package ee.schimke.terrazzo.dashboard
 import android.content.Context
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -10,7 +11,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import ee.schimke.ha.client.design.DesignStore
 import ee.schimke.ha.client.design.StoredManifest
+import ee.schimke.ha.design.DesignEntry
 import ee.schimke.ha.design.DesignKey
+import ee.schimke.ha.design.DesignQuery
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.CardDesignLibrary
@@ -25,37 +28,86 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 
 /**
- * Designs from the card design server, cached on disk by [CardDesignSync], keyed by [DesignKey].
- * Empty while no server is configured. These only override: every templatable card renders from a
- * design either way, falling back to the local [CardDesignLibrary] for keys the server doesn't
- * cover. See [cardTemplateFor].
+ * Which card designs this app wants from the design server: those for the user's palette and card
+ * style, in either light or dark, of their preferred variant (and `default` to fall back on), by
+ * their preferred author (and the built-in library's). The sync downloads what [queries] match out
+ * of the whole manifest; the dashboard prefers designs in [prefer]'s order.
  */
-val LocalCardDesigns = staticCompositionLocalOf<Map<DesignKey, ByteArray>> { emptyMap() }
+data class CardDesignChoice(
+  val serverUrl: String,
+  val style: ThemeStyle,
+  val cardStyle: HaUberTheme,
+  val variant: String = DesignKey.DEFAULT_VARIANT,
+  /** Preferred author, or blank for the built-in designs only. */
+  val author: String = "",
+) {
+  val enabled: Boolean
+    get() = serverUrl.isNotBlank()
 
-/**
- * The server designs cached on disk for [serverUrl]. With an empty URL this returns an empty map
- * and does no work. It never touches the network: [CardDesignSync]'s nightly job fills the cache,
- * and a newly synced design shows the next time the dashboard is composed.
- */
-@Composable
-fun rememberCardDesigns(context: Context, serverUrl: String): Map<DesignKey, ByteArray> {
-  if (serverUrl.isBlank()) return emptyMap()
-  val repository = remember(serverUrl) { CardDesignSync.cachedRepository(context, serverUrl) }
-  var designs by remember(serverUrl) { mutableStateOf<Map<DesignKey, ByteArray>>(emptyMap()) }
-  LaunchedEffect(repository) { designs = repository.resolveAll() }
-  return designs
+  private val authors: List<String>
+    get() = listOf(author.trim(), DesignEntry.BUILTIN_AUTHOR).filter { it.isNotEmpty() }.distinct()
+
+  /** The designs to download: every theme this palette and style draw in, by variant and author. */
+  val queries: List<DesignQuery>
+    get() {
+      val themes =
+        listOf(false, true).map { CardDesignTemplates.bakedTheme(style, it, cardStyle) }.distinct()
+      val variants = listOf(variant, DesignKey.DEFAULT_VARIANT).distinct()
+      return themes.flatMap { theme ->
+        variants.flatMap { v ->
+          authors.map { DesignQuery(variant = v, author = it, theme = theme) }
+        }
+      }
+    }
+
+  /** Between designs for one key, the preferred author's first. */
+  val prefer: List<DesignQuery>
+    get() = authors.map { DesignQuery(author = it) }
 }
 
 /**
- * The design [card] renders with: the server's design for its key when one is cached, otherwise the
- * local library's. Null only when the card has no template shape (an unsupported type or config, or
- * an entity not loaded yet); those cards capture through their converter.
+ * Designs from the card design server, cached on disk by [CardDesignSync], keyed by [DesignKey],
+ * and the variant to prefer. Empty while no server is configured. Server designs override: every
+ * templatable card renders from a design either way, falling back to the local [CardDesignLibrary]
+ * for keys the server doesn't cover. See [cardTemplateFor].
+ */
+data class CardDesigns(
+  val byKey: Map<DesignKey, ByteArray> = emptyMap(),
+  val variant: String = DesignKey.DEFAULT_VARIANT,
+)
+
+val LocalCardDesigns = staticCompositionLocalOf { CardDesigns() }
+
+/**
+ * The server designs cached on disk for [choice]. With no server this is empty and does no work. It
+ * never touches the network: [CardDesignSync] fills the cache, and when a sync stores new designs
+ * ([CardDesignSync.revision]) they are read again, so they show without restarting the app.
+ */
+@Composable
+fun rememberCardDesigns(context: Context, choice: CardDesignChoice): CardDesigns {
+  if (!choice.enabled) return CardDesigns(variant = choice.variant)
+  val revision by CardDesignSync.revision.collectAsState()
+  val repository =
+    remember(choice.serverUrl) { CardDesignSync.cachedRepository(context, choice.serverUrl) }
+  var designs by
+    remember(repository, choice.prefer) { mutableStateOf<Map<DesignKey, ByteArray>>(emptyMap()) }
+  LaunchedEffect(repository, choice.prefer, revision) {
+    designs = repository.resolveAll(prefer = choice.prefer)
+  }
+  return CardDesigns(designs, choice.variant)
+}
+
+/**
+ * The design [card] renders with: the server's design for its key in the preferred variant, then in
+ * the `default` variant, otherwise the local library's. Null only when the card has no template
+ * shape (an unsupported type or config, or an entity not loaded yet); those cards capture through
+ * their converter.
  */
 fun cardTemplateFor(
   context: Context,
   card: CardConfig,
   snapshot: HaSnapshot,
-  serverDesigns: Map<DesignKey, ByteArray>,
+  designs: CardDesigns,
   style: ThemeStyle,
   dark: Boolean,
   registry: CardRegistry,
@@ -64,7 +116,10 @@ fun cardTemplateFor(
   val key =
     CardDesignTemplates.keyFor(card, snapshot, style, dark, registry, cardStyle = cardStyle)
       ?: return null
-  val bytes = serverDesigns[key] ?: CardDesignLibrary.template(context, key, registry)
+  val bytes =
+    designs.byKey[key.copy(variant = designs.variant)]
+      ?: designs.byKey[key]
+      ?: CardDesignLibrary.template(context, key, registry)
   return CardDesignTemplates.playback(card, bytes, registry)
 }
 

@@ -19,7 +19,7 @@ import ee.schimke.terrazzo.image.HaImageStack
 import ee.schimke.terrazzo.monitor.createMonitor
 import ee.schimke.terrazzo.wearsync.MobileSyncStatsStore
 import ee.schimke.terrazzo.wearsync.MobileWearSyncManager
-import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.plus
 
@@ -84,10 +84,14 @@ class TerrazzoApplication : Application() {
       pinStore = graph.pinStore,
       slotsStore = graph.wearWidgetSlotsStore,
     )
-    // Keep the experimental card design sync scheduled for a URL saved by an earlier version (or
-    // cancelled when it's blank). Unique work, so re-applying on every start is a no-op.
+    // Keep the card design sync scheduled for the server (cancelled when its URL is blank), and
+    // sync
+    // once whenever the design choice changes — on start too, which costs nothing while the cache
+    // already holds every design the choice needs. Unique work, so re-applying is cheap.
     (ProcessLifecycleOwner.get().lifecycleScope + graph.logStore.coroutineExceptionHandler).launch {
-      CardDesignSync.apply(applicationContext, graph.preferencesStore.designServerUrl.first())
+      CardDesignSync.choice(graph.preferencesStore).distinctUntilChanged().collect { choice ->
+        CardDesignSync.apply(applicationContext, choice.serverUrl, syncNow = true)
+      }
     }
   }
 

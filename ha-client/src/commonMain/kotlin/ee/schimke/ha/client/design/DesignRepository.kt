@@ -3,6 +3,7 @@ package ee.schimke.ha.client.design
 import ee.schimke.ha.design.DesignEntry
 import ee.schimke.ha.design.DesignKey
 import ee.schimke.ha.design.DesignManifest
+import ee.schimke.ha.design.DesignQuery
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
 import io.ktor.client.request.header
@@ -25,14 +26,21 @@ import kotlinx.serialization.json.Json
  *   exactly as before.
  * @property allowUnsigned accept manifests without a signature. Spike / debug only — manifest
  *   signing is not implemented yet.
+ * @property choice the designs this client keeps, by tag: a refresh downloads only the blobs of
+ *   manifest entries one of these matches. Empty keeps every design. The whole manifest is always
+ *   fetched, so the server learns nothing about the choice beyond the blobs it implies.
  */
 data class DesignServerConfig(
   val baseUrl: String? = null,
   val allowUnsigned: Boolean = false,
   val clientVersion: Int = 0,
+  val choice: List<DesignQuery> = emptyList(),
 ) {
   val enabled: Boolean
     get() = !baseUrl.isNullOrBlank()
+
+  /** Whether [entry] is one of the designs this client keeps. */
+  fun wants(entry: DesignEntry): Boolean = choice.isEmpty() || choice.any { it.matches(entry) }
 
   companion object {
     val Off: DesignServerConfig = DesignServerConfig()
@@ -107,6 +115,8 @@ fun interface InbuiltDesigns {
 enum class RefreshResult {
   Disabled,
   NotDue,
+  /** The manifest wasn't due, but blobs the [DesignServerConfig.choice] needs were downloaded. */
+  Filled,
   Updated,
   NotModified,
   Rejected,
@@ -135,16 +145,21 @@ class DesignRepository(
   private val json = Json { ignoreUnknownKeys = true }
 
   /**
-   * Fetch the manifest if it is past its TTL (or [force]), then download any blobs it lists that
-   * aren't cached yet. Never throws for network or server trouble; the previous cache stays.
+   * Fetch the manifest if it is past its TTL (or [force]), then download the blobs of the designs
+   * [DesignServerConfig.choice] keeps that aren't cached yet. While the manifest isn't due, only
+   * fill in chosen blobs the cache lacks (a choice that changed since the last refresh). Never
+   * throws for network or server trouble; the previous cache stays.
    */
   suspend fun refresh(force: Boolean = false): RefreshResult = refreshLock.withLock {
     val baseUrl = config.baseUrl?.trimEnd('/')
     if (!config.enabled || baseUrl == null || httpClient == null) return RefreshResult.Disabled
     val now = clock()
     val stored = store.readManifest()
-    if (!force && stored != null && !isPastTtl(stored, now)) return RefreshResult.NotDue
     if (!force && inBackoff(now)) return RefreshResult.NotDue
+    if (!force && stored != null && !isPastTtl(stored, now)) {
+      return if (fetchMissing(baseUrl, stored.manifest) > 0) RefreshResult.Filled
+      else RefreshResult.NotDue
+    }
 
     val result = runCatching { fetchManifest(baseUrl, stored, now) }.getOrElse { Fetch.Failed }
     when (result) {
@@ -170,15 +185,12 @@ class DesignRepository(
           recordFailure(now)
           return RefreshResult.Rejected
         }
-        for (entry in manifest.designs) {
-          if (entry.revoked || store.readBlob(entry.sha256) != null) continue
-          val bytes = runCatching { fetchBlob(baseUrl, entry) }.getOrNull() ?: continue
-          store.writeBlob(entry.sha256, bytes)
-        }
-        // Only switch to the new manifest once every design it lists is on disk. Otherwise keep
-        // the previous one, whose verified blobs still serve as the stale fallback — but apply the
-        // new manifest's revocations to it, so a kill switch never waits on an unrelated download.
-        if (manifest.designs.any { !it.revoked && store.readBlob(it.sha256) == null }) {
+        fetchMissing(baseUrl, manifest)
+        // Only switch to the new manifest once every chosen design it lists is on disk. Otherwise
+        // keep the previous one, whose verified blobs still serve as the stale fallback — but apply
+        // the new manifest's revocations to it, so a kill switch never waits on an unrelated
+        // download.
+        if (manifest.designs.any { wanted(it) && store.readBlob(it.sha256) == null }) {
           if (stored != null) {
             val revokedKeys = manifest.designs.filter { it.revoked }.map { it.key }.toSet()
             if (revokedKeys.isNotEmpty()) {
@@ -209,18 +221,41 @@ class DesignRepository(
   /**
    * Every cached remote design that is not revoked and still verifies, by key. Hosts that layer
    * their own fallback underneath (a local design library) load this once and look keys up.
+   *
+   * Two authors can publish a design for the same key; [prefer] picks between them, the entry the
+   * earliest query in it matches winning, then manifest order. With no preference the first cached
+   * entry for a key wins.
    */
-  suspend fun resolveAll(): Map<DesignKey, ByteArray> {
+  suspend fun resolveAll(prefer: List<DesignQuery> = emptyList()): Map<DesignKey, ByteArray> {
     val stored = store.readManifest() ?: return emptyMap()
-    return stored.manifest.designs
-      .filter { !it.revoked }
-      .mapNotNull { entry ->
-        store
-          .readBlob(entry.sha256)
-          ?.takeIf { Sha256.hex(it) == entry.sha256 }
-          ?.let { entry.key to it }
-      }
-      .toMap()
+    fun rank(entry: DesignEntry): Int =
+      prefer.indexOfFirst { it.matches(entry) }.let { if (it < 0) prefer.size else it }
+    val resolved = LinkedHashMap<DesignKey, Pair<Int, ByteArray>>()
+    for (entry in stored.manifest.designs) {
+      if (entry.revoked) continue
+      val rank = rank(entry)
+      val current = resolved[entry.key]
+      if (current != null && current.first <= rank) continue
+      val bytes =
+        store.readBlob(entry.sha256)?.takeIf { Sha256.hex(it) == entry.sha256 } ?: continue
+      resolved[entry.key] = rank to bytes
+    }
+    return resolved.mapValues { it.value.second }
+  }
+
+  /** Whether [entry] is a live design this client keeps. */
+  private fun wanted(entry: DesignEntry): Boolean = !entry.revoked && config.wants(entry)
+
+  /** Downloads the chosen blobs of [manifest] the cache lacks; returns how many it stored. */
+  private suspend fun fetchMissing(baseUrl: String, manifest: DesignManifest): Int {
+    var stored = 0
+    for (entry in manifest.designs.filter(::wanted).distinctBy { it.sha256 }) {
+      if (store.readBlob(entry.sha256) != null) continue
+      val bytes = runCatching { fetchBlob(baseUrl, entry) }.getOrNull() ?: continue
+      store.writeBlob(entry.sha256, bytes)
+      stored++
+    }
+    return stored
   }
 
   /** Best design for [key], or null to fall through to the local converter. */

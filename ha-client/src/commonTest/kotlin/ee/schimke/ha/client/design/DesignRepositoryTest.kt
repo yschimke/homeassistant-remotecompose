@@ -3,6 +3,7 @@ package ee.schimke.ha.client.design
 import ee.schimke.ha.design.DesignEntry
 import ee.schimke.ha.design.DesignKey
 import ee.schimke.ha.design.DesignManifest
+import ee.schimke.ha.design.DesignQuery
 import ee.schimke.ha.design.DesignSurface
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
@@ -218,5 +219,81 @@ class DesignRepositoryTest {
         now
       }
     assertEquals(DesignSourceKind.Inbuilt, repository.resolve(key)?.source)
+  }
+
+  private val consoleKey = key.copy(theme = DesignKey.styledTheme("console", dark = true))
+  private val consoleTemplate = "console rc document".encodeToByteArray()
+
+  private fun twoStyles() =
+    published(
+      designs = listOf(design(), BuiltDesign(consoleKey, slots = 1, bytes = consoleTemplate))
+    )
+
+  @Test
+  fun aChoiceDownloadsOnlyTheDesignsItMatches() = runTest {
+    val host = FakeHost(twoStyles().files)
+    val store = InMemoryDesignStore()
+    val console =
+      DesignRepository(
+        config.copy(choice = listOf(DesignQuery(style = "console"))),
+        store,
+        host.client,
+      ) {
+        now
+      }
+    assertEquals(RefreshResult.Updated, console.refresh())
+    assertEquals(setOf(consoleKey), console.resolveAll().keys)
+    assertNull(host.hits["blobs/${Sha256.hex(template)}.rc"])
+    // The manifest is whole, so the classic design is still listed, just not downloaded.
+    assertEquals(2, assertNotNull(store.readManifest()).manifest.designs.size)
+  }
+
+  @Test
+  fun aChangedChoiceFillsInItsDesignsWithoutRefetchingTheManifest() = runTest {
+    val host = FakeHost(twoStyles().files)
+    val store = InMemoryDesignStore()
+    fun repo(style: String) =
+      DesignRepository(
+        config.copy(choice = listOf(DesignQuery(style = style))),
+        store,
+        host.client,
+      ) {
+        now
+      }
+    repo("console").refresh()
+    assertEquals(RefreshResult.Filled, repo(DesignKey.CLASSIC_STYLE).refresh())
+    assertEquals(RefreshResult.NotDue, repo(DesignKey.CLASSIC_STYLE).refresh())
+    assertEquals(1, host.hits["manifest.json"])
+    assertEquals(setOf(key, consoleKey), repo(DesignKey.CLASSIC_STYLE).resolveAll().keys)
+  }
+
+  @Test
+  fun resolveAllPrefersTheChosenAuthorForAKey() = runTest {
+    val theirs = "their rc document".encodeToByteArray()
+    val store = InMemoryDesignStore()
+    store.writeBlob(Sha256.hex(template), template)
+    store.writeBlob(Sha256.hex(theirs), theirs)
+    val entries =
+      listOf(
+        DesignEntry(key, Sha256.hex(template), template.size, slots = 1),
+        DesignEntry(key, Sha256.hex(theirs), theirs.size, slots = 1, author = "github:someone"),
+      )
+    store.writeManifest(
+      StoredManifest(
+        DesignManifest(
+          serial = 1,
+          generatedAtEpochMs = now,
+          expiresAtEpochMs = now + 1_000_000,
+          designs = entries,
+        ),
+        fetchedAtEpochMs = now,
+      )
+    )
+    val repository = repo(null, store)
+    assertContentEquals(template, repository.resolveAll()[key])
+    assertContentEquals(
+      theirs,
+      repository.resolveAll(prefer = listOf(DesignQuery(author = "github:someone")))[key],
+    )
   }
 }
