@@ -10,6 +10,7 @@ import androidx.compose.remote.creation.profile.Profile
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
+import androidx.wear.compose.material3.ColorScheme as WearColorScheme
 import androidx.wear.compose.remote.material3.RemoteColorScheme
 import androidx.wear.compose.remote.material3.RemoteMaterialTheme
 
@@ -331,6 +332,39 @@ fun haThemeFor(style: ThemeStyle, darkTheme: Boolean): HaTheme {
 @Composable
 fun ProvideHaTheme(theme: HaTheme, content: @Composable () -> Unit) {
   ProvideRemoteHaTheme(theme.asRemote(), content)
+}
+
+/**
+ * [this] palette as a Wear Material 3 colour scheme, each HA role in the slot [asHaTheme] reads it
+ * from. Roles HA has no counterpart for keep Wear's defaults, as they do under [ProvideHaTheme].
+ */
+fun HaTheme.asWearColorScheme(): WearColorScheme =
+  WearColorScheme(
+    surfaceContainerHigh = cardBackground,
+    background = dashboardBackground,
+    surfaceContainer = sectionBackground,
+    onSurface = primaryText,
+    onSurfaceVariant = secondaryText,
+    tertiary = linkText,
+    outlineVariant = divider,
+    primary = placeholderAccent,
+    primaryContainer = placeholderBackground,
+    secondary = unknownAccent,
+  )
+
+/**
+ * [ProvideHaTheme], but with every role written into the document as Remote Material 3's **named**
+ * `WearM3.<role>` colour, [theme]'s value as its default, rather than folded into constants.
+ *
+ * The pixels are the same; what changes is that a player can re-theme the captured document by
+ * setting those names, with no recapture. That is how the preview server applies a declared theme
+ * to a replayed catalog sticker (`rc.WearM3.<role>=color:…`), and how a host could recolour a card
+ * at runtime. Only colours a card takes from the theme follow it: a card style with its own fixed
+ * colours (LCD, Nixie, Braun) keeps them.
+ */
+@Composable
+fun ProvideNamedHaTheme(theme: HaTheme, content: @Composable () -> Unit) {
+  RemoteMaterialTheme(colorScheme = RemoteColorScheme(theme.asWearColorScheme()), content = content)
 }
 
 @Composable
