@@ -892,6 +892,7 @@ internal fun SettingsScreen(
       initial = PreferencesStore.DEFAULT_DESIGN_VARIANT
     )
   val designAuthor by graph.preferencesStore.designAuthor.collectAsState(initial = "")
+  val designToken by graph.preferencesStore.designToken.collectAsState(initial = "")
   val permanentWriteEnabled by
     graph.preferencesStore.permanentWriteMode.collectAsState(initial = false)
 
@@ -1147,9 +1148,11 @@ internal fun SettingsScreen(
         url = designServerUrl,
         variant = designVariant,
         author = designAuthor,
+        token = designToken,
         onUrlChange = { url -> scope.launch { graph.preferencesStore.setDesignServerUrl(url) } },
         onVariantChange = { scope.launch { graph.preferencesStore.setDesignVariant(it) } },
         onAuthorChange = { scope.launch { graph.preferencesStore.setDesignAuthor(it) } },
+        onTokenChange = { scope.launch { graph.preferencesStore.setDesignToken(it) } },
       )
 
       Row(
@@ -1315,9 +1318,11 @@ private fun DesignServerSetting(
   url: String,
   variant: String,
   author: String,
+  token: String,
   onUrlChange: (String) -> Unit,
   onVariantChange: (String) -> Unit,
   onAuthorChange: (String) -> Unit,
+  onTokenChange: (String) -> Unit,
 ) {
   val context = LocalContext.current
   var draft by remember(url) { mutableStateOf(url) }
@@ -1350,7 +1355,10 @@ private fun DesignServerSetting(
           if (!it.isFocused && draft != url) onUrlChange(draft)
         },
     )
-    if (url.isNotBlank()) DesignSourcesSummary()
+    if (url.isNotBlank()) {
+      DesignTokenField(url, token, onTokenChange)
+      DesignSourcesSummary()
+    }
     tags?.let { tags ->
       DesignTagPicker(
         title = "Variant",
@@ -1372,6 +1380,34 @@ private fun DesignServerSetting(
       )
     }
   }
+}
+
+/**
+ * The design server's device token: with it, the manifest also lists the designs this person
+ * published privately. Made on the server's `/my` page while signed in with GitHub.
+ */
+@Composable
+private fun DesignTokenField(url: String, token: String, onTokenChange: (String) -> Unit) {
+  var draft by remember(token) { mutableStateOf(token) }
+  val myPage = url.trimEnd('/').removeSuffix("/designs/v1") + "/my"
+  androidx.compose.material3.OutlinedTextField(
+    value = draft,
+    onValueChange = { draft = it },
+    singleLine = true,
+    label = { Text("Device token") },
+    supportingText = { Text("Shows your private designs. Create one at $myPage") },
+    visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
+    keyboardOptions =
+      androidx.compose.foundation.text.KeyboardOptions(
+        imeAction = androidx.compose.ui.text.input.ImeAction.Done
+      ),
+    keyboardActions =
+      androidx.compose.foundation.text.KeyboardActions(onDone = { onTokenChange(draft) }),
+    modifier =
+      Modifier.fillMaxWidth().onFocusChanged {
+        if (!it.isFocused && draft != token) onTokenChange(draft)
+      },
+  )
 }
 
 /**

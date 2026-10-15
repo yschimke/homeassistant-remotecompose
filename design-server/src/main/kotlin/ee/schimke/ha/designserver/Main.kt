@@ -21,6 +21,8 @@ import java.io.File
  *   ([GithubAuth]); without it, a browser that opened the edit link the server prints.
  * - The front page's links: `DESIGNER_URL`, `CATALOG_URL`, `STORE_URL`
  *   ([SiteConfig.fromEnvironment]).
+ * - `USER_DESIGNS_DIR`: where designs people publish are kept ([UserDesignStore]); defaults to
+ *   `user-designs` under `UI_BUILDER_STATE_DIR` when that is set. Publishing needs GitHub sign-in.
  */
 fun main(args: Array<String>) {
   val dir = File(args.firstOrNull() ?: System.getenv("DESIGN_LIBRARY") ?: "card-designs")
@@ -48,9 +50,16 @@ fun main(args: Array<String>) {
       )
       UiBuilderIntegration(config, UiBuilderClient(config, http))
     }
+  val userDesigns =
+    (System.getenv("USER_DESIGNS_DIR")?.takeIf { it.isNotBlank() }?.let(::File)
+        ?: System.getenv("UI_BUILDER_STATE_DIR")
+          ?.takeIf { it.isNotBlank() }
+          ?.let { File(it, "user-designs") })
+      ?.let(::UserDesignStore)
+  if (userDesigns != null) println("user designs: revision ${userDesigns.revision}")
   embeddedServer(CIO, port = port, host = host) {
       install(CallLogging)
-      designServer(holder, uiBuilder, github, SiteConfig.fromEnvironment())
+      designServer(holder, uiBuilder, github, SiteConfig.fromEnvironment(), userDesigns)
     }
     .start(wait = true)
 }

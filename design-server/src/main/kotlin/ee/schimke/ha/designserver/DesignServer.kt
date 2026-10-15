@@ -91,6 +91,8 @@ fun Application.designServer(
   uiBuilder: UiBuilderIntegration? = null,
   github: GithubAuth? = null,
   site: SiteConfig = SiteConfig(),
+  /** Designs people published; with GitHub sign-in it also serves `/my` and `/api/my/...`. */
+  userDesigns: UserDesignStore? = null,
 ) {
   install(DefaultHeaders)
   install(AutoHeadResponse)
@@ -102,26 +104,36 @@ fun Application.designServer(
   }
   routing {
     cardStudioRoutes(holder, uiBuilder, github)
+    if (userDesigns != null && github != null) {
+      userDesignRoutes(holder, userDesigns, uiBuilder, github)
+    }
     get("/healthz") { call.respondText("ok") }
 
     get("$API_BASE/manifest.json") {
-      val library = holder.current()
-      call.response.header(HttpHeaders.ETag, library.manifestEtag)
+      // A device token adds its owner's private designs; everyone gets the shared ones.
+      val login = github?.user(call)
+      val served = holder.current().manifestFor(userDesigns, login)
+      call.response.header(HttpHeaders.ETag, served.etag)
       call.allowAnyOrigin()
+      call.response.header(HttpHeaders.Vary, HttpHeaders.Authorization)
       // Clients revalidate on every refresh; a 304 costs nothing.
-      call.response.header(HttpHeaders.CacheControl, "no-cache")
-      if (
-        call.request.header(HttpHeaders.IfNoneMatch)?.let { library.manifestEtag in it } == true
-      ) {
+      call.response.header(
+        HttpHeaders.CacheControl,
+        if (login != null) "private, no-cache" else "no-cache",
+      )
+      if (call.request.header(HttpHeaders.IfNoneMatch)?.let { served.etag in it } == true) {
         call.respondBytes(ByteArray(0), status = HttpStatusCode.NotModified)
       } else {
-        call.respondBytes(library.manifestBytes, ContentType.Application.Json)
+        call.respondBytes(served.bytes, ContentType.Application.Json)
       }
     }
 
     get("$API_BASE/blobs/{name}") {
       val sha = BLOB_NAME.matchEntire(call.parameters["name"].orEmpty())?.groupValues?.get(1)
-      val bytes = sha?.let { holder.current().blob(it) } ?: return@get call.notFound()
+      // Blobs are content-addressed: a published design's hash is as good as a key to it.
+      val bytes =
+        sha?.let { holder.current().blob(it) ?: userDesigns?.blob(it) }
+          ?: return@get call.notFound()
       call.response.header(HttpHeaders.ETag, "\"$sha\"")
       call.allowAnyOrigin()
       call.response.header(HttpHeaders.CacheControl, "public, max-age=31536000, immutable")
@@ -389,14 +401,14 @@ private val EMBED_FILES =
 private fun embedResource(path: String): ByteArray? =
   LibraryHolder::class.java.classLoader.getResourceAsStream(path)?.use { it.readBytes() }
 
-private fun ApplicationCall.allowAnyOrigin() {
+internal fun ApplicationCall.allowAnyOrigin() {
   response.header(HttpHeaders.AccessControlAllowOrigin, "*")
 }
 
-private val BLOB_NAME = Regex("([0-9a-f]{64})\\.rc")
+internal val BLOB_NAME = Regex("([0-9a-f]{64})\\.rc")
 private val PREVIEW_NAME = Regex("[0-9a-f]{16}-(example|template)\\.png")
 
 private val json = Json { prettyPrint = true }
 
-private suspend fun ApplicationCall.notFound() =
+internal suspend fun ApplicationCall.notFound() =
   respondText("not found", status = HttpStatusCode.NotFound)

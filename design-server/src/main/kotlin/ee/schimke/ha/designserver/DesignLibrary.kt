@@ -121,7 +121,7 @@ private constructor(
   val totalBlobBytes: Long = blobs.values.sumOf { it.bytes.toLong() }
 
   companion object {
-    private const val USER_PREFIX = "USER:"
+    internal const val USER_PREFIX = "USER:"
 
     private val json = Json { ignoreUnknownKeys = true }
 

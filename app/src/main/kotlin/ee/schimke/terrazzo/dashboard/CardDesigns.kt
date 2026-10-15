@@ -45,6 +45,10 @@ data class CardDesignChoice(
   val author: String = "",
   /** The user's per-card and per-card-type departures, whose designs are fetched too. */
   val overrides: CardDesignOverrides = CardDesignOverrides(),
+  /**
+   * The server's device token, so the manifest lists the user's private designs; blank for none.
+   */
+  val token: String = "",
 ) {
   val enabled: Boolean
     get() = serverUrl.isNotBlank()

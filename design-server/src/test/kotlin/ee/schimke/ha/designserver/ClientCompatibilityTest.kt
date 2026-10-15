@@ -15,6 +15,7 @@ import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 
 /** The app's own design client against the server: what a phone pointed at it does. */
 class ClientCompatibilityTest {
@@ -50,5 +51,56 @@ class ClientCompatibilityTest {
     assertContentEquals(template, assertNotNull(repository.resolve(key)).bytes)
     // The second refresh revalidates the manifest by ETag.
     assertEquals(RefreshResult.NotModified, repository.refresh(force = true))
+  }
+
+  @Test
+  fun aDeviceTokenBringsThePersonsPrivateDesignsToTheApp() = testApplication {
+    val template = javaClass.getResource("/tile-light.rc")!!.readBytes()
+    val key =
+      DesignKey(
+        cardType = "tile",
+        surface = DesignSurface.MobileApp,
+        rcApiLevel = 8,
+        shape = "domain=light",
+        theme = "baked:Material3:light",
+      )
+    val dir = Files.createTempDirectory("designs").toFile()
+    val now = System.currentTimeMillis()
+    DesignPublisher.publish(listOf(BuiltDesign(key, 1, template)), serial = 1, nowEpochMs = now)
+      .files
+      .forEach { (path, bytes) ->
+        File(dir, path).also { it.parentFile.mkdirs() }.writeBytes(bytes)
+      }
+    val store = UserDesignStore(Files.createTempDirectory("user-designs").toFile())
+    val garage = key.copy(variant = "garage")
+    store.publish("octocat", garage, template, slots = 1, sourceDesignId = "d", revision = 1)
+    val github =
+      GithubAuth(
+        clientId = "id",
+        clientSecret = "secret",
+        publicUrl = "https://ha.example",
+        sessionSecret = "session-secret",
+        http = client,
+      )
+    application { designServer(LibraryHolder(dir), github = github, userDesigns = store) }
+
+    fun repository(token: String) =
+      DesignRepository(
+        DesignServerConfig(
+          baseUrl = "http://localhost$API_BASE",
+          allowUnsigned = true,
+          token = token,
+        ),
+        InMemoryDesignStore(),
+        client,
+        clock = { now },
+      )
+    val anonymous = repository("")
+    assertEquals(RefreshResult.Updated, anonymous.refresh(force = true))
+    assertNull(anonymous.resolve(garage))
+
+    val own = repository(github.deviceToken("octocat"))
+    assertEquals(RefreshResult.Updated, own.refresh(force = true))
+    assertContentEquals(template, assertNotNull(own.resolve(garage)).bytes)
   }
 }

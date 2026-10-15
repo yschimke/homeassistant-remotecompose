@@ -65,6 +65,7 @@ object CardDesignSync {
       .combine(CardDesignOverrideStore.of(context).overrides) { choice, overrides ->
         choice.copy(overrides = overrides)
       }
+      .combine(prefs.designToken) { choice, token -> choice.copy(token = token) }
 
   /** Serializes refreshes across worker instances (WorkManager runs workers in-process). */
   internal val refreshLock = Mutex()
@@ -120,6 +121,7 @@ object CardDesignSync {
           baseUrl = choice.serverUrl,
           allowUnsigned = true,
           choice = choice.queries,
+          token = choice.token,
         ),
       store = FileDesignStore(storeDir(context, choice.serverUrl)),
       clock = System::currentTimeMillis,

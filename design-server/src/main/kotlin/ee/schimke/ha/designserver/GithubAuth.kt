@@ -65,6 +65,29 @@ class GithubAuth(
     return login.takeIf { expiry > clock() && it.isNotEmpty() && allowed(it) }
   }
 
+  /**
+   * A token the app sends as `Authorization: Bearer` to read [login]'s private designs: signed like
+   * the session cookie, so it needs no storage, and good for a year.
+   */
+  fun deviceToken(login: String): String = sign("$DEVICE|$login|${clock() + DEVICE_TTL_MS}")
+
+  /** The login a [deviceToken] was minted for, or null when forged, expired or not allowed. */
+  fun deviceLogin(token: String): String? {
+    val parts = verify(token)?.split('|') ?: return null
+    if (parts.size != 3 || parts[0] != DEVICE) return null
+    val expiry = parts[2].toLongOrNull() ?: return null
+    return parts[1].takeIf { expiry > clock() && it.isNotEmpty() && allowed(it) }
+  }
+
+  /** The signed-in browser's login, or else the login of the request's device token. */
+  fun user(call: ApplicationCall): String? =
+    login(call)
+      ?: call.request.headers[HttpHeaders.Authorization]
+        ?.takeIf { it.startsWith("Bearer ", ignoreCase = true) }
+        ?.substring(7)
+        ?.trim()
+        ?.let(::deviceLogin)
+
   /** Where to send a browser to sign in, returning to [returnPath] afterwards. */
   fun signInPath(returnPath: String): String =
     "$START_PATH?return=${URLEncoder.encode(safeReturn(returnPath), Charsets.UTF_8)}"
@@ -205,6 +228,8 @@ class GithubAuth(
     private const val SESSION_COOKIE = "design-server-session"
     private const val STATE_COOKIE = "design-server-oauth-state"
     private const val SESSION_TTL_MS = 30L * 24 * 60 * 60 * 1000
+    private const val DEVICE = "device"
+    private const val DEVICE_TTL_MS = 365L * 24 * 60 * 60 * 1000
 
     /** Only a same-site path: never an absolute URL a sign-in could be bounced to. */
     fun safeReturn(path: String?): String =
