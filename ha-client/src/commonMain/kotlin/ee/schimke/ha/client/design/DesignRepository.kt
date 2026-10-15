@@ -170,7 +170,9 @@ class DesignRepository(
       Fetch.NotModified -> {
         stored?.let { store.writeManifest(it.copy(fetchedAtEpochMs = now)) }
         recordSuccess()
-        RefreshResult.NotModified
+        // The manifest is unchanged, but the choice may not be: fill in what it now needs.
+        val filled = stored?.let { fetchMissing(baseUrl, it.manifest) } ?: 0
+        if (filled > 0) RefreshResult.Filled else RefreshResult.NotModified
       }
       is Fetch.Body -> {
         val manifest = result.manifest
@@ -222,18 +224,20 @@ class DesignRepository(
    * Every cached remote design that is not revoked and still verifies, by key. Hosts that layer
    * their own fallback underneath (a local design library) load this once and look keys up.
    *
-   * Two authors can publish a design for the same key; [prefer] picks between them, the entry the
-   * earliest query in it matches winning, then manifest order. With no preference the first cached
-   * entry for a key wins.
+   * [prefer] limits and orders them: only entries one of its queries matches resolve (blobs a
+   * previous choice cached stay out), and between two authors' designs for one key the entry the
+   * earliest query matches wins, then manifest order. With no preference every cached entry
+   * resolves and the first for a key wins.
    */
   suspend fun resolveAll(prefer: List<DesignQuery> = emptyList()): Map<DesignKey, ByteArray> {
     val stored = store.readManifest() ?: return emptyMap()
     fun rank(entry: DesignEntry): Int =
-      prefer.indexOfFirst { it.matches(entry) }.let { if (it < 0) prefer.size else it }
+      if (prefer.isEmpty()) 0 else prefer.indexOfFirst { it.matches(entry) }
     val resolved = LinkedHashMap<DesignKey, Pair<Int, ByteArray>>()
     for (entry in stored.manifest.designs) {
       if (entry.revoked) continue
       val rank = rank(entry)
+      if (rank < 0) continue
       val current = resolved[entry.key]
       if (current != null && current.first <= rank) continue
       val bytes =

@@ -293,7 +293,54 @@ class DesignRepositoryTest {
     assertContentEquals(template, repository.resolveAll()[key])
     assertContentEquals(
       theirs,
-      repository.resolveAll(prefer = listOf(DesignQuery(author = "github:someone")))[key],
+      repository
+        .resolveAll(
+          prefer = listOf(DesignQuery(author = "github:someone"), DesignQuery(author = "terrazzo"))
+        )[key],
     )
+    // An author outside the choice never resolves, though its blob is still cached.
+    assertContentEquals(
+      template,
+      repository.resolveAll(prefer = listOf(DesignQuery(author = "terrazzo")))[key],
+    )
+    assertEquals(
+      emptyMap(),
+      repository.resolveAll(prefer = listOf(DesignQuery(author = "github:other"))),
+    )
+  }
+
+  @Test
+  fun anUnchangedManifestPastItsTtlStillFillsInTheChoice() = runTest {
+    val host = FakeHost(twoStyles().files)
+    val store = InMemoryDesignStore()
+    fun repo(style: String) =
+      DesignRepository(
+        config.copy(choice = listOf(DesignQuery(style = style))),
+        store,
+        host.client,
+      ) {
+        now
+      }
+    repo("console").refresh()
+    // Past the TTL the manifest is revalidated; the host answers 304 for the same ETag.
+    now += DesignManifest.DEFAULT_TTL_SECONDS * 1000 + 1
+    val notModified =
+      HttpClient(
+        MockEngine { request ->
+          val path = request.url.encodedPath.removePrefix("/v1/")
+          if (path == "manifest.json") respond(ByteArray(0), HttpStatusCode.NotModified)
+          else respond(host.files.getValue(path), HttpStatusCode.OK)
+        }
+      )
+    val classic =
+      DesignRepository(
+        config.copy(choice = listOf(DesignQuery(style = DesignKey.CLASSIC_STYLE))),
+        store,
+        notModified,
+      ) {
+        now
+      }
+    assertEquals(RefreshResult.Filled, classic.refresh())
+    assertEquals(setOf(key, consoleKey), classic.resolveAll().keys)
   }
 }
