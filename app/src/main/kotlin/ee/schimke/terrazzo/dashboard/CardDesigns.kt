@@ -76,6 +76,11 @@ data class CardDesignChoice(
 data class CardDesigns(
   val byKey: Map<DesignKey, ByteArray> = emptyMap(),
   val variant: String = DesignKey.DEFAULT_VARIANT,
+  /**
+   * The server choice [byKey] was read for, once its cache has loaded; null with no server or
+   * before the first read. Only then does a missing key mean the server lacks it.
+   */
+  val loadedFor: CardDesignChoice? = null,
 )
 
 val LocalCardDesigns = staticCompositionLocalOf { CardDesigns() }
@@ -91,12 +96,11 @@ fun rememberCardDesigns(context: Context, choice: CardDesignChoice): CardDesigns
   val revision by CardDesignSync.revision.collectAsState()
   val repository =
     remember(choice.serverUrl) { CardDesignSync.cachedRepository(context, choice.serverUrl) }
-  var designs by
-    remember(repository, choice.prefer) { mutableStateOf<Map<DesignKey, ByteArray>>(emptyMap()) }
-  LaunchedEffect(repository, choice.prefer, revision) {
-    designs = repository.resolveAll(prefer = choice.prefer)
+  var designs by remember(repository, choice) { mutableStateOf<CardDesigns?>(null) }
+  LaunchedEffect(repository, choice, revision) {
+    designs = CardDesigns(repository.resolveAll(prefer = choice.prefer), choice.variant, choice)
   }
-  return CardDesigns(designs, choice.variant)
+  return designs ?: CardDesigns(variant = choice.variant)
 }
 
 /**
@@ -119,7 +123,7 @@ fun cardTemplateFor(
     CardDesignTemplates.keyFor(card, snapshot, style, dark, registry, cardStyle = cardStyle)
       ?: return null
   val server = designs.byKey[key.copy(variant = designs.variant)] ?: designs.byKey[key]
-  CardDesignSources.record(key, fromServer = server != null)
+  designs.loadedFor?.let { CardDesignSources.record(it, key, fromServer = server != null) }
   val bytes = server ?: CardDesignLibrary.template(context, key, registry)
   return CardDesignTemplates.playback(card, bytes, registry)
 }
@@ -130,16 +134,29 @@ fun cardTemplateFor(
  * should fill are visible.
  */
 object CardDesignSources {
-  private val fromServer = java.util.concurrent.ConcurrentHashMap<DesignKey, Boolean>()
+  private var choice: CardDesignChoice? = null
+  private val fromServer = HashMap<DesignKey, Boolean>()
 
-  fun record(key: DesignKey, fromServer: Boolean) {
+  /**
+   * Records where [key]'s design came from under [choice], the server choice whose cache was
+   * loaded. A different choice starts the record afresh: its server, variant or author may differ.
+   */
+  @Synchronized
+  fun record(choice: CardDesignChoice, key: DesignKey, fromServer: Boolean) {
+    if (choice != this.choice) {
+      this.choice = choice
+      this.fromServer.clear()
+    }
     this.fromServer[key] = fromServer
   }
 
   /** How many distinct designs came from each source, and the keys the server lacked. */
   data class Summary(val server: Int, val local: List<DesignKey>)
 
-  fun summary(): Summary {
+  /** The record for [choice], empty when the last one recorded was for another. */
+  @Synchronized
+  fun summary(choice: CardDesignChoice? = this.choice): Summary {
+    if (choice == null || choice != this.choice) return Summary(0, emptyList())
     val all = fromServer.entries.toList()
     return Summary(
       server = all.count { it.value },

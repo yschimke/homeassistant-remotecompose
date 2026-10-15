@@ -1362,7 +1362,10 @@ private fun DesignServerSetting(
  */
 @Composable
 private fun DesignSourcesSummary() {
-  val summary = remember { CardDesignSources.summary() }
+  // Only the current choice's record: until a dashboard loads a changed choice there is none.
+  val prefs = LocalTerrazzoGraph.current.preferencesStore
+  val choice by remember(prefs) { CardDesignSync.choice(prefs) }.collectAsState(initial = null)
+  val summary = remember(choice) { CardDesignSources.summary(choice) }
   if (summary.server == 0 && summary.local.isEmpty()) return
   Text(
     "This session: ${summary.server} card designs from the server, " +
