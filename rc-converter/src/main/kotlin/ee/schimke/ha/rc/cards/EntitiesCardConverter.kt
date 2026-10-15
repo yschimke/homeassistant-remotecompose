@@ -23,7 +23,7 @@ import ee.schimke.ha.rc.components.HaGlanceCellData
 import ee.schimke.ha.rc.components.HaGlanceData
 import ee.schimke.ha.rc.components.HaToggleAccent
 import ee.schimke.ha.rc.components.LiveValues
-import ee.schimke.ha.rc.components.LocalSupportsFlowLayout
+import ee.schimke.ha.rc.components.LocalCompactEntityLayout
 import ee.schimke.ha.rc.components.RemoteHaEntities
 import ee.schimke.ha.rc.components.RemoteHaGlance
 import ee.schimke.ha.rc.defaultTapActionFor
@@ -70,9 +70,9 @@ class EntitiesCardConverter : CardConverter {
         // (rows collide off the bottom edge). Reflow straight to
         // the capped icon strip — the watch's "single row of the
         // first N icons" compact tier — without a live
-        // breakpoint. The launcher, which supports flow, keeps
-        // the width gate below.
-        if (!LocalSupportsFlowLayout.current) {
+        // breakpoint. Launcher widgets keep the width gate below,
+        // with a compatible multi-row grid when flow is unavailable.
+        if (LocalCompactEntityLayout.current) {
           IconStrip(card, snapshot, modifier.fillMaxSize())
         } else {
           // Width-axis reflow: as the widget is dragged wider,

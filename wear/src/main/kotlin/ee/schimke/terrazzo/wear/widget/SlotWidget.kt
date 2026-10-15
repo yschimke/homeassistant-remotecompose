@@ -281,7 +281,7 @@ private fun slotDocument(
                 // that lean on `RemoteFlowRow` (glance / grid /
                 // entity-filter) capture instead of throwing.
                 ProvideCardChrome(enabled = false) {
-                  ProvideFlowLayoutSupport(enabled = false) {
+                  ProvideFlowLayoutSupport(enabled = false, compactEntities = true) {
                     if (card != null) {
                       RenderChild(card, snapshot, RemoteModifier.fillMaxWidth())
                     } else {

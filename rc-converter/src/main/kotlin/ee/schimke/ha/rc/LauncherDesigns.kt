@@ -50,7 +50,11 @@ fun LauncherWidgetContent(
   snapshot: HaSnapshot,
   captureSizeDp: WidgetCaptureSizeDp? = null,
 ) {
-  CompositionLocalProvider(LocalWidgetCaptureSizeDp provides captureSizeDp) {
+  CompositionLocalProvider(
+    LocalWidgetCaptureSizeDp provides captureSizeDp,
+    ee.schimke.ha.rc.components.LocalSupportsFlowLayout provides
+      (androidx.compose.remote.core.Operations.LAYOUT_FLOW in profile.supportedOperations),
+  ) {
     ProvideCardRegistry(registry) {
       ProvideSystemHaTheme(
         profile = profile,

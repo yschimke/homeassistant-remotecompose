@@ -70,6 +70,21 @@ class LongPressHistoryTest {
   }
 
   @Test
+  fun forkUsesTheDashboardPreviewInsteadOfTheLauncherGrid() {
+    waitForFirstCard().longClick()
+    val fork = device.wait(Until.findObject(By.text("Fork in card designer")), 10_000)
+    assertNotNull(fork)
+    fork!!.click()
+    assertTrue(device.wait(Until.hasObject(By.text("Design or fix this card")), 10_000))
+    assertTrue(device.wait(Until.hasObject(By.descContains("Current card preview")), 15_000))
+    assertTrue(
+      "Forking must not show launcher size controls",
+      !device.hasObject(By.text("Try it on your home screen")),
+    )
+    assertTrue(device.wait(Until.hasObject(By.text("Design in UI Builder")), 10_000))
+  }
+
+  @Test
   fun longPressOnDashboardCard_opensHistoryThenInstallSheet() {
     // Demo mode lands directly on the "Security" dashboard (the
     // first board in `DemoData.BOARDS`, exposed as HA's default

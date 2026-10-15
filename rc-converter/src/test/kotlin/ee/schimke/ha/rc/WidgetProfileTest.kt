@@ -24,6 +24,13 @@ class WidgetProfileTest {
   }
 
   @Test
+  fun launcherProfilesExcludeExperimentalFlowLayout() {
+    for (profile in listOf(widgetsProfile, systemThemedWidgetsProfile)) {
+      assertFalse(Operations.LAYOUT_FLOW in profile.supportedOperations)
+    }
+  }
+
+  @Test
   fun android16Profile_excludesColorTheme() {
     assertFalse(Operations.COLOR_THEME in widgetsProfile.supportedOperations)
   }

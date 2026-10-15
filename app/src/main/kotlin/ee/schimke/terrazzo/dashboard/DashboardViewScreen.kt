@@ -897,11 +897,29 @@ private fun CardRow(
   }
 }
 
-/**
- * Hosts one card's own `.rc` document. Sized by the parent (via `weight(1f)` in compact rows, or
- * `height(...)` in section columns) so the layout decides the slot size, not the RemoteCompose
- * document.
- */
+/** Read-only dashboard rendering for the designer, independent of native launcher support. */
+@Composable
+internal fun StudioCardPreview(session: HaSession, card: CardConfig, snapshot: HaSnapshot) {
+  val context = androidx.compose.ui.platform.LocalContext.current
+  val registry = remember { defaultRegistry().withEnhancedShutter() }
+  val imageLoader =
+    LocalHaImageStack.current?.imageLoader
+      ?: remember(context) { SingletonImageLoader.get(context.applicationContext) }
+  CompositionLocalProvider(
+    LocalHaActionDispatcher provides ee.schimke.ha.rc.NoOpHaActionDispatcher
+  ) {
+    CardSlot(
+      card,
+      snapshot,
+      registry,
+      session.baseUrl,
+      imageLoader,
+      {},
+      Modifier.fillMaxWidth().semantics { contentDescription = "Current card preview" },
+    )
+  }
+}
+
 @Composable
 private fun CardSlot(
   card: CardConfig,

@@ -63,13 +63,13 @@ import ee.schimke.terrazzo.core.session.SessionConnectionStatus
 import ee.schimke.terrazzo.dashboard.CardActionsSheet
 import ee.schimke.terrazzo.dashboard.CardDesignSync
 import ee.schimke.terrazzo.dashboard.CardHistoryScreen
-import ee.schimke.terrazzo.dashboard.CardPreviewCard
 import ee.schimke.terrazzo.dashboard.DashboardListState
 import ee.schimke.terrazzo.dashboard.DashboardPickerScreen
 import ee.schimke.terrazzo.dashboard.DashboardSelectionScreen
 import ee.schimke.terrazzo.dashboard.DashboardSwitcher
 import ee.schimke.terrazzo.dashboard.DashboardViewScreen
 import ee.schimke.terrazzo.dashboard.ManagePinnedScreen
+import ee.schimke.terrazzo.dashboard.StudioCardPreview
 import ee.schimke.terrazzo.dashboard.TopBarOverflowMenu
 import ee.schimke.terrazzo.dashboard.historyTitle
 import ee.schimke.terrazzo.dashboard.rememberDashboardListState
@@ -621,7 +621,7 @@ private fun DashboardsRoot(
         current
       },
     ) {
-      CardPreviewCard(session, card, snapshot)
+      StudioCardPreview(session, card, snapshot)
     }
   } else if (historyOverlay != null) {
     val (historyCard, historySnapshot) = historyOverlay
