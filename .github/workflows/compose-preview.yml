@@ -51,7 +51,7 @@ jobs:
       - uses: ./.github/actions/setup
         with:
           cache-read-only: ${{ github.event_name == 'pull_request' && 'true' || 'false' }}
-      - uses: yschimke/compose-ai-tools/.github/actions/apply@v2.58.0
+      - uses: yschimke/compose-ai-tools/.github/actions/apply@v2.60.0
         with:
           # Generated branches (compose-preview/main, compose-preview/pr and the
           # a11y / resources pairs) go to the public output repository so this
