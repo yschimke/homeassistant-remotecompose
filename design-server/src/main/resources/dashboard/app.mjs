@@ -3,7 +3,7 @@ import { DashboardTransaction, bindTemplate, canonical, copy, entityIds, preview
 
 const $ = id => document.getElementById(id);
 const frame = $('editor');
-let draftValid = false;
+let draftValid = false, loadGeneration = 0, openSequence = 0, expectedOpenId = "";
 let ready = false, capabilities, current, config, selected, connection, transaction, unsubscribe;
 let subscriptionKey = "";
 let states = {}, templates = [], history = [], previewGeneration = 0, timer, previewAccess = false;
@@ -21,18 +21,26 @@ async function json(url, options) {
   return parseJson(await response.text());
 }
 function send(message) { if (ready) frame.contentWindow.postMessage(message, location.origin); }
+function detachSaveTarget() {
+  const generation = ++loadGeneration;
+  transaction = null;
+  unsubscribe?.(); unsubscribe = null; subscriptionKey = "";
+  $('save').disabled = true; $('undo-save').disabled = true;
+  return generation;
+}
+function openRequest() { expectedOpenId = `dashboard-open-${++openSequence}`; return expectedOpenId; }
 function pendingDraft() { draftValid = false; $('save').disabled = true; $('export').disabled = true; }
 function openConfig(value) {
   if (!value || typeof value !== 'object' || Array.isArray(value)) throw new Error('Import a dashboard JSON object.');
   pendingDraft();
   config = copy(value);
   $('json').value = JSON.stringify(config, null, 2);
-  if (capabilities) send({ type: 'compose-ui-builder/open', lovelaceConfig: JSON.stringify(config), capabilities: JSON.stringify(capabilities), label: config.title || 'Home Assistant dashboard' });
+  if (capabilities) send({ type: 'compose-ui-builder/open', requestId: openRequest(), lovelaceConfig: JSON.stringify(config), capabilities: JSON.stringify(capabilities), label: config.title || 'Home Assistant dashboard' });
   refreshViews();
 }
 function openDocument(value) {
   pendingDraft();
-  send({ type: 'compose-ui-builder/open', document: JSON.stringify(value), capabilities: JSON.stringify(capabilities) });
+  send({ type: 'compose-ui-builder/open', requestId: openRequest(), document: JSON.stringify(value), capabilities: JSON.stringify(capabilities) });
   if (selected && value.nodes[selected]) send({ type: 'compose-ui-builder/select', nodeId: selected });
 }
 function option(select, value, label) {
@@ -79,11 +87,16 @@ function bindControls() {
 }
 async function syncSubscription() {
   if (!transaction || !connection || !config) return;
+  const target = transaction, channel = connection, generation = loadGeneration;
   const ids = entityIds(config).sort(), key = JSON.stringify(ids);
   if (key === subscriptionKey) return;
   subscriptionKey = key; unsubscribe?.(); unsubscribe = null;
-  const stop = await connection.subscribeEntities(ids, event => { applyEntitiesEvent(states, event); queuePreviews(); });
-  if (key === subscriptionKey) unsubscribe = stop; else stop();
+  if (ids.length === 0) return;
+  const stop = await channel.subscribeEntities(ids, event => {
+    if (transaction !== target || connection !== channel || generation !== loadGeneration) return;
+    applyEntitiesEvent(states, event); queuePreviews();
+  });
+  if (key === subscriptionKey && transaction === target && connection === channel && generation === loadGeneration) unsubscribe = stop; else stop();
 }
 function queuePreviews() { clearTimeout(timer); timer = setTimeout(() => run(previews), 250); }
 async function previews() {
@@ -128,6 +141,7 @@ async function previews() {
 window.addEventListener('message', event => {
   if (event.source !== frame.contentWindow || event.origin !== location.origin) return;
   const message = event.data;
+  if (['compose-ui-builder/changed','compose-ui-builder/lovelace-config'].includes(message?.type) && message.requestId !== expectedOpenId) return;
   if (message?.type === 'compose-ui-builder/ready') { ready = true; if (capabilities && config) openConfig(config); }
   else if (message?.type === 'compose-ui-builder/changed') {
     const next = parseJson(message.document);
@@ -157,15 +171,17 @@ window.addEventListener('message', event => {
 });
 
 $('fixture').onclick = () => run(async () => {
-  unsubscribe?.(); unsubscribe = null; transaction = null; states = copy(fixtureStates); history = []; current = null;
+  const generation = detachSaveTarget(); states = copy(fixtureStates); history = []; current = null;
   $('save').disabled = true; $('undo-save').disabled = true;
-  openConfig(await json('/studio/dashboard/fixture.json')); bindControls(); status('Test dashboard loaded. It is separate from Home Assistant.');
+  const fixture = await json('/studio/dashboard/fixture.json'); if (generation !== loadGeneration) return;
+  openConfig(fixture); bindControls(); status('Test dashboard loaded. It is separate from Home Assistant.');
 });
 $('file').onchange = () => run(async () => {
   const file = $('file').files[0]; if (!file) return;
-  unsubscribe?.(); unsubscribe = null; transaction = null; current = null; history = [];
+  const generation = detachSaveTarget(); current = null; history = [];
   $('save').disabled = true; $('undo-save').disabled = true;
-  openConfig(parseJson(await file.text())); status('Imported as a draft. Export JSON to keep your changes.');
+  const imported = parseJson(await file.text()); if (generation !== loadGeneration) return;
+  openConfig(imported); status('Imported as a draft. Export JSON to keep your changes.');
 });
 function downloadJson(value, filename) {
   const url = URL.createObjectURL(new Blob([JSON.stringify(value, null, 2)], { type: 'application/json' }));
@@ -221,11 +237,14 @@ $('place').onclick = () => run(async () => {
 });
 
 async function connect() {
+  const generation = detachSaveTarget(); connection = null;
   const url = normalizeHassUrl($('hass').value); localStorage.setItem('dashboard-editor.hass', url);
   const session = sessionFor(url); await session.auth.completeSignIn();
   if (!session.auth.signedIn) { session.auth.signIn(); return; }
-  connection = session.connection; connection.decodeMessage = parseJson; await connection.connect();
-  const dashboards = await connection.send({ type: 'lovelace/dashboards/list' });
+  const nextConnection = session.connection; nextConnection.decodeMessage = parseJson; await nextConnection.connect();
+  const dashboards = await nextConnection.send({ type: 'lovelace/dashboards/list' });
+  if (generation !== loadGeneration) return;
+  connection = nextConnection;
   $('dashboard').replaceChildren(); option($('dashboard'), '', 'Overview (built-in)');
   for (const item of dashboards) {
     option($('dashboard'), item.url_path, item.title); $('dashboard').lastElementChild.dataset.mode = item.mode || '';
@@ -235,27 +254,39 @@ async function connect() {
 $('connect').onclick = () => run(connect);
 $('load').onclick = () => run(async () => {
   if (!connection) throw new Error('Connect to Home Assistant first.');
+  const generation = detachSaveTarget(), channel = connection;
   const path = $('dashboard').value || null;
-  const baseline = await connection.send({ type: 'lovelace/config', ...(path == null ? {} : { url_path: path }) });
-  const user = await connection.send({ type: 'auth/current_user' });
   const mode = $('dashboard').selectedOptions[0]?.dataset.mode;
-  const reason = !user.is_admin ? 'Administrator access is required to save. Export your draft instead.' : mode === 'yaml' ? 'YAML dashboards support draft export only.' : null;
-  transaction = new DashboardTransaction(connection, path, baseline, reason);
-  states = Object.fromEntries((await connection.send({ type: 'get_states' })).map(state => [state.entity_id, state]));
-  unsubscribe?.(); history = []; current = null; openConfig(baseline); bindControls();
-  subscriptionKey = ""; await syncSubscription();
-  $('save').disabled = !!reason || !draftValid; $('undo-save').disabled = true; status(reason || 'Dashboard loaded. Save checks for changes in Home Assistant first.');
+  try {
+    const baseline = await channel.send({ type: 'lovelace/config', ...(path == null ? {} : { url_path: path }) });
+    const user = await channel.send({ type: 'auth/current_user' });
+    const loadedStates = await channel.send({ type: 'get_states' });
+    if (generation !== loadGeneration || connection !== channel) return;
+    const reason = !user.is_admin ? 'Administrator access is required to save. Export your draft instead.' : mode === 'yaml' ? 'YAML dashboards support draft export only.' : null;
+    states = Object.fromEntries(loadedStates.map(state => [state.entity_id, state]));
+    history = []; current = null;
+    // Publish the destination and matching config together, after every read succeeds.
+    transaction = new DashboardTransaction(channel, path, baseline, reason);
+    openConfig(baseline); bindControls();
+    await syncSubscription();
+    if (generation !== loadGeneration) return;
+    $('save').disabled = !!reason || !draftValid; $('undo-save').disabled = true; status(reason || 'Dashboard loaded. Save checks for changes in Home Assistant first.');
+  } catch (error) { if (generation === loadGeneration) throw error; }
 });
 $('save').onclick = () => run(async () => {
   if (!transaction || !config || !draftValid) return;
+  const target = transaction, candidate = config;
   $('save').disabled = true;
-  try { const changed = await transaction.save(config); $('undo-save').disabled = !transaction.previous; status(changed ? 'Dashboard saved. Undo save is available.' : 'No changes to save.'); }
-  finally { $('save').disabled = !!transaction.readOnlyReason || !draftValid; }
+  try {
+    const changed = await target.save(candidate);
+    if (transaction === target) { $('undo-save').disabled = !target.previous; status(changed ? 'Dashboard saved. Undo save is available.' : 'No changes to save.'); }
+  } finally { if (transaction === target) $('save').disabled = !!target.readOnlyReason || !draftValid; }
 });
 $('undo-save').onclick = () => run(async () => {
-  if (!transaction) return;
-  const saved = canonical(transaction.baseline);
-  await transaction.undo(); if (canonical(config) === saved) openConfig(transaction.baseline);
+  const target = transaction; if (!target) return;
+  const saved = canonical(target.baseline);
+  await target.undo(); if (transaction !== target) return;
+  if (canonical(config) === saved) openConfig(target.baseline);
   $('undo-save').disabled = true; status('Saved dashboard restored. Your unsaved edits are kept.');
 });
 

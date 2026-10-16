@@ -25,7 +25,9 @@ grant server compute access.
 Save requires a storage dashboard and administrator rights. Before saving or undoing a save, the
 host re-reads config and rejects an observed external change. Failed or conflicting writes retain
 the draft. HA's WebSocket API has no atomic conditional save, so another client can still race
-between read and write. Export/reload/reapply resolves a conflict. YAML dashboards are draft/export
+between read and write. Export/reload/reapply resolves a conflict. Loading another dashboard first detaches the save target;
+a failed load retains the old draft for export, and overlapping loads cannot replace a newer
+selection. The host correlates editor acknowledgements with each open request before enabling saves. YAML dashboards are draft/export
 only; when HA omits the mode, its save endpoint remains the final authority. Undo edit is local;
 undo save conditionally restores the last baseline and retains newer local changes.
 
