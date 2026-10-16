@@ -18,7 +18,6 @@ import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rs
-import androidx.compose.remote.creation.compose.state.rsp
 import androidx.compose.remote.creation.compose.text.RemoteTextStyle
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.font.FontWeight
@@ -36,6 +35,7 @@ import ee.schimke.ha.rc.LocalCardSizeMode
 import ee.schimke.ha.rc.RemoteSizeBreakpoint
 import ee.schimke.ha.rc.cardDataSignature
 import ee.schimke.ha.rc.components.HaBambuPrintPhase
+import ee.schimke.ha.rc.components.HaType
 import ee.schimke.ha.rc.components.LiveValues
 import ee.schimke.ha.rc.components.cardChrome
 import ee.schimke.ha.rc.components.currentRemoteHaTheme
@@ -103,13 +103,13 @@ open class BambuLabCardConverter(
         RemoteText(
           text = "Bambu Lab".rs,
           color = theme.secondaryText,
-          fontSize = 11.rsp,
+          fontSize = HaType.Caption,
           style = RemoteTextStyle.Default,
         )
         RemoteText(
           text = variantLabel.rs,
           color = theme.primaryText,
-          fontSize = 15.rsp,
+          fontSize = HaType.Title,
           fontWeight = FontWeight.Medium,
           style = RemoteTextStyle.Default,
         )
@@ -121,13 +121,13 @@ open class BambuLabCardConverter(
           RemoteText(
             text = name.rs,
             color = theme.primaryText,
-            fontSize = 13.rsp,
+            fontSize = HaType.Body,
             style = RemoteTextStyle.Default,
           )
           RemoteText(
             text = LiveValues.state(entity?.entityId, state),
-            color = theme.secondaryText,
-            fontSize = 13.rsp,
+            color = theme.primaryText,
+            fontSize = HaType.Body,
             style = RemoteTextStyle.Default,
           )
         }

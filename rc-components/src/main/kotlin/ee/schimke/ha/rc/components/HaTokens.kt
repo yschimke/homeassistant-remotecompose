@@ -31,25 +31,33 @@ import androidx.compose.ui.graphics.Color
  * card titles are [Title] (the old 15sp and 16sp titles met there), readings are [Value] (the
  * gauge's 22sp and the metric's 24sp met there), and so on. The clock face is the one exception:
  * its numerals are sized to the card, not to a role.
+ *
+ * The text roles are sized for a phone held at arm's length, not for HA's desktop web: [Body] is
+ * 15sp (HA's card body is 13px, Android's list text 14–16sp), so a dashboard of cards reads like
+ * the rest of the phone. The steps stay strictly ascending from [Micro] to [Display], so a part
+ * that steps a role down (`adaptiveTitleSize`) always gets smaller text.
  */
 object HaType {
   /** 10sp — axis ticks, range ends, the smallest captions on a widget. */
   val Micro = 10.rsp
 
-  /** 11sp — secondary metadata: timestamps, range lines, a glance cell's state. */
-  val Caption = 11.rsp
+  /** 12sp — secondary metadata: timestamps, range lines, a glance cell's state. */
+  val Caption = 12.rsp
 
-  /** 12sp — labels and secondary state text; the default `secondaryText` size. */
-  val Label = 12.rsp
+  /** 13sp — labels and secondary state text; the default `secondaryText` size. */
+  val Label = 13.rsp
 
-  /** 13sp — row names and tile primary text (HA's 13px card body). */
-  val Body = 13.rsp
+  /**
+   * 15sp — row names, a row's or tile's state, tile primary text: the card body (HA's 13px card
+   * body, sized up for a phone).
+   */
+  val Body = 15.rsp
 
-  /** 14sp — emphasised body: an entity row's name on a roomy card, list items. Medium weight. */
-  val BodyLarge = 14.rsp
+  /** 16sp — emphasised body: an entity row's name on a roomy card, list items. Medium weight. */
+  val BodyLarge = 16.rsp
 
-  /** 16sp — card titles and section headings. Medium/SemiBold. */
-  val Title = 16.rsp
+  /** 17sp — card titles and section headings, one step above [BodyLarge]. Medium/SemiBold. */
+  val Title = 17.rsp
 
   /** 18sp — a reading in a compact presentation (widget chip, Wear). SemiBold. */
   val ValueSmall = 18.rsp

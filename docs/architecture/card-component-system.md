@@ -35,16 +35,23 @@ A part is reusable across cards, a Wear widget and a launcher cell only if it fo
 | Role | sp | Use |
 |---|---|---|
 | `Micro` | 10 | axis ticks, the smallest widget captions |
-| `Caption` | 11 | timestamps, range lines, a glance cell's state |
-| `Label` | 12 | labels and secondary state (`secondaryText`) |
-| `Body` | 13 | row names, tile primary text (HA's card body) |
-| `BodyLarge` | 14 | emphasised body, list items |
-| `Title` | 16 | card titles and section headings |
+| `Caption` | 12 | timestamps, range lines, a glance cell's state |
+| `Label` | 13 | labels and secondary state (`secondaryText`) |
+| `Body` | 15 | row names, a row's or tile's state, tile primary text (the card body) |
+| `BodyLarge` | 16 | emphasised body, list items |
+| `Title` | 17 | card titles and section headings |
 | `ValueSmall` | 18 | a reading at a compact presentation |
 | `Headline` | 22 | the heading card's title |
 | `Value` | 24 | a card's primary reading (gauge, sensor, thermometer) |
 | `ValueLarge` | 28 | a reading promoted on an expanded tier |
 | `Display` | 32 | display numerals (a statistic, a thermostat target) |
+
+The text roles are sized for a phone rather than for HA's desktop web: `Body` is 15 sp where HA's
+card body is 13 px (Android lists use 14–16 sp). They were 11 / 12 / 13 / 14 / 16 for `Caption`
+through `Title` until the card text was found too small on a phone; `Title` moved to 17 to stay a
+step above `BodyLarge`. The scale is strictly ascending, so stepping a role down always shrinks
+the text. An entity's state in a tile or an entities row is the value the card is read for, so it
+is `Body` in `primaryText`, not a grey caption.
 
 Adopting the scale collapsed the sixteen sizes the cards had drifted to. Card titles were 15 or
 16 sp and are all `Title` now (`adaptiveTitleSize` steps long titles down to `BodyLarge` and
