@@ -679,7 +679,7 @@ private fun DashboardsRoot(
           onRetryConnection = onRetryConnection,
           writeMode = writeMode,
           onWriteModeChange = { graph.sessionWriteMode.set(it) },
-          overflowMenu = {
+          overflowMenu = { agentInOverflow ->
             TopBarOverflowMenu(
               onOpenSettings = onOpenSettings,
               onOpenWidgets = onOpenWidgets,
@@ -687,6 +687,7 @@ private fun DashboardsRoot(
               onOpenWearWidgets = if (wearWidgetsSupported) onOpenWearWidgets else null,
               onOpenLogs = if (logsViewEnabled) onOpenLogs else null,
               onSignOut = onSignOut,
+              onOpenAgent = agentInOverflow,
             )
           },
         )

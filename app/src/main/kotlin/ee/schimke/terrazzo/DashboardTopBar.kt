@@ -1,10 +1,16 @@
 package ee.schimke.terrazzo
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
@@ -13,18 +19,18 @@ import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconToggleButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Switch
-import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
@@ -35,12 +41,25 @@ import ee.schimke.terrazzo.notifications.NotificationBell
 import ee.schimke.terrazzo.ui.statusColors
 
 /**
- * The dashboard view's top app bar. The actions are kept compact so the dashboard title (the
- * [title] slot, usually a `DashboardSwitcher`) still fits on a ~360 dp phone:
- * - the connection state is a small coloured dot while [ConnectionStatus.Connected], and only grows
- *   into a labelled chip for the states worth surfacing (connecting, paused, failed);
- * - write mode is a bare [Switch] whose thumb icon (pencil / lock) and semantics carry the state,
- *   rather than a separate "Read" / "Write" label.
+ * Below this window width the agent action moves from an icon into the overflow menu.
+ *
+ * The title is the most important thing in the bar, so the actions are budgeted against it. Every
+ * action is a 48 dp touch target and the bar adds a 16 dp title inset and a 4 dp trailing pad, so
+ * the title gets `width − 20 dp − 48 dp × actions`. With all five actions (agent, notifications,
+ * connection, write mode, overflow) that is 150 dp at 410 dp; dropping the agent icon gives a 360
+ * dp phone 148 dp — room for "3D Printing" in `titleLarge` (≈107 dp) plus its chevron.
+ */
+private val AgentActionMinWidth = 410.dp
+
+/**
+ * The dashboard view's top app bar: a [TopAppBar] plus, when the connection is not healthy, a slim
+ * full-width status strip below it. The actions are icon-only so the dashboard title (the [title]
+ * slot, usually a `DashboardSwitcher`) keeps the bar's width on a ~360 dp phone:
+ * - the connection state is always a small coloured dot; the strip says the same thing in words (or
+ *   shows progress) for every state but Connected, without taking width from the title;
+ * - write mode is an [IconToggleButton] (pencil when writable, lock when read-only);
+ * - the agent action folds into the overflow menu below [AgentActionMinWidth]. [overflowMenu]
+ *   receives the agent callback to render as a menu item then, or `null` when the icon is shown.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -55,111 +74,148 @@ internal fun DashboardTopBar(
   onRetryConnection: () -> Unit,
   writeMode: Boolean,
   onWriteModeChange: (Boolean) -> Unit,
-  overflowMenu: @Composable () -> Unit,
-) {
-  TopAppBar(
-    title = title,
-    actions = {
-      if (showAgentButton) {
-        IconButton(onClick = onOpenAgent) {
-          Icon(Icons.Filled.AutoAwesome, contentDescription = "Edit with an agent")
-        }
-      }
-      NotificationBell(
-        notifications = notifications,
-        onDismiss = onDismissNotification,
-        onClearAll = onClearNotifications,
-      )
-      ConnectionStatusIndicator(status = connectionStatus, onClick = onRetryConnection)
-      WriteModeSwitch(
-        writeMode = writeMode,
-        onWriteModeChange = onWriteModeChange,
-        modifier = Modifier.padding(horizontal = 4.dp),
-      )
-      overflowMenu()
-    },
-  )
-}
-
-/**
- * Connection state for the top bar. Connected — the steady state — is a small dot whose
- * accessibility label is the status; the other states keep the full text chip so they are
- * noticeable. Tapping either retries the connection.
- */
-@Composable
-internal fun ConnectionStatusIndicator(
-  status: ConnectionStatus,
-  onClick: () -> Unit,
+  overflowMenu: @Composable (onOpenAgent: (() -> Unit)?) -> Unit,
   modifier: Modifier = Modifier,
 ) {
-  val statusColor = status.statusColor()
-  if (status == ConnectionStatus.Connected) {
-    // A full-height but narrow tap target: an IconButton would reserve 48 dp of width for a 10 dp
-    // dot, which is exactly the width the title needs on a phone.
-    Box(
-      contentAlignment = Alignment.Center,
-      modifier =
-        modifier
-          .size(width = 24.dp, height = 48.dp)
-          .clickable(onClickLabel = "Retry connection", role = Role.Button, onClick = onClick)
-          .semantics { contentDescription = status.label },
-    ) {
-      Box(Modifier.size(10.dp).background(statusColor, CircleShape))
-    }
-  } else {
-    Surface(
-      onClick = onClick,
-      color = statusColor.copy(alpha = 0.16f),
-      shape = MaterialTheme.shapes.small,
-      modifier = modifier.padding(horizontal = 4.dp),
-    ) {
-      Text(
-        text = status.label,
-        color = statusColor,
-        style = MaterialTheme.typography.labelSmall,
-        maxLines = 1,
-        overflow = TextOverflow.Ellipsis,
-        modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
+  BoxWithConstraints(modifier = modifier) {
+    val agentInline = showAgentButton && maxWidth >= AgentActionMinWidth
+    val agentInOverflow = showAgentButton && !agentInline
+    Column(Modifier.fillMaxWidth()) {
+      TopAppBar(
+        title = title,
+        actions = {
+          if (agentInline) {
+            IconButton(onClick = onOpenAgent) {
+              Icon(Icons.Filled.AutoAwesome, contentDescription = "Edit with an agent")
+            }
+          }
+          NotificationBell(
+            notifications = notifications,
+            onDismiss = onDismissNotification,
+            onClearAll = onClearNotifications,
+          )
+          ConnectionStatusDot(status = connectionStatus, onClick = onRetryConnection)
+          WriteModeToggle(writeMode = writeMode, onWriteModeChange = onWriteModeChange)
+          overflowMenu(if (agentInOverflow) onOpenAgent else null)
+        },
       )
+      ConnectionStatusStrip(status = connectionStatus, onRetry = onRetryConnection)
     }
   }
 }
 
 /**
- * Session write-mode toggle. The thumb shows a pencil when writes are enabled and a lock when the
- * dashboard is read-only; screen readers get "Write mode" plus a Write / Read only state.
+ * Connection state as a 10 dp dot in a 48 dp touch target, for every state. Its accessibility label
+ * is the status; tapping it retries the connection.
  */
 @Composable
-internal fun WriteModeSwitch(
+internal fun ConnectionStatusDot(
+  status: ConnectionStatus,
+  onClick: () -> Unit,
+  modifier: Modifier = Modifier,
+) {
+  val statusColor = status.statusColor()
+  IconButton(
+    onClick = onClick,
+    modifier = modifier.semantics { contentDescription = status.label },
+  ) {
+    Box(Modifier.size(10.dp).background(statusColor, CircleShape))
+  }
+}
+
+/**
+ * The text (or progress) half of the connection state, shown full-width under the app bar so it
+ * never competes with the title: an indeterminate progress line while connecting, and a one-line
+ * tonal banner that retries on tap while paused or failed. Nothing while connected.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+internal fun ConnectionStatusStrip(
+  status: ConnectionStatus,
+  onRetry: () -> Unit,
+  modifier: Modifier = Modifier,
+) {
+  when (status) {
+    ConnectionStatus.Connected -> Unit
+    ConnectionStatus.Connecting ->
+      LinearProgressIndicator(
+        color = status.statusColor(),
+        modifier =
+          modifier.fillMaxWidth().semantics { contentDescription = "Connecting to Home Assistant" },
+      )
+    ConnectionStatus.Disconnected,
+    ConnectionStatus.Failed -> {
+      val failed = status == ConnectionStatus.Failed
+      val colors = MaterialTheme.colorScheme
+      Surface(
+        onClick = onRetry,
+        color = if (failed) colors.errorContainer else colors.surfaceContainerHigh,
+        contentColor = if (failed) colors.onErrorContainer else colors.onSurfaceVariant,
+        modifier = modifier.fillMaxWidth(),
+      ) {
+        Row(
+          verticalAlignment = Alignment.CenterVertically,
+          modifier =
+            Modifier.windowInsetsPadding(
+                TopAppBarDefaults.windowInsets.only(WindowInsetsSides.Horizontal)
+              )
+              .padding(horizontal = 16.dp, vertical = 8.dp),
+        ) {
+          Text(
+            text = if (failed) "Can't reach Home Assistant" else "Paused — tap to reconnect",
+            style = MaterialTheme.typography.bodyMedium,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f),
+          )
+          if (failed) {
+            Text(
+              text = "Retry",
+              style = MaterialTheme.typography.labelLarge,
+              color = colors.error,
+              modifier = Modifier.padding(start = 16.dp),
+            )
+          }
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Session write-mode toggle: a 48 dp icon toggle showing a pencil when writes are enabled and a
+ * lock when the dashboard is read-only. Screen readers get "Write mode" plus a Write / Read only
+ * state.
+ */
+@Composable
+internal fun WriteModeToggle(
   writeMode: Boolean,
   onWriteModeChange: (Boolean) -> Unit,
   modifier: Modifier = Modifier,
 ) {
-  Switch(
+  IconToggleButton(
     checked = writeMode,
     onCheckedChange = onWriteModeChange,
-    thumbContent = {
-      Icon(
-        imageVector = if (writeMode) Icons.Filled.Edit else Icons.Filled.Lock,
-        contentDescription = null,
-        modifier = Modifier.size(SwitchDefaults.IconSize),
-      )
-    },
     modifier =
       modifier.semantics {
         contentDescription = "Write mode"
         stateDescription = if (writeMode) "Write" else "Read only"
       },
-  )
+  ) {
+    Icon(
+      imageVector = if (writeMode) Icons.Filled.Edit else Icons.Filled.Lock,
+      contentDescription = null,
+    )
+  }
 }
 
-/** Theme-aware chrome colour for the top-bar connection indicator. */
+/** Theme-aware chrome colour for the connection dot and progress line. */
 @Composable
 @ReadOnlyComposable
 private fun ConnectionStatus.statusColor(): Color =
   when (this) {
-    ConnectionStatus.Failed -> statusColors.error
-    ConnectionStatus.Connecting -> statusColors.success
-    ConnectionStatus.Connected -> statusColors.info
+    ConnectionStatus.Connected -> statusColors.success
+    ConnectionStatus.Connecting -> statusColors.warning
     ConnectionStatus.Disconnected -> statusColors.neutral
+    ConnectionStatus.Failed -> statusColors.error
   }

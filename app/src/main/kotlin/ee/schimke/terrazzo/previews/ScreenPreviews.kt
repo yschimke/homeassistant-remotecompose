@@ -370,7 +370,7 @@ private fun TopBarPreviewHost(
       onRetryConnection = {},
       writeMode = writeMode,
       onWriteModeChange = {},
-      overflowMenu = {
+      overflowMenu = { agentInOverflow ->
         TopBarOverflowMenu(
           onOpenSettings = {},
           onOpenWidgets = {},
@@ -378,6 +378,7 @@ private fun TopBarPreviewHost(
           onOpenWearWidgets = null,
           onOpenLogs = null,
           onSignOut = {},
+          onOpenAgent = agentInOverflow,
         )
       },
     )
@@ -404,6 +405,20 @@ fun Screen_DashboardTopBar_SingleReadOnly() =
 @Composable
 fun Screen_DashboardTopBar_Connecting() =
   TopBarPreviewHost(currentUrlPath = "printing", connectionStatus = ConnectionStatus.Connecting)
+
+@Preview(name = "top bar · 360dp · paused", widthDp = NARROW_PHONE_WIDTH_DP)
+@Composable
+fun Screen_DashboardTopBar_Paused() =
+  TopBarPreviewHost(currentUrlPath = "printing", connectionStatus = ConnectionStatus.Disconnected)
+
+@Preview(name = "top bar · 360dp · failed", widthDp = NARROW_PHONE_WIDTH_DP)
+@Composable
+fun Screen_DashboardTopBar_Failed() =
+  TopBarPreviewHost(currentUrlPath = "printing", connectionStatus = ConnectionStatus.Failed)
+
+@Preview(name = "top bar · 412dp · switcher, agent inline", widthDp = PHONE_WIDTH_DP)
+@Composable
+fun Screen_DashboardTopBar_Phone() = TopBarPreviewHost(currentUrlPath = "printing")
 
 /**
  * Sample card + snapshot for the card-history screen previews. A tile bound to a numeric demo

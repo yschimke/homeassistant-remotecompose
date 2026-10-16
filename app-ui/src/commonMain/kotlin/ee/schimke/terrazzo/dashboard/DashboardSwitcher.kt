@@ -63,7 +63,8 @@ fun DashboardSwitcher(
   Box(modifier = modifier) {
     // The top bar's actions leave the title a phone-width remainder, so the name ellipsizes on one
     // line and gives up width before the chevron does (`weight(fill = false)` measures the text
-    // after the icon has claimed its 24 dp).
+    // after the icon has claimed its width). The chevron is 18 dp and sits tight to the text, so it
+    // costs the title as little as possible; the whole button stays the click target.
     TextButton(
       onClick = { expanded = true },
       contentPadding = PaddingValues(start = 4.dp, end = 0.dp),
@@ -81,6 +82,7 @@ fun DashboardSwitcher(
         imageVector = Icons.Filled.ArrowDropDown,
         contentDescription = "Switch dashboard",
         tint = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier.size(18.dp),
       )
     }
     DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
