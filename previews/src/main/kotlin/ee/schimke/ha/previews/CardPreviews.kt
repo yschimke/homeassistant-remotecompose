@@ -192,6 +192,76 @@ private fun glanceCard() =
     ]}"""
   )
 
+// ——— availability ———
+// State colour follows state: on (device-class colour), off (neutral), unavailable / unknown
+// (dimmed, neutral), a non-boolean state (`stale`, neutral) and a problem that is on (alert red).
+
+@Preview(
+  name = "entities availability (light)",
+  showBackground = false,
+  widthDp = 381,
+  heightDp = 330,
+)
+@Composable
+fun Entities_Availability_Light() =
+  CardHost(HaTheme.Light) { RenderChild(availabilityEntitiesCard(), Fixtures.availability) }
+
+@Preview(
+  name = "entities availability (dark)",
+  showBackground = false,
+  widthDp = 381,
+  heightDp = 330,
+)
+@Composable
+fun Entities_Availability_Dark() =
+  CardHost(HaTheme.Dark) { RenderChild(availabilityEntitiesCard(), Fixtures.availability) }
+
+@Preview(
+  name = "glance availability (light)",
+  showBackground = false,
+  widthDp = 381,
+  heightDp = 200,
+)
+@Composable
+fun Glance_Availability_Light() =
+  CardHost(HaTheme.Light) { RenderChild(availabilityGlanceCard(), Fixtures.availability) }
+
+@Preview(name = "tiles availability (light)", showBackground = false, widthDp = 381, heightDp = 200)
+@Composable
+fun Tiles_Availability_Light() =
+  CardHost(HaTheme.Light) { RenderChild(availabilityTilesCard(), Fixtures.availability) }
+
+@Preview(name = "tiles availability (dark)", showBackground = false, widthDp = 381, heightDp = 200)
+@Composable
+fun Tiles_Availability_Dark() =
+  CardHost(HaTheme.Dark) { RenderChild(availabilityTilesCard(), Fixtures.availability) }
+
+private val availabilityEntities =
+  listOf(
+    "binary_sensor.hall_motion",
+    "binary_sensor.front_room_motion",
+    "binary_sensor.driveway_motion",
+    "binary_sensor.mqtt_broker",
+    "binary_sensor.room_server",
+    "binary_sensor.printer_errors",
+    "light.kitchen",
+    "switch.coffee_maker",
+  )
+
+private val availabilityIds = availabilityEntities.joinToString(",") { "\"$it\"" }
+
+private fun availabilityEntitiesCard() =
+  card("""{"type":"entities","title":"Availability","entities":[$availabilityIds]}""")
+
+private fun availabilityGlanceCard() = card("""{"type":"glance","entities":[$availabilityIds]}""")
+
+private fun availabilityTilesCard() =
+  card(
+    "{\"type\":\"grid\",\"columns\":2,\"square\":false,\"cards\":[" +
+      availabilityEntities.joinToString(",") { "{\"type\":\"tile\",\"entity\":\"$it\"}" } +
+      "]}"
+  )
+
 // ——— heading ———
 // No HA reference. Tight-to-content, per rule 3 at top.
 
