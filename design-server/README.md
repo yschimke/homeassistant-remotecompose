@@ -17,9 +17,14 @@ design-server/build/install/design-server/bin/design-server card-designs/build/c
 
 - Card schema: a design's page, `/api/designs/<id>/schema`; any card's JSON at `/schema` or
   `POST /api/schema`
+- Design source: `/api/designs/<id>/source.uid`, a UI Builder document to fork a library design
+  from — the card rebuilt from `ha-cards` components in the design's uber theme, its entities named
+  by slot so a fork binds what the template does. Close to the library design, not identical: the
+  library's templates are captured from the app's converters, which have no editable source
 - UI Builder: set `UI_BUILDER_BINARY` (the bundled `compose-preview-server`) or `UI_BUILDER_URL` +
-  `UI_BUILDER_TOKEN`, open the printed edit link (or sign in with GitHub, below), then "Design in
-  UI Builder" — see [`card-design-ui-builder.md`](../docs/architecture/card-design-ui-builder.md)
+  `UI_BUILDER_TOKEN`, open the printed edit link (or sign in with GitHub, below), then "Fork in UI
+  Builder" on a design (it starts from the design's source) or "Design in UI Builder" on a pasted
+  card — see [`card-design-ui-builder.md`](../docs/architecture/card-design-ui-builder.md)
 
 Environment: `DESIGN_LIBRARY` (or the first argument), `PORT` (default 8080), `HOST`, and the
 `UI_BUILDER_*` settings above. A container image with the library baked in and UI Builder bundled:

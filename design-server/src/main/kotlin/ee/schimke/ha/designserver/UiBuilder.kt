@@ -483,7 +483,7 @@ object UiBuilderSeed {
       designId,
       title,
       heightDp = target.heightDp ?: (96 + 64 * (children.size.coerceAtLeast(1))),
-      stateVariables = schema.bindings.mapNotNull { b -> stateVariable(b)?.let { b.name to it } },
+      stateVariables = stateVariables(schema),
       nodes = nodes,
     )
   }
@@ -543,6 +543,10 @@ object UiBuilderSeed {
     schema.bindings.filterNot { supports(it.type) }
 
   /** A binding as a UI Builder state variable; null for kinds it has no state type for. */
+  /** [schema]'s bindings as UI Builder state variables, those UI Builder has a type for. */
+  fun stateVariables(schema: CardSchema): List<Pair<String, JsonObject>> =
+    schema.bindings.mapNotNull { b -> stateVariable(b)?.let { b.name to it } }
+
   private fun stateVariable(binding: BindingSchema): JsonObject? {
     val (type, valueType, default) =
       when (binding.type) {
