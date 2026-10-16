@@ -90,7 +90,10 @@ expressed as a binding.
 ## Card matrix (current)
 
 - **Binding (path 1):** sensor, entity, glance, tile, area, entities,
-  button, picture-entity, alarm-panel (`state_int`), gauge
+  button, picture-entity (its `entity_picture` URL is the exception: a
+  picture is fetched once per document, so `CachedCardPreview` folds
+  `cardPictureSignature` into the document key and a rotated camera token
+  or new frame plays as a new document), alarm-panel (`state_int`), gauge
   (`numeric_state`; the severity band is picked in-document), markdown (`.state` tokens + Jinja `templateValues`).
   Every typed measurement (thermometer, battery, arc / bar meters) is path 1 by construction:
   `HaReading` binds `<id>.state` and `<id>.numeric_state`, and the fill fraction and band colour
