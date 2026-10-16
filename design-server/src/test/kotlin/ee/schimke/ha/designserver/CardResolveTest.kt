@@ -22,6 +22,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -128,6 +129,28 @@ class CardResolveTest {
     assertTrue(match.exact)
     assertEquals("Kitchen", match.bindings.getValue("light.s0.name").content)
     assertEquals("$API_BASE/blobs/${match.sha256}.rc", match.blob)
+  }
+
+  @Test
+  fun anUnavailableValueIsNeverTheExamples() {
+    val pushed =
+      CardResolve.pushedValues(
+        names = listOf("sensor.s0.numeric_state", "sensor.s0.state", "card.range"),
+        // The card has a numeric_state with no JSON form (NaN), and no card.range.
+        own =
+          listOf(
+            BindingSchema("sensor.s0.numeric_state", BindingType.Float, null),
+            BindingSchema("sensor.s0.state", BindingType.Text, JsonPrimitive("unavailable")),
+          ),
+        example =
+          mapOf(
+            "sensor.s0.numeric_state" to JsonPrimitive(42.0),
+            "card.range" to JsonPrimitive("0 – 100"),
+          ),
+      )
+    assertEquals(JsonNull, pushed["sensor.s0.numeric_state"], "never the example's 42")
+    assertEquals("unavailable", pushed.getValue("sensor.s0.state").content)
+    assertEquals("0 – 100", pushed.getValue("card.range").content, "converter-only: the example's")
   }
 
   @Test

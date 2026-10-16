@@ -5,6 +5,7 @@ import ee.schimke.ha.design.DesignSurface
 import ee.schimke.ha.model.EntityState
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.booleanOrNull
@@ -36,7 +37,10 @@ data class CardMatch(
   val key: DesignKey,
   /** False when the card's shape couldn't be told and another design may fit it better. */
   val exact: Boolean,
-  /** Every named value to push, by name: the card's own where known, else the example's. */
+  /**
+   * Every named value to push, by name: the card's own where known, else the example's. Null is a
+   * value the card has but can't be written in JSON, such as an unavailable entity's number.
+   */
   val bindings: Map<String, JsonPrimitive>,
   val notes: List<String> = emptyList(),
 )
@@ -69,6 +73,26 @@ data class ResolveRequest(
 }
 
 object CardResolve {
+  /**
+   * The value pushed for each of [names]: the card's [own] where it has the binding, even one with
+   * no JSON form (an unavailable entity's `numeric_state` is NaN), which is null, never the
+   * example's reading. Only bindings the card lacks, those its converter would add, take the
+   * library [example]'s value.
+   */
+  internal fun pushedValues(
+    names: List<String>,
+    own: List<BindingSchema>,
+    example: Map<String, JsonPrimitive>,
+  ): Map<String, JsonPrimitive> {
+    val byName = own.associateBy { it.name }
+    return buildMap {
+      for (name in names) {
+        val value = if (name in byName) byName.getValue(name).example ?: JsonNull else example[name]
+        if (value != null) put(name, value)
+      }
+    }
+  }
+
   /** The design [request]'s card renders as, or null when no library design has its slots. */
   fun resolve(library: DesignLibrary, request: ResolveRequest): CardMatch? {
     val schema = CardSchema.fromCard(request.card, request.states, library)
@@ -95,13 +119,8 @@ object CardResolve {
     val chosen = variant.first()
 
     val example = chosen.catalog?.example?.bindings.orEmpty()
-    val bindings = buildMap {
-      for (binding in library.decode(chosen).bindings) {
-        val value =
-          schema.bindings.firstOrNull { it.name == binding.name }?.example ?: example[binding.name]
-        if (value != null) put(binding.name, value)
-      }
-    }
+    val bindings =
+      pushedValues(library.decode(chosen).bindings.map { it.name }, schema.bindings, example)
     return CardMatch(
       design = chosen.id,
       sha256 = chosen.entry.sha256,
