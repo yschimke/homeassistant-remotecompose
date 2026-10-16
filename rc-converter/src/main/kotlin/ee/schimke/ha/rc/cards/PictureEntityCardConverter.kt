@@ -135,6 +135,8 @@ class PictureEntityCardConverter : CardConverter {
             initiallyOn = isActive ?: false,
             toggleable = isActive != null,
             activeIcon = icons.activeIcon,
+            activeIconWhenUnavailable = icons.activeWhenUnavailable,
+            initiallyUnavailable = icons.unavailable,
           ),
         showName = showName,
         showState = showState,

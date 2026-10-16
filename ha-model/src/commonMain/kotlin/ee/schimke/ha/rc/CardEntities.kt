@@ -1,5 +1,6 @@
 package ee.schimke.ha.rc
 
+import ee.schimke.ha.design.CardDesignSlots
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaLiveBindings
 import ee.schimke.ha.model.HaSnapshot
@@ -110,6 +111,7 @@ fun cardSnapshotBindings(entityIds: Set<String>, snapshot: HaSnapshot): CardSnap
     val state = snapshot.states[id] ?: continue
     strings["$id.state"] = formatState(state)
     booleans["$id.is_on"] = HaLiveBindings.isOn(id, state.state)
+    ints["$id.status"] = CardDesignSlots.statusOf(state)
     HaLiveBindings.stateInt(id, state.state)?.let { ints["$id.state_int"] = it }
     HaLiveBindings.numericState(state.state)?.let { floats["$id.numeric_state"] = it }
     HaLiveBindings.attributeFloats(id, state.attributes).forEach { (suffix, value) ->

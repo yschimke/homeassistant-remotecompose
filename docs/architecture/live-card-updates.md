@@ -28,6 +28,7 @@ derived by `HaLiveBindings` / `cardSnapshotBindings` (the host):
 | `<id>.is_on` | bool | `HaLiveBindings.isOn(id, state)`: the typed `HaEntity.isActive` (climate `heat`/`cool`/…, cover `open`/`opening`/`closing`, lock `locked`, media `playing`, …), else `state == "on"` or `"open"`. Converters seed `LiveValues.isOn` from the same function. |
 | `<id>.numeric_state` | float | parsed numeric state (gauges/arcs derive their sweep in-document) |
 | `<id>.state_int` | int | domain-keyed variant (alarm panel today) |
+| `<id>.status` | int | `CardDesignSlots.statusOf`: 0 available, 1 unavailable, 2 unknown (an on/off icon pair shows its on glyph while unavailable when HA's default is the on glyph) |
 | `<id>.current_temperature`, `<id>.target_temperature` | float | `HaLiveBindings.attributeFloats`: a climate entity's `current_temperature` and `temperature` attributes (its state is the mode, so it has no `numeric_state`). A missing attribute — a thermostat switched off has no set point — is pushed as `HaLiveBindings.ABSENT` (−9999, not NaN), so the document clears it instead of keeping a stale value. The `ha-cards/thermostat` builder dial computes its fractions and labels from them in-document |
 
 The golden rule: **a binding's value must be reproducible by the host
@@ -116,7 +117,10 @@ state-following glyph has its path:
   `door-open`): path 1. `HaIconMap.entityIcons` gives both glyphs and the component bakes both,
   each tinted transparent outside its own state off `<id>.is_on` (`HaToggleAccent.activeIcon`).
   A component without an `is_on` binding draws `HaIconMap.resolve`, which for these entities is
-  the pair's non-negated glyph whatever the state.
+  the pair's non-negated glyph whatever the state. `is_on` is false while the entity is
+  unavailable or unknown too, where HA draws the rule's default — the on glyph for a light or a
+  fan — so those pairs also follow `<id>.status` (0 available, 1 unavailable, 2 unknown), which
+  both hosts push for every entity.
 - **Other state glyphs** (sun, alarm panel, weather, lock, cover, update, person, …): the
   converter bakes the current state's glyph and `cardIconSignature` changes with it. The app's
   dashboard folds that into the card's cache key, so the card re-encodes when the glyph changes

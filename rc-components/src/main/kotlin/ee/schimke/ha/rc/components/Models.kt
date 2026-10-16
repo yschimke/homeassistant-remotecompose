@@ -49,6 +49,14 @@ data class HaToggleAccent(
    * [initiallyOn]. Null when the glyph doesn't change with the state.
    */
   val activeIcon: ImageVector? = null,
+  /**
+   * Whether [activeIcon] is also the glyph while the entity is unavailable or unknown (Home
+   * Assistant's default for the state is the on glyph, as for a light), which `is_on` alone can't
+   * tell from off: the component then also follows `<entityId>.status`.
+   */
+  val activeIconWhenUnavailable: Boolean = false,
+  /** The entity was unavailable or unknown at capture: seeds `<entityId>.status`. */
+  val initiallyUnavailable: Boolean = false,
 )
 
 /** HA tile card model. */
@@ -560,6 +568,10 @@ data class HaPictureGlanceCell(
   val tapAction: HaAction,
   /** The glyph while on, when it differs from [icon]: see [HaToggleAccent.activeIcon]. */
   val activeIcon: ImageVector? = null,
+  /** See [HaToggleAccent.activeIconWhenUnavailable]. */
+  val activeIconWhenUnavailable: Boolean = false,
+  /** See [HaToggleAccent.initiallyUnavailable]. */
+  val initiallyUnavailable: Boolean = false,
 )
 
 /**
@@ -592,6 +604,10 @@ sealed interface HaPictureElement {
     override val position: HaPictureElementPosition? = null,
     /** The glyph while on, when it differs from [icon]: see [HaToggleAccent.activeIcon]. */
     val activeIcon: ImageVector? = null,
+    /** See [HaToggleAccent.activeIconWhenUnavailable]. */
+    val activeIconWhenUnavailable: Boolean = false,
+    /** See [HaToggleAccent.initiallyUnavailable]. */
+    val initiallyUnavailable: Boolean = false,
   ) : HaPictureElement
 
   data class StateLabel(

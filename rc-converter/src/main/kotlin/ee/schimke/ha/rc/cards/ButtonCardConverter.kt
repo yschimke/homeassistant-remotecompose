@@ -149,6 +149,8 @@ private fun buttonData(card: CardConfig, snapshot: HaSnapshot): HaButtonData {
         initiallyOn = isActive ?: false,
         toggleable = toggleable,
         activeIcon = icons.activeIcon,
+        activeIconWhenUnavailable = icons.activeWhenUnavailable,
+        initiallyUnavailable = icons.unavailable,
       ),
     showName = showName,
     tapAction = tapAction,

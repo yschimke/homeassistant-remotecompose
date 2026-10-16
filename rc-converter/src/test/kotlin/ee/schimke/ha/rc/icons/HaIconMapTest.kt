@@ -251,6 +251,70 @@ class HaIconMapTest {
   }
 
   @Test
+  fun everyWeatherGlyphHasItsOwnDesignKey() {
+    val conditions =
+      listOf(
+        "sunny",
+        "clear-night",
+        "partlycloudy",
+        "cloudy",
+        "rainy",
+        "pouring",
+        "snowy",
+        "snowy-rainy",
+        "hail",
+        "fog",
+        "windy",
+        "windy-variant",
+        "lightning",
+        "lightning-rainy",
+        "exceptional",
+        "not-a-condition",
+        null,
+      )
+    for (condition in conditions) {
+      // A design captured from the key draws the condition's own glyph.
+      val key = HaIconMap.weatherConditionKey(condition)
+      assertEquals(
+        HaIconMap.weatherCondition(condition).name,
+        HaIconMap.weatherCondition(key).name,
+        "$condition",
+      )
+    }
+    // Distinct glyphs, distinct keys.
+    val byGlyph = conditions.groupBy { HaIconMap.weatherCondition(it).name }
+    val keys = byGlyph.mapValues { (_, c) -> c.map(HaIconMap::weatherConditionKey).toSet() }
+    assertTrue(keys.values.all { it.size == 1 }, "$keys")
+    assertEquals(byGlyph.size, keys.values.flatten().toSet().size)
+    assertTrue(
+      HaIconMap.weatherConditionKey("sunny") != HaIconMap.weatherConditionKey("clear-night")
+    )
+    assertTrue(HaIconMap.weatherConditionKey("rainy") != HaIconMap.weatherConditionKey("pouring"))
+  }
+
+  @Test
+  fun unavailableOnOffEntitiesKnowWhichGlyphHomeAssistantDraws() {
+    // HA has no glyph for unavailable / unknown, so it draws the rule's default: the on glyph for
+    // a light, a fan or a switch, the off glyph for a door sensor. `is_on` is false either way.
+    for (id in listOf("light.k", "fan.c", "switch.s", "input_boolean.b")) {
+      val e = entity(id, "unavailable")
+      val icons = HaIconMap.entityIcons(null, e)
+      assertTrue(icons.activeWhenUnavailable, id)
+      assertTrue(icons.unavailable, id)
+      assertEquals(
+        HaIconMap.resolveNameForState(null, e),
+        icons.activeIcon!!.name.removePrefix("mdi:"),
+      )
+      assertTrue(HaIconMap.entityIcons(null, e.copy(state = "unknown")).unavailable, id)
+      assertTrue(!HaIconMap.entityIcons(null, e.copy(state = "off")).unavailable, id)
+    }
+    val door = entity("binary_sensor.d", "unavailable", "device_class" to "door")
+    val icons = HaIconMap.entityIcons(null, door)
+    assertTrue(!icons.activeWhenUnavailable)
+    assertEquals(HaIconMap.resolveNameForState(null, door), icons.icon.name.removePrefix("mdi:"))
+  }
+
+  @Test
   fun coversAndLocksFollowTheirState() {
     val garage = entity("cover.garage", "closed", "device_class" to "garage")
     assertEquals("garage", name(garage))

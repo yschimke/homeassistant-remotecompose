@@ -77,7 +77,16 @@ object HaIconMap {
   fun entityIcons(iconOverride: String?, entity: EntityState?): HaEntityIcons {
     if (entity != null && isToggle(entity) && fixedName(iconOverride, entity) == null) {
       val (off, on) = toggleNames(entity)
-      if (off != on) return HaEntityIcons(glyph(off), glyph(on))
+      if (off != on) {
+        // `is_on` is false while unavailable / unknown too, where HA draws the rule's default.
+        val unavailable = defaultName(entity, "unavailable", ranges = false)
+        return HaEntityIcons(
+          glyph(off),
+          glyph(on),
+          activeWhenUnavailable = unavailable == on,
+          unavailable = entity.state == "unavailable" || entity.state == "unknown",
+        )
+      }
     }
     return HaEntityIcons(resolve(iconOverride, entity), activeIcon = null)
   }
@@ -99,9 +108,23 @@ object HaIconMap {
   }
 
   /** The glyph for a weather `condition` (`sunny`, `partlycloudy`, `pouring`, …). */
-  fun weatherCondition(condition: String?): ImageVector {
+  fun weatherCondition(condition: String?): ImageVector = glyph(weatherConditionName(condition))
+
+  /**
+   * A design key for a weather `condition`: one condition per distinct glyph, so conditions share a
+   * key only when they share a glyph and a design captured from the key draws the same glyph as the
+   * condition itself. Known conditions are their own key; anything else is the condition whose
+   * glyph is the weather default (`partlycloudy`).
+   */
+  fun weatherConditionKey(condition: String?): String {
     val rule = rule("weather", null)!!
-    return glyph(condition?.let { rule.states[it] } ?: rule.default)
+    val name = weatherConditionName(condition)
+    return rule.states.entries.filter { it.value == name }.minOfOrNull { it.key } ?: "partlycloudy"
+  }
+
+  private fun weatherConditionName(condition: String?): String {
+    val rule = rule("weather", null)!!
+    return condition?.let { rule.states[it] } ?: rule.default
   }
 
   /**
@@ -271,4 +294,14 @@ object HaIconMap {
 }
 
 /** An entity's glyph, and its glyph while on when that differs: see [HaIconMap.entityIcons]. */
-data class HaEntityIcons(val icon: ImageVector, val activeIcon: ImageVector?)
+data class HaEntityIcons(
+  val icon: ImageVector,
+  val activeIcon: ImageVector?,
+  /**
+   * Whether Home Assistant draws [activeIcon] while the entity is unavailable or unknown (its rule
+   * has no glyph for those states and its default is the on glyph, as for a light or a fan).
+   */
+  val activeWhenUnavailable: Boolean = false,
+  /** The entity is unavailable or unknown now. */
+  val unavailable: Boolean = false,
+)

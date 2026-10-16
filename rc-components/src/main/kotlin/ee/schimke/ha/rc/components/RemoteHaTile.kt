@@ -69,6 +69,9 @@ fun RemoteHaTile(data: HaTileData, modifier: RemoteModifier = RemoteModifier) {
           HaStateIcon(
             icon = data.icon,
             activeIcon = data.accent.activeIcon,
+            entityId = data.entityId,
+            activeWhenUnavailable = data.accent.activeIconWhenUnavailable,
+            initiallyUnavailable = data.accent.initiallyUnavailable,
             initiallyOn = data.accent.initiallyOn,
             isOn = isOnBinding,
             tint = accent,
@@ -80,6 +83,9 @@ fun RemoteHaTile(data: HaTileData, modifier: RemoteModifier = RemoteModifier) {
         HaStateIcon(
           icon = data.icon,
           activeIcon = data.accent.activeIcon,
+          entityId = data.entityId,
+          activeWhenUnavailable = data.accent.activeIconWhenUnavailable,
+          initiallyUnavailable = data.accent.initiallyUnavailable,
           initiallyOn = data.accent.initiallyOn,
           isOn = isOnBinding,
           tint = accent,
@@ -161,6 +167,9 @@ fun RemoteHaIconChip(data: HaTileData, modifier: RemoteModifier = RemoteModifier
     HaStateIcon(
       icon = data.icon,
       activeIcon = data.accent.activeIcon,
+      entityId = data.entityId,
+      activeWhenUnavailable = data.accent.activeIconWhenUnavailable,
+      initiallyUnavailable = data.accent.initiallyUnavailable,
       initiallyOn = data.accent.initiallyOn,
       isOn = null,
       tint = accent,

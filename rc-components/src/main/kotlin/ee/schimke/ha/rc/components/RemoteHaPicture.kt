@@ -172,6 +172,9 @@ private fun Cell(cell: HaPictureGlanceCell, theme: RemoteHaTheme) {
     HaStateIcon(
       icon = cell.icon,
       activeIcon = cell.activeIcon,
+      entityId = cell.entityId,
+      activeWhenUnavailable = cell.activeIconWhenUnavailable,
+      initiallyUnavailable = cell.initiallyUnavailable,
       initiallyOn = cell.initiallyActive,
       isOn = isActive,
       tint = tint,
@@ -281,6 +284,9 @@ private fun Element(
         HaStateIcon(
           icon = element.icon,
           activeIcon = element.activeIcon,
+          entityId = element.entityId,
+          activeWhenUnavailable = element.activeIconWhenUnavailable,
+          initiallyUnavailable = element.initiallyUnavailable,
           initiallyOn = element.initiallyActive,
           isOn = isActive,
           tint = tint,

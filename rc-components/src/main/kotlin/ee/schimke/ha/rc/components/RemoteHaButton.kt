@@ -214,6 +214,9 @@ private fun ButtonIconChip(
     HaStateIcon(
       icon = data.icon,
       activeIcon = data.accent.activeIcon,
+      entityId = data.entityId,
+      activeWhenUnavailable = data.accent.activeIconWhenUnavailable,
+      initiallyUnavailable = data.accent.initiallyUnavailable,
       initiallyOn = data.accent.initiallyOn,
       isOn = isOn,
       tint = accent,

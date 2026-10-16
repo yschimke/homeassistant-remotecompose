@@ -154,6 +154,8 @@ class EntitiesCardConverter : CardConverter {
             initiallyOn = isActive ?: false,
             toggleable = isActive != null,
             activeIcon = icons.activeIcon,
+            activeIconWhenUnavailable = icons.activeWhenUnavailable,
+            initiallyUnavailable = icons.unavailable,
           ),
         tapAction = tapAction,
       )
@@ -201,6 +203,8 @@ class EntitiesCardConverter : CardConverter {
               initiallyOn = isActive ?: false,
               toggleable = isActive != null,
               activeIcon = icons.activeIcon,
+              activeIconWhenUnavailable = icons.activeWhenUnavailable,
+              initiallyUnavailable = icons.unavailable,
             ),
           tapAction = tapAction,
         )

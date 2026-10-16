@@ -93,7 +93,7 @@ class WeatherForecastCardConverter : CardConverter {
       kotlinx.serialization.json.buildJsonArray {
         repeat(dayCount) { i ->
           addJsonObject {
-            put("condition", properties["d$i.icon"] ?: "cloudy")
+            put("condition", properties["d$i.icon"] ?: iconKey(null))
             put("temperature", "0")
             put("templow", "0")
             put("datetime", "2000-01-0${(i % 7) + 1}T00:00:00")
@@ -350,21 +350,5 @@ private fun extraKinds(attrs: Map<String, kotlinx.serialization.json.JsonElement
     attrs[it]?.jsonPrimitive?.content?.isNotBlank() == true
   }
 
-/** A condition's icon group: conditions that share an icon share a design. */
-private fun iconKey(condition: String?): String =
-  when (condition) {
-    "sunny",
-    "clear-night" -> "sunny"
-    "partlycloudy" -> "partlycloudy"
-    "fog" -> "fog"
-    "rainy",
-    "pouring" -> "rainy"
-    "lightning",
-    "lightning-rainy" -> "lightning"
-    "snowy",
-    "snowy-rainy",
-    "hail" -> "snowy"
-    "windy",
-    "windy-variant" -> "windy"
-    else -> "cloudy"
-  }
+/** A condition's design key: conditions share a design only when they share a glyph. */
+private fun iconKey(condition: String?): String = HaIconMap.weatherConditionKey(condition)

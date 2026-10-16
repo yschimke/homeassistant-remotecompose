@@ -218,6 +218,19 @@ class CardDesignParityTest {
       dark = false,
     )
 
+  /**
+   * `is_on` is false while unavailable, but HA draws a light's default `lightbulb` then, not
+   * `lightbulb-off`: the template, captured off, follows `<slot>.status` to the same glyph.
+   */
+  @Test
+  fun lightUnavailable() =
+    assertParity(
+      "light-unavailable",
+      tile("light.kitchen", "Kitchen"),
+      entity("light.kitchen", "unavailable"),
+      dark = false,
+    )
+
   @Test
   fun lightOffDark() =
     assertParity(
