@@ -231,7 +231,11 @@ own. Dashboard cards and their section surfaces take it. It is part of the card'
 of its design key: Classic is `baked:<palette>:<mode>`, any other style `style:<id>:<mode>`, since
 the app palette doesn't change it. The design server captures every style, and its manifest tags
 each design with it ([card-design-server.md](card-design-server.md#server-api)).
-Launcher widgets keep following the launcher's system colours.
+Launcher widgets take the card style too (`LauncherLook`), and a card's own override. By default
+they keep the launcher's system colours, with the style's instruments, type, shapes and ink on
+them (`ProvideHaUberStyle`); Settings → **Launcher widget colours** → *Card style colours* draws
+the style with its palette instead, as on the dashboard. The look is part of the launcher
+template's key. Wear widgets use the watch's own card style.
 
 In the builder, `ha-cards/uber-theme` is a container that takes a `theme` and `dark`.
 `ha-cards/card-template` is the container a design that becomes a card design sits in: names and

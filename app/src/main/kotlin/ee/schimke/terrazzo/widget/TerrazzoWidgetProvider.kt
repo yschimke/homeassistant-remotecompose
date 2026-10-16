@@ -16,23 +16,30 @@ import androidx.compose.remote.creation.compose.capture.RemoteCreationDisplayInf
 import androidx.compose.remote.creation.compose.capture.captureSingleRemoteDocument
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.LauncherDesigns
+import ee.schimke.ha.rc.LauncherLook
 import ee.schimke.ha.rc.LauncherWidgetContent
 import ee.schimke.ha.rc.WidgetCaptureSizeDp
 import ee.schimke.ha.rc.cardHeightDp
 import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.cards.shutter.withEnhancedShutter
+import ee.schimke.ha.rc.components.HaUberTheme
 import ee.schimke.ha.rc.components.WidgetActionRegistry
 import ee.schimke.ha.rc.encodeHaAction
 import ee.schimke.ha.rc.formatState
 import ee.schimke.ha.rc.platformWidgetDocument
 import ee.schimke.ha.rc.systemThemedWidgetsProfile
 import ee.schimke.ha.rc.widgetsProfile
+import ee.schimke.terrazzo.core.prefs.LauncherColoursPref
 import ee.schimke.terrazzo.core.session.DemoData
+import ee.schimke.terrazzo.dashboard.CardDesignOverrideStore
 import ee.schimke.terrazzo.terrazzoGraph
+import ee.schimke.terrazzo.ui.toThemeStyle
+import ee.schimke.terrazzo.ui.toUberTheme
 import kotlin.math.roundToInt
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
@@ -158,6 +165,24 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
     appWidgetManager.updateAppWidget(widgetId, remoteViews)
   }
 
+  /**
+   * How [card]'s widget is drawn: in its own card style when the user picked one for it (a card
+   * design override), else their card style; on the launcher's colours unless they chose the card
+   * style's own ([LauncherColoursPref]).
+   */
+  private fun launcherLook(context: Context, card: ee.schimke.ha.model.CardConfig): LauncherLook =
+    runBlocking {
+      val prefs = context.terrazzoGraph().preferencesStore
+      val override = CardDesignOverrideStore.of(context).overrides.value.forCard(card)?.cardStyle
+      LauncherLook(
+        cardStyle = override?.let(HaUberTheme::byId) ?: prefs.cardStyle.first().toUberTheme(),
+        appPalette =
+          if (prefs.launcherColours.first() == LauncherColoursPref.App)
+            prefs.themeStyle.first().toThemeStyle()
+          else null,
+      )
+    }
+
   /** The install preview and the installed widget share the exact same capture and theme. */
   internal fun renderPreview(
     context: Context,
@@ -183,6 +208,8 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
         android.content.res.Configuration.UI_MODE_NIGHT_MASK ==
         android.content.res.Configuration.UI_MODE_NIGHT_YES
 
+    val look = launcherLook(context, card)
+
     // Design first: the card's launcher template with its values baked in. Cards with no design,
     // or one that can't be baked, capture directly.
     val baked = runCatching {
@@ -197,6 +224,7 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
         systemTheme = captureProfile === systemThemedWidgetsProfile,
         registry = registry,
         fetchImage = { url -> fetchWidgetImage(context, baseUrl, url) },
+        look = look,
       )
     }
       .onFailure { Log.w(TAG, "launcher design failed for id=$widgetId", it) }
@@ -230,6 +258,7 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
           densityDpi,
           captureProfile,
           dark,
+          look,
         ) ?: return null
       }
     return remoteViews
@@ -247,6 +276,7 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
     densityDpi: Int,
     captureProfile: androidx.compose.remote.creation.profile.Profile,
     dark: Boolean,
+    look: LauncherLook,
   ): RemoteViews? {
     val widgetActions =
       WidgetActionRegistry(snapshot.states.mapValues { (_, entity) -> formatState(entity) })
@@ -268,6 +298,7 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
               (widthPx * 160f / densityDpi).roundToInt(),
               (heightPx * 160f / densityDpi).roundToInt(),
             ),
+            look,
           )
         }
       }

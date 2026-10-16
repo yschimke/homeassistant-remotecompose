@@ -60,6 +60,7 @@ import ee.schimke.terrazzo.auth.rememberLoginController
 import ee.schimke.terrazzo.core.network.LanConnectionPolicy
 import ee.schimke.terrazzo.core.prefs.CardStylePref
 import ee.schimke.terrazzo.core.prefs.DarkModePref
+import ee.schimke.terrazzo.core.prefs.LauncherColoursPref
 import ee.schimke.terrazzo.core.prefs.PreferencesStore
 import ee.schimke.terrazzo.core.prefs.ThemePref
 import ee.schimke.terrazzo.core.session.DemoHaSession
@@ -878,6 +879,8 @@ internal fun SettingsScreen(
   val darkPref by graph.preferencesStore.darkMode.collectAsState(initial = DarkModePref.Follow)
   val cardStylePref by
     graph.preferencesStore.cardStyle.collectAsState(initial = CardStylePref.Classic)
+  val launcherColours by
+    graph.preferencesStore.launcherColours.collectAsState(initial = LauncherColoursPref.System)
   val gridLayoutEnabled by
     graph.preferencesStore.experimentalGridLayout.collectAsState(initial = false)
   val collapsedModeEnabled by graph.preferencesStore.collapsedMode.collectAsState(initial = true)
@@ -986,7 +989,22 @@ internal fun SettingsScreen(
 
       CardStyleSection(
         selected = cardStylePref,
-        onSelect = { pref -> scope.launch { graph.preferencesStore.setCardStyle(pref) } },
+        onSelect = { pref ->
+          scope.launch {
+            graph.preferencesStore.setCardStyle(pref)
+            widgetRefresh.refreshAllNow()
+          }
+        },
+      )
+
+      LauncherColoursSection(
+        selected = launcherColours,
+        onSelect = { pref ->
+          scope.launch {
+            graph.preferencesStore.setLauncherColours(pref)
+            widgetRefresh.refreshAllNow()
+          }
+        },
       )
 
       Row(
@@ -1236,8 +1254,9 @@ private fun ThemeSection(
 /**
  * The card style: how dashboard cards are drawn. Classic keeps the cards' own look in the chosen
  * palette; each uber theme brings its own palette, shapes, type and instrument designs (an LCD's
- * segment bars, a Trinitron VU needle). Dashboard cards only — launcher widgets keep following the
- * launcher's system colours, and the app's own screens keep the palette above.
+ * segment bars, a Trinitron VU needle). Dashboard cards and launcher widgets: widgets take the
+ * style on the launcher's colours unless [LauncherColoursSection] says otherwise. The app's own
+ * screens keep the palette above.
  */
 @Composable
 private fun CardStyleSection(selected: CardStylePref, onSelect: (CardStylePref) -> Unit) {
@@ -1258,6 +1277,46 @@ private fun CardStyleSection(selected: CardStylePref, onSelect: (CardStylePref) 
         Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(2.dp)) {
           Text(pref.toUberTheme().displayName, style = MaterialTheme.typography.bodyLarge)
           Text(cardStyleTagline(pref), style = MaterialTheme.typography.bodySmall)
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Whether launcher widgets keep the launcher's colours (the default) or draw the card style with
+ * its palette, as the dashboard does.
+ */
+@Composable
+private fun LauncherColoursSection(
+  selected: LauncherColoursPref,
+  onSelect: (LauncherColoursPref) -> Unit,
+) {
+  Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    Text("Launcher widget colours", style = MaterialTheme.typography.titleMedium)
+    LauncherColoursPref.entries.forEach { pref ->
+      Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+      ) {
+        RadioButton(selected = pref == selected, onClick = { onSelect(pref) })
+        Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+          Text(
+            when (pref) {
+              LauncherColoursPref.System -> "System colours"
+              LauncherColoursPref.App -> "Card style colours"
+            },
+            style = MaterialTheme.typography.bodyLarge,
+          )
+          Text(
+            when (pref) {
+              LauncherColoursPref.System ->
+                "Your launcher's colours, with the card style's gauges, type and shapes"
+              LauncherColoursPref.App -> "The card style's own colours, as on your dashboard"
+            },
+            style = MaterialTheme.typography.bodySmall,
+          )
         }
       }
     }

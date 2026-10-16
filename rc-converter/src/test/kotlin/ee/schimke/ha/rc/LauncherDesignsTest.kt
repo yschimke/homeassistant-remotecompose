@@ -29,11 +29,14 @@ import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.components.HaAction
+import ee.schimke.ha.rc.components.HaUberTheme
+import ee.schimke.ha.rc.components.ThemeStyle
 import ee.schimke.ha.rc.components.WidgetActionRegistry
 import java.io.File
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import kotlinx.coroutines.runBlocking
@@ -144,11 +147,48 @@ class LauncherDesignsTest {
   private fun entity(id: String, state: String, vararg attrs: Pair<String, String>) =
     EntityState(id, state, JsonObject(attrs.associate { (k, v) -> k to JsonPrimitive(v) }))
 
+  @Test
+  fun aLookIsPartOfTheKeyAndRoundTrips() {
+    val card = card("tile", "light.kitchen")
+    val snapshot = snapshotOf(entity("light.kitchen", "on"))
+    fun key(look: LauncherLook) =
+      LauncherDesigns.keyFor(card, snapshot, widthDp, heightDp, false, true, registry, look)!!
+    // The classic system look keeps the key widgets always had.
+    assertEquals("widget:system:light", key(LauncherLook()).theme)
+    val looks =
+      listOf(
+        LauncherLook(HaUberTheme.Lcd),
+        LauncherLook(HaUberTheme.Lcd, ThemeStyle.TerrazzoHome),
+        LauncherLook(HaUberTheme.Classic, ThemeStyle.entries.last()),
+      )
+    for (look in looks) {
+      val theme = key(look).theme
+      assertEquals(look, LauncherLook.parse(theme.split(':').drop(3)), theme)
+    }
+    assertEquals(looks.size, looks.map { key(it) }.distinct().size)
+  }
+
+  @Test
+  fun aStyledWidgetBakesAndDiffersFromClassic() {
+    val card = card("tile", "light.kitchen")
+    val snapshot = snapshotOf(entity("light.kitchen", "on"))
+    val classic = bake(card, snapshot)
+    for (look in
+      listOf(
+        LauncherLook(HaUberTheme.Lcd),
+        LauncherLook(HaUberTheme.Lcd, ThemeStyle.TerrazzoHome),
+      )) {
+      val styled = bake(card, snapshot, look = look)
+      assertFalse(classic.bytes.contentEquals(styled.bytes), "$look draws differently")
+    }
+  }
+
   private fun bake(
     card: CardConfig,
     snapshot: HaSnapshot,
     widthDp: Int = this.widthDp,
     heightDp: Int = this.heightDp,
+    look: LauncherLook = LauncherLook(),
   ): LauncherDesigns.Baked {
     val context = org.robolectric.RuntimeEnvironment.getApplication()
     return assertNotNull(
@@ -162,6 +202,7 @@ class LauncherDesignsTest {
         dark = false,
         systemTheme = false,
         registry = registry,
+        look = look,
       )
     )
   }
