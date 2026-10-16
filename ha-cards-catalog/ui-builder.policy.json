@@ -74,7 +74,39 @@
           "label": "4x2"
         }
       ]
-    }
+    },
+    "$comment_previews": "Every ha-cards design is a dashboard card that also lands on Wear and the launcher, so the builder previews each one in all three: Samsung's round Wear host at both sizes and the squircle (Pixel Watch) host at large, the launcher grid resized a cell at a time, and the app at phone and tablet column widths.",
+    "previews": [
+      {
+        "kind": "wear-widget",
+        "size": "small",
+        "shape": "round"
+      },
+      {
+        "kind": "wear-widget",
+        "size": "large",
+        "shape": "round"
+      },
+      {
+        "kind": "wear-widget",
+        "size": "large",
+        "shape": "squircle",
+        "label": "Squircle · Large"
+      },
+      {
+        "kind": "launcher-resizable"
+      },
+      {
+        "kind": "frame",
+        "widthDp": 360,
+        "label": "Phone"
+      },
+      {
+        "kind": "frame",
+        "widthDp": 480,
+        "label": "Tablet"
+      }
+    ]
   },
   "$comment_composeSourceExport": "The generic Remote Compose emitter, which dispatches on a design's root: a Wear widget container (WEAR_WIDGET_CONTAINER_IDS) exports through WearWidgetCodeExporter, `remote-widgets/launcher-widget` (LauncherWidgetCodeExporter.ROOT) through LauncherWidgetCodeExporter, and anything else — the dashboard card — as inline RemoteContent. Not `remote-compose-launcher-widget`, which would refuse every root but the launcher's.",
   "composeSourceExport": {
