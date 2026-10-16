@@ -129,20 +129,26 @@ val prepareRobolectricSdk by
     into(layout.buildDirectory.dir("robolectric-sdk"))
   }
 
-tasks.withType<Test>().configureEach {
-  inputs.files(robolectricSdk)
-  dependsOn(prepareRobolectricSdk)
-  systemProperty("robolectric.offline", "true")
-  systemProperty(
-    "robolectric.dependency.dir",
-    layout.buildDirectory.dir("robolectric-sdk").get().asFile.absolutePath,
-  )
-  // `-PdemoImagesOut=<dir>` writes the demo stand-in pictures there as PNGs, for a look.
-  providers.gradleProperty("demoImagesOut").orNull?.let {
-    systemProperty("demoImagesOut", file(it).absolutePath)
-    outputs.upToDateWhen { false }
+// This module's own unit-test tasks only: `withType<Test>()` alone also matches the compose-preview
+// plugin's `composePreviewRender` Test task, whose renderer resolves its own (newer) SDK and must
+// not be forced offline into a directory holding only this jar.
+tasks
+  .withType<Test>()
+  .matching { it.name.startsWith("test") && it.name.endsWith("UnitTest") }
+  .configureEach {
+    inputs.files(robolectricSdk)
+    dependsOn(prepareRobolectricSdk)
+    systemProperty("robolectric.offline", "true")
+    systemProperty(
+      "robolectric.dependency.dir",
+      layout.buildDirectory.dir("robolectric-sdk").get().asFile.absolutePath,
+    )
+    // `-PdemoImagesOut=<dir>` writes the demo stand-in pictures there as PNGs, for a look.
+    providers.gradleProperty("demoImagesOut").orNull?.let {
+      systemProperty("demoImagesOut", file(it).absolutePath)
+      outputs.upToDateWhen { false }
+    }
   }
-}
 
 tapmoc {
   java(libs.versions.java.get().toInt())
