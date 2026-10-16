@@ -234,6 +234,8 @@ each design with it ([card-design-server.md](card-design-server.md#server-api)).
 Launcher widgets keep following the launcher's system colours.
 
 In the builder, `ha-cards/uber-theme` is a container that takes a `theme` and `dark`.
+`ha-cards/card-template` is the container a design that becomes a card design sits in: names and
+titles inside it bind (`<entityId>.name`, `card.title`) as a template capture does.
 `HaCardMeasurementsTest` keeps the policy's values in step with `HaUberTheme.all`. The showcase
 previews are `Uber_*` in the `:previews` sheet, and the builder catalog shows Console itself in
 `HaCard/UberThemeConsole`; the rest of the `:previews` showcases are in

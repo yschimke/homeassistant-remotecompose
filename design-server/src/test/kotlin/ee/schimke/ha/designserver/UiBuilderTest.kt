@@ -237,14 +237,24 @@ class UiBuilderTest {
     assertFalse("template" in source, "a design, not a starting template")
     val nodes = source["nodes"]!!.jsonObject
     fun JsonObject.child(slot: String) = this["slots"]!!.jsonObject[slot]!!.jsonArray.single()
-    // Root → the design's uber theme → the card, named by slot so it binds light.s0.*.
-    val theme = nodes.getValue("root").jsonObject.child("content").jsonPrimitive.content
-    val themeNode = nodes.getValue(theme).jsonObject
-    assertEquals("ha-cards/uber-theme", themeNode["componentId"]!!.jsonPrimitive.content)
+    fun JsonObject.under(slot: String) =
+      nodes.getValue(child(slot).jsonPrimitive.content).jsonObject
+    fun JsonObject.component() = this["componentId"]!!.jsonPrimitive.content
+    // A section root (no surface of its own) → a card template, so names and titles bind → the
+    // design's uber theme, around the surface too → the surface → the card, named by slot.
+    val root = nodes.getValue("root").jsonObject
+    assertEquals("ha-cards/dashboard-section", root.component())
+    val template = root.under("content")
+    assertEquals("ha-cards/card-template", template.component())
+    val themeNode = template.under("children")
+    assertEquals("ha-cards/uber-theme", themeNode.component())
     val themeProps = themeNode["properties"]!!.jsonObject
     assertEquals("classic", themeProps["theme"]!!.jsonObject["value"]!!.jsonPrimitive.content)
     assertFalse(themeProps["dark"]!!.jsonObject["value"]!!.jsonPrimitive.boolean)
-    val tile = nodes.getValue(themeNode.child("children").jsonPrimitive.content).jsonObject
+    val surface = themeNode.under("children")
+    assertEquals("ha-cards/card-surface", surface.component())
+    val tile = surface.under("content")
+    assertEquals("ha-cards/tile", tile.component())
     val props = tile["properties"]!!.jsonObject
     assertEquals("light.s0", props["entityId"]!!.jsonObject["value"]!!.jsonPrimitive.content)
     assertEquals("Kitchen", props["name"]!!.jsonObject["value"]!!.jsonPrimitive.content)

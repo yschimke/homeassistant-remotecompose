@@ -25,6 +25,8 @@ import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.remote.creation.compose.state.rsp
 import androidx.compose.remote.creation.compose.text.RemoteTextStyle
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
 import androidx.wear.compose.remote.material3.RemoteIcon
 import ee.schimke.ha.model.HaLiveBindings
@@ -49,6 +51,7 @@ import ee.schimke.ha.rc.components.HaTileData
 import ee.schimke.ha.rc.components.HaToggleAccent
 import ee.schimke.ha.rc.components.HaUberTheme
 import ee.schimke.ha.rc.components.LiveValues
+import ee.schimke.ha.rc.components.LocalTemplateBindings
 import ee.schimke.ha.rc.components.ProvideCardChrome
 import ee.schimke.ha.rc.components.ProvideHaUberTheme
 import ee.schimke.ha.rc.components.RemoteHaArcDial
@@ -65,6 +68,7 @@ import ee.schimke.ha.rc.components.RemoteHaMetric
 import ee.schimke.ha.rc.components.RemoteHaTile
 import ee.schimke.ha.rc.components.RemoteHaToggleButton
 import ee.schimke.ha.rc.components.RemoteHaToggleSwitch
+import ee.schimke.ha.rc.components.TemplateBindings
 import ee.schimke.ha.rc.components.cardChrome
 import ee.schimke.ha.rc.components.currentRemoteHaTheme
 import ee.schimke.ha.rc.components.fraction
@@ -715,6 +719,25 @@ fun HaCardUberTheme(
   content: @Composable @RemoteComposable () -> Unit,
 ) {
   ProvideHaUberTheme(HaUberTheme.byId(theme), dark) {
+    RemoteBox(modifier = modifier, content = content)
+  }
+}
+
+/**
+ * A card design template (card-design-server.md): everything inside binds its text the way the
+ * design library's templates do. An entity's name becomes the `<entityId>.name` value and a card's
+ * title `card.title`, values a host pushes, rather than the literal text; with entities named by
+ * slot (`light.s0`) an exported design binds what a library template for the card does, so the app
+ * can publish it as one. Outside it, names and titles are the text a design gives them.
+ */
+@Composable
+@RemoteComposable
+fun HaCardTemplate(
+  modifier: RemoteModifier = RemoteModifier,
+  content: @Composable @RemoteComposable () -> Unit,
+) {
+  val bindings = remember { TemplateBindings() }
+  CompositionLocalProvider(LocalTemplateBindings provides bindings) {
     RemoteBox(modifier = modifier, content = content)
   }
 }
