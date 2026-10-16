@@ -17,6 +17,10 @@ design-server/build/install/design-server/bin/design-server card-designs/build/c
 
 - Card schema: a design's page, `/api/designs/<id>/schema`; any card's JSON at `/schema` or
   `POST /api/schema`
+- Card resolve: `POST /api/cards/resolve` with a card's config (optionally `states`, `cardStyle`
+  and `dark`) answers with the library design that draws it, its `.rc` and the values to push, for
+  players with no card converters (UI Builder's canvas, the embed). Any origin may call it. The
+  server can't run the converters, so when several shapes fit it picks the first (`exact: false`)
 - Design source: `/api/designs/<id>/source.uid`, a UI Builder document to fork a library design
   from — the card rebuilt from `ha-cards` components in the design's uber theme, its entities named
   by slot so a fork binds what the template does. Close to the library design, not identical: the

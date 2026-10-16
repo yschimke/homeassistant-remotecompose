@@ -27,8 +27,9 @@ import kotlinx.coroutines.launch
 
 /**
  * Lets the user draw one card, or every card of its type, in a card style other than their own. The
- * choice is kept on this device ([CardDesignOverrideStore]); the dashboard and its widgets pick it
- * up at once, and the design sync fetches the style's designs.
+ * choice is kept on this device ([CardDesignOverrideStore]); the dashboard picks it up at once, and
+ * the design sync fetches the style's designs. Widgets don't: launcher widgets follow the
+ * launcher's system colours, and Wear widgets the watch's own card style.
  */
 @Composable
 internal fun CardDesignOverrideSection(card: CardConfig) {

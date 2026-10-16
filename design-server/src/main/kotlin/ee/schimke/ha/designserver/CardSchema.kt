@@ -171,7 +171,7 @@ data class CardSchema(
     }
 
     /** The library designs of [cardType] whose slots are exactly [slotIds], in order. */
-    private fun templatesWithSlots(
+    internal fun templatesWithSlots(
       library: DesignLibrary,
       cardType: String,
       slotIds: List<String>,
