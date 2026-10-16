@@ -1,9 +1,11 @@
 package ee.schimke.ha.designserver
 
 import io.ktor.http.*
+import io.ktor.server.http.content.staticFiles
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import java.io.File
 import java.net.URI
 import java.util.Base64
 import kotlinx.coroutines.CancellationException
@@ -12,7 +14,14 @@ import kotlinx.serialization.json.*
 /**
  * Browser host for whole dashboards. HA OAuth, entity subscriptions and writes stay in the browser.
  */
-fun Route.dashboardStudioRoutes(integration: UiBuilderIntegration?, github: GithubAuth?) {
+fun Route.dashboardStudioRoutes(
+  integration: UiBuilderIntegration?,
+  github: GithubAuth?,
+  editorAssets: File? =
+    System.getenv("UI_BUILDER_WEB_DIR")?.takeIf { it.isNotBlank() }?.let(::File),
+) {
+  if (editorAssets?.isDirectory == true)
+    staticFiles("/studio/dashboard/assets", editorAssets, index = null)
   get("/studio/dashboard") {
     call.response.header(HttpHeaders.CacheControl, "no-store")
     call.response.header("Referrer-Policy", "no-referrer")
@@ -33,6 +42,11 @@ fun Route.dashboardStudioRoutes(integration: UiBuilderIntegration?, github: Gith
         "model.mjs" -> ContentType.Text.JavaScript
         else -> ContentType.Application.Json
       }
+    if (name == "editor.html" && editorAssets?.isDirectory != true)
+      return@get call.respondText(
+        "The dashboard editor is not installed on this host",
+        status = HttpStatusCode.ServiceUnavailable,
+      )
     call.respondText(dashboardResource(name!!), type)
   }
   get("/api/studio/dashboard/catalog") {

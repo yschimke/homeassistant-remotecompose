@@ -86,6 +86,11 @@ jobs:
           test -n "$id"
           curl -sf -o seeded.png "localhost:8724/api/ui-builder/v1/designs/$id/export.png?token=ci-token"
           file seeded.png | grep -q PNG
+          # The dashboard host serves the packaged editor on its own origin even without Caddy.
+          curl -sf localhost:8081/studio/dashboard/editor.html | grep -q '/studio/dashboard/assets/uiBuilder.mjs'
+          curl -sf localhost:8081/studio/dashboard/assets/uiBuilder.mjs -o dashboard-editor.mjs
+          test -s dashboard-editor.mjs
+          curl -sfI localhost:8081/studio/dashboard/assets/uiBuilder.wasm | grep -qi 'application/wasm'
       - name: Open an app draft in the bundled editor in Chromium
         run: STUDIO_SMOKE_REQUIRED=1 STUDIO_SERVER_URL=http://localhost:8081 STUDIO_OPERATOR_TOKEN=ci-token node --test design-server/test/*.test.mjs
       - name: Publish the image to GHCR

@@ -36,6 +36,7 @@ COPY design-server/catalogs.json /app/catalogs.json
 ENV DESIGN_LIBRARY=/library \
     PORT=8080 \
     UI_BUILDER_BINARY=/opt/compose-preview-server/bin/compose-preview-server \
+    UI_BUILDER_WEB_DIR=/opt/compose-preview-server/ui-builder \
     UI_BUILDER_HOST=0.0.0.0 \
     UI_BUILDER_PORT=8724 \
     UI_BUILDER_STATE_DIR=/data/ui-builder \

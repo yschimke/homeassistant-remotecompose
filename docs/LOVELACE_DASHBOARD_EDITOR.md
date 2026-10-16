@@ -1,6 +1,11 @@
 # Dashboard editor
 
 `/studio/dashboard` embeds the packaged Compose UI Builder and owns the Home Assistant session.
+The host serves the editor at `/studio/dashboard/assets/` from `UI_BUILDER_WEB_DIR`. The image
+sets that directory to its bundled preview-server archive's `ui-builder` folder, independently of
+whether the builder process runs locally or the APIs point at the shared server. A plain JVM host
+must unpack the matching released editor archive and set `UI_BUILDER_WEB_DIR` to it. This keeps
+module, Wasm and resource requests on the host origin without requiring a reverse proxy.
 Use **Load test dashboard** to edit a fixture without any HA connection. Import JSON creates a
 local draft; export downloads the complete config. Supported sections views expose views, sections,
 cards, editable card fields and grid sizes. Other view layouts remain opaque and are preserved.

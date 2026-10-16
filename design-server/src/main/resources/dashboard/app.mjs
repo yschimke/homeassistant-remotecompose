@@ -90,6 +90,7 @@ async function previews() {
   const generation = ++previewGeneration;
   if (!current || !config || !draftValid || !previewAccess) return;
   const requested = current;
+  $('preview-status').textContent = '';
   const result = {};
   // Associate the exact config with each card id, rather than reconstructing rawConfig in JS.
   const cards = [];
@@ -120,7 +121,7 @@ async function previews() {
     } catch (error) {
       result[id] = {config:card,error:'Preview unavailable'};
       if (generation === previewGeneration && requested === current) send({type:'compose-ui-builder/lovelace-previews',previews:JSON.stringify(result)});
-      status(`Card preview unavailable: ${error.message} The card config is kept.`);
+      if (generation === previewGeneration && requested === current) $('preview-status').textContent = 'Some card previews are unavailable. Their configuration is kept.';
     }
   }
 }
@@ -144,6 +145,7 @@ window.addEventListener('message', event => {
     $('chrome').replaceChildren();
     for (const action of message.actions) {
       const button = document.createElement('button'); button.textContent = action.label; button.disabled = !action.enabled;
+      if (typeof action.checked === 'boolean') button.setAttribute('aria-pressed', String(action.checked));
       button.addEventListener('click', () => send({ type: 'compose-ui-builder/invoke', id: action.id })); $('chrome').append(button);
     }
   } else if (message?.type === 'compose-ui-builder/generated-code') {

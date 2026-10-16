@@ -17,6 +17,10 @@ class DashboardStudioTest {
     application { routing { dashboardStudioRoutes(null, null) } }
     val page = client.get("/studio/dashboard")
     assertEquals(HttpStatusCode.OK, page.status)
+    assertEquals(
+      HttpStatusCode.ServiceUnavailable,
+      client.get("/studio/dashboard/editor.html").status,
+    )
     assertEquals("frame-ancestors 'self'", page.headers["Content-Security-Policy"])
     val fixture =
       Json.parseToJsonElement(client.get("/studio/dashboard/fixture.json").bodyAsText()).jsonObject
@@ -178,4 +182,27 @@ class DashboardStudioTest {
     )
     assertEquals(1, renders)
   }
+
+  @Test
+  fun packagedEditorAssetsAreServedOnTheHostOriginWithoutARunningBuilderProcess() =
+    testApplication {
+      val assets = kotlin.io.path.createTempDirectory("dashboard-assets").toFile()
+      try {
+        java.io.File(assets, "uiBuilder.mjs").writeText("export const packagedEditor = true;")
+        java.io.File(assets, "uiBuilder.wasm").writeBytes(byteArrayOf(0, 97, 115, 109, 1, 0, 0, 0))
+        application { routing { dashboardStudioRoutes(null, null, assets) } }
+        val editor = client.get("/studio/dashboard/editor.html")
+        assertEquals(HttpStatusCode.OK, editor.status)
+        assertTrue(editor.bodyAsText().contains("/studio/dashboard/assets/uiBuilder.mjs"))
+        assertEquals(
+          "export const packagedEditor = true;",
+          client.get("/studio/dashboard/assets/uiBuilder.mjs").bodyAsText(),
+        )
+        val wasm = client.get("/studio/dashboard/assets/uiBuilder.wasm")
+        assertEquals(HttpStatusCode.OK, wasm.status)
+        assertTrue(wasm.headers[HttpHeaders.ContentType].orEmpty().startsWith("application/wasm"))
+      } finally {
+        assets.deleteRecursively()
+      }
+    }
 }
