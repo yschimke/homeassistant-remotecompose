@@ -275,6 +275,22 @@ class HaClient(private val config: HaConfig, engine: HttpClientEngine? = null) {
   suspend fun snapshot(): HaSnapshot = HaSnapshot(states = fetchStates())
 
   /**
+   * [snapshot] with the device registry ([fetchDevices]), what a card configured by device (a Bambu
+   * Lab printer) resolves through. A registry that can't be read leaves it out.
+   */
+  suspend fun snapshotWithDevices(): HaSnapshot {
+    val devices =
+      try {
+        fetchDevices()
+      } catch (e: kotlinx.coroutines.CancellationException) {
+        throw e
+      } catch (e: Exception) {
+        emptyMap()
+      }
+    return snapshot().copy(devices = devices)
+  }
+
+  /**
    * Call a Home Assistant service (`call_service` WebSocket command).
    *
    * Mirrors the shape Lovelace tap actions produce — a `domain.service` targeting an optional

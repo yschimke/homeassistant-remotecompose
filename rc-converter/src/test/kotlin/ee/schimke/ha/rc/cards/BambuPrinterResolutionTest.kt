@@ -205,4 +205,71 @@ class BambuPrinterResolutionTest {
     assertTrue(p2sSignature.startsWith("printer=p2s_sn2"))
     assertFalse(ambiguous.startsWith("printer="))
   }
+
+  private fun CardConfig.string(key: String) = (raw[key] as? JsonPrimitive)?.content
+
+  @Test
+  fun resolvingDevicesPinsTheConfiguredPrinterAsAnExplicitPrefix() {
+    val pinned = resolveBambuDevices(control("dev-p2s"), both)
+    assertEquals("p2s_sn2", pinned.string("entity_prefix"))
+    assertEquals("dev-p2s", pinned.string("printer"))
+    // Without the registry — a Wear widget's snapshot — the pinned card is still the P2S's.
+    assertEquals("p2s_sn2", resolveBambuPrinter(pinned, bothWithoutRegistry).prefix)
+    assertTrue(resolveBambuPrinter(control("dev-p2s"), bothWithoutRegistry).ambiguous)
+    assertEquals(
+      "a1mini_sn1",
+      resolveBambuPrinter(resolveBambuDevices(status("dev-a1"), both), bothWithoutRegistry).prefix,
+    )
+  }
+
+  @Test
+  fun resolvingDevicesKeepsWhichAmsAndWhichSpool() {
+    val ams = resolveBambuDevices(card("custom:ha-bambulab-ams-card", "ams" to "dev-p2s-ams"), both)
+    assertEquals("p2s_sn2", ams.string("entity_prefix"))
+    assertEquals("sensor.p2s_sn2_ams_1_tray_1", ams.string("ams"))
+    val amsPrinter = resolveBambuPrinter(ams, bothWithoutRegistry)
+    assertEquals("p2s_sn2", amsPrinter.prefix)
+    assertEquals(1, amsPrinter.amsIndex)
+
+    val spool =
+      resolveBambuDevices(card("custom:ha-bambulab-spool-card", "spool" to "dev-p2s-spool"), both)
+    assertEquals("sensor.p2s_sn2_externalspool_external_spool", spool.string("spool"))
+    val slot = BambuLabSpoolCardConverter().chosenSlot(spool, bothWithoutRegistry)
+    assertEquals("sensor.p2s_sn2_externalspool_external_spool", slot?.entityId)
+  }
+
+  @Test
+  fun resolvingDevicesReachesIntoStacks() {
+    val stack =
+      CardConfig(
+        type = "vertical-stack",
+        raw =
+          JsonObject(
+            mapOf(
+              "type" to JsonPrimitive("vertical-stack"),
+              "cards" to kotlinx.serialization.json.JsonArray(listOf(control("dev-a1").raw)),
+            )
+          ),
+      )
+    val inner =
+      (resolveBambuDevices(stack, both).raw["cards"] as kotlinx.serialization.json.JsonArray)
+    assertEquals(
+      "a1mini_sn1",
+      (inner.single() as JsonObject)["entity_prefix"]?.let { (it as JsonPrimitive).content },
+    )
+  }
+
+  @Test
+  fun resolvingDevicesLeavesWhatTheRegistryCannotTellUnchanged() {
+    // Unresolvable: the card stays ambiguous rather than gaining a guessed prefix.
+    assertEquals(status(redacted), resolveBambuDevices(status(redacted), both))
+    assertEquals(status("dev-unrelated"), resolveBambuDevices(status("dev-unrelated"), both))
+    // No registry to resolve with.
+    assertEquals(status("dev-p2s"), resolveBambuDevices(status("dev-p2s"), bothWithoutRegistry))
+    // Already explicit, or not a Bambu card.
+    val explicit = card(status("x").type, "printer" to "dev-a1", "entity_prefix" to "p2s_sn2")
+    assertEquals(explicit, resolveBambuDevices(explicit, both))
+    val tile = card("tile", "entity" to "sensor.p2s_sn2_print_progress")
+    assertEquals(tile, resolveBambuDevices(tile, both))
+  }
 }

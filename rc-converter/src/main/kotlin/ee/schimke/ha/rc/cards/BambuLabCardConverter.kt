@@ -42,6 +42,9 @@ import ee.schimke.ha.rc.components.cardChrome
 import ee.schimke.ha.rc.components.currentRemoteHaTheme
 import ee.schimke.ha.rc.formatState
 import ee.schimke.ha.rc.formatValueWithUnit
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonPrimitive
 
@@ -560,8 +563,16 @@ internal fun resolveBambuPrinter(card: CardConfig, snapshot: HaSnapshot): BambuP
     ?.jsonPrimitive
     ?.contentOrNull
     ?.takeIf { it.isNotEmpty() }
-    ?.let {
-      return BambuPrinter(it, candidates)
+    ?.let { prefix ->
+      // An `ams:` / `spool:` naming one of this printer's entities still says which AMS or spool.
+      val named =
+        DeviceKeys.mapNotNull { key ->
+            (card.raw[key] as? JsonPrimitive)?.contentOrNull?.trim()?.takeIf {
+              it in snapshot.states && it.substringAfter('.', "").startsWith("${prefix}_")
+            }
+          }
+          .toSet()
+      return BambuPrinter(prefix, candidates, named)
     }
   for (key in DeviceKeys) {
     val configured = card.raw[key]?.jsonPrimitive?.contentOrNull?.trim()
@@ -583,6 +594,91 @@ internal fun resolveBambuPrinter(card: CardConfig, snapshot: HaSnapshot): BambuP
 
 /** The config keys that name a Bambu card's device. */
 private val DeviceKeys = listOf("printer", "ams", "spool")
+
+/** The Bambu Lab cards' types: every card [resolveBambuPrinter] finds a printer for. */
+private val BambuCardTypes =
+  setOf(
+    "custom:ha-bambulab-print_status-card",
+    "custom:ha-bambulab-print_control-card",
+    "custom:ha-bambulab-skipobject-card",
+    "custom:ha-bambulab-ams-card",
+    "custom:ha-bambulab-spool-card",
+  )
+
+/**
+ * [card] with every Bambu Lab card in it (stacks and grids included) carrying the printer its
+ * configured device resolves to, for a host that renders it from a snapshot without the device
+ * registry: a Wear widget or tile, whose values carry entity states only.
+ *
+ * A Bambu card names its printer, AMS or spool by device id (`printer:`, `ams:`, `spool:`), and
+ * only [HaSnapshot.devices] says which entities that device has. Resolved here, on the side that
+ * has the registry, the card gains the explicit `entity_prefix:` step 1 of [resolveBambuPrinter]
+ * honours, and an `ams:` / `spool:` device id becomes that device's own tray or spool entity (which
+ * AMS, which spool) — so the reduced host shows and controls the same printer, without guessing
+ * among several.
+ *
+ * A card that already resolves the same without the registry (an explicit prefix, its own entities,
+ * the only printer) or that the registry can't resolve either is returned unchanged.
+ */
+fun resolveBambuDevices(card: CardConfig, snapshot: HaSnapshot): CardConfig {
+  if (snapshot.devices.isEmpty()) return card
+  val raw = resolveBambuDevices(card.raw, snapshot)
+  return if (raw == card.raw) card else card.copy(raw = raw)
+}
+
+private fun resolveBambuDevices(raw: JsonObject, snapshot: HaSnapshot): JsonObject {
+  val type = (raw["type"] as? JsonPrimitive)?.contentOrNull
+  var out =
+    if (type != null && type in BambuCardTypes) pinBambuDevice(CardConfig(type, raw), snapshot)
+    else raw
+  // Stacks and grids: their cards are rendered from the same reduced snapshot.
+  (out["cards"] as? JsonArray)?.let { cards ->
+    val resolved =
+      JsonArray(
+        cards.map { (it as? JsonObject)?.let { c -> resolveBambuDevices(c, snapshot) } ?: it }
+      )
+    if (resolved != cards) out = JsonObject(out + ("cards" to resolved))
+  }
+  (out["card"] as? JsonObject)?.let { inner ->
+    val resolved = resolveBambuDevices(inner, snapshot)
+    if (resolved != inner) out = JsonObject(out + ("card" to resolved))
+  }
+  return out
+}
+
+/** One Bambu card's config with its registry-resolved printer made explicit; see above. */
+private fun pinBambuDevice(card: CardConfig, snapshot: HaSnapshot): JsonObject {
+  val printer = resolveBambuPrinter(card, snapshot)
+  val prefix = printer.prefix ?: return card.raw
+  val reduced = snapshot.copy(devices = emptyMap())
+  if (resolveBambuPrinter(card, reduced).sameAs(printer)) return card.raw
+  // The device's own tray / spool entity: which AMS an AMS card shows, which spool a spool card.
+  val deviceEntity = printer.spoolEntities.minOrNull()
+  val pinned = buildMap {
+    putAll(card.raw)
+    put("entity_prefix", JsonPrimitive(prefix))
+    if (deviceEntity != null) {
+      for (key in listOf("ams", "spool")) {
+        val configured = (card.raw[key] as? JsonPrimitive)?.contentOrNull?.trim()
+        if (!configured.isNullOrEmpty() && configured !in snapshot.states) {
+          put(key, JsonPrimitive(deviceEntity))
+        }
+      }
+    }
+  }
+  return JsonObject(pinned)
+}
+
+/** The same printer, AMS and spool: what a card renders from the resolution. */
+private fun BambuPrinter.sameAs(other: BambuPrinter): Boolean =
+  prefix == other.prefix && amsIndex == other.amsIndex && spoolEntities == other.spoolEntities
+
+/** The configured device's tray and spool entities. */
+private val BambuPrinter.spoolEntities: Set<String>
+  get() =
+    deviceEntities
+      .filter { TrayEntity.matches(it) || (it.startsWith("sensor.") && it.endsWith(EXTERNAL)) }
+      .toSet()
 
 /**
  * Every Bambu printer in [snapshot], by entity prefix: whatever has a print progress, status or
