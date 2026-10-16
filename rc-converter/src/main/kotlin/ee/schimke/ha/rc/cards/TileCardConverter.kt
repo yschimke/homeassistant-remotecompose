@@ -58,7 +58,12 @@ class TileCardConverter : CardConverter {
 
   override val cardType: String = CardTypes.TILE
 
-  override fun naturalHeightDp(card: CardConfig, snapshot: HaSnapshot): Int = 43
+  /**
+   * Two [HaType.Body][ee.schimke.ha.rc.components.HaType.Body] lines (name over state, ~20dp each)
+   * inside the tile's 8dp vertical padding. A host that fixes the canvas from this number (the
+   * monitoring service, a launcher widget with no reported height) must fit the state line too.
+   */
+  override fun naturalHeightDp(card: CardConfig, snapshot: HaSnapshot): Int = 56
 
   override fun naturalWidthClass(card: CardConfig, snapshot: HaSnapshot): CardWidthClass =
     CardWidthClass.Compact
