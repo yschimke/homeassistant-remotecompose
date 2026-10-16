@@ -1,9 +1,12 @@
-/** Retain unknown integers outside JavaScript's safe range instead of rounding dashboard config. */
+/** Preserve numeric source text whenever JavaScript would round or normalize it. */
 export function parseJson(text) {
   return JSON.parse(text, (key, value, context) => {
-    if (typeof value !== 'number' || Number.isFinite(value) && (!Number.isInteger(value) || Number.isSafeInteger(value))) return value;
-    if (!context?.source || !JSON.rawJSON) throw new Error('This browser cannot preserve large JSON numbers. Use a browser with JSON.rawJSON support.');
-    return JSON.rawJSON(context.source);
+    if (typeof value !== 'number') return value;
+    if (context?.source) {
+      if (Number.isFinite(value) && (!Number.isInteger(value) || Number.isSafeInteger(value)) && JSON.stringify(value) === context.source) return value;
+      if (JSON.rawJSON) return JSON.rawJSON(context.source);
+    } else if (Number.isSafeInteger(value)) return value;
+    throw new Error('This browser cannot preserve JSON numbers. Use a browser with JSON.rawJSON support.');
   });
 }
 

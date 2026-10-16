@@ -114,3 +114,14 @@ test('capturing templates replaces references, preserves literals and binds to a
   assert.equal(source.cards[0].entity,'sensor.room');
   assert.throws(()=>createTemplate('View',{type:'panel',cards:[]},{}),/sections views/);
 });
+
+
+test('unknown decimal precision, exponents and negative zero survive the host JSON lane', () => {
+  for (const literal of ['0.123456789012345678901', '1.0000000000000000001', '1e999', '1e-999', '-0', '1.0', '1e2']) {
+    const source = `{"views":[],"future":${literal}}`;
+    const value = parseJson(source);
+    assert.equal(JSON.stringify(copy(value)),source);
+    assert.equal(canonical(value),canonical(parseJson(source)));
+  }
+  assert.notEqual(canonical(parseJson('{"future":0.123456789012345678901}')),canonical(parseJson('{"future":0.123456789012345678902}')));
+});
