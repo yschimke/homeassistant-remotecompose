@@ -153,7 +153,7 @@ fun cardDataSignature(entityIds: Set<String>, snapshot: HaSnapshot): String {
  * Recursively walks [card] for `type: picture-entity` nodes (including picture-entity cards nested
  * in stack / grid / conditional / horizontal / vertical layouts) and returns the `entity:`
  * referenced by each. Used by `CachedCardPreview` to discover which slots need a live bitmap
- * override when `entity_picture` rotates.
+ * override when `entity_picture` rotates, and by [cardPictureSignature].
  *
  * The set is ordered by first appearance for stable iteration. Entries without a `domain.id`-shaped
  * value are skipped (mirrors [cardEntityIds]).
@@ -162,6 +162,24 @@ fun cardPictureEntityIds(card: CardConfig): Set<String> {
   val out = LinkedHashSet<String>()
   collectPictureEntities(card.raw, out)
   return out
+}
+
+/**
+ * The current `entity_picture` of every picture-entity slot in [card] ([cardPictureEntityIds]), or
+ * "" when it has none. A picture is fetched by URL once per document, not pushed as a binding, so a
+ * new URL — a real camera's rotating `camera_proxy` token, a demo camera's next frame — must reach
+ * the player as a new document: the card host folds this into the document's key.
+ *
+ * Only the picture URLs count; the slots' state and other attributes still arrive as bindings, so
+ * unrelated attribute churn doesn't re-encode.
+ */
+fun cardPictureSignature(card: CardConfig, snapshot: HaSnapshot): String {
+  val ids = cardPictureEntityIds(card)
+  if (ids.isEmpty()) return ""
+  return ids.joinToString(";") { id ->
+    val picture = snapshot.states[id]?.attributes?.get("entity_picture") as? JsonPrimitive
+    "$id=${picture?.contentOrNull.orEmpty()}"
+  }
 }
 
 private fun collectPictureEntities(element: JsonElement, out: MutableSet<String>) {

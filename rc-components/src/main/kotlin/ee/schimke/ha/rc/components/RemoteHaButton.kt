@@ -151,11 +151,11 @@ private fun ButtonBody(
   val verticalPadDp = if (compact) 6 else 12
   val namePadDp = if (compact) 4 else 6
   // Widget (compact) tier gives the name a touch more presence than
-  // the dashboard's 13sp — a single button has no extra data to fill a
+  // the dashboard's Body — a single button has no extra data to fill a
   // big cell with, so a bolder label is the cheapest way to use the
-  // space. 15sp + 6dp vertical padding still clears the shortest
-  // icon+name cell (`2×1`, 84dp) without clipping. Wrap mode keeps 13sp
-  // so the dashboard pixel-diff references are unchanged.
+  // space. BodyLarge (16sp, ~19dp line) + the 44dp chip + 4dp gap + 6dp
+  // vertical padding is ~79dp, which clears the shortest icon+name cell
+  // (`2×1`, 84dp) and the converter's 80dp icon+name gate.
   val nameSize = if (compact) HaType.BodyLarge else HaType.Body
   // Not using `fillMaxWidth()` by default: buttons placed in a grid or
   // horizontal-stack should wrap-content so the flow layout can pack

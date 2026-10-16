@@ -57,11 +57,11 @@ import java.time.ZonedDateTime
  *
  * 4. The reference dimensions at 2.625 density are:
  *
- *    tile 187 × 43 dp (refs in `references/tile/`) button 187 × 91 dp (refs in
- *    `references/button/`) entity 187 × 91 dp (refs in `references/entity/`) entities 381 × 169 dp
- *    (refs in `references/entities/`) glance 381 × 149 dp (refs in `references/glance/`) markdown
- *    381 × 106 dp (refs in `references/markdown/`) dashboard 381 × 411 dp (refs in
- *    `references/dashboard/`) home 561 × 251 dp (refs in `references/home/`)
+ *    tile 187 × 56 dp (HA web: 43; taller for the 15sp body) (refs in `references/tile/`) button
+ *    187 × 91 dp (refs in `references/button/`) entity 187 × 91 dp (refs in `references/entity/`)
+ *    entities 381 × 169 dp (refs in `references/entities/`) glance 381 × 149 dp (refs in
+ *    `references/glance/`) markdown 381 × 106 dp (refs in `references/markdown/`) dashboard 381 ×
+ *    411 dp (refs in `references/dashboard/`) home 561 × 251 dp (refs in `references/home/`)
  *
  * 5. If the HA references are ever re-captured at a different density, re-run
  *    `scripts/ref-sizes.py` and update these numbers together — don't drift.
@@ -1113,7 +1113,7 @@ private fun entityFilterCardConfig() =
 
 // ——— tile, state variants via PreviewParameter ———
 
-@Preview(name = "tile light (light)", showBackground = false, widthDp = 187, heightDp = 43)
+@Preview(name = "tile light (light)", showBackground = false, widthDp = 187, heightDp = 56)
 @Composable
 fun Tile_Light_States(
   @PreviewParameter(KitchenLightStatesProvider::class) param: Pair<String, HaSnapshot>
@@ -1122,7 +1122,7 @@ fun Tile_Light_States(
     RenderChild(card("""{"type":"tile","entity":"light.kitchen"}"""), param.second)
   }
 
-@Preview(name = "tile cover (light)", showBackground = false, widthDp = 187, heightDp = 43)
+@Preview(name = "tile cover (light)", showBackground = false, widthDp = 187, heightDp = 56)
 @Composable
 fun Tile_Cover_States(
   @PreviewParameter(GarageCoverStatesProvider::class) param: Pair<String, HaSnapshot>
@@ -1131,7 +1131,7 @@ fun Tile_Cover_States(
     RenderChild(card("""{"type":"tile","entity":"cover.garage"}"""), param.second)
   }
 
-@Preview(name = "tile lock (light)", showBackground = false, widthDp = 187, heightDp = 43)
+@Preview(name = "tile lock (light)", showBackground = false, widthDp = 187, heightDp = 56)
 @Composable
 fun Tile_Lock_States(
   @PreviewParameter(FrontDoorLockStatesProvider::class) param: Pair<String, HaSnapshot>

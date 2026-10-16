@@ -216,4 +216,63 @@ class CardEntitiesTest {
       )
     assertTrue(ids.isEmpty())
   }
+
+  @Test
+  fun pictureSignatureFollowsOnlyTheEntityPicture() {
+    // The bundled demo shape: camera cards nested in a grid, with keys that keep them off the
+    // card-design template path.
+    val grid =
+      card(
+        """{
+            "type":"grid",
+            "cards":[
+              {"type":"picture-entity","entity":"camera.driveway",
+               "camera_image":"camera.driveway","aspect_ratio":"16:9"},
+              {"type":"tile","entity":"light.kitchen"}
+            ]
+          }""",
+        type = "grid",
+      )
+    fun snapshot(picture: String?, state: String = "idle", motion: String = "off") =
+      HaSnapshot(
+        states =
+          mapOf(
+            "camera.driveway" to
+              EntityState(
+                "camera.driveway",
+                state,
+                rawConfig(
+                  buildString {
+                    append("""{"motion":"$motion"""")
+                    if (picture != null) append(""","entity_picture":"$picture"""")
+                    append('}')
+                  }
+                ),
+              ),
+            "light.kitchen" to EntityState("light.kitchen", "on"),
+          )
+      )
+    val frame1 = cardPictureSignature(grid, snapshot("/api/camera_proxy/camera.driveway?token=a"))
+    val frame2 = cardPictureSignature(grid, snapshot("/api/camera_proxy/camera.driveway?token=b"))
+
+    // A rotated token (or a demo camera's next frame) is a new picture, so a new document.
+    assertTrue(frame1 != frame2)
+    // State and unrelated attribute churn arrive as bindings: no re-encode.
+    assertEquals(
+      frame1,
+      cardPictureSignature(
+        grid,
+        snapshot("/api/camera_proxy/camera.driveway?token=a", "recording", "on"),
+      ),
+    )
+    // Losing the picture is a change too; a card with no picture slots has no signature.
+    assertTrue(frame1 != cardPictureSignature(grid, snapshot(null)))
+    assertEquals(
+      "",
+      cardPictureSignature(
+        card("""{"type":"tile","entity":"camera.driveway"}"""),
+        snapshot("/x"),
+      ),
+    )
+  }
 }

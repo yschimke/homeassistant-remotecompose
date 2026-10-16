@@ -49,8 +49,6 @@ class PictureEntityCardConverter : CardConverter {
     if (!TEMPLATE_CONFIG_KEYS.containsAll(card.raw.keys)) return null
     val entityId = card.raw["entity"]?.jsonPrimitive?.contentOrNull ?: return null
     val entity = snapshot.states[entityId] ?: return null
-    // A demo frame stamp is a per-frame value printed over the image; keep the converter.
-    if (entity.attributes["demo_frame_stamp"] != null) return null
     var ok = false
     val properties = DesignProperties.build {
       with(EntityDesign) {
@@ -116,7 +114,6 @@ class PictureEntityCardConverter : CardConverter {
       if (tapCfg != null) parseHaAction(tapCfg, entityId) else defaultTapActionFor(entityId)
 
     val imageUrl = entity?.attributes?.get("entity_picture")?.jsonPrimitive?.content
-    val frameStamp = entity?.attributes?.get("demo_frame_stamp")?.jsonPrimitive?.content
     val data =
       HaPictureEntityData(
         entityId = entityId,
@@ -127,7 +124,6 @@ class PictureEntityCardConverter : CardConverter {
         showName = showName,
         showState = showState,
         imageUrl = imageUrl,
-        frameStamp = frameStamp,
         tapAction = tapAction,
       )
 

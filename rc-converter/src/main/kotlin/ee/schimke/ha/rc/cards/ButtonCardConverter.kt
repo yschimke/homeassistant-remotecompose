@@ -112,8 +112,12 @@ class ButtonCardConverter : CardConverter {
     /** Smallest cell width that fits the icon + name tier. */
     const val MinIconNameWidthDp = 96
 
-    /** Smallest cell height that fits the icon + reserved label line. */
-    const val MinIconNameHeightDp = 72
+    /**
+     * Smallest cell height that fits the icon + reserved label line: 6 + 44 (chip) + 4 + ~19 (a
+     * 16sp `BodyLarge` line) + 6 ≈ 79dp. It was 72, which already left the old 15sp label a few dp
+     * short; a cell too short for the line now takes the icon-only tier rather than clipping it.
+     */
+    const val MinIconNameHeightDp = 80
   }
 }
 

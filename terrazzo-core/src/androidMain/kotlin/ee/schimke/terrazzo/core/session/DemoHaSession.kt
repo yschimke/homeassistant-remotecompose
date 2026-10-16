@@ -279,15 +279,25 @@ object DemoData {
       } else base
     if (!entityId.startsWith("camera.")) return withState
 
-    val frameTick = (nowMs / 10_000L)
+    // A camera's picture is a new frame every ten seconds, like a real `camera_proxy` URL whose
+    // token rotates. The app serves the demo-host URL from a generated stand-in image (with the
+    // frame's time burned in as an on-screen display), so the card itself carries nothing
+    // demo-specific.
     val attrs = withState.attributes.toMutableMap()
-    attrs["entity_picture"] =
-      JsonPrimitive(
-        "https://demo.local/camera/${entityId.substringAfter('.')}.jpg?frame=$frameTick"
-      )
-    attrs["demo_frame_stamp"] = JsonPrimitive("frame ${frameTick % 1000}")
+    attrs["entity_picture"] = JsonPrimitive(cameraPictureUrl(entityId, nowMs))
     return withState.copy(attributes = JsonObject(attrs))
   }
+
+  /** Length of one demo camera frame: the picture URL changes this often. */
+  const val CAMERA_FRAME_MILLIS: Long = 10_000L
+
+  /**
+   * The server-relative `entity_picture` of demo camera [entityId] at [nowMs]. Resolved against
+   * [BASE_URL] like any Home Assistant picture; the `frame` query is the frame's start time divided
+   * by [CAMERA_FRAME_MILLIS].
+   */
+  fun cameraPictureUrl(entityId: String, nowMs: Long): String =
+    "/api/camera_proxy/$entityId?token=demo&frame=${nowMs / CAMERA_FRAME_MILLIS}"
 
   private fun formatLikeOriginal(original: String, value: Double): String {
     val dotIndex = original.indexOf('.')
