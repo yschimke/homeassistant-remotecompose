@@ -571,7 +571,7 @@ export class HaConnection {
     const socket = new WebSocket(url);
     await new Promise((resolve, reject) => {
       socket.onmessage = (message) => {
-        const msg = JSON.parse(message.data);
+        const msg = (this.decodeMessage ?? JSON.parse)(message.data);
         if (msg.type === 'auth_required') socket.send(JSON.stringify({ type: 'auth', access_token: token }));
         else if (msg.type === 'auth_ok') resolve();
         else if (msg.type === 'auth_invalid') {
@@ -584,7 +584,7 @@ export class HaConnection {
     });
     this.socket = socket;
     this.retryMs = 1000;
-    socket.onmessage = (message) => this.receive(JSON.parse(message.data));
+    socket.onmessage = (message) => this.receive((this.decodeMessage ?? JSON.parse)(message.data));
     socket.onclose = () => this.lost();
     for (const sub of this.subscriptions) this.startSubscription(sub);
     this.onState('live');

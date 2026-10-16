@@ -19,6 +19,7 @@ val embedPlayerArchive = embedPlayer.incoming.artifacts.resolvedArtifacts.map { 
 
 val embedResources by
   tasks.registering(Sync::class) {
+    from(rootProject.file("lovelace-catalog/templates.json")) { into("dashboard") }
     from(files(rootProject.file("embed/ha-card.js"), rootProject.file("embed/demo.html"))) {
       into("embed/v1")
     }

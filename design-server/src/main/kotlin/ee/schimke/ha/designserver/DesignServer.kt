@@ -107,6 +107,7 @@ fun Application.designServer(
     }
   }
   routing {
+    dashboardStudioRoutes(uiBuilder, github)
     cardStudioRoutes(holder, uiBuilder, github)
     if (userDesigns != null && github != null) {
       userDesignRoutes(holder, userDesigns, uiBuilder, github)

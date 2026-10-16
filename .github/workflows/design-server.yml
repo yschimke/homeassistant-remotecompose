@@ -12,6 +12,7 @@ on:
       - card-designs/**
       - design-server/**
       - embed/**
+      - lovelace-catalog/**
       - rc-converter/src/main/**
       - rc-components/src/main/**
       - ha-model/src/**

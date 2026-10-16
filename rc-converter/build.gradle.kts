@@ -40,6 +40,10 @@ tasks.withType<Test>().configureEach {
     "robolectric.dependency.dir",
     layout.buildDirectory.dir("robolectric-sdk").get().asFile.absolutePath,
   )
+  providers.gradleProperty("lovelaceRenderEvidence").orNull?.let {
+    systemProperty("lovelaceRenderEvidence", file(it).absolutePath)
+    outputs.upToDateWhen { false }
+  }
   // `-PcardDesignsOut=<dir>` writes the spike's design-server files (manifest.json + blobs/)
   // there — see CardDesignTemplatesEndToEndTest.publishSpikeDesigns.
   providers.gradleProperty("cardDesignsOut").orNull?.let {

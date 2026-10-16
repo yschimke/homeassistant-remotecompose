@@ -19,6 +19,7 @@ import java.io.File
 import java.net.URLEncoder
 import java.security.SecureRandom
 import java.util.Base64
+import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
@@ -284,6 +285,97 @@ class UiBuilderClient(private val config: UiBuilderConfig, private val http: Htt
       put("nativeRuntimeId", benchmark.getValue("nativeRuntimeId").jsonPrimitive)
     }
     return JsonObject(document + ("catalogPin" to pin))
+  }
+
+  /** Public catalog metadata for the embedded dashboard editor; never a design or HA credential. */
+  suspend fun dashboardCatalog(): JsonObject {
+    val response =
+      http.post("${config.apiUrl.trimEnd('/')}/api/ui-builder/v1/requests") {
+        header(HttpHeaders.Authorization, "Bearer ${config.token}")
+        contentType(ContentType.Application.Json)
+        setBody(
+          buildJsonObject {
+            put("schemaVersion", 1)
+            put("requestId", UiBuilderConfig.randomToken())
+            put("actorId", "operator")
+            putJsonObject("request") { put("type", "listCatalogs") }
+          }
+            .toString()
+        )
+      }
+    check(response.status.isSuccess()) { "Dashboard catalog lookup failed" }
+    return Json.parseToJsonElement(response.bodyAsText())
+      .jsonObject
+      .getValue("response")
+      .jsonObject
+      .getValue("catalogs")
+      .jsonArray
+      .map { it.jsonObject }
+      .single {
+        it.getValue("benchmark").jsonObject["catalogSystemId"] == JsonPrimitive("lovelace")
+      }
+  }
+
+  /**
+   * Shared-host sign-in is verified by the existing builder identity endpoint, without operator
+   * credentials.
+   */
+  suspend fun dashboardPreviewAccess(cookie: String?): JsonObject {
+    return try {
+      val response =
+        http.get("${config.apiUrl.trimEnd('/')}/api/ui-builder/v1/identity") {
+          cookie?.let { header(HttpHeaders.Cookie, it) }
+          header(HttpHeaders.Referrer, "${config.browserUrl.trimEnd('/')}/studio/dashboard")
+        }
+      val identity = Json.parseToJsonElement(response.bodyAsText()).jsonObject
+      buildJsonObject {
+        put(
+          "authorized",
+          response.status.isSuccess() && identity["signedIn"] == JsonPrimitive(true),
+        )
+        (identity["signInUrl"] as? JsonPrimitive)
+          ?.content
+          ?.takeIf { it != "null" }
+          ?.let { put("signInPath", it) }
+      }
+    } catch (e: Exception) {
+      if (e is CancellationException) throw e
+      buildJsonObject { put("authorized", false) }
+    }
+  }
+
+  /**
+   * Render through harc's published converter preview, with large knobs in POST rather than URLs.
+   */
+  suspend fun renderDashboardCard(
+    card: JsonObject,
+    snapshot: JsonObject,
+    style: String,
+    dark: Boolean,
+    browserCookie: String? = null,
+    operator: Boolean = true,
+  ): ByteArray {
+    val response =
+      http.post(
+        "${config.apiUrl.trimEnd('/')}/homeassistant-remotecompose/render/ee.schimke.ha.previews.LovelaceCardPreviewKt.LovelaceCardPreview.rc"
+      ) {
+        if (operator) header("X-Compose-Preview-Token", config.token)
+        browserCookie?.let { header(HttpHeaders.Cookie, it) }
+        contentType(ContentType.Application.Json)
+        setBody(
+          buildJsonObject {
+            put("knob.cardJson", card.toString())
+            put("knob.snapshotJson", snapshot.toString())
+            put("knob.cardStyle", style)
+            put("knob.dark", dark.toString())
+          }
+            .toString()
+        )
+      }
+    check(response.status.isSuccess()) {
+      "Card converter preview unavailable (${response.status.value})"
+    }
+    return response.bodyAsBytes()
   }
 
   /**
