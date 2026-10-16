@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.width
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -55,6 +56,10 @@ class CardDesignParityTest {
 
   private val registry = defaultRegistry()
   private val style = ThemeStyle.TerrazzoHome
+
+  /** A fixed "now" for the clock cards, so neither capture depends on when the test runs. */
+  private val parityClock =
+    FixedHaClock(java.time.ZonedDateTime.of(2026, 5, 5, 10, 8, 30, 0, java.time.ZoneOffset.UTC))
 
   private fun tile(entity: String, name: String? = null) =
     CardConfig(
@@ -126,6 +131,13 @@ class CardDesignParityTest {
     statistics: Map<String, List<ee.schimke.ha.model.StatisticPoint>> = emptyMap(),
     /** A colour both renders must show before capture: an image that loads asynchronously. */
     awaitColor: androidx.compose.ui.graphics.Color? = null,
+    /**
+     * Pins the player's "now" for both captures. A clock card's time ticks in-document from the
+     * player's time source, and the two captures are taken one after the other, so a minute rolling
+     * over between them changes the digits. Provided around the players only: the encode pass is a
+     * separate composition, so the direct document keeps the live time binding the template has.
+     */
+    clock: HaClock = SystemHaClock,
   ) {
     val snapshot =
       HaSnapshot(
@@ -144,28 +156,30 @@ class CardDesignParityTest {
 
     var useTemplate by mutableStateOf(false)
     compose.setContent {
-      Box(Modifier.width(360.dp).testTag("card")) {
-        if (!useTemplate) {
-          CachedCardPreview(
-            cacheKey = "direct-$name",
-            profile = androidXExperimentalWrap,
-            card = card,
-            snapshot = snapshot,
-            bitmapLoader = bitmapLoader,
-          ) {
-            ProvideCardRegistry(registry) {
-              ProvideHaTheme(theme) { RenderChild(card, snapshot, RemoteModifier.fillMaxWidth()) }
+      CompositionLocalProvider(LocalHaClock provides clock) {
+        Box(Modifier.width(360.dp).testTag("card")) {
+          if (!useTemplate) {
+            CachedCardPreview(
+              cacheKey = "direct-$name",
+              profile = androidXExperimentalWrap,
+              card = card,
+              snapshot = snapshot,
+              bitmapLoader = bitmapLoader,
+            ) {
+              ProvideCardRegistry(registry) {
+                ProvideHaTheme(theme) { RenderChild(card, snapshot, RemoteModifier.fillMaxWidth()) }
+              }
             }
+          } else {
+            CachedCardPreview(
+              cacheKey = "template-$name",
+              profile = androidXExperimentalWrap,
+              card = card,
+              snapshot = snapshot,
+              bitmapLoader = bitmapLoader,
+              template = playback,
+            ) {}
           }
-        } else {
-          CachedCardPreview(
-            cacheKey = "template-$name",
-            profile = androidXExperimentalWrap,
-            card = card,
-            snapshot = snapshot,
-            bitmapLoader = bitmapLoader,
-            template = playback,
-          ) {}
         }
       }
     }
@@ -451,6 +465,7 @@ class CardDesignParityTest {
       card("clock") { put("title", "Kitchen clock") },
       emptyList(),
       dark = false,
+      clock = parityClock,
     )
 
   @Test
@@ -465,6 +480,7 @@ class CardDesignParityTest {
       },
       emptyList(),
       dark = true,
+      clock = parityClock,
     )
 
   @Test
