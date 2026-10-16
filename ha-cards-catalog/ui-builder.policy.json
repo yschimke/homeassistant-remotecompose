@@ -75,7 +75,7 @@
         }
       ]
     },
-    "$comment_previews": "Every ha-cards design is a dashboard card that also lands on Wear and the launcher, so the builder previews each one in all three: Samsung's round Wear host at both sizes and the squircle (Pixel Watch) host at large, the launcher grid resized a cell at a time, and the app at phone and tablet column widths.",
+    "$comment_previews": "Every ha-cards design is a dashboard card that also lands on Wear and the launcher, so the builder previews each one in all three: Samsung's round Wear host at both sizes and the squircle (Pixel Watch) host at large, the launcher grid resized a cell at a time, and the app at phone and tablet column widths. Designs are checked in these panes against docs/design/design-principles.md: content follows area, arrangement follows aspect (half the height and double the width shows the same content, in a row).",
     "previews": [
       {
         "kind": "wear-widget",

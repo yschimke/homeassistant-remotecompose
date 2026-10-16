@@ -44,6 +44,10 @@ design.
 
 ## Principles
 
+The short, reviewable list every design follows is
+[design-principles.md](../design/design-principles.md); this section is
+the card-ladder reasoning behind it.
+
 ### 1. Identity before density
 
 The first thing a card communicates is _what kind of thing it is_.
@@ -69,6 +73,11 @@ A 200×60 cell and a 144×144 cell both pass "≥ 140 dp wide" but ask for
 totally different layouts. The first wants a horizontal row; the
 second wants a column or square. Break on width **and** height (or
 their ratio), not just width.
+
+The rule this serves is principle 1 of
+[design-principles.md](../design/design-principles.md): content follows
+area, arrangement follows aspect. Halve the height and double the width
+and the card shows the same content, in a row.
 
 The `RemoteSizeBreakpoint` helper today reads only `componentWidth()`.
 A 2D variant is a prerequisite before any worked-example ladder below
