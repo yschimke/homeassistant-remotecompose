@@ -106,7 +106,12 @@ class HaImageStack(private val context: Context, private val lanPolicy: LanConne
         .build()
     Log.d(TAG, "imageLoader building (host=$haHost hasToken=${accessToken != null})")
     ImageLoader.Builder(context.applicationContext)
-      .components { add(OkHttpNetworkFetcherFactory(callFactory = { client })) }
+      .components {
+        // Demo mode's pictures are on a host nothing serves; draw stand-ins for them. Answers only
+        // for `DemoData.BASE_URL` URLs, so real sessions' fetches are untouched.
+        add(DemoImageFetcher.Factory())
+        add(OkHttpNetworkFetcherFactory(callFactory = { client }))
+      }
       .diskCache(diskCache)
       .eventListener(LoggingEventListener)
       .build()

@@ -2,6 +2,7 @@ package ee.schimke.terrazzo.widget
 
 import android.content.Context
 import android.graphics.Bitmap
+import ee.schimke.terrazzo.core.session.DemoData
 import ee.schimke.terrazzo.terrazzoGraph
 import java.io.ByteArrayOutputStream
 
@@ -28,7 +29,11 @@ object WidgetImages {
     val stack = (context.terrazzoGraph() as? ee.schimke.terrazzo.di.AppGraph)?.haImageStack
     stack ?: return null
     stack.ensureBaseUrl(baseUrl)
-    val bitmap = stack.resolve(url, fresh) ?: return null
+    // A demo widget's pictures are relative to the demo host even while the app's own session —
+    // the image stack's base — is a real one; pin them to it so the demo stand-ins answer.
+    val target =
+      if (DemoData.isDemo(baseUrl) && url.startsWith('/')) baseUrl.trimEnd('/') + url else url
+    val bitmap = stack.resolve(target, fresh) ?: return null
     return encode(bitmap, maxPx, maxBytes)
   }
 
