@@ -125,3 +125,13 @@ test('unknown decimal precision, exponents and negative zero survive the host JS
   }
   assert.notEqual(canonical(parseJson('{"future":0.123456789012345678901}')),canonical(parseJson('{"future":0.123456789012345678902}')));
 });
+
+
+test('a browser without number source context refuses rather than rounding config', () => {
+  const original = JSON.parse;
+  try {
+    JSON.parse = (text, reviver) => original(text, function(key,value) { return reviver.call(this,key,value); });
+    assert.throws(() => parseJson('{"future":1.0000000000000000001}'), /cannot preserve JSON numbers/);
+    assert.throws(() => parseJson('{"future":-0}'), /cannot preserve JSON numbers/);
+  } finally { JSON.parse = original; }
+});

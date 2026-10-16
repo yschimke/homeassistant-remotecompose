@@ -10,6 +10,8 @@ Use **Load test dashboard** to edit a fixture without any HA connection. Import 
 local draft; export downloads the complete config. Supported sections views expose views, sections,
 cards, editable card fields and grid sizes. Other view layouts remain opaque and are preserved.
 Unknown custom cards remain in exported config even when the renderer cannot draw them.
+Lossless numeric config requires a browser with JSON parse source context and `JSON.rawJSON`;
+unsupported browsers report an error instead of rounding a dashboard during import or save.
 
 Connect signs into Home Assistant using the existing embed OAuth client. Load selects a dashboard,
 reads the current user's admin status and subscribes to entities used in its config. The host owns

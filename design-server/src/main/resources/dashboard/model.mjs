@@ -5,7 +5,7 @@ export function parseJson(text) {
     if (context?.source) {
       if (Number.isFinite(value) && (!Number.isInteger(value) || Number.isSafeInteger(value)) && JSON.stringify(value) === context.source) return value;
       if (JSON.rawJSON) return JSON.rawJSON(context.source);
-    } else if (Number.isSafeInteger(value)) return value;
+    }
     throw new Error('This browser cannot preserve JSON numbers. Use a browser with JSON.rawJSON support.');
   });
 }
