@@ -631,6 +631,40 @@ object Fixtures {
     )
 
   /**
+   * [bambuPrintControl] while the printer's controls are unavailable (a printer reachable only over
+   * the cloud, or mid-reconnect): the pad still shows what applies, greyed out and inert.
+   */
+  val bambuPrintControlUnavailable =
+    HaSnapshot(
+      states =
+        bambuPrintControl.states.mapValues { (id, e) ->
+          if (id.startsWith("button.")) e.copy(state = "unavailable") else e
+        }
+    )
+
+  /** [bambuPrintControl] with the print paused: Resume and Stop. */
+  val bambuPrintControlPaused =
+    HaSnapshot(
+      states =
+        bambuPrintControl.states +
+          snapshot(
+              state(
+                "sensor.p2s_printing_print_status",
+                "pause",
+                mapOf("friendly_name" to "P2S Print status"),
+              )
+            )
+            .states
+    )
+
+  /**
+   * The demo's two printers ([bambuPrinting]'s P2S and [bambuIdle]'s A1 mini) with no device
+   * registry: a card whose `printer:` can't be resolved can't tell which one it means.
+   */
+  val bambuTwoPrinters =
+    HaSnapshot(states = bambuPrintControl.states + bambuPrinting.states + bambuIdle.states)
+
+  /**
    * Two temperature sensors with a 24-sample diurnal cycle so the history-graph preview has real
    * sparkline data to draw.
    */

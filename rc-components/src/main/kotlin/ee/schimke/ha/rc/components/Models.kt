@@ -264,19 +264,29 @@ enum class HaBambuPrintPhase {
   Offline,
 }
 
-/** `custom:ha-bambulab-print_control-card` — pause / resume / stop pad. */
+/**
+ * `custom:ha-bambulab-print_control-card` — pause / resume / stop pad. A null button is not shown:
+ * the converter passes only the actions that apply to the print's state. With none to show, the pad
+ * says why in [statusLine] ("Nothing printing").
+ */
 data class HaBambuPrintControlData(
   val printerName: String,
   val pause: HaBambuControlButton?,
   val resume: HaBambuControlButton?,
   val stop: HaBambuControlButton?,
+  val statusLine: String? = null,
 )
 
+/**
+ * One control. A button that is not [enabled] (its entity is `unavailable`) is drawn greyed out and
+ * does nothing when tapped.
+ */
 data class HaBambuControlButton(
   val label: String,
   val icon: ImageVector,
   val accent: Color,
   val tapAction: HaAction = HaAction.None,
+  val enabled: Boolean = true,
 )
 
 /** `custom:ha-bambulab-ams-card` — grid of up to four filament slots. */

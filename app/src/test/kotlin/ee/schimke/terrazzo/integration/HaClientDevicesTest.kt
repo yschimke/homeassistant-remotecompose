@@ -127,6 +127,7 @@ class HaClientDevicesTest {
             manufacturer = "Vaillant",
             model = "ecoTEC plus 832",
             translationKey = "flow_temperature",
+            deviceId = "dev1",
           ),
         "light.kitchen" to DeviceInfo(integration = "hue"),
       ),
@@ -137,7 +138,7 @@ class HaClientDevicesTest {
   @Test
   fun withoutTheDeviceRegistryEntitiesKeepTheirIntegration() {
     assertEquals(
-      DeviceInfo(integration = "vaillant", translationKey = "flow_temperature"),
+      DeviceInfo(integration = "vaillant", translationKey = "flow_temperature", deviceId = "dev1"),
       devices(deviceRegistry = false)["sensor.boiler_flow"],
     )
   }

@@ -215,7 +215,9 @@ class HaClient(private val config: HaConfig, engine: HttpClientEngine? = null) {
    * The device behind each entity, for device-specific card designs. The entity registry's display
    * list (`config/entity_registry/list_for_display`, open to every user) gives each entity's
    * integration, translation key and device id; the device registry (`config/device_registry/list`)
-   * adds manufacturer and model. Without the device registry, entities keep what the first gives.
+   * adds manufacturer and model. Without the device registry, entities keep what the first gives,
+   * the device id included: that is what lets a card configured by device (a Bambu Lab printer)
+   * find its entities for every user.
    */
   suspend fun fetchDevices(): Map<String, DeviceInfo> {
     val entities =
@@ -231,13 +233,15 @@ class HaClient(private val config: HaConfig, engine: HttpClientEngine? = null) {
       .mapNotNull { it as? JsonObject }
       .mapNotNull { entity ->
         val id = entity["ei"]?.jsonPrimitive?.contentOrNull ?: return@mapNotNull null
-        val device = entity["di"]?.jsonPrimitive?.contentOrNull?.let { devices[it] }
+        val deviceId = entity["di"]?.jsonPrimitive?.contentOrNull
+        val device = deviceId?.let { devices[it] }
         val info =
           DeviceInfo(
             integration = entity["pl"]?.jsonPrimitive?.contentOrNull,
             manufacturer = device?.get("manufacturer")?.jsonPrimitive?.contentOrNull,
             model = device?.get("model")?.jsonPrimitive?.contentOrNull,
             translationKey = entity["tk"]?.jsonPrimitive?.contentOrNull,
+            deviceId = deviceId,
           )
         (id to info).takeIf { info != DeviceInfo() }
       }

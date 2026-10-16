@@ -48,8 +48,17 @@ object DashboardFixtures {
     val (cfgText, statesText) = readBundled(name) ?: readSibling(name) ?: return null
     val dashboard = parseDashboard(cfgText)
     val states = parseStates(statesText)
-    return Loaded(dashboard = dashboard, snapshot = HaSnapshot(states = states))
+    val devices = readDevices(name)?.let(::parseDevices).orEmpty()
+    return Loaded(dashboard = dashboard, snapshot = HaSnapshot(states = states, devices = devices))
   }
+
+  private fun readDevices(name: String): String? =
+    DashboardFixtures::class
+      .java
+      .getResourceAsStream("/dashboards/$name/devices.json")
+      ?.bufferedReader()
+      ?.use { it.readText() }
+      ?: File(DASHBOARDS_ROOT, "$name/devices.json").takeIf { it.exists() }?.readText()
 
   private fun readBundled(name: String): Pair<String, String>? {
     val cls = DashboardFixtures::class.java
@@ -115,6 +124,19 @@ private fun kotlinx.serialization.json.JsonElement.toCardConfig(): CardConfig? {
   val type = obj["type"]?.jsonPrimitive?.content ?: return null
   return CardConfig(type = type, raw = obj)
 }
+
+/**
+ * The demo's device registry, `devices.json` beside the states: entity id → [DeviceInfo] (which
+ * device it belongs to), as `HaClient.fetchDevices` reports it from a live Home Assistant. Cards
+ * configured by device (the Bambu Lab cards' `printer:`) find their entities through it.
+ */
+private fun parseDevices(text: String): Map<String, ee.schimke.ha.design.DeviceInfo> = Json {
+  ignoreUnknownKeys = true
+}
+  .decodeFromString(
+    kotlinx.serialization.serializer<Map<String, ee.schimke.ha.design.DeviceInfo>>(),
+    text,
+  )
 
 private fun parseStates(text: String): Map<String, EntityState> {
   val root = Json.parseToJsonElement(text).jsonObject
