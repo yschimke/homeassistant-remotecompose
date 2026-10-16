@@ -1582,6 +1582,17 @@
         }
       ]
     },
+    "ha-cards/card-template": {
+      "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardComponentsKt.HaCardTemplate",
+      "displayName": "Card template",
+      "group": "Containment",
+      "canvas": "layout/box",
+      "canvasMapping": {
+        "slots": {
+          "children": "content"
+        }
+      }
+    },
     "ha-cards/uber-theme": {
       "record": "ha-cards-catalog/ee.schimke.ha.cards.HaCardComponentsKt.HaCardUberTheme",
       "displayName": "Uber theme",

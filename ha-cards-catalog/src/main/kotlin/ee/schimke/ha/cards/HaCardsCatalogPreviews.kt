@@ -436,6 +436,34 @@ fun HaCardBarMeterSticker() = HaCardSticker {
 }
 
 @CatalogComponent(
+  id = "HaCard/Template",
+  group = "Containment",
+  noReference = NO_KIT,
+  caption =
+    "A card design template: the entity names and card title inside it bind to the values the " +
+      "app pushes (`light.s0.name`, `card.title`), so a design made from it can be published as " +
+      "a card design.",
+)
+@Preview(widthDp = CARD_WIDTH_DP, heightDp = 120)
+@Composable
+fun HaCardTemplateSticker() = HaCardSticker {
+  HaCardTemplate {
+    HaCardSurface {
+      RemoteColumn(RemoteModifier.fillMaxWidth(), horizontalAlignment = RemoteAlignment.Start) {
+        HaCardHeading(title = "Kitchen", subtitle = true)
+        HaCardEntityRow(
+          name = "Ceiling",
+          state = "On",
+          entityId = "light.s0",
+          toggleable = true,
+          isOn = true,
+        )
+      }
+    }
+  }
+}
+
+@CatalogComponent(
   id = "HaCard/UberTheme",
   group = "Containment",
   noReference = NO_KIT,

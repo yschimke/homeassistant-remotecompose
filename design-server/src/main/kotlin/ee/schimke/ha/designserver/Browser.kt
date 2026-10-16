@@ -143,6 +143,7 @@ object Api {
     put("id", design.id)
     put("sha256", design.entry.sha256)
     put("blob", "$API_BASE/blobs/${design.entry.sha256}.rc")
+    put("source", "/api/designs/${design.id}/source.uid")
     put("key", Json.encodeToJsonElement(DesignKey.serializer(), design.key))
     putJsonObject("properties") { design.properties.forEach { (k, v) -> put(k, v) } }
     put("slots", design.entry.slots)
@@ -296,7 +297,10 @@ object Pages {
       append("<h2>Design it</h2>")
       append(
         "<p class=\"muted\">The card's data contract — its slots and every binding with an example " +
-          "value — as <a href=\"/api/designs/${design.id}/schema\">JSON</a>.</p>"
+          "value — as <a href=\"/api/designs/${design.id}/schema\">JSON</a>. Its editable " +
+          "source, to fork in UI Builder: <a href=\"/api/designs/${design.id}/source.uid\">" +
+          "<code>source.uid</code></a> (rebuilt from Home Assistant card components in this " +
+          "design's theme, so close to it rather than identical).</p>"
       )
       designButton(editor, "design", design.id, CardSchema.fromDesign(library, design))
       append("<p class=\"muted\"><a href=\"/api/designs/${design.id}\">JSON</a></p>")
@@ -381,7 +385,10 @@ object Pages {
       else -> {
         append("<form method=\"post\" action=\"/ui-builder/designs\">")
         append("<input type=\"hidden\" name=\"$field\" value=\"${esc(value)}\">")
-        append("<button type=\"submit\">Design in UI Builder</button> ")
+        val fork = field == "design"
+        append(
+          "<button type=\"submit\">${if (fork) "Fork in UI Builder" else "Design in UI Builder"}</button> "
+        )
         editor.login?.let {
           append(
             "<span class=\"muted\">as <b>${esc(it)}</b> · <button form=\"sign-out\" " +
@@ -389,7 +396,12 @@ object Pages {
           )
         }
         append(
-          "<span class=\"muted\">Seeds an adaptive RemoteCompose layout bound to these values.</span></form>"
+          "<span class=\"muted\">" +
+            (if (fork)
+              "Starts from this design's source: Home Assistant card components in its theme, " +
+                "bound to these values."
+            else "Seeds an adaptive RemoteCompose layout bound to these values.") +
+            "</span></form>"
         )
         if (editor.login != null)
           append(

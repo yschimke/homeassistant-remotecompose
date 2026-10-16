@@ -568,7 +568,11 @@ per request — but adds what a static host can't: verification, a template brow
 - **Designing in UI Builder.** A design's page and `/schema` (paste a card's JSON) show the
   card's schema — slots and bindings with example values (`/api/designs/<id>/schema`,
   `POST /api/schema`) — and, with UI Builder bundled (`UI_BUILDER_BINARY`) or configured
-  (`UI_BUILDER_URL`), seed a UI Builder design from it. What that does, what the spike found and
+  (`UI_BUILDER_URL`), seed a UI Builder design from it. A library design forks from its source
+  (`/api/designs/<id>/source.uid`): the card rebuilt in `ha-cards` components on a card surface
+  inside its `ha-cards/uber-theme`, all inside an `ha-cards/card-template` (which binds names and
+  titles as a template capture does), entities named by slot (`light.s0`), so the export binds the
+  template's `<domain>.s<N>.*` and `card.*` values; every binding is declared as a state variable. What that does, what the spike found and
   what a full pipeline still needs: [card-design-ui-builder.md](card-design-ui-builder.md).
 - **Running.** `DESIGN_LIBRARY` (or the first argument), `PORT` (8080), `HOST`.
   `design-server/Dockerfile` bakes a library into a JRE image with UI Builder bundled.

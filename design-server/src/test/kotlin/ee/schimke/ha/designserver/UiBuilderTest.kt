@@ -223,6 +223,60 @@ class UiBuilderTest {
   }
 
   @Test
+  fun aLibraryDesignHasAnEditableSourceInItsTheme() = testApplication {
+    application { designServer(LibraryHolder(library())) }
+    val id = DesignLibrary.idOf(key)
+    val response = client.get("/api/designs/$id/source.uid")
+    assertEquals(HttpStatusCode.OK, response.status)
+    assertEquals(
+      "attachment; filename=$id.uid",
+      response.headers[HttpHeaders.ContentDisposition],
+    )
+    val source = Json.parseToJsonElement(response.bodyAsText()).jsonObject
+    assertEquals("ha-cards", source["catalogPin"]!!.jsonObject["systemId"]!!.jsonPrimitive.content)
+    assertFalse("template" in source, "a design, not a starting template")
+    val nodes = source["nodes"]!!.jsonObject
+    fun JsonObject.child(slot: String) = this["slots"]!!.jsonObject[slot]!!.jsonArray.single()
+    fun JsonObject.under(slot: String) =
+      nodes.getValue(child(slot).jsonPrimitive.content).jsonObject
+    fun JsonObject.component() = this["componentId"]!!.jsonPrimitive.content
+    // A section root (no surface of its own) → a card template, so names and titles bind → the
+    // design's uber theme, around the surface too → the surface → the card, named by slot.
+    val root = nodes.getValue("root").jsonObject
+    assertEquals("ha-cards/dashboard-section", root.component())
+    val template = root.under("content")
+    assertEquals("ha-cards/card-template", template.component())
+    val themeNode = template.under("children")
+    assertEquals("ha-cards/uber-theme", themeNode.component())
+    val themeProps = themeNode["properties"]!!.jsonObject
+    assertEquals("classic", themeProps["theme"]!!.jsonObject["value"]!!.jsonPrimitive.content)
+    assertFalse(themeProps["dark"]!!.jsonObject["value"]!!.jsonPrimitive.boolean)
+    val surface = themeNode.under("children")
+    assertEquals("ha-cards/card-surface", surface.component())
+    val tile = surface.under("content")
+    assertEquals("ha-cards/tile", tile.component())
+    val props = tile["properties"]!!.jsonObject
+    assertEquals("light.s0", props["entityId"]!!.jsonObject["value"]!!.jsonPrimitive.content)
+    assertEquals("Kitchen", props["name"]!!.jsonObject["value"]!!.jsonPrimitive.content)
+    // Every binding the template has is a field to bind.
+    assertTrue("light.s0.is_on" in source["stateVariables"]!!.jsonObject)
+    assertTrue(
+      "/api/designs/$id/source.uid" in client.get("/api/designs/$id").bodyAsText(),
+      "the design's JSON links its source",
+    )
+    assertEquals(HttpStatusCode.NotFound, client.get("/api/designs/nope/source.uid").status)
+  }
+
+  @Test
+  fun aDesignsUberThemeComesFromItsKey() {
+    fun theme(value: String) = HaCardsSeed.uberThemeOf(key.copy(theme = value))
+    assertEquals(HaCardsSeed.UberTheme("lcd", dark = true), theme("style:lcd:dark"))
+    assertEquals(HaCardsSeed.UberTheme("braun", dark = false), theme("style:braun:light"))
+    assertEquals(HaCardsSeed.UberTheme("classic", dark = true), theme("baked:TerrazzoHome:dark"))
+    assertEquals(null, theme("custom"))
+  }
+
+  @Test
   fun seedsAUiBuilderDesignForAnAuthorizedBrowser() = testApplication {
     var created: JsonObject? = null
     var precondition: String? = null
@@ -234,6 +288,7 @@ class UiBuilderTest {
             created = Json.parseToJsonElement(call.receiveText()).jsonObject
             call.respondText("created", status = HttpStatusCode.Created)
           }
+          studioCatalogFixture(token = "secret")
         }
       }
     }
@@ -259,7 +314,7 @@ class UiBuilderTest {
     val edit = browser.get("/edit?token=secret")
     val cookie = assertNotNull(edit.headers[HttpHeaders.SetCookie]).substringBefore(';')
     assertTrue(
-      "Design in UI Builder" in
+      "Fork in UI Builder" in
         browser.get("/designs/$id") { header(HttpHeaders.Cookie, cookie) }.bodyAsText()
     )
 
@@ -275,6 +330,15 @@ class UiBuilderTest {
       response.headers[HttpHeaders.Location],
     )
     assertEquals("*", precondition, "creates, never replaces")
+    // A fork of the design's source, pinned to the served ha-cards catalog.
+    assertEquals(
+      "sha256:published",
+      document["catalogPin"]!!.jsonObject["catalogRevision"]!!.jsonPrimitive.content,
+    )
+    assertEquals(
+      "ha-cards/tile",
+      document["nodes"]!!.jsonObject["tile"]!!.jsonObject["componentId"]!!.jsonPrimitive.content,
+    )
     val state = document["stateVariables"]!!.jsonObject
     assertTrue(state.getValue("light.s0.is_on").jsonObject["initialValue"]!!.jsonPrimitive.boolean)
     assertEquals(
@@ -370,6 +434,7 @@ class UiBuilderTest {
           put("/api/ui-builder/v1/designs/{id}") {
             call.respondText("created", status = HttpStatusCode.Created)
           }
+          studioCatalogFixture(token = "secret")
           post("/ui-builder/{id}/access") {
             assertEquals("secret", call.request.queryParameters["token"])
             shared = call.receiveParameters().entries().associate { it.key to it.value.single() }

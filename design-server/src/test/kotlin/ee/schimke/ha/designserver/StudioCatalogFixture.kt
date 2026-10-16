@@ -9,14 +9,17 @@ import java.util.concurrent.atomic.AtomicInteger
 import kotlin.test.assertEquals
 import kotlinx.serialization.json.*
 
-internal fun Route.studioCatalogFixture(failFirstLookup: Boolean = false) {
+internal fun Route.studioCatalogFixture(
+  failFirstLookup: Boolean = false,
+  token: String = "operator",
+) {
   val lookups = AtomicInteger()
   post("/api/ui-builder/v1/requests") {
     if (failFirstLookup && lookups.incrementAndGet() == 1) {
       call.respondText("private catalog error", status = HttpStatusCode.ServiceUnavailable)
       return@post
     }
-    assertEquals("operator", call.request.queryParameters["token"])
+    assertEquals(token, call.request.queryParameters["token"])
     val request = Json.parseToJsonElement(call.receiveText()).jsonObject
     assertEquals(JsonPrimitive("operator"), request["actorId"])
     assertEquals(JsonPrimitive("listCatalogs"), request["request"]!!.jsonObject["type"])

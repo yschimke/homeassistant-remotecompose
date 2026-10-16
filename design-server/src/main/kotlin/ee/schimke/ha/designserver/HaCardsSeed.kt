@@ -1,5 +1,6 @@
 package ee.schimke.ha.designserver
 
+import ee.schimke.ha.design.DesignKey
 import ee.schimke.ha.designserver.UiBuilderSeed.Target
 import ee.schimke.ha.designserver.UiBuilderSeed.TextRole
 import ee.schimke.ha.designserver.UiBuilderSeed.float
@@ -55,6 +56,8 @@ object HaCardsSeed {
   const val METRIC = "ha-cards/metric"
   const val THERMOMETER = "ha-cards/thermometer"
   const val BUTTON = "ha-cards/button"
+  const val UBER_THEME = "ha-cards/uber-theme"
+  const val CARD_TEMPLATE = "ha-cards/card-template"
 
   /** HA's default dark card background: a Wear widget's own background. */
   private const val WEAR_BACKGROUND = "#FF1C1C1C"
@@ -87,7 +90,7 @@ object HaCardsSeed {
   }
 
   private fun target(
-    template: String,
+    template: String?,
     root: String,
     widthDp: Int?,
     heightDp: Int?,
@@ -117,14 +120,15 @@ object HaCardsSeed {
     )
 
   /** A dashboard section's root, 360dp wide: its cards each sit on their own surface. */
-  fun section(template: String, heightDp: Int? = null) =
+  fun section(template: String?, heightDp: Int? = null) =
     target(template, DASHBOARD_SECTION, widthDp = 360, heightDp = heightDp, adaptive = true)
 
   /**
    * A dashboard card, 360dp wide, growing with its rows; adaptive like the design server's. Without
-   * [title] an entities card leaves its heading out, as one inside a [section] does.
+   * [title] an entities card leaves its heading out, as one inside a [section] does. A null
+   * [template] is a design, not a starting template.
    */
-  fun card(template: String, heightDp: Int? = null, title: Boolean = true) =
+  fun card(template: String?, heightDp: Int? = null, title: Boolean = true) =
     target(
       template,
       DASHBOARD_CARD,
@@ -372,7 +376,14 @@ object HaCardsSeed {
    * `tile` for a tile card, a `gauge` for a gauge, a `button` for a button, and otherwise one
    * `entity-row` per slot (up to [Target.maxRows]) under an optional `heading`.
    */
-  fun haCard(schema: CardSchema, designId: String, title: String, target: Target): JsonObject {
+  fun haCard(
+    schema: CardSchema,
+    designId: String,
+    title: String,
+    target: Target,
+    entityOf: (SlotSchema) -> String? = { it.entity },
+    stateVariables: List<Pair<String, JsonObject>> = emptyList(),
+  ): JsonObject {
     val examples = schema.bindings.associate { it.name to it.example }
     fun text(name: String): String? =
       examples[name]?.takeIf { it.isString }?.contentOrNull?.takeIf(String::isNotBlank)
@@ -382,7 +393,7 @@ object HaCardsSeed {
     fun entityProperties(slot: SlotSchema): Map<String, JsonObject> = buildMap {
       put("name", UiBuilderSeed.string(text("${slot.slot}.name") ?: slot.name ?: slot.slot))
       put("state", UiBuilderSeed.string(text("${slot.slot}.state") ?: ""))
-      slot.entity?.let { put("entityId", UiBuilderSeed.string(it)) }
+      entityOf(slot)?.let { put("entityId", UiBuilderSeed.string(it)) }
       put("icon", UiBuilderSeed.string(iconFor(slot.domain)))
       if (UiBuilderSeed.toggleable(slot.domain)) {
         put("toggleable", bool(true))
@@ -409,7 +420,7 @@ object HaCardsSeed {
                 gaugeUnit(card, text("${first.slot}.state"))?.let {
                   put("unit", UiBuilderSeed.string(it))
                 }
-                first.entity?.let { put("entityId", UiBuilderSeed.string(it)) }
+                entityOf(first)?.let { put("entityId", UiBuilderSeed.string(it)) }
               },
           )
         body = "gauge"
@@ -473,9 +484,104 @@ object HaCardsSeed {
       designId,
       title,
       heightDp = target.heightDp ?: 120,
-      stateVariables = emptyList(),
+      stateVariables = stateVariables,
       nodes = ordered,
     )
+  }
+
+  /** An `ha-cards/uber-theme` choice: one of `HaUberTheme.all`'s ids, light or [dark]. */
+  data class UberTheme(val id: String, val dark: Boolean)
+
+  /**
+   * The uber theme a library design is drawn in, from its key's theme: `style:<id>:<mode>` is that
+   * card style, a baked theme (`baked:<app style>:<mode>`) is the cards' own `classic` look.
+   */
+  fun uberThemeOf(key: DesignKey): UberTheme? {
+    val parts = key.theme.split(':')
+    if (parts.size != 3) return null
+    val dark = parts[2] == "dark"
+    return when (parts[0]) {
+      "style" -> UberTheme(parts[1], dark)
+      "baked" -> UberTheme("classic", dark)
+      else -> null
+    }
+  }
+
+  /**
+   * The editable source of library [design]: a UI Builder document (`.uid`) to fork it from.
+   *
+   * The library's templates are captured from the app's card converters, so there is no source to
+   * recover from them; this rebuilds the card in `ha-cards` components ([haCard]). It nests, from
+   * the root down:
+   * - a [DASHBOARD_SECTION] root, which draws no surface of its own;
+   * - a [CARD_TEMPLATE], so names and titles bind as the library template's do (`light.s0.name`,
+   *   `card.title`) rather than being the example's text;
+   * - the design's [UBER_THEME], around the surface too, so its background and corners are the
+   *   theme's;
+   * - a [CARD_SURFACE] and the card's body, its entities named by slot (`light.s0`).
+   *
+   * So the exported card binds the `<domain>.s<N>.*` and `card.*` values the library template does,
+   * and a fork published over it keeps up with Home Assistant. Every binding is declared as a state
+   * variable, so the editor lists the fields there are to bind. It is close to the library design,
+   * not identical: the converters and the catalog components differ in detail.
+   */
+  fun source(library: DesignLibrary, design: LibraryDesign): JsonObject {
+    val schema = CardSchema.fromDesign(library, design)
+    val theme = uberThemeOf(design.key)
+    val card =
+      haCard(
+        schema,
+        designId = sourceId(design),
+        title =
+          "${design.key.cardType}${theme?.let { " · ${it.id}${if (it.dark) " dark" else ""}" } ?: ""}",
+        target = section(template = null),
+        entityOf = { it.slot },
+        stateVariables = UiBuilderSeed.stateVariables(schema),
+      )
+    val nodes = card.getValue("nodes").jsonObject
+    val root = nodes.getValue("root").jsonObject
+    val body = root.getValue("slots").jsonObject.getValue("content").jsonArray
+    val wrapped = LinkedHashMap<String, JsonObject>()
+    wrapped["root"] =
+      JsonObject(
+        root +
+          ("slots" to JsonObject(mapOf("content" to JsonArray(listOf(JsonPrimitive("template"))))))
+      )
+    val inTheme = if (theme != null) "theme" else "surface"
+    wrapped["template"] =
+      node(
+        "template",
+        CARD_TEMPLATE,
+        modifiers = listOf(UiBuilderSeed.fillMaxWidth()),
+        slots = mapOf("children" to listOf(inTheme)),
+      )
+    if (theme != null) {
+      wrapped["theme"] =
+        node(
+          "theme",
+          UBER_THEME,
+          properties = mapOf("theme" to UiBuilderSeed.string(theme.id), "dark" to bool(theme.dark)),
+          modifiers = listOf(UiBuilderSeed.fillMaxWidth()),
+          slots = mapOf("children" to listOf("surface")),
+        )
+    }
+    wrapped["surface"] =
+      node(
+        "surface",
+        CARD_SURFACE,
+        slots = mapOf("content" to body.map { it.jsonPrimitive.content }),
+      )
+    for ((id, child) in nodes) if (id != "root") wrapped[id] = child.jsonObject
+    return JsonObject(card + ("nodes" to JsonObject(wrapped)))
+  }
+
+  /** A path-safe UI Builder id for a fork of [design], unique per call. */
+  fun forkId(design: LibraryDesign): String =
+    "${sourceId(design)}-${System.currentTimeMillis().toString(36)}"
+
+  private fun sourceId(design: LibraryDesign): String {
+    val type = design.key.cardType.lowercase().replace(Regex("[^a-z0-9]+"), "-").trim('-').take(40)
+    return "card-$type-${design.id.lowercase().replace(Regex("[^a-z0-9]+"), "-").take(24)}"
   }
 
   /**

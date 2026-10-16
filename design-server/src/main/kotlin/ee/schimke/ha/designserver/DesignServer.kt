@@ -1,6 +1,7 @@
 package ee.schimke.ha.designserver
 
 import ee.schimke.ha.design.DesignCatalog
+import io.ktor.http.ContentDisposition
 import io.ktor.http.ContentType
 import io.ktor.http.Cookie
 import io.ktor.http.HttpHeaders
@@ -24,6 +25,8 @@ import io.ktor.server.routing.post
 import io.ktor.server.routing.routing
 import java.io.File
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 
 /**
  * The library a running server serves: reloaded when `manifest.json` changes on disk (checked at
@@ -221,6 +224,24 @@ fun Application.designServer(
       )
     }
 
+    // A library design's editable source, to fork in UI Builder (HaCardsSeed.source).
+    get("/api/designs/{id}/source.uid") {
+      val library = holder.current()
+      val design = library.design(call.parameters["id"].orEmpty()) ?: return@get call.notFound()
+      call.response.header(
+        HttpHeaders.ContentDisposition,
+        ContentDisposition.Attachment.withParameter(
+            ContentDisposition.Parameters.FileName,
+            "${design.id}.uid",
+          )
+          .toString(),
+      )
+      call.respondText(
+        json.encodeToString(JsonObject.serializer(), HaCardsSeed.source(library, design)) + "\n",
+        ContentType.Application.Json,
+      )
+    }
+
     // Any card's schema, from its Lovelace config (and optionally its entities' states).
     post("/api/schema") {
       val schema = runCatching {
@@ -286,8 +307,8 @@ fun Application.designServer(
       call.respondRedirect("/designs")
     }
 
-    // Seeds a UI Builder design from a library design (`design`) or a card's JSON (`card`), then
-    // opens it in the editor.
+    // Seeds a UI Builder design from a library design (`design`, a fork of its source) or a card's
+    // JSON (`card`), then opens it in the editor.
     post("/ui-builder/designs") {
       val integration = uiBuilder ?: return@post call.notFound()
       val editor = call.editor(uiBuilder, github)
@@ -300,11 +321,13 @@ fun Application.designServer(
       }
       val params = call.receiveParameters()
       val library = holder.current()
-      val (schema, title) =
+      // A library design forks from its source (HaCardsSeed.source), in the served `ha-cards`
+      // catalog; a pasted card gets the bound starting layout.
+      val (document, resolveCatalog) =
         params["design"]?.let { id ->
           val design = library.design(id) ?: return@post call.notFound()
-          CardSchema.fromDesign(library, design) to
-            "${design.key.cardType} · library design ${design.id}"
+          val source = HaCardsSeed.source(library, design)
+          JsonObject(source + ("id" to JsonPrimitive(HaCardsSeed.forkId(design)))) to true
         }
           ?: params["card"]?.let { text ->
             val (card, states) =
@@ -315,15 +338,15 @@ fun Application.designServer(
                     status = HttpStatusCode.BadRequest,
                   )
                 }
-            CardSchema.fromCard(card, states, holder.current()).let { it to it.cardType }
+            val schema = CardSchema.fromCard(card, states, holder.current())
+            UiBuilderSeed.document(schema, UiBuilderSeed.designId(schema), schema.cardType) to false
           }
           ?: return@post call.respondText(
             "needs design or card",
             status = HttpStatusCode.BadRequest,
           )
-      val document = UiBuilderSeed.document(schema, UiBuilderSeed.designId(schema), title)
       val location = runCatching {
-        val designId = integration.client.create(document)
+        val designId = integration.client.create(document, resolveCatalog)
         val login = editor.login
         if (login == null) integration.config.editorUrl(designId)
         else {
