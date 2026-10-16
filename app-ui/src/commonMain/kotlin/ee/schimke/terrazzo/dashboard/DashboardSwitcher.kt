@@ -1,6 +1,7 @@
 package ee.schimke.terrazzo.dashboard
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
@@ -18,6 +19,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import ee.schimke.ha.client.DashboardSummary
 
@@ -49,6 +51,9 @@ fun DashboardSwitcher(
       text = title,
       style = MaterialTheme.typography.titleLarge,
       color = MaterialTheme.colorScheme.onSurface,
+      maxLines = 1,
+      softWrap = false,
+      overflow = TextOverflow.Ellipsis,
       modifier = modifier,
     )
     return
@@ -56,11 +61,21 @@ fun DashboardSwitcher(
 
   var expanded by remember { mutableStateOf(false) }
   Box(modifier = modifier) {
-    TextButton(onClick = { expanded = true }) {
+    // The top bar's actions leave the title a phone-width remainder, so the name ellipsizes on one
+    // line and gives up width before the chevron does (`weight(fill = false)` measures the text
+    // after the icon has claimed its 24 dp).
+    TextButton(
+      onClick = { expanded = true },
+      contentPadding = PaddingValues(start = 4.dp, end = 0.dp),
+    ) {
       Text(
         text = title,
         style = MaterialTheme.typography.titleLarge,
         color = MaterialTheme.colorScheme.onSurface,
+        maxLines = 1,
+        softWrap = false,
+        overflow = TextOverflow.Ellipsis,
+        modifier = Modifier.weight(1f, fill = false),
       )
       Icon(
         imageVector = Icons.Filled.ArrowDropDown,

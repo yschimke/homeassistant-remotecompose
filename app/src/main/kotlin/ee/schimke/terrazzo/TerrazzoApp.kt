@@ -15,7 +15,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
@@ -26,13 +25,11 @@ import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
@@ -43,11 +40,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.onFocusChanged
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -83,11 +79,9 @@ import ee.schimke.terrazzo.dashboard.historyTitle
 import ee.schimke.terrazzo.dashboard.rememberDashboardListState
 import ee.schimke.terrazzo.dashboard.rememberSelectedDashboardListState
 import ee.schimke.terrazzo.discovery.DiscoveryScreen
-import ee.schimke.terrazzo.notifications.NotificationBell
 import ee.schimke.terrazzo.shared.AppScreen
 import ee.schimke.terrazzo.shared.CardStudioScreen
 import ee.schimke.terrazzo.shared.TerrazzoNavigation
-import ee.schimke.terrazzo.ui.statusColors
 import ee.schimke.terrazzo.ui.toUberTheme
 import ee.schimke.terrazzo.wearsync.WearWidgetsScreen
 import ee.schimke.terrazzo.widget.WidgetInstallSheet
@@ -475,7 +469,8 @@ private fun AuthenticatedShell(
 
 /**
  * The dashboard-first shell. Loads the dashboards list once for the session, hosts the picker →
- * view local nav, and renders the [TopAppBar] with the [DashboardSwitcher] + [TopBarOverflowMenu].
+ * view local nav, and renders the [DashboardTopBar] with the
+ * [DashboardSwitcher] + [TopBarOverflowMenu].
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -656,10 +651,10 @@ private fun DashboardsRoot(
   } else {
     Scaffold(
       topBar = {
-        TopAppBar(
+        DashboardTopBar(
           title = {
             if (openedValue == DASHBOARD_UNSET) {
-              Text("Pick a dashboard")
+              Text("Pick a dashboard", maxLines = 1, overflow = TextOverflow.Ellipsis)
             } else {
               DashboardSwitcher(
                 dashboards = readyDashboards,
@@ -671,45 +666,20 @@ private fun DashboardsRoot(
               )
             }
           },
-          actions = {
-            if (openedValue != DASHBOARD_UNSET && !readOnly) {
-              IconButton(onClick = { agentOpen = true }) {
-                Icon(Icons.Filled.AutoAwesome, contentDescription = "Edit with an agent")
-              }
-            }
-            NotificationBell(
-              notifications = notifications,
-              onDismiss = { n ->
-                scope.launch { runCatching { session.dismissNotification(n.notificationId) } }
-              },
-              onClearAll = { scope.launch { runCatching { session.dismissAllNotifications() } } },
-            )
-            val statusColor = connectionStatus.statusColor()
-            Surface(
-              onClick = onRetryConnection,
-              color = statusColor.copy(alpha = 0.16f),
-              shape = MaterialTheme.shapes.small,
-              modifier = Modifier.padding(end = 8.dp),
-            ) {
-              Text(
-                text = connectionStatus.label,
-                color = statusColor,
-                style = MaterialTheme.typography.labelSmall,
-                modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
-              )
-            }
-            Row(
-              verticalAlignment = Alignment.CenterVertically,
-              modifier = Modifier.padding(end = 8.dp),
-            ) {
-              Text(
-                text = if (readOnly) "Read" else "Write",
-                color = if (readOnly) statusColors.readOnly else statusColors.warning,
-                style = MaterialTheme.typography.labelSmall,
-                modifier = Modifier.padding(end = 4.dp),
-              )
-              Switch(checked = writeMode, onCheckedChange = { graph.sessionWriteMode.set(it) })
-            }
+          showAgentButton = openedValue != DASHBOARD_UNSET && !readOnly,
+          onOpenAgent = { agentOpen = true },
+          notifications = notifications,
+          onDismissNotification = { n ->
+            scope.launch { runCatching { session.dismissNotification(n.notificationId) } }
+          },
+          onClearNotifications = {
+            scope.launch { runCatching { session.dismissAllNotifications() } }
+          },
+          connectionStatus = connectionStatus,
+          onRetryConnection = onRetryConnection,
+          writeMode = writeMode,
+          onWriteModeChange = { graph.sessionWriteMode.set(it) },
+          overflowMenu = {
             TopBarOverflowMenu(
               onOpenSettings = onOpenSettings,
               onOpenWidgets = onOpenWidgets,
@@ -812,17 +782,6 @@ enum class ConnectionStatus(val label: String) {
   Connected("Connected"),
   Disconnected("Paused"),
 }
-
-/** Theme-aware chrome colour for the top-bar connection chip. */
-@Composable
-@ReadOnlyComposable
-private fun ConnectionStatus.statusColor(): Color =
-  when (this) {
-    ConnectionStatus.Failed -> statusColors.error
-    ConnectionStatus.Connecting -> statusColors.success
-    ConnectionStatus.Connected -> statusColors.info
-    ConnectionStatus.Disconnected -> statusColors.neutral
-  }
 
 private fun SessionConnectionStatus.toUiConnectionStatus(): ConnectionStatus =
   when (this) {
