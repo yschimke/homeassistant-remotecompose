@@ -714,6 +714,42 @@ async function fetchTemplate(library, design, designKey) {
 }
 
 /**
+ * The library design that draws [card], asked of the design server's resolver
+ * (`POST /api/cards/resolve`, at [resolveUrl]): its sha256. Only the design is taken: the card's
+ * slot values come live from [slotBindings], and the answer's other values are the library
+ * example's, not this card's, so a template's own placeholders are left to show instead.
+ */
+export async function resolveDesign(resolveUrl, card, { cardStyle = 'classic', dark = false } = {}, fetchImpl = fetch) {
+  // An element restarts as its attributes arrive: ask once per card, style and mode. A failure
+  // is forgotten, so a later start asks again.
+  const key = JSON.stringify([String(resolveUrl), card, cardStyle, dark]);
+  if (!resolved.has(key)) {
+    const pending = askResolver(resolveUrl, card, cardStyle, dark, fetchImpl);
+    resolved.set(key, pending);
+    pending.catch(() => resolved.delete(key));
+  }
+  return resolved.get(key);
+}
+
+const resolved = new Map();
+
+async function askResolver(resolveUrl, card, cardStyle, dark, fetchImpl) {
+  const response = await fetchImpl(resolveUrl, {
+    method: 'POST',
+    // A simple request: no CORS preflight.
+    headers: { 'Content-Type': 'text/plain' },
+    body: JSON.stringify({ card, cardStyle, dark }),
+  });
+  if (!response.ok) {
+    const reason = (await response.text()).trim();
+    throw new Error(`no design for this card${reason ? `: ${reason}` : ''} (${response.status})`);
+  }
+  const match = await response.json();
+  if (!SHA256.test(match.sha256 ?? '')) throw new Error('the resolver returned no design');
+  return { sha256: match.sha256, exact: match.exact !== false };
+}
+
+/**
  * TEMPORARY, until the upstream player fix in embed/upstream/remote-compose-player.patch ships:
  * the player draws text from its paint context's cache, which `setNamedStringOverride` does not
  * update and the document's own TextData puts back on every pass. Keep each overridden text in
@@ -764,7 +800,9 @@ const BaseElement = globalThis.HTMLElement ?? class {};
  * Attributes:
  * - `hass`: the viewer's Home Assistant, e.g. `https://my-ha.example:8123`.
  * - `card`: the Lovelace card config, as JSON.
- * - `design`: the template's sha256 in the library; or `design-key`, a DesignKey as JSON.
+ * - `design`: the template's sha256 in the library; or `design-key`, a DesignKey as JSON. With
+ *   neither, the design server picks the design that draws the card (`POST /api/cards/resolve`).
+ * - `card-style`: with neither, the card style to draw in (an `HaUberTheme` id; default `classic`).
  * - `library`: the design library (default: `/designs/v1/` on the host serving this script).
  * - `theme`: `light`, `dark` or `auto` (default).
  * - `height`: a fixed CSS height in px (default: the card's own).
@@ -777,7 +815,7 @@ const BaseElement = globalThis.HTMLElement ?? class {};
  */
 export class HaCardElement extends BaseElement {
   static get observedAttributes() {
-    return ['hass', 'card', 'design', 'design-key', 'library', 'theme', 'height'];
+    return ['hass', 'card', 'design', 'design-key', 'card-style', 'library', 'theme', 'height'];
   }
 
   constructor() {
@@ -879,9 +917,23 @@ export class HaCardElement extends BaseElement {
       const library = new URL(this.getAttribute('library') ?? new URL('../../designs/v1/', import.meta.url));
       if (!library.pathname.endsWith('/')) library.pathname += '/';
       const designKey = this.getAttribute('design-key');
+      let design = this.getAttribute('design');
+      if (!design && !designKey) {
+        // Neither given: the library's own server picks the design for this card.
+        const theme = this.getAttribute('theme');
+        const dark =
+          theme === 'dark' ||
+          (theme !== 'light' && !!globalThis.matchMedia?.('(prefers-color-scheme: dark)').matches);
+        const resolved = await resolveDesign(new URL('/api/cards/resolve', library), card, {
+          cardStyle: this.getAttribute('card-style') ?? 'classic',
+          dark,
+        });
+        if (!current()) return;
+        design = resolved.sha256;
+      }
       const [RC, bytes] = await Promise.all([
         loadPlayer(new URL('rc-player.js', import.meta.url).toString()),
-        fetchTemplate(library, this.getAttribute('design'), designKey ? JSON.parse(designKey) : null),
+        fetchTemplate(library, design, designKey ? JSON.parse(designKey) : null),
       ]);
       if (!current()) return;
       await this.play(RC, bytes, card);
