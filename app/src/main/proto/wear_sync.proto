@@ -38,6 +38,8 @@ message CardSummary {
     string title = 2;
     string primary_entity_id = 3;
     string raw_json = 4;
+    // Explicit phone card/type style override. Empty follows the watch-wide style.
+    string card_style_override = 5;
 }
 
 // One DataStore Proto entry per dashboard (path

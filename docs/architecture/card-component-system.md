@@ -268,7 +268,13 @@ control, calendar, area, picture, Bambu, weather and statistic cards take both.
 **Wear and TV.** The Wear app has a **Card style** setting of its own (`WearPrefs.cardStyle`).
 Slot widgets apply it with `ProvideHaUberStyle`, which brings the instruments, type, shapes and
 ink but keeps the watch's palette (the WearM3 colours its host updates); changing it (or the
-watch theme) re-renders placed widgets (`refreshAllSlotWidgets`). The TV kiosk has a card style
+watch theme) re-renders placed widgets (`refreshAllSlotWidgets`). An explicit phone per-card or
+per-card-type style override takes priority: the phone resolves `CardDesignOverrides.forCard` and
+syncs `CardSummary.cardStyleOverride` with the pin, including when only the override changes.
+Clearing it restores the watch-wide choice. An unknown style from a newer phone also follows the
+watch choice. This field is persisted with the offline pin; the effective style is part of the
+Wear template cache key. Variants, authors and device-specific server designs are still mobile
+design selection features and are not transferred by this field. The TV kiosk has a card style
 picker too (`TvPrefs.cardStyle`): its headline row is real cards (`TvKioskCards` — a light tile,
 a thermostat and a humidity gauge from `TvDemoData.snapshot`), converted and played like the
 dashboard's, so each style shows its own dials and meters there; the rest of the kiosk takes the
