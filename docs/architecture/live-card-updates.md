@@ -68,6 +68,22 @@ Re-encoding is more expensive than a binding push and doesn't animate, so
 prefer path 1. Reach for path 2 only when the content genuinely can't be
 expressed as a binding.
 
+### Relative times
+
+`formatState` shows a timestamp (`device_class: timestamp`, and `event` / `button` /
+`input_button` / `scene` entities) as a relative time — `3 h ago`, `in 5 min` — and as a date
+once it is a week or more away. That label moves with the clock, not the entity, so it is baked
+by the host rather than computed in-document, and refreshed on a tick:
+
+- Binding cards: a dashboard provides `LocalRelativeTimeTick` (`rememberRelativeTimeTick()`, every
+  20 s); `CachedCardPreview` re-runs its push for cards whose entities `isRelativeTimeState`.
+  Pushes are deduplicated, so a tick that rolls no label over writes nothing.
+- Re-encode cards: `cardDataSignature` folds the current label in, and the dashboard re-reads
+  the signature on the same tick.
+- Previews, tests and hosts without a tick never refresh it on their own (the default tick never
+  advances): their label is as of the last snapshot. Fixtures with fixed past timestamps render
+  as dates, so screenshots stay stable.
+
 ## Checklist for a new / changed converter
 
 1. Does every dynamic value the card shows update on live data? Walk each

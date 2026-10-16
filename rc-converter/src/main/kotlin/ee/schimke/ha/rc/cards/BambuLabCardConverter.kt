@@ -90,7 +90,7 @@ open class BambuLabCardConverter(
       entity?.attributes?.get("friendly_name")?.jsonPrimitive?.content
         ?: entityId
         ?: "Bambu Lab printer"
-    val state = formatState(entity)
+    val state = formatState(entity, snapshot)
 
     RemoteBox(
       modifier =

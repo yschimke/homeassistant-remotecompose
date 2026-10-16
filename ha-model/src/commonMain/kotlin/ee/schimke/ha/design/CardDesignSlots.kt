@@ -133,7 +133,7 @@ object CardDesignSlots {
         entry.name
           ?: state?.attributes?.get("friendly_name")?.jsonPrimitive?.contentOrNull
           ?: entityId
-      strings["$slot.state"] = formatState(state)
+      strings["$slot.state"] = formatState(state, snapshot)
       strings["$slot.name"] = name
       booleans["$slot.is_on"] = state?.let { HaLiveBindings.isOn(entityId, it.state) } ?: false
       ints["$slot.state_int"] = state?.let { HaLiveBindings.stateInt(entityId, it.state) } ?: -1

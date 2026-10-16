@@ -150,7 +150,7 @@ private fun logbookData(card: CardConfig, snapshot: HaSnapshot): HaLogbookData {
       val name = entity?.attributes?.get("friendly_name")?.jsonPrimitive?.content ?: entityId
       HaLogbookEntry(
         name = name,
-        message = formatState(entity),
+        message = formatState(entity, snapshot),
         whenText = formatRelative(entity?.lastChanged),
         icon = HaIconMap.resolve(null, entity),
       )

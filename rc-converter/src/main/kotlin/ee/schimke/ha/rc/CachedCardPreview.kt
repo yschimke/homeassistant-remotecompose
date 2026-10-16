@@ -196,10 +196,14 @@ fun CachedCardPreview(
       snapshot != null &&
       (entityIds.isNotEmpty() || template != null)
   ) {
-    LaunchedEffect(namedValues, snapshot) {
+    // A relative time ("3 h ago", see `isRelativeTimeState`) moves with the clock, not the
+    // entity: while the card shows one, the host's tick (`LocalRelativeTimeTick`) re-runs the
+    // push. Only changed values are written, so a tick that rolls no label over writes nothing.
+    val tick = relativeTimeTickFor(entityIds, snapshot)
+    LaunchedEffect(namedValues, snapshot, tick) {
       pushSnapshotBindings(NamedValueWriter(namedValues), bindingsFor(snapshot), pushedNamed)
     }
-    LaunchedEffect(playerHolder.value, snapshot) {
+    LaunchedEffect(playerHolder.value, snapshot, tick) {
       val updater = playerHolder.value ?: return@LaunchedEffect
       pushSnapshotBindings(ViewPlayerWriter(updater), bindingsFor(snapshot), pushedView)
     }

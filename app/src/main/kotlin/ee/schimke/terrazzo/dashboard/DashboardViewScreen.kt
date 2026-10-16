@@ -212,6 +212,8 @@ fun DashboardViewScreen(
   CompositionLocalProvider(
     LocalHaActionDispatcher provides actionDispatcher,
     LocalCardCaptureEpoch provides demoEpoch,
+    // Cards showing a relative time ("3 h ago") refresh on this tick, not only on new data.
+    ee.schimke.ha.rc.LocalRelativeTimeTick provides ee.schimke.ha.rc.rememberRelativeTimeTick(),
   ) {
     when (val s = state) {
       DashboardState.Loading ->
@@ -974,7 +976,12 @@ private fun CardSlot(
   // while named-binding pushes carry the updates (see CachedCardPreview).
   // `liveBindings` is the inverse flag: a re-encode card skips the push so its
   // per-card-formatted bake isn't clobbered by a raw value.
-  val dataSignature = remember(card, snapshot) { registry.cardDataSignature(card, snapshot) }
+  // A relative-time label ("3 h ago") is in the signature too; the tick re-reads it as the clock
+  // moves. Zero (never changing) for cards that show no relative time.
+  val tickEntities = remember(card) { ee.schimke.ha.rc.cardEntityIds(card) }
+  val relativeTimeTick = ee.schimke.ha.rc.relativeTimeTickFor(tickEntities, snapshot)
+  val dataSignature =
+    remember(card, snapshot, relativeTimeTick) { registry.cardDataSignature(card, snapshot) }
   val cacheKey =
     remember(card, style, dark, cardStyle, captureEpoch, templateValues, dataSignature) {
       CardSlotCacheKey(card, style, dark, cardStyle.id, captureEpoch, templateValues, dataSignature)

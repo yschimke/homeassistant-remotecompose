@@ -108,7 +108,7 @@ fun cardSnapshotBindings(entityIds: Set<String>, snapshot: HaSnapshot): CardSnap
   val floats = LinkedHashMap<String, Float>(entityIds.size)
   for (id in entityIds) {
     val state = snapshot.states[id] ?: continue
-    strings["$id.state"] = formatState(state)
+    strings["$id.state"] = formatState(state, snapshot)
     booleans["$id.is_on"] = HaLiveBindings.isOn(id, state.state)
     HaLiveBindings.stateInt(id, state.state)?.let { ints["$id.state_int"] = it }
     HaLiveBindings.numericState(state.state)?.let { floats["$id.numeric_state"] = it }
@@ -126,9 +126,11 @@ fun cardSnapshotBindings(entityIds: Set<String>, snapshot: HaSnapshot): CardSnap
  * baked content moves — the only update path for structural / derived / per-card-formatted cards.
  *
  * Covers everything a converter might read for [entityIds]: primary state, last-updated,
- * attributes, and the history / statistics / forecast slices of the snapshot. Over-inclusion only
- * costs a redundant (identical) re-encode, so this stays deliberately broad rather than trying to
- * know which slice each card reads.
+ * attributes, the history / statistics / forecast slices of the snapshot, and — for an entity shown
+ * as a relative time ([isRelativeTimeState]) — the current label, which changes as the clock moves
+ * (`3 h ago` → `4 h ago`) though the entity doesn't. Over-inclusion only costs a redundant
+ * (identical) re-encode, so this stays deliberately broad rather than trying to know which slice
+ * each card reads.
  */
 fun cardDataSignature(entityIds: Set<String>, snapshot: HaSnapshot): String {
   if (entityIds.isEmpty()) return ""
@@ -141,6 +143,9 @@ fun cardDataSignature(entityIds: Set<String>, snapshot: HaSnapshot): String {
       append("~h").append(snapshot.history[id]?.hashCode())
       append("~s").append(snapshot.statistics[id]?.hashCode())
       append("~f").append(snapshot.forecasts[id]?.hashCode())
+      // A relative time ("3 h ago") moves with the clock, not the entity: fold the label itself
+      // in, so the next signature read after it rolls over re-encodes the card.
+      if (isRelativeTimeState(s)) append("~t").append(formatState(s, snapshot))
       append(';')
     }
   }

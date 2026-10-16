@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import com.google.android.horologist.tiles.composable.ServiceComposableBitmapRenderer
 import ee.schimke.terrazzo.wear.data.WearPrefs
+import ee.schimke.terrazzo.wear.data.displayState
 import ee.schimke.terrazzo.wear.sync.WearOfflineStore
 import ee.schimke.terrazzo.wearsync.proto.SlotSizePref
 import ee.schimke.terrazzo.wearsync.proto.WearWidgetSlots
@@ -83,14 +84,7 @@ class WearSlotPreviewCapturer(
           .ifEmpty { card.card.primaryEntityId }
           .ifEmpty { "Slot ${slot.slotIndex + 1}" }
       val state =
-        values[card.card.primaryEntityId]
-          ?.let { v ->
-            buildString {
-              append(v.state)
-              if (v.unit.isNotEmpty()) append(" ${v.unit}")
-            }
-          }
-          .orEmpty()
+        values[card.card.primaryEntityId]?.displayState(card.card.primaryEntityId).orEmpty()
       val sizePref = SlotSizePref.fromWire(slot.size)
       if (sizePref == SlotSizePref.SmallOnly || sizePref == SlotSizePref.Both) {
         captureAndSave(slot.slotIndex, "small", SMALL_SIZE, title, state)

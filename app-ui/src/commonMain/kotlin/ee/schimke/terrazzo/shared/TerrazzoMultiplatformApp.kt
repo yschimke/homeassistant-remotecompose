@@ -488,7 +488,7 @@ private fun NativeCard(card: CardConfig, snapshot: HaSnapshot, toggle: (String) 
             headlineContent = {
               Text(value?.attributes?.get("friendly_name")?.jsonPrimitive?.contentOrNull ?: id)
             },
-            supportingContent = { Text(formatState(value)) },
+            supportingContent = { Text(formatState(value, snapshot)) },
             trailingContent = {
               if (id.substringBefore('.') in setOf("light", "switch", "input_boolean", "fan"))
                 Switch(
@@ -500,7 +500,7 @@ private fun NativeCard(card: CardConfig, snapshot: HaSnapshot, toggle: (String) 
           )
         }
       } else if (entity != null) {
-        Text(formatState(entity), style = MaterialTheme.typography.headlineSmall)
+        Text(formatState(entity, snapshot), style = MaterialTheme.typography.headlineSmall)
         if (entityId?.substringBefore('.') in setOf("light", "switch", "input_boolean", "fan")) {
           Switch(
             checked = entity.state == "on",

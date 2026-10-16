@@ -144,7 +144,7 @@ class EntitiesCardConverter : CardConverter {
       HaGlanceCellData(
         entityId = eid,
         name = name,
-        state = LiveValues.state(eid, formatState(entity)),
+        state = LiveValues.state(eid, formatState(entity, snapshot)),
         icon = HaIconMap.resolve(row?.get("icon")?.jsonPrimitive?.content, entity),
         accent =
           HaToggleAccent(
@@ -189,7 +189,7 @@ class EntitiesCardConverter : CardConverter {
         HaEntityRowData(
           entityId = eid,
           name = name,
-          state = LiveValues.state(eid, formatState(entity)),
+          state = LiveValues.state(eid, formatState(entity, snapshot)),
           icon = HaIconMap.resolve(row?.get("icon")?.jsonPrimitive?.content, entity),
           accent =
             HaToggleAccent(

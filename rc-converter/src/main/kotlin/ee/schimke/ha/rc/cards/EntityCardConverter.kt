@@ -90,7 +90,7 @@ class EntityCardConverter : CardConverter {
       HaEntityRowData(
         entityId = entityId,
         name = nameFor(card, entity, entityId),
-        state = LiveValues.state(entityId, formatState(entity)),
+        state = LiveValues.state(entityId, formatState(entity, snapshot)),
         icon = HaIconMap.resolve(card.raw["icon"]?.jsonPrimitive?.content, entity),
         accent =
           HaToggleAccent(
@@ -120,7 +120,7 @@ class EntityCardConverter : CardConverter {
     return HaTileData(
       entityId = entityId,
       name = nameFor(card, entity, entityId),
-      state = LiveValues.state(entityId, formatState(entity)),
+      state = LiveValues.state(entityId, formatState(entity, snapshot)),
       icon = HaIconMap.resolve(card.raw["icon"]?.jsonPrimitive?.content, entity),
       accent =
         HaToggleAccent(

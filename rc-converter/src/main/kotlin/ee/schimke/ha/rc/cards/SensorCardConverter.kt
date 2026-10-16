@@ -102,7 +102,12 @@ class SensorCardConverter : CardConverter {
   private fun IdentityTier(card: CardConfig, snapshot: HaSnapshot) {
     val entityId = card.raw["entity"]?.jsonPrimitive?.content
     val reading =
-      haReading(entityId, entityId?.let { snapshot.states[it] }, nameFor(card, snapshot))
+      haReading(
+        entityId,
+        entityId?.let { snapshot.states[it] },
+        nameFor(card, snapshot),
+        snapshot = snapshot,
+      )
     when (reading.kind.visual) {
       HaMeasureVisual.Thermometer,
       HaMeasureVisual.Battery ->
@@ -124,7 +129,7 @@ class SensorCardConverter : CardConverter {
       HaSensorCardData(
         entityId = entityId,
         name = nameFor(card, snapshot),
-        valueLabel = formatState(entity),
+        valueLabel = formatState(entity, snapshot),
         accent = HaStateColor.activeFor(entity),
         points = numeric,
         rangeLabel = rangeLabel(card),
@@ -145,7 +150,7 @@ class SensorCardConverter : CardConverter {
     return HaTileData(
       entityId = entityId,
       name = nameFor(card, snapshot),
-      state = LiveValues.state(entityId, formatState(entity)),
+      state = LiveValues.state(entityId, formatState(entity, snapshot)),
       icon = HaIconMap.resolve(card.raw["icon"]?.jsonPrimitive?.content, entity),
       accent = HaToggleAccent(activeAccent = accent, inactiveAccent = accent, toggleable = false),
     )
