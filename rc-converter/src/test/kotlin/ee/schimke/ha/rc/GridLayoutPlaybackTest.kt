@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.width
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.setValue
@@ -107,20 +108,34 @@ class GridLayoutPlaybackTest {
   /**
    * Plays [card]'s one document at each of [widthsDp] in turn; returns each played height in dp.
    */
-  private fun heightsAt(name: String, card: CardConfig, vararg widthsDp: Int): List<Float> {
+  private fun heightsAt(
+    name: String,
+    card: CardConfig,
+    vararg widthsDp: Int,
+    mode: CardSizeMode = CardSizeMode.Wrap,
+    capturePerWidth: Boolean = false,
+  ): List<Float> {
     val theme = haThemeFor(ThemeStyle.TerrazzoHome, darkTheme = true)
     var width by mutableIntStateOf(widthsDp.first())
     compose.setContent {
       Box(Modifier.width(width.dp).testTag("card")) {
         CachedCardPreview(
-          // One key: every width plays the same captured document.
-          cacheKey = "grid-playback-$name",
+          // One key: every width plays the same captured document — unless, like the launcher,
+          // the document is re-captured for every width it is shown at.
+          cacheKey = if (capturePerWidth) "grid-playback-$name-$width" else "grid-playback-$name",
           profile = androidXExperimentalWrap,
           card = card,
           snapshot = snapshot,
         ) {
-          ProvideCardRegistry(registry) {
-            ProvideHaTheme(theme) { RenderChild(card, snapshot, RemoteModifier.fillMaxWidth()) }
+          CompositionLocalProvider(
+            LocalWidgetCaptureSizeDp provides
+              if (capturePerWidth) WidgetCaptureSizeDp(width, heightDp = 400) else null
+          ) {
+            ProvideCardRegistry(registry) {
+              ProvideCardSizeMode(mode) {
+                ProvideHaTheme(theme) { RenderChild(card, snapshot, RemoteModifier.fillMaxWidth()) }
+              }
+            }
           }
         }
       }
@@ -176,6 +191,12 @@ class GridLayoutPlaybackTest {
     }
   }
 
+  /** [perRow] cells across [widthDp] are each at least [minCellDp] wide. */
+  private fun assertCellsAtLeast(minCellDp: Int, widthDp: Int, perRow: Int, what: String) {
+    val cell = (widthDp - 8f * (perRow - 1)) / perRow
+    assertTrue(cell >= minCellDp, "$what: $perRow per row gives $cell dp cells, under $minCellDp")
+  }
+
   private fun assertNear(expected: Float, actual: Float, what: String) =
     assertTrue(abs(expected - actual) <= 2f, "$what: expected ≈ $expected dp, was $actual dp")
 
@@ -223,6 +244,51 @@ class GridLayoutPlaybackTest {
     assertNear(tablet * 1.5f + 4f, phone, "three rows vs two")
     assertCellsFit(360, perRow = 2, yDp = 24f, "tiles at 360 dp")
     assertCellsFit(700, perRow = 3, yDp = 24f, "tiles at 700 dp")
+  }
+
+  @Test
+  fun aWidgetGridOfButtonsKeepsItsMinimumOnANarrowSlot() {
+    // Captured once and played through the runtime gate (a Wear slot): below the four-across
+    // threshold the narrow tier is what fits the widget floor — one 80 dp button per row — not
+    // the three that fit a phone, which at 160 dp would be 48 dp each.
+    val (w200, w160) =
+      heightsAt("four-buttons-fixed", fourButtons, 200, 160, mode = CardSizeMode.Fixed)
+    assertNear(4 * 200f + 3 * 8f, w200, "200 dp, one per row")
+    assertNear(4 * 160f + 3 * 8f, w160, "160 dp, one per row")
+    assertCellsAtLeast(80, 200, perRow = 1, "buttons at 200 dp")
+    assertCellsAtLeast(80, 160, perRow = 1, "buttons at 160 dp")
+    assertCellsFit(200, perRow = 1, yDp = 100f, "buttons at 200 dp")
+    assertCellsFit(160, perRow = 1, yDp = 80f, "buttons at 160 dp")
+  }
+
+  @Test
+  fun aLauncherGridOfButtonsFitsItsCaptureWidth() {
+    // The launcher re-captures for every size: two 80 dp buttons fit 200 dp, one fits 160 dp.
+    val (w200, w160) =
+      heightsAt(
+        "four-buttons-launcher",
+        fourButtons,
+        200,
+        160,
+        mode = CardSizeMode.Fixed,
+        capturePerWidth = true,
+      )
+    val cell200 = (200f - 8f) / 2f
+    assertNear(cell200 * 2 + 8f, w200, "200 dp, two rows of two")
+    assertNear(4 * 160f + 3 * 8f, w160, "160 dp, one per row")
+    assertCellsAtLeast(80, 200, perRow = 2, "buttons at 200 dp")
+    assertCellsAtLeast(80, 160, perRow = 1, "buttons at 160 dp")
+    assertCellsFit(200, perRow = 2, yDp = cell200 / 2f, "buttons at 200 dp")
+    assertCellsFit(160, perRow = 1, yDp = 80f, "buttons at 160 dp")
+  }
+
+  @Test
+  fun aWidgetGridOfTilesIsOneColumnOnANarrowSlot() {
+    val (w200, w160) = heightsAt("tiles-fixed", sixTiles, 200, 160, mode = CardSizeMode.Fixed)
+    assertTrue(w200 > 0f && w160 > 0f, "tiles should play at 200 and 160 dp")
+    assertCellsAtLeast(140, 200, perRow = 1, "tiles at 200 dp")
+    assertCellsFit(200, perRow = 1, yDp = 24f, "tiles at 200 dp")
+    assertCellsFit(160, perRow = 1, yDp = 24f, "tiles at 160 dp")
   }
 
   @Test

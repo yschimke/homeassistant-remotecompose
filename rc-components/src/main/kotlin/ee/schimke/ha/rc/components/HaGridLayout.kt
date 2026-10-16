@@ -19,11 +19,22 @@ object HaGridLayout {
   const val DEFAULT_COLUMNS: Int = 3
 
   /**
-   * The narrowest width the narrow tier is sized for, in dp: a 360 dp phone minus the dashboard's
-   * gutters. Below it a cell may drop under its minimum, as on any surface narrower than its
-   * content.
+   * The narrowest width a dashboard (`Wrap`) grid's narrow tier is sized for, in dp: a 320 dp
+   * phone, the narrowest Android commits to, minus the dashboard's 16 dp gutters. A 360 dp phone
+   * gets the same counts for every built-in minimum (buttons 3, tiles and pictures 2), so the lower
+   * floor costs nothing there. Below it a cell may drop under its minimum, as on any surface
+   * narrower than its content.
    */
-  const val NARROW_REFERENCE_DP: Int = 320
+  const val NARROW_REFERENCE_DP: Int = 288
+
+  /**
+   * The narrow-tier floor for a widget (`Fixed`) grid whose capture doesn't know the size it will
+   * be played at, in dp: a Wear slot (about 200 dp) with room to spare, and the narrowest resized
+   * launcher cell a grid of cards is worth drawing in. The launcher widget itself knows its size at
+   * capture and lays its grid out for exactly that width ([perRowAt]), so this only governs
+   * surfaces played through the runtime width gate.
+   */
+  const val FIXED_NARROW_REFERENCE_DP: Int = 160
 
   /**
    * Cells per row in a grid [widthDp] wide: `min(columns, ⌊(width + gap) / (minCell + gap)⌋)`, and
@@ -41,25 +52,56 @@ object HaGridLayout {
     perRow * minCellDp + (perRow - 1).coerceAtLeast(0) * gapDp
 
   /**
+   * Cells per row for [cellCount] cells laid out at exactly [widthDp]: [perRow], never more than
+   * there are cells. Used where the capture knows the width it will be played at.
+   */
+  fun perRowAt(
+    widthDp: Float,
+    cellCount: Int,
+    columns: Int,
+    minCellDp: Int,
+    gapDp: Int = GAP_DP,
+  ): Int =
+    perRow(
+      widthDp = widthDp,
+      minCellDp = minCellDp,
+      columns = columns.coerceAtMost(cellCount.coerceAtLeast(1)),
+      gapDp = gapDp,
+    )
+
+  /**
    * The two layouts a captured grid carries, and the playback width that picks between them.
    *
    * A grid is captured once and played at whatever width its host gives it, so the per-row count is
    * a playback decision. RemoteCompose's runtime width gates are reliable for a single threshold
    * only (#224), so the grid records two tiers: [widePerRow] cells (all its `columns`, or every
    * card when there are fewer) at or above [thresholdDp], and [narrowPerRow] below it — the most
-   * that still fit at their minimum in [NARROW_REFERENCE_DP]. When both are the same there is
-   * nothing to switch and [thresholdDp] is null.
+   * that still fit at their minimum in the narrowest width the document can be played at (the
+   * plan's `narrowReferenceDp`: [NARROW_REFERENCE_DP] for a dashboard, [FIXED_NARROW_REFERENCE_DP]
+   * for a widget). Sizing the narrow tier for the narrowest width rather than for the threshold
+   * keeps every cell at or above its minimum anywhere from that floor up; between the floor and
+   * [thresholdDp] the narrow tier's cells are wider than they need to be, the price of one gate.
+   * When both tiers are the same there is nothing to switch and [thresholdDp] is null.
    */
   data class Plan(val widePerRow: Int, val narrowPerRow: Int, val thresholdDp: Int?)
 
-  /** The [Plan] for [cellCount] cells of at least [minCellDp], at most [columns] to a row. */
-  fun plan(cellCount: Int, columns: Int, minCellDp: Int, gapDp: Int = GAP_DP): Plan {
+  /**
+   * The [Plan] for [cellCount] cells of at least [minCellDp], at most [columns] to a row, played no
+   * narrower than [narrowReferenceDp].
+   */
+  fun plan(
+    cellCount: Int,
+    columns: Int,
+    minCellDp: Int,
+    narrowReferenceDp: Int = NARROW_REFERENCE_DP,
+    gapDp: Int = GAP_DP,
+  ): Plan {
     val wide = columns.coerceAtLeast(1).coerceAtMost(cellCount.coerceAtLeast(1))
     if (wide == 1) return Plan(1, 1, null)
     val threshold = widthFor(wide, minCellDp, gapDp)
     val narrow =
       perRow(
-          widthDp = minOf(NARROW_REFERENCE_DP, threshold - 1).toFloat(),
+          widthDp = minOf(narrowReferenceDp, threshold - 1).toFloat(),
           minCellDp = minCellDp,
           columns = wide - 1,
           gapDp = gapDp,

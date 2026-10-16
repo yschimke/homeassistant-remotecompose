@@ -3,6 +3,7 @@ package ee.schimke.ha.rc.components
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 class HaGridLayoutTest {
   @Test
@@ -70,6 +71,81 @@ class HaGridLayoutTest {
     )
     // Five tiles: the narrow tier is what fits the phone, not columns - 1.
     assertEquals(2, HaGridLayout.plan(cellCount = 10, columns = 5, minCellDp = 140).narrowPerRow)
+  }
+
+  @Test
+  fun aWidgetPlanKeepsShrinkingBelowAPhone() {
+    // Four 80 dp buttons in a widget: two need 168 dp, so the narrow tier is one per row, and a
+    // 160 dp slot gets 160 dp cells rather than three 48 dp ones.
+    assertEquals(
+      HaGridLayout.Plan(widePerRow = 4, narrowPerRow = 1, thresholdDp = 344),
+      HaGridLayout.plan(
+        cellCount = 4,
+        columns = 4,
+        minCellDp = 80,
+        narrowReferenceDp = HaGridLayout.FIXED_NARROW_REFERENCE_DP,
+      ),
+    )
+    // Tiles: not even two fit at the floor.
+    assertEquals(
+      1,
+      HaGridLayout.plan(
+          cellCount = 6,
+          columns = 3,
+          minCellDp = 140,
+          narrowReferenceDp = HaGridLayout.FIXED_NARROW_REFERENCE_DP,
+        )
+        .narrowPerRow,
+    )
+  }
+
+  @Test
+  fun aCaptureOfKnownWidthLaysOutWhatFitsThatWidth() {
+    // The review's example: four-column buttons at 160 dp are one per row, at 200 dp two.
+    assertEquals(
+      1,
+      HaGridLayout.perRowAt(widthDp = 160f, cellCount = 4, columns = 4, minCellDp = 80),
+    )
+    assertEquals(
+      2,
+      HaGridLayout.perRowAt(widthDp = 200f, cellCount = 4, columns = 4, minCellDp = 80),
+    )
+    assertEquals(
+      4,
+      HaGridLayout.perRowAt(widthDp = 344f, cellCount = 4, columns = 4, minCellDp = 80),
+    )
+    // Tiles at 200 dp: one.
+    assertEquals(
+      1,
+      HaGridLayout.perRowAt(widthDp = 200f, cellCount = 6, columns = 3, minCellDp = 140),
+    )
+    // Never more per row than there are cards.
+    assertEquals(
+      2,
+      HaGridLayout.perRowAt(widthDp = 900f, cellCount = 2, columns = 4, minCellDp = 80),
+    )
+  }
+
+  @Test
+  fun noTierCellIsNarrowerThanItsMinimumFromTheFloorUp() {
+    val floors = listOf(HaGridLayout.NARROW_REFERENCE_DP, HaGridLayout.FIXED_NARROW_REFERENCE_DP)
+    for (floor in floors) for (minCell in listOf(60, 80, 100, 120, 140, 160, 240)) {
+      for (columns in 1..6) {
+        val plan = HaGridLayout.plan(cellCount = 12, columns, minCell, narrowReferenceDp = floor)
+        // From the floor (or one cell's minimum, if wider) up, whichever tier plays fits.
+        for (width in maxOf(floor, minCell)..1200) {
+          val threshold = plan.thresholdDp
+          val perRow =
+            if (threshold == null || width >= threshold) plan.widePerRow else plan.narrowPerRow
+          val cell = (width - HaGridLayout.GAP_DP * (perRow - 1)) / perRow.toFloat()
+          assertTrue(
+            cell >= minCell,
+            "floor $floor, min $minCell, columns $columns: $perRow per row at $width dp " +
+              "gives $cell dp cells",
+          )
+        }
+      }
+    }
   }
 
   @Test
