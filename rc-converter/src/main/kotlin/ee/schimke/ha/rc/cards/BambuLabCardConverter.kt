@@ -25,6 +25,7 @@ import androidx.compose.ui.text.font.FontWeight
 import ee.schimke.ha.design.CardDesignSlots
 import ee.schimke.ha.design.DesignProperties
 import ee.schimke.ha.model.CardConfig
+import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.BreakpointAxis
 import ee.schimke.ha.rc.CardConverter
@@ -40,6 +41,7 @@ import ee.schimke.ha.rc.components.cardChrome
 import ee.schimke.ha.rc.components.currentRemoteHaTheme
 import ee.schimke.ha.rc.formatState
 import ee.schimke.ha.rc.formatValueWithUnit
+import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonPrimitive
 
 /**
@@ -509,8 +511,26 @@ private fun printControlEntityIds(prefix: String): Set<String> = buildSet {
   add("button.${prefix}_pause_printing")
   add("button.${prefix}_resume_printing")
   add("button.${prefix}_stop_printing")
-  add("sensor.${prefix}_print_progress")
-  add("sensor.${prefix}_print_status")
+  // Every source [bambuPrinterName] reads, so a renamed printer re-encodes the pad.
+  add("sensor.${prefix}_printer_name")
+  BambuNameSources.forEach { (suffix, _) -> add("sensor.${prefix}_$suffix") }
+}
+
+/**
+ * Whole minutes left on the job. The integration states `remaining_time` in hours (`h`) today and
+ * in minutes in older releases; its unit says which, and a missing unit is read as minutes.
+ */
+private fun remainingMinutes(entity: EntityState): Int? {
+  val value = entity.state.toFloatOrNull()?.takeIf { it >= 0f } ?: return null
+  val unit = entity.attributes["unit_of_measurement"]?.jsonPrimitive?.contentOrNull
+  val minutes =
+    when (unit) {
+      "h" -> value * 60f
+      "s" -> value / 60f
+      "d" -> value * 1440f
+      else -> value
+    }
+  return kotlin.math.round(minutes).toInt()
 }
 
 internal fun buildPrintStatusData(
@@ -553,7 +573,7 @@ internal fun buildPrintStatusData(
     if (printing && current != null && total != null) "Layer $current / $total" else null
 
   val remainingEntity = sensor("remaining_time")
-  val remaining = remainingEntity?.state?.toFloatOrNull()?.toInt()?.takeIf { printing }
+  val remaining = remainingEntity?.let(::remainingMinutes)?.takeIf { printing }
   val remainingLine = remaining?.let { mins ->
     val h = mins / 60
     val m = mins % 60

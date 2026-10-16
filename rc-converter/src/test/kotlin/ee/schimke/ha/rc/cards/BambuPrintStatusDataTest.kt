@@ -72,6 +72,20 @@ class BambuPrintStatusDataTest {
   }
 
   @Test
+  fun remainingTimeInHoursIsConvertedToMinutes() {
+    val data =
+      buildPrintStatusData(
+        "x1c",
+        snapshot(
+          entity("sensor.x1c_print_progress", "42"),
+          entity("sensor.x1c_print_status", "running"),
+          entity("sensor.x1c_remaining_time", "1.5", "unit_of_measurement" to "h"),
+        ),
+      )
+    assertEquals("1h 30m left", data.remainingLine)
+  }
+
+  @Test
   fun phaseReadsPrintStatusThenStageThenProgress() {
     fun phase(status: String?, stage: String? = null, online: String? = null) =
       bambuPrintPhase(status, stage, online, progress = 0f, totalLayers = 0)
