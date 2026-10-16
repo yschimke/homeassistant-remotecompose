@@ -17,7 +17,6 @@ import androidx.compose.remote.creation.compose.modifier.size
 import androidx.compose.remote.creation.compose.shapes.RemoteCircleShape
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rs
-import androidx.compose.remote.creation.compose.state.rsp
 import androidx.compose.remote.creation.compose.text.RemoteTextStyle
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.font.FontWeight
@@ -31,6 +30,7 @@ import ee.schimke.ha.rc.CardSnapshotBindings
 import ee.schimke.ha.rc.DesignTemplateInput
 import ee.schimke.ha.rc.cardDataSignature
 import ee.schimke.ha.rc.cardEntityIds
+import ee.schimke.ha.rc.components.HaType
 import ee.schimke.ha.rc.components.cardChrome
 import ee.schimke.ha.rc.components.cardText
 import ee.schimke.ha.rc.components.cardTitle
@@ -134,7 +134,7 @@ class MapCardConverter : CardConverter {
           RemoteText(
             text = cardTitle(title),
             color = theme.primaryText,
-            fontSize = 15.rsp,
+            fontSize = HaType.Title,
             fontWeight = FontWeight.Medium,
             style = RemoteTextStyle.Default,
           )
@@ -143,7 +143,7 @@ class MapCardConverter : CardConverter {
           RemoteText(
             text = "No entities".rs,
             color = theme.secondaryText,
-            fontSize = 13.rsp,
+            fontSize = HaType.Body,
             style = RemoteTextStyle.Default,
           )
         } else {
@@ -170,13 +170,13 @@ class MapCardConverter : CardConverter {
       RemoteText(
         text = cardText("row.$index.name", name),
         color = theme.primaryText,
-        fontSize = 13.rsp,
+        fontSize = HaType.Body,
         style = RemoteTextStyle.Default,
       )
       RemoteText(
         text = cardText("row.$index.where", coords),
         color = theme.secondaryText,
-        fontSize = 12.rsp,
+        fontSize = HaType.Label,
         style = RemoteTextStyle.Default,
       )
     }

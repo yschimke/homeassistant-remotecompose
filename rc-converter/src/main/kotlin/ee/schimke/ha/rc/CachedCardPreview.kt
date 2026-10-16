@@ -48,6 +48,11 @@ import kotlinx.coroutines.runBlocking
  * key — `LiveValues.state` / `.attribute` / `.isOn` (in rc-components) are exactly the seam through
  * which a running player gets fresh data without re-encoding.
  *
+ * The one snapshot value folded in here rather than by the caller is a picture-entity slot's
+ * `entity_picture` ([cardPictureSignature]): the player fetches a picture by URL once per document,
+ * so a new URL (a camera's rotating token or next frame) plays as a new document — a re-encode on
+ * the converter path, a fresh decode of the same template bytes on the template path.
+ *
  * **Live snapshot push.** When [card] and [snapshot] are supplied, the running player is fed
  * named-binding writes for the entities the card references each time [snapshot] changes. This
  * covers the regression introduced by document caching: without it, the document is encoded once
@@ -110,10 +115,25 @@ fun CachedCardPreview(
       if (debugBorders) DebugBorderedCacheKey(cacheKey) else cacheKey
     }
 
+  val pictureSignature =
+    remember(card, snapshot) {
+      if (card != null && snapshot != null) cardPictureSignature(card, snapshot) else ""
+    }
+  val documentKey =
+    remember(effectiveCacheKey, pictureSignature) {
+      if (pictureSignature.isEmpty()) effectiveCacheKey
+      else PictureKeyedCacheKey(effectiveCacheKey, pictureSignature)
+    }
+
   val cardDocument =
-    remember(effectiveCacheKey, template) {
-      template?.let { CardDocument(bytes = it.bytes, widthPx = 0, heightPx = 0) }
-        ?: cache.get(effectiveCacheKey)
+    remember(documentKey, template) {
+      template?.let {
+        // Template bytes never change; a copy is a new document to the player, which decodes it
+        // again and fetches its slot pictures from the current snapshot's URLs.
+        val bytes = if (pictureSignature.isEmpty()) it.bytes else it.bytes.copyOf()
+        CardDocument(bytes = bytes, widthPx = 0, heightPx = 0)
+      }
+        ?: cache.get(documentKey)
         ?: runBlocking {
           val captureContent: @RemoteComposable @Composable () -> Unit =
             if (debugBorders) {
@@ -157,7 +177,7 @@ fun CachedCardPreview(
             }
           CardDocument(bytes = captured.bytes, widthPx = 0, heightPx = 0)
         }
-          .also { cache.put(effectiveCacheKey, it) }
+          .also { cache.put(documentKey, it) }
     }
   val bindingsFor: (HaSnapshot) -> CardSnapshotBindings =
     template?.bindings ?: { snap -> cardSnapshotBindings(entityIds(card), snap) }
@@ -173,7 +193,7 @@ fun CachedCardPreview(
   val entityIds = remember(card) { entityIds(card) }
   // Compose player: live values the running document reads by name. Re-created with the document
   // ([cacheKey]) — the new document carries its own initial bake.
-  val namedValues = remember(cacheKey, template) { mutableStateMapOf<String, RcNamedValue>() }
+  val namedValues = remember(documentKey, template) { mutableStateMapOf<String, RcNamedValue>() }
   // AndroidX player (launcher-widget previews, per-document fallback): the View handle survives
   // recomposition but is replaced if the player is torn down and rebuilt (cache invalidation,
   // theme flip, resize).
@@ -181,8 +201,8 @@ fun CachedCardPreview(
   // Track the last value pushed to each player so a redundant snapshot recompose doesn't re-issue
   // identical writes. Reset when [cacheKey] changes so the next push is unconditional.
   // A template swapping in (or out) is a new document too, so it resets the push state as well.
-  val pushedNamed = remember(cacheKey, template) { HashMap<String, Any?>() }
-  val pushedView = remember(cacheKey, template) { HashMap<String, Any?>() }
+  val pushedNamed = remember(documentKey, template) { HashMap<String, Any?>() }
+  val pushedView = remember(documentKey, template) { HashMap<String, Any?>() }
 
   // [liveBindings] is off for cards that refresh by document re-encode (those that declare a
   // `CardConverter.dataSignature`): their dynamic content is baked, not bound, so pushing the
@@ -267,6 +287,9 @@ fun CachedCardPreview(
  * card YAML, different bytes (the wrapping `DebugRcBorderWrapper` is captured into the document).
  */
 private data class DebugBorderedCacheKey(val inner: Any)
+
+/** [inner] with its picture-entity slots' current URLs ([cardPictureSignature]): a new picture. */
+private data class PictureKeyedCacheKey(val inner: Any, val pictures: String)
 
 /** Where [pushSnapshotBindings] writes: the Compose player's named values or the View player. */
 internal interface BindingWriter {
