@@ -9,7 +9,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.PixelMap
 import androidx.compose.ui.graphics.asAndroidBitmap
+import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
@@ -43,7 +46,10 @@ import org.robolectric.annotation.GraphicsMode
  * given and sizes square / aspect cells from their live width. Heights are the observable result: a
  * row of squares is as tall as one cell is wide.
  *
- * Renders land in `build/grid-layout-playback/` for review.
+ * Renders land in `build/grid-layout-playback/` for review. Known player issue, not the grid's: a
+ * `RemoteSizeBreakpoint` tier first revealed by a resize draws its icon chips without their round
+ * clip in the Compose card player (it reproduces with a single tile behind a breakpoint, no grid),
+ * so the second width of a test that crosses the grid's gate shows square chips.
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35], qualifiers = "w1000dp-h2000dp")
@@ -122,16 +128,51 @@ class GridLayoutPlaybackTest {
     return widthsDp.map { w ->
       compose.runOnIdle { width = w }
       compose.waitForIdle()
-      save("$name-${w}dp")
+      played[w] = save("$name-${w}dp")
       compose.onNodeWithTag("card").getUnclippedBoundsInRoot().let { it.bottom - it.top }.value
     }
   }
 
-  private fun save(name: String) {
+  /** The last frame played at each width, by width in dp. */
+  private val played = mutableMapOf<Int, PixelMap>()
+
+  private fun save(name: String): PixelMap {
     val image = compose.onNodeWithTag("card").captureToImage()
     val dir = File("build/grid-layout-playback").also { it.mkdirs() }
     dir.resolve("$name.png").outputStream().use {
       image.asAndroidBitmap().compress(Bitmap.CompressFormat.PNG, 100, it)
+    }
+    return image.toPixelMap()
+  }
+
+  /** The window behind the card: every gap between cells shows it. */
+  private fun isBackground(c: Color) = (c.red + c.green + c.blue) / 3f > 0.8f
+
+  /**
+   * The row of [perRow] equal cells played at [widthDp], sampled across its middle at [yDp]: each
+   * cell sits where `(width − gaps) ÷ perRow` puts it, with an empty gap between neighbours, so no
+   * cell is wider than its share and none runs past the right edge.
+   */
+  private fun assertCellsFit(widthDp: Int, perRow: Int, yDp: Float, what: String) {
+    val pixels = played.getValue(widthDp)
+    val scale = pixels.width / widthDp.toFloat()
+    val y = (yDp * scale).toInt()
+    val cell = (widthDp - 8f * (perRow - 1)) / perRow
+    for (k in 0 until perRow) {
+      val start = k * (cell + 8f)
+      // The cell itself has content across its middle.
+      val mid = ((start + cell / 2f) * scale).toInt()
+      assertTrue(!isBackground(pixels[mid, y]), "$what: cell $k should have content at x=$mid")
+      if (k > 0) {
+        // The gap before it is empty: a cell sized width ÷ perRow (gaps ignored) covers it.
+        val gap = start - 8f
+        for (x in ((gap + 2f) * scale).toInt()..((gap + 6f) * scale).toInt()) {
+          assertTrue(
+            isBackground(pixels[x, y]),
+            "$what: gap before cell $k should be empty at x=$x (cells overflow the row)",
+          )
+        }
+      }
     }
   }
 
@@ -144,6 +185,8 @@ class GridLayoutPlaybackTest {
     // Two squares side by side: one row as tall as a cell is wide.
     assertNear((360f - 8f) / 2f, phone, "360 dp")
     assertNear((700f - 8f) / 2f, tablet, "700 dp")
+    assertCellsFit(360, perRow = 2, yDp = phone / 2f, "pictures at 360 dp")
+    assertCellsFit(700, perRow = 2, yDp = tablet / 2f, "pictures at 700 dp")
   }
 
   @Test
@@ -160,6 +203,15 @@ class GridLayoutPlaybackTest {
     // 300 dp is narrower than four 80 dp cells: three to a row, then one.
     val cell = (300f - 2 * 8f) / 3f
     assertNear(cell * 2 + 8f, narrow, "300 dp, three and one")
+    assertCellsFit(360, perRow = 4, yDp = phone / 2f, "buttons at 360 dp")
+    assertCellsFit(300, perRow = 3, yDp = cell / 2f, "buttons at 300 dp")
+  }
+
+  @Test
+  fun fourColumnButtonsAtATabletWidth() {
+    val (tablet) = heightsAt("four-buttons-700", fourButtons, 700)
+    assertNear((700f - 3 * 8f) / 4f, tablet, "700 dp, one row of four")
+    assertCellsFit(700, perRow = 4, yDp = tablet / 2f, "buttons at 700 dp")
   }
 
   @Test
@@ -169,6 +221,8 @@ class GridLayoutPlaybackTest {
     val rowWithGap = (phone - tablet) // one extra row and its gap
     assertTrue(rowWithGap > 30f, "phone ($phone dp) should be one row taller than tablet ($tablet)")
     assertNear(tablet * 1.5f + 4f, phone, "three rows vs two")
+    assertCellsFit(360, perRow = 2, yDp = 24f, "tiles at 360 dp")
+    assertCellsFit(700, perRow = 3, yDp = 24f, "tiles at 700 dp")
   }
 
   @Test

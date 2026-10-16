@@ -25,8 +25,7 @@ import java.util.UUID
  * [content] fills the sized box: give its root `RemoteModifier.fillMaxSize()`.
  *
  * Inside a `grid` cell the width is the cell's, as the grid computes it from its own width
- * ([LocalGridCellWidthPx]): a player may report a weighted row child's width before the row's gaps
- * are taken out, which would make a "square" cell a few dp taller than it is wide.
+ * ([LocalGridCellWidthPx]), so every cell of a row gets the same exact size.
  *
  * The expression binds to the component being written when it is first referenced (the outer box,
  * or the inner one itself — both are `fillMaxWidth()`, so both read the cell's width), and it is

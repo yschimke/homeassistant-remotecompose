@@ -10,6 +10,7 @@ import androidx.compose.remote.creation.compose.layout.RemoteRow
 import androidx.compose.remote.creation.compose.layout.RemoteText
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
+import androidx.compose.remote.creation.compose.modifier.width
 import androidx.compose.remote.creation.compose.state.RemoteFloat
 import androidx.compose.remote.creation.compose.state.RemoteState
 import androidx.compose.remote.creation.compose.state.rc
@@ -90,16 +91,20 @@ fun RemoteHaGrid(
       verticalArrangement = RemoteArrangement.spacedBy(HaGridLayout.GAP_DP.rdp),
     ) {
       (0 until cellCount).chunked(columns).forEach { row ->
-        RemoteRow(
-          modifier = RemoteModifier.fillMaxWidth(),
-          horizontalArrangement = RemoteArrangement.spacedBy(HaGridLayout.GAP_DP.rdp),
-        ) {
-          row.forEach { index ->
+        // Gaps are fixed-width spacer boxes, not `spacedBy`: the Compose card player shares a
+        // weighted row's whole width between its weighted children before arrangement spacing,
+        // so with `spacedBy` each cell came out width ÷ perRow and the row overflowed by its gaps.
+        // Fixed children are measured first, so the weights split only what the gaps leave.
+        RemoteRow(modifier = RemoteModifier.fillMaxWidth()) {
+          for (slot in 0 until columns) {
+            if (slot > 0) RemoteBox(modifier = RemoteModifier.width(HaGridLayout.GAP_DP.rdp))
+            val index = row.getOrNull(slot)
             RemoteBox(modifier = RemoteModifier.weight(1f)) {
-              CompositionLocalProvider(LocalGridCellWidthPx provides cellWidthPx) { cell(index) }
+              if (index != null) {
+                CompositionLocalProvider(LocalGridCellWidthPx provides cellWidthPx) { cell(index) }
+              }
             }
           }
-          repeat(columns - row.size) { RemoteBox(modifier = RemoteModifier.weight(1f)) }
         }
       }
     }
