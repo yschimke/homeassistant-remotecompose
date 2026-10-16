@@ -565,6 +565,13 @@ per request — but adds what a static host can't: verification, a template brow
   JSON. Server-rendered HTML, no scripts.
 - **Hot reload.** A regenerated library goes live when `manifest.json` changes (checked at most
   every 5 s); one that fails to load keeps the previous one serving.
+- **Resolving a card.** `POST /api/cards/resolve` takes a card's config (with optional states,
+  card style and mode) and returns the closest library design (same card type, slots, style, mode
+  and the default variant), its blob and the values to push: the card's own slot values from its
+  states, and the converter-only ones from the library example. Without the converters the server
+  can't compute a card's shape, so when several shapes fit it returns the first with
+  `exact: false`. It serves players that have no converters: UI Builder's Lovelace canvas and the
+  embed.
 - **Designing in UI Builder.** A design's page and `/schema` (paste a card's JSON) show the
   card's schema — slots and bindings with example values (`/api/designs/<id>/schema`,
   `POST /api/schema`) — and, with UI Builder bundled (`UI_BUILDER_BINARY`) or configured

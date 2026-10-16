@@ -52,6 +52,16 @@ enum class CardStylePref(val id: String) {
 }
 
 /**
+ * The colours launcher widgets draw their cards in. [System] (the default) keeps the launcher's own
+ * colours, with the card style's instruments, type, shapes and ink on them; [App] draws the card
+ * style with its palette, as on the dashboard.
+ */
+enum class LauncherColoursPref {
+  System,
+  App,
+}
+
+/**
  * Small app-level preferences. Demo-mode flag plus theme choice (Material 3 vs one of four Terrazzo
  * palettes) and dark-mode preference. Reads are `Flow`s so the UI recomposes when the user flips a
  * switch in Settings; widget refresh takes a one-shot read at update time.
@@ -91,6 +101,18 @@ class PreferencesStore(private val context: Context) {
 
   suspend fun setCardStyle(style: CardStylePref) {
     context.store.edit { it[CARD_STYLE_KEY] = style.name }
+  }
+
+  val launcherColours: Flow<LauncherColoursPref>
+    get() =
+      context.store.data.map { prefs ->
+        prefs[LAUNCHER_COLOURS_KEY]?.let {
+          runCatching { LauncherColoursPref.valueOf(it) }.getOrNull()
+        } ?: LauncherColoursPref.System
+      }
+
+  suspend fun setLauncherColours(colours: LauncherColoursPref) {
+    context.store.edit { it[LAUNCHER_COLOURS_KEY] = colours.name }
   }
 
   val darkMode: Flow<DarkModePref>
@@ -333,6 +355,7 @@ class PreferencesStore(private val context: Context) {
     private val THEME_KEY = stringPreferencesKey("theme_style")
     private val DARK_KEY = stringPreferencesKey("dark_mode")
     private val CARD_STYLE_KEY = stringPreferencesKey("card_style")
+    private val LAUNCHER_COLOURS_KEY = stringPreferencesKey("launcher_widget_colours")
     private val HAPTICS_KEY = booleanPreferencesKey("haptics")
     private val SOUNDS_KEY = booleanPreferencesKey("interface_sounds")
     private val LAST_VIEWED_KEY = stringPreferencesKey("last_viewed_dashboard")

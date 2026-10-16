@@ -21,6 +21,7 @@ import io.ktor.server.response.respondBytes
 import io.ktor.server.response.respondRedirect
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.get
+import io.ktor.server.routing.options
 import io.ktor.server.routing.post
 import io.ktor.server.routing.routing
 import java.io.File
@@ -238,6 +239,37 @@ fun Application.designServer(
       )
       call.respondText(
         json.encodeToString(JsonObject.serializer(), HaCardsSeed.source(library, design)) + "\n",
+        ContentType.Application.Json,
+      )
+    }
+
+    // The library design a card renders as, and the values to push into it (CardResolve). Called
+    // cross-origin by players that have no card converters: UI Builder's canvas, the embed.
+    options("/api/cards/resolve") {
+      call.allowAnyOrigin()
+      call.response.header(HttpHeaders.AccessControlAllowMethods, "POST, OPTIONS")
+      call.response.header(HttpHeaders.AccessControlAllowHeaders, "Content-Type")
+      call.respondText("", status = HttpStatusCode.NoContent)
+    }
+    post("/api/cards/resolve") {
+      call.allowAnyOrigin()
+      val request = runCatching {
+        ResolveRequest.parse(Json.parseToJsonElement(call.receiveText()))
+      }
+        .getOrElse {
+          return@post call.respondText(
+            "not a card: ${it.message}",
+            status = HttpStatusCode.BadRequest,
+          )
+        }
+      val match =
+        CardResolve.resolve(holder.current(), request)
+          ?: return@post call.respondText(
+            "no library design draws this card in ${request.cardStyle}",
+            status = HttpStatusCode.NotFound,
+          )
+      call.respondText(
+        json.encodeToString(CardMatch.serializer(), match),
         ContentType.Application.Json,
       )
     }
