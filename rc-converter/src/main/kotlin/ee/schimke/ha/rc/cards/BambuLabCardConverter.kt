@@ -161,7 +161,7 @@ open class BambuLabCardConverter(
             text =
               "${printer.candidates.size} printers here, and this card's printer isn't known".rs,
             color = theme.secondaryText,
-            fontSize = 11.rsp,
+            fontSize = HaType.Caption,
             style = RemoteTextStyle.Default,
           )
         }
