@@ -559,6 +559,54 @@ fun BambuPrintStatus_Dark() =
     RenderChild(bambuPrintStatusCard(), Fixtures.bambuPrinting, RemoteModifier.fillMaxWidth())
   }
 
+@Preview(
+  name = "bambu print-status idle (light)",
+  showBackground = false,
+  widthDp = 381,
+  heightDp = 100,
+)
+@Composable
+fun BambuPrintStatusIdle_Light() =
+  CardHost(HaTheme.Light) {
+    RenderChild(bambuPrintStatusCard(), Fixtures.bambuIdle, RemoteModifier.fillMaxWidth())
+  }
+
+@Preview(
+  name = "bambu print-status idle (dark)",
+  showBackground = false,
+  widthDp = 381,
+  heightDp = 100,
+)
+@Composable
+fun BambuPrintStatusIdle_Dark() =
+  CardHost(HaTheme.Dark) {
+    RenderChild(bambuPrintStatusCard(), Fixtures.bambuIdle, RemoteModifier.fillMaxWidth())
+  }
+
+@Preview(
+  name = "bambu print-status finished (light)",
+  showBackground = false,
+  widthDp = 381,
+  heightDp = 100,
+)
+@Composable
+fun BambuPrintStatusFinished_Light() =
+  CardHost(HaTheme.Light) {
+    RenderChild(bambuPrintStatusCard(), Fixtures.bambuFinished, RemoteModifier.fillMaxWidth())
+  }
+
+@Preview(
+  name = "bambu print-status finished (dark)",
+  showBackground = false,
+  widthDp = 381,
+  heightDp = 100,
+)
+@Composable
+fun BambuPrintStatusFinished_Dark() =
+  CardHost(HaTheme.Dark) {
+    RenderChild(bambuPrintStatusCard(), Fixtures.bambuFinished, RemoteModifier.fillMaxWidth())
+  }
+
 private fun bambuPrintStatusCard() =
   card(
     """{"type":"custom:ha-bambulab-print_status-card",

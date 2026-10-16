@@ -1202,6 +1202,40 @@ class CardDesignParityTest {
     )
 
   @Test
+  fun bambuPrintStatusIdle() =
+    assertParity(
+      "bambu-print-status-idle",
+      card("custom:ha-bambulab-print_status-card") { put("entity_prefix", "a1mini_sn1") },
+      listOf(
+        entity(
+          "sensor.a1mini_sn1_print_progress",
+          "0",
+          "friendly_name" to "A1MINI_sn1 Print progress",
+        ),
+        entity("sensor.a1mini_sn1_print_status", "idle"),
+        entity("sensor.a1mini_sn1_current_stage", "idle"),
+        entity("sensor.a1mini_sn1_current_layer", "0"),
+        entity("sensor.a1mini_sn1_total_layer_count", "0"),
+        entity("sensor.a1mini_sn1_nozzle_temperature", "23", "unit_of_measurement" to "°C"),
+        entity("sensor.a1mini_sn1_bed_temperature", "22", "unit_of_measurement" to "°C"),
+      ),
+      dark = true,
+    )
+
+  @Test
+  fun bambuPrintStatusFinished() =
+    assertParity(
+      "bambu-print-status-finished",
+      card("custom:ha-bambulab-print_status-card") { put("entity_prefix", "x1c") },
+      listOf(
+        entity("sensor.x1c_print_progress", "100", "friendly_name" to "X1C Print progress"),
+        entity("sensor.x1c_print_status", "finish"),
+        entity("sensor.x1c_nozzle_temperature", "60", "unit_of_measurement" to "°C"),
+      ),
+      dark = false,
+    )
+
+  @Test
   fun bambuPrintControl() =
     assertParity(
       "bambu-print-control",

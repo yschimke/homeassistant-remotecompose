@@ -25,6 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import ee.schimke.ha.rc.components.HaAction
+import ee.schimke.ha.rc.components.HaBambuPrintPhase
 import ee.schimke.ha.rc.components.HaTheme
 import ee.schimke.ha.rc.components.ProvideHaTheme
 import ee.schimke.ha.rc.ui.HaAlarmActionUiData
@@ -508,6 +509,29 @@ fun Tier2_BambuPrintStatus() = Tier2Host {
       remainingLine = "1 h 12 min left",
       nozzleLine = "Nozzle 220 °C → 220 °C",
       bedLine = "Bed 55 °C → 55 °C",
+    ),
+    it,
+  )
+}
+
+@Preview(
+  name = "tier2 bambu print-status idle",
+  showBackground = false,
+  widthDp = 381,
+  heightDp = 100,
+)
+@Composable
+fun Tier2_BambuPrintStatusIdle() = Tier2Host {
+  HaBambuPrintStatus(
+    HaBambuPrintStatusUiData(
+      printerName = "A1 mini",
+      stage = "Idle",
+      progressLabel = "0 %",
+      progressFraction = 0f,
+      accent = Green,
+      nozzleLine = "Nozzle 23 °C",
+      bedLine = "Bed 22 °C",
+      phase = HaBambuPrintPhase.Idle,
     ),
     it,
   )
