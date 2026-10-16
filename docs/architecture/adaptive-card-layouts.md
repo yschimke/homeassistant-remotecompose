@@ -280,7 +280,7 @@ column row that steals height. Base shape ~`3×2`.
 
 | Tier | Min width | Layout |
 |------|-----------|--------|
-| Wrap (dashboard) | width pinned | HA reference band (fixed natural height), image fill-crop + scrim |
+| Wrap (dashboard) | width pinned | height follows the live width at HA's `aspect_ratio` (default 16:9; 1:1 in a `square` grid), image fill-crop + scrim |
 | Identity | `w < 180` | image fill-crop fills the whole cell; **name dropped** — only the state badge sits over the image |
 | Full | `w ≥ 180` | image fill-crop fills the whole cell + name + state scrim |
 
@@ -294,6 +294,33 @@ mode (no breakpoint). Matrix: `CardPreviewMatrix_PictureEntity` (bakes a
 landscape sample bitmap via an Inline `PictureImageStrategy` so the
 fill-crop is visible — square/tall cells crop the sides, nothing
 letterboxes).
+
+Wrap mode has no aspect-ratio modifier to lean on, so `RemoteAspectRatioBox`
+sizes the height from a `componentWidth()` expression at playback: one
+captured document is 16:9 at 360 dp and at 700 dp. `aspect_ratio` accepts
+HA's forms (`16:9`, `4x3`, `1.78`, and `50%` = height as a share of width);
+`picture-glance` applies it to its image area, above the entity strip.
+
+### Grid (`grid`)
+
+Principle 1 for a container: the same cards, arranged by the frame's width.
+HA's `columns` (default 3) is the **most** cells per row; each child also
+declares the narrowest cell it still reads in
+(`CardConverter.gridMinCellWidthDp`: button 80 dp, tile and the picture
+family 140, Compact cards 120, Full cards 240), and the grid takes the
+widest minimum among its children. A grid that can't give `columns` cells
+that much lays out fewer, wider ones, wrapping to more rows — one per row if
+even one doesn't fit. Rows are plain weighted `RemoteRow`s (no FlowLayout),
+and a short last row keeps the column width.
+
+The per-row count is a playback decision behind a **single** width gate
+(`HaGridLayout.plan`): `min(columns, cards)` at or above the width those
+cells need, else the count that fits a 320 dp phone. Cells read their width
+from the grid (`LocalGridCellWidthPx`, `(width − gaps) ÷ perRow`) rather
+than from their own weighted box. `square: true` (HA's default) makes
+button-like cells (`gridSquareCell`) square and gives picture cards a 1:1
+default; tiles and list cards keep their own height. Verified at playback by
+`GridLayoutPlaybackTest`.
 
 ### Bulk / time-series family (`history-graph`, `statistics-graph`, `logbook`, `todo-list`, `calendar`, `markdown`)
 

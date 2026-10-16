@@ -10,12 +10,12 @@ import androidx.compose.remote.creation.profile.Profile
 
 /**
  * AndroidX profile at the latest document API level *plus* the experimental op bit, which enables
- * operations not yet in the baseline AndroidX set — notably [FlowLayout] (op 240) used by
- * `hui-glance-card` and `hui-grid-card` equivalents.
+ * operations not yet in the baseline AndroidX set — notably [FlowLayout] (op 240) used by the
+ * `hui-glance-card` equivalent.
  *
- * Use this profile in any capture scope that needs `RemoteFlowRow` / `RemoteHaGrid` /
- * `RemoteHaGlance`. Stable profiles (`RcPlatformProfiles.ANDROIDX`) reject those ops with
- * `RuntimeException: Operation N is not supported for this version`.
+ * Use this profile in any capture scope that needs `RemoteFlowRow` / `RemoteHaGlance`. Stable
+ * profiles (`RcPlatformProfiles.ANDROIDX`) reject those ops with `RuntimeException: Operation N is
+ * not supported for this version`.
  */
 val androidXExperimental: Profile =
   Profile(

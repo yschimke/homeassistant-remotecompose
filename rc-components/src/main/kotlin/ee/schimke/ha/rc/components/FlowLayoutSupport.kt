@@ -14,8 +14,8 @@ import androidx.compose.runtime.staticCompositionLocalOf
  *
  * Set to `false` on surfaces whose capture writer is fixed to a stable profile — notably the Glance
  * Wear `WearWidgetDocument` capture path, which is owned by AndroidX and rejects experimental ops.
- * HA card components that use `RemoteFlowRow` (`RemoteHaGlance`, `RemoteHaGrid`) read this local
- * and use compatible rows when it is `false`, so cards capture instead of throwing.
+ * HA card components that use `RemoteFlowRow` (`RemoteHaGlance`) read this local and use compatible
+ * rows when it is `false`, so cards capture instead of throwing.
  */
 val LocalSupportsFlowLayout = staticCompositionLocalOf { true }
 

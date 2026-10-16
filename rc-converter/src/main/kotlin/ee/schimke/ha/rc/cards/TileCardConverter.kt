@@ -63,6 +63,9 @@ class TileCardConverter : CardConverter {
   override fun naturalWidthClass(card: CardConfig, snapshot: HaSnapshot): CardWidthClass =
     CardWidthClass.Compact
 
+  /** Icon plus a name and state line that still read: HA's own tile minimum is about this. */
+  override fun gridMinCellWidthDp(card: CardConfig, snapshot: HaSnapshot): Int = 140
+
   /**
    * A plain tile (`entity` plus optional `name` / `icon`) renders from a card design, with the
    * [EntityDesign] properties of its entity. The name and the state are bindings.

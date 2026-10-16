@@ -1,7 +1,10 @@
 package ee.schimke.ha.rc.cards
 
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
+import androidx.compose.remote.creation.compose.modifier.fillMaxSize
+import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import ee.schimke.ha.design.DesignProperties
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
@@ -9,13 +12,20 @@ import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.CardConverter
 import ee.schimke.ha.rc.CardSnapshotBindings
 import ee.schimke.ha.rc.DesignTemplateInput
+import ee.schimke.ha.rc.LocalCardRegistry
+import ee.schimke.ha.rc.LocalGridSquareCells
+import ee.schimke.ha.rc.RemoteSizeBreakpoint
 import ee.schimke.ha.rc.RenderChild
+import ee.schimke.ha.rc.UNSUPPORTED_CARD_TYPE
 import ee.schimke.ha.rc.components.HaAction
+import ee.schimke.ha.rc.components.HaGridLayout
 import ee.schimke.ha.rc.components.ProvideChildCardBindings
+import ee.schimke.ha.rc.components.RemoteAspectRatioBox
 import ee.schimke.ha.rc.components.RemoteHaGrid
 import ee.schimke.ha.rc.components.RemoteHaHorizontalStack
 import ee.schimke.ha.rc.components.RemoteHaVerticalStack
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonPrimitive
 
@@ -73,14 +83,36 @@ class HorizontalStackCardConverter : CardConverter {
   }
 }
 
+/**
+ * HA `grid` card. `columns` (HA default 3) is the **most** cells per row: each child also has a
+ * minimum cell width ([CardConverter.gridMinCellWidthDp]), and a grid too narrow for `columns` of
+ * them lays out fewer, wider cells, wrapping to more rows — down to one per row (design principle
+ * 1: same content, arrangement follows the frame). The document is captured once and played at its
+ * host's width, so the per-row count is chosen at playback: a single runtime width gate
+ * ([RemoteSizeBreakpoint]) between the two tiers of [HaGridLayout.plan].
+ *
+ * `square` (HA default true) makes the cells of button-like children square
+ * ([CardConverter.gridSquareCell]) and gives picture-family children a 1:1 default
+ * ([LocalGridSquareCells]); `square: false` lets every child keep its own height.
+ */
 class GridCardConverter : CardConverter {
   override val cardType: String = CardTypes.GRID
 
+  /** The grid's own structure, beside its children's: only the options the config sets. */
+  private fun layout(card: CardConfig): Map<String, Int> = buildMap {
+    card.raw[COLUMNS]?.let { put(COLUMNS, gridColumns(card)) }
+    card.raw[SQUARE]?.let { put(SQUARE, if (gridSquare(card)) 1 else 0) }
+  }
+
   override fun designProperties(card: CardConfig, snapshot: HaSnapshot): DesignProperties? =
-    CompositeDesign.properties(card, snapshot)
+    CompositeDesign.properties(card, snapshot, layout(card))
 
   override fun designTemplate(properties: DesignProperties): DesignTemplateInput? =
-    CompositeDesign.template(cardType, properties)
+    CompositeDesign.template(
+      cardType,
+      properties,
+      mapOf(COLUMNS to { JsonPrimitive(it) }, SQUARE to { JsonPrimitive(it == 1) }),
+    )
 
   override fun designBindings(card: CardConfig, snapshot: HaSnapshot): CardSnapshotBindings =
     CompositeDesign.bindings(card, snapshot)
@@ -94,15 +126,87 @@ class GridCardConverter : CardConverter {
 
   @Composable
   override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
-    RemoteHaGrid(modifier = modifier) { RenderChildren(card, snapshot) }
+    val children = childCards(card)
+    val registry = LocalCardRegistry.current
+    val converters = children.map { registry.get(it.type) ?: registry.get(UNSUPPORTED_CARD_TYPE) }
+    val square = gridSquare(card)
+    // Equal-width cells, so the widest minimum sets the grid's.
+    val minCellDp =
+      children.indices.maxOfOrNull { k ->
+        converters[k]?.gridMinCellWidthDp(children[k], snapshot) ?: DEFAULT_MIN_CELL_DP
+      } ?: DEFAULT_MIN_CELL_DP
+    val squareCells =
+      children.indices.map { k ->
+        square && converters[k]?.gridSquareCell(children[k], snapshot) == true
+      }
+    val plan = HaGridLayout.plan(children.size, gridColumns(card), minCellDp)
+
+    CompositionLocalProvider(LocalGridSquareCells provides square) {
+      val threshold = plan.thresholdDp
+      if (threshold == null) {
+        GridCells(children, squareCells, snapshot, plan.widePerRow, modifier)
+      } else {
+        RemoteSizeBreakpoint(
+          thresholdsDp = intArrayOf(threshold),
+          modifier = modifier.fillMaxWidth(),
+        ) { tier ->
+          val perRow = if (tier > 0) plan.widePerRow else plan.narrowPerRow
+          GridCells(children, squareCells, snapshot, perRow, RemoteModifier.fillMaxWidth())
+        }
+      }
+    }
+  }
+
+  private companion object {
+    const val COLUMNS = "columns"
+    const val SQUARE = "square"
+
+    /** A child whose converter can't be found: the unsupported placeholder's compact default. */
+    const val DEFAULT_MIN_CELL_DP = 120
   }
 }
 
-/** Each child, as child k of this card for its card-level template bindings. */
+/** [children] in rows of [perRow]; a [squareCells] child fills a square cell. */
+@Composable
+private fun GridCells(
+  children: List<CardConfig>,
+  squareCells: List<Boolean>,
+  snapshot: HaSnapshot,
+  perRow: Int,
+  modifier: RemoteModifier,
+) {
+  RemoteHaGrid(cellCount = children.size, perRow = perRow, modifier = modifier) { k ->
+    ProvideChildCardBindings(k) {
+      if (squareCells[k]) {
+        RemoteAspectRatioBox(1f, RemoteModifier.fillMaxWidth()) {
+          RenderChild(children[k], snapshot, RemoteModifier.fillMaxSize())
+        }
+      } else {
+        RenderChild(children[k], snapshot, RemoteModifier.fillMaxWidth())
+      }
+    }
+  }
+}
+
+/** HA's `columns`: a positive integer, default [HaGridLayout.DEFAULT_COLUMNS]. */
+internal fun gridColumns(card: CardConfig): Int =
+  (card.raw["columns"] as? JsonPrimitive)?.content?.toDoubleOrNull()?.toInt()?.takeIf { it > 0 }
+    ?: HaGridLayout.DEFAULT_COLUMNS
+
+/** HA's `square`: default true. */
+internal fun gridSquare(card: CardConfig): Boolean =
+  (card.raw["square"] as? JsonPrimitive)?.content?.toBooleanStrictOrNull() ?: true
+
+/**
+ * Each child, as child k of this card for its card-level template bindings. A stack is not a grid
+ * cell, so a stack nested in a square grid doesn't pass the square default on to its children.
+ */
 @Composable
 private fun RenderChildren(card: CardConfig, snapshot: HaSnapshot) {
-  childCards(card).forEachIndexed { k, child ->
-    ProvideChildCardBindings(k) { RenderChild(child, snapshot) }
+  CompositionLocalProvider(LocalGridSquareCells provides false) {
+    childCards(card).forEachIndexed { k, child ->
+      ProvideChildCardBindings(k) { RenderChild(child, snapshot) }
+    }
   }
 }
 

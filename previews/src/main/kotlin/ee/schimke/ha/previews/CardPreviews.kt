@@ -261,13 +261,15 @@ private fun horizontalStackCard() =
 
 // ——— grid ———
 // No HA reference. Tight-to-content, per rule 3 at top.
-// Our 4 buttons fit in one row at 312 dp.
+// `columns` is the most per row: four buttons in HA's default three columns lay out 3 + 1 at
+// 312 dp, each in a square cell ((312 − 2·8) / 3 ≈ 99 dp); the short last row keeps the column
+// width.
 
-@Preview(name = "grid (light)", showBackground = false, widthDp = 312, heightDp = 94)
+@Preview(name = "grid (light)", showBackground = false, widthDp = 312, heightDp = 206)
 @Composable
 fun Grid_Light() = CardHost(HaTheme.Light) { RenderChild(gridCard(), Fixtures.mixed) }
 
-@Preview(name = "grid (dark)", showBackground = false, widthDp = 312, heightDp = 94)
+@Preview(name = "grid (dark)", showBackground = false, widthDp = 312, heightDp = 206)
 @Composable
 fun Grid_Dark() = CardHost(HaTheme.Dark) { RenderChild(gridCard(), Fixtures.mixed) }
 
@@ -278,6 +280,76 @@ private fun gridCard() =
         {"type":"button","entity":"light.kitchen","name":"Office"},
         {"type":"button","entity":"sensor.living_room","name":"Temp","icon":"mdi:thermometer"},
         {"type":"button","entity":"sensor.living_room","name":"RH","icon":"mdi:water-percent"}
+    ]}"""
+  )
+
+// Four columns of buttons: four 80 dp cells need 344 dp, so a 360 dp phone keeps all four in a row
+// ((360 − 3·8) / 4 = 84 dp squares).
+@Preview(name = "grid 4 buttons — 360dp", showBackground = false, widthDp = 360, heightDp = 84)
+@Composable
+fun GridButtons4Columns_360() =
+  CardHost(HaTheme.Dark) { RenderChild(gridButtons4Card(), Fixtures.mixed) }
+
+private fun gridButtons4Card() =
+  card(
+    """{"type":"grid","columns":4,"cards":[
+        {"type":"button","entity":"light.kitchen","name":"Kitchen"},
+        {"type":"button","entity":"light.kitchen","name":"Office"},
+        {"type":"button","entity":"sensor.living_room","name":"Temp","icon":"mdi:thermometer"},
+        {"type":"button","entity":"sensor.living_room","name":"RH","icon":"mdi:water-percent"}
+    ]}"""
+  )
+
+// The 3D Printing dashboard's camera grid: two `aspect_ratio: 1:1` picture-entity cards in two
+// columns. Both fit side by side as squares at a phone's width ((360 − 8) / 2 = 176 dp) and at a
+// tablet's ((700 − 8) / 2 = 346 dp); the same document, played wider, just grows the squares.
+@Preview(
+  name = "grid 2 square pictures — 360dp",
+  showBackground = false,
+  widthDp = 360,
+  heightDp = 176,
+)
+@Composable
+fun GridSquarePictures_360() =
+  CardHost(HaTheme.Dark) { RenderChild(gridPicturesCard(), Fixtures.driveway) }
+
+@Preview(
+  name = "grid 2 square pictures — 700dp",
+  showBackground = false,
+  widthDp = 700,
+  heightDp = 346,
+)
+@Composable
+fun GridSquarePictures_700() =
+  CardHost(HaTheme.Dark) { RenderChild(gridPicturesCard(), Fixtures.driveway) }
+
+private fun gridPicturesCard() =
+  card(
+    """{"type":"grid","columns":2,"cards":[
+        {"type":"picture-entity","entity":"camera.driveway","name":"Chamber","aspect_ratio":"1:1"},
+        {"type":"picture-entity","entity":"camera.driveway","name":"Nozzle","aspect_ratio":"1:1"}
+    ]}"""
+  )
+
+// A tile grid: tiles keep their own height (they are rows, not squares). Three 140 dp tiles need
+// 436 dp, so a phone lays out two per row and a tablet all three.
+@Preview(name = "grid tiles — 360dp", showBackground = false, widthDp = 360, heightDp = 160)
+@Composable
+fun GridTiles_360() = CardHost(HaTheme.Dark) { RenderChild(gridTilesCard(), Fixtures.mixed) }
+
+@Preview(name = "grid tiles — 700dp", showBackground = false, widthDp = 700, heightDp = 104)
+@Composable
+fun GridTiles_700() = CardHost(HaTheme.Dark) { RenderChild(gridTilesCard(), Fixtures.mixed) }
+
+private fun gridTilesCard() =
+  card(
+    """{"type":"grid","columns":3,"cards":[
+        {"type":"tile","entity":"light.kitchen","name":"Kitchen"},
+        {"type":"tile","entity":"light.kitchen","name":"Office"},
+        {"type":"tile","entity":"sensor.living_room","name":"Living room"},
+        {"type":"tile","entity":"sensor.living_room","name":"Bedroom"},
+        {"type":"tile","entity":"light.kitchen","name":"Hall"},
+        {"type":"tile","entity":"sensor.living_room","name":"Study"}
     ]}"""
   )
 
@@ -413,15 +485,16 @@ private fun gaugeCard() =
   )
 
 // ——— picture-entity ———
+// No `aspect_ratio`: the picture family's default 16:9, so 312 dp wide is 176 dp tall.
 
-@Preview(name = "picture-entity (light)", showBackground = false, widthDp = 312, heightDp = 160)
+@Preview(name = "picture-entity (light)", showBackground = false, widthDp = 312, heightDp = 176)
 @Composable
 fun PictureEntity_Light() =
   CardHost(HaTheme.Light) {
     RenderChild(pictureEntityCard(), Fixtures.driveway, RemoteModifier.fillMaxWidth())
   }
 
-@Preview(name = "picture-entity (dark)", showBackground = false, widthDp = 312, heightDp = 160)
+@Preview(name = "picture-entity (dark)", showBackground = false, widthDp = 312, heightDp = 176)
 @Composable
 fun PictureEntity_Dark() =
   CardHost(HaTheme.Dark) {
@@ -852,15 +925,16 @@ private fun areaCard() =
   )
 
 // ——— picture ———
+// Default 16:9 at 320 dp. picture-glance below: a 16:9 image (214 dp at 381) over its 48 dp strip.
 
-@Preview(name = "picture (light)", showBackground = false, widthDp = 320, heightDp = 140)
+@Preview(name = "picture (light)", showBackground = false, widthDp = 320, heightDp = 180)
 @Composable
 fun Picture_Light() =
   CardHost(HaTheme.Light) {
     RenderChild(pictureCardConfig(), Fixtures.driveway, RemoteModifier.fillMaxWidth())
   }
 
-@Preview(name = "picture (dark)", showBackground = false, widthDp = 320, heightDp = 140)
+@Preview(name = "picture (dark)", showBackground = false, widthDp = 320, heightDp = 180)
 @Composable
 fun Picture_Dark() =
   CardHost(HaTheme.Dark) {
@@ -872,14 +946,14 @@ private fun pictureCardConfig() =
 
 // ——— picture-glance ———
 
-@Preview(name = "picture-glance (light)", showBackground = false, widthDp = 381, heightDp = 168)
+@Preview(name = "picture-glance (light)", showBackground = false, widthDp = 381, heightDp = 262)
 @Composable
 fun PictureGlance_Light() =
   CardHost(HaTheme.Light) {
     RenderChild(pictureGlanceCardConfig(), Fixtures.livingRoomGlance, RemoteModifier.fillMaxWidth())
   }
 
-@Preview(name = "picture-glance (dark)", showBackground = false, widthDp = 381, heightDp = 168)
+@Preview(name = "picture-glance (dark)", showBackground = false, widthDp = 381, heightDp = 262)
 @Composable
 fun PictureGlance_Dark() =
   CardHost(HaTheme.Dark) {

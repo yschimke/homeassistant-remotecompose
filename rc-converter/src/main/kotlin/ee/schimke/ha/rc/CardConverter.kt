@@ -2,6 +2,7 @@ package ee.schimke.ha.rc
 
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.staticCompositionLocalOf
 import ee.schimke.ha.design.DesignProperties
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
@@ -137,6 +138,28 @@ interface CardConverter {
     CardWidthClass.Full
 
   /**
+   * The narrowest cell, in dp, this card still reads as itself in when a `grid` card lays it out —
+   * the "too narrow for its icon" line. A grid's `columns` is the most cells per row; it lays out
+   * fewer, wider cells whenever its width can't give each one this much (see
+   * `HaGridLayout.perRow`). The default follows [naturalWidthClass]: a Compact card is happy at 120
+   * dp, a Full (list / hero) card wants 240 dp.
+   */
+  fun gridMinCellWidthDp(card: CardConfig, snapshot: HaSnapshot): Int =
+    when (naturalWidthClass(card, snapshot)) {
+      CardWidthClass.Compact -> 120
+      CardWidthClass.Full -> 240
+    }
+
+  /**
+   * Whether this card fills a **square** cell when its `grid` has `square: true` (HA's default) —
+   * true for button-like cards, whose content centres in whatever box it gets. The grid then sizes
+   * the cell's height from its live width and renders the card with `fillMaxSize()`. Cards that
+   * size their own height from their width (the picture family, via [LocalGridSquareCells]) and
+   * list- or row-shaped cards (tiles, entities) keep their own height, so default false.
+   */
+  fun gridSquareCell(card: CardConfig, snapshot: HaSnapshot): Boolean = false
+
+  /**
    * The comfortable default size this card wants when pinned as a launcher widget, in dp — the cell
    * it should occupy before the user resizes it.
    *
@@ -206,3 +229,10 @@ class CardRegistry(converters: Iterable<CardConverter> = emptyList()) {
 
 /** What a card design template is captured from: see [CardConverter.designTemplate]. */
 data class DesignTemplateInput(val card: CardConfig, val snapshot: HaSnapshot)
+
+/**
+ * True while rendering the children of a `grid` card with `square: true`. Picture-family cards with
+ * no `aspect_ratio` of their own read it and take a 1:1 shape, so a square grid of pictures is a
+ * grid of squares, as in HA; an explicit `aspect_ratio` still wins.
+ */
+val LocalGridSquareCells = staticCompositionLocalOf { false }
