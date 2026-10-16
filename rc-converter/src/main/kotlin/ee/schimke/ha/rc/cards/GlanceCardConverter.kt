@@ -67,17 +67,19 @@ class GlanceCardConverter : CardConverter {
       val tapCfg = row?.get("tap_action")?.jsonObject
       val tapAction = if (tapCfg != null) parseHaAction(tapCfg, eid) else defaultTapActionFor(eid)
       val isActive = entity?.toTyped()?.isActive
+      val icons = HaIconMap.entityIcons(row?.get("icon")?.jsonPrimitive?.content, entity)
       HaGlanceCellData(
         entityId = eid,
         name = name,
         state = LiveValues.state(eid, formatState(entity)),
-        icon = HaIconMap.resolve(row?.get("icon")?.jsonPrimitive?.content, entity),
+        icon = icons.icon,
         accent =
           HaToggleAccent(
             activeAccent = HaStateColor.activeFor(entity).rc,
             inactiveAccent = HaStateColor.inactiveFor(entity).rc,
             initiallyOn = isActive ?: false,
             toggleable = isActive != null,
+            activeIcon = icons.activeIcon,
           ),
         tapAction = tapAction,
       )

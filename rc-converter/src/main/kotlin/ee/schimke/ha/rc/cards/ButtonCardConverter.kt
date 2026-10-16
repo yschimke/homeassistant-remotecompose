@@ -136,17 +136,19 @@ private fun buttonData(card: CardConfig, snapshot: HaSnapshot): HaButtonData {
     if (tapCfg != null) parseHaAction(tapCfg, entityId) else defaultTapActionFor(entityId)
 
   val isActive = entity?.toTyped()?.isActive
+  val icons = HaIconMap.entityIcons(card.raw["icon"]?.jsonPrimitive?.content, entity)
   val toggleable = isActive != null
   return HaButtonData(
     entityId = entityId,
     name = name,
-    icon = HaIconMap.resolve(card.raw["icon"]?.jsonPrimitive?.content, entity),
+    icon = icons.icon,
     accent =
       HaToggleAccent(
         activeAccent = HaStateColor.activeFor(entity).rc,
         inactiveAccent = HaStateColor.inactiveFor(entity).rc,
         initiallyOn = isActive ?: false,
         toggleable = toggleable,
+        activeIcon = icons.activeIcon,
       ),
     showName = showName,
     tapAction = tapAction,

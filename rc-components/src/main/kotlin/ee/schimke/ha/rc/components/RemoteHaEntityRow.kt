@@ -3,7 +3,6 @@
 package ee.schimke.ha.rc.components
 
 import androidx.compose.remote.creation.compose.action.Action
-import androidx.compose.remote.creation.compose.capture.toRemoteImageVector
 import androidx.compose.remote.creation.compose.layout.RemoteAlignment
 import androidx.compose.remote.creation.compose.layout.RemoteArrangement
 import androidx.compose.remote.creation.compose.layout.RemoteBox
@@ -32,7 +31,6 @@ import androidx.compose.remote.creation.compose.state.tween
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.wear.compose.remote.material3.RemoteIcon
 
 /**
  * One row of an Entities card:
@@ -61,11 +59,14 @@ fun RemoteHaEntityRow(data: HaEntityRowData, modifier: RemoteModifier = RemoteMo
     verticalAlignment = RemoteAlignment.CenterVertically,
   ) {
     RemoteRow(verticalAlignment = RemoteAlignment.CenterVertically) {
-      RemoteIcon(
-        imageVector = data.icon.toRemoteImageVector(),
+      HaStateIcon(
+        icon = data.icon,
+        activeIcon = data.accent.activeIcon,
+        initiallyOn = data.accent.initiallyOn,
+        isOn = isOnBinding,
+        tint = accent,
         contentDescription = entityName(data.entityId, data.name),
         modifier = RemoteModifier.size(20.rdp),
-        tint = accent,
       )
       RemoteBox(modifier = RemoteModifier.padding(start = 12.rdp)) {
         RemoteText(

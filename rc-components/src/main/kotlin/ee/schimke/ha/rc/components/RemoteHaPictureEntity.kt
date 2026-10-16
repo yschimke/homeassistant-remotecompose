@@ -2,7 +2,6 @@
 
 package ee.schimke.ha.rc.components
 
-import androidx.compose.remote.creation.compose.capture.toRemoteImageVector
 import androidx.compose.remote.creation.compose.layout.RemoteAlignment
 import androidx.compose.remote.creation.compose.layout.RemoteArrangement
 import androidx.compose.remote.creation.compose.layout.RemoteBox
@@ -26,7 +25,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.wear.compose.remote.material3.RemoteIcon
 
 /**
  * HA `picture-entity` card — modern image-with-overlay tile (`hui-picture-entity-card.ts`).
@@ -127,19 +125,25 @@ fun RemoteHaPictureEntity(
             // Inline strategy with no pre-fetched bytes for
             // this URL — fall back to the icon path so the
             // tile renders something instead of a hole.
-            RemoteIcon(
-              imageVector = data.icon.toRemoteImageVector(),
+            HaStateIcon(
+              icon = data.icon,
+              activeIcon = data.accent.activeIcon,
+              initiallyOn = data.accent.initiallyOn,
+              isOn = isOnBinding,
+              tint = accent.copy(alpha = accent.alpha * 0.55f.rf),
               contentDescription = entityName(data.entityId, data.name),
               modifier = RemoteModifier.size(40.rdp),
-              tint = accent.copy(alpha = accent.alpha * 0.55f.rf),
             )
           }
         } else {
-          RemoteIcon(
-            imageVector = data.icon.toRemoteImageVector(),
+          HaStateIcon(
+            icon = data.icon,
+            activeIcon = data.accent.activeIcon,
+            initiallyOn = data.accent.initiallyOn,
+            isOn = isOnBinding,
+            tint = accent.copy(alpha = accent.alpha * 0.55f.rf),
             contentDescription = entityName(data.entityId, data.name),
             modifier = RemoteModifier.size(40.rdp),
-            tint = accent.copy(alpha = accent.alpha * 0.55f.rf),
           )
         }
         if (data.frameStamp != null) {

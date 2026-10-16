@@ -41,6 +41,14 @@ data class HaToggleAccent(
    * toggle binding is informational.
    */
   val toggleable: Boolean = true,
+  /**
+   * The glyph drawn while the entity is on, when it differs from the data's `icon` (drawn while
+   * off): a light's `lightbulb` over `lightbulb-off`, a door sensor's `door-open` over
+   * `door-closed`. With the `is_on` binding the component bakes both and swaps them in-document, so
+   * a document captured in one state draws the other; without it, it draws the glyph for
+   * [initiallyOn]. Null when the glyph doesn't change with the state.
+   */
+  val activeIcon: ImageVector? = null,
 )
 
 /** HA tile card model. */
@@ -550,6 +558,8 @@ data class HaPictureGlanceCell(
   val initiallyActive: Boolean,
   val label: String,
   val tapAction: HaAction,
+  /** The glyph while on, when it differs from [icon]: see [HaToggleAccent.activeIcon]. */
+  val activeIcon: ImageVector? = null,
 )
 
 /**
@@ -580,6 +590,8 @@ sealed interface HaPictureElement {
     val initiallyActive: Boolean,
     val tapAction: HaAction,
     override val position: HaPictureElementPosition? = null,
+    /** The glyph while on, when it differs from [icon]: see [HaToggleAccent.activeIcon]. */
+    val activeIcon: ImageVector? = null,
   ) : HaPictureElement
 
   data class StateLabel(

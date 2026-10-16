@@ -2,7 +2,6 @@
 
 package ee.schimke.ha.rc.components
 
-import androidx.compose.remote.creation.compose.capture.toRemoteImageVector
 import androidx.compose.remote.creation.compose.layout.RemoteAlignment
 import androidx.compose.remote.creation.compose.layout.RemoteArrangement
 import androidx.compose.remote.creation.compose.layout.RemoteBox
@@ -24,7 +23,6 @@ import androidx.compose.remote.creation.compose.state.rf
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.wear.compose.remote.material3.RemoteIcon
 
 /**
  * HA `tile` card — modern primary-info card (`home-assistant/frontend` → `hui-tile-card.ts`).
@@ -68,19 +66,25 @@ fun RemoteHaTile(data: HaTileData, modifier: RemoteModifier = RemoteModifier) {
               .background(accent.copy(alpha = accent.alpha * 0.2f.rf)),
           contentAlignment = RemoteAlignment.Center,
         ) {
-          RemoteIcon(
-            imageVector = data.icon.toRemoteImageVector(),
+          HaStateIcon(
+            icon = data.icon,
+            activeIcon = data.accent.activeIcon,
+            initiallyOn = data.accent.initiallyOn,
+            isOn = isOnBinding,
+            tint = accent,
             contentDescription = entityName(data.entityId, data.name),
             modifier = RemoteModifier.size(20.rdp),
-            tint = accent,
           )
         }
       } else {
-        RemoteIcon(
-          imageVector = data.icon.toRemoteImageVector(),
+        HaStateIcon(
+          icon = data.icon,
+          activeIcon = data.accent.activeIcon,
+          initiallyOn = data.accent.initiallyOn,
+          isOn = isOnBinding,
+          tint = accent,
           contentDescription = entityName(data.entityId, data.name),
           modifier = RemoteModifier.size(24.rdp),
-          tint = accent,
         )
       }
       RemoteColumn(modifier = RemoteModifier.padding(start = 10.rdp)) {
@@ -153,11 +157,15 @@ fun RemoteHaIconChip(data: HaTileData, modifier: RemoteModifier = RemoteModifier
     verticalArrangement = RemoteArrangement.Center,
     horizontalAlignment = RemoteAlignment.CenterHorizontally,
   ) {
-    RemoteIcon(
-      imageVector = data.icon.toRemoteImageVector(),
+    // Static like the accent: this tier registers no `is_on` binding.
+    HaStateIcon(
+      icon = data.icon,
+      activeIcon = data.accent.activeIcon,
+      initiallyOn = data.accent.initiallyOn,
+      isOn = null,
+      tint = accent,
       contentDescription = entityName(data.entityId, data.name),
       modifier = RemoteModifier.size(32.rdp),
-      tint = accent,
     )
     RemoteBox(modifier = RemoteModifier.padding(top = 6.rdp)) {
       RemoteText(

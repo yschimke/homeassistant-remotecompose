@@ -197,15 +197,18 @@ private fun mapElement(obj: JsonObject, snapshot: HaSnapshot): HaPictureElement?
   val position = parsePositionFraction(obj)
   return when (type) {
     "state-icon",
-    "icon" ->
+    "icon" -> {
+      val icons = HaIconMap.entityIcons(obj["icon"]?.jsonPrimitive?.content, entity)
       HaPictureElement.StateIcon(
         entityId = entityId,
-        icon = HaIconMap.resolve(obj["icon"]?.jsonPrimitive?.content, entity),
+        icon = icons.icon,
+        activeIcon = icons.activeIcon,
         accent = HaStateColor.activeFor(entity),
         initiallyActive = entity != null && HaLiveBindings.isOn(entityId, entity.state),
         tapAction = parseTap(obj, entityId),
         position = position,
       )
+    }
     "state-label" ->
       HaPictureElement.StateLabel(
         entityId = entityId,

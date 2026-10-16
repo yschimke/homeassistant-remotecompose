@@ -2,19 +2,6 @@
 
 package ee.schimke.ha.rc.cards
 
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AcUnit
-import androidx.compose.material.icons.filled.Air
-import androidx.compose.material.icons.filled.Cloud
-import androidx.compose.material.icons.filled.Compress
-import androidx.compose.material.icons.filled.Thermostat
-import androidx.compose.material.icons.filled.Thunderstorm
-import androidx.compose.material.icons.filled.Umbrella
-import androidx.compose.material.icons.filled.WaterDrop
-import androidx.compose.material.icons.filled.WbCloudy
-import androidx.compose.material.icons.filled.WbSunny
-import androidx.compose.material.icons.filled.WbTwilight
-import androidx.compose.material.icons.outlined.Cloud
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.fillMaxSize
 import androidx.compose.runtime.Composable
@@ -39,6 +26,7 @@ import ee.schimke.ha.rc.components.LiveValues
 import ee.schimke.ha.rc.components.RemoteHaWeatherForecast
 import ee.schimke.ha.rc.components.RemoteHaWeatherForecastWide
 import ee.schimke.ha.rc.formatValueWithUnit
+import ee.schimke.ha.rc.icons.HaIconMap
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.addJsonObject
@@ -218,48 +206,38 @@ private fun weatherExtras(
   val extras = mutableListOf<HaWeatherExtra>()
   attr("apparent_temperature")?.let {
     val unit = attr("temperature_unit") ?: "°"
-    extras += HaWeatherExtra(Icons.Filled.Thermostat, "Feels", formatValueWithUnit(it, unit))
+    extras += HaWeatherExtra(weatherAttrIcon("thermometer"), "Feels", formatValueWithUnit(it, unit))
   }
   attr("humidity")?.let {
-    extras += HaWeatherExtra(Icons.Filled.WaterDrop, "Humidity", formatValueWithUnit(it, "%"))
+    extras +=
+      HaWeatherExtra(weatherAttrIcon("water-percent"), "Humidity", formatValueWithUnit(it, "%"))
   }
   attr("wind_speed")?.let {
     val unit = attr("wind_speed_unit") ?: ""
-    extras += HaWeatherExtra(Icons.Filled.Air, "Wind", formatValueWithUnit(it, unit))
+    extras +=
+      HaWeatherExtra(weatherAttrIcon("weather-windy"), "Wind", formatValueWithUnit(it, unit))
   }
   attr("pressure")?.let {
     val unit = attr("pressure_unit") ?: ""
-    extras += HaWeatherExtra(Icons.Filled.Compress, "Pressure", formatValueWithUnit(it, unit))
+    extras += HaWeatherExtra(weatherAttrIcon("gauge"), "Pressure", formatValueWithUnit(it, unit))
   }
   attr("uv_index")?.let {
-    extras += HaWeatherExtra(Icons.Filled.WbTwilight, "UV", formatValueWithUnit(it, ""))
+    extras += HaWeatherExtra(weatherAttrIcon("weather-sunny"), "UV", formatValueWithUnit(it, ""))
   }
   attr("cloud_coverage")?.let {
-    extras += HaWeatherExtra(Icons.Filled.Cloud, "Cloud", formatValueWithUnit(it, "%"))
+    extras +=
+      HaWeatherExtra(weatherAttrIcon("weather-cloudy"), "Cloud", formatValueWithUnit(it, "%"))
   }
   // Cap to keep the chips on one row even on the widest widget; the first
   // four (feels / humidity / wind / pressure) are the most useful glance.
   return extras.take(4)
 }
 
-private fun weatherIcon(condition: String?): ImageVector =
-  when (condition) {
-    "sunny",
-    "clear-night" -> Icons.Filled.WbSunny
-    "partlycloudy" -> Icons.Filled.WbCloudy
-    "cloudy" -> Icons.Filled.Cloud
-    "fog" -> Icons.Outlined.Cloud
-    "rainy",
-    "pouring" -> Icons.Filled.Umbrella
-    "lightning",
-    "lightning-rainy" -> Icons.Filled.Thunderstorm
-    "snowy",
-    "snowy-rainy",
-    "hail" -> Icons.Filled.AcUnit
-    "windy",
-    "windy-variant" -> Icons.Filled.Air
-    else -> Icons.Filled.Cloud
-  }
+/** The condition's glyph, as Home Assistant's weather entity draws it (`weather-pouring`, …). */
+private fun weatherIcon(condition: String?): ImageVector = HaIconMap.weatherCondition(condition)
+
+/** An attribute read-out's glyph, as HA's weather card draws it (`weatherAttrIcons`). */
+private fun weatherAttrIcon(name: String): ImageVector = HaIconMap.mdi(name) ?: HaIconMap.Fallback
 
 private fun formatCondition(state: String): String =
   state.replace('-', ' ').replace('_', ' ').replaceFirstChar { it.uppercaseChar() }

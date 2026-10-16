@@ -106,18 +106,20 @@ class TileCardConverter : CardConverter {
     val tapAction =
       if (tapCfg != null) parseHaAction(tapCfg, entityId) else defaultTapActionFor(entityId)
     val isActive = entity?.toTyped()?.isActive
+    val icons = HaIconMap.entityIcons(card.raw["icon"]?.jsonPrimitive?.content, entity)
 
     return HaTileData(
       entityId = entityId,
       name = name,
       state = LiveValues.state(entityId, formatState(entity)),
-      icon = HaIconMap.resolve(card.raw["icon"]?.jsonPrimitive?.content, entity),
+      icon = icons.icon,
       accent =
         HaToggleAccent(
           activeAccent = HaStateColor.activeFor(entity).rc,
           inactiveAccent = HaStateColor.inactiveFor(entity).rc,
           initiallyOn = isActive ?: false,
           toggleable = isActive != null,
+          activeIcon = icons.activeIcon,
         ),
       tapAction = tapAction,
     )
