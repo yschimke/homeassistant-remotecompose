@@ -91,6 +91,12 @@ data class DesignEntry(
    * a person's id (`github:<login>`) for one published from UI Builder. The `author` tag.
    */
   val author: String = BUILTIN_AUTHOR,
+  /**
+   * The devices this design is made for (a boiler's flow temperature), or null for a generic
+   * design. A client prefers the most specific matching design for a card's entity's device over
+   * the generic one with the same [key]; see [DeviceMatch.pick].
+   */
+  val device: DeviceMatch? = null,
 ) {
   companion object {
     const val BUILTIN_AUTHOR: String = "terrazzo"

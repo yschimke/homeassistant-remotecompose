@@ -20,6 +20,11 @@ data class HaSnapshot(
   val history: Map<String, List<HistoryPoint>> = emptyMap(),
   val statistics: Map<String, List<StatisticPoint>> = emptyMap(),
   val forecasts: Map<String, JsonObject> = emptyMap(),
+  /**
+   * The device behind each entity id, where Home Assistant's registries say: what device-specific
+   * card designs match on. Empty when the registries weren't read.
+   */
+  val devices: Map<String, ee.schimke.ha.design.DeviceInfo> = emptyMap(),
 )
 
 @Serializable

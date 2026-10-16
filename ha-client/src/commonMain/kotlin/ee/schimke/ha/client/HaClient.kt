@@ -1,5 +1,6 @@
 package ee.schimke.ha.client
 
+import ee.schimke.ha.design.DeviceInfo
 import ee.schimke.ha.model.Dashboard
 import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HaNotification
@@ -41,6 +42,7 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.add
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -207,6 +209,39 @@ class HaClient(private val config: HaConfig, engine: HttpClientEngine? = null) {
       internalUrl = result["internal_url"]?.nullableString(),
       externalUrl = result["external_url"]?.nullableString(),
     )
+  }
+
+  /**
+   * The device behind each entity, for device-specific card designs. The entity registry's display
+   * list (`config/entity_registry/list_for_display`, open to every user) gives each entity's
+   * integration, translation key and device id; the device registry (`config/device_registry/list`)
+   * adds manufacturer and model. Without the device registry, entities keep what the first gives.
+   */
+  suspend fun fetchDevices(): Map<String, DeviceInfo> {
+    val entities =
+      runCommand("config/entity_registry/list_for_display")["entities"] as? JsonArray
+        ?: return emptyMap()
+    val devices = runCatching {
+      runCommandArray("config/device_registry/list")
+    }
+      .getOrDefault(JsonArray(emptyList()))
+      .mapNotNull { it as? JsonObject }
+      .associateBy { it["id"]?.jsonPrimitive?.contentOrNull }
+    return entities
+      .mapNotNull { it as? JsonObject }
+      .mapNotNull { entity ->
+        val id = entity["ei"]?.jsonPrimitive?.contentOrNull ?: return@mapNotNull null
+        val device = entity["di"]?.jsonPrimitive?.contentOrNull?.let { devices[it] }
+        val info =
+          DeviceInfo(
+            integration = entity["pl"]?.jsonPrimitive?.contentOrNull,
+            manufacturer = device?.get("manufacturer")?.jsonPrimitive?.contentOrNull,
+            model = device?.get("model")?.jsonPrimitive?.contentOrNull,
+            translationKey = entity["tk"]?.jsonPrimitive?.contentOrNull,
+          )
+        (id to info).takeIf { info != DeviceInfo() }
+      }
+      .toMap()
   }
 
   /** Top-level Lovelace dashboards registered in `lovelace/dashboards`. */

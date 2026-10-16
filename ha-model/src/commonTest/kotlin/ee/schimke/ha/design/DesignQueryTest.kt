@@ -79,4 +79,22 @@ class DesignQueryTest {
     assertEquals(mapOf("default" to 3), tags.variant)
     assertEquals(mapOf("github:a" to 1, "terrazzo" to 2), tags.author)
   }
+
+  @Test
+  fun aDeviceQueryFindsOnlyDesignsMadeForThatDevice() {
+    val generic = entry()
+    val forBoiler = entry().copy(device = DeviceMatch(integration = "vaillant", model = "ecoTEC*"))
+    val boiler = DesignQuery(device = DeviceInfo(integration = "vaillant", model = "ecoTEC plus"))
+    assertTrue(boiler.matches(forBoiler))
+    assertFalse(boiler.matches(generic))
+    assertFalse(DesignQuery(device = DeviceInfo(integration = "nibe")).matches(forBoiler))
+    // Without a device, a query keeps matching both.
+    assertTrue(DesignQuery().matches(forBoiler))
+    val parsed = DesignQuery.of(mapOf("integration" to "vaillant", "model" to "ecoTEC plus")::get)
+    assertEquals(DeviceInfo(integration = "vaillant", model = "ecoTEC plus"), parsed?.device)
+    assertEquals(
+      listOf("integration" to "vaillant", "model" to "ecoTEC plus"),
+      parsed?.parameters(),
+    )
+  }
 }

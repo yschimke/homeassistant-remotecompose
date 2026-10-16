@@ -5,6 +5,7 @@ import ee.schimke.ha.design.DesignKey
 import ee.schimke.ha.design.DesignManifest
 import ee.schimke.ha.design.DesignQuery
 import ee.schimke.ha.design.DesignSurface
+import ee.schimke.ha.design.DeviceMatch
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
@@ -342,5 +343,69 @@ class DesignRepositoryTest {
       }
     assertEquals(RefreshResult.Filled, classic.refresh())
     assertEquals(setOf(key, consoleKey), classic.resolveAll().keys)
+  }
+
+  @Test
+  fun deviceDesignsResolveBesideTheGenericOneForTheirKey() = runTest {
+    val boiler = "boiler dial".encodeToByteArray()
+    val store = InMemoryDesignStore()
+    store.writeBlob(Sha256.hex(template), template)
+    store.writeBlob(Sha256.hex(boiler), boiler)
+    val match = DeviceMatch(integration = "vaillant")
+    store.writeManifest(
+      StoredManifest(
+        DesignManifest(
+          serial = 1,
+          generatedAtEpochMs = now,
+          expiresAtEpochMs = now + 1_000_000,
+          designs =
+            listOf(
+              DesignEntry(key, Sha256.hex(template), template.size, slots = 1),
+              DesignEntry(key, Sha256.hex(boiler), boiler.size, slots = 1, device = match),
+            ),
+        ),
+        fetchedAtEpochMs = now,
+      )
+    )
+    val repository = repo(null, store)
+    // The generic design keeps its key; the device design never displaces it.
+    assertContentEquals(template, repository.resolveAll()[key])
+    val forDevices = repository.resolveDeviceDesigns()[key].orEmpty()
+    assertEquals(listOf(match), forDevices.map { it.first })
+    assertContentEquals(boiler, forDevices.single().second)
+  }
+
+  @Test
+  fun aDeviceDesignNeverStandsInForItsKeysGenericOneEvenWhenRevoked() = runTest {
+    val match = DeviceMatch(integration = "vaillant")
+    fun manifest(serial: Long, revokeDevice: Boolean, extra: List<BuiltDesign> = emptyList()) =
+      published(serial = serial, designs = listOf(design()) + extra).let { out ->
+        val generic = out.manifest.designs.first { it.key == key }
+        // Listed first, so a lookup by key alone would find it before the generic design.
+        val forDevice = generic.copy(device = match, revoked = revokeDevice)
+        out.files +
+          ("manifest.json" to
+            kotlinx.serialization.json.Json.encodeToString(
+                DesignManifest.serializer(),
+                out.manifest.copy(designs = listOf(forDevice) + out.manifest.designs),
+              )
+              .encodeToByteArray())
+      }
+    val host = FakeHost(manifest(serial = 1, revokeDevice = false))
+    val store = InMemoryDesignStore()
+    assertEquals(RefreshResult.Updated, repo(host, store).refresh())
+    assertNull(repo(host, store).resolve(key)?.entry?.device)
+    assertEquals(listOf(match), repo(host, store).resolveDeviceDesigns()[key]?.map { it.first })
+
+    // Serial 2 revokes the device design and lists a design whose blob is missing, so the old
+    // manifest stays with the revocation applied: to the device design's slot alone.
+    val missing = BuiltDesign(key.copy(shape = "domain=switch"), 1, "other".encodeToByteArray())
+    host.files =
+      manifest(serial = 2, revokeDevice = true, extra = listOf(missing)).filterKeys {
+        it == "manifest.json"
+      }
+    assertEquals(RefreshResult.Failed, repo(host, store).refresh(force = true))
+    assertContentEquals(template, repo(host, store).resolve(key)?.bytes)
+    assertEquals(emptyMap(), repo(host, store).resolveDeviceDesigns())
   }
 }

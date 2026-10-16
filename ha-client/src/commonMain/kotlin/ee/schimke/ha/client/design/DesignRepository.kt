@@ -4,6 +4,7 @@ import ee.schimke.ha.design.DesignEntry
 import ee.schimke.ha.design.DesignKey
 import ee.schimke.ha.design.DesignManifest
 import ee.schimke.ha.design.DesignQuery
+import ee.schimke.ha.design.DeviceMatch
 import io.ktor.client.HttpClient
 import io.ktor.client.request.get
 import io.ktor.client.request.header
@@ -199,11 +200,13 @@ class DesignRepository(
         // download.
         if (manifest.designs.any { wanted(it) && store.readBlob(it.sha256) == null }) {
           if (stored != null) {
-            val revokedKeys = manifest.designs.filter { it.revoked }.map { it.key }.toSet()
-            if (revokedKeys.isNotEmpty()) {
+            // A design's slot is its key and device match: revoking a device design leaves its
+            // key's generic design and device siblings alone.
+            val revoked = manifest.designs.filter { it.revoked }.map { it.key to it.device }.toSet()
+            if (revoked.isNotEmpty()) {
               val designs =
                 stored.manifest.designs.map {
-                  if (it.key in revokedKeys) it.copy(revoked = true) else it
+                  if ((it.key to it.device) in revoked) it.copy(revoked = true) else it
                 }
               store.writeManifest(stored.copy(manifest = stored.manifest.copy(designs = designs)))
             }
@@ -240,7 +243,8 @@ class DesignRepository(
       if (prefer.isEmpty()) 0 else prefer.indexOfFirst { it.matches(entry) }
     val resolved = LinkedHashMap<DesignKey, Pair<Int, ByteArray>>()
     for (entry in stored.manifest.designs) {
-      if (entry.revoked) continue
+      // Device-specific designs share their generic sibling's key: see resolveDeviceDesigns.
+      if (entry.revoked || entry.device != null) continue
       val rank = rank(entry)
       if (rank < 0) continue
       val current = resolved[entry.key]
@@ -250,6 +254,33 @@ class DesignRepository(
       resolved[entry.key] = rank to bytes
     }
     return resolved.mapValues { it.value.second }
+  }
+
+  /**
+   * The cached device-specific designs (entries with a [DesignEntry.device]) by key, the preferred
+   * author's first for each key and device match, as [resolveAll] ranks generic ones. A client
+   * picks among a key's candidates per card with [ee.schimke.ha.design.DeviceMatch.pick].
+   */
+  suspend fun resolveDeviceDesigns(
+    prefer: List<DesignQuery> = emptyList()
+  ): Map<DesignKey, List<Pair<DeviceMatch, ByteArray>>> {
+    val stored = store.readManifest() ?: return emptyMap()
+    fun rank(entry: DesignEntry): Int =
+      if (prefer.isEmpty()) 0 else prefer.indexOfFirst { it.matches(entry) }
+    val resolved = LinkedHashMap<Pair<DesignKey, DeviceMatch>, Pair<Int, ByteArray>>()
+    for (entry in stored.manifest.designs) {
+      val device = entry.device ?: continue
+      if (entry.revoked) continue
+      val rank = rank(entry)
+      if (rank < 0) continue
+      val slot = entry.key to device
+      val current = resolved[slot]
+      if (current != null && current.first <= rank) continue
+      val bytes =
+        store.readBlob(entry.sha256)?.takeIf { Sha256.hex(it) == entry.sha256 } ?: continue
+      resolved[slot] = rank to bytes
+    }
+    return resolved.entries.groupBy({ it.key.first }) { it.key.second to it.value.second }
   }
 
   /** Whether [entry] is a live design this client keeps. */
@@ -271,7 +302,9 @@ class DesignRepository(
   suspend fun resolve(key: DesignKey): DesignBlob? {
     val stored = store.readManifest()
     if (stored != null) {
-      val entry = stored.manifest.designs.firstOrNull { it.key == key && !it.revoked }
+      // The generic design for the key: device-specific ones resolve through resolveDeviceDesigns.
+      val entry =
+        stored.manifest.designs.firstOrNull { it.key == key && it.device == null && !it.revoked }
       if (entry != null) {
         val bytes = store.readBlob(entry.sha256)
         if (bytes != null && Sha256.hex(bytes) == entry.sha256) {
@@ -281,7 +314,9 @@ class DesignRepository(
         }
       }
       // A revoked entry also blocks the inbuilt copy of the same key.
-      if (stored.manifest.designs.any { it.key == key && it.revoked }) return null
+      if (stored.manifest.designs.any { it.key == key && it.device == null && it.revoked }) {
+        return null
+      }
     }
     return inbuilt.find(key)?.let { (entry, bytes) ->
       DesignBlob(entry, bytes, DesignSourceKind.Inbuilt)

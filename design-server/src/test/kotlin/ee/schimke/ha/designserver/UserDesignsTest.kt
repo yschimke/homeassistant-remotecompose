@@ -270,4 +270,44 @@ class UserDesignsTest {
     assertEquals(HttpStatusCode.UnprocessableEntity, refused.status)
     assertTrue("role=\"alert\"" in refused.bodyAsText())
   }
+
+  @Test
+  fun aDesignCanBeMadeForOneKindOfDevice() = testApplication {
+    val f = fixture()
+    val body =
+      """{"designId":"good","variant":"boiler","key":${
+        Json.encodeToString(DesignKey.serializer(), key)
+      },"device":{"integration":"vaillant","model":"ecoTEC*"}}"""
+    val published =
+      f.client.post("/api/my/designs") {
+        header(HttpHeaders.Cookie, f.cookie)
+        contentType(ContentType.Application.Json)
+        setBody(body)
+      }
+    assertEquals(HttpStatusCode.Created, published.status)
+    val design = json.decodeFromString(UserDesign.serializer(), published.bodyAsText())
+    assertEquals(
+      ee.schimke.ha.design.DeviceMatch(integration = "vaillant", model = "ecotec*"),
+      design.entry.device,
+    )
+    // A generic design for the same key sits beside it rather than replacing it.
+    f.publish("good", variant = "boiler")
+    assertEquals(2, UserDesignStore(f.storeDir).designs("octocat").size)
+    // The same match in other letter case replaces it rather than adding a third.
+    val recased =
+      f.client.post("/api/my/designs") {
+        header(HttpHeaders.Cookie, f.cookie)
+        contentType(ContentType.Application.Json)
+        setBody(body.replace("vaillant", "Vaillant").replace("ecoTEC*", "ECOTEC*"))
+      }
+    assertEquals(HttpStatusCode.Created, recased.status)
+    assertEquals(2, UserDesignStore(f.storeDir).designs("octocat").size)
+    val empty =
+      f.client.post("/api/my/designs") {
+        header(HttpHeaders.Cookie, f.cookie)
+        contentType(ContentType.Application.Json)
+        setBody(body.replace("""{"integration":"vaillant","model":"ecoTEC*"}""", "{}"))
+      }
+    assertEquals(HttpStatusCode.BadRequest, empty.status)
+  }
 }

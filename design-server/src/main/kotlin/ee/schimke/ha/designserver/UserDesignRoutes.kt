@@ -8,6 +8,7 @@ import ee.schimke.composeai.rcplayer.protocol.RcWireLimits
 import ee.schimke.ha.client.design.Sha256
 import ee.schimke.ha.design.DesignKey
 import ee.schimke.ha.design.DesignManifest
+import ee.schimke.ha.design.DeviceMatch
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
@@ -69,6 +70,8 @@ data class PublishRequest(
   val variant: String,
   /** A UI Builder revision to pin, or null for the latest. */
   val revision: Long? = null,
+  /** The devices it is made for (a boiler's dial), or null for every card of [key]. */
+  val device: DeviceMatch? = null,
 )
 
 /**
@@ -170,6 +173,7 @@ fun Route.userDesignRoutes(
             designId = form["designId"].orEmpty().trim(),
             key = base.key,
             variant = form["variant"].orEmpty().trim(),
+            device = deviceMatchOf(form::get),
           ),
         )
       }
@@ -275,16 +279,27 @@ object MyPage {
     append(
       "<label>Variant name <input name=\"variant\" pattern=\"[a-z0-9][a-z0-9-]{0,39}\" required></label> "
     )
+    append("<fieldset><legend>Only for one kind of device (optional)</legend>")
+    append("<label>Integration <input name=\"integration\" placeholder=\"vaillant\"></label> ")
+    append("<label>Manufacturer <input name=\"manufacturer\"></label> ")
+    append("<label>Model <input name=\"model\" placeholder=\"ecoTEC*\"></label></fieldset>")
     append("<button>Publish privately</button></form>")
     append("<h2>Published</h2>")
     if (designs.isEmpty()) {
       append("<p>Nothing yet. Publish a design from UI Builder or the app's card studio.</p>")
     } else {
-      append("<table><tr><th>Card</th><th>Variant</th><th>Theme</th><th>Shared</th><th></th></tr>")
+      append(
+        "<table><tr><th>Card</th><th>Variant</th><th>Device</th><th>Theme</th><th>Shared</th><th></th></tr>"
+      )
       for (design in designs) {
         val key = design.entry.key
         val next = !design.shared
+        val device =
+          design.entry.device?.let {
+            listOfNotNull(it.integration, it.manufacturer, it.model).joinToString(" ")
+          } ?: "any"
         append("<tr><td>${esc(key.cardType)}</td><td>${esc(key.variant)}</td>")
+        append("<td>${esc(device)}</td>")
         append("<td>${esc(key.theme)}</td><td>${if (design.shared) "yes" else "no"}</td><td>")
         append("<form method=\"post\" action=\"/my/designs/${design.entry.sha256}/share\">")
         append("<input type=\"hidden\" name=\"shared\" value=\"$next\">")
@@ -325,6 +340,9 @@ private suspend fun publish(
       "A variant is 1-40 lowercase letters, digits and dashes, and not \"default\".",
     )
   }
+  if (request.device != null && request.device.normalized().specificity == 0) {
+    return Published.Refused(HttpStatusCode.BadRequest, "A device match needs at least one field.")
+  }
   if (request.designId.isBlank()) {
     return Published.Refused(HttpStatusCode.BadRequest, "Name the UI Builder design to publish.")
   }
@@ -353,6 +371,19 @@ private suspend fun publish(
       slots = base.entry.slots,
       sourceDesignId = request.designId,
       revision = exported.revision,
+      // Stored canonical, so a republish that only changes case replaces its earlier design.
+      device = request.device?.normalized(),
     )
   )
+}
+
+/** The device match a form names (`integration`, `manufacturer`, `model`), or null for none. */
+private fun deviceMatchOf(field: (String) -> String?): DeviceMatch? {
+  fun value(name: String) = field(name)?.trim()?.takeIf { it.isNotEmpty() }
+  return DeviceMatch(
+      integration = value("integration"),
+      manufacturer = value("manufacturer"),
+      model = value("model"),
+    )
+    .takeIf { it.specificity > 0 }
 }

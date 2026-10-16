@@ -3,6 +3,7 @@ package ee.schimke.ha.designserver
 import ee.schimke.ha.client.design.Sha256
 import ee.schimke.ha.design.DesignEntry
 import ee.schimke.ha.design.DesignKey
+import ee.schimke.ha.design.DeviceMatch
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
@@ -83,15 +84,26 @@ class UserDesignStore(
     slots: Int,
     sourceDesignId: String?,
     revision: Long?,
+    device: DeviceMatch? = null,
   ): UserDesign {
     val sha = Sha256.hex(bytes)
     writeAtomically(File(dir, "blobs/$sha.rc"), bytes)
     val author = authorOf(login)
-    val replaced = index.designs.firstOrNull { it.entry.author == author && it.entry.key == key }
+    val replaced =
+      index.designs.firstOrNull {
+        it.entry.author == author && it.entry.key == key && it.entry.device == device
+      }
     val design =
       UserDesign(
         entry =
-          DesignEntry(key = key, sha256 = sha, bytes = bytes.size, slots = slots, author = author),
+          DesignEntry(
+            key = key,
+            sha256 = sha,
+            bytes = bytes.size,
+            slots = slots,
+            author = author,
+            device = device,
+          ),
         shared = replaced?.shared ?: false,
         sourceDesignId = sourceDesignId,
         revision = revision,

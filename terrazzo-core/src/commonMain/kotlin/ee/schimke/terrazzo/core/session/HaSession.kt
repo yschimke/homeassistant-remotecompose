@@ -245,9 +245,18 @@ class LiveHaSession(
 
   override suspend fun loadDashboard(urlPath: String?): Pair<Dashboard, HaSnapshot> {
     val dashboard = client.fetchDashboard(urlPath)
-    val snapshot = client.snapshot()
+    val snapshot = client.snapshot().copy(devices = devices())
     return dashboard to snapshot
   }
+
+  // Which device is behind each entity changes rarely: read once a session. A failure (an older
+  // Home Assistant, a refused registry) leaves cards on their generic designs and is retried.
+  @Volatile private var deviceCache: Map<String, ee.schimke.ha.design.DeviceInfo>? = null
+
+  private suspend fun devices(): Map<String, ee.schimke.ha.design.DeviceInfo> =
+    deviceCache
+      ?: runCatching { client.fetchDevices() }.getOrNull()?.also { deviceCache = it }
+      ?: emptyMap()
 
   override suspend fun fetchInstanceConfig(): HaInstanceConfig = client.fetchConfig()
 
