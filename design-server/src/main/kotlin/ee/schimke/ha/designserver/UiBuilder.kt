@@ -290,8 +290,12 @@ class UiBuilderClient(private val config: UiBuilderConfig, private val http: Htt
   /** Public catalog metadata for the embedded dashboard editor; never a design or HA credential. */
   suspend fun dashboardCatalog(): JsonObject {
     val response =
-      http.post("${config.apiUrl.trimEnd('/')}/api/ui-builder/v1/requests") {
-        header(HttpHeaders.Authorization, "Bearer ${config.token}")
+      // The requests API takes the operator token as `?token=`; it answers an Authorization
+      // header with 401.
+      http.post(
+        "${config.apiUrl.trimEnd('/')}/api/ui-builder/v1/requests" +
+          "?token=${URLEncoder.encode(config.token, Charsets.UTF_8)}"
+      ) {
         contentType(ContentType.Application.Json)
         setBody(
           buildJsonObject {

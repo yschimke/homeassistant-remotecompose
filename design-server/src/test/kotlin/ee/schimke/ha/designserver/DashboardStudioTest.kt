@@ -37,6 +37,45 @@ class DashboardStudioTest {
     )
   }
 
+  /** The requests API takes the operator token as `?token=` and refuses an Authorization header. */
+  @Test
+  fun catalogIsTheServedLovelaceCatalog() = testApplication {
+    externalServices {
+      hosts("https://builder.test") {
+        routing {
+          post("/api/ui-builder/v1/requests") {
+            if (
+              call.request.queryParameters["token"] != "operator" ||
+                call.request.headers[HttpHeaders.Authorization] != null
+            ) {
+              call.respondText("unauthorized", status = HttpStatusCode.Unauthorized)
+              return@post
+            }
+            call.respondText(
+              """{"response":{"type":"catalogs","catalogs":[""" +
+                """{"benchmark":{"catalogSystemId":"ha-cards"}},""" +
+                """{"benchmark":{"catalogSystemId":"lovelace"},"statusSemantics":{"platform":"lovelace"}}]}}"""
+            )
+          }
+        }
+      }
+    }
+    val config = UiBuilderConfig("https://builder.test", "https://builder.test", "operator")
+    val integration =
+      UiBuilderIntegration(
+        config,
+        UiBuilderClient(config, createClient { followRedirects = false }),
+      )
+    application { routing { dashboardStudioRoutes(integration, null) } }
+    val response = client.get("/api/studio/dashboard/catalog")
+    assertEquals(HttpStatusCode.OK, response.status)
+    val catalog = Json.parseToJsonElement(response.bodyAsText()).jsonObject
+    assertEquals(
+      JsonPrimitive("lovelace"),
+      catalog.getValue("statusSemantics").jsonObject["platform"],
+    )
+  }
+
   @Test
   fun cardPreviewRequiresEditorAuthorizationAndDelegatesToActualHarcRenderPort() = testApplication {
     val bytes = checkNotNull(javaClass.getResourceAsStream("/tile-light.rc")).use { it.readBytes() }
