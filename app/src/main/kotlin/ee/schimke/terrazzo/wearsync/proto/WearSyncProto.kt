@@ -73,7 +73,16 @@ data class EntityValue(
    * formats it identically. Null for the formatter's device-class default.
    */
   val displayPrecision: Int? = null,
+  /**
+   * The few other attributes a watch render reads, as their string values: a Bambu spool's `color`,
+   * `remain`, `remain_enabled` and `active` ([WEAR_EXTRA_ATTRIBUTES]). Only those, to keep the
+   * DataItem small.
+   */
+  val attributes: Map<String, String> = emptyMap(),
 )
+
+/** The attributes beyond the named fields that travel in [EntityValue.attributes]. */
+val WEAR_EXTRA_ATTRIBUTES: Set<String> = setOf("color", "remain", "remain_enabled", "active")
 
 /**
  * An entity's picture for Wear widgets, which can't fetch one: fetched and downscaled on the phone,

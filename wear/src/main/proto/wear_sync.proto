@@ -68,6 +68,9 @@ message EntityValue {
     // Decimals the phone's formatState rounds to (registry display precision, else the
     // entity's display_precision / suggested_display_precision); unset for the default.
     optional int32 display_precision = 6;
+    // The few other attributes a watch render reads, as strings: a Bambu spool's color, remain,
+    // remain_enabled and active.
+    map<string, string> attributes = 7;
 }
 
 // DataItem at `/wear/picture/<entityId>`: an entity's picture for Wear

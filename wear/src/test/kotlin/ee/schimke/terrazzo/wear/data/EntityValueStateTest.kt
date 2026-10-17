@@ -8,6 +8,7 @@ import ee.schimke.ha.rc.formatState
 import ee.schimke.terrazzo.wearsync.proto.EntityValue
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 import kotlinx.serialization.protobuf.ProtoBuf
 import org.junit.Assert.assertEquals
@@ -85,5 +86,19 @@ class EntityValueStateTest {
     assertEquals("21.46 °C", formatState(registry, snapshot))
     assertEquals("21.0 °C", formatState(suggested, snapshot))
     assertEquals("21.5 °C", formatState(plain, snapshot))
+  }
+
+  /** A spool's colour and remaining filament reach the converters as the attributes they read. */
+  @Test
+  fun spoolAttributesBecomeTheEntitysAttributes() {
+    val value =
+      EntityValue(
+        state = "PLA",
+        attributes = mapOf("color" to "#FF6A13FF", "remain" to "63", "active" to "true"),
+      )
+    val attrs = value.toEntityState("sensor.p1s_ams_1_tray_2").attributes
+    assertEquals("#FF6A13FF", attrs["color"]?.jsonPrimitive?.content)
+    assertEquals(63.0, attrs["remain"]?.jsonPrimitive?.content?.toDouble())
+    assertEquals(true, attrs["active"]?.jsonPrimitive?.content?.toBooleanStrict())
   }
 }
