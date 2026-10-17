@@ -25,18 +25,18 @@ import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.remote.creation.compose.text.RemoteFontFamily
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 
 /**
  * HA `markdown` card — renders parsed markdown blocks inside the card chrome. Headings, bullets and
- * paragraphs each pick a block-level style. A block in one emphasis (plain, or italic / bold / code
+ * paragraphs each pick a block-level style. A block drawn in one style (plain, or bold / code
  * throughout) emits a single [RemoteText]; blocks that carry links, images or mixed emphasis
  * ([MarkdownBlock.hasInlineMarkup]) lay their inline runs out as a flow row so link labels (accent
  * colour, clickable), emphasised words and badge images sit inline and wrap — falling back to a
  * non-wrapping row on capture profiles without the experimental FlowLayout op. Emphasis changes the
- * weight, slant or family only; the size is always the block's [HaType] token.
+ * weight or family only (italic is parsed but drawn upright, see [MarkdownStyle.drawn]); the size
+ * is always the block's [HaType] token.
  */
 @Composable
 @RemoteComposable
@@ -144,13 +144,12 @@ fun RemoteHaMarkdownIdentity(data: HaMarkdownData, modifier: RemoteModifier = Re
         )
       }
       if (firstLine != null) {
-        val emphasis = firstLine.style
+        val emphasis = firstLine.drawnStyle
         RemoteText(
           text = firstLine.boundText ?: firstLine.text.rs,
           color = theme.secondaryText,
           fontSize = HaType.Body,
           fontWeight = emphasis.weight(FontWeight.Normal),
-          fontStyle = emphasis.fontStyle,
           fontFamily = emphasis.fontFamily,
           style = haTextStyle(),
           maxLines = if (data.title != null) 2 else 3,
@@ -178,13 +177,12 @@ private fun MarkdownLine(
   val primary = theme.primaryText
   if (!block.hasInlineMarkup) {
     val text = block.boundText ?: block.text.rs
-    val emphasis = block.style
+    val emphasis = block.drawnStyle
     RemoteText(
       text = if (bullet) "• ".rs + text else text,
       color = primary,
       fontSize = fontSize,
       fontWeight = emphasis.weight(fontWeight),
-      fontStyle = emphasis.fontStyle,
       fontFamily = emphasis.fontFamily,
       style = haTextStyle(),
     )
@@ -270,7 +268,7 @@ private fun flowItems(inlines: List<MarkdownInline>): List<FlowItem> {
     var start = 0
     for (i in 0..inline.text.length) {
       if (i == inline.text.length || inline.text[i].isWhitespace()) {
-        if (i > start) pieces += inline.text.substring(start, i) to inline.style
+        if (i > start) pieces += inline.text.substring(start, i) to inline.style.drawn
         if (i < inline.text.length) endWord()
         start = i + 1
       }
@@ -295,7 +293,6 @@ private fun EmphasisText(
     color = color,
     fontSize = fontSize,
     fontWeight = emphasis.weight(fontWeight),
-    fontStyle = emphasis.fontStyle,
     fontFamily = emphasis.fontFamily,
     style = haTextStyle(),
   )
@@ -317,13 +314,12 @@ private fun InlineSpan(
       // A live `{{ states('x') }}` run — render the bound string as
       // one node so it keeps updating (can't be word-split like a
       // constant run).
-      val emphasis = inline.style
+      val emphasis = inline.style.drawn
       RemoteText(
         text = inline.boundText ?: inline.text.rs,
         color = primary,
         fontSize = fontSize,
         fontWeight = emphasis.weight(fontWeight),
-        fontStyle = emphasis.fontStyle,
         fontFamily = emphasis.fontFamily,
         style = haTextStyle(),
       )
@@ -347,12 +343,9 @@ private fun InlineSpan(
 private fun MarkdownStyle.weight(base: FontWeight): FontWeight =
   if (bold && base < FontWeight.Bold) FontWeight.Bold else base
 
-/**
- * Italic runs set [FontStyle.Italic]; every other run leaves the style unset (null), so an
- * unemphasised block encodes exactly as it did before emphasis support.
- */
-private val MarkdownStyle.fontStyle: FontStyle?
-  get() = if (italic) FontStyle.Italic else null
+// No FontStyle is set for italic runs: rc-player-compose 2.12.0 decodes the text font-style field
+// as Typeface bits (1 = bold) while RemoteCompose writes 1 = italic, so FontStyle.Italic would draw
+// bold. Italic is held back (see MarkdownStyle.drawn) until the player decodes it as italic.
 
 /** Inline code is set in the monospace family; other runs keep the theme's [haTextStyle] family. */
 private val MarkdownStyle.fontFamily: RemoteFontFamily?

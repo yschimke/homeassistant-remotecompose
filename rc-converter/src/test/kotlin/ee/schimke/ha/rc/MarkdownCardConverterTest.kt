@@ -164,7 +164,8 @@ class MarkdownCardConverterTest {
           snapshot,
         )
       )
-    assertEquals("H2b,Pi,Bbi,Bc,P", properties["blocks"])
+    // Italic draws upright, so it is not part of the key: `_Tagline_` keys as plain `P`.
+    assertEquals("H2b,P,Bb,Bc,P", properties["blocks"])
     // The synthetic template source parses back to the same keyed structure.
     assertNotNull(converter.designTemplate(properties))
   }

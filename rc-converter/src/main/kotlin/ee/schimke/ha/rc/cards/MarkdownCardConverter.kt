@@ -136,8 +136,9 @@ class MarkdownCardConverter : CardConverter {
   }
 
   /**
-   * A block's template key: kind, heading level, then its whole-block emphasis as `b` / `i` / `c`
-   * flags (`P`, `H2`, `Pi`, `Bbi`, `Pc`).
+   * A block's template key: kind, heading level, then its drawn whole-block emphasis as `b` / `c`
+   * flags (`P`, `H2b`, `Bc`). Italic is left out: it draws upright (see `MarkdownStyle.drawn`), so
+   * an italic block renders, and keys, exactly as a plain one.
    */
   private fun signature(block: MarkdownBlock): String {
     val kind =
@@ -147,22 +148,14 @@ class MarkdownCardConverter : CardConverter {
         MarkdownBlock.Kind.Bullet -> "B"
         MarkdownBlock.Kind.Divider -> return "D"
       }
-    val style = block.style
-    return kind +
-      (if (style.bold) "b" else "") +
-      (if (style.italic) "i" else "") +
-      (if (style.code) "c" else "")
+    val style = block.drawnStyle
+    return kind + (if (style.bold) "b" else "") + (if (style.code) "c" else "")
   }
 
   /** Placeholder [text] wrapped in the markdown for the [flags] a [signature] carries. */
   private fun emphasise(text: String, flags: String): String {
     val inner = if ('c' in flags) "`$text`" else text
-    return when {
-      'b' in flags && 'i' in flags -> "***$inner***"
-      'b' in flags -> "**$inner**"
-      'i' in flags -> "_${inner}_"
-      else -> inner
-    }
+    return if ('b' in flags) "**$inner**" else inner
   }
 
   @Composable
@@ -320,5 +313,7 @@ internal fun haExprToken(index: Int): String = "$HA_EXPR_OPEN$index$HA_EXPR_CLOS
 
 private val EXPR_TOKEN_REGEX = Regex("$HA_EXPR_OPEN\\d+$HA_EXPR_CLOSE")
 
-/** A block [MarkdownCardConverter] template key: kind, optional heading level, emphasis flags. */
-private val SIGNATURE = Regex("([HPBD])(\\d?)(b?i?c?)")
+/**
+ * A block [MarkdownCardConverter] template key: kind, optional heading level, drawn emphasis flags.
+ */
+private val SIGNATURE = Regex("([HPBD])(\\d?)(b?c?)")

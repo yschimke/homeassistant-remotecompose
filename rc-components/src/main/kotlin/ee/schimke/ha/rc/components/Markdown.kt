@@ -21,6 +21,15 @@ data class MarkdownStyle(
   val isPlain: Boolean
     get() = !bold && !italic && !code
 
+  /**
+   * The part of this style [RemoteHaMarkdown] actually draws: bold and code. Italic is parsed but
+   * held back — rc-player-compose 2.12.0 decodes the text font-style field as Typeface bits (1 =
+   * bold) while RemoteCompose writes 1 = italic, so an italic run would show as bold. Italic text
+   * draws upright until the player decodes it as italic.
+   */
+  val drawn: MarkdownStyle
+    get() = if (italic) copy(italic = false) else this
+
   companion object {
     val Plain = MarkdownStyle()
     val Code = MarkdownStyle(code = true)
@@ -91,23 +100,35 @@ data class MarkdownBlock(
   }
 
   /**
-   * True when the block carries links, images, or text runs in more than one [MarkdownStyle] —
-   * these need the inline flow-row path in [RemoteHaMarkdown]. Any other block renders as one
-   * [androidx.compose.remote.creation.compose.layout.RemoteText] in [style].
+   * True when the block carries links, images, or text runs drawn in more than one style (see
+   * [MarkdownStyle.drawn]) — these need the inline flow-row path in [RemoteHaMarkdown]. Any other
+   * block renders as one [androidx.compose.remote.creation.compose.layout.RemoteText] in
+   * [drawnStyle].
    */
   val hasInlineMarkup: Boolean
     get() =
-      inlines.any { it is MarkdownInline.Link || it is MarkdownInline.Image } || textStyles.size > 1
+      inlines.any { it is MarkdownInline.Link || it is MarkdownInline.Image } ||
+        drawnStyles.size > 1
 
   /**
    * The emphasis every text run of the block shares (`_Mobile companion for MeshCore_` is italic
-   * throughout), or [MarkdownStyle.Plain] when the runs differ — those take the flow-row path.
+   * throughout), or [MarkdownStyle.Plain] when the runs differ.
    */
   val style: MarkdownStyle
     get() = textStyles.singleOrNull() ?: MarkdownStyle.Plain
 
+  /**
+   * The drawn style every text run of the block shares — [style] without what the renderer holds
+   * back — or [MarkdownStyle.Plain] when the runs draw differently.
+   */
+  val drawnStyle: MarkdownStyle
+    get() = drawnStyles.singleOrNull() ?: MarkdownStyle.Plain
+
   private val textStyles: Set<MarkdownStyle>
     get() = inlines.filterIsInstance<MarkdownInline.Text>().mapTo(mutableSetOf()) { it.style }
+
+  private val drawnStyles: Set<MarkdownStyle>
+    get() = textStyles.mapTo(mutableSetOf()) { it.drawn }
 }
 
 /**

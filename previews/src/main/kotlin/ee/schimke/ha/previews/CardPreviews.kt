@@ -289,8 +289,9 @@ private fun markdownCard() =
   card("""{"type":"markdown","title":"Notes","content":"Welcome home.\nTemperature is normal."}""")
 
 /**
- * Inline emphasis as HA's markdown card (CommonMark via marked) draws it: italic, bold, both,
- * inline code, an intraword `snake_case` left plain, and a GitHub-style repo tagline.
+ * Inline emphasis as HA's markdown card (CommonMark via marked) parses it: italic, bold, both,
+ * inline code, an intraword `snake_case` left plain, and a GitHub-style repo tagline. Italic draws
+ * upright for now (see `MarkdownStyle.drawn`).
  */
 @Preview(name = "markdown emphasis (light)", showBackground = false, widthDp = 381, heightDp = 120)
 @Composable

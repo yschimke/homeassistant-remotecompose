@@ -301,4 +301,20 @@ class MarkdownTest {
     val blocks = Markdown.parse("```\ncode line\n```")
     assertEquals(MarkdownStyle.Code, blocks.single().style)
   }
+
+  @Test
+  fun italicIsParsedButDrawnUpright() {
+    // Held back until rc-player-compose decodes the font-style field as italic.
+    val mixed = Markdown.parse("a *b* c").single()
+    assertEquals(
+      MarkdownStyle(italic = true),
+      mixed.inlines[1].let { (it as MarkdownInline.Text).style },
+    )
+    assertTrue(!mixed.hasInlineMarkup, "italic-only runs draw like plain text")
+    assertEquals(MarkdownStyle.Plain, mixed.drawnStyle)
+    assertEquals(MarkdownStyle(bold = true), Markdown.parse("***both***").single().drawnStyle)
+    val boldAndItalic = Markdown.parse("***a*** **b**").single()
+    assertTrue(!boldAndItalic.hasInlineMarkup)
+    assertEquals(MarkdownStyle(bold = true), boldAndItalic.drawnStyle)
+  }
 }
