@@ -139,11 +139,14 @@ fun RemoteHaTileCompact(data: HaTileData, modifier: RemoteModifier = RemoteModif
         .padding(horizontal = 12.rdp, vertical = 3.rdp)
   ) {
     RemoteRow(verticalAlignment = RemoteAlignment.CenterVertically) {
-      RemoteIcon(
-        imageVector = data.icon.toRemoteImageVector(),
+      // Static like the accent: this tier registers no `is_on` binding.
+      HaStateIcon(
+        icon = data.icon,
+        accent = data.accent,
+        look = look,
+        tint = accent,
         contentDescription = entityName(data.entityId, data.name),
         modifier = RemoteModifier.size(24.rdp),
-        tint = accent,
       )
       RemoteColumn(modifier = RemoteModifier.padding(start = 10.rdp)) {
         RemoteText(
