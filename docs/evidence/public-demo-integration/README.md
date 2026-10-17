@@ -37,7 +37,9 @@ verifies that the dashboard remains interactive after the fetch failure.
 The gateway in these browser checks is a fixture, not a running Home Assistant.
 Production optimization and wider checks run in GitHub CI. These captures do not
 prove a deployed `/demo`. HA plugin implementation and installed-HA evidence belong
-to the separate PR #879.
+to merged PR #879. Its authenticated hosted entry is preserved alongside `/demo`;
+64 HA-client JVM tests and its two TS-player/session-bridge browser tests also pass
+locally after integration.
 
 ## Deployment and external limitations
 

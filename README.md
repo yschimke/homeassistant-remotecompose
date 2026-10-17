@@ -170,9 +170,11 @@ Local packaging: `./gradlew :app-ui:packageDistributionForCurrentOS`. Override t
 
 ### Web app
 
+For a local authenticated `/terrazzo` wall-panel URL and Remote Compose Lovelace cards, see [the Home Assistant integration installation guide](docs/HOME_ASSISTANT.md).
+
 The production Wasm app is deployed by **Wasm website** to [GitHub Pages](https://yschimke.github.io/homeassistant-remotecompose/). Pull requests build the same production distribution and exercise browser flows before deployment. Existing documentation and Android authentication pages remain available alongside the app.
 
-The `/demo/` entry (or `?demo=1` on the root Wasm app) opens a generic fake-data dashboard with inline design controls and an offline fallback. The design-server image also packages this entry for `ha.coo.ee/demo`; its edge route must be deployed with the image. Live public demo reads, source switching and explicit fake-data fallback follow the [demo data-source contract](docs/demo-data-source.md).
+The `/demo/` entry (or `?demo=1` on the root Wasm app) opens a generic dashboard with inline design controls, live public demo data when available, and an explicit fake-data fallback. The design-server image also packages this entry for `ha.coo.ee/demo`; its edge route must be deployed with the image. Live public demo reads, source switching and explicit fake-data fallback follow the [demo data-source contract](docs/demo-data-source.md).
 
 Local build: `./gradlew :app-ui:wasmJsBrowserDistribution`. Serve `app-ui/build/dist/wasmJs/productionExecutable` over HTTP on localhost or over HTTPS; opening `index.html` directly from disk does not work.
 

@@ -47,18 +47,29 @@ private data object SettingsDestination : NavKey
 
 private data class DashboardDestination(val path: String?) : NavKey
 
-private class AppConnection(val config: HaConfig) {
-  val client = HaClient(config)
+private class AppConnection(
+  val config: HaConfig,
+  accessTokenProvider: (suspend () -> String)? = null,
+  val hostedAction: ((String) -> Boolean)? = null,
+) {
+  val client = HaClient(config, accessTokenProvider = accessTokenProvider)
 
   suspend fun close() = client.close()
 }
 
 /** The same dashboard-first application runs on Android, desktop and Wasm. */
 @Composable
-fun TerrazzoMultiplatformApp() {
+fun TerrazzoMultiplatformApp(
+  hostedConfig: HaConfig? = null,
+  hostedAccessToken: (suspend () -> String)? = null,
+  initialDashboardPath: String? = null,
+  hostedAction: ((String) -> Boolean)? = null,
+) {
   val dark = isSystemInDarkTheme()
   MaterialTheme(colorScheme = if (dark) darkColorScheme() else lightColorScheme()) {
-    var connection by remember { mutableStateOf<AppConnection?>(null) }
+    var connection by remember {
+      mutableStateOf(hostedConfig?.let { AppConnection(it, hostedAccessToken, hostedAction) })
+    }
     var error by remember { mutableStateOf<String?>(null) }
     var busy by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
@@ -93,7 +104,7 @@ fun TerrazzoMultiplatformApp() {
               withContext(NonCancellable) { active.close() }
             }
           }
-          DashboardShell(active, onSignOut = { connection = null })
+          DashboardShell(active, initialDashboardPath, onSignOut = { connection = null })
         }
       }
     }
@@ -176,9 +187,13 @@ internal fun validServerUrl(value: String): Boolean = runCatching {
   .getOrDefault(false)
 
 @Composable
-private fun DashboardShell(connection: AppConnection, onSignOut: () -> Unit) {
+private fun DashboardShell(
+  connection: AppConnection,
+  initialDashboardPath: String?,
+  onSignOut: () -> Unit,
+) {
   var list by remember { mutableStateOf<DashboardListState>(DashboardListState.Loading) }
-  val stack = remember { mutableStateListOf<NavKey>(DashboardDestination(null)) }
+  val stack = remember { mutableStateListOf<NavKey>(DashboardDestination(initialDashboardPath)) }
   var snapshot by remember(connection) { mutableStateOf(HaSnapshot()) }
   var connectionError by remember(connection) { mutableStateOf<String?>(null) }
   var designServer by remember { mutableStateOf("https://ha.coo.ee") }
@@ -336,7 +351,9 @@ private fun LiveDashboard(
   fun dispatch(payload: String) {
     scope.launch {
       try {
-        dispatchCardAction(connection.client, payload)
+        if (connection.hostedAction?.invoke(payload) != true) {
+          dispatchCardAction(connection.client, payload)
+        }
       } catch (e: CancellationException) {
         throw e
       } catch (e: Exception) {
