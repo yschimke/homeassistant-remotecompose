@@ -78,20 +78,26 @@ inherit the watch-wide style. The watch still owns the widget palette.
 
 ## GitHub CI runtime evidence
 
-[Run 39051677625](https://github.com/yschimke/homeassistant-remotecompose/actions/runs/39051677625)
-booted the Wear OS 7/API 37 small round emulator with KVM, installed the app,
-and captured this actual activity frame at 384 × 384 px:
+[Run 39055629768](https://github.com/yschimke/homeassistant-remotecompose/actions/runs/39055629768)
+passed on the Wear OS 7/API 37 small round emulator with KVM. All three
+instrumentation tests ran with zero failures, errors or skips: Back navigation
+through dashboard/settings, Back from a pinned section, and system theme color
+resolution in the embedded Compose player. The app was then reinstalled and
+cold-launched successfully, producing this actual activity frame at 384 × 384 px:
 
 ![Wear app running in GitHub CI](ci-app-launch.png)
 
 The pinned landing page is readable; the dashboard entry continues below the
 round viewport in its scrollable list. This is the initial empty state, not an
-installed widget or a before/after comparison. All three instrumentation tests
-failed during Espresso initialization with
-`NoSuchMethodException: android.hardware.input.InputManager.getInstance`.
-The test runtime now explicitly requests Espresso 3.7.0, which includes the
-[upstream API 37 compatibility fix](https://github.com/android/android-test/issues/2507).
-Navigation assertions and system widget installation remain unverified pending
-the next run; the original local VM boot limitations above describe earlier attempts.
+installed widget or a before/after comparison. Reports, device information,
+logcat and the screenshot are available in the run's `wear-api-37-runtime` artifact.
+
+The previous run failed before test assertions because Compose transitively
+selected Espresso 3.5.0, which calls `InputManager.getInstance`, removed in API 37.
+Explicitly requesting Espresso 3.7.0 applies the
+[upstream compatibility fix](https://github.com/android/android-test/issues/2507).
+Local test APK assembly and Wear/repository formatting checks also pass.
+System widget installation, installed-widget playback and persistence remain
+unverified; the local VM boot limitations above describe earlier attempts.
 
 Hive session: https://hive.codes/?session=session-1792140217260-d26d7d
