@@ -136,11 +136,10 @@ fun RemoteHaPictureGlance(
       } else {
         GlanceImage(data, theme, RemoteModifier.fillMaxWidth().height(120.rdp))
       }
-      // The cells' 48dp touch targets fill the strip's 8dp vertical inset, and their row pulls in
-      // by the targets' extra width (negative spacing and an offset), so the 32dp circles sit
-      // exactly where an 8dp-spaced row of circles puts them. Neighbouring targets overlap only
-      // over
-      // that 8dp gap, never over a circle.
+      // The cells' 48dp touch targets fill the strip's 8dp vertical inset and sit edge to edge, so
+      // no tap is shared between two entities (the accessibility checker counts only a target's
+      // unshared area): the 32dp circles end up 16dp apart. The row's offset keeps the first circle
+      // where it was.
       RemoteRow(
         modifier =
           RemoteModifier.fillMaxWidth()
@@ -163,7 +162,6 @@ fun RemoteHaPictureGlance(
         if (data.cells.isNotEmpty()) {
           RemoteRow(
             modifier = RemoteModifier.offset((-CELL_TARGET_INSET_DP).rdp, 0.rdp),
-            horizontalArrangement = RemoteArrangement.spacedBy((8 - 2 * CELL_TARGET_INSET_DP).rdp),
             verticalAlignment = RemoteAlignment.CenterVertically,
           ) {
             data.cells.forEach { cell -> Cell(cell, theme) }

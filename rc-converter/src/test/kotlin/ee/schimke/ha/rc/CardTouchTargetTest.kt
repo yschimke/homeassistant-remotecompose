@@ -169,15 +169,15 @@ class CardTouchTargetTest {
     assertTouchTargets("""{"type":"media-control","entity":"media_player.office_speaker"}""", 3)
 
   @Test
-  fun mediaControlTargetsOverlapOnlyTheGapBetweenButtons() {
+  fun mediaControlTargetsDoNotOverlap() {
     val overlaps =
       rowOverlaps(card("""{"type":"media-control","entity":"media_player.office_speaker"}"""))
     assertEquals(2, overlaps.size)
-    assertTrue(overlaps.all { it <= 6.5f }, "overlaps past the 6dp button gap: $overlaps dp")
+    assertTrue(overlaps.all { it <= 0.5f }, "neighbouring targets overlap: $overlaps dp")
   }
 
   @Test
-  fun pictureGlanceTargetsOverlapOnlyTheGapBetweenCells() {
+  fun pictureGlanceTargetsDoNotOverlap() {
     val overlaps =
       rowOverlaps(
         card(
@@ -186,7 +186,7 @@ class CardTouchTargetTest {
         )
       )
     assertEquals(1, overlaps.size)
-    assertTrue(overlaps.all { it <= 8.5f }, "overlaps past the 8dp cell gap: $overlaps dp")
+    assertTrue(overlaps.all { it <= 0.5f }, "neighbouring targets overlap: $overlaps dp")
   }
 
   @Test
