@@ -1,0 +1,13 @@
+{
+  "system": "lovelace",
+  "title": "Home Assistant dashboards",
+  "library": [
+    "Home Assistant Lovelace"
+  ],
+  "module": "lovelace-catalog",
+  "modes": [
+    "light",
+    "dark"
+  ],
+  "referenceKits": []
+}
