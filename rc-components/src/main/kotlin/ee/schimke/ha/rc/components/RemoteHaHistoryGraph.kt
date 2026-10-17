@@ -37,8 +37,11 @@ import androidx.compose.ui.text.style.TextOverflow
  *   └─────────────────────────────────────────────┘
  * ```
  *
- * When no row has a line, the card shows one empty state instead of a stub per row: "No history in
- * the last 2 days" and the series' names on a line below it ([allSeriesEmpty]).
+ * With [singleEmptyState] (the `history-graph` card), when no row has a line the card shows one
+ * empty state instead of a row per series: "No history in the last 2 days" and the series' names on
+ * a line below it ([showsSingleEmptyState]). It is off by default: the sensor card and the
+ * statistics-graph line mode reuse this layout, and their rows must keep their current value when
+ * there is no history.
  *
  * Sparkline is captured from numeric `HistoryPoint`s. Each sample is bound to
  * `<entityId>.numeric.<index>`, so a host can push a sliding window of values without re-encoding
@@ -47,7 +50,11 @@ import androidx.compose.ui.text.style.TextOverflow
  */
 @Composable
 @RemoteComposable
-fun RemoteHaHistoryGraph(data: HaHistoryGraphData, modifier: RemoteModifier = RemoteModifier) {
+fun RemoteHaHistoryGraph(
+  data: HaHistoryGraphData,
+  modifier: RemoteModifier = RemoteModifier,
+  singleEmptyState: Boolean = false,
+) {
   val theme = haTheme()
   RemoteBox(
     modifier =
@@ -68,7 +75,7 @@ fun RemoteHaHistoryGraph(data: HaHistoryGraphData, modifier: RemoteModifier = Re
           overflow = TextOverflow.Ellipsis,
         )
       }
-      if (data.allSeriesEmpty) {
+      if (data.showsSingleEmptyState(singleEmptyState)) {
         EmptyState(data, theme)
       } else {
         RemoteText(

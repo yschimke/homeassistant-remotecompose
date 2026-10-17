@@ -229,6 +229,15 @@ val HaHistoryGraphRow.hasLine: Boolean
 val HaHistoryGraphData.allSeriesEmpty: Boolean
   get() = rows.isNotEmpty() && rows.none { it.hasLine }
 
+/**
+ * Whether [RemoteHaHistoryGraph] replaces its rows with the single empty state: only when the
+ * caller opts in ([singleEmptyState], the `history-graph` card) and [allSeriesEmpty]. The sensor
+ * card and statistics-graph reuse the layout without it, so a row with no history still shows its
+ * name and current value.
+ */
+fun HaHistoryGraphData.showsSingleEmptyState(singleEmptyState: Boolean): Boolean =
+  singleEmptyState && allSeriesEmpty
+
 data class HaHistoryGraphRow(
   val entityId: String?,
   val name: String,

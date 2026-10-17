@@ -35,6 +35,17 @@ class HistoryGraphLayoutTest {
   }
 
   @Test
+  fun onlyTheHistoryGraphCardOptsIntoTheSingleEmptyState() {
+    // The sensor card reuses this layout with one row: with no history it must keep that row
+    // (name + current value), not swap it for "No history in …".
+    val sensor = data(row("temp"))
+    assertTrue(sensor.allSeriesEmpty)
+    assertFalse(sensor.showsSingleEmptyState(singleEmptyState = false))
+    assertTrue(sensor.showsSingleEmptyState(singleEmptyState = true))
+    assertFalse(data(row("a", 1f, 2f)).showsSingleEmptyState(singleEmptyState = true))
+  }
+
+  @Test
   fun noEntitiesIsNotTheHistoryEmptyState() {
     assertFalse(data().allSeriesEmpty)
   }

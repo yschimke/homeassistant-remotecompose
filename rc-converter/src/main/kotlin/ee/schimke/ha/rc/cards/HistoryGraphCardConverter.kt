@@ -162,7 +162,7 @@ class HistoryGraphCardConverter : CardConverter {
 
     when (LocalCardSizeMode.current) {
       // Dashboard: the full per-row graph (HA reference).
-      CardSizeMode.Wrap -> RemoteHaHistoryGraph(data, modifier = modifier)
+      CardSizeMode.Wrap -> RemoteHaHistoryGraph(data, modifier = modifier, singleEmptyState = true)
       // Launcher / Wear: a single width gate (alpha010 collapses
       // multi-rung ladders to tier 0 — #224, see GaugeCardConverter).
       // Narrow → identity tier (first spark + latest value); wider →
@@ -178,7 +178,7 @@ class HistoryGraphCardConverter : CardConverter {
           if (tier == 0) {
             RemoteHaHistoryGraphIdentity(data, RemoteModifier.fillMaxWidth())
           } else {
-            RemoteHaHistoryGraph(data, RemoteModifier.fillMaxWidth())
+            RemoteHaHistoryGraph(data, RemoteModifier.fillMaxWidth(), singleEmptyState = true)
           }
         }
     }
