@@ -47,29 +47,46 @@ jobs:
       - uses: ./.github/actions/android-sdk
       - name: Build Wear app and test APKs before booting
         run: ./gradlew :wear:assembleDebug :wear:assembleDebugAndroidTest --stacktrace --max-workers=2
+      # The runner image's avdmanager writes target=android-0 into the AVD root ini for a
+      # minor-versioned package (android-37.0), so the emulator treats the AVD as API 3 and skips the
+      # Vulkan / GLDirectMem auto-enable the API 37 image's display stack needs (square/okhttp#9572).
+      # sdkmanager won't overwrite the preinstalled tools; it installs them as latest-2.
+      - name: Update SDK cmdline-tools
+        run: |
+          sdk="$ANDROID_HOME"
+          yes | "$sdk/cmdline-tools/latest/bin/sdkmanager" --install "cmdline-tools;latest" > /dev/null
+          if [ -d "$sdk/cmdline-tools/latest-2" ]; then
+            rm -rf "$sdk/cmdline-tools/latest"
+            mv "$sdk/cmdline-tools/latest-2" "$sdk/cmdline-tools/latest"
+          fi
+          "$sdk/cmdline-tools/latest/bin/sdkmanager" --version
       - name: Run Wear connected tests
         uses: reactivecircus/android-emulator-runner@v2.38.0
         with:
           api-level: '37.0'
           target: android-wear-signed
           arch: x86_64
+          # The stable emulator (37.2.12) boot-loops this image under every GPU mode (below); take the
+          # emulator, and the image, from the canary channel.
+          channel: canary
           profile: wearos_small_round
-          ram-size: 2048M
+          ram-size: 4096M
           disk-size: 2G
           disable-linux-hw-accel: false
           emulator-boot-timeout: 900
-          # With host GPU emulation (gfxstream, under swiftshader_indirect and swangle_indirect alike)
-          # the API 37 Wear image never finishes booting here: system_server's android.display thread
-          # crashes natively right after loading mapper/ranchu, zygote restarts every ~5 s and adb
-          # stays "offline". `-gpu guest` renders in the guest and skips the host gralloc path.
+          # With the old avdmanager's AVD (above) the image never finished booting under any GPU mode
+          # (swiftshader_indirect, swangle_indirect, guest): system_server's android.display thread
+          # crashed natively right after loading mapper/ranchu, zygote restarted every ~5 s and adb
+          # stayed "offline". API 37 takes OkHttp's settings: `-gpu auto` and 4 GB.
           # `-show-kernel` puts the guest console in the job log, the only trace a boot loop leaves.
-          emulator-options: -no-window -gpu guest -no-snapshot -noaudio -no-boot-anim -camera-back none -show-kernel -logcat-output /tmp/wear-guest-logcat.txt
+          emulator-options: -no-window -gpu auto -no-snapshot -noaudio -no-boot-anim -camera-back none -memory 4096 -show-kernel -logcat-output /tmp/wear-guest-logcat.txt
           # Wear OS 6+ images are only published signed (release-keys, ro.adb.secure=1), so adbd
           # accepts only an authorized host key. The emulator passes ~/.android/adbkey.pub to the
           # guest at boot only if it already exists, so create it before launch.
           pre-emulator-launch-script: |
             "$ANDROID_HOME/platform-tools/adb" start-server
             test -s ~/.android/adbkey.pub
+            cat ~/.android/avd/test.ini
           disable-animations: true
           script: bash scripts/run-wear-connected-tests.sh
       - name: Show the guest's crash log
