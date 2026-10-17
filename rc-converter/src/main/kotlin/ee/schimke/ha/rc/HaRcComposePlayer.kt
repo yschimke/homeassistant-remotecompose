@@ -71,7 +71,8 @@ enum class CardPlayback {
  *   without re-creating it, so document animations are not restarted.
  * - [onNamedAction] receives the document's named host actions (`ha` + JSON payload).
  * - A frozen [LocalHaClock] (previews, tests) pins the player's time source too, so time-driven
- *   expressions resolve to the same instant the converters encoded.
+ *   expressions resolve to the same instant the converters encoded, and decodes a plain
+ *   [BitmapLoader]'s images inline rather than on `Dispatchers.IO`, so a capture never races them.
  *
  * **Per-document fallback.** If rc-player-compose's own capability report says it can't fully
  * render a document, [fallback] draws it instead (the AndroidX player) and the reasons are logged —
@@ -91,7 +92,11 @@ fun HaRcComposePlayer(
     fallback()
     return
   }
-  val imageLoader = remember(bitmapLoader) { bitmapLoader.asRcImageLoader() }
+  val clock = LocalHaClock.current
+  // A frozen clock means a preview or test: decode inline, so the image is in place by the frame a
+  // capture waits on rather than landing from a background thread after it.
+  val imageLoader =
+    remember(bitmapLoader, clock.isFrozen) { bitmapLoader.asRcImageLoader(inline = clock.isFrozen) }
   // rc-player rejects a write to a name the document doesn't declare (the View player's setters
   // dropped it), and the host pushes every binding of every entity the card references. So the
   // player gets only the values this document declares, with a matching type.
@@ -105,7 +110,6 @@ fun HaRcComposePlayer(
         playerValues.putAll(accepted)
       }
   }
-  val clock = LocalHaClock.current
   val frozenTime = remember(clock) { if (clock.isFrozen) clock.asRcTimeSource() else null }
   val player: @Composable () -> Unit = {
     RcComposePlayer(
@@ -195,18 +199,27 @@ internal fun RcHostActionValue.toHostPayload(): Any? =
 /**
  * Adapt an AndroidX [BitmapLoader] to the CMP player's image API. A loader that already implements
  * [RcImageLoader] (the Coil loader, which can await a network fetch) is returned as-is.
+ *
+ * The blocking `loadBitmap` call runs on `Dispatchers.IO`, unless [inline]: then it runs on the
+ * player's own (main) dispatcher. Previews and tests pass [inline] so the image is decoded before
+ * the frame they capture. On `Dispatchers.IO` nothing they wait on waits for it, so a busy render
+ * run captured the placeholder some of the time.
  */
-internal fun BitmapLoader.asRcImageLoader(): RcImageLoader =
-  this as? RcImageLoader ?: BlockingBitmapLoaderAdapter(this)
+internal fun BitmapLoader.asRcImageLoader(inline: Boolean = false): RcImageLoader =
+  this as? RcImageLoader ?: BlockingBitmapLoaderAdapter(this, inline)
 
-private class BlockingBitmapLoaderAdapter(private val delegate: BitmapLoader) : RcImageLoader {
+private class BlockingBitmapLoaderAdapter(
+  private val delegate: BitmapLoader,
+  private val inline: Boolean,
+) : RcImageLoader {
   override suspend fun load(data: RcBitmapData): ImageBitmap? {
     if (delegate === BitmapLoader.UNSUPPORTED) return null
     val name = data.externalImageName() ?: return null
+    val decode = {
+      delegate.loadBitmap(name).use { BitmapFactory.decodeStream(it) }?.asImageBitmap()
+    }
     return try {
-      withContext(Dispatchers.IO) {
-        delegate.loadBitmap(name).use { BitmapFactory.decodeStream(it) }?.asImageBitmap()
-      }
+      if (inline) decode() else withContext(Dispatchers.IO) { decode() }
     } catch (e: CancellationException) {
       throw e
     } catch (e: Exception) {

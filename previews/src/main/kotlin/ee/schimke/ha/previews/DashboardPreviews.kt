@@ -19,6 +19,7 @@ import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.player.core.platform.BitmapLoader
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -32,6 +33,8 @@ import ee.schimke.ha.model.Section
 import ee.schimke.ha.model.SectionsGrid
 import ee.schimke.ha.model.View
 import ee.schimke.ha.rc.CachedCardPreview
+import ee.schimke.ha.rc.FixedHaClock
+import ee.schimke.ha.rc.LocalHaClock
 import ee.schimke.ha.rc.LovelaceSectionCardFlow
 import ee.schimke.ha.rc.LovelaceSectionsGrid
 import ee.schimke.ha.rc.ProvideCardRegistry
@@ -47,6 +50,8 @@ import ee.schimke.ha.rc.enableRemoteComposeWrapContent
 import ee.schimke.ha.rc.sectionFlowItems
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
+import java.time.ZoneOffset
+import java.time.ZonedDateTime
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -364,7 +369,9 @@ private fun DashboardPreview(name: String, transformView: (View) -> View = { it 
         fontWeight = FontWeight.Bold,
       )
     }
-    loaded.dashboard.views.forEach { view -> ViewBlock(view, loaded.snapshot, bitmapLoader) }
+    FrozenDashboardClock {
+      loaded.dashboard.views.forEach { view -> ViewBlock(view, loaded.snapshot, bitmapLoader) }
+    }
   }
 }
 
@@ -387,9 +394,26 @@ private fun DashboardViewPreview(name: String, viewIndex: Int) {
         fontWeight = FontWeight.Bold,
       )
     }
-    ViewBlock(view, loaded.snapshot, bitmapLoader)
+    FrozenDashboardClock { ViewBlock(view, loaded.snapshot, bitmapLoader) }
   }
 }
+
+/**
+ * Holds time still for a dashboard render, as [CardHost] does for single cards: relative times and
+ * clocks read the same instant on every run, the player's time source is pinned to it, and the
+ * player decodes the dashboard's images inline so a capture never races them (`HaRcComposePlayer`).
+ */
+@Composable
+private fun FrozenDashboardClock(content: @Composable () -> Unit) {
+  CompositionLocalProvider(
+    LocalHaClock provides FixedHaClock(DashboardPreviewNow),
+    content = content,
+  )
+}
+
+/** The instant dashboard previews render at: the card previews' `PreviewNow`. */
+private val DashboardPreviewNow: ZonedDateTime =
+  ZonedDateTime.of(2026, 5, 5, 10, 8, 0, 0, ZoneOffset.UTC)
 
 @Composable
 private fun ViewBlock(view: View, snapshot: HaSnapshot, bitmapLoader: BitmapLoader) {
