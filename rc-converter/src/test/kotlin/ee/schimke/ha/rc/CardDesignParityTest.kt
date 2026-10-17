@@ -1026,6 +1026,21 @@ class CardDesignParityTest {
       dark = true,
     )
 
+  @Test
+  fun markdownWholeBlockEmphasis() =
+    assertParity(
+      "markdown-emphasis",
+      card("markdown") {
+        put("title", "Repo")
+        put(
+          "content",
+          "## **meshcore-mobile**\n\n_Mobile companion for MeshCore_\n\n_It is {{ states('sensor.temp') }} inside_\n\n- ***Kitchen light***\n- `gradlew check`",
+        )
+      },
+      listStates,
+      dark = false,
+    )
+
   private fun entityJson(id: String, state: String, attrs: JsonObject) =
     EntityState(id, state, attrs)
 

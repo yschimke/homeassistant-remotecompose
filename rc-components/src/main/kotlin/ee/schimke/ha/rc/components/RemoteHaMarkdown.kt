@@ -22,6 +22,7 @@ import androidx.compose.remote.creation.compose.modifier.width
 import androidx.compose.remote.creation.compose.state.RemoteTextUnit
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rs
+import androidx.compose.remote.creation.compose.text.RemoteFontFamily
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
@@ -29,10 +30,13 @@ import androidx.compose.ui.text.style.TextOverflow
 
 /**
  * HA `markdown` card — renders parsed markdown blocks inside the card chrome. Headings, bullets and
- * paragraphs each pick a block-level style. Plain blocks emit a single [RemoteText]; blocks that
- * carry links or images ([MarkdownBlock.hasInlineMarkup]) lay their inline runs out as a flow row
- * so link labels (accent colour, clickable) and badge images sit inline and wrap — falling back to
- * a non-wrapping row on capture profiles without the experimental FlowLayout op.
+ * paragraphs each pick a block-level style. A block drawn in one style (plain, or bold / code
+ * throughout) emits a single [RemoteText]; blocks that carry links, images or mixed emphasis
+ * ([MarkdownBlock.hasInlineMarkup]) lay their inline runs out as a flow row so link labels (accent
+ * colour, clickable), emphasised words and badge images sit inline and wrap — falling back to a
+ * non-wrapping row on capture profiles without the experimental FlowLayout op. Emphasis changes the
+ * weight or family only (italic is parsed but drawn upright, see [MarkdownStyle.drawn]); the size
+ * is always the block's [HaType] token.
  */
 @Composable
 @RemoteComposable
@@ -140,10 +144,13 @@ fun RemoteHaMarkdownIdentity(data: HaMarkdownData, modifier: RemoteModifier = Re
         )
       }
       if (firstLine != null) {
+        val emphasis = firstLine.drawnStyle
         RemoteText(
           text = firstLine.boundText ?: firstLine.text.rs,
           color = theme.secondaryText,
           fontSize = HaType.Body,
+          fontWeight = emphasis.weight(FontWeight.Normal),
+          fontFamily = emphasis.fontFamily,
           style = haTextStyle(),
           maxLines = if (data.title != null) 2 else 3,
           overflow = TextOverflow.Ellipsis,
@@ -154,9 +161,9 @@ fun RemoteHaMarkdownIdentity(data: HaMarkdownData, modifier: RemoteModifier = Re
 }
 
 /**
- * One heading / bullet / paragraph line. Plain blocks render as a single [RemoteText] (preserving
- * the live `boundText` binding); blocks with links or images render their inline runs in a flow
- * row.
+ * One heading / bullet / paragraph line. A block in one emphasis renders as a single [RemoteText]
+ * (preserving the live `boundText` binding); blocks with links, images or mixed emphasis render
+ * their inline runs in a flow row.
  */
 @Composable
 @RemoteComposable
@@ -170,17 +177,18 @@ private fun MarkdownLine(
   val primary = theme.primaryText
   if (!block.hasInlineMarkup) {
     val text = block.boundText ?: block.text.rs
+    val emphasis = block.drawnStyle
     RemoteText(
       text = if (bullet) "• ".rs + text else text,
       color = primary,
       fontSize = fontSize,
-      fontWeight = fontWeight,
+      fontWeight = emphasis.weight(fontWeight),
+      fontFamily = emphasis.fontFamily,
       style = haTextStyle(),
     )
     return
   }
 
-  val link = theme.linkText
   val content: @Composable () -> Unit = {
     if (bullet) {
       RemoteText(
@@ -191,49 +199,22 @@ private fun MarkdownLine(
         style = haTextStyle(),
       )
     }
-    block.inlines.forEach { inline ->
-      when (inline) {
-        is MarkdownInline.Text ->
-          if (inline.boundText != null) {
-            // A live `{{ states('x') }}` run — render the bound
-            // string as one node so it keeps updating (can't be
-            // word-split like a constant run).
-            RemoteText(
-              text = inline.boundText,
-              color = primary,
-              fontSize = fontSize,
-              fontWeight = fontWeight,
-              style = haTextStyle(),
-            )
+    flowItems(block.inlines).forEach { item ->
+      when (item) {
+        is FlowItem.Word ->
+          if (item.pieces.size == 1) {
+            val (text, emphasis) = item.pieces.single()
+            EmphasisText(text, emphasis, primary, fontSize, fontWeight)
           } else {
-            // Split into words so the flow row can wrap between
-            // them; the row's horizontal spacing stands in for
-            // the collapsed inter-word whitespace.
-            inline.text
-              .split(WORD_SPLIT)
-              .filter { it.isNotEmpty() }
-              .forEach { word ->
-                RemoteText(
-                  text = word.rs,
-                  color = primary,
-                  fontSize = fontSize,
-                  fontWeight = fontWeight,
-                  style = haTextStyle(),
-                )
+            // A word that changes emphasis part-way (`**bold**,`) stays one
+            // unbreakable flow item, its pieces abutting with no gap.
+            RemoteRow {
+              item.pieces.forEach { (text, emphasis) ->
+                EmphasisText(text, emphasis, primary, fontSize, fontWeight)
               }
+            }
           }
-        is MarkdownInline.Link -> {
-          val click = HaAction.Url(inline.url).toRemoteAction()
-          RemoteText(
-            text = inline.boundText ?: inline.text.rs,
-            color = link,
-            fontSize = fontSize,
-            fontWeight = fontWeight,
-            style = haTextStyle(),
-            modifier = click?.let { RemoteModifier.clickable(it) } ?: RemoteModifier,
-          )
-        }
-        is MarkdownInline.Image -> MarkdownBadge(inline)
+        is FlowItem.Span -> InlineSpan(item.inline, theme, fontSize, fontWeight)
       }
     }
   }
@@ -253,6 +234,124 @@ private fun MarkdownLine(
     RemoteRow(horizontalArrangement = RemoteArrangement.spacedBy(4.rdp)) { content() }
   }
 }
+
+/**
+ * One flow-row item: a whitespace-delimited [Word] of constant text, possibly spanning several
+ * emphasis runs, or a [Span] — a link, an image or a live-bound text run — that keeps its own node.
+ */
+private sealed interface FlowItem {
+  data class Word(val pieces: List<Pair<String, MarkdownStyle>>) : FlowItem
+
+  data class Span(val inline: MarkdownInline) : FlowItem
+}
+
+/**
+ * Splits constant text runs into words so the flow row can wrap between them; the row's horizontal
+ * spacing stands in for the collapsed inter-word whitespace. Words are cut at whitespace only, so
+ * `_word_.` stays one item whose italic and plain pieces abut.
+ */
+private fun flowItems(inlines: List<MarkdownInline>): List<FlowItem> {
+  val items = mutableListOf<FlowItem>()
+  val pieces = mutableListOf<Pair<String, MarkdownStyle>>()
+  fun endWord() {
+    if (pieces.isNotEmpty()) {
+      items += FlowItem.Word(pieces.toList())
+      pieces.clear()
+    }
+  }
+  for (inline in inlines) {
+    if (inline !is MarkdownInline.Text || inline.boundText != null) {
+      endWord()
+      items += FlowItem.Span(inline)
+      continue
+    }
+    var start = 0
+    for (i in 0..inline.text.length) {
+      if (i == inline.text.length || inline.text[i].isWhitespace()) {
+        if (i > start) pieces += inline.text.substring(start, i) to inline.style.drawn
+        if (i < inline.text.length) endWord()
+        start = i + 1
+      }
+    }
+  }
+  endWord()
+  return items
+}
+
+/** A constant run of text in the block's size and weight, with [emphasis] applied. */
+@Composable
+@RemoteComposable
+private fun EmphasisText(
+  text: String,
+  emphasis: MarkdownStyle,
+  color: androidx.compose.remote.creation.compose.state.RemoteColor,
+  fontSize: RemoteTextUnit,
+  fontWeight: FontWeight,
+) {
+  RemoteText(
+    text = text.rs,
+    color = color,
+    fontSize = fontSize,
+    fontWeight = emphasis.weight(fontWeight),
+    fontFamily = emphasis.fontFamily,
+    style = haTextStyle(),
+  )
+}
+
+/** A link, an image, or a live-bound text run inside a flow row. */
+@Composable
+@RemoteComposable
+private fun InlineSpan(
+  inline: MarkdownInline,
+  theme: RemoteHaTheme,
+  fontSize: RemoteTextUnit,
+  fontWeight: FontWeight,
+) {
+  val primary = theme.primaryText
+  val link = theme.linkText
+  when (inline) {
+    is MarkdownInline.Text -> {
+      // A live `{{ states('x') }}` run — render the bound string as
+      // one node so it keeps updating (can't be word-split like a
+      // constant run).
+      val emphasis = inline.style.drawn
+      RemoteText(
+        text = inline.boundText ?: inline.text.rs,
+        color = primary,
+        fontSize = fontSize,
+        fontWeight = emphasis.weight(fontWeight),
+        fontFamily = emphasis.fontFamily,
+        style = haTextStyle(),
+      )
+    }
+    is MarkdownInline.Link -> {
+      val click = HaAction.Url(inline.url).toRemoteAction()
+      val emphasis = inline.style.drawn
+      RemoteText(
+        text = inline.boundText ?: inline.text.rs,
+        color = link,
+        fontSize = fontSize,
+        fontWeight = emphasis.weight(fontWeight),
+        fontFamily = emphasis.fontFamily,
+        style = haTextStyle(),
+        modifier = click?.let { RemoteModifier.clickable(it) } ?: RemoteModifier,
+      )
+    }
+    is MarkdownInline.Image -> MarkdownBadge(inline)
+  }
+}
+
+/** Bold emphasis lifts the block's weight to [FontWeight.Bold]; anything else keeps it. */
+private fun MarkdownStyle.weight(base: FontWeight): FontWeight =
+  if (bold && base < FontWeight.Bold) FontWeight.Bold else base
+
+// No FontStyle is set for italic runs: rc-player-compose 2.12.0 decodes the text font-style field
+// as Typeface bits (1 = bold) while RemoteCompose writes 1 = italic, so FontStyle.Italic would draw
+// bold. Italic is held back (see MarkdownStyle.drawn) until the player decodes it as italic.
+
+/** Inline code is set in the monospace family; other runs keep the theme's [haTextStyle] family. */
+private val MarkdownStyle.fontFamily: RemoteFontFamily?
+  get() = if (code) RemoteFontFamily.Monospace else null
 
 /**
  * Inline badge / image. The bytes are fetched by URL at playback via the host's `BitmapLoader`, so
@@ -301,5 +400,3 @@ private const val BADGE_WIDTH_DP = 96
 // bitmap-memory budget (384×128×4 ≈ 196 KB each).
 private const val BADGE_DECODE_MAX_W_PX = 384
 private const val BADGE_DECODE_MAX_H_PX = 128
-
-private val WORD_SPLIT = Regex("\\s+")

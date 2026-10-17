@@ -288,6 +288,26 @@ fun Markdown_Dark() = CardHost(HaTheme.Dark) { RenderChild(markdownCard(), Fixtu
 private fun markdownCard() =
   card("""{"type":"markdown","title":"Notes","content":"Welcome home.\nTemperature is normal."}""")
 
+/**
+ * Inline emphasis as HA's markdown card (CommonMark via marked) parses it: italic, bold, both,
+ * inline code, an intraword `snake_case` left plain, and a GitHub-style repo tagline. Italic draws
+ * upright for now (see `MarkdownStyle.drawn`).
+ */
+@Preview(name = "markdown emphasis (light)", showBackground = false, widthDp = 381, heightDp = 120)
+@Composable
+fun Markdown_Emphasis_Light() =
+  CardHost(HaTheme.Light) { RenderChild(markdownEmphasisCard(), Fixtures.mixed) }
+
+@Preview(name = "markdown emphasis (dark)", showBackground = false, widthDp = 381, heightDp = 120)
+@Composable
+fun Markdown_Emphasis_Dark() =
+  CardHost(HaTheme.Dark) { RenderChild(markdownEmphasisCard(), Fixtures.mixed) }
+
+private fun markdownEmphasisCard() =
+  card(
+    """{"type":"markdown","content":"## meshcore-mobile\n\n_Mobile companion for MeshCore_\n\nThis is *italic*, this is **bold**, this is ***both***.\n\n- Run `gradlew check` on snake_case_name\n- __Bold bullet__"}"""
+  )
+
 // ——— vertical-stack ———
 
 @Preview(name = "vertical-stack (light)", showBackground = false, widthDp = 232, heightDp = 100)

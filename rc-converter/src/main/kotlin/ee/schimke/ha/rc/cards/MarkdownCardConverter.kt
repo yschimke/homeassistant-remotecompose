@@ -65,9 +65,9 @@ class MarkdownCardConverter : CardConverter {
   /**
    * A markdown card of plain blocks renders from a card design. The client renders the content —
    * `{{ states() }}` tokens and full Jinja alike — on live data; the template is keyed on the
-   * rendered block structure (kind and heading level per block, plus the title's size bucket) and
-   * each block's text is the `card.md.<i>` binding. Links and images keep the converter: their URLs
-   * can't be part of a template.
+   * rendered block structure (kind, heading level and whole-block emphasis per block, plus the
+   * title's size bucket) and each block's text is the `card.md.<i>` binding. Links, images and
+   * mixed emphasis keep the converter: their URLs and per-word runs can't be part of a template.
    */
   override fun designProperties(card: CardConfig, snapshot: HaSnapshot): DesignProperties? {
     if (!setOf("type", "title", "content").containsAll(card.raw.keys)) return null
@@ -83,13 +83,15 @@ class MarkdownCardConverter : CardConverter {
     val signatures = properties[BLOCKS]?.split(',')?.filter { it.isNotEmpty() } ?: return null
     val source = buildString {
       signatures.forEachIndexed { i, sig ->
-        val previousBullet = i > 0 && signatures[i - 1] == "B"
-        if (sig != "B" && previousBullet) append('\n')
-        when {
-          sig.startsWith("H") -> append("#".repeat(sig.drop(1).toIntOrNull() ?: 1) + " H\n\n")
-          sig == "P" -> append("P\n\n")
-          sig == "B" -> append("- B\n")
-          sig == "D" -> append("---\n\n")
+        val match = SIGNATURE.matchEntire(sig) ?: return null
+        val (kind, level, style) = match.destructured
+        val previousBullet = i > 0 && signatures[i - 1].startsWith("B")
+        if (kind != "B" && previousBullet) append('\n')
+        when (kind) {
+          "H" -> append("#".repeat(level.toIntOrNull() ?: 1) + " " + emphasise("H", style) + "\n\n")
+          "P" -> append(emphasise("P", style) + "\n\n")
+          "B" -> append("- " + emphasise("B", style) + "\n")
+          "D" -> append("---\n\n")
           else -> return null
         }
       }
@@ -133,13 +135,28 @@ class MarkdownCardConverter : CardConverter {
     return Markdown.parse(template.rendered).map { it.copy(text = template.plain(it.text)) }
   }
 
-  private fun signature(block: MarkdownBlock): String =
-    when (block.kind) {
-      MarkdownBlock.Kind.Heading -> "H${block.level}"
-      MarkdownBlock.Kind.Paragraph -> "P"
-      MarkdownBlock.Kind.Bullet -> "B"
-      MarkdownBlock.Kind.Divider -> "D"
-    }
+  /**
+   * A block's template key: kind, heading level, then its drawn whole-block emphasis as `b` / `c`
+   * flags (`P`, `H2b`, `Bc`). Italic is left out: it draws upright (see `MarkdownStyle.drawn`), so
+   * an italic block renders, and keys, exactly as a plain one.
+   */
+  private fun signature(block: MarkdownBlock): String {
+    val kind =
+      when (block.kind) {
+        MarkdownBlock.Kind.Heading -> "H${block.level}"
+        MarkdownBlock.Kind.Paragraph -> "P"
+        MarkdownBlock.Kind.Bullet -> "B"
+        MarkdownBlock.Kind.Divider -> return "D"
+      }
+    val style = block.drawnStyle
+    return kind + (if (style.bold) "b" else "") + (if (style.code) "c" else "")
+  }
+
+  /** Placeholder [text] wrapped in the markdown for the [flags] a [signature] carries. */
+  private fun emphasise(text: String, flags: String): String {
+    val inner = if ('c' in flags) "`$text`" else text
+    return if ('b' in flags) "**$inner**" else inner
+  }
 
   @Composable
   override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
@@ -295,3 +312,8 @@ internal const val HA_EXPR_CLOSE: String = "\uE001"
 internal fun haExprToken(index: Int): String = "$HA_EXPR_OPEN$index$HA_EXPR_CLOSE"
 
 private val EXPR_TOKEN_REGEX = Regex("$HA_EXPR_OPEN\\d+$HA_EXPR_CLOSE")
+
+/**
+ * A block [MarkdownCardConverter] template key: kind, optional heading level, drawn emphasis flags.
+ */
+private val SIGNATURE = Regex("([HPBD])(\\d?)(b?c?)")
