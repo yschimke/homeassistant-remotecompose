@@ -61,9 +61,10 @@ jobs:
           emulator-boot-timeout: 900
           # The API 37 Wear image never finishes booting here: system_server's android.display thread
           # crashes natively right after loading mapper/ranchu, zygote restarts every ~5 s and adb
-          # stays "offline" (the same under swiftshader_indirect and swangle_indirect). -logcat
-          # streams the guest's crash and tombstone lines to the job log without adb.
-          emulator-options: -no-window -gpu swangle_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none -logcat '*:S DEBUG:V AndroidRuntime:E libc:F crash_dump64:V SurfaceFlinger:E DisplayManagerService:E'
+          # stays "offline" (the same under swiftshader_indirect and swangle_indirect). The guest's
+          # logcat goes to a file (adb never comes up to pull a tombstone); the step after the
+          # emulator prints its crash lines when the job fails.
+          emulator-options: -no-window -gpu swangle_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none -logcat-output /tmp/wear-guest-logcat.txt
           # Wear OS 6+ images are only published signed (release-keys, ro.adb.secure=1), so adbd
           # accepts only an authorized host key. The emulator passes ~/.android/adbkey.pub to the
           # guest at boot only if it already exists, so create it before launch.
@@ -72,6 +73,14 @@ jobs:
             test -s ~/.android/adbkey.pub
           disable-animations: true
           script: bash scripts/run-wear-connected-tests.sh
+      - name: Show the guest's crash log
+        if: failure()
+        run: |
+          f=/tmp/wear-guest-logcat.txt
+          test -s "$f" || { echo "no guest logcat at $f"; exit 0; }
+          wc -l "$f"
+          grep -nE ' F DEBUG|F libc|FATAL EXCEPTION|AndroidRuntime|Abort message|backtrace:|^.*#[0-9]{2} pc |signal [0-9]+ \(' "$f" | head -300 || true
+          mkdir -p build/wear-runtime && cp "$f" build/wear-runtime/guest-logcat.txt
       - name: Show instrumented test failures
         if: failure()
         run: python3 scripts/summarize-android-test-failures.py
