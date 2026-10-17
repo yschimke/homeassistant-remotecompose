@@ -282,6 +282,28 @@ class GridLayoutPlaybackTest {
     assertCellsFit(160, perRow = 1, yDp = 80f, "buttons at 160 dp")
   }
 
+  /**
+   * A grid nested in a horizontal stack lays its rows out for its own half of the launcher widget,
+   * not the whole widget: at 400 dp each grid has (400 − 8) ÷ 2 = 196 dp, so its four 80 dp buttons
+   * go two to a row as squares. Planned from the widget's 400 dp, all four would share one row at
+   * about 43 dp each.
+   */
+  @Test
+  fun aLauncherGridInsideAStackFitsItsOwnShare() {
+    val grid = fourButtons.raw.toString()
+    val stack = card("""{"type":"horizontal-stack","cards":[$grid,$grid]}""")
+    val (height) =
+      heightsAt(
+        "stacked-grids-launcher",
+        stack,
+        400,
+        mode = CardSizeMode.Fixed,
+        capturePerWidth = true,
+      )
+    val cell = (196f - 8f) / 2f
+    assertNear(cell * 2 + 8f, height, "two rows of two square buttons in each half")
+  }
+
   @Test
   fun aWidgetGridOfTilesIsOneColumnOnANarrowSlot() {
     val (w200, w160) = heightsAt("tiles-fixed", sixTiles, 200, 160, mode = CardSizeMode.Fixed)
@@ -289,6 +311,23 @@ class GridLayoutPlaybackTest {
     assertCellsAtLeast(140, 200, perRow = 1, "tiles at 200 dp")
     assertCellsFit(200, perRow = 1, yDp = 24f, "tiles at 200 dp")
     assertCellsFit(160, perRow = 1, yDp = 24f, "tiles at 160 dp")
+  }
+
+  /**
+   * Square pictures side by side in a horizontal stack take their height from their own column,
+   * like the grid's: each column is (360 − 8) ÷ 2 = 176 dp, so the stack is 176 dp tall.
+   */
+  @Test
+  fun squarePicturesInAHorizontalStackSizeFromTheirColumn() {
+    val stack =
+      card(
+        """{"type":"horizontal-stack","cards":[
+          {"type":"picture-entity","entity":"camera.chamber","aspect_ratio":"1:1"},
+          {"type":"picture-entity","entity":"camera.nozzle","aspect_ratio":"1:1"}]}"""
+      )
+    val (phone, tablet) = heightsAt("stacked-square-pictures", stack, 360, 700)
+    assertNear((360f - 8f) / 2f, phone, "360 dp")
+    assertNear((700f - 8f) / 2f, tablet, "700 dp")
   }
 
   @Test

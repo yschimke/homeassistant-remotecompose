@@ -38,16 +38,46 @@ fun RemoteHaVerticalStack(
   }
 }
 
+/**
+ * HA `horizontal-stack`: [cellCount] cells side by side, sharing the width equally as HA's `flex: 1
+ * 1 0` children do, with [HORIZONTAL_STACK_GAP_DP] between them. Gaps are fixed-width spacer boxes
+ * rather than `spacedBy`, for the same reason as [RemoteHaGrid]: the Compose card player shares a
+ * weighted row's width before subtracting arrangement spacing. Without weights, a card that fills
+ * its width (a grid, an entities list) would take the whole row.
+ */
 @Composable
 @RemoteComposable
 fun RemoteHaHorizontalStack(
+  cellCount: Int,
   modifier: RemoteModifier = RemoteModifier,
-  content: @Composable @RemoteComposable () -> Unit,
+  cell: @Composable @RemoteComposable (index: Int) -> Unit,
 ) {
-  RemoteRow(modifier = modifier, horizontalArrangement = RemoteArrangement.spacedBy(8.rdp)) {
-    CompositionLocalProvider(LocalGridCellWidthPx provides null) { content() }
+  val columns = cellCount.coerceAtLeast(1)
+  val name = remember { "$GridWidthExpressionPrefix${UUID.randomUUID()}" }
+  val stackWidthPx =
+    RemoteFloat.createNamedRemoteFloatExpression(name = name, domain = RemoteState.Domain.User) {
+      componentWidth()
+    }
+  // Each column's width, from the stack's own width as [RemoteHaGrid] computes its cells': a
+  // picture sizes its height from it rather than from what a player reports for a weighted child.
+  val cellWidthPx =
+    (stackWidthPx - HORIZONTAL_STACK_GAP_DP.rdp.toPx() * (columns - 1).toFloat()) /
+      columns.toFloat()
+  RemoteBox(modifier = modifier.fillMaxWidth()) {
+    RemoteText(text = stackWidthPx.toRemoteString(WidthFormat), color = Color.Transparent.rc)
+    RemoteRow(modifier = RemoteModifier.fillMaxWidth()) {
+      CompositionLocalProvider(LocalGridCellWidthPx provides cellWidthPx) {
+        for (index in 0 until cellCount) {
+          if (index > 0) RemoteBox(modifier = RemoteModifier.width(HORIZONTAL_STACK_GAP_DP.rdp))
+          RemoteBox(modifier = RemoteModifier.weight(1f)) { cell(index) }
+        }
+      }
+    }
   }
 }
+
+/** The gap between a [RemoteHaHorizontalStack]'s cells, in dp. */
+const val HORIZONTAL_STACK_GAP_DP: Int = 8
 
 /**
  * HA `grid` card — [cellCount] cells in rows of [perRow], each row's cells equal width.
@@ -112,9 +142,9 @@ fun RemoteHaGrid(
 }
 
 /**
- * The live width, in px, of the `grid` cell being composed ([RemoteHaGrid]), or null outside one.
- * Read by [RemoteAspectRatioBox]. A container nested in a cell that lays its children out at other
- * widths (a horizontal stack) resets it to null.
+ * The live width, in px, of the `grid` cell or horizontal-stack column being composed, or null
+ * outside one. Read by [RemoteAspectRatioBox]. A [RemoteHaHorizontalStack] provides its own
+ * columns' width.
  */
 val LocalGridCellWidthPx = staticCompositionLocalOf<RemoteFloat?> { null }
 
