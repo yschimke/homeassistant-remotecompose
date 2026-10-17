@@ -247,7 +247,14 @@ private fun GridCells(
   perRow: Int,
   modifier: RemoteModifier,
 ) {
-  RemoteHaGrid(cellCount = children.size, perRow = perRow, modifier = modifier) { k ->
+  // A grid of square cells (pictures) keeps the column width on a short last row, so its pictures
+  // stay a column's square; other cards stretch across the row rather than leave a hole.
+  RemoteHaGrid(
+    cellCount = children.size,
+    perRow = perRow,
+    modifier = modifier,
+    stretchLastRow = squareCells.none { it },
+  ) { k ->
     ProvideChildCardBindings(k) {
       if (squareCells[k]) {
         RemoteAspectRatioBox(1f, RemoteModifier.fillMaxWidth()) {

@@ -246,6 +246,33 @@ class GridLayoutPlaybackTest {
     assertCellsFit(700, perRow = 3, yDp = 24f, "tiles at 700 dp")
   }
 
+  private val threeTiles =
+    card(
+      """{"type":"grid","columns":2,"cards":[
+        {"type":"tile","entity":"light.kitchen"},{"type":"tile","entity":"light.office"},
+        {"type":"tile","entity":"switch.fan"}]}"""
+    )
+
+  /**
+   * An odd tile out spans its row rather than sitting beside an empty column: the second row's one
+   * tile has content where the first row's gap and second cell are.
+   */
+  @Test
+  fun aShortLastRowOfTilesStretchesAcrossTheGrid() {
+    val (height) = heightsAt("three-tiles", threeTiles, 360)
+    val pixels = played.getValue(360)
+    val scale = pixels.width / 360f
+    val rowHeight = (height - 8f) / 2f
+    val y = ((rowHeight + 8f + rowHeight / 2f) * scale).toInt()
+    for (xDp in listOf(178f, 270f)) {
+      assertTrue(
+        !isBackground(pixels[(xDp * scale).toInt(), y]),
+        "the last row's tile should cover x=$xDp dp",
+      )
+    }
+    assertCellsFit(360, perRow = 2, yDp = rowHeight / 2f, "the full first row")
+  }
+
   @Test
   fun aWidgetGridOfButtonsKeepsItsMinimumOnANarrowSlot() {
     // Captured once and played through the runtime gate (a Wear slot): below the four-across

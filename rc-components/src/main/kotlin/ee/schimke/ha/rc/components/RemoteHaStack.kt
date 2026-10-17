@@ -84,8 +84,12 @@ const val HORIZONTAL_STACK_GAP_DP: Int = 8
  *
  * The rows are ordinary [RemoteRow]s of weighted cells rather than a `RemoteFlowRow`: a flow row
  * packs children by their own width, and a card fills the width it is given, so it wraps one card
- * per line. Which [perRow] applies is the caller's (playback) decision — see [HaGridLayout.Plan]. A
- * short last row keeps the column width (empty weighted slots fill it), as HA's CSS grid does.
+ * per line. Which [perRow] applies is the caller's (playback) decision — see [HaGridLayout.Plan].
+ *
+ * A short last row shares the grid's whole width between its cells when [stretchLastRow] (an odd
+ * tile out spans the row rather than sitting beside an empty column); otherwise it keeps the column
+ * width, with empty weighted slots after it, as HA's CSS grid does. A grid of pictures keeps the
+ * columns, so a picture stays a column's square.
  *
  * Every cell sees its live width through [LocalGridCellWidthPx], computed from the grid's own width
  * — `(width − gaps) ÷ perRow` — so a [RemoteAspectRatioBox] inside a cell is sized from the cell,
@@ -102,6 +106,7 @@ fun RemoteHaGrid(
   cellCount: Int,
   perRow: Int,
   modifier: RemoteModifier = RemoteModifier,
+  stretchLastRow: Boolean = true,
   cell: @Composable @RemoteComposable (index: Int) -> Unit,
 ) {
   val columns = perRow.coerceAtLeast(1)
@@ -110,8 +115,8 @@ fun RemoteHaGrid(
     RemoteFloat.createNamedRemoteFloatExpression(name = name, domain = RemoteState.Domain.User) {
       componentWidth()
     }
-  val cellWidthPx =
-    (gridWidthPx - HaGridLayout.GAP_DP.rdp.toPx() * (columns - 1).toFloat()) / columns.toFloat()
+  fun cellWidthPx(slots: Int) =
+    (gridWidthPx - HaGridLayout.GAP_DP.rdp.toPx() * (slots - 1).toFloat()) / slots.toFloat()
   RemoteBox(modifier = modifier.fillMaxWidth()) {
     // Writes the width expression while this box is the component being written, so it reads the
     // grid's width (the same forcing text `RemoteSizeBreakpoint` uses; it draws nothing).
@@ -125,13 +130,17 @@ fun RemoteHaGrid(
         // weighted row's whole width between its weighted children before arrangement spacing,
         // so with `spacedBy` each cell came out width ÷ perRow and the row overflowed by its gaps.
         // Fixed children are measured first, so the weights split only what the gaps leave.
+        // A short last row shares the whole width between its cells rather than leaving empty
+        // columns, so an odd tile out doesn't sit beside a hole.
+        val slots = if (stretchLastRow) row.size else columns
+        val widthPx = cellWidthPx(slots)
         RemoteRow(modifier = RemoteModifier.fillMaxWidth()) {
-          for (slot in 0 until columns) {
+          for (slot in 0 until slots) {
             if (slot > 0) RemoteBox(modifier = RemoteModifier.width(HaGridLayout.GAP_DP.rdp))
             val index = row.getOrNull(slot)
             RemoteBox(modifier = RemoteModifier.weight(1f)) {
               if (index != null) {
-                CompositionLocalProvider(LocalGridCellWidthPx provides cellWidthPx) { cell(index) }
+                CompositionLocalProvider(LocalGridCellWidthPx provides widthPx) { cell(index) }
               }
             }
           }
