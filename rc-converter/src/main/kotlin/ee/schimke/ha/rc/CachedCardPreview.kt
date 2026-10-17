@@ -222,10 +222,12 @@ fun CachedCardPreview(
       snapshot != null &&
       (entityIds.isNotEmpty() || template != null)
   ) {
-    LaunchedEffect(namedValues, snapshot) {
+    // Keyed on the clock too: a template's time-derived bindings change when the injected clock
+    // does.
+    LaunchedEffect(namedValues, snapshot, clock) {
       pushSnapshotBindings(NamedValueWriter(namedValues), bindingsFor(snapshot), pushedNamed)
     }
-    LaunchedEffect(playerHolder.value, snapshot) {
+    LaunchedEffect(playerHolder.value, snapshot, clock) {
       val updater = playerHolder.value ?: return@LaunchedEffect
       pushSnapshotBindings(ViewPlayerWriter(updater), bindingsFor(snapshot), pushedView)
     }
