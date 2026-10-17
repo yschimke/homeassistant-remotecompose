@@ -282,6 +282,28 @@ class GridLayoutPlaybackTest {
     assertCellsFit(160, perRow = 1, yDp = 80f, "buttons at 160 dp")
   }
 
+  /**
+   * A grid nested in a horizontal stack lays its rows out for its own half of the launcher widget,
+   * not the whole widget: at 400 dp each grid has (400 − 8) ÷ 2 = 196 dp, so its four 80 dp buttons
+   * go two to a row as squares. Planned from the widget's 400 dp, all four would share one row at
+   * about 43 dp each.
+   */
+  @Test
+  fun aLauncherGridInsideAStackFitsItsOwnShare() {
+    val grid = fourButtons.raw.toString()
+    val stack = card("""{"type":"horizontal-stack","cards":[$grid,$grid]}""")
+    val (height) =
+      heightsAt(
+        "stacked-grids-launcher",
+        stack,
+        400,
+        mode = CardSizeMode.Fixed,
+        capturePerWidth = true,
+      )
+    val cell = (196f - 8f) / 2f
+    assertNear(cell * 2 + 8f, height, "two rows of two square buttons in each half")
+  }
+
   @Test
   fun aWidgetGridOfTilesIsOneColumnOnANarrowSlot() {
     val (w200, w160) = heightsAt("tiles-fixed", sixTiles, 200, 160, mode = CardSizeMode.Fixed)

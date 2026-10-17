@@ -38,16 +38,32 @@ fun RemoteHaVerticalStack(
   }
 }
 
+/**
+ * HA `horizontal-stack`: [cellCount] cells side by side, sharing the width equally as HA's `flex: 1
+ * 1 0` children do, with [HORIZONTAL_STACK_GAP_DP] between them. Gaps are fixed-width spacer boxes
+ * rather than `spacedBy`, for the same reason as [RemoteHaGrid]: the Compose card player shares a
+ * weighted row's width before subtracting arrangement spacing. Without weights, a card that fills
+ * its width (a grid, an entities list) would take the whole row.
+ */
 @Composable
 @RemoteComposable
 fun RemoteHaHorizontalStack(
+  cellCount: Int,
   modifier: RemoteModifier = RemoteModifier,
-  content: @Composable @RemoteComposable () -> Unit,
+  cell: @Composable @RemoteComposable (index: Int) -> Unit,
 ) {
-  RemoteRow(modifier = modifier, horizontalArrangement = RemoteArrangement.spacedBy(8.rdp)) {
-    CompositionLocalProvider(LocalGridCellWidthPx provides null) { content() }
+  RemoteRow(modifier = modifier.fillMaxWidth()) {
+    CompositionLocalProvider(LocalGridCellWidthPx provides null) {
+      for (index in 0 until cellCount) {
+        if (index > 0) RemoteBox(modifier = RemoteModifier.width(HORIZONTAL_STACK_GAP_DP.rdp))
+        RemoteBox(modifier = RemoteModifier.weight(1f)) { cell(index) }
+      }
+    }
   }
 }
+
+/** The gap between a [RemoteHaHorizontalStack]'s cells, in dp. */
+const val HORIZONTAL_STACK_GAP_DP: Int = 8
 
 /**
  * HA `grid` card — [cellCount] cells in rows of [perRow], each row's cells equal width.

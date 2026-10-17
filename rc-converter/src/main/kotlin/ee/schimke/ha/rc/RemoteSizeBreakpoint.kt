@@ -209,3 +209,29 @@ private const val BreakpointExpressionPrefix = "__terrazzo_breakpoint_"
 data class WidgetCaptureSizeDp(val widthDp: Int, val heightDp: Int)
 
 internal val LocalWidgetCaptureSizeDp = staticCompositionLocalOf<WidgetCaptureSizeDp?> { null }
+
+/**
+ * Runs [content] with the launcher capture size narrowed to one child's share of it, for a
+ * container that splits its room into [columns] × [rows] equal parts with [gapDp] between them (a
+ * grid's cells, a horizontal stack's columns). A nested grid or size gate then picks its layout for
+ * the room it will actually be played in, not the whole widget's. No-op outside a launcher capture.
+ */
+@Composable
+internal fun ProvideChildCaptureShare(
+  columns: Int,
+  rows: Int = 1,
+  gapDp: Int,
+  content: @Composable () -> Unit,
+) {
+  val size = LocalWidgetCaptureSizeDp.current
+  if (size == null || columns < 1 || rows < 1) {
+    content()
+    return
+  }
+  fun share(total: Int, parts: Int): Int = ((total - gapDp * (parts - 1)) / parts).coerceAtLeast(0)
+  CompositionLocalProvider(
+    LocalWidgetCaptureSizeDp provides
+      WidgetCaptureSizeDp(share(size.widthDp, columns), share(size.heightDp, rows)),
+    content = content,
+  )
+}

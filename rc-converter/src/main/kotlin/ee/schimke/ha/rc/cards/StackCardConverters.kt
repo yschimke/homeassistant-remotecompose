@@ -19,11 +19,13 @@ import ee.schimke.ha.rc.LocalCardRegistry
 import ee.schimke.ha.rc.LocalCardSizeMode
 import ee.schimke.ha.rc.LocalGridSquareCells
 import ee.schimke.ha.rc.LocalWidgetCaptureSizeDp
+import ee.schimke.ha.rc.ProvideChildCaptureShare
 import ee.schimke.ha.rc.RemoteSizeBreakpoint
 import ee.schimke.ha.rc.RenderChild
 import ee.schimke.ha.rc.SystemHaClock
 import ee.schimke.ha.rc.UNSUPPORTED_CARD_TYPE
 import ee.schimke.ha.rc.childrenDataSignature
+import ee.schimke.ha.rc.components.HORIZONTAL_STACK_GAP_DP
 import ee.schimke.ha.rc.components.HaAction
 import ee.schimke.ha.rc.components.HaGridLayout
 import ee.schimke.ha.rc.components.ProvideChildCardBindings
@@ -106,7 +108,17 @@ class HorizontalStackCardConverter : CardConverter {
 
   @Composable
   override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
-    RemoteHaHorizontalStack(modifier = modifier) { RenderChildren(card, snapshot) }
+    // HA splits a horizontal stack's width evenly; each child is captured for its own column.
+    val children = childCards(card)
+    ProvideChildCaptureShare(columns = children.size, gapDp = HORIZONTAL_STACK_GAP_DP) {
+      CompositionLocalProvider(LocalGridSquareCells provides false) {
+        RemoteHaHorizontalStack(cellCount = children.size, modifier = modifier) { k ->
+          ProvideChildCardBindings(k) {
+            RenderChild(children[k], snapshot, RemoteModifier.fillMaxWidth())
+          }
+        }
+      }
+    }
   }
 }
 
@@ -197,7 +209,12 @@ class GridCardConverter : CardConverter {
       if (captureWidthDp != null) {
         val perRow =
           HaGridLayout.perRowAt(captureWidthDp.toFloat(), children.size, columns, minCellDp)
-        GridCells(children, squareCells, snapshot, perRow, modifier)
+        val rows = (children.size + perRow - 1) / perRow
+        // Each cell is captured for its own share of the widget, so a nested grid or size gate
+        // lays out for its cell rather than the whole widget.
+        ProvideChildCaptureShare(columns = perRow, rows = rows, gapDp = HaGridLayout.GAP_DP) {
+          GridCells(children, squareCells, snapshot, perRow, modifier)
+        }
       } else if (threshold == null) {
         GridCells(children, squareCells, snapshot, plan.widePerRow, modifier)
       } else {
