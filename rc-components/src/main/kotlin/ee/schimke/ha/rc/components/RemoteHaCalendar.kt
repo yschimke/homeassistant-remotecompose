@@ -62,12 +62,15 @@ fun RemoteHaCalendar(data: HaCalendarData, modifier: RemoteModifier = RemoteModi
         )
       }
       if (data.events.isEmpty()) {
-        RemoteText(
-          text = "No upcoming events".rs,
-          color = theme.secondaryText,
-          fontSize = HaType.Label,
-          style = haTextStyle(),
-        )
+        if (visualFamily() == HaVisualFamily.Console)
+          ConsoleTapeLabel("No upcoming events".rs, compact = false)
+        else
+          RemoteText(
+            text = "No upcoming events".rs,
+            color = theme.secondaryText,
+            fontSize = HaType.Label,
+            style = haTextStyle(),
+          )
       } else {
         data.events.forEachIndexed { i, event -> Event(i, event, theme) }
       }
@@ -134,12 +137,15 @@ fun RemoteHaCalendarIdentity(data: HaCalendarData, modifier: RemoteModifier = Re
           overflow = TextOverflow.Ellipsis,
         )
       } else {
-        RemoteText(
-          text = "No upcoming events".rs,
-          color = theme.secondaryText,
-          fontSize = HaType.Body,
-          style = haTextStyle(),
-        )
+        if (visualFamily() == HaVisualFamily.Console)
+          ConsoleTapeLabel("No upcoming events".rs, compact = true)
+        else
+          RemoteText(
+            text = "No upcoming events".rs,
+            color = theme.secondaryText,
+            fontSize = HaType.Body,
+            style = haTextStyle(),
+          )
       }
     }
   }

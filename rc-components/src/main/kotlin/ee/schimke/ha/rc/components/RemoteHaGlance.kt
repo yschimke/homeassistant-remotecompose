@@ -152,7 +152,11 @@ fun RemoteHaGlanceCell(data: HaGlanceCellData, modifier: RemoteModifier = Remote
       fontSize = HaType.Label,
       style = haTextStyle(),
     )
-    RemoteBox(modifier = RemoteModifier.padding(vertical = 4.rdp)) {
+    RemoteBox(
+      modifier =
+        RemoteModifier.padding(vertical = 4.rdp)
+          .then(if (data.tapAction != HaAction.None) consoleKeyChrome(accent) else RemoteModifier)
+    ) {
       HaStateIcon(
         icon = data.icon,
         accent = data.accent,

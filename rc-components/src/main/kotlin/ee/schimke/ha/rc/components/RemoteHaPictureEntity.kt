@@ -101,6 +101,11 @@ fun RemoteHaPictureEntity(
             .background(accent.copy(alpha = accent.alpha * 0.10f.rf)),
         contentAlignment = RemoteAlignment.Center,
       ) {
+        if (visualFamily() == HaVisualFamily.Console)
+          ConsoleTapeLabel(
+            (if (data.imageUrl == null) "No image" else "Image unavailable").rs,
+            RemoteModifier.padding(6.rdp),
+          )
         if (data.imageUrl != null) {
           // The encoding form is picked by the embedding
           // surface via [LocalPictureImageStrategy]:
@@ -143,6 +148,22 @@ fun RemoteHaPictureEntity(
             // Inline strategy with no pre-fetched bytes for
             // this URL — fall back to the icon path so the
             // tile renders something instead of a hole.
+            if (visualFamily() != HaVisualFamily.Console)
+              HaStateIcon(
+                icon = data.icon,
+                activeIcon = data.accent.activeIcon,
+                initiallyOn = data.accent.initiallyOn,
+                isOn = isOnBinding,
+                activeWhenUnavailable = data.accent.activeIconWhenUnavailable,
+                initiallyAvailable = data.accent.initiallyAvailable,
+                isAvailable = isAvailable,
+                tint = accent.copy(alpha = accent.alpha * 0.55f.rf),
+                contentDescription = entityName(data.entityId, data.name),
+                modifier = RemoteModifier.size(40.rdp),
+              )
+          }
+        } else {
+          if (visualFamily() != HaVisualFamily.Console)
             HaStateIcon(
               icon = data.icon,
               activeIcon = data.accent.activeIcon,
@@ -155,20 +176,6 @@ fun RemoteHaPictureEntity(
               contentDescription = entityName(data.entityId, data.name),
               modifier = RemoteModifier.size(40.rdp),
             )
-          }
-        } else {
-          HaStateIcon(
-            icon = data.icon,
-            activeIcon = data.accent.activeIcon,
-            initiallyOn = data.accent.initiallyOn,
-            isOn = isOnBinding,
-            activeWhenUnavailable = data.accent.activeIconWhenUnavailable,
-            initiallyAvailable = data.accent.initiallyAvailable,
-            isAvailable = isAvailable,
-            tint = accent.copy(alpha = accent.alpha * 0.55f.rf),
-            contentDescription = entityName(data.entityId, data.name),
-            modifier = RemoteModifier.size(40.rdp),
-          )
         }
         if (data.frameStamp != null) {
           RemoteBox(

@@ -84,12 +84,15 @@ fun RemoteHaStatisticsGraph(
         style = haTextStyle(),
       )
       if (data.rows.isEmpty()) {
-        RemoteText(
-          text = "No entities".rs,
-          color = theme.secondaryText,
-          fontSize = HaType.Body,
-          style = haTextStyle(),
-        )
+        if (visualFamily() == HaVisualFamily.Console)
+          ConsoleTapeLabel("No entities".rs, compact = true)
+        else
+          RemoteText(
+            text = "No entities".rs,
+            color = theme.secondaryText,
+            fontSize = HaType.Body,
+            style = haTextStyle(),
+          )
       } else if (data.stacked) {
         StackedBars(data.rows, theme)
         data.rows.forEach { row -> Legend(row, theme) }
@@ -126,12 +129,14 @@ private fun BarRow(row: HaHistoryGraphRow, theme: RemoteHaTheme) {
     )
   }
   if (row.points.isEmpty()) {
-    RemoteText(
-      text = "No samples".rs,
-      color = theme.secondaryText,
-      fontSize = HaType.Caption,
-      style = haTextStyle(),
-    )
+    if (visualFamily() == HaVisualFamily.Console) ConsoleTapeLabel("No samples".rs, compact = true)
+    else
+      RemoteText(
+        text = "No samples".rs,
+        color = theme.secondaryText,
+        fontSize = HaType.Caption,
+        style = haTextStyle(),
+      )
   } else {
     Bars(row.entityId, row.points, row.accent, theme)
   }

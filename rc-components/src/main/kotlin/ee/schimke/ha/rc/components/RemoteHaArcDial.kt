@@ -437,7 +437,8 @@ private fun StepperButton(
       RemoteModifier.then(click)
         .size(36.rdp)
         .clip(haControlShape(18, round = true))
-        .border(1.rdp, theme.divider, haControlShape(18, round = true)),
+        .border(1.rdp, theme.divider, haControlShape(18, round = true))
+        .then(consoleKeyChrome(accent)),
     contentAlignment = RemoteAlignment.Center,
   ) {
     RemoteIcon(

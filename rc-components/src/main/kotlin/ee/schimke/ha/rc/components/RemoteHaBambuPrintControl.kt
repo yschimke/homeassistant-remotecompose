@@ -53,12 +53,15 @@ fun RemoteHaBambuPrintControl(
       )
       val buttons = listOfNotNull(data.pause, data.resume, data.stop)
       if (buttons.isEmpty()) {
-        RemoteText(
-          text = cardText("status", data.statusLine ?: ""),
-          color = theme.primaryText,
-          fontSize = HaType.Body,
-          style = haTextStyle(),
-        )
+        if (visualFamily() == HaVisualFamily.Console)
+          ConsoleTapeLabel(cardText("status", data.statusLine ?: "No controls available"))
+        else
+          RemoteText(
+            text = cardText("status", data.statusLine ?: ""),
+            color = theme.primaryText,
+            fontSize = HaType.Body,
+            style = haTextStyle(),
+          )
       } else {
         RemoteRow(
           modifier = RemoteModifier.fillMaxWidth(),

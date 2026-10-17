@@ -155,6 +155,20 @@ private fun TileIcon(data: HaTileData, look: HaEntityLook, renderChip: Boolean) 
         modifier = RemoteModifier.size(20.rdp),
       )
     }
+  } else if (visualFamily() == HaVisualFamily.Console && data.tapAction is HaAction.CallService) {
+    RemoteBox(
+      modifier = RemoteModifier.size(24.rdp).then(consoleKeyChrome(accent)),
+      contentAlignment = RemoteAlignment.Center,
+    ) {
+      HaStateIcon(
+        icon = data.icon,
+        accent = data.accent,
+        look = look,
+        tint = accent,
+        contentDescription = null,
+        modifier = RemoteModifier.size(18.rdp),
+      )
+    }
   } else {
     HaStateIcon(
       icon = data.icon,
@@ -199,15 +213,24 @@ fun RemoteHaTileCompact(data: HaTileData, modifier: RemoteModifier = RemoteModif
   ) {
     RemoteRow(verticalAlignment = RemoteAlignment.CenterVertically) {
       // Static like the accent: this tier registers no `is_on` binding.
-      HaStateIcon(
-        icon = data.icon,
-        accent = data.accent,
-        look = look,
-        tint = accent,
-        // Decorative: the name is drawn beside it.
-        contentDescription = null,
-        modifier = RemoteModifier.size(24.rdp),
-      )
+      RemoteBox(
+        modifier =
+          RemoteModifier.size(24.rdp)
+            .then(
+              if (data.tapAction != HaAction.None) consoleKeyChrome(accent) else RemoteModifier
+            ),
+        contentAlignment = RemoteAlignment.Center,
+      ) {
+        HaStateIcon(
+          icon = data.icon,
+          accent = data.accent,
+          look = look,
+          tint = accent,
+          // Decorative: the name is drawn beside it.
+          contentDescription = null,
+          modifier = RemoteModifier.size(24.rdp),
+        )
+      }
       RemoteColumn(modifier = RemoteModifier.padding(start = 10.rdp)) {
         RemoteText(
           text = entityName(data.entityId, data.name),
@@ -285,14 +308,21 @@ fun RemoteHaIconChip(data: HaTileData, modifier: RemoteModifier = RemoteModifier
     horizontalAlignment = RemoteAlignment.CenterHorizontally,
   ) {
     // Static like the accent: this tier registers no `is_on` binding.
-    HaStateIcon(
-      icon = data.icon,
-      accent = data.accent,
-      look = look,
-      tint = accent,
-      contentDescription = entityName(data.entityId, data.name),
-      modifier = RemoteModifier.size(32.rdp),
-    )
+    RemoteBox(
+      modifier =
+        RemoteModifier.size(32.rdp)
+          .then(if (data.tapAction != HaAction.None) consoleKeyChrome(accent) else RemoteModifier),
+      contentAlignment = RemoteAlignment.Center,
+    ) {
+      HaStateIcon(
+        icon = data.icon,
+        accent = data.accent,
+        look = look,
+        tint = accent,
+        contentDescription = entityName(data.entityId, data.name),
+        modifier = RemoteModifier.size(32.rdp),
+      )
+    }
     RemoteBox(modifier = RemoteModifier.padding(top = 6.rdp)) {
       // The chip's only text, so it reads as the value: primary ink, a step above a caption.
       RemoteText(
