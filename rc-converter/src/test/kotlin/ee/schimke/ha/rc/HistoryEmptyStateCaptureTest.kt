@@ -67,7 +67,12 @@ class HistoryEmptyStateCaptureTest {
   }
 
   /** The text of [card] captured in a fixed launcher / Wear cell [widthDp] × [heightDp]. */
-  private fun fixedCellText(card: CardConfig, widthDp: Int, heightDp: Int): String = runBlocking {
+  private fun fixedCellText(
+    card: CardConfig,
+    widthDp: Int,
+    heightDp: Int,
+    axis: BreakpointAxis = BreakpointAxis.Width,
+  ): String = runBlocking {
     val context = org.robolectric.RuntimeEnvironment.getApplication()
     val density = context.resources.displayMetrics.density
     val converter = registry.get(card.type)!!
@@ -82,7 +87,9 @@ class HistoryEmptyStateCaptureTest {
           ),
         profile = RcPlatformProfiles.ANDROIDX,
       ) {
-        ProvideCardSizeMode(CardSizeMode.Fixed) { converter.Render(card, snapshot) }
+        ProvideCardSizeMode(CardSizeMode.Fixed) {
+          ProvideFixedCanvasAxis(axis) { converter.Render(card, snapshot) }
+        }
       }
     String(captured.bytes, Charsets.UTF_8)
   }
@@ -100,17 +107,26 @@ class HistoryEmptyStateCaptureTest {
     )
 
   /**
-   * A Wear small slot (184 dp wide after padding, over the identity threshold) and a narrow
-   * launcher cell (identity tier) both use the short "No history", never the full sentence, which
-   * can't fit their fixed height.
+   * A Wear small slot (184 dp wide after padding, over the identity threshold, too short for a
+   * title over a sentence) uses the short "No history", never the full sentence.
    */
   @Test
-  fun fixedCellsUseTheShortEmptyState() {
-    for ((w, h) in listOf(184 to 44, 120 to 100)) {
-      val text = fixedCellText(historyGraph("Temperature"), w, h)
-      assertTrue("No history" in text, "$w×$h shows the short empty state")
-      assertFalse("No history in the" in text, "$w×$h never shows the full sentence")
-    }
+  fun aWearSlotUsesTheShortEmptyState() {
+    val text = fixedCellText(historyGraph("Temperature"), 184, 44, BreakpointAxis.Height)
+    assertTrue("No history" in text, "the Wear slot shows the short empty state")
+    assertFalse("No history in the" in text, "the Wear slot never shows the full sentence")
+  }
+
+  /**
+   * A launcher widget gates on width at runtime, so its document carries both tiers: the narrow
+   * identity tier's short "No history", and the wide tier's full empty state, which has room in a
+   * launcher cell (the one-line Wear form would leave most of a large widget blank).
+   */
+  @Test
+  fun aLauncherWidgetKeepsTheFullEmptyState() {
+    val text = fixedCellText(historyGraph("Temperature"), 288, 252)
+    assertTrue("No history in the last 24 hours" in text, "the wide tier keeps the full sentence")
+    assertTrue("No history" in text.replace("No history in the last 24 hours", ""))
   }
 
   @Test

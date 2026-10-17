@@ -16,6 +16,7 @@ import ee.schimke.ha.rc.CardSnapshotBindings
 import ee.schimke.ha.rc.DesignTemplateInput
 import ee.schimke.ha.rc.HaStateColor
 import ee.schimke.ha.rc.LocalCardSizeMode
+import ee.schimke.ha.rc.LocalFixedCanvasAxis
 import ee.schimke.ha.rc.RemoteSizeBreakpoint
 import ee.schimke.ha.rc.cardDataSignature
 import ee.schimke.ha.rc.cardEntityIds
@@ -169,7 +170,10 @@ class HistoryGraphCardConverter : CardConverter {
       // the full graph, which fills the larger cell by drawing every
       // series. Width, not height: every Fixed-mode surface pins
       // width and lets height follow (see EntitiesCardConverter).
-      CardSizeMode.Fixed ->
+      CardSizeMode.Fixed -> {
+        // Only a Wear slot's height is too small for the empty state's title over its sentence;
+        // a launcher widget's cell has room for it, and the one-line form would leave it blank.
+        val compactEmptyState = LocalFixedCanvasAxis.current == BreakpointAxis.Height
         RemoteSizeBreakpoint(
           thresholdsDp = intArrayOf(BULK_IDENTITY_THRESHOLD_DP),
           modifier = modifier,
@@ -182,10 +186,11 @@ class HistoryGraphCardConverter : CardConverter {
               data,
               RemoteModifier.fillMaxWidth(),
               singleEmptyState = true,
-              compactEmptyState = true,
+              compactEmptyState = compactEmptyState,
             )
           }
         }
+      }
     }
   }
 }
