@@ -16,7 +16,7 @@ const variableOffset = unsupportedTemplate.indexOf(Buffer.from('light.s0.name'))
 assert.ok(variableOffset >= 0);
 Buffer.from('card.bad.name').copy(unsupportedTemplate, variableOffset);
 const unsupportedSha = createHash('sha256').update(unsupportedTemplate).digest('hex');
-const frontend = `${root}home-assistant/custom_components/terrazzo/frontend/`;
+const frontend = `${root}custom_components/terrazzo/frontend/`;
 
 ['library', 'local-url', 'remote-url'].forEach((source) => test(`HA custom card uses signed-in state/actions, updates live and renders real RC bytes (${source})`, async () => {
   const browser = await chromium.launch({ headless: true });
@@ -163,6 +163,15 @@ test('panel passes only same-origin session capability, refreshes auth and clean
     assert.equal(result.fresh, true);
     assert.equal(result.path, 'https://ha.test/terrazzo-static/wasm/index.html?ha-panel');
     assert.equal(result.dashboard, 'wall-panel');
+    assert.deepEqual(await page.evaluate(() => {
+      const panel = document.querySelector('terrazzo-panel');
+      history.replaceState(null, '', '/terrazzo?dashboard=second-panel');
+      const explicit = panel.frame.terrazzoHost.getDashboard();
+      history.replaceState(null, '', '/terrazzo?dashboard=');
+      const picker = panel.frame.terrazzoHost.getDashboard();
+      history.replaceState(null, '', '/terrazzo');
+      return {explicit, picker, configured: panel.frame.terrazzoHost.getDashboard()};
+    }), {explicit:'second-panel', picker:'', configured:'wall-panel'});
     assert.equal(result.denied, true);
     assert.equal(result.reattached, result.path);
   } finally { await browser.close(); }

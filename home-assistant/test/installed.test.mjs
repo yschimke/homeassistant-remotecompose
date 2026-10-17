@@ -56,6 +56,15 @@ test('installed HA /terrazzo and Lovelace custom card render and act as the sign
       return (await result.json()).state === 'on';
     });
     await page.screenshot({path:`${evidence}/dashboard-after.png`});
+    // Every dashboard is available, including ones hidden from HA's sidebar.
+    await page.goto(`${base}/terrazzo?dashboard=`);
+    await page.frameLocator('terrazzo-panel iframe').getByRole('button', {name:'Second panel second-panel',exact:true}).click({force:true});
+    await page.frameLocator('terrazzo-panel iframe').getByText('Second dashboard is selected', {exact:true}).waitFor();
+    await page.screenshot({path:`${evidence}/dashboard-selected.png`});
+    await page.goto(`${base}/terrazzo?dashboard=second-panel`);
+    await page.frameLocator('terrazzo-panel iframe').getByText('Second dashboard is selected', {exact:true}).waitFor();
+    await page.goto(`${base}/terrazzo?dashboard=home`);
+    await page.frameLocator('terrazzo-panel iframe').getByText(/This dashboard is unavailable|needs Home Assistant's frontend/).waitFor();
     await page.goto(`${base}/wall-panel/0`);
     const card = page.locator('remote-compose-card');
     await card.waitFor({timeout:60_000});

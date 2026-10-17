@@ -42,6 +42,7 @@ jobs:
     uses: ./.github/workflows/release-build.yml
     with:
       tag: ${{ needs.release-please.outputs.tag_name }}
+      publish_home_assistant: true
     secrets: inherit
     permissions:
       contents: write

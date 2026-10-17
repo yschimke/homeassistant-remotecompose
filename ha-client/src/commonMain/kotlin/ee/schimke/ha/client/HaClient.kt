@@ -173,7 +173,8 @@ class HaClient(
   }
 
   suspend fun fetchDashboard(urlPath: String? = null): Dashboard {
-    val result = runCommand("lovelace/config") { if (urlPath != null) put("url_path", urlPath) }
+    val result = fetchDashboardConfig(urlPath)
+    if (!result.hasRenderableViews()) throw UnsupportedDashboardException()
     return json.decodeFromJsonElement(Dashboard.serializer(), result)
   }
 

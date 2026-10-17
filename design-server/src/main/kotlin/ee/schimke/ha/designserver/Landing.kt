@@ -72,6 +72,7 @@ object Landing {
       append("<a class=\"button\" href=\"${esc(site.storeUrl)}\">Get the app</a>")
     else append("<a class=\"button\" href=\"$SOURCE_URL\">Get the app</a>")
     append("<a class=\"button quiet\" href=\"#designer\">Design your own cards</a>")
+    append("<a class=\"button quiet\" href=\"#home-assistant\">Install in Home Assistant</a>")
     append("</div></div>")
     append("<div class=\"phones\">")
     for (shot in SCREENSHOTS) {
@@ -104,6 +105,21 @@ object Landing {
         "stays on your phone.",
     )
     append("</section>")
+
+    append("<section id=\"home-assistant\" class=\"designer\">")
+    append("<p class=\"eyebrow\">Home Assistant integration</p>")
+    append("<h2>A dashboard for your wall panel</h2>")
+    append(
+      "<p class=\"lede\">Install Terrazzo in Home Assistant for local dashboards at " +
+        "<code>/terrazzo</code> and Remote Compose cards in Lovelace. " +
+        "Use HACS to track published releases and install updates, or install a release ZIP manually. " +
+        "Home Assistant needs a restart after installation or an update.</p>"
+    )
+    append("<div class=\"actions\">")
+    append(
+      "<a class=\"button\" href=\"$SOURCE_URL/blob/main/docs/HOME_ASSISTANT.md\">Installation and updates</a>"
+    )
+    append("</div></section>")
 
     append("<section id=\"designer\" class=\"designer\">")
     append("<p class=\"eyebrow\">Card designer</p>")
