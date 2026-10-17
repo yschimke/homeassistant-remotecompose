@@ -108,6 +108,19 @@ interface CardConverter {
   fun designBindings(card: CardConfig, snapshot: HaSnapshot): CardSnapshotBindings? = null
 
   /**
+   * [designBindings] with "now" read from [clock]. Template playback calls this one, passing the
+   * [LocalHaClock] in scope, so a binding derived from the time (a clock card's date line) agrees
+   * with what [Render] reads from the same clock on the direct path. A converter whose bindings
+   * read the time overrides both forms, the two-argument one passing [SystemHaClock] (the
+   * [LocalHaClock] default); every other converter overrides only the two-argument form.
+   */
+  fun designBindings(
+    card: CardConfig,
+    snapshot: HaSnapshot,
+    clock: HaClock,
+  ): CardSnapshotBindings? = designBindings(card, snapshot)
+
+  /**
    * The action to run for a tap on slot [slot] of this card's design template, whose bytes encode
    * [templateAction] (with the slot's entity id), or null for the slot's default tap. Templates are
    * remote content, so an implementation never returns [templateAction] itself: it may only use it

@@ -474,7 +474,7 @@ class CardDesignTemplatesEndToEndTest {
       playback.resolveTap(ee.schimke.ha.rc.components.HaAction.MoreInfo("sensor.s2"), snapshot),
     )
     // Children's card-level bindings are namespaced per child; slots are one sequence.
-    val bindings = playback.bindings(snapshot)
+    val bindings = playback.bindings(snapshot, SystemHaClock)
     assertEquals("Kitchen", bindings.strings["light.s0.name"])
     assertTrue("switch.s1.state" in bindings.strings)
   }

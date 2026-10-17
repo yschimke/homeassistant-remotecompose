@@ -9,6 +9,7 @@ import ee.schimke.ha.rc.CardDesignTemplates
 import ee.schimke.ha.rc.CardRegistry
 import ee.schimke.ha.rc.CardSnapshotBindings
 import ee.schimke.ha.rc.DesignTemplateInput
+import ee.schimke.ha.rc.HaClock
 import ee.schimke.ha.rc.components.CARD_BINDING_PREFIX
 import ee.schimke.ha.rc.components.HaAction
 import ee.schimke.ha.rc.components.childCardBindingPrefix
@@ -103,16 +104,16 @@ internal object CompositeDesign {
 
   /**
    * Every child's bindings — its slot bindings and its own card-level ones — renumbered into the
-   * container's slot sequence and its `card.c<k>` namespace.
+   * container's slot sequence and its `card.c<k>` namespace, read at [clock].
    */
-  fun bindings(card: CardConfig, snapshot: HaSnapshot): CardSnapshotBindings {
+  fun bindings(card: CardConfig, snapshot: HaSnapshot, clock: HaClock): CardSnapshotBindings {
     var merged = CardSnapshotBindings(emptyMap(), emptyMap(), emptyMap(), emptyMap())
     var offset = 0
     children(card).forEachIndexed { k, child ->
       val converter = registry.get(child.type)
       val own =
         CardDesignSlots.slotBindings(child, snapshot).let { slots ->
-          converter?.designBindings(child, snapshot)?.let { slots + it } ?: slots
+          converter?.designBindings(child, snapshot, clock)?.let { slots + it } ?: slots
         }
       val childPrefix = childCardBindingPrefix(CARD_BINDING_PREFIX, k)
       fun key(name: String) =

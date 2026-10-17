@@ -18,6 +18,7 @@ import androidx.compose.remote.creation.compose.modifier.fillMaxSize
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.modifier.size
+import androidx.compose.remote.creation.compose.modifier.width
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.runtime.Composable
@@ -164,49 +165,70 @@ private fun CurrentRow(data: HaWeatherForecastData, theme: RemoteHaTheme) {
  * Bottom strip of supplementary current-conditions read-outs — each a small inset chip with an
  * icon, value, and label. Mirrors the forecast strip's spread-and-centre column layout so the two
  * rows read as one coherent block.
+ *
+ * The chips share the row's width equally, separated by fixed-width spacers rather than a
+ * `spacedBy` arrangement: the RemoteCompose row divides the full width among weighted children
+ * without subtracting `spacedBy` gaps (fixed-size children it does subtract), so with four chips
+ * and three 8 dp gaps the last chip ran 24 dp past the card edge and was clipped. With spacers the
+ * chips sum to exactly the row's width, and a value too long for its share ellipsises instead of
+ * pushing the row wider. The gap and the chips' side padding are kept tight so a four-chip row
+ * still fits a value like "1012.7 hPa" on a typical phone.
  */
 @Composable
 private fun ExtraInfoRow(extras: List<HaWeatherExtra>, theme: RemoteHaTheme) {
   RemoteRow(
     modifier = RemoteModifier.fillMaxWidth(),
-    horizontalArrangement = RemoteArrangement.spacedBy(8.rdp),
     verticalAlignment = RemoteAlignment.CenterVertically,
   ) {
     extras.forEachIndexed { i, extra ->
-      RemoteColumn(
-        modifier =
-          RemoteModifier.weight(1f)
-            .clip(haControlShape(10))
-            .background(theme.divider)
-            .padding(horizontal = 4.rdp, vertical = 8.rdp),
-        horizontalAlignment = RemoteAlignment.CenterHorizontally,
-        verticalArrangement = RemoteArrangement.spacedBy(3.rdp),
-      ) {
-        RemoteIcon(
-          imageVector = extra.icon.toRemoteImageVector(),
-          contentDescription = extra.label.rs,
-          modifier = RemoteModifier.size(16.rdp),
-          tint = theme.secondaryText,
-        )
-        RemoteText(
-          text = cardText("extra.$i", extra.value),
-          color = theme.primaryText,
-          fontSize = HaType.Body,
-          fontWeight = FontWeight.Medium,
-          style = haTextStyle(),
-          maxLines = 1,
-          overflow = TextOverflow.Ellipsis,
-        )
-        RemoteText(
-          text = extra.label.rs,
-          color = theme.secondaryText,
-          fontSize = HaType.Micro,
-          style = haTextStyle(),
-          maxLines = 1,
-          overflow = TextOverflow.Ellipsis,
-        )
-      }
+      if (i > 0) RemoteBox(modifier = RemoteModifier.width(ChipGapDp.rdp))
+      ExtraChip(i, extra, theme, RemoteModifier.weight(1f))
     }
+  }
+}
+
+/** Gap between two condition chips, in dp. */
+private const val ChipGapDp = 6
+
+@Composable
+private fun ExtraChip(
+  i: Int,
+  extra: HaWeatherExtra,
+  theme: RemoteHaTheme,
+  modifier: RemoteModifier,
+) {
+  RemoteColumn(
+    modifier =
+      modifier
+        .clip(haControlShape(10))
+        .background(theme.divider)
+        .padding(horizontal = 3.rdp, vertical = 8.rdp),
+    horizontalAlignment = RemoteAlignment.CenterHorizontally,
+    verticalArrangement = RemoteArrangement.spacedBy(3.rdp),
+  ) {
+    RemoteIcon(
+      imageVector = extra.icon.toRemoteImageVector(),
+      contentDescription = extra.label.rs,
+      modifier = RemoteModifier.size(16.rdp),
+      tint = theme.secondaryText,
+    )
+    RemoteText(
+      text = cardText("extra.$i", extra.value),
+      color = theme.primaryText,
+      fontSize = HaType.Body,
+      fontWeight = FontWeight.Medium,
+      style = haTextStyle(),
+      maxLines = 1,
+      overflow = TextOverflow.Ellipsis,
+    )
+    RemoteText(
+      text = extra.label.rs,
+      color = theme.secondaryText,
+      fontSize = HaType.Micro,
+      style = haTextStyle(),
+      maxLines = 1,
+      overflow = TextOverflow.Ellipsis,
+    )
   }
 }
 
@@ -228,7 +250,6 @@ fun RemoteHaWeatherForecastWide(
         .then(cardChrome(theme.cardBackground, theme.divider))
         .padding(horizontal = 10.rdp, vertical = 8.rdp),
     verticalAlignment = RemoteAlignment.CenterVertically,
-    horizontalArrangement = RemoteArrangement.spacedBy(8.rdp),
   ) {
     RemoteIcon(
       imageVector = data.icon.toRemoteImageVector(),
@@ -236,8 +257,11 @@ fun RemoteHaWeatherForecastWide(
       modifier = RemoteModifier.size(28.rdp),
       tint = theme.primaryText,
     )
+    // The 8 dp gaps either side of the text are its own padding, not a `spacedBy` arrangement:
+    // the RemoteCompose row doesn't subtract `spacedBy` gaps from the weighted share, which pushed
+    // the temperature 16 dp past the slot's edge (clipped on Wear and the 4×1 widget).
     RemoteColumn(
-      modifier = RemoteModifier.weight(1f),
+      modifier = RemoteModifier.weight(1f).padding(horizontal = 8.rdp),
       verticalArrangement = RemoteArrangement.Center,
     ) {
       RemoteText(
