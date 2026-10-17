@@ -76,4 +76,22 @@ and device-match selection remain mobile features; the new wire field carries
 only explicit card/type **style** overrides. Missing or unrecognized overrides
 inherit the watch-wide style. The watch still owns the widget palette.
 
+## GitHub CI runtime evidence
+
+[Run 39051677625](https://github.com/yschimke/homeassistant-remotecompose/actions/runs/39051677625)
+booted the Wear OS 7/API 37 small round emulator with KVM, installed the app,
+and captured this actual activity frame at 384 × 384 px:
+
+![Wear app running in GitHub CI](ci-app-launch.png)
+
+The pinned landing page is readable; the dashboard entry continues below the
+round viewport in its scrollable list. This is the initial empty state, not an
+installed widget or a before/after comparison. All three instrumentation tests
+failed during Espresso initialization with
+`NoSuchMethodException: android.hardware.input.InputManager.getInstance`.
+The test runtime now explicitly requests Espresso 3.7.0, which includes the
+[upstream API 37 compatibility fix](https://github.com/android/android-test/issues/2507).
+Navigation assertions and system widget installation remain unverified pending
+the next run; the original local VM boot limitations above describe earlier attempts.
+
 Hive session: https://hive.codes/?session=session-1792140217260-d26d7d

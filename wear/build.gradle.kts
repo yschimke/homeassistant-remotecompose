@@ -153,6 +153,8 @@ dependencies {
 
   androidTestImplementation(libs.androidx.test.ext.junit)
   androidTestImplementation(libs.androidx.test.runner)
+  // Compose's transitive Espresso calls InputManager.getInstance, removed in API 37.
+  androidTestImplementation(libs.androidx.test.espresso.core)
   androidTestImplementation(platform(libs.compose.bom))
   androidTestImplementation(libs.compose.ui.test.junit4)
   androidTestImplementation(libs.remote.core)
