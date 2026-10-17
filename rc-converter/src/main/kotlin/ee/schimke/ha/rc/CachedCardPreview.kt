@@ -33,6 +33,8 @@ import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.components.HA_ACTION_NAME
 import ee.schimke.ha.rc.components.HaAction
 import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.contentOrNull
 
 /**
  * Cached counterpart to upstream `androidx.compose.remote.tooling.preview.RemotePreview`.
@@ -265,7 +267,9 @@ fun CachedCardPreview(
     }
   }
   // The AndroidX View player, primed so `modifier` can be wrap-content on the height axis (#153)
-  // while pinned EXACTLY constraints still dominate the View's measure.
+  // while pinned EXACTLY constraints still dominate the View's measure. Accessibility services and
+  // checkers see that View, not the document's semantics inside it, so it carries the card's name.
+  val playerLabel = remember(card, snapshot) { playerLabel(card, snapshot) }
   val androidXPlayer: @Composable () -> Unit = {
     WrapAdaptiveRemoteDocumentPlayer(
       documentBytes = cardDocument.bytes,
@@ -273,6 +277,7 @@ fun CachedCardPreview(
       bitmapLoader = playerBitmapLoader,
       init = { player -> playerHolder.value = player },
       onNamedAction = onNamedAction,
+      contentDescription = playerLabel,
     )
   }
   when (playback) {
@@ -410,6 +415,21 @@ private fun applyDirtyDataOperations(operations: List<Operation>, context: Remot
 }
 
 private fun entityIds(card: CardConfig?): Set<String> = card?.let { cardEntityIds(it) }.orEmpty()
+
+/**
+ * What a card is called, for the View player that hosts it: its `title` or `name`, else its first
+ * entity's friendly name, else its type.
+ */
+private fun playerLabel(card: CardConfig?, snapshot: HaSnapshot?): String? {
+  if (card == null) return null
+  fun text(key: String): String? =
+    (card.raw[key] as? JsonPrimitive)?.contentOrNull?.takeIf { it.isNotBlank() }
+  val entity = cardEntityIds(card).firstOrNull()
+  val friendlyName = entity?.let {
+    snapshot?.states?.get(it)?.attributes?.get("friendly_name") as? JsonPrimitive
+  }
+  return text("title") ?: text("name") ?: friendlyName?.contentOrNull ?: entity ?: card.type
+}
 
 /**
  * Plays a card design template in place of a local capture. [bytes] is a values-free document from

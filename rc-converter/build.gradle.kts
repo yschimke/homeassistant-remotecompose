@@ -98,6 +98,9 @@ dependencies {
   testImplementation(libs.indriya)
   testImplementation(libs.ktor.client.mock)
   testImplementation("org.robolectric:robolectric:4.17")
+  testImplementation(
+    "com.google.android.apps.common.testing.accessibility.framework:accessibility-test-framework:4.1.1"
+  )
   testImplementation(libs.compose.ui.test.junit4)
   debugImplementation(libs.compose.ui.test.manifest)
   robolectricSdk(libs.robolectric.sdk35)
