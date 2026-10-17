@@ -39,6 +39,7 @@ import ee.schimke.ha.rc.CardTemplatePlayback
 import ee.schimke.ha.rc.HaRcComposePlayer
 import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.components.HaAction
+import ee.schimke.ha.rc.components.HaUberTheme
 import ee.schimke.ha.rc.components.ThemeStyle
 import ee.schimke.terrazzo.wear.ui.terrazzoWearColorScheme
 import java.io.File
@@ -183,6 +184,60 @@ class SlotWidgetDesignTest {
   }
 
   @Test
+  fun aHostChangingItsInsetsOrCornersGetsANewTemplate() {
+    val card = card("tile", "light.kitchen")
+    val snapshot = HaSnapshot(states = mapOf("light.kitchen" to entity("light.kitchen", "on")))
+    val original = capture(data(card, snapshot))
+    var displayed by mutableStateOf(original)
+    compose.setContent {
+      Box(Modifier.size(params.widthDp.dp, params.heightDp.dp).testTag("widget")) {
+        key(displayed) {
+          HaRcComposePlayer(
+            documentBytes = displayed,
+            modifier = Modifier.size(params.widthDp.dp, params.heightDp.dp),
+            fallback = { error("host geometry document must play") },
+          )
+        }
+      }
+    }
+    for ((horizontal, vertical, corner) in
+      listOf(Triple(24f, 8f, 26f), Triple(8f, 20f, 26f), Triple(8f, 8f, 4f))) {
+      val changedParams =
+        WearWidgetParams(
+          instanceId = params.instanceId,
+          containerType = params.containerType,
+          widthDp = params.widthDp,
+          heightDp = params.heightDp,
+          horizontalPaddingDp = horizontal,
+          verticalPaddingDp = vertical,
+          cornerRadiusDp = corner,
+        )
+      val changed = runBlocking {
+        data(card, snapshot)
+          .captureRawContent(RuntimeEnvironment.getApplication(), changedParams, false)
+          .rcDocument
+      }
+      val fresh = runBlocking {
+        slotWidgetData(registry, colors, Any(), card, snapshot, 0)
+          .captureRawContent(RuntimeEnvironment.getApplication(), changedParams, false)
+          .rcDocument
+      }
+      compose.runOnIdle { displayed = changed }
+      compose.waitForIdle()
+      val cachedPixels = pixels("geometry-cached-$horizontal-$vertical-$corner")
+      compose.runOnIdle { displayed = fresh }
+      compose.waitForIdle()
+      val freshPixels = pixels("geometry-fresh-$horizontal-$vertical-$corner")
+      var differing = 0
+      for (y in 0 until freshPixels.height) for (x in 0 until freshPixels.width) {
+        if (freshPixels[x, y] != cachedPixels[x, y]) differing++
+      }
+      assertEquals(0, differing, "cached capture must match fresh host geometry")
+    }
+    assertTrue(original.contentEquals(capture(data(card, snapshot))))
+  }
+
+  @Test
   fun tileBakesItsValues() {
     assertBaked(
       card("tile", "light.kitchen"),
@@ -193,6 +248,130 @@ class SlotWidgetDesignTest {
       "light.s0",
       "Kitchen",
     )
+  }
+
+  @Test
+  fun changingOnlyThePhoneOverrideInvalidatesTheTemplate() {
+    val card = card("sensor", "sensor.temp")
+    val snapshot =
+      HaSnapshot(
+        states =
+          mapOf(
+            "sensor.temp" to
+              entity(
+                "sensor.temp",
+                "21.5",
+                "device_class" to "temperature",
+                "unit_of_measurement" to "°C",
+              )
+          )
+      )
+    fun render(override: String) =
+      capture(
+        slotWidgetData(
+          registry,
+          colors,
+          style,
+          card,
+          snapshot,
+          0,
+          wearWidgetCardStyle(override, "braun"),
+        )
+      )
+    val inherited = render("")
+    val overridden = render("lcd")
+    assertFalse(
+      inherited.contentEquals(overridden),
+      "an LCD override must replace the Braun template",
+    )
+    assertTrue(
+      inherited.contentEquals(render("")),
+      "clearing the override restores the watch design",
+    )
+  }
+
+  @Test
+  fun alternativeStylesBakeFreshReadingsAtBothWearSizes() {
+    val card = card("sensor", "sensor.temp")
+    data class Frame(val name: String, val height: Float, val bytes: ByteArray)
+    val frames = mutableListOf<Frame>()
+    fun snapshot(value: String) =
+      HaSnapshot(
+        states =
+          mapOf(
+            "sensor.temp" to
+              entity(
+                "sensor.temp",
+                value,
+                "friendly_name" to "Living room",
+                "device_class" to "temperature",
+                "unit_of_measurement" to "°C",
+              )
+          )
+      )
+    for (uber in HaUberTheme.all) {
+      for ((container, height) in
+        listOf(
+          ContainerInfo.CONTAINER_TYPE_SMALL to 60f,
+          ContainerInfo.CONTAINER_TYPE_LARGE to 112f,
+        )) {
+        val sized =
+          WearWidgetParams(
+            instanceId = params.instanceId,
+            containerType = container,
+            widthDp = params.widthDp,
+            heightDp = height,
+            horizontalPaddingDp = params.horizontalPaddingDp,
+            verticalPaddingDp = params.verticalPaddingDp,
+            cornerRadiusDp = params.cornerRadiusDp,
+          )
+        fun captureReading(value: String) = runBlocking {
+          slotWidgetData(registry, colors, style to uber.id, card, snapshot(value), 0, uber)
+            .captureRawContent(RuntimeEnvironment.getApplication(), sized, false)
+            .rcDocument
+        }
+        val first = captureReading("21.5")
+        val changed = captureReading("27.5")
+        assertTrue("21.5" in String(first, Charsets.ISO_8859_1), "the initial reading is baked")
+        assertTrue("27.5" in String(changed, Charsets.ISO_8859_1), "the new reading is baked")
+        assertFalse(
+          "No samples" in String(first, Charsets.ISO_8859_1),
+          "Wear has no history: show the current measurement",
+        )
+        frames += Frame("style-${uber.id}-${height.toInt()}", height, first)
+        assertFalse(first.contentEquals(changed), "${uber.id}/$height must refresh its baked value")
+        for (bytes in listOf(first, changed)) {
+          val document = RcDocumentCodec.decode(bytes, RcWireLimits())
+          assertEquals(
+            emptyList(),
+            document.validateFor(RcTargetProfiles.WEAR_WIDGETS),
+            "${uber.id}/$height",
+          )
+          assertFalse(
+            document.namedVariables.any { it.name.startsWith("sensor.s0.") },
+            "no unresolved entity slot",
+          )
+        }
+      }
+    }
+    // Supplementary player evidence, explicitly not a system-host installation screenshot.
+    var frame by mutableStateOf(frames.first())
+    compose.setContent {
+      Box(Modifier.size(200.dp, frame.height.dp).testTag("widget")) {
+        key(frame.name) {
+          HaRcComposePlayer(
+            documentBytes = frame.bytes,
+            modifier = Modifier.size(200.dp, frame.height.dp),
+            fallback = { error("${frame.name} failed playback") },
+          )
+        }
+      }
+    }
+    for (next in frames) {
+      compose.runOnIdle { frame = next }
+      compose.waitForIdle()
+      pixels(next.name)
+    }
   }
 
   @Test

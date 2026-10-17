@@ -72,6 +72,14 @@ fun WearSettingsScreen(
 
     item { Spacer(Modifier.height(8.dp)) }
     item { ListHeader { Text("Card style") } }
+    item {
+      Text(
+        text = "Widget style. A card's own style from your phone takes priority.",
+        style = MaterialTheme.typography.labelSmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+      )
+    }
     items(HaUberTheme.all) { uber ->
       RadioButton(
         selected = uber.id == cardStyle,

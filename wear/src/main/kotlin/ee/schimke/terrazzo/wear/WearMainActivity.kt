@@ -2,6 +2,7 @@ package ee.schimke.terrazzo.wear
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
@@ -110,6 +111,12 @@ private fun WearApp(repo: WearSyncRepository) {
   var screen by rememberSaveable { mutableStateOf(WearScreen.TopLevel) }
   var openedDashboard by rememberSaveable { mutableStateOf<String?>(null) }
   var openedSectionKey by rememberSaveable { mutableStateOf<String?>(null) }
+
+  // A system Back (including the watch's dismiss gesture) returns through the same hierarchy
+  // as the on-screen buttons instead of closing the activity from a detail screen.
+  BackHandler(enabled = screen != WearScreen.TopLevel) {
+    screen = if (screen == WearScreen.Dashboard) WearScreen.Dashboards else WearScreen.TopLevel
+  }
 
   MaterialTheme(
     colorScheme = terrazzoWearColorScheme(style),
