@@ -2,6 +2,8 @@ package ee.schimke.terrazzo.dashboard
 
 import android.content.Context
 import android.content.Intent
+import android.os.Looper
+import android.util.Log
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
@@ -11,6 +13,8 @@ import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.UiObject2
 import androidx.test.uiautomator.Until
 import ee.schimke.terrazzo.MainActivity
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -52,22 +56,38 @@ class LongPressHistoryTest {
         .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         .addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK)
         .putExtra(MainActivity.EXTRA_TEST_DEMO_MODE, true)
-    context.startActivity(launch)
-    // Wait for the dashboard view. Demo-mode clears the
-    // last-viewed-dashboard pref, so the app lands on HA's
-    // default dashboard (the first board in DemoData.BOARDS,
-    // "Security") rather than auto-resuming from a previous
-    // run. "Security" appears as the title in the top-bar
-    // dashboard switcher.
-    assertTrue(
-      "Security dashboard did not surface within 15s",
-      device.wait(Until.hasObject(By.text("Security")), 15_000),
+    // Sample outside the main thread so a blocked first composition leaves actionable stacks
+    // in the CI logcat artifact. Stop sampling as soon as startup succeeds or fails.
+    val startupSampler = Executors.newSingleThreadScheduledExecutor()
+    startupSampler.scheduleAtFixedRate(
+      {
+        val stack = Looper.getMainLooper().thread.stackTrace.joinToString("\n")
+        Log.i("DemoStartup", "Main thread while awaiting dashboard:\n$stack")
+      },
+      2,
+      2,
+      TimeUnit.SECONDS,
     )
-    assertEquals(
-      "Demo startup must stay in the app instead of opening a LAN permission dialog",
-      context.packageName,
-      device.currentPackageName,
-    )
+    try {
+      context.startActivity(launch)
+      // Wait for the dashboard view. Demo-mode clears the
+      // last-viewed-dashboard pref, so the app lands on HA's
+      // default dashboard (the first board in DemoData.BOARDS,
+      // "Security") rather than auto-resuming from a previous
+      // run. "Security" appears as the title in the top-bar
+      // dashboard switcher.
+      assertTrue(
+        "Security dashboard did not surface within 15s",
+        device.wait(Until.hasObject(By.text("Security")), 15_000),
+      )
+      assertEquals(
+        "Demo startup must stay in the app instead of opening a LAN permission dialog",
+        context.packageName,
+        device.currentPackageName,
+      )
+    } finally {
+      startupSampler.shutdownNow()
+    }
   }
 
   @After
