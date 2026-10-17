@@ -141,6 +141,24 @@ class TileFeaturesCaptureTest {
     assertTrue("Off" in text && "Heat" in text, "the hvac mode buttons")
   }
 
+  /**
+   * Each control's spoken label names its tile, so a dashboard of thermostats doesn't read "Heat"
+   * and "Target temperature +" once per tile with nothing to tell them apart.
+   */
+  @Test
+  fun theFeatureControlsAreLabelledWithTheTileName() {
+    val text = documentText(climateTile("climate.kids_room", "Kitchen"))
+    for (label in
+      listOf(
+        "Kitchen, Target temperature −",
+        "Kitchen, Target temperature +",
+        "Kitchen, Heat",
+        "Kitchen, Off",
+      )) {
+      assertTrue(label in text, "spoken label \"$label\"")
+    }
+  }
+
   @Test fun rendersClimateTilesLight() = renderAll(dark = false)
 
   @Test fun rendersClimateTilesDark() = renderAll(dark = true)

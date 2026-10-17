@@ -17,10 +17,12 @@ import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.background
 import androidx.compose.remote.creation.compose.modifier.clickable
 import androidx.compose.remote.creation.compose.modifier.clip
+import androidx.compose.remote.creation.compose.modifier.contentDescription
 import androidx.compose.remote.creation.compose.modifier.fillMaxSize
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.creation.compose.modifier.height
 import androidx.compose.remote.creation.compose.modifier.padding
+import androidx.compose.remote.creation.compose.modifier.semantics
 import androidx.compose.remote.creation.compose.modifier.size
 import androidx.compose.remote.creation.compose.state.RemoteColor
 import androidx.compose.remote.creation.compose.state.rc
@@ -131,23 +133,35 @@ internal fun TileFeaturesBelow(data: HaTileData, accent: RemoteColor) {
     ) {
       row.forEach { feature ->
         RemoteBox(modifier = RemoteModifier.weight(1f)) {
-          TileFeature(feature, accent, TileFeatureHeightDp)
+          TileFeature(feature, accent, TileFeatureHeightDp, data.name)
         }
       }
     }
   }
 }
 
-/** One feature control, [heightDp] tall, filling its width. */
+/**
+ * One feature control, [heightDp] tall, filling its width. Each control's spoken label starts with
+ * [subject], the tile's name: a dashboard of thermostats otherwise reads "Heat" and "Target
+ * temperature +" once per tile, with nothing to tell them apart.
+ */
 @Composable
 @RemoteComposable
-internal fun TileFeature(feature: HaTileFeature, accent: RemoteColor, heightDp: Int) {
+internal fun TileFeature(
+  feature: HaTileFeature,
+  accent: RemoteColor,
+  heightDp: Int,
+  subject: String,
+) {
   when (feature) {
     // The steppers keep the primary ink, as HA's number buttons do; the accent marks a selection.
-    is HaTileFeature.NumberButtons -> NumberButtons(feature, heightDp)
-    is HaTileFeature.ModeSelect -> ModeSelect(feature, accent, heightDp)
+    is HaTileFeature.NumberButtons -> NumberButtons(feature, heightDp, subject)
+    is HaTileFeature.ModeSelect -> ModeSelect(feature, accent, heightDp, subject)
   }
 }
+
+/** A feature control's spoken label: the tile's [subject], then what the control does. */
+private fun spoken(subject: String, label: String): String = "$subject, $label"
 
 /** HA's control track: the disabled colour at 20%, here the theme's secondary text, softened. */
 @Composable
@@ -164,7 +178,7 @@ private const val FeatureCornerDp = 12
  * step that leaves the entity's range carries no action and draws its button faded.
  */
 @Composable
-private fun NumberButtons(feature: HaTileFeature.NumberButtons, heightDp: Int) {
+private fun NumberButtons(feature: HaTileFeature.NumberButtons, heightDp: Int, subject: String) {
   val theme = haTheme()
   RemoteRow(
     modifier =
@@ -174,7 +188,12 @@ private fun NumberButtons(feature: HaTileFeature.NumberButtons, heightDp: Int) {
         .background(featureTrack()),
     verticalAlignment = RemoteAlignment.CenterVertically,
   ) {
-    StepButton(Icons.Filled.Remove, feature.decrement, "${feature.description} −", heightDp)
+    StepButton(
+      Icons.Filled.Remove,
+      feature.decrement,
+      spoken(subject, "${feature.description} −"),
+      heightDp,
+    )
     RemoteBox(modifier = RemoteModifier.weight(1f), contentAlignment = RemoteAlignment.Center) {
       RemoteText(
         text = feature.valueLabel.rs,
@@ -186,7 +205,12 @@ private fun NumberButtons(feature: HaTileFeature.NumberButtons, heightDp: Int) {
         overflow = TextOverflow.Ellipsis,
       )
     }
-    StepButton(Icons.Filled.Add, feature.increment, "${feature.description} +", heightDp)
+    StepButton(
+      Icons.Filled.Add,
+      feature.increment,
+      spoken(subject, "${feature.description} +"),
+      heightDp,
+    )
   }
 }
 
@@ -219,7 +243,12 @@ private fun StepButton(
  * with the tile's [accent] and its content in the card colour.
  */
 @Composable
-private fun ModeSelect(feature: HaTileFeature.ModeSelect, accent: RemoteColor, heightDp: Int) {
+private fun ModeSelect(
+  feature: HaTileFeature.ModeSelect,
+  accent: RemoteColor,
+  heightDp: Int,
+  subject: String,
+) {
   val theme = haTheme()
   RemoteRow(
     modifier =
@@ -245,13 +274,15 @@ private fun ModeSelect(feature: HaTileFeature.ModeSelect, accent: RemoteColor, h
         if (feature.showIcons && icon != null) {
           RemoteIcon(
             imageVector = icon.toRemoteImageVector(),
-            contentDescription = option.label.rs,
+            contentDescription = spoken(subject, option.label).rs,
             modifier = RemoteModifier.size(20.rdp),
             tint = ink,
           )
         } else {
           RemoteText(
             text = option.label.rs,
+            modifier =
+              RemoteModifier.semantics { contentDescription = spoken(subject, option.label).rs },
             color = ink,
             fontSize = HaType.Label,
             fontWeight = FontWeight.Medium,

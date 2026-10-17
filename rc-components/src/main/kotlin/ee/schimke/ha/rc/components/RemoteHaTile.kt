@@ -118,7 +118,7 @@ private fun TileInfoRow(data: HaTileData, look: HaEntityLook, renderChip: Boolea
     }
     if (inline != null) {
       RemoteBox(modifier = RemoteModifier.weight(1f).padding(start = TileFeatureGapDp.rdp)) {
-        TileFeature(inline, accent, TileInlineFeatureHeightDp)
+        TileFeature(inline, accent, TileInlineFeatureHeightDp, data.name)
       }
     }
   }
