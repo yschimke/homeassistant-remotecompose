@@ -52,11 +52,25 @@ fun RemoteHaHorizontalStack(
   modifier: RemoteModifier = RemoteModifier,
   cell: @Composable @RemoteComposable (index: Int) -> Unit,
 ) {
-  RemoteRow(modifier = modifier.fillMaxWidth()) {
-    CompositionLocalProvider(LocalGridCellWidthPx provides null) {
-      for (index in 0 until cellCount) {
-        if (index > 0) RemoteBox(modifier = RemoteModifier.width(HORIZONTAL_STACK_GAP_DP.rdp))
-        RemoteBox(modifier = RemoteModifier.weight(1f)) { cell(index) }
+  val columns = cellCount.coerceAtLeast(1)
+  val name = remember { "$GridWidthExpressionPrefix${UUID.randomUUID()}" }
+  val stackWidthPx =
+    RemoteFloat.createNamedRemoteFloatExpression(name = name, domain = RemoteState.Domain.User) {
+      componentWidth()
+    }
+  // Each column's width, from the stack's own width as [RemoteHaGrid] computes its cells': a
+  // picture sizes its height from it rather than from what a player reports for a weighted child.
+  val cellWidthPx =
+    (stackWidthPx - HORIZONTAL_STACK_GAP_DP.rdp.toPx() * (columns - 1).toFloat()) /
+      columns.toFloat()
+  RemoteBox(modifier = modifier.fillMaxWidth()) {
+    RemoteText(text = stackWidthPx.toRemoteString(WidthFormat), color = Color.Transparent.rc)
+    RemoteRow(modifier = RemoteModifier.fillMaxWidth()) {
+      CompositionLocalProvider(LocalGridCellWidthPx provides cellWidthPx) {
+        for (index in 0 until cellCount) {
+          if (index > 0) RemoteBox(modifier = RemoteModifier.width(HORIZONTAL_STACK_GAP_DP.rdp))
+          RemoteBox(modifier = RemoteModifier.weight(1f)) { cell(index) }
+        }
       }
     }
   }
@@ -128,9 +142,9 @@ fun RemoteHaGrid(
 }
 
 /**
- * The live width, in px, of the `grid` cell being composed ([RemoteHaGrid]), or null outside one.
- * Read by [RemoteAspectRatioBox]. A container nested in a cell that lays its children out at other
- * widths (a horizontal stack) resets it to null.
+ * The live width, in px, of the `grid` cell or horizontal-stack column being composed, or null
+ * outside one. Read by [RemoteAspectRatioBox]. A [RemoteHaHorizontalStack] provides its own
+ * columns' width.
  */
 val LocalGridCellWidthPx = staticCompositionLocalOf<RemoteFloat?> { null }
 

@@ -313,6 +313,23 @@ class GridLayoutPlaybackTest {
     assertCellsFit(160, perRow = 1, yDp = 24f, "tiles at 160 dp")
   }
 
+  /**
+   * Square pictures side by side in a horizontal stack take their height from their own column,
+   * like the grid's: each column is (360 − 8) ÷ 2 = 176 dp, so the stack is 176 dp tall.
+   */
+  @Test
+  fun squarePicturesInAHorizontalStackSizeFromTheirColumn() {
+    val stack =
+      card(
+        """{"type":"horizontal-stack","cards":[
+          {"type":"picture-entity","entity":"camera.chamber","aspect_ratio":"1:1"},
+          {"type":"picture-entity","entity":"camera.nozzle","aspect_ratio":"1:1"}]}"""
+      )
+    val (phone, tablet) = heightsAt("stacked-square-pictures", stack, 360, 700)
+    assertNear((360f - 8f) / 2f, phone, "360 dp")
+    assertNear((700f - 8f) / 2f, tablet, "700 dp")
+  }
+
   @Test
   fun pictureEntityHonoursAspectRatio() {
     val wide = card("""{"type":"picture-entity","entity":"camera.chamber","aspect_ratio":"16:9"}""")
