@@ -8,6 +8,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Grid
 import androidx.compose.foundation.layout.PaddingValues
@@ -57,6 +58,8 @@ import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.Dashboard
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.model.JinjaTemplate
+import ee.schimke.ha.model.SectionsGrid
+import ee.schimke.ha.model.SectionsGridLayout
 import ee.schimke.ha.model.TemplateBindings
 import ee.schimke.ha.rc.CachedCardPreview
 import ee.schimke.ha.rc.CardDesignTemplates
@@ -64,6 +67,7 @@ import ee.schimke.ha.rc.CardWidthClass
 import ee.schimke.ha.rc.LocalCardCaptureEpoch
 import ee.schimke.ha.rc.LocalHaActionDispatcher
 import ee.schimke.ha.rc.LocalRcDebugBorders
+import ee.schimke.ha.rc.LovelaceSectionsGrid
 import ee.schimke.ha.rc.ProvideCardRegistry
 import ee.schimke.ha.rc.RenderChild
 import ee.schimke.ha.rc.androidXExperimentalWrap
@@ -108,13 +112,18 @@ import kotlinx.serialization.json.jsonPrimitive
  * not one giant document.
  *
  * Layout follows the dashboard's own structure as faithfully as the window allows:
- * - **Wide (Expanded width, ≥2 sections)** — sections render side-by-side as columns, mirroring
- *   HA's modern dashboard. Up to 2 columns at 840 dp / 3 at 1200 dp. Section titles sit at the top
- *   of each column.
- * - **Single-column (Compact / Medium, or no sections)** — sections stack vertically with their
- *   titles preserved as inline headings. Cards inside a section pack consecutive
- *   [CardWidthClass.Compact] entries (tile / button / entity) into a single row so a four-button
- *   cluster doesn't take four full screen heights on a phone.
+ * - **Header** — a sections view's `header` card renders first, centred and at most 700 dp wide, as
+ *   HA's view header does.
+ * - **Sections grid** — sections are placed with HA's sections-view rules ([SectionsGrid], shared
+ *   with the preview harness): as many 320 dp-minimum columns as fit, clamped to the view's
+ *   `max_columns` (default 4) and to the sections' total `column_span`, each section spanning
+ *   `min(column_span, columns)` in authored row order, the grid at most 500 dp per column and
+ *   centred. Section titles sit at the top of each section.
+ * - **One column** — when every section spans the full width (always on a phone, and for the common
+ *   `column_span: 4` dashboards on small tablets) sections stack with their titles as inline
+ *   headings, collapsible, and capped at [LayoutConfig.maxContentWidth] from Medium width up. Cards
+ *   inside a section pack consecutive [CardWidthClass.Compact] entries (tile / button / entity)
+ *   into a single row so a four-button cluster doesn't take four full screen heights on a phone.
  *
  * View titles are not rendered: each top-level dashboard has one "view" in the typical case, and
  * the user already saw the view name in the picker. Multi-view dashboards are an HA tab construct;
@@ -291,29 +300,8 @@ private fun DashboardList(
     haImageStack?.imageLoader
       ?: remember(context) { SingletonImageLoader.get(context.applicationContext) }
 
-  val sectionColumns = (cfg.maxSectionColumns).coerceAtMost(layout.sectionCount).coerceAtLeast(1)
-  val sideBySide = sectionColumns >= 2
-
-  // Per-view "which section is expanded right now". null = none open
-  // (user collapsed the open one). Seeded with index 0 for each view
-  // when collapsed mode kicks in, so first paint shows above-the-fold
-  // content. Re-seeded when [layout] swaps (a different dashboard
-  // loaded) so we don't carry stale indices across dashboards. Only
-  // consulted by the single-column branch — wide mode shows
-  // everything regardless.
-  val expandedSectionByView: SnapshotStateMap<Int, Int?> =
-    remember(layout, collapsedMode, sideBySide) {
-      mutableStateMapOf<Int, Int?>().apply {
-        if (collapsedMode && !sideBySide) {
-          layout.views.forEachIndexed { i, view -> if (view.sections.isNotEmpty()) put(i, 0) }
-        }
-      }
-    }
-
-  // Centre + cap the column on Expanded ONLY when the dashboard has
-  // no sections — sections drive their own grid width and shouldn't
-  // be capped to a single-column max.
-  val constrainColumn = !sideBySide && cfg.maxContentWidth != Dp.Unspecified
+  // The readable width for one-column content at this window size (none on a phone).
+  val readableCap: Dp? = cfg.maxContentWidth.takeIf { it != Dp.Unspecified }
 
   val style = LocalThemeStyle.current
   val dark = LocalIsDarkTheme.current
@@ -330,7 +318,39 @@ private fun DashboardList(
   val dashboardModifier =
     if (cardStyle.id == HaUberTheme.Classic.id) Modifier.fillMaxSize()
     else Modifier.fillMaxSize().background(haTheme.dashboardBackground)
-  Box(modifier = dashboardModifier, contentAlignment = Alignment.TopCenter) {
+  BoxWithConstraints(modifier = dashboardModifier, contentAlignment = Alignment.TopCenter) {
+    // Each sections view is placed with HA's sections-grid rules (shared with the preview
+    // harness via [ViewLayout.sectionsGrid]): columns that fit at HA's 320 dp minimum, clamped to
+    // `max_columns` and to the sections' total `column_span`, each section spanning
+    // `min(column_span, columns)`. A view whose sections all span the full width reads as one
+    // column and takes the readable cap, so a landscape phone doesn't stretch every card.
+    val availableWidthDp = (maxWidth - cfg.horizontalGutter * 2).value.coerceAtLeast(0f)
+    val sectionGrids =
+      remember(layout, availableWidthDp, readableCap) {
+        layout.views.map {
+          it.sectionsGrid(availableWidthDp, SECTION_GAP.value, readableCap?.value)
+        }
+      }
+    val singleTrackViews = sectionGrids.map { it.singleTrack }
+
+    // Per-view "which section is expanded right now". null = none open
+    // (user collapsed the open one). Seeded with index 0 for each view
+    // when collapsed mode kicks in, so first paint shows above-the-fold
+    // content. Re-seeded when [layout] swaps (a different dashboard
+    // loaded) so we don't carry stale indices across dashboards. Only
+    // consulted by views that render as one column — a view laid out
+    // side by side shows everything regardless.
+    val expandedSectionByView: SnapshotStateMap<Int, Int?> =
+      remember(layout, collapsedMode, singleTrackViews) {
+        mutableStateMapOf<Int, Int?>().apply {
+          if (collapsedMode) {
+            layout.views.forEachIndexed { i, view ->
+              if (view.sections.isNotEmpty() && singleTrackViews[i]) put(i, 0)
+            }
+          }
+        }
+      }
+
     val cardDesigns = designChoice?.let { rememberCardDesigns(context, it) } ?: CardDesigns()
     val cardDesignOverrides by
       remember(context) { CardDesignOverrideStore.of(context).overrides }.collectAsState()
@@ -340,25 +360,24 @@ private fun DashboardList(
       LocalCardDesignOverrides provides cardDesignOverrides,
     ) {
       LazyColumn(
-        modifier =
-          Modifier.fillMaxSize()
-            .let { if (constrainColumn) it.widthIn(max = cfg.maxContentWidth) else it }
-            .padding(horizontal = cfg.horizontalGutter),
+        modifier = Modifier.fillMaxSize().padding(horizontal = cfg.horizontalGutter),
         contentPadding = contentPadding,
         verticalArrangement = Arrangement.spacedBy(12.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
       ) {
         layout.views.forEachIndexed { viewIndex, view ->
+          val grid = sectionGrids[viewIndex]
           renderView(
             viewIndex = viewIndex,
             view = view,
+            grid = grid,
             snapshot = snapshot,
             registry = registry,
             cfg = cfg,
-            sideBySide = sideBySide,
-            sectionColumns = sectionColumns,
+            orphanMaxWidth = readableCap ?: Dp.Infinity,
             useGridLayout = useGridLayout,
             haTheme = haTheme,
-            collapsedMode = collapsedMode && !sideBySide,
+            collapsedMode = collapsedMode && grid.singleTrack,
             expandedSectionIndex = expandedSectionByView[viewIndex],
             onToggleSection = { sectionIndex ->
               expandedSectionByView[viewIndex] =
@@ -417,22 +436,25 @@ private fun SectionGroupSurface(
   }
 }
 
+/** Gap between section columns and rows in the sections grid. */
+private val SECTION_GAP = 16.dp
+
 /**
- * Emit one view's blocks into the parent [LazyListScope]. Orphan cards (legacy `view.cards`) come
- * first as a single column; sections follow, either stacked (single-column mode) or — in wide mode
- * — packed across [sectionColumns] tracks. The wide path has two implementations selected by
- * [useGridLayout]: the legacy `Row` + `chunked` path with manual weight padding, or a single
- * Compose 1.11 `Grid` with one section per cell. Compact / Medium widths render the same either way
- * (both fall through to the single-column branch).
+ * Emit one view's blocks into the parent [LazyListScope]: the view header's card, then orphan cards
+ * (legacy `view.cards`) as a single column, then the sections as [grid] placed them. A
+ * [SectionsGridLayout.singleTrack] grid (every section full width — always the case on a phone)
+ * stacks the sections, collapsible and with compact cards packed into rows; otherwise one
+ * [LovelaceSectionsGrid] item lays them out side by side honouring `column_span`. [useGridLayout]
+ * swaps that for the experimental Compose `Grid`, fed the same spans.
  */
 private fun LazyListScope.renderView(
   viewIndex: Int,
   view: ViewLayout,
+  grid: SectionsGridLayout,
   snapshot: HaSnapshot,
   registry: ee.schimke.ha.rc.CardRegistry,
   cfg: LayoutConfig,
-  sideBySide: Boolean,
-  sectionColumns: Int,
+  orphanMaxWidth: Dp,
   useGridLayout: Boolean,
   haTheme: HaTheme,
   collapsedMode: Boolean,
@@ -444,6 +466,25 @@ private fun LazyListScope.renderView(
   pinContext: SectionPinContext,
 ) {
   val viewKey = "v$viewIndex"
+  val contentWidth = grid.maxWidthDp.dp
+  val contentModifier = Modifier.widthIn(max = contentWidth).fillMaxWidth()
+
+  val header = view.header
+  val headerCard = header?.card
+  if (headerCard != null) {
+    item(key = "$viewKey-header") {
+      ViewHeaderCard(
+        card = headerCard,
+        centered = header.centered,
+        snapshot = snapshot,
+        registry = registry,
+        baseUrl = baseUrl,
+        imageLoader = imageLoader,
+        onLongPress = onLongPress,
+        modifier = contentModifier,
+      )
+    }
+  }
 
   if (view.orphanCards.isNotEmpty()) {
     cardRows(
@@ -455,13 +496,14 @@ private fun LazyListScope.renderView(
       baseUrl = baseUrl,
       imageLoader = imageLoader,
       onLongPress = onLongPress,
+      modifier = Modifier.widthIn(max = orphanMaxWidth).fillMaxWidth(),
     )
   }
 
   if (view.sections.isEmpty()) return
 
-  if (!sideBySide) {
-    // Single-column: each section becomes a single LazyColumn item
+  if (grid.singleTrack) {
+    // One column: each section becomes a single LazyColumn item
     // wrapped in [SectionGroupSurface] so the title + its cards
     // render as one grouped material container. Cards inside are
     // rendered eagerly (a section is a small handful of cards;
@@ -474,7 +516,7 @@ private fun LazyListScope.renderView(
       val collapsible = collapsedMode
       val expanded = !collapsible || expandedSectionIndex == sectionIndex
       item(key = sectionKey) {
-        SectionGroupSurface(haTheme) {
+        SectionGroupSurface(haTheme, modifier = Modifier.widthIn(max = contentWidth)) {
           val headingModel = resolveSectionHeading(section, sectionIndex)
           val headingTitle = headingModel.title
           val showHeading = collapsible || section.title != null
@@ -506,7 +548,7 @@ private fun LazyListScope.renderView(
     item(key = "$viewKey-grid") {
       SectionGrid(
         sections = view.sections,
-        columns = sectionColumns,
+        grid = grid,
         snapshot = snapshot,
         registry = registry,
         haTheme = haTheme,
@@ -514,24 +556,64 @@ private fun LazyListScope.renderView(
         imageLoader = imageLoader,
         onLongPress = onLongPress,
         pinContext = pinContext,
+        modifier = contentModifier,
       )
     }
   } else {
-    view.sections.chunked(sectionColumns).forEachIndexed { rowIndex, sectionRow ->
-      item(key = "$viewKey-srow$rowIndex") {
-        SectionRow(
-          sections = sectionRow,
-          sectionIndexOffset = rowIndex * sectionColumns,
-          columns = sectionColumns,
-          snapshot = snapshot,
-          registry = registry,
-          haTheme = haTheme,
-          baseUrl = baseUrl,
-          imageLoader = imageLoader,
-          onLongPress = onLongPress,
-          pinContext = pinContext,
-        )
+    item(key = "$viewKey-sections") {
+      LovelaceSectionsGrid(
+        grid = grid,
+        modifier = contentModifier,
+        columnGap = SECTION_GAP,
+        rowGap = SECTION_GAP,
+      ) {
+        view.sections.forEachIndexed { sectionIndex, section ->
+          SectionColumn(
+            section = section,
+            sectionIndex = sectionIndex,
+            snapshot = snapshot,
+            registry = registry,
+            haTheme = haTheme,
+            baseUrl = baseUrl,
+            imageLoader = imageLoader,
+            onLongPress = onLongPress,
+            pinContext = pinContext,
+          )
+        }
       }
+    }
+  }
+}
+
+/**
+ * A sections view's header card (HA's `hui-view-header`): at most
+ * [SectionsGrid.HEADER_MAX_WIDTH_DP] wide, centred unless the header's `layout` is `start`.
+ */
+@Composable
+private fun ViewHeaderCard(
+  card: CardConfig,
+  centered: Boolean,
+  snapshot: HaSnapshot,
+  registry: ee.schimke.ha.rc.CardRegistry,
+  baseUrl: String?,
+  imageLoader: ImageLoader,
+  onLongPress: (CardConfig) -> Unit,
+  modifier: Modifier = Modifier,
+) {
+  Box(
+    modifier = modifier.padding(top = 8.dp),
+    contentAlignment = if (centered) Alignment.TopCenter else Alignment.TopStart,
+  ) {
+    key(card) {
+      CardSlot(
+        card = card,
+        snapshot = snapshot,
+        registry = registry,
+        baseUrl = baseUrl,
+        imageLoader = imageLoader,
+        onLongPress = onLongPress,
+        modifier = Modifier.widthIn(max = SectionsGrid.HEADER_MAX_WIDTH_DP.dp).fillMaxWidth(),
+      )
     }
   }
 }
@@ -706,66 +788,17 @@ internal fun CardConfig.toPinnedData(): PinnedCardData {
 private val pinJson = Json { ignoreUnknownKeys = true }
 
 /**
- * One row of [columns] section-columns laid out side-by-side. Cards within each section stack
- * vertically — wide mode treats sections as the primary layout unit so we don't compact-pack inside
- * them (a 400-dp section column can show a tile at full width without eyeline pain). If [sections]
- * is shorter than [columns] we pad with empty `weight(1f)` Spacer-equivalents via empty columns so
- * the remaining sections in the next row still align with this one.
- */
-@Composable
-private fun SectionRow(
-  sections: List<SectionLayout>,
-  sectionIndexOffset: Int,
-  columns: Int,
-  snapshot: HaSnapshot,
-  registry: ee.schimke.ha.rc.CardRegistry,
-  haTheme: HaTheme,
-  baseUrl: String?,
-  imageLoader: ImageLoader,
-  onLongPress: (CardConfig) -> Unit,
-  pinContext: SectionPinContext,
-) {
-  Row(
-    modifier = Modifier.fillMaxWidth(),
-    horizontalArrangement = Arrangement.spacedBy(16.dp),
-    verticalAlignment = Alignment.Top,
-  ) {
-    sections.forEachIndexed { offset, section ->
-      SectionColumn(
-        section = section,
-        sectionIndex = sectionIndexOffset + offset,
-        snapshot = snapshot,
-        registry = registry,
-        haTheme = haTheme,
-        baseUrl = baseUrl,
-        imageLoader = imageLoader,
-        onLongPress = onLongPress,
-        pinContext = pinContext,
-        modifier = Modifier.weight(1f),
-      )
-    }
-    // Reserve weight for missing columns so the row geometry
-    // matches its sibling rows when sections.size % columns != 0.
-    repeat(columns - sections.size) { Box(modifier = Modifier.weight(1f)) }
-  }
-}
-
-/**
- * Experimental wide-mode layout: every section in a view is one cell in a Compose 1.11 [Grid] with
- * [columns] equal-weight column tracks. Replaces the [SectionRow] +
- * `view.sections.chunked(columns)` + `Spacer(weight)` ceremony with a single layout pass that
- * auto-flows sections by row. Per-cell content is the same [SectionColumn] the legacy path uses, so
- * visual parity is the goal: any difference is the Grid layout policy itself, not a different cell
- * renderer.
+ * Experimental wide-mode layout: the sections in one Compose 1.11 [Grid] with the same column count
+ * and spans [SectionsGrid] computed, left to the `Grid`'s own auto-placement. Per-cell content is
+ * the same [SectionColumn] [LovelaceSectionsGrid] uses, so any difference is the layout policy
+ * itself, not a different cell renderer.
  *
  * Implicit row tracks default to `GridTrackSize.Auto`, so each row sizes to its tallest section.
- * Cards inside a section size themselves to their document's intrinsic content height via the
- * Compose Multiplatform player `CachedCardPreview` plays them with.
  */
 @Composable
 private fun SectionGrid(
   sections: List<SectionLayout>,
-  columns: Int,
+  grid: SectionsGridLayout,
   snapshot: HaSnapshot,
   registry: ee.schimke.ha.rc.CardRegistry,
   haTheme: HaTheme,
@@ -773,15 +806,17 @@ private fun SectionGrid(
   imageLoader: ImageLoader,
   onLongPress: (CardConfig) -> Unit,
   pinContext: SectionPinContext,
+  modifier: Modifier = Modifier,
 ) {
   Grid(
-    modifier = Modifier.fillMaxWidth(),
+    modifier = modifier,
     config = {
-      repeat(columns) { column(1.fr) }
-      gap(row = 16.dp, column = 16.dp)
+      repeat(grid.columnCount) { column(1.fr) }
+      gap(row = SECTION_GAP, column = SECTION_GAP)
     },
   ) {
     sections.forEachIndexed { sectionIndex, section ->
+      val placement = grid.placements[sectionIndex]
       SectionColumn(
         section = section,
         sectionIndex = sectionIndex,
@@ -792,7 +827,8 @@ private fun SectionGrid(
         imageLoader = imageLoader,
         onLongPress = onLongPress,
         pinContext = pinContext,
-        modifier = Modifier.gridItem(),
+        modifier =
+          Modifier.gridItem(rowSpan = placement.rowSpan, columnSpan = placement.columnSpan),
       )
     }
   }
@@ -856,11 +892,12 @@ private fun LazyListScope.cardRows(
   baseUrl: String?,
   imageLoader: ImageLoader,
   onLongPress: (CardConfig) -> Unit,
+  modifier: Modifier = Modifier,
 ) {
   val rows = packAndChunk(cards, compactPerRow) { c -> registry.cardWidthClass(c, snapshot) }
   rows.forEachIndexed { rowIndex, row ->
     item(key = "$keyPrefix-r$rowIndex") {
-      CardRow(row, snapshot, registry, baseUrl, imageLoader, onLongPress)
+      CardRow(row, snapshot, registry, baseUrl, imageLoader, onLongPress, modifier)
     }
   }
 }
@@ -879,8 +916,9 @@ private fun CardRow(
   baseUrl: String?,
   imageLoader: ImageLoader,
   onLongPress: (CardConfig) -> Unit,
+  modifier: Modifier = Modifier.fillMaxWidth(),
 ) {
-  Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+  Row(modifier = modifier, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
     row.cards.forEach { card ->
       // Key by the card config so a slot never inherits an
       // unrelated card's hosted player when repacking shifts cards

@@ -2,6 +2,10 @@ package ee.schimke.terrazzo.dashboard
 
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.Dashboard
+import ee.schimke.ha.model.SectionSpan
+import ee.schimke.ha.model.SectionsGrid
+import ee.schimke.ha.model.SectionsGridLayout
+import ee.schimke.ha.model.ViewHeader
 
 /**
  * Structured projection of a Lovelace [Dashboard] that preserves the pieces the renderer needs to
@@ -23,7 +27,7 @@ data class DashboardLayout(val views: List<ViewLayout>) {
     get() = views.sumOf { it.sections.size }
 
   val isEmpty: Boolean
-    get() = views.all { it.orphanCards.isEmpty() && it.sections.isEmpty() }
+    get() = views.all { it.orphanCards.isEmpty() && it.sections.isEmpty() && it.header == null }
 }
 
 data class ViewLayout(
@@ -36,9 +40,40 @@ data class ViewLayout(
   val viewPath: String,
   val orphanCards: List<CardConfig>,
   val sections: List<SectionLayout>,
-)
+  /** The sections view's `header`; its card renders above the sections at full width. */
+  val header: ViewHeader? = null,
+  /** HA's `max_columns` for the sections grid (null = HA's default of 4). */
+  val maxColumns: Int? = null,
+  /** HA's `dense_section_placement`. */
+  val denseSectionPlacement: Boolean = false,
+) {
+  /**
+   * Place this view's sections for a host [availableWidthDp] wide, with HA's sections-grid rules
+   * ([SectionsGrid]). [singleTrackMaxWidthDp] caps a layout whose sections all span the full width.
+   */
+  fun sectionsGrid(
+    availableWidthDp: Float,
+    columnGapDp: Float,
+    singleTrackMaxWidthDp: Float? = null,
+  ): SectionsGridLayout =
+    SectionsGrid.layout(
+      spans = sections.map { SectionSpan(it.columnSpan, it.rowSpan) },
+      availableWidthDp = availableWidthDp,
+      columnGapDp = columnGapDp,
+      maxColumns = maxColumns,
+      dense = denseSectionPlacement,
+      singleTrackMaxWidthDp = singleTrackMaxWidthDp,
+    )
+}
 
-data class SectionLayout(val title: String?, val cards: List<CardConfig>)
+data class SectionLayout(
+  val title: String?,
+  val cards: List<CardConfig>,
+  /** HA's `column_span` (null = 1), clamped to the grid's columns when placed. */
+  val columnSpan: Int? = null,
+  /** HA's `row_span` (null = 1). */
+  val rowSpan: Int? = null,
+)
 
 /**
  * Project a Lovelace dashboard payload onto [DashboardLayout]. View / section / card order is
@@ -57,8 +92,16 @@ fun buildDashboardLayout(dashboard: Dashboard): DashboardLayout =
           orphanCards = view.cards,
           sections =
             view.sections.map { section ->
-              SectionLayout(title = section.title, cards = section.cards)
+              SectionLayout(
+                title = section.title,
+                cards = section.cards,
+                columnSpan = section.columnSpan,
+                rowSpan = section.rowSpan,
+              )
             },
+          header = view.header?.takeIf { it.card != null },
+          maxColumns = view.maxColumns,
+          denseSectionPlacement = view.denseSectionPlacement == true,
         )
       }
   )
