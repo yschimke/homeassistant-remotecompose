@@ -70,7 +70,7 @@ class LovelaceSectionCardGridTest {
   }
 
   @Test
-  fun rowSpansReserveRows_andATallSpanningCardGrowsTheLastRow() {
+  fun rowSpansReserveRows_andATallSpanningCardGrowsEveryRowItSpans() {
     // entity (6×2) beside two tiles (6×1): the second tile goes under the first.
     val plan =
       SectionCardGrid.plan(
@@ -89,11 +89,12 @@ class LovelaceSectionCardGridTest {
       }
     }
 
+    // The 150 dp entity card spans rows 0–1 (56 + 8 + 50 = 114). As in CSS grid, the 36 dp it
+    // still needs is shared by both rows: 74 dp and 68 dp, so the second tile starts at 82 dp.
     compose.onNodeWithTag("c1").assertTopPositionInRootIsEqualTo(0.dp)
     compose.onNodeWithTag("c1").assertLeftPositionInRootIsEqualTo(156.dp)
-    compose.onNodeWithTag("c2").assertTopPositionInRootIsEqualTo(64.dp)
+    compose.onNodeWithTag("c2").assertTopPositionInRootIsEqualTo(82.dp)
     compose.onNodeWithTag("c2").assertLeftPositionInRootIsEqualTo(156.dp)
-    // The 150 dp entity card spans rows 0–1 (56 + 8 + 50 = 114), so row 1 grows by 36 dp.
     compose.onNodeWithTag("c0").assertTopPositionInRootIsEqualTo(0.dp)
     compose.onNodeWithTag("c0").assertHeightIsEqualTo(150.dp)
     compose.onRoot().assertHeightIsEqualTo(150.dp)

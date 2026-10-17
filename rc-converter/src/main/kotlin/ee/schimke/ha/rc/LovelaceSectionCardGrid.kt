@@ -17,8 +17,8 @@ import ee.schimke.ha.model.SectionCardPlan
  * from the room HA would give it. Shared by the app's dashboard screen and the preview harness.
  *
  * Heights follow HA's `grid-auto-rows: auto`: a row is as tall as its tallest single-row card, and
- * a card spanning several rows grows the last of them only when it is taller than the rows it spans
- * together. Cards sit at the top of their cell.
+ * a card spanning several rows grows them, sharing the extra height equally, only when it is taller
+ * than the rows it spans together. Cards sit at the top of their cell.
  *
  * A card's fixed `rows` shape the placement (it reserves that many rows, so neighbours flow around
  * it as in HA) but not its height: HA stretches a card to
@@ -70,8 +70,14 @@ fun LovelaceSectionCardGrid(
         val last = p.row + p.rowSpan - 1
         var spanned = rowGapPx * (p.rowSpan - 1)
         for (r in p.row..last) spanned += rowHeights[r]
+        // CSS grid shares a spanning item's extra height across the auto rows it covers: each
+        // gets an equal part, and the last takes the remainder.
         val missing = cellHeights[i] - spanned
-        if (missing > 0) rowHeights[last] += missing
+        if (missing > 0) {
+          val share = missing / p.rowSpan
+          for (r in p.row..last) rowHeights[r] += share
+          rowHeights[last] += missing - share * p.rowSpan
+        }
       }
     }
     val rowTops = IntArray(rowHeights.size)
