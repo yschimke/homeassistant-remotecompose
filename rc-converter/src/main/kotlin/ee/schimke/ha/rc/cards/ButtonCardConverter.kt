@@ -4,13 +4,11 @@ package ee.schimke.ha.rc.cards
 
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.fillMaxSize
-import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.runtime.Composable
 import ee.schimke.ha.design.DesignProperties
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.HaSnapshot
-import ee.schimke.ha.model.toTyped
 import ee.schimke.ha.rc.CardConverter
 import ee.schimke.ha.rc.CardSizeMode
 import ee.schimke.ha.rc.CardWidthClass
@@ -19,7 +17,6 @@ import ee.schimke.ha.rc.HaStateColor
 import ee.schimke.ha.rc.LocalCardSizeMode
 import ee.schimke.ha.rc.RemoteMinSizeGate
 import ee.schimke.ha.rc.components.HaButtonData
-import ee.schimke.ha.rc.components.HaToggleAccent
 import ee.schimke.ha.rc.components.RemoteHaButton
 import ee.schimke.ha.rc.components.RemoteHaButtonIcon
 import ee.schimke.ha.rc.components.RemoteHaToggleButton
@@ -139,19 +136,11 @@ private fun buttonData(card: CardConfig, snapshot: HaSnapshot): HaButtonData {
   val tapAction =
     if (tapCfg != null) parseHaAction(tapCfg, entityId) else defaultTapActionFor(entityId)
 
-  val isActive = entity?.toTyped()?.isActive
-  val toggleable = isActive != null
   return HaButtonData(
     entityId = entityId,
     name = name,
     icon = HaIconMap.resolve(card.raw["icon"]?.jsonPrimitive?.content, entity),
-    accent =
-      HaToggleAccent(
-        activeAccent = HaStateColor.activeFor(entity).rc,
-        inactiveAccent = HaStateColor.inactiveFor(entity).rc,
-        initiallyOn = isActive ?: false,
-        toggleable = toggleable,
-      ),
+    accent = HaStateColor.toggleAccentFor(entityId, entity),
     showName = showName,
     tapAction = tapAction,
   )

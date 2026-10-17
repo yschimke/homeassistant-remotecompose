@@ -41,7 +41,8 @@ import androidx.wear.compose.remote.material3.RemoteIcon
  * ```
  *
  * Toggleable entities (lights / switches / locks / …) render a [RemoteHaToggleSwitch] in the
- * trailing slot — matches HA's `hui-toggle-entity-row`. Read-only entities show the state text.
+ * trailing slot — matches HA's `hui-toggle-entity-row`. Read-only entities show the state text. An
+ * unavailable entity is dimmed as a whole, with a neutral icon ([entityLook]).
  */
 @Composable
 @RemoteComposable
@@ -53,11 +54,9 @@ fun RemoteHaEntityRow(
   val theme = haTheme()
   val clickable =
     data.tapAction.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
-  val isOnBinding =
-    if (data.accent.toggleable) LiveValues.isOn(data.entityId, data.accent.initiallyOn) else null
-  val accent: RemoteColor =
-    isOnBinding?.select(data.accent.themed().activeAccent, data.accent.themed().inactiveAccent)
-      ?: data.accent.themed().activeAccent
+  val look = entityLook(data.entityId, data.accent)
+  val isOnBinding = look.isOn
+  val accent: RemoteColor = look.accent
 
   RemoteRow(
     modifier = modifier.then(clickable).fillMaxWidth().padding(vertical = verticalPaddingDp.rdp),
@@ -80,7 +79,7 @@ fun RemoteHaEntityRow(
       RemoteBox(modifier = RemoteModifier.padding(start = 12.rdp)) {
         RemoteText(
           text = entityName(data.entityId, data.name),
-          color = theme.primaryText,
+          color = look.dim(theme.primaryText),
           fontSize = HaType.Body,
           style = haTextStyle(),
           maxLines = 1,
@@ -91,8 +90,8 @@ fun RemoteHaEntityRow(
     if (isOnBinding != null) {
       RemoteHaToggleSwitch(
         isOn = isOnBinding,
-        activeAccent = data.accent.themed().activeAccent,
-        inactiveAccent = data.accent.themed().inactiveAccent,
+        activeAccent = look.activeAccent,
+        inactiveAccent = look.inactiveAccent,
         tapAction = data.tapAction,
       )
     } else {
@@ -100,7 +99,7 @@ fun RemoteHaEntityRow(
       // row is read for, not metadata.
       RemoteText(
         text = data.state,
-        color = theme.primaryText,
+        color = look.dim(theme.primaryText),
         fontSize = HaType.Body,
         style = haTextStyle(),
         maxLines = 1,

@@ -26,6 +26,12 @@
       "initialValue": "Living room",
       "persistence": "design"
     },
+    "light.s0.is_available": {
+      "type": "value",
+      "valueType": "bool",
+      "initialValue": true,
+      "persistence": "design"
+    },
     "light.s0.is_on": {
       "type": "value",
       "valueType": "bool",
@@ -62,6 +68,12 @@
       "initialValue": 0,
       "persistence": "design"
     },
+    "sensor.s2.is_available": {
+      "type": "value",
+      "valueType": "bool",
+      "initialValue": true,
+      "persistence": "design"
+    },
     "sensor.s2.is_on": {
       "type": "value",
       "valueType": "bool",
@@ -96,6 +108,12 @@
       "type": "value",
       "valueType": "int",
       "initialValue": 0,
+      "persistence": "design"
+    },
+    "switch.s1.is_available": {
+      "type": "value",
+      "valueType": "bool",
+      "initialValue": true,
       "persistence": "design"
     },
     "switch.s1.is_on": {

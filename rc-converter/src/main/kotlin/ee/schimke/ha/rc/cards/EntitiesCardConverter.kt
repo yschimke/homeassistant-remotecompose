@@ -3,13 +3,11 @@ package ee.schimke.ha.rc.cards
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.fillMaxSize
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
-import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.runtime.Composable
 import ee.schimke.ha.design.DesignProperties
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.HaSnapshot
-import ee.schimke.ha.model.toTyped
 import ee.schimke.ha.rc.BreakpointAxis
 import ee.schimke.ha.rc.CardConverter
 import ee.schimke.ha.rc.CardSizeMode
@@ -21,7 +19,6 @@ import ee.schimke.ha.rc.components.HaEntitiesData
 import ee.schimke.ha.rc.components.HaEntityRowData
 import ee.schimke.ha.rc.components.HaGlanceCellData
 import ee.schimke.ha.rc.components.HaGlanceData
-import ee.schimke.ha.rc.components.HaToggleAccent
 import ee.schimke.ha.rc.components.LiveValues
 import ee.schimke.ha.rc.components.LocalCompactEntityLayout
 import ee.schimke.ha.rc.components.RemoteHaEntities
@@ -143,19 +140,12 @@ class EntitiesCardConverter : CardConverter {
           ?: "—"
       val tapCfg = row?.get("tap_action")?.jsonObject
       val tapAction = if (tapCfg != null) parseHaAction(tapCfg, eid) else defaultTapActionFor(eid)
-      val isActive = entity?.toTyped()?.isActive
       HaGlanceCellData(
         entityId = eid,
         name = name,
         state = LiveValues.state(eid, formatState(entity)),
         icon = HaIconMap.resolve(row?.get("icon")?.jsonPrimitive?.content, entity),
-        accent =
-          HaToggleAccent(
-            activeAccent = HaStateColor.activeFor(entity).rc,
-            inactiveAccent = HaStateColor.inactiveFor(entity).rc,
-            initiallyOn = isActive ?: false,
-            toggleable = isActive != null,
-          ),
+        accent = HaStateColor.toggleAccentFor(eid, entity),
         tapAction = tapAction,
       )
     }
@@ -189,19 +179,12 @@ class EntitiesCardConverter : CardConverter {
             ?: "—"
         val tapCfg = row?.get("tap_action")?.jsonObject
         val tapAction = if (tapCfg != null) parseHaAction(tapCfg, eid) else defaultTapActionFor(eid)
-        val isActive = entity?.toTyped()?.isActive
         HaEntityRowData(
           entityId = eid,
           name = name,
           state = LiveValues.state(eid, formatState(entity)),
           icon = HaIconMap.resolve(row?.get("icon")?.jsonPrimitive?.content, entity),
-          accent =
-            HaToggleAccent(
-              activeAccent = HaStateColor.activeFor(entity).rc,
-              inactiveAccent = HaStateColor.inactiveFor(entity).rc,
-              initiallyOn = isActive ?: false,
-              toggleable = isActive != null,
-            ),
+          accent = HaStateColor.toggleAccentFor(eid, entity),
           tapAction = tapAction,
         )
       }
