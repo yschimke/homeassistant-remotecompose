@@ -117,7 +117,10 @@ fun RemoteHaAlarmPanelWide(data: HaAlarmPanelData, modifier: RemoteModifier = Re
     modifier =
       modifier
         .then(cardChrome(theme.cardBackground, theme.divider))
-        .padding(horizontal = 12.rdp, vertical = 8.rdp)
+        // 2dp, not more: the Wear small slot's content box is ~44dp, and the name (BodyLarge)
+        // over the status (Label) is ~39dp of it (lines are ~1.33× their size). The row centres
+        // itself on taller cells.
+        .padding(horizontal = 12.rdp, vertical = 2.rdp)
   ) {
     RemoteStateLayout(stateInt, *keys, modifier = RemoteModifier.fillMaxSize()) { key ->
       val status = statusByKey[key] ?: initialStatus

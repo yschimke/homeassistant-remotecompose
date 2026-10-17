@@ -11,11 +11,13 @@ import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HaSnapshot
+import ee.schimke.ha.rc.BreakpointAxis
 import ee.schimke.ha.rc.CardConverter
 import ee.schimke.ha.rc.CardSizeMode
 import ee.schimke.ha.rc.CardSnapshotBindings
 import ee.schimke.ha.rc.DesignTemplateInput
 import ee.schimke.ha.rc.LocalCardSizeMode
+import ee.schimke.ha.rc.LocalFixedCanvasAxis
 import ee.schimke.ha.rc.RemoteSizeBreakpoint
 import ee.schimke.ha.rc.cardDataSignature
 import ee.schimke.ha.rc.cardEntityIds
@@ -148,29 +150,50 @@ internal fun thermostatDial(card: CardConfig, snapshot: HaSnapshot): HaArcDialDa
 }
 
 /**
- * Width ladder shared by thermostat / humidifier. Mirrors the gauge single-gate pattern in
+ * Width ladder shared by thermostat / humidifier / light. Mirrors the gauge single-gate pattern in
  * [GaugeCardConverter]: arc-left Wide row when the runtime cell is too narrow for the full vertical
  * card with steppers, full card otherwise. A single threshold avoids the alpha010 nested
  * `RemoteStateLayout` quirk that collapses multi-tier ladders (#224).
+ *
+ * On a Wear slot ([LocalFixedCanvasAxis] is [BreakpointAxis.Height]) every container is narrower
+ * than the full card, so the gate moves to height: the small slot, too short for the Wide row's
+ * three lines, takes its compact two-line form.
  */
 @Composable
 internal fun RenderArcDial(data: HaArcDialData, modifier: RemoteModifier) {
   when (LocalCardSizeMode.current) {
     CardSizeMode.Wrap -> RemoteHaArcDial(data, modifier)
     CardSizeMode.Fixed ->
-      RemoteSizeBreakpoint(
-        thresholdsDp = intArrayOf(ArcDialFullMinDp),
-        modifier = modifier.fillMaxSize(),
-      ) { tier ->
-        when (tier) {
-          0 -> RemoteHaArcDialWide(data, RemoteModifier.fillMaxSize())
-          else -> RemoteHaArcDial(data, RemoteModifier.fillMaxSize())
-        }
+      when (LocalFixedCanvasAxis.current) {
+        BreakpointAxis.Height ->
+          RemoteSizeBreakpoint(
+            thresholdsDp = intArrayOf(ArcDialWideMinHeightDp),
+            axis = BreakpointAxis.Height,
+            modifier = modifier.fillMaxSize(),
+          ) { tier ->
+            RemoteHaArcDialWide(data, RemoteModifier.fillMaxSize(), compact = tier == 0)
+          }
+        BreakpointAxis.Width ->
+          RemoteSizeBreakpoint(
+            thresholdsDp = intArrayOf(ArcDialFullMinDp),
+            modifier = modifier.fillMaxSize(),
+          ) { tier ->
+            when (tier) {
+              0 -> RemoteHaArcDialWide(data, RemoteModifier.fillMaxSize())
+              else -> RemoteHaArcDial(data, RemoteModifier.fillMaxSize())
+            }
+          }
       }
   }
 }
 
 private const val ArcDialFullMinDp = 260
+
+/**
+ * The Wide row's mode, value and target lines (~59dp: a line is ~1.33× its type size) inside its
+ * 8dp vertical padding.
+ */
+private const val ArcDialWideMinHeightDp = 76
 
 private fun stepperActions(
   entity: EntityState?,

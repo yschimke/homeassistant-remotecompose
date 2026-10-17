@@ -198,7 +198,9 @@ fun RemoteHaGaugeWide(data: HaGaugeData, modifier: RemoteModifier = RemoteModifi
       modifier
         .then(clickable)
         .then(cardChrome(theme.cardBackground, theme.divider))
-        .padding(horizontal = 8.rdp, vertical = 6.rdp),
+        // 2dp, not more: the Wear small slot's content box is ~44dp, and the value (Title) over
+        // the name (Caption) is ~39dp of it (lines are ~1.33× their size).
+        .padding(horizontal = 8.rdp, vertical = 2.rdp),
     verticalAlignment = RemoteAlignment.Bottom,
     horizontalArrangement = RemoteArrangement.spacedBy(8.rdp),
   ) {
@@ -214,7 +216,7 @@ fun RemoteHaGaugeWide(data: HaGaugeData, modifier: RemoteModifier = RemoteModifi
       strokeWidthPx = 6f,
     )
     RemoteColumn(
-      modifier = RemoteModifier.weight(1f).padding(bottom = 4.rdp),
+      modifier = RemoteModifier.weight(1f),
       verticalArrangement = RemoteArrangement.Center,
       horizontalAlignment = RemoteAlignment.Start,
     ) {
