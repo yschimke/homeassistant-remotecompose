@@ -1,0 +1,80 @@
+[
+  {
+    "id": "heating",
+    "title": "Heating section",
+    "kind": "Section",
+    "config": {
+      "type": "grid",
+      "title": "Heating",
+      "cards": [
+        {
+          "type": "tile",
+          "entity": "climate.s0",
+          "grid_options": {
+            "columns": 12
+          }
+        },
+        {
+          "type": "gauge",
+          "entity": "sensor.s0",
+          "name": "Temperature",
+          "min": 0,
+          "max": 40
+        }
+      ]
+    },
+    "slots": [
+      {
+        "id": "climate.s0",
+        "domain": "climate"
+      },
+      {
+        "id": "sensor.s0",
+        "domain": "sensor",
+        "deviceClass": "temperature"
+      }
+    ]
+  },
+  {
+    "id": "room",
+    "title": "Room view",
+    "kind": "View",
+    "config": {
+      "type": "sections",
+      "title": "Room",
+      "sections": [
+        {
+          "type": "grid",
+          "title": "Heating",
+          "cards": [
+            {
+              "type": "tile",
+              "entity": "climate.s0",
+              "grid_options": {
+                "columns": 12
+              }
+            },
+            {
+              "type": "gauge",
+              "entity": "sensor.s0",
+              "name": "Temperature",
+              "min": 0,
+              "max": 40
+            }
+          ]
+        }
+      ]
+    },
+    "slots": [
+      {
+        "id": "climate.s0",
+        "domain": "climate"
+      },
+      {
+        "id": "sensor.s0",
+        "domain": "sensor",
+        "deviceClass": "temperature"
+      }
+    ]
+  }
+]
