@@ -61,6 +61,17 @@ interface CardConverter {
   fun dataSignature(card: CardConfig, snapshot: HaSnapshot): String? = null
 
   /**
+   * [dataSignature] for a card that may render other cards: hosts call this one, through
+   * [CardRegistry.cardDataSignature], since a container's document bakes whatever its children
+   * bake. The default is the card's own signature, else its [designDelegate]'s (a conditional
+   * card's inner card, an entity filter's card). Containers that render several children (stacks,
+   * grid) override it to fold in every child's signature.
+   */
+  fun dataSignature(card: CardConfig, snapshot: HaSnapshot, registry: CardRegistry): String? =
+    dataSignature(card, snapshot)
+      ?: designDelegate(card, snapshot)?.let { registry.cardDataSignature(it, snapshot) }
+
+  /**
    * The generation properties of [card] under [snapshot], or null when this card can't render from
    * a card design (the default: it then captures through [Render]).
    *

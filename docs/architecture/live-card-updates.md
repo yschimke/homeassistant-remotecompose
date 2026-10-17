@@ -59,6 +59,13 @@ override fun dataSignature(card: CardConfig, snapshot: HaSnapshot): String =
   cardDataSignature(cardEntityIds(card), snapshot)
 ```
 
+Hosts read the signature through `CardRegistry.cardDataSignature`, which asks the
+registry-aware `dataSignature(card, snapshot, registry)`: a container (vertical / horizontal stack,
+grid) folds in its children's signatures (`childrenDataSignature`, null only when every child is),
+and a wrapper (conditional, entity filter) answers with its shown card's. A re-encode card nested
+in a grid therefore re-encodes the grid's document, while a grid of binding cards keeps the
+binding push. Never call `converter.dataSignature(card, snapshot)` directly from a host.
+
 Use a custom signature when the entity id isn't in a standard `entity:` /
 `entities:` field (`cardEntityIds` won't find it — e.g. Bambu's
 `printer:`), or to *exclude* a volatile attribute that would re-encode
