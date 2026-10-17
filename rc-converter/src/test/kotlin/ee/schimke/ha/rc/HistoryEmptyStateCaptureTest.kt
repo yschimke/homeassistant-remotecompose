@@ -1,5 +1,8 @@
 package ee.schimke.ha.rc
 
+import androidx.compose.remote.creation.compose.capture.RemoteCreationDisplayInfo
+import androidx.compose.remote.creation.compose.capture.captureSingleRemoteDocument
+import androidx.compose.remote.creation.profile.RcPlatformProfiles
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HaSnapshot
@@ -23,6 +26,7 @@ import org.robolectric.annotation.Config
  * card does; the `sensor` card, which reuses the same layout for one row, keeps its current value.
  * Checked on the encoded document's text.
  */
+@Suppress("RestrictedApi")
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35])
 class HistoryEmptyStateCaptureTest {
@@ -60,6 +64,69 @@ class HistoryEmptyStateCaptureTest {
         forceRefresh = true,
       )
     String(doc.bytes, Charsets.UTF_8)
+  }
+
+  /** The text of [card] captured in a fixed launcher / Wear cell [widthDp] × [heightDp]. */
+  private fun fixedCellText(
+    card: CardConfig,
+    widthDp: Int,
+    heightDp: Int,
+    axis: BreakpointAxis = BreakpointAxis.Width,
+  ): String = runBlocking {
+    val context = org.robolectric.RuntimeEnvironment.getApplication()
+    val density = context.resources.displayMetrics.density
+    val converter = registry.get(card.type)!!
+    val captured =
+      captureSingleRemoteDocument(
+        context = context,
+        creationDisplayInfo =
+          RemoteCreationDisplayInfo(
+            (widthDp * density).toInt(),
+            (heightDp * density).toInt(),
+            context.resources.configuration.densityDpi,
+          ),
+        profile = RcPlatformProfiles.ANDROIDX,
+      ) {
+        ProvideCardSizeMode(CardSizeMode.Fixed) {
+          ProvideFixedCanvasAxis(axis) { converter.Render(card, snapshot) }
+        }
+      }
+    String(captured.bytes, Charsets.UTF_8)
+  }
+
+  private fun historyGraph(title: String?) =
+    CardConfig(
+      type = "history-graph",
+      raw =
+        buildJsonObject {
+          put("type", "history-graph")
+          title?.let { put("title", it) }
+          put("hours_to_show", 24)
+          putJsonArray("entities") { add("sensor.temp") }
+        },
+    )
+
+  /**
+   * A Wear small slot (184 dp wide after padding, over the identity threshold, too short for a
+   * title over a sentence) uses the short "No history", never the full sentence.
+   */
+  @Test
+  fun aWearSlotUsesTheShortEmptyState() {
+    val text = fixedCellText(historyGraph("Temperature"), 184, 44, BreakpointAxis.Height)
+    assertTrue("No history" in text, "the Wear slot shows the short empty state")
+    assertFalse("No history in the" in text, "the Wear slot never shows the full sentence")
+  }
+
+  /**
+   * A launcher widget gates on width at runtime, so its document carries both tiers: the narrow
+   * identity tier's short "No history", and the wide tier's full empty state, which has room in a
+   * launcher cell (the one-line Wear form would leave most of a large widget blank).
+   */
+  @Test
+  fun aLauncherWidgetKeepsTheFullEmptyState() {
+    val text = fixedCellText(historyGraph("Temperature"), 288, 252)
+    assertTrue("No history in the last 24 hours" in text, "the wide tier keeps the full sentence")
+    assertTrue("No history" in text.replace("No history in the last 24 hours", ""))
   }
 
   @Test

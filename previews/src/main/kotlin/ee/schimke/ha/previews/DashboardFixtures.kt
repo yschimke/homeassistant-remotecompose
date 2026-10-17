@@ -6,6 +6,7 @@ import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.model.Section
 import ee.schimke.ha.model.View
+import ee.schimke.ha.model.ViewHeader
 import java.io.File
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
@@ -105,6 +106,9 @@ private fun parseView(obj: JsonObject): View {
     title = title,
     type = type,
     maxColumns = maxColumns,
+    denseSectionPlacement =
+      obj["dense_section_placement"]?.jsonPrimitive?.content?.toBooleanStrictOrNull(),
+    header = ViewHeader.fromJson(obj["header"]),
     cards = cards,
     sections = sections,
   )

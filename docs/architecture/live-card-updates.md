@@ -110,7 +110,9 @@ expressed as a binding.
   calendar, logbook, to-do, history-graph,
   statistics-graph, statistic, map, weather-forecast, thermostat /
   humidifier / light (arc fill + labels), media-control, Bambu (AMS /
-  print status). Markdown also re-encodes on Jinja template changes via
+  print status), the shutter cards (`custom:enhanced-shutter-card`,
+  `custom:garage-shutter-card`: door height, which buttons are enabled,
+  and the state line are baked from the cover). Markdown also re-encodes on Jinja template changes via
   `templateValues`.
 - **Static / self-driven:** heading, clock (RemoteCompose time ops),
   unsupported.

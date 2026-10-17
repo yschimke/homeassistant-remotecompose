@@ -8,6 +8,7 @@ import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.model.HistoryPoint
 import ee.schimke.ha.model.Section
 import ee.schimke.ha.model.View
+import ee.schimke.ha.model.ViewHeader
 import kotlin.math.roundToInt
 import kotlin.math.sin
 import kotlin.time.Instant
@@ -204,6 +205,9 @@ object DemoData {
       title = title,
       type = type,
       maxColumns = maxColumns,
+      denseSectionPlacement =
+        obj["dense_section_placement"]?.jsonPrimitive?.content?.toBooleanStrictOrNull(),
+      header = ViewHeader.fromJson(obj["header"]),
       cards = cards,
       sections = sections,
     )
