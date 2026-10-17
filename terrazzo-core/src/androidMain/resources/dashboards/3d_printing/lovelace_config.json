@@ -271,17 +271,6 @@
                   "tap_action": {
                     "action": "more-info"
                   }
-                },
-                {
-                  "type": "picture-entity",
-                  "entity": "image.p2s_sn2_pick_image",
-                  "name": "Pick image",
-                  "show_name": true,
-                  "show_state": false,
-                  "aspect_ratio": "1:1",
-                  "tap_action": {
-                    "action": "more-info"
-                  }
                 }
               ],
               "grid_options": {
@@ -318,16 +307,44 @@
                   "icon": "mdi:timer-sand"
                 },
                 {
-                  "type": "tile",
-                  "entity": "sensor.p2s_sn2_start_time",
-                  "name": "Started",
-                  "icon": "mdi:clock-start"
+                  "type": "conditional",
+                  "conditions": [
+                    {
+                      "condition": "state",
+                      "entity": "sensor.p2s_sn2_print_status",
+                      "state": [
+                        "prepare",
+                        "running",
+                        "pause"
+                      ]
+                    }
+                  ],
+                  "card": {
+                    "type": "tile",
+                    "entity": "sensor.p2s_sn2_start_time",
+                    "name": "Started",
+                    "icon": "mdi:clock-start"
+                  }
                 },
                 {
-                  "type": "tile",
-                  "entity": "sensor.p2s_sn2_end_time",
-                  "name": "ETA",
-                  "icon": "mdi:clock-end"
+                  "type": "conditional",
+                  "conditions": [
+                    {
+                      "condition": "state",
+                      "entity": "sensor.p2s_sn2_print_status",
+                      "state": [
+                        "prepare",
+                        "running",
+                        "pause"
+                      ]
+                    }
+                  ],
+                  "card": {
+                    "type": "tile",
+                    "entity": "sensor.p2s_sn2_end_time",
+                    "name": "ETA",
+                    "icon": "mdi:clock-end"
+                  }
                 }
               ],
               "grid_options": {
@@ -769,17 +786,6 @@
                   "tap_action": {
                     "action": "more-info"
                   }
-                },
-                {
-                  "type": "picture-entity",
-                  "entity": "image.a1mini_sn1_pick_image",
-                  "name": "Pick image",
-                  "show_name": true,
-                  "show_state": false,
-                  "aspect_ratio": "1:1",
-                  "tap_action": {
-                    "action": "more-info"
-                  }
                 }
               ],
               "grid_options": {
@@ -816,16 +822,44 @@
                   "icon": "mdi:timer-sand"
                 },
                 {
-                  "type": "tile",
-                  "entity": "sensor.a1mini_sn1_start_time",
-                  "name": "Started",
-                  "icon": "mdi:clock-start"
+                  "type": "conditional",
+                  "conditions": [
+                    {
+                      "condition": "state",
+                      "entity": "sensor.a1mini_sn1_print_status",
+                      "state": [
+                        "prepare",
+                        "running",
+                        "pause"
+                      ]
+                    }
+                  ],
+                  "card": {
+                    "type": "tile",
+                    "entity": "sensor.a1mini_sn1_start_time",
+                    "name": "Started",
+                    "icon": "mdi:clock-start"
+                  }
                 },
                 {
-                  "type": "tile",
-                  "entity": "sensor.a1mini_sn1_end_time",
-                  "name": "ETA",
-                  "icon": "mdi:clock-end"
+                  "type": "conditional",
+                  "conditions": [
+                    {
+                      "condition": "state",
+                      "entity": "sensor.a1mini_sn1_print_status",
+                      "state": [
+                        "prepare",
+                        "running",
+                        "pause"
+                      ]
+                    }
+                  ],
+                  "card": {
+                    "type": "tile",
+                    "entity": "sensor.a1mini_sn1_end_time",
+                    "name": "ETA",
+                    "icon": "mdi:clock-end"
+                  }
                 }
               ],
               "grid_options": {
