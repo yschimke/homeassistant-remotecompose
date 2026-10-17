@@ -55,6 +55,7 @@ dependencies {
   implementation(libs.remote.player.compose)
   implementation(libs.remote.tooling.preview)
   // The Compose Multiplatform Remote Compose engine the packaged card players render through.
+  implementation(platform(libs.rc.players.bom))
   implementation(libs.rc.player.compose)
   implementation(libs.materialkolor)
   testImplementation(libs.kotlin.test.junit)

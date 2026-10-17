@@ -73,6 +73,7 @@ dependencies {
   implementation(project(":ha-model"))
   implementation(project(":ha-client"))
   // Decodes templates for the browser: their bindings, size and op-set validation.
+  implementation(platform(libs.rc.players.bom))
   implementation(libs.rc.player.edit)
 
   implementation(libs.ktor.server.core)

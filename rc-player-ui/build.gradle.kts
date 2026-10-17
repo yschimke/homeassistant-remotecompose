@@ -20,6 +20,7 @@ kotlin {
   sourceSets {
     commonMain.dependencies {
       api(libs.cmp.ui)
+      api(project.dependencies.platform(libs.rc.players.bom))
       api(libs.rc.player.compose)
       implementation(libs.cmp.runtime)
       implementation(libs.cmp.foundation)
