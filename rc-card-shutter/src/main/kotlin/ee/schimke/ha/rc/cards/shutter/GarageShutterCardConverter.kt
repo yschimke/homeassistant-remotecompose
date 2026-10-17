@@ -4,10 +4,11 @@ import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.runtime.Composable
 import ee.schimke.ha.model.CardConfig
-import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.CardConverter
 import ee.schimke.ha.rc.CardRegistry
+import ee.schimke.ha.rc.cardDataSignature
+import ee.schimke.ha.rc.cardEntityIds
 import ee.schimke.ha.rc.components.HaAction
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
@@ -21,8 +22,9 @@ import kotlinx.serialization.json.jsonPrimitive
  *
  * - sectional-door visualisation (horizontal aspect, panel grooves),
  * - direction-of-motion chevron driven by the cover's `opening` / `closing` state,
- * - state label normalises HA's `device_class: garage` cover states to natural English ("Open" /
- *   "Closed" / "Opening…").
+ * - up / stop / down buttons that follow the door ([coverControls]): close is greyed on a closed
+ *   door, open on an open one, stop unless it is moving, and unsupported ones are hidden,
+ * - one state line ([coverStateLabel]): "Closed", "Open", or "Opening · 40%".
  *
  * Position semantics match the shutter card so the two cards' fractions can share host-side
  * animation code: `closedFraction` 0..1 where 1 is fully closed. HA's `current_position` is "100 =
@@ -40,6 +42,11 @@ class GarageShutterCardConverter : CardConverter {
     // plus 10dp inter-row gap. Title + outer padding adds ~28dp + 20dp.
     return (if (hasTitle) 28 else 0) + 20 + entryCount * 114
   }
+
+  // Door height, button states and the state line are baked from the cover's state, so the card
+  // re-encodes when it changes (live-card-updates.md, path 2).
+  override fun dataSignature(card: CardConfig, snapshot: HaSnapshot): String =
+    cardDataSignature(cardEntityIds(card), snapshot)
 
   @Composable
   override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
@@ -81,72 +88,25 @@ class GarageShutterCardConverter : CardConverter {
         ?: entityId
         ?: "(no entity)"
     val namePosition = raw["name_position"]?.jsonPrimitive?.content ?: cardNamePosition
-    val closedFraction = closedFractionOf(entity)
-    val motion = motionOf(entity)
-    val stateLabel = stateLabelFor(entity, closedFraction)
+    // Many garage-door integrations don't expose current_position; an unknown door is drawn
+    // closed, and a moving one half-way with the motion arrow.
+    val closedFraction = coverClosedFraction(entity, unknownFraction = 1f)
 
     return HaGarageEntryData(
       name = name.rs,
       closedFraction = closedFraction,
-      motion = motion,
-      stateLabel = stateLabel.rs,
+      motion = coverMotion(entity),
+      stateLabel = coverStateLabel(entity).rs,
       showNameOnTop = namePosition != "none",
       openAction = entityId?.let { callService("open_cover", it) } ?: HaAction.None,
       closeAction = entityId?.let { callService("close_cover", it) } ?: HaAction.None,
       stopAction = entityId?.let { callService("stop_cover", it) } ?: HaAction.None,
+      controls = coverControls(entity),
     )
   }
 
   private fun callService(service: String, entityId: String): HaAction =
     HaAction.CallService(domain = "cover", service = service, entityId = entityId)
-
-  /** 0f = fully open, 1f = fully closed. Mirrors the shutter card. */
-  private fun closedFractionOf(entity: EntityState?): Float {
-    if (entity == null) return 1f
-    val pos = entity.attributes["current_position"]?.jsonPrimitive?.content?.toFloatOrNull()
-    if (pos != null) return (1f - pos / 100f).coerceIn(0f, 1f)
-    // Many garage-door integrations don't expose current_position;
-    // pick a representative value per state so the visualisation
-    // still tells the user something. `opening` / `closing` show
-    // the door at half — combined with the motion chevron that
-    // reads as "in transit", which is the right mental model.
-    return when (entity.state) {
-      "open" -> 0f
-      "opening" -> 0.5f
-      "closing" -> 0.5f
-      "closed" -> 1f
-      else -> 1f
-    }
-  }
-
-  private fun motionOf(entity: EntityState?): GarageMotion =
-    when (entity?.state) {
-      "opening" -> GarageMotion.Opening
-      "closing" -> GarageMotion.Closing
-      else -> GarageMotion.Idle
-    }
-
-  private fun stateLabelFor(entity: EntityState?, closedFraction: Float): String {
-    if (entity == null) return "Unavailable"
-    val state = entity.state
-    if (state == "unavailable" || state == "unknown") return "Unavailable"
-    val hasPosition = entity.attributes["current_position"] != null
-    if (hasPosition) {
-      val pct = ((1f - closedFraction) * 100).toInt().coerceIn(0, 100)
-      return when (pct) {
-        0 -> "Closed"
-        100 -> "Open"
-        else -> "$pct% open"
-      }
-    }
-    return when (state) {
-      "open" -> "Open"
-      "closed" -> "Closed"
-      "opening" -> "Opening…"
-      "closing" -> "Closing…"
-      else -> state.replace('_', ' ').replaceFirstChar { it.uppercaseChar() }
-    }
-  }
 
   companion object {
     const val CARD_TYPE: String = "custom:garage-shutter-card"

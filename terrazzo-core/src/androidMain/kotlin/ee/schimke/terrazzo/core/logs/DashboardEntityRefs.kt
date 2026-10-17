@@ -23,6 +23,7 @@ import kotlinx.serialization.json.JsonPrimitive
 fun referencedEntities(dashboard: Dashboard): Set<String> {
   val out = mutableSetOf<String>()
   for (view in dashboard.views) {
+    view.header?.card?.let { walk(it.raw, out) }
     view.cards.forEach { walk(it.raw, out) }
     view.sections.forEach { sec -> sec.cards.forEach { walk(it.raw, out) } }
     view.badges.forEach { walk(it, out) }
