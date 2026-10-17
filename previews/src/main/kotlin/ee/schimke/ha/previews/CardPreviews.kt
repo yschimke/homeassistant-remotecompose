@@ -201,7 +201,7 @@ private fun glanceCard() =
   name = "entities availability (light)",
   showBackground = false,
   widthDp = 381,
-  heightDp = 330,
+  heightDp = 460,
 )
 @Composable
 fun Entities_Availability_Light() =
@@ -211,7 +211,7 @@ fun Entities_Availability_Light() =
   name = "entities availability (dark)",
   showBackground = false,
   widthDp = 381,
-  heightDp = 330,
+  heightDp = 460,
 )
 @Composable
 fun Entities_Availability_Dark() =
