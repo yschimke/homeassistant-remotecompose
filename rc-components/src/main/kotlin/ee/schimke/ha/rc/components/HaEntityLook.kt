@@ -7,12 +7,26 @@ import androidx.compose.remote.creation.compose.state.RemoteColor
 import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rf
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.staticCompositionLocalOf
 
 /**
  * Alpha an unavailable entity's icon, chip and text draw at: visibly "not live" next to its
  * neighbours, still legible enough to read which entity it is.
  */
 const val UnavailableContentAlpha: Float = 0.5f
+
+/**
+ * Whether entity components show availability (dim + neutral accent off `<id>.is_available`).
+ *
+ * Off for widget captures (`CardSizeMode.Fixed`: launcher and Wear widgets), which never receive
+ * bindings: their template is baked with constants, and the bake does not fold the colour selects
+ * availability needs, so every dimmed colour would stay a `ColorExpression` in the widget. Android
+ * 16's platform widget player does not draw those reliably (a glance cell's text stopped updating,
+ * an entity row drew blank). Fixed mode is also where sibling size tiers exist, so this keeps the
+ * named boolean from being registered in two state-layout branches. A widget still shows the
+ * entity's state text ("Unavailable") and its inactive, neutral accent.
+ */
+val LocalEntityAvailability = staticCompositionLocalOf { true }
 
 /**
  * The neutral accent for an entity's resting state (a switch that is off, a motion sensor that sees
@@ -113,10 +127,13 @@ internal fun entityLook(
       !live && accent.toggleable && !accent.initiallyOn -> themed.inactiveAccent
       else -> themed.activeAccent
     }
+  val showsAvailability = LocalEntityAvailability.current
   return HaEntityLook(
     isOn = isOn,
-    isAvailable = if (live) LiveValues.isAvailable(entityId, accent.initiallyAvailable) else null,
-    staticallyAvailable = accent.initiallyAvailable,
+    isAvailable =
+      if (live && showsAvailability) LiveValues.isAvailable(entityId, accent.initiallyAvailable)
+      else null,
+    staticallyAvailable = !showsAvailability || accent.initiallyAvailable,
     neutral = unavailableAccent(),
     onOff = onOff,
     themedActive = themed.activeAccent,
