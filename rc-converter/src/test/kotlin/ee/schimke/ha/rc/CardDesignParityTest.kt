@@ -57,9 +57,12 @@ class CardDesignParityTest {
   private val registry = defaultRegistry()
   private val style = ThemeStyle.TerrazzoHome
 
-  /** A fixed "now" for the clock cards, so neither capture depends on when the test runs. */
+  /**
+   * A fixed "now" for the clock cards, so neither capture depends on when the test runs: one second
+   * before midnight, where a wall-clock read on either path would show a different date line.
+   */
   private val parityClock =
-    FixedHaClock(java.time.ZonedDateTime.of(2026, 5, 5, 10, 8, 30, 0, java.time.ZoneOffset.UTC))
+    FixedHaClock(java.time.ZonedDateTime.of(2026, 5, 5, 23, 59, 59, 0, java.time.ZoneOffset.UTC))
 
   private fun tile(entity: String, name: String? = null) =
     CardConfig(
@@ -132,10 +135,13 @@ class CardDesignParityTest {
     /** A colour both renders must show before capture: an image that loads asynchronously. */
     awaitColor: androidx.compose.ui.graphics.Color? = null,
     /**
-     * Pins the player's "now" for both captures. A clock card's time ticks in-document from the
-     * player's time source, and the two captures are taken one after the other, so a minute rolling
-     * over between them changes the digits. Provided around the players only: the encode pass is a
-     * separate composition, so the direct document keeps the live time binding the template has.
+     * Pins "now" for both renders. A clock card's time ticks in-document from the player's time
+     * source, and the two captures are taken one after the other, so a minute rolling over between
+     * them changes the digits; its date line is baked into the direct document but pushed into the
+     * template as a binding, so both must read the same instant. Provided around the players (the
+     * time source, and the template's bindings) and, unfrozen, to the direct encode: that is a
+     * separate composition, and a frozen clock there would swap the live time binding the template
+     * has for a static label.
      */
     clock: HaClock = SystemHaClock,
   ) {
@@ -166,8 +172,12 @@ class CardDesignParityTest {
               snapshot = snapshot,
               bitmapLoader = bitmapLoader,
             ) {
-              ProvideCardRegistry(registry) {
-                ProvideHaTheme(theme) { RenderChild(card, snapshot, RemoteModifier.fillMaxWidth()) }
+              CompositionLocalProvider(LocalHaClock provides clock.unfrozen()) {
+                ProvideCardRegistry(registry) {
+                  ProvideHaTheme(theme) {
+                    RenderChild(card, snapshot, RemoteModifier.fillMaxWidth())
+                  }
+                }
               }
             }
           } else {
@@ -202,6 +212,16 @@ class CardDesignParityTest {
     assertTrue(colors.size > 2, "$name: the direct capture must draw real content")
     assertEquals(0, differing, "$name: pixels differing between direct and template render")
   }
+
+  /** This clock's instant and zone, without [HaClock.isFrozen]: the live document path. */
+  private fun HaClock.unfrozen(): HaClock =
+    if (!isFrozen) this
+    else
+      object : HaClock {
+        override fun now() = this@unfrozen.now()
+
+        override fun zone() = this@unfrozen.zone()
+      }
 
   /** Waits until the card shows [color] somewhere: the bitmap loader runs off the main thread. */
   private fun awaitPixel(color: androidx.compose.ui.graphics.Color) {
@@ -1182,6 +1202,36 @@ class CardDesignParityTest {
           "longitude" to "24.75",
         ),
         entity("device_tracker.car", "away", "friendly_name" to "Car"),
+      ),
+      dark = false,
+    )
+
+  /** A row whose coordinates HA withholds draws no position line, in the template as directly. */
+  @Test
+  fun mapRedactedPosition() =
+    assertParity(
+      "map-redacted",
+      card("map") {
+        putJsonArray("entities") {
+          add("zone.home")
+          add("person.alex")
+        }
+      },
+      listOf(
+        entity(
+          "zone.home",
+          "zoning",
+          "friendly_name" to "Home",
+          "latitude" to "<redacted>",
+          "longitude" to "<redacted>",
+        ),
+        entity(
+          "person.alex",
+          "home",
+          "friendly_name" to "Alex",
+          "latitude" to "59.43",
+          "longitude" to "24.75",
+        ),
       ),
       dark = false,
     )
