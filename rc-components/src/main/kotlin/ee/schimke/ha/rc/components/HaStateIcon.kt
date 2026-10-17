@@ -43,7 +43,7 @@ internal fun HaStateIcon(
   initiallyAvailable: Boolean,
   isAvailable: RemoteBoolean?,
   tint: RemoteColor,
-  contentDescription: RemoteString,
+  contentDescription: RemoteString?,
   modifier: RemoteModifier,
 ) {
   if (activeIcon == null || activeIcon == icon) {
@@ -66,9 +66,11 @@ internal fun HaStateIcon(
       modifier,
       tint = showActive.select(hidden, tint),
     )
+    // Described once: both glyphs are drawn, one transparent, so a description on each would be
+    // read twice.
     RemoteIcon(
       activeIcon.toRemoteImageVector(),
-      contentDescription,
+      null,
       modifier,
       tint = showActive.select(tint, hidden),
     )
@@ -83,7 +85,7 @@ internal fun HaStateIcon(
   accent: HaToggleAccent,
   look: HaEntityLook,
   tint: RemoteColor,
-  contentDescription: RemoteString,
+  contentDescription: RemoteString?,
   modifier: RemoteModifier,
 ) =
   HaStateIcon(

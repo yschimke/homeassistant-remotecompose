@@ -56,7 +56,11 @@ fun RemoteHaEntities(
         RemoteBox(modifier = RemoteModifier.padding(top = 4.rdp))
       }
       data.rows.forEach { row ->
-        RemoteHaEntityRow(row, verticalPaddingDp = if (dense) DenseRowPaddingDp else 6)
+        RemoteHaEntityRow(
+          row,
+          verticalPaddingDp = if (dense) DenseRowPaddingDp else 6,
+          minHeightDp = if (dense) 0 else EntityRowMinHeightDp,
+        )
       }
     }
   }
@@ -187,7 +191,8 @@ private fun FittedEntityRow(
       accent = data.accent,
       look = look,
       tint = look.accent,
-      contentDescription = entityName(data.entityId, data.name),
+      // Decorative: the name is drawn beside it.
+      contentDescription = null,
       modifier = RemoteModifier.size((if (expanded) 28 else 18).rdp),
     )
     RemoteBox(

@@ -117,7 +117,7 @@ fun RemoteHaButtonIcon(data: HaButtonData, modifier: RemoteModifier = RemoteModi
     modifier = modifier.then(clickable).then(cardChrome(theme.cardBackground, theme.divider)),
     contentAlignment = RemoteAlignment.Center,
   ) {
-    ButtonIconChip(data, look, accent, FullChipDp, FullIconDp)
+    ButtonIconChip(data, look, accent, FullChipDp, FullIconDp, iconOnly = true)
   }
 }
 
@@ -196,6 +196,7 @@ private fun ButtonIconChip(
   accent: RemoteColor,
   chipDp: Int,
   iconDp: Int,
+  iconOnly: Boolean = false,
 ) {
   RemoteBox(
     modifier =
@@ -209,7 +210,9 @@ private fun ButtonIconChip(
       accent = data.accent,
       look = look,
       tint = accent,
-      contentDescription = entityName(data.entityId, data.name),
+      // Decorative when the name is drawn under it; the icon alone carries it otherwise.
+      contentDescription =
+        if (data.showName && !iconOnly) null else entityName(data.entityId, data.name),
       modifier = RemoteModifier.size(iconDp.rdp),
     )
   }
