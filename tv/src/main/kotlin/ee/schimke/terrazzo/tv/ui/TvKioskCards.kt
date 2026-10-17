@@ -20,6 +20,7 @@ import ee.schimke.ha.rc.ProvideCardRegistry
 import ee.schimke.ha.rc.ProvideCardSizeMode
 import ee.schimke.ha.rc.RenderChild
 import ee.schimke.ha.rc.androidXExperimentalWrap
+import ee.schimke.ha.rc.cardDataSignature
 import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.components.HaUberTheme
 import ee.schimke.ha.rc.components.ProvideCardStyle
@@ -47,7 +48,7 @@ fun TvKioskCards(
     KioskCards.forEach { card ->
       // Re-encode cards (the thermostat) refresh by their data signature; binding cards push
       // their new values into the running player.
-      val signature = registry.get(card.type)?.dataSignature(card, snapshot)
+      val signature = registry.cardDataSignature(card, snapshot)
       CachedCardPreview(
         cacheKey = KioskCardKey(card, style, cardStyle.id, signature),
         profile = androidXExperimentalWrap,

@@ -124,6 +124,19 @@ object HaStateColor {
     )
   }
 
+  /**
+   * The colour of HVAC mode [mode] (`heat`, `cool`, …) — the colour a climate entity in that mode
+   * takes — or null where HA draws it inactive (`off`, unknown). The tile's `hvac_action` badge
+   * takes the colour of the mode its action maps to (`heating` → `heat`, `idle` → `off`).
+   */
+  fun climateModeColor(mode: String): Color? =
+    when (val parsed = ClimateMode.parse(mode)) {
+      is ClimateMode.Off,
+      is ClimateMode.Unavailable,
+      is ClimateMode.Unknown -> null
+      else -> climateColor(parsed)
+    }
+
   private fun climateColor(mode: ClimateMode): Color =
     when (mode) {
       is ClimateMode.Heat,

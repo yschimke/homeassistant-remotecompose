@@ -220,7 +220,16 @@ On a Wear slot every container passes the width gate, and the small one (a ~44dp
 too short for the full tile's two body lines (56dp with padding). Wear surfaces declare
 `LocalFixedCanvasAxis = Height`, and the tile gates on height there instead: below 56dp it takes
 `RemoteHaTileCompact` (the name a step down to `Label` over the body-sized state, tighter padding),
-at or above it the full tile. The arc-dial family (thermostat, humidifier, light) does the same with
+at or above it the full tile.
+
+A tile's `features:` (HA's `target-temperature`, `climate-hvac-modes`, …) are the first thing it
+drops. They draw under the tile on the dashboard (Wrap), each row a 42dp control under a 12dp gap,
+so `naturalHeightDp` grows by 54dp a row. A launcher cell shows them only behind a single
+`RemoteMinSizeGate` sized to that height (≥ 96dp wide): a roomy cell (2×2 and up) gets the full
+tile with its features, anything shorter the compact tile, whose encode-time colours and unclipped
+icon keep it a safe state-layout sibling. The width ladder's icon-only tier is not reachable for
+such a tile (one gate per card, #224), so a 1×1 cell shows the compact row. Wear slots never show
+features. The arc-dial family (thermostat, humidifier, light) does the same with
 a two-line compact Wide row, and the short Wide rows (gauge, alarm panel, media control) keep their
 vertical padding to 2dp so both lines fit the small slot.
 
