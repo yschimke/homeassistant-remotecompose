@@ -2,6 +2,9 @@
 
 package ee.schimke.ha.cards
 
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Pause
+import androidx.compose.material.icons.filled.Stop
 import androidx.compose.remote.creation.compose.action.hostAction
 import androidx.compose.remote.creation.compose.layout.RemoteAlignment
 import androidx.compose.remote.creation.compose.layout.RemoteColumn
@@ -21,6 +24,12 @@ import androidx.wear.compose.remote.material3.RemoteCard
 import androidx.wear.compose.remote.material3.RemoteSwitchButton
 import androidx.wear.compose.remote.material3.RemoteText
 import ee.schimke.composeai.preview.CatalogComponent
+import ee.schimke.ha.rc.components.HaAction
+import ee.schimke.ha.rc.components.HaBambuControlButton
+import ee.schimke.ha.rc.components.HaBambuPrintControlData
+import ee.schimke.ha.rc.components.HaClockData
+import ee.schimke.ha.rc.components.RemoteHaBambuPrintControl
+import ee.schimke.ha.rc.components.RemoteHaClock
 
 // ---------------------------------------------------------------------------------------------
 // The `ha-cards` sheet: one sticker per palette entry. Discovery records the call each sticker
@@ -490,7 +499,7 @@ fun HaCardUberThemeSticker() = HaCardSticker {
   noReference = NO_KIT,
   caption =
     "The `console` uber theme: a skeuomorphic studio desk. The thermostat is a knurled knob in a " +
-      "ring of lamps, the gauge a backlit VU meter, the thermometer a fader, all on a lit metal panel.",
+      "ring of lamps, the gauge a backlit VU meter, the thermometer a glass liquid column, all on a lit metal panel.",
 )
 @Preview(widthDp = CARD_WIDTH_DP, heightDp = 560)
 @Composable
@@ -505,6 +514,57 @@ fun HaCardUberThemeConsoleSticker() = HaCardSticker {
           HaCardEntityRow(name = "Kitchen", state = "On", toggleable = true, isOn = true)
         }
       }
+    }
+  }
+}
+
+@CatalogComponent(
+  id = "HaCard/ConsoleControls",
+  group = "Containment",
+  noReference = NO_KIT,
+  caption =
+    "Console instruments: smoked-glass LED clock, recessed transport keys with separate " +
+      "pilot lamps, a mechanical rocker and an enamel-backed liquid thermometer.",
+)
+@Preview(widthDp = CARD_WIDTH_DP, heightDp = 420)
+@Composable
+fun HaCardConsoleControlsSticker() = HaCardSticker {
+  HaCardUberTheme(theme = "console", dark = true) {
+    RemoteColumn(RemoteModifier.fillMaxWidth(), horizontalAlignment = RemoteAlignment.Start) {
+      RemoteHaClock(
+        HaClockData(
+          title = "STUDIO",
+          staticTimeLabel = "05:17",
+          secondaryLabel = null,
+          isLarge = true,
+          use24Hour = true,
+        )
+      )
+      RemoteHaBambuPrintControl(
+        HaBambuPrintControlData(
+          printerName = "Transport",
+          pause =
+            HaBambuControlButton(
+              "Pause",
+              Icons.Filled.Pause,
+              Color(0xFFFFA000),
+              HaAction.None,
+              true,
+            ),
+          resume = null,
+          stop =
+            HaBambuControlButton("Stop", Icons.Filled.Stop, Color(0xFFE53935), HaAction.None, true),
+          statusLine = null,
+        )
+      )
+      HaCardButton(
+        name = "Fan",
+        entityId = "switch.fan",
+        toggleable = true,
+        isOn = true,
+        modifier = RemoteModifier.fillMaxWidth(),
+      )
+      HaCardSurface { HaCardThermometer(name = "Room temperature", value = 21.5f) }
     }
   }
 }

@@ -42,6 +42,7 @@ import java.text.DecimalFormat
 fun RemoteHaClock(data: HaClockData, modifier: RemoteModifier = RemoteModifier) {
   val theme = haTheme()
   val timeSize = if (data.isLarge) 64 else 36
+  val console = visualFamily() == HaVisualFamily.Console
   RemoteBox(
     modifier =
       modifier
@@ -66,7 +67,7 @@ fun RemoteHaClock(data: HaClockData, modifier: RemoteModifier = RemoteModifier) 
       }
       val timeText: RemoteString =
         data.staticTimeLabel?.rs
-          ?: if (data.zoned || data.showSeconds) {
+          ?: if (data.zoned || data.showSeconds || console) {
             liveClockTimeString(
               zoneOffsetMinutes =
                 if (data.zoned) cardFloat("zone_offset_minutes", data.zoneOffsetMinutes.toFloat())
@@ -80,14 +81,17 @@ fun RemoteHaClock(data: HaClockData, modifier: RemoteModifier = RemoteModifier) 
                 if (data.use24Hour) RemoteBoolean(true) else RemoteTimeDefaults.is24HourFormat()
             )
           }
-      RemoteText(
-        text = timeText,
-        color = theme.primaryText,
-        fontSize = timeSize.rsp,
-        fontWeight = FontWeight.Light,
-        style = haTextStyle(),
-        maxLines = 1,
-      )
+      if (console) {
+        ConsoleClock(data, timeText)
+      } else
+        RemoteText(
+          text = timeText,
+          color = theme.primaryText,
+          fontSize = timeSize.rsp,
+          fontWeight = FontWeight.Light,
+          style = haTextStyle(),
+          maxLines = 1,
+        )
       if (data.secondaryLabel != null) {
         RemoteText(
           text = cardText("date", data.secondaryLabel),

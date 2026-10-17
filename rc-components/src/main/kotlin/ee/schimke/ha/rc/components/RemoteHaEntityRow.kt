@@ -260,6 +260,14 @@ fun RemoteHaToggleSwitchByProgress(
   modifier: RemoteModifier = RemoteModifier,
   clickable: RemoteModifier = RemoteModifier,
 ) {
+  if (visualFamily() == HaVisualFamily.Console) {
+    ConsoleControlFace(
+      tween(ConsoleSlot.rc, activeAccent, progress),
+      modifier.size(width = TrackWidth, height = TrackHeight).then(clickable),
+      progress,
+    )
+    return
+  }
   // The uber theme's control shape and ink: an LCD switch is a square-knobbed block printed in its
   // ink, a Trinitron one a hairline-cornered slider.
   val uber = currentHaUberTheme()

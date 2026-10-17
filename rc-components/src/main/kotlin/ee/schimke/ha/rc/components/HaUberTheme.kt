@@ -54,7 +54,8 @@ enum class HaVisualFamily {
   Nixie,
   /**
    * Console: a 1970s broadcast desk, drawn skeuomorphically — a backlit VU meter behind glass, a
-   * fader in a recessed slot, a lamp-lit battery in a metal bezel, a dotted lamp ring round a dial.
+   * fader in a recessed slot, a liquid thermometer, a lamp-lit battery, a dotted lamp ring round a
+   * dial, mechanical keys and rockers with pilot lamps, and a smoked-glass LED clock.
    */
   Console,
 }
