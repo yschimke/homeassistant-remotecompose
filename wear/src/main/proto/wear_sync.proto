@@ -65,6 +65,9 @@ message EntityValue {
     string device_class = 4;
     // The entity's `entity_picture` URL; the picture travels as a WearPicture.
     string entity_picture = 5;
+    // Decimals the phone's formatState rounds to (registry display precision, else the
+    // entity's display_precision / suggested_display_precision); unset for the default.
+    optional int32 display_precision = 6;
 }
 
 // DataItem at `/wear/picture/<entityId>`: an entity's picture for Wear

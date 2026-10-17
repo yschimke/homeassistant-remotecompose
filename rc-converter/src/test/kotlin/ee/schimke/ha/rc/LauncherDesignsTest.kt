@@ -507,7 +507,7 @@ class LauncherDesignsTest {
             widgetsProfile,
             dark = false,
             // As the provider builds it: the tap metadata's state seed is the live state.
-            WidgetActionRegistry(snapshot.states.mapValues { (_, e) -> formatState(e) }),
+            WidgetActionRegistry(snapshot.states.mapValues { (_, e) -> formatState(e, snapshot) }),
             card,
             snapshot,
             captureSizeDp = WidgetCaptureSizeDp(widthDp, heightDp),

@@ -15,6 +15,7 @@ import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.cards.resolveBambuDevices
+import ee.schimke.ha.rc.displayPrecisionOf
 import ee.schimke.terrazzo.core.pin.MobilePinnedCard
 import ee.schimke.terrazzo.core.pin.MobilePinnedSection
 import ee.schimke.terrazzo.core.pin.PinStore
@@ -322,7 +323,7 @@ class MobileWearSyncManager(
         .getOrNull()
       if (snapshot != null) {
         registrySnapshot.value = snapshot
-        val current = snapshot.states.mapValues { (_, state) -> state.toEntityValue() }
+        val current = snapshot.states.mapValues { (_, state) -> state.toEntityValue(snapshot) }
         val delivery = valuesDelivery(hasPinned, watchAppOpen = isLeaseFresh(leaseState.value))
         if (delivery.stream) pushStream(current)
         if (delivery.dataItem) pushValuesItem(current)
@@ -464,7 +465,11 @@ class MobileWearSyncManager(
   }
 }
 
-private fun EntityState.toEntityValue(): EntityValue {
+/**
+ * This state for the watch, which formats it with the same `formatState`: the display precision
+ * travels with it, since the watch has neither the registry nor the other attributes.
+ */
+internal fun EntityState.toEntityValue(snapshot: HaSnapshot): EntityValue {
   val attrs = attributes
   return EntityValue(
     state = state,
@@ -472,6 +477,7 @@ private fun EntityState.toEntityValue(): EntityValue {
     unit = attrs["unit_of_measurement"]?.jsonPrimitive?.contentOrNull.orEmpty(),
     deviceClass = attrs["device_class"]?.jsonPrimitive?.contentOrNull.orEmpty(),
     entityPicture = attrs["entity_picture"]?.jsonPrimitive?.contentOrNull.orEmpty(),
+    displayPrecision = displayPrecisionOf(this, snapshot),
   )
 }
 

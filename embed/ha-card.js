@@ -55,60 +55,312 @@ export function slotId(domain, index) {
   return `${domain}.s${index}`;
 }
 
-/** `formatState`: the display string the converters bake and the live binding pushes. */
-export function formatState(entity) {
+/**
+ * What a value that exists but can't be shown honestly reads as (`NO_VALUE` in ha-model): a
+ * redacted (`21.xx`) or negative duration. Never a number the entity didn't report.
+ */
+export const NO_VALUE = '—';
+
+/**
+ * `formatState`: the display string the converters bake and the live binding pushes, read the way
+ * Home Assistant's frontend shows a state — relative times, binary-sensor words, display
+ * precision, currency, durations, compass bearings, count units; free text untouched. A port of
+ * ha-model's `HaStateFormat.kt`, rule for rule.
+ *
+ * [entity] is `{ state, attributes }` for [entityId]. [displayPrecision] is the entity registry's
+ * (`dp`); the embed doesn't read the registry, so it passes none, like a snapshot without devices.
+ * [nowMs] is the reference instant for relative times (`3 h ago`): the embed's own clock, as on
+ * every other host — see `isRelativeTimeState` for refreshing it.
+ */
+export function formatState(entity, entityId = '', displayPrecision = null, nowMs = Date.now()) {
   const raw = entity ? entity.state : null;
   if (raw === null || raw === undefined) return 'Unavailable';
-  if (raw === 'unavailable' || raw === 'unknown') return 'Unavailable';
-  const unit = content(entity.attributes ? entity.attributes.unit_of_measurement : null);
-  const normalized = normalizeNumericValue(raw);
-  if (normalized !== null) return formatValueWithUnit(normalized, unit);
-  const text = raw.replaceAll('_', ' ');
-  if (text.length === 0) return text;
-  const upper = text.charAt(0).toUpperCase();
-  return (upper.length === 1 ? upper : text.charAt(0)) + text.substring(1);
+  if (raw === 'unavailable') return 'Unavailable';
+  if (raw === 'unknown') return 'Unknown';
+  const attributes = isObject(entity.attributes) ? entity.attributes : {};
+  const domain = domainOf(entityId);
+  const deviceClass = attrString(attributes, 'device_class');
+  const unit = (attrString(attributes, 'unit_of_measurement') ?? '').trim();
+
+  if (isTimestampEntity(domain, deviceClass)) {
+    const time = parseInstant(raw);
+    if (time !== null) return formatRelativeTime(time, nowMs);
+  }
+  if (deviceClass === 'date') {
+    const date = parseLocalDate(raw);
+    if (date !== null) return formatDate(date.year, date.month, date.day);
+  }
+  if (domain === 'binary_sensor') {
+    const label = binarySensorLabel(deviceClass, raw);
+    if (label !== null) return label;
+  }
+  if (isRedacted(raw)) return NO_VALUE;
+  if (isNumber(raw)) {
+    const precision =
+      displayPrecision ?? attrInt(attributes, 'display_precision') ?? attrInt(attributes, 'suggested_display_precision');
+    return formatNumericState(raw, unit, deviceClass, precision, attrString(attributes, 'friendly_name'));
+  }
+  return humanize(raw);
 }
 
-export function formatValueWithUnit(value, unit) {
-  const normalized = normalizeNumericValue(value) ?? value;
+/** `formatValueWithUnit`: [value] with its [unit], formatted as `formatState` formats a number. */
+export function formatValueWithUnit(value, unit, deviceClass = null, displayPrecision = null) {
   const cleanUnit = (unit ?? '').trim();
-  return cleanUnit.length === 0 ? normalized : `${normalized} ${cleanUnit}`;
+  if (isRedacted(value)) return NO_VALUE;
+  if (!isNumber(value)) return joinUnit(value, cleanUnit);
+  return formatNumericState(value, cleanUnit, deviceClass, displayPrecision, null);
 }
 
-const X_PLACEHOLDER = /^(-?\d+)\.[xX]+$/;
+/** How often a card showing a relative time re-derives its bindings: well inside a minute. */
+const RELATIVE_TIME_TICK_MS = 20_000;
+
+/**
+ * `isRelativeTimeState`: whether [entity]'s display string is relative to now (`3 h ago`), so the
+ * embed re-derives it on a timer even when the entity doesn't change.
+ */
+export function isRelativeTimeState(entity, entityId) {
+  if (!entity || typeof entity.state !== 'string') return false;
+  const attributes = isObject(entity.attributes) ? entity.attributes : {};
+  return isTimestampEntity(domainOf(entityId), attrString(attributes, 'device_class')) && parseInstant(entity.state) !== null;
+}
+
+/** `string()` in HaStateFormat.kt: a primitive's text, null when absent or blank. */
+function attrString(attributes, key) {
+  const text = content(attributes[key]);
+  return text === null || text.trim().length === 0 ? null : text;
+}
+
+/** `int()` in HaStateFormat.kt: kotlinx `intOrNull`, kept to 0..10. */
+function attrInt(attributes, key) {
+  const text = content(attributes[key]);
+  if (text === null || !/^[+-]?\d+$/.test(text)) return null;
+  const value = Number.parseInt(text, 10);
+  return value >= 0 && value <= 10 ? value : null;
+}
+
+/** Kotlin's `kotlin.math.round`: half to even. */
+function roundHalfEven(x) {
+  const floor = Math.floor(x);
+  const diff = x - floor;
+  if (diff < 0.5) return floor;
+  if (diff > 0.5) return floor + 1;
+  return floor % 2 === 0 ? floor : floor + 1;
+}
+
+// Time ---------------------------------------------------------------------------------------
+
+const TIMESTAMP_DOMAINS = new Set(['event', 'button', 'input_button', 'scene']);
+const MINUTE = 60;
+const HOUR = 60 * MINUTE;
+const DAY = 24 * HOUR;
+const INSTANT =
+  /^(\d{4})-(\d{2})-(\d{2})[Tt](\d{2}):(\d{2})(?::(\d{2})(?:\.(\d{1,9}))?)?(?:([Zz])|([+-])(\d{2}):?(\d{2}))$/;
+
+function isTimestampEntity(domain, deviceClass) {
+  return deviceClass === 'timestamp' || TIMESTAMP_DOMAINS.has(domain);
+}
+
+/** An ISO-8601 instant with an offset (`2026-04-20T12:22:53.298+00:00`) as epoch ms, or null. */
+function parseInstant(raw) {
+  if (raw.length < 10 || !/^\d/.test(raw)) return null;
+  const m = INSTANT.exec(raw);
+  if (!m) return null;
+  const [year, month, day, hour, minute] = [1, 2, 3, 4, 5].map((i) => Number(m[i]));
+  const second = m[6] ? Number(m[6]) : 0;
+  if (month < 1 || month > 12 || day < 1 || day > daysIn(year, month) || hour > 23 || minute > 59 || second > 59)
+    return null;
+  const ms = m[7] ? Number(m[7].padEnd(3, '0').substring(0, 3)) : 0;
+  const offset = m[8] ? 0 : (m[9] === '-' ? -1 : 1) * (Number(m[10]) * 60 + Number(m[11])) * 60_000;
+  return Date.UTC(year, month - 1, day, hour, minute, second, ms) - offset;
+}
+
+function daysIn(year, month) {
+  return new Date(Date.UTC(year, month, 0)).getUTCDate();
+}
+
+function parseLocalDate(raw) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(raw);
+  if (!m) return null;
+  const [year, month, day] = [1, 2, 3].map((i) => Number(m[i]));
+  if (month < 1 || month > 12 || day < 1 || day > daysIn(year, month)) return null;
+  return { year, month, day };
+}
+
+/**
+ * `formatRelativeTime`: `just now`, `5 min ago`, `3 h ago`, `2 days ago` (`in …` ahead), with
+ * Home Assistant's `selectUnit` thresholds; a date (`20 Apr 2026`, local time) a week or more away.
+ */
+export function formatRelativeTime(timeMs, nowMs) {
+  const seconds = Math.trunc((nowMs - timeMs) / 1000);
+  const past = seconds >= 0;
+  const magnitude = Math.abs(seconds);
+  const relative = (text) => (past ? `${text} ago` : `in ${text}`);
+  const minutes = roundHalfEven(magnitude / MINUTE);
+  const hours = roundHalfEven(magnitude / HOUR);
+  const days = roundHalfEven(magnitude / DAY);
+  if (magnitude < 45) return past ? 'just now' : 'now';
+  if (minutes < 45) return relative(`${minutes} min`);
+  if (hours < 22) return relative(`${hours} h`);
+  if (days < 7) return relative(days === 1 ? '1 day' : `${days} days`);
+  const local = new Date(timeMs);
+  return formatDate(local.getFullYear(), local.getMonth() + 1, local.getDate());
+}
+
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+function formatDate(year, month, day) {
+  return `${day} ${MONTHS[month - 1]} ${year}`;
+}
+
+// Binary sensors: Home Assistant's English state words by device class [off, on] ---------------
+
+const BINARY_SENSOR_LABELS = {
+  battery: ['Normal', 'Low'],
+  battery_charging: ['Not charging', 'Charging'],
+  carbon_monoxide: ['Clear', 'Detected'],
+  co: ['Clear', 'Detected'],
+  cold: ['Normal', 'Cold'],
+  connectivity: ['Disconnected', 'Connected'],
+  door: ['Closed', 'Open'],
+  garage_door: ['Closed', 'Open'],
+  gas: ['Clear', 'Detected'],
+  heat: ['Normal', 'Hot'],
+  light: ['No light', 'Light detected'],
+  lock: ['Locked', 'Unlocked'],
+  moisture: ['Dry', 'Wet'],
+  motion: ['Clear', 'Detected'],
+  moving: ['Not moving', 'Moving'],
+  occupancy: ['Clear', 'Detected'],
+  opening: ['Closed', 'Open'],
+  plug: ['Unplugged', 'Plugged in'],
+  presence: ['Away', 'Home'],
+  problem: ['OK', 'Problem'],
+  running: ['Not running', 'Running'],
+  safety: ['Safe', 'Unsafe'],
+  smoke: ['Clear', 'Detected'],
+  sound: ['Clear', 'Detected'],
+  tamper: ['Clear', 'Tampering detected'],
+  update: ['Up-to-date', 'Update available'],
+  vibration: ['Clear', 'Detected'],
+  window: ['Closed', 'Open'],
+};
+
+function binarySensorLabel(deviceClass, raw) {
+  if (deviceClass === null || !Object.hasOwn(BINARY_SENSOR_LABELS, deviceClass)) return null;
+  const [off, on] = BINARY_SENSOR_LABELS[deviceClass];
+  if (raw === 'off') return off;
+  if (raw === 'on') return on;
+  return null;
+}
+
+// Enum / free text ---------------------------------------------------------------------------
+
+const ENUM_STATE = /^[a-z0-9_]*[a-z][a-z0-9_]*$/;
+const ENUM_LABELS = { heat_cool: 'Heat/Cool', not_home: 'Away' };
+
+/** Known enum / snake_case states humanised; anything else is the entity's own text, untouched. */
+function humanize(raw) {
+  if (!ENUM_STATE.test(raw)) return raw;
+  if (Object.hasOwn(ENUM_LABELS, raw)) return ENUM_LABELS[raw];
+  const text = raw.replaceAll('_', ' ');
+  return text.charAt(0).toUpperCase() + text.substring(1);
+}
+
+// Numbers ------------------------------------------------------------------------------------
+
+const REDACTED = /^-?\d+\.[xX]+$/;
 const DECIMAL = /^([+-]?)(\d*)(?:\.(\d*))?(?:[eE]([+-]?\d+))?$/;
 
-/** Decimal-string HALF_UP rounding to two places, exactly as `HaStateFormat.kt` does it. */
-function normalizeNumericValue(raw) {
-  const placeholder = X_PLACEHOLDER.exec(raw);
-  if (placeholder) return placeholder[1];
+function isRedacted(raw) {
+  return REDACTED.test(raw);
+}
+
+/** A plain finite decimal. `Number('')` is 0, so a digit is required, as Kotlin's parse does. */
+function isNumber(raw) {
+  return DECIMAL.test(raw) && /\d/.test(raw) && Number.isFinite(Number(raw));
+}
+
+function formatNumericState(value, unit, deviceClass, precision, name) {
+  const number = Number(value);
+  if (deviceClass === 'duration') {
+    const duration = formatDuration(number, unit);
+    if (duration !== null) return duration;
+  }
+  const currency = currencyOf(unit, deviceClass);
+  if (currency !== null) return formatMoney(value, currency, precision);
+  if (deviceClass === 'wind_direction' || (unit === '°' && mentionsBearing(name))) {
+    const degrees = formatDecimal(value, precision ?? 0, precision ?? 0) ?? value;
+    return `${compassPoint(number)} ${degrees}°`;
+  }
+  if (unit === 'm' && (deviceClass === null || deviceClass === 'distance') && Math.abs(number) >= 1000) {
+    const km = formatDecimal(scaleDown(value, 3), 0, precision ?? 1);
+    return km === null ? joinUnit(value, unit) : `${km} km`;
+  }
+  const [min, max] = precision !== null ? [precision, precision] : [0, defaultDecimals(deviceClass, unit)];
+  const formatted = formatDecimal(value, min, max) ?? value;
+  const shownUnit = repeatsName(unit, name) ? '' : countUnit(unit, formatted);
+  return joinUnit(formatted, shownUnit);
+}
+
+function joinUnit(value, unit) {
+  if (unit.length === 0) return value;
+  if (unit === '°') return `${value}°`;
+  return `${value} ${unit}`;
+}
+
+const DECIMALS_BY_UNIT = new Map([
+  ...['°C', '°F', '℃', '℉', 'K'].map((u) => [u, 1]),
+  ['%', 0],
+  ...['W', 'Wh', 'lx', 'ppm', 'ppb', 'µg/m³', 'μg/m³', 'mg/m³', 'dB', 'dBm', 'dBA', 'hPa', 'mbar', 'Pa', 'W/m²', 'mA', 'g', 'cm', 'mL'].map((u) => [u, 0]),
+  ...['kW', 'MW', 'kWh', 'MWh', 'A', 'inHg', 'bar', 'm³'].map((u) => [u, 2]),
+  ...['V', 'kPa', 'psi', 'km/h', 'mph', 'm/s', 'kn', 'ft/s', 'km', 'mi', 'mm', 'in', 'mm/h', 'in/h', 'L', 'gal', 'kg', 'lb'].map((u) => [u, 1]),
+]);
+const DECIMALS_BY_CLASS = { temperature: 1, humidity: 0, battery: 0, moisture: 0, illuminance: 0, aqi: 0 };
+
+function defaultDecimals(deviceClass, unit) {
+  if (DECIMALS_BY_UNIT.has(unit)) return DECIMALS_BY_UNIT.get(unit);
+  if (deviceClass !== null && Object.hasOwn(DECIMALS_BY_CLASS, deviceClass)) return DECIMALS_BY_CLASS[deviceClass];
+  return 2;
+}
+
+/** `formatDecimal`: HALF_UP to [maxDecimals], trailing zeros trimmed down to [minDecimals]. */
+export function formatDecimal(raw, minDecimals, maxDecimals) {
+  const rounded = roundDecimal(raw, maxDecimals);
+  if (rounded === null) return null;
+  if (maxDecimals <= minDecimals || !rounded.includes('.')) return rounded;
+  const [whole, fraction] = rounded.split('.');
+  const kept = fraction.replace(/0+$/, '').padEnd(minDecimals, '0');
+  return kept.length === 0 ? whole : `${whole}.${kept}`;
+}
+
+/** Decimal-string HALF_UP rounding, exactly as `HaStateFormat.kt` does it. */
+function roundDecimal(raw, decimals) {
   const match = DECIMAL.exec(raw);
-  // Kotlin first asks `toDoubleOrNull()?.isFinite()`. Every string DECIMAL accepts that
-  // Kotlin parses, Number parses to the same double.
-  if (!match || !Number.isFinite(Number(raw))) return null;
+  if (!match || !isNumber(raw)) return null;
   const integer = match[2];
   const fraction = match[3] ?? '';
   const exponentText = match[4] ?? '';
   const exponent = exponentText.length === 0 ? 0 : Number.parseInt(exponentText, 10);
-  if (!Number.isSafeInteger(exponent) || Math.abs(exponent) > 2147483647) return null;
-  if (exponent < -400) return '0';
+  // Kotlin's `toIntOrNull()`: an exponent outside Int is no number this can round.
+  if (!Number.isSafeInteger(exponent) || exponent > 2147483647 || exponent < -2147483648) return null;
+  const zero = decimals === 0 ? '0' : `0.${'0'.repeat(decimals)}`;
+  if (exponent < -400) return zero;
   if (exponent > 400) return null;
   const digits = integer + fraction;
   if (digits.length === 0) return null;
   const decimalAt = integer.length + exponent;
   let whole;
   if (decimalAt <= 0) whole = '0';
-  else if (decimalAt >= digits.length)
-    whole = digits + '0'.repeat(Math.min(decimalAt - digits.length, 400));
+  else if (decimalAt >= digits.length) whole = digits + '0'.repeat(Math.min(decimalAt - digits.length, 400));
   else whole = digits.substring(0, decimalAt);
   whole = whole.replace(/^0+/, '') || '0';
   let fractional;
   if (decimalAt <= 0) fractional = '0'.repeat(Math.min(-decimalAt, 400)) + digits;
   else if (decimalAt >= digits.length) fractional = '';
   else fractional = digits.substring(decimalAt);
-  fractional = fractional.padEnd(3, '0');
-  let scaled = (whole + fractional.substring(0, 2)).replace(/^0+/, '') || '0';
-  if (fractional.charAt(2) >= '5') {
+  fractional = fractional.padEnd(decimals + 1, '0');
+  let scaled = (whole + fractional.substring(0, decimals)).replace(/^0+/, '') || '0';
+  if (fractional.charAt(decimals) >= '5') {
     const chars = scaled.split('');
     let carry = true;
     for (let i = chars.length - 1; i >= 0 && carry; i--) {
@@ -120,10 +372,135 @@ function normalizeNumericValue(raw) {
     }
     scaled = (carry ? '1' : '') + chars.join('');
   }
-  const padded = scaled.padStart(3, '0');
-  const decimals = padded.slice(-2).replace(/0+$/, '');
-  const result = padded.slice(0, -2) + (decimals.length === 0 ? '' : `.${decimals}`);
-  return match[1] === '-' && result !== '0' ? `-${result}` : result;
+  const padded = scaled.padStart(decimals + 1, '0');
+  const result = decimals === 0 ? padded : `${padded.slice(0, -decimals)}.${padded.slice(-decimals)}`;
+  const isZero = /^[0.]*$/.test(result);
+  return match[1] === '-' && !isZero ? `-${result}` : result;
+}
+
+/** [raw] divided by 10^[places]: only the exponent moves. */
+function scaleDown(raw, places) {
+  const match = DECIMAL.exec(raw);
+  if (!match) return raw;
+  const exponent = match[4] ? Number.parseInt(match[4], 10) : 0;
+  const mantissa = raw.split(/[eE]/)[0];
+  return `${mantissa}e${exponent - places}`;
+}
+
+// Currency -----------------------------------------------------------------------------------
+
+const CURRENCY_SYMBOLS = {
+  GBP: '£', EUR: '€', USD: '$', JPY: '¥', CNY: 'CN¥', INR: '₹', KRW: '₩', AUD: 'A$', CAD: 'CA$',
+  NZD: 'NZ$', HKD: 'HK$', MXN: 'MX$', BRL: 'R$', ILS: '₪', VND: '₫', TWD: 'NT$', PHP: '₱',
+};
+const CURRENCY_CODES = new Set([
+  ...Object.keys(CURRENCY_SYMBOLS),
+  'CHF', 'SEK', 'NOK', 'DKK', 'PLN', 'CZK', 'HUF', 'RON', 'BGN', 'ZAR', 'SGD', 'THB', 'TRY', 'IDR',
+  'MYR', 'AED', 'SAR', 'ISK',
+]);
+const ZERO_DECIMAL_CURRENCIES = new Set(['JPY', 'KRW', 'VND', 'ISK', 'HUF']);
+const CURRENCY_UNIT = /^([A-Z]{3})(?:\s*\/\s*(.+))?$/;
+
+function currencyOf(unit, deviceClass) {
+  const match = CURRENCY_UNIT.exec(unit);
+  if (!match) return null;
+  const code = match[1];
+  if (!CURRENCY_CODES.has(code) && deviceClass !== 'monetary') return null;
+  return { code, per: match[2] && match[2].length > 0 ? match[2] : null };
+}
+
+/** `£3.84`, `£0.25/kWh`, `CHF 3.84`. */
+function formatMoney(value, currency, precision) {
+  const fixed = ZERO_DECIMAL_CURRENCIES.has(currency.code) ? 0 : 2;
+  let min;
+  let max;
+  if (precision !== null) [min, max] = [precision, precision];
+  else if (currency.per !== null) [min, max] = [fixed, Math.max(fixed, 4)];
+  else [min, max] = [fixed, fixed];
+  const amount = formatDecimal(value, min, max) ?? value;
+  const negative = amount.startsWith('-');
+  const magnitude = negative ? amount.substring(1) : amount;
+  const symbol = CURRENCY_SYMBOLS[currency.code];
+  const money = symbol !== undefined ? `${symbol}${magnitude}` : `${currency.code} ${magnitude}`;
+  const per = currency.per !== null ? `/${currency.per}` : '';
+  return (negative ? '-' : '') + money + per;
+}
+
+// Durations, bearings, names, counts ---------------------------------------------------------
+
+const SECOND_UNITS = new Set(['s', '', 'ms', 'µs', 'μs']);
+
+/** `1 h 05 min`, `5 min`, `45 s`, `2 d 3 h`; negative is NO_VALUE; null for an unknown unit. */
+function formatDuration(value, unit) {
+  let seconds;
+  switch (unit) {
+    case 'd': seconds = value * DAY; break;
+    case 'h': seconds = value * HOUR; break;
+    case 'min': seconds = value * MINUTE; break;
+    case 's':
+    case '': seconds = value; break;
+    case 'ms': seconds = value / 1000; break;
+    case 'µs':
+    case 'μs': seconds = value / 1_000_000; break;
+    default: return null;
+  }
+  if (seconds < 0) return NO_VALUE;
+  const total = roundHalfEven(seconds);
+  const pad = (n) => String(n).padStart(2, '0');
+  if (total < MINUTE) return `${total} s`;
+  if (total < HOUR) {
+    const rest = total % MINUTE;
+    const minutes = Math.floor(total / MINUTE);
+    return rest === 0 || !SECOND_UNITS.has(unit) ? `${minutes} min` : `${minutes} min ${pad(rest)} s`;
+  }
+  if (total < DAY) {
+    const minutes = Math.floor((total % HOUR) / MINUTE);
+    const hours = Math.floor(total / HOUR);
+    return minutes === 0 ? `${hours} h` : `${hours} h ${pad(minutes)} min`;
+  }
+  const hours = Math.floor((total % DAY) / HOUR);
+  const days = Math.floor(total / DAY);
+  return hours === 0 ? `${days} d` : `${days} d ${hours} h`;
+}
+
+const COMPASS = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'];
+
+/** The 16-point compass point for a bearing in degrees. */
+export function compassPoint(degrees) {
+  const normalized = (((degrees % 360) + 360) % 360);
+  return COMPASS[Math.trunc((normalized + 11.25) / 22.5) % 16];
+}
+
+function mentionsBearing(name) {
+  if (name === null) return false;
+  const lower = name.toLowerCase();
+  return lower.includes('bearing') || lower.includes('direction');
+}
+
+/** A unit the entity's name already ends with (`UV index` on "Garden UV index"): shown once. */
+function repeatsName(unit, name) {
+  if (name === null || unit.length < 3 || !/\p{L}/u.test(unit)) return false;
+  const lowerName = name.trim().toLowerCase();
+  const lowerUnit = unit.toLowerCase();
+  if (!lowerName.endsWith(lowerUnit)) return false;
+  const before = lowerName.length - lowerUnit.length - 1;
+  return before < 0 || !/[\p{L}\p{Nd}]/u.test(lowerName.charAt(before));
+}
+
+const COUNT_UNITS = new Map([
+  ...['alert', 'commit', 'cycle', 'device', 'download', 'email', 'error', 'event', 'file', 'follower', 'fork',
+    'issue', 'item', 'message', 'notification', 'package', 'pull request', 'request', 'star', 'step', 'task',
+    'time', 'update', 'visitor', 'warning', 'watcher'].map((one) => [one, `${one}s`]),
+  ['entity', 'entities'],
+  ['person', 'people'],
+]);
+const COUNT_SINGULAR = new Map([...COUNT_UNITS].map(([one, many]) => [many, one]));
+
+/** `1 star`, `2 stars`: a known count unit agreeing with [formatted]; any other unit unchanged. */
+function countUnit(unit, formatted) {
+  const singular = COUNT_SINGULAR.get(unit) ?? (COUNT_UNITS.has(unit) ? unit : null);
+  if (singular === null) return unit;
+  return formatted === '1' || formatted === '-1' ? singular : COUNT_UNITS.get(singular);
 }
 
 const ON_OFF = new Set(['light', 'switch', 'input_boolean', 'fan', 'siren', 'humidifier', 'binary_sensor']);
@@ -263,7 +640,7 @@ export function slotBindings(card, states) {
     const state = states[entityId] ?? null;
     const name =
       entry.name ?? content(state && state.attributes ? state.attributes.friendly_name : null) ?? entityId;
-    strings[`${slot}.state`] = formatState(state);
+    strings[`${slot}.state`] = formatState(state, entityId);
     strings[`${slot}.name`] = name;
     booleans[`${slot}.is_on`] = state ? isOn(entityId, state.state) : false;
     booleans[`${slot}.is_available`] = state ? isAvailable(state.state) : false;
@@ -849,6 +1226,13 @@ export class HaCardElement extends BaseElement {
 
   connectedCallback() {
     this.start();
+    // A relative time ("3 h ago") moves with the clock, not the entity: while the card shows one,
+    // re-derive the bindings on a tick, as the app's dashboard does. Only changed values are
+    // pushed, so a tick that rolls no label over repaints nothing.
+    this.clockTimer = setInterval(() => {
+      const card = this.card;
+      if (card && cardEntityIds(card).some((id) => isRelativeTimeState(this.states[id], id))) this.render();
+    }, RELATIVE_TIME_TICK_MS);
     if (globalThis.ResizeObserver) {
       this.resizer = new ResizeObserver(() => this.fit());
       this.resizer.observe(this);
@@ -857,6 +1241,7 @@ export class HaCardElement extends BaseElement {
 
   disconnectedCallback() {
     this.stop();
+    clearInterval(this.clockTimer);
     if (this.resizer) this.resizer.disconnect();
   }
 

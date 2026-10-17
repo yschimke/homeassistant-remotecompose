@@ -123,7 +123,7 @@ class PictureEntityCardConverter : CardConverter {
       HaPictureEntityData(
         entityId = entityId,
         name = name,
-        state = LiveValues.state(entityId, formatState(entity)),
+        state = LiveValues.state(entityId, formatState(entity, snapshot)),
         icon = icons.icon,
         accent = HaStateColor.toggleAccentFor(entityId, entity).withIcons(icons),
         showName = showName,

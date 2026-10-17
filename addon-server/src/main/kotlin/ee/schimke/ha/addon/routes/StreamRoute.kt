@@ -59,7 +59,9 @@ fun Routing.streamRoute(bridge: HaSupervisorBridge) {
               put("type", "state")
               put(
                 "bindings",
-                buildJsonObject { putStateBindings(state) },
+                buildJsonObject {
+                  putStateBindings(state, bridge.cache.displayPrecision(state.entityId))
+                },
               )
             }
             send(Frame.Text(msg.toString()))
@@ -120,7 +122,7 @@ private suspend fun handleClientFrame(
           "bindings",
           buildJsonObject {
             for (state in bindings) {
-              putStateBindings(state)
+              putStateBindings(state, bridge.cache.displayPrecision(state.entityId))
             }
           },
         )
@@ -151,10 +153,14 @@ private suspend fun handleClientFrame(
   }
 }
 
-/** Keep hydration and live events aligned with the document's formatted state binding. */
-internal fun JsonObjectBuilder.putStateBindings(state: EntityState) {
+/**
+ * Keep hydration and live events aligned with the document's formatted state binding: the same
+ * `formatState` the app authors with, at the entity registry's [displayPrecision] (`dp`) as the
+ * app's snapshot carries it.
+ */
+internal fun JsonObjectBuilder.putStateBindings(state: EntityState, displayPrecision: Int? = null) {
   val entityId = state.entityId
-  put("$entityId.state", JsonPrimitive(formatState(state)))
+  put("$entityId.state", JsonPrimitive(formatState(state, displayPrecision)))
   put("$entityId.is_on", JsonPrimitive(HaLiveBindings.isOn(entityId, state.state)))
   put("$entityId.is_available", JsonPrimitive(HaLiveBindings.isAvailable(state.state)))
   putStateInt(entityId, state.state)

@@ -19,6 +19,7 @@ import androidx.wear.compose.material3.ButtonDefaults
 import androidx.wear.compose.material3.ListHeader
 import androidx.wear.compose.material3.MaterialTheme
 import androidx.wear.compose.material3.Text
+import ee.schimke.terrazzo.wear.data.displayState
 import ee.schimke.terrazzo.wearsync.proto.DashboardData
 import ee.schimke.terrazzo.wearsync.proto.EntityValue
 
@@ -119,15 +120,7 @@ fun WearDashboardScreen(
     } else {
       items(dashboard.cards) { card ->
         val value = values[card.primaryEntityId]
-        val displayState =
-          value
-            ?.let { v ->
-              buildString {
-                append(v.state)
-                if (v.unit.isNotEmpty()) append(" ${v.unit}")
-              }
-            }
-            .orEmpty()
+        val displayState = value?.displayState(card.primaryEntityId).orEmpty()
         Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp, vertical = 6.dp)) {
           Text(
             text = card.title.ifEmpty { card.primaryEntityId.ifEmpty { card.type } },

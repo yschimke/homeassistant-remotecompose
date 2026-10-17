@@ -141,7 +141,7 @@ class CoverControlsTest {
     assertEquals("Closing", coverStateLabel(cover("closing")))
     assertEquals("Closed", coverStateLabel(cover("closed")))
     assertEquals("Unavailable", coverStateLabel(cover("unavailable", 0)))
-    assertEquals("Unavailable", coverStateLabel(cover("unknown")))
+    assertEquals("Unknown", coverStateLabel(cover("unknown")))
     assertEquals("Unavailable", coverStateLabel(null))
   }
 

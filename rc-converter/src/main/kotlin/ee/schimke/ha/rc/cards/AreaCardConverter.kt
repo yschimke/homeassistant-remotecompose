@@ -14,6 +14,7 @@ import ee.schimke.ha.design.CardDesignSlots
 import ee.schimke.ha.design.DesignProperties
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
+import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HaLiveBindings
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.CardConverter
@@ -25,6 +26,7 @@ import ee.schimke.ha.rc.components.HaAreaCardData
 import ee.schimke.ha.rc.components.HaAreaStat
 import ee.schimke.ha.rc.components.LiveValues
 import ee.schimke.ha.rc.components.RemoteHaArea
+import ee.schimke.ha.rc.formatState
 import ee.schimke.ha.rc.formatValueWithUnit
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.add
@@ -138,13 +140,13 @@ class AreaCardConverter : CardConverter {
         "temperature" ->
           HaAreaStat(
             icon = Icons.Filled.Thermostat,
-            label = LiveValues.state(id, formatValueWithUnit(entity.state, unit ?: "°C")),
+            label = LiveValues.state(id, areaStat(entity, snapshot, unit, "°C")),
           )
         "humidity",
         "moisture" ->
           HaAreaStat(
             icon = Icons.Filled.WaterDrop,
-            label = LiveValues.state(id, formatValueWithUnit(entity.state, unit ?: "%")),
+            label = LiveValues.state(id, areaStat(entity, snapshot, unit, "%")),
           )
         else -> null
       }
@@ -184,3 +186,16 @@ private fun nameOf(card: CardConfig): String =
       it.uppercaseChar()
     }
     ?: "Area"
+
+/**
+ * An area stat's label under `<id>.state`: the host pushes `formatState` there, so an entity with
+ * its own unit bakes exactly that. Only a reading without a unit gets the stat's [fallbackUnit].
+ */
+private fun areaStat(
+  entity: EntityState,
+  snapshot: HaSnapshot,
+  unit: String?,
+  fallbackUnit: String,
+): String =
+  if (unit != null) formatState(entity, snapshot)
+  else formatValueWithUnit(entity.state, fallbackUnit)

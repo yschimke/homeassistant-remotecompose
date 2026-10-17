@@ -12,6 +12,7 @@ import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.runtime.Composable
 import ee.schimke.ha.model.EntityState
+import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.components.HaAction
 import ee.schimke.ha.rc.components.HaMeasureKind
 import ee.schimke.ha.rc.components.HaPresentation
@@ -39,6 +40,7 @@ fun haReading(
   min: Double? = null,
   max: Double? = null,
   kind: HaMeasureKind? = null,
+  snapshot: HaSnapshot? = null,
 ): HaReading {
   val attr = { key: String -> entity?.attributes?.get(key)?.jsonPrimitive?.contentOrNull }
   val resolvedUnit = unit ?: attr("unit_of_measurement")
@@ -48,7 +50,7 @@ fun haReading(
   return HaReading.live(
     entityId = entityId,
     name = name ?: attr("friendly_name") ?: entityId ?: "Sensor",
-    formatted = formatState(entity),
+    formatted = snapshot?.let { formatState(entity, it) } ?: formatState(entity),
     numeric = entity?.state?.toFloatOrNull() ?: lower.toFloat(),
     unit = resolvedUnit,
     kind = resolvedKind,

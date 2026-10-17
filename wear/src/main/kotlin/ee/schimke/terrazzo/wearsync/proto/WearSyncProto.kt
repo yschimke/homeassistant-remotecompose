@@ -67,6 +67,12 @@ data class EntityValue(
   val deviceClass: String = "",
   /** The entity's `entity_picture` URL; the picture itself travels as a [WearPicture]. */
   val entityPicture: String = "",
+  /**
+   * The decimals the phone's `formatState` rounds this state to — the entity registry's display
+   * precision, else the entity's `display_precision` / `suggested_display_precision` — so the watch
+   * formats it identically. Null for the formatter's device-class default.
+   */
+  val displayPrecision: Int? = null,
 )
 
 /**

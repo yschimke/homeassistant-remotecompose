@@ -214,7 +214,7 @@ private fun mapElement(obj: JsonObject, snapshot: HaSnapshot): HaPictureElement?
     "state-label" ->
       HaPictureElement.StateLabel(
         entityId = entityId,
-        text = LiveValues.state(entityId, formatState(entity)),
+        text = LiveValues.state(entityId, formatState(entity, snapshot)),
         position = position,
       )
     "service-button" -> {

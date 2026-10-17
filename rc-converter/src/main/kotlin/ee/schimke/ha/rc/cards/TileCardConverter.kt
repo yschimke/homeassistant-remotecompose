@@ -222,7 +222,7 @@ class TileCardConverter : CardConverter {
     // to (live-card-updates.md); such a tile re-encodes instead.
     val content = TileContent.stateContent(card, entityId)
     val state =
-      if (content == null) LiveValues.state(entityId, formatState(entity))
+      if (content == null) LiveValues.state(entityId, formatState(entity, snapshot))
       else LiveValues.named(entityId, "state_label", TileContent.secondaryText(content, entity))
     // HA: a configured colour is the active colour; inactive stays the neutral look.
     val stateAccent = HaStateColor.toggleAccentFor(entityId, entity)

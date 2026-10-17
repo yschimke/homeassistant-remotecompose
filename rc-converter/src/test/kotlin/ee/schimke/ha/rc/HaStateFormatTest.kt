@@ -41,7 +41,7 @@ class HaStateFormatTest {
   }
 
   @Test
-  fun dropsMaskedFractionSuffix() {
+  fun showsNoValueForAMaskedFraction() {
     val state =
       EntityState(
         "sensor.home_download",
@@ -49,7 +49,8 @@ class HaStateFormatTest {
         attributes = buildJsonObject { put("unit_of_measurement", "Mbit/s") },
       )
 
-    assertEquals("551 Mbit/s", formatState(state))
+    // A redacted reading is not "551": never invent the digits (design principle 7).
+    assertEquals(NO_VALUE, formatState(state))
   }
 
   @Test
@@ -97,7 +98,7 @@ class HaStateFormatTest {
   @Test
   fun `value and unit formatter normalizes numeric values`() {
     assertEquals("73.13 Mbit/s", formatValueWithUnit("73.1299", "Mbit/s"))
-    assertEquals("551 Mbit/s", formatValueWithUnit("551.XXXXXXXXXXXX", "Mbit/s"))
+    assertEquals(NO_VALUE, formatValueWithUnit("551.XXXXXXXXXXXX", "Mbit/s"))
   }
 
   @Test

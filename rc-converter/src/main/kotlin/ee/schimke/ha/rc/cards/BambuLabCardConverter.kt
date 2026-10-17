@@ -116,7 +116,7 @@ open class BambuLabCardConverter(
       when {
         printer.ambiguous -> ""
         prefix != null -> buildPrintStatusData(prefix, snapshot).phase.label
-        else -> formatState(entity)
+        else -> formatState(entity, snapshot)
       }
 
     RemoteBox(

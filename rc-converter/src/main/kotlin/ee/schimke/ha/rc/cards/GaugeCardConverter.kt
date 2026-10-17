@@ -197,7 +197,7 @@ private fun gaugeData(card: CardConfig, snapshot: HaSnapshot): HaGaugeData {
   return HaGaugeData(
     entityId = entityId,
     name = name,
-    valueText = LiveValues.state(entityId, formatState(entity)),
+    valueText = LiveValues.state(entityId, formatState(entity, snapshot)),
     unit = unit,
     value = LiveValues.numericState(entityId, value.toFloat()),
     min = min,

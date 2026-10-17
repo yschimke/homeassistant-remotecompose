@@ -68,7 +68,7 @@ class GlanceCardConverter : CardConverter {
       HaGlanceCellData(
         entityId = eid,
         name = name,
-        state = LiveValues.state(eid, formatState(entity)),
+        state = LiveValues.state(eid, formatState(entity, snapshot)),
         icon = icons.icon,
         accent = HaStateColor.toggleAccentFor(eid, entity).withIcons(icons),
         tapAction = tapAction,

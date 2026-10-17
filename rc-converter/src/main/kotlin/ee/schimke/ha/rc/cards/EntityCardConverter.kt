@@ -88,7 +88,7 @@ class EntityCardConverter : CardConverter {
       HaEntityRowData(
         entityId = entityId,
         name = nameFor(card, entity, entityId),
-        state = LiveValues.state(entityId, formatState(entity)),
+        state = LiveValues.state(entityId, formatState(entity, snapshot)),
         icon = icons.icon,
         accent = HaStateColor.toggleAccentFor(entityId, entity).withIcons(icons),
         tapAction = tapAction,
@@ -112,7 +112,7 @@ class EntityCardConverter : CardConverter {
     return HaTileData(
       entityId = entityId,
       name = nameFor(card, entity, entityId),
-      state = LiveValues.state(entityId, formatState(entity)),
+      state = LiveValues.state(entityId, formatState(entity, snapshot)),
       icon = icons.icon,
       accent = HaStateColor.toggleAccentFor(entityId, entity).withIcons(icons),
       tapAction = tapAction,
