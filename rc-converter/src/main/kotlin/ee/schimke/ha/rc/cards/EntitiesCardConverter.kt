@@ -18,6 +18,7 @@ import ee.schimke.ha.rc.LocalFixedCanvasAxis
 import ee.schimke.ha.rc.LocalWidgetCaptureSizeDp
 import ee.schimke.ha.rc.RemoteMinSizeGate
 import ee.schimke.ha.rc.RemoteSizeBreakpoint
+import ee.schimke.ha.rc.components.EntityRowMinHeightDp
 import ee.schimke.ha.rc.components.HaEntitiesData
 import ee.schimke.ha.rc.components.HaEntitiesFit
 import ee.schimke.ha.rc.components.HaEntityRowData
@@ -47,7 +48,7 @@ class EntitiesCardConverter : CardConverter {
   override fun naturalHeightDp(card: CardConfig, snapshot: HaSnapshot): Int {
     val rows = card.raw["entities"]?.jsonArray?.size ?: 0
     val title = if (card.raw["title"] != null) 36 else 0
-    return title + 16 + 44 * rows // title + top-pad + 44dp per entity row.
+    return title + 16 + EntityRowMinHeightDp * rows // title + top-pad + one touch-target row each.
   }
 
   /**

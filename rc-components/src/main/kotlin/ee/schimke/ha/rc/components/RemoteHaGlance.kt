@@ -158,7 +158,8 @@ fun RemoteHaGlanceCell(data: HaGlanceCellData, modifier: RemoteModifier = Remote
         accent = data.accent,
         look = look,
         tint = accent,
-        contentDescription = entityName(data.entityId, data.name),
+        // Decorative: the name is drawn above it.
+        contentDescription = null,
         modifier = RemoteModifier.size(28.rdp),
       )
     }

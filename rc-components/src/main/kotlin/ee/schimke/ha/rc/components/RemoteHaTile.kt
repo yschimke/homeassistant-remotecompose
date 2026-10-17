@@ -129,6 +129,7 @@ private fun TileInfoRow(data: HaTileData, look: HaEntityLook, renderChip: Boolea
 @Composable
 @RemoteComposable
 private fun TileIcon(data: HaTileData, look: HaEntityLook, renderChip: Boolean) {
+  // Decorative: the tile draws the name beside it.
   val accent = look.accent
   if (renderChip) {
     RemoteBox(
@@ -143,7 +144,7 @@ private fun TileIcon(data: HaTileData, look: HaEntityLook, renderChip: Boolean) 
         accent = data.accent,
         look = look,
         tint = accent,
-        contentDescription = entityName(data.entityId, data.name),
+        contentDescription = null,
         modifier = RemoteModifier.size(20.rdp),
       )
     }
@@ -153,7 +154,7 @@ private fun TileIcon(data: HaTileData, look: HaEntityLook, renderChip: Boolean) 
       accent = data.accent,
       look = look,
       tint = accent,
-      contentDescription = entityName(data.entityId, data.name),
+      contentDescription = null,
       modifier = RemoteModifier.size(24.rdp),
     )
   }
@@ -196,7 +197,8 @@ fun RemoteHaTileCompact(data: HaTileData, modifier: RemoteModifier = RemoteModif
         accent = data.accent,
         look = look,
         tint = accent,
-        contentDescription = entityName(data.entityId, data.name),
+        // Decorative: the name is drawn beside it.
+        contentDescription = null,
         modifier = RemoteModifier.size(24.rdp),
       )
       RemoteColumn(modifier = RemoteModifier.padding(start = 10.rdp)) {

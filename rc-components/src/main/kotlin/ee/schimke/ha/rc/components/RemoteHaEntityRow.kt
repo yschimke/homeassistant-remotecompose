@@ -14,9 +14,11 @@ import androidx.compose.remote.creation.compose.modifier.background
 import androidx.compose.remote.creation.compose.modifier.clickable
 import androidx.compose.remote.creation.compose.modifier.clip
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
+import androidx.compose.remote.creation.compose.modifier.height
 import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.modifier.size
 import androidx.compose.remote.creation.compose.modifier.visibility
+import androidx.compose.remote.creation.compose.modifier.width
 import androidx.compose.remote.creation.compose.shaders.RemoteBrush
 import androidx.compose.remote.creation.compose.shaders.verticalGradient
 import androidx.compose.remote.creation.compose.shapes.RemoteCircleShape
@@ -50,6 +52,7 @@ fun RemoteHaEntityRow(
   data: HaEntityRowData,
   modifier: RemoteModifier = RemoteModifier,
   verticalPaddingDp: Int = 6,
+  minHeightDp: Int = EntityRowMinHeightDp,
 ) {
   val theme = haTheme()
   val clickable =
@@ -59,10 +62,20 @@ fun RemoteHaEntityRow(
   val accent: RemoteColor = look.accent
 
   RemoteRow(
-    modifier = modifier.then(clickable).fillMaxWidth().padding(vertical = verticalPaddingDp.rdp),
+    // The player's tap area excludes padding, so a touch-target row takes its height from the strut
+    // below rather than from padding.
+    modifier =
+      modifier
+        .then(clickable)
+        .fillMaxWidth()
+        .padding(vertical = (if (minHeightDp > 0) 0 else verticalPaddingDp).rdp),
     horizontalArrangement = RemoteArrangement.SpaceBetween,
     verticalAlignment = RemoteAlignment.CenterVertically,
   ) {
+    // A zero-width strut holds the row at [minHeightDp]: `heightIn` on the row isn't honoured by
+    // the
+    // card player.
+    if (minHeightDp > 0) RemoteBox(modifier = RemoteModifier.width(0.rdp).height(minHeightDp.rdp))
     // The icon and name take what the trailing state or switch leaves: a long name ellipsizes
     // instead of pushing the value (the part the row is read for) or the switch out of a narrow
     // widget cell.
@@ -75,7 +88,9 @@ fun RemoteHaEntityRow(
         accent = data.accent,
         look = look,
         tint = accent,
-        contentDescription = entityName(data.entityId, data.name),
+        // The name is drawn beside the icon, so the icon is decorative: described too, a screen
+        // reader would read the name twice.
+        contentDescription = null,
         modifier = RemoteModifier.size(20.rdp),
       )
       RemoteBox(modifier = RemoteModifier.padding(start = 12.rdp)) {
@@ -117,6 +132,12 @@ fun RemoteHaEntityRow(
     )
   }
 }
+
+/**
+ * A row's height at least: a full touch target (48dp), which is also HA's row pitch (a 40px row
+ * with 8px between rows). A fixed widget canvas, which can't grow, passes 0.
+ */
+const val EntityRowMinHeightDp: Int = 48
 
 /**
  * A row's trailing slot: [switch] for a [toggle] entity with an on/off state, else [state] (its
