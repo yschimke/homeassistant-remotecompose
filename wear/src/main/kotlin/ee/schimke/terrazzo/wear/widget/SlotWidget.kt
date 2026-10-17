@@ -120,7 +120,8 @@ abstract class SlotWidget(internal val slotIndex: Int) : GlanceWearWidget() {
     }
 
     val style = WearPrefs(app).themeStyle.first()
-    val cardStyle = HaUberTheme.byId(WearPrefs(app).cardStyle.first())
+    val cardStyle =
+      wearWidgetCardStyle(pinned?.card?.cardStyleOverride, WearPrefs(app).cardStyle.first())
     val registry = defaultRegistry().withEnhancedShutter()
     val wearColors = RemoteColorScheme(terrazzoWearColorScheme(style))
     // Keep Remote Material's WearM3.* named states, but define the two HA-specific semantic slots:
@@ -131,7 +132,7 @@ abstract class SlotWidget(internal val slotIndex: Int) : GlanceWearWidget() {
     return slotWidgetData(
       registry,
       updatedColors,
-      style to cardStyle.id,
+      style,
       card,
       snapshot,
       slotIndex,
@@ -141,6 +142,10 @@ abstract class SlotWidget(internal val slotIndex: Int) : GlanceWearWidget() {
     }
   }
 }
+
+/** Unknown ids from a newer phone fall back to this watch's preference. */
+internal fun wearWidgetCardStyle(override: String?, watchStyle: String): HaUberTheme =
+  HaUberTheme.all.firstOrNull { it.id == override } ?: HaUberTheme.byId(watchStyle)
 
 /**
  * The widget data for a slot showing [card]. Design first: the card's Wear template, captured by
@@ -175,10 +180,13 @@ internal fun slotWidgetData(
         WearTemplateKey(
           cardType = design.type,
           shape = properties.shape,
-          theme = themeKey,
+          theme = themeKey to cardStyle.id,
           containerType = params.containerType,
           widthDp = params.widthDp,
           heightDp = params.heightDp,
+          horizontalPaddingDp = params.horizontalPaddingDp,
+          verticalPaddingDp = params.verticalPaddingDp,
+          cornerRadiusDp = params.cornerRadiusDp,
           renderer = params.rendererVersion.toString(),
         )
       val template =
@@ -232,6 +240,9 @@ private data class WearTemplateKey(
   val containerType: Int,
   val widthDp: Float,
   val heightDp: Float,
+  val horizontalPaddingDp: Float,
+  val verticalPaddingDp: Float,
+  val cornerRadiusDp: Float,
   val renderer: String,
 )
 
