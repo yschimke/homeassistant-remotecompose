@@ -227,6 +227,58 @@ class DesignServerTest {
     }
 
   @Test
+  fun browserExplainsUnsupportedModeAndLinksToAvailableDesigns() {
+    val console = key(DesignKey.styledTheme("console", dark = true))
+    serve(library(extra = listOf(BuiltDesign(console, 1, template)))) {
+      val response = client.get("/designs?type=all&style=console&mode=light&q=&preview=example")
+      assertEquals(HttpStatusCode.OK, response.status)
+      val page = response.bodyAsText()
+      assertTrue("0 shown" in page)
+      assertTrue("Theme <b>console</b> has no light designs in this library." in page)
+      val recovery = "/designs?type=all&amp;style=console&amp;mode=dark"
+      assertTrue("href=\"$recovery\">dark</a>" in page)
+      assertTrue("1 shown" in client.get(recovery.replace("&amp;", "&")).bodyAsText())
+      assertTrue("Clear all filters" in page)
+
+      // An omitted mode chooses a mode this style actually has. Explicit filters stay strict,
+      // both in the browser and in the API: never label dark artifacts as light.
+      assertTrue("1 shown" in client.get("/designs?style=console").bodyAsText())
+      assertTrue("1 shown" in client.get("/designs?style=console&mode=all").bodyAsText())
+      val api =
+        Json.parseToJsonElement(client.get("/api/designs?style=console&mode=light").bodyAsText())
+          .jsonObject
+      assertEquals(0, api["count"]!!.jsonPrimitive.content.toInt())
+    }
+  }
+
+  @Test
+  fun modeRecoveryPreservesOtherFiltersAndEscapesLinks() {
+    val console = key(DesignKey.styledTheme("console", dark = true))
+    serve(library(extra = listOf(BuiltDesign(console, 1, template)))) {
+      val page =
+        client
+          .get("/designs?type=tile&style=console&mode=light&q=domain%3Dlight&preview=template")
+          .bodyAsText()
+      val recovery =
+        "/designs?type=tile&amp;style=console&amp;mode=dark&amp;q=domain%3Dlight&amp;preview=template"
+      assertTrue("href=\"$recovery\">dark</a>" in page)
+      assertTrue("1 shown" in client.get(recovery.replace("&amp;", "&")).bodyAsText())
+
+      for (query in
+        listOf(
+          "style=Material3&mode=light&q=does-not-exist",
+          "style=unknown&mode=light",
+          "type=gauge",
+        )) {
+        val empty = client.get("/designs?$query").bodyAsText()
+        assertTrue("No designs match." in empty)
+        assertTrue("Clear all filters" in empty)
+        assertFalse("Available modes:" in empty, "ordinary empty results are not a mode mismatch")
+      }
+    }
+  }
+
+  @Test
   fun frontPageSellsTheAppAndLinksTheDesigner() =
     serve(library()) {
       val page = client.get("/").bodyAsText()
