@@ -14,15 +14,15 @@ import ee.schimke.ha.rc.CardSizeMode
 import ee.schimke.ha.rc.DesignTemplateInput
 import ee.schimke.ha.rc.HaStateColor
 import ee.schimke.ha.rc.LocalCardSizeMode
+import ee.schimke.ha.rc.LocalFixedCanvasAxis
+import ee.schimke.ha.rc.RemoteMinSizeGate
 import ee.schimke.ha.rc.RemoteSizeBreakpoint
 import ee.schimke.ha.rc.components.HaEntitiesData
+import ee.schimke.ha.rc.components.HaEntitiesFit
 import ee.schimke.ha.rc.components.HaEntityRowData
-import ee.schimke.ha.rc.components.HaGlanceCellData
-import ee.schimke.ha.rc.components.HaGlanceData
 import ee.schimke.ha.rc.components.LiveValues
-import ee.schimke.ha.rc.components.LocalCompactEntityLayout
 import ee.schimke.ha.rc.components.RemoteHaEntities
-import ee.schimke.ha.rc.components.RemoteHaGlance
+import ee.schimke.ha.rc.components.RemoteHaEntitiesFitted
 import ee.schimke.ha.rc.defaultTapActionFor
 import ee.schimke.ha.rc.formatState
 import ee.schimke.ha.rc.icons.HaIconMap
@@ -62,98 +62,104 @@ class EntitiesCardConverter : CardConverter {
     when (LocalCardSizeMode.current) {
       CardSizeMode.Wrap -> FullList(card, snapshot, modifier, maxRows = Int.MAX_VALUE)
       CardSizeMode.Fixed ->
-        // Glance Wear slots are short-and-wide and reject
-        // FlowLayout: a vertical list of rows overflows the slot
-        // (rows collide off the bottom edge). Reflow straight to
-        // the capped icon strip — the watch's "single row of the
-        // first N icons" compact tier — without a live
-        // breakpoint. Launcher widgets keep the width gate below,
-        // with a compatible multi-row grid when flow is unavailable.
-        if (LocalCompactEntityLayout.current) {
-          IconStrip(card, snapshot, modifier.fillMaxSize())
-        } else {
-          // Width-axis reflow: as the widget is dragged wider,
-          // the vertical column of rows repacks into a grid of
-          // icon cells ("column of N rows -> grid of N icons").
-          //
-          // Width, not height, for two reasons: (1) it's the
-          // axis every Fixed-mode surface pins (the matrix
-          // preview and the launcher both fix width and let
-          // height follow), so the gate fires consistently and
-          // is reviewable in the matrix; a height gate reads an
-          // unstable wrap-height there. (2) SINGLE threshold — a
-          // multi-rung ladder lowers to nested
-          // RemoteStateLayouts, which alpha010 collapses to tier
-          // 0 at playback (#224, see GaugeCardConverter). The
-          // grid self-fills the large end (it grows rows to fill
-          // the cell height), so no second gate is needed.
-          RemoteSizeBreakpoint(
-            thresholdsDp = intArrayOf(260),
-            modifier = modifier,
-            axis = BreakpointAxis.Width,
-          ) { tier ->
-            when (tier) {
-              // Tier 0 (w < 260): the natural vertical list,
-              // same as Wrap — narrow cells stack rows.
-              // Rows are dense here: the widget's height is fixed, and four 15sp rows plus
-              // the title fill a `3×2` cell only with 4dp rather than 6dp row padding.
-              0 ->
-                FullList(
-                  card,
-                  snapshot,
-                  RemoteModifier.fillMaxWidth(),
-                  maxRows = Int.MAX_VALUE,
-                  forceTitle = true,
-                  dense = true,
-                )
-              // Tier 1 (w >= 260): wide enough to lay the
-              // entities out side by side — reflow into a
-              // grid of icon | name | state cells that fills
-              // the cell height. Each cell keeps its
-              // identity, so nothing is dropped, just
-              // repacked.
-              else -> IconStrip(card, snapshot, RemoteModifier.fillMaxSize())
-            }
-          }
+        when (LocalFixedCanvasAxis.current) {
+          BreakpointAxis.Height -> WearList(card, snapshot, modifier)
+          BreakpointAxis.Width -> LauncherList(card, snapshot, modifier)
         }
     }
   }
 
   /**
-   * Reflow tier: the same entities, repacked as a [RemoteHaGlance] grid of icon cells instead of a
-   * vertical list. Reuses the glance component so the cells match the `glance` card exactly and the
-   * whole multi-entity family shares one reflow. The title is retained (cheap P2) and the grid
-   * fills the cell height rather than gluing a single row to the top over a blank half-cell
-   * (Principle 8).
+   * A Wear slot: every container is the same width and the small and large ones differ only in
+   * height, so the single gate is on height ([LocalFixedCanvasAxis]). Both tiers are a list of
+   * whole rows — icon, name, state — never a strip of glance cells, whose unbounded labels ran into
+   * each other across a 184dp slot and whose icon column overflowed its height.
+   * * **Small** (`h < 80`, ~44dp of content): the first [WEAR_SMALL_ROWS] rows, no title.
+   * * **Large** (`h ≥ 80`, ~96dp of content): the title over the first [WEAR_LARGE_ROWS] rows (one
+   *   more without a title), at body size.
+   *
+   * Rows share the slot's height and centre in their share, so a short list fills the slot. Both
+   * tiers resolve their accents from the encode-time state, so neither registers `<entity>.is_on`
+   * twice; the Wear slot is baked from constants anyway.
    */
   @Composable
-  private fun IconStrip(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
+  private fun WearList(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
     val title = card.raw["title"]?.jsonPrimitive?.content
-    val entries: List<JsonElement> = card.raw["entities"]?.jsonArray ?: emptyList()
-    val cells = entries.mapNotNull { el ->
-      val (eid, row) = normalize(el)
-      val entity = eid?.let { snapshot.states[it] }
-      val name =
-        row?.get("name")?.jsonPrimitive?.content
-          ?: entity?.attributes?.get("friendly_name")?.jsonPrimitive?.content
-          ?: eid
-          ?: "—"
-      val tapCfg = row?.get("tap_action")?.jsonObject
-      val tapAction = if (tapCfg != null) parseHaAction(tapCfg, eid) else defaultTapActionFor(eid)
-      HaGlanceCellData(
-        entityId = eid,
-        name = name,
-        state = LiveValues.state(eid, formatState(entity)),
-        icon = HaIconMap.resolve(row?.get("icon")?.jsonPrimitive?.content, entity),
-        accent = HaStateColor.toggleAccentFor(eid, entity),
-        tapAction = tapAction,
-      )
+    RemoteSizeBreakpoint(
+      thresholdsDp = intArrayOf(WEAR_LARGE_MIN_HEIGHT_DP),
+      axis = BreakpointAxis.Height,
+      modifier = modifier.fillMaxSize(),
+    ) { tier ->
+      when (tier) {
+        0 ->
+          RemoteHaEntitiesFitted(
+            HaEntitiesData(title = null, rows = rows(card, snapshot).take(WEAR_SMALL_ROWS)),
+            HaEntitiesFit.Compact,
+            RemoteModifier.fillMaxSize(),
+          )
+        else ->
+          RemoteHaEntitiesFitted(
+            HaEntitiesData(
+              title = title,
+              rows =
+                rows(card, snapshot)
+                  .take(if (title != null) WEAR_LARGE_ROWS else WEAR_LARGE_ROWS + 1),
+            ),
+            HaEntitiesFit.Compact,
+            RemoteModifier.fillMaxSize(),
+            largeText = true,
+          )
+      }
     }
-    RemoteHaGlance(
-      HaGlanceData(title = title, cells = cells),
-      modifier = modifier,
-      fillHeight = true,
-    )
+  }
+
+  /**
+   * A launcher widget. One 2-D gate ([RemoteMinSizeGate], a single expression, so it survives
+   * alpha010's #224 collapse of nested and `.and()` gates):
+   * * **List** (narrower than [LAUNCHER_EXPANDED_MIN_WIDTH_DP], or too short for every row at
+   *   [HaEntitiesFit.Expanded] height): the Wrap list with dense rows — four 15sp rows plus the
+   *   title fill a `3×2` cell only with 4dp rather than 6dp row padding.
+   * * **Expanded** (wide enough, and tall enough for the title plus every row at
+   *   [HaEntitiesFit.Expanded]'s 36dp): the same rows spread over the widget's height with a bigger
+   *   icon and the value a step up, so a `4×3` or `5×4` widget reads larger rather than showing a
+   *   strip of glance cells in a mostly empty box.
+   *
+   * The height minimum comes from the row count, so a long list stays on the dense rows until the
+   * widget can hold every row expanded. Width not height used to be the only axis because the
+   * matrix and launcher pin width; the launcher capture knows both dimensions (it selects the tier
+   * at capture time), and the matrix's fixed cells pin both.
+   */
+  @Composable
+  private fun LauncherList(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
+    val title = card.raw["title"]?.jsonPrimitive?.content
+    val rowCount = card.raw["entities"]?.jsonArray?.size ?: 0
+    val fit = HaEntitiesFit.Expanded
+    val minHeightDp =
+      fit.verticalPaddingDp +
+        (if (title != null) fit.titleHeightDp else 0) +
+        rowCount * fit.rowMinHeightDp
+    RemoteMinSizeGate(
+      minWidthDp = LAUNCHER_EXPANDED_MIN_WIDTH_DP,
+      minHeightDp = minHeightDp,
+      modifier = modifier.fillMaxSize(),
+    ) { roomy ->
+      if (roomy) {
+        RemoteHaEntitiesFitted(
+          HaEntitiesData(title = title, rows = rows(card, snapshot)),
+          fit,
+          RemoteModifier.fillMaxSize(),
+        )
+      } else {
+        FullList(
+          card,
+          snapshot,
+          RemoteModifier.fillMaxWidth(),
+          maxRows = Int.MAX_VALUE,
+          forceTitle = true,
+          dense = true,
+        )
+      }
+    }
   }
 
   @Composable
@@ -166,33 +172,55 @@ class EntitiesCardConverter : CardConverter {
     dense: Boolean = false,
   ) {
     val title = if (forceTitle) card.raw["title"]?.jsonPrimitive?.content else null
-    val entries: List<JsonElement> = card.raw["entities"]?.jsonArray ?: emptyList()
-
-    val rows =
-      entries.take(maxRows).mapNotNull { el ->
-        val (eid, row) = normalize(el)
-        val entity = eid?.let { snapshot.states[it] }
-        val name =
-          row?.get("name")?.jsonPrimitive?.content
-            ?: entity?.attributes?.get("friendly_name")?.jsonPrimitive?.content
-            ?: eid
-            ?: "—"
-        val tapCfg = row?.get("tap_action")?.jsonObject
-        val tapAction = if (tapCfg != null) parseHaAction(tapCfg, eid) else defaultTapActionFor(eid)
-        HaEntityRowData(
-          entityId = eid,
-          name = name,
-          state = LiveValues.state(eid, formatState(entity)),
-          icon = HaIconMap.resolve(row?.get("icon")?.jsonPrimitive?.content, entity),
-          accent = HaStateColor.toggleAccentFor(eid, entity),
-          tapAction = tapAction,
-        )
-      }
+    val rows = rows(card, snapshot).take(maxRows)
     RemoteHaEntities(HaEntitiesData(title = title, rows = rows), modifier = modifier, dense = dense)
+  }
+
+  /** Every configured entity as a row. */
+  @Composable
+  private fun rows(card: CardConfig, snapshot: HaSnapshot): List<HaEntityRowData> {
+    val entries: List<JsonElement> = card.raw["entities"]?.jsonArray ?: emptyList()
+    return entries.map { el ->
+      val (eid, row) = normalize(el)
+      val entity = eid?.let { snapshot.states[it] }
+      val name =
+        row?.get("name")?.jsonPrimitive?.content
+          ?: entity?.attributes?.get("friendly_name")?.jsonPrimitive?.content
+          ?: eid
+          ?: "—"
+      val tapCfg = row?.get("tap_action")?.jsonObject
+      val tapAction = if (tapCfg != null) parseHaAction(tapCfg, eid) else defaultTapActionFor(eid)
+      HaEntityRowData(
+        entityId = eid,
+        name = name,
+        state = LiveValues.state(eid, formatState(entity)),
+        icon = HaIconMap.resolve(row?.get("icon")?.jsonPrimitive?.content, entity),
+        accent = HaStateColor.toggleAccentFor(eid, entity),
+        tapAction = tapAction,
+      )
+    }
   }
 
   private companion object {
     val TEMPLATE_CONFIG_KEYS = setOf("type", "title", "entities")
+
+    /**
+     * Wear height gate: between the small slot (~44dp of content, 60dp in the matrix) and the large
+     * one (~96dp, 112dp in the matrix).
+     */
+    const val WEAR_LARGE_MIN_HEIGHT_DP = 80
+
+    /** Compact rows (20dp: an 18dp icon beside a 13sp line) in the small slot's ~44dp. */
+    const val WEAR_SMALL_ROWS = 2
+
+    /** Body-size rows (~23dp) under a ~22dp title in the large slot's ~96dp. */
+    const val WEAR_LARGE_ROWS = 3
+
+    /**
+     * Narrowest launcher widget that takes the expanded rows: a `4×N` cell (~288dp) and wider; a
+     * `3×N` cell keeps the dense list.
+     */
+    const val LAUNCHER_EXPANDED_MIN_WIDTH_DP = 260
   }
 
   private fun normalize(el: JsonElement): Pair<String?, JsonObject?> =
