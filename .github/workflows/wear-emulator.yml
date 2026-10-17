@@ -60,6 +60,12 @@ jobs:
           disable-linux-hw-accel: false
           emulator-boot-timeout: 900
           emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none
+          # Wear OS 6+ images are only published signed (release-keys, ro.adb.secure=1): adbd stays
+          # "offline" unless the host's key is authorized. The emulator authorizes
+          # ~/.android/adbkey.pub at boot only if it already exists, so create it before launch.
+          pre-emulator-launch-script: |
+            "$ANDROID_HOME/platform-tools/adb" start-server
+            test -s ~/.android/adbkey.pub
           disable-animations: true
           script: bash scripts/run-wear-connected-tests.sh
       - name: Show instrumented test failures
