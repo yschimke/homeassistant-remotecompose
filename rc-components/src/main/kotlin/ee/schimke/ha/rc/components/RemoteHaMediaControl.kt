@@ -18,12 +18,12 @@ import androidx.compose.remote.creation.compose.layout.RemoteRow
 import androidx.compose.remote.creation.compose.layout.RemoteText
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.background
-import androidx.compose.remote.creation.compose.modifier.clickable
 import androidx.compose.remote.creation.compose.modifier.clip
 import androidx.compose.remote.creation.compose.modifier.fillMaxHeight
 import androidx.compose.remote.creation.compose.modifier.fillMaxSize
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.creation.compose.modifier.height
+import androidx.compose.remote.creation.compose.modifier.offset
 import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.modifier.size
 import androidx.compose.remote.creation.compose.shapes.RemoteRoundedCornerShape
@@ -137,19 +137,23 @@ private fun TitleBlock(data: HaMediaControlData, theme: RemoteHaTheme) {
 
 @Composable
 private fun TransportRow(data: HaMediaControlData) {
+  // Each button's 48dp touch target is wider and taller than the button drawn in it, so the row
+  // pulls in by the difference (negative spacing, and an offset in place of the 6dp top inset) to
+  // keep the buttons where a 4dp-spaced row of drawn buttons puts them. The row ends up 2dp taller.
   RemoteRow(
-    modifier = RemoteModifier.padding(top = 6.rdp),
-    horizontalArrangement = RemoteArrangement.spacedBy(4.rdp),
+    modifier = RemoteModifier.offset((-8).rdp, 2.rdp),
+    horizontalArrangement = RemoteArrangement.spacedBy((-8).rdp),
     verticalAlignment = RemoteAlignment.CenterVertically,
   ) {
-    TransportButton(Icons.Filled.SkipPrevious, data.previousAction, data.accent)
+    TransportButton(Icons.Filled.SkipPrevious, "Previous", data.previousAction, data.accent)
     TransportButton(
       if (data.isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow,
+      if (data.isPlaying) "Pause" else "Play",
       data.playPauseAction,
       data.accent,
       big = true,
     )
-    TransportButton(Icons.Filled.SkipNext, data.nextAction, data.accent)
+    TransportButton(Icons.Filled.SkipNext, "Next", data.nextAction, data.accent)
   }
 }
 
@@ -249,23 +253,24 @@ fun RemoteHaMediaControlWide(data: HaMediaControlData, modifier: RemoteModifier 
   }
 }
 
+/**
+ * A transport control drawn at its own size (40dp play/pause, 32dp skip) with a full touch target
+ * around it ([RemoteHaTouchTarget]), labelled with what it does.
+ */
 @Composable
 private fun TransportButton(
   icon: androidx.compose.ui.graphics.vector.ImageVector,
+  label: String,
   action: HaAction,
   accent: androidx.compose.ui.graphics.Color,
   big: Boolean = false,
 ) {
-  val click = action.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
-  val size = if (big) 40.rdp else 32.rdp
+  val size = if (big) 40 else 32
   val iconSize = if (big) 22.rdp else 18.rdp
-  RemoteBox(
-    modifier = RemoteModifier.then(click).size(size).clip(haControlShape(0, round = true)),
-    contentAlignment = RemoteAlignment.Center,
-  ) {
+  RemoteHaTouchTarget(size, size, action.toRemoteAction(), label.rs) {
     RemoteIcon(
       imageVector = icon.toRemoteImageVector(),
-      contentDescription = "transport".rs,
+      contentDescription = null,
       modifier = RemoteModifier.size(iconSize),
       tint = haInk(accent),
     )

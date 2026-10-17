@@ -17,8 +17,10 @@ import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.clickable
 import androidx.compose.remote.creation.compose.modifier.fillMaxSize
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
+import androidx.compose.remote.creation.compose.modifier.height
 import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.modifier.size
+import androidx.compose.remote.creation.compose.modifier.width
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.runtime.Composable
@@ -55,14 +57,20 @@ fun RemoteHaTodoList(data: HaTodoListData, modifier: RemoteModifier = RemoteModi
 
       if (data.activeItems.isNotEmpty()) {
         Section("Active", theme)
-        data.activeItems.forEachIndexed { i, item ->
-          Row("active.$i", item, completed = false, theme = theme)
+        // Item rows are full touch targets stacked edge to edge (HA's 48px list rows), so the
+        // column's 8dp gap sits between sections, not between items.
+        RemoteColumn {
+          data.activeItems.forEachIndexed { i, item ->
+            Row("active.$i", item, completed = false, theme = theme)
+          }
         }
       }
       if (data.completedItems.isNotEmpty()) {
         Section("Completed", theme)
-        data.completedItems.forEachIndexed { i, item ->
-          Row("done.$i", item, completed = true, theme = theme)
+        RemoteColumn {
+          data.completedItems.forEachIndexed { i, item ->
+            Row("done.$i", item, completed = true, theme = theme)
+          }
         }
       }
       // Note: an empty stub when both sections empty.
@@ -138,10 +146,13 @@ private fun Row(key: String, item: HaTodoItem, completed: Boolean, theme: Remote
   val summary = cardText("$key.summary", item.summary)
   val click =
     item.tapAction.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
+  // The player's tap area excludes padding, so the row takes its 48dp touch-target height from a
+  // zero-width strut rather than from padding.
   RemoteRow(
-    modifier = RemoteModifier.then(click).fillMaxWidth().padding(vertical = 4.rdp),
+    modifier = RemoteModifier.then(click).fillMaxWidth(),
     verticalAlignment = RemoteAlignment.CenterVertically,
   ) {
+    RemoteBox(modifier = RemoteModifier.width(0.rdp).height(MinTouchTargetDp.rdp))
     RemoteIcon(
       imageVector =
         (if (completed) Icons.Filled.CheckBox else Icons.Outlined.CheckBoxOutlineBlank)
