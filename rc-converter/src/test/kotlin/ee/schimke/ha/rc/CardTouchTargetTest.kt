@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.dp
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HaSnapshot
+import ee.schimke.ha.rc.cards.TodoListCardConverter
 import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.components.ProvideHaTheme
 import ee.schimke.ha.rc.components.ThemeStyle
@@ -76,6 +77,18 @@ class CardTouchTargetTest {
                   }
                 ),
             ),
+            state(
+              "todo.chores",
+              "4",
+              name("Chores"),
+              "items" to
+                JsonArray(
+                  listOf("Bins", "Dishes", "Laundry", "Plants", "Hoover").mapIndexed { i, s ->
+                    val st = if (i < 4) "needs_action" else "completed"
+                    JsonObject(mapOf("summary" to JsonPrimitive(s), "status" to JsonPrimitive(st)))
+                  }
+                ),
+            ),
             state("light.living_room_lamp", "on", name("Lamp")),
             state("light.kitchen_lights", "off", name("Kitchen")),
             state(
@@ -107,7 +120,7 @@ class CardTouchTargetTest {
     compose.setContent {
       Box(Modifier.background(Color.White).width(381.dp)) {
         CachedCardPreview(
-          cacheKey = "touch-target-${card.type}",
+          cacheKey = "touch-target-${card.raw}",
           profile = androidXExperimentalWrap,
           card = card,
           snapshot = snapshot,
@@ -156,6 +169,17 @@ class CardTouchTargetTest {
       """{"type":"todo-list","entity":"todo.shopping","title":"Shopping list"}""",
       2,
     )
+
+  @Test
+  fun todoListSizeHintHoldsEveryRow() {
+    val card = card("""{"type":"todo-list","entity":"todo.chores","title":"Chores"}""")
+    val hint = TodoListCardConverter().naturalHeightDp(card, snapshot)
+    tapTargets(card)
+    val root = compose.onRoot().fetchSemanticsNode()
+    val drawnDp = root.size.height / root.layoutInfo.density.density
+    assertTrue(drawnDp <= hint, "five 48dp rows (${drawnDp}dp) fit the ${hint}dp size hint")
+    assertTrue(hint - drawnDp < 12f, "the ${hint}dp size hint is close to the card (${drawnDp}dp)")
+  }
 
   @Test
   fun entitiesRows() =

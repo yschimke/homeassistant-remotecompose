@@ -7,7 +7,7 @@ The accessibility report on #881 flagged touch targets under 48dp in these previ
 | --- | --- | --- | --- |
 | Media control | ![](mediacontrol-before.png) | ![](mediacontrol-after.png) | Transport buttons are 48dp targets around the same 32/40dp buttons; the row pulls in by the difference, so they draw in place (the row is 2dp taller). Labelled Previous / Play or Pause / Next. |
 | Picture glance | ![](pictureglance-before.png) | ![](pictureglance-after.png) | Entity cells are 48dp targets around the same 32dp cell, filling the strip's vertical inset; same positions. The cells draw as the circles their shape asks for (`clickable` ahead of `clip` had made them rounded squares). |
-| To-do list | ![](todolist-before.png) | ![](todolist-after.png) | Item rows are 48dp tall (HA's list row height), up from ~26dp: the one visible layout change. |
+| To-do list | ![](todolist-before.png) | ![](todolist-after.png) | Item rows are 48dp tall (HA's list row height), up from ~26dp: the one visible layout change. The card's size hint (`naturalHeightDp`) now follows its rows instead of a flat 220dp, and the preview grows to 250dp. |
 | Entities | ![](entities-before.png) | ![](entities-after.png) | The row is the tap target; its switch no longer takes a separate 36 × 22dp tap for the same action. The preview canvas grows to the card's natural height (it was clipping the last row). |
 | Dashboard | ![](dashboard-before.png) | ![](dashboard-after.png) | The entities slot grows to the card's natural 148dp (it was squeezing the rows to 42dp). |
 

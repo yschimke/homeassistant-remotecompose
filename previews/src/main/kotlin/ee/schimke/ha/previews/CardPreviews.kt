@@ -1141,14 +1141,14 @@ private fun mediaControlCard() =
 
 // ——— todo-list ———
 
-@Preview(name = "todo-list (light)", showBackground = false, widthDp = 320, heightDp = 220)
+@Preview(name = "todo-list (light)", showBackground = false, widthDp = 320, heightDp = 250)
 @Composable
 fun TodoList_Light() =
   CardHost(HaTheme.Light) {
     RenderChild(todoListCard(), Fixtures.shoppingList, RemoteModifier.fillMaxWidth())
   }
 
-@Preview(name = "todo-list (dark)", showBackground = false, widthDp = 320, heightDp = 220)
+@Preview(name = "todo-list (dark)", showBackground = false, widthDp = 320, heightDp = 250)
 @Composable
 fun TodoList_Dark() =
   CardHost(HaTheme.Dark) {
