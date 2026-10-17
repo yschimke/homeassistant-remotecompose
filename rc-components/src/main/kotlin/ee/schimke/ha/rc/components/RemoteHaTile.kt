@@ -54,57 +54,108 @@ fun RemoteHaTile(data: HaTileData, modifier: RemoteModifier = RemoteModifier) {
         .then(cardChrome(theme.cardBackground, theme.divider))
         .padding(horizontal = 12.rdp, vertical = 8.rdp)
   ) {
-    RemoteRow(verticalAlignment = RemoteAlignment.CenterVertically) {
-      if (renderChip) {
-        RemoteBox(
-          modifier =
-            RemoteModifier.size(32.rdp)
-              .clip(haControlShape(18, round = true))
-              .background(accent.copy(alpha = accent.alpha * 0.2f.rf)),
-          contentAlignment = RemoteAlignment.Center,
-        ) {
-          HaStateIcon(
-            icon = data.icon,
-            accent = data.accent,
-            look = look,
-            tint = accent,
-            contentDescription = entityName(data.entityId, data.name),
-            modifier = RemoteModifier.size(20.rdp),
-          )
-        }
-      } else {
-        HaStateIcon(
-          icon = data.icon,
-          accent = data.accent,
-          look = look,
-          tint = accent,
-          contentDescription = entityName(data.entityId, data.name),
-          modifier = RemoteModifier.size(24.rdp),
-        )
-      }
-      RemoteColumn(modifier = RemoteModifier.padding(start = 10.rdp)) {
-        RemoteText(
-          text = entityName(data.entityId, data.name),
-          color = look.dim(theme.primaryText),
-          fontSize = HaType.Body,
-          fontWeight = FontWeight.Medium,
-          style = haTextStyle(),
-          maxLines = 1,
-          overflow = TextOverflow.Ellipsis,
-        )
-        // The state is what a tile is read for, so it is body-sized and in the primary ink; the
-        // name keeps the emphasis through its weight. (A caption-sized grey state was the smallest,
-        // lowest-contrast text on the card.)
-        RemoteText(
-          text = data.state,
-          color = look.dim(theme.primaryText),
-          fontSize = HaType.Body,
-          style = haTextStyle(),
-          maxLines = 1,
-          overflow = TextOverflow.Ellipsis,
-        )
+    if (data.features.isEmpty()) {
+      TileInfoRow(data, look, renderChip)
+    } else {
+      RemoteColumn(modifier = RemoteModifier.fillMaxWidth()) {
+        TileInfoRow(data, look, renderChip)
+        TileFeaturesBelow(data, accent)
       }
     }
+  }
+}
+
+/**
+ * The tile's icon, name and state — and, with [HaTileFeaturePosition.Inline], its first feature
+ * beside them.
+ */
+@Composable
+@RemoteComposable
+private fun TileInfoRow(data: HaTileData, look: HaEntityLook, renderChip: Boolean) {
+  val theme = haTheme()
+  val accent: RemoteColor = look.accent
+  val inline =
+    data.features.firstOrNull()?.takeIf { data.featuresPosition == HaTileFeaturePosition.Inline }
+  RemoteRow(
+    modifier = if (inline != null) RemoteModifier.fillMaxWidth() else RemoteModifier,
+    verticalAlignment = RemoteAlignment.CenterVertically,
+  ) {
+    val badge = data.badge
+    if (badge != null) {
+      TileIconWithBadge(badge, iconSlotDp = if (renderChip) 32 else 24) {
+        TileIcon(data, look, renderChip)
+      }
+    } else {
+      TileIcon(data, look, renderChip)
+    }
+    RemoteColumn(
+      modifier =
+        if (inline != null) RemoteModifier.weight(1f).padding(start = 10.rdp)
+        else RemoteModifier.padding(start = 10.rdp)
+    ) {
+      RemoteText(
+        text = entityName(data.entityId, data.name),
+        color = look.dim(theme.primaryText),
+        fontSize = HaType.Body,
+        fontWeight = FontWeight.Medium,
+        style = haTextStyle(),
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+      )
+      // The state is what a tile is read for, so it is body-sized and in the primary ink; the
+      // name keeps the emphasis through its weight. (A caption-sized grey state was the smallest,
+      // lowest-contrast text on the card.)
+      RemoteText(
+        text = data.state,
+        color = look.dim(theme.primaryText),
+        fontSize = HaType.Body,
+        style = haTextStyle(),
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+      )
+    }
+    if (inline != null) {
+      RemoteBox(modifier = RemoteModifier.weight(1f).padding(start = TileFeatureGapDp.rdp)) {
+        TileFeature(inline, accent, TileInlineFeatureHeightDp, data.name)
+      }
+    }
+  }
+}
+
+/**
+ * The tile's state icon: in a tinted chip for an entity with on/off chrome, else plain. An on/off
+ * entity swaps between its two glyphs through [look]'s `is_on` ([HaStateIcon]).
+ */
+@Composable
+@RemoteComposable
+private fun TileIcon(data: HaTileData, look: HaEntityLook, renderChip: Boolean) {
+  val accent = look.accent
+  if (renderChip) {
+    RemoteBox(
+      modifier =
+        RemoteModifier.size(32.rdp)
+          .clip(haControlShape(18, round = true))
+          .background(accent.copy(alpha = accent.alpha * 0.2f.rf)),
+      contentAlignment = RemoteAlignment.Center,
+    ) {
+      HaStateIcon(
+        icon = data.icon,
+        accent = data.accent,
+        look = look,
+        tint = accent,
+        contentDescription = entityName(data.entityId, data.name),
+        modifier = RemoteModifier.size(20.rdp),
+      )
+    }
+  } else {
+    HaStateIcon(
+      icon = data.icon,
+      accent = data.accent,
+      look = look,
+      tint = accent,
+      contentDescription = entityName(data.entityId, data.name),
+      modifier = RemoteModifier.size(24.rdp),
+    )
   }
 }
 

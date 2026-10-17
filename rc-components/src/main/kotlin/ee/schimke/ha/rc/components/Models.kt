@@ -66,7 +66,13 @@ data class HaToggleAccent(
   val activeIconWhenUnavailable: Boolean = false,
 )
 
-/** HA tile card model. */
+/**
+ * HA tile card model.
+ *
+ * [badge] and [features] are what HA's tile draws beyond icon, name and state (`hui-tile-card`'s
+ * `renderTileBadge` and `hui-card-features`). Both are baked at capture: a converter that sets them
+ * re-encodes the card on data changes (`CardConverter.dataSignature`).
+ */
 data class HaTileData(
   val entityId: String?,
   val name: String,
@@ -74,6 +80,57 @@ data class HaTileData(
   val icon: ImageVector,
   val accent: HaToggleAccent,
   val tapAction: HaAction = HaAction.None,
+  val badge: HaTileBadge? = null,
+  val features: List<HaTileFeature> = emptyList(),
+  val featuresPosition: HaTileFeaturePosition = HaTileFeaturePosition.Bottom,
+)
+
+/**
+ * The small disc HA's tile lays over the corner of its icon, e.g. a climate entity's `hvac_action`
+ * (a flame while heating). [color] is the disc; null draws the neutral, inactive colour.
+ */
+data class HaTileBadge(val icon: ImageVector, val color: Color?, val description: String)
+
+/** Where a tile's features sit (HA `features_position`). */
+enum class HaTileFeaturePosition {
+  /** Each feature on its own row under the icon, name and state (HA's default). */
+  Bottom,
+
+  /** The first feature beside the name and state; any others below, two to a row. */
+  Inline,
+}
+
+/**
+ * One tile feature row (HA `features:`), resolved by the converter into what it draws and the
+ * actions its controls fire. Unsupported feature types never reach the component.
+ */
+sealed interface HaTileFeature {
+  /**
+   * HA's `target-temperature`: a − / value / + control. [decrement] / [increment] are the service
+   * calls one step either way, or [HaAction.None] where the step would leave the entity's range or
+   * the entity is unavailable (the button then draws disabled).
+   */
+  data class NumberButtons(
+    val valueLabel: String,
+    val decrement: HaAction,
+    val increment: HaAction,
+    val description: String,
+  ) : HaTileFeature
+
+  /**
+   * A mode selector (HA `climate-hvac-modes`, `climate-preset-modes`, …): one segment per option,
+   * the current one filled with the tile's accent. [showIcons] draws each option's icon in place of
+   * its label (HA's `icons` style).
+   */
+  data class ModeSelect(val options: List<HaTileModeOption>, val showIcons: Boolean) : HaTileFeature
+}
+
+/** One option of a [HaTileFeature.ModeSelect]. */
+data class HaTileModeOption(
+  val label: String,
+  val icon: ImageVector?,
+  val selected: Boolean,
+  val action: HaAction,
 )
 
 /** HA button card model. */

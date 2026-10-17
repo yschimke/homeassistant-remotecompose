@@ -88,7 +88,20 @@ fun CardRegistry.cardSizeConstraints(
  * into the card's cache key and skips the live-binding push for that card.
  */
 fun CardRegistry.cardDataSignature(card: CardConfig, snapshot: HaSnapshot): String? =
-  get(card.type)?.dataSignature(card, snapshot)
+  get(card.type)?.dataSignature(card, snapshot, this)
+
+/**
+ * The signature of a container's [children] (stack, grid): each child's [cardDataSignature], tagged
+ * with its position, joined in order — or null when every child keeps up through named bindings, so
+ * a container of binding cards stays on the binding path. One re-encode child makes the whole
+ * container document re-encode, since its bytes bake that child.
+ */
+fun CardRegistry.childrenDataSignature(children: List<CardConfig>, snapshot: HaSnapshot): String? {
+  val parts = children.mapIndexedNotNull { i, child ->
+    cardDataSignature(child, snapshot)?.let { "$i:${child.type}{$it}" }
+  }
+  return if (parts.isEmpty()) null else parts.joinToString("|")
+}
 
 /**
  * The state-following glyphs [card] draws ([HaIconMap.stateSignature] per entity: a sun's

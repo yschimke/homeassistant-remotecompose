@@ -7,11 +7,13 @@ import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.CardConverter
+import ee.schimke.ha.rc.CardRegistry
 import ee.schimke.ha.rc.CardSnapshotBindings
 import ee.schimke.ha.rc.DesignTemplateInput
 import ee.schimke.ha.rc.HaClock
 import ee.schimke.ha.rc.RenderChild
 import ee.schimke.ha.rc.SystemHaClock
+import ee.schimke.ha.rc.childrenDataSignature
 import ee.schimke.ha.rc.components.HaAction
 import ee.schimke.ha.rc.components.ProvideChildCardBindings
 import ee.schimke.ha.rc.components.RemoteHaGrid
@@ -50,6 +52,10 @@ class VerticalStackCardConverter : CardConverter {
     templateAction: HaAction,
   ): HaAction? = CompositeDesign.action(card, snapshot, slot, templateAction)
 
+  /** A stack bakes what its children bake: see [childrenDataSignature]. */
+  override fun dataSignature(card: CardConfig, snapshot: HaSnapshot, registry: CardRegistry) =
+    registry.childrenDataSignature(childCards(card), snapshot)
+
   @Composable
   override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
     RemoteHaVerticalStack(modifier = modifier) { RenderChildren(card, snapshot) }
@@ -81,6 +87,10 @@ class HorizontalStackCardConverter : CardConverter {
     templateAction: HaAction,
   ): HaAction? = CompositeDesign.action(card, snapshot, slot, templateAction)
 
+  /** A stack bakes what its children bake: see [childrenDataSignature]. */
+  override fun dataSignature(card: CardConfig, snapshot: HaSnapshot, registry: CardRegistry) =
+    registry.childrenDataSignature(childCards(card), snapshot)
+
   @Composable
   override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
     RemoteHaHorizontalStack(modifier = modifier) { RenderChildren(card, snapshot) }
@@ -111,6 +121,10 @@ class GridCardConverter : CardConverter {
     slot: Int,
     templateAction: HaAction,
   ): HaAction? = CompositeDesign.action(card, snapshot, slot, templateAction)
+
+  /** A stack bakes what its children bake: see [childrenDataSignature]. */
+  override fun dataSignature(card: CardConfig, snapshot: HaSnapshot, registry: CardRegistry) =
+    registry.childrenDataSignature(childCards(card), snapshot)
 
   @Composable
   override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {

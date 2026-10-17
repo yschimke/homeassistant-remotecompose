@@ -127,6 +127,162 @@ fun DashboardSecurityMobile() = DashboardPreview("security")
 @Composable
 fun DashboardSecurityTablet() = DashboardPreview("security")
 
+/*
+ * Per-view previews. The whole-dashboard previews above stop at [MOBILE_HEIGHT] / [TABLET_HEIGHT],
+ * so a board's second and later views, and the lower part of a long first view, never rendered and
+ * the preview diff could not see changes there. Each preview below renders one view on its own
+ * canvas, so CI baselines cover every view. The whole-dashboard previews stay as they are, so
+ * their baselines remain comparable.
+ *
+ * Each canvas is the view's measured content height (noted above each preview) plus 150-250 dp,
+ * rounded up to 100 dp. That is why these are explicit functions rather than a
+ * `@PreviewParameter` fan-out: a fan-out shares one `heightDp`, so every view would pay for the
+ * tallest. The tallest phone canvas (3900 dp) is 1079 x 10238 px, about 44 MB as ARGB; the
+ * tallest tablet canvas (3700 dp) is 2100 x 9713 px, about 82 MB. Both fit the render task's 2 GiB
+ * heap (see `previews/build.gradle.kts`) and stay below Android's 100 MiB limit on drawing a
+ * bitmap through a `RecordingCanvas`.
+ *
+ * Coverage:
+ * - Mobile: every view of the multi-view boards (3D printing, energy, meshcore) and the
+ *   single-view boards whose whole-dashboard preview crops (climate, github). Networks and security
+ *   already fit their whole-dashboard previews in full (1358 dp and 1574 dp of 1800), so they get
+ *   no per-view copy.
+ * - Tablet: only 3D printing's P2s and Filament views. At 800 dp the sections grid has two
+ *   columns and every demo section spans at least two, so a tablet view is the phone layout capped
+ *   at the medium readable width: same order, same content height. These two carry the card types
+ *   no first view shows at that width (the Bambu print status / control cards, the picture-entity
+ *   grid, the AMS and spool cards); A1 Mini repeats P2s's structure.
+ *
+ * When a demo board gains cards and a view outgrows its canvas, the bottom crops (the content
+ * scrolls inside the canvas), so raise that view's height with the board change.
+ */
+
+// Content ends at 1568 dp.
+@Preview(
+  name = "dashboard 3d-printing view 1 Printers — mobile",
+  widthDp = MOBILE_WIDTH,
+  heightDp = 1800,
+)
+@Composable
+fun DashboardView3dPrintingPrintersMobile() = DashboardViewPreview("3d_printing", viewIndex = 0)
+
+// Content ends at 3481 dp.
+@Preview(
+  name = "dashboard 3d-printing view 2 P2s — mobile",
+  widthDp = MOBILE_WIDTH,
+  heightDp = 3700,
+)
+@Composable
+fun DashboardView3dPrintingP2sMobile() = DashboardViewPreview("3d_printing", viewIndex = 1)
+
+// Content ends at 3481 dp.
+@Preview(
+  name = "dashboard 3d-printing view 2 P2s — tablet",
+  widthDp = TABLET_WIDTH,
+  heightDp = 3700,
+)
+@Composable
+fun DashboardView3dPrintingP2sTablet() = DashboardViewPreview("3d_printing", viewIndex = 1)
+
+// Content ends at 3693 dp.
+@Preview(
+  name = "dashboard 3d-printing view 3 A1 Mini — mobile",
+  widthDp = MOBILE_WIDTH,
+  heightDp = 3900,
+)
+@Composable
+fun DashboardView3dPrintingA1MiniMobile() = DashboardViewPreview("3d_printing", viewIndex = 2)
+
+// Content ends at 2018 dp.
+@Preview(
+  name = "dashboard 3d-printing view 4 Filament — mobile",
+  widthDp = MOBILE_WIDTH,
+  heightDp = 2200,
+)
+@Composable
+fun DashboardView3dPrintingFilamentMobile() = DashboardViewPreview("3d_printing", viewIndex = 3)
+
+// Content ends at 2018 dp.
+@Preview(
+  name = "dashboard 3d-printing view 4 Filament — tablet",
+  widthDp = TABLET_WIDTH,
+  heightDp = 2200,
+)
+@Composable
+fun DashboardView3dPrintingFilamentTablet() = DashboardViewPreview("3d_printing", viewIndex = 3)
+
+// Content ends at 2136 dp.
+@Preview(
+  name = "dashboard climate view 1 Home — mobile",
+  widthDp = MOBILE_WIDTH,
+  heightDp = 2300,
+)
+@Composable
+fun DashboardViewClimateHomeMobile() = DashboardViewPreview("climate", viewIndex = 0)
+
+// Content ends at 1850 dp.
+@Preview(
+  name = "dashboard energy view 1 Overview — mobile",
+  widthDp = MOBILE_WIDTH,
+  heightDp = 2000,
+)
+@Composable
+fun DashboardViewEnergyOverviewMobile() = DashboardViewPreview("energy", viewIndex = 0)
+
+// Content ends at 976 dp.
+@Preview(
+  name = "dashboard energy view 2 Sun — mobile",
+  widthDp = MOBILE_WIDTH,
+  heightDp = 1200,
+)
+@Composable
+fun DashboardViewEnergySunMobile() = DashboardViewPreview("energy", viewIndex = 1)
+
+// Content ends at 3096 dp.
+@Preview(
+  name = "dashboard github view 1 Projects — mobile",
+  widthDp = MOBILE_WIDTH,
+  heightDp = 3300,
+)
+@Composable
+fun DashboardViewGithubProjectsMobile() = DashboardViewPreview("github", viewIndex = 0)
+
+// Content ends at 2041 dp.
+@Preview(
+  name = "dashboard meshcore view 1 Overview — mobile",
+  widthDp = MOBILE_WIDTH,
+  heightDp = 2200,
+)
+@Composable
+fun DashboardViewMeshcoreOverviewMobile() = DashboardViewPreview("meshcore", viewIndex = 0)
+
+// Content ends at 1689 dp.
+@Preview(
+  name = "dashboard meshcore view 2 Solar Repeater — mobile",
+  widthDp = MOBILE_WIDTH,
+  heightDp = 1900,
+)
+@Composable
+fun DashboardViewMeshcoreSolarRepeaterMobile() = DashboardViewPreview("meshcore", viewIndex = 1)
+
+// Content ends at 1555 dp.
+@Preview(
+  name = "dashboard meshcore view 3 Room Server — mobile",
+  widthDp = MOBILE_WIDTH,
+  heightDp = 1800,
+)
+@Composable
+fun DashboardViewMeshcoreRoomServerMobile() = DashboardViewPreview("meshcore", viewIndex = 2)
+
+// Content ends at 791 dp.
+@Preview(
+  name = "dashboard meshcore view 4 Controls — mobile",
+  widthDp = MOBILE_WIDTH,
+  heightDp = 1000,
+)
+@Composable
+fun DashboardViewMeshcoreControlsMobile() = DashboardViewPreview("meshcore", viewIndex = 3)
+
 /**
  * The climate board with every `column_span` removed (HA's default of 1), so the tablet canvas
  * exercises the side-by-side sections grid: two span-1 sections share a row, each one HA column
@@ -209,6 +365,29 @@ private fun DashboardPreview(name: String, transformView: (View) -> View = { it 
       )
     }
     loaded.dashboard.views.forEach { view -> ViewBlock(view, loaded.snapshot, bitmapLoader) }
+  }
+}
+
+/** One view of a demo dashboard on its own canvas, so views past the first get a render. */
+@Composable
+private fun DashboardViewPreview(name: String, viewIndex: Int) {
+  enableRemoteComposeWrapContent()
+  val loaded = DashboardFixtures.load(name) ?: return
+  val view = loaded.dashboard.views.getOrNull(viewIndex) ?: return
+  val bitmapLoader = remember { DashboardPreviewBitmapLoader() }
+  Column(
+    modifier = Modifier.uiFillMaxWidth().verticalScroll(rememberScrollState()),
+    verticalArrangement = Arrangement.spacedBy(8.dp),
+  ) {
+    Box(modifier = Modifier.padding(16.dp)) {
+      androidx.compose.material3.Text(
+        text =
+          "${loaded.dashboard.title ?: name} — view ${viewIndex + 1} of ${loaded.dashboard.views.size}",
+        style = androidx.compose.material3.MaterialTheme.typography.titleMedium,
+        fontWeight = FontWeight.Bold,
+      )
+    }
+    ViewBlock(view, loaded.snapshot, bitmapLoader)
   }
 }
 

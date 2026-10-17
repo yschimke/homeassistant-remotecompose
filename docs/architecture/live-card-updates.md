@@ -59,6 +59,13 @@ override fun dataSignature(card: CardConfig, snapshot: HaSnapshot): String =
   cardDataSignature(cardEntityIds(card), snapshot)
 ```
 
+Hosts read the signature through `CardRegistry.cardDataSignature`, which asks the
+registry-aware `dataSignature(card, snapshot, registry)`: a container (vertical / horizontal stack,
+grid) folds in its children's signatures (`childrenDataSignature`, null only when every child is),
+and a wrapper (conditional, entity filter) answers with its shown card's. A re-encode card nested
+in a grid therefore re-encodes the grid's document, while a grid of binding cards keeps the
+binding push. Never call `converter.dataSignature(card, snapshot)` directly from a host.
+
 Use a custom signature when the entity id isn't in a standard `entity:` /
 `entities:` field (`cardEntityIds` won't find it — e.g. Bambu's
 `printer:`), or to *exclude* a volatile attribute that would re-encode
@@ -90,7 +97,9 @@ expressed as a binding.
 
 ## Card matrix (current)
 
-- **Binding (path 1):** sensor, entity, glance, tile, area, entities,
+- **Binding (path 1):** sensor, entity, glance, tile (a plain one — a tile that bakes a
+  `state_content` line, a climate `hvac_action` badge or `features:` re-encodes, see below),
+  area, entities,
   button, picture-entity (its `entity_picture` URL is the exception: a
   picture is fetched once per document, so `CachedCardPreview` folds
   `cardPictureSignature` into the document key and a rotated camera token
@@ -101,7 +110,11 @@ expressed as a binding.
   are computed in-document ([card-component-system.md](card-component-system.md)). The
   `ha-cards/thermostat` builder component is path 1 as well, through the climate temperature
   floats; the `thermostat` *converter* still re-encodes (its accent follows `hvac_action`).
-- **Re-encode (path 2):** calendar, logbook, to-do, history-graph,
+- **Re-encode (path 2):** a tile with baked extras (`TileContent.bakes`: the climate /
+  cover / humidifier / valve default secondary line such as "Heat · 22.8 °C", a configured
+  `state_content`, the `hvac_action` badge, or `features:` whose stepped `set_temperature` payloads
+  and selected mode are baked; its line goes under `<id>.state_label`, never `<id>.state`),
+  calendar, logbook, to-do, history-graph,
   statistics-graph, statistic, map, weather-forecast, thermostat /
   humidifier / light (arc fill + labels), media-control, Bambu (AMS /
   print status), the shutter cards (`custom:enhanced-shutter-card`,
