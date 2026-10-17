@@ -20,6 +20,8 @@ import ee.schimke.ha.client.DashboardSummary
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HistoryPoint
 import ee.schimke.ha.rc.components.ThemeStyle
+import ee.schimke.terrazzo.ConnectionStatus
+import ee.schimke.terrazzo.DashboardTopBar
 import ee.schimke.terrazzo.LocalTerrazzoGraph
 import ee.schimke.terrazzo.SettingsScreen
 import ee.schimke.terrazzo.core.auth.HaAuthService
@@ -50,9 +52,11 @@ import ee.schimke.terrazzo.dashboard.CardHistoryScreen
 import ee.schimke.terrazzo.dashboard.DashboardListState
 import ee.schimke.terrazzo.dashboard.DashboardPickerScreen
 import ee.schimke.terrazzo.dashboard.DashboardSelectionScreen
+import ee.schimke.terrazzo.dashboard.DashboardSwitcher
 import ee.schimke.terrazzo.dashboard.DashboardViewScreen
 import ee.schimke.terrazzo.dashboard.ManagePinnedContent
 import ee.schimke.terrazzo.dashboard.PinRowItem
+import ee.schimke.terrazzo.dashboard.TopBarOverflowMenu
 import ee.schimke.terrazzo.dashboard.historyEntityIds
 import ee.schimke.terrazzo.discovery.DiscoveryScreen
 import ee.schimke.terrazzo.logs.LogsContent
@@ -332,6 +336,89 @@ fun Screen_DashboardView_ThemeStyle(
   PhoneHost(style = style) {
     DashboardViewScreen(session = demoSession(), urlPath = null, onCardLongPress = { _, _ -> })
   }
+
+// --- Dashboard top bar ----------------------------------------------------
+
+/** Narrow-phone width: the title used to wrap mid-word ("3D / Printi / ng") here. */
+private const val NARROW_PHONE_WIDTH_DP = 360
+
+private val TOP_BAR_DASHBOARDS =
+  listOf(
+    DashboardSummary(urlPath = null, title = "Home"),
+    DashboardSummary(urlPath = "printing", title = "3D Printing"),
+    DashboardSummary(urlPath = "garden", title = "Garden irrigation and greenhouse"),
+  )
+
+@Composable
+private fun TopBarPreviewHost(
+  currentUrlPath: String?,
+  dashboards: List<DashboardSummary> = TOP_BAR_DASHBOARDS,
+  connectionStatus: ConnectionStatus = ConnectionStatus.Connected,
+  writeMode: Boolean = true,
+) =
+  TerrazzoTheme(style = ThemeStyle.TerrazzoHome, darkMode = DarkModePref.Follow) {
+    DashboardTopBar(
+      title = {
+        DashboardSwitcher(dashboards = dashboards, currentUrlPath = currentUrlPath, onSwitch = {})
+      },
+      showAgentButton = writeMode,
+      onOpenAgent = {},
+      notifications = emptyList(),
+      onDismissNotification = {},
+      onClearNotifications = {},
+      connectionStatus = connectionStatus,
+      onRetryConnection = {},
+      writeMode = writeMode,
+      onWriteModeChange = {},
+      overflowMenu = { agentInOverflow ->
+        TopBarOverflowMenu(
+          onOpenSettings = {},
+          onOpenWidgets = {},
+          onOpenPinned = {},
+          onOpenWearWidgets = null,
+          onOpenLogs = null,
+          onSignOut = {},
+          onOpenAgent = agentInOverflow,
+        )
+      },
+    )
+  }
+
+@Preview(name = "top bar · 360dp · switcher", widthDp = NARROW_PHONE_WIDTH_DP)
+@Composable
+fun Screen_DashboardTopBar_Narrow() = TopBarPreviewHost(currentUrlPath = "printing")
+
+@Preview(name = "top bar · 360dp · long title", widthDp = NARROW_PHONE_WIDTH_DP)
+@Composable
+fun Screen_DashboardTopBar_LongTitle() = TopBarPreviewHost(currentUrlPath = "garden")
+
+@Preview(name = "top bar · 360dp · single dashboard, read only", widthDp = NARROW_PHONE_WIDTH_DP)
+@Composable
+fun Screen_DashboardTopBar_SingleReadOnly() =
+  TopBarPreviewHost(
+    currentUrlPath = "printing",
+    dashboards = TOP_BAR_DASHBOARDS.filter { it.urlPath == "printing" },
+    writeMode = false,
+  )
+
+@Preview(name = "top bar · 360dp · connecting", widthDp = NARROW_PHONE_WIDTH_DP)
+@Composable
+fun Screen_DashboardTopBar_Connecting() =
+  TopBarPreviewHost(currentUrlPath = "printing", connectionStatus = ConnectionStatus.Connecting)
+
+@Preview(name = "top bar · 360dp · paused", widthDp = NARROW_PHONE_WIDTH_DP)
+@Composable
+fun Screen_DashboardTopBar_Paused() =
+  TopBarPreviewHost(currentUrlPath = "printing", connectionStatus = ConnectionStatus.Disconnected)
+
+@Preview(name = "top bar · 360dp · failed", widthDp = NARROW_PHONE_WIDTH_DP)
+@Composable
+fun Screen_DashboardTopBar_Failed() =
+  TopBarPreviewHost(currentUrlPath = "printing", connectionStatus = ConnectionStatus.Failed)
+
+@Preview(name = "top bar · 412dp · switcher, agent inline", widthDp = PHONE_WIDTH_DP)
+@Composable
+fun Screen_DashboardTopBar_Phone() = TopBarPreviewHost(currentUrlPath = "printing")
 
 /**
  * Sample card + snapshot for the card-history screen previews. A tile bound to a numeric demo

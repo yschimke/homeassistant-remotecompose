@@ -103,10 +103,13 @@ fun RemoteHaTile(data: HaTileData, modifier: RemoteModifier = RemoteModifier) {
           maxLines = 1,
           overflow = TextOverflow.Ellipsis,
         )
+        // The state is what a tile is read for, so it is body-sized and in the primary ink; the
+        // name keeps the emphasis through its weight. (A caption-sized grey state was the smallest,
+        // lowest-contrast text on the card.)
         RemoteText(
           text = data.state,
-          color = theme.secondaryText,
-          fontSize = HaType.Caption,
+          color = theme.primaryText,
+          fontSize = HaType.Body,
           style = haTextStyle(),
           maxLines = 1,
           overflow = TextOverflow.Ellipsis,
@@ -177,10 +180,11 @@ fun RemoteHaIconChip(data: HaTileData, modifier: RemoteModifier = RemoteModifier
       modifier = RemoteModifier.size(32.rdp),
     )
     RemoteBox(modifier = RemoteModifier.padding(top = 6.rdp)) {
+      // The chip's only text, so it reads as the value: primary ink, a step above a caption.
       RemoteText(
         text = data.state,
-        color = theme.secondaryText,
-        fontSize = HaType.Caption,
+        color = theme.primaryText,
+        fontSize = HaType.Label,
         style = haTextStyle(),
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,

@@ -583,6 +583,26 @@ fun CardPreviewMatrix_Gauge() {
 }
 
 @Preview(
+  name = "matrix — bambu print-status",
+  showBackground = false,
+  widthDp = MATRIX_CANVAS_WIDTH_DP,
+  heightDp = 460,
+)
+@Composable
+fun CardPreviewMatrix_BambuPrintStatus() {
+  val card =
+    card("""{"type":"custom:ha-bambulab-print_status-card","printer":"<device-id-placeholder>"}""")
+  // 3×2 stacks the job under the ring; 4×3 and the app column lay the job's lines out beside it
+  // (one width gate at 260 dp).
+  CardPreviewMatrix(
+    card = card,
+    snapshot = Fixtures.bambuPrinting,
+    baseGridSize = WidgetGridSize(cellsW = 4, cellsH = 2),
+    label = "bambu print-status · printing",
+  )
+}
+
+@Preview(
   name = "matrix — button",
   showBackground = false,
   widthDp = MATRIX_CANVAS_WIDTH_DP,

@@ -50,6 +50,7 @@ import ee.schimke.composeai.discovery.AdapterValueCodecs
 import ee.schimke.composeai.discovery.ExportProjection
 import ee.schimke.composeai.discovery.WireColor
 import ee.schimke.ha.rc.components.HaAction
+import ee.schimke.ha.rc.components.HaBambuPrintPhase
 import ee.schimke.ha.rc.components.HaHeadingStyle
 import ee.schimke.ha.rc.components.haServiceData
 import ee.schimke.ha.rc.ui.HaAlarmActionUiData
@@ -285,6 +286,7 @@ val GaugeStyleCodec = enumCodec<HaGaugeStyle>("$UI.HaGaugeStyle")
 val ArcDialStyleCodec = enumCodec<HaArcDialStyle>("$UI.HaArcDialStyle")
 val CardLayoutCodec = enumCodec<HaCardLayout>("$UI.HaCardLayout")
 val StatisticsChartTypeCodec = enumCodec<HaStatisticsChartType>("$UI.HaStatisticsChartType")
+val BambuPrintPhaseCodec = enumCodec<HaBambuPrintPhase>("$COMPONENTS.HaBambuPrintPhase")
 
 // ——— shorthands ———
 
@@ -1013,6 +1015,12 @@ val BambuPrintStatusCodec: AdapterObjectCodec<HaBambuPrintStatusUiData> =
     val remaining = field(HaBambuPrintStatusUiData::remainingLine, OptionalText, default = null)
     val nozzle = field(HaBambuPrintStatusUiData::nozzleLine, OptionalText, default = null)
     val bed = field(HaBambuPrintStatusUiData::bedLine, OptionalText, default = null)
+    val phase =
+      field(
+        HaBambuPrintStatusUiData::phase,
+        BambuPrintPhaseCodec,
+        default = HaBambuPrintPhase.Printing,
+      )
     construct {
       HaBambuPrintStatusUiData(
         printerName = it[printerName],
@@ -1024,6 +1032,7 @@ val BambuPrintStatusCodec: AdapterObjectCodec<HaBambuPrintStatusUiData> =
         remainingLine = it[remaining],
         nozzleLine = it[nozzle],
         bedLine = it[bed],
+        phase = it[phase],
       )
     }
   }

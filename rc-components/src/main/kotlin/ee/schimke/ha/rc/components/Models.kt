@@ -242,6 +242,10 @@ data class HaHistoryGraphRow(
  * either participating sensor for composite lines) changes. For composite lines (`Layer X / Y`,
  * `Nozzle 220°C → 220°C`) we pick the sensor whose value drives the line — `_current_layer`,
  * `_nozzle_temperature`, `_bed_temperature`.
+ *
+ * [phase] is structure: a printer that is not printing draws the idle layout (no ring, no `0 %`, no
+ * layer count) and a finished one a full ring with a check, so a change of phase re-encodes the
+ * card (it is a re-encode card) and a design template keys on it.
  */
 data class HaBambuPrintStatusData(
   val entityId: String?,
@@ -260,7 +264,21 @@ data class HaBambuPrintStatusData(
   val nozzleLine: String?,
   val bedEntityId: String?,
   val bedLine: String?,
+  val phase: HaBambuPrintPhase = HaBambuPrintPhase.Printing,
 )
+
+/**
+ * What a Bambu printer is doing, as far as the print-status card's layout is concerned. Only
+ * [Printing] (which includes preparing and paused) shows the progress ring and the job's lines; the
+ * others show the printer and its state.
+ */
+enum class HaBambuPrintPhase {
+  Printing,
+  Idle,
+  Finished,
+  Failed,
+  Offline,
+}
 
 /** `custom:ha-bambulab-print_control-card` — pause / resume / stop pad. */
 data class HaBambuPrintControlData(

@@ -15,6 +15,7 @@ import ee.schimke.ha.rc.components.HaAreaStat
 import ee.schimke.ha.rc.components.HaBambuAmsData
 import ee.schimke.ha.rc.components.HaBambuControlButton
 import ee.schimke.ha.rc.components.HaBambuPrintControlData
+import ee.schimke.ha.rc.components.HaBambuPrintPhase
 import ee.schimke.ha.rc.components.HaBambuPrintStatusData
 import ee.schimke.ha.rc.components.HaBambuSpoolDetail
 import ee.schimke.ha.rc.components.HaBambuSpoolSlot
@@ -415,6 +416,7 @@ data class HaBambuPrintStatusUiData(
   val remainingLine: String? = null,
   val nozzleLine: String? = null,
   val bedLine: String? = null,
+  val phase: HaBambuPrintPhase = HaBambuPrintPhase.Printing,
 )
 
 /** Plain mirror of [HaBambuControlButton]. */
@@ -743,6 +745,7 @@ internal fun HaBambuPrintStatusUiData.toRemote(): HaBambuPrintStatusData =
     nozzleLine = nozzleLine,
     bedEntityId = null,
     bedLine = bedLine,
+    phase = phase,
   )
 
 internal fun HaBambuControlButtonUiData.toRemote(): HaBambuControlButton =

@@ -29,13 +29,13 @@ import androidx.compose.remote.creation.compose.shapes.RemoteRoundedCornerShape
 import androidx.compose.remote.creation.compose.state.RemoteString
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rs
-import androidx.compose.remote.creation.compose.state.rsp
 import androidx.compose.remote.creation.compose.text.RemoteTextStyle
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.wear.compose.remote.material3.RemoteIcon
 import ee.schimke.ha.rc.components.HaAction
+import ee.schimke.ha.rc.components.HaType
 import ee.schimke.ha.rc.components.cardChrome
 import ee.schimke.ha.rc.components.currentRemoteHaTheme
 import ee.schimke.ha.rc.components.toRemoteAction
@@ -79,7 +79,7 @@ fun RemoteHaShutter(data: HaShutterCardData, modifier: RemoteModifier = RemoteMo
         RemoteText(
           text = data.title,
           color = theme.primaryText,
-          fontSize = 15.rsp,
+          fontSize = HaType.Title,
           fontWeight = FontWeight.Medium,
           style = RemoteTextStyle.Default,
           maxLines = 1,
@@ -100,7 +100,7 @@ private fun ShutterEntry(entry: HaShutterEntryData) {
       RemoteText(
         text = entry.name,
         color = theme.primaryText,
-        fontSize = 13.rsp,
+        fontSize = HaType.Body,
         fontWeight = FontWeight.Medium,
         style = RemoteTextStyle.Default,
         maxLines = 1,
@@ -117,7 +117,7 @@ private fun ShutterEntry(entry: HaShutterEntryData) {
     RemoteText(
       text = entry.stateLabel,
       color = theme.secondaryText,
-      fontSize = 11.rsp,
+      fontSize = HaType.Caption,
       style = RemoteTextStyle.Default,
       maxLines = 1,
       overflow = TextOverflow.Ellipsis,

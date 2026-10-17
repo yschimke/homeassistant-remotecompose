@@ -536,6 +536,101 @@ object Fixtures {
     )
 
   /**
+   * An A1 mini that is switched on and not printing, as the demo "3D Printing" dashboard reports
+   * it: `print_status` idle, progress and layers at 0, the factory printer name, cold temperatures.
+   */
+  val bambuIdle =
+    snapshot(
+      state(
+        "sensor.a1mini_sn1_print_progress",
+        "0",
+        mapOf("friendly_name" to "A1MINI_sn1 Print progress", "unit_of_measurement" to "%"),
+      ),
+      state(
+        "sensor.a1mini_sn1_print_status",
+        "idle",
+        mapOf("friendly_name" to "A1MINI_sn1 Print status"),
+      ),
+      state(
+        "sensor.a1mini_sn1_current_stage",
+        "idle",
+        mapOf("friendly_name" to "A1MINI_sn1 Current stage"),
+      ),
+      state(
+        "sensor.a1mini_sn1_printer_name",
+        "3DP-030-293",
+        mapOf("friendly_name" to "A1MINI_sn1 Printer name"),
+      ),
+      state(
+        "sensor.a1mini_sn1_current_layer",
+        "0",
+        mapOf("friendly_name" to "A1MINI_sn1 Current layer"),
+      ),
+      state(
+        "sensor.a1mini_sn1_total_layer_count",
+        "0",
+        mapOf("friendly_name" to "A1MINI_sn1 Total layer count"),
+      ),
+      state(
+        "sensor.a1mini_sn1_remaining_time",
+        "0.0",
+        mapOf("friendly_name" to "A1MINI_sn1 Remaining time", "unit_of_measurement" to "min"),
+      ),
+      state(
+        "sensor.a1mini_sn1_nozzle_temperature",
+        "23",
+        mapOf("friendly_name" to "A1MINI_sn1 Nozzle temperature", "unit_of_measurement" to "°C"),
+      ),
+      state(
+        "sensor.a1mini_sn1_bed_temperature",
+        "22",
+        mapOf("friendly_name" to "A1MINI_sn1 Bed temperature", "unit_of_measurement" to "°C"),
+      ),
+      state("binary_sensor.a1mini_sn1_online", "on", mapOf("friendly_name" to "A1MINI_sn1 Online")),
+    )
+
+  /** [bambuIdle] just after a print finished: a named printer, a still-warm bed. */
+  val bambuFinished =
+    HaSnapshot(
+      states =
+        bambuIdle.states +
+          snapshot(
+              state(
+                "sensor.a1mini_sn1_print_progress",
+                "100",
+                mapOf("friendly_name" to "A1MINI_sn1 Print progress", "unit_of_measurement" to "%"),
+              ),
+              state(
+                "sensor.a1mini_sn1_print_status",
+                "finish",
+                mapOf("friendly_name" to "A1MINI_sn1 Print status"),
+              ),
+              state(
+                "sensor.a1mini_sn1_printer_name",
+                "Workshop A1",
+                mapOf("friendly_name" to "A1MINI_sn1 Printer name"),
+              ),
+              state(
+                "sensor.a1mini_sn1_nozzle_temperature",
+                "61",
+                mapOf(
+                  "friendly_name" to "A1MINI_sn1 Nozzle temperature",
+                  "unit_of_measurement" to "°C",
+                ),
+              ),
+              state(
+                "sensor.a1mini_sn1_bed_temperature",
+                "48",
+                mapOf(
+                  "friendly_name" to "A1MINI_sn1 Bed temperature",
+                  "unit_of_measurement" to "°C",
+                ),
+              ),
+            )
+            .states
+    )
+
+  /**
    * Two temperature sensors with a 24-sample diurnal cycle so the history-graph preview has real
    * sparkline data to draw.
    */

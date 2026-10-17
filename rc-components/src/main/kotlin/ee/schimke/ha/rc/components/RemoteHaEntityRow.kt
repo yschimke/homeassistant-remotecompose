@@ -58,7 +58,13 @@ fun RemoteHaEntityRow(data: HaEntityRowData, modifier: RemoteModifier = RemoteMo
     horizontalArrangement = RemoteArrangement.SpaceBetween,
     verticalAlignment = RemoteAlignment.CenterVertically,
   ) {
-    RemoteRow(verticalAlignment = RemoteAlignment.CenterVertically) {
+    // The icon and name take what the trailing state or switch leaves: a long name ellipsizes
+    // instead of pushing the value (the part the row is read for) or the switch out of a narrow
+    // widget cell.
+    RemoteRow(
+      modifier = RemoteModifier.weight(1f).padding(end = 8.rdp),
+      verticalAlignment = RemoteAlignment.CenterVertically,
+    ) {
       HaStateIcon(
         icon = data.icon,
         activeIcon = data.accent.activeIcon,
@@ -90,9 +96,11 @@ fun RemoteHaEntityRow(data: HaEntityRowData, modifier: RemoteModifier = RemoteMo
         tapAction = data.tapAction,
       )
     } else {
+      // HA's generic entity row draws the state in the primary text colour: it is the value the
+      // row is read for, not metadata.
       RemoteText(
         text = data.state,
-        color = theme.secondaryText,
+        color = theme.primaryText,
         fontSize = HaType.Body,
         style = haTextStyle(),
         maxLines = 1,
