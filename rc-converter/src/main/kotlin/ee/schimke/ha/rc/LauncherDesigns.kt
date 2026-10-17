@@ -160,7 +160,8 @@ object LauncherDesigns {
   ): DesignKey? {
     val design = CardDesignTemplates.designCard(card, snapshot, registry)
     val shape =
-      registry.converterFor(design.type)?.designProperties(design, snapshot)?.shape ?: return null
+      registry.converterFor(design.type)?.framedDesignProperties(design, snapshot)?.shape
+        ?: return null
     return DesignKey(
       cardType = design.type,
       variant = "${widthDp}x$heightDp",
@@ -189,7 +190,7 @@ object LauncherDesigns {
     val converter =
       requireNotNull(registry.converterFor(key.cardType)) { "no converter: ${key.cardType}" }
     val (card, snapshot) =
-      requireNotNull(converter.designTemplate(DesignProperties.parse(key.shape))) {
+      requireNotNull(converter.framedDesignTemplate(DesignProperties.parse(key.shape))) {
           "${key.cardType} has no template for ${key.shape}"
         }
         // The placeholder converter templates its own type; the key names the card's.

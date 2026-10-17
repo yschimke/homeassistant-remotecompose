@@ -84,6 +84,7 @@ import ee.schimke.ha.rc.components.ProvideCardStyle
 import ee.schimke.ha.rc.components.ThemeStyle
 import ee.schimke.ha.rc.components.cardPalette
 import ee.schimke.ha.rc.converterFor
+import ee.schimke.ha.rc.framedDesignProperties
 import ee.schimke.ha.rc.image.CoilBitmapLoader
 import ee.schimke.ha.rc.sectionFlowItems
 import ee.schimke.terrazzo.LocalHaImageStack
@@ -1090,7 +1091,8 @@ private fun CardSlot(
   val cardDesigns = LocalCardDesigns.current
   // A conditional or entity-filter card renders as the card it currently shows.
   val designCard = CardDesignTemplates.designCard(card, snapshot, registry)
-  val designShape = registry.converterFor(designCard.type)?.designProperties(designCard, snapshot)
+  val designShape =
+    registry.converterFor(designCard.type)?.framedDesignProperties(designCard, snapshot)
   val template =
     remember(designCard, designShape, cardDesigns, style, dark, cardStyle, override) {
       cardTemplateFor(
