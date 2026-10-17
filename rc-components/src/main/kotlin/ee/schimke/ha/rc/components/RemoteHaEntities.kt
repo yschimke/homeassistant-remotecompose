@@ -203,30 +203,46 @@ private fun FittedEntityRow(
         overflow = TextOverflow.Ellipsis,
       )
     }
-    val isOn = look.isOn
-    if (expanded && isOn != null) {
-      RemoteHaToggleSwitch(
-        isOn = isOn,
-        activeAccent = look.activeAccent,
-        inactiveAccent = look.inactiveAccent,
-        tapAction = data.tapAction,
-      )
-    } else if (expanded && data.accent.toggleable) {
-      // The switch at its encode-time position: a widget is re-baked when the entity changes.
-      RemoteHaToggleSwitchByProgress(
-        progress = (if (data.accent.initiallyOn) 1f else 0f).rf,
-        activeAccent = look.activeAccent,
-        inactiveAccent = look.inactiveAccent,
-        clickable = clickable,
-      )
-    } else {
+    val stateText: @Composable @RemoteComposable (RemoteModifier) -> Unit = { stateModifier ->
       RemoteText(
         text = data.state,
+        modifier = stateModifier,
         color = look.dim(theme.primaryText),
         fontSize = if (expanded) HaType.ValueSmall else nameSize,
         style = haTextStyle(),
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
+      )
+    }
+    if (!expanded) {
+      stateText(RemoteModifier)
+    } else if (look.isOn == null && data.toggle && data.accent.toggleable) {
+      // The switch at its encode-time position: a widget is re-baked when the entity changes. An
+      // entity unavailable at encode time shows its state text, as HA's toggle row does.
+      if (look.staticallyAvailable) {
+        RemoteHaToggleSwitchByProgress(
+          progress = (if (data.accent.initiallyOn) 1f else 0f).rf,
+          activeAccent = look.activeAccent,
+          inactiveAccent = look.inactiveAccent,
+          clickable = clickable,
+        )
+      } else {
+        stateText(RemoteModifier)
+      }
+    } else {
+      TrailingSwitchOrState(
+        look = look,
+        toggle = data.toggle,
+        switch = { isOn, switchModifier ->
+          RemoteHaToggleSwitch(
+            isOn = isOn,
+            activeAccent = look.activeAccent,
+            inactiveAccent = look.inactiveAccent,
+            modifier = switchModifier,
+            tapAction = data.tapAction,
+          )
+        },
+        state = stateText,
       )
     }
   }

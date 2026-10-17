@@ -151,6 +151,11 @@ data class HaEntityRowData(
   val icon: ImageVector,
   val accent: HaToggleAccent,
   val tapAction: HaAction = HaAction.None,
+  /**
+   * Whether the row ends in a switch for an entity with an on/off state, as HA's toggle row does.
+   * False for an entity that can't be switched (a binary sensor), whose row shows its state text.
+   */
+  val toggle: Boolean = true,
 )
 
 /** Entities card (title + rows). The converter collects rows into this list. */

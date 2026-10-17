@@ -16,6 +16,7 @@ import androidx.compose.remote.creation.compose.modifier.clip
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.modifier.size
+import androidx.compose.remote.creation.compose.modifier.visibility
 import androidx.compose.remote.creation.compose.shaders.RemoteBrush
 import androidx.compose.remote.creation.compose.shaders.verticalGradient
 import androidx.compose.remote.creation.compose.shapes.RemoteCircleShape
@@ -27,6 +28,7 @@ import androidx.compose.remote.creation.compose.state.asRemoteDp
 import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rf
+import androidx.compose.remote.creation.compose.state.ri
 import androidx.compose.remote.creation.compose.state.tween
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
@@ -87,27 +89,69 @@ fun RemoteHaEntityRow(
         )
       }
     }
-    if (isOnBinding != null) {
-      RemoteHaToggleSwitch(
-        isOn = isOnBinding,
-        activeAccent = look.activeAccent,
-        inactiveAccent = look.inactiveAccent,
-        tapAction = data.tapAction,
-      )
-    } else {
-      // HA's generic entity row draws the state in the primary text colour: it is the value the
-      // row is read for, not metadata.
-      RemoteText(
-        text = data.state,
-        color = look.dim(theme.primaryText),
-        fontSize = HaType.Body,
-        style = haTextStyle(),
-        maxLines = 1,
-        overflow = TextOverflow.Ellipsis,
-      )
+    TrailingSwitchOrState(
+      look = look,
+      toggle = data.toggle,
+      switch = { isOn, switchModifier ->
+        RemoteHaToggleSwitch(
+          isOn = isOn,
+          activeAccent = look.activeAccent,
+          inactiveAccent = look.inactiveAccent,
+          modifier = switchModifier,
+          tapAction = data.tapAction,
+        )
+      },
+      state = { stateModifier ->
+        // HA's generic entity row draws the state in the primary text colour: it is the value the
+        // row is read for, not metadata.
+        RemoteText(
+          text = data.state,
+          modifier = stateModifier,
+          color = look.dim(theme.primaryText),
+          fontSize = HaType.Body,
+          style = haTextStyle(),
+          maxLines = 1,
+          overflow = TextOverflow.Ellipsis,
+        )
+      },
+    )
+  }
+}
+
+/**
+ * A row's trailing slot: [switch] for a [toggle] entity with an on/off state, else [state] (its
+ * state text). An unavailable entity shows [state] in place of the switch, as HA's toggle row shows
+ * "Unavailable": live off `<id>.is_available` (both are emitted, one visible), or chosen at encode
+ * time where availability is baked.
+ *
+ * Both are emitted straight into the caller's row with a visibility modifier, not inside a box: a
+ * wrapping box isn't re-measured when the switch's knob padding animates, so the knob stayed at its
+ * encode-time position.
+ */
+@Composable
+@RemoteComposable
+internal fun TrailingSwitchOrState(
+  look: HaEntityLook,
+  toggle: Boolean,
+  switch: @Composable @RemoteComposable (isOn: RemoteBoolean, modifier: RemoteModifier) -> Unit,
+  state: @Composable @RemoteComposable (modifier: RemoteModifier) -> Unit,
+) {
+  val isOn = look.isOn
+  val isAvailable = look.isAvailable
+  when {
+    !toggle || isOn == null || !look.staticallyAvailable && isAvailable == null ->
+      state(RemoteModifier)
+    isAvailable == null -> switch(isOn, RemoteModifier)
+    else -> {
+      switch(isOn, RemoteModifier.visibility(isAvailable.select(Visible, Gone)))
+      state(RemoteModifier.visibility(isAvailable.select(Gone, Visible)))
     }
   }
 }
+
+// RemoteCompose component visibility (`Component.Visibility`).
+private val Visible = 1.ri
+private val Gone = 0.ri
 
 // ——— toggle switch ———
 

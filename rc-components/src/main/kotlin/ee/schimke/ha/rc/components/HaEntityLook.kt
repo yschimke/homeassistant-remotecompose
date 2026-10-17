@@ -60,7 +60,8 @@ internal class HaEntityLook(
   val isOn: RemoteBoolean?,
   /** `<id>.is_available`, or null when availability is baked ([staticallyAvailable]). */
   val isAvailable: RemoteBoolean?,
-  private val staticallyAvailable: Boolean,
+  /** Whether the entity was available at encode time, where [isAvailable] is null. */
+  val staticallyAvailable: Boolean,
   /** The neutral colour that replaces the on/off accent while unavailable. */
   private val neutral: RemoteColor,
   onOff: RemoteColor,
