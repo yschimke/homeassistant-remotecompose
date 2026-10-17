@@ -50,6 +50,7 @@ import ee.schimke.composeai.discovery.AdapterValueCodecs
 import ee.schimke.composeai.discovery.ExportProjection
 import ee.schimke.composeai.discovery.WireColor
 import ee.schimke.ha.rc.components.HaAction
+import ee.schimke.ha.rc.components.HaBambuPrintPhase
 import ee.schimke.ha.rc.components.HaHeadingStyle
 import ee.schimke.ha.rc.components.haServiceData
 import ee.schimke.ha.rc.ui.HaAlarmActionUiData
@@ -156,8 +157,9 @@ private class MappedCodec<W, T>(
 
 /**
  * The closed icon set a design may pick, keyed as the UI builder's Material icon table keys them
- * (`filled/lightbulb`). It is every glyph `rc-converter`'s `HaIconMap` resolves an entity or an
- * `mdi:` name to, plus the ones the Tier-2 preview fixtures draw.
+ * (`filled/lightbulb`): the Material glyphs the Tier-2 preview fixtures and catalog defaults draw.
+ * Live cards draw Home Assistant's own Material Design Icons instead (`rc-converter`'s
+ * `HaIconMap`), which this table doesn't list.
  */
 val HomeAssistantIcons: Map<String, ImageVector> =
   listOf(
@@ -284,6 +286,7 @@ val GaugeStyleCodec = enumCodec<HaGaugeStyle>("$UI.HaGaugeStyle")
 val ArcDialStyleCodec = enumCodec<HaArcDialStyle>("$UI.HaArcDialStyle")
 val CardLayoutCodec = enumCodec<HaCardLayout>("$UI.HaCardLayout")
 val StatisticsChartTypeCodec = enumCodec<HaStatisticsChartType>("$UI.HaStatisticsChartType")
+val BambuPrintPhaseCodec = enumCodec<HaBambuPrintPhase>("$COMPONENTS.HaBambuPrintPhase")
 
 // ——— shorthands ———
 
@@ -1012,6 +1015,12 @@ val BambuPrintStatusCodec: AdapterObjectCodec<HaBambuPrintStatusUiData> =
     val remaining = field(HaBambuPrintStatusUiData::remainingLine, OptionalText, default = null)
     val nozzle = field(HaBambuPrintStatusUiData::nozzleLine, OptionalText, default = null)
     val bed = field(HaBambuPrintStatusUiData::bedLine, OptionalText, default = null)
+    val phase =
+      field(
+        HaBambuPrintStatusUiData::phase,
+        BambuPrintPhaseCodec,
+        default = HaBambuPrintPhase.Printing,
+      )
     construct {
       HaBambuPrintStatusUiData(
         printerName = it[printerName],
@@ -1023,6 +1032,7 @@ val BambuPrintStatusCodec: AdapterObjectCodec<HaBambuPrintStatusUiData> =
         remainingLine = it[remaining],
         nozzleLine = it[nozzle],
         bedLine = it[bed],
+        phase = it[phase],
       )
     }
   }

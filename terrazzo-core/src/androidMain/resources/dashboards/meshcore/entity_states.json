@@ -6,7 +6,7 @@
       "channel_index": "0",
       "device_class": "connectivity",
       "icon": "mdi:message-bulleted",
-      "friendly_name": "MeshCore Kodu Heltec (sn1) Public Messages"
+      "friendly_name": "Kodu Heltec Public Messages"
     },
     "last_changed": "2026-04-30T18:08:20.159842+00:00",
     "last_reported": "2026-04-30T18:13:55.012657+00:00",
@@ -24,7 +24,7 @@
       "broker_number": "<redacted>",
       "server": "mqtt-eu-v1.letsmesh.net",
       "device_class": "connectivity",
-      "friendly_name": "MeshCore Kodu Heltec (sn1) MQTT Broker 1 Connection"
+      "friendly_name": "Kodu Heltec MQTT Broker 1 Connection"
     },
     "last_changed": "2026-04-30T18:08:18.554925+00:00",
     "last_reported": "2026-04-30T18:13:55.012035+00:00",
@@ -60,7 +60,7 @@
       "last_advert_formatted": "2024-06-01T11:52:34",
       "device_class": "connectivity",
       "icon": "mdi:forum-outline",
-      "friendly_name": "MeshCore Kodu Heltec (sn1) Kodu Room (Room Server)"
+      "friendly_name": "Kodu Room"
     },
     "last_changed": "2026-04-30T18:08:18.554369+00:00",
     "last_reported": "2026-05-05T22:13:41.011980+00:00",
@@ -96,7 +96,7 @@
       "last_advert_formatted": "2026-04-20T20:01:04",
       "device_class": "connectivity",
       "icon": "mdi:account-off",
-      "friendly_name": "MeshCore Kodu Heltec (sn1) Kodu T1000E (Client)"
+      "friendly_name": "Kodu T1000E"
     },
     "last_changed": "2026-04-30T18:08:18.554024+00:00",
     "last_reported": "2026-04-30T18:08:23.372384+00:00",
@@ -132,7 +132,7 @@
       "last_advert_formatted": "2026-05-05T18:14:05",
       "device_class": "connectivity",
       "icon": "mdi:radio-tower",
-      "friendly_name": "MeshCore Kodu Heltec (sn1) Kodu Repeater (Repeater)"
+      "friendly_name": "Kodu Repeater"
     },
     "last_changed": "2026-05-03T18:11:34.011698+00:00",
     "last_reported": "2026-05-05T19:13:36.010412+00:00",
@@ -204,11 +204,11 @@
   },
   "select.meshcore_contact": {
     "entity_id": "select.meshcore_contact",
-    "state": "Kodu Room (sn2)",
+    "state": "Kodu Room",
     "attributes": {
       "options": [
-        "Kodu Room (sn2)",
-        "Kodu T1000E (sn3)"
+        "Kodu Room",
+        "Kodu T1000E"
       ],
       "public_key_prefix": "sn2",
       "public_key": "<redacted>",
@@ -252,7 +252,7 @@
       "state_class": "measurement",
       "unit_of_measurement": "kHz",
       "icon": "mdi:radio",
-      "friendly_name": "MeshCore Kodu Heltec (sn1) Bandwidth"
+      "friendly_name": "Kodu Heltec Bandwidth"
     },
     "last_changed": "2026-04-30T18:08:23.010466+00:00",
     "last_reported": "2026-04-30T18:13:55.009587+00:00",
@@ -270,7 +270,7 @@
       "state_class": "measurement",
       "unit_of_measurement": "MHz",
       "icon": "mdi:radio",
-      "friendly_name": "MeshCore Kodu Heltec (sn1) Frequency"
+      "friendly_name": "Kodu Heltec Frequency"
     },
     "last_changed": "2026-04-30T18:08:23.010412+00:00",
     "last_reported": "2026-04-30T18:13:55.009561+00:00",
@@ -286,7 +286,7 @@
     "state": "Idle",
     "attributes": {
       "icon": "mdi:radio-tower",
-      "friendly_name": "MeshCore Kodu Heltec (sn1) Last Message Delivery"
+      "friendly_name": "Kodu Heltec Last Message Delivery"
     },
     "last_changed": "2026-04-30T18:08:18.544211+00:00",
     "last_reported": "2026-04-30T18:13:55.011961+00:00",
@@ -303,7 +303,7 @@
     "attributes": {
       "state_class": "measurement",
       "icon": "mdi:account-group",
-      "friendly_name": "MeshCore Kodu Heltec (sn1) Node Count"
+      "friendly_name": "Kodu Heltec Node Count"
     },
     "last_changed": "2026-04-30T18:09:00.011446+00:00",
     "last_reported": "2026-04-30T18:13:55.009426+00:00",
@@ -319,7 +319,7 @@
     "state": "online",
     "attributes": {
       "icon": "mdi:radio-tower",
-      "friendly_name": "MeshCore Kodu Heltec (sn1) Node Status"
+      "friendly_name": "Kodu Heltec Node Status"
     },
     "last_changed": "2026-04-30T18:08:23.370669+00:00",
     "last_reported": "2026-04-30T18:13:55.009288+00:00",
@@ -335,7 +335,7 @@
     "state": "8",
     "attributes": {
       "icon": "mdi:radio",
-      "friendly_name": "MeshCore Kodu Heltec (sn1) Spreading Factor"
+      "friendly_name": "Kodu Heltec Spreading Factor"
     },
     "last_changed": "2026-04-30T18:08:23.010513+00:00",
     "last_reported": "2026-04-30T18:13:55.009607+00:00",
@@ -354,7 +354,7 @@
       "unit_of_measurement": "dBm",
       "device_class": "signal_strength",
       "icon": "mdi:power",
-      "friendly_name": "MeshCore Kodu Heltec (sn1) TX Power"
+      "friendly_name": "Kodu Heltec TX Power"
     },
     "last_changed": "2026-04-30T18:08:23.010191+00:00",
     "last_reported": "2026-04-30T18:13:55.009455+00:00",
@@ -374,7 +374,7 @@
       "unit_of_measurement": "%",
       "device_class": "battery",
       "icon": "mdi:battery",
-      "friendly_name": "MeshCore Repeater: Kodu Room (f1f680) Battery Percentage"
+      "friendly_name": "Kodu Room Battery Percentage"
     },
     "last_changed": "2026-05-05T20:40:09.828844+00:00",
     "last_reported": "2026-05-05T20:40:15.011287+00:00",
@@ -400,7 +400,7 @@
       "unit_of_measurement": "°C",
       "device_class": "temperature",
       "icon": "mdi:thermometer",
-      "friendly_name": "MeshCore Repeater: Kodu Room (f1f680) Ch1 Temperature"
+      "friendly_name": "Kodu Room Ch1 Temperature"
     },
     "last_changed": "2026-05-05T20:40:34.221879+00:00",
     "last_reported": "2026-05-05T20:40:46.012449+00:00",
@@ -419,7 +419,7 @@
       "last_updated": "2026-05-05T21:40:09.830216",
       "unit_of_measurement": "dBm",
       "icon": "mdi:signal",
-      "friendly_name": "MeshCore Repeater: Kodu Room (f1f680) Last RSSI"
+      "friendly_name": "Kodu Room Last RSSI"
     },
     "last_changed": "2026-05-05T20:40:09.830257+00:00",
     "last_reported": "2026-05-05T20:40:15.011456+00:00",
@@ -438,7 +438,7 @@
       "last_updated": "2026-05-05T21:40:09.830343",
       "unit_of_measurement": "dB",
       "icon": "mdi:signal",
-      "friendly_name": "MeshCore Repeater: Kodu Room (f1f680) Last SNR"
+      "friendly_name": "Kodu Room Last SNR"
     },
     "last_changed": "2026-05-05T20:40:09.830382+00:00",
     "last_reported": "2026-05-05T20:40:15.011489+00:00",
@@ -456,7 +456,7 @@
       "state_class": "total_increasing",
       "last_updated": "2026-05-05T21:40:09.830459",
       "icon": "mdi:message-arrow-left",
-      "friendly_name": "MeshCore Repeater: Kodu Room (f1f680) Messages Received"
+      "friendly_name": "Kodu Room Messages Received"
     },
     "last_changed": "2026-05-05T20:40:09.830487+00:00",
     "last_reported": "2026-05-05T20:40:15.011522+00:00",
@@ -479,7 +479,7 @@
       "uptime_delta_seconds": "7215",
       "unit_of_measurement": "msg/min",
       "icon": "mdi:message-arrow-left",
-      "friendly_name": "MeshCore Repeater: Kodu Room (f1f680) Messages Received Rate"
+      "friendly_name": "Kodu Room Messages Received Rate"
     },
     "last_changed": "2026-05-05T20:40:09.831904+00:00",
     "last_reported": "2026-05-05T20:40:15.012047+00:00",
@@ -497,7 +497,7 @@
       "state_class": "total_increasing",
       "last_updated": "2026-05-05T21:40:09.829458",
       "icon": "mdi:message-arrow-right",
-      "friendly_name": "MeshCore Repeater: Kodu Room (f1f680) Messages Sent"
+      "friendly_name": "Kodu Room Messages Sent"
     },
     "last_changed": "2026-05-05T20:40:09.830050+00:00",
     "last_reported": "2026-05-05T20:40:15.011424+00:00",
@@ -520,7 +520,7 @@
       "uptime_delta_seconds": "7215",
       "unit_of_measurement": "msg/min",
       "icon": "mdi:message-arrow-right",
-      "friendly_name": "MeshCore Repeater: Kodu Room (f1f680) Messages Sent Rate"
+      "friendly_name": "Kodu Room Messages Sent Rate"
     },
     "last_changed": "2026-04-30T20:09:03.096604+00:00",
     "last_reported": "2026-05-05T20:40:15.012086+00:00",
@@ -539,7 +539,7 @@
       "last_updated": "2026-05-05T21:40:09.830651",
       "unit_of_measurement": "dBm",
       "icon": "mdi:waveform",
-      "friendly_name": "MeshCore Repeater: Kodu Room (f1f680) Noise Floor"
+      "friendly_name": "Kodu Room Noise Floor"
     },
     "last_changed": "2026-05-05T18:39:54.715138+00:00",
     "last_reported": "2026-05-05T20:40:15.011584+00:00",
@@ -562,7 +562,7 @@
       "uptime_delta_seconds": "7215",
       "unit_of_measurement": "msg/min",
       "icon": "mdi:message-arrow-left",
-      "friendly_name": "MeshCore Repeater: Kodu Room (f1f680) Received Direct Messages Rate"
+      "friendly_name": "Kodu Room Received Direct Messages Rate"
     },
     "last_changed": "2026-05-05T20:40:09.832073+00:00",
     "last_reported": "2026-05-05T20:40:15.012126+00:00",
@@ -585,7 +585,7 @@
       "uptime_delta_seconds": "7215",
       "unit_of_measurement": "msg/min",
       "icon": "mdi:message-arrow-left-outline",
-      "friendly_name": "MeshCore Repeater: Kodu Room (f1f680) Received Flood Messages Rate"
+      "friendly_name": "Kodu Room Received Flood Messages Rate"
     },
     "last_changed": "2026-05-05T20:40:09.832156+00:00",
     "last_reported": "2026-05-05T20:40:15.012167+00:00",
@@ -608,7 +608,7 @@
       "uptime_delta_seconds": "7215",
       "unit_of_measurement": "msg/min",
       "icon": "mdi:message-arrow-right",
-      "friendly_name": "MeshCore Repeater: Kodu Room (f1f680) Sent Direct Messages Rate"
+      "friendly_name": "Kodu Room Sent Direct Messages Rate"
     },
     "last_changed": "2026-04-30T20:09:03.096910+00:00",
     "last_reported": "2026-05-05T20:40:15.012205+00:00",
@@ -626,7 +626,7 @@
       "state_class": "measurement",
       "last_updated": "2026-05-05T21:40:09.830555",
       "icon": "mdi:playlist-edit",
-      "friendly_name": "MeshCore Repeater: Kodu Room (f1f680) TX Queue Length"
+      "friendly_name": "Kodu Room TX Queue Length"
     },
     "last_changed": "2026-04-30T18:08:54.856641+00:00",
     "last_reported": "2026-05-05T20:40:15.011553+00:00",
@@ -647,7 +647,7 @@
       "unit_of_measurement": "d",
       "device_class": "duration",
       "icon": "mdi:clock",
-      "friendly_name": "MeshCore Repeater: Kodu Room (f1f680) Uptime"
+      "friendly_name": "Kodu Room Uptime"
     },
     "last_changed": "2026-05-05T20:40:09.829101+00:00",
     "last_reported": "2026-05-05T20:40:15.011349+00:00",
@@ -665,7 +665,7 @@
       "state_class": "measurement",
       "unit_of_measurement": "hops",
       "icon": "mdi:counter",
-      "friendly_name": "MeshCore Client: Kodu T1000E (f27490) Path Length"
+      "friendly_name": "Kodu T1000E Path Length"
     },
     "last_changed": "2026-04-30T18:08:18.543822+00:00",
     "last_reported": "2026-04-30T18:13:55.011888+00:00",
@@ -683,7 +683,7 @@
       "state_class": "total_increasing",
       "unit_of_measurement": "requests",
       "icon": "mdi:alert-circle",
-      "friendly_name": "MeshCore Client: Kodu T1000E (f27490) Request Failures"
+      "friendly_name": "Kodu T1000E Request Failures"
     },
     "last_changed": "2026-05-05T20:36:11.011072+00:00",
     "last_reported": "2026-05-05T20:36:16.013596+00:00",
@@ -701,7 +701,7 @@
       "state_class": "total_increasing",
       "unit_of_measurement": "requests",
       "icon": "mdi:check-circle",
-      "friendly_name": "MeshCore Client: Kodu T1000E (f27490) Request Successes"
+      "friendly_name": "Kodu T1000E Request Successes"
     },
     "last_changed": "2026-04-30T18:08:18.543951+00:00",
     "last_reported": "2026-04-30T18:13:55.011908+00:00",
@@ -724,7 +724,7 @@
       "unit_of_measurement": "%",
       "device_class": "power_factor",
       "icon": "mdi:percent",
-      "friendly_name": "MeshCore Repeater: Kodu Repeater (fa27ef) Airtime Utilization"
+      "friendly_name": "Kodu Repeater Airtime Utilization"
     },
     "last_changed": "2026-05-05T20:31:19.891030+00:00",
     "last_reported": "2026-05-05T20:31:43.011091+00:00",
@@ -745,7 +745,7 @@
       "unit_of_measurement": "V",
       "device_class": "voltage",
       "icon": "mdi:battery",
-      "friendly_name": "MeshCore Repeater: Kodu Repeater (fa27ef) Battery Voltage"
+      "friendly_name": "Kodu Repeater Battery Voltage"
     },
     "last_changed": "2026-05-05T20:31:19.889198+00:00",
     "last_reported": "2026-05-05T20:31:43.010541+00:00",
@@ -765,7 +765,7 @@
       "unit_of_measurement": "%",
       "device_class": "battery",
       "icon": "mdi:battery",
-      "friendly_name": "MeshCore Repeater: Kodu Repeater (fa27ef) Battery Percentage"
+      "friendly_name": "Kodu Repeater Battery Percentage"
     },
     "last_changed": "2026-05-05T20:31:19.889433+00:00",
     "last_reported": "2026-05-05T20:31:43.010581+00:00",
@@ -791,7 +791,7 @@
       "unit_of_measurement": "°C",
       "device_class": "temperature",
       "icon": "mdi:thermometer",
-      "friendly_name": "MeshCore Repeater: Kodu Repeater (fa27ef) Ch1 Temperature"
+      "friendly_name": "Kodu Repeater Ch1 Temperature"
     },
     "last_changed": "2026-05-05T21:58:30.133747+00:00",
     "last_reported": "2026-05-05T21:58:39.012943+00:00",
@@ -817,7 +817,7 @@
       "unit_of_measurement": "V",
       "device_class": "voltage",
       "icon": "mdi:flash",
-      "friendly_name": "MeshCore Repeater: Kodu Repeater (fa27ef) Ch1 Voltage"
+      "friendly_name": "Kodu Repeater Ch1 Voltage"
     },
     "last_changed": "2026-05-05T21:58:30.133529+00:00",
     "last_reported": "2026-05-05T21:58:39.012908+00:00",
@@ -840,7 +840,7 @@
       "uptime_delta_seconds": "7232",
       "unit_of_measurement": "msg/min",
       "icon": "mdi:content-duplicate",
-      "friendly_name": "MeshCore Repeater: Kodu Repeater (fa27ef) Flood Duplicates Rate"
+      "friendly_name": "Kodu Repeater Flood Duplicates Rate"
     },
     "last_changed": "2026-05-05T20:31:19.891437+00:00",
     "last_reported": "2026-05-05T20:31:43.011248+00:00",
@@ -859,7 +859,7 @@
       "last_updated": "2026-05-05T21:31:19.889974",
       "unit_of_measurement": "dBm",
       "icon": "mdi:signal",
-      "friendly_name": "MeshCore Repeater: Kodu Repeater (fa27ef) Last RSSI"
+      "friendly_name": "Kodu Repeater Last RSSI"
     },
     "last_changed": "2026-05-05T18:30:47.432586+00:00",
     "last_reported": "2026-05-05T20:31:43.010726+00:00",
@@ -878,7 +878,7 @@
       "last_updated": "2026-05-05T21:31:19.890068",
       "unit_of_measurement": "dB",
       "icon": "mdi:signal",
-      "friendly_name": "MeshCore Repeater: Kodu Repeater (fa27ef) Last SNR"
+      "friendly_name": "Kodu Repeater Last SNR"
     },
     "last_changed": "2026-05-05T18:30:47.432689+00:00",
     "last_reported": "2026-05-05T20:31:43.010758+00:00",
@@ -896,7 +896,7 @@
       "state_class": "total_increasing",
       "last_updated": "2026-05-05T21:31:19.890161",
       "icon": "mdi:message-arrow-left",
-      "friendly_name": "MeshCore Repeater: Kodu Repeater (fa27ef) Messages Received"
+      "friendly_name": "Kodu Repeater Messages Received"
     },
     "last_changed": "2026-05-05T20:31:19.890187+00:00",
     "last_reported": "2026-05-05T20:31:43.010788+00:00",
@@ -919,7 +919,7 @@
       "uptime_delta_seconds": "7232",
       "unit_of_measurement": "msg/min",
       "icon": "mdi:message-arrow-left",
-      "friendly_name": "MeshCore Repeater: Kodu Repeater (fa27ef) Messages Received Rate"
+      "friendly_name": "Kodu Repeater Messages Received Rate"
     },
     "last_changed": "2026-05-05T20:31:19.891539+00:00",
     "last_reported": "2026-05-05T20:31:43.011286+00:00",
@@ -937,7 +937,7 @@
       "state_class": "total_increasing",
       "last_updated": "2026-05-05T21:31:19.889874",
       "icon": "mdi:message-arrow-right",
-      "friendly_name": "MeshCore Repeater: Kodu Repeater (fa27ef) Messages Sent"
+      "friendly_name": "Kodu Repeater Messages Sent"
     },
     "last_changed": "2026-05-05T20:31:19.889903+00:00",
     "last_reported": "2026-05-05T20:31:43.010695+00:00",
@@ -960,7 +960,7 @@
       "uptime_delta_seconds": "7232",
       "unit_of_measurement": "msg/min",
       "icon": "mdi:message-arrow-right",
-      "friendly_name": "MeshCore Repeater: Kodu Repeater (fa27ef) Messages Sent Rate"
+      "friendly_name": "Kodu Repeater Messages Sent Rate"
     },
     "last_changed": "2026-05-05T20:31:19.891638+00:00",
     "last_reported": "2026-05-05T20:31:43.011325+00:00",
@@ -979,7 +979,7 @@
       "last_updated": "2026-05-05T21:31:19.890337",
       "unit_of_measurement": "dBm",
       "icon": "mdi:waveform",
-      "friendly_name": "MeshCore Repeater: Kodu Repeater (fa27ef) Noise Floor"
+      "friendly_name": "Kodu Repeater Noise Floor"
     },
     "last_changed": "2026-05-05T20:31:19.890360+00:00",
     "last_reported": "2026-05-05T20:31:43.010845+00:00",
@@ -1002,7 +1002,7 @@
       "unit_of_measurement": "%",
       "device_class": "power_factor",
       "icon": "mdi:percent",
-      "friendly_name": "MeshCore Repeater: Kodu Repeater (fa27ef) RX Airtime Utilization"
+      "friendly_name": "Kodu Repeater RX Airtime Utilization"
     },
     "last_changed": "2026-05-05T20:31:19.891228+00:00",
     "last_reported": "2026-05-05T20:31:43.011169+00:00",
@@ -1020,7 +1020,7 @@
       "state_class": "measurement",
       "last_updated": "2026-05-05T21:31:19.890250",
       "icon": "mdi:playlist-edit",
-      "friendly_name": "MeshCore Repeater: Kodu Repeater (fa27ef) TX Queue Length"
+      "friendly_name": "Kodu Repeater TX Queue Length"
     },
     "last_changed": "2026-05-04T13:32:42.758401+00:00",
     "last_reported": "2026-05-05T20:31:43.010818+00:00",
@@ -1033,7 +1033,7 @@
   },
   "sensor.meshcore_sn7_uptime_kodu_repeater": {
     "entity_id": "sensor.meshcore_sn7_uptime_kodu_repeater",
-    "state": "32.XXXXXXXXXXXXX",
+    "state": "32.481597",
     "attributes": {
       "state_class": "measurement",
       "last_updated": "2026-05-05T21:31:19.889600",
@@ -1041,7 +1041,7 @@
       "unit_of_measurement": "d",
       "device_class": "duration",
       "icon": "mdi:clock",
-      "friendly_name": "MeshCore Repeater: Kodu Repeater (fa27ef) Uptime"
+      "friendly_name": "Kodu Repeater Uptime"
     },
     "last_changed": "2026-05-05T20:31:19.889660+00:00",
     "last_reported": "2026-05-05T20:31:43.010626+00:00",

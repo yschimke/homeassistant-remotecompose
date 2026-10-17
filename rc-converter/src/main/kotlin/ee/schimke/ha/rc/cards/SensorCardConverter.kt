@@ -43,6 +43,9 @@ import kotlinx.serialization.json.jsonPrimitive
  * [IdentityTier]; sparkline + name dropped — the sparkline is the card's P5, so it's the first
  * thing to go), while the full [RemoteHaSensorCard] promotes the sparkline back on cells with the
  * width to host it, and is [CenteredCell]-wrapped so a tall cell fills rather than top-glues.
+ *
+ * The range label is the history graph's [historyRangeLabel] over the same `hours_to_show` (24 by
+ * default, as in Home Assistant): "Last 24 hours", "Last 7 days", "Last 2 weeks".
  */
 class SensorCardConverter : CardConverter {
   override val cardType: String = CardTypes.SENSOR
@@ -70,7 +73,7 @@ class SensorCardConverter : CardConverter {
   override fun designBindings(card: CardConfig, snapshot: HaSnapshot): CardSnapshotBindings {
     val ids = listOfNotNull(card.raw["entity"]?.jsonPrimitive?.content)
     return CardSnapshotBindings(
-      mapOf("card.range" to rangeLabel(card)),
+      mapOf("card.range" to historyRangeLabel(card)),
       emptyMap(),
       emptyMap(),
       SeriesDesign.slotBindings(ids, snapshot),
@@ -102,7 +105,12 @@ class SensorCardConverter : CardConverter {
   private fun IdentityTier(card: CardConfig, snapshot: HaSnapshot) {
     val entityId = card.raw["entity"]?.jsonPrimitive?.content
     val reading =
-      haReading(entityId, entityId?.let { snapshot.states[it] }, nameFor(card, snapshot))
+      haReading(
+        entityId,
+        entityId?.let { snapshot.states[it] },
+        nameFor(card, snapshot),
+        snapshot = snapshot,
+      )
     when (reading.kind.visual) {
       HaMeasureVisual.Thermometer,
       HaMeasureVisual.Battery ->
@@ -124,10 +132,10 @@ class SensorCardConverter : CardConverter {
       HaSensorCardData(
         entityId = entityId,
         name = nameFor(card, snapshot),
-        valueLabel = formatState(entity),
+        valueLabel = formatState(entity, snapshot),
         accent = HaStateColor.activeFor(entity),
         points = numeric,
-        rangeLabel = rangeLabel(card),
+        rangeLabel = historyRangeLabel(card),
       ),
       modifier = modifier,
     )
@@ -145,7 +153,7 @@ class SensorCardConverter : CardConverter {
     return HaTileData(
       entityId = entityId,
       name = nameFor(card, snapshot),
-      state = LiveValues.state(entityId, formatState(entity)),
+      state = LiveValues.state(entityId, formatState(entity, snapshot)),
       icon = HaIconMap.resolve(card.raw["icon"]?.jsonPrimitive?.content, entity),
       accent = HaToggleAccent(activeAccent = accent, inactiveAccent = accent, toggleable = false),
     )
@@ -162,6 +170,3 @@ class SensorCardConverter : CardConverter {
 }
 
 private val TEMPLATE_CONFIG_KEYS = setOf("type", "entity", "name", "hours_to_show")
-
-private fun rangeLabel(card: CardConfig): String =
-  "Last ${card.raw["hours_to_show"]?.jsonPrimitive?.content?.toIntOrNull() ?: 24}h"

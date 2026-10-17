@@ -24,7 +24,7 @@ class TerrazzoClient(baseUrl: String, accessToken: String) {
 
   suspend fun loadDashboard(urlPath: String?): Dashboard = client.fetchDashboard(urlPath)
 
-  suspend fun loadSnapshot(): HaSnapshot = client.snapshot()
+  suspend fun loadSnapshot(): HaSnapshot = client.snapshotWithDevices()
 
   suspend fun callService(
     domain: String,

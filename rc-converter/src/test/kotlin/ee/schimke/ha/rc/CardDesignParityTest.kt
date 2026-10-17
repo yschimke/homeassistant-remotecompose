@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.width
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -55,6 +56,13 @@ class CardDesignParityTest {
 
   private val registry = defaultRegistry()
   private val style = ThemeStyle.TerrazzoHome
+
+  /**
+   * A fixed "now" for the clock cards, so neither capture depends on when the test runs: one second
+   * before midnight, where a wall-clock read on either path would show a different date line.
+   */
+  private val parityClock =
+    FixedHaClock(java.time.ZonedDateTime.of(2026, 5, 5, 23, 59, 59, 0, java.time.ZoneOffset.UTC))
 
   private fun tile(entity: String, name: String? = null) =
     CardConfig(
@@ -126,6 +134,16 @@ class CardDesignParityTest {
     statistics: Map<String, List<ee.schimke.ha.model.StatisticPoint>> = emptyMap(),
     /** A colour both renders must show before capture: an image that loads asynchronously. */
     awaitColor: androidx.compose.ui.graphics.Color? = null,
+    /**
+     * Pins "now" for both renders. A clock card's time ticks in-document from the player's time
+     * source, and the two captures are taken one after the other, so a minute rolling over between
+     * them changes the digits; its date line is baked into the direct document but pushed into the
+     * template as a binding, so both must read the same instant. Provided around the players (the
+     * time source, and the template's bindings) and, unfrozen, to the direct encode: that is a
+     * separate composition, and a frozen clock there would swap the live time binding the template
+     * has for a static label.
+     */
+    clock: HaClock = SystemHaClock,
   ) {
     val snapshot =
       HaSnapshot(
@@ -144,28 +162,34 @@ class CardDesignParityTest {
 
     var useTemplate by mutableStateOf(false)
     compose.setContent {
-      Box(Modifier.width(360.dp).testTag("card")) {
-        if (!useTemplate) {
-          CachedCardPreview(
-            cacheKey = "direct-$name",
-            profile = androidXExperimentalWrap,
-            card = card,
-            snapshot = snapshot,
-            bitmapLoader = bitmapLoader,
-          ) {
-            ProvideCardRegistry(registry) {
-              ProvideHaTheme(theme) { RenderChild(card, snapshot, RemoteModifier.fillMaxWidth()) }
+      CompositionLocalProvider(LocalHaClock provides clock) {
+        Box(Modifier.width(360.dp).testTag("card")) {
+          if (!useTemplate) {
+            CachedCardPreview(
+              cacheKey = "direct-$name",
+              profile = androidXExperimentalWrap,
+              card = card,
+              snapshot = snapshot,
+              bitmapLoader = bitmapLoader,
+            ) {
+              CompositionLocalProvider(LocalHaClock provides clock.unfrozen()) {
+                ProvideCardRegistry(registry) {
+                  ProvideHaTheme(theme) {
+                    RenderChild(card, snapshot, RemoteModifier.fillMaxWidth())
+                  }
+                }
+              }
             }
+          } else {
+            CachedCardPreview(
+              cacheKey = "template-$name",
+              profile = androidXExperimentalWrap,
+              card = card,
+              snapshot = snapshot,
+              bitmapLoader = bitmapLoader,
+              template = playback,
+            ) {}
           }
-        } else {
-          CachedCardPreview(
-            cacheKey = "template-$name",
-            profile = androidXExperimentalWrap,
-            card = card,
-            snapshot = snapshot,
-            bitmapLoader = bitmapLoader,
-            template = playback,
-          ) {}
         }
       }
     }
@@ -188,6 +212,16 @@ class CardDesignParityTest {
     assertTrue(colors.size > 2, "$name: the direct capture must draw real content")
     assertEquals(0, differing, "$name: pixels differing between direct and template render")
   }
+
+  /** This clock's instant and zone, without [HaClock.isFrozen]: the live document path. */
+  private fun HaClock.unfrozen(): HaClock =
+    if (!isFrozen) this
+    else
+      object : HaClock {
+        override fun now() = this@unfrozen.now()
+
+        override fun zone() = this@unfrozen.zone()
+      }
 
   /** Waits until the card shows [color] somewhere: the bitmap loader runs off the main thread. */
   private fun awaitPixel(color: androidx.compose.ui.graphics.Color) {
@@ -215,6 +249,19 @@ class CardDesignParityTest {
       "light-on",
       tile("light.kitchen", "Kitchen"),
       entity("light.kitchen", "on"),
+      dark = false,
+    )
+
+  /**
+   * `is_on` is false while unavailable, but HA draws a light's default `lightbulb` then, not
+   * `lightbulb-off`: the template, captured off, follows `<slot>.is_available` to the same glyph.
+   */
+  @Test
+  fun lightUnavailable() =
+    assertParity(
+      "light-unavailable",
+      tile("light.kitchen", "Kitchen"),
+      entity("light.kitchen", "unavailable"),
       dark = false,
     )
 
@@ -351,6 +398,81 @@ class CardDesignParityTest {
       dark = false,
     )
 
+  // Availability: a template is captured available (placeholder `off`) and dims only once the
+  // pushed `<slot>.is_available` says otherwise, so these also prove the dimming follows the live
+  // binding rather than the capture.
+
+  private val unavailableStates =
+    listOf(
+      entity("light.kitchen", "unavailable", "friendly_name" to "Kitchen"),
+      entity(
+        "sensor.temp",
+        "unknown",
+        "device_class" to "temperature",
+        "unit_of_measurement" to "°C",
+      ),
+      entity("binary_sensor.front_door", "off", "device_class" to "door"),
+      entity("switch.fan", "on", "friendly_name" to "Fan"),
+    )
+
+  @Test
+  fun tileUnavailableMotion() =
+    assertParity(
+      "tile-unavailable-motion",
+      tile("binary_sensor.driveway", "Driveway"),
+      entity("binary_sensor.driveway", "unavailable", "device_class" to "motion"),
+      dark = false,
+    )
+
+  @Test
+  fun tileMotionOn() =
+    assertParity(
+      "tile-motion-on",
+      tile("binary_sensor.hall", "Hall"),
+      entity("binary_sensor.hall", "on", "device_class" to "motion"),
+      dark = false,
+    )
+
+  @Test
+  fun buttonUnavailable() =
+    assertParity(
+      "button-unavailable",
+      card("button") { put("entity", "switch.fan") },
+      entity("switch.fan", "unavailable", "friendly_name" to "Fan"),
+      dark = false,
+    )
+
+  @Test
+  fun tileProblemOnDark() =
+    assertParity(
+      "tile-problem-on",
+      tile("binary_sensor.hms", "HMS errors"),
+      entity("binary_sensor.hms", "on", "device_class" to "problem"),
+      dark = true,
+    )
+
+  @Test
+  fun tileConnectivityOff() =
+    assertParity(
+      "tile-connectivity-off",
+      tile("binary_sensor.broker", "MQTT broker"),
+      entity("binary_sensor.broker", "off", "device_class" to "connectivity"),
+      dark = false,
+    )
+
+  @Test
+  fun entitiesWithUnavailableRows() =
+    assertParity(
+      "entities-unavailable",
+      listCard("entities", "Downstairs"),
+      unavailableStates,
+      dark = false,
+    )
+
+  @Test
+  fun glanceWithUnavailableCellsDark() =
+    assertParity("glance-unavailable", listCard("glance", null), unavailableStates, dark = true)
+
   @Test
   fun alarmPanelArmedAway() =
     assertParity(
@@ -451,6 +573,7 @@ class CardDesignParityTest {
       card("clock") { put("title", "Kitchen clock") },
       emptyList(),
       dark = false,
+      clock = parityClock,
     )
 
   @Test
@@ -465,6 +588,7 @@ class CardDesignParityTest {
       },
       emptyList(),
       dark = true,
+      clock = parityClock,
     )
 
   @Test
@@ -621,6 +745,46 @@ class CardDesignParityTest {
         ),
     )
 
+  private val meterStates =
+    listOf(
+      entity("sensor.meter_import", "1.2", "friendly_name" to "Electricity Meter Import Rate"),
+      entity("sensor.meter_export", "0.4", "friendly_name" to "Electricity Meter Export Rate"),
+      entity("sensor.solar_power", "3.1", "friendly_name" to "solaredge Current power"),
+    )
+
+  private fun meterCard() =
+    card("history-graph") {
+      put("title", "Energy")
+      put("hours_to_show", 48)
+      putJsonArray("entities") {
+        addJsonObject {
+          put("entity", "sensor.meter_import")
+          put("name", "Import")
+        }
+        addJsonObject {
+          put("entity", "sensor.meter_export")
+          put("name", "Export")
+        }
+        add("sensor.solar_power")
+      }
+    }
+
+  /** No series has history: the one card-level empty state, names from `name:` overrides. */
+  @Test
+  fun historyGraphAllEmpty() =
+    assertParity("history-graph-empty", meterCard(), meterStates, dark = false)
+
+  /** Some series empty: graphs for the rest, one line for each empty series. */
+  @Test
+  fun historyGraphPartlyEmpty() =
+    assertParity(
+      "history-graph-partly-empty",
+      meterCard(),
+      meterStates,
+      dark = true,
+      history = mapOf("sensor.solar_power" to series(0, 2, 3, 1)),
+    )
+
   private fun stats(vararg means: Double) = means.mapIndexed { i, v ->
     ee.schimke.ha.model.StatisticPoint(
       kotlin.time.Instant.fromEpochMilliseconds(i * 3_600_000L),
@@ -745,6 +909,27 @@ class CardDesignParityTest {
       dark = false,
     )
 
+  /** The grid's own `columns` / `square` are structure: the template keeps them. */
+  @Test
+  fun gridOfButtonsWithColumns() =
+    assertParity(
+      "grid-columns",
+      card("grid") {
+        put("columns", 4)
+        put("square", false)
+        put(
+          "cards",
+          kotlinx.serialization.json.JsonArray(
+            listOf("light.kitchen", "switch.fan", "light.kitchen", "switch.fan").map { id ->
+              card("button") { put("entity", id) }.raw
+            }
+          ),
+        )
+      },
+      listStates,
+      dark = true,
+    )
+
   @Test
   fun nestedStacks() =
     assertParity(
@@ -852,6 +1037,21 @@ class CardDesignParityTest {
       },
       listStates,
       dark = true,
+    )
+
+  @Test
+  fun markdownWholeBlockEmphasis() =
+    assertParity(
+      "markdown-emphasis",
+      card("markdown") {
+        put("title", "Repo")
+        put(
+          "content",
+          "## **meshcore-mobile**\n\n_Mobile companion for MeshCore_\n\n_It is {{ states('sensor.temp') }} inside_\n\n- ***Kitchen light***\n- `gradlew check`",
+        )
+      },
+      listStates,
+      dark = false,
     )
 
   private fun entityJson(id: String, state: String, attrs: JsonObject) =
@@ -1055,6 +1255,36 @@ class CardDesignParityTest {
       dark = false,
     )
 
+  /** A row whose coordinates HA withholds draws no position line, in the template as directly. */
+  @Test
+  fun mapRedactedPosition() =
+    assertParity(
+      "map-redacted",
+      card("map") {
+        putJsonArray("entities") {
+          add("zone.home")
+          add("person.alex")
+        }
+      },
+      listOf(
+        entity(
+          "zone.home",
+          "zoning",
+          "friendly_name" to "Home",
+          "latitude" to "<redacted>",
+          "longitude" to "<redacted>",
+        ),
+        entity(
+          "person.alex",
+          "home",
+          "friendly_name" to "Alex",
+          "latitude" to "59.43",
+          "longitude" to "24.75",
+        ),
+      ),
+      dark = false,
+    )
+
   @Test
   fun pictureElements() =
     assertParity(
@@ -1198,6 +1428,40 @@ class CardDesignParityTest {
       "bambu-print-status",
       card("custom:ha-bambulab-print_status-card") { put("entity_prefix", "x1c") },
       printer,
+      dark = false,
+    )
+
+  @Test
+  fun bambuPrintStatusIdle() =
+    assertParity(
+      "bambu-print-status-idle",
+      card("custom:ha-bambulab-print_status-card") { put("entity_prefix", "a1mini_sn1") },
+      listOf(
+        entity(
+          "sensor.a1mini_sn1_print_progress",
+          "0",
+          "friendly_name" to "A1MINI_sn1 Print progress",
+        ),
+        entity("sensor.a1mini_sn1_print_status", "idle"),
+        entity("sensor.a1mini_sn1_current_stage", "idle"),
+        entity("sensor.a1mini_sn1_current_layer", "0"),
+        entity("sensor.a1mini_sn1_total_layer_count", "0"),
+        entity("sensor.a1mini_sn1_nozzle_temperature", "23", "unit_of_measurement" to "°C"),
+        entity("sensor.a1mini_sn1_bed_temperature", "22", "unit_of_measurement" to "°C"),
+      ),
+      dark = true,
+    )
+
+  @Test
+  fun bambuPrintStatusFinished() =
+    assertParity(
+      "bambu-print-status-finished",
+      card("custom:ha-bambulab-print_status-card") { put("entity_prefix", "x1c") },
+      listOf(
+        entity("sensor.x1c_print_progress", "100", "friendly_name" to "X1C Print progress"),
+        entity("sensor.x1c_print_status", "finish"),
+        entity("sensor.x1c_nozzle_temperature", "60", "unit_of_measurement" to "°C"),
+      ),
       dark = false,
     )
 

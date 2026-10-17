@@ -6,6 +6,7 @@ import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.model.Section
 import ee.schimke.ha.model.View
+import ee.schimke.ha.model.ViewHeader
 import java.io.File
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
@@ -48,8 +49,17 @@ object DashboardFixtures {
     val (cfgText, statesText) = readBundled(name) ?: readSibling(name) ?: return null
     val dashboard = parseDashboard(cfgText)
     val states = parseStates(statesText)
-    return Loaded(dashboard = dashboard, snapshot = HaSnapshot(states = states))
+    val devices = readDevices(name)?.let(::parseDevices).orEmpty()
+    return Loaded(dashboard = dashboard, snapshot = HaSnapshot(states = states, devices = devices))
   }
+
+  private fun readDevices(name: String): String? =
+    DashboardFixtures::class
+      .java
+      .getResourceAsStream("/dashboards/$name/devices.json")
+      ?.bufferedReader()
+      ?.use { it.readText() }
+      ?: File(DASHBOARDS_ROOT, "$name/devices.json").takeIf { it.exists() }?.readText()
 
   private fun readBundled(name: String): Pair<String, String>? {
     val cls = DashboardFixtures::class.java
@@ -105,6 +115,9 @@ private fun parseView(obj: JsonObject): View {
     title = title,
     type = type,
     maxColumns = maxColumns,
+    denseSectionPlacement =
+      obj["dense_section_placement"]?.jsonPrimitive?.content?.toBooleanStrictOrNull(),
+    header = ViewHeader.fromJson(obj["header"]),
     cards = cards,
     sections = sections,
   )
@@ -115,6 +128,19 @@ private fun kotlinx.serialization.json.JsonElement.toCardConfig(): CardConfig? {
   val type = obj["type"]?.jsonPrimitive?.content ?: return null
   return CardConfig(type = type, raw = obj)
 }
+
+/**
+ * The demo's device registry, `devices.json` beside the states: entity id → [DeviceInfo] (which
+ * device it belongs to), as `HaClient.fetchDevices` reports it from a live Home Assistant. Cards
+ * configured by device (the Bambu Lab cards' `printer:`) find their entities through it.
+ */
+private fun parseDevices(text: String): Map<String, ee.schimke.ha.design.DeviceInfo> = Json {
+  ignoreUnknownKeys = true
+}
+  .decodeFromString(
+    kotlinx.serialization.serializer<Map<String, ee.schimke.ha.design.DeviceInfo>>(),
+    text,
+  )
 
 private fun parseStates(text: String): Map<String, EntityState> {
   val root = Json.parseToJsonElement(text).jsonObject

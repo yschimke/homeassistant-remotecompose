@@ -44,6 +44,14 @@ tasks.withType<Test>().configureEach {
     systemProperty("lovelaceRenderEvidence", file(it).absolutePath)
     outputs.upToDateWhen { false }
   }
+  // The demo dashboards whose `mdi:` icons HaIconMapTest checks are all bundled.
+  val demoDashboards =
+    layout.projectDirectory.dir("../terrazzo-core/src/androidMain/resources/dashboards")
+  inputs
+    .dir(demoDashboards)
+    .withPropertyName("demoDashboards")
+    .withPathSensitivity(PathSensitivity.RELATIVE)
+  systemProperty("harc.demoDashboards", demoDashboards.asFile.absolutePath)
   // `-PcardDesignsOut=<dir>` writes the spike's design-server files (manifest.json + blobs/)
   // there — see CardDesignTemplatesEndToEndTest.publishSpikeDesigns.
   providers.gradleProperty("cardDesignsOut").orNull?.let {

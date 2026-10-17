@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.1.42](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.41...v0.1.42) (2026-10-16)
+
+
+### Features
+
+* card designs made for one kind of device ([#830](https://github.com/yschimke/homeassistant-remotecompose/issues/830)) ([4459268](https://github.com/yschimke/homeassistant-remotecompose/commit/4459268b0051be0197e94f9c1bbcc4d8356b309c))
+* card style overrides, agent-edited dashboards, and published user designs ([#829](https://github.com/yschimke/homeassistant-remotecompose/issues/829)) ([539edb9](https://github.com/yschimke/homeassistant-remotecompose/commit/539edb9b7e886be2f0388de56fe821c40cce9b99))
+* **design-server:** editable .uid source for every library design ([#831](https://github.com/yschimke/homeassistant-remotecompose/issues/831)) ([d73fcda](https://github.com/yschimke/homeassistant-remotecompose/commit/d73fcda1a0c297d28af9daa6710edab937a1653e))
+* **embed:** ha-card finds its own design when given only a card ([#833](https://github.com/yschimke/homeassistant-remotecompose/issues/833)) ([0550815](https://github.com/yschimke/homeassistant-remotecompose/commit/0550815a6bf1b11902551da3817fda75be160b75))
+* **ha-cards:** preview every card on Wear, the launcher and app widths ([#835](https://github.com/yschimke/homeassistant-remotecompose/issues/835)) ([540a8b8](https://github.com/yschimke/homeassistant-remotecompose/commit/540a8b8c5b8102f6f2301cf50a8d4b352995bc3f))
+* **rc-converter:** render unsupported custom cards as their entities ([#827](https://github.com/yschimke/homeassistant-remotecompose/issues/827)) ([0949347](https://github.com/yschimke/homeassistant-remotecompose/commit/09493477311c2a8824a3fceb50789bbcfa7a6ffa))
+* resolve any card to its library design; launcher widgets take the card style ([#832](https://github.com/yschimke/homeassistant-remotecompose/issues/832)) ([007c52d](https://github.com/yschimke/homeassistant-remotecompose/commit/007c52d58d970c50761a2e37061ed7f5d94e05f6))
+
 ## [0.1.41](https://github.com/yschimke/homeassistant-remotecompose/compare/v0.1.40...v0.1.41) (2026-10-15)
 
 

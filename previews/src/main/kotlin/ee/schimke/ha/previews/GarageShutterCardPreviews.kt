@@ -41,6 +41,11 @@ import kotlinx.serialization.json.JsonPrimitive
 private const val SINGLE_WIDTH_DP = 200
 private const val SINGLE_HEIGHT_DP = 172
 
+/**
+ * Two garages under one title: tall enough for the second door's state line at the card type scale.
+ */
+private const val TWO_ENTITIES_HEIGHT_DP = 357
+
 @Composable
 private fun GarageHost(theme: HaTheme, content: @Composable () -> Unit) {
   CapturingRemoteContentPreview(profile = androidXExperimental) {
@@ -104,13 +109,18 @@ fun Garage_State_Dark(
   name = "garage two-entities (light)",
   showBackground = false,
   widthDp = 280,
-  heightDp = 340,
+  heightDp = TWO_ENTITIES_HEIGHT_DP,
 )
 @Composable
 fun Garage_TwoEntities_Light() =
   GarageHost(HaTheme.Light) { RenderChild(garageDoubleCard(), garageDoubleSnapshot()) }
 
-@Preview(name = "garage two-entities (dark)", showBackground = false, widthDp = 280, heightDp = 340)
+@Preview(
+  name = "garage two-entities (dark)",
+  showBackground = false,
+  widthDp = 280,
+  heightDp = TWO_ENTITIES_HEIGHT_DP,
+)
 @Composable
 fun Garage_TwoEntities_Dark() =
   GarageHost(HaTheme.Dark) { RenderChild(garageDoubleCard(), garageDoubleSnapshot()) }

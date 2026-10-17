@@ -1,6 +1,6 @@
 import com.github.triplet.gradle.androidpublisher.ReleaseStatus
 
-val appVersionName = "0.1.41" // x-release-please-version
+val appVersionName = "0.1.42" // x-release-please-version
 
 // Pack MAJOR.MINOR.PATCH into a monotonic int. Caps at major < 22.
 val appVersionCode: Int = run {
@@ -117,6 +117,39 @@ android {
   kotlin { jvmToolchain(libs.versions.java.get().toInt()) }
 }
 
+// Robolectric's SDK jar, resolved by Gradle (offline at test time) — same setup as
+// `:rc-converter`. Used by the demo-image tests, which draw real bitmaps.
+val robolectricSdk by configurations.creating {
+  isCanBeConsumed = false
+  isTransitive = false
+}
+val prepareRobolectricSdk by
+  tasks.registering(Sync::class) {
+    from(robolectricSdk)
+    into(layout.buildDirectory.dir("robolectric-sdk"))
+  }
+
+// This module's own unit-test tasks only: `withType<Test>()` alone also matches the compose-preview
+// plugin's `composePreviewRender` Test task, whose renderer resolves its own (newer) SDK and must
+// not be forced offline into a directory holding only this jar.
+tasks
+  .withType<Test>()
+  .matching { it.name.startsWith("test") && it.name.endsWith("UnitTest") }
+  .configureEach {
+    inputs.files(robolectricSdk)
+    dependsOn(prepareRobolectricSdk)
+    systemProperty("robolectric.offline", "true")
+    systemProperty(
+      "robolectric.dependency.dir",
+      layout.buildDirectory.dir("robolectric-sdk").get().asFile.absolutePath,
+    )
+    // `-PdemoImagesOut=<dir>` writes the demo stand-in pictures there as PNGs, for a look.
+    providers.gradleProperty("demoImagesOut").orNull?.let {
+      systemProperty("demoImagesOut", file(it).absolutePath)
+      outputs.upToDateWhen { false }
+    }
+  }
+
 tapmoc {
   java(libs.versions.java.get().toInt())
   kotlin(libs.versions.kotlin.get())
@@ -201,6 +234,8 @@ dependencies {
 
   testImplementation(libs.kotlin.test.junit)
   testImplementation(libs.kotlinx.coroutines.test)
+  testImplementation("org.robolectric:robolectric:4.17")
+  robolectricSdk(libs.robolectric.sdk35)
   // Offline-first integration tests spin up real fake servers so the
   // round-trip through HaClient (WebSocket) and AddonClient (HTTP) is
   // exercised against an actual socket — not a Ktor MockEngine.

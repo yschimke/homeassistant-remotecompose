@@ -35,7 +35,7 @@
       "mac": "<redacted>",
       "host_name": "<redacted>",
       "oui": "",
-      "friendly_name": "iPhone"
+      "friendly_name": "Guest iPhone"
     },
     "last_changed": "2026-05-01T02:48:12.768332+00:00",
     "last_reported": "2026-05-01T02:48:12.768332+00:00",
@@ -54,7 +54,7 @@
       "mac": "<redacted>",
       "host_name": "<redacted>",
       "oui": "",
-      "friendly_name": "iPhone iPhone"
+      "friendly_name": "Work iPhone"
     },
     "last_changed": "2026-05-01T02:48:12.767199+00:00",
     "last_reported": "2026-05-01T02:48:12.767199+00:00",
@@ -92,7 +92,7 @@
       "mac": "<redacted>",
       "host_name": "<redacted>",
       "oui": "",
-      "friendly_name": "iPhone"
+      "friendly_name": "Living room TV"
     },
     "last_changed": "2026-05-01T02:48:12.768382+00:00",
     "last_reported": "2026-05-01T02:48:12.768382+00:00",
@@ -111,7 +111,7 @@
       "mac": "<redacted>",
       "host_name": "<redacted>",
       "oui": "",
-      "friendly_name": "Mac"
+      "friendly_name": "Mac mini"
     },
     "last_changed": "2026-05-01T02:48:12.768280+00:00",
     "last_reported": "2026-05-01T02:48:12.768280+00:00",
@@ -139,7 +139,7 @@
       "radio": "6e",
       "radio_proto": "ax",
       "oui": "",
-      "friendly_name": "Mac"
+      "friendly_name": "Office iMac"
     },
     "last_changed": "2026-05-05T08:17:55.406712+00:00",
     "last_reported": "2026-05-05T08:18:15.560051+00:00",
@@ -158,7 +158,7 @@
       "mac": "<redacted>",
       "host_name": "<redacted>",
       "oui": "",
-      "friendly_name": "iPhone"
+      "friendly_name": "Kitchen iPad"
     },
     "last_changed": "2026-05-01T02:48:12.769078+00:00",
     "last_reported": "2026-05-01T02:48:12.769078+00:00",
@@ -231,7 +231,7 @@
   },
   "sensor.fast_com_download": {
     "entity_id": "sensor.fast_com_download",
-    "state": "551.XXXXXXXXXXXX",
+    "state": "551.4",
     "attributes": {
       "state_class": "measurement",
       "unit_of_measurement": "Mbit/s",
@@ -249,7 +249,7 @@
   },
   "sensor.garage_fast_com_download": {
     "entity_id": "sensor.garage_fast_com_download",
-    "state": "61.XXXXXXXXXXXXX",
+    "state": "61.8",
     "attributes": {
       "state_class": "measurement",
       "unit_of_measurement": "Mbit/s",

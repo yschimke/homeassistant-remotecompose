@@ -250,7 +250,7 @@
             },
             {
               "type": "custom:ha-bambulab-print_status-card",
-              "printer": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+              "printer": "demo-p2s-sn2",
               "style": "full",
               "grid_options": {
                 "columns": "full"
@@ -265,17 +265,6 @@
                   "type": "picture-entity",
                   "entity": "image.p2s_sn2_cover_image",
                   "name": "Cover preview",
-                  "show_name": true,
-                  "show_state": false,
-                  "aspect_ratio": "1:1",
-                  "tap_action": {
-                    "action": "more-info"
-                  }
-                },
-                {
-                  "type": "picture-entity",
-                  "entity": "image.p2s_sn2_pick_image",
-                  "name": "Pick image",
                   "show_name": true,
                   "show_state": false,
                   "aspect_ratio": "1:1",
@@ -318,16 +307,44 @@
                   "icon": "mdi:timer-sand"
                 },
                 {
-                  "type": "tile",
-                  "entity": "sensor.p2s_sn2_start_time",
-                  "name": "Started",
-                  "icon": "mdi:clock-start"
+                  "type": "conditional",
+                  "conditions": [
+                    {
+                      "condition": "state",
+                      "entity": "sensor.p2s_sn2_print_status",
+                      "state": [
+                        "prepare",
+                        "running",
+                        "pause"
+                      ]
+                    }
+                  ],
+                  "card": {
+                    "type": "tile",
+                    "entity": "sensor.p2s_sn2_start_time",
+                    "name": "Started",
+                    "icon": "mdi:clock-start"
+                  }
                 },
                 {
-                  "type": "tile",
-                  "entity": "sensor.p2s_sn2_end_time",
-                  "name": "ETA",
-                  "icon": "mdi:clock-end"
+                  "type": "conditional",
+                  "conditions": [
+                    {
+                      "condition": "state",
+                      "entity": "sensor.p2s_sn2_print_status",
+                      "state": [
+                        "prepare",
+                        "running",
+                        "pause"
+                      ]
+                    }
+                  ],
+                  "card": {
+                    "type": "tile",
+                    "entity": "sensor.p2s_sn2_end_time",
+                    "name": "ETA",
+                    "icon": "mdi:clock-end"
+                  }
                 }
               ],
               "grid_options": {
@@ -345,7 +362,7 @@
             },
             {
               "type": "custom:ha-bambulab-print_control-card",
-              "printer": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+              "printer": "demo-p2s-sn2",
               "grid_options": {
                 "columns": "full"
               }
@@ -735,7 +752,7 @@
             },
             {
               "type": "custom:ha-bambulab-print_status-card",
-              "printer": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+              "printer": "demo-a1mini-sn1",
               "style": "full",
               "grid_options": {
                 "columns": "full"
@@ -763,17 +780,6 @@
                   "type": "picture-entity",
                   "entity": "image.a1mini_sn1_cover_image",
                   "name": "Cover preview",
-                  "show_name": true,
-                  "show_state": false,
-                  "aspect_ratio": "1:1",
-                  "tap_action": {
-                    "action": "more-info"
-                  }
-                },
-                {
-                  "type": "picture-entity",
-                  "entity": "image.a1mini_sn1_pick_image",
-                  "name": "Pick image",
                   "show_name": true,
                   "show_state": false,
                   "aspect_ratio": "1:1",
@@ -816,16 +822,44 @@
                   "icon": "mdi:timer-sand"
                 },
                 {
-                  "type": "tile",
-                  "entity": "sensor.a1mini_sn1_start_time",
-                  "name": "Started",
-                  "icon": "mdi:clock-start"
+                  "type": "conditional",
+                  "conditions": [
+                    {
+                      "condition": "state",
+                      "entity": "sensor.a1mini_sn1_print_status",
+                      "state": [
+                        "prepare",
+                        "running",
+                        "pause"
+                      ]
+                    }
+                  ],
+                  "card": {
+                    "type": "tile",
+                    "entity": "sensor.a1mini_sn1_start_time",
+                    "name": "Started",
+                    "icon": "mdi:clock-start"
+                  }
                 },
                 {
-                  "type": "tile",
-                  "entity": "sensor.a1mini_sn1_end_time",
-                  "name": "ETA",
-                  "icon": "mdi:clock-end"
+                  "type": "conditional",
+                  "conditions": [
+                    {
+                      "condition": "state",
+                      "entity": "sensor.a1mini_sn1_print_status",
+                      "state": [
+                        "prepare",
+                        "running",
+                        "pause"
+                      ]
+                    }
+                  ],
+                  "card": {
+                    "type": "tile",
+                    "entity": "sensor.a1mini_sn1_end_time",
+                    "name": "ETA",
+                    "icon": "mdi:clock-end"
+                  }
                 }
               ],
               "grid_options": {
@@ -843,7 +877,7 @@
             },
             {
               "type": "custom:ha-bambulab-print_control-card",
-              "printer": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+              "printer": "demo-a1mini-sn1",
               "grid_options": {
                 "columns": "full"
               }
@@ -1231,7 +1265,7 @@
             },
             {
               "type": "custom:ha-bambulab-ams-card",
-              "ams": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+              "ams": "demo-p2s-sn2-ams-1",
               "style": "full",
               "grid_options": {
                 "columns": "full"
@@ -1330,7 +1364,7 @@
             },
             {
               "type": "custom:ha-bambulab-spool-card",
-              "spool": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+              "spool": "demo-p2s-sn2-external-spool",
               "grid_options": {
                 "columns": "full"
               }
@@ -1368,7 +1402,7 @@
             },
             {
               "type": "custom:ha-bambulab-ams-card",
-              "ams": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+              "ams": "demo-a1mini-sn1-ams-1",
               "style": "full",
               "grid_options": {
                 "columns": "full"
@@ -1455,7 +1489,7 @@
             },
             {
               "type": "custom:ha-bambulab-spool-card",
-              "spool": "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+              "spool": "demo-a1mini-sn1-external-spool",
               "grid_options": {
                 "columns": "full"
               }

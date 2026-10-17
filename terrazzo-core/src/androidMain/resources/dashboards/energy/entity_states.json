@@ -10,7 +10,7 @@
       "next_joined_event_end": null,
       "next_joined_event_duration_in_minutes": null,
       "icon": "mdi:leaf",
-      "friendly_name": "Octoplus (A-sn1) Octoplus Saving Sessions (A-sn1)"
+      "friendly_name": "Octoplus Saving Sessions"
     },
     "last_changed": "2026-04-30T18:08:19.021281+00:00",
     "last_reported": "2026-04-30T18:13:18.636836+00:00",
@@ -30,7 +30,7 @@
       "next_start": null,
       "next_end": null,
       "icon": "mdi:lightning-bolt",
-      "friendly_name": "Electricity Meter Off Peak Electricity (sn2/sn3)"
+      "friendly_name": "Electricity Off Peak"
     },
     "last_changed": "2026-04-30T18:08:19.021695+00:00",
     "last_reported": "2026-04-30T18:13:20.036952+00:00",
@@ -48,7 +48,7 @@
       "state_class": "total",
       "redeemable_points": 496,
       "icon": "mdi:trophy",
-      "friendly_name": "Octoplus (A-sn1) Octoplus Points (A-sn1)"
+      "friendly_name": "Octoplus Points"
     },
     "last_changed": "2026-04-30T18:08:49.222081+00:00",
     "last_reported": "2026-04-30T18:13:19.116670+00:00",
@@ -65,7 +65,7 @@
     "attributes": {
       "state_class": "total",
       "icon": "mdi:star-circle",
-      "friendly_name": "Wheel Of Fortune Spins Electricity (A-sn1)"
+      "friendly_name": "Wheel Of Fortune Spins Electricity"
     },
     "last_changed": "2026-04-30T18:09:19.173678+00:00",
     "last_reported": "2026-04-30T18:13:18.997716+00:00",
@@ -82,7 +82,7 @@
     "attributes": {
       "state_class": "total",
       "icon": "mdi:star-circle",
-      "friendly_name": "Wheel Of Fortune Spins Gas (A-sn1)"
+      "friendly_name": "Wheel Of Fortune Spins Gas"
     },
     "last_changed": "2026-04-30T18:09:19.173798+00:00",
     "last_reported": "2026-04-30T18:13:18.997802+00:00",
@@ -113,7 +113,7 @@
       "unit_of_measurement": "GBP/kWh",
       "device_class": "monetary",
       "icon": "mdi:currency-gbp",
-      "friendly_name": "Electricity Meter Current Rate Electricity (sn2 sn3)"
+      "friendly_name": "Electricity Current Rate"
     },
     "last_changed": "2026-04-30T18:08:19.100303+00:00",
     "last_reported": "2026-05-04T23:09:36.428620+00:00",
@@ -138,7 +138,7 @@
       "unit_of_measurement": "GBP",
       "device_class": "monetary",
       "icon": "mdi:currency-gbp",
-      "friendly_name": "Electricity Meter Current Standing Charge Electricity (sn2/sn3)"
+      "friendly_name": "Electricity Standing Charge"
     },
     "last_changed": "2026-04-30T18:08:19.101005+00:00",
     "last_reported": "2026-04-30T18:13:18.748962+00:00",
@@ -163,7 +163,7 @@
       "unit_of_measurement": "GBP/kWh",
       "device_class": "monetary",
       "icon": "mdi:currency-gbp",
-      "friendly_name": "Electricity Meter Next Rate Electricity (sn2/sn3)"
+      "friendly_name": "Electricity Next Rate"
     },
     "last_changed": "2026-04-30T18:08:19.100751+00:00",
     "last_reported": "2026-04-30T18:13:20.040280+00:00",
@@ -430,7 +430,7 @@
       "unit_of_measurement": "kWh",
       "device_class": "energy",
       "icon": "mdi:lightning-bolt",
-      "friendly_name": "Electricity Meter Previous Accumulative Consumption Electricity (sn2/sn3)"
+      "friendly_name": "Electricity Yesterday Consumption"
     },
     "last_changed": "2026-05-05T01:38:12.033561+00:00",
     "last_reported": "2026-05-05T01:38:37.329614+00:00",
@@ -796,7 +796,7 @@
       "unit_of_measurement": "GBP",
       "device_class": "monetary",
       "icon": "mdi:currency-gbp",
-      "friendly_name": "Electricity Meter Previous Accumulative Cost Electricity (sn2/sn3)"
+      "friendly_name": "Electricity Yesterday Cost"
     },
     "last_changed": "2026-05-05T01:38:37.340010+00:00",
     "last_reported": "2026-05-05T01:38:37.340010+00:00",
@@ -827,7 +827,7 @@
       "unit_of_measurement": "GBP/kWh",
       "device_class": "monetary",
       "icon": "mdi:currency-gbp",
-      "friendly_name": "Electricity Meter Export Current Rate Export Electricity (sn2 sn4)"
+      "friendly_name": "Export Current Rate"
     },
     "last_changed": "2026-04-30T18:08:19.103058+00:00",
     "last_reported": "2026-05-04T23:09:35.052516+00:00",
@@ -852,7 +852,7 @@
       "unit_of_measurement": "GBP/kWh",
       "device_class": "monetary",
       "icon": "mdi:currency-gbp",
-      "friendly_name": "Electricity Meter Export Next Rate Export Electricity (sn2/sn4)"
+      "friendly_name": "Export Next Rate"
     },
     "last_changed": "2026-04-30T18:08:19.103436+00:00",
     "last_reported": "2026-04-30T18:13:18.676911+00:00",
@@ -1119,7 +1119,7 @@
       "unit_of_measurement": "kWh",
       "device_class": "energy",
       "icon": "mdi:lightning-bolt",
-      "friendly_name": "Electricity Meter Export Previous Accumulative Consumption Export Electricity (sn2/sn4)"
+      "friendly_name": "Export Yesterday"
     },
     "last_changed": "2026-05-04T22:38:08.141100+00:00",
     "last_reported": "2026-05-04T22:38:17.056568+00:00",
@@ -1485,7 +1485,7 @@
       "unit_of_measurement": "GBP",
       "device_class": "monetary",
       "icon": "mdi:currency-gbp",
-      "friendly_name": "Electricity Meter Export Previous Accumulative Cost Export Electricity (sn2/sn4)"
+      "friendly_name": "Export Yesterday Income"
     },
     "last_changed": "2026-05-04T22:38:37.062989+00:00",
     "last_reported": "2026-05-04T22:38:47.056188+00:00",
@@ -1511,7 +1511,7 @@
       "unit_of_measurement": "GBP/kWh",
       "device_class": "monetary",
       "icon": "mdi:currency-gbp",
-      "friendly_name": "Gas Meter Current Rate Gas (sn5/sn6)"
+      "friendly_name": "Gas Current Rate"
     },
     "last_changed": "2026-04-30T18:08:19.106551+00:00",
     "last_reported": "2026-05-04T23:09:33.135538+00:00",
@@ -1524,7 +1524,7 @@
   },
   "sensor.octopus_energy_gas_sn5_sn6_current_standing_charge": {
     "entity_id": "sensor.octopus_energy_gas_sn5_sn6_current_standing_charge",
-    "state": "0.XXXXXXXX",
+    "state": "0.2917",
     "attributes": {
       "state_class": "total",
       "mprn": "<redacted>",
@@ -1534,7 +1534,7 @@
       "unit_of_measurement": "GBP",
       "device_class": "monetary",
       "icon": "mdi:currency-gbp",
-      "friendly_name": "Gas Meter Current Standing Charge Gas (sn5/sn6)"
+      "friendly_name": "Gas Standing Charge"
     },
     "last_changed": "2026-04-30T18:08:19.107297+00:00",
     "last_reported": "2026-04-30T18:13:18.867078+00:00",
@@ -1558,7 +1558,7 @@
       "unit_of_measurement": "GBP/kWh",
       "device_class": "monetary",
       "icon": "mdi:currency-gbp",
-      "friendly_name": "Gas Meter Next Rate Gas (sn5/sn6)"
+      "friendly_name": "Gas Next Rate"
     },
     "last_changed": "2026-04-30T18:08:19.107052+00:00",
     "last_reported": "2026-04-30T18:13:18.702664+00:00",
@@ -1872,7 +1872,7 @@
       "unit_of_measurement": "kWh",
       "device_class": "energy",
       "icon": "mdi:lightning-bolt",
-      "friendly_name": "Gas Meter Previous Accumulative Consumption (kWh) Gas (sn5/sn6)"
+      "friendly_name": "Gas Yesterday (kWh)"
     },
     "last_changed": "2026-05-05T00:08:37.200185+00:00",
     "last_reported": "2026-05-05T00:08:37.200185+00:00",
@@ -2188,7 +2188,7 @@
       "unit_of_measurement": "m³",
       "device_class": "gas",
       "icon": "mdi:fire",
-      "friendly_name": "Gas Meter Previous Accumulative Consumption Gas (sn5/sn6)"
+      "friendly_name": "Gas Yesterday (m³)"
     },
     "last_changed": "2026-05-05T00:08:11.136228+00:00",
     "last_reported": "2026-05-05T00:08:11.136228+00:00",
@@ -2553,7 +2553,7 @@
       "unit_of_measurement": "GBP",
       "device_class": "monetary",
       "icon": "mdi:currency-gbp",
-      "friendly_name": "Gas Meter Previous Accumulative Cost Gas (sn5/sn6)"
+      "friendly_name": "Gas Yesterday Cost"
     },
     "last_changed": "2026-05-05T00:08:37.198823+00:00",
     "last_reported": "2026-05-05T00:08:37.198823+00:00",
@@ -2636,10 +2636,10 @@
   },
   "sensor.solaredge_lifetime_energy": {
     "entity_id": "sensor.solaredge_lifetime_energy",
-    "state": "XXXXXXXX.0",
+    "state": "18452.37",
     "attributes": {
       "state_class": "total_increasing",
-      "unit_of_measurement": "Wh",
+      "unit_of_measurement": "kWh",
       "device_class": "energy",
       "friendly_name": "solaredge Lifetime energy"
     },

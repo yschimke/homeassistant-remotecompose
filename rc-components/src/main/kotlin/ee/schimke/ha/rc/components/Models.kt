@@ -25,8 +25,10 @@ import androidx.compose.ui.graphics.vector.ImageVector
 /**
  * State-binding + colour pair for a toggleable entity. The component builds `<entityId>.is_on` and
  * uses `isOn.select(activeAccent, inactiveAccent)` so a live player can flip the accent without
- * re-encoding. For non-toggleable entities (sensors, etc.) leave the parent's `entityId` null and
- * the activeAccent is used unconditionally.
+ * re-encoding. Availability is a third, orthogonal state: `<entityId>.is_available` (seeded from
+ * [initiallyAvailable]) overrides either accent with a neutral one and dims the content. For
+ * non-toggleable entities (sensors, etc.) leave the parent's `entityId` null and the activeAccent
+ * is used unconditionally.
  *
  * [initiallyOn] is the boolean value at authoring time — named `RemoteBoolean`s don't carry a
  * `constantValueOrNull`, so the composable needs this separately to seed an in-document
@@ -41,9 +43,36 @@ data class HaToggleAccent(
    * toggle binding is informational.
    */
   val toggleable: Boolean = true,
+  /**
+   * Whether the entity had a real state at authoring time — false when it was `unavailable`,
+   * `unknown` or missing from the snapshot. Seeds the live `<entityId>.is_available` binding the
+   * component reads to dim the whole row / tile and swap the accent for a neutral one (see
+   * [entityLook]); the host flips it at runtime the same way it flips `is_on`.
+   */
+  val initiallyAvailable: Boolean = true,
+  /**
+   * The glyph drawn while the entity is on, when it differs from the data's `icon` (drawn while
+   * off): a light's `lightbulb` over `lightbulb-off`, a door sensor's `door-open` over
+   * `door-closed`. With the `is_on` binding the component bakes both and swaps them in-document, so
+   * a document captured in one state draws the other; without it, it draws the glyph for
+   * [initiallyOn]. Null when the glyph doesn't change with the state.
+   */
+  val activeIcon: ImageVector? = null,
+  /**
+   * Whether [activeIcon] is also the glyph while the entity is unavailable or unknown (Home
+   * Assistant's default for those states is the on glyph, as for a light), which `is_on` alone
+   * can't tell from off: the component then also follows `<entityId>.is_available`.
+   */
+  val activeIconWhenUnavailable: Boolean = false,
 )
 
-/** HA tile card model. */
+/**
+ * HA tile card model.
+ *
+ * [badge] and [features] are what HA's tile draws beyond icon, name and state (`hui-tile-card`'s
+ * `renderTileBadge` and `hui-card-features`). Both are baked at capture: a converter that sets them
+ * re-encodes the card on data changes (`CardConverter.dataSignature`).
+ */
 data class HaTileData(
   val entityId: String?,
   val name: String,
@@ -51,6 +80,57 @@ data class HaTileData(
   val icon: ImageVector,
   val accent: HaToggleAccent,
   val tapAction: HaAction = HaAction.None,
+  val badge: HaTileBadge? = null,
+  val features: List<HaTileFeature> = emptyList(),
+  val featuresPosition: HaTileFeaturePosition = HaTileFeaturePosition.Bottom,
+)
+
+/**
+ * The small disc HA's tile lays over the corner of its icon, e.g. a climate entity's `hvac_action`
+ * (a flame while heating). [color] is the disc; null draws the neutral, inactive colour.
+ */
+data class HaTileBadge(val icon: ImageVector, val color: Color?, val description: String)
+
+/** Where a tile's features sit (HA `features_position`). */
+enum class HaTileFeaturePosition {
+  /** Each feature on its own row under the icon, name and state (HA's default). */
+  Bottom,
+
+  /** The first feature beside the name and state; any others below, two to a row. */
+  Inline,
+}
+
+/**
+ * One tile feature row (HA `features:`), resolved by the converter into what it draws and the
+ * actions its controls fire. Unsupported feature types never reach the component.
+ */
+sealed interface HaTileFeature {
+  /**
+   * HA's `target-temperature`: a − / value / + control. [decrement] / [increment] are the service
+   * calls one step either way, or [HaAction.None] where the step would leave the entity's range or
+   * the entity is unavailable (the button then draws disabled).
+   */
+  data class NumberButtons(
+    val valueLabel: String,
+    val decrement: HaAction,
+    val increment: HaAction,
+    val description: String,
+  ) : HaTileFeature
+
+  /**
+   * A mode selector (HA `climate-hvac-modes`, `climate-preset-modes`, …): one segment per option,
+   * the current one filled with the tile's accent. [showIcons] draws each option's icon in place of
+   * its label (HA's `icons` style).
+   */
+  data class ModeSelect(val options: List<HaTileModeOption>, val showIcons: Boolean) : HaTileFeature
+}
+
+/** One option of a [HaTileFeature.ModeSelect]. */
+data class HaTileModeOption(
+  val label: String,
+  val icon: ImageVector?,
+  val selected: Boolean,
+  val action: HaAction,
 )
 
 /** HA button card model. */
@@ -71,6 +151,11 @@ data class HaEntityRowData(
   val icon: ImageVector,
   val accent: HaToggleAccent,
   val tapAction: HaAction = HaAction.None,
+  /**
+   * Whether the row ends in a switch for an entity with an on/off state, as HA's toggle row does.
+   * False for an entity that can't be switched (a binary sensor), whose row shows its state text.
+   */
+  val toggle: Boolean = true,
 )
 
 /** Entities card (title + rows). The converter collects rows into this list. */
@@ -199,17 +284,42 @@ data class HaLogbookEntry(
  */
 data class HaHistoryGraphData(
   val title: String?,
-  /** "Last 24h" / "Last 12h" — whatever `hours_to_show` resolved to. */
+  /** "Last 24 hours" / "Last 7 days" — whatever `hours_to_show` resolved to. */
   val rangeLabel: String,
   val rows: List<HaHistoryGraphRow>,
+  /**
+   * The one card-level message shown when no row has a line ("No history in the last 2 days"), in
+   * place of a stub per row.
+   */
+  val emptyLabel: String = "No history",
 )
+
+/** Whether [this] row draws a line: a sparkline needs at least two numeric samples. */
+val HaHistoryGraphRow.hasLine: Boolean
+  get() = points.size >= 2
+
+/**
+ * Whether the card shows its single empty state: it has rows and none of them draws a line. When
+ * only some rows are empty, those rows shrink to one line each and the others keep their graphs.
+ */
+val HaHistoryGraphData.allSeriesEmpty: Boolean
+  get() = rows.isNotEmpty() && rows.none { it.hasLine }
+
+/**
+ * Whether [RemoteHaHistoryGraph] replaces its rows with the single empty state: only when the
+ * caller opts in ([singleEmptyState], the `history-graph` card) and [allSeriesEmpty]. The sensor
+ * card and statistics-graph reuse the layout without it, so a row with no history still shows its
+ * name and current value.
+ */
+fun HaHistoryGraphData.showsSingleEmptyState(singleEmptyState: Boolean): Boolean =
+  singleEmptyState && allSeriesEmpty
 
 data class HaHistoryGraphRow(
   val entityId: String?,
   val name: String,
   val summary: RemoteString,
   val accent: Color,
-  /** Numeric samples in order. Empty → renders a "no data" stub. */
+  /** Numeric samples in order. Fewer than two → the row is one line: its name and summary. */
   val points: List<Float>,
 )
 
@@ -226,6 +336,10 @@ data class HaHistoryGraphRow(
  * either participating sensor for composite lines) changes. For composite lines (`Layer X / Y`,
  * `Nozzle 220°C → 220°C`) we pick the sensor whose value drives the line — `_current_layer`,
  * `_nozzle_temperature`, `_bed_temperature`.
+ *
+ * [phase] is structure: a printer that is not printing draws the idle layout (no ring, no `0 %`, no
+ * layer count) and a finished one a full ring with a check, so a change of phase re-encodes the
+ * card (it is a re-encode card) and a design template keys on it.
  */
 data class HaBambuPrintStatusData(
   val entityId: String?,
@@ -244,21 +358,45 @@ data class HaBambuPrintStatusData(
   val nozzleLine: String?,
   val bedEntityId: String?,
   val bedLine: String?,
+  val phase: HaBambuPrintPhase = HaBambuPrintPhase.Printing,
 )
 
-/** `custom:ha-bambulab-print_control-card` — pause / resume / stop pad. */
+/**
+ * What a Bambu printer is doing, as far as the print-status card's layout is concerned. Only
+ * [Printing] (which includes preparing and paused) shows the progress ring and the job's lines; the
+ * others show the printer and its state.
+ */
+enum class HaBambuPrintPhase {
+  Printing,
+  Idle,
+  Finished,
+  Failed,
+  Offline,
+}
+
+/**
+ * `custom:ha-bambulab-print_control-card` — pause / resume / stop pad. A null button is not shown:
+ * the converter passes only the actions that apply to the print's state. With none to show, the pad
+ * says why in [statusLine] ("Nothing printing").
+ */
 data class HaBambuPrintControlData(
   val printerName: String,
   val pause: HaBambuControlButton?,
   val resume: HaBambuControlButton?,
   val stop: HaBambuControlButton?,
+  val statusLine: String? = null,
 )
 
+/**
+ * One control. A button that is not [enabled] (its entity is `unavailable`) is drawn greyed out and
+ * does nothing when tapped.
+ */
 data class HaBambuControlButton(
   val label: String,
   val icon: ImageVector,
   val accent: Color,
   val tapAction: HaAction = HaAction.None,
+  val enabled: Boolean = true,
 )
 
 /** `custom:ha-bambulab-ams-card` — grid of up to four filament slots. */
@@ -269,8 +407,8 @@ data class HaBambuSpoolDetail(val slot: HaBambuSpoolSlot)
 
 /**
  * One filament tray. [color] is the spool's swatch (state.attributes.color parsed from
- * `#RRGGBBAA`); [remainPercent] is 0..100 (or null when the HA "remain_enabled" flag is off and the
- * integration reports nothing).
+ * `#RRGGBBAA`); [remainPercent] is 0..100, or null when it isn't known (the integration reports
+ * `-1`, or the HA "remain_enabled" flag is off and the integration reports nothing).
  */
 data class HaBambuSpoolSlot(
   val entityId: String?,
@@ -550,6 +688,12 @@ data class HaPictureGlanceCell(
   val initiallyActive: Boolean,
   val label: String,
   val tapAction: HaAction,
+  /** The glyph while on, when it differs from [icon]: see [HaToggleAccent.activeIcon]. */
+  val activeIcon: ImageVector? = null,
+  /** See [HaToggleAccent.activeIconWhenUnavailable]. */
+  val activeIconWhenUnavailable: Boolean = false,
+  /** See [HaToggleAccent.initiallyAvailable]. */
+  val initiallyAvailable: Boolean = true,
 )
 
 /**
@@ -580,6 +724,12 @@ sealed interface HaPictureElement {
     val initiallyActive: Boolean,
     val tapAction: HaAction,
     override val position: HaPictureElementPosition? = null,
+    /** The glyph while on, when it differs from [icon]: see [HaToggleAccent.activeIcon]. */
+    val activeIcon: ImageVector? = null,
+    /** See [HaToggleAccent.activeIconWhenUnavailable]. */
+    val activeIconWhenUnavailable: Boolean = false,
+    /** See [HaToggleAccent.initiallyAvailable]. */
+    val initiallyAvailable: Boolean = true,
   ) : HaPictureElement
 
   data class StateLabel(

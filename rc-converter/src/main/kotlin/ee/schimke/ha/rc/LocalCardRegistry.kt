@@ -7,6 +7,7 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.components.LocalRemoteAnimationsEnabled
+import ee.schimke.ha.rc.icons.HaIconMap
 
 /**
  * Composition local that lets stack / grid / conditional cards recurse into the registry for their
@@ -87,7 +88,34 @@ fun CardRegistry.cardSizeConstraints(
  * into the card's cache key and skips the live-binding push for that card.
  */
 fun CardRegistry.cardDataSignature(card: CardConfig, snapshot: HaSnapshot): String? =
-  get(card.type)?.dataSignature(card, snapshot)
+  get(card.type)?.dataSignature(card, snapshot, this)
+
+/**
+ * The signature of a container's [children] (stack, grid): each child's [cardDataSignature], tagged
+ * with its position, joined in order — or null when every child keeps up through named bindings, so
+ * a container of binding cards stays on the binding path. One re-encode child makes the whole
+ * container document re-encode, since its bytes bake that child.
+ */
+fun CardRegistry.childrenDataSignature(children: List<CardConfig>, snapshot: HaSnapshot): String? {
+  val parts = children.mapIndexedNotNull { i, child ->
+    cardDataSignature(child, snapshot)?.let { "$i:${child.type}{$it}" }
+  }
+  return if (parts.isEmpty()) null else parts.joinToString("|")
+}
+
+/**
+ * The state-following glyphs [card] draws ([HaIconMap.stateSignature] per entity: a sun's
+ * `white-balance-sunny` / `weather-night`, an alarm panel's `shield-home` / `shield-off`, …), or
+ * null when none of its entities' glyphs follow their state. Unlike [cardDataSignature], values
+ * still arrive as named bindings: a host folds this into the card's cache key only, so the document
+ * re-encodes when a glyph changes and keeps taking binding pushes otherwise. On/off glyphs aren't
+ * in it; they swap in-document on `is_on` ([HaIconMap.entityIcons]).
+ */
+fun cardIconSignature(card: CardConfig, snapshot: HaSnapshot): String? =
+  cardEntityIds(card)
+    .mapNotNull { id -> HaIconMap.stateSignature(snapshot.states[id])?.let { "$id=$it" } }
+    .takeIf { it.isNotEmpty() }
+    ?.joinToString(";")
 
 internal const val UNSUPPORTED_CARD_TYPE = "__unsupported__"
 

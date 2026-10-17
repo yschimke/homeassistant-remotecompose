@@ -279,7 +279,9 @@ open class TerrazzoWidgetProvider : AppWidgetProvider() {
     look: LauncherLook,
   ): RemoteViews? {
     val widgetActions =
-      WidgetActionRegistry(snapshot.states.mapValues { (_, entity) -> formatState(entity) })
+      WidgetActionRegistry(
+        snapshot.states.mapValues { (_, entity) -> formatState(entity, snapshot) }
+      )
     val captured = runCatching {
       runBlocking {
         captureSingleRemoteDocument(

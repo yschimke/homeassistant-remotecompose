@@ -28,6 +28,9 @@ internal fun CompactStateChip(card: CardConfig, snapshot: HaSnapshot) {
   val entity = entityId?.let { snapshot.states[it] }
   val theme = currentRemoteHaTheme()
   RemoteBox(modifier = RemoteModifier.fillMaxSize()) {
-    RemoteText(text = LiveValues.state(entityId, formatState(entity)), color = theme.primaryText)
+    RemoteText(
+      text = LiveValues.state(entityId, formatState(entity, snapshot)),
+      color = theme.primaryText,
+    )
   }
 }

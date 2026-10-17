@@ -22,6 +22,7 @@ import androidx.wear.compose.material3.ButtonDefaults
 import androidx.wear.compose.material3.ListHeader
 import androidx.wear.compose.material3.MaterialTheme
 import androidx.wear.compose.material3.Text
+import ee.schimke.terrazzo.wear.data.displayState
 import ee.schimke.terrazzo.wearsync.proto.EntityValue
 import ee.schimke.terrazzo.wearsync.proto.PinnedCard
 import ee.schimke.terrazzo.wearsync.proto.PinnedCardSet
@@ -174,15 +175,7 @@ private fun EmptyPinned() {
 @Composable
 private fun PinnedCardRow(card: PinnedCard, value: EntityValue?) {
   val title = card.card.title.ifEmpty { card.card.primaryEntityId.ifEmpty { card.card.type } }
-  val displayState =
-    value
-      ?.let { v ->
-        buildString {
-          append(v.state)
-          if (v.unit.isNotEmpty()) append(" ${v.unit}")
-        }
-      }
-      .orEmpty()
+  val displayState = value?.displayState(card.card.primaryEntityId).orEmpty()
   Box(modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp, vertical = 6.dp)) {
     Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterStart) {
       Column {

@@ -27,6 +27,19 @@ class StateCache {
     _states.value = current + (entityId to value)
   }
 
+  /**
+   * The entity registry's display precision by `entity_id` (`dp` in
+   * `config/entity_registry/list_for_display`): what the app's `formatState(entity, snapshot)`
+   * rounds to, so the add-on's `<id>.state` push matches the document the app authored.
+   */
+  @Volatile private var precisions: Map<String, Int> = emptyMap()
+
+  fun displayPrecision(entityId: String): Int? = precisions[entityId]
+
+  fun replaceDisplayPrecisions(map: Map<String, Int>) {
+    precisions = map.toMap()
+  }
+
   fun remove(entityId: String) {
     val current = _states.value
     if (entityId !in current) return

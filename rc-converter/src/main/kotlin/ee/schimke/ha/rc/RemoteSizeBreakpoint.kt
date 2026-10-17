@@ -11,6 +11,7 @@ import androidx.compose.remote.creation.compose.state.RemoteState
 import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
@@ -137,6 +138,22 @@ enum class BreakpointAxis {
   Height,
 }
 
+/**
+ * The dimension a Fixed-mode host's canvases differ along, so the one a card with a single runtime
+ * gate should read. Launcher widgets (and the matrix's launcher cells) pin width and let height
+ * wrap: [BreakpointAxis.Width], the default. A Wear slot pins both, and its small and large
+ * containers share a width and differ only in height, so Wear surfaces provide
+ * [BreakpointAxis.Height]: a card whose layouts differ by height there (the tile's compact or full
+ * name-over-state stack) gates on height instead of on a width every Wear slot passes.
+ */
+val LocalFixedCanvasAxis = staticCompositionLocalOf { BreakpointAxis.Width }
+
+/** Declare, for the cards in [content], the axis this Fixed-mode host's canvases differ along. */
+@Composable
+fun ProvideFixedCanvasAxis(axis: BreakpointAxis, content: @Composable () -> Unit) {
+  CompositionLocalProvider(LocalFixedCanvasAxis provides axis, content = content)
+}
+
 private val InvisibleFormat = DecimalFormat("0")
 
 /**
@@ -192,3 +209,29 @@ private const val BreakpointExpressionPrefix = "__terrazzo_breakpoint_"
 data class WidgetCaptureSizeDp(val widthDp: Int, val heightDp: Int)
 
 internal val LocalWidgetCaptureSizeDp = staticCompositionLocalOf<WidgetCaptureSizeDp?> { null }
+
+/**
+ * Runs [content] with the launcher capture size narrowed to one child's share of it, for a
+ * container that splits its room into [columns] × [rows] equal parts with [gapDp] between them (a
+ * grid's cells, a horizontal stack's columns). A nested grid or size gate then picks its layout for
+ * the room it will actually be played in, not the whole widget's. No-op outside a launcher capture.
+ */
+@Composable
+internal fun ProvideChildCaptureShare(
+  columns: Int,
+  rows: Int = 1,
+  gapDp: Int,
+  content: @Composable () -> Unit,
+) {
+  val size = LocalWidgetCaptureSizeDp.current
+  if (size == null || columns < 1 || rows < 1) {
+    content()
+    return
+  }
+  fun share(total: Int, parts: Int): Int = ((total - gapDp * (parts - 1)) / parts).coerceAtLeast(0)
+  CompositionLocalProvider(
+    LocalWidgetCaptureSizeDp provides
+      WidgetCaptureSizeDp(share(size.widthDp, columns), share(size.heightDp, rows)),
+    content = content,
+  )
+}

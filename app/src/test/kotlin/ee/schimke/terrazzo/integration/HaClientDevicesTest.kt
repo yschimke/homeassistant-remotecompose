@@ -28,7 +28,7 @@ import kotlinx.serialization.json.put
 
 /**
  * [HaClient.fetchDevices] joins the entity registry's display list with the device registry, in the
- * compact keys Home Assistant's own frontend reads (`ei`, `di`, `pl`, `tk`).
+ * compact keys Home Assistant's own frontend reads (`ei`, `di`, `pl`, `tk`, `dp`).
  */
 class HaClientDevicesTest {
   private var server: EmbeddedServer<*, *>? = null
@@ -44,6 +44,7 @@ class HaClientDevicesTest {
       {"entity_categories": {}, "entities": [
         {"ei": "sensor.boiler_flow", "di": "dev1", "pl": "vaillant", "tk": "flow_temperature"},
         {"ei": "light.kitchen", "pl": "hue"},
+        {"ei": "sensor.outdoor_temperature", "pl": "met", "dp": 1},
         {"ei": "sensor.bare"}
       ]}
       """
@@ -127,8 +128,11 @@ class HaClientDevicesTest {
             manufacturer = "Vaillant",
             model = "ecoTEC plus 832",
             translationKey = "flow_temperature",
+            deviceId = "dev1",
           ),
         "light.kitchen" to DeviceInfo(integration = "hue"),
+        // `dp`: the registry's display precision, which `formatState` rounds to.
+        "sensor.outdoor_temperature" to DeviceInfo(integration = "met", displayPrecision = 1),
       ),
       devices(deviceRegistry = true),
     )
@@ -137,7 +141,7 @@ class HaClientDevicesTest {
   @Test
   fun withoutTheDeviceRegistryEntitiesKeepTheirIntegration() {
     assertEquals(
-      DeviceInfo(integration = "vaillant", translationKey = "flow_temperature"),
+      DeviceInfo(integration = "vaillant", translationKey = "flow_temperature", deviceId = "dev1"),
       devices(deviceRegistry = false)["sensor.boiler_flow"],
     )
   }

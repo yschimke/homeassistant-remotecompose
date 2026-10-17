@@ -199,7 +199,7 @@
             "expected": {
                 "strings": {
                     "card.title": "Formatting",
-                    "sensor.s0.state": "21.46 °C",
+                    "sensor.s0.state": "21.5 °C",
                     "sensor.s0.name": "sensor.n0",
                     "sensor.s1.state": "21.46",
                     "sensor.s1.name": "sensor.n1",
@@ -223,7 +223,7 @@
                     "sensor.s10.name": "sensor.n10",
                     "sensor.s11.state": "-100",
                     "sensor.s11.name": "sensor.n11",
-                    "sensor.s12.state": "12 °C",
+                    "sensor.s12.state": "—",
                     "sensor.s12.name": "sensor.n12",
                     "sensor.s13.state": "5",
                     "sensor.s13.name": "sensor.n13",
@@ -243,11 +243,11 @@
                     "sensor.s20.name": "sensor.n20",
                     "sensor.s21.state": "Off",
                     "sensor.s21.name": "sensor.n21",
-                    "sensor.s22.state": "Not home",
+                    "sensor.s22.state": "Away",
                     "sensor.s22.name": "sensor.n22",
-                    "sensor.s23.state": "Heat cool",
+                    "sensor.s23.state": "Heat/Cool",
                     "sensor.s23.name": "sensor.n23",
-                    "sensor.s24.state": "Unavailable",
+                    "sensor.s24.state": "Unknown",
                     "sensor.s24.name": "sensor.n24",
                     "sensor.s25.state": "Unavailable",
                     "sensor.s25.name": "sensor.n25",
@@ -260,34 +260,63 @@
                 },
                 "booleans": {
                     "sensor.s0.is_on": false,
+                    "sensor.s0.is_available": true,
                     "sensor.s1.is_on": false,
+                    "sensor.s1.is_available": true,
                     "sensor.s2.is_on": false,
+                    "sensor.s2.is_available": true,
                     "sensor.s3.is_on": false,
+                    "sensor.s3.is_available": true,
                     "sensor.s4.is_on": false,
+                    "sensor.s4.is_available": true,
                     "sensor.s5.is_on": false,
+                    "sensor.s5.is_available": true,
                     "sensor.s6.is_on": false,
+                    "sensor.s6.is_available": true,
                     "sensor.s7.is_on": false,
+                    "sensor.s7.is_available": true,
                     "sensor.s8.is_on": false,
+                    "sensor.s8.is_available": true,
                     "sensor.s9.is_on": false,
+                    "sensor.s9.is_available": true,
                     "sensor.s10.is_on": false,
+                    "sensor.s10.is_available": true,
                     "sensor.s11.is_on": false,
+                    "sensor.s11.is_available": true,
                     "sensor.s12.is_on": false,
+                    "sensor.s12.is_available": true,
                     "sensor.s13.is_on": false,
+                    "sensor.s13.is_available": true,
                     "sensor.s14.is_on": false,
+                    "sensor.s14.is_available": true,
                     "sensor.s15.is_on": false,
+                    "sensor.s15.is_available": true,
                     "sensor.s16.is_on": false,
+                    "sensor.s16.is_available": true,
                     "sensor.s17.is_on": false,
+                    "sensor.s17.is_available": true,
                     "sensor.s18.is_on": false,
+                    "sensor.s18.is_available": true,
                     "sensor.s19.is_on": false,
+                    "sensor.s19.is_available": true,
                     "sensor.s20.is_on": true,
+                    "sensor.s20.is_available": true,
                     "sensor.s21.is_on": false,
+                    "sensor.s21.is_available": true,
                     "sensor.s22.is_on": false,
+                    "sensor.s22.is_available": true,
                     "sensor.s23.is_on": false,
+                    "sensor.s23.is_available": true,
                     "sensor.s24.is_on": false,
+                    "sensor.s24.is_available": false,
                     "sensor.s25.is_on": false,
+                    "sensor.s25.is_available": false,
                     "sensor.s26.is_on": false,
+                    "sensor.s26.is_available": true,
                     "sensor.s27.is_on": false,
-                    "sensor.s28.is_on": false
+                    "sensor.s27.is_available": true,
+                    "sensor.s28.is_on": false,
+                    "sensor.s28.is_available": true
                 },
                 "ints": {
                     "sensor.s0.state_int": -1,
@@ -587,7 +616,7 @@
                     "media_player.s9.name": "J",
                     "media_player.s10.state": "On",
                     "media_player.s10.name": "K",
-                    "climate.s11.state": "Heat cool",
+                    "climate.s11.state": "Heat/Cool",
                     "climate.s11.name": "L",
                     "climate.s12.state": "Off",
                     "climate.s12.name": "Row 12",
@@ -595,7 +624,7 @@
                     "vacuum.s13.name": "N",
                     "person.s14.state": "Home",
                     "person.s14.name": "O",
-                    "device_tracker.s15.state": "Not home",
+                    "device_tracker.s15.state": "Away",
                     "device_tracker.s15.name": "P",
                     "valve.s16.state": "Open",
                     "valve.s16.name": "Row 16",
@@ -605,34 +634,56 @@
                     "binary_sensor.s18.name": "S",
                     "fan.s19.state": "Unavailable",
                     "fan.s19.name": "T",
-                    "input_boolean.s20.state": "Unavailable",
+                    "input_boolean.s20.state": "Unknown",
                     "input_boolean.s20.name": "Row 20",
                     "weather.s21.state": "Sunny",
                     "weather.s21.name": "V"
                 },
                 "booleans": {
                     "light.s0.is_on": true,
+                    "light.s0.is_available": true,
                     "light.s1.is_on": false,
+                    "light.s1.is_available": true,
                     "switch.s2.is_on": true,
+                    "switch.s2.is_available": true,
                     "cover.s3.is_on": true,
+                    "cover.s3.is_available": true,
                     "cover.s4.is_on": false,
+                    "cover.s4.is_available": true,
                     "lock.s5.is_on": true,
+                    "lock.s5.is_available": true,
                     "lock.s6.is_on": false,
+                    "lock.s6.is_available": true,
                     "media_player.s7.is_on": true,
+                    "media_player.s7.is_available": true,
                     "media_player.s8.is_on": false,
+                    "media_player.s8.is_available": true,
                     "media_player.s9.is_on": false,
+                    "media_player.s9.is_available": true,
                     "media_player.s10.is_on": true,
+                    "media_player.s10.is_available": true,
                     "climate.s11.is_on": true,
+                    "climate.s11.is_available": true,
                     "climate.s12.is_on": false,
+                    "climate.s12.is_available": true,
                     "vacuum.s13.is_on": true,
+                    "vacuum.s13.is_available": true,
                     "person.s14.is_on": true,
+                    "person.s14.is_available": true,
                     "device_tracker.s15.is_on": false,
+                    "device_tracker.s15.is_available": true,
                     "valve.s16.is_on": true,
+                    "valve.s16.is_available": true,
                     "scene.s17.is_on": true,
+                    "scene.s17.is_available": true,
                     "binary_sensor.s18.is_on": true,
+                    "binary_sensor.s18.is_available": true,
                     "fan.s19.is_on": false,
+                    "fan.s19.is_available": false,
                     "input_boolean.s20.is_on": false,
-                    "weather.s21.is_on": false
+                    "input_boolean.s20.is_available": false,
+                    "weather.s21.is_on": false,
+                    "weather.s21.is_available": true
                 },
                 "ints": {
                     "light.s0.state_int": -1,
@@ -806,25 +857,38 @@
                     "alarm_control_panel.s9.name": "alarm_control_panel.a9",
                     "alarm_control_panel.s10.state": "Unavailable",
                     "alarm_control_panel.s10.name": "alarm_control_panel.a10",
-                    "alarm_control_panel.s11.state": "Unavailable",
+                    "alarm_control_panel.s11.state": "Unknown",
                     "alarm_control_panel.s11.name": "alarm_control_panel.a11",
                     "alarm_control_panel.s12.state": "Something new",
                     "alarm_control_panel.s12.name": "alarm_control_panel.a12"
                 },
                 "booleans": {
                     "alarm_control_panel.s0.is_on": false,
+                    "alarm_control_panel.s0.is_available": true,
                     "alarm_control_panel.s1.is_on": true,
+                    "alarm_control_panel.s1.is_available": true,
                     "alarm_control_panel.s2.is_on": true,
+                    "alarm_control_panel.s2.is_available": true,
                     "alarm_control_panel.s3.is_on": true,
+                    "alarm_control_panel.s3.is_available": true,
                     "alarm_control_panel.s4.is_on": true,
+                    "alarm_control_panel.s4.is_available": true,
                     "alarm_control_panel.s5.is_on": true,
+                    "alarm_control_panel.s5.is_available": true,
                     "alarm_control_panel.s6.is_on": true,
+                    "alarm_control_panel.s6.is_available": true,
                     "alarm_control_panel.s7.is_on": true,
+                    "alarm_control_panel.s7.is_available": true,
                     "alarm_control_panel.s8.is_on": true,
+                    "alarm_control_panel.s8.is_available": true,
                     "alarm_control_panel.s9.is_on": false,
+                    "alarm_control_panel.s9.is_available": true,
                     "alarm_control_panel.s10.is_on": false,
+                    "alarm_control_panel.s10.is_available": false,
                     "alarm_control_panel.s11.is_on": false,
-                    "alarm_control_panel.s12.is_on": false
+                    "alarm_control_panel.s11.is_available": false,
+                    "alarm_control_panel.s12.is_on": false,
+                    "alarm_control_panel.s12.is_available": true
                 },
                 "ints": {
                     "alarm_control_panel.s0.state_int": 0,
@@ -893,7 +957,8 @@
                     "light.s0.name": "Kitchen"
                 },
                 "booleans": {
-                    "light.s0.is_on": true
+                    "light.s0.is_on": true,
+                    "light.s0.is_available": true
                 },
                 "ints": {
                     "light.s0.state_int": -1,
@@ -917,7 +982,8 @@
                     "light.s0.name": "light.gone"
                 },
                 "booleans": {
-                    "light.s0.is_on": false
+                    "light.s0.is_on": false,
+                    "light.s0.is_available": false
                 },
                 "ints": {
                     "light.s0.state_int": -1,
@@ -989,9 +1055,13 @@
                 },
                 "booleans": {
                     "light.s0.is_on": false,
+                    "light.s0.is_available": true,
                     "sensor.s1.is_on": false,
+                    "sensor.s1.is_available": true,
                     "switch.s2.is_on": true,
-                    "switch.s3.is_on": true
+                    "switch.s2.is_available": true,
+                    "switch.s3.is_on": true,
+                    "switch.s3.is_available": true
                 },
                 "ints": {
                     "light.s0.state_int": -1,
@@ -1045,12 +1115,14 @@
                     "card.title": "Plan",
                     "light.s0.state": "On",
                     "light.s0.name": "light.kitchen",
-                    "sensor.s1.state": "Unavailable",
+                    "sensor.s1.state": "Unknown",
                     "sensor.s1.name": "sensor.x"
                 },
                 "booleans": {
                     "light.s0.is_on": true,
-                    "sensor.s1.is_on": false
+                    "light.s0.is_available": true,
+                    "sensor.s1.is_on": false,
+                    "sensor.s1.is_available": false
                 },
                 "ints": {
                     "light.s0.state_int": -1,
@@ -1105,7 +1177,9 @@
                 },
                 "booleans": {
                     "light.s0.is_on": true,
-                    "light.s1.is_on": true
+                    "light.s0.is_available": true,
+                    "light.s1.is_on": true,
+                    "light.s1.is_available": true
                 },
                 "ints": {
                     "light.s0.state_int": -1,
@@ -1116,6 +1190,588 @@
                 "floats": {
                     "light.s0.numeric_state": "NaN",
                     "light.s1.numeric_state": "NaN"
+                }
+            }
+        },
+        {
+            "name": "home assistant formatting",
+            "card": {
+                "type": "entities",
+                "entities": [
+                    "binary_sensor.door",
+                    "binary_sensor.motion",
+                    "binary_sensor.problem",
+                    "binary_sensor.plain",
+                    "sensor.version",
+                    "sensor.commit",
+                    "sensor.mode",
+                    "sensor.unknown",
+                    "sensor.temp",
+                    "sensor.temp_dp",
+                    "sensor.temp_sdp",
+                    "sensor.humidity",
+                    "sensor.rate",
+                    "sensor.rate4",
+                    "sensor.cost",
+                    "sensor.cost_neg",
+                    "sensor.cost_chf",
+                    "sensor.cost_jpy",
+                    "sensor.redacted",
+                    "sensor.uv",
+                    "sensor.visibility",
+                    "sensor.visibility_exp",
+                    "sensor.wind",
+                    "sensor.bearing",
+                    "sensor.elevation",
+                    "sensor.duration",
+                    "sensor.duration_s",
+                    "sensor.duration_half",
+                    "sensor.duration_d",
+                    "sensor.duration_neg",
+                    "sensor.stars",
+                    "sensor.issues",
+                    "sensor.power",
+                    "sensor.energy",
+                    "sensor.past",
+                    "event.doorbell",
+                    "sensor.future",
+                    "sensor.bad_time",
+                    "sensor.bin_day",
+                    "sensor.five_f"
+                ]
+            },
+            "states": {
+                "binary_sensor.door": {
+                    "state": "on",
+                    "attributes": {
+                        "device_class": "door"
+                    }
+                },
+                "binary_sensor.motion": {
+                    "state": "off",
+                    "attributes": {
+                        "device_class": "motion"
+                    }
+                },
+                "binary_sensor.problem": {
+                    "state": "on",
+                    "attributes": {
+                        "device_class": "problem"
+                    }
+                },
+                "binary_sensor.plain": {
+                    "state": "off",
+                    "attributes": {}
+                },
+                "sensor.version": {
+                    "state": "V0.1.1",
+                    "attributes": {}
+                },
+                "sensor.commit": {
+                    "state": "Refactor(data-history)…",
+                    "attributes": {}
+                },
+                "sensor.mode": {
+                    "state": "heat_cool",
+                    "attributes": {}
+                },
+                "sensor.unknown": {
+                    "state": "unknown",
+                    "attributes": {}
+                },
+                "sensor.temp": {
+                    "state": "11.49",
+                    "attributes": {
+                        "unit_of_measurement": "°C",
+                        "device_class": "temperature"
+                    }
+                },
+                "sensor.temp_dp": {
+                    "state": "11.49",
+                    "attributes": {
+                        "unit_of_measurement": "°C",
+                        "display_precision": 2
+                    }
+                },
+                "sensor.temp_sdp": {
+                    "state": "21",
+                    "attributes": {
+                        "unit_of_measurement": "°C",
+                        "suggested_display_precision": 1
+                    }
+                },
+                "sensor.humidity": {
+                    "state": "94.17",
+                    "attributes": {
+                        "unit_of_measurement": "%",
+                        "device_class": "humidity"
+                    }
+                },
+                "sensor.rate": {
+                    "state": "0.25",
+                    "attributes": {
+                        "unit_of_measurement": "GBP/kWh"
+                    }
+                },
+                "sensor.rate4": {
+                    "state": "0.25345",
+                    "attributes": {
+                        "unit_of_measurement": "GBP/kWh"
+                    }
+                },
+                "sensor.cost": {
+                    "state": "3.8",
+                    "attributes": {
+                        "unit_of_measurement": "GBP",
+                        "device_class": "monetary"
+                    }
+                },
+                "sensor.cost_neg": {
+                    "state": "-1.5",
+                    "attributes": {
+                        "unit_of_measurement": "USD"
+                    }
+                },
+                "sensor.cost_chf": {
+                    "state": "3.84",
+                    "attributes": {
+                        "unit_of_measurement": "CHF"
+                    }
+                },
+                "sensor.cost_jpy": {
+                    "state": "1200.5",
+                    "attributes": {
+                        "unit_of_measurement": "JPY"
+                    }
+                },
+                "sensor.redacted": {
+                    "state": "0.xx",
+                    "attributes": {
+                        "unit_of_measurement": "GBP"
+                    }
+                },
+                "sensor.uv": {
+                    "state": "0",
+                    "attributes": {
+                        "unit_of_measurement": "UV index",
+                        "friendly_name": "Garden UV index"
+                    }
+                },
+                "sensor.visibility": {
+                    "state": "10000",
+                    "attributes": {
+                        "unit_of_measurement": "m",
+                        "device_class": "distance"
+                    }
+                },
+                "sensor.visibility_exp": {
+                    "state": "1.2345e4",
+                    "attributes": {
+                        "unit_of_measurement": "m"
+                    }
+                },
+                "sensor.wind": {
+                    "state": "50",
+                    "attributes": {
+                        "unit_of_measurement": "°",
+                        "device_class": "wind_direction"
+                    }
+                },
+                "sensor.bearing": {
+                    "state": "200.4",
+                    "attributes": {
+                        "unit_of_measurement": "°",
+                        "friendly_name": "Wind bearing"
+                    }
+                },
+                "sensor.elevation": {
+                    "state": "12.5",
+                    "attributes": {
+                        "unit_of_measurement": "°"
+                    }
+                },
+                "sensor.duration": {
+                    "state": "65",
+                    "attributes": {
+                        "unit_of_measurement": "min",
+                        "device_class": "duration"
+                    }
+                },
+                "sensor.duration_s": {
+                    "state": "330",
+                    "attributes": {
+                        "unit_of_measurement": "s",
+                        "device_class": "duration"
+                    }
+                },
+                "sensor.duration_half": {
+                    "state": "2.5",
+                    "attributes": {
+                        "unit_of_measurement": "s",
+                        "device_class": "duration"
+                    }
+                },
+                "sensor.duration_d": {
+                    "state": "2.125",
+                    "attributes": {
+                        "unit_of_measurement": "d",
+                        "device_class": "duration"
+                    }
+                },
+                "sensor.duration_neg": {
+                    "state": "-5",
+                    "attributes": {
+                        "unit_of_measurement": "min",
+                        "device_class": "duration"
+                    }
+                },
+                "sensor.stars": {
+                    "state": "1",
+                    "attributes": {
+                        "unit_of_measurement": "stars"
+                    }
+                },
+                "sensor.issues": {
+                    "state": "3",
+                    "attributes": {
+                        "unit_of_measurement": "issue"
+                    }
+                },
+                "sensor.power": {
+                    "state": "1234.56",
+                    "attributes": {
+                        "unit_of_measurement": "W"
+                    }
+                },
+                "sensor.energy": {
+                    "state": "12.3456",
+                    "attributes": {
+                        "unit_of_measurement": "kWh"
+                    }
+                },
+                "sensor.past": {
+                    "state": "2020-01-15T12:00:00+00:00",
+                    "attributes": {
+                        "device_class": "timestamp"
+                    }
+                },
+                "event.doorbell": {
+                    "state": "2020-01-15T12:00:00.123Z",
+                    "attributes": {}
+                },
+                "sensor.future": {
+                    "state": "2099-06-15T12:00:00+02:00",
+                    "attributes": {
+                        "device_class": "timestamp"
+                    }
+                },
+                "sensor.bad_time": {
+                    "state": "soon",
+                    "attributes": {
+                        "device_class": "timestamp"
+                    }
+                },
+                "sensor.bin_day": {
+                    "state": "2026-04-20",
+                    "attributes": {
+                        "device_class": "date"
+                    }
+                },
+                "sensor.five_f": {
+                    "state": "5f",
+                    "attributes": {
+                        "unit_of_measurement": "°C"
+                    }
+                }
+            },
+            "expected": {
+                "strings": {
+                    "binary_sensor.s0.state": "Open",
+                    "binary_sensor.s0.name": "binary_sensor.door",
+                    "binary_sensor.s1.state": "Clear",
+                    "binary_sensor.s1.name": "binary_sensor.motion",
+                    "binary_sensor.s2.state": "Problem",
+                    "binary_sensor.s2.name": "binary_sensor.problem",
+                    "binary_sensor.s3.state": "Off",
+                    "binary_sensor.s3.name": "binary_sensor.plain",
+                    "sensor.s4.state": "V0.1.1",
+                    "sensor.s4.name": "sensor.version",
+                    "sensor.s5.state": "Refactor(data-history)…",
+                    "sensor.s5.name": "sensor.commit",
+                    "sensor.s6.state": "Heat/Cool",
+                    "sensor.s6.name": "sensor.mode",
+                    "sensor.s7.state": "Unknown",
+                    "sensor.s7.name": "sensor.unknown",
+                    "sensor.s8.state": "11.5 °C",
+                    "sensor.s8.name": "sensor.temp",
+                    "sensor.s9.state": "11.49 °C",
+                    "sensor.s9.name": "sensor.temp_dp",
+                    "sensor.s10.state": "21.0 °C",
+                    "sensor.s10.name": "sensor.temp_sdp",
+                    "sensor.s11.state": "94 %",
+                    "sensor.s11.name": "sensor.humidity",
+                    "sensor.s12.state": "£0.25/kWh",
+                    "sensor.s12.name": "sensor.rate",
+                    "sensor.s13.state": "£0.2535/kWh",
+                    "sensor.s13.name": "sensor.rate4",
+                    "sensor.s14.state": "£3.80",
+                    "sensor.s14.name": "sensor.cost",
+                    "sensor.s15.state": "-$1.50",
+                    "sensor.s15.name": "sensor.cost_neg",
+                    "sensor.s16.state": "CHF 3.84",
+                    "sensor.s16.name": "sensor.cost_chf",
+                    "sensor.s17.state": "¥1201",
+                    "sensor.s17.name": "sensor.cost_jpy",
+                    "sensor.s18.state": "—",
+                    "sensor.s18.name": "sensor.redacted",
+                    "sensor.s19.state": "0",
+                    "sensor.s19.name": "Garden UV index",
+                    "sensor.s20.state": "10 km",
+                    "sensor.s20.name": "sensor.visibility",
+                    "sensor.s21.state": "12.3 km",
+                    "sensor.s21.name": "sensor.visibility_exp",
+                    "sensor.s22.state": "NE 50°",
+                    "sensor.s22.name": "sensor.wind",
+                    "sensor.s23.state": "SSW 200°",
+                    "sensor.s23.name": "Wind bearing",
+                    "sensor.s24.state": "12.5°",
+                    "sensor.s24.name": "sensor.elevation",
+                    "sensor.s25.state": "1 h 05 min",
+                    "sensor.s25.name": "sensor.duration",
+                    "sensor.s26.state": "5 min 30 s",
+                    "sensor.s26.name": "sensor.duration_s",
+                    "sensor.s27.state": "2 s",
+                    "sensor.s27.name": "sensor.duration_half",
+                    "sensor.s28.state": "2 d 3 h",
+                    "sensor.s28.name": "sensor.duration_d",
+                    "sensor.s29.state": "—",
+                    "sensor.s29.name": "sensor.duration_neg",
+                    "sensor.s30.state": "1 star",
+                    "sensor.s30.name": "sensor.stars",
+                    "sensor.s31.state": "3 issues",
+                    "sensor.s31.name": "sensor.issues",
+                    "sensor.s32.state": "1235 W",
+                    "sensor.s32.name": "sensor.power",
+                    "sensor.s33.state": "12.35 kWh",
+                    "sensor.s33.name": "sensor.energy",
+                    "sensor.s34.state": "15 Jan 2020",
+                    "sensor.s34.name": "sensor.past",
+                    "event.s35.state": "15 Jan 2020",
+                    "event.s35.name": "event.doorbell",
+                    "sensor.s36.state": "15 Jun 2099",
+                    "sensor.s36.name": "sensor.future",
+                    "sensor.s37.state": "Soon",
+                    "sensor.s37.name": "sensor.bad_time",
+                    "sensor.s38.state": "20 Apr 2026",
+                    "sensor.s38.name": "sensor.bin_day",
+                    "sensor.s39.state": "5f",
+                    "sensor.s39.name": "sensor.five_f"
+                },
+                "booleans": {
+                    "binary_sensor.s0.is_on": true,
+                    "binary_sensor.s0.is_available": true,
+                    "binary_sensor.s1.is_on": false,
+                    "binary_sensor.s1.is_available": true,
+                    "binary_sensor.s2.is_on": true,
+                    "binary_sensor.s2.is_available": true,
+                    "binary_sensor.s3.is_on": false,
+                    "binary_sensor.s3.is_available": true,
+                    "sensor.s4.is_on": false,
+                    "sensor.s4.is_available": true,
+                    "sensor.s5.is_on": false,
+                    "sensor.s5.is_available": true,
+                    "sensor.s6.is_on": false,
+                    "sensor.s6.is_available": true,
+                    "sensor.s7.is_on": false,
+                    "sensor.s7.is_available": false,
+                    "sensor.s8.is_on": false,
+                    "sensor.s8.is_available": true,
+                    "sensor.s9.is_on": false,
+                    "sensor.s9.is_available": true,
+                    "sensor.s10.is_on": false,
+                    "sensor.s10.is_available": true,
+                    "sensor.s11.is_on": false,
+                    "sensor.s11.is_available": true,
+                    "sensor.s12.is_on": false,
+                    "sensor.s12.is_available": true,
+                    "sensor.s13.is_on": false,
+                    "sensor.s13.is_available": true,
+                    "sensor.s14.is_on": false,
+                    "sensor.s14.is_available": true,
+                    "sensor.s15.is_on": false,
+                    "sensor.s15.is_available": true,
+                    "sensor.s16.is_on": false,
+                    "sensor.s16.is_available": true,
+                    "sensor.s17.is_on": false,
+                    "sensor.s17.is_available": true,
+                    "sensor.s18.is_on": false,
+                    "sensor.s18.is_available": true,
+                    "sensor.s19.is_on": false,
+                    "sensor.s19.is_available": true,
+                    "sensor.s20.is_on": false,
+                    "sensor.s20.is_available": true,
+                    "sensor.s21.is_on": false,
+                    "sensor.s21.is_available": true,
+                    "sensor.s22.is_on": false,
+                    "sensor.s22.is_available": true,
+                    "sensor.s23.is_on": false,
+                    "sensor.s23.is_available": true,
+                    "sensor.s24.is_on": false,
+                    "sensor.s24.is_available": true,
+                    "sensor.s25.is_on": false,
+                    "sensor.s25.is_available": true,
+                    "sensor.s26.is_on": false,
+                    "sensor.s26.is_available": true,
+                    "sensor.s27.is_on": false,
+                    "sensor.s27.is_available": true,
+                    "sensor.s28.is_on": false,
+                    "sensor.s28.is_available": true,
+                    "sensor.s29.is_on": false,
+                    "sensor.s29.is_available": true,
+                    "sensor.s30.is_on": false,
+                    "sensor.s30.is_available": true,
+                    "sensor.s31.is_on": false,
+                    "sensor.s31.is_available": true,
+                    "sensor.s32.is_on": false,
+                    "sensor.s32.is_available": true,
+                    "sensor.s33.is_on": false,
+                    "sensor.s33.is_available": true,
+                    "sensor.s34.is_on": false,
+                    "sensor.s34.is_available": true,
+                    "event.s35.is_on": false,
+                    "event.s35.is_available": true,
+                    "sensor.s36.is_on": false,
+                    "sensor.s36.is_available": true,
+                    "sensor.s37.is_on": false,
+                    "sensor.s37.is_available": true,
+                    "sensor.s38.is_on": false,
+                    "sensor.s38.is_available": true,
+                    "sensor.s39.is_on": false,
+                    "sensor.s39.is_available": true
+                },
+                "ints": {
+                    "binary_sensor.s0.state_int": -1,
+                    "binary_sensor.s0.status": 0,
+                    "binary_sensor.s1.state_int": -1,
+                    "binary_sensor.s1.status": 0,
+                    "binary_sensor.s2.state_int": -1,
+                    "binary_sensor.s2.status": 0,
+                    "binary_sensor.s3.state_int": -1,
+                    "binary_sensor.s3.status": 0,
+                    "sensor.s4.state_int": -1,
+                    "sensor.s4.status": 0,
+                    "sensor.s5.state_int": -1,
+                    "sensor.s5.status": 0,
+                    "sensor.s6.state_int": -1,
+                    "sensor.s6.status": 0,
+                    "sensor.s7.state_int": -1,
+                    "sensor.s7.status": 2,
+                    "sensor.s8.state_int": -1,
+                    "sensor.s8.status": 0,
+                    "sensor.s9.state_int": -1,
+                    "sensor.s9.status": 0,
+                    "sensor.s10.state_int": -1,
+                    "sensor.s10.status": 0,
+                    "sensor.s11.state_int": -1,
+                    "sensor.s11.status": 0,
+                    "sensor.s12.state_int": -1,
+                    "sensor.s12.status": 0,
+                    "sensor.s13.state_int": -1,
+                    "sensor.s13.status": 0,
+                    "sensor.s14.state_int": -1,
+                    "sensor.s14.status": 0,
+                    "sensor.s15.state_int": -1,
+                    "sensor.s15.status": 0,
+                    "sensor.s16.state_int": -1,
+                    "sensor.s16.status": 0,
+                    "sensor.s17.state_int": -1,
+                    "sensor.s17.status": 0,
+                    "sensor.s18.state_int": -1,
+                    "sensor.s18.status": 0,
+                    "sensor.s19.state_int": -1,
+                    "sensor.s19.status": 0,
+                    "sensor.s20.state_int": -1,
+                    "sensor.s20.status": 0,
+                    "sensor.s21.state_int": -1,
+                    "sensor.s21.status": 0,
+                    "sensor.s22.state_int": -1,
+                    "sensor.s22.status": 0,
+                    "sensor.s23.state_int": -1,
+                    "sensor.s23.status": 0,
+                    "sensor.s24.state_int": -1,
+                    "sensor.s24.status": 0,
+                    "sensor.s25.state_int": -1,
+                    "sensor.s25.status": 0,
+                    "sensor.s26.state_int": -1,
+                    "sensor.s26.status": 0,
+                    "sensor.s27.state_int": -1,
+                    "sensor.s27.status": 0,
+                    "sensor.s28.state_int": -1,
+                    "sensor.s28.status": 0,
+                    "sensor.s29.state_int": -1,
+                    "sensor.s29.status": 0,
+                    "sensor.s30.state_int": -1,
+                    "sensor.s30.status": 0,
+                    "sensor.s31.state_int": -1,
+                    "sensor.s31.status": 0,
+                    "sensor.s32.state_int": -1,
+                    "sensor.s32.status": 0,
+                    "sensor.s33.state_int": -1,
+                    "sensor.s33.status": 0,
+                    "sensor.s34.state_int": -1,
+                    "sensor.s34.status": 0,
+                    "event.s35.state_int": -1,
+                    "event.s35.status": 0,
+                    "sensor.s36.state_int": -1,
+                    "sensor.s36.status": 0,
+                    "sensor.s37.state_int": -1,
+                    "sensor.s37.status": 0,
+                    "sensor.s38.state_int": -1,
+                    "sensor.s38.status": 0,
+                    "sensor.s39.state_int": -1,
+                    "sensor.s39.status": 0
+                },
+                "floats": {
+                    "binary_sensor.s0.numeric_state": "NaN",
+                    "binary_sensor.s1.numeric_state": "NaN",
+                    "binary_sensor.s2.numeric_state": "NaN",
+                    "binary_sensor.s3.numeric_state": "NaN",
+                    "sensor.s4.numeric_state": "NaN",
+                    "sensor.s5.numeric_state": "NaN",
+                    "sensor.s6.numeric_state": "NaN",
+                    "sensor.s7.numeric_state": "NaN",
+                    "sensor.s8.numeric_state": 11.489999771118164,
+                    "sensor.s9.numeric_state": 11.489999771118164,
+                    "sensor.s10.numeric_state": 21.0,
+                    "sensor.s11.numeric_state": 94.16999816894531,
+                    "sensor.s12.numeric_state": 0.25,
+                    "sensor.s13.numeric_state": 0.2534500062465668,
+                    "sensor.s14.numeric_state": 3.799999952316284,
+                    "sensor.s15.numeric_state": -1.5,
+                    "sensor.s16.numeric_state": 3.8399999141693115,
+                    "sensor.s17.numeric_state": 1200.5,
+                    "sensor.s18.numeric_state": "NaN",
+                    "sensor.s19.numeric_state": 0.0,
+                    "sensor.s20.numeric_state": 10000.0,
+                    "sensor.s21.numeric_state": 12345.0,
+                    "sensor.s22.numeric_state": 50.0,
+                    "sensor.s23.numeric_state": 200.39999389648438,
+                    "sensor.s24.numeric_state": 12.5,
+                    "sensor.s25.numeric_state": 65.0,
+                    "sensor.s26.numeric_state": 330.0,
+                    "sensor.s27.numeric_state": 2.5,
+                    "sensor.s28.numeric_state": 2.125,
+                    "sensor.s29.numeric_state": -5.0,
+                    "sensor.s30.numeric_state": 1.0,
+                    "sensor.s31.numeric_state": 3.0,
+                    "sensor.s32.numeric_state": 1234.56005859375,
+                    "sensor.s33.numeric_state": 12.345600128173828,
+                    "sensor.s34.numeric_state": "NaN",
+                    "event.s35.numeric_state": "NaN",
+                    "sensor.s36.numeric_state": "NaN",
+                    "sensor.s37.numeric_state": "NaN",
+                    "sensor.s38.numeric_state": "NaN",
+                    "sensor.s39.numeric_state": 5.0
                 }
             }
         }

@@ -84,8 +84,19 @@ class ClockCardConverter : CardConverter {
     return DesignTemplateInput(card, HaSnapshot())
   }
 
-  override fun designBindings(card: CardConfig, snapshot: HaSnapshot): CardSnapshotBindings {
-    val clock = SystemHaClock
+  override fun designBindings(card: CardConfig, snapshot: HaSnapshot): CardSnapshotBindings =
+    designBindings(card, snapshot, SystemHaClock)
+
+  /**
+   * The date line and another zone's offset, read from [clock]: the same clock [Render] reads
+   * through [LocalHaClock], so a template played under an injected clock shows what the direct
+   * render under that clock shows.
+   */
+  override fun designBindings(
+    card: CardConfig,
+    snapshot: HaSnapshot,
+    clock: HaClock,
+  ): CardSnapshotBindings {
     val tz = zoneOf(card)
     val strings = buildMap { if (showsDate(card)) put("card.date", dateLabel(tz, clock)) }
     val floats = buildMap {

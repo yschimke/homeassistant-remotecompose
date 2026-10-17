@@ -28,9 +28,20 @@ object WidgetImages {
     val stack = (context.terrazzoGraph() as? ee.schimke.terrazzo.di.AppGraph)?.haImageStack
     stack ?: return null
     stack.ensureBaseUrl(baseUrl)
-    val bitmap = stack.resolve(url, fresh) ?: return null
+    val bitmap = stack.resolve(target(baseUrl, url), fresh) ?: return null
     return encode(bitmap, maxPx, maxBytes)
   }
+
+  /**
+   * [url] pinned to the widget's own server [baseUrl] when it is server-relative, as Home
+   * Assistant's `entity_picture` / `camera_proxy` / `image_proxy` URLs are. The image stack's base
+   * is the foreground session's, which need not be this widget's: a demo widget refreshing while
+   * the app shows a real server, or a real widget refreshing while the app is in demo mode, would
+   * otherwise fetch from the other one (and a real widget would get a demo stand-in). Same-host
+   * requests still carry the session's bearer; signed picture URLs carry their own token.
+   */
+  internal fun target(baseUrl: String, url: String): String =
+    if (url.startsWith('/')) baseUrl.trimEnd('/') + url else url
 
   /** [bitmap] as PNG scaled to fit [maxPx], halved until it fits [maxBytes]; null if it can't. */
   fun encode(bitmap: Bitmap, maxPx: Int, maxBytes: Int = Int.MAX_VALUE): ByteArray? {

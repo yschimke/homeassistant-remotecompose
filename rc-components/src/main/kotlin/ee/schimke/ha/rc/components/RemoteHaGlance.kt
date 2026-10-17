@@ -2,7 +2,6 @@
 
 package ee.schimke.ha.rc.components
 
-import androidx.compose.remote.creation.compose.capture.toRemoteImageVector
 import androidx.compose.remote.creation.compose.layout.RemoteAlignment
 import androidx.compose.remote.creation.compose.layout.RemoteArrangement
 import androidx.compose.remote.creation.compose.layout.RemoteBox
@@ -23,7 +22,6 @@ import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.wear.compose.remote.material3.RemoteIcon
 
 /**
  * Cells per compatible row. Compact Wear slots keep only this many cells; launcher widgets retain
@@ -142,32 +140,32 @@ fun RemoteHaGlanceCell(data: HaGlanceCellData, modifier: RemoteModifier = Remote
   val theme = haTheme()
   val clickable =
     data.tapAction.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
-  val isOnBinding =
-    if (data.accent.toggleable) LiveValues.isOn(data.entityId, data.accent.initiallyOn) else null
-  val accent: RemoteColor =
-    isOnBinding?.select(data.accent.themed().activeAccent, data.accent.themed().inactiveAccent)
-      ?: data.accent.themed().activeAccent
+  val look = entityLook(data.entityId, data.accent)
+  val accent: RemoteColor = look.accent
   RemoteColumn(
     modifier = modifier.then(clickable).padding(vertical = 4.rdp),
     horizontalAlignment = RemoteAlignment.CenterHorizontally,
   ) {
     RemoteText(
       text = entityName(data.entityId, data.name),
-      color = theme.primaryText,
+      color = look.dim(theme.primaryText),
       fontSize = HaType.Label,
       style = haTextStyle(),
     )
     RemoteBox(modifier = RemoteModifier.padding(vertical = 4.rdp)) {
-      RemoteIcon(
-        imageVector = data.icon.toRemoteImageVector(),
-        contentDescription = entityName(data.entityId, data.name),
-        modifier = RemoteModifier.size(28.rdp),
+      HaStateIcon(
+        icon = data.icon,
+        accent = data.accent,
+        look = look,
         tint = accent,
+        // Decorative: the name is drawn above it.
+        contentDescription = null,
+        modifier = RemoteModifier.size(28.rdp),
       )
     }
     RemoteText(
       text = data.state,
-      color = theme.secondaryText,
+      color = look.dim(theme.secondaryText),
       fontSize = HaType.Caption,
       style = haTextStyle(),
     )

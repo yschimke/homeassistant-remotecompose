@@ -43,6 +43,7 @@ import kotlinx.serialization.json.add
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -235,8 +236,10 @@ class HaClient(private val config: HaConfig, engine: HttpClientEngine? = null) {
   /**
    * The device behind each entity, for device-specific card designs. The entity registry's display
    * list (`config/entity_registry/list_for_display`, open to every user) gives each entity's
-   * integration, translation key and device id; the device registry (`config/device_registry/list`)
-   * adds manufacturer and model. Without the device registry, entities keep what the first gives.
+   * integration, translation key, display precision (`dp`) and device id; the device registry
+   * (`config/device_registry/list`) adds manufacturer and model. Without the device registry,
+   * entities keep what the first gives, the device id included: that is what lets a card configured
+   * by device (a Bambu Lab printer) find its entities for every user.
    */
   suspend fun fetchDevices(): Map<String, DeviceInfo> {
     val entities =
@@ -252,13 +255,16 @@ class HaClient(private val config: HaConfig, engine: HttpClientEngine? = null) {
       .mapNotNull { it as? JsonObject }
       .mapNotNull { entity ->
         val id = entity["ei"]?.jsonPrimitive?.contentOrNull ?: return@mapNotNull null
-        val device = entity["di"]?.jsonPrimitive?.contentOrNull?.let { devices[it] }
+        val deviceId = entity["di"]?.jsonPrimitive?.contentOrNull
+        val device = deviceId?.let { devices[it] }
         val info =
           DeviceInfo(
             integration = entity["pl"]?.jsonPrimitive?.contentOrNull,
             manufacturer = device?.get("manufacturer")?.jsonPrimitive?.contentOrNull,
             model = device?.get("model")?.jsonPrimitive?.contentOrNull,
             translationKey = entity["tk"]?.jsonPrimitive?.contentOrNull,
+            displayPrecision = entity["dp"]?.jsonPrimitive?.intOrNull,
+            deviceId = deviceId,
           )
         (id to info).takeIf { info != DeviceInfo() }
       }
@@ -290,6 +296,22 @@ class HaClient(private val config: HaConfig, engine: HttpClientEngine? = null) {
   }
 
   suspend fun snapshot(): HaSnapshot = HaSnapshot(states = fetchStates())
+
+  /**
+   * [snapshot] with the device registry ([fetchDevices]), what a card configured by device (a Bambu
+   * Lab printer) resolves through. A registry that can't be read leaves it out.
+   */
+  suspend fun snapshotWithDevices(): HaSnapshot {
+    val devices =
+      try {
+        fetchDevices()
+      } catch (e: kotlinx.coroutines.CancellationException) {
+        throw e
+      } catch (e: Exception) {
+        emptyMap()
+      }
+    return snapshot().copy(devices = devices)
+  }
 
   /**
    * Call a Home Assistant service (`call_service` WebSocket command).

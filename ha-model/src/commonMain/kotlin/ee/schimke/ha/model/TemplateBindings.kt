@@ -70,6 +70,7 @@ object TemplateBindings {
   fun dashboardTemplates(dashboard: Dashboard): List<TemplateRef> {
     val out = LinkedHashMap<String, TemplateRef>()
     for (view in dashboard.views) {
+      view.header?.card?.let { collect(it.raw, out) }
       for (card in view.cards) collect(card.raw, out)
       for (section in view.sections) {
         for (card in section.cards) collect(card.raw, out)

@@ -34,7 +34,10 @@ import kotlinx.coroutines.withTimeout
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -190,8 +193,12 @@ class HaSupervisorBridge(
     receiveJob = scope.launch { receiveLoop(s) }
 
     hydrateStates()
+    hydrateDisplayPrecisions()
     subscribe("state_changed")
     subscribe("lovelace_updated")
+    // A user changing an entity's display precision: re-read it. Not fatal where refused.
+    runCatching { subscribe("entity_registry_updated") }
+      .onFailure { log.warn("entity_registry_updated subscription refused: {}", it.message) }
   }
 
   private suspend fun hydrateStates() {
@@ -204,6 +211,18 @@ class HaSupervisorBridge(
     }
     cache.replaceAll(map)
     log.info("hydrated {} entities", map.size)
+  }
+
+  /**
+   * The registry's display precisions, as the app reads them (`HaClient.fetchDevices`). An older
+   * Home Assistant or a refused command leaves states on their attribute / default precision.
+   */
+  private suspend fun hydrateDisplayPrecisions() {
+    runCatching { runCommand("config/entity_registry/list_for_display")["entities"] as? JsonArray }
+      .onSuccess { entities ->
+        cache.replaceDisplayPrecisions(entities?.let(::registryDisplayPrecisions).orEmpty())
+      }
+      .onFailure { log.warn("entity registry display list unavailable: {}", it.message) }
   }
 
   private suspend fun subscribe(eventType: String): Int {
@@ -307,6 +326,7 @@ class HaSupervisorBridge(
         }
         _events.tryEmit(HaEvent.StateChanged(entityId))
       }
+      "entity_registry_updated" -> scope.launch { hydrateDisplayPrecisions() }
       "lovelace_updated" -> {
         val urlPath = data["url_path"]?.jsonPrimitive?.content
         _events.tryEmit(HaEvent.LovelaceUpdated(urlPath))
@@ -346,3 +366,14 @@ sealed interface HaEvent {
 
   data class LovelaceUpdated(val urlPath: String?) : HaEvent
 }
+
+/** `entity_id` → display precision from a `list_for_display` entity array (`ei`, `dp`). */
+internal fun registryDisplayPrecisions(entities: JsonArray): Map<String, Int> =
+  entities
+    .mapNotNull { it as? JsonObject }
+    .mapNotNull { entity ->
+      val id = (entity["ei"] as? JsonPrimitive)?.contentOrNull ?: return@mapNotNull null
+      val precision = (entity["dp"] as? JsonPrimitive)?.intOrNull ?: return@mapNotNull null
+      id to precision
+    }
+    .toMap()
