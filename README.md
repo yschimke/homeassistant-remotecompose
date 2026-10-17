@@ -170,6 +170,8 @@ Local packaging: `./gradlew :app-ui:packageDistributionForCurrentOS`. Override t
 
 ### Web app
 
+For a local authenticated `/terrazzo` wall-panel URL and Remote Compose Lovelace cards, see [the Home Assistant integration installation guide](docs/HOME_ASSISTANT.md).
+
 The production Wasm app is deployed by **Wasm website** to [GitHub Pages](https://yschimke.github.io/homeassistant-remotecompose/). Pull requests build the same production distribution and exercise browser flows before deployment. Existing documentation and Android authentication pages remain available alongside the app.
 
 Local build: `./gradlew :app-ui:wasmJsBrowserDistribution`. Serve `app-ui/build/dist/wasmJs/productionExecutable` over HTTP on localhost or over HTTPS; opening `index.html` directly from disk does not work.
