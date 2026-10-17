@@ -1,0 +1,87 @@
+{
+  "title": "Lovelace test dashboard",
+  "x-fixture": {
+    "preserve": [
+      null,
+      true,
+      {
+        "future": 7
+      }
+    ]
+  },
+  "views": [
+    {
+      "type": "sections",
+      "title": "Home",
+      "path": "home",
+      "max_columns": 2,
+      "sections": [
+        {
+          "type": "grid",
+          "title": "Living room",
+          "cards": [
+            {
+              "type": "tile",
+              "entity": "light.sofa",
+              "name": "Sofa",
+              "grid_options": {
+                "columns": 6,
+                "rows": 2,
+                "future": true
+              }
+            },
+            {
+              "type": "gauge",
+              "entity": "sensor.room",
+              "min": 0,
+              "max": 40,
+              "grid_options": {
+                "columns": 6,
+                "rows": 3
+              }
+            },
+            {
+              "type": "custom:mushroom-template-card",
+              "primary": "{{ states(entity) }}",
+              "entity": "sensor.room",
+              "card_mod": {
+                "style": "ha-card { color: red; }"
+              }
+            }
+          ]
+        },
+        {
+          "type": "grid",
+          "title": "Heating",
+          "cards": [
+            {
+              "type": "tile",
+              "entity": "climate.boiler"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Legacy",
+      "cards": [
+        {
+          "type": "markdown",
+          "content": "## This view is preserved"
+        }
+      ]
+    },
+    {
+      "type": "panel",
+      "title": "Map",
+      "cards": [
+        {
+          "type": "map",
+          "entities": [
+            "person.ada"
+          ]
+        }
+      ]
+    }
+  ]
+}

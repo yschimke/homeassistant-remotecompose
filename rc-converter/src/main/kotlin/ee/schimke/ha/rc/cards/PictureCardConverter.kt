@@ -28,6 +28,9 @@ import kotlinx.serialization.json.put
 class PictureCardConverter : CardConverter {
   override val cardType: String = CardTypes.PICTURE
 
+  /** A picture's height follows its width: it keeps a grid column's width. */
+  override fun gridKeepsColumnWidth(card: CardConfig, snapshot: HaSnapshot): Boolean = true
+
   override fun naturalHeightDp(card: CardConfig, snapshot: HaSnapshot): Int = 140
 
   override fun gridMinCellWidthDp(card: CardConfig, snapshot: HaSnapshot): Int =

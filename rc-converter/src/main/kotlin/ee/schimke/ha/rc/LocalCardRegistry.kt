@@ -5,8 +5,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.staticCompositionLocalOf
 import ee.schimke.ha.model.CardConfig
+import ee.schimke.ha.model.CardTypes
+import ee.schimke.ha.model.HaLiveBindings
 import ee.schimke.ha.model.HaSnapshot
+import ee.schimke.ha.rc.components.LiveValues
+import ee.schimke.ha.rc.components.LocalEntityAvailability
 import ee.schimke.ha.rc.components.LocalRemoteAnimationsEnabled
+import ee.schimke.ha.rc.components.RemoteHaUnavailableFrame
 import ee.schimke.ha.rc.icons.HaIconMap
 
 /**
@@ -42,8 +47,46 @@ fun ProvideCardRegistry(registry: CardRegistry, content: @Composable () -> Unit)
 fun RenderChild(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier = RemoteModifier) {
   val registry = LocalCardRegistry.current
   val converter = registry.get(card.type) ?: registry.get(UNSUPPORTED_CARD_TYPE) ?: return
-  converter.Render(card, snapshot, modifier)
+  // A conditional is only a wrapper: the card it shows gets the frame, as if it stood alone.
+  if (card.type == CardTypes.CONDITIONAL && !LocalInsideCard.current) {
+    converter.Render(card, snapshot, modifier)
+    return
+  }
+  val entityId = if (LocalInsideCard.current) null else unavailableFrameEntity(card)
+  if (entityId == null) {
+    // No frame here: a stack or grid with no entity of its own leaves each child to frame itself.
+    converter.Render(card, snapshot, modifier)
+    return
+  }
+  // The card is about one entity: it shows that entity's unavailability as the uber theme does,
+  // once for every card type rather than in each converter.
+  val initiallyAvailable =
+    snapshot.states[entityId]?.let { HaLiveBindings.isAvailable(it.state) } ?: false
+  val isAvailable =
+    if (LocalEntityAvailability.current) LiveValues.isAvailable(entityId, initiallyAvailable)
+    else null
+  RemoteHaUnavailableFrame(isAvailable, initiallyAvailable, modifier) { contentModifier ->
+    CompositionLocalProvider(LocalInsideCard provides true) {
+      converter.Render(card, snapshot, contentModifier)
+    }
+  }
 }
+
+/**
+ * True while composing inside an unavailable frame, so a card nested in a framed card (a stack or
+ * grid with its own `entity:`, which renders children through [RenderChild] again) doesn't get a
+ * second frame of its own. A container without an entity has no frame and doesn't set it, so its
+ * children frame themselves.
+ */
+private val LocalInsideCard = staticCompositionLocalOf { false }
+
+/**
+ * The one entity a top-level [card] is about (its `entity:`), whose unavailability the card shows
+ * with the uber theme's [ee.schimke.ha.rc.components.HaUnavailableStyle], or null for a card about
+ * several entities or none (an entities list dims each row instead).
+ */
+internal fun unavailableFrameEntity(card: CardConfig): String? =
+  (card.raw["entity"] as? kotlinx.serialization.json.JsonPrimitive)?.content?.takeIf { '.' in it }
 
 /**
  * Host-side lookup of a card's preferred rendered height in dp. The dashboard does **not** call

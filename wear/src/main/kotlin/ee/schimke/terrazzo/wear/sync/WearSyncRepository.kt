@@ -104,14 +104,11 @@ class WearSyncRepository(context: Context, private val scope: CoroutineScope) {
   private val messageListener = MessageClient.OnMessageReceivedListener { event ->
     if (event.path != WearSyncPaths.STREAM_MESSAGE) return@OnMessageReceivedListener
     val frame: StreamUpdate = decodeProto(event.data) ?: return@OnMessageReceivedListener
-    val merged = _values.value.toMutableMap()
-    for (delta in frame.deltas) {
-      merged[delta.entityId] = delta.value
-    }
-    _values.value = merged
+    val merged = mergeStreamUpdate(offline.readValues(), frame) ?: return@OnMessageReceivedListener
+    _values.value = merged.values
     // Persist the merged snapshot so a process restart resumes from
     // the latest delta-updated state, not the last full DataItem.
-    offline.writeValues(LiveValues(values = merged, capturedAtMs = frame.capturedAtMs))
+    offline.writeValues(merged)
   }
 
   fun start() {
@@ -180,10 +177,12 @@ class WearSyncRepository(context: Context, private val scope: CoroutineScope) {
         }
       path == WearSyncPaths.VALUES ->
         decodeProto<LiveValues>(bytes)?.let { live ->
-          // Cold-read overwrites entirely; subsequent stream
-          // deltas will merge from this baseline.
-          _values.value = live.values
-          offline.writeValues(live)
+          // A cold DataItem may predate the last streamed delta persisted on disk. Keep the
+          // newer snapshot, just as a widget's Data Layer read does.
+          newerThan(live, offline.readValues(), LiveValues::capturedAtMs)?.let {
+            _values.value = it.values
+            offline.writeValues(it)
+          }
         }
       // Read straight from disk by the Wear widgets when they bake.
       path.startsWith(WearSyncPaths.PICTURE_PREFIX) ->
@@ -245,6 +244,14 @@ internal fun <T : Any> newerThan(candidate: T?, stored: T?, time: (T) -> Long): 
   candidate?.takeIf {
     stored == null || time(it) > time(stored)
   }
+
+/** Ignore delayed stream frames; merge fresh deltas without dropping other entities. */
+internal fun mergeStreamUpdate(stored: LiveValues?, frame: StreamUpdate): LiveValues? {
+  if (stored != null && frame.capturedAtMs <= stored.capturedAtMs) return null
+  val values = stored?.values.orEmpty().toMutableMap()
+  frame.deltas.forEach { values[it.entityId] = it.value }
+  return LiveValues(values = values, capturedAtMs = frame.capturedAtMs)
+}
 
 /**
  * The newest by [time] of the DataItems at [path]: each node that ever wrote one (a replaced phone,

@@ -227,40 +227,67 @@ class DesignServerTest {
     }
 
   @Test
-  fun browserExplainsUnsupportedModeAndLinksToAvailableDesigns() {
+  fun consoleUsesTheSameDesignInBothModes() {
     val console = key(DesignKey.styledTheme("console", dark = true))
     serve(library(extra = listOf(BuiltDesign(console, 1, template)))) {
-      val response = client.get("/designs?type=all&style=console&mode=light&q=&preview=example")
-      assertEquals(HttpStatusCode.OK, response.status)
-      val page = response.bodyAsText()
-      assertTrue("0 shown" in page)
-      assertTrue("Theme <b>console</b> has no light designs in this library." in page)
-      val recovery = "/designs?type=all&amp;style=console&amp;mode=dark"
-      assertTrue("href=\"$recovery\">dark</a>" in page)
-      assertTrue("1 shown" in client.get(recovery.replace("&amp;", "&")).bodyAsText())
-      assertTrue("Clear all filters" in page)
-
-      // An omitted mode chooses a mode this style actually has. Explicit filters stay strict,
-      // both in the browser and in the API: never label dark artifacts as light.
+      for (mode in listOf("light", "dark", "all")) {
+        val response = client.get("/designs?type=all&style=console&mode=$mode&q=&preview=example")
+        assertEquals(HttpStatusCode.OK, response.status)
+        val page = response.bodyAsText()
+        assertTrue("1 shown" in page)
+        assertTrue("/designs/${DesignLibrary.idOf(console)}" in page)
+        assertFalse("No designs match." in page)
+        assertTrue("<option value=\"$mode\" selected>" in page)
+        val api =
+          Json.parseToJsonElement(client.get("/api/designs?style=console&mode=$mode").bodyAsText())
+            .jsonObject
+        assertEquals(1, api["count"]!!.jsonPrimitive.content.toInt())
+        assertEquals(
+          DesignLibrary.idOf(console),
+          api["designs"]!!.jsonArray.single().jsonObject["id"]!!.jsonPrimitive.content,
+        )
+      }
       assertTrue("1 shown" in client.get("/designs?style=console").bodyAsText())
-      assertTrue("1 shown" in client.get("/designs?style=console&mode=all").bodyAsText())
-      val api =
-        Json.parseToJsonElement(client.get("/api/designs?style=console&mode=light").bodyAsText())
-          .jsonObject
-      assertEquals(0, api["count"]!!.jsonPrimitive.content.toInt())
+      assertTrue("2 shown" in client.get("/designs?style=all&mode=light").bodyAsText())
+      assertTrue("2 shown" in client.get("/designs?style=all&mode=dark").bodyAsText())
+      assertTrue(
+        "1 shown" in
+          client
+            .get("/designs?type=tile&style=console&mode=light&q=domain%3Dlight&preview=template")
+            .bodyAsText()
+      )
+      assertTrue(
+        "0 shown" in client.get("/designs?type=gauge&style=console&mode=light").bodyAsText()
+      )
+      assertTrue(
+        "0 shown" in client.get("/designs?style=console&mode=light&q=missing").bodyAsText()
+      )
+      assertTrue("0 shown" in client.get("/designs?style=console&mode=sepia").bodyAsText())
+    }
+    // Even a console-only library must offer both host modes in the selector.
+    val dir = library(extra = listOf(BuiltDesign(console, 1, template)))
+    val loaded = DesignLibrary.load(dir)
+    val manifest =
+      loaded.manifest.copy(designs = loaded.manifest.designs.filter { it.key == console })
+    File(dir, "manifest.json").writeText(Json.encodeToString(DesignManifest.serializer(), manifest))
+    serve(dir) {
+      val page = client.get("/designs?style=console&mode=light").bodyAsText()
+      assertTrue("1 shown" in page)
+      assertTrue("<option value=\"light\" selected>" in page)
+      assertTrue("<option value=\"dark\">" in page)
     }
   }
 
   @Test
   fun modeRecoveryPreservesOtherFiltersAndEscapesLinks() {
-    val console = key(DesignKey.styledTheme("console", dark = true))
-    serve(library(extra = listOf(BuiltDesign(console, 1, template)))) {
+    val nixie = key(DesignKey.styledTheme("nixie", dark = true))
+    serve(library(extra = listOf(BuiltDesign(nixie, 1, template)))) {
       val page =
         client
-          .get("/designs?type=tile&style=console&mode=light&q=domain%3Dlight&preview=template")
+          .get("/designs?type=tile&style=nixie&mode=light&q=domain%3Dlight&preview=template")
           .bodyAsText()
       val recovery =
-        "/designs?type=tile&amp;style=console&amp;mode=dark&amp;q=domain%3Dlight&amp;preview=template"
+        "/designs?type=tile&amp;style=nixie&amp;mode=dark&amp;q=domain%3Dlight&amp;preview=template"
       assertTrue("href=\"$recovery\">dark</a>" in page)
       assertTrue("1 shown" in client.get(recovery.replace("&amp;", "&")).bodyAsText())
 

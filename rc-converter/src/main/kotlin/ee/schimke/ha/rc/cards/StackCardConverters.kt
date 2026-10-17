@@ -180,8 +180,8 @@ class GridCardConverter : CardConverter {
   @Composable
   override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
     // Cells for what the children draw now: a hidden conditional takes no cell, a shown one is
-    // sized as the card it shows.
-    // Each keeps its authored index for its card-level template bindings.
+    // sized as the card it shows. Each keeps its authored index for its card-level template
+    // bindings.
     val shown =
       childCards(card).mapIndexedNotNull { k, child -> shownCard(child, snapshot)?.let { k to it } }
     val children = shown.map { it.second }
@@ -199,6 +199,14 @@ class GridCardConverter : CardConverter {
         square && converters[k]?.gridSquareCell(children[k], snapshot) == true
       }
     val columns = gridColumns(card)
+    // A grid holding a picture or a square cell keeps HA's columns (gridKeepsColumnWidth): its
+    // short last row isn't stretched, and fewer cards than columns still lay out a column wide, so
+    // a lone picture is a column's square rather than one as wide as the grid.
+    val keepColumns =
+      children.indices.any { k ->
+        converters[k]?.gridKeepsColumnWidth(children[k], snapshot) == true
+      }
+    val planCount = if (keepColumns) maxOf(children.size, columns) else children.size
     // A launcher capture is re-recorded for every size it is shown at, so it lays its rows out for
     // exactly that width. Everything else is captured once and picks a tier at playback, its narrow
     // tier sized for the narrowest width its surface plays at.
@@ -208,21 +216,28 @@ class GridCardConverter : CardConverter {
         CardSizeMode.Wrap -> HaGridLayout.NARROW_REFERENCE_DP
         CardSizeMode.Fixed -> HaGridLayout.FIXED_NARROW_REFERENCE_DP
       }
-    val plan = HaGridLayout.plan(children.size, columns, minCellDp, narrowReferenceDp)
+    val plan = HaGridLayout.plan(planCount, columns, minCellDp, narrowReferenceDp)
 
     CompositionLocalProvider(LocalGridSquareCells provides square) {
       val threshold = plan.thresholdDp
       if (captureWidthDp != null) {
-        val perRow =
-          HaGridLayout.perRowAt(captureWidthDp.toFloat(), children.size, columns, minCellDp)
+        val perRow = HaGridLayout.perRowAt(captureWidthDp.toFloat(), planCount, columns, minCellDp)
         val rows = (children.size + perRow - 1) / perRow
         // Each cell is captured for its own share of the widget, so a nested grid or size gate
         // lays out for its cell rather than the whole widget.
         ProvideChildCaptureShare(columns = perRow, rows = rows, gapDp = HaGridLayout.GAP_DP) {
-          GridCells(children, bindingIndices, squareCells, snapshot, perRow, modifier)
+          GridCells(children, bindingIndices, squareCells, keepColumns, snapshot, perRow, modifier)
         }
       } else if (threshold == null) {
-        GridCells(children, bindingIndices, squareCells, snapshot, plan.widePerRow, modifier)
+        GridCells(
+          children,
+          bindingIndices,
+          squareCells,
+          keepColumns,
+          snapshot,
+          plan.widePerRow,
+          modifier,
+        )
       } else {
         RemoteSizeBreakpoint(
           thresholdsDp = intArrayOf(threshold),
@@ -233,6 +248,7 @@ class GridCardConverter : CardConverter {
             children,
             bindingIndices,
             squareCells,
+            keepColumns,
             snapshot,
             perRow,
             RemoteModifier.fillMaxWidth(),
@@ -252,19 +268,26 @@ class GridCardConverter : CardConverter {
 }
 
 /**
- * [children] in rows of [perRow]; a [squareCells] child fills a square cell. [bindingIndices] is
- * each child's authored index, for its card-level template bindings.
+ * [children] in rows of [perRow]; a [squareCells] child fills a square cell. A short last row
+ * stretches across the grid unless [keepColumns]. [bindingIndices] is each child's authored index,
+ * for its card-level template bindings.
  */
 @Composable
 private fun GridCells(
   children: List<CardConfig>,
   bindingIndices: List<Int>,
   squareCells: List<Boolean>,
+  keepColumns: Boolean,
   snapshot: HaSnapshot,
   perRow: Int,
   modifier: RemoteModifier,
 ) {
-  RemoteHaGrid(cellCount = children.size, perRow = perRow, modifier = modifier) { k ->
+  RemoteHaGrid(
+    cellCount = children.size,
+    perRow = perRow,
+    modifier = modifier,
+    stretchLastRow = !keepColumns,
+  ) { k ->
     ProvideChildCardBindings(bindingIndices[k]) {
       if (squareCells[k]) {
         RemoteAspectRatioBox(1f, RemoteModifier.fillMaxWidth()) {

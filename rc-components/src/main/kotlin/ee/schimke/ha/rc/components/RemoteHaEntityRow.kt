@@ -63,7 +63,8 @@ fun RemoteHaEntityRow(
 
   RemoteRow(
     // The player's tap area excludes padding, so a touch-target row takes its height from the strut
-    // below rather than from padding.
+    // below rather than from padding. The row is the tap target: its switch takes no tap of its own
+    // (a 36 × 22dp target for the same action).
     modifier =
       modifier
         .then(clickable)
@@ -113,7 +114,6 @@ fun RemoteHaEntityRow(
           activeAccent = look.activeAccent,
           inactiveAccent = look.inactiveAccent,
           modifier = switchModifier,
-          tapAction = data.tapAction,
         )
       },
       state = { stateModifier ->

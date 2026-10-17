@@ -24,15 +24,15 @@ fun sectionFlowItems(
   snapshot: HaSnapshot,
   registry: CardRegistry,
 ): List<SectionFlowItem> = cards.map { card ->
-  // A conditional is sized as the card it shows; a hidden one is drawn empty, so it asks for
-  // nothing and never pushes a neighbour to the next row.
+  // A conditional is sized as the card it shows; a hidden one is drawn empty and left out of the
+  // rows, so it neither pushes a neighbour to the next row nor adds a gap beside it.
   val shown = shownCard(card, snapshot)
-  SectionFlowItem(
-    minWidth =
-      if (shown == null) 0f
-      else (registry.get(shown.type)?.gridMinCellWidthDp(shown, snapshot) ?: 240).toFloat(),
-    ownRow = SectionCardFlow.ownRow(card),
-  )
+  if (shown == null) SectionFlowItem(minWidth = 0f, hidden = true)
+  else
+    SectionFlowItem(
+      minWidth = (registry.get(shown.type)?.gridMinCellWidthDp(shown, snapshot) ?: 240).toFloat(),
+      ownRow = SectionCardFlow.ownRow(card),
+    )
 }
 
 /**
@@ -47,7 +47,7 @@ fun sectionFlowItems(
  * inside it).
  *
  * [items] are in dp (see [sectionFlowItems]); [content] must emit exactly one child per item, in
- * the same order.
+ * the same order. A hidden item's child is measured at zero size and placed at the origin.
  */
 @Composable
 fun LovelaceSectionCardFlow(
@@ -89,6 +89,11 @@ fun LovelaceSectionCardFlow(
         rowHeight = maxOf(rowHeight, placeable.height)
       }
       y += rowHeight
+    }
+
+    // Hidden items are in no row; their (empty) children still need measuring to be placed.
+    items.forEachIndexed { i, item ->
+      if (item.hidden) placeables[i] = measurables[i].measure(Constraints.fixed(0, 0))
     }
 
     layout(width, y.coerceIn(constraints.minHeight, constraints.maxHeight)) {

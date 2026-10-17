@@ -14,6 +14,8 @@ def package(wasm, player, output):
             raise FileNotFoundError(f"Build asset missing: {path}")
     output.mkdir(parents=True, exist_ok=True)
     stage = output / "custom_components" / "terrazzo"
+    if stage.exists():
+        shutil.rmtree(stage)
     shutil.copytree(ROOT / "home-assistant/custom_components/terrazzo", stage, dirs_exist_ok=True,
                     ignore=shutil.ignore_patterns('__pycache__'))
     shutil.copytree(wasm, stage / "frontend/wasm", dirs_exist_ok=True)

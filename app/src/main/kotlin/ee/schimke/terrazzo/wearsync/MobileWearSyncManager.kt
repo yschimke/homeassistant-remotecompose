@@ -10,6 +10,7 @@ import com.google.android.gms.wearable.NodeClient
 import com.google.android.gms.wearable.PutDataMapRequest
 import com.google.android.gms.wearable.Wearable
 import com.google.android.horologist.data.WearDataLayerRegistry
+import ee.schimke.ha.client.design.CardDesignOverrides
 import ee.schimke.ha.design.CardDesignSlots
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.EntityState
@@ -26,6 +27,7 @@ import ee.schimke.terrazzo.core.prefs.PreferencesStore
 import ee.schimke.terrazzo.core.session.HaSession
 import ee.schimke.terrazzo.core.session.SessionConnectionStatus
 import ee.schimke.terrazzo.core.wearsync.WearSyncManager
+import ee.schimke.terrazzo.dashboard.CardDesignOverrideStore
 import ee.schimke.terrazzo.wearsync.proto.CardSummary
 import ee.schimke.terrazzo.wearsync.proto.DashboardData
 import ee.schimke.terrazzo.wearsync.proto.EntityDelta
@@ -201,9 +203,16 @@ class MobileWearSyncManager(
     // Each card resolved against the registry first: the watch has none to resolve a Bambu card's
     // configured printer with.
     scope.launch {
-      combine(pinStore.cards, registrySnapshot) { cards, snapshot -> cards.resolvedFor(snapshot) }
+      combine(pinStore.cards, CardDesignOverrideStore.of(context).overrides, registrySnapshot) {
+          cards,
+          overrides,
+          snapshot ->
+          cards.resolvedFor(snapshot) to overrides
+        }
         .distinctUntilChanged()
-        .collect { writeDataItem(WearSyncPaths.PINNED, encodeProto(it.toProto())) }
+        .collect { (cards, overrides) ->
+          writeDataItem(WearSyncPaths.PINNED, encodeProto(cards.toWearPinnedCards(overrides)))
+        }
     }
 
     // Pinned sections → /wear/sections.
@@ -586,19 +595,31 @@ private val json = Json { ignoreUnknownKeys = true }
  * Captured fields flow through unchanged — the pin store is the source of truth for title / primary
  * entity at the time of pinning.
  */
-private fun List<MobilePinnedCard>.toProto(): PinnedCardSet =
+internal fun List<MobilePinnedCard>.toWearPinnedCards(
+  overrides: CardDesignOverrides,
+  updatedAtMs: Long = System.currentTimeMillis(),
+): PinnedCardSet =
   PinnedCardSet(
     cards =
       this.sortedBy { it.orderIndex }
         .map { entry ->
           PinnedCard(
             baseUrl = entry.baseUrl,
-            card = entry.card.toProto(),
+            card =
+              entry.card
+                .toProto()
+                .copy(
+                  cardStyleOverride =
+                    entry.card.rawJson
+                      .toCardConfigOrNull()
+                      ?.let { overrides.forCard(it)?.cardStyle }
+                      .orEmpty()
+                ),
             cardKey = entry.key,
             orderIndex = entry.orderIndex,
           )
         },
-    updatedAtMs = System.currentTimeMillis(),
+    updatedAtMs = updatedAtMs,
   )
 
 @JvmName("slotsToProto")

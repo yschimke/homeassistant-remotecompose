@@ -201,6 +201,27 @@ class HaClient(
     return previous
   }
 
+  private val dashboardWriteMutex = Mutex()
+
+  /**
+   * Check the loaded baseline immediately before saving. HA has no compare-and-swap/revision
+   * argument, so this detects observed conflicts; an external writer can still race this pair of
+   * WebSocket commands. Serialize this client's writes, including undo, through this method.
+   */
+  suspend fun compareAndReplaceDashboardConfig(
+    expected: JsonObject,
+    config: JsonObject,
+    urlPath: String? = null,
+  ) = dashboardWriteMutex.withLock {
+    if (fetchDashboardConfig(urlPath) != expected)
+      throw ee.schimke.ha.client.dashboard.DashboardConflictException()
+    awaitCommand("lovelace/config/save") {
+      put("config", config)
+      if (urlPath != null) put("url_path", urlPath)
+    }
+    Unit
+  }
+
   /**
    * Fetch the HA instance's `config` payload — same shape `GET /api/config` returns over REST,
    * exposed here over the already-open WebSocket so we don't pay a separate TCP/TLS handshake. Used

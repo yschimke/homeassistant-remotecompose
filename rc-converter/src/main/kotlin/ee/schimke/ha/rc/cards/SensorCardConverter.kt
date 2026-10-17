@@ -2,6 +2,7 @@
 
 package ee.schimke.ha.rc.cards
 
+import androidx.compose.remote.creation.compose.layout.RemoteBox
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.fillMaxSize
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
@@ -24,6 +25,7 @@ import ee.schimke.ha.rc.components.HaSensorCardData
 import ee.schimke.ha.rc.components.HaTileData
 import ee.schimke.ha.rc.components.HaToggleAccent
 import ee.schimke.ha.rc.components.LiveValues
+import ee.schimke.ha.rc.components.LocalCompactEntityLayout
 import ee.schimke.ha.rc.components.RemoteHaIconChip
 import ee.schimke.ha.rc.components.RemoteHaMeasurement
 import ee.schimke.ha.rc.components.RemoteHaSensorCard
@@ -85,13 +87,25 @@ class SensorCardConverter : CardConverter {
     when (LocalCardSizeMode.current) {
       CardSizeMode.Wrap -> FullSensor(card, snapshot, modifier)
       CardSizeMode.Fixed ->
-        RemoteSizeBreakpoint(thresholdsDp = intArrayOf(120), modifier = modifier.fillMaxSize()) {
-          tier ->
-          when (tier) {
-            0 -> IdentityTier(card, snapshot)
-            else -> CenteredCell { FullSensor(card, snapshot, RemoteModifier.fillMaxWidth()) }
+        if (LocalCompactEntityLayout.current) {
+          // Wear has current values but no history, and its 60 dp slot cannot fit the full
+          // sensor/history panel. Keep the reading's live text and numeric bindings, with the
+          // theme's typed instrument, in both Wear containers.
+          val id = card.raw["entity"]?.jsonPrimitive?.content
+          val reading = haReading(id, id?.let { snapshot.states[it] }, nameFor(card, snapshot))
+          RemoteBox(modifier.fillMaxSize()) {
+            CenteredCell {
+              RemoteHaMeasurement(reading, HaPresentation.Compact, RemoteModifier.fillMaxWidth())
+            }
           }
-        }
+        } else
+          RemoteSizeBreakpoint(thresholdsDp = intArrayOf(120), modifier = modifier.fillMaxSize()) {
+            tier ->
+            when (tier) {
+              0 -> IdentityTier(card, snapshot)
+              else -> CenteredCell { FullSensor(card, snapshot, RemoteModifier.fillMaxWidth()) }
+            }
+          }
     }
   }
 

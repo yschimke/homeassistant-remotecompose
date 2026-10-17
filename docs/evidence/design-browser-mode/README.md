@@ -1,6 +1,9 @@
-# Console light investigation
+# Console mode investigation
 
 Observed on 2026-10-17, using Chromium at 1440 × 1000.
+
+The original investigation and PR #876 validation below are historical. The follow-up makes
+console available in both host modes using its existing palette; see the final section.
 
 ## Deployed observations
 
@@ -85,3 +88,29 @@ production library's 4351 total and 229 console results.
 ![Local recovery link renders a real console preview](local-recovery.png)
 
 Repository-wide `./gradlew ktfmtCheck` also passed.
+
+
+## Follow-up: console in both modes
+
+Console's single palette now matches both light and dark host modes in `/designs` and
+`/api/designs`. The exact original URL displays the same console design as `mode=dark`;
+`mode=all` lists it once. Keys, blobs and preview paths retain their published values.
+The dropdown uses the same availability rule, including in a console-only library. Other
+themes retain strict mode filtering and unsupported-mode recovery.
+
+Validation on 2026-10-17:
+
+- The new `consoleUsesTheSameDesignInBothModes` server regression failed before the fix at
+  the light result count. After the fix, all 61 design-server tests passed with zero
+  failures/errors/skips. Coverage includes identical API IDs across modes, no duplicates,
+  mixed-theme results, preserved card/search/template filters, invalid modes, and the
+  console-only dropdown. Existing recovery coverage now uses nixie.
+- `:design-server:installDist` and repository-wide `ktfmtCheck` passed.
+- The updated Chromium regression failed on the previous installed server (`0 shown`).
+  It now passes: the original light URL loads a decoded PNG, switching the form to dark
+  retains the same design link and preview URL, both preview responses are HTTP 200 PNGs,
+  and no JavaScript page exceptions occur.
+- Browser verification uses the same three real deployed fixture designs described above;
+  the local console count is 1. The screenshot is 1440 × 1000.
+
+![Console preview available with the original light query](local-both-modes.png)

@@ -41,6 +41,8 @@ data class CardSummary(
   val title: String = "",
   val primaryEntityId: String = "",
   val rawJson: String = "",
+  /** Explicit phone card/type style override; empty follows the watch style. */
+  val cardStyleOverride: String = "",
 )
 
 /** One DataStore Proto entry per dashboard, keyed by `urlPath`. */
