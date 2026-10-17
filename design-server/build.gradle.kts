@@ -47,6 +47,9 @@ sourceSets.main {
 }
 
 tasks.test {
+  val catalogs = project.file("catalogs.json")
+  inputs.file(catalogs)
+  systemProperty("designServer.catalogs", catalogs.path)
   // Pins the embed's binding port to ha-model; see EmbedBindingsGoldenTest.
   val golden = rootProject.file("embed/test/bindings-golden.json")
   inputs.file(golden)

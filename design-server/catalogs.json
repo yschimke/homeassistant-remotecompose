@@ -1,6 +1,10 @@
 {
   "catalogs": [
     {
+      "system": "remote-m3",
+      "repo": "yschimke/remote-m3-catalog-out"
+    },
+    {
       "system": "ha-cards",
       "repo": "yschimke/homeassistant-remotecompose-out"
     },
