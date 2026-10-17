@@ -1170,6 +1170,36 @@ class CardDesignParityTest {
       dark = false,
     )
 
+  /** A row whose coordinates HA withholds draws no position line, in the template as directly. */
+  @Test
+  fun mapRedactedPosition() =
+    assertParity(
+      "map-redacted",
+      card("map") {
+        putJsonArray("entities") {
+          add("zone.home")
+          add("person.alex")
+        }
+      },
+      listOf(
+        entity(
+          "zone.home",
+          "zoning",
+          "friendly_name" to "Home",
+          "latitude" to "<redacted>",
+          "longitude" to "<redacted>",
+        ),
+        entity(
+          "person.alex",
+          "home",
+          "friendly_name" to "Alex",
+          "latitude" to "59.43",
+          "longitude" to "24.75",
+        ),
+      ),
+      dark = false,
+    )
+
   @Test
   fun pictureElements() =
     assertParity(

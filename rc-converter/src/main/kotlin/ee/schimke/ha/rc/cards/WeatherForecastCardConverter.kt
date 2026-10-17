@@ -64,11 +64,12 @@ class WeatherForecastCardConverter : CardConverter {
   // Add-to-Home-Screen preview (WidgetInstallSheet sizes its preview box from
   // cardHeightDp and renders in Wrap mode). The Wrap card stacks current row +
   // high/low + forecast strip + the conditions-chip row, so it needs the full
-  // ~222 dp; advertising the shorter forecast-only height clipped the chips in
+  // ~231 dp at the card type scale; advertising the shorter forecast-only height
+  // (or the older 224 dp, which cut the chips' labels off) clipped the chips in
   // that pin preview. The Fixed widget tiers don't draw the chips and simply
   // fill whatever (smaller) cell they're given, so over-reserving here is
   // harmless — the forecast strip grows to take up the slack.
-  override fun naturalHeightDp(card: CardConfig, snapshot: HaSnapshot): Int = 224
+  override fun naturalHeightDp(card: CardConfig, snapshot: HaSnapshot): Int = 232
 
   /**
    * A weather card renders from a card design. Structure: the current condition's icon, each
