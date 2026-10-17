@@ -197,7 +197,7 @@ needle, and a Braun thermometer has no fill. Every part reads the theme through
 | `lcd`: segment display | 12 blocks with ghosts | **framed column of bars**, no bulb, **hot bars in a red ink** | **phone battery**, four bars, red when low | chunky segments | value in a **recessed screen** | 4 dp bezel · square block switch |
 | `braun`: Dieter Rams | half-circle dial, index ticks, **orange pointer** on a black hub | **tuning scale**: spine, ticks, orange pointer, red ticks past hot | hairline, softly rounded | tuning scale | plain | 18 dp, borderless |
 | `nixie` | glowing filament over electrode dots | **IN-9 bargraph tube** in its socket | horizontal tube | tube | plain | 14 dp · 4 dp |
-| `console`: skeuomorphic studio desk | **backlit VU meter** behind glass: cream face, the standard VU scale, red from 0 VU, needle and pivot bridge | **fader**: metal cap in a lit slot beside a silkscreen scale, red marks past hot | **lamp in a metal bezel**, red when low | fader | ruled plate | 6 dp **painted-metal panel** (sheen) · metal cap in a recessed slot; dials are a **knob in a lamp ring** |
+| `console`: skeuomorphic studio desk | **backlit VU meter** behind glass: cream face, the standard VU scale, red from 0 VU, needle and pivot bridge | **glass liquid column** and reservoir on an ivory enamel scale, red marks past hot | **lamp in a metal bezel**, red when low | fader | ruled plate | 6 dp **painted-metal panel** (sheen) · recessed keys and rockers with separate pilot lamps; dials are a **knob in a lamp ring**, clocks red LED modules behind smoked glass |
 
 How each part takes it:
 
@@ -214,11 +214,16 @@ How each part takes it:
 - **Card chrome and controls**: `cardChrome` takes the theme's corner and border, and the toggle
   switch takes its corner and square or round knob (`HaCardShapeStyle`). `HaSurfaceMaterial` says
   what they are made of: `Flat`, or Console's `PaintedMetal`, where `cardChrome` lays a fixed
-  top-lit sheen over the card colour (so a live background still shows) and the switch knob is a
-  machined cap (a gradient brush) in a recessed slot.
+  top-lit sheen over the card colour (so a live background still shows). `ConsoleControls.kt`
+  draws recessed keys and rockers with a separate pilot lamp; the rocker seam and cap depth follow
+  the same live on/off expression as the standard switch. Transport lamps indicate an available
+  command, while switch lamps indicate on/off. Disabled transport controls remain inert.
+- **Console clocks**: `ConsoleClock.kt` draws seven-segment LED modules behind smoked glass.
+  Digits use the player's hour/minute/second fields and the existing zone-offset binding; the
+  original time string remains the accessibility label. The date and title keep their bindings.
 - **Skeuomorphism stays live and original.** Console draws light and material with gradient
   shaders (`RemoteBrush` linear and radial gradients, applied to a paint) and shadows as offset
-  translucent shapes — all vectors, sized from the canvas at playback, with the needle, fader cap
+  translucent shapes — all vectors, sized from the canvas at playback, with the needle, fader cap, liquid column
   and lamps moved by the live fraction. It is an original drawing of the 1970s-console genre; the
   only borrowed thing is the VU scale itself (ANSI C16.5), which is a standard. Don't trace a
   product's artwork: raster knobs from a CC-licensed gallery would also be legal with attribution,

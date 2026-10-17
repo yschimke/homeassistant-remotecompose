@@ -18,6 +18,7 @@ import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.modifier.size
 import androidx.compose.remote.creation.compose.state.RemoteColor
+import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rf
 import androidx.compose.runtime.Composable
@@ -131,7 +132,13 @@ private fun TileInfoRow(data: HaTileData, look: HaEntityLook, renderChip: Boolea
 private fun TileIcon(data: HaTileData, look: HaEntityLook, renderChip: Boolean) {
   // Decorative: the tile draws the name beside it.
   val accent = look.accent
-  if (renderChip) {
+  if (renderChip && visualFamily() == HaVisualFamily.Console) {
+    ConsoleControlFace(
+      look.isOn?.select(accent, ConsoleSlot.rc) ?: accent,
+      RemoteModifier.size(32.rdp),
+      look.isOn?.select(1f.rf, 0f.rf),
+    )
+  } else if (renderChip) {
     RemoteBox(
       modifier =
         RemoteModifier.size(32.rdp)

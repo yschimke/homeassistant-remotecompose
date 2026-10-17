@@ -17,6 +17,7 @@ import androidx.compose.remote.creation.compose.modifier.clip
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.modifier.size
+import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rf
 import androidx.compose.remote.creation.compose.state.rs
@@ -84,18 +85,29 @@ private fun Button(button: HaBambuControlButton, theme: RemoteHaTheme) {
     horizontalAlignment = RemoteAlignment.CenterHorizontally,
   ) {
     val accent = if (button.enabled) haInk(button.accent) else theme.secondaryText
+    val console = visualFamily() == HaVisualFamily.Console
     RemoteBox(
       modifier =
         RemoteModifier.size(48.rdp)
           .clip(haControlShape(24, round = true))
-          .background(accent.copy(alpha = accent.alpha * 0.18f.rf)),
+          .then(
+            if (console) RemoteModifier
+            else RemoteModifier.background(accent.copy(alpha = accent.alpha * 0.18f.rf))
+          ),
       contentAlignment = RemoteAlignment.Center,
     ) {
+      if (console)
+        ConsoleControlFace(
+          if (button.enabled) accent else ConsoleSlot.rc,
+          RemoteModifier.size(48.rdp),
+        )
       RemoteIcon(
         imageVector = button.icon.toRemoteImageVector(),
         contentDescription = button.label.rs,
-        modifier = RemoteModifier.size(24.rdp),
-        tint = accent,
+        modifier =
+          RemoteModifier.then(if (console) RemoteModifier.padding(end = 13.rdp) else RemoteModifier)
+            .size(24.rdp),
+        tint = if (console && button.enabled) theme.primaryText else accent,
       )
     }
     RemoteBox(modifier = RemoteModifier.padding(top = 6.rdp)) {
