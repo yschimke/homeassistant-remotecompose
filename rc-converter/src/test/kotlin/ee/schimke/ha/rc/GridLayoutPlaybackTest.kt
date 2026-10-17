@@ -246,6 +246,90 @@ class GridLayoutPlaybackTest {
     assertCellsFit(700, perRow = 3, yDp = 24f, "tiles at 700 dp")
   }
 
+  private val threeTiles =
+    card(
+      """{"type":"grid","columns":2,"cards":[
+        {"type":"tile","entity":"light.kitchen"},{"type":"tile","entity":"light.office"},
+        {"type":"tile","entity":"switch.fan"}]}"""
+    )
+
+  /**
+   * An odd tile out spans its row rather than sitting beside an empty column: the second row's one
+   * tile has content where the first row's gap and second cell are.
+   */
+  @Test
+  fun aShortLastRowOfTilesStretchesAcrossTheGrid() {
+    val (height) = heightsAt("three-tiles", threeTiles, 360)
+    val pixels = played.getValue(360)
+    val scale = pixels.width / 360f
+    val rowHeight = (height - 8f) / 2f
+    val y = ((rowHeight + 8f + rowHeight / 2f) * scale).toInt()
+    for (xDp in listOf(178f, 270f)) {
+      assertTrue(
+        !isBackground(pixels[(xDp * scale).toInt(), y]),
+        "the last row's tile should cover x=$xDp dp",
+      )
+    }
+    assertCellsFit(360, perRow = 2, yDp = rowHeight / 2f, "the full first row")
+  }
+
+  private val lonePicture =
+    card(
+      """{"type":"grid","columns":2,"cards":[
+        {"type":"picture-entity","entity":"camera.chamber","aspect_ratio":"1:1"}]}"""
+    )
+
+  /**
+   * A picture alone in a 2-column grid keeps HA's column: a column's square, not a square as wide
+   * as the grid (a 360 dp tall picture on a phone).
+   */
+  @Test
+  fun aLonePictureKeepsItsColumn() {
+    val (phone) = heightsAt("lone-picture", lonePicture, 360)
+    assertNear((360f - 8f) / 2f, phone, "one column's square")
+  }
+
+  private val threePictures =
+    card(
+      """{"type":"grid","columns":2,"cards":[
+        {"type":"picture-entity","entity":"camera.chamber","aspect_ratio":"1:1"},
+        {"type":"picture-entity","entity":"camera.nozzle","aspect_ratio":"1:1"},
+        {"type":"picture-entity","entity":"camera.chamber","aspect_ratio":"1:1"}]}"""
+    )
+
+  /** A picture grid's short last row isn't stretched: the third picture is a column's square. */
+  @Test
+  fun aPictureGridsShortLastRowKeepsItsColumns() {
+    val (phone) = heightsAt("three-pictures", threePictures, 360)
+    val cell = (360f - 8f) / 2f
+    assertNear(cell * 2 + 8f, phone, "two rows of column squares")
+  }
+
+  /** Four tiles with two conditionals between them whose conditions don't hold. */
+  private val fourTilesAndHiddenConditionals =
+    card(
+      """{"type":"grid","columns":2,"cards":[
+        {"type":"tile","entity":"light.kitchen"},
+        {"type":"conditional","conditions":[{"entity":"light.office","state":"on"}],
+         "card":{"type":"entities","entities":["light.office"]}},
+        {"type":"tile","entity":"light.office"},{"type":"tile","entity":"switch.fan"},
+        {"type":"conditional","conditions":[{"entity":"switch.pump","state":"on"}],
+         "card":{"type":"entities","entities":["switch.pump"]}},
+        {"type":"tile","entity":"switch.pump"}]}"""
+    )
+
+  /**
+   * A hidden conditional takes no cell: the grid lays its shown cards out as if it weren't there.
+   * Before, its full-width (240 dp) default minimum forced the whole grid to one card per row on a
+   * phone, with an empty cell where each hidden card sat.
+   */
+  @Test
+  fun hiddenConditionalsTakeNoCell() {
+    heightsAt("four-tiles-hidden-conditionals", fourTilesAndHiddenConditionals, 360)
+    // Two to a row: with one per row each tile spans the gap this checks for.
+    assertCellsFit(360, perRow = 2, yDp = 24f, "tiles beside hidden conditionals")
+  }
+
   @Test
   fun aWidgetGridOfButtonsKeepsItsMinimumOnANarrowSlot() {
     // Captured once and played through the runtime gate (a Wear slot): below the four-across

@@ -1,0 +1,41 @@
+name: Public demo HA security
+on:
+  pull_request:
+    paths: ['deploy/demo-ha/**', '.github/workflows/demo-ha.yml']
+  push:
+    branches: [main]
+    paths: ['deploy/demo-ha/**', '.github/workflows/demo-ha.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  readonly:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    defaults:
+      run:
+        working-directory: deploy/demo-ha
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-python@v6.1.0
+        with:
+          python-version: '3.13'
+      - run: pip install -r requirements.txt
+      - name: Gateway deny-by-default and live update tests
+        run: python -m unittest -v test_gateway.py
+      - name: Validate and start dedicated Home Assistant
+        run: |
+          docker compose config --quiet
+          docker compose up -d homeassistant
+          docker compose --profile setup run --rm bootstrap
+          docker compose up -d --build gateway
+      - name: Verify real HA reads, denied writes and streaming
+        run: |
+          for attempt in $(seq 1 60); do
+            if curl -fsS http://127.0.0.1:8125/healthz > /dev/null; then break; fi
+            sleep 2
+          done
+          python verify_public.py http://127.0.0.1:8125 --stream
+      - name: Stop isolated demo
+        if: always()
+        run: docker compose --profile setup down --volumes

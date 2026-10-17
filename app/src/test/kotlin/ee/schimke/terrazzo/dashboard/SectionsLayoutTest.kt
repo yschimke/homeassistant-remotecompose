@@ -143,7 +143,12 @@ class SectionsLayoutTest {
           for (width in listOf(328f, 496f)) {
             val rows = SectionCardFlow.rows(items, width, 8f)
             val where = "${summary.urlPath} ${section.title} at $width dp"
-            assertEquals(section.cards.indices.toList(), rows.flatMap { it.indices }, where)
+            // Every shown card, in order; a hidden conditional is in no row.
+            assertEquals(
+              items.indices.filterNot { items[it].hidden },
+              rows.flatMap { it.indices },
+              where,
+            )
             for (row in rows) {
               if (row.indices.any { items[it].ownRow }) assertEquals(1, row.indices.size, where)
               if (row.indices.size > 1) {

@@ -1497,6 +1497,8 @@ export class HaCardElement extends BaseElement {
   }
 }
 
-if (globalThis.customElements && !customElements.get('ha-card')) {
+// Hosts with their own <ha-card> (Home Assistant) import with ?register=false.
+if (globalThis.customElements && !customElements.get('ha-card') &&
+    new URL(import.meta.url).searchParams.get('register') !== 'false') {
   customElements.define('ha-card', HaCardElement);
 }

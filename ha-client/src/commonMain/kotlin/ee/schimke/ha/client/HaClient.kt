@@ -71,7 +71,11 @@ data class HaConfig(val baseUrl: String, val accessToken: String)
  * The connection is held open; command IDs are monotonic and responses are matched in a receive
  * loop. Not a subscription client yet — cards work from a point-in-time [HaSnapshot].
  */
-class HaClient(private val config: HaConfig, engine: HttpClientEngine? = null) {
+class HaClient(
+  private val config: HaConfig,
+  engine: HttpClientEngine? = null,
+  private val accessTokenProvider: (suspend () -> String)? = null,
+) {
   private val json = Json {
     ignoreUnknownKeys = true
     isLenient = true
@@ -134,6 +138,7 @@ class HaClient(private val config: HaConfig, engine: HttpClientEngine? = null) {
     sessionMutex.withLock {
       if (session != null) return
       _state.value = ConnectionState.Connecting
+      val accessToken = accessTokenProvider?.invoke() ?: config.accessToken
       val wsUrl = config.baseUrl.toWsUrl() + "/api/websocket"
       val s = httpClient.webSocketSession { url(wsUrl) }
 
@@ -148,7 +153,7 @@ class HaClient(private val config: HaConfig, engine: HttpClientEngine? = null) {
           JsonObject.serializer(),
           buildJsonObject {
             put("type", "auth")
-            put("access_token", config.accessToken)
+            put("access_token", accessToken)
           },
         )
       )

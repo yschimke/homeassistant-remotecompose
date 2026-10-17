@@ -2,9 +2,15 @@ package ee.schimke.ha.model
 
 /**
  * One card in a section's flow: [minWidth] is the narrowest it still reads as itself in (its
- * design's minimum, not HA's column span), and [ownRow] keeps it on a row of its own.
+ * design's minimum, not HA's column span), and [ownRow] keeps it on a row of its own. A [hidden]
+ * card (a conditional whose conditions don't hold) takes no part in the flow: no row, no width, no
+ * gap beside it.
  */
-data class SectionFlowItem(val minWidth: Float, val ownRow: Boolean = false)
+data class SectionFlowItem(
+  val minWidth: Float,
+  val ownRow: Boolean = false,
+  val hidden: Boolean = false,
+)
 
 /** One row of a section's flow: the cards' indices, in authored order, and each one's width. */
 data class SectionFlowRow(val indices: List<Int>, val widths: List<Float>)
@@ -29,7 +35,10 @@ data class SectionFlowRow(val indices: List<Int>, val widths: List<Float>)
  * Units are whatever the caller uses (dp in tests, px in the layout), as long as they agree.
  */
 object SectionCardFlow {
-  /** Lay out [items] in a section [width] wide, with [gap] between neighbouring cards. */
+  /**
+   * Lay out [items] in a section [width] wide, with [gap] between neighbouring cards. A
+   * [SectionFlowItem.hidden] item is in no row.
+   */
   fun rows(items: List<SectionFlowItem>, width: Float, gap: Float): List<SectionFlowRow> {
     val rows = mutableListOf<SectionFlowRow>()
     val current = mutableListOf<Int>()
@@ -43,6 +52,7 @@ object SectionCardFlow {
     }
 
     items.forEachIndexed { i, item ->
+      if (item.hidden) return@forEachIndexed
       if (item.ownRow) {
         flush()
         current += i

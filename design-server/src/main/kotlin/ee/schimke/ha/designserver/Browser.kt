@@ -30,7 +30,8 @@ data class ThemeParts(val style: String, val mode: String?) {
 /**
  * The browser's filter, from query parameters: card type, theme style, light/dark, a text search
  * over type and properties, and which preview to show. With [defaults], an unset style and mode
- * pick the library's first style in light, so the first page shows each shape once.
+ * pick the library's first style and that style's first mode, so the first page shows each shape
+ * once, including for styles that only have a dark palette.
  */
 data class BrowserFilter(
   val cardType: String?,
@@ -84,10 +85,15 @@ data class BrowserFilter(
           else -> value
         }
       val firstStyle = library.designs.firstOrNull()?.let { ThemeParts.of(it.key).style }
-      val firstMode = library.designs.firstNotNullOfOrNull { ThemeParts.of(it.key).mode }
+      val style = param("style", firstStyle.takeIf { defaults })
+      val firstMode =
+        library.designs
+          .map { ThemeParts.of(it.key) }
+          .firstOrNull { (style == null || it.style == style) && it.mode != null }
+          ?.mode
       return BrowserFilter(
         cardType = param("type", null),
-        style = param("style", firstStyle.takeIf { defaults }),
+        style = style,
         mode = param("mode", firstMode.takeIf { defaults }),
         query = param("q", null),
         preview = if (params["preview"] == "template") Preview.Template else Preview.Example,
@@ -194,7 +200,30 @@ object Pages {
       append("</select></label><button type=\"submit\">Apply</button></form>")
 
       append("<p class=\"count\">${designs.size} shown</p>")
-      if (designs.isEmpty()) append("<p class=\"empty\">No designs match.</p>")
+      if (designs.isEmpty()) {
+        append("<p class=\"empty\">No designs match.</p>")
+        val styleModes =
+          all
+            .map { ThemeParts.of(it.key) }
+            .filter { it.style == filter.style }
+            .mapNotNull { it.mode }
+            .distinct()
+        if (filter.mode != null && styleModes.isNotEmpty() && filter.mode !in styleModes) {
+          append(
+            "<p class=\"mode-hint\">Theme <b>${esc(filter.style.orEmpty())}</b> has no " +
+              "${esc(filter.mode)} designs in this library. Available modes: "
+          )
+          append(
+            styleModes.joinToString(", ") { mode ->
+              "<a href=\"/designs?${esc(filter.query { copy(mode = mode) })}\">${esc(mode)}</a>"
+            }
+          )
+          append(".</p>")
+        }
+        append(
+          "<p><a href=\"/designs?type=all&amp;style=all&amp;mode=all\">Clear all filters</a></p>"
+        )
+      }
       for ((type, group) in designs.groupBy { it.key.cardType }.toSortedMap()) {
         append(
           "<section><h2 id=\"${esc(type)}\">${esc(type)} <span>${group.size}</span></h2><div class=\"grid\">"
