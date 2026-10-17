@@ -273,6 +273,38 @@ class GridLayoutPlaybackTest {
     assertCellsFit(360, perRow = 2, yDp = rowHeight / 2f, "the full first row")
   }
 
+  private val lonePicture =
+    card(
+      """{"type":"grid","columns":2,"cards":[
+        {"type":"picture-entity","entity":"camera.chamber","aspect_ratio":"1:1"}]}"""
+    )
+
+  /**
+   * A picture alone in a 2-column grid keeps HA's column: a column's square, not a square as wide
+   * as the grid (a 360 dp tall picture on a phone).
+   */
+  @Test
+  fun aLonePictureKeepsItsColumn() {
+    val (phone) = heightsAt("lone-picture", lonePicture, 360)
+    assertNear((360f - 8f) / 2f, phone, "one column's square")
+  }
+
+  private val threePictures =
+    card(
+      """{"type":"grid","columns":2,"cards":[
+        {"type":"picture-entity","entity":"camera.chamber","aspect_ratio":"1:1"},
+        {"type":"picture-entity","entity":"camera.nozzle","aspect_ratio":"1:1"},
+        {"type":"picture-entity","entity":"camera.chamber","aspect_ratio":"1:1"}]}"""
+    )
+
+  /** A picture grid's short last row isn't stretched: the third picture is a column's square. */
+  @Test
+  fun aPictureGridsShortLastRowKeepsItsColumns() {
+    val (phone) = heightsAt("three-pictures", threePictures, 360)
+    val cell = (360f - 8f) / 2f
+    assertNear(cell * 2 + 8f, phone, "two rows of column squares")
+  }
+
   @Test
   fun aWidgetGridOfButtonsKeepsItsMinimumOnANarrowSlot() {
     // Captured once and played through the runtime gate (a Wear slot): below the four-across

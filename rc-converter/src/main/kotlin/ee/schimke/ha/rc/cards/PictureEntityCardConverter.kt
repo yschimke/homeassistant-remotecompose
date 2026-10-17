@@ -37,6 +37,9 @@ import kotlinx.serialization.json.put
 class PictureEntityCardConverter : CardConverter {
   override val cardType: String = CardTypes.PICTURE_ENTITY
 
+  /** A picture's height follows its width: it keeps a grid column's width. */
+  override fun gridKeepsColumnWidth(card: CardConfig, snapshot: HaSnapshot): Boolean = true
+
   override fun naturalHeightDp(card: CardConfig, snapshot: HaSnapshot): Int = 160
 
   override fun gridMinCellWidthDp(card: CardConfig, snapshot: HaSnapshot): Int =
