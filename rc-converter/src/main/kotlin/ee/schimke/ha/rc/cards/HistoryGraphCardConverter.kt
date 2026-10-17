@@ -178,7 +178,12 @@ class HistoryGraphCardConverter : CardConverter {
           if (tier == 0) {
             RemoteHaHistoryGraphIdentity(data, RemoteModifier.fillMaxWidth())
           } else {
-            RemoteHaHistoryGraph(data, RemoteModifier.fillMaxWidth(), singleEmptyState = true)
+            RemoteHaHistoryGraph(
+              data,
+              RemoteModifier.fillMaxWidth(),
+              singleEmptyState = true,
+              compactEmptyState = true,
+            )
           }
         }
     }
