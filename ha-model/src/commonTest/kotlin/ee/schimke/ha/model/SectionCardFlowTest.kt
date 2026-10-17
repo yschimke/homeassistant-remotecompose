@@ -87,4 +87,15 @@ class SectionCardFlowTest {
     )
     assertFalse(SectionCardFlow.ownRow(card("""{"type":"tile","grid_options":{"columns":12}}""")))
   }
+
+  @Test
+  fun aHiddenCardTakesNoRoomAndNoGap() {
+    val hidden = SectionFlowItem(0f, hidden = true)
+    // 140 + 8 + 140 = 288: two tiles fit with a hidden conditional between them, with one gap.
+    val rows = SectionCardFlow.rows(listOf(item(140), hidden, item(140)), 288f, gap)
+    assertEquals(listOf(listOf(0, 2)), rows.indices())
+    assertEquals(listOf(140f, 140f), rows.single().widths)
+    // A hidden item alone makes no row.
+    assertEquals(emptyList(), SectionCardFlow.rows(listOf(hidden), 288f, gap))
+  }
 }
