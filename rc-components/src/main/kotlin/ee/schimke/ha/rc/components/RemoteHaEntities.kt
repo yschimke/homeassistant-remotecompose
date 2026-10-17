@@ -99,11 +99,13 @@ enum class HaEntitiesFit(
  * Gaps are padding, not `spacedBy`: a RemoteCompose row does not subtract arrangement gaps from its
  * weighted children.
  *
- * A state-layout sibling of [RemoteHaEntities] in a Fixed-mode size ladder, so like
- * [RemoteHaIconChip] its rows resolve the accent and any switch position from the encode-time state
- * rather than registering `<entity>.is_on` again (a duplicate named `RemoteBoolean` blanks the
- * other branch in alpha010, #224). Widgets are baked from constants in any case; the state text
- * stays a live binding.
+ * The rows' accents and switches follow [looks]: the live `<entity>.is_on` bindings from
+ * [entityLooks], which a widget bake fills with the card's values. A caller sharing a state layout
+ * with sibling tiers creates them once, outside the layout, and hands the same [HaEntityLooks] to
+ * every tier (or to the one tier that draws rows): two registrations of one named `RemoteBoolean`
+ * blank the other branch in alpha010 (#224). Without [looks], the rows resolve both from the
+ * encode-time state, like [RemoteHaIconChip] — right only for a capture of the real entities, never
+ * for a design template. The state text is always a live binding.
  *
  * [largeText] steps a [HaEntitiesFit.Compact] row's text up from [HaType.Label] to [HaType.Body],
  * for a large Wear slot.
@@ -115,6 +117,7 @@ fun RemoteHaEntitiesFitted(
   fit: HaEntitiesFit,
   modifier: RemoteModifier = RemoteModifier,
   largeText: Boolean = false,
+  looks: HaEntityLooks? = null,
 ) {
   val theme = haTheme()
   RemoteBox(
@@ -140,9 +143,10 @@ fun RemoteHaEntitiesFitted(
           overflow = TextOverflow.Ellipsis,
         )
       }
-      data.rows.forEach { row ->
+      data.rows.forEachIndexed { i, row ->
         FittedEntityRow(
           row,
+          looks?.looks?.getOrNull(i) ?: entityLook(row.entityId, row.accent, live = false),
           fit,
           largeText,
           RemoteModifier.fillMaxWidth().weight(1f),
@@ -161,6 +165,7 @@ fun RemoteHaEntitiesFitted(
 @RemoteComposable
 private fun FittedEntityRow(
   data: HaEntityRowData,
+  look: HaEntityLook,
   fit: HaEntitiesFit,
   largeText: Boolean,
   modifier: RemoteModifier,
@@ -168,7 +173,6 @@ private fun FittedEntityRow(
   val theme = haTheme()
   val clickable =
     data.tapAction.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
-  val look = entityLook(data.entityId, data.accent, live = false)
   val expanded = fit == HaEntitiesFit.Expanded
   val nameSize =
     when {
@@ -199,7 +203,15 @@ private fun FittedEntityRow(
         overflow = TextOverflow.Ellipsis,
       )
     }
-    if (expanded && data.accent.toggleable) {
+    val isOn = look.isOn
+    if (expanded && isOn != null) {
+      RemoteHaToggleSwitch(
+        isOn = isOn,
+        activeAccent = look.activeAccent,
+        inactiveAccent = look.inactiveAccent,
+        tapAction = data.tapAction,
+      )
+    } else if (expanded && data.accent.toggleable) {
       // The switch at its encode-time position: a widget is re-baked when the entity changes.
       RemoteHaToggleSwitchByProgress(
         progress = (if (data.accent.initiallyOn) 1f else 0f).rf,
@@ -219,3 +231,14 @@ private fun FittedEntityRow(
     }
   }
 }
+
+/**
+ * The live look (`<entity>.is_on` accent and switch) of each of [rows], for
+ * [RemoteHaEntitiesFitted]. Create it once per document and share it across sibling size tiers.
+ */
+class HaEntityLooks internal constructor(internal val looks: List<HaEntityLook>)
+
+/** [HaEntityLooks] for [rows], registering each toggleable entity's `<entity>.is_on` once. */
+@Composable
+fun entityLooks(rows: List<HaEntityRowData>): HaEntityLooks =
+  HaEntityLooks(rows.map { entityLook(it.entityId, it.accent) })

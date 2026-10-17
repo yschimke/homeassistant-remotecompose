@@ -277,10 +277,14 @@ gate per card, on the axis the host's canvases differ along
   computed from the row count, so a long list keeps the dense rows until
   the widget can hold all of them expanded. A launcher capture knows its
   size, so both gates select the tier at capture time there.
-- **Bindings.** The dense list keeps the live `<entity>.is_on` switches;
-  the fitted tiers resolve accents and the switch position from the
-  encode-time state (`entityLook(…, live = false)`), so sibling tiers never
-  register the same named boolean twice.
+- **Bindings.** Every tier's toggle rows read the live `<entity>.is_on`
+  booleans, so a baked card-design template (launcher or Wear) draws each
+  entity's real on/off state rather than its placeholder's. No document
+  registers one twice: the two Wear tiers share one set of looks created
+  outside the gate (`entityLooks`), and a launcher capture records only the
+  tier its size selects. When both launcher tiers are recorded (the matrix,
+  no capture size), the expanded rows take the captured entities' state
+  instead (`entityLook(…, live = false)`).
 
 (No identity-only tier — entities is a list, the rows _are_ the
 identity.)
