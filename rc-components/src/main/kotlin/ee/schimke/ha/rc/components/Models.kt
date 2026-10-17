@@ -208,17 +208,42 @@ data class HaLogbookEntry(
  */
 data class HaHistoryGraphData(
   val title: String?,
-  /** "Last 24h" / "Last 12h" — whatever `hours_to_show` resolved to. */
+  /** "Last 24 hours" / "Last 7 days" — whatever `hours_to_show` resolved to. */
   val rangeLabel: String,
   val rows: List<HaHistoryGraphRow>,
+  /**
+   * The one card-level message shown when no row has a line ("No history in the last 2 days"), in
+   * place of a stub per row.
+   */
+  val emptyLabel: String = "No history",
 )
+
+/** Whether [this] row draws a line: a sparkline needs at least two numeric samples. */
+val HaHistoryGraphRow.hasLine: Boolean
+  get() = points.size >= 2
+
+/**
+ * Whether the card shows its single empty state: it has rows and none of them draws a line. When
+ * only some rows are empty, those rows shrink to one line each and the others keep their graphs.
+ */
+val HaHistoryGraphData.allSeriesEmpty: Boolean
+  get() = rows.isNotEmpty() && rows.none { it.hasLine }
+
+/**
+ * Whether [RemoteHaHistoryGraph] replaces its rows with the single empty state: only when the
+ * caller opts in ([singleEmptyState], the `history-graph` card) and [allSeriesEmpty]. The sensor
+ * card and statistics-graph reuse the layout without it, so a row with no history still shows its
+ * name and current value.
+ */
+fun HaHistoryGraphData.showsSingleEmptyState(singleEmptyState: Boolean): Boolean =
+  singleEmptyState && allSeriesEmpty
 
 data class HaHistoryGraphRow(
   val entityId: String?,
   val name: String,
   val summary: RemoteString,
   val accent: Color,
-  /** Numeric samples in order. Empty → renders a "no data" stub. */
+  /** Numeric samples in order. Fewer than two → the row is one line: its name and summary. */
   val points: List<Float>,
 )
 
