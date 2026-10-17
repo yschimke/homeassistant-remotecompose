@@ -59,6 +59,43 @@ class ConditionalCardConverter(private val registryForHeight: CardRegistry? = nu
   }
 }
 
+/**
+ * What [card] draws right now: a conditional's inner card while its conditions hold, null while
+ * it's hidden; any other card is itself. A container sizes and places its children by this, so a
+ * hidden conditional takes no cell and a shown one sizes like the card it shows. A conditional that
+ * shows or hides re-encodes its card through [cardVisibilitySignature].
+ */
+internal fun shownCard(card: CardConfig, snapshot: HaSnapshot): CardConfig? =
+  if (card.type != CardTypes.CONDITIONAL) card
+  else if (conditionsMet(card, snapshot)) innerCard(card)?.let { shownCard(it, snapshot) } else null
+
+/**
+ * Which of the conditional cards in [card]'s tree (itself, a stack's or grid's children, nested
+ * conditionals) are shown under [snapshot], or null when it holds none. A conditional is drawn, or
+ * left out, at encode time, and a grid lays its cells out around the ones shown, so a host keys its
+ * capture on this: a condition flipping re-encodes the card. Like [cardIconSignature] it joins the
+ * key without turning the card's live bindings off.
+ */
+fun cardVisibilitySignature(card: CardConfig, snapshot: HaSnapshot): String? {
+  val flags = StringBuilder()
+  fun walk(c: CardConfig) {
+    if (c.type == CardTypes.CONDITIONAL) {
+      val met = conditionsMet(c, snapshot)
+      flags.append(if (met) '1' else '0')
+      if (met) innerCard(c)?.let(::walk)
+      return
+    }
+    (c.raw["cards"] as? JsonArray)?.forEach { el ->
+      val obj = el as? JsonObject ?: return@forEach
+      val type =
+        (obj["type"] as? kotlinx.serialization.json.JsonPrimitive)?.content ?: return@forEach
+      walk(CardConfig(type = type, raw = obj))
+    }
+  }
+  walk(card)
+  return flags.takeIf { it.isNotEmpty() }?.toString()
+}
+
 private fun innerCard(card: CardConfig): CardConfig? {
   val obj = card.raw["card"] as? JsonObject ?: return null
   val type = obj["type"]?.jsonPrimitive?.content ?: return null
