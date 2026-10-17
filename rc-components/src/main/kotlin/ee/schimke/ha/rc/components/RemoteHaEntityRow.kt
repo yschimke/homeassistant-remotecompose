@@ -122,7 +122,9 @@ fun RemoteHaEntityRow(
  * A row's trailing slot: [switch] for a [toggle] entity with an on/off state, else [state] (its
  * state text). An unavailable entity shows [state] in place of the switch, as HA's toggle row shows
  * "Unavailable": live off `<id>.is_available` (both are emitted, one visible), or chosen at encode
- * time where availability is baked.
+ * time in a sibling size tier that doesn't register the binding. Widgets, which don't show
+ * availability ([LocalEntityAvailability]), keep the dimmed switch: a baked widget comes from a
+ * design template whose properties don't include availability, so a direct capture must not differ.
  *
  * Both are emitted straight into the caller's row with a visibility modifier, not inside a box: a
  * wrapping box isn't re-measured when the switch's knob padding animates, so the knob stayed at its
