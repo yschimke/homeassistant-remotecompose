@@ -21,6 +21,7 @@ import ee.schimke.ha.rc.components.RemoteHaPictureEntity
 import ee.schimke.ha.rc.defaultTapActionFor
 import ee.schimke.ha.rc.formatState
 import ee.schimke.ha.rc.icons.HaIconMap
+import ee.schimke.ha.rc.icons.withIcons
 import ee.schimke.ha.rc.parseHaAction
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.contentOrNull
@@ -113,14 +114,15 @@ class PictureEntityCardConverter : CardConverter {
     val tapAction =
       if (tapCfg != null) parseHaAction(tapCfg, entityId) else defaultTapActionFor(entityId)
 
+    val icons = HaIconMap.entityIcons(card.raw["icon"]?.jsonPrimitive?.content, entity)
     val imageUrl = entity?.attributes?.get("entity_picture")?.jsonPrimitive?.content
     val data =
       HaPictureEntityData(
         entityId = entityId,
         name = name,
         state = LiveValues.state(entityId, formatState(entity)),
-        icon = HaIconMap.resolve(card.raw["icon"]?.jsonPrimitive?.content, entity),
-        accent = HaStateColor.toggleAccentFor(entityId, entity),
+        icon = icons.icon,
+        accent = HaStateColor.toggleAccentFor(entityId, entity).withIcons(icons),
         showName = showName,
         showState = showState,
         imageUrl = imageUrl,

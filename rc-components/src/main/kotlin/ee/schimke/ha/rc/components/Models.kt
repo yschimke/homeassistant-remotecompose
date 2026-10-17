@@ -50,6 +50,20 @@ data class HaToggleAccent(
    * [entityLook]); the host flips it at runtime the same way it flips `is_on`.
    */
   val initiallyAvailable: Boolean = true,
+  /**
+   * The glyph drawn while the entity is on, when it differs from the data's `icon` (drawn while
+   * off): a light's `lightbulb` over `lightbulb-off`, a door sensor's `door-open` over
+   * `door-closed`. With the `is_on` binding the component bakes both and swaps them in-document, so
+   * a document captured in one state draws the other; without it, it draws the glyph for
+   * [initiallyOn]. Null when the glyph doesn't change with the state.
+   */
+  val activeIcon: ImageVector? = null,
+  /**
+   * Whether [activeIcon] is also the glyph while the entity is unavailable or unknown (Home
+   * Assistant's default for those states is the on glyph, as for a light), which `is_on` alone
+   * can't tell from off: the component then also follows `<entityId>.is_available`.
+   */
+  val activeIconWhenUnavailable: Boolean = false,
 )
 
 /**
@@ -669,6 +683,12 @@ data class HaPictureGlanceCell(
   val initiallyActive: Boolean,
   val label: String,
   val tapAction: HaAction,
+  /** The glyph while on, when it differs from [icon]: see [HaToggleAccent.activeIcon]. */
+  val activeIcon: ImageVector? = null,
+  /** See [HaToggleAccent.activeIconWhenUnavailable]. */
+  val activeIconWhenUnavailable: Boolean = false,
+  /** See [HaToggleAccent.initiallyAvailable]. */
+  val initiallyAvailable: Boolean = true,
 )
 
 /**
@@ -699,6 +719,12 @@ sealed interface HaPictureElement {
     val initiallyActive: Boolean,
     val tapAction: HaAction,
     override val position: HaPictureElementPosition? = null,
+    /** The glyph while on, when it differs from [icon]: see [HaToggleAccent.activeIcon]. */
+    val activeIcon: ImageVector? = null,
+    /** See [HaToggleAccent.activeIconWhenUnavailable]. */
+    val activeIconWhenUnavailable: Boolean = false,
+    /** See [HaToggleAccent.initiallyAvailable]. */
+    val initiallyAvailable: Boolean = true,
   ) : HaPictureElement
 
   data class StateLabel(

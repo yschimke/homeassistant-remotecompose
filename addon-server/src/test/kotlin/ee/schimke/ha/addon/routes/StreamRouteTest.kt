@@ -25,4 +25,14 @@ class StreamRouteTest {
     assertEquals("23.13 °C", update["sensor.temp.state"]?.jsonPrimitive?.content)
     assertEquals("23.125", update["sensor.temp.numeric_state"]?.jsonPrimitive?.content)
   }
+
+  @Test
+  fun stateBindingsCarryAvailability() {
+    val light = EntityState("light.kitchen", "unavailable")
+    val unavailable = buildJsonObject { putStateBindings(light) }
+    val back = buildJsonObject { putStateBindings(light.copy(state = "off")) }
+    // `is_on` alone can't tell unavailable from off; an on/off icon pair reads this too.
+    assertEquals("false", unavailable["light.kitchen.is_available"]?.jsonPrimitive?.content)
+    assertEquals("true", back["light.kitchen.is_available"]?.jsonPrimitive?.content)
+  }
 }

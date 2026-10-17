@@ -40,6 +40,14 @@ tasks.withType<Test>().configureEach {
     "robolectric.dependency.dir",
     layout.buildDirectory.dir("robolectric-sdk").get().asFile.absolutePath,
   )
+  // The demo dashboards whose `mdi:` icons HaIconMapTest checks are all bundled.
+  val demoDashboards =
+    layout.projectDirectory.dir("../terrazzo-core/src/androidMain/resources/dashboards")
+  inputs
+    .dir(demoDashboards)
+    .withPropertyName("demoDashboards")
+    .withPathSensitivity(PathSensitivity.RELATIVE)
+  systemProperty("harc.demoDashboards", demoDashboards.asFile.absolutePath)
   // `-PcardDesignsOut=<dir>` writes the spike's design-server files (manifest.json + blobs/)
   // there — see CardDesignTemplatesEndToEndTest.publishSpikeDesigns.
   providers.gradleProperty("cardDesignsOut").orNull?.let {

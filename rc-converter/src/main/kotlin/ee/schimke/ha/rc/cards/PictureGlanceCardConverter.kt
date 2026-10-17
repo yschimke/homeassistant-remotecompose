@@ -109,9 +109,13 @@ class PictureGlanceCardConverter : CardConverter {
       val entity = snapshot.states[id]
       val name = entity?.attributes?.get("friendly_name")?.jsonPrimitive?.content ?: id
       val active = entity != null && HaLiveBindings.isOn(id, entity.state)
+      val icons = HaIconMap.entityIcons(null, entity)
       HaPictureGlanceCell(
         entityId = id,
-        icon = HaIconMap.resolve(null, entity),
+        icon = icons.icon,
+        activeIcon = icons.activeIcon,
+        activeIconWhenUnavailable = icons.activeWhenUnavailable,
+        initiallyAvailable = !icons.unavailable,
         accent = HaStateColor.activeFor(entity),
         initiallyActive = active,
         label = name,

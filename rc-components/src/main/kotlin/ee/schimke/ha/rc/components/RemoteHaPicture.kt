@@ -169,11 +169,18 @@ private fun Cell(cell: HaPictureGlanceCell, theme: RemoteHaTheme) {
       RemoteModifier.then(click).size(32.rdp).clip(haControlShape(16, round = true)).background(bg),
     contentAlignment = RemoteAlignment.Center,
   ) {
-    RemoteIcon(
-      imageVector = cell.icon.toRemoteImageVector(),
+    HaStateIcon(
+      icon = cell.icon,
+      activeIcon = cell.activeIcon,
+      initiallyOn = cell.initiallyActive,
+      isOn = isActive,
+      activeWhenUnavailable = cell.activeIconWhenUnavailable,
+      initiallyAvailable = cell.initiallyAvailable,
+      isAvailable =
+        pairAvailability(cell.entityId, cell.activeIconWhenUnavailable, cell.initiallyAvailable),
+      tint = tint,
       contentDescription = entityName(cell.entityId, cell.label),
       modifier = RemoteModifier.size(18.rdp),
-      tint = tint,
     )
   }
 }
@@ -275,11 +282,22 @@ private fun Element(
           modifier.then(click).size(28.rdp).clip(haControlShape(14, round = true)).background(bg),
         contentAlignment = RemoteAlignment.Center,
       ) {
-        RemoteIcon(
-          imageVector = element.icon.toRemoteImageVector(),
+        HaStateIcon(
+          icon = element.icon,
+          activeIcon = element.activeIcon,
+          initiallyOn = element.initiallyActive,
+          isOn = isActive,
+          activeWhenUnavailable = element.activeIconWhenUnavailable,
+          initiallyAvailable = element.initiallyAvailable,
+          isAvailable =
+            pairAvailability(
+              element.entityId,
+              element.activeIconWhenUnavailable,
+              element.initiallyAvailable,
+            ),
+          tint = tint,
           contentDescription = "element".rs,
           modifier = RemoteModifier.size(16.rdp),
-          tint = tint,
         )
       }
     }

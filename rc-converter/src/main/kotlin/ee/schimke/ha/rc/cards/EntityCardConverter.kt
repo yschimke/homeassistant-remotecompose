@@ -23,6 +23,7 @@ import ee.schimke.ha.rc.components.RemoteHaIconChip
 import ee.schimke.ha.rc.defaultTapActionFor
 import ee.schimke.ha.rc.formatState
 import ee.schimke.ha.rc.icons.HaIconMap
+import ee.schimke.ha.rc.icons.withIcons
 import ee.schimke.ha.rc.parseHaAction
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -82,13 +83,14 @@ class EntityCardConverter : CardConverter {
     val tapCfg = card.raw["tap_action"]?.jsonObject
     val tapAction =
       if (tapCfg != null) parseHaAction(tapCfg, entityId) else defaultTapActionFor(entityId)
+    val icons = HaIconMap.entityIcons(card.raw["icon"]?.jsonPrimitive?.content, entity)
     RemoteHaEntityRow(
       HaEntityRowData(
         entityId = entityId,
         name = nameFor(card, entity, entityId),
         state = LiveValues.state(entityId, formatState(entity)),
-        icon = HaIconMap.resolve(card.raw["icon"]?.jsonPrimitive?.content, entity),
-        accent = HaStateColor.toggleAccentFor(entityId, entity),
+        icon = icons.icon,
+        accent = HaStateColor.toggleAccentFor(entityId, entity).withIcons(icons),
         tapAction = tapAction,
       ),
       modifier = modifier,
@@ -106,12 +108,13 @@ class EntityCardConverter : CardConverter {
     val tapCfg = card.raw["tap_action"]?.jsonObject
     val tapAction =
       if (tapCfg != null) parseHaAction(tapCfg, entityId) else defaultTapActionFor(entityId)
+    val icons = HaIconMap.entityIcons(card.raw["icon"]?.jsonPrimitive?.content, entity)
     return HaTileData(
       entityId = entityId,
       name = nameFor(card, entity, entityId),
       state = LiveValues.state(entityId, formatState(entity)),
-      icon = HaIconMap.resolve(card.raw["icon"]?.jsonPrimitive?.content, entity),
-      accent = HaStateColor.toggleAccentFor(entityId, entity),
+      icon = icons.icon,
+      accent = HaStateColor.toggleAccentFor(entityId, entity).withIcons(icons),
       tapAction = tapAction,
     )
   }

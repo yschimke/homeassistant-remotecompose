@@ -2,7 +2,6 @@
 
 package ee.schimke.ha.rc.components
 
-import androidx.compose.remote.creation.compose.capture.toRemoteImageVector
 import androidx.compose.remote.creation.compose.layout.RemoteAlignment
 import androidx.compose.remote.creation.compose.layout.RemoteArrangement
 import androidx.compose.remote.creation.compose.layout.RemoteBox
@@ -26,7 +25,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.wear.compose.remote.material3.RemoteIcon
 
 /**
  * HA `picture-entity` card — modern image-with-overlay tile (`hui-picture-entity-card.ts`).
@@ -61,6 +59,14 @@ fun RemoteHaPictureEntity(
   val theme = haTheme()
   val isOnBinding =
     if (data.accent.toggleable) LiveValues.isOn(data.entityId, data.accent.initiallyOn) else null
+  // Only for an on/off glyph pair that differs while unavailable: no other part of this card reads
+  // availability, and widgets (Fixed mode) carry no availability binding at all.
+  val isAvailable =
+    pairAvailability(
+      data.entityId,
+      data.accent.activeIconWhenUnavailable,
+      data.accent.initiallyAvailable,
+    )
   val accent =
     isOnBinding?.select(data.accent.themed().activeAccent, data.accent.themed().inactiveAccent)
       ?: data.accent.themed().activeAccent
@@ -127,19 +133,31 @@ fun RemoteHaPictureEntity(
             // Inline strategy with no pre-fetched bytes for
             // this URL — fall back to the icon path so the
             // tile renders something instead of a hole.
-            RemoteIcon(
-              imageVector = data.icon.toRemoteImageVector(),
+            HaStateIcon(
+              icon = data.icon,
+              activeIcon = data.accent.activeIcon,
+              initiallyOn = data.accent.initiallyOn,
+              isOn = isOnBinding,
+              activeWhenUnavailable = data.accent.activeIconWhenUnavailable,
+              initiallyAvailable = data.accent.initiallyAvailable,
+              isAvailable = isAvailable,
+              tint = accent.copy(alpha = accent.alpha * 0.55f.rf),
               contentDescription = entityName(data.entityId, data.name),
               modifier = RemoteModifier.size(40.rdp),
-              tint = accent.copy(alpha = accent.alpha * 0.55f.rf),
             )
           }
         } else {
-          RemoteIcon(
-            imageVector = data.icon.toRemoteImageVector(),
+          HaStateIcon(
+            icon = data.icon,
+            activeIcon = data.accent.activeIcon,
+            initiallyOn = data.accent.initiallyOn,
+            isOn = isOnBinding,
+            activeWhenUnavailable = data.accent.activeIconWhenUnavailable,
+            initiallyAvailable = data.accent.initiallyAvailable,
+            isAvailable = isAvailable,
+            tint = accent.copy(alpha = accent.alpha * 0.55f.rf),
             contentDescription = entityName(data.entityId, data.name),
             modifier = RemoteModifier.size(40.rdp),
-            tint = accent.copy(alpha = accent.alpha * 0.55f.rf),
           )
         }
         if (data.frameStamp != null) {

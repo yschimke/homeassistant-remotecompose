@@ -22,6 +22,7 @@ import ee.schimke.ha.rc.components.RemoteHaButtonIcon
 import ee.schimke.ha.rc.components.RemoteHaToggleButton
 import ee.schimke.ha.rc.defaultTapActionFor
 import ee.schimke.ha.rc.icons.HaIconMap
+import ee.schimke.ha.rc.icons.withIcons
 import ee.schimke.ha.rc.parseHaAction
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -136,11 +137,12 @@ private fun buttonData(card: CardConfig, snapshot: HaSnapshot): HaButtonData {
   val tapAction =
     if (tapCfg != null) parseHaAction(tapCfg, entityId) else defaultTapActionFor(entityId)
 
+  val icons = HaIconMap.entityIcons(card.raw["icon"]?.jsonPrimitive?.content, entity)
   return HaButtonData(
     entityId = entityId,
     name = name,
-    icon = HaIconMap.resolve(card.raw["icon"]?.jsonPrimitive?.content, entity),
-    accent = HaStateColor.toggleAccentFor(entityId, entity),
+    icon = icons.icon,
+    accent = HaStateColor.toggleAccentFor(entityId, entity).withIcons(icons),
     showName = showName,
     tapAction = tapAction,
   )

@@ -18,6 +18,7 @@ import ee.schimke.ha.rc.components.RemoteHaGlance
 import ee.schimke.ha.rc.defaultTapActionFor
 import ee.schimke.ha.rc.formatState
 import ee.schimke.ha.rc.icons.HaIconMap
+import ee.schimke.ha.rc.icons.withIcons
 import ee.schimke.ha.rc.parseHaAction
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
@@ -63,12 +64,13 @@ class GlanceCardConverter : CardConverter {
           ?: "—"
       val tapCfg = row?.get("tap_action")?.jsonObject
       val tapAction = if (tapCfg != null) parseHaAction(tapCfg, eid) else defaultTapActionFor(eid)
+      val icons = HaIconMap.entityIcons(row?.get("icon")?.jsonPrimitive?.content, entity)
       HaGlanceCellData(
         entityId = eid,
         name = name,
         state = LiveValues.state(eid, formatState(entity)),
-        icon = HaIconMap.resolve(row?.get("icon")?.jsonPrimitive?.content, entity),
-        accent = HaStateColor.toggleAccentFor(eid, entity),
+        icon = icons.icon,
+        accent = HaStateColor.toggleAccentFor(eid, entity).withIcons(icons),
         tapAction = tapAction,
       )
     }
