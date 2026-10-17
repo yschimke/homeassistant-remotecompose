@@ -120,6 +120,10 @@ object DemoData {
   private val baseStates: Map<String, EntityState> =
     BOARDS.flatMap { b -> loadStates(b).entries }.associate { it.key to it.value }
 
+  /** Which device each entity belongs to, from each board's `devices.json` where it has one. */
+  private val baseDevices: Map<String, ee.schimke.ha.design.DeviceInfo> =
+    BOARDS.flatMap { b -> loadDevices(b).entries }.associate { it.key to it.value }
+
   fun dashboard(urlPath: String?): Dashboard {
     val slug = urlPathToSlug(urlPath)
     return cachedDashboards[slug] ?: cachedDashboards[BOARDS.first().slug]!!
@@ -131,7 +135,7 @@ object DemoData {
   ): HaSnapshot {
     val drifted = baseStates.mapValues { (id, st) -> drift(id, st, nowMs) }
     val withOverrides = router.snapshotOverrides(drifted, nowMs)
-    return HaSnapshot(states = withOverrides)
+    return HaSnapshot(states = withOverrides, devices = baseDevices)
   }
 
   /**
@@ -171,6 +175,11 @@ object DemoData {
   private fun loadStates(b: DemoBoard): Map<String, EntityState> {
     val text = readResource("/dashboards/${b.slug}/entity_states.json") ?: return emptyMap()
     return parseStates(text)
+  }
+
+  private fun loadDevices(b: DemoBoard): Map<String, ee.schimke.ha.design.DeviceInfo> {
+    val text = readResource("/dashboards/${b.slug}/devices.json") ?: return emptyMap()
+    return parseDevices(text)
   }
 
   private fun emptyBoard(b: DemoBoard): Dashboard = Dashboard(title = b.title)
@@ -218,6 +227,19 @@ object DemoData {
     val type = obj["type"]?.jsonPrimitive?.content ?: return null
     return CardConfig(type = type, raw = obj)
   }
+
+  /**
+   * The demo's device registry, `devices.json` beside the states: entity id → [DeviceInfo] (which
+   * device it belongs to), as `HaClient.fetchDevices` reports it from a live Home Assistant. Cards
+   * configured by device (the Bambu Lab cards' `printer:`) find their entities through it.
+   */
+  private fun parseDevices(text: String): Map<String, ee.schimke.ha.design.DeviceInfo> = Json {
+    ignoreUnknownKeys = true
+  }
+    .decodeFromString(
+      kotlinx.serialization.serializer<Map<String, ee.schimke.ha.design.DeviceInfo>>(),
+      text,
+    )
 
   private fun parseStates(text: String): Map<String, EntityState> {
     val root = Json.parseToJsonElement(text).jsonObject

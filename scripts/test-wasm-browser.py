@@ -46,7 +46,10 @@ def route_socket(socket):
             return
         commands.append(message)
         results = {'lovelace/dashboards/list': [], 'get_states': [entity], 'lovelace/config': dashboard,
-                   'subscribe_events': None, 'unsubscribe_events': None, 'call_service': {}}
+                   'subscribe_events': None, 'unsubscribe_events': None, 'call_service': {},
+                   'config/entity_registry/list_for_display': {'entity_categories': {}, 'entities': [
+                       {'ei': 'switch.lamp', 'pl': 'demo', 'di': 'lamp-device'}]},
+                   'config/device_registry/list': [{'id': 'lamp-device', 'manufacturer': 'Demo', 'model': 'Lamp'}]}
         assert kind in results, f'Unexpected Home Assistant command: {kind}'
         if kind == 'subscribe_events':
             assert message['event_type'] == 'state_changed'

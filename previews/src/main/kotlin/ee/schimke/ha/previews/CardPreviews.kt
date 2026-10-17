@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
+import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.FixedHaClock
 import ee.schimke.ha.rc.LocalHaClock
@@ -760,6 +761,113 @@ fun BambuPrintControl_Dark() =
 
 private fun bambuPrintControlCard() =
   card("""{"type":"custom:ha-bambulab-print_control-card","printer":"<device-id-placeholder>"}""")
+
+@Preview(
+  name = "bambu print-control paused (light)",
+  showBackground = false,
+  widthDp = 381,
+  heightDp = 124,
+)
+@Composable
+fun BambuPrintControlPaused_Light() =
+  CardHost(HaTheme.Light) {
+    RenderChild(
+      bambuPrintControlCard(),
+      Fixtures.bambuPrintControlPaused,
+      RemoteModifier.fillMaxWidth(),
+    )
+  }
+
+@Preview(
+  name = "bambu print-control unavailable (light)",
+  showBackground = false,
+  widthDp = 381,
+  heightDp = 124,
+)
+@Composable
+fun BambuPrintControlUnavailable_Light() =
+  CardHost(HaTheme.Light) {
+    RenderChild(
+      bambuPrintControlCard(),
+      Fixtures.bambuPrintControlUnavailable,
+      RemoteModifier.fillMaxWidth(),
+    )
+  }
+
+@Preview(
+  name = "bambu print-control unavailable (dark)",
+  showBackground = false,
+  widthDp = 381,
+  heightDp = 124,
+)
+@Composable
+fun BambuPrintControlUnavailable_Dark() =
+  CardHost(HaTheme.Dark) {
+    RenderChild(
+      bambuPrintControlCard(),
+      Fixtures.bambuPrintControlUnavailable,
+      RemoteModifier.fillMaxWidth(),
+    )
+  }
+
+@Preview(
+  name = "bambu print-control idle (light)",
+  showBackground = false,
+  widthDp = 381,
+  heightDp = 80,
+)
+@Composable
+fun BambuPrintControlIdle_Light() =
+  CardHost(HaTheme.Light) {
+    RenderChild(bambuPrintControlCard(), bambuIdleWithButtons, RemoteModifier.fillMaxWidth())
+  }
+
+@Preview(
+  name = "bambu print-control ambiguous printer (light)",
+  showBackground = false,
+  widthDp = 381,
+  heightDp = 110,
+)
+@Composable
+fun BambuPrintControlAmbiguous_Light() =
+  CardHost(HaTheme.Light) {
+    RenderChild(bambuPrintControlCard(), Fixtures.bambuTwoPrinters, RemoteModifier.fillMaxWidth())
+  }
+
+@Preview(
+  name = "bambu print-control ambiguous printer (dark)",
+  showBackground = false,
+  widthDp = 381,
+  heightDp = 110,
+)
+@Composable
+fun BambuPrintControlAmbiguous_Dark() =
+  CardHost(HaTheme.Dark) {
+    RenderChild(bambuPrintControlCard(), Fixtures.bambuTwoPrinters, RemoteModifier.fillMaxWidth())
+  }
+
+@Preview(
+  name = "bambu print-status ambiguous printer (light)",
+  showBackground = false,
+  widthDp = 381,
+  heightDp = 110,
+)
+@Composable
+fun BambuPrintStatusAmbiguous_Light() =
+  CardHost(HaTheme.Light) {
+    RenderChild(bambuPrintStatusCard(), Fixtures.bambuTwoPrinters, RemoteModifier.fillMaxWidth())
+  }
+
+/** The demo's idle A1 mini with its (unavailable) print buttons: nothing to control. */
+private val bambuIdleWithButtons =
+  HaSnapshot(
+    states =
+      Fixtures.bambuIdle.states +
+        listOf("pause", "resume", "stop").associate { action ->
+          val id = "button.a1mini_sn1_${action}_printing"
+          id to EntityState(id, "unavailable")
+        }
+  )
 
 // ——— bambu ams ———
 
