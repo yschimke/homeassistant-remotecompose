@@ -9,23 +9,43 @@ import org.intellij.markdown.flavours.gfm.GFMTokenTypes
 import org.intellij.markdown.parser.MarkdownParser
 
 /**
+ * Inline emphasis on a [MarkdownInline.Text] run, as CommonMark (and so HA's markdown card, which
+ * renders through marked) defines it: `*x*` / `_x_` italic, `**x**` / `__x__` bold, `***x***` both,
+ * and `` `x` `` inline code. The flags combine, so nesting (`**bold _and italic_**`) keeps both.
+ */
+data class MarkdownStyle(
+  val bold: Boolean = false,
+  val italic: Boolean = false,
+  val code: Boolean = false,
+) {
+  val isPlain: Boolean
+    get() = !bold && !italic && !code
+
+  companion object {
+    val Plain = MarkdownStyle()
+    val Code = MarkdownStyle(code = true)
+  }
+}
+
+/**
  * One inline run inside a [MarkdownBlock]. The parser keeps links and images as their own spans
  * instead of flattening the whole block to plain text, so [RemoteHaMarkdown] can lay a paragraph
- * out as a flow row of styled runs — link labels in the accent colour, badge images fetched by URL
- * — rather than dropping the URLs on the floor.
+ * out as a flow row of styled runs — link labels in the accent colour, badge images fetched by URL,
+ * emphasised words in italic / bold / monospace — rather than dropping the markup on the floor.
  */
 sealed interface MarkdownInline {
   /** Visible text this span contributes to the block (empty for images). */
   val text: String
 
   /**
-   * Plain run; rendered with the block's own text style. [boundText] carries the live
-   * `RemoteString` when [text] holds a `{{ states('x') }}` binding token, so the rich-inline path
-   * keeps updating instead of drawing the literal token.
+   * Text run; rendered with the block's own text style plus its [style] emphasis. [boundText]
+   * carries the live `RemoteString` when [text] holds a `{{ states('x') }}` binding token, so the
+   * rich-inline path keeps updating instead of drawing the literal token.
    */
   data class Text(
     override val text: String,
     val boundText: androidx.compose.remote.creation.compose.state.RemoteString? = null,
+    val style: MarkdownStyle = MarkdownStyle.Plain,
   ) : MarkdownInline
 
   /**
@@ -52,8 +72,9 @@ sealed interface MarkdownInline {
 /**
  * Block-level markdown element. [inlines] carries the block's inline runs (text / links / images);
  * [text] is the concatenated visible text, kept for height heuristics and the simple `{{
- * states('x') }}` binding path. Plain blocks (no links or images) still render as a single
- * RemoteText; only [hasInlineMarkup] blocks take the flow-row path.
+ * states('x') }}` binding path. Blocks without links, images or mixed emphasis still render as a
+ * single RemoteText — in the block's uniform [style] — and only [hasInlineMarkup] blocks take the
+ * flow-row path.
  */
 data class MarkdownBlock(
   val kind: Kind,
@@ -70,19 +91,32 @@ data class MarkdownBlock(
   }
 
   /**
-   * True when the block carries links or images — these need the inline flow-row path in
-   * [RemoteHaMarkdown]. A plain block renders as one
-   * [androidx.compose.remote.creation.compose.layout.RemoteText].
+   * True when the block carries links, images, or text runs in more than one [MarkdownStyle] —
+   * these need the inline flow-row path in [RemoteHaMarkdown]. Any other block renders as one
+   * [androidx.compose.remote.creation.compose.layout.RemoteText] in [style].
    */
   val hasInlineMarkup: Boolean
-    get() = inlines.any { it is MarkdownInline.Link || it is MarkdownInline.Image }
+    get() =
+      inlines.any { it is MarkdownInline.Link || it is MarkdownInline.Image } || textStyles.size > 1
+
+  /**
+   * The emphasis every text run of the block shares (`_Mobile companion for MeshCore_` is italic
+   * throughout), or [MarkdownStyle.Plain] when the runs differ — those take the flow-row path.
+   */
+  val style: MarkdownStyle
+    get() = textStyles.singleOrNull() ?: MarkdownStyle.Plain
+
+  private val textStyles: Set<MarkdownStyle>
+    get() = inlines.filterIsInstance<MarkdownInline.Text>().mapTo(mutableSetOf()) { it.style }
 }
 
 /**
  * Markdown → block list using JetBrains' multiplatform parser. The parser owns block boundaries
  * (CommonMark + GFM extensions); we walk the AST and emit one [MarkdownBlock] per top-level block.
- * Inline syntax is split into [MarkdownInline] runs so links and images survive to the renderer;
- * emphasis / code markup collapses to plain text.
+ * Inline syntax is split into [MarkdownInline] runs so links and images survive to the renderer,
+ * and emphasis / inline code become [MarkdownStyle]d text runs. Delimiters the parser does not pair
+ * (an unmatched `*`, an intraword `_`, an escaped `\*`) stay literal text, as CommonMark has it.
+ * Strikethrough markup still collapses to plain text.
  */
 object Markdown {
   private val flavour = GFMFlavourDescriptor()
@@ -124,7 +158,14 @@ object Markdown {
           .lineSequence()
           .map { it.trim() }
           .filter { it.isNotEmpty() && !it.startsWith("```") && !it.startsWith("~~~") }
-          .forEach { out += MarkdownBlock(MarkdownBlock.Kind.Paragraph, it) }
+          .forEach {
+            out +=
+              MarkdownBlock(
+                MarkdownBlock.Kind.Paragraph,
+                it,
+                inlines = listOf(MarkdownInline.Text(it, style = MarkdownStyle.Code)),
+              )
+          }
       }
       MarkdownElementTypes.BLOCK_QUOTE -> node.children.forEach { visit(it, src, out) }
       else ->
@@ -156,56 +197,110 @@ object Markdown {
   // --- inline walk -------------------------------------------------------
 
   private fun inlineSpans(node: ASTNode, src: String): List<MarkdownInline> {
-    val out = mutableListOf<MarkdownInline>()
-    val sb = StringBuilder()
-    appendInline(node, src, sb, out)
-    flush(sb, out)
-    return out
+    val runs = Runs()
+    appendInline(node, src, MarkdownStyle.Plain, runs)
+    runs.flush()
+    return runs.out
   }
 
-  private fun flush(sb: StringBuilder, out: MutableList<MarkdownInline>) {
-    if (sb.isNotEmpty()) {
-      out += MarkdownInline.Text(sb.toString())
-      sb.setLength(0)
+  /** Accumulates text into one run per contiguous [MarkdownStyle]. */
+  private class Runs {
+    val out = mutableListOf<MarkdownInline>()
+    private val sb = StringBuilder()
+    private var style = MarkdownStyle.Plain
+
+    fun text(value: CharSequence, style: MarkdownStyle) {
+      if (style != this.style) {
+        flush()
+        this.style = style
+      }
+      sb.append(value)
+    }
+
+    fun span(span: MarkdownInline) {
+      flush()
+      out += span
+    }
+
+    fun flush() {
+      if (sb.isNotEmpty()) {
+        out += MarkdownInline.Text(sb.toString(), style = style)
+        sb.setLength(0)
+      }
     }
   }
 
-  private fun appendInline(
-    node: ASTNode,
-    src: String,
-    sb: StringBuilder,
-    out: MutableList<MarkdownInline>,
-  ) {
+  private fun appendInline(node: ASTNode, src: String, style: MarkdownStyle, runs: Runs) {
     when (node.type) {
       MarkdownElementTypes.IMAGE -> {
-        flush(sb, out)
-        out += imageSpan(node, src, href = null)
+        runs.span(imageSpan(node, src, href = null))
         return
       }
       MarkdownElementTypes.AUTOLINK -> {
-        flush(sb, out)
         val url = node.getTextInNode(src).toString().trim().removePrefix("<").removeSuffix(">")
-        out += MarkdownInline.Link(url, url)
+        runs.span(MarkdownInline.Link(url, url))
         return
       }
       MarkdownElementTypes.INLINE_LINK,
       MarkdownElementTypes.FULL_REFERENCE_LINK,
       MarkdownElementTypes.SHORT_REFERENCE_LINK -> {
-        flush(sb, out)
-        appendLink(node, src, out)
+        runs.flush()
+        appendLink(node, src, runs.out)
         return
       }
     }
     if (node.children.isEmpty()) {
-      when (node.type) {
-        MarkdownTokenTypes.EOL,
-        MarkdownTokenTypes.HARD_LINE_BREAK -> sb.append('\n')
-        in MARKUP_TOKENS -> Unit
-        else -> sb.append(node.getTextInNode(src))
+      when {
+        node.type == MarkdownTokenTypes.EOL || node.type == MarkdownTokenTypes.HARD_LINE_BREAK ->
+          runs.text("\n", MarkdownStyle.Plain)
+        isMarkup(node) -> Unit
+        else -> runs.text(leafText(node, src), style)
       }
     } else {
-      node.children.forEach { appendInline(it, src, sb, out) }
+      val inner =
+        when (node.type) {
+          MarkdownElementTypes.EMPH -> style.copy(italic = true)
+          MarkdownElementTypes.STRONG -> style.copy(bold = true)
+          MarkdownElementTypes.CODE_SPAN -> style.copy(code = true)
+          else -> style
+        }
+      node.children.forEach { appendInline(it, src, inner, runs) }
     }
+  }
+
+  /**
+   * True for a delimiter token the parser paired into markup — the `*` / `_` of an emphasis or
+   * strong element, a code span's backticks, a strikethrough's tildes, link brackets, heading and
+   * list markers. An emphasis delimiter or backtick the parser left unpaired is literal text.
+   */
+  private fun isMarkup(node: ASTNode): Boolean {
+    val parent = node.parent?.type
+    return when (node.type) {
+      MarkdownTokenTypes.EMPH ->
+        parent == MarkdownElementTypes.EMPH || parent == MarkdownElementTypes.STRONG
+      MarkdownTokenTypes.BACKTICK,
+      MarkdownTokenTypes.ESCAPED_BACKTICKS -> parent == MarkdownElementTypes.CODE_SPAN
+      else -> node.type in MARKUP_TOKENS
+    }
+  }
+
+  /**
+   * A leaf's visible text. A backslash escape (`\*`, `\_`, `\#`) drops its backslash outside code
+   * spans, where CommonMark keeps backslashes literal.
+   */
+  private fun leafText(node: ASTNode, src: String): CharSequence {
+    val text = node.getTextInNode(src)
+    if (text.indexOf('\\') < 0 || insideCodeSpan(node)) return text
+    return BACKSLASH_ESCAPE.replace(text, "$1")
+  }
+
+  private fun insideCodeSpan(node: ASTNode): Boolean {
+    var p = node.parent
+    while (p != null) {
+      if (p.type == MarkdownElementTypes.CODE_SPAN) return true
+      p = p.parent
+    }
+    return false
   }
 
   private fun appendLink(node: ASTNode, src: String, out: MutableList<MarkdownInline>) {
@@ -255,11 +350,11 @@ object Markdown {
   private fun appendPlain(node: ASTNode, src: String, sb: StringBuilder) {
     if (node.type == MarkdownElementTypes.IMAGE) return
     if (node.children.isEmpty()) {
-      when (node.type) {
-        MarkdownTokenTypes.EOL,
-        MarkdownTokenTypes.HARD_LINE_BREAK -> sb.append(' ')
-        in MARKUP_TOKENS -> Unit
-        else -> sb.append(node.getTextInNode(src))
+      when {
+        node.type == MarkdownTokenTypes.EOL || node.type == MarkdownTokenTypes.HARD_LINE_BREAK ->
+          sb.append(' ')
+        isMarkup(node) -> Unit
+        else -> sb.append(leafText(node, src))
       }
     } else {
       node.children.forEach { appendPlain(it, src, sb) }
@@ -277,8 +372,9 @@ object Markdown {
   }
 
   /**
-   * Collapse horizontal whitespace, merge adjacent text runs, drop the empties, and trim the
-   * block's leading / trailing whitespace.
+   * Collapse horizontal whitespace, merge adjacent text runs of one style, drop the empties, and
+   * trim the block's leading / trailing whitespace. A whitespace-only run carries no visible style,
+   * so it joins the run before it: `*a* *b*` is one italic run.
    */
   private fun normalize(spans: List<MarkdownInline>): List<MarkdownInline> {
     val merged = mutableListOf<MarkdownInline>()
@@ -286,31 +382,33 @@ object Markdown {
       if (span is MarkdownInline.Text) {
         val collapsed = span.text.replace(HORIZONTAL_WHITESPACE, " ")
         val last = merged.lastOrNull()
-        if (last is MarkdownInline.Text) {
-          merged[merged.lastIndex] = MarkdownInline.Text(last.text + collapsed)
+        if (last is MarkdownInline.Text && (last.style == span.style || collapsed.isBlank())) {
+          merged[merged.lastIndex] = last.copy(text = last.text + collapsed)
+        } else if (last is MarkdownInline.Text && last.text.isBlank()) {
+          merged[merged.lastIndex] = span.copy(text = last.text + collapsed)
         } else {
-          merged += MarkdownInline.Text(collapsed)
+          merged += span.copy(text = collapsed)
         }
       } else {
         merged += span
       }
     }
     (merged.firstOrNull() as? MarkdownInline.Text)?.let {
-      merged[0] = MarkdownInline.Text(it.text.trimStart())
+      merged[0] = it.copy(text = it.text.trimStart())
     }
     (merged.lastOrNull() as? MarkdownInline.Text)?.let {
-      merged[merged.lastIndex] = MarkdownInline.Text(it.text.trimEnd())
+      merged[merged.lastIndex] = it.copy(text = it.text.trimEnd())
     }
     return merged.filterNot { it is MarkdownInline.Text && it.text.isEmpty() }
   }
 
   private val HORIZONTAL_WHITESPACE = Regex("[ \\t\\x0B\\f\\r]+")
 
+  /** A CommonMark backslash escape: `\` before ASCII punctuation. */
+  private val BACKSLASH_ESCAPE = Regex("""\\([!-/:-@\[-`{-~])""")
+
   private val MARKUP_TOKENS =
     setOf(
-      MarkdownTokenTypes.EMPH,
-      MarkdownTokenTypes.BACKTICK,
-      MarkdownTokenTypes.ESCAPED_BACKTICKS,
       MarkdownTokenTypes.LBRACKET,
       MarkdownTokenTypes.RBRACKET,
       MarkdownTokenTypes.LPAREN,

@@ -1,5 +1,6 @@
 package ee.schimke.ha.rc
 
+import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.cards.MarkdownCardConverter
@@ -9,7 +10,10 @@ import ee.schimke.ha.rc.components.MarkdownInline
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 
 class MarkdownCardConverterTest {
 
@@ -138,5 +142,35 @@ class MarkdownCardConverterTest {
       )
 
     assertEquals("- **Temp**: ${haExprToken(0)} °C", template.rendered)
+  }
+
+  private fun markdown(content: String) =
+    CardConfig(
+      type = "markdown",
+      raw =
+        buildJsonObject {
+          put("type", "markdown")
+          put("content", content)
+        },
+    )
+
+  @Test
+  fun wholeBlockEmphasisIsPartOfTheDesignKey() {
+    val converter = MarkdownCardConverter()
+    val properties =
+      assertNotNull(
+        converter.designProperties(
+          markdown("## **Title**\n\n_Tagline_\n\n- ***both***\n- `code`\n\nplain"),
+          snapshot,
+        )
+      )
+    assertEquals("H2b,Pi,Bbi,Bc,P", properties["blocks"])
+    // The synthetic template source parses back to the same keyed structure.
+    assertNotNull(converter.designTemplate(properties))
+  }
+
+  @Test
+  fun mixedEmphasisKeepsTheConverter() {
+    assertNull(MarkdownCardConverter().designProperties(markdown("some **bold** words"), snapshot))
   }
 }

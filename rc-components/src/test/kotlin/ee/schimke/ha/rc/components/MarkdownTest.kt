@@ -153,6 +153,7 @@ class MarkdownTest {
       blocks[1].inlines.filterIsInstance<MarkdownInline.Link>().single().url,
     )
     assertEquals("Mobile companion for MeshCore", blocks[2].text)
+    assertEquals(MarkdownStyle(italic = true), blocks[2].style)
     val badge = blocks[3].inlines.filterIsInstance<MarkdownInline.Image>().single()
     assertEquals("https://img/badge.svg", badge.url)
     assertEquals("https://ci/url", badge.href)
@@ -184,9 +185,120 @@ class MarkdownTest {
 
   @Test
   fun plainParagraphHasNoInlineMarkup() {
-    val blocks = Markdown.parse("just **bold** text")
+    val blocks = Markdown.parse("just plain text")
     assertEquals(1, blocks.size)
     assertTrue(!blocks[0].hasInlineMarkup)
-    assertEquals("just bold text", blocks[0].text)
+    assertEquals(MarkdownStyle.Plain, blocks[0].style)
+  }
+
+  // --- emphasis ------------------------------------------------------------
+
+  private fun runs(source: String): List<Pair<String, MarkdownStyle>> =
+    Markdown.parse(source).single().inlines.map {
+      val text = it as MarkdownInline.Text
+      text.text to text.style
+    }
+
+  private val italic = MarkdownStyle(italic = true)
+  private val bold = MarkdownStyle(bold = true)
+  private val both = MarkdownStyle(bold = true, italic = true)
+
+  @Test
+  fun asteriskAndUnderscoreItalic() {
+    assertEquals(
+      listOf("a " to MarkdownStyle.Plain, "b" to italic, " c" to MarkdownStyle.Plain),
+      runs("a *b* c"),
+    )
+    assertEquals(
+      listOf("a " to MarkdownStyle.Plain, "b" to italic, " c" to MarkdownStyle.Plain),
+      runs("a _b_ c"),
+    )
+  }
+
+  @Test
+  fun doubleAsteriskAndUnderscoreBold() {
+    assertEquals(listOf("a " to MarkdownStyle.Plain, "b" to bold), runs("a **b**"))
+    assertEquals(listOf("a " to MarkdownStyle.Plain, "b" to bold), runs("a __b__"))
+  }
+
+  @Test
+  fun tripleAsteriskIsBoldAndItalic() {
+    assertEquals(listOf("both" to both), runs("***both***"))
+  }
+
+  @Test
+  fun nestedEmphasisCombines() {
+    assertEquals(
+      listOf("bold " to bold, "and italic" to both, " end" to bold),
+      runs("**bold _and italic_ end**"),
+    )
+  }
+
+  @Test
+  fun inlineCodeIsMonospaceAndLiteral() {
+    assertEquals(
+      listOf("run " to MarkdownStyle.Plain, "a*b*c \\_" to MarkdownStyle.Code),
+      runs("run `a*b*c \\_`"),
+    )
+  }
+
+  @Test
+  fun intrawordUnderscoreStaysPlain() {
+    assertEquals(
+      listOf("use snake_case_name here" to MarkdownStyle.Plain),
+      runs("use snake_case_name here"),
+    )
+    // `*` is allowed intraword by CommonMark; `_` is not.
+    assertEquals(
+      listOf("foo" to MarkdownStyle.Plain, "bar" to italic, "baz" to MarkdownStyle.Plain),
+      runs("foo*bar*baz"),
+    )
+  }
+
+  @Test
+  fun unmatchedMarkersStayLiteral() {
+    assertEquals(listOf("2 * 3 = 6" to MarkdownStyle.Plain), runs("2 * 3 = 6"))
+    assertEquals(listOf("*not closed" to MarkdownStyle.Plain), runs("*not closed"))
+    assertEquals(listOf("__half" to MarkdownStyle.Plain), runs("__half"))
+    // An empty emphasis is not emphasis: HA (marked) shows the delimiters.
+    assertEquals(listOf("__" to MarkdownStyle.Plain), runs("__"))
+    assertEquals(listOf("a `tick" to MarkdownStyle.Plain), runs("a `tick"))
+  }
+
+  @Test
+  fun escapedMarkersAreLiteral() {
+    assertEquals(listOf("*not italic*" to MarkdownStyle.Plain), runs("\\*not italic\\*"))
+    assertEquals(listOf("_kept_" to MarkdownStyle.Plain), runs("\\_kept\\_"))
+  }
+
+  @Test
+  fun wholeBlockEmphasisIsTheBlockStyle() {
+    val block = Markdown.parse("_Mobile companion for MeshCore_").single()
+    assertEquals(italic, block.style)
+    assertTrue(!block.hasInlineMarkup, "a uniformly italic block stays a single text")
+    // Whitespace between two runs of one style carries no style of its own.
+    assertEquals(italic, Markdown.parse("*a* *b*").single().style)
+  }
+
+  @Test
+  fun mixedEmphasisTakesTheInlinePath() {
+    val block = Markdown.parse("just **bold** text").single()
+    assertEquals("just bold text", block.text)
+    assertTrue(block.hasInlineMarkup)
+    assertEquals(MarkdownStyle.Plain, block.style)
+  }
+
+  @Test
+  fun emphasisInHeadingsAndBullets() {
+    val blocks = Markdown.parse("## **Title**\n\n- _one_\n- two")
+    assertEquals(bold, blocks[0].style)
+    assertEquals(italic, blocks[1].style)
+    assertEquals(MarkdownStyle.Plain, blocks[2].style)
+  }
+
+  @Test
+  fun fencedCodeLinesAreMonospace() {
+    val blocks = Markdown.parse("```\ncode line\n```")
+    assertEquals(MarkdownStyle.Code, blocks.single().style)
   }
 }
