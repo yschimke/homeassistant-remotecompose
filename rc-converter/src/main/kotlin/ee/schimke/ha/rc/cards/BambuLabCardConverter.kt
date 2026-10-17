@@ -44,6 +44,7 @@ import ee.schimke.ha.rc.components.currentRemoteHaTheme
 import ee.schimke.ha.rc.formatState
 import ee.schimke.ha.rc.formatValueWithUnit
 import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.contentOrNull
@@ -326,6 +327,21 @@ private fun readSpoolSlots(
   }
 }
 
+/**
+ * How full a tray's spool is, 0..100, or null when it isn't known: the integration reports `-1` for
+ * a spool the AMS can't estimate (a third-party spool without an RFID tag), and nothing when
+ * `remain_enabled` is off. Unknown draws "—", never "-1 %".
+ */
+internal fun bambuRemainPercent(attrs: Map<String, JsonElement>): Int? {
+  if (attrs["remain_enabled"]?.jsonPrimitive?.content?.toBooleanStrictOrNull() == false) return null
+  return attrs["remain"]
+    ?.jsonPrimitive
+    ?.content
+    ?.toDoubleOrNull()
+    ?.takeIf { it in 0.0..100.0 }
+    ?.toInt()
+}
+
 /** The tray's number within its AMS (`…_tray_3` → 3). */
 private fun trayNumber(slot: ee.schimke.ha.rc.components.HaBambuSpoolSlot): Int =
   slot.entityId!!.substringAfterLast('_').toInt()
@@ -346,10 +362,7 @@ private fun spoolSlot(
   val attrs = entity.attributes
   val material = entity.state.takeUnless { it == "unknown" || it == "unavailable" } ?: "Empty"
   val color = parseHexArgb(attrs["color"]?.jsonPrimitive?.content)
-  val remain =
-    (attrs["remain"]?.jsonPrimitive?.content?.toIntOrNull())?.takeIf {
-      attrs["remain_enabled"]?.jsonPrimitive?.content?.toBooleanStrictOrNull() != false
-    }
+  val remain = bambuRemainPercent(attrs)
   val active = attrs["active"]?.jsonPrimitive?.content?.toBooleanStrictOrNull() == true
   return ee.schimke.ha.rc.components.HaBambuSpoolSlot(
     entityId = entity.entityId,

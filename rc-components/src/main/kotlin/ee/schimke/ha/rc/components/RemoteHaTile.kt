@@ -2,7 +2,6 @@
 
 package ee.schimke.ha.rc.components
 
-import androidx.compose.remote.creation.compose.capture.toRemoteImageVector
 import androidx.compose.remote.creation.compose.layout.RemoteAlignment
 import androidx.compose.remote.creation.compose.layout.RemoteArrangement
 import androidx.compose.remote.creation.compose.layout.RemoteBox
@@ -24,7 +23,6 @@ import androidx.compose.remote.creation.compose.state.rf
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.wear.compose.remote.material3.RemoteIcon
 
 /**
  * HA `tile` card — modern primary-info card (`home-assistant/frontend` → `hui-tile-card.ts`).
@@ -85,10 +83,10 @@ private fun TileInfoRow(data: HaTileData, look: HaEntityLook, renderChip: Boolea
     val badge = data.badge
     if (badge != null) {
       TileIconWithBadge(badge, iconSlotDp = if (renderChip) 32 else 24) {
-        TileIcon(data, accent, renderChip)
+        TileIcon(data, look, renderChip)
       }
     } else {
-      TileIcon(data, accent, renderChip)
+      TileIcon(data, look, renderChip)
     }
     RemoteColumn(
       modifier =
@@ -124,10 +122,14 @@ private fun TileInfoRow(data: HaTileData, look: HaEntityLook, renderChip: Boolea
   }
 }
 
-/** The tile's state icon: in a tinted chip for an entity with on/off chrome, else plain. */
+/**
+ * The tile's state icon: in a tinted chip for an entity with on/off chrome, else plain. An on/off
+ * entity swaps between its two glyphs through [look]'s `is_on` ([HaStateIcon]).
+ */
 @Composable
 @RemoteComposable
-private fun TileIcon(data: HaTileData, accent: RemoteColor, renderChip: Boolean) {
+private fun TileIcon(data: HaTileData, look: HaEntityLook, renderChip: Boolean) {
+  val accent = look.accent
   if (renderChip) {
     RemoteBox(
       modifier =
@@ -136,19 +138,23 @@ private fun TileIcon(data: HaTileData, accent: RemoteColor, renderChip: Boolean)
           .background(accent.copy(alpha = accent.alpha * 0.2f.rf)),
       contentAlignment = RemoteAlignment.Center,
     ) {
-      RemoteIcon(
-        imageVector = data.icon.toRemoteImageVector(),
+      HaStateIcon(
+        icon = data.icon,
+        accent = data.accent,
+        look = look,
+        tint = accent,
         contentDescription = entityName(data.entityId, data.name),
         modifier = RemoteModifier.size(20.rdp),
-        tint = accent,
       )
     }
   } else {
-    RemoteIcon(
-      imageVector = data.icon.toRemoteImageVector(),
+    HaStateIcon(
+      icon = data.icon,
+      accent = data.accent,
+      look = look,
+      tint = accent,
       contentDescription = entityName(data.entityId, data.name),
       modifier = RemoteModifier.size(24.rdp),
-      tint = accent,
     )
   }
 }
@@ -184,11 +190,14 @@ fun RemoteHaTileCompact(data: HaTileData, modifier: RemoteModifier = RemoteModif
         .padding(horizontal = 12.rdp, vertical = 3.rdp)
   ) {
     RemoteRow(verticalAlignment = RemoteAlignment.CenterVertically) {
-      RemoteIcon(
-        imageVector = data.icon.toRemoteImageVector(),
+      // Static like the accent: this tier registers no `is_on` binding.
+      HaStateIcon(
+        icon = data.icon,
+        accent = data.accent,
+        look = look,
+        tint = accent,
         contentDescription = entityName(data.entityId, data.name),
         modifier = RemoteModifier.size(24.rdp),
-        tint = accent,
       )
       RemoteColumn(modifier = RemoteModifier.padding(start = 10.rdp)) {
         RemoteText(
@@ -266,11 +275,14 @@ fun RemoteHaIconChip(data: HaTileData, modifier: RemoteModifier = RemoteModifier
     verticalArrangement = RemoteArrangement.Center,
     horizontalAlignment = RemoteAlignment.CenterHorizontally,
   ) {
-    RemoteIcon(
-      imageVector = data.icon.toRemoteImageVector(),
+    // Static like the accent: this tier registers no `is_on` binding.
+    HaStateIcon(
+      icon = data.icon,
+      accent = data.accent,
+      look = look,
+      tint = accent,
       contentDescription = entityName(data.entityId, data.name),
       modifier = RemoteModifier.size(32.rdp),
-      tint = accent,
     )
     RemoteBox(modifier = RemoteModifier.padding(top = 6.rdp)) {
       // The chip's only text, so it reads as the value: primary ink, a step above a caption.

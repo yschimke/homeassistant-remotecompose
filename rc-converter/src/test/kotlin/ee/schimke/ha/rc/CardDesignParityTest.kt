@@ -252,6 +252,19 @@ class CardDesignParityTest {
       dark = false,
     )
 
+  /**
+   * `is_on` is false while unavailable, but HA draws a light's default `lightbulb` then, not
+   * `lightbulb-off`: the template, captured off, follows `<slot>.is_available` to the same glyph.
+   */
+  @Test
+  fun lightUnavailable() =
+    assertParity(
+      "light-unavailable",
+      tile("light.kitchen", "Kitchen"),
+      entity("light.kitchen", "unavailable"),
+      dark = false,
+    )
+
   @Test
   fun lightOffDark() =
     assertParity(
@@ -894,6 +907,27 @@ class CardDesignParityTest {
       ),
       listStates,
       dark = false,
+    )
+
+  /** The grid's own `columns` / `square` are structure: the template keeps them. */
+  @Test
+  fun gridOfButtonsWithColumns() =
+    assertParity(
+      "grid-columns",
+      card("grid") {
+        put("columns", 4)
+        put("square", false)
+        put(
+          "cards",
+          kotlinx.serialization.json.JsonArray(
+            listOf("light.kitchen", "switch.fan", "light.kitchen", "switch.fan").map { id ->
+              card("button") { put("entity", id) }.raw
+            }
+          ),
+        )
+      },
+      listStates,
+      dark = true,
     )
 
   @Test

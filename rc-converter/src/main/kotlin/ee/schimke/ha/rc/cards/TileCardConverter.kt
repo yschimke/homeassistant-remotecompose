@@ -36,6 +36,7 @@ import ee.schimke.ha.rc.components.tileNaturalHeightDp
 import ee.schimke.ha.rc.defaultTapActionFor
 import ee.schimke.ha.rc.formatState
 import ee.schimke.ha.rc.icons.HaIconMap
+import ee.schimke.ha.rc.icons.withIcons
 import ee.schimke.ha.rc.parseHaAction
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -113,6 +114,9 @@ class TileCardConverter : CardConverter {
 
   override fun naturalWidthClass(card: CardConfig, snapshot: HaSnapshot): CardWidthClass =
     CardWidthClass.Compact
+
+  /** Icon plus a name and state line that still read: HA's own tile minimum is about this. */
+  override fun gridMinCellWidthDp(card: CardConfig, snapshot: HaSnapshot): Int = 140
 
   /**
    * A plain tile (`entity` plus optional `name` / `icon`) renders from a card design, with the
@@ -212,6 +216,7 @@ class TileCardConverter : CardConverter {
     val tapCfg = card.raw["tap_action"]?.jsonObject
     val tapAction =
       if (tapCfg != null) parseHaAction(tapCfg, entityId) else defaultTapActionFor(entityId)
+    val icons = HaIconMap.entityIcons(card.raw["icon"]?.jsonPrimitive?.content, entity)
 
     // A baked secondary line never goes under `<id>.state`, which the host pushes `formatState`
     // to (live-card-updates.md); such a tile re-encodes instead.
@@ -230,8 +235,8 @@ class TileCardConverter : CardConverter {
       entityId = entityId,
       name = name,
       state = state,
-      icon = HaIconMap.resolve(card.raw["icon"]?.jsonPrimitive?.content, entity),
-      accent = accent,
+      icon = icons.icon,
+      accent = accent.withIcons(icons),
       tapAction = tapAction,
       badge = TileContent.badge(entity)?.let { HaTileBadge(it.icon, it.color, it.description) },
       features = TileContent.features(card, entity),

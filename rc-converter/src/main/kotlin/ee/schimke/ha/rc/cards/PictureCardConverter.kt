@@ -30,6 +30,9 @@ class PictureCardConverter : CardConverter {
 
   override fun naturalHeightDp(card: CardConfig, snapshot: HaSnapshot): Int = 140
 
+  override fun gridMinCellWidthDp(card: CardConfig, snapshot: HaSnapshot): Int =
+    PICTURE_MIN_CELL_WIDTH_DP
+
   /**
    * A picture card renders from a card design: its name and image caption are `card.name` and
    * `card.image`, so only which of them it has is structure. Its tap is the card's own.
@@ -95,10 +98,12 @@ class PictureCardConverter : CardConverter {
     val image = card.raw["image"]?.jsonPrimitive?.content
     val name = card.raw["name"]?.jsonPrimitive?.content
     val tap = parseHaAction(card.raw["tap_action"]?.jsonObject, defaultEntityId = null)
-    // The image is the identity: dashboard keeps the HA reference
-    // band; launcher / Wear fill the whole cell so the picture (the
-    // placeholder until a host wires an image channel) is edge-to-edge
-    // with the name as a bottom scrim, never letterboxed.
+    // The image is the identity: the dashboard keeps HA's
+    // `aspect_ratio` (height follows the live width); launcher / Wear
+    // fill the whole cell so the picture (the placeholder until a host
+    // wires an image channel) is edge-to-edge with the name as a bottom
+    // scrim, never letterboxed.
+    val fixed = LocalCardSizeMode.current == CardSizeMode.Fixed
     RemoteHaPicture(
       HaPictureCardData(
         name = name,
@@ -107,7 +112,8 @@ class PictureCardConverter : CardConverter {
         tapAction = tap,
       ),
       modifier = modifier,
-      fillHeight = LocalCardSizeMode.current == CardSizeMode.Fixed,
+      fillHeight = fixed,
+      aspectRatio = if (fixed) null else pictureAspectRatio(card),
     )
   }
 }

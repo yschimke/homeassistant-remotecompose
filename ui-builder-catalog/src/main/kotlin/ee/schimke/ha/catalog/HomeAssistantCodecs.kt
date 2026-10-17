@@ -157,8 +157,9 @@ private class MappedCodec<W, T>(
 
 /**
  * The closed icon set a design may pick, keyed as the UI builder's Material icon table keys them
- * (`filled/lightbulb`). It is every glyph `rc-converter`'s `HaIconMap` resolves an entity or an
- * `mdi:` name to, plus the ones the Tier-2 preview fixtures draw.
+ * (`filled/lightbulb`): the Material glyphs the Tier-2 preview fixtures and catalog defaults draw.
+ * Live cards draw Home Assistant's own Material Design Icons instead (`rc-converter`'s
+ * `HaIconMap`), which this table doesn't list.
  */
 val HomeAssistantIcons: Map<String, ImageVector> =
   listOf(

@@ -59,7 +59,7 @@ internal class HaEntityLook(
   /** `<id>.is_on`, for toggle chrome; null when the entity has no on/off state. */
   val isOn: RemoteBoolean?,
   /** `<id>.is_available`, or null when availability is baked ([staticallyAvailable]). */
-  private val isAvailable: RemoteBoolean?,
+  val isAvailable: RemoteBoolean?,
   private val staticallyAvailable: Boolean,
   /** The neutral colour that replaces the on/off accent while unavailable. */
   private val neutral: RemoteColor,

@@ -75,6 +75,7 @@ import ee.schimke.ha.rc.ProvideCardRegistry
 import ee.schimke.ha.rc.RenderChild
 import ee.schimke.ha.rc.androidXExperimentalWrap
 import ee.schimke.ha.rc.cardDataSignature
+import ee.schimke.ha.rc.cardIconSignature
 import ee.schimke.ha.rc.cardWidthClass
 import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.cards.shutter.withEnhancedShutter
@@ -1061,9 +1062,31 @@ private fun CardSlot(
   val relativeTimeTick = ee.schimke.ha.rc.relativeTimeTickFor(tickEntities, snapshot)
   val dataSignature =
     remember(card, snapshot, relativeTimeTick) { registry.cardDataSignature(card, snapshot) }
+  // Glyphs that follow an entity's state beyond on/off (a sun's day / night icon, an alarm panel's
+  // armed / disarmed shield) are baked, so they re-encode the card when they change. Values still
+  // arrive as bindings: this joins the key without turning `liveBindings` off.
+  val iconSignature = remember(card, snapshot) { cardIconSignature(card, snapshot) }
   val cacheKey =
-    remember(card, style, dark, cardStyle, captureEpoch, templateValues, dataSignature) {
-      CardSlotCacheKey(card, style, dark, cardStyle.id, captureEpoch, templateValues, dataSignature)
+    remember(
+      card,
+      style,
+      dark,
+      cardStyle,
+      captureEpoch,
+      templateValues,
+      dataSignature,
+      iconSignature,
+    ) {
+      CardSlotCacheKey(
+        card,
+        style,
+        dark,
+        cardStyle.id,
+        captureEpoch,
+        templateValues,
+        dataSignature,
+        iconSignature,
+      )
     }
   val context = androidx.compose.ui.platform.LocalContext.current
   // Templatable cards always render from a card design: the design server's when one is cached for
@@ -1137,6 +1160,7 @@ private data class CardSlotCacheKey(
   val captureEpoch: Long,
   val templateValues: Map<String, String?>,
   val dataSignature: String?,
+  val iconSignature: String?,
 )
 
 /**

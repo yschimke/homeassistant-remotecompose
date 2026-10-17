@@ -2,7 +2,6 @@
 
 package ee.schimke.ha.rc.components
 
-import androidx.compose.remote.creation.compose.capture.toRemoteImageVector
 import androidx.compose.remote.creation.compose.layout.RemoteAlignment
 import androidx.compose.remote.creation.compose.layout.RemoteArrangement
 import androidx.compose.remote.creation.compose.layout.RemoteBox
@@ -23,7 +22,6 @@ import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.wear.compose.remote.material3.RemoteIcon
 
 /**
  * Cells per compatible row. Compact Wear slots keep only this many cells; launcher widgets retain
@@ -155,11 +153,13 @@ fun RemoteHaGlanceCell(data: HaGlanceCellData, modifier: RemoteModifier = Remote
       style = haTextStyle(),
     )
     RemoteBox(modifier = RemoteModifier.padding(vertical = 4.rdp)) {
-      RemoteIcon(
-        imageVector = data.icon.toRemoteImageVector(),
+      HaStateIcon(
+        icon = data.icon,
+        accent = data.accent,
+        look = look,
+        tint = accent,
         contentDescription = entityName(data.entityId, data.name),
         modifier = RemoteModifier.size(28.rdp),
-        tint = accent,
       )
     }
     RemoteText(
