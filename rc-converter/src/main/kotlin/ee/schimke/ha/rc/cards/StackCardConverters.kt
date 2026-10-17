@@ -13,12 +13,14 @@ import ee.schimke.ha.rc.CardConverter
 import ee.schimke.ha.rc.CardSizeMode
 import ee.schimke.ha.rc.CardSnapshotBindings
 import ee.schimke.ha.rc.DesignTemplateInput
+import ee.schimke.ha.rc.HaClock
 import ee.schimke.ha.rc.LocalCardRegistry
 import ee.schimke.ha.rc.LocalCardSizeMode
 import ee.schimke.ha.rc.LocalGridSquareCells
 import ee.schimke.ha.rc.LocalWidgetCaptureSizeDp
 import ee.schimke.ha.rc.RemoteSizeBreakpoint
 import ee.schimke.ha.rc.RenderChild
+import ee.schimke.ha.rc.SystemHaClock
 import ee.schimke.ha.rc.UNSUPPORTED_CARD_TYPE
 import ee.schimke.ha.rc.components.HaAction
 import ee.schimke.ha.rc.components.HaGridLayout
@@ -46,7 +48,13 @@ class VerticalStackCardConverter : CardConverter {
     CompositeDesign.template(cardType, properties)
 
   override fun designBindings(card: CardConfig, snapshot: HaSnapshot): CardSnapshotBindings =
-    CompositeDesign.bindings(card, snapshot)
+    CompositeDesign.bindings(card, snapshot, SystemHaClock)
+
+  override fun designBindings(
+    card: CardConfig,
+    snapshot: HaSnapshot,
+    clock: HaClock,
+  ): CardSnapshotBindings = CompositeDesign.bindings(card, snapshot, clock)
 
   override fun designAction(
     card: CardConfig,
@@ -71,7 +79,13 @@ class HorizontalStackCardConverter : CardConverter {
     CompositeDesign.template(cardType, properties)
 
   override fun designBindings(card: CardConfig, snapshot: HaSnapshot): CardSnapshotBindings =
-    CompositeDesign.bindings(card, snapshot)
+    CompositeDesign.bindings(card, snapshot, SystemHaClock)
+
+  override fun designBindings(
+    card: CardConfig,
+    snapshot: HaSnapshot,
+    clock: HaClock,
+  ): CardSnapshotBindings = CompositeDesign.bindings(card, snapshot, clock)
 
   override fun designAction(
     card: CardConfig,
@@ -122,7 +136,13 @@ class GridCardConverter : CardConverter {
     )
 
   override fun designBindings(card: CardConfig, snapshot: HaSnapshot): CardSnapshotBindings =
-    CompositeDesign.bindings(card, snapshot)
+    CompositeDesign.bindings(card, snapshot, SystemHaClock)
+
+  override fun designBindings(
+    card: CardConfig,
+    snapshot: HaSnapshot,
+    clock: HaClock,
+  ): CardSnapshotBindings = CompositeDesign.bindings(card, snapshot, clock)
 
   override fun designAction(
     card: CardConfig,

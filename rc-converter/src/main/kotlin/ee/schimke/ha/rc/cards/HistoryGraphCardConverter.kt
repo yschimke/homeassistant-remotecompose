@@ -244,7 +244,10 @@ private fun hoursToShow(card: CardConfig): Double =
   card.raw["hours_to_show"]?.jsonPrimitive?.contentOrNull?.toDoubleOrNull()?.takeIf { it > 0 }
     ?: DEFAULT_HOURS
 
-/** The card's subtitle: "Last 24 hours", "Last 7 days", "Last 2 weeks". */
+/**
+ * The card's subtitle: "Last 24 hours", "Last 7 days", "Last 2 weeks". Shared with the `sensor`
+ * card, whose graph window is the same `hours_to_show` key with the same default of 24.
+ */
 internal fun historyRangeLabel(card: CardConfig): String =
   historyWindow(hoursToShow(card)).replaceFirstChar { it.uppercase() }
 
