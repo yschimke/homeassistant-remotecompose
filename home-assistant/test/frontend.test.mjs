@@ -10,6 +10,12 @@ const playerPath = process.env.RC_PLAYER_JS ?? `${root}design-server/build/gener
 if (!existsSync(playerPath)) throw new Error('Build the TS player or set RC_PLAYER_JS');
 const template = readFileSync(`${root}design-server/src/test/resources/tile-light.rc`);
 const sha = createHash('sha256').update(template).digest('hex');
+// Keep a real RC document but declare one string only its converter could provide.
+const unsupportedTemplate = Buffer.from(template);
+const variableOffset = unsupportedTemplate.indexOf(Buffer.from('light.s0.name'));
+assert.ok(variableOffset >= 0);
+Buffer.from('card.bad.name').copy(unsupportedTemplate, variableOffset);
+const unsupportedSha = createHash('sha256').update(unsupportedTemplate).digest('hex');
 const frontend = `${root}home-assistant/custom_components/terrazzo/frontend/`;
 
 test('HA custom card uses signed-in state/actions, updates live and renders real RC bytes', async () => {
@@ -25,7 +31,7 @@ test('HA custom card uses signed-in state/actions, updates live and renders real
         const file = name === 'ha-card.js' ? `${root}embed/ha-card.js` : name === 'rc-player.js' ? playerPath : `${frontend}${name}`;
         return route.fulfill({ contentType: 'text/javascript', body: readFileSync(file) });
       }
-      if (path.endsWith('.rc')) return route.fulfill({ body: template, contentType: 'application/octet-stream' });
+      if (path.endsWith('.rc')) return route.fulfill({ body: path.endsWith(`${unsupportedSha}.rc`) ? unsupportedTemplate : template, contentType: 'application/octet-stream' });
       return route.fulfill({ contentType: 'text/html', body: `<!doctype html><meta charset="utf-8"><style>body{font:16px system-ui;background:#f4f4f4;margin:24px}remote-compose-card{width:400px;background:white;border-radius:16px}</style>
         <p>Home Assistant · Remote Compose</p><script>window.NativeHaCard = class extends HTMLElement {}; customElements.define('ha-card', NativeHaCard);</script>
         <script type="module" src="/terrazzo-static/remote-compose-card.js"></script>` });
@@ -91,6 +97,10 @@ test('HA custom card uses signed-in state/actions, updates live and renders real
     assert.equal(await page.evaluate(() => card.pushed.get('USER:light.s0.state')), 'Unavailable');
     assert.deepEqual(errors, []);
     assert.deepEqual(await page.evaluate(() => Object.keys(localStorage)), []);
+    await page.evaluate((design) => card.setConfig({...card.config,design}), unsupportedSha);
+    await page.waitForFunction(() => card.dataset.status === 'error');
+    assert.match(await page.locator('remote-compose-card .status').textContent(), /converter bindings unavailable/);
+    assert.equal(await page.evaluate(() => card.player), null, 'never show fixture values from an incompatible template');
     // HA can also lazy-load its chrome after the resource; do not claim its tag first.
     const early = await browser.newPage();
     await early.route('https://early.test/**', (route) => {
@@ -125,12 +135,15 @@ test('panel passes only same-origin session capability, refreshes auth and clean
       const token = await panel.frame.terrazzoHost.getAccessToken();
       const path = panel.frame.src;
       const dashboard = panel.frame.terrazzoHost.getDashboard();
+      const height = panel.frame.getBoundingClientRect().height;
+      const viewportHeight = window.innerHeight;
       panel.remove();
       let denied = false;
       try { await panel.frame.terrazzoHost.getAccessToken(); } catch { denied = true; }
       document.body.append(panel);
-      return {fresh: token === 'fresh-fixture', path, dashboard, denied, reattached: panel.frame.src};
+      return {height, viewportHeight, fresh: token === 'fresh-fixture', path, dashboard, denied, reattached: panel.frame.src};
     });
+    assert.equal(result.height, result.viewportHeight, 'panel must fill HA height without a percentage-height ancestor');
     assert.equal(result.fresh, true);
     assert.equal(result.path, 'https://ha.test/terrazzo-static/wasm/index.html?ha-panel');
     assert.equal(result.dashboard, 'wall-panel');

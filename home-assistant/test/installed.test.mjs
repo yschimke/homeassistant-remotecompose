@@ -59,7 +59,8 @@ test('installed HA /terrazzo and Lovelace custom card render and act as the sign
     await page.goto(`${base}/wall-panel/0`);
     const card = page.locator('remote-compose-card');
     await card.waitFor({timeout:60_000});
-    await page.waitForFunction(() => {
+    try {
+      await page.waitForFunction(() => {
       const visit = (node) => {
         if (node.localName === 'remote-compose-card') return node;
         for (const child of [...(node.shadowRoot?.children ?? []), ...(node.children ?? [])]) {
@@ -68,7 +69,17 @@ test('installed HA /terrazzo and Lovelace custom card render and act as the sign
       };
       const card = visit(document.documentElement);
       return card?.dataset.status === 'live' && card.pushed.get('USER:light.s0.state') === 'On';
-    });
+      });
+    } catch (error) {
+      await page.screenshot({path:`${evidence}/lovelace-failure.png`});
+      const detail = await card.evaluate((element) => ({
+        status:element.dataset.status, message:element.statusLine?.textContent,
+        state:element._hass?.states['light.wall_light']?.state,
+        bindings:[...element.pushed],
+      }));
+      console.error('Synthetic fixture card diagnostics:', JSON.stringify(detail));
+      throw error;
+    }
     await page.screenshot({path:`${evidence}/lovelace-before.png`});
     await card.locator('canvas').click({position:{x:100,y:35}});
     await page.waitForFunction(async () => {

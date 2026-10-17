@@ -3,7 +3,7 @@ export class TerrazzoPanel extends HTMLElement {
   constructor() {
     super();
     this.attachShadow({ mode: 'open' }).innerHTML = `
-      <style>:host { display:block;height:100%; } iframe { border:0;width:100%;height:100%; }</style>
+      <style>:host { display:block;height:100vh;height:100dvh; } iframe { display:block;border:0;width:100%;height:100%; }</style>
       <iframe title="Terrazzo dashboard" allow="fullscreen"></iframe>`;
     this.frame = this.shadowRoot.querySelector('iframe');
     this.frame.terrazzoHost = {
