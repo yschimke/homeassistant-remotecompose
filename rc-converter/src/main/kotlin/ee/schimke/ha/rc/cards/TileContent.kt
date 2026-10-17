@@ -1,14 +1,5 @@
 package ee.schimke.ha.rc.cards
 
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AcUnit
-import androidx.compose.material.icons.filled.Air
-import androidx.compose.material.icons.filled.LocalFireDepartment
-import androidx.compose.material.icons.filled.PowerSettingsNew
-import androidx.compose.material.icons.filled.Schedule
-import androidx.compose.material.icons.filled.Thermostat
-import androidx.compose.material.icons.filled.ThermostatAuto
-import androidx.compose.material.icons.filled.WaterDrop
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import ee.schimke.ha.model.CardConfig
@@ -21,6 +12,7 @@ import ee.schimke.ha.rc.components.HaTileFeaturePosition
 import ee.schimke.ha.rc.components.HaTileModeOption
 import ee.schimke.ha.rc.formatState
 import ee.schimke.ha.rc.formatValueWithUnit
+import ee.schimke.ha.rc.icons.HaIconMap
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.time.ZoneId
@@ -171,7 +163,7 @@ internal object TileContent {
     if (action == "off") return null
     val mode = HVAC_ACTION_TO_MODE[action] ?: return null
     return Badge(
-      icon = HVAC_ACTION_ICONS[action] ?: Icons.Filled.Thermostat,
+      icon = HVAC_ACTION_ICONS[action] ?: THERMOSTAT,
       color = HaStateColor.climateModeColor(mode),
       description = humanize(action),
     )
@@ -303,16 +295,16 @@ internal object TileContent {
       "fan_only" to "Fan only",
     )
 
-  /** HA's `CLIMATE_HVAC_MODE_ICONS`, as the nearest Material icons. */
+  /** HA's `CLIMATE_HVAC_MODE_ICONS` (the frontend's `data/climate.ts`), as bundled MDI glyphs. */
   private val HVAC_MODE_ICONS: Map<String, ImageVector> =
-    mapOf(
-      "cool" to Icons.Filled.AcUnit,
-      "dry" to Icons.Filled.WaterDrop,
-      "fan_only" to Icons.Filled.Air,
-      "auto" to Icons.Filled.ThermostatAuto,
-      "heat" to Icons.Filled.LocalFireDepartment,
-      "off" to Icons.Filled.PowerSettingsNew,
-      "heat_cool" to Icons.Filled.Thermostat,
+    mdiIcons(
+      "cool" to "snowflake",
+      "dry" to "water-percent",
+      "fan_only" to "fan",
+      "auto" to "thermostat-auto",
+      "heat" to "fire",
+      "off" to "power",
+      "heat_cool" to "sun-snowflake-variant",
     )
 
   /** HA's `CLIMATE_HVAC_ACTION_TO_MODE`. */
@@ -328,17 +320,26 @@ internal object TileContent {
       "preheating" to "heat",
     )
 
-  /** HA's `hvac_action` attribute icons, as the nearest Material icons. */
+  /** HA's `CLIMATE_HVAC_ACTION_ICONS` (the frontend's `data/climate.ts`), as bundled MDI glyphs. */
   private val HVAC_ACTION_ICONS: Map<String, ImageVector> =
-    mapOf(
-      "cooling" to Icons.Filled.AcUnit,
-      "defrosting" to Icons.Filled.AcUnit,
-      "drying" to Icons.Filled.WaterDrop,
-      "fan" to Icons.Filled.Air,
-      "heating" to Icons.Filled.LocalFireDepartment,
-      "idle" to Icons.Filled.Schedule,
-      "preheating" to Icons.Filled.LocalFireDepartment,
+    mdiIcons(
+      "cooling" to "snowflake",
+      "defrosting" to "snowflake-melt",
+      "drying" to "water-percent",
+      "fan" to "fan",
+      "heating" to "fire",
+      "idle" to "clock-outline",
+      "off" to "power",
+      "preheating" to "heat-wave",
     )
+
+  /** A climate glyph when an action or mode has none of its own: HA's `mdi:thermostat`. */
+  private val THERMOSTAT: ImageVector = requireNotNull(HaIconMap.mdi("thermostat"))
+
+  private fun mdiIcons(vararg names: Pair<String, String>): Map<String, ImageVector> =
+    names.associate { (key, name) ->
+      key to requireNotNull(HaIconMap.mdi(name)) { "mdi:$name is not bundled" }
+    }
 
   /**
    * HA's `climate-hvac-modes` feature: the entity's `hvac_modes` (narrowed and ordered by the
@@ -355,7 +356,7 @@ internal object TileContent {
     val options = modes.map { mode ->
       HaTileModeOption(
         label = HVAC_MODE_LABELS[mode] ?: humanize(mode),
-        icon = HVAC_MODE_ICONS[mode] ?: Icons.Filled.Thermostat,
+        icon = HVAC_MODE_ICONS[mode] ?: THERMOSTAT,
         selected = entity.state == mode,
         action =
           if (!available) HaAction.None

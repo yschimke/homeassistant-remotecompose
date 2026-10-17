@@ -1,8 +1,5 @@
 package ee.schimke.ha.rc.cards
 
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.LocalFireDepartment
-import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.ui.graphics.Color
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.EntityState
@@ -12,6 +9,7 @@ import ee.schimke.ha.rc.HaStateColor
 import ee.schimke.ha.rc.components.HaAction
 import ee.schimke.ha.rc.components.HaTileFeature
 import ee.schimke.ha.rc.components.HaTileFeaturePosition
+import ee.schimke.ha.rc.icons.HaIconMap
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
@@ -156,15 +154,19 @@ class TileContentTest {
   @Test
   fun theBadgeFollowsHvacAction() {
     val heating = assertNotNull(TileContent.badge(climate(action = "heating")))
-    assertEquals(Icons.Filled.LocalFireDepartment, heating.icon)
+    // The frontend's CLIMATE_HVAC_ACTION_ICONS, as MDI glyphs.
+    assertEquals(HaIconMap.mdi("fire"), heating.icon)
     assertEquals(HaStateColor.climateModeColor("heat"), heating.color)
 
     val idle = assertNotNull(TileContent.badge(climate(action = "idle")))
-    assertEquals(Icons.Filled.Schedule, idle.icon)
+    assertEquals(HaIconMap.mdi("clock-outline"), idle.icon)
     assertNull(idle.color, "idle maps to the off mode: the neutral colour")
 
     val cooling = assertNotNull(TileContent.badge(climate(state = "cool", action = "cooling")))
     assertEquals(HaStateColor.climateModeColor("cool"), cooling.color)
+    assertEquals(HaIconMap.mdi("snowflake"), cooling.icon)
+    val defrosting = assertNotNull(TileContent.badge(climate(action = "defrosting")))
+    assertEquals(HaIconMap.mdi("snowflake-melt"), defrosting.icon)
 
     assertNull(TileContent.badge(climate(action = "off")))
     assertNull(TileContent.badge(climate(action = null)))
@@ -241,6 +243,11 @@ class TileContentTest {
     val modes = assertIs<HaTileFeature.ModeSelect>(features[1])
     // HA lists the modes in reverse HVAC_MODES order: off first.
     assertEquals(listOf("Off", "Heat"), modes.options.map { it.label })
+    // The frontend's CLIMATE_HVAC_MODE_ICONS, as MDI glyphs.
+    assertEquals(
+      listOf(HaIconMap.mdi("power"), HaIconMap.mdi("fire")),
+      modes.options.map { it.icon },
+    )
     assertEquals(listOf(false, true), modes.options.map { it.selected })
     // A dropdown can't open in a document: it draws as labelled buttons.
     assertEquals(false, modes.showIcons)
