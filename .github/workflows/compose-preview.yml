@@ -30,7 +30,10 @@ jobs:
     # bot-authored PR (or a bot dispatch); humans and main always run it.
     if: ${{ !(startsWith(github.head_ref || github.ref_name, 'release-please--') && (github.event.pull_request.user.login || github.actor) == 'github-actions[bot]') }}
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    # Render, a11y and the PR-comment comparison all scale with how many
+    # previews a PR changes: one touching ~120 (a grid or dashboard-wide
+    # change) took 28-31 minutes, so 30 left no headroom.
+    timeout-minutes: 45
     permissions:
       # The composite action either pushes to compose-preview/main (baseline
       # mode) or appends to compose-preview/pr + posts a sticky PR comment

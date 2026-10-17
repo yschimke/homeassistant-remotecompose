@@ -9,7 +9,9 @@ import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.CardConverter
 import ee.schimke.ha.rc.CardSnapshotBindings
 import ee.schimke.ha.rc.DesignTemplateInput
+import ee.schimke.ha.rc.HaClock
 import ee.schimke.ha.rc.RenderChild
+import ee.schimke.ha.rc.SystemHaClock
 import ee.schimke.ha.rc.components.HaAction
 import ee.schimke.ha.rc.components.ProvideChildCardBindings
 import ee.schimke.ha.rc.components.RemoteHaGrid
@@ -33,7 +35,13 @@ class VerticalStackCardConverter : CardConverter {
     CompositeDesign.template(cardType, properties)
 
   override fun designBindings(card: CardConfig, snapshot: HaSnapshot): CardSnapshotBindings =
-    CompositeDesign.bindings(card, snapshot)
+    CompositeDesign.bindings(card, snapshot, SystemHaClock)
+
+  override fun designBindings(
+    card: CardConfig,
+    snapshot: HaSnapshot,
+    clock: HaClock,
+  ): CardSnapshotBindings = CompositeDesign.bindings(card, snapshot, clock)
 
   override fun designAction(
     card: CardConfig,
@@ -58,7 +66,13 @@ class HorizontalStackCardConverter : CardConverter {
     CompositeDesign.template(cardType, properties)
 
   override fun designBindings(card: CardConfig, snapshot: HaSnapshot): CardSnapshotBindings =
-    CompositeDesign.bindings(card, snapshot)
+    CompositeDesign.bindings(card, snapshot, SystemHaClock)
+
+  override fun designBindings(
+    card: CardConfig,
+    snapshot: HaSnapshot,
+    clock: HaClock,
+  ): CardSnapshotBindings = CompositeDesign.bindings(card, snapshot, clock)
 
   override fun designAction(
     card: CardConfig,
@@ -83,7 +97,13 @@ class GridCardConverter : CardConverter {
     CompositeDesign.template(cardType, properties)
 
   override fun designBindings(card: CardConfig, snapshot: HaSnapshot): CardSnapshotBindings =
-    CompositeDesign.bindings(card, snapshot)
+    CompositeDesign.bindings(card, snapshot, SystemHaClock)
+
+  override fun designBindings(
+    card: CardConfig,
+    snapshot: HaSnapshot,
+    clock: HaClock,
+  ): CardSnapshotBindings = CompositeDesign.bindings(card, snapshot, clock)
 
   override fun designAction(
     card: CardConfig,

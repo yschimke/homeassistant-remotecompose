@@ -43,6 +43,10 @@ import androidx.compose.ui.text.style.TextOverflow
  * statistics-graph line mode reuse this layout, and their rows must keep their current value when
  * there is no history.
  *
+ * [compactEmptyState] is for launcher and Wear cells, whose height is fixed: the whole empty card
+ * is one line, the title (else the series' names) and a short "No history" caption beside it, the
+ * same shape as an empty row.
+ *
  * Sparkline is captured from numeric `HistoryPoint`s. Each sample is bound to
  * `<entityId>.numeric.<index>`, so a host can push a sliding window of values without re-encoding
  * the document. The y-axis range is captured from the initial values; samples that drift well
@@ -54,6 +58,7 @@ fun RemoteHaHistoryGraph(
   data: HaHistoryGraphData,
   modifier: RemoteModifier = RemoteModifier,
   singleEmptyState: Boolean = false,
+  compactEmptyState: Boolean = false,
 ) {
   val theme = haTheme()
   RemoteBox(
@@ -63,7 +68,12 @@ fun RemoteHaHistoryGraph(
         .then(cardChrome(theme.cardBackground, theme.divider))
         .padding(horizontal = 14.rdp, vertical = 10.rdp)
   ) {
+    val empty = data.showsSingleEmptyState(singleEmptyState)
     RemoteColumn(verticalArrangement = RemoteArrangement.spacedBy(6.rdp)) {
+      if (empty && compactEmptyState) {
+        CompactEmptyState(data, theme)
+        return@RemoteColumn
+      }
       if (data.title != null) {
         RemoteText(
           text = cardTitle(data.title),
@@ -75,7 +85,7 @@ fun RemoteHaHistoryGraph(
           overflow = TextOverflow.Ellipsis,
         )
       }
-      if (data.showsSingleEmptyState(singleEmptyState)) {
+      if (empty) {
         EmptyState(data, theme)
       } else {
         RemoteText(
@@ -149,12 +159,14 @@ fun RemoteHaHistoryGraphIdentity(
           Sparkline(row.entityId, row.points, row.accent, theme)
         }
       } else {
+        // The cell's height is fixed and small: a short caption, like the tile's compact name +
+        // value, never a wrapped sentence.
         RemoteText(
-          text = if (data.rows.isEmpty()) "No entities".rs else cardText("empty", data.emptyLabel),
-          color = theme.secondaryText,
-          fontSize = HaType.Body,
+          text = (if (data.rows.isEmpty()) "No entities" else COMPACT_EMPTY_LABEL).rs,
+          color = theme.primaryText,
+          fontSize = HaType.Label,
           style = haTextStyle(),
-          maxLines = 2,
+          maxLines = 1,
           overflow = TextOverflow.Ellipsis,
         )
       }
@@ -177,12 +189,8 @@ private fun EmptyState(data: HaHistoryGraphData, theme: RemoteHaTheme) {
     maxLines = 2,
     overflow = TextOverflow.Ellipsis,
   )
-  val names =
-    data.rows
-      .map { entityName(it.entityId, it.name) }
-      .reduce { line, name -> line + LEGEND_SEPARATOR + name }
   RemoteText(
-    text = names,
+    text = legend(data),
     color = theme.primaryText,
     fontSize = HaType.Caption,
     style = haTextStyle(),
@@ -190,6 +198,47 @@ private fun EmptyState(data: HaHistoryGraphData, theme: RemoteHaTheme) {
     overflow = TextOverflow.Ellipsis,
   )
 }
+
+/**
+ * The empty state in a fixed-height launcher or Wear cell: one line, the title (else the series'
+ * names) at row-label size with a short "No history" caption beside it — the same shape as an empty
+ * row, so it fits a Wear small slot's ~44 dp.
+ */
+@Composable
+private fun CompactEmptyState(data: HaHistoryGraphData, theme: RemoteHaTheme) {
+  RemoteRow(
+    modifier = RemoteModifier.fillMaxWidth(),
+    verticalAlignment = RemoteAlignment.CenterVertically,
+    horizontalArrangement = RemoteArrangement.SpaceBetween,
+  ) {
+    RemoteText(
+      text = if (data.title != null) cardTitle(data.title) else legend(data),
+      color = theme.primaryText,
+      fontSize = HaType.Label,
+      fontWeight = FontWeight.Medium,
+      style = haTextStyle(),
+      maxLines = 1,
+      overflow = TextOverflow.Ellipsis,
+      modifier = RemoteModifier.weight(1f).padding(end = 8.rdp),
+    )
+    RemoteText(
+      text = COMPACT_EMPTY_LABEL.rs,
+      color = theme.secondaryText,
+      fontSize = HaType.Caption,
+      style = haTextStyle(),
+      maxLines = 1,
+    )
+  }
+}
+
+@Composable
+private fun legend(data: HaHistoryGraphData) =
+  data.rows
+    .map { entityName(it.entityId, it.name) }
+    .reduce { line, name -> line + LEGEND_SEPARATOR + name }
+
+/** The empty state's short form, where the full "No history in the last …" can't fit. */
+const val COMPACT_EMPTY_LABEL: String = "No history"
 
 private const val LEGEND_SEPARATOR = "  ·  "
 

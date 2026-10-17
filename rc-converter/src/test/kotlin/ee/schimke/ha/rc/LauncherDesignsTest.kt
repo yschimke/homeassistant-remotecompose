@@ -447,9 +447,53 @@ class LauncherDesignsTest {
     )
   }
 
-  private fun assertWidgetParity(name: String, card: CardConfig, snapshot: HaSnapshot) {
+  /**
+   * An entities widget roomy enough for its expanded rows, with a light and a switch that are on:
+   * the baked template must draw them on (accent and switch), as the direct capture does, not in
+   * the off state of the template's placeholder entities.
+   */
+  @Test
+  fun bakedExpandedEntitiesWidgetShowsTheLiveOnOffState() =
+    assertWidgetParity(
+      "entities-expanded",
+      CardConfig(
+        "entities",
+        kotlinx.serialization.json.Json.parseToJsonElement(
+          """{"type":"entities","title":"Living Room","entities":
+            ["sensor.temp","light.lamp","switch.coffee","binary_sensor.door"]}"""
+        ) as JsonObject,
+      ),
+      snapshotOf(
+        entity("sensor.temp", "21.5", "friendly_name" to "Living Room"),
+        entity("light.lamp", "on", "friendly_name" to "Office lamp"),
+        entity("switch.coffee", "on", "friendly_name" to "Coffee maker"),
+        entity(
+          "binary_sensor.door",
+          "on",
+          "friendly_name" to "Front door",
+          "device_class" to "door",
+        ),
+      ),
+      widthDp = 288,
+      heightDp = 252,
+      played = true,
+    )
+
+  /**
+   * With [played], both documents play in a player of the widget's size, as a launcher plays a
+   * widget, rather than the wrap-height card preview: a card that fills its widget (the expanded
+   * entities rows share its height) draws nothing in a wrap-height player.
+   */
+  private fun assertWidgetParity(
+    name: String,
+    card: CardConfig,
+    snapshot: HaSnapshot,
+    widthDp: Int = this.widthDp,
+    heightDp: Int = this.heightDp,
+    played: Boolean = false,
+  ) {
     val context = org.robolectric.RuntimeEnvironment.getApplication()
-    val baked = bake(card, snapshot)
+    val baked = bake(card, snapshot, widthDp, heightDp)
     val widthPx = widthDp * density / 160
     val heightPx = heightDp * density / 160
     val direct = runBlocking {
@@ -475,13 +519,23 @@ class LauncherDesignsTest {
     var bytes by mutableStateOf(direct)
     compose.setContent {
       Box(Modifier.size(widthDp.dp, heightDp.dp).testTag("widget")) {
+        if (played) {
+          androidx.compose.runtime.key(bytes) {
+            HaRcComposePlayer(
+              documentBytes = bytes,
+              modifier = Modifier.size(widthDp.dp, heightDp.dp),
+              fallback = { error("the widget plays in the Compose player") },
+            )
+          }
+          return@Box
+        }
         CachedCardPreview(
           cacheKey = "widget-$name",
           profile = widgetsProfile,
           template =
             CardTemplatePlayback(
               bytes,
-              { CardSnapshotBindings(emptyMap(), emptyMap(), emptyMap(), emptyMap()) },
+              { _, _ -> CardSnapshotBindings(emptyMap(), emptyMap(), emptyMap(), emptyMap()) },
               HaAction.None,
             ),
         ) {}

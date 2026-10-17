@@ -511,14 +511,14 @@ private fun pictureEntityCard() =
 // The canvas is sized to that taller content (measured via
 // `scripts/check-preview-waste.py`), not the HA capture.
 
-@Preview(name = "weather-forecast (light)", showBackground = false, widthDp = 381, heightDp = 224)
+@Preview(name = "weather-forecast (light)", showBackground = false, widthDp = 381, heightDp = 232)
 @Composable
 fun WeatherForecast_Light() =
   CardHost(HaTheme.Light) {
     RenderChild(weatherForecastCard(), Fixtures.weather, RemoteModifier.fillMaxWidth())
   }
 
-@Preview(name = "weather-forecast (dark)", showBackground = false, widthDp = 381, heightDp = 224)
+@Preview(name = "weather-forecast (dark)", showBackground = false, widthDp = 381, heightDp = 232)
 @Composable
 fun WeatherForecast_Dark() =
   CardHost(HaTheme.Dark) {

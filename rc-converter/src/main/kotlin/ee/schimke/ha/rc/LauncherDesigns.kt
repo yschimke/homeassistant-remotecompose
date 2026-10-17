@@ -279,15 +279,17 @@ object LauncherDesigns {
    * [templateBytes] with [playback]'s bindings for [snapshot] written in, its slot pictures fetched
    * and embedded, its now-constant state layouts collapsed and the document optimised; null when it
    * can't be (a picture that can't be resolved or fetched, a binding the document can't hold as a
-   * constant). For any host that can't receive bindings: launcher widgets, Wear widgets.
+   * constant). For any host that can't receive bindings: launcher widgets, Wear widgets. A
+   * time-derived binding is read from [clock].
    */
   fun bakeValues(
     templateBytes: ByteArray,
     playback: CardTemplatePlayback,
     snapshot: HaSnapshot,
     fetchImage: (url: String) -> ByteArray? = { null },
+    clock: HaClock = SystemHaClock,
   ): ByteArray? {
-    val bindings = playback.bindings(snapshot)
+    val bindings = playback.bindings(snapshot, clock)
     val values = buildMap {
       for ((name, v) in bindings.strings) put(name, RcHardcodedValue.Text(v))
       for ((name, v) in bindings.booleans) put(name, RcHardcodedValue.BooleanValue(v))
