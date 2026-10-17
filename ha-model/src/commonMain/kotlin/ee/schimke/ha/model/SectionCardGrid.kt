@@ -10,8 +10,11 @@ import kotlinx.serialization.json.doubleOrNull
 
 /**
  * How the cards inside one Lovelace `sections` section are laid out, as the HA frontend computes it
- * in `hui-grid-section.ts`, `compute-card-grid-size.ts` and each card's `getGridOptions()`. Pure,
- * so the app's dashboard screen and the preview harness place cards with the same function.
+ * in `hui-grid-section.ts`, `compute-card-grid-size.ts` and each card's `getGridOptions()`.
+ *
+ * harc doesn't render sections this way: these sizes describe HA's card designs, and harc lays a
+ * section out by its own designs' sizes instead ([SectionCardFlow], design principle 9). This model
+ * stays as the reference for what HA does, and for [gridOptions].
  *
  * HA's rules, reproduced here:
  * - **12 columns per section column.** A section's grid has `12 × column_span` equal columns, where
@@ -27,8 +30,7 @@ import kotlinx.serialization.json.doubleOrNull
  * - **Spans.** A card spans `min(columns, gridColumns)` columns; `"full"` spans the whole row.
  *   Numeric `rows` spans that many rows, and HA fixes the card's height to `rows × 56 + (rows − 1)
  *   × 8` dp ([fixedHeightDp], carried on each placement); `auto` spans one row at the card's
- *   natural height. The renderer (`LovelaceSectionCardGrid`) uses the spans but keeps each card's
- *   natural height, since harc's cards wrap their content rather than fill HA's height.
+ *   natural height.
  * - **Placement.** CSS grid auto-placement in authored order with the default `grid-auto-flow: row`
  *   (sparse, not dense), rows sized to their content (`grid-auto-rows: auto`) and separated by
  *   [ROW_GAP_DP].

@@ -59,7 +59,6 @@ import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.Dashboard
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.model.JinjaTemplate
-import ee.schimke.ha.model.SectionCardGrid
 import ee.schimke.ha.model.SectionsGrid
 import ee.schimke.ha.model.SectionsGridLayout
 import ee.schimke.ha.model.TemplateBindings
@@ -69,7 +68,7 @@ import ee.schimke.ha.rc.CardWidthClass
 import ee.schimke.ha.rc.LocalCardCaptureEpoch
 import ee.schimke.ha.rc.LocalHaActionDispatcher
 import ee.schimke.ha.rc.LocalRcDebugBorders
-import ee.schimke.ha.rc.LovelaceSectionCardGrid
+import ee.schimke.ha.rc.LovelaceSectionCardFlow
 import ee.schimke.ha.rc.LovelaceSectionsGrid
 import ee.schimke.ha.rc.ProvideCardRegistry
 import ee.schimke.ha.rc.RenderChild
@@ -86,6 +85,7 @@ import ee.schimke.ha.rc.components.ThemeStyle
 import ee.schimke.ha.rc.components.cardPalette
 import ee.schimke.ha.rc.converterFor
 import ee.schimke.ha.rc.image.CoilBitmapLoader
+import ee.schimke.ha.rc.sectionFlowItems
 import ee.schimke.terrazzo.LocalHaImageStack
 import ee.schimke.terrazzo.LocalTerrazzoGraph
 import ee.schimke.terrazzo.core.logs.referencedEntities
@@ -544,7 +544,6 @@ private fun LazyListScope.renderView(
             val renderedCards = if (showHeading) headingModel.visibleCards else section.cards
             SectionCards(
               cards = renderedCards,
-              sectionColumnSpan = grid.placements[sectionIndex].columnSpan,
               snapshot = snapshot,
               registry = registry,
               baseUrl = baseUrl,
@@ -580,7 +579,6 @@ private fun LazyListScope.renderView(
           SectionColumn(
             section = section,
             sectionIndex = sectionIndex,
-            sectionColumnSpan = grid.placements[sectionIndex].columnSpan,
             snapshot = snapshot,
             registry = registry,
             haTheme = haTheme,
@@ -830,7 +828,6 @@ private fun SectionGrid(
       SectionColumn(
         section = section,
         sectionIndex = sectionIndex,
-        sectionColumnSpan = placement.columnSpan,
         snapshot = snapshot,
         registry = registry,
         haTheme = haTheme,
@@ -849,7 +846,6 @@ private fun SectionGrid(
 private fun SectionColumn(
   section: SectionLayout,
   sectionIndex: Int,
-  sectionColumnSpan: Int,
   snapshot: HaSnapshot,
   registry: ee.schimke.ha.rc.CardRegistry,
   haTheme: HaTheme,
@@ -870,7 +866,6 @@ private fun SectionColumn(
     }
     SectionCards(
       cards = section.cards,
-      sectionColumnSpan = sectionColumnSpan,
       snapshot = snapshot,
       registry = registry,
       baseUrl = baseUrl,
@@ -881,23 +876,23 @@ private fun SectionColumn(
 }
 
 /**
- * One section's cards on HA's section grid ([SectionCardGrid], shared with the preview harness):
- * `12 × sectionColumnSpan` columns, each card spanning its `grid_options` (or its type's default)
- * columns in authored order, so a pair of tiles shares a row instead of stacking full width. Each
- * card is measured at exactly its cell's width, so its converter picks the matching width tier.
+ * One section's cards in HA's order, laid out by their own designs' sizes
+ * ([LovelaceSectionCardFlow], shared with the preview harness; design principle 9): rows fill in
+ * authored order while every card keeps its minimum width, and re-flow when the section's width
+ * changes. Each card is measured at exactly its share of the row, so its converter picks the
+ * matching width tier.
  */
 @Composable
 private fun SectionCards(
   cards: List<CardConfig>,
-  sectionColumnSpan: Int,
   snapshot: HaSnapshot,
   registry: ee.schimke.ha.rc.CardRegistry,
   baseUrl: String?,
   imageLoader: ImageLoader,
   onLongPress: (CardConfig) -> Unit,
 ) {
-  val plan = remember(cards, sectionColumnSpan) { SectionCardGrid.plan(cards, sectionColumnSpan) }
-  LovelaceSectionCardGrid(plan = plan, modifier = Modifier.fillMaxWidth()) {
+  val items = remember(cards, snapshot, registry) { sectionFlowItems(cards, snapshot, registry) }
+  LovelaceSectionCardFlow(items = items, modifier = Modifier.fillMaxWidth()) {
     cards.forEach { card ->
       // Key by the card config so each slot's hosted player is tied
       // to its card identity, not its position in the section — a

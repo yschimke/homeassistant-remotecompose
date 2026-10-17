@@ -29,11 +29,10 @@ import androidx.compose.ui.unit.dp
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.model.Section
-import ee.schimke.ha.model.SectionCardGrid
 import ee.schimke.ha.model.SectionsGrid
 import ee.schimke.ha.model.View
 import ee.schimke.ha.rc.CachedCardPreview
-import ee.schimke.ha.rc.LovelaceSectionCardGrid
+import ee.schimke.ha.rc.LovelaceSectionCardFlow
 import ee.schimke.ha.rc.LovelaceSectionsGrid
 import ee.schimke.ha.rc.ProvideCardRegistry
 import ee.schimke.ha.rc.RenderChild
@@ -45,6 +44,7 @@ import ee.schimke.ha.rc.cards.shutter.withGarageShutter
 import ee.schimke.ha.rc.components.HaTheme
 import ee.schimke.ha.rc.components.ProvideHaTheme
 import ee.schimke.ha.rc.enableRemoteComposeWrapContent
+import ee.schimke.ha.rc.sectionFlowItems
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import kotlinx.serialization.json.JsonArray
@@ -457,7 +457,7 @@ private fun SectionsView(view: View, snapshot: HaSnapshot, bitmapLoader: BitmapL
       if (view.sections.isNotEmpty()) {
         LovelaceSectionsGrid(grid = grid) {
           view.sections.forEachIndexed { i, section ->
-            SectionBlock(section, grid.placements[i].columnSpan, snapshot, bitmapLoader)
+            SectionBlock(section, snapshot, bitmapLoader)
           }
         }
       }
@@ -466,14 +466,13 @@ private fun SectionsView(view: View, snapshot: HaSnapshot, bitmapLoader: BitmapL
 }
 
 /**
- * One section: its title, then its cards on HA's section grid ([SectionCardGrid], the same plan the
- * app uses) — `12 × sectionColumnSpan` columns, each card spanning its `grid_options` columns or
- * its type's HA default, each card measured at exactly its cell's width.
+ * One section: its title, then its cards in HA's order, laid out by their own designs' sizes
+ * ([LovelaceSectionCardFlow], the same layout the app uses; design principle 9), each card measured
+ * at exactly its share of the row.
  */
 @Composable
 private fun SectionBlock(
   section: Section,
-  sectionColumnSpan: Int,
   snapshot: HaSnapshot,
   bitmapLoader: BitmapLoader,
 ) {
@@ -496,11 +495,15 @@ private fun SectionBlock(
           )
         }
       }
-      val plan =
-        remember(section.cards, sectionColumnSpan) {
-          SectionCardGrid.plan(section.cards, sectionColumnSpan)
+      val items =
+        remember(section.cards, snapshot) {
+          sectionFlowItems(
+            section.cards,
+            snapshot,
+            defaultRegistry().withEnhancedShutter().withGarageShutter(),
+          )
         }
-      LovelaceSectionCardGrid(plan = plan, modifier = Modifier.uiFillMaxWidth()) {
+      LovelaceSectionCardFlow(items = items, modifier = Modifier.uiFillMaxWidth()) {
         section.cards.forEach { card ->
           CardSlot(card, snapshot, bitmapLoader, horizontalPadding = 0.dp)
         }
