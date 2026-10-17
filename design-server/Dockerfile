@@ -14,7 +14,7 @@
 # - A public server: sign people in with GitHub (GITHUB_CLIENT_ID, …, UI_BUILDER_GITHUB_CLIENT_ID,
 #   …); see design-server/README.md, which also covers deploying at ha.coo.ee.
 # - Another library: mount it and set DESIGN_LIBRARY.
-ARG UI_BUILDER_VERSION=3.138.0
+ARG UI_BUILDER_VERSION=3.142.0
 
 FROM eclipse-temurin:21-jre AS ui-builder
 ARG UI_BUILDER_VERSION
@@ -37,11 +37,12 @@ COPY app-ui/build/dist/wasmJs/productionExecutable /app/wasm
 ENV DESIGN_LIBRARY=/library \
     PORT=8080 \
     UI_BUILDER_BINARY=/opt/compose-preview-server/bin/compose-preview-server \
+    UI_BUILDER_WEB_DIR=/opt/compose-preview-server/ui-builder \
     UI_BUILDER_HOST=0.0.0.0 \
     UI_BUILDER_PORT=8724 \
     UI_BUILDER_STATE_DIR=/data/ui-builder \
     USER_DESIGNS_DIR=/data/user-designs \
-    UI_BUILDER_ARGS="--catalogs-file /app/catalogs.json --catalog-cache-dir /data/catalog-cache --ui-builder-catalogs remote-m3,ha-cards"
+    UI_BUILDER_ARGS="--catalogs-file /app/catalogs.json --catalog-cache-dir /data/catalog-cache --ui-builder-catalogs remote-m3,ha-cards,lovelace"
 USER designs
 WORKDIR /data
 VOLUME /data

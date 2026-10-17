@@ -1,5 +1,11 @@
 # Embedding UI Builder: host-bound RemoteCompose designs
 
+> Historical Remote Compose embedding proposal (written against server 3.121.0). Dashboard
+> editing now follows the host-owned JSON target described in
+> [Lovelace dashboard editor](../LOVELACE_DASHBOARD_EDITOR.md): the packaged iframe bridge and
+> JSON lane are already available. The proposal below remains context for reusable card
+> presentation contracts; those are separate from editing whole Lovelace dashboard configs.
+
 What UI Builder (compose-preview-server) would need in order to be an editor that a host embeds:
 the host owns the data, the actions and the runtime, and UI Builder designs only the presentation,
 which ships as a RemoteCompose document. Card designs are the first case

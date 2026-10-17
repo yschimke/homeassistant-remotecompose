@@ -12,6 +12,7 @@ on:
       - card-designs/**
       - design-server/**
       - embed/**
+      - lovelace-catalog/**
       - app-ui/**
       - rc-player-ui/**
       - rc-converter/src/main/**
@@ -86,13 +87,21 @@ jobs:
           curl -sf localhost:8081/demo/ | grep -q 'id="app"'
           curl -sf localhost:8081/demo/bootstrap.js | grep -q 'showLoadFailure'
           curl -sf -c cookies.txt -o /dev/null "localhost:8081/edit?token=ci-token"
-          location=$(curl -s -b cookies.txt -o /dev/null -w '%{redirect_url}' -X POST localhost:8081/ui-builder/designs \
-            --data-urlencode 'card={"type":"entities","title":"Living room","entities":["light.kitchen","sensor.temp"]}')
+          location=$(curl -sS --fail-with-body -b cookies.txt -o seed-response.txt -w '%{redirect_url}' -X POST localhost:8081/ui-builder/designs \
+            --data-urlencode 'card={"type":"entities","title":"Living room","entities":["light.kitchen","sensor.temp"]}') || { cat seed-response.txt; exit 1; }
           echo "editor: $location"
           id=$(echo "$location" | sed -E 's#.*/ui-builder/([^?]+)\?.*#\1#')
           test -n "$id"
           curl -sf -o seeded.png "localhost:8724/api/ui-builder/v1/designs/$id/export.png?token=ci-token"
           file seeded.png | grep -q PNG
+          # Resolve the actual published catalog, not just the static dashboard shell.
+          curl -fsS localhost:8081/api/studio/dashboard/catalog -o dashboard-catalog.json
+          python3 -c 'import json; c=json.load(open("dashboard-catalog.json")); assert c["statusSemantics"]["platform"] == "lovelace"'
+          # The dashboard host serves the packaged editor on its own origin even without Caddy.
+          curl -sf localhost:8081/studio/dashboard/editor.html | grep -q '/studio/dashboard/assets/uiBuilder.mjs'
+          curl -sf localhost:8081/studio/dashboard/assets/uiBuilder.mjs -o dashboard-editor.mjs
+          test -s dashboard-editor.mjs
+          curl -sfI localhost:8081/studio/dashboard/assets/uiBuilder.wasm | grep -qi 'application/wasm'
       - name: Open an app draft in the bundled editor in Chromium
         run: STUDIO_SMOKE_REQUIRED=1 STUDIO_SERVER_URL=http://localhost:8081 STUDIO_OPERATOR_TOKEN=ci-token node --test design-server/test/*.test.mjs
       - name: Publish the image to GHCR

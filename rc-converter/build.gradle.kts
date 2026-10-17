@@ -40,6 +40,10 @@ tasks.withType<Test>().configureEach {
     "robolectric.dependency.dir",
     layout.buildDirectory.dir("robolectric-sdk").get().asFile.absolutePath,
   )
+  providers.gradleProperty("lovelaceRenderEvidence").orNull?.let {
+    systemProperty("lovelaceRenderEvidence", file(it).absolutePath)
+    outputs.upToDateWhen { false }
+  }
   // The demo dashboards whose `mdi:` icons HaIconMapTest checks are all bundled.
   val demoDashboards =
     layout.projectDirectory.dir("../terrazzo-core/src/androidMain/resources/dashboards")
