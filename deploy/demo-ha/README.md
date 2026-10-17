@@ -95,7 +95,7 @@ cd deploy/demo-ha
 docker compose up -d homeassistant
 docker compose --profile setup run --rm bootstrap
 docker compose up -d --build gateway
-curl --fail http://127.0.0.1:8125/healthz
+docker compose --profile verify run --rm verify
 ```
 
 Bootstrap generates a random owner password and a 365-day long-lived gateway token. It prints
@@ -108,8 +108,10 @@ would install cloud-backed integrations. The facade does not depend on those ste
 Rotate the token privately before its expiry and recreate the gateway; never send it to the frontend.
 
 HA has no host port, host network, host devices, Docker socket, discovery, recorder or external
-network route. Both Compose networks are internal; only the gateway has a loopback-bound host
-port (8125). The private network contains HA + facade; edge contains facade + Caddy. The public
+network route. Both Compose networks are internal. Neither HA nor the facade publishes host ports:
+Docker internal networks do not provide the host-port reachability a loopback probe would need.
+The private network contains HA + facade; edge contains facade + Caddy and the optional verifier.
+The verifier has no private network or credentials and probes the same facade address as Caddy. The public
 facade makes exactly one fixed upstream request, `GET /api/states`, with its own credential.
 It never relays client headers, bodies, paths or commands. Its public dashboard/config/registries
 are fixed reviewed projections. The native HA state API and service API are never exposed.
@@ -131,6 +133,8 @@ The unit suite starts a fake upstream and verifies both accepted reads and that 
 never reach it. It checks filtering, stale state, malformed frames, subscriptions and changed data.
 `.github/workflows/demo-ha.yml` runs the same tests plus a **real HA container**, private onboarding,
 and the public verifier including a real minute-based update. This VM has no Docker; use GitHub CI
-for that lane. The verifier attempts REST and WebSocket mutations with no admin token and checks
+for that lane. The Compose `verify` profile runs the public verifier inside the isolated edge network, waits up
+to 120 seconds for readiness, then requires the same reads, rejected writes and a live update.
+The verifier attempts REST and WebSocket mutations with no admin token and checks
 that battery state and dashboard remain unchanged. Run it again against the public HTTPS URL after
 deploying; a successful local test is not evidence about the deployed edge.

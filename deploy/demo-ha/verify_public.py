@@ -6,8 +6,19 @@ import json
 import aiohttp
 
 
-async def verify(base, stream):
+async def verify(base, stream, wait_ready=0):
     async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=15)) as session:
+        for attempt in range(wait_ready):
+            try:
+                async with session.get(base + '/healthz') as r:
+                    if r.status == 200:
+                        break
+            except (aiohttp.ClientError, asyncio.TimeoutError):
+                pass
+            await asyncio.sleep(1)
+        else:
+            if wait_ready:
+                raise RuntimeError('Demo did not become healthy within the readiness window')
         async with session.get(base + '/healthz') as r:
             assert r.status == 200, f'healthz: HTTP {r.status}'
             assert (await r.json())['read_only'] is True
@@ -76,5 +87,6 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('base', help='e.g. https://ha.coo.ee/demo-ha')
     parser.add_argument('--stream', action='store_true', help='Wait up to 80 seconds for a real update')
+    parser.add_argument('--wait-ready', type=int, default=0, help='Wait this many seconds for healthy startup')
     args = parser.parse_args()
-    asyncio.run(verify(args.base.rstrip('/'), args.stream))
+    asyncio.run(verify(args.base.rstrip('/'), args.stream, args.wait_ready))

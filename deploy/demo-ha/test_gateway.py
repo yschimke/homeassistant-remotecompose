@@ -8,6 +8,7 @@ from aiohttp import ClientSession, WSMsgType, web
 from aiohttp.test_utils import TestClient, TestServer
 
 from gateway import Gateway, create_app
+from verify_public import verify
 
 
 def state(value='21.5'):
@@ -23,6 +24,7 @@ class GatewayTest(unittest.IsolatedAsyncioTestCase):
         self.requests = []
         entities = json.loads((Path(__file__).parent / 'entities.json').read_text())
         self.rows = [dict(state(), entity_id=entity) for entity in entities]
+        next(s for s in self.rows if s['entity_id'] == 'sensor.demo_battery')['state'] = '78'
         self.rows.append(dict(state(), entity_id='sensor.private_device'))
         async def upstream(request):
             self.requests.append((request.method, request.path, request.headers.get('Authorization')))
@@ -110,6 +112,10 @@ class GatewayTest(unittest.IsolatedAsyncioTestCase):
             await self.g.poll_once(self.session)
         self.assertFalse(self.g.fresh())
         self.assertEqual((await self.client.get('/healthz')).status, 503)
+
+    async def test_public_verifier_runs_without_private_credentials(self):
+        await verify(str(self.client.make_url('')).rstrip('/'), stream=False, wait_ready=1)
+        self.assertEqual(self.requests, [('GET', '/api/states', 'Bearer secret-token')])
 
     async def test_stale_backend_is_not_reported_healthy(self):
         self.g.updated = time.monotonic() - 60
