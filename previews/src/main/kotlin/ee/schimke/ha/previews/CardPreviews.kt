@@ -58,10 +58,11 @@ import java.time.ZonedDateTime
  * 4. The reference dimensions at 2.625 density are:
  *
  *    tile 187 × 56 dp (HA web: 43; taller for the 15sp body) (refs in `references/tile/`) button
- *    187 × 91 dp (refs in `references/button/`) entity 187 × 91 dp (refs in `references/entity/`)
- *    entities 381 × 169 dp (refs in `references/entities/`) glance 381 × 149 dp (refs in
- *    `references/glance/`) markdown 381 × 106 dp (refs in `references/markdown/`) dashboard 381 ×
- *    411 dp (refs in `references/dashboard/`) home 561 × 251 dp (refs in `references/home/`)
+ *    187 × 96 dp (HA web: 91; taller for the 15sp name) (refs in `references/button/`) entity 187 ×
+ *    91 dp (refs in `references/entity/`) entities 381 × 169 dp (refs in `references/entities/`)
+ *    glance 381 × 149 dp (refs in `references/glance/`) markdown 381 × 106 dp (refs in
+ *    `references/markdown/`) dashboard 381 × 411 dp (refs in `references/dashboard/`) home 561 ×
+ *    251 dp (refs in `references/home/`)
  *
  * 5. If the HA references are ever re-captured at a different density, re-run
  *    `scripts/ref-sizes.py` and update these numbers together — don't drift.
@@ -97,14 +98,14 @@ internal fun CardHost(theme: HaTheme, content: @Composable () -> Unit) {
 // preview canvas (matching HA's top-level button card). Buttons nested
 // inside a grid / horizontal-stack use the default wrap-content.
 
-@Preview(name = "button (light)", showBackground = false, widthDp = 187, heightDp = 91)
+@Preview(name = "button (light)", showBackground = false, widthDp = 187, heightDp = 96)
 @Composable
 fun Button_Light(
   @PreviewParameter(KitchenLightStatesProvider::class) param: Pair<String, HaSnapshot>
 ) =
   CardHost(HaTheme.Light) { RenderChild(buttonCard(), param.second, RemoteModifier.fillMaxWidth()) }
 
-@Preview(name = "button (dark)", showBackground = false, widthDp = 187, heightDp = 91)
+@Preview(name = "button (dark)", showBackground = false, widthDp = 187, heightDp = 96)
 @Composable
 fun Button_Dark(
   @PreviewParameter(KitchenLightStatesProvider::class) param: Pair<String, HaSnapshot>
@@ -122,14 +123,14 @@ private fun buttonCard() =
 // homeassistant-remotecompose#418.
 private val KitchenLightOn: HaSnapshot = KitchenLightStatesProvider().values.first().second
 
-@Preview(name = "button on (light)", showBackground = false, widthDp = 187, heightDp = 91)
+@Preview(name = "button on (light)", showBackground = false, widthDp = 187, heightDp = 96)
 @Composable
 fun Button_On_Light() =
   CardHost(HaTheme.Light) {
     RenderChild(buttonCard(), KitchenLightOn, RemoteModifier.fillMaxWidth())
   }
 
-@Preview(name = "button on (dark)", showBackground = false, widthDp = 187, heightDp = 91)
+@Preview(name = "button on (dark)", showBackground = false, widthDp = 187, heightDp = 96)
 @Composable
 fun Button_On_Dark() =
   CardHost(HaTheme.Dark) {

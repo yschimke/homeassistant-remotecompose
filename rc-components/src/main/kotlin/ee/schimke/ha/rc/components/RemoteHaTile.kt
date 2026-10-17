@@ -110,6 +110,73 @@ fun RemoteHaTile(data: HaTileData, modifier: RemoteModifier = RemoteModifier) {
 }
 
 /**
+ * The tile for a short Fixed-mode canvas (the Wear small slot, whose content box is ~44dp): the
+ * same icon, name and state, with the name a step down to [HaType.Label] and the padding tightened,
+ * because the full tile's two body lines and padding need [TileTwoLineMinHeightDp]. The state keeps
+ * its body size — it is what the tile is read for — and the name stays whole rather than being
+ * ellipsised beside it on one line (design principle 5: compact is designed, not clipped).
+ *
+ * A state-layout sibling of [RemoteHaTile], so like [RemoteHaIconChip] it resolves the accent from
+ * the encode-time state rather than registering `<entity>.is_on` again (a duplicate named
+ * `RemoteBoolean` blanks the other branch in alpha010, #224); the state text stays live.
+ */
+@Composable
+@RemoteComposable
+fun RemoteHaTileCompact(data: HaTileData, modifier: RemoteModifier = RemoteModifier) {
+  val theme = haTheme()
+  val clickable =
+    data.tapAction.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
+  val accent: RemoteColor =
+    if (data.accent.toggleable && !data.accent.initiallyOn) data.accent.themed().inactiveAccent
+    else data.accent.themed().activeAccent
+
+  RemoteBox(
+    modifier =
+      modifier
+        .then(clickable)
+        .fillMaxWidth()
+        .then(cardChrome(theme.cardBackground, theme.divider))
+        // A Label line (~17dp) over a Body line (~20dp) inside 3dp: ~43dp of the slot's ~44.
+        .padding(horizontal = 12.rdp, vertical = 3.rdp)
+  ) {
+    RemoteRow(verticalAlignment = RemoteAlignment.CenterVertically) {
+      RemoteIcon(
+        imageVector = data.icon.toRemoteImageVector(),
+        contentDescription = entityName(data.entityId, data.name),
+        modifier = RemoteModifier.size(24.rdp),
+        tint = accent,
+      )
+      RemoteColumn(modifier = RemoteModifier.padding(start = 10.rdp)) {
+        RemoteText(
+          text = entityName(data.entityId, data.name),
+          color = theme.primaryText,
+          fontSize = HaType.Label,
+          fontWeight = FontWeight.Medium,
+          style = haTextStyle(),
+          maxLines = 1,
+          overflow = TextOverflow.Ellipsis,
+        )
+        RemoteText(
+          text = data.state,
+          color = theme.primaryText,
+          fontSize = HaType.Body,
+          style = haTextStyle(),
+          maxLines = 1,
+          overflow = TextOverflow.Ellipsis,
+        )
+      }
+    }
+  }
+}
+
+/**
+ * The height [RemoteHaTile]'s name-over-state stack needs: two [HaType.Body] lines (~20dp each)
+ * inside its 8dp vertical padding. A Fixed-mode canvas shorter than this takes
+ * [RemoteHaTileCompact].
+ */
+const val TileTwoLineMinHeightDp: Int = 56
+
+/**
  * Icon-only identity tier for the icon-+-state family (`tile`, `entity`, `sensor`, `statistic`).
  * Centres the tinted state icon in the cell with a single state line beneath it — the "minimum
  * viable identity" rung (P1: icon + value; P2 name dropped) that Fixed-mode converters fall to on

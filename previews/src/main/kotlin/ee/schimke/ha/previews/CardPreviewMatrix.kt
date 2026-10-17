@@ -42,6 +42,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
+import ee.schimke.ha.rc.BreakpointAxis
 import ee.schimke.ha.rc.CachedCardPreview
 import ee.schimke.ha.rc.CardPlayback
 import ee.schimke.ha.rc.CardSizeMode
@@ -49,6 +50,7 @@ import ee.schimke.ha.rc.FixedHaClock
 import ee.schimke.ha.rc.LocalHaClock
 import ee.schimke.ha.rc.ProvideCardRegistry
 import ee.schimke.ha.rc.ProvideCardSizeMode
+import ee.schimke.ha.rc.ProvideFixedCanvasAxis
 import ee.schimke.ha.rc.RenderChild
 import ee.schimke.ha.rc.androidXExperimentalWrap
 import ee.schimke.ha.rc.cards.defaultRegistry
@@ -396,10 +398,12 @@ private fun WatchFaceCell(
                   // non-wrapping compact path here too,
                   // so the matrix wear cells show what
                   // the watch actually draws.
-                  ProvideFlowLayoutSupport(enabled = false, compactEntities = true) {
-                    RemoteHaWidgetSurface {
-                      WithImageStrategy(imageStrategy) {
-                        RenderChild(card, snapshot, RemoteModifier.rcFillMaxWidth())
+                  ProvideFixedCanvasAxis(BreakpointAxis.Height) {
+                    ProvideFlowLayoutSupport(enabled = false, compactEntities = true) {
+                      RemoteHaWidgetSurface {
+                        WithImageStrategy(imageStrategy) {
+                          RenderChild(card, snapshot, RemoteModifier.rcFillMaxWidth())
+                        }
                       }
                     }
                   }

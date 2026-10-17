@@ -98,6 +98,8 @@ class EntitiesCardConverter : CardConverter {
             when (tier) {
               // Tier 0 (w < 260): the natural vertical list,
               // same as Wrap — narrow cells stack rows.
+              // Rows are dense here: the widget's height is fixed, and four 15sp rows plus
+              // the title fill a `3×2` cell only with 4dp rather than 6dp row padding.
               0 ->
                 FullList(
                   card,
@@ -105,6 +107,7 @@ class EntitiesCardConverter : CardConverter {
                   RemoteModifier.fillMaxWidth(),
                   maxRows = Int.MAX_VALUE,
                   forceTitle = true,
+                  dense = true,
                 )
               // Tier 1 (w >= 260): wide enough to lay the
               // entities out side by side — reflow into a
@@ -170,6 +173,7 @@ class EntitiesCardConverter : CardConverter {
     modifier: RemoteModifier,
     maxRows: Int,
     forceTitle: Boolean = true,
+    dense: Boolean = false,
   ) {
     val title = if (forceTitle) card.raw["title"]?.jsonPrimitive?.content else null
     val entries: List<JsonElement> = card.raw["entities"]?.jsonArray ?: emptyList()
@@ -201,7 +205,7 @@ class EntitiesCardConverter : CardConverter {
           tapAction = tapAction,
         )
       }
-    RemoteHaEntities(HaEntitiesData(title = title, rows = rows), modifier = modifier)
+    RemoteHaEntities(HaEntitiesData(title = title, rows = rows), modifier = modifier, dense = dense)
   }
 
   private companion object {
