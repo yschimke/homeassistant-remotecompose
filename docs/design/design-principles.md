@@ -81,3 +81,22 @@ colours, and may be dark-only. Launcher widgets default to the system theme.
 
 - *Check:* every design renders in light and dark. A themed design changes with the theme; a
   forced palette stays the same on purpose.
+
+## 9. The dashboard's sections and order; the cards' own sizes
+
+**Keep where the user put things; size them by harc's designs, not HA's.**
+
+A dashboard brings its structure from Home Assistant: its views, its sections, and the order of
+the cards inside each section. harc keeps all of that. What it doesn't keep is HA's size for each
+card. A section's `grid_options` (`columns`, `rows`, and each card type's defaults) describe HA's
+design of that card, and harc's design for the same card is a different size: a tile with its
+features, a button, a gauge. So inside a section the cards flow by their own designs. Each card
+has the narrowest width it still reads as itself in, rows fill in authored order while every card
+keeps that width, a row is shared in proportion to those widths, and the section reflows when its
+width changes. Headings keep a row to themselves, because they divide a section into groups.
+
+- *Check:* the same section on a phone and on a tablet keeps its cards in the same order. On the
+  tablet, compact cards that stacked on the phone share rows, and no card is narrower than its
+  design's minimum.
+- *Limit:* order is never changed to fill a gap. A wide card that doesn't fit after a compact one
+  starts the next row, even if a later compact card would have fitted beside it.
