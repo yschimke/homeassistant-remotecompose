@@ -77,6 +77,11 @@ class MarkdownBadgeTargetTest {
     compose.waitForIdle()
 
     for (label in listOf("ci", "License")) {
+      assertEquals(
+        1,
+        compose.onAllNodesWithContentDescription(label).fetchSemanticsNodes().size,
+        "\"$label\" is announced once, by its button",
+      )
       val buttons =
         compose.onAllNodesWithContentDescription(label).fetchSemanticsNodes().filter {
           it.config.getOrNull(SemanticsActions.OnClick) != null

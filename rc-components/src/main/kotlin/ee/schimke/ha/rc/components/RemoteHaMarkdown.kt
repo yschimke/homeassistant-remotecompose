@@ -21,6 +21,7 @@ import androidx.compose.remote.creation.compose.modifier.height
 import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.modifier.semantics
 import androidx.compose.remote.creation.compose.modifier.width
+import androidx.compose.remote.creation.compose.state.RemoteString
 import androidx.compose.remote.creation.compose.state.RemoteTextUnit
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rs
@@ -378,16 +379,17 @@ private fun MarkdownBadge(image: MarkdownInline.Image) {
       height = BADGE_DECODE_MAX_H_PX,
     )
   val label = image.alt.ifEmpty { image.href ?: "image" }.rs
-  val badge: @Composable @RemoteComposable () -> Unit = {
+  // [description] is null inside the labelled tap target, so the badge is announced once.
+  val badge: @Composable @RemoteComposable (description: RemoteString?) -> Unit = { description ->
     RemoteImage(
       remoteBitmap = rb,
-      contentDescription = label,
+      contentDescription = description,
       modifier = RemoteModifier.height(BADGE_HEIGHT_DP.rdp).width(BADGE_WIDTH_DP.rdp),
       contentScale = ContentScale.Fit,
     )
   }
   if (click == null) {
-    badge()
+    badge(label)
   } else {
     // A linked badge is a button: the tap target carries the badge's label (the image's own
     // description doesn't reach the clickable node) and is a full touch target tall, with the badge
@@ -399,7 +401,7 @@ private fun MarkdownBadge(image: MarkdownInline.Image) {
           .height(MIN_TOUCH_TARGET_DP.rdp),
       contentAlignment = RemoteAlignment.Center,
     ) {
-      badge()
+      badge(null)
     }
   }
 }
