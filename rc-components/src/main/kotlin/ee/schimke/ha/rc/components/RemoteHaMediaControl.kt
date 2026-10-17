@@ -192,7 +192,10 @@ fun RemoteHaMediaControlWide(data: HaMediaControlData, modifier: RemoteModifier 
     modifier =
       modifier
         .then(cardChrome(theme.cardBackground, theme.divider))
-        .padding(horizontal = 10.rdp, vertical = 8.rdp),
+        // 2dp, not more: the Wear small slot's content box is ~44dp, and the title (BodyLarge)
+        // over the player (Caption) is ~37dp of it (lines are ~1.33× their size). The row centres
+        // itself on taller cells.
+        .padding(horizontal = 10.rdp, vertical = 2.rdp),
     verticalAlignment = RemoteAlignment.CenterVertically,
     horizontalArrangement = RemoteArrangement.spacedBy(10.rdp),
   ) {

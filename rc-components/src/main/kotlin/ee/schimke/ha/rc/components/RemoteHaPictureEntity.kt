@@ -2,7 +2,6 @@
 
 package ee.schimke.ha.rc.components
 
-import androidx.compose.remote.creation.compose.capture.toRemoteImageVector
 import androidx.compose.remote.creation.compose.layout.RemoteAlignment
 import androidx.compose.remote.creation.compose.layout.RemoteArrangement
 import androidx.compose.remote.creation.compose.layout.RemoteBox
@@ -26,7 +25,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.wear.compose.remote.material3.RemoteIcon
 
 /**
  * HA `picture-entity` card — modern image-with-overlay tile (`hui-picture-entity-card.ts`).
@@ -47,9 +45,12 @@ import androidx.wear.compose.remote.material3.RemoteIcon
  * The image is the card's identity at every size: it **fills and crops** to the cell
  * ([ContentScale.Crop]) so it never letterboxes, with the name/state strip kept as a translucent
  * scrim along the bottom. In [fillHeight] mode (launcher / Wear Fixed cells) the card grows to the
- * full cell height instead of the [naturalHeightDp]-derived 160 dp the dashboard wraps to — so the
- * picture earns the whole canvas rather than letterboxing into a band (see
- * docs/architecture/adaptive-card-layouts.md §"Picture family").
+ * full cell height — so the picture earns the whole canvas rather than letterboxing into a band
+ * (see docs/architecture/adaptive-card-layouts.md §"Picture family").
+ *
+ * Otherwise (the dashboard, Wrap) the card's height follows its live width at [aspectRatio] (width
+ * ÷ height, HA's `aspect_ratio`), so it keeps its shape in a full-width slot and in a grid cell
+ * alike. A null [aspectRatio] keeps the legacy fixed 160 dp band.
  */
 @Composable
 @RemoteComposable
@@ -57,10 +58,25 @@ fun RemoteHaPictureEntity(
   data: HaPictureEntityData,
   modifier: RemoteModifier = RemoteModifier,
   fillHeight: Boolean = false,
+  aspectRatio: Float? = null,
 ) {
+  if (!fillHeight && aspectRatio != null) {
+    RemoteAspectRatioBox(aspectRatio, modifier) {
+      RemoteHaPictureEntity(data, RemoteModifier.fillMaxSize(), fillHeight = true)
+    }
+    return
+  }
   val theme = haTheme()
   val isOnBinding =
     if (data.accent.toggleable) LiveValues.isOn(data.entityId, data.accent.initiallyOn) else null
+  // Only for an on/off glyph pair that differs while unavailable: no other part of this card reads
+  // availability, and widgets (Fixed mode) carry no availability binding at all.
+  val isAvailable =
+    pairAvailability(
+      data.entityId,
+      data.accent.activeIconWhenUnavailable,
+      data.accent.initiallyAvailable,
+    )
   val accent =
     isOnBinding?.select(data.accent.themed().activeAccent, data.accent.themed().inactiveAccent)
       ?: data.accent.themed().activeAccent
@@ -68,8 +84,8 @@ fun RemoteHaPictureEntity(
     data.tapAction.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
   val showStrip = data.showName || data.showState
 
-  // Wrap: width pinned, fixed natural height (HA reference band). Fixed:
-  // fill the whole cell so the image is the identity edge-to-edge.
+  // Fill: the whole cell (Fixed) or the aspect box (Wrap with a ratio), so the
+  // image is the identity edge-to-edge. Otherwise the legacy fixed band.
   val sizeModifier =
     if (fillHeight) RemoteModifier.fillMaxSize() else RemoteModifier.fillMaxWidth().height(160.rdp)
 
@@ -127,19 +143,31 @@ fun RemoteHaPictureEntity(
             // Inline strategy with no pre-fetched bytes for
             // this URL — fall back to the icon path so the
             // tile renders something instead of a hole.
-            RemoteIcon(
-              imageVector = data.icon.toRemoteImageVector(),
+            HaStateIcon(
+              icon = data.icon,
+              activeIcon = data.accent.activeIcon,
+              initiallyOn = data.accent.initiallyOn,
+              isOn = isOnBinding,
+              activeWhenUnavailable = data.accent.activeIconWhenUnavailable,
+              initiallyAvailable = data.accent.initiallyAvailable,
+              isAvailable = isAvailable,
+              tint = accent.copy(alpha = accent.alpha * 0.55f.rf),
               contentDescription = entityName(data.entityId, data.name),
               modifier = RemoteModifier.size(40.rdp),
-              tint = accent.copy(alpha = accent.alpha * 0.55f.rf),
             )
           }
         } else {
-          RemoteIcon(
-            imageVector = data.icon.toRemoteImageVector(),
+          HaStateIcon(
+            icon = data.icon,
+            activeIcon = data.accent.activeIcon,
+            initiallyOn = data.accent.initiallyOn,
+            isOn = isOnBinding,
+            activeWhenUnavailable = data.accent.activeIconWhenUnavailable,
+            initiallyAvailable = data.accent.initiallyAvailable,
+            isAvailable = isAvailable,
+            tint = accent.copy(alpha = accent.alpha * 0.55f.rf),
             contentDescription = entityName(data.entityId, data.name),
             modifier = RemoteModifier.size(40.rdp),
-            tint = accent.copy(alpha = accent.alpha * 0.55f.rf),
           )
         }
         if (data.frameStamp != null) {

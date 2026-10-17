@@ -133,9 +133,11 @@ object CardDesignSlots {
         entry.name
           ?: state?.attributes?.get("friendly_name")?.jsonPrimitive?.contentOrNull
           ?: entityId
-      strings["$slot.state"] = formatState(state)
+      strings["$slot.state"] = formatState(state, snapshot)
       strings["$slot.name"] = name
       booleans["$slot.is_on"] = state?.let { HaLiveBindings.isOn(entityId, it.state) } ?: false
+      // A missing entity is as unavailable as an `unavailable` one: the converter bakes it so.
+      booleans["$slot.is_available"] = state?.let { HaLiveBindings.isAvailable(it.state) } ?: false
       ints["$slot.state_int"] = state?.let { HaLiveBindings.stateInt(entityId, it.state) } ?: -1
       ints["$slot.status"] = statusOf(state)
       floats["$slot.numeric_state"] =

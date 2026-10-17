@@ -100,7 +100,7 @@
             },
             {
               "type": "heading",
-              "heading": "🎒 Card Tracker  —  Am I close to home?",
+              "heading": "🎒 Card tracker",
               "heading_style": "title",
               "grid_options": {
                 "columns": "full"

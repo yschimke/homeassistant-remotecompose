@@ -108,6 +108,29 @@ class DemoDataTest {
   }
 
   @Test
+  fun cameras_have_relative_frame_urls_and_no_debug_attributes() {
+    // A demo camera looks like a real one: a server-relative `camera_proxy` picture (served by
+    // the app's demo stand-in fetcher) that changes per frame, and nothing demo-only for a card
+    // to draw.
+    val cameras =
+      DemoData.snapshot(nowMs = 0L).states.values.filter { it.entityId.startsWith("camera.") }
+    assertTrue(cameras.isNotEmpty(), "expected demo cameras")
+    for (camera in cameras) {
+      val picture = camera.attributes["entity_picture"]?.jsonPrimitive?.content
+      assertEquals(DemoData.cameraPictureUrl(camera.entityId, 0L), picture)
+      assertTrue(picture!!.startsWith("/api/camera_proxy/${camera.entityId}?"), picture)
+      assertFalse(camera.attributes.keys.any { it.startsWith("demo_") }, camera.entityId)
+    }
+    val id = cameras.first().entityId
+    val later = DemoData.snapshot(nowMs = DemoData.CAMERA_FRAME_MILLIS).states.getValue(id)
+    assertNotEquals(
+      cameras.first().attributes["entity_picture"],
+      later.attributes["entity_picture"],
+      "the next frame is a new picture URL",
+    )
+  }
+
+  @Test
   fun snapshot_does_not_change_dashboard_size() {
     // Drifting changes state strings, never the entity-id set.
     // Pinned widgets cache id → slot mappings; a stable id set

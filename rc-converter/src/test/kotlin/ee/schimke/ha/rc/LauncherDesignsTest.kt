@@ -29,11 +29,14 @@ import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.components.HaAction
+import ee.schimke.ha.rc.components.HaUberTheme
+import ee.schimke.ha.rc.components.ThemeStyle
 import ee.schimke.ha.rc.components.WidgetActionRegistry
 import java.io.File
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import kotlinx.coroutines.runBlocking
@@ -144,11 +147,48 @@ class LauncherDesignsTest {
   private fun entity(id: String, state: String, vararg attrs: Pair<String, String>) =
     EntityState(id, state, JsonObject(attrs.associate { (k, v) -> k to JsonPrimitive(v) }))
 
+  @Test
+  fun aLookIsPartOfTheKeyAndRoundTrips() {
+    val card = card("tile", "light.kitchen")
+    val snapshot = snapshotOf(entity("light.kitchen", "on"))
+    fun key(look: LauncherLook) =
+      LauncherDesigns.keyFor(card, snapshot, widthDp, heightDp, false, true, registry, look)!!
+    // The classic system look keeps the key widgets always had.
+    assertEquals("widget:system:light", key(LauncherLook()).theme)
+    val looks =
+      listOf(
+        LauncherLook(HaUberTheme.Lcd),
+        LauncherLook(HaUberTheme.Lcd, ThemeStyle.TerrazzoHome),
+        LauncherLook(HaUberTheme.Classic, ThemeStyle.entries.last()),
+      )
+    for (look in looks) {
+      val theme = key(look).theme
+      assertEquals(look, LauncherLook.parse(theme.split(':').drop(3)), theme)
+    }
+    assertEquals(looks.size, looks.map { key(it) }.distinct().size)
+  }
+
+  @Test
+  fun aStyledWidgetBakesAndDiffersFromClassic() {
+    val card = card("tile", "light.kitchen")
+    val snapshot = snapshotOf(entity("light.kitchen", "on"))
+    val classic = bake(card, snapshot)
+    for (look in
+      listOf(
+        LauncherLook(HaUberTheme.Lcd),
+        LauncherLook(HaUberTheme.Lcd, ThemeStyle.TerrazzoHome),
+      )) {
+      val styled = bake(card, snapshot, look = look)
+      assertFalse(classic.bytes.contentEquals(styled.bytes), "$look draws differently")
+    }
+  }
+
   private fun bake(
     card: CardConfig,
     snapshot: HaSnapshot,
     widthDp: Int = this.widthDp,
     heightDp: Int = this.heightDp,
+    look: LauncherLook = LauncherLook(),
   ): LauncherDesigns.Baked {
     val context = org.robolectric.RuntimeEnvironment.getApplication()
     return assertNotNull(
@@ -162,6 +202,7 @@ class LauncherDesignsTest {
         dark = false,
         systemTheme = false,
         registry = registry,
+        look = look,
       )
     )
   }
@@ -214,6 +255,90 @@ class LauncherDesignsTest {
         )
       ),
     )
+
+  /** A direct Fixed-mode widget capture of [card], as the provider's fallback path builds it. */
+  private fun directWidget(card: CardConfig, snapshot: HaSnapshot, widthDp: Int, heightDp: Int) =
+    runBlocking {
+      captureSingleRemoteDocument(
+          context = org.robolectric.RuntimeEnvironment.getApplication(),
+          creationDisplayInfo =
+            RemoteCreationDisplayInfo(widthDp * density / 160, heightDp * density / 160, density),
+          profile = widgetsProfile,
+        ) {
+          LauncherWidgetContent(
+            registry,
+            widgetsProfile,
+            dark = false,
+            WidgetActionRegistry(snapshot.states.mapValues { (_, e) -> formatState(e) }),
+            card,
+            snapshot,
+            captureSizeDp = WidgetCaptureSizeDp(widthDp, heightDp),
+          )
+        }
+        .bytes
+    }
+
+  /**
+   * Widgets never receive bindings, so they carry no availability look: no `<id>.is_available`
+   * (which a button's or entity's two size tiers would otherwise both register, colliding as
+   * state-layout siblings), and no availability colour selects, which the bake leaves as colour
+   * expressions that Android 16's platform widget player doesn't draw reliably.
+   */
+  @Test
+  fun widgetsCarryNoAvailabilityBinding() {
+    val sensors = (1..5).map { "sensor.room_$it" }
+    val snapshot =
+      snapshotOf(
+        *sensors
+          .map { entity(it, if (it == sensors.last()) "unavailable" else "12") }
+          .toTypedArray(),
+        entity("switch.boiler", "unavailable", "friendly_name" to "Boiler"),
+      )
+    val list = sensors.joinToString { "\"$it\"" }
+    val cards =
+      listOf(
+        card("button", sensors.last()),
+        card("entity", sensors.last()),
+        card("tile", sensors.last()),
+        card("entity", "switch.boiler"),
+        CardConfig(
+          "glance",
+          kotlinx.serialization.json.Json.parseToJsonElement(
+            """{"type":"glance","entities":[$list]}"""
+          ) as JsonObject,
+        ),
+        CardConfig(
+          "entities",
+          kotlinx.serialization.json.Json.parseToJsonElement(
+            """{"type":"entities","entities":[$list]}"""
+          ) as JsonObject,
+        ),
+      )
+    for (card in cards) {
+      // Both tiers of the size ladders: icon-only and full.
+      for ((w, h) in listOf(80 to 60, 288 to 252)) {
+        val names =
+          RcDocumentCodec.decode(directWidget(card, snapshot, w, h), RcWireLimits())
+            .namedVariables
+            .map { it.name }
+        assertTrue(
+          names.none { it.endsWith(".is_available") },
+          "${card.type} ${w}x$h widget registers no availability: $names",
+        )
+      }
+    }
+    // A glance of read-only sensors has no state colour to select: its widget is all constants.
+    val glance = bake(cards[4], snapshot, 288, 336)
+    val operations = arrayListOf<Operation>()
+    RemoteComposeBuffer.fromInputStream(platformWidgetDocument(glance.bytes).inputStream())
+      .inflateFromBuffer(operations)
+    assertEquals(
+      emptyList(),
+      operations.filterIsInstance<androidx.compose.remote.core.operations.ColorExpression>().map {
+        it.toString()
+      },
+    )
+  }
 
   @Test
   fun bakedGaugeWidgetMatchesADirectCapture() =
@@ -322,9 +447,53 @@ class LauncherDesignsTest {
     )
   }
 
-  private fun assertWidgetParity(name: String, card: CardConfig, snapshot: HaSnapshot) {
+  /**
+   * An entities widget roomy enough for its expanded rows, with a light and a switch that are on:
+   * the baked template must draw them on (accent and switch), as the direct capture does, not in
+   * the off state of the template's placeholder entities.
+   */
+  @Test
+  fun bakedExpandedEntitiesWidgetShowsTheLiveOnOffState() =
+    assertWidgetParity(
+      "entities-expanded",
+      CardConfig(
+        "entities",
+        kotlinx.serialization.json.Json.parseToJsonElement(
+          """{"type":"entities","title":"Living Room","entities":
+            ["sensor.temp","light.lamp","switch.coffee","binary_sensor.door"]}"""
+        ) as JsonObject,
+      ),
+      snapshotOf(
+        entity("sensor.temp", "21.5", "friendly_name" to "Living Room"),
+        entity("light.lamp", "on", "friendly_name" to "Office lamp"),
+        entity("switch.coffee", "on", "friendly_name" to "Coffee maker"),
+        entity(
+          "binary_sensor.door",
+          "on",
+          "friendly_name" to "Front door",
+          "device_class" to "door",
+        ),
+      ),
+      widthDp = 288,
+      heightDp = 252,
+      played = true,
+    )
+
+  /**
+   * With [played], both documents play in a player of the widget's size, as a launcher plays a
+   * widget, rather than the wrap-height card preview: a card that fills its widget (the expanded
+   * entities rows share its height) draws nothing in a wrap-height player.
+   */
+  private fun assertWidgetParity(
+    name: String,
+    card: CardConfig,
+    snapshot: HaSnapshot,
+    widthDp: Int = this.widthDp,
+    heightDp: Int = this.heightDp,
+    played: Boolean = false,
+  ) {
     val context = org.robolectric.RuntimeEnvironment.getApplication()
-    val baked = bake(card, snapshot)
+    val baked = bake(card, snapshot, widthDp, heightDp)
     val widthPx = widthDp * density / 160
     val heightPx = heightDp * density / 160
     val direct = runBlocking {
@@ -338,7 +507,7 @@ class LauncherDesignsTest {
             widgetsProfile,
             dark = false,
             // As the provider builds it: the tap metadata's state seed is the live state.
-            WidgetActionRegistry(snapshot.states.mapValues { (_, e) -> formatState(e) }),
+            WidgetActionRegistry(snapshot.states.mapValues { (_, e) -> formatState(e, snapshot) }),
             card,
             snapshot,
             captureSizeDp = WidgetCaptureSizeDp(widthDp, heightDp),
@@ -350,13 +519,23 @@ class LauncherDesignsTest {
     var bytes by mutableStateOf(direct)
     compose.setContent {
       Box(Modifier.size(widthDp.dp, heightDp.dp).testTag("widget")) {
+        if (played) {
+          androidx.compose.runtime.key(bytes) {
+            HaRcComposePlayer(
+              documentBytes = bytes,
+              modifier = Modifier.size(widthDp.dp, heightDp.dp),
+              fallback = { error("the widget plays in the Compose player") },
+            )
+          }
+          return@Box
+        }
         CachedCardPreview(
           cacheKey = "widget-$name",
           profile = widgetsProfile,
           template =
             CardTemplatePlayback(
               bytes,
-              { CardSnapshotBindings(emptyMap(), emptyMap(), emptyMap(), emptyMap()) },
+              { _, _ -> CardSnapshotBindings(emptyMap(), emptyMap(), emptyMap(), emptyMap()) },
               HaAction.None,
             ),
         ) {}

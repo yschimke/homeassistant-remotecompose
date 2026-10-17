@@ -4,10 +4,11 @@ import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.runtime.Composable
 import ee.schimke.ha.model.CardConfig
-import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.CardConverter
 import ee.schimke.ha.rc.CardRegistry
+import ee.schimke.ha.rc.cardDataSignature
+import ee.schimke.ha.rc.cardEntityIds
 import ee.schimke.ha.rc.components.HaAction
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
@@ -17,10 +18,12 @@ import kotlinx.serialization.json.jsonPrimitive
 /**
  * Converter for the HACS `custom:enhanced-shutter-card`.
  *
- * Minimal port: renders per-entity rows with a window/shutter visualisation and open / stop / close
- * buttons. Full feature set of the upstream card (image-based slats & backgrounds, 3D tilt,
- * presets, per-entity resizing, hide-button states) is deliberately deferred — this module exists
- * to prove the custom-card extension seam and give a working shutter out of the box.
+ * Minimal port: renders per-entity rows with a window-shutter drawing (a garage door for
+ * `device_class: garage` / `gate`) and open / stop / close buttons. The buttons follow the cover
+ * ([coverControls]: greyed when they would do nothing, hidden when unsupported) and honour the
+ * upstream `button_up_hide_states` / `button_stop_hide_states` / `button_down_hide_states`. The
+ * rest of the upstream card (image-based slats & backgrounds, 3D tilt, presets, per-entity
+ * resizing) is deliberately deferred.
  *
  * Register via [CardRegistry.register]:
  * ```kotlin
@@ -38,6 +41,11 @@ class EnhancedShutterCardConverter : CardConverter {
     // ~140dp per shutter row (viz + name + state + gaps); plus title.
     return (if (hasTitle) 28 else 0) + 20 + entryCount * 140
   }
+
+  // Shutter height, button states and the state line are baked from the cover's state, so the
+  // card re-encodes when it changes (live-card-updates.md, path 2).
+  override fun dataSignature(card: CardConfig, snapshot: HaSnapshot): String =
+    cardDataSignature(cardEntityIds(card), snapshot)
 
   @Composable
   override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
@@ -82,46 +90,25 @@ class EnhancedShutterCardConverter : CardConverter {
         ?: entityId
         ?: "(no entity)"
     val namePosition = raw["name_position"]?.jsonPrimitive?.content ?: cardNamePosition
-    val closedFraction = closedFractionOf(entity)
-    val positionPct = ((1f - closedFraction) * 100).toInt().coerceIn(0, 100)
-    val stateLabel = stateLabelFor(entity, positionPct)
+    val garage = isGarageLike(entity)
+    val closedFraction = coverClosedFraction(entity, unknownFraction = if (garage) 1f else 0.5f)
 
     return HaShutterEntryData(
       name = name.rs,
       closedFraction = closedFraction,
-      stateLabel = stateLabel.rs,
+      stateLabel = coverStateLabel(entity).rs,
       showNameOnTop = namePosition != "none",
       openAction = entityId?.let { callService("open_cover", it) } ?: HaAction.None,
       closeAction = entityId?.let { callService("close_cover", it) } ?: HaAction.None,
       stopAction = entityId?.let { callService("stop_cover", it) } ?: HaAction.None,
+      controls = coverControls(entity, CoverHideStates.fromEntry(raw)),
+      motion = coverMotion(entity),
+      garage = garage,
     )
   }
 
   private fun callService(service: String, entityId: String): HaAction =
     HaAction.CallService(domain = "cover", service = service, entityId = entityId)
-
-  /** 0f = fully open, 1f = fully closed. */
-  private fun closedFractionOf(entity: EntityState?): Float {
-    if (entity == null) return 0.5f
-    val pos = entity.attributes["current_position"]?.jsonPrimitive?.content?.toFloatOrNull()
-    if (pos != null) return (1f - pos / 100f).coerceIn(0f, 1f)
-    return when (entity.state) {
-      "open",
-      "opening" -> 0f
-      "closed",
-      "closing" -> 1f
-      else -> 0.5f
-    }
-  }
-
-  private fun stateLabelFor(entity: EntityState?, positionPct: Int): String {
-    if (entity == null) return "Unavailable"
-    val state = entity.state
-    if (state == "unavailable" || state == "unknown") return "Unavailable"
-    val hasPosition = entity.attributes["current_position"] != null
-    return if (hasPosition) "$positionPct% open"
-    else state.replace('_', ' ').replaceFirstChar { it.uppercaseChar() }
-  }
 
   companion object {
     const val CARD_TYPE: String = "custom:enhanced-shutter-card"

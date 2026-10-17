@@ -2,6 +2,7 @@ package ee.schimke.ha.rc
 
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.staticCompositionLocalOf
 import ee.schimke.ha.design.DesignProperties
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
@@ -61,6 +62,17 @@ interface CardConverter {
   fun dataSignature(card: CardConfig, snapshot: HaSnapshot): String? = null
 
   /**
+   * [dataSignature] for a card that may render other cards: hosts call this one, through
+   * [CardRegistry.cardDataSignature], since a container's document bakes whatever its children
+   * bake. The default is the card's own signature, else its [designDelegate]'s (a conditional
+   * card's inner card, an entity filter's card). Containers that render several children (stacks,
+   * grid) override it to fold in every child's signature.
+   */
+  fun dataSignature(card: CardConfig, snapshot: HaSnapshot, registry: CardRegistry): String? =
+    dataSignature(card, snapshot)
+      ?: designDelegate(card, snapshot)?.let { registry.cardDataSignature(it, snapshot) }
+
+  /**
    * The generation properties of [card] under [snapshot], or null when this card can't render from
    * a card design (the default: it then captures through [Render]).
    *
@@ -95,6 +107,19 @@ interface CardConverter {
    * of `CardDesignSlots.slotBindings`.
    */
   fun designBindings(card: CardConfig, snapshot: HaSnapshot): CardSnapshotBindings? = null
+
+  /**
+   * [designBindings] with "now" read from [clock]. Template playback calls this one, passing the
+   * [LocalHaClock] in scope, so a binding derived from the time (a clock card's date line) agrees
+   * with what [Render] reads from the same clock on the direct path. A converter whose bindings
+   * read the time overrides both forms, the two-argument one passing [SystemHaClock] (the
+   * [LocalHaClock] default); every other converter overrides only the two-argument form.
+   */
+  fun designBindings(
+    card: CardConfig,
+    snapshot: HaSnapshot,
+    clock: HaClock,
+  ): CardSnapshotBindings? = designBindings(card, snapshot)
 
   /**
    * The action to run for a tap on slot [slot] of this card's design template, whose bytes encode
@@ -135,6 +160,28 @@ interface CardConverter {
    */
   fun naturalWidthClass(card: CardConfig, snapshot: HaSnapshot): CardWidthClass =
     CardWidthClass.Full
+
+  /**
+   * The narrowest cell, in dp, this card still reads as itself in when a `grid` card lays it out —
+   * the "too narrow for its icon" line. A grid's `columns` is the most cells per row; it lays out
+   * fewer, wider cells whenever its width can't give each one this much (see
+   * `HaGridLayout.perRow`). The default follows [naturalWidthClass]: a Compact card is happy at 120
+   * dp, a Full (list / hero) card wants 240 dp.
+   */
+  fun gridMinCellWidthDp(card: CardConfig, snapshot: HaSnapshot): Int =
+    when (naturalWidthClass(card, snapshot)) {
+      CardWidthClass.Compact -> 120
+      CardWidthClass.Full -> 240
+    }
+
+  /**
+   * Whether this card fills a **square** cell when its `grid` has `square: true` (HA's default) —
+   * true for button-like cards, whose content centres in whatever box it gets. The grid then sizes
+   * the cell's height from its live width and renders the card with `fillMaxSize()`. Cards that
+   * size their own height from their width (the picture family, via [LocalGridSquareCells]) and
+   * list- or row-shaped cards (tiles, entities) keep their own height, so default false.
+   */
+  fun gridSquareCell(card: CardConfig, snapshot: HaSnapshot): Boolean = false
 
   /**
    * The comfortable default size this card wants when pinned as a launcher widget, in dp — the cell
@@ -206,3 +253,10 @@ class CardRegistry(converters: Iterable<CardConverter> = emptyList()) {
 
 /** What a card design template is captured from: see [CardConverter.designTemplate]. */
 data class DesignTemplateInput(val card: CardConfig, val snapshot: HaSnapshot)
+
+/**
+ * True while rendering the children of a `grid` card with `square: true`. Picture-family cards with
+ * no `aspect_ratio` of their own read it and take a 1:1 shape, so a square grid of pictures is a
+ * grid of squares, as in HA; an explicit `aspect_ratio` still wins.
+ */
+val LocalGridSquareCells = staticCompositionLocalOf { false }

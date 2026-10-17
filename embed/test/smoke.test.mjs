@@ -34,7 +34,10 @@ const HASS = 'https://ha.test';
 const card = { type: 'tile', entity: 'light.kitchen' };
 
 /** A page on page.test embedding the card, with scripts and blobs from designs.test. */
-async function openPage(browser, { tokens, url = PAGE, setup, cardConfig = card, failFirst = 0 } = {}) {
+async function openPage(
+  browser,
+  { tokens, url = PAGE, setup, cardConfig = card, failFirst = 0, design = `design="${sha}"`, resolves = [] } = {},
+) {
   const page = await browser.newPage({ deviceScaleFactor: 1, viewport: { width: 480, height: 320 } });
   const errors = [];
   page.on('pageerror', (e) => errors.push(e.message));
@@ -45,7 +48,7 @@ async function openPage(browser, { tokens, url = PAGE, setup, cardConfig = card,
     route.fulfill({
       contentType: 'text/html',
       body: `<!doctype html><body style="margin:0"><script type="module" src="https://designs.test/embed/v1/ha-card.js"></script>
-        <ha-card style="width:400px" hass="${HASS}" design="${sha}" library="https://designs.test/designs/v1/"
+        <ha-card style="width:400px" hass="${HASS}" ${design} library="https://designs.test/designs/v1/"
                  card='${JSON.stringify(cardConfig)}'></ha-card></body>`,
     }),
   );
@@ -56,6 +59,15 @@ async function openPage(browser, { tokens, url = PAGE, setup, cardConfig = card,
     }
     if (path === '/embed/v1/rc-player.js') {
       return route.fulfill({ contentType: 'text/javascript', headers: cors, body: readFileSync(playerPath) });
+    }
+    if (path === '/api/cards/resolve') {
+      // The design server's resolver: the one template these tests have.
+      resolves.push(JSON.parse(route.request().postData()));
+      return route.fulfill({
+        contentType: 'application/json',
+        headers: cors,
+        body: JSON.stringify({ sha256: sha, exact: true, bindings: { 'light.s0.name': 'Example' } }),
+      });
     }
     if (path === `/designs/v1/blobs/${sha}.rc`) {
       return route.fulfill({ contentType: 'application/octet-stream', headers: cors, body: template });
@@ -148,6 +160,27 @@ test('a signed-in viewer sees live values and taps call services', { skip }, asy
       { domain: 'homeassistant', service: 'toggle', target: { entity_id: 'light.kitchen' } },
     );
     assert.equal(await drawnText(page, 'light.s0.state'), 'Off');
+    assert.deepEqual(errors, []);
+  } finally {
+    await browser.close();
+  }
+});
+
+test('without a design, the card asks the design server for one', { skip }, async () => {
+  const browser = await chromium.launch();
+  try {
+    const resolves = [];
+    const { page, errors } = await openPage(browser, {
+      tokens: liveTokens,
+      design: 'card-style="lcd" theme="dark"',
+      resolves,
+    });
+    await page.waitForFunction(() => document.querySelector('ha-card')?.dataset.status === 'live');
+    await page.waitForFunction(() => document.querySelector('ha-card').states['light.kitchen']);
+    // Asked once, however often the element restarts while its attributes arrive.
+    assert.deepEqual(resolves, [{ card, cardStyle: 'lcd', dark: true }]);
+    // The card's own live name, not the resolver's example.
+    assert.equal(await drawnText(page, 'light.s0.name'), 'Kitchen Light');
     assert.deepEqual(errors, []);
   } finally {
     await browser.close();

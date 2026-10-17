@@ -13,6 +13,13 @@ Blink network ids, Octopus meter ids, etc.) gets replaced with a stable
 readable pseudonym, applied consistently across the lovelace_config.json
 AND entity_states.json so card-to-entity references survive.
 
+Device ids (32 hex chars, e.g. a Bambu card's `printer:`) come out as
+`XXXX…`. The bundled 3d_printing board's Bambu cards instead carry
+hand-written pseudonymous device ids (`demo-p2s-sn2`, …) that its
+hand-written `devices.json` (entity id -> device, the shape
+`HaClient.fetchDevices` reports) resolves; restore both after a re-scrub,
+or those cards can't tell the two printers apart.
+
 Usage:
     python3 terrazzo-core/scripts/scrub-demo-dashboards.py \\
         --src ~/workspace/homeassistant-agents/dashboards \\

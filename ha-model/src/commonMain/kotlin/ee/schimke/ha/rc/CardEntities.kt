@@ -66,6 +66,8 @@ private fun addEntityId(value: JsonPrimitive, out: MutableSet<String>) {
  *   converters bake), not the raw HA state. Pushing the raw state would replace e.g. `"21.5 °C"`
  *   with `"21.5"` on the first update.
  * - `<id>.is_on` (bool) — active flag.
+ * - `<id>.is_available` (bool) — false while the entity is `unavailable` / `unknown`
+ *   ([HaLiveBindings.isAvailable]); cards dim it.
  * - `<id>.state_int` (int) — domain-keyed state variant, where one exists
  *   ([HaLiveBindings.stateInt]); used by alarm-panel chrome.
  * - `<id>.numeric_state` (float) — parsed numeric state ([HaLiveBindings.numericState]); used by
@@ -108,8 +110,9 @@ fun cardSnapshotBindings(entityIds: Set<String>, snapshot: HaSnapshot): CardSnap
   val floats = LinkedHashMap<String, Float>(entityIds.size)
   for (id in entityIds) {
     val state = snapshot.states[id] ?: continue
-    strings["$id.state"] = formatState(state)
+    strings["$id.state"] = formatState(state, snapshot)
     booleans["$id.is_on"] = HaLiveBindings.isOn(id, state.state)
+    booleans["$id.is_available"] = HaLiveBindings.isAvailable(state.state)
     HaLiveBindings.stateInt(id, state.state)?.let { ints["$id.state_int"] = it }
     HaLiveBindings.numericState(state.state)?.let { floats["$id.numeric_state"] = it }
     HaLiveBindings.attributeFloats(id, state.attributes).forEach { (suffix, value) ->
@@ -126,9 +129,11 @@ fun cardSnapshotBindings(entityIds: Set<String>, snapshot: HaSnapshot): CardSnap
  * baked content moves — the only update path for structural / derived / per-card-formatted cards.
  *
  * Covers everything a converter might read for [entityIds]: primary state, last-updated,
- * attributes, and the history / statistics / forecast slices of the snapshot. Over-inclusion only
- * costs a redundant (identical) re-encode, so this stays deliberately broad rather than trying to
- * know which slice each card reads.
+ * attributes, the history / statistics / forecast slices of the snapshot, and — for an entity shown
+ * as a relative time ([isRelativeTimeState]) — the current label, which changes as the clock moves
+ * (`3 h ago` → `4 h ago`) though the entity doesn't. Over-inclusion only costs a redundant
+ * (identical) re-encode, so this stays deliberately broad rather than trying to know which slice
+ * each card reads.
  */
 fun cardDataSignature(entityIds: Set<String>, snapshot: HaSnapshot): String {
   if (entityIds.isEmpty()) return ""
@@ -141,6 +146,9 @@ fun cardDataSignature(entityIds: Set<String>, snapshot: HaSnapshot): String {
       append("~h").append(snapshot.history[id]?.hashCode())
       append("~s").append(snapshot.statistics[id]?.hashCode())
       append("~f").append(snapshot.forecasts[id]?.hashCode())
+      // A relative time ("3 h ago") moves with the clock, not the entity: fold the label itself
+      // in, so the next signature read after it rolls over re-encodes the card.
+      if (isRelativeTimeState(s)) append("~t").append(formatState(s, snapshot))
       append(';')
     }
   }
@@ -150,7 +158,7 @@ fun cardDataSignature(entityIds: Set<String>, snapshot: HaSnapshot): String {
  * Recursively walks [card] for `type: picture-entity` nodes (including picture-entity cards nested
  * in stack / grid / conditional / horizontal / vertical layouts) and returns the `entity:`
  * referenced by each. Used by `CachedCardPreview` to discover which slots need a live bitmap
- * override when `entity_picture` rotates.
+ * override when `entity_picture` rotates, and by [cardPictureSignature].
  *
  * The set is ordered by first appearance for stable iteration. Entries without a `domain.id`-shaped
  * value are skipped (mirrors [cardEntityIds]).
@@ -159,6 +167,24 @@ fun cardPictureEntityIds(card: CardConfig): Set<String> {
   val out = LinkedHashSet<String>()
   collectPictureEntities(card.raw, out)
   return out
+}
+
+/**
+ * The current `entity_picture` of every picture-entity slot in [card] ([cardPictureEntityIds]), or
+ * "" when it has none. A picture is fetched by URL once per document, not pushed as a binding, so a
+ * new URL — a real camera's rotating `camera_proxy` token, a demo camera's next frame — must reach
+ * the player as a new document: the card host folds this into the document's key.
+ *
+ * Only the picture URLs count; the slots' state and other attributes still arrive as bindings, so
+ * unrelated attribute churn doesn't re-encode.
+ */
+fun cardPictureSignature(card: CardConfig, snapshot: HaSnapshot): String {
+  val ids = cardPictureEntityIds(card)
+  if (ids.isEmpty()) return ""
+  return ids.joinToString(";") { id ->
+    val picture = snapshot.states[id]?.attributes?.get("entity_picture") as? JsonPrimitive
+    "$id=${picture?.contentOrNull.orEmpty()}"
+  }
 }
 
 private fun collectPictureEntities(element: JsonElement, out: MutableSet<String>) {

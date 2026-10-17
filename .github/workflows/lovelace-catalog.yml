@@ -1,0 +1,59 @@
+name: Lovelace dashboard catalog
+
+on:
+  pull_request:
+    paths: ['lovelace-catalog/**', '.github/workflows/lovelace-catalog.yml']
+  push:
+    branches: [main]
+    paths: ['lovelace-catalog/**', '.github/workflows/lovelace-catalog.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: lovelace-catalog-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  catalog:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - name: Generate and test the data catalog
+        run: |
+          python3 -m unittest discover -s lovelace-catalog -p 'test_*.py'
+          python3 lovelace-catalog/generate.py
+          printf '%s\n' '${{ github.sha }}' > build/lovelace-catalog/source-commit.txt
+      - uses: actions/upload-artifact@v7.0.2
+        with:
+          name: lovelace-catalog
+          path: build/lovelace-catalog
+      # Same output repository and design-artifacts/<system> branch contract as ha-cards.
+      # This catalog is all declarations: there is no compiled component record or render bundle.
+      - uses: actions/checkout@v7.0.1
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        with:
+          repository: yschimke/homeassistant-remotecompose-out
+          token: ${{ secrets.ARTIFACTS_TOKEN }}
+          path: catalog-output
+      - name: Publish the immutable source generation
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        working-directory: catalog-output
+        run: |
+          git config user.name 'Yuri Schimke'
+          git config user.email 'yuri@schimke.ee'
+          if git ls-remote --exit-code --heads origin design-artifacts/lovelace > /dev/null; then
+            git fetch origin design-artifacts/lovelace:refs/remotes/origin/design-artifacts/lovelace
+            git switch -C design-artifacts/lovelace origin/design-artifacts/lovelace
+            git rm -rf --ignore-unmatch .
+          else
+            git switch --orphan design-artifacts/lovelace
+            git rm -rf --ignore-unmatch .
+          fi
+          cp -R ../build/lovelace-catalog/. .
+          git add .
+          if ! git diff --cached --quiet; then
+            git commit -m 'chore(lovelace): publish dashboard catalog' -m 'Source: yschimke/homeassistant-remotecompose@${{ github.sha }}'
+            git push origin HEAD:design-artifacts/lovelace
+          fi

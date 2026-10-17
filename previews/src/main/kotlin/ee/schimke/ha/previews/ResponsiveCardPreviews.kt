@@ -13,14 +13,14 @@ import ee.schimke.ha.rc.components.HaTheme
  * Responsive tolerance previews using realistic widths a dashboard commonly hits: narrow phone
  * column, standard mobile width, and tablet pane.
  */
-@Preview(name = "entities responsive narrow", widthDp = 260, heightDp = 180, showBackground = false)
+@Preview(name = "entities responsive narrow", widthDp = 260, heightDp = 240, showBackground = false)
 @Preview(
   name = "entities responsive standard",
   widthDp = 381,
-  heightDp = 180,
+  heightDp = 240,
   showBackground = false,
 )
-@Preview(name = "entities responsive wide", widthDp = 480, heightDp = 180, showBackground = false)
+@Preview(name = "entities responsive wide", widthDp = 480, heightDp = 240, showBackground = false)
 @Composable
 fun Entities_Responsive_Light() =
   CardHost(HaTheme.Light) {

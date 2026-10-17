@@ -28,6 +28,8 @@ import java.util.UUID
  * gate `ButtonCardConverter` introduced (#352), shared so every card can send a wide-short cell
  * (Wear S) and a narrow-tall one (`1×1`) to the same compact tier.
  *
+ * A launcher capture (one that provides its widget size) captures only the matching variant.
+ *
  * Use [modifier] `fillMaxSize()` so the gate reads the host's cell, not the content's intrinsic
  * size.
  */
@@ -39,6 +41,18 @@ fun RemoteMinSizeGate(
   content: @Composable (roomy: Boolean) -> Unit,
 ) {
   require(minWidthDp > 0 && minHeightDp > 0) { "RemoteMinSizeGate needs positive minimums" }
+
+  // A launcher capture knows its size and is redone on every resize: pick the tier now, as
+  // [RemoteSizeBreakpoint] does, since Android 16 does not reliably update state-layout predicates
+  // driven by component dimensions.
+  val widgetSize = LocalWidgetCaptureSizeDp.current
+  if (widgetSize != null) {
+    RemoteBox(modifier = modifier) {
+      content(widgetSize.widthDp >= minWidthDp && widgetSize.heightDp >= minHeightDp)
+    }
+    return
+  }
+
   val gateName = remember { "__min_size_gate_${UUID.randomUUID()}" }
   // ratio = minW/minH, so `h · ratio ≥ minW` ⇔ `h ≥ minH`.
   val ratio = minWidthDp.toFloat() / minHeightDp.toFloat()

@@ -35,16 +35,23 @@ A part is reusable across cards, a Wear widget and a launcher cell only if it fo
 | Role | sp | Use |
 |---|---|---|
 | `Micro` | 10 | axis ticks, the smallest widget captions |
-| `Caption` | 11 | timestamps, range lines, a glance cell's state |
-| `Label` | 12 | labels and secondary state (`secondaryText`) |
-| `Body` | 13 | row names, tile primary text (HA's card body) |
-| `BodyLarge` | 14 | emphasised body, list items |
-| `Title` | 16 | card titles and section headings |
+| `Caption` | 12 | timestamps, range lines, a glance cell's state |
+| `Label` | 13 | labels and secondary state (`secondaryText`) |
+| `Body` | 15 | row names, a row's or tile's state, tile primary text (the card body) |
+| `BodyLarge` | 16 | emphasised body, list items |
+| `Title` | 17 | card titles and section headings |
 | `ValueSmall` | 18 | a reading at a compact presentation |
 | `Headline` | 22 | the heading card's title |
 | `Value` | 24 | a card's primary reading (gauge, sensor, thermometer) |
 | `ValueLarge` | 28 | a reading promoted on an expanded tier |
 | `Display` | 32 | display numerals (a statistic, a thermostat target) |
+
+The text roles are sized for a phone rather than for HA's desktop web: `Body` is 15 sp where HA's
+card body is 13 px (Android lists use 14–16 sp). They were 11 / 12 / 13 / 14 / 16 for `Caption`
+through `Title` until the card text was found too small on a phone; `Title` moved to 17 to stay a
+step above `BodyLarge`. The scale is strictly ascending, so stepping a role down always shrinks
+the text. An entity's state in a tile or an entities row is the value the card is read for, so it
+is `Body` in `primaryText`, not a grey caption.
 
 Adopting the scale collapsed the sixteen sizes the cards had drifted to. Card titles were 15 or
 16 sp and are all `Title` now (`adaptiveTitleSize` steps long titles down to `BodyLarge` and
@@ -231,7 +238,11 @@ own. Dashboard cards and their section surfaces take it. It is part of the card'
 of its design key: Classic is `baked:<palette>:<mode>`, any other style `style:<id>:<mode>`, since
 the app palette doesn't change it. The design server captures every style, and its manifest tags
 each design with it ([card-design-server.md](card-design-server.md#server-api)).
-Launcher widgets keep following the launcher's system colours.
+Launcher widgets take the card style too (`LauncherLook`), and a card's own override. By default
+they keep the launcher's system colours, with the style's instruments, type, shapes and ink on
+them (`ProvideHaUberStyle`); Settings → **Launcher widget colours** → *Card style colours* draws
+the style with its palette instead, as on the dashboard. The look is part of the launcher
+template's key. Wear widgets use the watch's own card style.
 
 In the builder, `ha-cards/uber-theme` is a container that takes a `theme` and `dark`.
 `ha-cards/card-template` is the container a design that becomes a card design sits in: names and

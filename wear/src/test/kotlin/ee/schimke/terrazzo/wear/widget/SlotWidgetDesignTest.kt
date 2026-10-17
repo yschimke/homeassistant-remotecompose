@@ -461,6 +461,63 @@ class SlotWidgetDesignTest {
       ),
     )
 
+  /**
+   * An entities slot with a light that is on: the baked template must draw it on, as the direct
+   * capture does, not in the off accent of the template's placeholder entities.
+   */
+  @Test
+  fun bakedEntitiesShowTheLiveOnOffState() =
+    assertPlayedParity(
+      "entities",
+      CardConfig(
+        "entities",
+        kotlinx.serialization.json.Json.parseToJsonElement(
+          """{"type":"entities","title":"Living Room","entities":["light.lamp","switch.coffee"]}"""
+        ) as JsonObject,
+      ),
+      HaSnapshot(
+        states =
+          mapOf(
+            "light.lamp" to entity("light.lamp", "on", "friendly_name" to "Office lamp"),
+            "switch.coffee" to entity("switch.coffee", "on", "friendly_name" to "Coffee maker"),
+          )
+      ),
+    )
+
+  /**
+   * [assertParity] played as the watch face plays a widget, at its container's size: a card that
+   * fills its slot (the entities rows share the slot's height) draws nothing in a wrap-height
+   * player.
+   */
+  private fun assertPlayedParity(name: String, card: CardConfig, snapshot: HaSnapshot) {
+    val data = data(card, snapshot)
+    assertFalse(data is WearWidgetDocument, "${card.type} renders from its design")
+    val direct = capture(slotDocumentForTest(card, snapshot))
+    val baked = capture(data)
+    var bytes by mutableStateOf(direct)
+    compose.setContent {
+      Box(Modifier.size(params.widthDp.dp, params.heightDp.dp).testTag("widget")) {
+        key(bytes) {
+          HaRcComposePlayer(
+            documentBytes = bytes,
+            modifier = Modifier.size(params.widthDp.dp, params.heightDp.dp),
+            fallback = { error("the widget plays in the Compose player") },
+          )
+        }
+      }
+    }
+    compose.waitForIdle()
+    val directPixels = pixels("direct-$name")
+    compose.runOnIdle { bytes = baked }
+    compose.waitForIdle()
+    val bakedPixels = pixels("baked-$name")
+    var differing = 0
+    for (y in 0 until directPixels.height) for (x in 0 until directPixels.width) {
+      if (directPixels[x, y] != bakedPixels[x, y]) differing++
+    }
+    assertEquals(0, differing, "$name: pixels differing between a direct and a baked Wear widget")
+  }
+
   private fun assertParity(name: String, card: CardConfig, snapshot: HaSnapshot) {
     val direct = capture(slotDocumentForTest(card, snapshot))
     val baked = capture(data(card, snapshot))
@@ -475,7 +532,7 @@ class SlotWidgetDesignTest {
             template =
               CardTemplatePlayback(
                 bytes,
-                { CardSnapshotBindings(emptyMap(), emptyMap(), emptyMap(), emptyMap()) },
+                { _, _ -> CardSnapshotBindings(emptyMap(), emptyMap(), emptyMap(), emptyMap()) },
                 HaAction.None,
               ),
           ) {}

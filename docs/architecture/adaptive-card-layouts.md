@@ -44,6 +44,10 @@ design.
 
 ## Principles
 
+The short, reviewable list every design follows is
+[design-principles.md](../design/design-principles.md); this section is
+the card-ladder reasoning behind it.
+
 ### 1. Identity before density
 
 The first thing a card communicates is _what kind of thing it is_.
@@ -69,6 +73,11 @@ A 200×60 cell and a 144×144 cell both pass "≥ 140 dp wide" but ask for
 totally different layouts. The first wants a horizontal row; the
 second wants a column or square. Break on width **and** height (or
 their ratio), not just width.
+
+The rule this serves is principle 1 of
+[design-principles.md](../design/design-principles.md): content follows
+area, arrangement follows aspect. Halve the height and double the width
+and the card shows the same content, in a row.
 
 The `RemoteSizeBreakpoint` helper today reads only `componentWidth()`.
 A 2D variant is a prerequisite before any worked-example ladder below
@@ -191,7 +200,7 @@ centered layout at the largest (Principles 7–8).
 > tier 0 at playback. So "Expanded / Full / Reflowed / …" is the design
 > target, not something a converter can encode as 4 live rungs today.
 > In practice each card picks the **one** transition that buys the most
-> (e.g. gauge: Wide↔Stacked; entities: list↔strip) and uses _centering_
+> (e.g. gauge: Wide↔Stacked; entities: dense↔expanded list) and uses _centering_
 > rather than a distinct tier to satisfy Principle 8 at the large end,
 > which costs no extra breakpoint. Revisit when a true multi-rung /
 > aspect gate lands.
@@ -206,6 +215,23 @@ centered layout at the largest (Principles 7–8).
 | 2. Reflowed wide-thin | 80 × 40 | icon · state inline, no name; tinted background still carries on/off colour |
 | 3. Identity chip | 56 × 56 | icon-only square, tinted by state |
 | 4. Text chip | smaller | centred state |
+
+On a Wear slot every container passes the width gate, and the small one (a ~44dp content box) is
+too short for the full tile's two body lines (56dp with padding). Wear surfaces declare
+`LocalFixedCanvasAxis = Height`, and the tile gates on height there instead: below 56dp it takes
+`RemoteHaTileCompact` (the name a step down to `Label` over the body-sized state, tighter padding),
+at or above it the full tile.
+
+A tile's `features:` (HA's `target-temperature`, `climate-hvac-modes`, …) are the first thing it
+drops. They draw under the tile on the dashboard (Wrap), each row a 42dp control under a 12dp gap,
+so `naturalHeightDp` grows by 54dp a row. A launcher cell shows them only behind a single
+`RemoteMinSizeGate` sized to that height (≥ 96dp wide): a roomy cell (2×2 and up) gets the full
+tile with its features, anything shorter the compact tile, whose encode-time colours and unclipped
+icon keep it a safe state-layout sibling. The width ladder's icon-only tier is not reachable for
+such a tile (one gate per card, #224), so a 1×1 cell shows the compact row. Wear slots never show
+features. The arc-dial family (thermostat, humidifier, light) does the same with
+a two-line compact Wide row, and the short Wide rows (gauge, alarm panel, media control) keep their
+vertical padding to 2dp so both lines fit the small slot.
 
 ### entity
 
@@ -237,30 +263,40 @@ centered layout at the largest (Principles 7–8).
 
 ### entities
 
-| Tier | Min size | Layout |
-|------|----------|--------|
-| 1. Full | `w < 260` | title chrome + N rows — matches Wrap |
-| 2. **Icon strip (reflow)** | `w ≥ 260` | rows repacked as a horizontal `glance`-style strip of icon · name · state cells |
+Every Fixed-mode tier is a list of whole rows (icon · name · state); the
+size buys more rows or bigger rows, never a strip of glance cells. One
+gate per card, on the axis the host's canvases differ along
+(`LocalFixedCanvasAxis`):
 
-Implemented as a **single-threshold width-axis** `RemoteSizeBreakpoint`
-(`thresholdsDp = [260], axis = Width`): drag the widget wider and the
-column of rows repacks into a row of icons. Two deliberate constraints,
-both learned from the matrix preview:
+| Host | Tier | Gate | Layout |
+|------|------|------|--------|
+| Wear (`Height`) | Small | `h < 80` | the first 2 rows, compact (18dp icon, `Label` text), no title |
+| Wear (`Height`) | Large | `h ≥ 80` | title over the first 3 rows (4 without a title), `Body` text |
+| Launcher (`Width`) | List | narrower than 260dp, or too short for the expanded rows | the Wrap list with dense (4dp) rows |
+| Launcher (`Width`) | Expanded | `w ≥ 260` **and** `h ≥ 20 + title 28 + 36 × rows` | the same rows spread over the widget's height: 28dp icon, `BodyLarge` name, `ValueSmall` value |
 
-- **Single threshold.** A multi-rung ladder lowers to nested
-  `RemoteStateLayout`s, which alpha010 collapses to tier 0 at playback
-  (#224, same as `GaugeCardConverter`) — a two-rung version pinned every
-  widget cell to one tier.
-- **Width, not height.** Every Fixed-mode surface (the matrix `@Preview`
-  cell and the launcher) pins width and lets height follow, so only a
-  width gate reads a stable canvas dimension and fires consistently. A
-  height gate reads the wrap-content height in those surfaces and
-  mis-selects. (`componentHeight()` _does_ work where height is pinned —
-  e.g. the Wear S vs L gauge — which is why the axis is available; it's
-  just not the right axis for a launcher list reflow.)
+- **Wear** gates on height with `RemoteSizeBreakpoint`: every slot is the
+  same width. The rows in both tiers share the slot's height and centre in
+  their share (`RemoteHaEntitiesFitted`), and each name ellipsises beside
+  its value, so labels never run together. The old glance strip ran its
+  unbounded labels into each other across the slot and dropped every row
+  on the small one.
+- **Launcher** gates with `RemoteMinSizeGate`, a single `min(w, h · r)`
+  expression, so it is still one gate (#224). The height minimum is
+  computed from the row count, so a long list keeps the dense rows until
+  the widget can hold all of them expanded. A launcher capture knows its
+  size, so both gates select the tier at capture time there.
+- **Bindings.** Every tier's toggle rows read the live `<entity>.is_on`
+  booleans, so a baked card-design template (launcher or Wear) draws each
+  entity's real on/off state rather than its placeholder's. No document
+  registers one twice: the two Wear tiers share one set of looks created
+  outside the gate (`entityLooks`), and a launcher capture records only the
+  tier its size selects. When both launcher tiers are recorded (the matrix,
+  no capture size), the expanded rows take the captured entities' state
+  instead (`entityLook(…, live = false)`).
 
 (No identity-only tier — entities is a list, the rows _are_ the
-identity; the strip keeps which-and-how-many.)
+identity.)
 
 ### Picture family (`picture`, `picture-entity`)
 
@@ -271,7 +307,7 @@ column row that steals height. Base shape ~`3×2`.
 
 | Tier | Min width | Layout |
 |------|-----------|--------|
-| Wrap (dashboard) | width pinned | HA reference band (fixed natural height), image fill-crop + scrim |
+| Wrap (dashboard) | width pinned | height follows the live width at HA's `aspect_ratio` (default 16:9; 1:1 in a `square` grid), image fill-crop + scrim |
 | Identity | `w < 180` | image fill-crop fills the whole cell; **name dropped** — only the state badge sits over the image |
 | Full | `w ≥ 180` | image fill-crop fills the whole cell + name + state scrim |
 
@@ -285,6 +321,33 @@ mode (no breakpoint). Matrix: `CardPreviewMatrix_PictureEntity` (bakes a
 landscape sample bitmap via an Inline `PictureImageStrategy` so the
 fill-crop is visible — square/tall cells crop the sides, nothing
 letterboxes).
+
+Wrap mode has no aspect-ratio modifier to lean on, so `RemoteAspectRatioBox`
+sizes the height from a `componentWidth()` expression at playback: one
+captured document is 16:9 at 360 dp and at 700 dp. `aspect_ratio` accepts
+HA's forms (`16:9`, `4x3`, `1.78`, and `50%` = height as a share of width);
+`picture-glance` applies it to its image area, above the entity strip.
+
+### Grid (`grid`)
+
+Principle 1 for a container: the same cards, arranged by the frame's width.
+HA's `columns` (default 3) is the **most** cells per row; each child also
+declares the narrowest cell it still reads in
+(`CardConverter.gridMinCellWidthDp`: button 80 dp, tile and the picture
+family 140, Compact cards 120, Full cards 240), and the grid takes the
+widest minimum among its children. A grid that can't give `columns` cells
+that much lays out fewer, wider ones, wrapping to more rows — one per row if
+even one doesn't fit. Rows are plain weighted `RemoteRow`s (no FlowLayout),
+and a short last row keeps the column width.
+
+The per-row count is a playback decision behind a **single** width gate
+(`HaGridLayout.plan`): `min(columns, cards)` at or above the width those
+cells need, else the count that fits a 320 dp phone. Cells read their width
+from the grid (`LocalGridCellWidthPx`, `(width − gaps) ÷ perRow`) rather
+than from their own weighted box. `square: true` (HA's default) makes
+button-like cells (`gridSquareCell`) square and gives picture cards a 1:1
+default; tiles and list cards keep their own height. Verified at playback by
+`GridLayoutPlaybackTest`.
 
 ### Bulk / time-series family (`history-graph`, `statistics-graph`, `logbook`, `todo-list`, `calendar`, `markdown`)
 
@@ -524,7 +587,7 @@ and is reused. The families today:
 | **Icon + state row/tile** | tinted icon | `tile`, `entity`, `sensor`, `statistic` | `RemoteHaTile` (+`RemoteHaIconChip`), `RemoteHaEntityRow` | all four: `Full↔IconChip` (Full self-centred via `CenteredCell`) |
 | **Icon-centred button** | large tinted icon | `button` | `RemoteHaButton` / `RemoteHaToggleButton` / `RemoteHaButtonIcon` | `icon-only ↔ icon+name` (2-D gate) |
 | **Arc-dial control** | the arc/dial | `gauge`, `thermostat`, `humidifier`, `light` | `RemoteHaGauge*`, `RemoteHaArcDial*`, `RenderArcDial` | thermostat/humidifier/light: Wide↔Full (width); gauge: Wide↔Stacked (height) — all via shared `RemoteSizeBreakpoint` |
-| **Multi-entity list/strip** | first row/cell | `entities`, `glance`, `area`, `picture-glance`, `entity-filter`, `*-stack` | `RemoteHaEntities`, `RemoteHaGlance` | entities: `list↔strip`; others: none |
+| **Multi-entity list/strip** | first row/cell | `entities`, `glance`, `area`, `picture-glance`, `entity-filter`, `*-stack` | `RemoteHaEntities`, `RemoteHaEntitiesFitted`, `RemoteHaGlance` | entities: dense↔expanded list (launcher), compact rows by height (Wear); others: none |
 | **Hero + supporting detail** | condition/art/shield + value | `weather-forecast`, `media-control`, `alarm-panel` | `RemoteHaWeatherForecast*`, `RemoteHaMediaControl*`, `RemoteHaAlarmPanel*` | all three `Wide↔Full` |
 | **Bulk / time-series** | spark/list head | `history-graph`, `statistics-graph`, `logbook`, `todo-list`, `calendar`, `markdown` | per-card + `RemoteHa*Identity` | `Identity↔Full` (width `180`); Wear `SmallOnly` |
 | **Picture / image** | the image | `picture`, `picture-entity`, `picture-elements` | `RemoteHaImage*`, `RemoteHaPictureEntity` | picture-entity: fill-crop + `Identity↔Full` (width `180`); picture: fill-crop; `picture-elements`: none |
@@ -585,7 +648,8 @@ The current state is the placeholder, not the philosophy:
    (#352) uses it to send narrow-tall (`1×1`) and wide-short (Wear S)
    cells to the icon-only tier while wide-and-tall cells keep the name,
    something no single width- or height-only gate can do. Net:
-   `entities` reflows on a single width threshold; per-card ladders pick
+   `entities` uses the same `min` form on launchers (expanded rows only
+   when every row fits) and a height gate on Wear; per-card ladders pick
    the one pinned axis (or the single-`min` 2-D form) that best
    discriminates their variants — see `GaugeCardConverter` /
    `ButtonCardConverter`.
@@ -599,7 +663,7 @@ The current state is the placeholder, not the philosophy:
    breakpoint per card (#224) — the reflow / expanded rungs between
    identity and full are the design target, not encodable yet.
 3. Runtime tier selection **does** fire — the matrix preview shows tile
-   switching chip↔full and entities switching list↔strip per size. Two
+   switching chip↔full and entities switching dense↔expanded rows per size. Two
    gotchas were shaped around: the `componentWidth()` named expression
    only materialises when a visible node references it (the transparent
    forcing-`RemoteText` in `RemoteSizeBreakpoint`), and the default
@@ -624,8 +688,9 @@ The current state is the placeholder, not the philosophy:
    `Full → CompactStateChip` at a single 120 dp gate — a Principle 1 /
    "hiding the icon first" violation, visible in the matrix at the time.)
 6. **Large cells pad with whitespace instead of enriching (Principle
-   7).** Still visible at `base+1` for the list / hero families
-   (`entities`, `weather-forecast`): content pins to the top-left and
+   7).** Was visible at `base+1` for the list / hero families
+   (`entities` now spreads expanded rows over the cell;
+   `weather-forecast`): content pins to the top-left and
    the bottom half of the cell is blank. The fix is an Expanded tier or
    centring (`No dead space`, Principle 8). **Caveat learned the hard
    way:** centring cannot be retrofitted by setting

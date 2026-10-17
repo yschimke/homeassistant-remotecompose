@@ -106,10 +106,19 @@ fun RemoteHaArcDial(data: HaArcDialData, modifier: RemoteModifier = RemoteModifi
  * off the row height (square); the text column shows mode chip, value, and target stacked so the
  * full readout stays visible even at chip sizes. Steppers are omitted — cells that hit this tier
  * don't have vertical room for them.
+ *
+ * [compact] is the Wear small slot's form (a ~44dp content box, too short for three lines): the
+ * mode over the value, set a step smaller, with tighter padding. The target line drops — the arc
+ * still marks the target, so the reading keeps its intent (design principle 3: reflow, then drop
+ * the least important part).
  */
 @Composable
 @RemoteComposable
-fun RemoteHaArcDialWide(data: HaArcDialData, modifier: RemoteModifier = RemoteModifier) {
+fun RemoteHaArcDialWide(
+  data: HaArcDialData,
+  modifier: RemoteModifier = RemoteModifier,
+  compact: Boolean = false,
+) {
   val theme = haTheme()
   val click =
     data.tapAction.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
@@ -126,7 +135,7 @@ fun RemoteHaArcDialWide(data: HaArcDialData, modifier: RemoteModifier = RemoteMo
       modifier
         .then(click)
         .then(cardChrome(theme.cardBackground, theme.divider))
-        .padding(horizontal = 10.rdp, vertical = 8.rdp),
+        .padding(horizontal = 10.rdp, vertical = if (compact) 2.rdp else 8.rdp),
     verticalAlignment = RemoteAlignment.CenterVertically,
     horizontalArrangement = RemoteArrangement.spacedBy(10.rdp),
   ) {
@@ -152,22 +161,23 @@ fun RemoteHaArcDialWide(data: HaArcDialData, modifier: RemoteModifier = RemoteMo
       RemoteText(
         text = centerText(data),
         color = theme.primaryText,
-        fontSize = HaType.ValueSmall,
+        fontSize = if (compact) HaType.Title else HaType.ValueSmall,
         fontWeight = haValueWeight(),
         style = haTextStyle(),
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,
       )
-      supportingText(data)?.let { supporting ->
-        RemoteText(
-          text = supporting,
-          color = dialAccent(data),
-          fontSize = HaType.Label,
-          style = haTextStyle(),
-          maxLines = 1,
-          overflow = TextOverflow.Ellipsis,
-        )
-      }
+      if (!compact)
+        supportingText(data)?.let { supporting ->
+          RemoteText(
+            text = supporting,
+            color = dialAccent(data),
+            fontSize = HaType.Label,
+            style = haTextStyle(),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+          )
+        }
     }
   }
 }
@@ -257,6 +267,8 @@ private fun ChipText(text: RemoteString, accent: RemoteColor) {
     fontWeight = FontWeight.Medium,
     style = haTextStyle(),
     maxLines = 1,
+    // A long mode ("Humidifying") in a narrow text column ellipsises rather than being cut.
+    overflow = TextOverflow.Ellipsis,
   )
 }
 

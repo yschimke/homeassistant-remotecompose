@@ -1,0 +1,746 @@
+{
+  "binary_sensor.a1mini_sn1_ams_1_active": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "AMS lite",
+    "deviceId": "demo-a1mini-sn1-ams-1"
+  },
+  "binary_sensor.a1mini_sn1_externalspool_active": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "External Spool",
+    "deviceId": "demo-a1mini-sn1-external-spool"
+  },
+  "binary_sensor.a1mini_sn1_extruder_filament_state": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "A1 mini",
+    "deviceId": "demo-a1mini-sn1"
+  },
+  "binary_sensor.a1mini_sn1_firmware_update": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "A1 mini",
+    "deviceId": "demo-a1mini-sn1"
+  },
+  "binary_sensor.a1mini_sn1_hms_errors": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "A1 mini",
+    "deviceId": "demo-a1mini-sn1"
+  },
+  "binary_sensor.a1mini_sn1_online": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "A1 mini",
+    "deviceId": "demo-a1mini-sn1"
+  },
+  "binary_sensor.a1mini_sn1_print_error": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "A1 mini",
+    "deviceId": "demo-a1mini-sn1"
+  },
+  "binary_sensor.a1mini_sn1_recording_timelapse": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "A1 mini",
+    "deviceId": "demo-a1mini-sn1"
+  },
+  "binary_sensor.p2s_sn2_ams_1_active": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "AMS",
+    "deviceId": "demo-p2s-sn2-ams-1"
+  },
+  "binary_sensor.p2s_sn2_ams_1_drying": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "AMS",
+    "deviceId": "demo-p2s-sn2-ams-1"
+  },
+  "binary_sensor.p2s_sn2_door": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "P2S",
+    "deviceId": "demo-p2s-sn2"
+  },
+  "binary_sensor.p2s_sn2_externalspool_active": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "External Spool",
+    "deviceId": "demo-p2s-sn2-external-spool"
+  },
+  "binary_sensor.p2s_sn2_extruder_filament": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "P2S",
+    "deviceId": "demo-p2s-sn2"
+  },
+  "binary_sensor.p2s_sn2_firmware": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "P2S",
+    "deviceId": "demo-p2s-sn2"
+  },
+  "binary_sensor.p2s_sn2_hms_errors": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "P2S",
+    "deviceId": "demo-p2s-sn2"
+  },
+  "binary_sensor.p2s_sn2_online": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "P2S",
+    "deviceId": "demo-p2s-sn2"
+  },
+  "binary_sensor.p2s_sn2_print_error": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "P2S",
+    "deviceId": "demo-p2s-sn2"
+  },
+  "binary_sensor.p2s_sn2_timelapse": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "P2S",
+    "deviceId": "demo-p2s-sn2"
+  },
+  "button.a1mini_sn1_force_refresh_data": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "A1 mini",
+    "deviceId": "demo-a1mini-sn1"
+  },
+  "button.a1mini_sn1_pause_printing": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "A1 mini",
+    "deviceId": "demo-a1mini-sn1"
+  },
+  "button.a1mini_sn1_resume_printing": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "A1 mini",
+    "deviceId": "demo-a1mini-sn1"
+  },
+  "button.a1mini_sn1_stop_printing": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "A1 mini",
+    "deviceId": "demo-a1mini-sn1"
+  },
+  "camera.a1mini_sn1_camera": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "A1 mini",
+    "deviceId": "demo-a1mini-sn1"
+  },
+  "fan.a1mini_sn1_cooling_fan": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "A1 mini",
+    "deviceId": "demo-a1mini-sn1"
+  },
+  "image.a1mini_sn1_cover_image": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "A1 mini",
+    "deviceId": "demo-a1mini-sn1"
+  },
+  "image.a1mini_sn1_pick_image": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "A1 mini",
+    "deviceId": "demo-a1mini-sn1"
+  },
+  "image.p2s_sn2_cover_image": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "P2S",
+    "deviceId": "demo-p2s-sn2"
+  },
+  "image.p2s_sn2_pick_image": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "P2S",
+    "deviceId": "demo-p2s-sn2"
+  },
+  "light.a1mini_sn1_chamber_light": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "A1 mini",
+    "deviceId": "demo-a1mini-sn1"
+  },
+  "light.p2s_sn2_chamber_light": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "P2S",
+    "deviceId": "demo-p2s-sn2"
+  },
+  "select.a1mini_sn1_printing_speed": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "A1 mini",
+    "deviceId": "demo-a1mini-sn1"
+  },
+  "sensor.a1mini_sn1_active_tray": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "A1 mini",
+    "deviceId": "demo-a1mini-sn1"
+  },
+  "sensor.a1mini_sn1_ams_1_humidity": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "AMS lite",
+    "deviceId": "demo-a1mini-sn1-ams-1"
+  },
+  "sensor.a1mini_sn1_ams_1_humidity_index": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "AMS lite",
+    "deviceId": "demo-a1mini-sn1-ams-1"
+  },
+  "sensor.a1mini_sn1_ams_1_temperature_2": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "AMS lite",
+    "deviceId": "demo-a1mini-sn1-ams-1"
+  },
+  "sensor.a1mini_sn1_ams_1_tray_1": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "AMS lite",
+    "deviceId": "demo-a1mini-sn1-ams-1"
+  },
+  "sensor.a1mini_sn1_ams_1_tray_2": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "AMS lite",
+    "deviceId": "demo-a1mini-sn1-ams-1"
+  },
+  "sensor.a1mini_sn1_ams_1_tray_3": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "AMS lite",
+    "deviceId": "demo-a1mini-sn1-ams-1"
+  },
+  "sensor.a1mini_sn1_ams_1_tray_4": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "AMS lite",
+    "deviceId": "demo-a1mini-sn1-ams-1"
+  },
+  "sensor.a1mini_sn1_bed_temperature": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "A1 mini",
+    "deviceId": "demo-a1mini-sn1"
+  },
+  "sensor.a1mini_sn1_cooling_fan_speed": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "A1 mini",
+    "deviceId": "demo-a1mini-sn1"
+  },
+  "sensor.a1mini_sn1_current_layer": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "A1 mini",
+    "deviceId": "demo-a1mini-sn1"
+  },
+  "sensor.a1mini_sn1_current_stage": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "A1 mini",
+    "deviceId": "demo-a1mini-sn1"
+  },
+  "sensor.a1mini_sn1_end_time": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "A1 mini",
+    "deviceId": "demo-a1mini-sn1"
+  },
+  "sensor.a1mini_sn1_externalspool_external_spool": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "External Spool",
+    "deviceId": "demo-a1mini-sn1-external-spool"
+  },
+  "sensor.a1mini_sn1_gcode_file_downloaded": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "A1 mini",
+    "deviceId": "demo-a1mini-sn1"
+  },
+  "sensor.a1mini_sn1_gcode_filename": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "A1 mini",
+    "deviceId": "demo-a1mini-sn1"
+  },
+  "sensor.a1mini_sn1_heatbreak_fan_speed": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "A1 mini",
+    "deviceId": "demo-a1mini-sn1"
+  },
+  "sensor.a1mini_sn1_ip_address": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "A1 mini",
+    "deviceId": "demo-a1mini-sn1"
+  },
+  "sensor.a1mini_sn1_model_download": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "A1 mini",
+    "deviceId": "demo-a1mini-sn1"
+  },
+  "sensor.a1mini_sn1_mqtt_connection_mode": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "A1 mini",
+    "deviceId": "demo-a1mini-sn1"
+  },
+  "sensor.a1mini_sn1_nozzle_size": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "A1 mini",
+    "deviceId": "demo-a1mini-sn1"
+  },
+  "sensor.a1mini_sn1_nozzle_target_temperature": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "A1 mini",
+    "deviceId": "demo-a1mini-sn1"
+  },
+  "sensor.a1mini_sn1_nozzle_temperature": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "A1 mini",
+    "deviceId": "demo-a1mini-sn1"
+  },
+  "sensor.a1mini_sn1_nozzle_type": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "A1 mini",
+    "deviceId": "demo-a1mini-sn1"
+  },
+  "sensor.a1mini_sn1_print_bed_type": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "A1 mini",
+    "deviceId": "demo-a1mini-sn1"
+  },
+  "sensor.a1mini_sn1_print_length": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "A1 mini",
+    "deviceId": "demo-a1mini-sn1"
+  },
+  "sensor.a1mini_sn1_print_progress": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "A1 mini",
+    "deviceId": "demo-a1mini-sn1"
+  },
+  "sensor.a1mini_sn1_print_status": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "A1 mini",
+    "deviceId": "demo-a1mini-sn1"
+  },
+  "sensor.a1mini_sn1_print_type": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "A1 mini",
+    "deviceId": "demo-a1mini-sn1"
+  },
+  "sensor.a1mini_sn1_print_weight": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "A1 mini",
+    "deviceId": "demo-a1mini-sn1"
+  },
+  "sensor.a1mini_sn1_printable_objects": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "A1 mini",
+    "deviceId": "demo-a1mini-sn1"
+  },
+  "sensor.a1mini_sn1_printer_name": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "A1 mini",
+    "deviceId": "demo-a1mini-sn1"
+  },
+  "sensor.a1mini_sn1_remaining_time": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "A1 mini",
+    "deviceId": "demo-a1mini-sn1"
+  },
+  "sensor.a1mini_sn1_sd_card_status": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "A1 mini",
+    "deviceId": "demo-a1mini-sn1"
+  },
+  "sensor.a1mini_sn1_serial_number": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "A1 mini",
+    "deviceId": "demo-a1mini-sn1"
+  },
+  "sensor.a1mini_sn1_skipped_objects": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "A1 mini",
+    "deviceId": "demo-a1mini-sn1"
+  },
+  "sensor.a1mini_sn1_speed_profile": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "A1 mini",
+    "deviceId": "demo-a1mini-sn1"
+  },
+  "sensor.a1mini_sn1_start_time": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "A1 mini",
+    "deviceId": "demo-a1mini-sn1"
+  },
+  "sensor.a1mini_sn1_target_bed_temperature": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "A1 mini",
+    "deviceId": "demo-a1mini-sn1"
+  },
+  "sensor.a1mini_sn1_task_name": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "A1 mini",
+    "deviceId": "demo-a1mini-sn1"
+  },
+  "sensor.a1mini_sn1_total_layer_count": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "A1 mini",
+    "deviceId": "demo-a1mini-sn1"
+  },
+  "sensor.a1mini_sn1_total_usage": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "A1 mini",
+    "deviceId": "demo-a1mini-sn1"
+  },
+  "sensor.a1mini_sn1_wi_fi_signal": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "A1 mini",
+    "deviceId": "demo-a1mini-sn1"
+  },
+  "sensor.p2s_sn2_active_tray": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "P2S",
+    "deviceId": "demo-p2s-sn2"
+  },
+  "sensor.p2s_sn2_airduct_mode": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "P2S",
+    "deviceId": "demo-p2s-sn2"
+  },
+  "sensor.p2s_sn2_ams_1_humidity": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "AMS",
+    "deviceId": "demo-p2s-sn2-ams-1"
+  },
+  "sensor.p2s_sn2_ams_1_humidity_index": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "AMS",
+    "deviceId": "demo-p2s-sn2-ams-1"
+  },
+  "sensor.p2s_sn2_ams_1_remaining_drying_time": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "AMS",
+    "deviceId": "demo-p2s-sn2-ams-1"
+  },
+  "sensor.p2s_sn2_ams_1_temperature": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "AMS",
+    "deviceId": "demo-p2s-sn2-ams-1"
+  },
+  "sensor.p2s_sn2_ams_1_tray_1": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "AMS",
+    "deviceId": "demo-p2s-sn2-ams-1"
+  },
+  "sensor.p2s_sn2_ams_1_tray_2": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "AMS",
+    "deviceId": "demo-p2s-sn2-ams-1"
+  },
+  "sensor.p2s_sn2_ams_1_tray_3": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "AMS",
+    "deviceId": "demo-p2s-sn2-ams-1"
+  },
+  "sensor.p2s_sn2_ams_1_tray_4": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "AMS",
+    "deviceId": "demo-p2s-sn2-ams-1"
+  },
+  "sensor.p2s_sn2_aux_fan_speed": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "P2S",
+    "deviceId": "demo-p2s-sn2"
+  },
+  "sensor.p2s_sn2_bed_target_temperature": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "P2S",
+    "deviceId": "demo-p2s-sn2"
+  },
+  "sensor.p2s_sn2_bed_temperature": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "P2S",
+    "deviceId": "demo-p2s-sn2"
+  },
+  "sensor.p2s_sn2_chamber_fan_speed": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "P2S",
+    "deviceId": "demo-p2s-sn2"
+  },
+  "sensor.p2s_sn2_chamber_temperature": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "P2S",
+    "deviceId": "demo-p2s-sn2"
+  },
+  "sensor.p2s_sn2_cooling_fan_speed": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "P2S",
+    "deviceId": "demo-p2s-sn2"
+  },
+  "sensor.p2s_sn2_current_layer": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "P2S",
+    "deviceId": "demo-p2s-sn2"
+  },
+  "sensor.p2s_sn2_current_stage": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "P2S",
+    "deviceId": "demo-p2s-sn2"
+  },
+  "sensor.p2s_sn2_end_time": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "P2S",
+    "deviceId": "demo-p2s-sn2"
+  },
+  "sensor.p2s_sn2_externalspool_external_spool": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "External Spool",
+    "deviceId": "demo-p2s-sn2-external-spool"
+  },
+  "sensor.p2s_sn2_gcode_file_downloaded": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "P2S",
+    "deviceId": "demo-p2s-sn2"
+  },
+  "sensor.p2s_sn2_gcode_filename": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "P2S",
+    "deviceId": "demo-p2s-sn2"
+  },
+  "sensor.p2s_sn2_heatbreak_fan_speed": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "P2S",
+    "deviceId": "demo-p2s-sn2"
+  },
+  "sensor.p2s_sn2_ip_address": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "P2S",
+    "deviceId": "demo-p2s-sn2"
+  },
+  "sensor.p2s_sn2_model_download": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "P2S",
+    "deviceId": "demo-p2s-sn2"
+  },
+  "sensor.p2s_sn2_mqtt_connection_mode": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "P2S",
+    "deviceId": "demo-p2s-sn2"
+  },
+  "sensor.p2s_sn2_nozzle_size": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "P2S",
+    "deviceId": "demo-p2s-sn2"
+  },
+  "sensor.p2s_sn2_nozzle_target_temperature": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "P2S",
+    "deviceId": "demo-p2s-sn2"
+  },
+  "sensor.p2s_sn2_nozzle_temperature": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "P2S",
+    "deviceId": "demo-p2s-sn2"
+  },
+  "sensor.p2s_sn2_nozzle_type": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "P2S",
+    "deviceId": "demo-p2s-sn2"
+  },
+  "sensor.p2s_sn2_print_bed_type": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "P2S",
+    "deviceId": "demo-p2s-sn2"
+  },
+  "sensor.p2s_sn2_print_length": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "P2S",
+    "deviceId": "demo-p2s-sn2"
+  },
+  "sensor.p2s_sn2_print_progress": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "P2S",
+    "deviceId": "demo-p2s-sn2"
+  },
+  "sensor.p2s_sn2_print_status": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "P2S",
+    "deviceId": "demo-p2s-sn2"
+  },
+  "sensor.p2s_sn2_print_type": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "P2S",
+    "deviceId": "demo-p2s-sn2"
+  },
+  "sensor.p2s_sn2_print_weight": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "P2S",
+    "deviceId": "demo-p2s-sn2"
+  },
+  "sensor.p2s_sn2_printable_objects": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "P2S",
+    "deviceId": "demo-p2s-sn2"
+  },
+  "sensor.p2s_sn2_printer_name": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "P2S",
+    "deviceId": "demo-p2s-sn2"
+  },
+  "sensor.p2s_sn2_remaining_time": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "P2S",
+    "deviceId": "demo-p2s-sn2"
+  },
+  "sensor.p2s_sn2_sd_card_status": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "P2S",
+    "deviceId": "demo-p2s-sn2"
+  },
+  "sensor.p2s_sn2_serial_number": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "P2S",
+    "deviceId": "demo-p2s-sn2"
+  },
+  "sensor.p2s_sn2_skipped_objects": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "P2S",
+    "deviceId": "demo-p2s-sn2"
+  },
+  "sensor.p2s_sn2_speed_profile": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "P2S",
+    "deviceId": "demo-p2s-sn2"
+  },
+  "sensor.p2s_sn2_start_time": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "P2S",
+    "deviceId": "demo-p2s-sn2"
+  },
+  "sensor.p2s_sn2_task_name": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "P2S",
+    "deviceId": "demo-p2s-sn2"
+  },
+  "sensor.p2s_sn2_total_layer_count": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "P2S",
+    "deviceId": "demo-p2s-sn2"
+  },
+  "sensor.p2s_sn2_total_usage": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "P2S",
+    "deviceId": "demo-p2s-sn2"
+  },
+  "sensor.p2s_sn2_wi_fi_signal": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "P2S",
+    "deviceId": "demo-p2s-sn2"
+  },
+  "switch.a1mini_sn1_enable_camera": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "A1 mini",
+    "deviceId": "demo-a1mini-sn1"
+  },
+  "switch.p2s_sn2_camera": {
+    "integration": "bambu_lab",
+    "manufacturer": "Bambu Lab",
+    "model": "P2S",
+    "deviceId": "demo-p2s-sn2"
+  }
+}

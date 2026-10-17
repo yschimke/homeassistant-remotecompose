@@ -69,6 +69,8 @@ fetches them. None of them holds user data.
 | `card` | The Lovelace card config as JSON: the same object a dashboard holds. |
 | `design` | The template's sha256 in the library. The bytes are checked against it where `crypto.subtle` exists, which is any secure context. |
 | `design-key` | Instead of `design`, a `DesignKey` as JSON, looked up in the library's manifest. A pinned sha256 is preferred because it can't change under the page. |
+| _(neither)_ | With no `design` and no `design-key`, the card asks the library's server for one (`POST /api/cards/resolve`, [card-design-server.md](card-design-server.md)): the closest library design for its type, slots, `card-style` and mode. It is asked once per card, style and mode, as a CORS simple request. Only the design is taken: the answer's values are the library example's, not this card's. |
+| `card-style` | With neither of the above, the card style to draw in: an `HaUberTheme` id such as `lcd` or `braun`. The default is `classic`. |
 | `library` | The design library base. The default is `/designs/v1/` on the host serving the script. |
 | `theme` | `light`, `dark` or `auto`. Templates are baked per theme, so this only steers the player. |
 | `height` | A fixed CSS height. By default the canvas fits the laid-out card. |
@@ -95,13 +97,26 @@ The page pushes the **slot bindings** a template reads, which is everything
 
 - `card.title`;
 - for each slot `<domain>.s<N>`: `.state` (formatted, as `formatState`), `.name`, `.is_on`
-  (`HaLiveBindings.isOn`, pushed as an int 0/1 like the app does), `.state_int`, `.status` and
-  `.numeric_state`.
+  (`HaLiveBindings.isOn`, pushed as an int 0/1 like the app does), `.is_available`
+  (`HaLiveBindings.isAvailable`, likewise 0/1; false for a missing entity), `.state_int`, `.status`
+  and `.numeric_state`.
 
 Names go to the player in the `USER:` domain, as the AndroidX player's `setUserLocal*` writes them.
 
+`.state` reads the way Home Assistant's frontend shows it (`HaStateFormat.kt`): binary-sensor words
+by device class (`Open`, `Detected`), `Unknown` apart from `Unavailable`, the entity's
+`display_precision` / `suggested_display_precision` else a device-class default, currency
+(`£0.25/kWh`), durations (`1 h 05 min`), compass bearings (`NE 50°`), count units (`1 star`), `—`
+for a redacted value, and free text untouched. Two differences from the app, both by design:
+
+- The embed doesn't read the entity registry, so a registry-only display precision (`dp`, which the
+  app gets from `config/entity_registry/list_for_display`) isn't applied; the attributes are.
+- A timestamp (`device_class: timestamp`, `event` / `button` / `input_button` / `scene`) reads as
+  a relative time from the viewer's clock (`3 h ago`), a date (local time) a week or more away. The
+  element re-derives its bindings every 20 s while a card shows one, like the app's dashboard tick.
+
 `embed/ha-card.js` is a JavaScript **port** of those functions, not ha-model's `wasmJs` build. The
-port is about 200 lines with no download cost, while the wasm build is a megabyte-scale module plus
+port is a few hundred lines with no download cost, while the wasm build is a megabyte-scale module plus
 loader for a few string functions. The port is pinned to Kotlin by one golden file,
 `embed/test/bindings-golden.json`:
 

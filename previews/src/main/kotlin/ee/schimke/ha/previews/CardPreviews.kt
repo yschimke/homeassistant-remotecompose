@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
+import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.FixedHaClock
 import ee.schimke.ha.rc.LocalHaClock
@@ -57,11 +58,11 @@ import java.time.ZonedDateTime
  *
  * 4. The reference dimensions at 2.625 density are:
  *
- *    tile 187 × 43 dp (refs in `references/tile/`) button 187 × 91 dp (refs in
- *    `references/button/`) entity 187 × 91 dp (refs in `references/entity/`) entities 381 × 169 dp
- *    (refs in `references/entities/`) glance 381 × 149 dp (refs in `references/glance/`) markdown
- *    381 × 106 dp (refs in `references/markdown/`) dashboard 381 × 411 dp (refs in
- *    `references/dashboard/`) home 561 × 251 dp (refs in `references/home/`)
+ *    tile 187 × 56 dp (HA web: 43; taller for the 15sp body) (refs in `references/tile/`) button
+ *    187 × 91 dp (refs in `references/button/`) entity 187 × 91 dp (refs in `references/entity/`)
+ *    entities 381 × 169 dp (refs in `references/entities/`) glance 381 × 149 dp (refs in
+ *    `references/glance/`) markdown 381 × 106 dp (refs in `references/markdown/`) dashboard 381 ×
+ *    411 dp (refs in `references/dashboard/`) home 561 × 251 dp (refs in `references/home/`)
  *
  * 5. If the HA references are ever re-captured at a different density, re-run
  *    `scripts/ref-sizes.py` and update these numbers together — don't drift.
@@ -192,6 +193,76 @@ private fun glanceCard() =
     ]}"""
   )
 
+// ——— availability ———
+// State colour follows state: on (device-class colour), off (neutral), unavailable / unknown
+// (dimmed, neutral), a non-boolean state (`stale`, neutral) and a problem that is on (alert red).
+
+@Preview(
+  name = "entities availability (light)",
+  showBackground = false,
+  widthDp = 381,
+  heightDp = 460,
+)
+@Composable
+fun Entities_Availability_Light() =
+  CardHost(HaTheme.Light) { RenderChild(availabilityEntitiesCard(), Fixtures.availability) }
+
+@Preview(
+  name = "entities availability (dark)",
+  showBackground = false,
+  widthDp = 381,
+  heightDp = 460,
+)
+@Composable
+fun Entities_Availability_Dark() =
+  CardHost(HaTheme.Dark) { RenderChild(availabilityEntitiesCard(), Fixtures.availability) }
+
+@Preview(
+  name = "glance availability (light)",
+  showBackground = false,
+  widthDp = 381,
+  heightDp = 200,
+)
+@Composable
+fun Glance_Availability_Light() =
+  CardHost(HaTheme.Light) { RenderChild(availabilityGlanceCard(), Fixtures.availability) }
+
+@Preview(name = "tiles availability (light)", showBackground = false, widthDp = 381, heightDp = 200)
+@Composable
+fun Tiles_Availability_Light() =
+  CardHost(HaTheme.Light) { RenderChild(availabilityTilesCard(), Fixtures.availability) }
+
+@Preview(name = "tiles availability (dark)", showBackground = false, widthDp = 381, heightDp = 200)
+@Composable
+fun Tiles_Availability_Dark() =
+  CardHost(HaTheme.Dark) { RenderChild(availabilityTilesCard(), Fixtures.availability) }
+
+private val availabilityEntities =
+  listOf(
+    "binary_sensor.hall_motion",
+    "binary_sensor.front_room_motion",
+    "binary_sensor.driveway_motion",
+    "binary_sensor.mqtt_broker",
+    "binary_sensor.room_server",
+    "binary_sensor.printer_errors",
+    "light.kitchen",
+    "switch.coffee_maker",
+  )
+
+private val availabilityIds = availabilityEntities.joinToString(",") { "\"$it\"" }
+
+private fun availabilityEntitiesCard() =
+  card("""{"type":"entities","title":"Availability","entities":[$availabilityIds]}""")
+
+private fun availabilityGlanceCard() = card("""{"type":"glance","entities":[$availabilityIds]}""")
+
+private fun availabilityTilesCard() =
+  card(
+    "{\"type\":\"grid\",\"columns\":2,\"square\":false,\"cards\":[" +
+      availabilityEntities.joinToString(",") { "{\"type\":\"tile\",\"entity\":\"$it\"}" } +
+      "]}"
+  )
+
 // ——— heading ———
 // No HA reference. Tight-to-content, per rule 3 at top.
 
@@ -217,6 +288,26 @@ fun Markdown_Dark() = CardHost(HaTheme.Dark) { RenderChild(markdownCard(), Fixtu
 
 private fun markdownCard() =
   card("""{"type":"markdown","title":"Notes","content":"Welcome home.\nTemperature is normal."}""")
+
+/**
+ * Inline emphasis as HA's markdown card (CommonMark via marked) parses it: italic, bold, both,
+ * inline code, an intraword `snake_case` left plain, and a GitHub-style repo tagline. Italic draws
+ * upright for now (see `MarkdownStyle.drawn`).
+ */
+@Preview(name = "markdown emphasis (light)", showBackground = false, widthDp = 381, heightDp = 120)
+@Composable
+fun Markdown_Emphasis_Light() =
+  CardHost(HaTheme.Light) { RenderChild(markdownEmphasisCard(), Fixtures.mixed) }
+
+@Preview(name = "markdown emphasis (dark)", showBackground = false, widthDp = 381, heightDp = 120)
+@Composable
+fun Markdown_Emphasis_Dark() =
+  CardHost(HaTheme.Dark) { RenderChild(markdownEmphasisCard(), Fixtures.mixed) }
+
+private fun markdownEmphasisCard() =
+  card(
+    """{"type":"markdown","content":"## meshcore-mobile\n\n_Mobile companion for MeshCore_\n\nThis is *italic*, this is **bold**, this is ***both***.\n\n- Run `gradlew check` on snake_case_name\n- __Bold bullet__"}"""
+  )
 
 // ——— vertical-stack ———
 
@@ -261,13 +352,15 @@ private fun horizontalStackCard() =
 
 // ——— grid ———
 // No HA reference. Tight-to-content, per rule 3 at top.
-// Our 4 buttons fit in one row at 312 dp.
+// `columns` is the most per row: four buttons in HA's default three columns lay out 3 + 1 at
+// 312 dp, each in a square cell ((312 − 2·8) / 3 ≈ 99 dp); the short last row keeps the column
+// width.
 
-@Preview(name = "grid (light)", showBackground = false, widthDp = 312, heightDp = 94)
+@Preview(name = "grid (light)", showBackground = false, widthDp = 312, heightDp = 206)
 @Composable
 fun Grid_Light() = CardHost(HaTheme.Light) { RenderChild(gridCard(), Fixtures.mixed) }
 
-@Preview(name = "grid (dark)", showBackground = false, widthDp = 312, heightDp = 94)
+@Preview(name = "grid (dark)", showBackground = false, widthDp = 312, heightDp = 206)
 @Composable
 fun Grid_Dark() = CardHost(HaTheme.Dark) { RenderChild(gridCard(), Fixtures.mixed) }
 
@@ -278,6 +371,76 @@ private fun gridCard() =
         {"type":"button","entity":"light.kitchen","name":"Office"},
         {"type":"button","entity":"sensor.living_room","name":"Temp","icon":"mdi:thermometer"},
         {"type":"button","entity":"sensor.living_room","name":"RH","icon":"mdi:water-percent"}
+    ]}"""
+  )
+
+// Four columns of buttons: four 80 dp cells need 344 dp, so a 360 dp phone keeps all four in a row
+// ((360 − 3·8) / 4 = 84 dp squares).
+@Preview(name = "grid 4 buttons — 360dp", showBackground = false, widthDp = 360, heightDp = 84)
+@Composable
+fun GridButtons4Columns_360() =
+  CardHost(HaTheme.Dark) { RenderChild(gridButtons4Card(), Fixtures.mixed) }
+
+private fun gridButtons4Card() =
+  card(
+    """{"type":"grid","columns":4,"cards":[
+        {"type":"button","entity":"light.kitchen","name":"Kitchen"},
+        {"type":"button","entity":"light.kitchen","name":"Office"},
+        {"type":"button","entity":"sensor.living_room","name":"Temp","icon":"mdi:thermometer"},
+        {"type":"button","entity":"sensor.living_room","name":"RH","icon":"mdi:water-percent"}
+    ]}"""
+  )
+
+// The 3D Printing dashboard's camera grid: two `aspect_ratio: 1:1` picture-entity cards in two
+// columns. Both fit side by side as squares at a phone's width ((360 − 8) / 2 = 176 dp) and at a
+// tablet's ((700 − 8) / 2 = 346 dp); the same document, played wider, just grows the squares.
+@Preview(
+  name = "grid 2 square pictures — 360dp",
+  showBackground = false,
+  widthDp = 360,
+  heightDp = 176,
+)
+@Composable
+fun GridSquarePictures_360() =
+  CardHost(HaTheme.Dark) { RenderChild(gridPicturesCard(), Fixtures.driveway) }
+
+@Preview(
+  name = "grid 2 square pictures — 700dp",
+  showBackground = false,
+  widthDp = 700,
+  heightDp = 346,
+)
+@Composable
+fun GridSquarePictures_700() =
+  CardHost(HaTheme.Dark) { RenderChild(gridPicturesCard(), Fixtures.driveway) }
+
+private fun gridPicturesCard() =
+  card(
+    """{"type":"grid","columns":2,"cards":[
+        {"type":"picture-entity","entity":"camera.driveway","name":"Chamber","aspect_ratio":"1:1"},
+        {"type":"picture-entity","entity":"camera.driveway","name":"Nozzle","aspect_ratio":"1:1"}
+    ]}"""
+  )
+
+// A tile grid: tiles keep their own height (they are rows, not squares). Three 140 dp tiles need
+// 436 dp, so a phone lays out two per row and a tablet all three.
+@Preview(name = "grid tiles — 360dp", showBackground = false, widthDp = 360, heightDp = 160)
+@Composable
+fun GridTiles_360() = CardHost(HaTheme.Dark) { RenderChild(gridTilesCard(), Fixtures.mixed) }
+
+@Preview(name = "grid tiles — 700dp", showBackground = false, widthDp = 700, heightDp = 104)
+@Composable
+fun GridTiles_700() = CardHost(HaTheme.Dark) { RenderChild(gridTilesCard(), Fixtures.mixed) }
+
+private fun gridTilesCard() =
+  card(
+    """{"type":"grid","columns":3,"cards":[
+        {"type":"tile","entity":"light.kitchen","name":"Kitchen"},
+        {"type":"tile","entity":"light.kitchen","name":"Office"},
+        {"type":"tile","entity":"sensor.living_room","name":"Living room"},
+        {"type":"tile","entity":"sensor.living_room","name":"Bedroom"},
+        {"type":"tile","entity":"light.kitchen","name":"Hall"},
+        {"type":"tile","entity":"sensor.living_room","name":"Study"}
     ]}"""
   )
 
@@ -413,15 +576,16 @@ private fun gaugeCard() =
   )
 
 // ——— picture-entity ———
+// No `aspect_ratio`: the picture family's default 16:9, so 312 dp wide is 176 dp tall.
 
-@Preview(name = "picture-entity (light)", showBackground = false, widthDp = 312, heightDp = 160)
+@Preview(name = "picture-entity (light)", showBackground = false, widthDp = 312, heightDp = 176)
 @Composable
 fun PictureEntity_Light() =
   CardHost(HaTheme.Light) {
     RenderChild(pictureEntityCard(), Fixtures.driveway, RemoteModifier.fillMaxWidth())
   }
 
-@Preview(name = "picture-entity (dark)", showBackground = false, widthDp = 312, heightDp = 160)
+@Preview(name = "picture-entity (dark)", showBackground = false, widthDp = 312, heightDp = 176)
 @Composable
 fun PictureEntity_Dark() =
   CardHost(HaTheme.Dark) {
@@ -441,14 +605,14 @@ private fun pictureEntityCard() =
 // The canvas is sized to that taller content (measured via
 // `scripts/check-preview-waste.py`), not the HA capture.
 
-@Preview(name = "weather-forecast (light)", showBackground = false, widthDp = 381, heightDp = 224)
+@Preview(name = "weather-forecast (light)", showBackground = false, widthDp = 381, heightDp = 232)
 @Composable
 fun WeatherForecast_Light() =
   CardHost(HaTheme.Light) {
     RenderChild(weatherForecastCard(), Fixtures.weather, RemoteModifier.fillMaxWidth())
   }
 
-@Preview(name = "weather-forecast (dark)", showBackground = false, widthDp = 381, heightDp = 224)
+@Preview(name = "weather-forecast (dark)", showBackground = false, widthDp = 381, heightDp = 232)
 @Composable
 fun WeatherForecast_Dark() =
   CardHost(HaTheme.Dark) {
@@ -505,18 +669,17 @@ private fun historyGraphCard() =
         "entities":["sensor.outside_temp","sensor.upstairs_temp"]}"""
   )
 
-// Regression guard: long entity names with no recorder data must
-// truncate (ellipsis) rather than overrun the right-aligned "no data"
-// summary. See the "Open issues per repo" dashboard card. No HA
-// reference exists for this synthetic case; the canvas is deliberately
-// narrow (300 dp) so the longest repo name has to truncate — that's the
-// behaviour under test, not a reference-matched size.
+// Every series empty (recorder exclusions, a fresh install): one card-level
+// "No history in the last 2 weeks" with the series' names on one line below
+// it, instead of a "no data" + "No samples" pair per row. The canvas is
+// deliberately narrow (300 dp) so the long repo names have to truncate on
+// that one legend line. No HA reference exists for this synthetic case.
 
 @Preview(
   name = "history-graph no-data (light)",
   showBackground = false,
   widthDp = 300,
-  heightDp = 240,
+  heightDp = 140,
 )
 @Composable
 fun HistoryGraphNoData_Light() =
@@ -528,13 +691,48 @@ fun HistoryGraphNoData_Light() =
   name = "history-graph no-data (dark)",
   showBackground = false,
   widthDp = 300,
-  heightDp = 240,
+  heightDp = 140,
 )
 @Composable
 fun HistoryGraphNoData_Dark() =
   CardHost(HaTheme.Dark) {
     RenderChild(issuesGraphCard(), Fixtures.issuesNoData, RemoteModifier.fillMaxWidth())
   }
+
+// Per-row `name:` overrides label the rows ("Import", "Export") instead of the
+// meters' long friendly names, and the two series with no history shrink to
+// one line each while the one with history keeps its graph.
+
+@Preview(
+  name = "history-graph named, partly empty (light)",
+  showBackground = false,
+  widthDp = 381,
+  heightDp = 180,
+)
+@Composable
+fun HistoryGraphNamedPartlyEmpty_Light() =
+  CardHost(HaTheme.Light) {
+    RenderChild(meterGraphCard(), Fixtures.meterPartlyEmpty, RemoteModifier.fillMaxWidth())
+  }
+
+@Preview(
+  name = "history-graph named, partly empty (dark)",
+  showBackground = false,
+  widthDp = 381,
+  heightDp = 180,
+)
+@Composable
+fun HistoryGraphNamedPartlyEmpty_Dark() =
+  CardHost(HaTheme.Dark) {
+    RenderChild(meterGraphCard(), Fixtures.meterPartlyEmpty, RemoteModifier.fillMaxWidth())
+  }
+
+private fun meterGraphCard() =
+  card(
+    """{"type":"history-graph","title":"Electricity","hours_to_show":168,
+        "entities":[{"entity":"sensor.meter_import_rate","name":"Import"},
+        {"entity":"sensor.meter_export_rate","name":"Export"},"sensor.solaredge_power"]}"""
+  )
 
 private fun issuesGraphCard() =
   card(
@@ -557,6 +755,54 @@ fun BambuPrintStatus_Light() =
 fun BambuPrintStatus_Dark() =
   CardHost(HaTheme.Dark) {
     RenderChild(bambuPrintStatusCard(), Fixtures.bambuPrinting, RemoteModifier.fillMaxWidth())
+  }
+
+@Preview(
+  name = "bambu print-status idle (light)",
+  showBackground = false,
+  widthDp = 381,
+  heightDp = 100,
+)
+@Composable
+fun BambuPrintStatusIdle_Light() =
+  CardHost(HaTheme.Light) {
+    RenderChild(bambuPrintStatusCard(), Fixtures.bambuIdle, RemoteModifier.fillMaxWidth())
+  }
+
+@Preview(
+  name = "bambu print-status idle (dark)",
+  showBackground = false,
+  widthDp = 381,
+  heightDp = 100,
+)
+@Composable
+fun BambuPrintStatusIdle_Dark() =
+  CardHost(HaTheme.Dark) {
+    RenderChild(bambuPrintStatusCard(), Fixtures.bambuIdle, RemoteModifier.fillMaxWidth())
+  }
+
+@Preview(
+  name = "bambu print-status finished (light)",
+  showBackground = false,
+  widthDp = 381,
+  heightDp = 100,
+)
+@Composable
+fun BambuPrintStatusFinished_Light() =
+  CardHost(HaTheme.Light) {
+    RenderChild(bambuPrintStatusCard(), Fixtures.bambuFinished, RemoteModifier.fillMaxWidth())
+  }
+
+@Preview(
+  name = "bambu print-status finished (dark)",
+  showBackground = false,
+  widthDp = 381,
+  heightDp = 100,
+)
+@Composable
+fun BambuPrintStatusFinished_Dark() =
+  CardHost(HaTheme.Dark) {
+    RenderChild(bambuPrintStatusCard(), Fixtures.bambuFinished, RemoteModifier.fillMaxWidth())
   }
 
 private fun bambuPrintStatusCard() =
@@ -588,6 +834,113 @@ fun BambuPrintControl_Dark() =
 
 private fun bambuPrintControlCard() =
   card("""{"type":"custom:ha-bambulab-print_control-card","printer":"<device-id-placeholder>"}""")
+
+@Preview(
+  name = "bambu print-control paused (light)",
+  showBackground = false,
+  widthDp = 381,
+  heightDp = 124,
+)
+@Composable
+fun BambuPrintControlPaused_Light() =
+  CardHost(HaTheme.Light) {
+    RenderChild(
+      bambuPrintControlCard(),
+      Fixtures.bambuPrintControlPaused,
+      RemoteModifier.fillMaxWidth(),
+    )
+  }
+
+@Preview(
+  name = "bambu print-control unavailable (light)",
+  showBackground = false,
+  widthDp = 381,
+  heightDp = 124,
+)
+@Composable
+fun BambuPrintControlUnavailable_Light() =
+  CardHost(HaTheme.Light) {
+    RenderChild(
+      bambuPrintControlCard(),
+      Fixtures.bambuPrintControlUnavailable,
+      RemoteModifier.fillMaxWidth(),
+    )
+  }
+
+@Preview(
+  name = "bambu print-control unavailable (dark)",
+  showBackground = false,
+  widthDp = 381,
+  heightDp = 124,
+)
+@Composable
+fun BambuPrintControlUnavailable_Dark() =
+  CardHost(HaTheme.Dark) {
+    RenderChild(
+      bambuPrintControlCard(),
+      Fixtures.bambuPrintControlUnavailable,
+      RemoteModifier.fillMaxWidth(),
+    )
+  }
+
+@Preview(
+  name = "bambu print-control idle (light)",
+  showBackground = false,
+  widthDp = 381,
+  heightDp = 80,
+)
+@Composable
+fun BambuPrintControlIdle_Light() =
+  CardHost(HaTheme.Light) {
+    RenderChild(bambuPrintControlCard(), bambuIdleWithButtons, RemoteModifier.fillMaxWidth())
+  }
+
+@Preview(
+  name = "bambu print-control ambiguous printer (light)",
+  showBackground = false,
+  widthDp = 381,
+  heightDp = 110,
+)
+@Composable
+fun BambuPrintControlAmbiguous_Light() =
+  CardHost(HaTheme.Light) {
+    RenderChild(bambuPrintControlCard(), Fixtures.bambuTwoPrinters, RemoteModifier.fillMaxWidth())
+  }
+
+@Preview(
+  name = "bambu print-control ambiguous printer (dark)",
+  showBackground = false,
+  widthDp = 381,
+  heightDp = 110,
+)
+@Composable
+fun BambuPrintControlAmbiguous_Dark() =
+  CardHost(HaTheme.Dark) {
+    RenderChild(bambuPrintControlCard(), Fixtures.bambuTwoPrinters, RemoteModifier.fillMaxWidth())
+  }
+
+@Preview(
+  name = "bambu print-status ambiguous printer (light)",
+  showBackground = false,
+  widthDp = 381,
+  heightDp = 110,
+)
+@Composable
+fun BambuPrintStatusAmbiguous_Light() =
+  CardHost(HaTheme.Light) {
+    RenderChild(bambuPrintStatusCard(), Fixtures.bambuTwoPrinters, RemoteModifier.fillMaxWidth())
+  }
+
+/** The demo's idle A1 mini with its (unavailable) print buttons: nothing to control. */
+private val bambuIdleWithButtons =
+  HaSnapshot(
+    states =
+      Fixtures.bambuIdle.states +
+        listOf("pause", "resume", "stop").associate { action ->
+          val id = "button.a1mini_sn1_${action}_printing"
+          id to EntityState(id, "unavailable")
+        }
+  )
 
 // ——— bambu ams ———
 
@@ -852,15 +1205,16 @@ private fun areaCard() =
   )
 
 // ——— picture ———
+// Default 16:9 at 320 dp. picture-glance below: a 16:9 image (214 dp at 381) over its 48 dp strip.
 
-@Preview(name = "picture (light)", showBackground = false, widthDp = 320, heightDp = 140)
+@Preview(name = "picture (light)", showBackground = false, widthDp = 320, heightDp = 180)
 @Composable
 fun Picture_Light() =
   CardHost(HaTheme.Light) {
     RenderChild(pictureCardConfig(), Fixtures.driveway, RemoteModifier.fillMaxWidth())
   }
 
-@Preview(name = "picture (dark)", showBackground = false, widthDp = 320, heightDp = 140)
+@Preview(name = "picture (dark)", showBackground = false, widthDp = 320, heightDp = 180)
 @Composable
 fun Picture_Dark() =
   CardHost(HaTheme.Dark) {
@@ -872,14 +1226,14 @@ private fun pictureCardConfig() =
 
 // ——— picture-glance ———
 
-@Preview(name = "picture-glance (light)", showBackground = false, widthDp = 381, heightDp = 168)
+@Preview(name = "picture-glance (light)", showBackground = false, widthDp = 381, heightDp = 262)
 @Composable
 fun PictureGlance_Light() =
   CardHost(HaTheme.Light) {
     RenderChild(pictureGlanceCardConfig(), Fixtures.livingRoomGlance, RemoteModifier.fillMaxWidth())
   }
 
-@Preview(name = "picture-glance (dark)", showBackground = false, widthDp = 381, heightDp = 168)
+@Preview(name = "picture-glance (dark)", showBackground = false, widthDp = 381, heightDp = 262)
 @Composable
 fun PictureGlance_Dark() =
   CardHost(HaTheme.Dark) {
@@ -995,7 +1349,7 @@ private fun entityFilterCardConfig() =
 
 // ——— tile, state variants via PreviewParameter ———
 
-@Preview(name = "tile light (light)", showBackground = false, widthDp = 187, heightDp = 43)
+@Preview(name = "tile light (light)", showBackground = false, widthDp = 187, heightDp = 56)
 @Composable
 fun Tile_Light_States(
   @PreviewParameter(KitchenLightStatesProvider::class) param: Pair<String, HaSnapshot>
@@ -1004,7 +1358,7 @@ fun Tile_Light_States(
     RenderChild(card("""{"type":"tile","entity":"light.kitchen"}"""), param.second)
   }
 
-@Preview(name = "tile cover (light)", showBackground = false, widthDp = 187, heightDp = 43)
+@Preview(name = "tile cover (light)", showBackground = false, widthDp = 187, heightDp = 56)
 @Composable
 fun Tile_Cover_States(
   @PreviewParameter(GarageCoverStatesProvider::class) param: Pair<String, HaSnapshot>
@@ -1013,7 +1367,7 @@ fun Tile_Cover_States(
     RenderChild(card("""{"type":"tile","entity":"cover.garage"}"""), param.second)
   }
 
-@Preview(name = "tile lock (light)", showBackground = false, widthDp = 187, heightDp = 43)
+@Preview(name = "tile lock (light)", showBackground = false, widthDp = 187, heightDp = 56)
 @Composable
 fun Tile_Lock_States(
   @PreviewParameter(FrontDoorLockStatesProvider::class) param: Pair<String, HaSnapshot>

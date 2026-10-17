@@ -9,7 +9,7 @@ content, and what is missing between that design and a template the
 
 - **Card schema** (`design-server`, `CardSchema`). A card's data contract: its slots
   (`<domain>.s<N>`, by position) and every named value a client pushes for it — per slot `name`,
-  `state`, `is_on`, `state_int`, `status`, `numeric_state`, plus card-level values such as
+  `state`, `is_on`, `is_available`, `state_int`, `status`, `numeric_state`, plus card-level values such as
   `card.title` — each with a type and an example value. It comes from a library design (the
   template's bindings decoded with `rc-player-edit`, with its catalog example's values) or from
   any card's Lovelace config and states (`CardDesignSlots.slotBindings`, the bindings the app
@@ -102,6 +102,10 @@ in another design.
 collapsible and fit layouts and `for-each`, checked on the design matrix at the sizes a card takes
 (dashboard columns, launcher cells, Wear small/large). Branching designs by width is the thing
 adaptive layout avoids.
+
+Every design is reviewed against [design-principles.md](../design/design-principles.md), using
+the preview strip the ha-cards catalog declares (three Wear hosts, the resizable launcher, phone
+and tablet frames).
 
 The UI Builder side of steps 4–7, written as general enhancements for any host that embeds UI
 Builder to produce RemoteCompose, is in [ui-builder-embedding.md](ui-builder-embedding.md).

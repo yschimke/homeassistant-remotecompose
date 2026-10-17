@@ -23,12 +23,14 @@ import ee.schimke.ha.client.design.CardDesignOverrides
 import ee.schimke.ha.client.design.CardDesignScope
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.rc.components.HaUberTheme
+import ee.schimke.terrazzo.widget.WidgetRefreshScheduler
 import kotlinx.coroutines.launch
 
 /**
  * Lets the user draw one card, or every card of its type, in a card style other than their own. The
- * choice is kept on this device ([CardDesignOverrideStore]); the dashboard and its widgets pick it
- * up at once, and the design sync fetches the style's designs.
+ * choice is kept on this device ([CardDesignOverrideStore]); the dashboard and launcher widgets
+ * pick it up at once, and the design sync fetches the style's designs. Wear widgets keep the
+ * watch's own card style for now.
  */
 @Composable
 internal fun CardDesignOverrideSection(card: CardConfig) {
@@ -40,6 +42,8 @@ internal fun CardDesignOverrideSection(card: CardConfig) {
     scope.launch {
       val keep = overrides.at(at, card)
       store.set(at, card, CardDesignOverride(cardStyle = cardStyle, variant = keep?.variant))
+      // A launcher widget of this card draws in its style too.
+      WidgetRefreshScheduler(context.applicationContext).refreshAllNow()
     }
   }
 }

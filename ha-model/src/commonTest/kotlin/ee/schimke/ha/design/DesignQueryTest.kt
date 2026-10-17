@@ -97,4 +97,19 @@ class DesignQueryTest {
       parsed?.parameters(),
     )
   }
+
+  /**
+   * The display precision and device id say how to format and which device, not what kind of
+   * device, so a query whose device carries only those still matches generic designs.
+   */
+  @Test
+  fun precisionAndDeviceIdDoNotMakeAQueryDeviceSpecific() {
+    val generic = entry()
+    assertTrue(DesignQuery(device = DeviceInfo(displayPrecision = 1)).matches(generic))
+    assertTrue(DesignQuery(device = DeviceInfo(deviceId = "abc123")).matches(generic))
+    val boiler = DeviceInfo(integration = "vaillant", model = "ecoTEC plus", deviceId = "abc123")
+    val forBoiler = entry().copy(device = DeviceMatch(integration = "vaillant", model = "ecoTEC*"))
+    assertTrue(DesignQuery(device = boiler).matches(forBoiler))
+    assertFalse(DesignQuery(device = boiler).matches(generic))
+  }
 }

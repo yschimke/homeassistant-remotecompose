@@ -2,7 +2,6 @@
 
 package ee.schimke.ha.rc.components
 
-import androidx.compose.remote.creation.compose.capture.toRemoteImageVector
 import androidx.compose.remote.creation.compose.layout.RemoteAlignment
 import androidx.compose.remote.creation.compose.layout.RemoteArrangement
 import androidx.compose.remote.creation.compose.layout.RemoteBox
@@ -24,7 +23,6 @@ import androidx.compose.remote.creation.compose.state.rf
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.wear.compose.remote.material3.RemoteIcon
 
 /**
  * HA `tile` card — modern primary-info card (`home-assistant/frontend` → `hui-tile-card.ts`).
@@ -42,14 +40,11 @@ fun RemoteHaTile(data: HaTileData, modifier: RemoteModifier = RemoteModifier) {
   val theme = haTheme()
   val clickable =
     data.tapAction.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
-  val isOnBinding =
-    if (data.accent.toggleable) LiveValues.isOn(data.entityId, data.accent.initiallyOn) else null
-  val accent: RemoteColor =
-    isOnBinding?.select(data.accent.themed().activeAccent, data.accent.themed().inactiveAccent)
-      ?: data.accent.themed().activeAccent
+  val look = entityLook(data.entityId, data.accent)
+  val accent: RemoteColor = look.accent
   // Toggleable entities always get the chip (color varies with isOn);
   // read-only entities (no isOn binding) render icon plain.
-  val renderChip = isOnBinding != null
+  val renderChip = look.isOn != null
 
   RemoteBox(
     modifier =
@@ -59,35 +54,158 @@ fun RemoteHaTile(data: HaTileData, modifier: RemoteModifier = RemoteModifier) {
         .then(cardChrome(theme.cardBackground, theme.divider))
         .padding(horizontal = 12.rdp, vertical = 8.rdp)
   ) {
-    RemoteRow(verticalAlignment = RemoteAlignment.CenterVertically) {
-      if (renderChip) {
-        RemoteBox(
-          modifier =
-            RemoteModifier.size(32.rdp)
-              .clip(haControlShape(18, round = true))
-              .background(accent.copy(alpha = accent.alpha * 0.2f.rf)),
-          contentAlignment = RemoteAlignment.Center,
-        ) {
-          RemoteIcon(
-            imageVector = data.icon.toRemoteImageVector(),
-            contentDescription = entityName(data.entityId, data.name),
-            modifier = RemoteModifier.size(20.rdp),
-            tint = accent,
-          )
-        }
-      } else {
-        RemoteIcon(
-          imageVector = data.icon.toRemoteImageVector(),
-          contentDescription = entityName(data.entityId, data.name),
-          modifier = RemoteModifier.size(24.rdp),
-          tint = accent,
-        )
+    if (data.features.isEmpty()) {
+      TileInfoRow(data, look, renderChip)
+    } else {
+      RemoteColumn(modifier = RemoteModifier.fillMaxWidth()) {
+        TileInfoRow(data, look, renderChip)
+        TileFeaturesBelow(data, accent)
       }
+    }
+  }
+}
+
+/**
+ * The tile's icon, name and state — and, with [HaTileFeaturePosition.Inline], its first feature
+ * beside them.
+ */
+@Composable
+@RemoteComposable
+private fun TileInfoRow(data: HaTileData, look: HaEntityLook, renderChip: Boolean) {
+  val theme = haTheme()
+  val accent: RemoteColor = look.accent
+  val inline =
+    data.features.firstOrNull()?.takeIf { data.featuresPosition == HaTileFeaturePosition.Inline }
+  RemoteRow(
+    modifier = if (inline != null) RemoteModifier.fillMaxWidth() else RemoteModifier,
+    verticalAlignment = RemoteAlignment.CenterVertically,
+  ) {
+    val badge = data.badge
+    if (badge != null) {
+      TileIconWithBadge(badge, iconSlotDp = if (renderChip) 32 else 24) {
+        TileIcon(data, look, renderChip)
+      }
+    } else {
+      TileIcon(data, look, renderChip)
+    }
+    RemoteColumn(
+      modifier =
+        if (inline != null) RemoteModifier.weight(1f).padding(start = 10.rdp)
+        else RemoteModifier.padding(start = 10.rdp)
+    ) {
+      RemoteText(
+        text = entityName(data.entityId, data.name),
+        color = look.dim(theme.primaryText),
+        fontSize = HaType.Body,
+        fontWeight = FontWeight.Medium,
+        style = haTextStyle(),
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+      )
+      // The state is what a tile is read for, so it is body-sized and in the primary ink; the
+      // name keeps the emphasis through its weight. (A caption-sized grey state was the smallest,
+      // lowest-contrast text on the card.)
+      RemoteText(
+        text = data.state,
+        color = look.dim(theme.primaryText),
+        fontSize = HaType.Body,
+        style = haTextStyle(),
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+      )
+    }
+    if (inline != null) {
+      RemoteBox(modifier = RemoteModifier.weight(1f).padding(start = TileFeatureGapDp.rdp)) {
+        TileFeature(inline, accent, TileInlineFeatureHeightDp, data.name)
+      }
+    }
+  }
+}
+
+/**
+ * The tile's state icon: in a tinted chip for an entity with on/off chrome, else plain. An on/off
+ * entity swaps between its two glyphs through [look]'s `is_on` ([HaStateIcon]).
+ */
+@Composable
+@RemoteComposable
+private fun TileIcon(data: HaTileData, look: HaEntityLook, renderChip: Boolean) {
+  // Decorative: the tile draws the name beside it.
+  val accent = look.accent
+  if (renderChip) {
+    RemoteBox(
+      modifier =
+        RemoteModifier.size(32.rdp)
+          .clip(haControlShape(18, round = true))
+          .background(accent.copy(alpha = accent.alpha * 0.2f.rf)),
+      contentAlignment = RemoteAlignment.Center,
+    ) {
+      HaStateIcon(
+        icon = data.icon,
+        accent = data.accent,
+        look = look,
+        tint = accent,
+        contentDescription = null,
+        modifier = RemoteModifier.size(20.rdp),
+      )
+    }
+  } else {
+    HaStateIcon(
+      icon = data.icon,
+      accent = data.accent,
+      look = look,
+      tint = accent,
+      contentDescription = null,
+      modifier = RemoteModifier.size(24.rdp),
+    )
+  }
+}
+
+/**
+ * The tile for a short Fixed-mode canvas (the Wear small slot, whose content box is ~44dp): the
+ * same icon, name and state, with the name a step down to [HaType.Label] and the padding tightened,
+ * because the full tile's two body lines and padding need [TileTwoLineMinHeightDp]. The state keeps
+ * its body size — it is what the tile is read for — and the name stays whole rather than being
+ * ellipsised beside it on one line (design principle 5: compact is designed, not clipped).
+ *
+ * A state-layout sibling of [RemoteHaTile], so like [RemoteHaIconChip] it resolves the accent and
+ * the unavailable dimming from the encode-time state rather than registering `<entity>.is_on` /
+ * `is_available` again (a duplicate named `RemoteBoolean` blanks the other branch in
+ * alpha010, #224); the state text stays live.
+ */
+@Composable
+@RemoteComposable
+fun RemoteHaTileCompact(data: HaTileData, modifier: RemoteModifier = RemoteModifier) {
+  val theme = haTheme()
+  val clickable =
+    data.tapAction.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
+  val look = entityLook(data.entityId, data.accent, live = false)
+  val accent: RemoteColor = look.accent
+
+  RemoteBox(
+    modifier =
+      modifier
+        .then(clickable)
+        .fillMaxWidth()
+        .then(cardChrome(theme.cardBackground, theme.divider))
+        // A Label line (~17dp) over a Body line (~20dp) inside 3dp: ~43dp of the slot's ~44.
+        .padding(horizontal = 12.rdp, vertical = 3.rdp)
+  ) {
+    RemoteRow(verticalAlignment = RemoteAlignment.CenterVertically) {
+      // Static like the accent: this tier registers no `is_on` binding.
+      HaStateIcon(
+        icon = data.icon,
+        accent = data.accent,
+        look = look,
+        tint = accent,
+        // Decorative: the name is drawn beside it.
+        contentDescription = null,
+        modifier = RemoteModifier.size(24.rdp),
+      )
       RemoteColumn(modifier = RemoteModifier.padding(start = 10.rdp)) {
         RemoteText(
           text = entityName(data.entityId, data.name),
-          color = theme.primaryText,
-          fontSize = HaType.Body,
+          color = look.dim(theme.primaryText),
+          fontSize = HaType.Label,
           fontWeight = FontWeight.Medium,
           style = haTextStyle(),
           maxLines = 1,
@@ -95,8 +213,8 @@ fun RemoteHaTile(data: HaTileData, modifier: RemoteModifier = RemoteModifier) {
         )
         RemoteText(
           text = data.state,
-          color = theme.secondaryText,
-          fontSize = HaType.Caption,
+          color = look.dim(theme.primaryText),
+          fontSize = HaType.Body,
           style = haTextStyle(),
           maxLines = 1,
           overflow = TextOverflow.Ellipsis,
@@ -105,6 +223,13 @@ fun RemoteHaTile(data: HaTileData, modifier: RemoteModifier = RemoteModifier) {
     }
   }
 }
+
+/**
+ * The height [RemoteHaTile]'s name-over-state stack needs: two [HaType.Body] lines (~20dp each)
+ * inside its 8dp vertical padding. A Fixed-mode canvas shorter than this takes
+ * [RemoteHaTileCompact].
+ */
+const val TileTwoLineMinHeightDp: Int = 56
 
 /**
  * Icon-only identity tier for the icon-+-state family (`tile`, `entity`, `sensor`, `statistic`).
@@ -130,7 +255,7 @@ fun RemoteHaTile(data: HaTileData, modifier: RemoteModifier = RemoteModifier) {
  * * **Static accent, no live `isOn` `select`.** The full tier already registers `<entity>.is_on`;
  *   re-registering that named `RemoteBoolean` here collides and blanks the other branch (a
  *   duplicate named `RemoteString` like `state` is fine — a duplicate `RemoteBoolean` is not). The
- *   accent is resolved from the encode-time state instead.
+ *   accent, and the unavailable dimming, are resolved from the encode-time state instead.
  * * **No clipped circle backing.** A `.clip(RemoteCircleShape)` + `background` box in this branch
  *   likewise blanks the sibling full tier at playback. The tinted glyph alone carries the identity
  *   — the circle halo is the cosmetic part, and dropping it costs nothing semantically.
@@ -144,26 +269,29 @@ fun RemoteHaIconChip(data: HaTileData, modifier: RemoteModifier = RemoteModifier
   val theme = haTheme()
   val clickable =
     data.tapAction.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
-  val accent: RemoteColor =
-    if (data.accent.toggleable && !data.accent.initiallyOn) data.accent.themed().inactiveAccent
-    else data.accent.themed().activeAccent
+  val look = entityLook(data.entityId, data.accent, live = false)
+  val accent: RemoteColor = look.accent
 
   RemoteColumn(
     modifier = modifier.then(clickable).fillMaxSize().padding(4.rdp),
     verticalArrangement = RemoteArrangement.Center,
     horizontalAlignment = RemoteAlignment.CenterHorizontally,
   ) {
-    RemoteIcon(
-      imageVector = data.icon.toRemoteImageVector(),
+    // Static like the accent: this tier registers no `is_on` binding.
+    HaStateIcon(
+      icon = data.icon,
+      accent = data.accent,
+      look = look,
+      tint = accent,
       contentDescription = entityName(data.entityId, data.name),
       modifier = RemoteModifier.size(32.rdp),
-      tint = accent,
     )
     RemoteBox(modifier = RemoteModifier.padding(top = 6.rdp)) {
+      // The chip's only text, so it reads as the value: primary ink, a step above a caption.
       RemoteText(
         text = data.state,
-        color = theme.secondaryText,
-        fontSize = HaType.Caption,
+        color = look.dim(theme.primaryText),
+        fontSize = HaType.Label,
         style = haTextStyle(),
         maxLines = 1,
         overflow = TextOverflow.Ellipsis,

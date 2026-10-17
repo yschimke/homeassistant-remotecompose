@@ -25,15 +25,65 @@ import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.components.HaAction
 import ee.schimke.ha.rc.components.HaTheme
+import ee.schimke.ha.rc.components.HaUberTheme
 import ee.schimke.ha.rc.components.LocalTemplateBindings
 import ee.schimke.ha.rc.components.ProvideCardChrome
+import ee.schimke.ha.rc.components.ProvideCardStyle
+import ee.schimke.ha.rc.components.ProvideHaUberStyle
 import ee.schimke.ha.rc.components.ProvideSystemHaTheme
 import ee.schimke.ha.rc.components.ProvideWidgetActionRegistry
 import ee.schimke.ha.rc.components.RemoteHaWidgetSurface
 import ee.schimke.ha.rc.components.TemplateBindings
+import ee.schimke.ha.rc.components.ThemeStyle
 import ee.schimke.ha.rc.components.WidgetActionRegistry
+import ee.schimke.ha.rc.components.cardPalette
 import java.util.concurrent.ConcurrentHashMap
 import kotlinx.coroutines.runBlocking
+
+/**
+ * How a launcher widget draws its card: in [cardStyle], on the launcher's own colours, or with
+ * [appPalette] on the app's.
+ * - **System colours** ([appPalette] null, the default): the style's instruments, type, shapes and
+ *   ink on the colours the launcher resolves ([ProvideHaUberStyle]). Classic is the cards' own look
+ *   on them, as widgets always were. An inked style (LCD, Nixie) still prints in its ink.
+ * - **App style**: the style with its palette, as on the dashboard. Classic draws in the app's
+ *   palette ([appPalette]); every other style brings its own.
+ */
+data class LauncherLook(
+  val cardStyle: HaUberTheme = HaUberTheme.Classic,
+  val appPalette: ThemeStyle? = null,
+) {
+  /** What this look adds to a launcher key's theme; empty for the classic system look. */
+  internal val keySuffix: String
+    get() =
+      if (cardStyle.id == HaUberTheme.Classic.id && appPalette == null) ""
+      else ":${cardStyle.id}" + (appPalette?.let { ":$APP_PREFIX${it.name}" } ?: "")
+
+  /** [content] in this look, inside the launcher's theme. */
+  @Composable
+  internal fun Provide(dark: Boolean, content: @Composable () -> Unit) {
+    when {
+      appPalette != null ->
+        ProvideCardStyle(cardStyle, cardStyle.cardPalette(appPalette, dark), dark, content)
+      cardStyle.id == HaUberTheme.Classic.id -> content()
+      else -> ProvideHaUberStyle(cardStyle, dark, content)
+    }
+  }
+
+  companion object {
+    private const val APP_PREFIX = "app-"
+
+    /** The look a launcher key's theme parts after the mode name ([keySuffix], split). */
+    internal fun parse(parts: List<String>): LauncherLook {
+      val style = parts.getOrNull(0)?.let(HaUberTheme::byId) ?: HaUberTheme.Classic
+      val palette =
+        parts.getOrNull(1)?.removePrefix(APP_PREFIX)?.let { name ->
+          ThemeStyle.entries.firstOrNull { it.name == name }
+        }
+      return LauncherLook(style, palette)
+    }
+  }
+}
 
 /**
  * The launcher-widget content of [card]: the same tree for a live capture and a design template.
@@ -49,6 +99,7 @@ fun LauncherWidgetContent(
   card: CardConfig,
   snapshot: HaSnapshot,
   captureSizeDp: WidgetCaptureSizeDp? = null,
+  look: LauncherLook = LauncherLook(),
 ) {
   CompositionLocalProvider(
     LocalWidgetCaptureSizeDp provides captureSizeDp,
@@ -60,10 +111,12 @@ fun LauncherWidgetContent(
         profile = profile,
         fallbackTheme = if (dark) HaTheme.Dark else HaTheme.Light,
       ) {
-        ProvideCardSizeMode(CardSizeMode.Fixed) {
-          ProvideCardChrome(enabled = false) {
-            ProvideWidgetActionRegistry(widgetActions) {
-              RemoteHaWidgetSurface { RenderChild(card, snapshot, RemoteModifier.fillMaxWidth()) }
+        look.Provide(dark) {
+          ProvideCardSizeMode(CardSizeMode.Fixed) {
+            ProvideCardChrome(enabled = false) {
+              ProvideWidgetActionRegistry(widgetActions) {
+                RemoteHaWidgetSurface { RenderChild(card, snapshot, RemoteModifier.fillMaxWidth()) }
+              }
             }
           }
         }
@@ -80,7 +133,8 @@ fun LauncherWidgetContent(
  * only the baked copy, made on the device, holds values.
  *
  * Keys add the widget's size (the canvas the template is laid out on) and its theme (system colours
- * on hosts that resolve them, else the light / dark fallback) to the card's own shape.
+ * on hosts that resolve them, else the light / dark fallback, then the [LauncherLook]) to the
+ * card's own shape.
  */
 object LauncherDesigns {
 
@@ -102,6 +156,7 @@ object LauncherDesigns {
     dark: Boolean,
     systemTheme: Boolean,
     registry: CardRegistry = CardDesignTemplates.defaultTemplateRegistry,
+    look: LauncherLook = LauncherLook(),
   ): DesignKey? {
     val design = CardDesignTemplates.designCard(card, snapshot, registry)
     val shape =
@@ -113,7 +168,8 @@ object LauncherDesigns {
       rcApiLevel = WIDGETS_DESIGN_API_LEVEL,
       shape = shape,
       theme =
-        "widget:${if (systemTheme) "system" else "fallback"}:${if (dark) "dark" else "light"}",
+        "widget:${if (systemTheme) "system" else "fallback"}:${if (dark) "dark" else "light"}" +
+          look.keySuffix,
     )
   }
 
@@ -129,6 +185,7 @@ object LauncherDesigns {
     val parts = key.theme.split(':')
     val profile = if (parts.getOrNull(1) == "system") systemThemedWidgetsProfile else widgetsProfile
     val dark = parts.getOrNull(2) == "dark"
+    val look = LauncherLook.parse(parts.drop(3))
     val converter =
       requireNotNull(registry.converterFor(key.cardType)) { "no converter: ${key.cardType}" }
     val (card, snapshot) =
@@ -157,6 +214,7 @@ object LauncherDesigns {
               card,
               snapshot,
               WidgetCaptureSizeDp(widthDp, heightDp),
+              look,
             )
           }
         }
@@ -202,8 +260,10 @@ object LauncherDesigns {
     systemTheme: Boolean,
     registry: CardRegistry = CardDesignTemplates.defaultTemplateRegistry,
     fetchImage: (url: String) -> ByteArray? = { null },
+    look: LauncherLook = LauncherLook(),
   ): Baked? {
-    val key = keyFor(card, snapshot, widthDp, heightDp, dark, systemTheme, registry) ?: return null
+    val key =
+      keyFor(card, snapshot, widthDp, heightDp, dark, systemTheme, registry, look) ?: return null
     val template =
       library.getOrPut(key to densityDpi) { capture(context, key, densityDpi, registry) }
     return bake(
@@ -219,15 +279,17 @@ object LauncherDesigns {
    * [templateBytes] with [playback]'s bindings for [snapshot] written in, its slot pictures fetched
    * and embedded, its now-constant state layouts collapsed and the document optimised; null when it
    * can't be (a picture that can't be resolved or fetched, a binding the document can't hold as a
-   * constant). For any host that can't receive bindings: launcher widgets, Wear widgets.
+   * constant). For any host that can't receive bindings: launcher widgets, Wear widgets. A
+   * time-derived binding is read from [clock].
    */
   fun bakeValues(
     templateBytes: ByteArray,
     playback: CardTemplatePlayback,
     snapshot: HaSnapshot,
     fetchImage: (url: String) -> ByteArray? = { null },
+    clock: HaClock = SystemHaClock,
   ): ByteArray? {
-    val bindings = playback.bindings(snapshot)
+    val bindings = playback.bindings(snapshot, clock)
     val values = buildMap {
       for ((name, v) in bindings.strings) put(name, RcHardcodedValue.Text(v))
       for ((name, v) in bindings.booleans) put(name, RcHardcodedValue.BooleanValue(v))

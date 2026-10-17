@@ -144,7 +144,8 @@ private fun Entry(index: Int, entry: HaLogbookEntry, theme: RemoteHaTheme) {
   ) {
     RemoteIcon(
       imageVector = entry.icon.toRemoteImageVector(),
-      contentDescription = name,
+      // Decorative: the name is drawn beside it.
+      contentDescription = null,
       modifier = RemoteModifier.size(16.rdp),
       tint = theme.secondaryText,
     )

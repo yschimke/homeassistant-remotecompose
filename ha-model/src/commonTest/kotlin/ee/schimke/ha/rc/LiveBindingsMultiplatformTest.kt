@@ -77,7 +77,7 @@ class LiveBindingsMultiplatformTest {
         "-0.001" to "0",
         "1e3" to "1000",
         "21.500" to "21.5",
-        "21.xx" to "21",
+        "21.xx" to NO_VALUE,
         "NaN" to "NaN",
         "Infinity" to "Infinity",
         "-Infinity" to "-Infinity",
@@ -107,7 +107,7 @@ class LiveBindingsMultiplatformTest {
     val before = cardSnapshotBindings(setOf("sensor.temp"), snapshot("21.500"))
     val after = cardSnapshotBindings(setOf("sensor.temp"), snapshot("23.125"))
     assertEquals("21.5 °C", before.strings["sensor.temp.state"])
-    assertEquals("23.13 °C", after.strings["sensor.temp.state"])
+    assertEquals("23.1 °C", after.strings["sensor.temp.state"])
     assertEquals(23.125f, after.floats["sensor.temp.numeric_state"])
   }
 }

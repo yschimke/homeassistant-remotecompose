@@ -61,7 +61,7 @@ internal fun WidgetPreparationPreview(
     card.raw["name"]?.jsonPrimitive?.contentOrNull
       ?: entity?.attributes?.get("friendly_name")?.jsonPrimitive?.contentOrNull
       ?: "${card.type} widget"
-  val stateLabel = entity?.let { formatState(it) }.orEmpty()
+  val stateLabel = entity?.let { formatState(it, snapshot) }.orEmpty()
   if (android.os.Build.VERSION.SDK_INT < WidgetInstaller.MIN_HOST_API) {
     Text("$label · $stateLabel", style = MaterialTheme.typography.titleMedium)
     return

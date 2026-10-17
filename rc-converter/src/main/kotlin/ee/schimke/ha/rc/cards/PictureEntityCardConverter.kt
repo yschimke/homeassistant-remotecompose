@@ -2,14 +2,12 @@ package ee.schimke.ha.rc.cards
 
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.fillMaxSize
-import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.runtime.Composable
 import ee.schimke.ha.design.CardDesignSlots
 import ee.schimke.ha.design.DesignProperties
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.HaSnapshot
-import ee.schimke.ha.model.toTyped
 import ee.schimke.ha.rc.BreakpointAxis
 import ee.schimke.ha.rc.CardConverter
 import ee.schimke.ha.rc.CardSizeMode
@@ -18,12 +16,12 @@ import ee.schimke.ha.rc.HaStateColor
 import ee.schimke.ha.rc.LocalCardSizeMode
 import ee.schimke.ha.rc.RemoteSizeBreakpoint
 import ee.schimke.ha.rc.components.HaPictureEntityData
-import ee.schimke.ha.rc.components.HaToggleAccent
 import ee.schimke.ha.rc.components.LiveValues
 import ee.schimke.ha.rc.components.RemoteHaPictureEntity
 import ee.schimke.ha.rc.defaultTapActionFor
 import ee.schimke.ha.rc.formatState
 import ee.schimke.ha.rc.icons.HaIconMap
+import ee.schimke.ha.rc.icons.withIcons
 import ee.schimke.ha.rc.parseHaAction
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.contentOrNull
@@ -41,6 +39,9 @@ class PictureEntityCardConverter : CardConverter {
 
   override fun naturalHeightDp(card: CardConfig, snapshot: HaSnapshot): Int = 160
 
+  override fun gridMinCellWidthDp(card: CardConfig, snapshot: HaSnapshot): Int =
+    PICTURE_MIN_CELL_WIDTH_DP
+
   /**
    * A picture-entity card renders from a card design. The image is the slot's picture URL
    * (`CardDesignSlots.pictureUrl`), which playback resolves to the entity's own `entity_picture`;
@@ -52,8 +53,6 @@ class PictureEntityCardConverter : CardConverter {
     if (!TEMPLATE_CONFIG_KEYS.containsAll(card.raw.keys)) return null
     val entityId = card.raw["entity"]?.jsonPrimitive?.contentOrNull ?: return null
     val entity = snapshot.states[entityId] ?: return null
-    // A demo frame stamp is a per-frame value printed over the image; keep the converter.
-    if (entity.attributes["demo_frame_stamp"] != null) return null
     var ok = false
     val properties = DesignProperties.build {
       with(EntityDesign) {
@@ -118,32 +117,25 @@ class PictureEntityCardConverter : CardConverter {
     val tapAction =
       if (tapCfg != null) parseHaAction(tapCfg, entityId) else defaultTapActionFor(entityId)
 
-    val isActive = entity?.toTyped()?.isActive
+    val icons = HaIconMap.entityIcons(card.raw["icon"]?.jsonPrimitive?.content, entity)
     val imageUrl = entity?.attributes?.get("entity_picture")?.jsonPrimitive?.content
-    val frameStamp = entity?.attributes?.get("demo_frame_stamp")?.jsonPrimitive?.content
     val data =
       HaPictureEntityData(
         entityId = entityId,
         name = name,
-        state = LiveValues.state(entityId, formatState(entity)),
-        icon = HaIconMap.resolve(card.raw["icon"]?.jsonPrimitive?.content, entity),
-        accent =
-          HaToggleAccent(
-            activeAccent = HaStateColor.activeFor(entity).rc,
-            inactiveAccent = HaStateColor.inactiveFor(entity).rc,
-            initiallyOn = isActive ?: false,
-            toggleable = isActive != null,
-          ),
+        state = LiveValues.state(entityId, formatState(entity, snapshot)),
+        icon = icons.icon,
+        accent = HaStateColor.toggleAccentFor(entityId, entity).withIcons(icons),
         showName = showName,
         showState = showState,
         imageUrl = imageUrl,
-        frameStamp = frameStamp,
         tapAction = tapAction,
       )
 
     when (LocalCardSizeMode.current) {
-      // Dashboard: the HA reference band (fixed natural height).
-      CardSizeMode.Wrap -> RemoteHaPictureEntity(data, modifier = modifier)
+      // Dashboard: HA's `aspect_ratio` — the height follows the live width.
+      CardSizeMode.Wrap ->
+        RemoteHaPictureEntity(data, modifier = modifier, aspectRatio = pictureAspectRatio(card))
       // Launcher / Wear: the image is the identity edge-to-edge —
       // it fills and crops the whole cell at every size (no
       // letterbox). A single width gate drops the name at the

@@ -26,7 +26,8 @@ data class DesignQuery(
 ) {
   fun matches(entry: DesignEntry): Boolean {
     val key = entry.key
-    val forDevice = device?.takeIf { it != DeviceInfo() }
+    val forDevice =
+      device?.copy(displayPrecision = null, deviceId = null)?.takeIf { it != DeviceInfo() }
     return (forDevice == null || entry.device?.matches(forDevice) == true) &&
       tag(cardType, key.cardType) &&
       tag(style, key.cardStyle) &&
