@@ -1,0 +1,12 @@
+{
+  "title": "Demo Home",
+  "views": [{
+    "title": "Home", "path": "home", "icon": "mdi:home", "cards": [
+      {"type": "markdown", "content": "## Demo Home\nLive simulated readings. Public access is read-only."},
+      {"type": "tile", "entity": "light.demo_lamp", "tap_action": {"action": "none"}},
+      {"type": "tile", "entity": "sensor.demo_temperature"},
+      {"type": "gauge", "entity": "sensor.demo_humidity", "min": 0, "max": 100},
+      {"type": "entities", "title": "At home", "show_header_toggle": false, "entities": ["binary_sensor.demo_motion", "switch.demo_coffee", "sensor.demo_battery"]}
+    ]
+  }]
+}

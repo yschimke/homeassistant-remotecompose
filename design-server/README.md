@@ -15,6 +15,11 @@ design-server/build/install/design-server/bin/design-server card-designs/build/c
   Home Assistant), its player `/embed/v1/rc-player.js` and a demo at `/embed/v1/demo.html` — see
   [`card-embedding.md`](../docs/architecture/card-embedding.md)
 
+The `/designs` browser defaults to the first available mode of the selected theme. Some themes
+(console, nixie and trinitron) only have dark designs. An explicit `mode=light` stays a strict
+filter: an unsupported combination explains the available modes and links to them, preserving
+the card, search and preview filters. The JSON API always keeps explicit filters strict too.
+
 - Card schema: a design's page, `/api/designs/<id>/schema`; any card's JSON at `/schema` or
   `POST /api/schema`
 - Card resolve: `POST /api/cards/resolve` with a card's config (optionally `states`, `cardStyle`

@@ -305,6 +305,31 @@ class GridLayoutPlaybackTest {
     assertNear(cell * 2 + 8f, phone, "two rows of column squares")
   }
 
+  /** Four tiles with two conditionals between them whose conditions don't hold. */
+  private val fourTilesAndHiddenConditionals =
+    card(
+      """{"type":"grid","columns":2,"cards":[
+        {"type":"tile","entity":"light.kitchen"},
+        {"type":"conditional","conditions":[{"entity":"light.office","state":"on"}],
+         "card":{"type":"entities","entities":["light.office"]}},
+        {"type":"tile","entity":"light.office"},{"type":"tile","entity":"switch.fan"},
+        {"type":"conditional","conditions":[{"entity":"switch.pump","state":"on"}],
+         "card":{"type":"entities","entities":["switch.pump"]}},
+        {"type":"tile","entity":"switch.pump"}]}"""
+    )
+
+  /**
+   * A hidden conditional takes no cell: the grid lays its shown cards out as if it weren't there.
+   * Before, its full-width (240 dp) default minimum forced the whole grid to one card per row on a
+   * phone, with an empty cell where each hidden card sat.
+   */
+  @Test
+  fun hiddenConditionalsTakeNoCell() {
+    heightsAt("four-tiles-hidden-conditionals", fourTilesAndHiddenConditionals, 360)
+    // Two to a row: with one per row each tile spans the gap this checks for.
+    assertCellsFit(360, perRow = 2, yDp = 24f, "tiles beside hidden conditionals")
+  }
+
   @Test
   fun aWidgetGridOfButtonsKeepsItsMinimumOnANarrowSlot() {
     // Captured once and played through the runtime gate (a Wear slot): below the four-across

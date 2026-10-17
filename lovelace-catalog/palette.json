@@ -1,0 +1,302 @@
+{
+  "schema": "lovelace-palette/v1",
+  "cardTypes": [
+    "tile",
+    "entities",
+    "entity",
+    "button",
+    "gauge",
+    "thermostat",
+    "glance",
+    "markdown",
+    "heading",
+    "sensor",
+    "statistic",
+    "history-graph",
+    "statistics-graph",
+    "logbook",
+    "calendar",
+    "todo-list",
+    "weather-forecast",
+    "media-control",
+    "alarm-panel",
+    "area",
+    "clock",
+    "picture",
+    "picture-glance",
+    "picture-elements",
+    "picture-entity",
+    "map",
+    "iframe",
+    "vertical-stack",
+    "horizontal-stack",
+    "grid",
+    "conditional",
+    "custom"
+  ],
+  "cardProperties": [
+    {
+      "name": "rawConfig",
+      "jsonType": "string",
+      "required": false,
+      "notes": "Opaque original config as JSON text. Preserves unknown fields and numbers through .uid storage."
+    },
+    {
+      "name": "title",
+      "jsonType": "string",
+      "required": false
+    },
+    {
+      "name": "name",
+      "jsonType": "string",
+      "required": false
+    },
+    {
+      "name": "entity",
+      "jsonType": "string",
+      "required": false
+    },
+    {
+      "name": "icon",
+      "jsonType": "string",
+      "required": false
+    },
+    {
+      "name": "content",
+      "jsonType": "string",
+      "required": false
+    },
+    {
+      "name": "unit",
+      "jsonType": "string",
+      "required": false
+    },
+    {
+      "name": "min",
+      "jsonType": "number",
+      "required": false,
+      "editor": {
+        "control": "number",
+        "minimum": -1000000000,
+        "maximum": 1000000000,
+        "step": 1
+      }
+    },
+    {
+      "name": "max",
+      "jsonType": "number",
+      "required": false,
+      "editor": {
+        "control": "number",
+        "minimum": -1000000000,
+        "maximum": 1000000000,
+        "step": 1
+      }
+    },
+    {
+      "name": "show_name",
+      "jsonType": "boolean",
+      "required": false
+    },
+    {
+      "name": "show_state",
+      "jsonType": "boolean",
+      "required": false
+    },
+    {
+      "name": "grid_columns",
+      "jsonType": [
+        "integer",
+        "string"
+      ],
+      "required": false,
+      "allowedValues": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        "full"
+      ]
+    },
+    {
+      "name": "grid_rows",
+      "jsonType": "integer",
+      "required": false,
+      "editor": {
+        "control": "number",
+        "minimum": 1,
+        "maximum": 256,
+        "step": 1
+      }
+    }
+  ],
+  "structure": {
+    "lovelace/dashboard": {
+      "role": "screen-root",
+      "displayName": "Dashboard",
+      "group": "Dashboard",
+      "canvas": "lovelace/dashboard",
+      "shelfRole": "Scaffold",
+      "traits": [
+        "LovelaceDashboard"
+      ],
+      "slots": {
+        "views": {
+          "acceptedTraits": [
+            "LovelaceView"
+          ],
+          "min": 0
+        }
+      },
+      "properties": [
+        {
+          "name": "rawConfig",
+          "jsonType": "string",
+          "required": false,
+          "notes": "Opaque original config as JSON text. Preserves unknown fields and numbers through .uid storage."
+        },
+        {
+          "name": "title",
+          "jsonType": "string",
+          "required": false
+        }
+      ],
+      "modifierCapabilities": []
+    },
+    "lovelace/view": {
+      "role": "layout",
+      "displayName": "Sections view",
+      "group": "Dashboard",
+      "canvas": "lovelace/view",
+      "shelfRole": "Container",
+      "traits": [
+        "LovelaceView"
+      ],
+      "slots": {
+        "sections": {
+          "acceptedTraits": [
+            "LovelaceSection"
+          ],
+          "min": 0
+        }
+      },
+      "properties": [
+        {
+          "name": "rawConfig",
+          "jsonType": "string",
+          "required": false,
+          "notes": "Opaque original config as JSON text. Preserves unknown fields and numbers through .uid storage."
+        },
+        {
+          "name": "title",
+          "jsonType": "string",
+          "required": false
+        },
+        {
+          "name": "path",
+          "jsonType": "string",
+          "required": false
+        },
+        {
+          "name": "icon",
+          "jsonType": "string",
+          "required": false
+        },
+        {
+          "name": "max_columns",
+          "jsonType": "integer",
+          "required": false,
+          "editor": {
+            "control": "number",
+            "minimum": 1,
+            "maximum": 12,
+            "step": 1
+          }
+        }
+      ],
+      "modifierCapabilities": []
+    },
+    "lovelace/opaque-view": {
+      "role": "decoration",
+      "displayName": "Preserved view",
+      "group": "Cards",
+      "canvas": "lovelace/view",
+      "shelfRole": "Leaf",
+      "traits": [
+        "LovelaceView"
+      ],
+      "slots": {},
+      "properties": [
+        {
+          "name": "rawConfig",
+          "jsonType": "string",
+          "required": false,
+          "notes": "Opaque original config as JSON text. Preserves unknown fields and numbers through .uid storage."
+        }
+      ],
+      "modifierCapabilities": []
+    },
+    "lovelace/section": {
+      "role": "layout",
+      "displayName": "Section",
+      "group": "Dashboard",
+      "canvas": "lovelace/section",
+      "shelfRole": "Container",
+      "traits": [
+        "LovelaceSection"
+      ],
+      "slots": {
+        "cards": {
+          "acceptedTraits": [
+            "LovelaceCard"
+          ],
+          "min": 0
+        }
+      },
+      "properties": [
+        {
+          "name": "rawConfig",
+          "jsonType": "string",
+          "required": false,
+          "notes": "Opaque original config as JSON text. Preserves unknown fields and numbers through .uid storage."
+        },
+        {
+          "name": "title",
+          "jsonType": "string",
+          "required": false
+        },
+        {
+          "name": "column_span",
+          "jsonType": "integer",
+          "required": false,
+          "editor": {
+            "control": "number",
+            "minimum": 1,
+            "maximum": 12,
+            "step": 1
+          }
+        },
+        {
+          "name": "row_span",
+          "jsonType": "integer",
+          "required": false,
+          "editor": {
+            "control": "number",
+            "minimum": 1,
+            "maximum": 256,
+            "step": 1
+          }
+        }
+      ],
+      "modifierCapabilities": []
+    }
+  }
+}

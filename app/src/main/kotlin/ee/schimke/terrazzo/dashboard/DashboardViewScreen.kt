@@ -76,6 +76,7 @@ import ee.schimke.ha.rc.androidXExperimentalWrap
 import ee.schimke.ha.rc.cardDataSignature
 import ee.schimke.ha.rc.cardIconSignature
 import ee.schimke.ha.rc.cardWidthClass
+import ee.schimke.ha.rc.cards.cardVisibilitySignature
 import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.cards.shutter.withEnhancedShutter
 import ee.schimke.ha.rc.components.HaTheme
@@ -1061,6 +1062,9 @@ private fun CardSlot(
   // armed / disarmed shield) are baked, so they re-encode the card when they change. Values still
   // arrive as bindings: this joins the key without turning `liveBindings` off.
   val iconSignature = remember(card, snapshot) { cardIconSignature(card, snapshot) }
+  // A conditional showing or hiding changes what the card draws (and how a grid lays out its
+  // cells), so it re-encodes the card too, with bindings still on.
+  val visibilitySignature = remember(card, snapshot) { cardVisibilitySignature(card, snapshot) }
   val cacheKey =
     remember(
       card,
@@ -1071,6 +1075,7 @@ private fun CardSlot(
       templateValues,
       dataSignature,
       iconSignature,
+      visibilitySignature,
     ) {
       CardSlotCacheKey(
         card,
@@ -1081,6 +1086,7 @@ private fun CardSlot(
         templateValues,
         dataSignature,
         iconSignature,
+        visibilitySignature,
       )
     }
   val context = androidx.compose.ui.platform.LocalContext.current
@@ -1156,6 +1162,7 @@ private data class CardSlotCacheKey(
   val templateValues: Map<String, String?>,
   val dataSignature: String?,
   val iconSignature: String?,
+  val visibilitySignature: String?,
 )
 
 /**
