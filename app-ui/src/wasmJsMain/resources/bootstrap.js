@@ -10,17 +10,3 @@ function showLoadFailure() {
 }
 window.addEventListener('error', showLoadFailure, true);
 window.addEventListener('unhandledrejection', showLoadFailure);
-
-// A locally installed HA panel owns authentication and subscriptions. The iframe accepts
-// snapshots only from its same-origin parent; credentials never cross this boundary.
-window.terrazzoHost = {
-  connect(receive) {
-    if (window.parent === window) return;
-    window.addEventListener('message', (event) => {
-      if (event.source !== window.parent || event.origin !== window.location.origin) return;
-      if (event.data?.type !== 'terrazzo:snapshot') return;
-      receive(JSON.stringify(event.data));
-    });
-    window.parent.postMessage({type: 'terrazzo:ready'}, window.location.origin);
-  },
-};

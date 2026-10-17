@@ -73,12 +73,15 @@ object DemoDashboard {
     )
 }
 
-/** Also used by the HA custom panel, whose host supplies the dashboard and live snapshot. */
+/** Data-independent demo surface; the host supplies its current dashboard and snapshot. */
 @Composable
 fun DashboardExperience(
   dashboard: Dashboard = DemoDashboard.dashboard,
   snapshot: HaSnapshot = DemoDashboard.snapshot,
   demo: Boolean = true,
+  dataStatus: DemoDataStatus = DemoDataStatus.FAKE,
+  dataMode: DemoDataMode = DemoDataMode.FAKE,
+  onDataModeChange: ((DemoDataMode) -> Unit)? = null,
 ) {
   var design by rememberSaveable { mutableStateOf("classic") }
   var dark by rememberSaveable { mutableStateOf(false) }
@@ -97,10 +100,44 @@ fun DashboardExperience(
     ) { padding ->
       Column(Modifier.fillMaxSize().padding(padding)) {
         Text(
-          if (demo) "Example home · fake data · read only" else "Home Assistant · read only",
+          if (!demo) "Home Assistant · read only"
+          else if (dataStatus == DemoDataStatus.LIVE) "Example home · live demo data · read only"
+          else "Example home · fake data · read only",
           Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
           style = MaterialTheme.typography.labelLarge,
         )
+        if (onDataModeChange != null) {
+          Row(
+            Modifier.padding(horizontal = 16.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+          ) {
+            FilterChip(
+              selected = dataMode == DemoDataMode.AUTO,
+              onClick = { onDataModeChange(DemoDataMode.AUTO) },
+              label = { Text("Live when available") },
+            )
+            FilterChip(
+              selected = dataMode == DemoDataMode.FAKE,
+              onClick = { onDataModeChange(DemoDataMode.FAKE) },
+              label = { Text("Fake data") },
+            )
+          }
+          when (dataStatus) {
+            DemoDataStatus.CONNECTING ->
+              Text(
+                "Connecting to public demo…",
+                Modifier.padding(horizontal = 16.dp),
+                style = MaterialTheme.typography.labelMedium,
+              )
+            DemoDataStatus.UNAVAILABLE ->
+              Text(
+                "Live demo unavailable · using fake data · retrying",
+                Modifier.padding(horizontal = 16.dp),
+                style = MaterialTheme.typography.labelMedium,
+              )
+            else -> Unit
+          }
+        }
         Row(
           Modifier.fillMaxWidth()
             .horizontalScroll(rememberScrollState())

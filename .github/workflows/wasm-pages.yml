@@ -16,10 +16,8 @@ on:
       - 'docs/**'
       - 'scripts/test-wasm-browser.py'
       - 'scripts/test-demo-browser.py'
-      - 'scripts/package-ha-integration.py'
+      - 'scripts/fixtures/demo/**'
       - 'scripts/stage-wasm-demo.py'
-      - 'home-assistant/**'
-      - 'embed/**'
       - '.github/workflows/wasm-pages.yml'
       - '.github/actions/**'
   workflow_dispatch:
@@ -42,7 +40,7 @@ jobs:
         with:
           cache-read-only: 'true'
       - name: Build production Wasm
-        run: ./gradlew :app-ui:wasmJsBrowserDistribution :ha-client:jvmTest :app-ui:jvmTest :design-server:embedResources --stacktrace
+        run: ./gradlew :app-ui:wasmJsBrowserDistribution :ha-client:jvmTest :app-ui:jvmTest :rc-player-ui:jvmTest --stacktrace
       - uses: actions/setup-python@v7.0.0
         with:
           python-version: '3.15.0'
@@ -52,17 +50,8 @@ jobs:
           python -m playwright install --with-deps chromium
       - name: Test browser flows at the GitHub Pages project path
         run: python scripts/test-wasm-browser.py app-ui/build/dist/wasmJs/productionExecutable
-      - name: Test the demo and package the Home Assistant integration
-        run: |
-          python scripts/test-demo-browser.py app-ui/build/dist/wasmJs/productionExecutable
-          python scripts/package-ha-integration.py --wasm app-ui/build/dist/wasmJs/productionExecutable --embed design-server/build/generated/embed/embed/v1 --output build/terrazzo-home-assistant.zip
-          npm install --no-save --prefix embed playwright@1.56.1
-          HA_BROWSER_REQUIRED=1 node --test home-assistant/test/*.test.mjs
-          python -m unittest discover -s home-assistant/test -p 'test_*.py'
-      - uses: actions/upload-artifact@v7.0.2
-        with:
-          name: terrazzo-home-assistant
-          path: build/terrazzo-home-assistant.zip
+      - name: Test the public demo
+        run: python scripts/test-demo-browser.py app-ui/build/dist/wasmJs/productionExecutable
       - name: Build existing documentation and authentication pages
         uses: actions/jekyll-build-pages@v1.0.13
         with:

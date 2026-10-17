@@ -2,7 +2,7 @@
 # server and the library first — generating the library needs Android (Robolectric), so it doesn't
 # run in this image — then build from the repo root:
 #
-#   ./gradlew :card-designs:generateCardDesigns :design-server:installDist
+#   ./gradlew :card-designs:generateCardDesigns :design-server:installDist :app-ui:wasmJsBrowserDistribution
 #   docker build -f design-server/Dockerfile -t card-design-server .
 #   docker run -p 8080:8080 -p 8724:8724 -v card-designs-data:/data card-design-server
 #
