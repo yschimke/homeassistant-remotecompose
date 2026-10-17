@@ -1,17 +1,16 @@
 name: Wear emulator
 
 on:
+  # Slow (APK build plus a 15-minute cold-boot budget for the API 37 image) and not a required
+  # check: it runs only for changes to the Wear app's own code and this harness, never on pushes
+  # to main. Dispatch it by hand (or CI's wear-only input) to check anything else.
   pull_request:
     branches: [main]
     paths:
-      - 'wear/**'
+      - 'wear/src/main/**'
+      - 'wear/src/androidTest/**'
+      - 'wear/build.gradle.kts'
       - 'wear-sync-proto/**'
-      - 'rc-*/**'
-      - 'ha-model/**'
-      - 'gradle/**'
-      - '*.gradle.kts'
-      - 'gradle.properties'
-      - '.github/actions/android-sdk/**'
       - '.github/workflows/wear-emulator.yml'
       - 'scripts/run-wear-connected-tests.sh'
   workflow_dispatch:
