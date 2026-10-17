@@ -15,6 +15,11 @@ on:
       - 'gradle.properties'
       - 'docs/**'
       - 'scripts/test-wasm-browser.py'
+      - 'scripts/test-demo-browser.py'
+      - 'scripts/package-ha-integration.py'
+      - 'scripts/stage-wasm-demo.py'
+      - 'home-assistant/**'
+      - 'embed/**'
       - '.github/workflows/wasm-pages.yml'
       - '.github/actions/**'
   workflow_dispatch:
@@ -37,7 +42,7 @@ jobs:
         with:
           cache-read-only: 'true'
       - name: Build production Wasm
-        run: ./gradlew :app-ui:wasmJsBrowserDistribution :ha-client:jvmTest :app-ui:jvmTest --stacktrace
+        run: ./gradlew :app-ui:wasmJsBrowserDistribution :ha-client:jvmTest :app-ui:jvmTest :design-server:embedResources --stacktrace
       - uses: actions/setup-python@v7.0.0
         with:
           python-version: '3.15.0'
@@ -47,6 +52,17 @@ jobs:
           python -m playwright install --with-deps chromium
       - name: Test browser flows at the GitHub Pages project path
         run: python scripts/test-wasm-browser.py app-ui/build/dist/wasmJs/productionExecutable
+      - name: Test the demo and package the Home Assistant integration
+        run: |
+          python scripts/test-demo-browser.py app-ui/build/dist/wasmJs/productionExecutable
+          python scripts/package-ha-integration.py --wasm app-ui/build/dist/wasmJs/productionExecutable --embed design-server/build/generated/embed/embed/v1 --output build/terrazzo-home-assistant.zip
+          npm install --no-save --prefix embed playwright@1.56.1
+          HA_BROWSER_REQUIRED=1 node --test home-assistant/test/*.test.mjs
+          python -m unittest discover -s home-assistant/test -p 'test_*.py'
+      - uses: actions/upload-artifact@v7.0.2
+        with:
+          name: terrazzo-home-assistant
+          path: build/terrazzo-home-assistant.zip
       - name: Build existing documentation and authentication pages
         uses: actions/jekyll-build-pages@v1.0.13
         with:
@@ -58,6 +74,7 @@ jobs:
           mkdir -p _site
           cp -R _site-docs/. _site/
           cp -R app-ui/build/dist/wasmJs/productionExecutable/. _site/
+          python scripts/stage-wasm-demo.py _site
       - uses: actions/upload-pages-artifact@v5.0.0
         with:
           path: _site

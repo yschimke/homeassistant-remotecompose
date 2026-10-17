@@ -12,6 +12,8 @@ on:
       - card-designs/**
       - design-server/**
       - embed/**
+      - app-ui/**
+      - rc-player-ui/**
       - rc-converter/src/main/**
       - rc-components/src/main/**
       - ha-model/src/**
@@ -71,6 +73,10 @@ jobs:
       - name: Test cross-origin Card Studio handoffs in Chromium
         run: STUDIO_SMOKE_REQUIRED=1 STUDIO_SERVER_URL=http://localhost:8080 node --test design-server/test/*.test.mjs
       - name: Build the container image
+        # The public /demo is the shared WASM host, packaged alongside the design server.
+        # Keep this slower compilation in CI.
+        run: ./gradlew :app-ui:wasmJsBrowserDistribution --stacktrace
+      - name: Build the container with the demo
         run: docker build -f design-server/Dockerfile -t card-design-server .
       - name: Run the image with UI Builder and seed a design
         run: |

@@ -107,6 +107,7 @@ fun Application.designServer(
     }
   }
   routing {
+    demoSite(File(System.getenv("WASM_SITE_DIR") ?: "/app/wasm"))
     cardStudioRoutes(holder, uiBuilder, github)
     if (userDesigns != null && github != null) {
       userDesignRoutes(holder, userDesigns, uiBuilder, github)

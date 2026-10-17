@@ -33,6 +33,7 @@ COPY --from=ui-builder /opt/compose-preview-server /opt/compose-preview-server
 COPY design-server/build/install/design-server/lib /app/lib
 COPY card-designs/build/card-designs /library
 COPY design-server/catalogs.json /app/catalogs.json
+COPY app-ui/build/dist/wasmJs/productionExecutable /app/wasm
 ENV DESIGN_LIBRARY=/library \
     PORT=8080 \
     UI_BUILDER_BINARY=/opt/compose-preview-server/bin/compose-preview-server \

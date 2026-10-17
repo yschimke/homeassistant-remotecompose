@@ -1497,6 +1497,7 @@ export class HaCardElement extends BaseElement {
   }
 }
 
-if (globalThis.customElements && !customElements.get('ha-card')) {
+// HA's custom-card wrapper imports the class without claiming HA's own <ha-card> tag.
+if (globalThis.customElements && new URL(import.meta.url).searchParams.get('register') !== 'false' && !customElements.get('ha-card')) {
   customElements.define('ha-card', HaCardElement);
 }
