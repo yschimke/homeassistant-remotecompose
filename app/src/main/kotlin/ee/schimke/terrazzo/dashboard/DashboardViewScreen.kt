@@ -59,6 +59,7 @@ import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.Dashboard
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.model.JinjaTemplate
+import ee.schimke.ha.model.SectionCardGrid
 import ee.schimke.ha.model.SectionsGrid
 import ee.schimke.ha.model.SectionsGridLayout
 import ee.schimke.ha.model.TemplateBindings
@@ -68,6 +69,7 @@ import ee.schimke.ha.rc.CardWidthClass
 import ee.schimke.ha.rc.LocalCardCaptureEpoch
 import ee.schimke.ha.rc.LocalHaActionDispatcher
 import ee.schimke.ha.rc.LocalRcDebugBorders
+import ee.schimke.ha.rc.LovelaceSectionCardGrid
 import ee.schimke.ha.rc.LovelaceSectionsGrid
 import ee.schimke.ha.rc.ProvideCardRegistry
 import ee.schimke.ha.rc.RenderChild
@@ -122,9 +124,11 @@ import kotlinx.serialization.json.jsonPrimitive
  *   centred. Section titles sit at the top of each section.
  * - **One column** — when every section spans the full width (always on a phone, and for the common
  *   `column_span: 4` dashboards on small tablets) sections stack with their titles as inline
- *   headings, collapsible, and capped at [LayoutConfig.maxContentWidth] from Medium width up. Cards
- *   inside a section pack consecutive [CardWidthClass.Compact] entries (tile / button / entity)
- *   into a single row so a four-button cluster doesn't take four full screen heights on a phone.
+ *   headings, collapsible, and capped at [LayoutConfig.maxContentWidth] from Medium width up.
+ * - **Cards in a section** — HA's section grid ([SectionCardGrid], shared with the preview
+ *   harness): 12 columns per view column the section spans, each card spanning its `grid_options`
+ *   columns (its type's HA default otherwise: a tile is 6, so two share a row) in authored order.
+ *   Legacy `view.cards` still pack consecutive [CardWidthClass.Compact] cards into rows.
  *
  * View titles are not rendered: each top-level dashboard has one "view" in the typical case, and
  * the user already saw the view name in the picker. Multi-view dashboards are an HA tab construct;
@@ -537,13 +541,15 @@ private fun LazyListScope.renderView(
           }
           if (expanded) {
             val renderedCards = if (showHeading) headingModel.visibleCards else section.cards
-            val rows =
-              packAndChunk(renderedCards, cfg.compactCardsPerRow) { c ->
-                registry.cardWidthClass(c, snapshot)
-              }
-            rows.forEach { row ->
-              CardRow(row, snapshot, registry, baseUrl, imageLoader, onLongPress)
-            }
+            SectionCards(
+              cards = renderedCards,
+              sectionColumnSpan = grid.placements[sectionIndex].columnSpan,
+              snapshot = snapshot,
+              registry = registry,
+              baseUrl = baseUrl,
+              imageLoader = imageLoader,
+              onLongPress = onLongPress,
+            )
           }
         }
       }
@@ -573,6 +579,7 @@ private fun LazyListScope.renderView(
           SectionColumn(
             section = section,
             sectionIndex = sectionIndex,
+            sectionColumnSpan = grid.placements[sectionIndex].columnSpan,
             snapshot = snapshot,
             registry = registry,
             haTheme = haTheme,
@@ -822,6 +829,7 @@ private fun SectionGrid(
       SectionColumn(
         section = section,
         sectionIndex = sectionIndex,
+        sectionColumnSpan = placement.columnSpan,
         snapshot = snapshot,
         registry = registry,
         haTheme = haTheme,
@@ -840,6 +848,7 @@ private fun SectionGrid(
 private fun SectionColumn(
   section: SectionLayout,
   sectionIndex: Int,
+  sectionColumnSpan: Int,
   snapshot: HaSnapshot,
   registry: ee.schimke.ha.rc.CardRegistry,
   haTheme: HaTheme,
@@ -858,7 +867,37 @@ private fun SectionColumn(
         section = section,
       )
     }
-    section.cards.forEach { card ->
+    SectionCards(
+      cards = section.cards,
+      sectionColumnSpan = sectionColumnSpan,
+      snapshot = snapshot,
+      registry = registry,
+      baseUrl = baseUrl,
+      imageLoader = imageLoader,
+      onLongPress = onLongPress,
+    )
+  }
+}
+
+/**
+ * One section's cards on HA's section grid ([SectionCardGrid], shared with the preview harness):
+ * `12 × sectionColumnSpan` columns, each card spanning its `grid_options` (or its type's default)
+ * columns in authored order, so a pair of tiles shares a row instead of stacking full width. Each
+ * card is measured at exactly its cell's width, so its converter picks the matching width tier.
+ */
+@Composable
+private fun SectionCards(
+  cards: List<CardConfig>,
+  sectionColumnSpan: Int,
+  snapshot: HaSnapshot,
+  registry: ee.schimke.ha.rc.CardRegistry,
+  baseUrl: String?,
+  imageLoader: ImageLoader,
+  onLongPress: (CardConfig) -> Unit,
+) {
+  val plan = remember(cards, sectionColumnSpan) { SectionCardGrid.plan(cards, sectionColumnSpan) }
+  LovelaceSectionCardGrid(plan = plan, modifier = Modifier.fillMaxWidth()) {
+    cards.forEach { card ->
       // Key by the card config so each slot's hosted player is tied
       // to its card identity, not its position in the section — a
       // reused slot must not keep a previous card's player state.
