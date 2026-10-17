@@ -62,6 +62,11 @@ class Gateway:
             states = self.sanitize(await response.json())
         if states.keys() != self.entities:
             raise ValueError("Demo entities are not all ready")
+        # Entity IDs arrive before template sensors have their first value. Do not declare the
+        # initial snapshot healthy until initialization completes. Later unavailable states are
+        # real live updates and must still reach clients.
+        if not self.updated and any(row['state'] in ('unknown', 'unavailable') for row in states.values()):
+            raise ValueError("Demo entities are still initializing")
         old = self.states
         self.states, self.updated = states, time.monotonic()
         for entity in old.keys() | states.keys():
