@@ -388,8 +388,8 @@ data class HaBambuSpoolDetail(val slot: HaBambuSpoolSlot)
 
 /**
  * One filament tray. [color] is the spool's swatch (state.attributes.color parsed from
- * `#RRGGBBAA`); [remainPercent] is 0..100 (or null when the HA "remain_enabled" flag is off and the
- * integration reports nothing).
+ * `#RRGGBBAA`); [remainPercent] is 0..100, or null when it isn't known (the integration reports
+ * `-1`, or the HA "remain_enabled" flag is off and the integration reports nothing).
  */
 data class HaBambuSpoolSlot(
   val entityId: String?,
