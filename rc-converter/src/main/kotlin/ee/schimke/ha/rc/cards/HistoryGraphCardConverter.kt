@@ -16,6 +16,7 @@ import ee.schimke.ha.rc.CardSnapshotBindings
 import ee.schimke.ha.rc.DesignTemplateInput
 import ee.schimke.ha.rc.HaStateColor
 import ee.schimke.ha.rc.LocalCardSizeMode
+import ee.schimke.ha.rc.LocalFixedCanvasAxis
 import ee.schimke.ha.rc.RemoteSizeBreakpoint
 import ee.schimke.ha.rc.cardDataSignature
 import ee.schimke.ha.rc.cardEntityIds
@@ -169,7 +170,10 @@ class HistoryGraphCardConverter : CardConverter {
       // the full graph, which fills the larger cell by drawing every
       // series. Width, not height: every Fixed-mode surface pins
       // width and lets height follow (see EntitiesCardConverter).
-      CardSizeMode.Fixed ->
+      CardSizeMode.Fixed -> {
+        // Only a Wear slot's height is too small for the empty state's title over its sentence;
+        // a launcher widget's cell has room for it, and the one-line form would leave it blank.
+        val compactEmptyState = LocalFixedCanvasAxis.current == BreakpointAxis.Height
         RemoteSizeBreakpoint(
           thresholdsDp = intArrayOf(BULK_IDENTITY_THRESHOLD_DP),
           modifier = modifier,
@@ -178,9 +182,15 @@ class HistoryGraphCardConverter : CardConverter {
           if (tier == 0) {
             RemoteHaHistoryGraphIdentity(data, RemoteModifier.fillMaxWidth())
           } else {
-            RemoteHaHistoryGraph(data, RemoteModifier.fillMaxWidth(), singleEmptyState = true)
+            RemoteHaHistoryGraph(
+              data,
+              RemoteModifier.fillMaxWidth(),
+              singleEmptyState = true,
+              compactEmptyState = compactEmptyState,
+            )
           }
         }
+      }
     }
   }
 }
@@ -234,7 +244,10 @@ private fun hoursToShow(card: CardConfig): Double =
   card.raw["hours_to_show"]?.jsonPrimitive?.contentOrNull?.toDoubleOrNull()?.takeIf { it > 0 }
     ?: DEFAULT_HOURS
 
-/** The card's subtitle: "Last 24 hours", "Last 7 days", "Last 2 weeks". */
+/**
+ * The card's subtitle: "Last 24 hours", "Last 7 days", "Last 2 weeks". Shared with the `sensor`
+ * card, whose graph window is the same `hours_to_show` key with the same default of 24.
+ */
 internal fun historyRangeLabel(card: CardConfig): String =
   historyWindow(hoursToShow(card)).replaceFirstChar { it.uppercase() }
 

@@ -21,6 +21,7 @@ import androidx.compose.remote.creation.compose.state.rs
 import androidx.compose.remote.creation.compose.text.RemoteTextStyle
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import ee.schimke.ha.design.CardDesignSlots
 import ee.schimke.ha.design.DesignProperties
 import ee.schimke.ha.model.CardConfig
@@ -113,22 +114,30 @@ open class BambuLabCardConverter(
           fontWeight = FontWeight.Medium,
           style = RemoteTextStyle.Default,
         )
+        // The name takes what the state leaves and ellipsizes; the state keeps its natural width on
+        // one line. Unconstrained, a narrow Wear cell broke "Unavailable" mid-word. The gap is the
+        // state's start padding, not spacedBy: a row hands its full width to a weighted child
+        // without subtracting spacedBy gaps.
         RemoteRow(
           modifier = RemoteModifier.fillMaxWidth(),
           verticalAlignment = RemoteAlignment.CenterVertically,
-          horizontalArrangement = RemoteArrangement.SpaceBetween,
         ) {
           RemoteText(
             text = name.rs,
+            modifier = RemoteModifier.weight(1f),
             color = theme.primaryText,
             fontSize = HaType.Body,
             style = RemoteTextStyle.Default,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
           )
           RemoteText(
             text = LiveValues.state(entity?.entityId, state),
+            modifier = RemoteModifier.padding(start = 8.rdp),
             color = theme.primaryText,
             fontSize = HaType.Body,
             style = RemoteTextStyle.Default,
+            maxLines = 1,
           )
         }
       }

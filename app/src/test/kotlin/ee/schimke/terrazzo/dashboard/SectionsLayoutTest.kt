@@ -1,6 +1,8 @@
 package ee.schimke.terrazzo.dashboard
 
+import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.Dashboard
+import ee.schimke.ha.model.SectionCardGrid
 import ee.schimke.ha.model.SectionsGrid
 import ee.schimke.terrazzo.core.session.DemoData
 import kotlin.test.Test
@@ -9,6 +11,8 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 
 /**
@@ -122,5 +126,44 @@ class SectionsLayoutTest {
     val spanOneGrid = spanOne.sectionsGrid(tabletWidth, tabletWidth, cap)
     assertEquals(2, spanOneGrid.columnCount)
     assertEquals(listOf(0 to 0, 0 to 1), spanOneGrid.placements.map { it.row to it.column })
+  }
+
+  @Test
+  fun sectionCards_followHaSectionGrid() {
+    // The demo boards author their cards `grid_options: { columns: full }` (their tiles live in
+    // `grid` cards), so those take a whole row of the section's 24-column grid (each section
+    // spans two view columns on this tablet). The printer picture's `conditional` card has no
+    // grid_options, so it takes HA's default 12 columns: half the row.
+    val printing = buildDashboardLayout(DemoData.dashboard("3d-printing")).views.first()
+    val tablet = printing.sectionsGrid(1280f, 1280f, SectionsGrid.readableMaxWidthDp(1280f))
+    printing.sections.forEachIndexed { i, section ->
+      val plan = SectionCardGrid.plan(section.cards, tablet.placements[i].columnSpan)
+      assertEquals(24, plan.columnCount)
+      assertEquals(
+        section.cards.map { if (it.type == "conditional") 12 else 24 },
+        plan.placements.map { it.columnSpan },
+      )
+      assertTrue(plan.placements.all { it.column == 0 })
+    }
+
+    // The same tiles authored HA's way, straight in the section, pair up on a landscape phone:
+    // one 500 dp view column, so a 12-column section and 6-column tiles.
+    val security = buildDashboardLayout(DemoData.dashboard(null)).views.single()
+    val landscape = security.sectionsGrid(732f, 732f, SectionsGrid.readableMaxWidthDp(732f))
+    val tiles =
+      security.sections
+        .flatMap { it.cards }
+        .filter { it.type == "grid" }
+        .flatMap { grid -> grid.raw["cards"]!!.jsonArray.map { it.jsonObject } }
+        .filter { it["type"]!!.jsonPrimitive.content == "tile" }
+        .map { CardConfig("tile", it) }
+    val plan = SectionCardGrid.plan(tiles, landscape.placements.first().columnSpan)
+    assertEquals(12, plan.columnCount)
+    assertEquals(
+      tiles.indices.map { (it / 2) to (it % 2) * 6 },
+      plan.placements.map { it.row to it.column },
+    )
+    // Each tile gets (500 − 11·8) / 12 · 6 + 5·8 = 246 dp.
+    assertEquals(246f, plan.cellWidthDp(plan.placements.first(), landscape.maxWidthDp))
   }
 }

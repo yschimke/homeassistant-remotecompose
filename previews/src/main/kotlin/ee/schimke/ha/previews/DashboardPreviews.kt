@@ -24,13 +24,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.model.Section
+import ee.schimke.ha.model.SectionCardGrid
 import ee.schimke.ha.model.SectionsGrid
 import ee.schimke.ha.model.View
 import ee.schimke.ha.rc.CachedCardPreview
+import ee.schimke.ha.rc.LovelaceSectionCardGrid
 import ee.schimke.ha.rc.LovelaceSectionsGrid
 import ee.schimke.ha.rc.ProvideCardRegistry
 import ee.schimke.ha.rc.RenderChild
@@ -44,6 +47,9 @@ import ee.schimke.ha.rc.components.ProvideHaTheme
 import ee.schimke.ha.rc.enableRemoteComposeWrapContent
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 
 /**
  * Whole-dashboard previews — one column per card, stacked vertically. Used to compare
@@ -137,6 +143,52 @@ fun DashboardSectionsSpanOneTablet() =
     view.copy(sections = view.sections.map { it.copy(columnSpan = null) })
   }
 
+/**
+ * The climate board as HA's own sections dashboards are authored: each `grid` card's children are
+ * lifted into the section and the demo's `grid_options: { columns: full }` dropped, so every card
+ * takes its type's HA default on the section grid ([SectionCardGrid]) — tiles two to a row on a
+ * phone-wide section, history graphs and pictures full width.
+ */
+@Preview(
+  name = "dashboard section card grid — mobile",
+  widthDp = MOBILE_WIDTH,
+  heightDp = MOBILE_HEIGHT,
+)
+@Composable
+fun DashboardSectionCardGridMobile() = DashboardPreview("climate", ::liftGridCards)
+
+/** [DashboardSectionCardGridMobile] on the tablet canvas: sections span two view columns here. */
+@Preview(
+  name = "dashboard section card grid — tablet",
+  widthDp = TABLET_WIDTH,
+  heightDp = TABLET_HEIGHT,
+)
+@Composable
+fun DashboardSectionCardGridTablet() = DashboardPreview("climate", ::liftGridCards)
+
+private fun liftGridCards(view: View): View =
+  view.copy(
+    sections =
+      view.sections.map { section ->
+        section.copy(
+          cards =
+            section.cards.flatMap { card ->
+              val children =
+                if (card.type == "grid") {
+                  (card.raw["cards"] as? JsonArray)?.mapNotNull { child ->
+                    val obj = child as? JsonObject ?: return@mapNotNull null
+                    val type = (obj["type"] as? JsonPrimitive)?.content ?: return@mapNotNull null
+                    CardConfig(type, obj)
+                  } ?: emptyList()
+                } else {
+                  listOf(card)
+                }
+              children.map { it.copy(raw = JsonObject(it.raw - "grid_options")) }
+            }
+        )
+      }
+  )
+
 @Composable
 private fun DashboardPreview(name: String, transformView: (View) -> View = { it }) {
   enableRemoteComposeWrapContent()
@@ -225,15 +277,27 @@ private fun SectionsView(view: View, snapshot: HaSnapshot, bitmapLoader: BitmapL
       }
       if (view.sections.isNotEmpty()) {
         LovelaceSectionsGrid(grid = grid) {
-          view.sections.forEach { section -> SectionBlock(section, snapshot, bitmapLoader) }
+          view.sections.forEachIndexed { i, section ->
+            SectionBlock(section, grid.placements[i].columnSpan, snapshot, bitmapLoader)
+          }
         }
       }
     }
   }
 }
 
+/**
+ * One section: its title, then its cards on HA's section grid ([SectionCardGrid], the same plan the
+ * app uses) — `12 × sectionColumnSpan` columns, each card spanning its `grid_options` columns or
+ * its type's HA default, each card measured at exactly its cell's width.
+ */
 @Composable
-private fun SectionBlock(section: Section, snapshot: HaSnapshot, bitmapLoader: BitmapLoader) {
+private fun SectionBlock(
+  section: Section,
+  sectionColumnSpan: Int,
+  snapshot: HaSnapshot,
+  bitmapLoader: BitmapLoader,
+) {
   // Wrap the title + cards in a Surface tinted with
   // `HaTheme.Light.sectionBackground` so M3-elevation themes (Mushroom,
   // Kiosk, Material3) get a visible group. For these flat-HA previews
@@ -242,7 +306,7 @@ private fun SectionBlock(section: Section, snapshot: HaSnapshot, bitmapLoader: B
   androidx.compose.material3.Surface(
     color = HaTheme.Light.sectionBackground,
     shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
-    modifier = Modifier.uiFillMaxWidth().padding(horizontal = 4.dp),
+    modifier = Modifier.uiFillMaxWidth(),
   ) {
     androidx.compose.foundation.layout.Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
       if (section.title != null) {
@@ -253,13 +317,26 @@ private fun SectionBlock(section: Section, snapshot: HaSnapshot, bitmapLoader: B
           )
         }
       }
-      section.cards.forEach { card -> CardSlot(card, snapshot, bitmapLoader) }
+      val plan =
+        remember(section.cards, sectionColumnSpan) {
+          SectionCardGrid.plan(section.cards, sectionColumnSpan)
+        }
+      LovelaceSectionCardGrid(plan = plan, modifier = Modifier.uiFillMaxWidth()) {
+        section.cards.forEach { card ->
+          CardSlot(card, snapshot, bitmapLoader, horizontalPadding = 0.dp)
+        }
+      }
     }
   }
 }
 
 @Composable
-private fun CardSlot(card: CardConfig, snapshot: HaSnapshot, bitmapLoader: BitmapLoader) {
+private fun CardSlot(
+  card: CardConfig,
+  snapshot: HaSnapshot,
+  bitmapLoader: BitmapLoader,
+  horizontalPadding: Dp = 8.dp,
+) {
   val registry = defaultRegistry().withEnhancedShutter().withGarageShutter()
   // Wrap-content via the adaptive player — slot wraps to the
   // document's intrinsic content height. Mirrors what
@@ -268,7 +345,7 @@ private fun CardSlot(card: CardConfig, snapshot: HaSnapshot, bitmapLoader: Bitma
     modifier =
       Modifier.uiFillMaxWidth()
         .heightIn(max = MAX_CARD_SLOT_HEIGHT_DP.dp)
-        .padding(horizontal = 8.dp)
+        .padding(horizontal = horizontalPadding)
   ) {
     CachedCardPreview(
       cacheKey = card,

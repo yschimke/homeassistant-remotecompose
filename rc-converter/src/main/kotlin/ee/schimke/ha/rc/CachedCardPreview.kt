@@ -179,8 +179,14 @@ fun CachedCardPreview(
         }
           .also { cache.put(documentKey, it) }
     }
+  // A template's time-derived bindings (a clock card's date line) read the same clock the direct
+  // render reads, so an injected clock reaches both paths.
+  val clock = LocalHaClock.current
   val bindingsFor: (HaSnapshot) -> CardSnapshotBindings =
-    template?.bindings ?: { snap -> cardSnapshotBindings(entityIds(card), snap) }
+    template?.let { t -> { snap -> t.bindings(snap, clock) } }
+      ?: { snap ->
+        cardSnapshotBindings(entityIds(card), snap)
+      }
 
   // Hand the encoded document to an observer once the composition succeeds. `SideEffect` rather
   // than `remember`: publishing from a `remember` block is the `RememberReturnType` lint error,
@@ -219,11 +225,12 @@ fun CachedCardPreview(
     // A relative time ("3 h ago", see `isRelativeTimeState`) moves with the clock, not the
     // entity: while the card shows one, the host's tick (`LocalRelativeTimeTick`) re-runs the
     // push. Only changed values are written, so a tick that rolls no label over writes nothing.
+    // Keyed on the injected clock too: a template's time-derived bindings change with it.
     val tick = relativeTimeTickFor(entityIds, snapshot)
-    LaunchedEffect(namedValues, snapshot, tick) {
+    LaunchedEffect(namedValues, snapshot, tick, clock) {
       pushSnapshotBindings(NamedValueWriter(namedValues), bindingsFor(snapshot), pushedNamed)
     }
-    LaunchedEffect(playerHolder.value, snapshot, tick) {
+    LaunchedEffect(playerHolder.value, snapshot, tick, clock) {
       val updater = playerHolder.value ?: return@LaunchedEffect
       pushSnapshotBindings(ViewPlayerWriter(updater), bindingsFor(snapshot), pushedView)
     }
@@ -406,7 +413,8 @@ private fun entityIds(card: CardConfig?): Set<String> = card?.let { cardEntityId
 
 /**
  * Plays a card design template in place of a local capture. [bytes] is a values-free document from
- * the design server (or cache), and [bindings] derives every slot binding from a snapshot.
+ * the design server (or cache), and [bindings] derives every slot binding from a snapshot, reading
+ * "now" from the given [HaClock] (the [LocalHaClock] in scope, when played).
  *
  * Taps are resolved from the card's **local** config, never from the template: the bytes are
  * remote, so the action a template encodes only picks *which* of the card's own actions runs. A tap
@@ -416,7 +424,7 @@ private fun entityIds(card: CardConfig?): Set<String> = card?.let { cardEntityId
  */
 class CardTemplatePlayback(
   val bytes: ByteArray,
-  val bindings: (HaSnapshot) -> CardSnapshotBindings,
+  val bindings: (snapshot: HaSnapshot, clock: HaClock) -> CardSnapshotBindings,
   val tapAction: HaAction,
   val slotTapActions: List<HaAction> = emptyList(),
   /** A card-specific action for a tap on a slot: see [CardConverter.designAction]. */
