@@ -151,4 +151,41 @@ class UnavailableFrameCaptureTest {
       "one \"$label\" per unavailable card, none on the available tile",
     )
   }
+
+  /** A stack has no entity of its own, so each child shows its own entity's unavailability. */
+  @Test
+  fun aStacksUnavailableChildIsFramed() {
+    val stack =
+      CardConfig(
+        "vertical-stack",
+        buildJsonObject {
+          put("type", "vertical-stack")
+          put(
+            "cards",
+            kotlinx.serialization.json.JsonArray(
+              listOf(card("tile", "light.porch").raw, card("tile", "light.hall").raw)
+            ),
+          )
+        },
+      )
+    val registry = defaultRegistry()
+    compose.setContent {
+      Box(Modifier.width(240.dp)) {
+        CachedCardPreview(
+          cacheKey = "unavailable-stack",
+          profile = androidXExperimentalWrap,
+          card = stack,
+          snapshot = snapshot,
+        ) {
+          ProvideCardRegistry(registry) {
+            ProvideHaUberTheme(HaUberTheme.Lcd, false) {
+              RenderChild(stack, snapshot, RemoteModifier.fillMaxWidth())
+            }
+          }
+        }
+      }
+    }
+    compose.waitForIdle()
+    assertEquals(1, compose.onAllNodesWithText("----").fetchSemanticsNodes().size)
+  }
 }

@@ -54,9 +54,8 @@ fun RenderChild(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier
   }
   val entityId = if (LocalInsideCard.current) null else unavailableFrameEntity(card)
   if (entityId == null) {
-    CompositionLocalProvider(LocalInsideCard provides true) {
-      converter.Render(card, snapshot, modifier)
-    }
+    // No frame here: a stack or grid with no entity of its own leaves each child to frame itself.
+    converter.Render(card, snapshot, modifier)
     return
   }
   // The card is about one entity: it shows that entity's unavailability as the uber theme does,
@@ -74,8 +73,10 @@ fun RenderChild(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier
 }
 
 /**
- * True while composing inside a card, so a card nested in a stack or grid (which renders it through
- * [RenderChild] again) doesn't get a second unavailable frame of its own.
+ * True while composing inside an unavailable frame, so a card nested in a framed card (a stack or
+ * grid with its own `entity:`, which renders children through [RenderChild] again) doesn't get a
+ * second frame of its own. A container without an entity has no frame and doesn't set it, so its
+ * children frame themselves.
  */
 private val LocalInsideCard = staticCompositionLocalOf { false }
 
