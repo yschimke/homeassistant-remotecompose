@@ -25,9 +25,9 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
 /**
- * The entities card's Fixed-mode size tiers: every tier is a list of rows, and at most one of the
- * sibling tiers in a gate registers the live `<entity>.is_on` booleans (a duplicate named boolean
- * blanks the other branch in alpha010, #224).
+ * The entities card's Fixed-mode size tiers: every tier is a list of rows, and the rows register
+ * the live `<entity>.is_on` booleans a design-template bake fills in. Pixel parity between baked
+ * and direct widgets is in `LauncherDesignsTest` and the Wear module's `SlotWidgetDesignTest`.
  */
 @Suppress("RestrictedApi")
 @RunWith(RobolectricTestRunner::class)
@@ -113,19 +113,27 @@ class EntitiesSizeTiersTest {
   private val allRows = listOf("Living Room", "Office lamp", "Coffee maker", "Front door")
 
   /**
-   * The narrow launcher tier is the dense list with live switches; the expanded tier keeps every
-   * row too but resolves its switches from the encode-time state, so the two siblings never both
-   * register `<entity>.is_on`.
+   * A launcher capture records only the tier its size selects, so both the dense list and the
+   * expanded rows register the live `<entity>.is_on` booleans a design-template bake fills in.
    */
   @Test
-  fun launcherExpandedTierRegistersNoOnOffBinding() {
+  fun eachLauncherTierRegistersTheOnOffBindingsForTheBake() {
     val dense = capture(216, 168, BreakpointAxis.Width, captureSize = true)
-    assertTrue(names(dense).any { it.endsWith("light.lamp.is_on") }, "dense rows: ${names(dense)}")
+    assertTrue(names(dense).any { it.endsWith("light.lamp.is_on") }, "dense: ${names(dense)}")
     assertRows(dense, allRows, "the 3x2 widget")
 
     val expanded = capture(288, 252, BreakpointAxis.Width, captureSize = true)
-    assertTrue(names(expanded).none { it.endsWith(".is_on") }, "expanded: ${names(expanded)}")
+    assertTrue(
+      names(expanded).any { it.endsWith("light.lamp.is_on") },
+      "expanded: ${names(expanded)}",
+    )
     assertRows(expanded, allRows, "the 4x3 widget")
+  }
+
+  /** Recording both launcher tiers (no capture size), every row is still in the document. */
+  @Test
+  fun anUnsizedLauncherCaptureKeepsEveryRow() {
+    assertRows(capture(288, 252, BreakpointAxis.Width), allRows, "the unsized launcher widget")
   }
 
   /**
@@ -134,14 +142,18 @@ class EntitiesSizeTiersTest {
   @Test
   fun aShortWideLauncherKeepsTheDenseList() {
     val bytes = capture(360, 168, BreakpointAxis.Width, captureSize = true)
+    assertRows(bytes, allRows, "the 5x2 widget")
     assertTrue(names(bytes).any { it.endsWith("light.lamp.is_on") }, "dense rows: ${names(bytes)}")
   }
 
-  /** Both Wear tiers are lists of rows, neither registering `<entity>.is_on`. */
+  /**
+   * Both Wear tiers are lists of rows sharing one set of live `<entity>.is_on` looks, so a baked
+   * Wear template shows each entity's real state.
+   */
   @Test
-  fun wearTiersAreRowListsWithoutOnOffBindings() {
+  fun wearTiersAreRowListsWithSharedOnOffBindings() {
     val bytes = capture(184, 96, BreakpointAxis.Height)
-    assertTrue(names(bytes).none { it.endsWith(".is_on") }, "wear: ${names(bytes)}")
+    assertTrue(names(bytes).any { it.endsWith("light.lamp.is_on") }, "wear: ${names(bytes)}")
     assertRows(bytes, listOf("Living Room", "Office lamp", "Coffee maker"), "the Wear slot")
     assertTrue("Downstairs" in String(bytes, Charsets.UTF_8), "the large Wear slot keeps the title")
   }

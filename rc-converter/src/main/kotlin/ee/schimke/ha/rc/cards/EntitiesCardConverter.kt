@@ -15,6 +15,7 @@ import ee.schimke.ha.rc.DesignTemplateInput
 import ee.schimke.ha.rc.HaStateColor
 import ee.schimke.ha.rc.LocalCardSizeMode
 import ee.schimke.ha.rc.LocalFixedCanvasAxis
+import ee.schimke.ha.rc.LocalWidgetCaptureSizeDp
 import ee.schimke.ha.rc.RemoteMinSizeGate
 import ee.schimke.ha.rc.RemoteSizeBreakpoint
 import ee.schimke.ha.rc.components.HaEntitiesData
@@ -23,6 +24,7 @@ import ee.schimke.ha.rc.components.HaEntityRowData
 import ee.schimke.ha.rc.components.LiveValues
 import ee.schimke.ha.rc.components.RemoteHaEntities
 import ee.schimke.ha.rc.components.RemoteHaEntitiesFitted
+import ee.schimke.ha.rc.components.entityLooks
 import ee.schimke.ha.rc.defaultTapActionFor
 import ee.schimke.ha.rc.formatState
 import ee.schimke.ha.rc.icons.HaIconMap
@@ -78,13 +80,19 @@ class EntitiesCardConverter : CardConverter {
    * * **Large** (`h ≥ 80`, ~96dp of content): the title over the first [WEAR_LARGE_ROWS] rows (one
    *   more without a title), at body size.
    *
-   * Rows share the slot's height and centre in their share, so a short list fills the slot. Both
-   * tiers resolve their accents from the encode-time state, so neither registers `<entity>.is_on`
-   * twice; the Wear slot is baked from constants anyway.
+   * Rows share the slot's height and centre in their share, so a short list fills the slot. The
+   * rows' live on/off looks are created once, outside the gate, and shared by both tiers, so a
+   * baked design template shows each entity's real state and no `<entity>.is_on` is registered
+   * twice.
    */
   @Composable
   private fun WearList(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
     val title = card.raw["title"]?.jsonPrimitive?.content
+    val largeRows = if (title != null) WEAR_LARGE_ROWS else WEAR_LARGE_ROWS + 1
+    val rows = rows(card, snapshot).take(maxOf(WEAR_SMALL_ROWS, largeRows))
+    // Both tiers draw the same entities, so their live on/off looks are registered once, here,
+    // and shared: a design template bakes them, and neither branch registers `is_on` twice.
+    val looks = entityLooks(rows)
     RemoteSizeBreakpoint(
       thresholdsDp = intArrayOf(WEAR_LARGE_MIN_HEIGHT_DP),
       axis = BreakpointAxis.Height,
@@ -93,21 +101,18 @@ class EntitiesCardConverter : CardConverter {
       when (tier) {
         0 ->
           RemoteHaEntitiesFitted(
-            HaEntitiesData(title = null, rows = rows(card, snapshot).take(WEAR_SMALL_ROWS)),
+            HaEntitiesData(title = null, rows = rows.take(WEAR_SMALL_ROWS)),
             HaEntitiesFit.Compact,
             RemoteModifier.fillMaxSize(),
+            looks = looks,
           )
         else ->
           RemoteHaEntitiesFitted(
-            HaEntitiesData(
-              title = title,
-              rows =
-                rows(card, snapshot)
-                  .take(if (title != null) WEAR_LARGE_ROWS else WEAR_LARGE_ROWS + 1),
-            ),
+            HaEntitiesData(title = title, rows = rows.take(largeRows)),
             HaEntitiesFit.Compact,
             RemoteModifier.fillMaxSize(),
             largeText = true,
+            looks = looks,
           )
       }
     }
@@ -132,6 +137,7 @@ class EntitiesCardConverter : CardConverter {
   @Composable
   private fun LauncherList(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
     val title = card.raw["title"]?.jsonPrimitive?.content
+    val sizedAtCapture = LocalWidgetCaptureSizeDp.current != null
     val rowCount = card.raw["entities"]?.jsonArray?.size ?: 0
     val fit = HaEntitiesFit.Expanded
     val minHeightDp =
@@ -144,10 +150,15 @@ class EntitiesCardConverter : CardConverter {
       modifier = modifier.fillMaxSize(),
     ) { roomy ->
       if (roomy) {
+        val rows = rows(card, snapshot)
         RemoteHaEntitiesFitted(
-          HaEntitiesData(title = title, rows = rows(card, snapshot)),
+          HaEntitiesData(title = title, rows = rows),
           fit,
           RemoteModifier.fillMaxSize(),
+          // A launcher capture (live widget or design template) records only this tier, so its
+          // rows can register `is_on` for the bake to fill. Recording both tiers (the matrix), the
+          // dense list already registers them: these rows take the captured entities' state.
+          looks = if (sizedAtCapture) entityLooks(rows) else null,
         )
       } else {
         FullList(
