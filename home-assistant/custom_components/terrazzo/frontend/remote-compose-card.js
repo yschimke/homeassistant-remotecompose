@@ -8,6 +8,7 @@ export class RemoteComposeCard extends HaCardElement {
       throw new Error('Remote Compose requires a tile, button, entity or gauge card with live bindings.');
     }
     this.config = structuredClone(config);
+    this.setAttribute('require-host-bindings', '');
     // Set local mode before attributes can trigger an asynchronous start/OAuth.
     this.setStates(this._hass?.states ?? {});
     const attrs = {
