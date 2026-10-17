@@ -59,8 +59,11 @@ jobs:
           disk-size: 2G
           disable-linux-hw-accel: false
           emulator-boot-timeout: 900
-          # -show-kernel: a boot that never brings adbd online otherwise logs nothing after "full startup".
-          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none -show-kernel
+          # swangle_indirect, not swiftshader_indirect: under the latter the API 37 Wear image's
+          # system_server crashes in its android.display thread right after loading mapper/ranchu,
+          # zygote restarts every ~5 s and boot never completes (adb stays "offline").
+          # -show-kernel keeps the guest's boot on the job log, the only record when adbd never starts.
+          emulator-options: -no-window -gpu swangle_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none -show-kernel
           # Wear OS 6+ images are only published signed (release-keys, ro.adb.secure=1), so adbd
           # accepts only an authorized host key. The emulator passes ~/.android/adbkey.pub to the
           # guest at boot only if it already exists, so create it before launch.
