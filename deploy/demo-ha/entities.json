@@ -1,0 +1,1 @@
+["sensor.demo_temperature", "sensor.demo_humidity", "sensor.demo_battery", "binary_sensor.demo_motion", "light.demo_lamp", "switch.demo_coffee"]

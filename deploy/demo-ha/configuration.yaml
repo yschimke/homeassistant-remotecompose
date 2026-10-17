@@ -1,0 +1,52 @@
+# Dedicated, generic simulation. No default_config, discovery, cloud, real devices or recorder.
+homeassistant:
+  name: Demo Home
+  latitude: 0
+  longitude: 0
+  elevation: 0
+  unit_system: metric
+  time_zone: UTC
+http:
+api:
+websocket_api:
+frontend:
+onboarding:
+logger:
+  default: warning
+lovelace:
+  mode: yaml
+
+template:
+  - sensor:
+      - name: Demo temperature
+        unique_id: demo_temperature
+        device_class: temperature
+        unit_of_measurement: "°C"
+        state: "{{ (21 + (now().minute % 10) / 10) | round(1) }}"
+      - name: Demo humidity
+        unique_id: demo_humidity
+        device_class: humidity
+        unit_of_measurement: "%"
+        state: "{{ 42 + now().minute % 8 }}"
+      - name: Demo battery
+        unique_id: demo_battery
+        device_class: battery
+        unit_of_measurement: "%"
+        state: "78"
+  - binary_sensor:
+      - name: Demo motion
+        unique_id: demo_motion
+        device_class: motion
+        state: "{{ now().minute % 2 == 0 }}"
+  - light:
+      - name: Demo lamp
+        unique_id: demo_lamp
+        state: "{{ now().minute % 4 < 2 }}"
+        turn_on: []
+        turn_off: []
+  - switch:
+      - name: Demo coffee
+        unique_id: demo_coffee
+        state: "{{ now().minute % 6 < 3 }}"
+        turn_on: []
+        turn_off: []

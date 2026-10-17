@@ -1,0 +1,58 @@
+name: public-demo-ha
+services:
+  homeassistant:
+    image: ghcr.io/home-assistant/home-assistant:2026.10.2
+    restart: unless-stopped
+    volumes:
+      - ha_config:/config
+      - ./configuration.yaml:/config/configuration.yaml:ro
+      - ./dashboard.json:/config/ui-lovelace.yaml:ro
+    networks: [private]
+    # No host ports, host networking, devices or Docker socket.
+    mem_limit: 768m
+    cpus: 1.0
+    logging: &logging
+      driver: json-file
+      options: {max-size: 5m, max-file: "2"}
+  gateway:
+    build: .
+    restart: unless-stopped
+    environment:
+      HA_URL: http://homeassistant:8123
+    secrets: [ha_token]
+    ports: ["127.0.0.1:8125:8080"]
+    networks:
+      private: {}
+      edge:
+        aliases: [demo-ha-gateway]
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 128m
+    cpus: 0.5
+    logging: *logging
+    healthcheck:
+      test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://localhost:8080/healthz')"]
+      interval: 15s
+      timeout: 3s
+      retries: 3
+  bootstrap:
+    build: .
+    profiles: [setup]
+    user: "0:0"
+    environment:
+      HA_URL: http://homeassistant:8123
+    volumes: ["./private:/private"]
+    networks: [private]
+    command: [python, bootstrap.py]
+    logging: *logging
+networks:
+  private:
+    internal: true
+  edge:
+    internal: true
+volumes:
+  ha_config:
+secrets:
+  ha_token:
+    file: ./private/ha_token
