@@ -86,11 +86,29 @@ class GarageDoorStatesProvider : PreviewParameterProvider<Pair<String, HaSnapsho
     )
 }
 
-private fun garageSnapshot(state: String, positionPct: Int?): HaSnapshot {
+/**
+ * The demo Security dashboard's garage door (`supported_features: 15`, a position) at rest and in
+ * motion, so the enhanced shutter card's buttons can be seen following it: closed, opening, part
+ * open, open, closing, unavailable.
+ */
+class GarageDoorControlStatesProvider : PreviewParameterProvider<Pair<String, HaSnapshot>> {
+  override val values: Sequence<Pair<String, HaSnapshot>> =
+    sequenceOf(
+      "closed" to garageSnapshot(state = "closed", positionPct = 0, features = 15),
+      "opening" to garageSnapshot(state = "opening", positionPct = 40, features = 15),
+      "partly_open" to garageSnapshot(state = "open", positionPct = 45, features = 15),
+      "open" to garageSnapshot(state = "open", positionPct = 100, features = 15),
+      "closing" to garageSnapshot(state = "closing", positionPct = 60, features = 15),
+      "unavailable" to garageSnapshot(state = "unavailable", positionPct = null, features = 15),
+    )
+}
+
+private fun garageSnapshot(state: String, positionPct: Int?, features: Int? = null): HaSnapshot {
   val attrs = buildMap {
     put("friendly_name", "Garage")
     put("device_class", "garage")
     if (positionPct != null) put("current_position", positionPct.toString())
+    if (features != null) put("supported_features", features.toString())
   }
   return snapshot(state("cover.garage", state, attrs))
 }
