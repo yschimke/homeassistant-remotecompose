@@ -85,18 +85,30 @@ Other allowed commands: `get_config`, `lovelace/dashboards/list` (one `demo` das
 
 ## Provision on preview.coo.ee
 
-Keep this checkout on the host, separate from the preview server stack. Docker Compose is required.
+The service definitions, pinned images, generic data and routing overlay are committed config;
+there is no manual HA setup, public token to create, or secret to commit. The host still needs
+an operator to apply that config. Required access is a shell on `preview.coo.ee` with permission
+to use Docker, Docker Compose v2, and checkouts of this repository and `compose-preview-server`.
+Docker must be able to pull the pinned images and build the gateway. Python is only needed
+outside containers for the final public verifier, which can also run from your laptop.
+
+Keep this checkout on the host, separate from the preview server stack.
 The companion preview-server PR installs `/demo-ha/*` routing to `demo-ha-gateway:8080` and attaches
 Caddy to this stack's **edge** network; it does not route directly to HA.
 
 ```sh
-cd deploy/demo-ha
-# Do not start the public gateway until its secret exists.
-docker compose up -d homeassistant
-docker compose --profile setup run --rm bootstrap
-docker compose up -d --build gateway
-docker compose --profile verify run --rm verify
+# From this repository's root, on preview.coo.ee:
+bash deploy/demo-ha/provision.sh
 ```
+
+The script checks Docker and Compose config, builds the helper images, starts HA, bootstraps
+private credentials, starts the facade, and verifies reads, rejected mutations and a live update
+from the isolated edge network. It stops on failure and reports success only after verification.
+It works from any directory and pins the Compose file and `public-demo-ha` project even if the
+shell exports settings for another stack. Rerun it after pulling reviewed configuration changes;
+it retains the HA volume and existing token. It never removes volumes or changes Caddy.
+If it fails after starting services, those services remain available for diagnosis; fix the
+reported failure and rerun. Do not delete the volume or private directory to retry onboarding.
 
 Bootstrap generates a random owner password and a 365-day long-lived gateway token. It prints
 neither. Owner credentials stay in host-only `private/owner.json` (0600, parent 0700), gateway token
@@ -116,9 +128,46 @@ facade makes exactly one fixed upstream request, `GET /api/states`, with its own
 It never relays client headers, bodies, paths or commands. Its public dashboard/config/registries
 are fixed reviewed projections. The native HA state API and service API are never exposed.
 
-To enable the preview-server route after this stack is healthy, follow that repository's
-`deploy/image/docker-compose.demo-ha.yml` instructions. Inspect Caddy's effective configuration
-before reload and preserve all existing frontend/design routes. Backend rollback is to remove that
+### Enable the committed public route
+
+After provisioning passes, use the `compose-preview-server` checkout on the same Docker host.
+Its committed [`deploy/image/docker-compose.demo-ha.yml`](https://github.com/yschimke/compose-preview-server/blob/main/deploy/image/docker-compose.demo-ha.yml)
+mounts the route and connects Caddy to `public-demo-ha_edge`. The host's existing HA domain must
+be `ha.coo.ee`, with DNS/TLS already working. Keep the existing deployment's project name,
+environment file, working directory and **every existing Compose overlay**. Add
+`docker-compose.demo-ha.yml` to its persistent `COMPOSE_FILE` setting, so future deployments
+retain it. Do not replace an existing deployment setting with only the demo overlay.
+
+For example, if the host currently uses `docker-compose.yml:docker-compose.deploy-config.yml`,
+the resulting setting and apply commands in that repository's `deploy/image` directory are:
+
+```sh
+export COMPOSE_FILE=docker-compose.yml:docker-compose.deploy-config.yml:docker-compose.demo-ha.yml
+docker compose config --quiet
+docker compose up -d --no-deps caddy
+```
+
+This is an example for that existing file list, not a replacement for the host's other overlays.
+Persist the resulting file list wherever the host's deploy job reads it; the shell export alone
+does not persist across logins. Inspect Caddy's effective configuration before reload and preserve
+all existing frontend/design routes. Only the facade is reachable at `/demo-ha/*`; do not add
+a route or published port to HA itself. The backend script deliberately cannot guess the host's
+preview-stack settings.
+
+Finally, from this checkout on the host **or your laptop**, with Python 3 and network access:
+
+```sh
+python3 -m venv /tmp/demo-ha-verify
+/tmp/demo-ha-verify/bin/pip install -r deploy/demo-ha/requirements.txt
+/tmp/demo-ha-verify/bin/python deploy/demo-ha/verify_public.py https://ha.coo.ee/demo-ha --wait-ready 120 --stream
+```
+
+Only a passing run against that HTTPS URL establishes public reads, rejected mutation attempts
+and live updates through the deployed route. Keep its output as deployment evidence; it needs
+no private credential. A 404 usually means the Caddy overlay is not active; a 503 means the
+facade is not ready or its upstream data is stale.
+
+Backend rollback is to remove that
 overlay/route and stop the demo containers, retaining the HA volume and private credentials.
 
 ## Verification
@@ -131,8 +180,8 @@ python verify_public.py https://ha.coo.ee/demo-ha --stream
 
 The unit suite starts a fake upstream and verifies both accepted reads and that denied requests
 never reach it. It checks filtering, stale state, malformed frames, subscriptions and changed data.
-`.github/workflows/demo-ha.yml` runs the same tests plus a **real HA container**, private onboarding,
-and the public verifier including a real minute-based update. This VM has no Docker; use GitHub CI
+`.github/workflows/demo-ha.yml` runs the same tests plus `provision.sh` against a **real HA container**,
+including private onboarding and the verifier with a real minute-based update. This VM has no Docker; use GitHub CI
 for that lane. The Compose `verify` profile runs the public verifier inside the isolated edge network, waits up
 to 120 seconds for readiness, then requires the same reads, rejected writes and a live update.
 The verifier attempts REST and WebSocket mutations with no admin token and checks

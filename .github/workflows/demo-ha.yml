@@ -22,16 +22,10 @@ jobs:
           python-version: '3.13'
       - run: pip install -r requirements.txt
       - name: Gateway deny-by-default and live update tests
-        run: python -m unittest -v test_gateway.py
+        run: python -m unittest discover -v
       - name: Validate and start dedicated Home Assistant
         run: |
-          docker compose config --quiet
-          docker compose up -d homeassistant
-          docker compose --profile setup run --rm bootstrap
-          docker compose up -d --build gateway
-      - name: Verify real HA reads, denied writes and streaming
-        # Internal networks do not publish host ports. Probe through the same edge network as Caddy.
-        run: docker compose --profile verify run --rm verify
+          bash provision.sh
       - name: Diagnose container startup on failure
         if: failure()
         run: |
