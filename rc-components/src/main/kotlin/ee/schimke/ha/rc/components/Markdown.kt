@@ -59,12 +59,14 @@ sealed interface MarkdownInline {
 
   /**
    * `[label](url)` — a clickable, accent-coloured run. [boundText] carries the live label when it
-   * holds a binding token.
+   * holds a binding token. [style] is the label's emphasis: the emphasis around the link
+   * (`**[docs](url)**`) combined with the label's own (`[**docs**](url)`, `` [`code`](url) ``).
    */
   data class Link(
     override val text: String,
     val url: String,
     val boundText: androidx.compose.remote.creation.compose.state.RemoteString? = null,
+    val style: MarkdownStyle = MarkdownStyle.Plain,
   ) : MarkdownInline
 
   /**
@@ -259,14 +261,14 @@ object Markdown {
       }
       MarkdownElementTypes.AUTOLINK -> {
         val url = node.getTextInNode(src).toString().trim().removePrefix("<").removeSuffix(">")
-        runs.span(MarkdownInline.Link(url, url))
+        runs.span(MarkdownInline.Link(url, url, style = style))
         return
       }
       MarkdownElementTypes.INLINE_LINK,
       MarkdownElementTypes.FULL_REFERENCE_LINK,
       MarkdownElementTypes.SHORT_REFERENCE_LINK -> {
         runs.flush()
-        appendLink(node, src, runs.out)
+        appendLink(node, src, style, runs.out)
         return
       }
     }
@@ -324,7 +326,12 @@ object Markdown {
     return false
   }
 
-  private fun appendLink(node: ASTNode, src: String, out: MutableList<MarkdownInline>) {
+  private fun appendLink(
+    node: ASTNode,
+    src: String,
+    style: MarkdownStyle,
+    out: MutableList<MarkdownInline>,
+  ) {
     // The link's own destination is a direct child (the image inside a
     // badge has its own, deeper, LINK_DESTINATION — don't grab that one).
     val dest =
@@ -340,7 +347,43 @@ object Markdown {
     }
     val text = label?.let { labelText(it, src) }.orEmpty()
     if (text.isEmpty()) return
-    out += if (dest != null) MarkdownInline.Link(text, dest) else MarkdownInline.Text(text)
+    val labelStyle = label?.let { combine(style, labelStyle(it, src)) } ?: style
+    out +=
+      if (dest != null) MarkdownInline.Link(text, dest, style = labelStyle)
+      else MarkdownInline.Text(text, style = labelStyle)
+  }
+
+  private fun combine(a: MarkdownStyle, b: MarkdownStyle) =
+    MarkdownStyle(bold = a.bold || b.bold, italic = a.italic || b.italic, code = a.code || b.code)
+
+  /**
+   * The emphasis inside a link label. A link draws as one run, so a label that mixes emphasis
+   * (`[**a** b](url)`) takes the style covering most of its visible characters.
+   */
+  private fun labelStyle(label: ASTNode, src: String): MarkdownStyle {
+    val counts = mutableMapOf<MarkdownStyle, Int>()
+    fun walk(node: ASTNode, style: MarkdownStyle) {
+      if (node.type == MarkdownElementTypes.IMAGE) return
+      if (node.children.isEmpty()) {
+        if (node.type == MarkdownTokenTypes.LBRACKET || node.type == MarkdownTokenTypes.RBRACKET) {
+          return
+        }
+        if (isMarkup(node)) return
+        val visible = leafText(node, src).count { !it.isWhitespace() }
+        if (visible > 0) counts[style] = (counts[style] ?: 0) + visible
+        return
+      }
+      val inner =
+        when (node.type) {
+          MarkdownElementTypes.EMPH -> style.copy(italic = true)
+          MarkdownElementTypes.STRONG -> style.copy(bold = true)
+          MarkdownElementTypes.CODE_SPAN -> style.copy(code = true)
+          else -> style
+        }
+      node.children.forEach { walk(it, inner) }
+    }
+    walk(label, MarkdownStyle.Plain)
+    return counts.maxByOrNull { it.value }?.key ?: MarkdownStyle.Plain
   }
 
   private fun imageSpan(node: ASTNode, src: String, href: String?): MarkdownInline.Image {

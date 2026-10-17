@@ -326,11 +326,13 @@ private fun InlineSpan(
     }
     is MarkdownInline.Link -> {
       val click = HaAction.Url(inline.url).toRemoteAction()
+      val emphasis = inline.style.drawn
       RemoteText(
         text = inline.boundText ?: inline.text.rs,
         color = link,
         fontSize = fontSize,
-        fontWeight = fontWeight,
+        fontWeight = emphasis.weight(fontWeight),
+        fontFamily = emphasis.fontFamily,
         style = haTextStyle(),
         modifier = click?.let { RemoteModifier.clickable(it) } ?: RemoteModifier,
       )

@@ -317,4 +317,34 @@ class MarkdownTest {
     assertTrue(!boldAndItalic.hasInlineMarkup)
     assertEquals(MarkdownStyle(bold = true), boldAndItalic.drawnStyle)
   }
+
+  private fun link(source: String): MarkdownInline.Link =
+    Markdown.parse(source).single().inlines.filterIsInstance<MarkdownInline.Link>().single()
+
+  @Test
+  fun emphasisAroundALinkStylesTheLabel() {
+    val l = link("**[docs](https://example.com)**")
+    assertEquals("docs", l.text)
+    assertEquals("https://example.com", l.url)
+    assertEquals(MarkdownStyle(bold = true), l.style)
+  }
+
+  @Test
+  fun emphasisInsideALinkLabelStylesTheLabel() {
+    assertEquals(MarkdownStyle(bold = true), link("[**docs**](https://example.com)").style)
+    assertEquals(MarkdownStyle.Code, link("[`code`](https://example.com)").style)
+    assertEquals("code", link("[`code`](https://example.com)").text)
+  }
+
+  @Test
+  fun mixedLabelTakesItsDominantStyle() {
+    assertEquals(MarkdownStyle(bold = true), link("[**longer** x](https://example.com)").style)
+  }
+
+  @Test
+  fun plainLinkIsUnchanged() {
+    val l = link("see [docs](https://example.com) here")
+    assertEquals("docs", l.text)
+    assertEquals(MarkdownStyle.Plain, l.style)
+  }
 }
