@@ -117,6 +117,22 @@ class GatewayTest(unittest.IsolatedAsyncioTestCase):
         await verify(str(self.client.make_url('')).rstrip('/'), stream=False, wait_ready=1)
         self.assertEqual(self.requests, [('GET', '/api/states', 'Bearer secret-token')])
 
+    async def test_readiness_deadline_includes_slow_request_time(self):
+        async def slow_health(request):
+            await asyncio.sleep(2)
+            return web.json_response({'read_only': True})
+        app = web.Application()
+        app.router.add_get('/healthz', slow_health)
+        server = TestServer(app)
+        await server.start_server()
+        started = time.monotonic()
+        try:
+            with self.assertRaisesRegex(RuntimeError, 'readiness window'):
+                await verify(str(server.make_url('')).rstrip('/'), stream=False, wait_ready=1)
+            self.assertLess(time.monotonic() - started, 1.7)
+        finally:
+            await server.close()
+
     async def test_stale_backend_is_not_reported_healthy(self):
         self.g.updated = time.monotonic() - 60
         for path in ['/healthz', '/api/states', '/dashboard', '/api/config', '/api/websocket']:

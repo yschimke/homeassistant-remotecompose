@@ -6,19 +6,25 @@ import json
 import aiohttp
 
 
+async def wait_until_ready(session, base, seconds):
+    loop = asyncio.get_running_loop()
+    deadline = loop.time() + seconds
+    while (remaining := deadline - loop.time()) > 0:
+        try:
+            timeout = aiohttp.ClientTimeout(total=min(2, remaining))
+            async with session.get(base + '/healthz', timeout=timeout) as response:
+                if response.status == 200:
+                    return
+        except (aiohttp.ClientError, asyncio.TimeoutError):
+            pass
+        await asyncio.sleep(min(1, max(0, deadline - loop.time())))
+    raise RuntimeError('Demo did not become healthy within the readiness window')
+
+
 async def verify(base, stream, wait_ready=0):
     async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=15)) as session:
-        for attempt in range(wait_ready):
-            try:
-                async with session.get(base + '/healthz') as r:
-                    if r.status == 200:
-                        break
-            except (aiohttp.ClientError, asyncio.TimeoutError):
-                pass
-            await asyncio.sleep(1)
-        else:
-            if wait_ready:
-                raise RuntimeError('Demo did not become healthy within the readiness window')
+        if wait_ready > 0:
+            await wait_until_ready(session, base, wait_ready)
         async with session.get(base + '/healthz') as r:
             assert r.status == 200, f'healthz: HTTP {r.status}'
             assert (await r.json())['read_only'] is True
