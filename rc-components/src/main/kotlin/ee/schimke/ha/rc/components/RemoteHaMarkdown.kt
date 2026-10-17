@@ -14,10 +14,12 @@ import androidx.compose.remote.creation.compose.layout.RemoteText
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.background
 import androidx.compose.remote.creation.compose.modifier.clickable
+import androidx.compose.remote.creation.compose.modifier.contentDescription
 import androidx.compose.remote.creation.compose.modifier.fillMaxSize
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.creation.compose.modifier.height
 import androidx.compose.remote.creation.compose.modifier.padding
+import androidx.compose.remote.creation.compose.modifier.semantics
 import androidx.compose.remote.creation.compose.modifier.width
 import androidx.compose.remote.creation.compose.state.RemoteTextUnit
 import androidx.compose.remote.creation.compose.state.rdp
@@ -375,16 +377,35 @@ private fun MarkdownBadge(image: MarkdownInline.Image) {
       width = BADGE_DECODE_MAX_W_PX,
       height = BADGE_DECODE_MAX_H_PX,
     )
-  RemoteImage(
-    remoteBitmap = rb,
-    contentDescription = image.alt.ifEmpty { "image" }.rs,
-    modifier =
-      (click?.let { RemoteModifier.clickable(it) } ?: RemoteModifier)
-        .height(BADGE_HEIGHT_DP.rdp)
-        .width(BADGE_WIDTH_DP.rdp),
-    contentScale = ContentScale.Fit,
-  )
+  val label = image.alt.ifEmpty { image.href ?: "image" }.rs
+  val badge: @Composable @RemoteComposable () -> Unit = {
+    RemoteImage(
+      remoteBitmap = rb,
+      contentDescription = label,
+      modifier = RemoteModifier.height(BADGE_HEIGHT_DP.rdp).width(BADGE_WIDTH_DP.rdp),
+      contentScale = ContentScale.Fit,
+    )
+  }
+  if (click == null) {
+    badge()
+  } else {
+    // A linked badge is a button: the tap target carries the badge's label (the image's own
+    // description doesn't reach the clickable node) and is a full touch target tall, with the badge
+    // centred in it.
+    RemoteBox(
+      modifier =
+        RemoteModifier.clickable(click)
+          .semantics { contentDescription = label }
+          .height(MIN_TOUCH_TARGET_DP.rdp),
+      contentAlignment = RemoteAlignment.Center,
+    ) {
+      badge()
+    }
+  }
 }
+
+/** The smallest tap target, in dp (Material's and the accessibility checker's 48dp). */
+private const val MIN_TOUCH_TARGET_DP = 48
 
 // Badge SVGs are ~20 px tall and a few times wider; a fixed box keeps the
 // flow row tidy and lets several badges share a line. Fit letterboxes any
