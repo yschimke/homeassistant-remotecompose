@@ -102,8 +102,20 @@ The page pushes the **slot bindings** a template reads, which is everything
 
 Names go to the player in the `USER:` domain, as the AndroidX player's `setUserLocal*` writes them.
 
+`.state` reads the way Home Assistant's frontend shows it (`HaStateFormat.kt`): binary-sensor words
+by device class (`Open`, `Detected`), `Unknown` apart from `Unavailable`, the entity's
+`display_precision` / `suggested_display_precision` else a device-class default, currency
+(`£0.25/kWh`), durations (`1 h 05 min`), compass bearings (`NE 50°`), count units (`1 star`), `—`
+for a redacted value, and free text untouched. Two differences from the app, both by design:
+
+- The embed doesn't read the entity registry, so a registry-only display precision (`dp`, which the
+  app gets from `config/entity_registry/list_for_display`) isn't applied; the attributes are.
+- A timestamp (`device_class: timestamp`, `event` / `button` / `input_button` / `scene`) reads as
+  a relative time from the viewer's clock (`3 h ago`), a date (local time) a week or more away. The
+  element re-derives its bindings every 20 s while a card shows one, like the app's dashboard tick.
+
 `embed/ha-card.js` is a JavaScript **port** of those functions, not ha-model's `wasmJs` build. The
-port is about 200 lines with no download cost, while the wasm build is a megabyte-scale module plus
+port is a few hundred lines with no download cost, while the wasm build is a megabyte-scale module plus
 loader for a few string functions. The port is pinned to Kotlin by one golden file,
 `embed/test/bindings-golden.json`:
 

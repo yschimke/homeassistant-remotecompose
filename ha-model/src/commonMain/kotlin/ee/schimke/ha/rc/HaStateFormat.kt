@@ -38,6 +38,16 @@ fun formatState(
   )
 
 /**
+ * The decimals [formatState] rounds [entity] to under [snapshot]: the entity registry's display
+ * precision, else the entity's `display_precision` / `suggested_display_precision` attribute; null
+ * for the device-class default. For hosts that hand the state on to be formatted elsewhere (Wear).
+ */
+fun displayPrecisionOf(entity: EntityState, snapshot: HaSnapshot): Int? =
+  snapshot.devices[entity.entityId]?.displayPrecision
+    ?: entity.attributes.int("display_precision")
+    ?: entity.attributes.int("suggested_display_precision")
+
+/**
  * Identical display strings for document authoring and live bindings on every platform, written to
  * read the way Home Assistant's own frontend shows a state:
  * - `unavailable` → `Unavailable`, `unknown` → `Unknown`, a missing entity → `Unavailable`.
@@ -248,9 +258,14 @@ private fun humanize(raw: String): String {
 private val REDACTED = Regex("^-?\\d+\\.[xX]+$")
 private val NUMBER = Regex("^([+-]?)(\\d*)(?:\\.(\\d*))?(?:[eE]([+-]?\\d+))?$")
 
-private fun isRedacted(raw: String): Boolean = REDACTED.matches(raw.trim())
+private fun isRedacted(raw: String): Boolean = REDACTED.matches(raw)
 
-private fun isNumber(raw: String): Boolean = raw.trim().toDoubleOrNull()?.isFinite() == true
+/**
+ * A plain decimal (`21.5`, `-3`, `1e3`) that is finite. Stricter than `toDoubleOrNull`, which on
+ * the JVM also takes `5f` or ` 7 `: the embed's JavaScript port (`embed/ha-card.js`) must agree.
+ */
+private fun isNumber(raw: String): Boolean =
+  NUMBER.matches(raw) && raw.toDoubleOrNull()?.isFinite() == true
 
 private fun formatNumericState(
   raw: String,
@@ -259,7 +274,7 @@ private fun formatNumericState(
   precision: Int?,
   name: String?,
 ): String {
-  val value = raw.trim()
+  val value = raw
   val number = value.toDouble()
   if (deviceClass == "duration")
     formatDuration(number, unit)?.let {
@@ -378,7 +393,7 @@ internal fun formatDecimal(raw: String, minDecimals: Int, maxDecimals: Int): Str
 }
 
 private fun roundDecimal(raw: String, decimals: Int): String? {
-  val text = raw.trim()
+  val text = raw
   if (text.toDoubleOrNull()?.isFinite() != true) return null
   val match = NUMBER.matchEntire(text) ?: return null
   val integer = match.groupValues[2]
