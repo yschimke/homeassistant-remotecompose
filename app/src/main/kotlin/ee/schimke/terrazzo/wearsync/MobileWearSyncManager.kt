@@ -36,6 +36,7 @@ import ee.schimke.terrazzo.wearsync.proto.PinnedCardSet
 import ee.schimke.terrazzo.wearsync.proto.PinnedSection
 import ee.schimke.terrazzo.wearsync.proto.PinnedSectionSet
 import ee.schimke.terrazzo.wearsync.proto.StreamUpdate
+import ee.schimke.terrazzo.wearsync.proto.WEAR_EXTRA_ATTRIBUTES
 import ee.schimke.terrazzo.wearsync.proto.WearLease
 import ee.schimke.terrazzo.wearsync.proto.WearPicture
 import ee.schimke.terrazzo.wearsync.proto.WearSettings
@@ -478,6 +479,11 @@ internal fun EntityState.toEntityValue(snapshot: HaSnapshot): EntityValue {
     deviceClass = attrs["device_class"]?.jsonPrimitive?.contentOrNull.orEmpty(),
     entityPicture = attrs["entity_picture"]?.jsonPrimitive?.contentOrNull.orEmpty(),
     displayPrecision = displayPrecisionOf(this, snapshot),
+    attributes =
+      WEAR_EXTRA_ATTRIBUTES.mapNotNull { key ->
+          attrs[key]?.jsonPrimitive?.contentOrNull?.let { key to it }
+        }
+        .toMap(),
   )
 }
 

@@ -9,7 +9,8 @@ import kotlinx.serialization.json.JsonPrimitive
 /**
  * This synced value as the [EntityState] the shared formatter and card converters read. Only the
  * fields the wire format carries survive the round-trip — state, friendly_name,
- * unit_of_measurement, device_class, entity_picture, and the phone's display precision.
+ * unit_of_measurement, device_class, entity_picture, the phone's display precision, and the
+ * [ee.schimke.terrazzo.wearsync.proto.WEAR_EXTRA_ATTRIBUTES] a spool reads.
  */
 internal fun EntityValue.toEntityState(entityId: String): EntityState {
   val attrs =
@@ -21,6 +22,8 @@ internal fun EntityValue.toEntityState(entityId: String): EntityState {
       // The phone's resolved precision, as the attribute `formatState` reads: text rows and the
       // slot widget's converters then round exactly as the phone does.
       displayPrecision?.let { put("display_precision", JsonPrimitive(it)) }
+      // A spool's colour and remaining filament, as the phone's attributes held them.
+      attributes.forEach { (key, value) -> put(key, JsonPrimitive(value)) }
     }
   return EntityState(entityId = entityId, state = state, attributes = JsonObject(attrs))
 }
