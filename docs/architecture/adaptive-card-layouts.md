@@ -216,6 +216,14 @@ centered layout at the largest (Principles 7–8).
 | 3. Identity chip | 56 × 56 | icon-only square, tinted by state |
 | 4. Text chip | smaller | centred state |
 
+On a Wear slot every container passes the width gate, and the small one (a ~44dp content box) is
+too short for the full tile's two body lines (56dp with padding). Wear surfaces declare
+`LocalFixedCanvasAxis = Height`, and the tile gates on height there instead: below 56dp it takes
+`RemoteHaTileCompact` (the name a step down to `Label` over the body-sized state, tighter padding),
+at or above it the full tile. The arc-dial family (thermostat, humidifier, light) does the same with
+a two-line compact Wide row, and the short Wide rows (gauge, alarm panel, media control) keep their
+vertical padding to 2dp so both lines fit the small slot.
+
 ### entity
 
 | Tier | Min size | Layout |

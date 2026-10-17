@@ -18,6 +18,8 @@ import androidx.compose.runtime.setValue
  * dropdown deliberately doesn't: Settings, installed widgets, sign-out. Dashboard quick-switching
  * stays in the title-side dropdown so users don't have to scroll past "Manage widgets" / "Settings"
  * entries to reach the dashboards they actually want to switch between.
+ *
+ * [onOpenAgent], when non-null, adds an "Edit with an agent" entry at the top.
  */
 @Composable
 fun TopBarOverflowMenu(
@@ -27,12 +29,24 @@ fun TopBarOverflowMenu(
   onOpenWearWidgets: (() -> Unit)?,
   onOpenLogs: (() -> Unit)?,
   onSignOut: () -> Unit,
+  onOpenAgent: (() -> Unit)? = null,
 ) {
   var expanded by remember { mutableStateOf(false) }
   IconButton(onClick = { expanded = true }) {
     Icon(Icons.Filled.MoreVert, contentDescription = "More options")
   }
   DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+    // Set only on narrow windows, where the top bar folds its agent icon in here to give the
+    // dashboard title the width.
+    if (onOpenAgent != null) {
+      DropdownMenuItem(
+        text = { Text("Edit with an agent") },
+        onClick = {
+          expanded = false
+          onOpenAgent()
+        },
+      )
+    }
     DropdownMenuItem(
       text = { Text("Settings") },
       onClick = {

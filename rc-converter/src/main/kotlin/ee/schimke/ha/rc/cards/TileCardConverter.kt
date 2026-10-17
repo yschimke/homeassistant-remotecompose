@@ -5,25 +5,26 @@ package ee.schimke.ha.rc.cards
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.fillMaxSize
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
-import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.runtime.Composable
 import ee.schimke.ha.design.DesignProperties
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.HaSnapshot
-import ee.schimke.ha.model.toTyped
+import ee.schimke.ha.rc.BreakpointAxis
 import ee.schimke.ha.rc.CardConverter
 import ee.schimke.ha.rc.CardSizeMode
 import ee.schimke.ha.rc.CardWidthClass
 import ee.schimke.ha.rc.DesignTemplateInput
 import ee.schimke.ha.rc.HaStateColor
 import ee.schimke.ha.rc.LocalCardSizeMode
+import ee.schimke.ha.rc.LocalFixedCanvasAxis
 import ee.schimke.ha.rc.RemoteSizeBreakpoint
 import ee.schimke.ha.rc.components.HaTileData
-import ee.schimke.ha.rc.components.HaToggleAccent
 import ee.schimke.ha.rc.components.LiveValues
 import ee.schimke.ha.rc.components.RemoteHaIconChip
 import ee.schimke.ha.rc.components.RemoteHaTile
+import ee.schimke.ha.rc.components.RemoteHaTileCompact
+import ee.schimke.ha.rc.components.TileTwoLineMinHeightDp
 import ee.schimke.ha.rc.defaultTapActionFor
 import ee.schimke.ha.rc.formatState
 import ee.schimke.ha.rc.icons.HaIconMap
@@ -44,6 +45,12 @@ import kotlinx.serialization.json.jsonPrimitive
  * * **Full** (otherwise) → the HA-reference [RemoteHaTile], wrapped in [CenteredCell] so a tall
  *   cell (`3×2`) centres the row rather than gluing it to the top over a blank half (Principles
  *   7–8).
+ *
+ * On a Wear slot ([LocalFixedCanvasAxis] is [BreakpointAxis.Height]) every container is wide enough
+ * for the full tile, but the small one (a ~44dp content box) is shorter than the name-over-state
+ * stack needs ([TileTwoLineMinHeightDp]). The ladder there gates on height instead: below it the
+ * tile takes [RemoteHaTileCompact] (the name a step smaller over the body-sized state, tighter
+ * padding); at or above it, the full tile.
  */
 class TileCardConverter : CardConverter {
   companion object {
@@ -58,7 +65,12 @@ class TileCardConverter : CardConverter {
 
   override val cardType: String = CardTypes.TILE
 
-  override fun naturalHeightDp(card: CardConfig, snapshot: HaSnapshot): Int = 43
+  /**
+   * Two [HaType.Body][ee.schimke.ha.rc.components.HaType.Body] lines (name over state, ~20dp each)
+   * inside the tile's 8dp vertical padding. A host that fixes the canvas from this number (the
+   * monitoring service, a launcher widget with no reported height) must fit the state line too.
+   */
+  override fun naturalHeightDp(card: CardConfig, snapshot: HaSnapshot): Int = TileTwoLineMinHeightDp
 
   override fun naturalWidthClass(card: CardConfig, snapshot: HaSnapshot): CardWidthClass =
     CardWidthClass.Compact
@@ -81,12 +93,33 @@ class TileCardConverter : CardConverter {
     when (LocalCardSizeMode.current) {
       CardSizeMode.Wrap -> FullTile(card, snapshot, modifier)
       CardSizeMode.Fixed ->
-        RemoteSizeBreakpoint(thresholdsDp = intArrayOf(96), modifier = modifier.fillMaxSize()) {
-          tier ->
-          when (tier) {
-            0 -> RemoteHaIconChip(tileData(card, snapshot), RemoteModifier.fillMaxSize())
-            else -> CenteredCell { FullTile(card, snapshot, RemoteModifier.fillMaxWidth()) }
-          }
+        when (LocalFixedCanvasAxis.current) {
+          // A Wear slot: every container passes the width gate, and the small one is too short
+          // for the full name-over-state stack, so it takes the compact stack there.
+          BreakpointAxis.Height ->
+            RemoteSizeBreakpoint(
+              thresholdsDp = intArrayOf(TileTwoLineMinHeightDp),
+              axis = BreakpointAxis.Height,
+              modifier = modifier.fillMaxSize(),
+            ) { tier ->
+              when (tier) {
+                0 ->
+                  CenteredCell {
+                    RemoteHaTileCompact(tileData(card, snapshot), RemoteModifier.fillMaxWidth())
+                  }
+                else -> CenteredCell { FullTile(card, snapshot, RemoteModifier.fillMaxWidth()) }
+              }
+            }
+          BreakpointAxis.Width ->
+            RemoteSizeBreakpoint(
+              thresholdsDp = intArrayOf(96),
+              modifier = modifier.fillMaxSize(),
+            ) { tier ->
+              when (tier) {
+                0 -> RemoteHaIconChip(tileData(card, snapshot), RemoteModifier.fillMaxSize())
+                else -> CenteredCell { FullTile(card, snapshot, RemoteModifier.fillMaxWidth()) }
+              }
+            }
         }
     }
   }
@@ -108,20 +141,13 @@ class TileCardConverter : CardConverter {
     val tapCfg = card.raw["tap_action"]?.jsonObject
     val tapAction =
       if (tapCfg != null) parseHaAction(tapCfg, entityId) else defaultTapActionFor(entityId)
-    val isActive = entity?.toTyped()?.isActive
 
     return HaTileData(
       entityId = entityId,
       name = name,
       state = LiveValues.state(entityId, formatState(entity)),
       icon = HaIconMap.resolve(card.raw["icon"]?.jsonPrimitive?.content, entity),
-      accent =
-        HaToggleAccent(
-          activeAccent = HaStateColor.activeFor(entity).rc,
-          inactiveAccent = HaStateColor.inactiveFor(entity).rc,
-          initiallyOn = isActive ?: false,
-          toggleable = isActive != null,
-        ),
+      accent = HaStateColor.toggleAccentFor(entityId, entity),
       tapAction = tapAction,
     )
   }

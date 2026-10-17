@@ -18,23 +18,30 @@ import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.remote.creation.compose.state.rs
-import androidx.compose.remote.creation.compose.state.rsp
 import androidx.compose.remote.creation.compose.text.RemoteTextStyle
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.text.font.FontWeight
 import ee.schimke.ha.design.CardDesignSlots
 import ee.schimke.ha.design.DesignProperties
 import ee.schimke.ha.model.CardConfig
+import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HaSnapshot
+import ee.schimke.ha.rc.BreakpointAxis
 import ee.schimke.ha.rc.CardConverter
+import ee.schimke.ha.rc.CardSizeMode
 import ee.schimke.ha.rc.CardSnapshotBindings
 import ee.schimke.ha.rc.DesignTemplateInput
+import ee.schimke.ha.rc.LocalCardSizeMode
+import ee.schimke.ha.rc.RemoteSizeBreakpoint
 import ee.schimke.ha.rc.cardDataSignature
+import ee.schimke.ha.rc.components.HaBambuPrintPhase
+import ee.schimke.ha.rc.components.HaType
 import ee.schimke.ha.rc.components.LiveValues
 import ee.schimke.ha.rc.components.cardChrome
 import ee.schimke.ha.rc.components.currentRemoteHaTheme
 import ee.schimke.ha.rc.formatState
 import ee.schimke.ha.rc.formatValueWithUnit
+import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonPrimitive
 
 /**
@@ -96,13 +103,13 @@ open class BambuLabCardConverter(
         RemoteText(
           text = "Bambu Lab".rs,
           color = theme.secondaryText,
-          fontSize = 11.rsp,
+          fontSize = HaType.Caption,
           style = RemoteTextStyle.Default,
         )
         RemoteText(
           text = variantLabel.rs,
           color = theme.primaryText,
-          fontSize = 15.rsp,
+          fontSize = HaType.Title,
           fontWeight = FontWeight.Medium,
           style = RemoteTextStyle.Default,
         )
@@ -114,13 +121,13 @@ open class BambuLabCardConverter(
           RemoteText(
             text = name.rs,
             color = theme.primaryText,
-            fontSize = 13.rsp,
+            fontSize = HaType.Body,
             style = RemoteTextStyle.Default,
           )
           RemoteText(
             text = LiveValues.state(entity?.entityId, state),
-            color = theme.secondaryText,
-            fontSize = 13.rsp,
+            color = theme.primaryText,
+            fontSize = HaType.Body,
             style = RemoteTextStyle.Default,
           )
         }
@@ -334,14 +341,16 @@ class BambuLabPrintStatusCardConverter :
     variantLabel = "Print status",
   ) {
   /**
-   * The print status renders from a card design: which lines exist (progress, layers, time left,
-   * nozzle, bed) and whether the progress arc has started are structure; every line, the progress
-   * and the printer's name are bindings, under [BambuDesign.PREFIX].
+   * The print status renders from a card design: the printer's phase (printing, or idle / finished
+   * / failed / offline, which draw without the ring), which lines exist (progress, layers, time
+   * left, nozzle, bed) and whether the progress arc has started are structure; every line, the
+   * progress, the state and the printer's name are bindings, under [BambuDesign.PREFIX].
    */
   override fun designProperties(card: CardConfig, snapshot: HaSnapshot): DesignProperties? {
     val prefix = resolvePrinterPrefix(card, snapshot) ?: return null
     val data = buildPrintStatusData(prefix, snapshot)
     return DesignProperties.build {
+      enum("phase", data.phase.ordinal)
       enum(
         "progress",
         if (data.progressEntityId == null) 0 else if (data.progressFraction * 360f > 0.5f) 2 else 1,
@@ -355,10 +364,14 @@ class BambuLabPrintStatusCardConverter :
 
   override fun designTemplate(properties: DesignProperties): DesignTemplateInput? {
     val progress = properties["progress"]?.toIntOrNull() ?: return null
+    val phase =
+      properties["phase"]?.toIntOrNull()?.let { HaBambuPrintPhase.entries.getOrNull(it) }
+        ?: HaBambuPrintPhase.Printing
     val states = buildList {
       add(BambuDesign.sensor("current_stage", "printing"))
+      // The phase is read from `print_status` first, so the template states it there.
+      add(BambuDesign.sensor("print_status", phase.templateStatus))
       if (progress > 0) add(BambuDesign.sensor("print_progress", if (progress == 2) "50" else "0"))
-      else add(BambuDesign.sensor("print_status", "idle"))
       if (properties["layer"] == "1") {
         add(BambuDesign.sensor("current_layer", "1"))
         add(BambuDesign.sensor("total_layer_count", "2"))
@@ -419,9 +432,29 @@ class BambuLabPrintStatusCardConverter :
       return
     }
     val data = buildPrintStatusData(prefix, snapshot)
-    ee.schimke.ha.rc.components.RemoteHaBambuPrintStatus(data, modifier)
+    when (LocalCardSizeMode.current) {
+      // Dashboard: the two-column layout, so the job's lines use the right half.
+      CardSizeMode.Wrap -> ee.schimke.ha.rc.components.RemoteHaBambuPrintStatus(data, modifier)
+      // Launcher / Wear: a narrow cell stacks the same content in a column; a wide one lays it out
+      // in two. One width gate (#224).
+      CardSizeMode.Fixed ->
+        RemoteSizeBreakpoint(
+          thresholdsDp = intArrayOf(PRINT_STATUS_WIDE_MIN_DP),
+          modifier = modifier,
+          axis = BreakpointAxis.Width,
+        ) { tier ->
+          ee.schimke.ha.rc.components.RemoteHaBambuPrintStatus(
+            data,
+            RemoteModifier.fillMaxWidth(),
+            wide = tier > 0,
+          )
+        }
+    }
   }
 }
+
+/** Width (dp) from which the print status lays its content out in two columns. */
+private const val PRINT_STATUS_WIDE_MIN_DP = 260
 
 /**
  * Best-effort discovery: explicit `entity_prefix` wins; otherwise the first
@@ -469,6 +502,8 @@ private fun printStatusEntityIds(prefix: String): Set<String> = buildSet {
   add("sensor.${prefix}_target_nozzle_temperature")
   add("sensor.${prefix}_bed_temperature")
   add("sensor.${prefix}_target_bed_temperature")
+  add("sensor.${prefix}_printer_name")
+  add("binary_sensor.${prefix}_online")
 }
 
 /** Buttons + name sensors [buildPrintControlData] reads for the control pad. */
@@ -476,11 +511,29 @@ private fun printControlEntityIds(prefix: String): Set<String> = buildSet {
   add("button.${prefix}_pause_printing")
   add("button.${prefix}_resume_printing")
   add("button.${prefix}_stop_printing")
-  add("sensor.${prefix}_print_progress")
-  add("sensor.${prefix}_print_status")
+  // Every source [bambuPrinterName] reads, so a renamed printer re-encodes the pad.
+  add("sensor.${prefix}_printer_name")
+  BambuNameSources.forEach { (suffix, _) -> add("sensor.${prefix}_$suffix") }
 }
 
-private fun buildPrintStatusData(
+/**
+ * Whole minutes left on the job. The integration states `remaining_time` in hours (`h`) today and
+ * in minutes in older releases; its unit says which, and a missing unit is read as minutes.
+ */
+private fun remainingMinutes(entity: EntityState): Int? {
+  val value = entity.state.toFloatOrNull()?.takeIf { it >= 0f } ?: return null
+  val unit = entity.attributes["unit_of_measurement"]?.jsonPrimitive?.contentOrNull
+  val minutes =
+    when (unit) {
+      "h" -> value * 60f
+      "s" -> value / 60f
+      "d" -> value * 1440f
+      else -> value
+    }
+  return kotlin.math.round(minutes).toInt()
+}
+
+internal fun buildPrintStatusData(
   prefix: String,
   snapshot: HaSnapshot,
 ): ee.schimke.ha.rc.components.HaBambuPrintStatusData {
@@ -491,25 +544,36 @@ private fun buildPrintStatusData(
   val progress = progressEntity?.state?.toFloatOrNull() ?: 0f
   val stageEntity = sensor("current_stage") ?: sensor("print_status")
   val stageRaw = stageEntity?.state ?: "idle"
-  val stage = stageRaw.replace('_', ' ').replaceFirstChar { it.uppercaseChar() }
-
-  val printerEntity = progressEntity ?: sensor("print_status")
-  val printerName =
-    printerEntity
-      ?.attributes
-      ?.get("friendly_name")
-      ?.jsonPrimitive
-      ?.content
-      ?.substringBeforeLast(' ') ?: prefix.uppercase()
 
   val currentLayerEntity = sensor("current_layer")
   val totalLayerEntity = sensor("total_layer_count")
   val current = currentLayerEntity?.state?.toIntOrNull()
   val total = totalLayerEntity?.state?.toIntOrNull()
-  val layerLine = if (current != null && total != null) "Layer $current / $total" else null
+
+  val phase =
+    bambuPrintPhase(
+      printStatus = sensor("print_status")?.state,
+      stage = sensor("current_stage")?.state,
+      online = s["binary_sensor.${prefix}_online"]?.state,
+      progress = progress,
+      totalLayers = total,
+    )
+  val printing = phase == HaBambuPrintPhase.Printing
+  // Printing shows the stage ("Inspecting first layer"); otherwise the state is the headline.
+  val stage =
+    if (printing) stageRaw.replace('_', ' ').replaceFirstChar { it.uppercaseChar() }
+    else phase.label
+
+  val printerEntity = progressEntity ?: sensor("print_status")
+  val printerName = bambuPrinterName(prefix, snapshot)
+
+  // The job's lines exist only while printing: an idle printer's `Layer 0 / 0` and `0m left`
+  // describe no job.
+  val layerLine =
+    if (printing && current != null && total != null) "Layer $current / $total" else null
 
   val remainingEntity = sensor("remaining_time")
-  val remaining = remainingEntity?.state?.toIntOrNull()
+  val remaining = remainingEntity?.let(::remainingMinutes)?.takeIf { printing }
   val remainingLine = remaining?.let { mins ->
     val h = mins / 60
     val m = mins % 60
@@ -558,8 +622,133 @@ private fun buildPrintStatusData(
     nozzleLine = nozzleLine,
     bedEntityId = bedEntity?.entityId,
     bedLine = bedLine,
+    phase = phase,
   )
 }
+
+/**
+ * The printer's phase. `print_status` (the printer's `gcode_state`: `running`, `pause`, `prepare`,
+ * `finish`, `failed`, `idle`, `offline`) decides when it can; else `current_stage`; else a print
+ * with no progress and no layers is not running.
+ */
+internal fun bambuPrintPhase(
+  printStatus: String?,
+  stage: String?,
+  online: String?,
+  progress: Float,
+  totalLayers: Int?,
+): HaBambuPrintPhase {
+  if (online == "off") return HaBambuPrintPhase.Offline
+  fun of(state: String?): HaBambuPrintPhase? =
+    when (state?.trim()?.lowercase()) {
+      null,
+      "",
+      "unknown" -> null
+      "idle",
+      "init" -> HaBambuPrintPhase.Idle
+      "finish",
+      "finished" -> HaBambuPrintPhase.Finished
+      "failed" -> HaBambuPrintPhase.Failed
+      "offline",
+      "unavailable" -> HaBambuPrintPhase.Offline
+      else -> HaBambuPrintPhase.Printing
+    }
+  return of(printStatus)
+    ?: of(stage)
+    ?: if (progress <= 0f && (totalLayers ?: 0) <= 0) HaBambuPrintPhase.Idle
+    else HaBambuPrintPhase.Printing
+}
+
+/** The headline a printer that is not printing shows. */
+private val HaBambuPrintPhase.label: String
+  get() =
+    when (this) {
+      HaBambuPrintPhase.Printing -> "Printing"
+      HaBambuPrintPhase.Idle -> "Idle"
+      HaBambuPrintPhase.Finished -> "Finished"
+      HaBambuPrintPhase.Failed -> "Failed"
+      HaBambuPrintPhase.Offline -> "Offline"
+    }
+
+/** A `print_status` a design template states for [this] phase: [bambuPrintPhase] reads it back. */
+private val HaBambuPrintPhase.templateStatus: String
+  get() =
+    when (this) {
+      HaBambuPrintPhase.Printing -> "running"
+      HaBambuPrintPhase.Idle -> "idle"
+      HaBambuPrintPhase.Finished -> "finish"
+      HaBambuPrintPhase.Failed -> "failed"
+      HaBambuPrintPhase.Offline -> "offline"
+    }
+
+/**
+ * The printer's display name. The name the owner gave it (`sensor.<prefix>_printer_name`) when it
+ * is not Bambu's factory default (`3DP-030-293`); else the device's name, read off an entity's
+ * friendly name (`A1MINI_sn1 Print progress` → `A1MINI_sn1`), with its serial dropped and its model
+ * code spelled as Bambu does (`A1MINI_01P00A…` → `A1 mini`). A device the owner renamed keeps its
+ * name.
+ */
+internal fun bambuPrinterName(prefix: String, snapshot: HaSnapshot): String {
+  val s = snapshot.states
+  s["sensor.${prefix}_printer_name"]
+    ?.state
+    ?.trim()
+    ?.takeIf { it.isNotEmpty() && it !in NotAName && !FactoryPrinterName.matches(it) }
+    ?.let {
+      return it
+    }
+  val device =
+    BambuNameSources.firstNotNullOfOrNull { (suffix, entityName) ->
+      s["sensor.${prefix}_$suffix"]
+        ?.attributes
+        ?.get("friendly_name")
+        ?.jsonPrimitive
+        ?.content
+        ?.trim()
+        ?.takeIf { it.endsWith(" $entityName", ignoreCase = true) }
+        ?.dropLast(entityName.length + 1)
+        ?.trim()
+        ?.takeIf { it.isNotEmpty() }
+    } ?: prefix
+  val serialSplit = DeviceWithSerial.matchEntire(device)
+  val model = serialSplit?.groupValues?.get(1) ?: device
+  return BambuModelNames[model.uppercase()]
+    ?: if (serialSplit != null) model.uppercase() else device
+}
+
+private val NotAName = setOf("unknown", "unavailable", "none")
+
+/** Bambu Handy's default printer name, which says nothing a person would recognise. */
+private val FactoryPrinterName = Regex("""3DP-\d{3}-\d{3}""")
+
+/**
+ * `<MODEL>_<serial>`, the bambulab integration's device name: a real serial (`01P00A123456789`) or
+ * a redacted one (`sn1`).
+ */
+private val DeviceWithSerial = Regex("""([A-Za-z0-9]+)_(sn\d+|[0-9A-Z]{8,})""")
+
+/** Entities whose friendly name is `<device> <entity name>`, and that entity name. */
+private val BambuNameSources =
+  listOf(
+    "print_progress" to "Print progress",
+    "print_status" to "Print status",
+    "current_stage" to "Current stage",
+  )
+
+/** Model codes as Bambu Lab writes the printers' names. */
+private val BambuModelNames =
+  mapOf(
+    "A1MINI" to "A1 mini",
+    "A1" to "A1",
+    "P1P" to "P1P",
+    "P1S" to "P1S",
+    "P2S" to "P2S",
+    "X1" to "X1",
+    "X1C" to "X1 Carbon",
+    "X1E" to "X1E",
+    "H2D" to "H2D",
+    "H2S" to "H2S",
+  )
 
 private fun formatTemp(value: Float): String =
   if (value == value.toInt().toFloat()) value.toInt().toString() else "%.1f".format(value)
@@ -705,13 +894,7 @@ private fun buildPrintControlData(
     }
   if (pause == null && resume == null && stop == null) return null
 
-  val printerName =
-    (s["sensor.${prefix}_print_progress"] ?: s["sensor.${prefix}_print_status"])
-      ?.attributes
-      ?.get("friendly_name")
-      ?.jsonPrimitive
-      ?.content
-      ?.substringBeforeLast(' ') ?: prefix.uppercase()
+  val printerName = bambuPrinterName(prefix, snapshot)
   return ee.schimke.ha.rc.components.HaBambuPrintControlData(
     printerName = printerName,
     pause = pause,

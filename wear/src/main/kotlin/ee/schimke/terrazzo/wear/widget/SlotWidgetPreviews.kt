@@ -23,11 +23,13 @@ import androidx.glance.wear.tooling.preview.WearWidgetPreviewSnapshot
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.EntityState
 import ee.schimke.ha.model.HaSnapshot
+import ee.schimke.ha.rc.BreakpointAxis
 import ee.schimke.ha.rc.CardSizeMode
 import ee.schimke.ha.rc.FixedHaClock
 import ee.schimke.ha.rc.LocalHaClock
 import ee.schimke.ha.rc.ProvideCardRegistry
 import ee.schimke.ha.rc.ProvideCardSizeMode
+import ee.schimke.ha.rc.ProvideFixedCanvasAxis
 import ee.schimke.ha.rc.RenderChild
 import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.cards.shutter.withEnhancedShutter
@@ -82,11 +84,13 @@ internal class PreviewSlotWidget(
                 // since Glance Wear's capture profile rejects
                 // FlowLayout (op 240).
                 ProvideCardChrome(enabled = false) {
-                  ProvideFlowLayoutSupport(enabled = false, compactEntities = true) {
-                    if (card != null) {
-                      RenderChild(card, snapshot, RemoteModifier.fillMaxWidth())
-                    } else {
-                      PreviewEmptyPlaceholder(slotIndex, theme)
+                  ProvideFixedCanvasAxis(BreakpointAxis.Height) {
+                    ProvideFlowLayoutSupport(enabled = false, compactEntities = true) {
+                      if (card != null) {
+                        RenderChild(card, snapshot, RemoteModifier.fillMaxWidth())
+                      } else {
+                        PreviewEmptyPlaceholder(slotIndex, theme)
+                      }
                     }
                   }
                 }

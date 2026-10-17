@@ -25,8 +25,10 @@ import androidx.compose.ui.graphics.vector.ImageVector
 /**
  * State-binding + colour pair for a toggleable entity. The component builds `<entityId>.is_on` and
  * uses `isOn.select(activeAccent, inactiveAccent)` so a live player can flip the accent without
- * re-encoding. For non-toggleable entities (sensors, etc.) leave the parent's `entityId` null and
- * the activeAccent is used unconditionally.
+ * re-encoding. Availability is a third, orthogonal state: `<entityId>.is_available` (seeded from
+ * [initiallyAvailable]) overrides either accent with a neutral one and dims the content. For
+ * non-toggleable entities (sensors, etc.) leave the parent's `entityId` null and the activeAccent
+ * is used unconditionally.
  *
  * [initiallyOn] is the boolean value at authoring time — named `RemoteBoolean`s don't carry a
  * `constantValueOrNull`, so the composable needs this separately to seed an in-document
@@ -41,6 +43,13 @@ data class HaToggleAccent(
    * toggle binding is informational.
    */
   val toggleable: Boolean = true,
+  /**
+   * Whether the entity had a real state at authoring time — false when it was `unavailable`,
+   * `unknown` or missing from the snapshot. Seeds the live `<entityId>.is_available` binding the
+   * component reads to dim the whole row / tile and swap the accent for a neutral one (see
+   * [entityLook]); the host flips it at runtime the same way it flips `is_on`.
+   */
+  val initiallyAvailable: Boolean = true,
 )
 
 /** HA tile card model. */
@@ -199,17 +208,42 @@ data class HaLogbookEntry(
  */
 data class HaHistoryGraphData(
   val title: String?,
-  /** "Last 24h" / "Last 12h" — whatever `hours_to_show` resolved to. */
+  /** "Last 24 hours" / "Last 7 days" — whatever `hours_to_show` resolved to. */
   val rangeLabel: String,
   val rows: List<HaHistoryGraphRow>,
+  /**
+   * The one card-level message shown when no row has a line ("No history in the last 2 days"), in
+   * place of a stub per row.
+   */
+  val emptyLabel: String = "No history",
 )
+
+/** Whether [this] row draws a line: a sparkline needs at least two numeric samples. */
+val HaHistoryGraphRow.hasLine: Boolean
+  get() = points.size >= 2
+
+/**
+ * Whether the card shows its single empty state: it has rows and none of them draws a line. When
+ * only some rows are empty, those rows shrink to one line each and the others keep their graphs.
+ */
+val HaHistoryGraphData.allSeriesEmpty: Boolean
+  get() = rows.isNotEmpty() && rows.none { it.hasLine }
+
+/**
+ * Whether [RemoteHaHistoryGraph] replaces its rows with the single empty state: only when the
+ * caller opts in ([singleEmptyState], the `history-graph` card) and [allSeriesEmpty]. The sensor
+ * card and statistics-graph reuse the layout without it, so a row with no history still shows its
+ * name and current value.
+ */
+fun HaHistoryGraphData.showsSingleEmptyState(singleEmptyState: Boolean): Boolean =
+  singleEmptyState && allSeriesEmpty
 
 data class HaHistoryGraphRow(
   val entityId: String?,
   val name: String,
   val summary: RemoteString,
   val accent: Color,
-  /** Numeric samples in order. Empty → renders a "no data" stub. */
+  /** Numeric samples in order. Fewer than two → the row is one line: its name and summary. */
   val points: List<Float>,
 )
 
@@ -226,6 +260,10 @@ data class HaHistoryGraphRow(
  * either participating sensor for composite lines) changes. For composite lines (`Layer X / Y`,
  * `Nozzle 220°C → 220°C`) we pick the sensor whose value drives the line — `_current_layer`,
  * `_nozzle_temperature`, `_bed_temperature`.
+ *
+ * [phase] is structure: a printer that is not printing draws the idle layout (no ring, no `0 %`, no
+ * layer count) and a finished one a full ring with a check, so a change of phase re-encodes the
+ * card (it is a re-encode card) and a design template keys on it.
  */
 data class HaBambuPrintStatusData(
   val entityId: String?,
@@ -244,7 +282,21 @@ data class HaBambuPrintStatusData(
   val nozzleLine: String?,
   val bedEntityId: String?,
   val bedLine: String?,
+  val phase: HaBambuPrintPhase = HaBambuPrintPhase.Printing,
 )
+
+/**
+ * What a Bambu printer is doing, as far as the print-status card's layout is concerned. Only
+ * [Printing] (which includes preparing and paused) shows the progress ring and the job's lines; the
+ * others show the printer and its state.
+ */
+enum class HaBambuPrintPhase {
+  Printing,
+  Idle,
+  Finished,
+  Failed,
+  Offline,
+}
 
 /** `custom:ha-bambulab-print_control-card` — pause / resume / stop pad. */
 data class HaBambuPrintControlData(

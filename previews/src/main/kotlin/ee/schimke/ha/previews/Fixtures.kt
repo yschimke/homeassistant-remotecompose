@@ -115,6 +115,47 @@ object Fixtures {
       ),
     )
 
+  /**
+   * State colour follows state: the same kinds of entity on, off, and unavailable / unknown /
+   * non-boolean, for the availability previews. Unavailable rows dim; off is neutral; a problem
+   * that is on is the alert colour.
+   */
+  val availability =
+    snapshot(
+      state(
+        "binary_sensor.hall_motion",
+        "on",
+        mapOf("friendly_name" to "Hall", "device_class" to "motion"),
+      ),
+      state(
+        "binary_sensor.front_room_motion",
+        "off",
+        mapOf("friendly_name" to "Front room", "device_class" to "motion"),
+      ),
+      state(
+        "binary_sensor.driveway_motion",
+        "unavailable",
+        mapOf("friendly_name" to "Driveway", "device_class" to "motion"),
+      ),
+      state(
+        "binary_sensor.mqtt_broker",
+        "off",
+        mapOf("friendly_name" to "MQTT broker", "device_class" to "connectivity"),
+      ),
+      state(
+        "binary_sensor.room_server",
+        "stale",
+        mapOf("friendly_name" to "Room server", "device_class" to "connectivity"),
+      ),
+      state(
+        "binary_sensor.printer_errors",
+        "on",
+        mapOf("friendly_name" to "HMS errors", "device_class" to "problem"),
+      ),
+      state("light.kitchen", "unknown", mapOf("friendly_name" to "Kitchen")),
+      state("switch.coffee_maker", "on", mapOf("friendly_name" to "Coffee maker")),
+    )
+
   val battery =
     snapshot(
       state(
@@ -536,6 +577,101 @@ object Fixtures {
     )
 
   /**
+   * An A1 mini that is switched on and not printing, as the demo "3D Printing" dashboard reports
+   * it: `print_status` idle, progress and layers at 0, the factory printer name, cold temperatures.
+   */
+  val bambuIdle =
+    snapshot(
+      state(
+        "sensor.a1mini_sn1_print_progress",
+        "0",
+        mapOf("friendly_name" to "A1MINI_sn1 Print progress", "unit_of_measurement" to "%"),
+      ),
+      state(
+        "sensor.a1mini_sn1_print_status",
+        "idle",
+        mapOf("friendly_name" to "A1MINI_sn1 Print status"),
+      ),
+      state(
+        "sensor.a1mini_sn1_current_stage",
+        "idle",
+        mapOf("friendly_name" to "A1MINI_sn1 Current stage"),
+      ),
+      state(
+        "sensor.a1mini_sn1_printer_name",
+        "3DP-030-293",
+        mapOf("friendly_name" to "A1MINI_sn1 Printer name"),
+      ),
+      state(
+        "sensor.a1mini_sn1_current_layer",
+        "0",
+        mapOf("friendly_name" to "A1MINI_sn1 Current layer"),
+      ),
+      state(
+        "sensor.a1mini_sn1_total_layer_count",
+        "0",
+        mapOf("friendly_name" to "A1MINI_sn1 Total layer count"),
+      ),
+      state(
+        "sensor.a1mini_sn1_remaining_time",
+        "0.0",
+        mapOf("friendly_name" to "A1MINI_sn1 Remaining time", "unit_of_measurement" to "min"),
+      ),
+      state(
+        "sensor.a1mini_sn1_nozzle_temperature",
+        "23",
+        mapOf("friendly_name" to "A1MINI_sn1 Nozzle temperature", "unit_of_measurement" to "°C"),
+      ),
+      state(
+        "sensor.a1mini_sn1_bed_temperature",
+        "22",
+        mapOf("friendly_name" to "A1MINI_sn1 Bed temperature", "unit_of_measurement" to "°C"),
+      ),
+      state("binary_sensor.a1mini_sn1_online", "on", mapOf("friendly_name" to "A1MINI_sn1 Online")),
+    )
+
+  /** [bambuIdle] just after a print finished: a named printer, a still-warm bed. */
+  val bambuFinished =
+    HaSnapshot(
+      states =
+        bambuIdle.states +
+          snapshot(
+              state(
+                "sensor.a1mini_sn1_print_progress",
+                "100",
+                mapOf("friendly_name" to "A1MINI_sn1 Print progress", "unit_of_measurement" to "%"),
+              ),
+              state(
+                "sensor.a1mini_sn1_print_status",
+                "finish",
+                mapOf("friendly_name" to "A1MINI_sn1 Print status"),
+              ),
+              state(
+                "sensor.a1mini_sn1_printer_name",
+                "Workshop A1",
+                mapOf("friendly_name" to "A1MINI_sn1 Printer name"),
+              ),
+              state(
+                "sensor.a1mini_sn1_nozzle_temperature",
+                "61",
+                mapOf(
+                  "friendly_name" to "A1MINI_sn1 Nozzle temperature",
+                  "unit_of_measurement" to "°C",
+                ),
+              ),
+              state(
+                "sensor.a1mini_sn1_bed_temperature",
+                "48",
+                mapOf(
+                  "friendly_name" to "A1MINI_sn1 Bed temperature",
+                  "unit_of_measurement" to "°C",
+                ),
+              ),
+            )
+            .states
+    )
+
+  /**
    * Two temperature sensors with a 24-sample diurnal cycle so the history-graph preview has real
    * sparkline data to draw.
    */
@@ -644,9 +780,55 @@ object Fixtures {
   }
 
   /**
-   * Sensors with long friendly names and **no** recorder history, so each row summarises as "no
-   * data" and falls back to "No samples". Reproduces the GitHub "Open issues per repo" dashboard
-   * card where a long repo name used to overrun the right-aligned summary.
+   * Electricity meters with long friendly names, where only the solar series has recorder history:
+   * the history-graph's per-row `name:` overrides and its one-line empty rows.
+   */
+  val meterPartlyEmpty: HaSnapshot = run {
+    fun meter(id: String, name: String, state: String) =
+      id to
+        EntityState(
+          entityId = id,
+          state = state,
+          attributes =
+            JsonObject(
+              mapOf(
+                "friendly_name" to JsonPrimitive(name),
+                "unit_of_measurement" to JsonPrimitive("kW"),
+                "device_class" to JsonPrimitive("power"),
+              )
+            ),
+        )
+    val baseTime = Instant.parse("2026-05-05T00:00:00Z")
+    val solar =
+      listOf(0f, 0f, 0.4f, 1.6f, 2.9f, 3.8f, 4.1f, 3.6f, 2.4f, 1.1f, 0.2f, 0f).mapIndexed { i, v ->
+        ee.schimke.ha.model.HistoryPoint(
+          ts = baseTime.plus(kotlin.time.Duration.parse("${i * 2}h")),
+          state = v.toString(),
+        )
+      }
+    HaSnapshot(
+      states =
+        mapOf(
+          meter(
+            "sensor.meter_import_rate",
+            "Electricity Meter Import Current Rate Import Electricity",
+            "0.6",
+          ),
+          meter(
+            "sensor.meter_export_rate",
+            "Electricity Meter Export Current Rate Export Electricity",
+            "0.0",
+          ),
+          meter("sensor.solaredge_power", "solaredge Current power", "0.0"),
+        ),
+      history = mapOf("sensor.solaredge_power" to solar),
+    )
+  }
+
+  /**
+   * Sensors with long friendly names and **no** recorder history, so the history-graph shows its
+   * one card-level empty state. Reproduces the GitHub "Open issues per repo" dashboard card, whose
+   * long repo names must truncate on the empty state's one legend line.
    */
   val issuesNoData: HaSnapshot = run {
     fun issueSensor(id: String, name: String) =

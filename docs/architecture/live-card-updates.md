@@ -26,6 +26,7 @@ derived by `HaLiveBindings` / `cardSnapshotBindings` (the host):
 | --- | --- | --- |
 | `<id>.state` | string | `formatState(entity)` — the **formatted** display string |
 | `<id>.is_on` | bool | `HaLiveBindings.isOn(id, state)`: the typed `HaEntity.isActive` (climate `heat`/`cool`/…, cover `open`/`opening`/`closing`, lock `locked`, media `playing`, …), else `state == "on"` or `"open"`. Converters seed `LiveValues.isOn` from the same function. |
+| `<id>.is_available` | bool | `HaLiveBindings.isAvailable(state)`: false for `unavailable` / `unknown`. Entity rows, tiles, glance cells and buttons read it to dim the entity and swap its accent for a neutral one, so an entity going offline or coming back restyles without a re-encode. Converters seed it through `HaStateColor.toggleAccentFor` (false too for a configured entity missing from the snapshot). |
 | `<id>.numeric_state` | float | parsed numeric state (gauges/arcs derive their sweep in-document) |
 | `<id>.state_int` | int | domain-keyed variant (alarm panel today) |
 | `<id>.current_temperature`, `<id>.target_temperature` | float | `HaLiveBindings.attributeFloats`: a climate entity's `current_temperature` and `temperature` attributes (its state is the mode, so it has no `numeric_state`). A missing attribute — a thermostat switched off has no set point — is pushed as `HaLiveBindings.ABSENT` (−9999, not NaN), so the document clears it instead of keeping a stale value. The `ha-cards/thermostat` builder dial computes its fractions and labels from them in-document |
@@ -90,7 +91,10 @@ expressed as a binding.
 ## Card matrix (current)
 
 - **Binding (path 1):** sensor, entity, glance, tile, area, entities,
-  button, picture-entity, alarm-panel (`state_int`), gauge
+  button, picture-entity (its `entity_picture` URL is the exception: a
+  picture is fetched once per document, so `CachedCardPreview` folds
+  `cardPictureSignature` into the document key and a rotated camera token
+  or new frame plays as a new document), alarm-panel (`state_int`), gauge
   (`numeric_state`; the severity band is picked in-document), markdown (`.state` tokens + Jinja `templateValues`).
   Every typed measurement (thermometer, battery, arc / bar meters) is path 1 by construction:
   `HaReading` binds `<id>.state` and `<id>.numeric_state`, and the fill fraction and band colour

@@ -16,10 +16,11 @@ import ee.schimke.ha.rc.components.ProvideHaTheme
  * SIZING RULE" block there. DO NOT change these dimensions without updating both files together.
  *
  * Reference PNG is 492×112 px (captured at deviceScaleFactor=2 via Puppeteer). Preview renders at
- * density 2.625 (Robolectric default), so canvas = 492/2.625 × 112/2.625 ≈ 187×43 dp.
+ * density 2.625 (Robolectric default), so canvas = 492/2.625 × 112/2.625 ≈ 187×43 dp. The height is
+ * 56 dp since the card type scale went to 15sp body text: two lines no longer fit HA web's 43.
  */
 private const val TILE_WIDTH_DP = 187
-private const val TILE_HEIGHT_DP = 43
+private const val TILE_HEIGHT_DP = 56
 
 @Composable
 private fun TileHost(theme: HaTheme, content: @Composable () -> Unit) {

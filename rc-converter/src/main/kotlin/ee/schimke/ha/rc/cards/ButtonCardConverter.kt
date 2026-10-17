@@ -4,13 +4,11 @@ package ee.schimke.ha.rc.cards
 
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.fillMaxSize
-import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.runtime.Composable
 import ee.schimke.ha.design.DesignProperties
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.HaSnapshot
-import ee.schimke.ha.model.toTyped
 import ee.schimke.ha.rc.CardConverter
 import ee.schimke.ha.rc.CardSizeMode
 import ee.schimke.ha.rc.CardWidthClass
@@ -20,7 +18,6 @@ import ee.schimke.ha.rc.LocalCardSizeMode
 import ee.schimke.ha.rc.LocalGridSquareCells
 import ee.schimke.ha.rc.RemoteMinSizeGate
 import ee.schimke.ha.rc.components.HaButtonData
-import ee.schimke.ha.rc.components.HaToggleAccent
 import ee.schimke.ha.rc.components.RemoteHaButton
 import ee.schimke.ha.rc.components.RemoteHaButtonIcon
 import ee.schimke.ha.rc.components.RemoteHaToggleButton
@@ -124,8 +121,12 @@ class ButtonCardConverter : CardConverter {
     /** Smallest cell width that fits the icon + name tier. */
     const val MinIconNameWidthDp = 96
 
-    /** Smallest cell height that fits the icon + reserved label line. */
-    const val MinIconNameHeightDp = 72
+    /**
+     * Smallest cell height that fits the icon + reserved label line: 6 + 44 (chip) + 4 + ~19 (a
+     * 16sp `BodyLarge` line) + 6 ≈ 79dp. It was 72, which already left the old 15sp label a few dp
+     * short; a cell too short for the line now takes the icon-only tier rather than clipping it.
+     */
+    const val MinIconNameHeightDp = 80
 
     /** Narrowest `grid` cell: the compact body (44 dp chip + 12 dp sides) plus a short name. */
     const val MinGridCellWidthDp = 80
@@ -147,19 +148,11 @@ private fun buttonData(card: CardConfig, snapshot: HaSnapshot): HaButtonData {
   val tapAction =
     if (tapCfg != null) parseHaAction(tapCfg, entityId) else defaultTapActionFor(entityId)
 
-  val isActive = entity?.toTyped()?.isActive
-  val toggleable = isActive != null
   return HaButtonData(
     entityId = entityId,
     name = name,
     icon = HaIconMap.resolve(card.raw["icon"]?.jsonPrimitive?.content, entity),
-    accent =
-      HaToggleAccent(
-        activeAccent = HaStateColor.activeFor(entity).rc,
-        inactiveAccent = HaStateColor.inactiveFor(entity).rc,
-        initiallyOn = isActive ?: false,
-        toggleable = toggleable,
-      ),
+    accent = HaStateColor.toggleAccentFor(entityId, entity),
     showName = showName,
     tapAction = tapAction,
   )
