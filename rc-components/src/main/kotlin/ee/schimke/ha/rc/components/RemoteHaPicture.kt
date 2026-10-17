@@ -138,7 +138,9 @@ fun RemoteHaPictureGlance(
       }
       // The cells' 48dp touch targets fill the strip's 8dp vertical inset, and their row pulls in
       // by the targets' extra width (negative spacing and an offset), so the 32dp circles sit
-      // exactly where an 8dp-spaced row of circles puts them.
+      // exactly where an 8dp-spaced row of circles puts them. Neighbouring targets overlap only
+      // over
+      // that 8dp gap, never over a circle.
       RemoteRow(
         modifier =
           RemoteModifier.fillMaxWidth()

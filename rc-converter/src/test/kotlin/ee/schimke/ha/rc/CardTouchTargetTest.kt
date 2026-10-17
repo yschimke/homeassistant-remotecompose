@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsNode
@@ -114,7 +115,20 @@ class CardTouchTargetTest {
   }
 
   /** The tappable nodes of [card] as played back, with their size in dp. */
-  private fun tapTargets(card: CardConfig): List<Pair<Float, Float>> {
+  private fun tapTargets(card: CardConfig): List<Pair<Float, Float>> =
+    tapNodes(card).map { (bounds, density) -> bounds.width / density to bounds.height / density }
+
+  /**
+   * How far each tappable node overlaps the next one along a row, in dp. A target may reach over
+   * the gap between two drawn controls, but no further: past it, a tap on one control could land on
+   * its neighbour.
+   */
+  private fun rowOverlaps(card: CardConfig): List<Float> =
+    tapNodes(card)
+      .sortedBy { it.first.left }
+      .zipWithNext { (a, d), (b, _) -> (a.right - b.left) / d }
+
+  private fun tapNodes(card: CardConfig): List<Pair<Rect, Float>> {
     val registry = defaultRegistry()
     val theme = haThemeFor(ThemeStyle.TerrazzoHome, false)
     compose.setContent {
@@ -139,7 +153,7 @@ class CardTouchTargetTest {
       }
       .flatten()
       .filter { it.config.getOrNull(SemanticsActions.OnClick) != null }
-      .map { it.size.width / density to it.size.height / density }
+      .map { it.boundsInRoot to density }
       .toList()
   }
 
@@ -153,6 +167,27 @@ class CardTouchTargetTest {
   @Test
   fun mediaControlTransportButtons() =
     assertTouchTargets("""{"type":"media-control","entity":"media_player.office_speaker"}""", 3)
+
+  @Test
+  fun mediaControlTargetsOverlapOnlyTheGapBetweenButtons() {
+    val overlaps =
+      rowOverlaps(card("""{"type":"media-control","entity":"media_player.office_speaker"}"""))
+    assertEquals(2, overlaps.size)
+    assertTrue(overlaps.all { it <= 6.5f }, "overlaps past the 6dp button gap: $overlaps dp")
+  }
+
+  @Test
+  fun pictureGlanceTargetsOverlapOnlyTheGapBetweenCells() {
+    val overlaps =
+      rowOverlaps(
+        card(
+          """{"type":"picture-glance","title":"Living room","image":"/local/lr.png",
+            "entities":["light.living_room_lamp","light.kitchen_lights"]}"""
+        )
+      )
+    assertEquals(1, overlaps.size)
+    assertTrue(overlaps.all { it <= 8.5f }, "overlaps past the 8dp cell gap: $overlaps dp")
+  }
 
   @Test
   fun pictureGlanceEntityIcons() =
