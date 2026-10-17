@@ -144,6 +144,10 @@ home-thermometer
 home-thermometer-outline
 thermostat-auto
 thermostat-box
+# The frontend's climate action and mode glyphs (CLIMATE_HVAC_ACTION_ICONS / _MODE_ICONS) that
+# core's icon tables don't already bring: defrosting, and heat/cool.
+snowflake-melt
+sun-snowflake-variant
 radiator
 radiator-off
 heat-pump
