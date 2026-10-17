@@ -7,8 +7,10 @@ import ee.schimke.terrazzo.wearsync.proto.decodeProto
 import ee.schimke.terrazzo.wearsync.proto.encodeProto
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlinx.serialization.json.add
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
+import kotlinx.serialization.json.putJsonArray
 
 /**
  * A Bambu spool's colour and remaining filament reach the watch, so its spool card draws the
@@ -44,6 +46,25 @@ class WearSpoolAttributesTest {
       "only the attributes a watch render reads, not the tray's other details",
     )
     assertEquals(value, decodeProto<EntityValue>(encodeProto(value)))
+  }
+
+  /** Another integration's structured value under the same key is skipped, not thrown on. */
+  @Test
+  fun aStructuredValueUnderTheSameKeyIsSkipped() {
+    val light =
+      EntityState(
+        "light.strip",
+        "on",
+        buildJsonObject {
+          putJsonArray("color") {
+            add(255)
+            add(0)
+            add(0)
+          }
+          put("active", "true")
+        },
+      )
+    assertEquals(mapOf("active" to "true"), light.toEntityValue(HaSnapshot()).attributes)
   }
 
   @Test

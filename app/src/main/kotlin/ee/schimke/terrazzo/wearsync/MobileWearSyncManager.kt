@@ -481,7 +481,9 @@ internal fun EntityState.toEntityValue(snapshot: HaSnapshot): EntityValue {
     displayPrecision = displayPrecisionOf(this, snapshot),
     attributes =
       WEAR_EXTRA_ATTRIBUTES.mapNotNull { key ->
-          attrs[key]?.jsonPrimitive?.contentOrNull?.let { key to it }
+          // A safe cast: another integration may put an object or array under the same key, which
+          // is skipped rather than thrown on (that would stop the whole sync).
+          (attrs[key] as? JsonPrimitive)?.contentOrNull?.let { key to it }
         }
         .toMap(),
   )
