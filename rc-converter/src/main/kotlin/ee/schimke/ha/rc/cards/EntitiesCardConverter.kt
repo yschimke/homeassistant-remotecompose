@@ -210,12 +210,19 @@ class EntitiesCardConverter : CardConverter {
         icon = icons.icon,
         accent = HaStateColor.toggleAccentFor(eid, entity).withIcons(icons),
         tapAction = tapAction,
+        toggle = eid?.substringBefore('.') !in READ_ONLY_DOMAINS,
       )
     }
   }
 
   private companion object {
     val TEMPLATE_CONFIG_KEYS = setOf("type", "title", "entities")
+
+    /**
+     * Domains with an on/off state that nothing can switch: HA's entities card gives them its
+     * simple row (the state text, "Detected" / "Clear") rather than the toggle row.
+     */
+    val READ_ONLY_DOMAINS = setOf("binary_sensor", "sensor", "device_tracker", "person", "update")
 
     /**
      * Wear height gate: between the small slot (~44dp of content, 60dp in the matrix) and the large
