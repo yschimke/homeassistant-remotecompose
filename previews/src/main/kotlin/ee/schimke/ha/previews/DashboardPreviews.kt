@@ -9,10 +9,10 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth as uiFillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
@@ -20,6 +20,7 @@ import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.player.core.platform.BitmapLoader
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -27,8 +28,10 @@ import androidx.compose.ui.unit.dp
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.model.Section
+import ee.schimke.ha.model.SectionsGrid
 import ee.schimke.ha.model.View
 import ee.schimke.ha.rc.CachedCardPreview
+import ee.schimke.ha.rc.LovelaceSectionsGrid
 import ee.schimke.ha.rc.ProvideCardRegistry
 import ee.schimke.ha.rc.RenderChild
 import ee.schimke.ha.rc.androidXExperimentalWrap
@@ -118,10 +121,29 @@ fun DashboardSecurityMobile() = DashboardPreview("security")
 @Composable
 fun DashboardSecurityTablet() = DashboardPreview("security")
 
+/**
+ * The climate board with every `column_span` removed (HA's default of 1), so the tablet canvas
+ * exercises the side-by-side sections grid: two span-1 sections share a row, each one HA column
+ * wide. The demo boards themselves are all `column_span: 4`, which stacks on a tablet.
+ */
+@Preview(
+  name = "dashboard sections span 1 — tablet",
+  widthDp = TABLET_WIDTH,
+  heightDp = TABLET_HEIGHT,
+)
 @Composable
-private fun DashboardPreview(name: String) {
+fun DashboardSectionsSpanOneTablet() =
+  DashboardPreview("climate") { view ->
+    view.copy(sections = view.sections.map { it.copy(columnSpan = null) })
+  }
+
+@Composable
+private fun DashboardPreview(name: String, transformView: (View) -> View = { it }) {
   enableRemoteComposeWrapContent()
-  val loaded = DashboardFixtures.load(name) ?: return
+  val loaded =
+    DashboardFixtures.load(name)?.let {
+      it.copy(dashboard = it.dashboard.copy(views = it.dashboard.views.map(transformView)))
+    } ?: return
   val bitmapLoader = remember { DashboardPreviewBitmapLoader() }
   Column(
     modifier = Modifier.uiFillMaxWidth().verticalScroll(rememberScrollState()),
@@ -138,19 +160,6 @@ private fun DashboardPreview(name: String) {
   }
 }
 
-/**
- * Width threshold below which we collapse the sections grid to a single column — matches HA's web
- * frontend behaviour, which packs sections only on viewports wide enough that one section keeps a
- * reasonable per-card width (~380 dp).
- */
-private const val SECTIONS_GRID_MIN_WIDTH_DP = 600
-
-/**
- * Per-column target width on tablet+. Sections fill `max_columns` columns up to whatever fits in
- * the canvas at this width.
- */
-private const val SECTIONS_COLUMN_TARGET_WIDTH_DP = 360
-
 @Composable
 private fun ViewBlock(view: View, snapshot: HaSnapshot, bitmapLoader: BitmapLoader) {
   if (view.title != null) {
@@ -161,7 +170,7 @@ private fun ViewBlock(view: View, snapshot: HaSnapshot, bitmapLoader: BitmapLoad
       )
     }
   }
-  if (view.type == "sections" && view.sections.isNotEmpty()) {
+  if (view.type == "sections" && (view.sections.isNotEmpty() || view.header?.card != null)) {
     SectionsView(view, snapshot, bitmapLoader)
   } else {
     // Legacy `type: panel` / `type: masonry` / unspecified — render
@@ -173,40 +182,50 @@ private fun ViewBlock(view: View, snapshot: HaSnapshot, bitmapLoader: BitmapLoad
 }
 
 /**
- * `type: sections` view layout. On viewports below [SECTIONS_GRID_MIN_WIDTH_DP] we render
- * single-column (mobile path); on wider hosts we pack sections into N columns based on the canvas
- * width and the view's `max_columns:` config (default 4 per HA).
+ * `type: sections` view layout, placed by [SectionsGrid] — the same function the app's
+ * `DashboardViewScreen` uses, so the harness shows what the app does: HA's responsive column gap (8
+ * dp up to a 600 dp canvas, 32 dp above) as padding either side and a 24 dp row gap, HA's column
+ * count for the canvas width (320 dp minimum columns, `max_columns`, never more columns than total
+ * `column_span`), each section spanning `min(column_span, columns)` in sparse row flow, the grid
+ * capped at HA's 500 dp per column and centred. A view whose sections all span the full width takes
+ * the window-size readable cap ([SectionsGrid.readableMaxWidthDp]), as the app does.
  *
- * Sections are distributed by walking left-to-right through columns, appending to the column with
- * the smallest current card-count — keeps column heights roughly balanced without honouring
- * `column_span` / `row_span` yet (those are minor v2 polish).
+ * The view's `header` card renders first, centred (HA's default `layout: center`) and at most
+ * [SectionsGrid.HEADER_MAX_WIDTH_DP] wide.
  */
 @Composable
 private fun SectionsView(view: View, snapshot: HaSnapshot, bitmapLoader: BitmapLoader) {
-  BoxWithConstraints(modifier = Modifier.uiFillMaxWidth()) {
-    val widthDp = maxWidth.value.toInt()
-    val maxColumns = view.maxColumns ?: 4
-    val columnCount =
-      if (widthDp < SECTIONS_GRID_MIN_WIDTH_DP) 1
-      else (widthDp / SECTIONS_COLUMN_TARGET_WIDTH_DP).coerceIn(1, maxColumns)
-
-    if (columnCount == 1) {
-      Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        view.sections.forEach { section -> SectionBlock(section, snapshot, bitmapLoader) }
-      }
-    } else {
-      val columns = packSections(view.sections, columnCount)
-      Row(
-        modifier = Modifier.uiFillMaxWidth().padding(horizontal = 8.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-      ) {
-        columns.forEach { sections ->
-          Column(
-            modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-          ) {
-            sections.forEach { section -> SectionBlock(section, snapshot, bitmapLoader) }
+  BoxWithConstraints(
+    modifier = Modifier.uiFillMaxWidth(),
+    contentAlignment = Alignment.TopCenter,
+  ) {
+    val grid =
+      SectionsGrid.layout(
+        view = view,
+        viewWidthDp = maxWidth.value,
+        singleTrackMaxWidthDp = SectionsGrid.readableMaxWidthDp(maxWidth.value),
+      )
+    Column(
+      modifier =
+        Modifier.padding(horizontal = grid.horizontalPaddingDp.dp)
+          .widthIn(max = grid.maxWidthDp.dp)
+          .uiFillMaxWidth(),
+      verticalArrangement = Arrangement.spacedBy(grid.rowGapDp.dp),
+    ) {
+      view.header?.card?.let { headerCard ->
+        Box(
+          modifier = Modifier.uiFillMaxWidth(),
+          contentAlignment =
+            if (view.header!!.centered) Alignment.TopCenter else Alignment.TopStart,
+        ) {
+          Box(Modifier.widthIn(max = SectionsGrid.HEADER_MAX_WIDTH_DP.dp)) {
+            CardSlot(headerCard, snapshot, bitmapLoader)
           }
+        }
+      }
+      if (view.sections.isNotEmpty()) {
+        LovelaceSectionsGrid(grid = grid) {
+          view.sections.forEach { section -> SectionBlock(section, snapshot, bitmapLoader) }
         }
       }
     }
@@ -237,21 +256,6 @@ private fun SectionBlock(section: Section, snapshot: HaSnapshot, bitmapLoader: B
       section.cards.forEach { card -> CardSlot(card, snapshot, bitmapLoader) }
     }
   }
-}
-
-/**
- * Greedy pack — append each section to the shortest column. Keeps column heights balanced without
- * modelling per-card pixel heights.
- */
-private fun packSections(sections: List<Section>, columnCount: Int): List<List<Section>> {
-  val columns = MutableList(columnCount) { mutableListOf<Section>() }
-  val cardCounts = MutableList(columnCount) { 0 }
-  sections.forEach { section ->
-    val target = cardCounts.indices.minBy { cardCounts[it] }
-    columns[target] += section
-    cardCounts[target] += section.cards.size.coerceAtLeast(1)
-  }
-  return columns
 }
 
 @Composable
