@@ -428,7 +428,11 @@ private fun playerLabel(card: CardConfig?, snapshot: HaSnapshot?): String? {
   val friendlyName = entity?.let {
     snapshot?.states?.get(it)?.attributes?.get("friendly_name") as? JsonPrimitive
   }
-  return text("title") ?: text("name") ?: friendlyName?.contentOrNull ?: entity ?: card.type
+  return text("title")
+    ?: text("name")
+    ?: friendlyName?.contentOrNull?.takeIf { it.isNotBlank() }
+    ?: entity
+    ?: card.type
 }
 
 /**
