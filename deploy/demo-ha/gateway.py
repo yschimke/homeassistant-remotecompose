@@ -60,8 +60,8 @@ class Gateway:
         ) as response:
             response.raise_for_status()
             states = self.sanitize(await response.json())
-        if not states:
-            raise ValueError("No demo entities ready")
+        if states.keys() != self.entities:
+            raise ValueError("Demo entities are not all ready")
         old = self.states
         self.states, self.updated = states, time.monotonic()
         for entity in old.keys() | states.keys():

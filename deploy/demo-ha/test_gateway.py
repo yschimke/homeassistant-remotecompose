@@ -1,5 +1,6 @@
 import asyncio
 import json
+from pathlib import Path
 import time
 import unittest
 
@@ -20,7 +21,9 @@ def state(value='21.5'):
 class GatewayTest(unittest.IsolatedAsyncioTestCase):
     async def asyncSetUp(self):
         self.requests = []
-        self.rows = [state(), dict(state(), entity_id='sensor.private_device')]
+        entities = json.loads((Path(__file__).parent / 'entities.json').read_text())
+        self.rows = [dict(state(), entity_id=entity) for entity in entities]
+        self.rows.append(dict(state(), entity_id='sensor.private_device'))
         async def upstream(request):
             self.requests.append((request.method, request.path, request.headers.get('Authorization')))
             return web.json_response(self.rows)
@@ -54,7 +57,7 @@ class GatewayTest(unittest.IsolatedAsyncioTestCase):
             for private in ['secret-token', 'private-value', 'private_device', 'private-user', 'camera_proxy']:
                 self.assertNotIn(private, body)
             self.assertEqual(response.headers['Cache-Control'], 'no-store')
-        self.assertEqual(len(await (await self.client.get('/api/states')).json()), 1)
+        self.assertEqual(len(await (await self.client.get('/api/states')).json()), 6)
         self.assertEqual((await self.client.get('/api/states/sensor.private_device')).status, 404)
 
     async def test_rest_denies_all_mutation_and_unlisted_read_routes(self):
@@ -81,7 +84,7 @@ class GatewayTest(unittest.IsolatedAsyncioTestCase):
         self.assertFalse((await ws.receive_json())['success'])
         await ws.send_json({'id': 31, 'type': 'subscribe_events', 'event_type': 'state_changed'})
         self.assertTrue((await ws.receive_json())['success'])
-        self.rows = [state('22.1')]
+        self.rows[0] = state('22.1')
         await self.g.poll_once(self.session)
         event = await asyncio.wait_for(ws.receive_json(), 2)
         self.assertEqual(event['id'], 31)
@@ -94,6 +97,19 @@ class GatewayTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual((await ws.receive_json())['type'], 'pong')
         self.assertTrue(all(m == 'GET' and p == '/api/states' for m, p, _ in self.requests))
         await ws.close()
+
+    async def test_partial_startup_or_reload_does_not_mark_incomplete_data_fresh(self):
+        previous_states, previous_updated = self.g.states, self.g.updated
+        self.rows = [state('99')]
+        with self.assertRaises(ValueError):
+            await self.g.poll_once(self.session)
+        self.assertEqual(self.g.states, previous_states)
+        self.assertEqual(self.g.updated, previous_updated)
+        self.g.updated, self.g.states = 0, {}
+        with self.assertRaises(ValueError):
+            await self.g.poll_once(self.session)
+        self.assertFalse(self.g.fresh())
+        self.assertEqual((await self.client.get('/healthz')).status, 503)
 
     async def test_stale_backend_is_not_reported_healthy(self):
         self.g.updated = time.monotonic() - 60
