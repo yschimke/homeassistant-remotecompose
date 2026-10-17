@@ -26,6 +26,7 @@ derived by `HaLiveBindings` / `cardSnapshotBindings` (the host):
 | --- | --- | --- |
 | `<id>.state` | string | `formatState(entity)` — the **formatted** display string |
 | `<id>.is_on` | bool | `HaLiveBindings.isOn(id, state)`: the typed `HaEntity.isActive` (climate `heat`/`cool`/…, cover `open`/`opening`/`closing`, lock `locked`, media `playing`, …), else `state == "on"` or `"open"`. Converters seed `LiveValues.isOn` from the same function. |
+| `<id>.is_available` | bool | `HaLiveBindings.isAvailable(state)`: false for `unavailable` / `unknown`. Entity rows, tiles, glance cells and buttons read it to dim the entity and swap its accent for a neutral one, so an entity going offline or coming back restyles without a re-encode. Converters seed it through `HaStateColor.toggleAccentFor` (false too for a configured entity missing from the snapshot). |
 | `<id>.numeric_state` | float | parsed numeric state (gauges/arcs derive their sweep in-document) |
 | `<id>.state_int` | int | domain-keyed variant (alarm panel today) |
 | `<id>.current_temperature`, `<id>.target_temperature` | float | `HaLiveBindings.attributeFloats`: a climate entity's `current_temperature` and `temperature` attributes (its state is the mode, so it has no `numeric_state`). A missing attribute — a thermostat switched off has no set point — is pushed as `HaLiveBindings.ABSENT` (−9999, not NaN), so the document clears it instead of keeping a stale value. The `ha-cards/thermostat` builder dial computes its fractions and labels from them in-document |
@@ -119,7 +120,9 @@ by the host rather than computed in-document, and refreshed on a tick:
 - **Re-encode (path 2):** calendar, logbook, to-do, history-graph,
   statistics-graph, statistic, map, weather-forecast, thermostat /
   humidifier / light (arc fill + labels), media-control, Bambu (AMS /
-  print status). Markdown also re-encodes on Jinja template changes via
+  print status), the shutter cards (`custom:enhanced-shutter-card`,
+  `custom:garage-shutter-card`: door height, which buttons are enabled,
+  and the state line are baked from the cover). Markdown also re-encodes on Jinja template changes via
   `templateValues`.
 - **Static / self-driven:** heading, clock (RemoteCompose time ops),
   unsupported.

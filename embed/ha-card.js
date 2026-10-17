@@ -542,6 +542,11 @@ export function isOn(entityId, state) {
   return isActive(domainOf(entityId), state) ?? (state === 'on' || state === 'open');
 }
 
+/** `HaLiveBindings.isAvailable` ↔ `<slot>.is_available`. */
+export function isAvailable(state) {
+  return state !== 'unavailable' && state !== 'unknown';
+}
+
 /** `AlarmStateInt`: wire keys, never reordered. */
 const ALARM_STATE_INT = {
   disarmed: 0, armed_home: 1, armed_away: 2, armed_night: 3, armed_vacation: 4,
@@ -638,6 +643,7 @@ export function slotBindings(card, states) {
     strings[`${slot}.state`] = formatState(state, entityId);
     strings[`${slot}.name`] = name;
     booleans[`${slot}.is_on`] = state ? isOn(entityId, state.state) : false;
+    booleans[`${slot}.is_available`] = state ? isAvailable(state.state) : false;
     ints[`${slot}.state_int`] = (state ? stateInt(entityId, state.state) : null) ?? -1;
     ints[`${slot}.status`] = statusOf(state);
     floats[`${slot}.numeric_state`] = (state ? numericState(state.state) : null) ?? Number.NaN;

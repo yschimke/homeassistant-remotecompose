@@ -129,10 +129,10 @@ class PreferencesStore(private val context: Context) {
   }
 
   /**
-   * Opt-in to the experimental Compose 1.11 `Grid` API for the dashboard side-by-side section
-   * layout. Off by default so the stable `Row` + chunked path keeps shipping; flip from Settings to
-   * evaluate visual / behavioural parity against the legacy path. Compact / Medium widths render
-   * the same either way (the flag only takes effect in Expanded width with ≥2 sections).
+   * Opt-in to the experimental Compose 1.11 `Grid` API for the dashboard's side-by-side sections
+   * grid. Off by default so the shared HA sections-grid layout keeps shipping; flip from Settings
+   * to evaluate the `Grid`'s own auto-placement (fed the same column count and spans) against it.
+   * Only views whose sections sit side by side differ; one-column views render the same either way.
    */
   val experimentalGridLayout: Flow<Boolean>
     get() = context.store.data.map { it[GRID_LAYOUT_KEY] ?: false }

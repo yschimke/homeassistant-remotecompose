@@ -31,6 +31,7 @@ class CardDesignSlotsTest {
     val bindings = CardDesignSlots.slotBindings(card, snapshot)
     assertEquals("Kitchen", bindings.strings["light.s0.name"])
     assertEquals(true, bindings.booleans["light.s0.is_on"])
+    assertEquals(true, bindings.booleans["light.s0.is_available"])
     assertEquals(CardDesignSlots.STATUS_AVAILABLE, bindings.ints["light.s0.status"])
     assertEquals(-1, bindings.ints["light.s0.state_int"])
     assertTrue(bindings.floats["light.s0.numeric_state"]!!.isNaN())
@@ -42,6 +43,7 @@ class CardDesignSlotsTest {
     val card = tile("sensor.temp")
     val missing = CardDesignSlots.slotBindings(card, HaSnapshot())
     assertEquals(CardDesignSlots.STATUS_MISSING, missing.ints["sensor.s0.status"])
+    assertEquals(false, missing.booleans["sensor.s0.is_available"])
     assertEquals("sensor.temp", missing.strings["sensor.s0.name"])
 
     val unavailable =
@@ -60,6 +62,7 @@ class CardDesignSlotsTest {
         ),
       )
     assertEquals(CardDesignSlots.STATUS_UNAVAILABLE, unavailable.ints["sensor.s0.status"])
+    assertEquals(false, unavailable.booleans["sensor.s0.is_available"])
     assertEquals("Temp", unavailable.strings["sensor.s0.name"])
     assertTrue(unavailable.floats["sensor.s0.numeric_state"]!!.isNaN())
   }

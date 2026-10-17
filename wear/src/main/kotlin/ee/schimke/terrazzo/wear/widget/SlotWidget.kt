@@ -24,12 +24,14 @@ import androidx.wear.compose.remote.material3.RemoteMaterialTheme
 import ee.schimke.ha.design.CardDesignSlots
 import ee.schimke.ha.model.CardConfig
 import ee.schimke.ha.model.HaSnapshot
+import ee.schimke.ha.rc.BreakpointAxis
 import ee.schimke.ha.rc.CardDesignTemplates
 import ee.schimke.ha.rc.CardRegistry
 import ee.schimke.ha.rc.CardSizeMode
 import ee.schimke.ha.rc.LauncherDesigns
 import ee.schimke.ha.rc.ProvideCardRegistry
 import ee.schimke.ha.rc.ProvideCardSizeMode
+import ee.schimke.ha.rc.ProvideFixedCanvasAxis
 import ee.schimke.ha.rc.RenderChild
 import ee.schimke.ha.rc.cards.defaultRegistry
 import ee.schimke.ha.rc.cards.shutter.withEnhancedShutter
@@ -279,11 +281,13 @@ private fun slotDocument(
                 // that lean on `RemoteFlowRow` (glance / grid /
                 // entity-filter) capture instead of throwing.
                 ProvideCardChrome(enabled = false) {
-                  ProvideFlowLayoutSupport(enabled = false, compactEntities = true) {
-                    if (card != null) {
-                      RenderChild(card, snapshot, RemoteModifier.fillMaxWidth())
-                    } else {
-                      EmptySlotPlaceholder(slotIndex, theme)
+                  ProvideFixedCanvasAxis(BreakpointAxis.Height) {
+                    ProvideFlowLayoutSupport(enabled = false, compactEntities = true) {
+                      if (card != null) {
+                        RenderChild(card, snapshot, RemoteModifier.fillMaxWidth())
+                      } else {
+                        EmptySlotPlaceholder(slotIndex, theme)
+                      }
                     }
                   }
                 }

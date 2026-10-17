@@ -64,6 +64,19 @@ object LiveValues {
     )
   }
 
+  /**
+   * Entity availability ↔ `<entityId>.is_available`: false while HA reports `unavailable` /
+   * `unknown` (`HaLiveBindings.isAvailable`). Null for a null [entityId], like [isOn].
+   */
+  fun isAvailable(entityId: String?, initial: Boolean): RemoteBoolean? {
+    if (entityId == null) return null
+    return RemoteBoolean.createNamedRemoteBoolean(
+      name(entityId, "is_available"),
+      initial,
+      RemoteState.Domain.User,
+    )
+  }
+
   /** Entity attribute ↔ `<entityId>.attributes.<attribute>`. */
   fun attribute(entityId: String?, attribute: String, initial: String): RemoteString =
     named(entityId, "attributes.$attribute", initial)

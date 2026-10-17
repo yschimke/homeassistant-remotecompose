@@ -37,6 +37,21 @@ object HaLiveBindings {
     EntityState(entityId, state).toTyped().isActive ?: (state == "on" || state == "open")
 
   /**
+   * Whether the entity reports a real state ↔ `<entityId>.is_available`: false for HA's
+   * `unavailable` and `unknown`. Cards dim an entity that isn't available and drop its on/off
+   * accent for a neutral one (design principle 7: an unavailable value looks unavailable), so the
+   * host pushes this alongside `is_on` and an entity going offline, or coming back, restyles
+   * without a re-encode.
+   */
+  fun isAvailable(state: String): Boolean = state != UNAVAILABLE && state != UNKNOWN
+
+  /** HA's state for an entity whose integration can't reach it. */
+  const val UNAVAILABLE: String = "unavailable"
+
+  /** HA's state for an entity that has never reported a value. */
+  const val UNKNOWN: String = "unknown"
+
+  /**
    * Parsed numeric form of an entity's primary state ↔ `<entityId>.numeric_state`. Gauges / arcs
    * bind this and compute their sweep in-document, so pushing the raw number keeps them live
    * without a re-encode. Non-numeric or non-finite states (e.g. `"on"`, `"unavailable"`) have no

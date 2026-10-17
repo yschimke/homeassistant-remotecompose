@@ -260,34 +260,63 @@
                 },
                 "booleans": {
                     "sensor.s0.is_on": false,
+                    "sensor.s0.is_available": true,
                     "sensor.s1.is_on": false,
+                    "sensor.s1.is_available": true,
                     "sensor.s2.is_on": false,
+                    "sensor.s2.is_available": true,
                     "sensor.s3.is_on": false,
+                    "sensor.s3.is_available": true,
                     "sensor.s4.is_on": false,
+                    "sensor.s4.is_available": true,
                     "sensor.s5.is_on": false,
+                    "sensor.s5.is_available": true,
                     "sensor.s6.is_on": false,
+                    "sensor.s6.is_available": true,
                     "sensor.s7.is_on": false,
+                    "sensor.s7.is_available": true,
                     "sensor.s8.is_on": false,
+                    "sensor.s8.is_available": true,
                     "sensor.s9.is_on": false,
+                    "sensor.s9.is_available": true,
                     "sensor.s10.is_on": false,
+                    "sensor.s10.is_available": true,
                     "sensor.s11.is_on": false,
+                    "sensor.s11.is_available": true,
                     "sensor.s12.is_on": false,
+                    "sensor.s12.is_available": true,
                     "sensor.s13.is_on": false,
+                    "sensor.s13.is_available": true,
                     "sensor.s14.is_on": false,
+                    "sensor.s14.is_available": true,
                     "sensor.s15.is_on": false,
+                    "sensor.s15.is_available": true,
                     "sensor.s16.is_on": false,
+                    "sensor.s16.is_available": true,
                     "sensor.s17.is_on": false,
+                    "sensor.s17.is_available": true,
                     "sensor.s18.is_on": false,
+                    "sensor.s18.is_available": true,
                     "sensor.s19.is_on": false,
+                    "sensor.s19.is_available": true,
                     "sensor.s20.is_on": true,
+                    "sensor.s20.is_available": true,
                     "sensor.s21.is_on": false,
+                    "sensor.s21.is_available": true,
                     "sensor.s22.is_on": false,
+                    "sensor.s22.is_available": true,
                     "sensor.s23.is_on": false,
+                    "sensor.s23.is_available": true,
                     "sensor.s24.is_on": false,
+                    "sensor.s24.is_available": false,
                     "sensor.s25.is_on": false,
+                    "sensor.s25.is_available": false,
                     "sensor.s26.is_on": false,
+                    "sensor.s26.is_available": true,
                     "sensor.s27.is_on": false,
-                    "sensor.s28.is_on": false
+                    "sensor.s27.is_available": true,
+                    "sensor.s28.is_on": false,
+                    "sensor.s28.is_available": true
                 },
                 "ints": {
                     "sensor.s0.state_int": -1,
@@ -612,27 +641,49 @@
                 },
                 "booleans": {
                     "light.s0.is_on": true,
+                    "light.s0.is_available": true,
                     "light.s1.is_on": false,
+                    "light.s1.is_available": true,
                     "switch.s2.is_on": true,
+                    "switch.s2.is_available": true,
                     "cover.s3.is_on": true,
+                    "cover.s3.is_available": true,
                     "cover.s4.is_on": false,
+                    "cover.s4.is_available": true,
                     "lock.s5.is_on": true,
+                    "lock.s5.is_available": true,
                     "lock.s6.is_on": false,
+                    "lock.s6.is_available": true,
                     "media_player.s7.is_on": true,
+                    "media_player.s7.is_available": true,
                     "media_player.s8.is_on": false,
+                    "media_player.s8.is_available": true,
                     "media_player.s9.is_on": false,
+                    "media_player.s9.is_available": true,
                     "media_player.s10.is_on": true,
+                    "media_player.s10.is_available": true,
                     "climate.s11.is_on": true,
+                    "climate.s11.is_available": true,
                     "climate.s12.is_on": false,
+                    "climate.s12.is_available": true,
                     "vacuum.s13.is_on": true,
+                    "vacuum.s13.is_available": true,
                     "person.s14.is_on": true,
+                    "person.s14.is_available": true,
                     "device_tracker.s15.is_on": false,
+                    "device_tracker.s15.is_available": true,
                     "valve.s16.is_on": true,
+                    "valve.s16.is_available": true,
                     "scene.s17.is_on": true,
+                    "scene.s17.is_available": true,
                     "binary_sensor.s18.is_on": true,
+                    "binary_sensor.s18.is_available": true,
                     "fan.s19.is_on": false,
+                    "fan.s19.is_available": false,
                     "input_boolean.s20.is_on": false,
-                    "weather.s21.is_on": false
+                    "input_boolean.s20.is_available": false,
+                    "weather.s21.is_on": false,
+                    "weather.s21.is_available": true
                 },
                 "ints": {
                     "light.s0.state_int": -1,
@@ -813,18 +864,31 @@
                 },
                 "booleans": {
                     "alarm_control_panel.s0.is_on": false,
+                    "alarm_control_panel.s0.is_available": true,
                     "alarm_control_panel.s1.is_on": true,
+                    "alarm_control_panel.s1.is_available": true,
                     "alarm_control_panel.s2.is_on": true,
+                    "alarm_control_panel.s2.is_available": true,
                     "alarm_control_panel.s3.is_on": true,
+                    "alarm_control_panel.s3.is_available": true,
                     "alarm_control_panel.s4.is_on": true,
+                    "alarm_control_panel.s4.is_available": true,
                     "alarm_control_panel.s5.is_on": true,
+                    "alarm_control_panel.s5.is_available": true,
                     "alarm_control_panel.s6.is_on": true,
+                    "alarm_control_panel.s6.is_available": true,
                     "alarm_control_panel.s7.is_on": true,
+                    "alarm_control_panel.s7.is_available": true,
                     "alarm_control_panel.s8.is_on": true,
+                    "alarm_control_panel.s8.is_available": true,
                     "alarm_control_panel.s9.is_on": false,
+                    "alarm_control_panel.s9.is_available": true,
                     "alarm_control_panel.s10.is_on": false,
+                    "alarm_control_panel.s10.is_available": false,
                     "alarm_control_panel.s11.is_on": false,
-                    "alarm_control_panel.s12.is_on": false
+                    "alarm_control_panel.s11.is_available": false,
+                    "alarm_control_panel.s12.is_on": false,
+                    "alarm_control_panel.s12.is_available": true
                 },
                 "ints": {
                     "alarm_control_panel.s0.state_int": 0,
@@ -893,7 +957,8 @@
                     "light.s0.name": "Kitchen"
                 },
                 "booleans": {
-                    "light.s0.is_on": true
+                    "light.s0.is_on": true,
+                    "light.s0.is_available": true
                 },
                 "ints": {
                     "light.s0.state_int": -1,
@@ -917,7 +982,8 @@
                     "light.s0.name": "light.gone"
                 },
                 "booleans": {
-                    "light.s0.is_on": false
+                    "light.s0.is_on": false,
+                    "light.s0.is_available": false
                 },
                 "ints": {
                     "light.s0.state_int": -1,
@@ -989,9 +1055,13 @@
                 },
                 "booleans": {
                     "light.s0.is_on": false,
+                    "light.s0.is_available": true,
                     "sensor.s1.is_on": false,
+                    "sensor.s1.is_available": true,
                     "switch.s2.is_on": true,
-                    "switch.s3.is_on": true
+                    "switch.s2.is_available": true,
+                    "switch.s3.is_on": true,
+                    "switch.s3.is_available": true
                 },
                 "ints": {
                     "light.s0.state_int": -1,
@@ -1050,7 +1120,9 @@
                 },
                 "booleans": {
                     "light.s0.is_on": true,
-                    "sensor.s1.is_on": false
+                    "light.s0.is_available": true,
+                    "sensor.s1.is_on": false,
+                    "sensor.s1.is_available": false
                 },
                 "ints": {
                     "light.s0.state_int": -1,
@@ -1105,7 +1177,9 @@
                 },
                 "booleans": {
                     "light.s0.is_on": true,
-                    "light.s1.is_on": true
+                    "light.s0.is_available": true,
+                    "light.s1.is_on": true,
+                    "light.s1.is_available": true
                 },
                 "ints": {
                     "light.s0.state_int": -1,

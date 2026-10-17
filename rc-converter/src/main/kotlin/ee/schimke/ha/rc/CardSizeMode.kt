@@ -50,9 +50,15 @@ val LocalCardSizeMode = staticCompositionLocalOf { CardSizeMode.Wrap }
 /**
  * Wrap [content] so converters inside it observe [mode] via [LocalCardSizeMode]. Phone widget /
  * wear widget capture sites pass [CardSizeMode.Fixed]; the dashboard inherits the
- * [CardSizeMode.Wrap] default and doesn't need to provide.
+ * [CardSizeMode.Wrap] default and doesn't need to provide. Fixed mode also turns off the entity
+ * availability look ([ee.schimke.ha.rc.components.LocalEntityAvailability]).
  */
 @Composable
 fun ProvideCardSizeMode(mode: CardSizeMode, content: @Composable () -> Unit) {
-  CompositionLocalProvider(LocalCardSizeMode provides mode, content = content)
+  CompositionLocalProvider(
+    LocalCardSizeMode provides mode,
+    // Widget captures never receive bindings; see LocalEntityAvailability.
+    ee.schimke.ha.rc.components.LocalEntityAvailability provides (mode == CardSizeMode.Wrap),
+    content = content,
+  )
 }

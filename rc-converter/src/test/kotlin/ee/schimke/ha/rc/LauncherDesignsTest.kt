@@ -256,6 +256,90 @@ class LauncherDesignsTest {
       ),
     )
 
+  /** A direct Fixed-mode widget capture of [card], as the provider's fallback path builds it. */
+  private fun directWidget(card: CardConfig, snapshot: HaSnapshot, widthDp: Int, heightDp: Int) =
+    runBlocking {
+      captureSingleRemoteDocument(
+          context = org.robolectric.RuntimeEnvironment.getApplication(),
+          creationDisplayInfo =
+            RemoteCreationDisplayInfo(widthDp * density / 160, heightDp * density / 160, density),
+          profile = widgetsProfile,
+        ) {
+          LauncherWidgetContent(
+            registry,
+            widgetsProfile,
+            dark = false,
+            WidgetActionRegistry(snapshot.states.mapValues { (_, e) -> formatState(e) }),
+            card,
+            snapshot,
+            captureSizeDp = WidgetCaptureSizeDp(widthDp, heightDp),
+          )
+        }
+        .bytes
+    }
+
+  /**
+   * Widgets never receive bindings, so they carry no availability look: no `<id>.is_available`
+   * (which a button's or entity's two size tiers would otherwise both register, colliding as
+   * state-layout siblings), and no availability colour selects, which the bake leaves as colour
+   * expressions that Android 16's platform widget player doesn't draw reliably.
+   */
+  @Test
+  fun widgetsCarryNoAvailabilityBinding() {
+    val sensors = (1..5).map { "sensor.room_$it" }
+    val snapshot =
+      snapshotOf(
+        *sensors
+          .map { entity(it, if (it == sensors.last()) "unavailable" else "12") }
+          .toTypedArray(),
+        entity("switch.boiler", "unavailable", "friendly_name" to "Boiler"),
+      )
+    val list = sensors.joinToString { "\"$it\"" }
+    val cards =
+      listOf(
+        card("button", sensors.last()),
+        card("entity", sensors.last()),
+        card("tile", sensors.last()),
+        card("entity", "switch.boiler"),
+        CardConfig(
+          "glance",
+          kotlinx.serialization.json.Json.parseToJsonElement(
+            """{"type":"glance","entities":[$list]}"""
+          ) as JsonObject,
+        ),
+        CardConfig(
+          "entities",
+          kotlinx.serialization.json.Json.parseToJsonElement(
+            """{"type":"entities","entities":[$list]}"""
+          ) as JsonObject,
+        ),
+      )
+    for (card in cards) {
+      // Both tiers of the size ladders: icon-only and full.
+      for ((w, h) in listOf(80 to 60, 288 to 252)) {
+        val names =
+          RcDocumentCodec.decode(directWidget(card, snapshot, w, h), RcWireLimits())
+            .namedVariables
+            .map { it.name }
+        assertTrue(
+          names.none { it.endsWith(".is_available") },
+          "${card.type} ${w}x$h widget registers no availability: $names",
+        )
+      }
+    }
+    // A glance of read-only sensors has no state colour to select: its widget is all constants.
+    val glance = bake(cards[4], snapshot, 288, 336)
+    val operations = arrayListOf<Operation>()
+    RemoteComposeBuffer.fromInputStream(platformWidgetDocument(glance.bytes).inputStream())
+      .inflateFromBuffer(operations)
+    assertEquals(
+      emptyList(),
+      operations.filterIsInstance<androidx.compose.remote.core.operations.ColorExpression>().map {
+        it.toString()
+      },
+    )
+  }
+
   @Test
   fun bakedGaugeWidgetMatchesADirectCapture() =
     assertWidgetParity(
