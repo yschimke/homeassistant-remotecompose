@@ -12,6 +12,7 @@ import androidx.test.uiautomator.UiObject2
 import androidx.test.uiautomator.Until
 import ee.schimke.terrazzo.MainActivity
 import org.junit.After
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -61,6 +62,11 @@ class LongPressHistoryTest {
     assertTrue(
       "Security dashboard did not surface within 15s",
       device.wait(Until.hasObject(By.text("Security")), 15_000),
+    )
+    assertEquals(
+      "Demo startup must stay in the app instead of opening a LAN permission dialog",
+      context.packageName,
+      device.currentPackageName,
     )
   }
 

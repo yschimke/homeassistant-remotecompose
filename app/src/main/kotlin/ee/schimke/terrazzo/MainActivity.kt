@@ -57,7 +57,12 @@ class MainActivity : ComponentActivity() {
     // token is minted (see TerrazzoApp.LaunchedEffect that calls
     // sessionFactory.create with a fresh access token).
     val initialInstance = graph.offlineCache.lastInstance()
-    val initialSession = initialInstance?.let { graph.sessionFactory.createCachedOnly(it) }
+    // Demo mode must be the first session, not an asynchronous replacement after composition.
+    // A transient DiscoveryScreen immediately requests the LAN permission, covering the demo with
+    // a system dialog even though the demo never connects to a local Home Assistant instance.
+    val initialSession =
+      if (runBlocking { graph.preferencesStore.demoModeNow() }) graph.sessionFactory.createDemo()
+      else initialInstance?.let { graph.sessionFactory.createCachedOnly(it) }
 
     // The runtime graph is always an [AppGraph] (constructed via
     // Metro in TerrazzoApplication). Surface its image stack so

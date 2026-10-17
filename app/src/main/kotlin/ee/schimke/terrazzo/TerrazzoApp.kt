@@ -131,7 +131,9 @@ fun TerrazzoApp(initialDashboard: String? = null, initialSession: HaSession? = n
   // swap the stub for a real live session in the background.
   LaunchedEffect(Unit) {
     if (graph.preferencesStore.demoModeNow()) {
-      session = graph.sessionFactory.createDemo()
+      // MainActivity already supplies the demo on a cold start. Keep that session so the first
+      // dashboard is not torn down and rebuilt while it is drawing.
+      if (session !is DemoHaSession) session = graph.sessionFactory.createDemo()
       widgetScheduler.scheduleDemo()
     } else if (initialSession != null) {
       val baseUrl = initialSession.baseUrl
