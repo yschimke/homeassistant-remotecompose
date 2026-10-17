@@ -2,7 +2,7 @@
 # server and the library first — generating the library needs Android (Robolectric), so it doesn't
 # run in this image — then build from the repo root:
 #
-#   ./gradlew :card-designs:generateCardDesigns :design-server:installDist
+#   ./gradlew :card-designs:generateCardDesigns :design-server:installDist :app-ui:wasmJsBrowserDistribution
 #   docker build -f design-server/Dockerfile -t card-design-server .
 #   docker run -p 8080:8080 -p 8724:8724 -v card-designs-data:/data card-design-server
 #
@@ -33,6 +33,7 @@ COPY --from=ui-builder /opt/compose-preview-server /opt/compose-preview-server
 COPY design-server/build/install/design-server/lib /app/lib
 COPY card-designs/build/card-designs /library
 COPY design-server/catalogs.json /app/catalogs.json
+COPY app-ui/build/dist/wasmJs/productionExecutable /app/wasm
 ENV DESIGN_LIBRARY=/library \
     PORT=8080 \
     UI_BUILDER_BINARY=/opt/compose-preview-server/bin/compose-preview-server \
