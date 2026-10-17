@@ -137,14 +137,13 @@ private fun TitleBlock(data: HaMediaControlData, theme: RemoteHaTheme) {
 
 @Composable
 private fun TransportRow(data: HaMediaControlData) {
-  // Each button's 48dp touch target is wider and taller than the button drawn in it, so the row
-  // pulls in by the difference (negative spacing, and an offset in place of the 6dp top inset) to
-  // keep the buttons where a row of drawn buttons puts them. Neighbouring targets overlap only over
-  // the 6dp gap between the drawn buttons (12dp of extra width, less the gap), never over a button,
-  // so a tap on a button is always that button's. The row ends up 2dp taller.
+  // Each button's 48dp touch target is wider and taller than the button drawn in it. The targets
+  // sit edge to edge, so no tap is shared between two buttons (the accessibility checker counts
+  // only
+  // a target's unshared area): the drawn buttons end up 12dp apart. The row's offset, in place of
+  // the 6dp top inset, keeps the first button where it was. The row ends up 2dp taller.
   RemoteRow(
     modifier = RemoteModifier.offset((-8).rdp, 2.rdp),
-    horizontalArrangement = RemoteArrangement.spacedBy((-6).rdp),
     verticalAlignment = RemoteAlignment.CenterVertically,
   ) {
     TransportButton(Icons.Filled.SkipPrevious, "Previous", data.previousAction, data.accent)
