@@ -117,6 +117,18 @@ class GatewayTest(unittest.IsolatedAsyncioTestCase):
         await verify(str(self.client.make_url('')).rstrip('/'), stream=False, wait_ready=1)
         self.assertEqual(self.requests, [('GET', '/api/states', 'Bearer secret-token')])
 
+    async def test_public_verifier_accepts_ha_numeric_format_and_rejects_wrong_battery(self):
+        battery = next(s for s in self.rows if s['entity_id'] == 'sensor.demo_battery')
+        battery['state'] = '78.0'
+        await self.g.poll_once(self.session)
+        await verify(str(self.client.make_url('')).rstrip('/'), stream=False)
+        for value in ['77.0', 'unknown', 'unavailable', 'NaN', 'Infinity']:
+            with self.subTest(value=value):
+                battery['state'] = value
+                await self.g.poll_once(self.session)
+                with self.assertRaisesRegex(AssertionError, 'battery'):
+                    await verify(str(self.client.make_url('')).rstrip('/'), stream=False)
+
     async def test_readiness_deadline_includes_slow_request_time(self):
         async def slow_health(request):
             await asyncio.sleep(2)

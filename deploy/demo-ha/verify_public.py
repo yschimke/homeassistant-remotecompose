@@ -33,7 +33,12 @@ async def verify(base, stream, wait_ready=0):
             rows = await r.json()
             assert len(rows) == 6, f'Expected six generic entities, got {len(rows)}'
             battery = next(s for s in rows if s['entity_id'] == 'sensor.demo_battery')
-            assert battery['state'] == '78'
+            # HA numeric sensors can serialize the configured 78 as "78.0".
+            try:
+                battery_value = float(battery['state'])
+            except (ValueError, TypeError):
+                raise AssertionError(f"Expected demo battery 78%, got {battery['state']!r}") from None
+            assert battery_value == 78, f"Expected demo battery 78%, got {battery['state']!r}"
             assert all(s['entity_id'].split('.')[1].startswith('demo_') for s in rows)
         async with session.get(base + '/dashboard') as r:
             assert r.status == 200
