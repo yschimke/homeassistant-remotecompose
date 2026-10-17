@@ -135,9 +135,9 @@ object CardDesignTemplates {
       }
     return CardTemplatePlayback(
       bytes = bytes,
-      bindings = { snapshot ->
+      bindings = { snapshot, clock ->
         val slots = CardDesignSlots.slotBindings(card, snapshot)
-        converter?.designBindings(card, snapshot)?.let { slots + it } ?: slots
+        converter?.designBindings(card, snapshot, clock)?.let { slots + it } ?: slots
       },
       tapAction = tapActionOf(card.raw["tap_action"] as? JsonObject, entityId),
       slotTapActions = slotTaps,

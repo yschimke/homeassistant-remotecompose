@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.width
 import androidx.compose.remote.creation.compose.modifier.RemoteModifier
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -55,6 +56,13 @@ class CardDesignParityTest {
 
   private val registry = defaultRegistry()
   private val style = ThemeStyle.TerrazzoHome
+
+  /**
+   * A fixed "now" for the clock cards, so neither capture depends on when the test runs: one second
+   * before midnight, where a wall-clock read on either path would show a different date line.
+   */
+  private val parityClock =
+    FixedHaClock(java.time.ZonedDateTime.of(2026, 5, 5, 23, 59, 59, 0, java.time.ZoneOffset.UTC))
 
   private fun tile(entity: String, name: String? = null) =
     CardConfig(
@@ -126,6 +134,16 @@ class CardDesignParityTest {
     statistics: Map<String, List<ee.schimke.ha.model.StatisticPoint>> = emptyMap(),
     /** A colour both renders must show before capture: an image that loads asynchronously. */
     awaitColor: androidx.compose.ui.graphics.Color? = null,
+    /**
+     * Pins "now" for both renders. A clock card's time ticks in-document from the player's time
+     * source, and the two captures are taken one after the other, so a minute rolling over between
+     * them changes the digits; its date line is baked into the direct document but pushed into the
+     * template as a binding, so both must read the same instant. Provided around the players (the
+     * time source, and the template's bindings) and, unfrozen, to the direct encode: that is a
+     * separate composition, and a frozen clock there would swap the live time binding the template
+     * has for a static label.
+     */
+    clock: HaClock = SystemHaClock,
   ) {
     val snapshot =
       HaSnapshot(
@@ -144,28 +162,34 @@ class CardDesignParityTest {
 
     var useTemplate by mutableStateOf(false)
     compose.setContent {
-      Box(Modifier.width(360.dp).testTag("card")) {
-        if (!useTemplate) {
-          CachedCardPreview(
-            cacheKey = "direct-$name",
-            profile = androidXExperimentalWrap,
-            card = card,
-            snapshot = snapshot,
-            bitmapLoader = bitmapLoader,
-          ) {
-            ProvideCardRegistry(registry) {
-              ProvideHaTheme(theme) { RenderChild(card, snapshot, RemoteModifier.fillMaxWidth()) }
+      CompositionLocalProvider(LocalHaClock provides clock) {
+        Box(Modifier.width(360.dp).testTag("card")) {
+          if (!useTemplate) {
+            CachedCardPreview(
+              cacheKey = "direct-$name",
+              profile = androidXExperimentalWrap,
+              card = card,
+              snapshot = snapshot,
+              bitmapLoader = bitmapLoader,
+            ) {
+              CompositionLocalProvider(LocalHaClock provides clock.unfrozen()) {
+                ProvideCardRegistry(registry) {
+                  ProvideHaTheme(theme) {
+                    RenderChild(card, snapshot, RemoteModifier.fillMaxWidth())
+                  }
+                }
+              }
             }
+          } else {
+            CachedCardPreview(
+              cacheKey = "template-$name",
+              profile = androidXExperimentalWrap,
+              card = card,
+              snapshot = snapshot,
+              bitmapLoader = bitmapLoader,
+              template = playback,
+            ) {}
           }
-        } else {
-          CachedCardPreview(
-            cacheKey = "template-$name",
-            profile = androidXExperimentalWrap,
-            card = card,
-            snapshot = snapshot,
-            bitmapLoader = bitmapLoader,
-            template = playback,
-          ) {}
         }
       }
     }
@@ -188,6 +212,16 @@ class CardDesignParityTest {
     assertTrue(colors.size > 2, "$name: the direct capture must draw real content")
     assertEquals(0, differing, "$name: pixels differing between direct and template render")
   }
+
+  /** This clock's instant and zone, without [HaClock.isFrozen]: the live document path. */
+  private fun HaClock.unfrozen(): HaClock =
+    if (!isFrozen) this
+    else
+      object : HaClock {
+        override fun now() = this@unfrozen.now()
+
+        override fun zone() = this@unfrozen.zone()
+      }
 
   /** Waits until the card shows [color] somewhere: the bitmap loader runs off the main thread. */
   private fun awaitPixel(color: androidx.compose.ui.graphics.Color) {
@@ -526,6 +560,7 @@ class CardDesignParityTest {
       card("clock") { put("title", "Kitchen clock") },
       emptyList(),
       dark = false,
+      clock = parityClock,
     )
 
   @Test
@@ -540,6 +575,7 @@ class CardDesignParityTest {
       },
       emptyList(),
       dark = true,
+      clock = parityClock,
     )
 
   @Test
