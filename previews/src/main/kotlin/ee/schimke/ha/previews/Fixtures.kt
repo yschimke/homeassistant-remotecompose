@@ -115,6 +115,47 @@ object Fixtures {
       ),
     )
 
+  /**
+   * State colour follows state: the same kinds of entity on, off, and unavailable / unknown /
+   * non-boolean, for the availability previews. Unavailable rows dim; off is neutral; a problem
+   * that is on is the alert colour.
+   */
+  val availability =
+    snapshot(
+      state(
+        "binary_sensor.hall_motion",
+        "on",
+        mapOf("friendly_name" to "Hall", "device_class" to "motion"),
+      ),
+      state(
+        "binary_sensor.front_room_motion",
+        "off",
+        mapOf("friendly_name" to "Front room", "device_class" to "motion"),
+      ),
+      state(
+        "binary_sensor.driveway_motion",
+        "unavailable",
+        mapOf("friendly_name" to "Driveway", "device_class" to "motion"),
+      ),
+      state(
+        "binary_sensor.mqtt_broker",
+        "off",
+        mapOf("friendly_name" to "MQTT broker", "device_class" to "connectivity"),
+      ),
+      state(
+        "binary_sensor.room_server",
+        "stale",
+        mapOf("friendly_name" to "Room server", "device_class" to "connectivity"),
+      ),
+      state(
+        "binary_sensor.printer_errors",
+        "on",
+        mapOf("friendly_name" to "HMS errors", "device_class" to "problem"),
+      ),
+      state("light.kitchen", "unknown", mapOf("friendly_name" to "Kitchen")),
+      state("switch.coffee_maker", "on", mapOf("friendly_name" to "Coffee maker")),
+    )
+
   val battery =
     snapshot(
       state(
