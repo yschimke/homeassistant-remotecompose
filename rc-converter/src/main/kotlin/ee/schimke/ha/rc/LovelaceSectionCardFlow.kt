@@ -12,6 +12,7 @@ import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.model.SectionCardFlow
 import ee.schimke.ha.model.SectionCardGrid
 import ee.schimke.ha.model.SectionFlowItem
+import ee.schimke.ha.rc.cards.shownCard
 
 /**
  * The min width (dp) and own-row flag of each of [cards] for [LovelaceSectionCardFlow]: the
@@ -23,8 +24,13 @@ fun sectionFlowItems(
   snapshot: HaSnapshot,
   registry: CardRegistry,
 ): List<SectionFlowItem> = cards.map { card ->
+  // A conditional is sized as the card it shows; a hidden one is drawn empty, so it asks for
+  // nothing and never pushes a neighbour to the next row.
+  val shown = shownCard(card, snapshot)
   SectionFlowItem(
-    minWidth = (registry.get(card.type)?.gridMinCellWidthDp(card, snapshot) ?: 240).toFloat(),
+    minWidth =
+      if (shown == null) 0f
+      else (registry.get(shown.type)?.gridMinCellWidthDp(shown, snapshot) ?: 240).toFloat(),
     ownRow = SectionCardFlow.ownRow(card),
   )
 }
