@@ -20,6 +20,7 @@ import ee.schimke.ha.rc.cardEntityIds
 import ee.schimke.ha.rc.components.HaAction
 import ee.schimke.ha.rc.components.HaTodoItem
 import ee.schimke.ha.rc.components.HaTodoListData
+import ee.schimke.ha.rc.components.MinTouchTargetDp
 import ee.schimke.ha.rc.components.RemoteHaTodoList
 import ee.schimke.ha.rc.components.RemoteHaTodoListIdentity
 import kotlinx.serialization.json.JsonArray
@@ -45,7 +46,20 @@ class TodoListCardConverter : CardConverter {
   override fun dataSignature(card: CardConfig, snapshot: HaSnapshot): String =
     cardDataSignature(cardEntityIds(card), snapshot)
 
-  override fun naturalHeightDp(card: CardConfig, snapshot: HaSnapshot): Int = 220
+  /**
+   * The card's height for its items: 12dp insets, the title, and each non-empty section's caption
+   * over its 48dp item rows (touch targets stacked edge to edge), 8dp apart. A host that captures
+   * at this height shows every row.
+   */
+  override fun naturalHeightDp(card: CardConfig, snapshot: HaSnapshot): Int {
+    val data = todoData(card, snapshot)
+    val sections =
+      listOf(data.activeItems.size, data.completedItems.size)
+        .filter { it > 0 }
+        .sumOf { rows -> GAP_DP + CAPTION_DP + GAP_DP + rows * MinTouchTargetDp }
+    val body = if (sections > 0) sections else GAP_DP + EMPTY_LABEL_DP
+    return INSETS_DP + TITLE_DP + body
+  }
 
   /**
    * A to-do list renders from a card design: how many items are active and completed is the
@@ -215,3 +229,12 @@ private fun todoData(card: CardConfig, snapshot: HaSnapshot): HaTodoListData {
   }
   return HaTodoListData(title = title, activeItems = active, completedItems = completed)
 }
+
+// RemoteHaTodoList's layout, for naturalHeightDp: vertical insets, the line heights of the 17sp
+// title (20dp), the 12sp section caption (14dp) and the 13sp "No items" label (16dp), each with 2dp
+// to spare for a taller theme typeface, and the column's gap.
+private const val INSETS_DP = 24
+private const val TITLE_DP = 22
+private const val CAPTION_DP = 16
+private const val EMPTY_LABEL_DP = 18
+private const val GAP_DP = 8

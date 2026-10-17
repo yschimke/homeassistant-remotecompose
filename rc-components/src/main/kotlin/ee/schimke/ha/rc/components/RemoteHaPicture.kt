@@ -18,6 +18,7 @@ import androidx.compose.remote.creation.compose.modifier.clip
 import androidx.compose.remote.creation.compose.modifier.fillMaxSize
 import androidx.compose.remote.creation.compose.modifier.fillMaxWidth
 import androidx.compose.remote.creation.compose.modifier.height
+import androidx.compose.remote.creation.compose.modifier.offset
 import androidx.compose.remote.creation.compose.modifier.padding
 import androidx.compose.remote.creation.compose.modifier.size
 import androidx.compose.remote.creation.compose.shapes.RemoteRoundedCornerShape
@@ -135,11 +136,16 @@ fun RemoteHaPictureGlance(
       } else {
         GlanceImage(data, theme, RemoteModifier.fillMaxWidth().height(120.rdp))
       }
+      // The cells' 48dp touch targets fill the strip's 8dp vertical inset, and their row pulls in
+      // by the targets' extra width (negative spacing and an offset), so the 32dp circles sit
+      // exactly where an 8dp-spaced row of circles puts them. Neighbouring targets overlap only
+      // over
+      // that 8dp gap, never over a circle.
       RemoteRow(
         modifier =
           RemoteModifier.fillMaxWidth()
             .background(theme.cardBackground)
-            .padding(horizontal = 10.rdp, vertical = 8.rdp),
+            .padding(horizontal = 10.rdp),
         horizontalArrangement = RemoteArrangement.spacedBy(8.rdp),
         verticalAlignment = RemoteAlignment.CenterVertically,
       ) {
@@ -154,7 +160,15 @@ fun RemoteHaPictureGlance(
             overflow = TextOverflow.Ellipsis,
           )
         }
-        data.cells.forEach { cell -> Cell(cell, theme) }
+        if (data.cells.isNotEmpty()) {
+          RemoteRow(
+            modifier = RemoteModifier.offset((-CELL_TARGET_INSET_DP).rdp, 0.rdp),
+            horizontalArrangement = RemoteArrangement.spacedBy((8 - 2 * CELL_TARGET_INSET_DP).rdp),
+            verticalAlignment = RemoteAlignment.CenterVertically,
+          ) {
+            data.cells.forEach { cell -> Cell(cell, theme) }
+          }
+        }
       }
     }
   }
@@ -178,8 +192,6 @@ private fun GlanceImage(data: HaPictureGlanceData, theme: RemoteHaTheme, modifie
 
 @Composable
 private fun Cell(cell: HaPictureGlanceCell, theme: RemoteHaTheme) {
-  val click =
-    cell.tapAction.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
   val accent = haInk(cell.accent)
   val activeBg: RemoteColor = accent.copy(alpha = accent.alpha * 0.18f.rf)
   val inactiveBg: RemoteColor = theme.divider.copy(alpha = theme.divider.alpha * 0.5f.rf)
@@ -194,26 +206,37 @@ private fun Cell(cell: HaPictureGlanceCell, theme: RemoteHaTheme) {
     isActive?.select(accent, theme.secondaryText)
       ?: if (cell.initiallyActive) accent else theme.secondaryText
 
-  RemoteBox(
-    modifier =
-      RemoteModifier.then(click).size(32.rdp).clip(haControlShape(16, round = true)).background(bg),
-    contentAlignment = RemoteAlignment.Center,
+  RemoteHaTouchTarget(
+    CELL_DP,
+    CELL_DP,
+    cell.tapAction.toRemoteAction(),
+    entityName(cell.entityId, cell.label),
   ) {
-    HaStateIcon(
-      icon = cell.icon,
-      activeIcon = cell.activeIcon,
-      initiallyOn = cell.initiallyActive,
-      isOn = isActive,
-      activeWhenUnavailable = cell.activeIconWhenUnavailable,
-      initiallyAvailable = cell.initiallyAvailable,
-      isAvailable =
-        pairAvailability(cell.entityId, cell.activeIconWhenUnavailable, cell.initiallyAvailable),
-      tint = tint,
-      contentDescription = entityName(cell.entityId, cell.label),
-      modifier = RemoteModifier.size(18.rdp),
-    )
+    RemoteBox(
+      modifier =
+        RemoteModifier.size(CELL_DP.rdp).clip(haControlShape(16, round = true)).background(bg),
+      contentAlignment = RemoteAlignment.Center,
+    ) {
+      HaStateIcon(
+        icon = cell.icon,
+        activeIcon = cell.activeIcon,
+        initiallyOn = cell.initiallyActive,
+        isOn = isActive,
+        activeWhenUnavailable = cell.activeIconWhenUnavailable,
+        initiallyAvailable = cell.initiallyAvailable,
+        isAvailable =
+          pairAvailability(cell.entityId, cell.activeIconWhenUnavailable, cell.initiallyAvailable),
+        tint = tint,
+        contentDescription = null,
+        modifier = RemoteModifier.size(18.rdp),
+      )
+    }
   }
 }
+
+/** A picture glance cell's drawn circle, and how far its touch target reaches past it each side. */
+private const val CELL_DP = 32
+private const val CELL_TARGET_INSET_DP = (MinTouchTargetDp - CELL_DP) / 2
 
 // HA's `style.top` / `style.left` are CSS percentages of the
 // parent's box. RC has no fraction-based offset, so we lock the
