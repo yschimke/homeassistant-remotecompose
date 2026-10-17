@@ -11,9 +11,11 @@ import ee.schimke.ha.model.CardTypes
 import ee.schimke.ha.model.HaLiveBindings
 import ee.schimke.ha.model.HaSnapshot
 import ee.schimke.ha.rc.CardConverter
+import ee.schimke.ha.rc.CardSizeMode
 import ee.schimke.ha.rc.CardSnapshotBindings
 import ee.schimke.ha.rc.DesignTemplateInput
 import ee.schimke.ha.rc.HaStateColor
+import ee.schimke.ha.rc.LocalCardSizeMode
 import ee.schimke.ha.rc.components.HaPictureGlanceCell
 import ee.schimke.ha.rc.components.HaPictureGlanceData
 import ee.schimke.ha.rc.components.RemoteHaPictureGlance
@@ -33,6 +35,9 @@ class PictureGlanceCardConverter : CardConverter {
   override val cardType: String = CardTypes.PICTURE_GLANCE
 
   override fun naturalHeightDp(card: CardConfig, snapshot: HaSnapshot): Int = 168
+
+  override fun gridMinCellWidthDp(card: CardConfig, snapshot: HaSnapshot): Int =
+    PICTURE_MIN_CELL_WIDTH_DP
 
   /**
    * A picture glance renders from a card design: per cell, the entity's [EntityDesign] properties
@@ -131,6 +136,9 @@ class PictureGlanceCardConverter : CardConverter {
         cells = cells,
       ),
       modifier = modifier,
+      // Dashboard: the image keeps HA's `aspect_ratio`; a launcher / Wear cell keeps the band.
+      imageAspectRatio =
+        if (LocalCardSizeMode.current == CardSizeMode.Fixed) null else pictureAspectRatio(card),
     )
   }
 }

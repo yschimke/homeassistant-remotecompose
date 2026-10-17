@@ -44,7 +44,15 @@ internal object CompositeDesign {
       CardConfig(type = type, raw = obj)
     }
 
-  fun properties(card: CardConfig, snapshot: HaSnapshot): DesignProperties? {
+  /**
+   * [layout] is the container's own structure, as top-level enum properties (a grid's `columns` and
+   * `square`); [template] copies them back into the template card's config.
+   */
+  fun properties(
+    card: CardConfig,
+    snapshot: HaSnapshot,
+    layout: Map<String, Int> = emptyMap(),
+  ): DesignProperties? {
     val children = children(card)
     if (children.isEmpty() || children.size != (card.raw["cards"] as? JsonArray)?.size) return null
     val shapes = children.map { child ->
@@ -52,6 +60,7 @@ internal object CompositeDesign {
     }
     return DesignProperties.build {
       enum(COUNT, children.size)
+      for ((name, value) in layout) enum(name, value)
       children.forEachIndexed { k, child ->
         string("c$k.$TYPE", child.type)
         for ((name, value) in shapes[k].values) string("c$k.$name", value)
@@ -59,7 +68,11 @@ internal object CompositeDesign {
     }
   }
 
-  fun template(cardType: String, properties: DesignProperties): DesignTemplateInput? {
+  fun template(
+    cardType: String,
+    properties: DesignProperties,
+    layout: Map<String, (Int) -> JsonElement> = emptyMap(),
+  ): DesignTemplateInput? {
     val count = properties[COUNT]?.toIntOrNull() ?: return null
     var offset = 0
     val states = LinkedHashMap<String, EntityState>()
@@ -94,7 +107,16 @@ internal object CompositeDesign {
     val card =
       CardConfig(
         type = cardType,
-        raw = JsonObject(mapOf("type" to JsonPrimitive(cardType), "cards" to JsonArray(children))),
+        raw =
+          JsonObject(
+            buildMap {
+              put("type", JsonPrimitive(cardType))
+              for ((name, toConfig) in layout) {
+                properties[name]?.toIntOrNull()?.let { put(name, toConfig(it)) }
+              }
+              put("cards", JsonArray(children))
+            }
+          ),
       )
     return DesignTemplateInput(
       card,

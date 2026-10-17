@@ -57,7 +57,8 @@ import kotlinx.serialization.json.JsonPrimitive
  * `CompositionLocal`s from the outer tree.
  */
 private const val PICTURE_TILE_WIDTH_DP = 360
-private const val PICTURE_TILE_HEIGHT_DP = 160
+/** 360 dp at the picture card's default 16:9 (no `aspect_ratio`). */
+private const val PICTURE_TILE_HEIGHT_DP = 203
 private const val SAMPLE_PICTURE_BITMAP_PX = 512
 
 private val pictureSampleCard: CardConfig =

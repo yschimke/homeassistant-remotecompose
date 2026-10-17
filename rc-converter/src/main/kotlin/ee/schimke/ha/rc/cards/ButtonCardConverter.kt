@@ -15,6 +15,7 @@ import ee.schimke.ha.rc.CardWidthClass
 import ee.schimke.ha.rc.DesignTemplateInput
 import ee.schimke.ha.rc.HaStateColor
 import ee.schimke.ha.rc.LocalCardSizeMode
+import ee.schimke.ha.rc.LocalGridSquareCells
 import ee.schimke.ha.rc.RemoteMinSizeGate
 import ee.schimke.ha.rc.components.HaButtonData
 import ee.schimke.ha.rc.components.RemoteHaButton
@@ -58,6 +59,12 @@ class ButtonCardConverter : CardConverter {
   override fun naturalWidthClass(card: CardConfig, snapshot: HaSnapshot): CardWidthClass =
     CardWidthClass.Compact
 
+  /** The icon chip plus its padding, with a few characters of name: narrower and it's no button. */
+  override fun gridMinCellWidthDp(card: CardConfig, snapshot: HaSnapshot): Int = MinGridCellWidthDp
+
+  /** HA's square grid cell: the button centres its icon and name in it. */
+  override fun gridSquareCell(card: CardConfig, snapshot: HaSnapshot): Boolean = true
+
   /**
    * A plain entity button renders from a card design: the [EntityDesign] properties of its entity
    * plus `show_name`, which decides whether the name line exists at all.
@@ -76,7 +83,9 @@ class ButtonCardConverter : CardConverter {
   override fun Render(card: CardConfig, snapshot: HaSnapshot, modifier: RemoteModifier) {
     val data = buttonData(card, snapshot)
     when (LocalCardSizeMode.current) {
-      CardSizeMode.Wrap -> RenderButton(data, modifier)
+      // In a square grid cell (as narrow as MinGridCellWidthDp, so as short) the compact body
+      // keeps the icon and name inside the square.
+      CardSizeMode.Wrap -> RenderButton(data, modifier, compact = LocalGridSquareCells.current)
       CardSizeMode.Fixed -> AdaptiveButton(data, modifier)
     }
   }
@@ -119,6 +128,9 @@ class ButtonCardConverter : CardConverter {
      * short; a cell too short for the line now takes the icon-only tier rather than clipping it.
      */
     const val MinIconNameHeightDp = 80
+
+    /** Narrowest `grid` cell: the compact body (44 dp chip + 12 dp sides) plus a short name. */
+    const val MinGridCellWidthDp = 80
   }
 }
 

@@ -39,6 +39,9 @@ class PictureEntityCardConverter : CardConverter {
 
   override fun naturalHeightDp(card: CardConfig, snapshot: HaSnapshot): Int = 160
 
+  override fun gridMinCellWidthDp(card: CardConfig, snapshot: HaSnapshot): Int =
+    PICTURE_MIN_CELL_WIDTH_DP
+
   /**
    * A picture-entity card renders from a card design. The image is the slot's picture URL
    * (`CardDesignSlots.pictureUrl`), which playback resolves to the entity's own `entity_picture`;
@@ -130,8 +133,9 @@ class PictureEntityCardConverter : CardConverter {
       )
 
     when (LocalCardSizeMode.current) {
-      // Dashboard: the HA reference band (fixed natural height).
-      CardSizeMode.Wrap -> RemoteHaPictureEntity(data, modifier = modifier)
+      // Dashboard: HA's `aspect_ratio` — the height follows the live width.
+      CardSizeMode.Wrap ->
+        RemoteHaPictureEntity(data, modifier = modifier, aspectRatio = pictureAspectRatio(card))
       // Launcher / Wear: the image is the identity edge-to-edge —
       // it fills and crops the whole cell at every size (no
       // letterbox). A single width gate drops the name at the

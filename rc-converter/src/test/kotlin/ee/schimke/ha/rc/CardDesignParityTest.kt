@@ -909,6 +909,27 @@ class CardDesignParityTest {
       dark = false,
     )
 
+  /** The grid's own `columns` / `square` are structure: the template keeps them. */
+  @Test
+  fun gridOfButtonsWithColumns() =
+    assertParity(
+      "grid-columns",
+      card("grid") {
+        put("columns", 4)
+        put("square", false)
+        put(
+          "cards",
+          kotlinx.serialization.json.JsonArray(
+            listOf("light.kitchen", "switch.fan", "light.kitchen", "switch.fan").map { id ->
+              card("button") { put("entity", id) }.raw
+            }
+          ),
+        )
+      },
+      listStates,
+      dark = true,
+    )
+
   @Test
   fun nestedStacks() =
     assertParity(

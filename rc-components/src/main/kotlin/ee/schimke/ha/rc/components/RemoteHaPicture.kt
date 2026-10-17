@@ -34,6 +34,9 @@ import androidx.wear.compose.remote.material3.RemoteIcon
  * `picture` card — a static image with optional name overlay. RC alpha08 has no channel for
  * arbitrary HTTP images, so the renderer paints a tinted placeholder + caption. Hosts that wire an
  * image channel later can replace the placeholder without changing the converter / model boundary.
+ *
+ * [fillHeight] fills a host-fixed cell; otherwise a non-null [aspectRatio] (width ÷ height) sizes
+ * the card's height from its live width, and null keeps the legacy fixed 140 dp band.
  */
 @Composable
 @RemoteComposable
@@ -41,7 +44,15 @@ fun RemoteHaPicture(
   data: HaPictureCardData,
   modifier: RemoteModifier = RemoteModifier,
   fillHeight: Boolean = false,
+  aspectRatio: Float? = null,
 ) {
+  // Wrap with a ratio: height follows the live width (HA's `aspect_ratio`).
+  if (!fillHeight && aspectRatio != null) {
+    RemoteAspectRatioBox(aspectRatio, modifier) {
+      RemoteHaPicture(data, RemoteModifier.fillMaxSize(), fillHeight = true)
+    }
+    return
+  }
   val theme = haTheme()
   val click =
     data.tapAction.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
@@ -102,24 +113,27 @@ fun RemoteHaPicture(
 
 /**
  * `picture-glance` card — image with a strip of clickable entity cells across the bottom. Same
- * image-channel limitation as [RemoteHaPicture].
+ * image-channel limitation as [RemoteHaPicture]. [imageAspectRatio] (width ÷ height) sizes the
+ * image area from the card's live width; the strip sits below it.
  */
 @Composable
 @RemoteComposable
-fun RemoteHaPictureGlance(data: HaPictureGlanceData, modifier: RemoteModifier = RemoteModifier) {
+fun RemoteHaPictureGlance(
+  data: HaPictureGlanceData,
+  modifier: RemoteModifier = RemoteModifier,
+  imageAspectRatio: Float? = null,
+) {
   val theme = haTheme()
   RemoteBox(modifier = modifier.fillMaxWidth().then(cardChrome(theme.divider, theme.divider))) {
     RemoteColumn {
-      RemoteBox(
-        modifier = RemoteModifier.fillMaxWidth().height(120.rdp).background(theme.divider),
-        contentAlignment = RemoteAlignment.Center,
-      ) {
-        RemoteIcon(
-          imageVector = data.placeholderIcon.toRemoteImageVector(),
-          contentDescription = data.title?.let { cardTitle(it) } ?: "image".rs,
-          modifier = RemoteModifier.size(40.rdp),
-          tint = theme.placeholderAccent,
-        )
+      // The image area: its height follows the live width at [imageAspectRatio], or the legacy
+      // fixed 120 dp band when there is none.
+      if (imageAspectRatio != null) {
+        RemoteAspectRatioBox(imageAspectRatio) {
+          GlanceImage(data, theme, RemoteModifier.fillMaxSize())
+        }
+      } else {
+        GlanceImage(data, theme, RemoteModifier.fillMaxWidth().height(120.rdp))
       }
       RemoteRow(
         modifier =
@@ -143,6 +157,22 @@ fun RemoteHaPictureGlance(data: HaPictureGlanceData, modifier: RemoteModifier = 
         data.cells.forEach { cell -> Cell(cell, theme) }
       }
     }
+  }
+}
+
+@Composable
+@RemoteComposable
+private fun GlanceImage(data: HaPictureGlanceData, theme: RemoteHaTheme, modifier: RemoteModifier) {
+  RemoteBox(
+    modifier = modifier.background(theme.divider),
+    contentAlignment = RemoteAlignment.Center,
+  ) {
+    RemoteIcon(
+      imageVector = data.placeholderIcon.toRemoteImageVector(),
+      contentDescription = data.title?.let { cardTitle(it) } ?: "image".rs,
+      modifier = RemoteModifier.size(40.rdp),
+      tint = theme.placeholderAccent,
+    )
   }
 }
 
