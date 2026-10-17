@@ -621,6 +621,46 @@ class CardDesignParityTest {
         ),
     )
 
+  private val meterStates =
+    listOf(
+      entity("sensor.meter_import", "1.2", "friendly_name" to "Electricity Meter Import Rate"),
+      entity("sensor.meter_export", "0.4", "friendly_name" to "Electricity Meter Export Rate"),
+      entity("sensor.solar_power", "3.1", "friendly_name" to "solaredge Current power"),
+    )
+
+  private fun meterCard() =
+    card("history-graph") {
+      put("title", "Energy")
+      put("hours_to_show", 48)
+      putJsonArray("entities") {
+        addJsonObject {
+          put("entity", "sensor.meter_import")
+          put("name", "Import")
+        }
+        addJsonObject {
+          put("entity", "sensor.meter_export")
+          put("name", "Export")
+        }
+        add("sensor.solar_power")
+      }
+    }
+
+  /** No series has history: the one card-level empty state, names from `name:` overrides. */
+  @Test
+  fun historyGraphAllEmpty() =
+    assertParity("history-graph-empty", meterCard(), meterStates, dark = false)
+
+  /** Some series empty: graphs for the rest, one line for each empty series. */
+  @Test
+  fun historyGraphPartlyEmpty() =
+    assertParity(
+      "history-graph-partly-empty",
+      meterCard(),
+      meterStates,
+      dark = true,
+      history = mapOf("sensor.solar_power" to series(0, 2, 3, 1)),
+    )
+
   private fun stats(vararg means: Double) = means.mapIndexed { i, v ->
     ee.schimke.ha.model.StatisticPoint(
       kotlin.time.Instant.fromEpochMilliseconds(i * 3_600_000L),
