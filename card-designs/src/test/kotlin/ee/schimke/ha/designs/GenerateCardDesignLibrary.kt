@@ -29,6 +29,7 @@ import ee.schimke.ha.rc.CachedCardPreview
 import ee.schimke.ha.rc.CardDesignTemplates
 import ee.schimke.ha.rc.CardSnapshotBindings
 import ee.schimke.ha.rc.CardTemplatePlayback
+import ee.schimke.ha.rc.SystemHaClock
 import ee.schimke.ha.rc.androidXExperimentalWrap
 import ee.schimke.ha.rc.components.HaAction
 import ee.schimke.ha.rc.components.HaUberTheme
@@ -144,7 +145,7 @@ class GenerateCardDesignLibrary {
       render(
         out.resolve(previews.template!!),
         // As published: nothing pushed, so the template's own placeholders show.
-        CardTemplatePlayback(design.bytes, { NO_BINDINGS }, HaAction.None),
+        CardTemplatePlayback(design.bytes, { _, _ -> NO_BINDINGS }, HaAction.None),
         card = null,
         snapshot = null,
       )
@@ -182,7 +183,7 @@ class GenerateCardDesignLibrary {
 
   /** The values [playback] pushes for [example]: its preview's bindings, for the catalog. */
   private fun exampleBindings(playback: CardTemplatePlayback, example: Example) =
-    playback.bindings(example.snapshot).let { b ->
+    playback.bindings(example.snapshot, SystemHaClock).let { b ->
       buildMap<String, JsonPrimitive> {
         b.strings.forEach { (k, v) -> put(k, JsonPrimitive(v)) }
         b.booleans.forEach { (k, v) -> put(k, JsonPrimitive(v)) }

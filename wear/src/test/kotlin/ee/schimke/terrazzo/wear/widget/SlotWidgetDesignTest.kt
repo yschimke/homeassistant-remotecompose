@@ -296,7 +296,7 @@ class SlotWidgetDesignTest {
             template =
               CardTemplatePlayback(
                 bytes,
-                { CardSnapshotBindings(emptyMap(), emptyMap(), emptyMap(), emptyMap()) },
+                { _, _ -> CardSnapshotBindings(emptyMap(), emptyMap(), emptyMap(), emptyMap()) },
                 HaAction.None,
               ),
           ) {}
