@@ -156,6 +156,7 @@ internal fun JsonObjectBuilder.putStateBindings(state: EntityState) {
   val entityId = state.entityId
   put("$entityId.state", JsonPrimitive(formatState(state)))
   put("$entityId.is_on", JsonPrimitive(HaLiveBindings.isOn(entityId, state.state)))
+  put("$entityId.is_available", JsonPrimitive(HaLiveBindings.isAvailable(state.state)))
   putStateInt(entityId, state.state)
   putNumericState(entityId, state.state)
   HaLiveBindings.attributeFloats(entityId, state.attributes).forEach { (suffix, value) ->

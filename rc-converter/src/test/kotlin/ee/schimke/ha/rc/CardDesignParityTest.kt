@@ -365,6 +365,81 @@ class CardDesignParityTest {
       dark = false,
     )
 
+  // Availability: a template is captured available (placeholder `off`) and dims only once the
+  // pushed `<slot>.is_available` says otherwise, so these also prove the dimming follows the live
+  // binding rather than the capture.
+
+  private val unavailableStates =
+    listOf(
+      entity("light.kitchen", "unavailable", "friendly_name" to "Kitchen"),
+      entity(
+        "sensor.temp",
+        "unknown",
+        "device_class" to "temperature",
+        "unit_of_measurement" to "°C",
+      ),
+      entity("binary_sensor.front_door", "off", "device_class" to "door"),
+      entity("switch.fan", "on", "friendly_name" to "Fan"),
+    )
+
+  @Test
+  fun tileUnavailableMotion() =
+    assertParity(
+      "tile-unavailable-motion",
+      tile("binary_sensor.driveway", "Driveway"),
+      entity("binary_sensor.driveway", "unavailable", "device_class" to "motion"),
+      dark = false,
+    )
+
+  @Test
+  fun tileMotionOn() =
+    assertParity(
+      "tile-motion-on",
+      tile("binary_sensor.hall", "Hall"),
+      entity("binary_sensor.hall", "on", "device_class" to "motion"),
+      dark = false,
+    )
+
+  @Test
+  fun buttonUnavailable() =
+    assertParity(
+      "button-unavailable",
+      card("button") { put("entity", "switch.fan") },
+      entity("switch.fan", "unavailable", "friendly_name" to "Fan"),
+      dark = false,
+    )
+
+  @Test
+  fun tileProblemOnDark() =
+    assertParity(
+      "tile-problem-on",
+      tile("binary_sensor.hms", "HMS errors"),
+      entity("binary_sensor.hms", "on", "device_class" to "problem"),
+      dark = true,
+    )
+
+  @Test
+  fun tileConnectivityOff() =
+    assertParity(
+      "tile-connectivity-off",
+      tile("binary_sensor.broker", "MQTT broker"),
+      entity("binary_sensor.broker", "off", "device_class" to "connectivity"),
+      dark = false,
+    )
+
+  @Test
+  fun entitiesWithUnavailableRows() =
+    assertParity(
+      "entities-unavailable",
+      listCard("entities", "Downstairs"),
+      unavailableStates,
+      dark = false,
+    )
+
+  @Test
+  fun glanceWithUnavailableCellsDark() =
+    assertParity("glance-unavailable", listCard("glance", null), unavailableStates, dark = true)
+
   @Test
   fun alarmPanelArmedAway() =
     assertParity(
@@ -635,6 +710,46 @@ class CardDesignParityTest {
           "sensor.temp" to series(19, 21, 20, 23, 22),
           "sensor.humidity" to series(40, 45, 52, 48),
         ),
+    )
+
+  private val meterStates =
+    listOf(
+      entity("sensor.meter_import", "1.2", "friendly_name" to "Electricity Meter Import Rate"),
+      entity("sensor.meter_export", "0.4", "friendly_name" to "Electricity Meter Export Rate"),
+      entity("sensor.solar_power", "3.1", "friendly_name" to "solaredge Current power"),
+    )
+
+  private fun meterCard() =
+    card("history-graph") {
+      put("title", "Energy")
+      put("hours_to_show", 48)
+      putJsonArray("entities") {
+        addJsonObject {
+          put("entity", "sensor.meter_import")
+          put("name", "Import")
+        }
+        addJsonObject {
+          put("entity", "sensor.meter_export")
+          put("name", "Export")
+        }
+        add("sensor.solar_power")
+      }
+    }
+
+  /** No series has history: the one card-level empty state, names from `name:` overrides. */
+  @Test
+  fun historyGraphAllEmpty() =
+    assertParity("history-graph-empty", meterCard(), meterStates, dark = false)
+
+  /** Some series empty: graphs for the rest, one line for each empty series. */
+  @Test
+  fun historyGraphPartlyEmpty() =
+    assertParity(
+      "history-graph-partly-empty",
+      meterCard(),
+      meterStates,
+      dark = true,
+      history = mapOf("sensor.solar_power" to series(0, 2, 3, 1)),
     )
 
   private fun stats(vararg means: Double) = means.mapIndexed { i, v ->

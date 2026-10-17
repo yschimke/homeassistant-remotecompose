@@ -30,6 +30,7 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.add
 import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
@@ -51,17 +52,23 @@ class HistoryGraphCardConverter : CardConverter {
     cardDataSignature(cardEntityIds(card), snapshot)
 
   override fun naturalHeightDp(card: CardConfig, snapshot: HaSnapshot): Int {
-    val rows = entityIds(card).size.coerceAtLeast(1)
+    val ids = entityIds(card)
     val title = if (card.raw["title"] != null) 24 else 0
-    // ~52 dp per row (label + sparkline + spacing) + range label + padding.
-    return title + 16 + 52 * rows + 20
+    val graphed = ids.count { SeriesDesign.hasData(snapshot, it) }
+    // No series has a line: one empty-state message plus a line of names.
+    if (ids.isNotEmpty() && graphed == 0) return title + 16 + 44 + 20
+    // ~52 dp per graphed row (label + sparkline + spacing), ~22 dp per empty row (label only),
+    // + range label + padding.
+    return title + 16 + 52 * graphed.coerceAtLeast(1) + 22 * (ids.size - graphed) + 20
   }
 
   /**
    * A history graph renders from a card design: per row, the entity's [EntityDesign] properties
    * (accent) and whether it has a line ([SeriesDesign]); plus the row count and whether there is a
-   * title. Names, summaries (`<slot>.summary`), samples, ranges, the title and the range label are
-   * bindings.
+   * title. Whether every row has no line (the card-level empty state) follows from those. Names
+   * (`<slot>.name`, a row's `name:` else its friendly name), summaries (`<slot>.summary`), samples,
+   * ranges, the title, the range label (`card.range`) and the empty-state message (`card.empty`)
+   * are bindings.
    */
   override fun designProperties(card: CardConfig, snapshot: HaSnapshot): DesignProperties? {
     if (!TEMPLATE_CONFIG_KEYS.containsAll(card.raw.keys)) return null
@@ -107,15 +114,13 @@ class HistoryGraphCardConverter : CardConverter {
   override fun designBindings(card: CardConfig, snapshot: HaSnapshot): CardSnapshotBindings {
     val ids = entityIds(card)
     val strings = buildMap {
-      put("card.range", rangeLabel(card))
+      put("card.range", historyRangeLabel(card))
+      put("card.empty", historyEmptyLabel(card))
+      val names = historyRowNames(card, snapshot)
       ids.forEachIndexed { i, id ->
         val slot = CardDesignSlots.slotId(CardDesignSlots.domainOf(id), i)
         put("$slot.summary", summarise(snapshot.history[id].orEmpty()))
-        // Rows name their entity by friendly name only, never a per-row `name:`.
-        put(
-          "$slot.name",
-          snapshot.states[id]?.attributes?.get("friendly_name")?.jsonPrimitive?.content ?: id,
-        )
+        put("$slot.name", names[i])
       }
     }
     return CardSnapshotBindings(
@@ -131,9 +136,10 @@ class HistoryGraphCardConverter : CardConverter {
     val title = card.raw["title"]?.jsonPrimitive?.content
     val ids = entityIds(card)
 
-    val rows = ids.map { id ->
+    val names = historyRowNames(card, snapshot)
+    val rows = ids.mapIndexed { i, id ->
       val entity = snapshot.states[id]
-      val name = entity?.attributes?.get("friendly_name")?.jsonPrimitive?.content ?: id
+      val name = names[i]
       val history = snapshot.history[id].orEmpty()
       val numeric = history.mapNotNull { it.state.toFloatOrNull() }
       HaHistoryGraphRow(
@@ -146,11 +152,17 @@ class HistoryGraphCardConverter : CardConverter {
       )
     }
 
-    val data = HaHistoryGraphData(title = title, rangeLabel = rangeLabel(card), rows = rows)
+    val data =
+      HaHistoryGraphData(
+        title = title,
+        rangeLabel = historyRangeLabel(card),
+        rows = rows,
+        emptyLabel = historyEmptyLabel(card),
+      )
 
     when (LocalCardSizeMode.current) {
       // Dashboard: the full per-row graph (HA reference).
-      CardSizeMode.Wrap -> RemoteHaHistoryGraph(data, modifier = modifier)
+      CardSizeMode.Wrap -> RemoteHaHistoryGraph(data, modifier = modifier, singleEmptyState = true)
       // Launcher / Wear: a single width gate (alpha010 collapses
       // multi-rung ladders to tier 0 — #224, see GaugeCardConverter).
       // Narrow → identity tier (first spark + latest value); wider →
@@ -166,7 +178,7 @@ class HistoryGraphCardConverter : CardConverter {
           if (tier == 0) {
             RemoteHaHistoryGraphIdentity(data, RemoteModifier.fillMaxWidth())
           } else {
-            RemoteHaHistoryGraph(data, RemoteModifier.fillMaxWidth())
+            RemoteHaHistoryGraph(data, RemoteModifier.fillMaxWidth(), singleEmptyState = true)
           }
         }
     }
@@ -185,19 +197,66 @@ private fun summarise(points: List<HistoryPoint>): String {
   return "${fmt(min)} – ${fmt(max)} (${points.size})"
 }
 
-private fun entityIds(card: CardConfig): List<String> {
+private fun entityIds(card: CardConfig): List<String> = entityRows(card).map { it.first }
+
+/** Each `entities:` row as its entity id and its own `name:`, when it sets a plain string one. */
+private fun entityRows(card: CardConfig): List<Pair<String, String?>> {
   val arr: JsonArray = card.raw["entities"]?.jsonArray ?: return emptyList()
   return arr.mapNotNull { el ->
     when (el) {
-      is JsonPrimitive -> el.content
-      is JsonObject -> el["entity"]?.jsonPrimitive?.content
+      is JsonPrimitive -> el.content to null
+      is JsonObject ->
+        el["entity"]?.jsonPrimitive?.content?.let { id ->
+          id to (el["name"] as? JsonPrimitive)?.takeIf { it.isString }?.content
+        }
       else -> null
     }
   }
 }
 
+/**
+ * Each row's display name, in row order. As in Home Assistant's history-graph card, a row's own
+ * `name:` wins; otherwise the entity's `friendly_name`, else its id. Nothing is stripped from
+ * either.
+ */
+internal fun historyRowNames(card: CardConfig, snapshot: HaSnapshot): List<String> =
+  entityRows(card).map { (id, name) ->
+    name
+      ?: snapshot.states[id]?.attributes?.get("friendly_name")?.jsonPrimitive?.contentOrNull
+      ?: id
+  }
+
 private val TEMPLATE_CONFIG_KEYS = setOf("type", "title", "entities", "hours_to_show")
 private const val HAS_TITLE = "has_title"
+private const val DEFAULT_HOURS = 24.0
 
-private fun rangeLabel(card: CardConfig): String =
-  "Last ${card.raw["hours_to_show"]?.jsonPrimitive?.content?.toIntOrNull() ?: 24}h"
+private fun hoursToShow(card: CardConfig): Double =
+  card.raw["hours_to_show"]?.jsonPrimitive?.contentOrNull?.toDoubleOrNull()?.takeIf { it > 0 }
+    ?: DEFAULT_HOURS
+
+/** The card's subtitle: "Last 24 hours", "Last 7 days", "Last 2 weeks". */
+internal fun historyRangeLabel(card: CardConfig): String =
+  historyWindow(hoursToShow(card)).replaceFirstChar { it.uppercase() }
+
+/** The card-level empty state: "No history in the last 2 days". */
+internal fun historyEmptyLabel(card: CardConfig): String =
+  "No history in the ${historyWindow(hoursToShow(card))}"
+
+/**
+ * `hours_to_show` as words, lower case: "last 6 hours", "last 7 days", "last 2 weeks".
+ *
+ * Under 48 hours reads in hours ("last 24 hours", "last 36 hours"); whole days from 2 up read in
+ * days ("last 2 days", "last 7 days", "last 30 days") unless they are 2 or more whole weeks ("last
+ * 2 weeks"); anything else stays in hours ("last 50 hours"), and under an hour in minutes.
+ */
+internal fun historyWindow(hours: Double): String {
+  fun plural(n: Long, unit: String) = if (n == 1L) "last $unit" else "last $n ${unit}s"
+  val wholeHours = hours.toLong()
+  return when {
+    hours < 1 -> plural(Math.round(hours * 60).coerceAtLeast(1), "minute")
+    hours != wholeHours.toDouble() -> "last ${"%.1f".format(java.util.Locale.ROOT, hours)} hours"
+    wholeHours < 48 || wholeHours % 24 != 0L -> plural(wholeHours, "hour")
+    (wholeHours / 24) % 7 == 0L && wholeHours / 24 >= 14 -> plural(wholeHours / 168, "week")
+    else -> plural(wholeHours / 24, "day")
+  }
+}
