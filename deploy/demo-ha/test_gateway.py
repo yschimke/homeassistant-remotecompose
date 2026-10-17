@@ -8,6 +8,7 @@ from aiohttp import ClientSession, WSMsgType, web
 from aiohttp.test_utils import TestClient, TestServer
 
 from gateway import Gateway, create_app
+from verify_public import verify
 
 
 def state(value='21.5'):
@@ -23,6 +24,7 @@ class GatewayTest(unittest.IsolatedAsyncioTestCase):
         self.requests = []
         entities = json.loads((Path(__file__).parent / 'entities.json').read_text())
         self.rows = [dict(state(), entity_id=entity) for entity in entities]
+        next(s for s in self.rows if s['entity_id'] == 'sensor.demo_battery')['state'] = '78'
         self.rows.append(dict(state(), entity_id='sensor.private_device'))
         async def upstream(request):
             self.requests.append((request.method, request.path, request.headers.get('Authorization')))
@@ -110,6 +112,38 @@ class GatewayTest(unittest.IsolatedAsyncioTestCase):
             await self.g.poll_once(self.session)
         self.assertFalse(self.g.fresh())
         self.assertEqual((await self.client.get('/healthz')).status, 503)
+
+    async def test_public_verifier_runs_without_private_credentials(self):
+        await verify(str(self.client.make_url('')).rstrip('/'), stream=False, wait_ready=1)
+        self.assertEqual(self.requests, [('GET', '/api/states', 'Bearer secret-token')])
+
+    async def test_public_verifier_accepts_ha_numeric_format_and_rejects_wrong_battery(self):
+        battery = next(s for s in self.rows if s['entity_id'] == 'sensor.demo_battery')
+        battery['state'] = '78.0'
+        await self.g.poll_once(self.session)
+        await verify(str(self.client.make_url('')).rstrip('/'), stream=False)
+        for value in ['77.0', 'unknown', 'unavailable', 'NaN', 'Infinity']:
+            with self.subTest(value=value):
+                battery['state'] = value
+                await self.g.poll_once(self.session)
+                with self.assertRaisesRegex(AssertionError, 'battery'):
+                    await verify(str(self.client.make_url('')).rstrip('/'), stream=False)
+
+    async def test_readiness_deadline_includes_slow_request_time(self):
+        async def slow_health(request):
+            await asyncio.sleep(2)
+            return web.json_response({'read_only': True})
+        app = web.Application()
+        app.router.add_get('/healthz', slow_health)
+        server = TestServer(app)
+        await server.start_server()
+        started = time.monotonic()
+        try:
+            with self.assertRaisesRegex(RuntimeError, 'readiness window'):
+                await verify(str(server.make_url('')).rstrip('/'), stream=False, wait_ready=1)
+            self.assertLess(time.monotonic() - started, 1.7)
+        finally:
+            await server.close()
 
     async def test_stale_backend_is_not_reported_healthy(self):
         self.g.updated = time.monotonic() - 60

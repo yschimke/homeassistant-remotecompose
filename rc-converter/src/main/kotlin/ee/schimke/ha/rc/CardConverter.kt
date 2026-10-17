@@ -184,6 +184,16 @@ interface CardConverter {
   fun gridSquareCell(card: CardConfig, snapshot: HaSnapshot): Boolean = false
 
   /**
+   * Whether this card keeps a `grid` column's width rather than spanning a short row: true for a
+   * [gridSquareCell] and for the picture family, whose height follows their width, so a picture
+   * stays a column's square instead of growing as wide (and tall) as the grid. A grid with such a
+   * card keeps HA's columns: its short last row isn't stretched, and a grid with fewer cards than
+   * columns still lays them out a column wide.
+   */
+  fun gridKeepsColumnWidth(card: CardConfig, snapshot: HaSnapshot): Boolean =
+    gridSquareCell(card, snapshot)
+
+  /**
    * The comfortable default size this card wants when pinned as a launcher widget, in dp — the cell
    * it should occupy before the user resizes it.
    *

@@ -13,6 +13,8 @@ import ee.schimke.ha.rc.HaClock
 import ee.schimke.ha.rc.components.CARD_BINDING_PREFIX
 import ee.schimke.ha.rc.components.HaAction
 import ee.schimke.ha.rc.components.childCardBindingPrefix
+import ee.schimke.ha.rc.framedDesignProperties
+import ee.schimke.ha.rc.framedDesignTemplate
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
@@ -56,7 +58,8 @@ internal object CompositeDesign {
     val children = children(card)
     if (children.isEmpty() || children.size != (card.raw["cards"] as? JsonArray)?.size) return null
     val shapes = children.map { child ->
-      registry.get(child.type)?.designProperties(child, snapshot) ?: return null
+      // Framed: an unavailable child's design carries its frame, as it would standing alone.
+      registry.get(child.type)?.framedDesignProperties(child, snapshot) ?: return null
     }
     return DesignProperties.build {
       enum(COUNT, children.size)
@@ -88,7 +91,7 @@ internal object CompositeDesign {
               .filter { it.key.startsWith(prefix) && it.key != "$prefix$TYPE" }
               .joinToString(";") { "${it.key.removePrefix(prefix)}=${it.value}" }
           )
-        val input = registry.get(type)?.designTemplate(own) ?: return null
+        val input = registry.get(type)?.framedDesignTemplate(own) ?: return null
         val slots = CardDesignSlots.slotEntities(input.card)?.size ?: 0
         val rename = { id: String -> offsetSlots(id, offset) }
         for ((id, entity) in input.snapshot.states) {

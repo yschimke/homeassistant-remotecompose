@@ -6,18 +6,27 @@ on:
   pull_request:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      wear-only:
+        description: Run only the Wear OS 7 emulator suite
+        type: boolean
+        default: false
 
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
+  wear-emulator:
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.wear-only }}
+    uses: ./.github/workflows/wear-emulator.yml
+
   ios:
     name: iOS app and shared framework
     # Skip on release-please PRs: they only bump the manifest, CHANGELOG and
     # version lines, all of which main's push CI already built. Matches the
     # bot-authored PR (or a bot dispatch); humans and main always run it.
-    if: ${{ !(startsWith(github.head_ref || github.ref_name, 'release-please--') && (github.event.pull_request.user.login || github.actor) == 'github-actions[bot]') }}
+    if: ${{ inputs.wear-only != true && !(startsWith(github.head_ref || github.ref_name, 'release-please--') && (github.event.pull_request.user.login || github.actor) == 'github-actions[bot]') }}
     runs-on: macos-15
     timeout-minutes: 45
     steps:
@@ -47,7 +56,7 @@ jobs:
   build:
     name: Assemble (debug)
     # Release-please guard: see the ios job.
-    if: ${{ !(startsWith(github.head_ref || github.ref_name, 'release-please--') && (github.event.pull_request.user.login || github.actor) == 'github-actions[bot]') }}
+    if: ${{ inputs.wear-only != true && !(startsWith(github.head_ref || github.ref_name, 'release-please--') && (github.event.pull_request.user.login || github.actor) == 'github-actions[bot]') }}
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
@@ -65,7 +74,7 @@ jobs:
   test:
     name: Unit tests
     # Release-please guard: see the ios job.
-    if: ${{ !(startsWith(github.head_ref || github.ref_name, 'release-please--') && (github.event.pull_request.user.login || github.actor) == 'github-actions[bot]') }}
+    if: ${{ inputs.wear-only != true && !(startsWith(github.head_ref || github.ref_name, 'release-please--') && (github.event.pull_request.user.login || github.actor) == 'github-actions[bot]') }}
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
@@ -85,7 +94,7 @@ jobs:
       # render before `./gradlew test`. (The `compose-preview` workflow
       # still publishes baselines / PR comments separately; this step is
       # local to the test job and doesn't push anything.)
-      - uses: yschimke/compose-ai-tools/.github/actions/install@v2.60.0
+      - uses: yschimke/compose-ai-tools/.github/actions/install@v2.68.0
         with:
           version: catalog
           catalog-key: compose-preview-plugin
@@ -113,7 +122,7 @@ jobs:
   lint:
     name: Android lint
     # Release-please guard: see the ios job.
-    if: ${{ !(startsWith(github.head_ref || github.ref_name, 'release-please--') && (github.event.pull_request.user.login || github.actor) == 'github-actions[bot]') }}
+    if: ${{ inputs.wear-only != true && !(startsWith(github.head_ref || github.ref_name, 'release-please--') && (github.event.pull_request.user.login || github.actor) == 'github-actions[bot]') }}
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
@@ -140,6 +149,9 @@ jobs:
 
   android-test:
     name: Instrumented tests (API 36)
+    # Only a focused manual Wear dispatch skips this job. PR matrix checks
+    # still expand, including the release-please no-op checks below.
+    if: ${{ inputs.wear-only != true }}
     runs-on: ubuntu-latest
     timeout-minutes: 60
     # Release-please guard (see the ios job), applied per step instead of at

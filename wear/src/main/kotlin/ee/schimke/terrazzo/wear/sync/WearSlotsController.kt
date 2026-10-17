@@ -18,6 +18,7 @@ import ee.schimke.terrazzo.wear.widget.Slot3SmallWidgetService
 import ee.schimke.terrazzo.wear.widget.Slot4LargeWidgetService
 import ee.schimke.terrazzo.wear.widget.Slot4SmallWidgetService
 import ee.schimke.terrazzo.wear.widget.WearCardDataTier
+import ee.schimke.terrazzo.wear.widget.refreshAllSlotWidgets
 import ee.schimke.terrazzo.wear.widget.wearCardDataTier
 import ee.schimke.terrazzo.wearsync.proto.PinnedCardSet
 import ee.schimke.terrazzo.wearsync.proto.SlotSizePref
@@ -77,7 +78,12 @@ class WearSlotsController(
       // before /wear/pinned both need a re-apply, not just slot
       // edits. `combine` emits on every change of either source.
       combine(repo.slots, repo.pinned) { slots, pinned -> slots to pinned }
-        .collectLatest { (slots, pinned) -> applySlots(slots, pinned) }
+        .collectLatest { (slots, pinned) ->
+          applySlots(slots, pinned)
+          // Reassigning a placed slot or editing its phone style must redraw the installed
+          // widget, even when the provider's enabled state did not change.
+          refreshAllSlotWidgets(context.applicationContext)
+        }
     }
   }
 

@@ -6,8 +6,25 @@ import json
 import aiohttp
 
 
-async def verify(base, stream):
+async def wait_until_ready(session, base, seconds):
+    loop = asyncio.get_running_loop()
+    deadline = loop.time() + seconds
+    while (remaining := deadline - loop.time()) > 0:
+        try:
+            timeout = aiohttp.ClientTimeout(total=min(2, remaining))
+            async with session.get(base + '/healthz', timeout=timeout) as response:
+                if response.status == 200:
+                    return
+        except (aiohttp.ClientError, asyncio.TimeoutError):
+            pass
+        await asyncio.sleep(min(1, max(0, deadline - loop.time())))
+    raise RuntimeError('Demo did not become healthy within the readiness window')
+
+
+async def verify(base, stream, wait_ready=0):
     async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=15)) as session:
+        if wait_ready > 0:
+            await wait_until_ready(session, base, wait_ready)
         async with session.get(base + '/healthz') as r:
             assert r.status == 200, f'healthz: HTTP {r.status}'
             assert (await r.json())['read_only'] is True
@@ -16,7 +33,12 @@ async def verify(base, stream):
             rows = await r.json()
             assert len(rows) == 6, f'Expected six generic entities, got {len(rows)}'
             battery = next(s for s in rows if s['entity_id'] == 'sensor.demo_battery')
-            assert battery['state'] == '78'
+            # HA numeric sensors can serialize the configured 78 as "78.0".
+            try:
+                battery_value = float(battery['state'])
+            except (ValueError, TypeError):
+                raise AssertionError(f"Expected demo battery 78%, got {battery['state']!r}") from None
+            assert battery_value == 78, f"Expected demo battery 78%, got {battery['state']!r}"
             assert all(s['entity_id'].split('.')[1].startswith('demo_') for s in rows)
         async with session.get(base + '/dashboard') as r:
             assert r.status == 200
@@ -76,5 +98,6 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('base', help='e.g. https://ha.coo.ee/demo-ha')
     parser.add_argument('--stream', action='store_true', help='Wait up to 80 seconds for a real update')
+    parser.add_argument('--wait-ready', type=int, default=0, help='Wait this many seconds for healthy startup')
     args = parser.parse_args()
-    asyncio.run(verify(args.base.rstrip('/'), args.stream))
+    asyncio.run(verify(args.base.rstrip('/'), args.stream, args.wait_ready))

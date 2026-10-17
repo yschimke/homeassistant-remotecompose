@@ -954,7 +954,7 @@ export class HaConnection {
     const socket = new WebSocket(url);
     await new Promise((resolve, reject) => {
       socket.onmessage = (message) => {
-        const msg = JSON.parse(message.data);
+        const msg = (this.decodeMessage ?? JSON.parse)(message.data);
         if (msg.type === 'auth_required') socket.send(JSON.stringify({ type: 'auth', access_token: token }));
         else if (msg.type === 'auth_ok') resolve();
         else if (msg.type === 'auth_invalid') {
@@ -967,7 +967,7 @@ export class HaConnection {
     });
     this.socket = socket;
     this.retryMs = 1000;
-    socket.onmessage = (message) => this.receive(JSON.parse(message.data));
+    socket.onmessage = (message) => this.receive((this.decodeMessage ?? JSON.parse)(message.data));
     socket.onclose = () => this.lost();
     for (const sub of this.subscriptions) this.startSubscription(sub);
     this.onState('live');
@@ -1190,6 +1190,7 @@ const BaseElement = globalThis.HTMLElement ?? class {};
  * - `theme`: `light`, `dark` or `auto` (default).
  * - `height`: a fixed CSS height in px (default: the card's own).
  * - `read-only`: taps run no service calls.
+ * - `require-host-bindings`: reject templates declaring data this host cannot populate.
  *
  * Events (bubbling, composed): `ha-card-action` (cancelable, before a tap runs: detail is the
  * action), `ha-card-more-info` and `ha-card-navigate` (actions a page handles itself). The
@@ -1198,7 +1199,7 @@ const BaseElement = globalThis.HTMLElement ?? class {};
  */
 export class HaCardElement extends BaseElement {
   static get observedAttributes() {
-    return ['hass', 'card', 'design', 'design-key', 'card-style', 'library', 'theme', 'height'];
+    return ['hass', 'card', 'design', 'design-key', 'card-style', 'library', 'theme', 'height', 'require-host-bindings'];
   }
 
   constructor() {
@@ -1355,6 +1356,24 @@ export class HaCardElement extends BaseElement {
     this.player = player;
     this.pushed.clear();
     patchStringOverrides(player.getRemoteContext());
+    if (this.hasAttribute('require-host-bindings')) {
+      const bindings = slotBindings(card, this.states);
+      for (const [name, variable] of player.getRemoteContext().namedVariables) {
+        const key = name.replace(/^USER:/, '');
+        // Colors are template/theme constants. Every data declaration must have a host value;
+        // leaving a converter-specific declaration alone would display the library's fixture.
+        const supported = variable.type === 2 ||
+          (variable.type === 0 && Object.hasOwn(bindings.strings, key)) ||
+          (variable.type === 1 && Object.hasOwn(bindings.floats, key)) ||
+          (variable.type === 4 && (Object.hasOwn(bindings.ints, key) || Object.hasOwn(bindings.booleans, key)));
+        if (!supported) {
+          player.destroy();
+          this.player = null;
+          this.canvas.style.visibility = 'hidden';
+          throw new Error('this template needs converter bindings unavailable in this host');
+        }
+      }
+    }
     doc.addActionCallback({
       onAction: (name, value) => {
         if (name === HA_ACTION_NAME) this.tap(resolveTap(card, value));
@@ -1497,6 +1516,8 @@ export class HaCardElement extends BaseElement {
   }
 }
 
-if (globalThis.customElements && !customElements.get('ha-card')) {
+// Hosts with their own <ha-card> (Home Assistant) import with ?register=false.
+if (globalThis.customElements && !customElements.get('ha-card') &&
+    new URL(import.meta.url).searchParams.get('register') !== 'false') {
   customElements.define('ha-card', HaCardElement);
 }

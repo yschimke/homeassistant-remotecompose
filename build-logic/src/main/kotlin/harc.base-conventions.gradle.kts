@@ -84,6 +84,19 @@ run {
   }
 }
 
+// compose-preview renders at the module's compileSdk, capped at its highest supported level: 36
+// through plugin 2.60, 37 from 2.66. Under Robolectric's SDK 37 sandbox most RemoteCompose card
+// previews capture before their player draws and come out blank, so render at 36 unless a module
+// pins its own `composePreview.sdkVersion`. The plugin is usually injected by the CLI's init script
+// rather than declared here, so its extension type isn't on this classpath.
+pluginManager.withPlugin("ee.schimke.composeai.preview") {
+  @Suppress("UNCHECKED_CAST")
+  val sdkVersion =
+    extensions.getByName("composePreview").withGroovyBuilder { getProperty("sdkVersion") }
+      as Property<Int>
+  sdkVersion.convention(36)
+}
+
 // Unify every `org.hamcrest:*` coord on the 2.x unified jar. JUnit 4 and
 // Espresso still pull `hamcrest-core:1.3` (and the split `-library` /
 // `-integration` jars) transitively; their classes overlap with the

@@ -73,6 +73,7 @@ fun WrapAdaptiveRemoteDocumentPlayer(
   bitmapLoader: BitmapLoader = BitmapLoader.UNSUPPORTED,
   init: (RemoteComposePlayer) -> Unit = {},
   onNamedAction: (name: String, value: Any?) -> Unit = { _, _ -> },
+  contentDescription: String? = null,
 ) {
   val context = LocalContext.current
   BoxWithConstraints(modifier = modifier) {
@@ -109,6 +110,7 @@ fun WrapAdaptiveRemoteDocumentPlayer(
             addIdActionListener { id, value -> onNamedAction(id.toString(), value) }
           }
         }
+      view.contentDescription = contentDescription
       // Swap the embedded View when a resize produces a new instance.
       key(view) { AndroidView(factory = { view }, modifier = Modifier.fillMaxSize()) }
     } else {
@@ -127,6 +129,7 @@ fun WrapAdaptiveRemoteDocumentPlayer(
             addIdActionListener { id, value -> onNamedAction(id.toString(), value) }
           }
         }
+      view.contentDescription = contentDescription
       val widthDp = with(density) { clampWarmupDimension(view.measuredWidth, maxWPx).toDp() }
       val heightDp = with(density) { clampWarmupDimension(view.measuredHeight, maxHPx).toDp() }
       Box(modifier = Modifier.size(widthDp, heightDp)) {

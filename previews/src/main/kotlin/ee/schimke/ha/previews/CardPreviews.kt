@@ -155,11 +155,11 @@ private fun entityCard() = card("""{"type":"entity","entity":"sensor.living_room
 
 // ——— entities ———
 
-@Preview(name = "entities (light)", showBackground = false, widthDp = 381, heightDp = 169)
+@Preview(name = "entities (light)", showBackground = false, widthDp = 381, heightDp = 196)
 @Composable
 fun Entities_Light() = CardHost(HaTheme.Light) { RenderChild(entitiesCard(), Fixtures.mixed) }
 
-@Preview(name = "entities (dark)", showBackground = false, widthDp = 381, heightDp = 169)
+@Preview(name = "entities (dark)", showBackground = false, widthDp = 381, heightDp = 196)
 @Composable
 fun Entities_Dark() = CardHost(HaTheme.Dark) { RenderChild(entitiesCard(), Fixtures.mixed) }
 
@@ -227,12 +227,12 @@ fun Entities_Availability_Dark() =
 fun Glance_Availability_Light() =
   CardHost(HaTheme.Light) { RenderChild(availabilityGlanceCard(), Fixtures.availability) }
 
-@Preview(name = "tiles availability (light)", showBackground = false, widthDp = 381, heightDp = 200)
+@Preview(name = "tiles availability (light)", showBackground = false, widthDp = 381, heightDp = 260)
 @Composable
 fun Tiles_Availability_Light() =
   CardHost(HaTheme.Light) { RenderChild(availabilityTilesCard(), Fixtures.availability) }
 
-@Preview(name = "tiles availability (dark)", showBackground = false, widthDp = 381, heightDp = 200)
+@Preview(name = "tiles availability (dark)", showBackground = false, widthDp = 381, heightDp = 260)
 @Composable
 fun Tiles_Availability_Dark() =
   CardHost(HaTheme.Dark) { RenderChild(availabilityTilesCard(), Fixtures.availability) }
@@ -456,11 +456,11 @@ private fun gridTilesCard() =
 // would couple per-card state updates and defeat the widget-per-card
 // model.
 
-@Preview(name = "dashboard (light)", showBackground = false, widthDp = 381, heightDp = 411)
+@Preview(name = "dashboard (light)", showBackground = false, widthDp = 381, heightDp = 431)
 @Composable
 fun Dashboard_Light() = DashboardHost(HaTheme.Light)
 
-@Preview(name = "dashboard (dark)", showBackground = false, widthDp = 381, heightDp = 411)
+@Preview(name = "dashboard (dark)", showBackground = false, widthDp = 381, heightDp = 431)
 @Composable
 fun Dashboard_Dark() = DashboardHost(HaTheme.Dark)
 
@@ -492,7 +492,7 @@ private fun DashboardHost(theme: HaTheme) {
         RemoteModifier.fillMaxWidth(),
       )
     }
-    PlayerSlot(theme, heightDp = 128) {
+    PlayerSlot(theme, heightDp = 148) {
       RenderChild(
         card(
           """{"type":"entities","title":"Living Room","entities":[
@@ -1141,14 +1141,14 @@ private fun mediaControlCard() =
 
 // ——— todo-list ———
 
-@Preview(name = "todo-list (light)", showBackground = false, widthDp = 320, heightDp = 220)
+@Preview(name = "todo-list (light)", showBackground = false, widthDp = 320, heightDp = 250)
 @Composable
 fun TodoList_Light() =
   CardHost(HaTheme.Light) {
     RenderChild(todoListCard(), Fixtures.shoppingList, RemoteModifier.fillMaxWidth())
   }
 
-@Preview(name = "todo-list (dark)", showBackground = false, widthDp = 320, heightDp = 220)
+@Preview(name = "todo-list (dark)", showBackground = false, widthDp = 320, heightDp = 250)
 @Composable
 fun TodoList_Dark() =
   CardHost(HaTheme.Dark) {

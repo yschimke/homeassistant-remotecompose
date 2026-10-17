@@ -71,7 +71,11 @@ data class HaConfig(val baseUrl: String, val accessToken: String)
  * The connection is held open; command IDs are monotonic and responses are matched in a receive
  * loop. Not a subscription client yet — cards work from a point-in-time [HaSnapshot].
  */
-class HaClient(private val config: HaConfig, engine: HttpClientEngine? = null) {
+class HaClient(
+  private val config: HaConfig,
+  engine: HttpClientEngine? = null,
+  private val accessTokenProvider: (suspend () -> String)? = null,
+) {
   private val json = Json {
     ignoreUnknownKeys = true
     isLenient = true
@@ -134,6 +138,7 @@ class HaClient(private val config: HaConfig, engine: HttpClientEngine? = null) {
     sessionMutex.withLock {
       if (session != null) return
       _state.value = ConnectionState.Connecting
+      val accessToken = accessTokenProvider?.invoke() ?: config.accessToken
       val wsUrl = config.baseUrl.toWsUrl() + "/api/websocket"
       val s = httpClient.webSocketSession { url(wsUrl) }
 
@@ -148,7 +153,7 @@ class HaClient(private val config: HaConfig, engine: HttpClientEngine? = null) {
           JsonObject.serializer(),
           buildJsonObject {
             put("type", "auth")
-            put("access_token", config.accessToken)
+            put("access_token", accessToken)
           },
         )
       )
@@ -194,6 +199,27 @@ class HaClient(private val config: HaConfig, engine: HttpClientEngine? = null) {
       if (urlPath != null) put("url_path", urlPath)
     }
     return previous
+  }
+
+  private val dashboardWriteMutex = Mutex()
+
+  /**
+   * Check the loaded baseline immediately before saving. HA has no compare-and-swap/revision
+   * argument, so this detects observed conflicts; an external writer can still race this pair of
+   * WebSocket commands. Serialize this client's writes, including undo, through this method.
+   */
+  suspend fun compareAndReplaceDashboardConfig(
+    expected: JsonObject,
+    config: JsonObject,
+    urlPath: String? = null,
+  ) = dashboardWriteMutex.withLock {
+    if (fetchDashboardConfig(urlPath) != expected)
+      throw ee.schimke.ha.client.dashboard.DashboardConflictException()
+    awaitCommand("lovelace/config/save") {
+      put("config", config)
+      if (urlPath != null) put("url_path", urlPath)
+    }
+    Unit
   }
 
   /**

@@ -80,4 +80,25 @@ class LovelaceSectionCardFlowTest {
     compose.onNodeWithTag("c3").assertWidthIsEqualTo(252.dp)
     compose.onRoot().assertHeightIsEqualTo(138.dp)
   }
+
+  @Test
+  fun aHiddenConditionalBetweenTwoTilesLeavesNoGap() {
+    val withHidden =
+      listOf(SectionFlowItem(140f), SectionFlowItem(0f, hidden = true), SectionFlowItem(140f))
+    compose.setContent {
+      Box(Modifier.width(288.dp)) {
+        LovelaceSectionCardFlow(withHidden) {
+          Box(Modifier.height(50.dp).testTag("c0"))
+          Box(Modifier.testTag("c1"))
+          Box(Modifier.height(50.dp).testTag("c2"))
+        }
+      }
+    }
+    // 140 + 8 + 140 = 288: both tiles share the row, one gap between them.
+    compose.onNodeWithTag("c0").assertWidthIsEqualTo(140.dp)
+    compose.onNodeWithTag("c2").assertTopPositionInRootIsEqualTo(0.dp)
+    compose.onNodeWithTag("c2").assertLeftPositionInRootIsEqualTo(148.dp)
+    compose.onNodeWithTag("c1").assertWidthIsEqualTo(0.dp)
+    compose.onRoot().assertHeightIsEqualTo(50.dp)
+  }
 }

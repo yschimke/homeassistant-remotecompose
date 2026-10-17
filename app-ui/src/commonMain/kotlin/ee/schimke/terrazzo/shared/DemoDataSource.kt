@@ -1,0 +1,109 @@
+package ee.schimke.terrazzo.shared
+
+import ee.schimke.ha.model.*
+import io.ktor.client.HttpClient
+import io.ktor.client.request.get
+import io.ktor.client.statement.bodyAsText
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.withTimeout
+import kotlinx.serialization.json.*
+
+/**
+ * The public renderer consumes only a dashboard and a snapshot, never an authenticated HA client.
+ */
+data class DemoData(val dashboard: Dashboard, val snapshot: HaSnapshot) {
+  companion object {
+    val Fake = DemoData(DemoDashboard.dashboard, DemoDashboard.snapshot)
+  }
+}
+
+enum class DemoDataMode {
+  AUTO,
+  FAKE,
+}
+
+enum class DemoDataStatus {
+  FAKE,
+  CONNECTING,
+  LIVE,
+  UNAVAILABLE,
+}
+
+data class DemoFrame(val data: DemoData, val status: DemoDataStatus)
+
+/** Read-only boundary shared by the demo host and backend adapter. No action/write API. */
+fun interface DemoDataSource {
+  suspend fun read(): DemoData
+}
+
+/** Always start with a usable fixture; discard stale live data on every failed refresh. */
+fun demoFrames(mode: DemoDataMode, source: DemoDataSource): Flow<DemoFrame> = flow {
+  emit(
+    DemoFrame(
+      DemoData.Fake,
+      if (mode == DemoDataMode.FAKE) DemoDataStatus.FAKE else DemoDataStatus.CONNECTING,
+    )
+  )
+  if (mode == DemoDataMode.FAKE) return@flow
+  while (true) {
+    val frame =
+      try {
+        DemoFrame(withTimeout(4_000) { source.read() }, DemoDataStatus.LIVE)
+      } catch (e: CancellationException) {
+        // A request timeout is recoverable; cancellation of the host is not.
+        if (e !is kotlinx.coroutines.TimeoutCancellationException) throw e
+        DemoFrame(DemoData.Fake, DemoDataStatus.UNAVAILABLE)
+      } catch (_: Throwable) {
+        // Browser fetch failures are JsException (Throwable, not Exception).
+        DemoFrame(DemoData.Fake, DemoDataStatus.UNAVAILABLE)
+      }
+    emit(frame)
+    delay(if (frame.status == DemoDataStatus.LIVE) 5_000 else 15_000)
+  }
+}
+
+/** Fixed public gateway only. No OAuth, stored credentials, private HA URL or write commands. */
+class PublicDemoDataSource(baseUrl: String) : DemoDataSource {
+  private val base = baseUrl.trimEnd('/')
+  private val http = HttpClient()
+  private val json = Json { ignoreUnknownKeys = true }
+
+  override suspend fun read(): DemoData {
+    suspend fun readJson(path: String): JsonElement {
+      val response = http.get("$base/$path")
+      check(response.status.value == 200) { "Public demo unavailable" }
+      return json.parseToJsonElement(response.bodyAsText())
+    }
+    val dashboard = json.decodeFromJsonElement<Dashboard>(readJson("dashboard"))
+    return DemoData(dashboard, decodeDemoStates(readJson("api/states").jsonArray))
+  }
+
+  fun close() = http.close()
+}
+
+internal fun decodeDemoStates(states: JsonArray): HaSnapshot {
+  val json = Json { ignoreUnknownKeys = true }
+  return HaSnapshot(
+    states.associate { value ->
+      val state = value.jsonObject
+      val normalized = buildJsonObject {
+        state.forEach { (key, value) ->
+          put(
+            when (key) {
+              "entity_id" -> "entityId"
+              "last_changed" -> "lastChanged"
+              "last_updated" -> "lastUpdated"
+              else -> key
+            },
+            value,
+          )
+        }
+      }
+      val entity = json.decodeFromJsonElement<EntityState>(normalized)
+      entity.entityId to entity
+    }
+  )
+}

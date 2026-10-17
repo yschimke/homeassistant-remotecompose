@@ -17,6 +17,11 @@ import kotlinx.serialization.json.putJsonObject
  * own palette `style:<card style>:<light|dark>`, which the browser lists as that style.
  */
 data class ThemeParts(val style: String, val mode: String?) {
+  /** Host modes where this palette is available; console uses its fixed look in either mode. */
+  val availableModes: List<String>
+    get() =
+      if (style == "console" && mode == "dark") listOf("light", "dark") else listOfNotNull(mode)
+
   companion object {
     fun of(key: DesignKey): ThemeParts {
       val parts = key.theme.split(':')
@@ -50,7 +55,7 @@ data class BrowserFilter(
       val theme = ThemeParts.of(design.key)
       (cardType == null || design.key.cardType == cardType) &&
         (style == null || theme.style == style) &&
-        (mode == null || theme.mode == mode) &&
+        (mode == null || mode in theme.availableModes) &&
         (query == null ||
           design.key.cardType.contains(query, ignoreCase = true) ||
           design.key.shape.contains(query, ignoreCase = true))
@@ -169,7 +174,7 @@ object Pages {
     val all = library.designs
     val types = all.map { it.key.cardType }.distinct().sorted()
     val styles = all.map { ThemeParts.of(it.key).style }.distinct()
-    val modes = all.mapNotNull { ThemeParts.of(it.key).mode }.distinct()
+    val modes = all.flatMap { ThemeParts.of(it.key).availableModes }.distinct()
     val shapes = all.map { it.key.cardType to it.key.shape }.distinct().size
     return page("Card designs") {
       append(
@@ -206,7 +211,7 @@ object Pages {
           all
             .map { ThemeParts.of(it.key) }
             .filter { it.style == filter.style }
-            .mapNotNull { it.mode }
+            .flatMap { it.availableModes }
             .distinct()
         if (filter.mode != null && styleModes.isNotEmpty() && filter.mode !in styleModes) {
           append(

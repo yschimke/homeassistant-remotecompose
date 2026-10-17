@@ -1,9 +1,33 @@
 {
-  "catalogs": [{ "system": "ha-cards", "repo": "yschimke/homeassistant-remotecompose-out" }],
+  "catalogs": [
+    {
+      "system": "remote-m3",
+      "repo": "yschimke/remote-m3-catalog-out"
+    },
+    {
+      "system": "ha-cards",
+      "repo": "yschimke/homeassistant-remotecompose-out"
+    },
+    {
+      "system": "lovelace",
+      "repo": "yschimke/homeassistant-remotecompose-out"
+    }
+  ],
   "uiBuilder": {
     "catalogs": {
-      "ha-cards": { "serve": true, "published": true, "owned": true },
-      "remote-m3": { "serve": true }
+      "ha-cards": {
+        "serve": true,
+        "published": true,
+        "owned": true
+      },
+      "remote-m3": {
+        "serve": true
+      },
+      "lovelace": {
+        "serve": true,
+        "published": true,
+        "owned": true
+      }
     }
   }
 }

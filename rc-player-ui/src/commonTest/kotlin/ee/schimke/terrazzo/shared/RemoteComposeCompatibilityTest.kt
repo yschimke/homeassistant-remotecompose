@@ -1,6 +1,7 @@
 package ee.schimke.terrazzo.shared
 
 import ee.schimke.composeai.rcplayer.protocol.*
+import ee.schimke.composeai.rcplayer.runtime.RcNamedValue
 import kotlin.test.Test
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
@@ -25,5 +26,22 @@ class RemoteComposeCompatibilityTest {
   @Test
   fun invalidDocumentsDoNotEnterThePlayer() {
     assertFalse(canPlayWithCmp(byteArrayOf(1, 2, 3)))
+  }
+
+  @Test
+  fun converterOnlyValuesCannotLeakFromTheLibraryFixture() {
+    fun template(name: String) =
+      RcDocumentCodec.encode(
+        RcDocument(
+          RcHeader(RcVersion(1, 0, 0)),
+          listOf(RcNamedVariable(42, RcNamedVariable.STRING_TYPE, "USER:$name")),
+        )
+      )
+    val bindings = mapOf("light.s0.state" to RcNamedValue.Text("Off"))
+    assertTrue(canBindWithCmp(template("light.s0.state"), bindings))
+    assertFalse(canBindWithCmp(template("card.md.content"), bindings))
+    assertFalse(
+      canBindWithCmp(template("light.s0.state"), mapOf("light.s0.state" to RcNamedValue.Integer(1)))
+    )
   }
 }
