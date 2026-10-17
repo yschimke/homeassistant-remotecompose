@@ -780,9 +780,55 @@ object Fixtures {
   }
 
   /**
-   * Sensors with long friendly names and **no** recorder history, so each row summarises as "no
-   * data" and falls back to "No samples". Reproduces the GitHub "Open issues per repo" dashboard
-   * card where a long repo name used to overrun the right-aligned summary.
+   * Electricity meters with long friendly names, where only the solar series has recorder history:
+   * the history-graph's per-row `name:` overrides and its one-line empty rows.
+   */
+  val meterPartlyEmpty: HaSnapshot = run {
+    fun meter(id: String, name: String, state: String) =
+      id to
+        EntityState(
+          entityId = id,
+          state = state,
+          attributes =
+            JsonObject(
+              mapOf(
+                "friendly_name" to JsonPrimitive(name),
+                "unit_of_measurement" to JsonPrimitive("kW"),
+                "device_class" to JsonPrimitive("power"),
+              )
+            ),
+        )
+    val baseTime = Instant.parse("2026-05-05T00:00:00Z")
+    val solar =
+      listOf(0f, 0f, 0.4f, 1.6f, 2.9f, 3.8f, 4.1f, 3.6f, 2.4f, 1.1f, 0.2f, 0f).mapIndexed { i, v ->
+        ee.schimke.ha.model.HistoryPoint(
+          ts = baseTime.plus(kotlin.time.Duration.parse("${i * 2}h")),
+          state = v.toString(),
+        )
+      }
+    HaSnapshot(
+      states =
+        mapOf(
+          meter(
+            "sensor.meter_import_rate",
+            "Electricity Meter Import Current Rate Import Electricity",
+            "0.6",
+          ),
+          meter(
+            "sensor.meter_export_rate",
+            "Electricity Meter Export Current Rate Export Electricity",
+            "0.0",
+          ),
+          meter("sensor.solaredge_power", "solaredge Current power", "0.0"),
+        ),
+      history = mapOf("sensor.solaredge_power" to solar),
+    )
+  }
+
+  /**
+   * Sensors with long friendly names and **no** recorder history, so the history-graph shows its
+   * one card-level empty state. Reproduces the GitHub "Open issues per repo" dashboard card, whose
+   * long repo names must truncate on the empty state's one legend line.
    */
   val issuesNoData: HaSnapshot = run {
     fun issueSensor(id: String, name: String) =

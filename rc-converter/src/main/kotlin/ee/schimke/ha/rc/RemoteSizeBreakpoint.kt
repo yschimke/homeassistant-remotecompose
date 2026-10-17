@@ -11,6 +11,7 @@ import androidx.compose.remote.creation.compose.state.RemoteState
 import androidx.compose.remote.creation.compose.state.rc
 import androidx.compose.remote.creation.compose.state.rdp
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
@@ -135,6 +136,22 @@ fun RemoteSizeBreakpoint(
 enum class BreakpointAxis {
   Width,
   Height,
+}
+
+/**
+ * The dimension a Fixed-mode host's canvases differ along, so the one a card with a single runtime
+ * gate should read. Launcher widgets (and the matrix's launcher cells) pin width and let height
+ * wrap: [BreakpointAxis.Width], the default. A Wear slot pins both, and its small and large
+ * containers share a width and differ only in height, so Wear surfaces provide
+ * [BreakpointAxis.Height]: a card whose layouts differ by height there (the tile's compact or full
+ * name-over-state stack) gates on height instead of on a width every Wear slot passes.
+ */
+val LocalFixedCanvasAxis = staticCompositionLocalOf { BreakpointAxis.Width }
+
+/** Declare, for the cards in [content], the axis this Fixed-mode host's canvases differ along. */
+@Composable
+fun ProvideFixedCanvasAxis(axis: BreakpointAxis, content: @Composable () -> Unit) {
+  CompositionLocalProvider(LocalFixedCanvasAxis provides axis, content = content)
 }
 
 private val InvisibleFormat = DecimalFormat("0")

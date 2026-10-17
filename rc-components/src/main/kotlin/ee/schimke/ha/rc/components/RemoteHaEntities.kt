@@ -18,10 +18,17 @@ import androidx.compose.ui.text.style.TextOverflow
 /**
  * HA `entities` card — stacked list of [RemoteHaEntityRow]s with an optional title header. Matches
  * `hui-entities-card.ts` visually.
+ *
+ * [dense] tightens each row's vertical padding (6dp to 4dp) for a fixed widget canvas, where the
+ * list has a set height to fit its rows into rather than growing to them.
  */
 @Composable
 @RemoteComposable
-fun RemoteHaEntities(data: HaEntitiesData, modifier: RemoteModifier = RemoteModifier) {
+fun RemoteHaEntities(
+  data: HaEntitiesData,
+  modifier: RemoteModifier = RemoteModifier,
+  dense: Boolean = false,
+) {
   val theme = haTheme()
   RemoteBox(
     modifier =
@@ -43,7 +50,11 @@ fun RemoteHaEntities(data: HaEntitiesData, modifier: RemoteModifier = RemoteModi
         )
         RemoteBox(modifier = RemoteModifier.padding(top = 4.rdp))
       }
-      data.rows.forEach { row -> RemoteHaEntityRow(row) }
+      data.rows.forEach { row ->
+        RemoteHaEntityRow(row, verticalPaddingDp = if (dense) DenseRowPaddingDp else 6)
+      }
     }
   }
 }
+
+private const val DenseRowPaddingDp = 4

@@ -575,18 +575,17 @@ private fun historyGraphCard() =
         "entities":["sensor.outside_temp","sensor.upstairs_temp"]}"""
   )
 
-// Regression guard: long entity names with no recorder data must
-// truncate (ellipsis) rather than overrun the right-aligned "no data"
-// summary. See the "Open issues per repo" dashboard card. No HA
-// reference exists for this synthetic case; the canvas is deliberately
-// narrow (300 dp) so the longest repo name has to truncate — that's the
-// behaviour under test, not a reference-matched size.
+// Every series empty (recorder exclusions, a fresh install): one card-level
+// "No history in the last 2 weeks" with the series' names on one line below
+// it, instead of a "no data" + "No samples" pair per row. The canvas is
+// deliberately narrow (300 dp) so the long repo names have to truncate on
+// that one legend line. No HA reference exists for this synthetic case.
 
 @Preview(
   name = "history-graph no-data (light)",
   showBackground = false,
   widthDp = 300,
-  heightDp = 240,
+  heightDp = 140,
 )
 @Composable
 fun HistoryGraphNoData_Light() =
@@ -598,13 +597,48 @@ fun HistoryGraphNoData_Light() =
   name = "history-graph no-data (dark)",
   showBackground = false,
   widthDp = 300,
-  heightDp = 240,
+  heightDp = 140,
 )
 @Composable
 fun HistoryGraphNoData_Dark() =
   CardHost(HaTheme.Dark) {
     RenderChild(issuesGraphCard(), Fixtures.issuesNoData, RemoteModifier.fillMaxWidth())
   }
+
+// Per-row `name:` overrides label the rows ("Import", "Export") instead of the
+// meters' long friendly names, and the two series with no history shrink to
+// one line each while the one with history keeps its graph.
+
+@Preview(
+  name = "history-graph named, partly empty (light)",
+  showBackground = false,
+  widthDp = 381,
+  heightDp = 180,
+)
+@Composable
+fun HistoryGraphNamedPartlyEmpty_Light() =
+  CardHost(HaTheme.Light) {
+    RenderChild(meterGraphCard(), Fixtures.meterPartlyEmpty, RemoteModifier.fillMaxWidth())
+  }
+
+@Preview(
+  name = "history-graph named, partly empty (dark)",
+  showBackground = false,
+  widthDp = 381,
+  heightDp = 180,
+)
+@Composable
+fun HistoryGraphNamedPartlyEmpty_Dark() =
+  CardHost(HaTheme.Dark) {
+    RenderChild(meterGraphCard(), Fixtures.meterPartlyEmpty, RemoteModifier.fillMaxWidth())
+  }
+
+private fun meterGraphCard() =
+  card(
+    """{"type":"history-graph","title":"Electricity","hours_to_show":168,
+        "entities":[{"entity":"sensor.meter_import_rate","name":"Import"},
+        {"entity":"sensor.meter_export_rate","name":"Export"},"sensor.solaredge_power"]}"""
+  )
 
 private fun issuesGraphCard() =
   card(

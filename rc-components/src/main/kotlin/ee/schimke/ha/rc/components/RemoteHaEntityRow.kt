@@ -44,7 +44,11 @@ import androidx.compose.ui.text.style.TextOverflow
  */
 @Composable
 @RemoteComposable
-fun RemoteHaEntityRow(data: HaEntityRowData, modifier: RemoteModifier = RemoteModifier) {
+fun RemoteHaEntityRow(
+  data: HaEntityRowData,
+  modifier: RemoteModifier = RemoteModifier,
+  verticalPaddingDp: Int = 6,
+) {
   val theme = haTheme()
   val clickable =
     data.tapAction.toRemoteAction()?.let { RemoteModifier.clickable(it) } ?: RemoteModifier
@@ -53,7 +57,7 @@ fun RemoteHaEntityRow(data: HaEntityRowData, modifier: RemoteModifier = RemoteMo
   val accent: RemoteColor = look.accent
 
   RemoteRow(
-    modifier = modifier.then(clickable).fillMaxWidth().padding(vertical = 6.rdp),
+    modifier = modifier.then(clickable).fillMaxWidth().padding(vertical = verticalPaddingDp.rdp),
     horizontalArrangement = RemoteArrangement.SpaceBetween,
     verticalAlignment = RemoteAlignment.CenterVertically,
   ) {
